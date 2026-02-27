@@ -1,0 +1,197 @@
+Build a production-grade Node.js + Express + PostgreSQL backend for the existing Altuvera frontend country layout.
+
+You must generate:
+1) SQL migration files.
+2) Express routes.
+3) Controllers + services + validation.
+4) Data mappers that return exactly what frontend expects.
+5) Seed script for at least 6 countries and 18 destinations.
+6) Swagger/OpenAPI docs.
+7) Postman collection.
+
+Stack requirements:
+- Node.js 20+
+- Express
+- PostgreSQL 15+
+- Query builder: Knex OR Prisma (pick one and stay consistent)
+- Validation: Zod or Joi
+- Auth middleware with role-based access for admin write routes
+- Rate limiting + structured logging + centralized error handling
+
+Frontend compatibility requirements:
+- Existing frontend reads fields from country objects such as:
+  id, name, capital, flag, tagline, motto, independence, description, fullDescription, additionalInfo,
+  population, area, languages, officialLanguages, ethnicGroups, religions, currency, currencySymbol,
+  timezone, callingCode, drivingSide, climate, seasons, bestTime, visaInfo, healthInfo, highlights,
+  experiences, wildlife, cuisine, festivals, unescoSites, travelTips, airports, images, heroImage,
+  mapPosition, neighboringCountries, economicInfo
+- Existing frontend also reads destinations by country.
+- API response must preserve frontend keys in camelCase.
+
+API contract to implement:
+- GET /api/countries
+  query: search, featured, region, limit, offset, sortBy, sortDir
+  response:
+  {
+    "data": [CountrySummary],
+    "meta": { "total": number, "limit": number, "offset": number }
+  }
+
+- GET /api/countries/featured
+  query: limit
+  response: { "data": [CountrySummary] }
+
+- GET /api/countries/:idOrSlug
+  response: { "data": CountryFull }
+
+- GET /api/countries/:idOrSlug/destinations
+  query: limit, offset, type
+  response:
+  {
+    "data": [DestinationSummary],
+    "meta": { "total": number, "limit": number, "offset": number }
+  }
+
+- POST /api/admin/countries
+- PUT /api/admin/countries/:id
+- DELETE /api/admin/countries/:id
+- POST /api/admin/countries/:id/destinations
+- PUT /api/admin/destinations/:id
+- DELETE /api/admin/destinations/:id
+
+All admin routes:
+- require JWT auth
+- require role in ('admin','editor')
+- audit fields updated_by and timestamps
+
+PostgreSQL schema guide (normalized + JSONB for nested blocks):
+
+Table: countries
+- id SERIAL PRIMARY KEY
+- slug VARCHAR(120) UNIQUE NOT NULL
+- name VARCHAR(160) NOT NULL
+- capital VARCHAR(160)
+- flag VARCHAR(16)
+- tagline VARCHAR(255)
+- motto VARCHAR(255)
+- independence_date DATE
+- description TEXT
+- full_description TEXT
+- additional_info TEXT
+- population_text VARCHAR(120)
+- area_text VARCHAR(120)
+- currency VARCHAR(120)
+- currency_symbol VARCHAR(20)
+- timezone VARCHAR(120)
+- calling_code VARCHAR(20)
+- driving_side VARCHAR(20)
+- climate TEXT
+- best_time VARCHAR(255)
+- visa_info TEXT
+- health_info TEXT
+- hero_image TEXT
+- map_lat DECIMAL(10,7)
+- map_lng DECIMAL(10,7)
+- is_featured BOOLEAN DEFAULT FALSE
+- display_order INT DEFAULT 0
+- created_at TIMESTAMPTZ DEFAULT now()
+- updated_at TIMESTAMPTZ DEFAULT now()
+- updated_by INT NULL
+
+Table: country_details
+- country_id INT PRIMARY KEY REFERENCES countries(id) ON DELETE CASCADE
+- seasons JSONB DEFAULT '{}'::jsonb
+- wildlife JSONB DEFAULT '{}'::jsonb
+- cuisine JSONB DEFAULT '{}'::jsonb
+- economic_info JSONB DEFAULT '{}'::jsonb
+- ai_insights JSONB DEFAULT '{}'::jsonb
+- ai_generated_at TIMESTAMPTZ NULL
+- created_at TIMESTAMPTZ DEFAULT now()
+- updated_at TIMESTAMPTZ DEFAULT now()
+
+Table: country_arrays
+- id SERIAL PRIMARY KEY
+- country_id INT NOT NULL REFERENCES countries(id) ON DELETE CASCADE
+- kind VARCHAR(50) NOT NULL
+  // allowed: languages, officialLanguages, ethnicGroups, religions, highlights, experiences,
+  // unescoSites, travelTips, neighboringCountries, images
+- value TEXT NOT NULL
+- sort_order INT DEFAULT 0
+- UNIQUE(country_id, kind, value)
+
+Table: country_airports
+- id SERIAL PRIMARY KEY
+- country_id INT NOT NULL REFERENCES countries(id) ON DELETE CASCADE
+- name VARCHAR(255) NOT NULL
+- location VARCHAR(255)
+- type VARCHAR(80)
+- sort_order INT DEFAULT 0
+
+Table: country_festivals
+- id SERIAL PRIMARY KEY
+- country_id INT NOT NULL REFERENCES countries(id) ON DELETE CASCADE
+- name VARCHAR(255) NOT NULL
+- period VARCHAR(120)
+- sort_order INT DEFAULT 0
+
+Table: destinations
+- id SERIAL PRIMARY KEY
+- slug VARCHAR(160) UNIQUE NOT NULL
+- country_id INT NOT NULL REFERENCES countries(id) ON DELETE CASCADE
+- name VARCHAR(255) NOT NULL
+- type VARCHAR(120)
+- short_description TEXT
+- description TEXT
+- best_time VARCHAR(255)
+- duration_days INT
+- difficulty VARCHAR(50)
+- featured BOOLEAN DEFAULT FALSE
+- created_at TIMESTAMPTZ DEFAULT now()
+- updated_at TIMESTAMPTZ DEFAULT now()
+
+Table: destination_images
+- id SERIAL PRIMARY KEY
+- destination_id INT NOT NULL REFERENCES destinations(id) ON DELETE CASCADE
+- image_url TEXT NOT NULL
+- sort_order INT DEFAULT 0
+
+Indexes:
+- countries(slug)
+- countries(is_featured, display_order)
+- countries(name)
+- destinations(country_id, featured)
+- destinations(slug)
+- country_arrays(country_id, kind, sort_order)
+
+Mapper output rules:
+- Convert DB fields to frontend camelCase.
+- Build nested objects:
+  mapPosition = { lat, lng }
+  seasons, wildlife, cuisine, economicInfo from JSONB
+  arrays reconstructed by kind
+  airports as [{name, location, type}]
+  festivals as [{name, period}]
+- Keep null-safe defaults: [] for arrays, {} for objects.
+
+Controller quality requirements:
+- Pagination + filtering + sorting with whitelist.
+- 404 for missing country/destination.
+- Validation errors return 422 with field details.
+- All list routes include meta.
+
+Non-functional requirements:
+- Use transactions for create/update of parent + child records.
+- Add optimistic update support via updated_at check on admin updates.
+- Add Redis-friendly cache hooks (interface stubs) for read routes.
+- Include SQL seed and rollback scripts.
+- Include unit tests for mappers and integration tests for core routes.
+
+Deliverables format:
+- Print folder tree first.
+- Then output each file content in code blocks with file path headings.
+- Then include run commands:
+  npm install
+  npm run migrate
+  npm run seed
+  npm run dev
+

@@ -1,0 +1,68 @@
+export const theme = {
+  colors: {
+    primary: '#059669',
+    primaryLight: '#10B981',
+    primaryDark: '#047857',
+    primaryDarker: '#065F46',
+    secondary: '#ffffff',
+    accent: '#34D399',
+    background: '#ffffff',
+    backgroundAlt: '#F0FDF4',
+    backgroundDark: '#022C22',
+    text: '#1a1a1a',
+    textLight: '#4B5563',
+    textMuted: '#6B7280',
+    border: '#E5E7EB',
+    borderLight: '#D1FAE5',
+    success: '#10B981',
+    error: '#EF4444',
+    warning: '#F59E0B',
+    shadow: 'rgba(5, 150, 105, 0.15)',
+    shadowDark: 'rgba(0, 0, 0, 0.1)',
+    overlay: 'rgba(0, 0, 0, 0.5)',
+    gradientPrimary: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
+    gradientDark: 'linear-gradient(135deg, #022C22 0%, #065F46 100%)',
+    gradientLight: 'linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)',
+  },
+  fonts: {
+    heading: "'Playfair Display', serif",
+    body: "'Poppins', sans-serif",
+    accent: "'Dancing Script', cursive",
+  },
+  spacing: {
+    xs: '4px',
+    sm: '8px',
+    md: '16px',
+    lg: '24px',
+    xl: '32px',
+    xxl: '48px',
+    xxxl: '64px',
+  },
+  borderRadius: {
+    sm: '4px',
+    md: '8px',
+    lg: '16px',
+    xl: '24px',
+    full: '9999px',
+  },
+  shadows: {
+    sm: '0 2px 4px rgba(5, 150, 105, 0.1)',
+    md: '0 4px 12px rgba(5, 150, 105, 0.15)',
+    lg: '0 8px 24px rgba(5, 150, 105, 0.2)',
+    xl: '0 12px 48px rgba(5, 150, 105, 0.25)',
+  },
+  transitions: {
+    fast: '0.15s ease',
+    normal: '0.3s ease',
+    slow: '0.5s ease',
+  },
+  breakpoints: {
+    sm: '640px',
+    md: '768px',
+    lg: '1024px',
+    xl: '1280px',
+    xxl: '1536px',
+  }
+};
+
+export default theme;
