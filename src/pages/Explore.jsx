@@ -86,8 +86,8 @@ const GALLERY_SLIDES = [
     images: [
       'https://i.pinimg.com/1200x/ed/00/e4/ed00e4d4f784630b8e1e1fdb9f1e9dbe.jpg',
       'https://i.pinimg.com/736x/db/9f/c0/db9fc09ed986e007870040a56f6383f2.jpg',
-      'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTa73QGCLzaCips2hFLpodiiAJRfXux7sW4yg&s',
-      'https://africaadventurevacations.com/wp-content/uploads/2022/01/Top-ten-Serengeti-National-Park-safari-activities.jpg',
+      'https://i.pinimg.com/1200x/ab/7c/7e/ab7c7eca444c186f9e12780fc9ee24df.jpg',
+      'https://i.pinimg.com/1200x/50/35/bb/5035bbb9131f43cf29fedd5c310ad96b.jpg',
     ],
     title: 'Serengeti National Park',
     subtitle: 'Tanzania',
@@ -96,10 +96,10 @@ const GALLERY_SLIDES = [
   },
   {
     images: [
-      'https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=800&q=80',
-      'https://images.unsplash.com/photo-1504567961542-e24d9439a724?w=800&q=80',
-      'https://images.unsplash.com/photo-1542202229-7d93c33f5d07?w=800&q=80',
-      'https://images.unsplash.com/photo-1581852017103-68ac65514cf7?w=800&q=80',
+      'https://i.pinimg.com/736x/57/f6/43/57f6431ce6d454571adaa99b95341407.jpg',
+      'https://i.pinimg.com/1200x/5b/44/d6/5b44d6575310432429bbf2bccd0217ef.jpg',
+      'https://i.pinimg.com/736x/90/75/59/907559fce3c69dacf167d4f05c798095.jpg',
+      'https://i.pinimg.com/736x/8a/79/83/8a7983b7e5f61aba24a42c9d6329bf77.jpg',
     ],
     title: 'Bwindi Impenetrable Forest',
     subtitle: 'Uganda',
@@ -108,10 +108,10 @@ const GALLERY_SLIDES = [
   },
   {
     images: [
-      'https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80',
-      'https://images.unsplash.com/photo-1521150932951-303a95503ed3?w=800&q=80',
-      'https://images.unsplash.com/photo-1609198092458-38a293c7ac4b?w=800&q=80',
-      'https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=800&q=80',
+      'https://i.pinimg.com/736x/c1/30/87/c130874fb93c42ac52c370c0805016f5.jpg',
+      'https://i.pinimg.com/1200x/9c/78/89/9c7889c623d6ef5ec6f3167927645a5f.jpg',
+      'https://i.pinimg.com/1200x/d6/64/61/d66461288dc140afaf7d2749cf40d84e.jpg',
+      'https://i.pinimg.com/736x/bb/a3/6d/bba36d4b980c81f44e0633873dd37ccf.jpg',
     ],
     title: 'Mount Kilimanjaro',
     subtitle: 'Tanzania',
@@ -147,9 +147,9 @@ const FEATURED_EXPERIENCES = [
     id: 'gorilla-trekking',
     title: 'Mountain Gorilla Trekking',
     images: [
-      'https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=800&q=80',
-      'https://images.unsplash.com/photo-1504567961542-e24d9439a724?w=800&q=80',
-      'https://images.unsplash.com/photo-1542202229-7d93c33f5d07?w=800&q=80',
+      'https://i.pinimg.com/1200x/f4/de/34/f4de34c3ff61ad0ce2891d6949c7a8e3.jpg',
+      'https://i.pinimg.com/1200x/cb/73/62/cb736205da2f5591da152dd2661dd9b5.jpg',
+      'https://i.pinimg.com/1200x/b7/e8/06/b7e806d69b4dbe59aa517ca9091f0e25.jpg',
     ],
     location: 'Rwanda & Uganda',
     duration: '4 Days',
@@ -169,9 +169,9 @@ const FEATURED_EXPERIENCES = [
     id: 'kilimanjaro-summit',
     title: 'Kilimanjaro Summit Trek',
     images: [
-      'https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80',
-      'https://images.unsplash.com/photo-1521150932951-303a95503ed3?w=800&q=80',
-      'https://images.unsplash.com/photo-1609198092458-38a293c7ac4b?w=800&q=80',
+      'https://i.pinimg.com/1200x/ad/01/b0/ad01b05429d3eb1315ab5c5588909e44.jpg',
+      'https://i.pinimg.com/736x/c0/b7/ba/c0b7ba033052981d0954f59e19e7c210.jpg',
+      'https://i.pinimg.com/1200x/b0/0e/3b/b00e3b94654f915f856aac1e0df7c59c.jpg',
     ],
     location: 'Tanzania',
     duration: '8 Days',
@@ -191,9 +191,9 @@ const FEATURED_EXPERIENCES = [
     id: 'zanzibar-escape',
     title: 'Zanzibar Island Paradise',
     images: [
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80',
-      'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80',
-      'https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=800&q=80',
+      'https://i.pinimg.com/736x/7a/2e/f3/7a2ef3dc39aff069c92ff6b205001aa5.jpg',
+      'https://i.pinimg.com/1200x/1f/93/40/1f934073d021f3767c0ea1b4e0507352.jpg',
+      'https://i.pinimg.com/1200x/0a/71/4e/0a714eb9d0f4db898343362a47d91d6a.jpg',
     ],
     location: 'Tanzania',
     duration: '5 Days',
@@ -213,9 +213,9 @@ const FEATURED_EXPERIENCES = [
     id: 'masai-cultural',
     title: 'Masai Cultural Immersion',
     images: [
-      'https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=800&q=80',
-      'https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=800&q=80',
-      'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800&q=80',
+      'https://i.pinimg.com/736x/0e/7b/b7/0e7bb772c50bf3ec1bb2ef81abbf7959.jpg',
+      'https://i.pinimg.com/736x/99/af/05/99af05ad4a9080b9830ad48438c12043.jpg',
+      'https://i.pinimg.com/1200x/79/e1/f8/79e1f8e119ebfbd6bb9483af5f0f7123.jpg',
     ],
     location: 'Kenya',
     duration: '3 Days',
@@ -235,9 +235,9 @@ const FEATURED_EXPERIENCES = [
     id: 'serengeti-luxury',
     title: 'Serengeti Luxury Safari',
     images: [
-      'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800&q=80',
-      'https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=800&q=80',
-      'https://images.unsplash.com/photo-1549366021-9f761d450615?w=800&q=80',
+      'https://i.pinimg.com/736x/3b/a0/ca/3ba0ca69c00d79b9a66160b0f27cb783.jpg',
+      'https://i.pinimg.com/736x/9a/7b/4d/9a7b4d63a6f13786eaa3d24bbdab2dd3.jpg',
+      'https://i.pinimg.com/736x/81/c3/4b/81c34b01d8aabc156de1e709eb2d50eb.jpg',
     ],
     location: 'Tanzania',
     duration: '6 Days',
@@ -264,9 +264,10 @@ const EXPERIENCE_CATEGORIES = [
     description:
       'Witness the Big Five roaming free across sprawling savannas and national parks.',
     images: [
-      'https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=800&q=80',
-      'https://images.unsplash.com/photo-1535941339077-2dd1c7963098?w=800&q=80',
-      'https://images.unsplash.com/photo-1549366021-9f761d450615?w=800&q=80',
+      'https://i.pinimg.com/1200x/c2/9f/44/c29f44fa94ebd6f672b4aedd2be232f9.jpg',
+      'https://i.pinimg.com/1200x/18/6d/29/186d29ce2c35f853712f8abba2befd56.jpg',
+      'https://i.pinimg.com/736x/68/a3/eb/68a3eb73611270e39654a0d915040923.jpg',
+      'https://i.pinimg.com/736x/02/f1/c4/02f1c492e7799b33c5f86df25265a8bc.jpg',
     ],
     path: '/destinations?category=safari',
   },
@@ -278,9 +279,9 @@ const EXPERIENCE_CATEGORIES = [
     description:
       "Scale Africa's most iconic peaks, from Kilimanjaro to the Rwenzori moonscapes.",
     images: [
-      'https://images.unsplash.com/photo-1551632811-561732d1e306?w=800&q=80',
-      'https://images.unsplash.com/photo-1521150932951-303a95503ed3?w=800&q=80',
-      'https://images.unsplash.com/photo-1609198092458-38a293c7ac4b?w=800&q=80',
+      'https://i.pinimg.com/1200x/ff/e2/d9/ffe2d9dcdaf94b5e81468c8535316e31.jpg',
+      'https://i.pinimg.com/736x/0f/22/a7/0f22a7b798ab8eeb0d2dd950dfaee566.jpg',
+      'https://i.pinimg.com/736x/c4/ed/06/c4ed06bfacaef772aae7e62206ad4488.jpg',
     ],
     path: '/destinations?category=trekking',
   },
@@ -292,9 +293,9 @@ const EXPERIENCE_CATEGORIES = [
     description:
       "Paradise beaches lapped by the Indian Ocean — from Zanzibar to Kenya's coral coast.",
     images: [
-      'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=80',
-      'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800&q=80',
-      'https://images.unsplash.com/photo-1559494007-9f5847c49d94?w=800&q=80',
+      'https://i.pinimg.com/736x/f6/01/bb/f601bb23119765395c42c4819f2a003e.jpg',
+      'https://i.pinimg.com/1200x/f6/1c/c7/f61cc726f0d4057347265241bfcbabcc.jpg',
+      'https://i.pinimg.com/1200x/a8/cd/38/a8cd38c9fa7a14ce7db3356c0157f6ce.jpg',
     ],
     path: '/destinations?category=beach',
   },
@@ -306,9 +307,9 @@ const EXPERIENCE_CATEGORIES = [
     description:
       'Connect with centuries-old traditions, vibrant communities, and rich heritage.',
     images: [
-      'https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=800&q=80',
-      'https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=800&q=80',
-      'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800&q=80',
+      'https://i.pinimg.com/1200x/5f/a3/4b/5fa34bd6bb03cbd6b41841ccaac3e8ac.jpg',
+      'https://i.pinimg.com/1200x/67/61/f9/6761f917a32f481a04c07546534eb15c.jpg',
+      'https://i.pinimg.com/1200x/3e/ec/62/3eec62d51f2576c5a0d90f2d90b426ea.jpg',
     ],
     path: '/destinations?category=cultural',
   },
@@ -2073,10 +2074,10 @@ function Explore() {
               <AnimatedSection animation="fadeInUp" delay={0.15}>
                 <SlideshowCard
                   images={[
-                    'https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=800&q=80',
-                    'https://images.unsplash.com/photo-1535941339077-2dd1c7963098?w=800&q=80',
-                    'https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=800&q=80',
-                    'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800&q=80',
+                    'https://i.pinimg.com/736x/93/6a/84/936a8464a479f3f955c9ec40cdd54f9b.jpg',
+                    'https://i.pinimg.com/1200x/a4/fd/0d/a4fd0d8ace7ed69162c5ef9d54e982f5.jpg',
+                    'https://i.pinimg.com/1200x/03/de/a7/03dea79b65be75f66457f6e1f4650d97.jpg',
+                    'https://i.pinimg.com/474x/96/99/da/9699dad536d1b8035c73b523da63b6ca.jpg',
                   ]}
                   height={560}
                   borderRadius={28}

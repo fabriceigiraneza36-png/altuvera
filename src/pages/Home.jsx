@@ -1509,10 +1509,70 @@ const Home = () => {
                     ]}
                     style={{
                       position: "absolute",
-                      bottom: "clamp(12px, 3vw, 32px)",
+                      bottom: "clamp(10px, 3vw, 70px)",
                       left: "clamp(-20px, 1vw, -40px)",
                       width: "clamp(180px, 36%, 280px)",
-                      height: "clamp(200px, 40vw, 360px)",
+                      height: "clamp(150px, 40vw, 200px)",
+                      borderRadius: 24,
+                      objectFit: "cover",
+                      border: "8px solid white",
+                      boxShadow: "0 30px 70px rgba(0,0,0,.25)",
+                      zIndex: 5,
+                      animation: "floatSoft 6s ease-in-out infinite",
+                    }}
+                    className="iis"
+                    interval={4500}
+                  />
+                  <ImageCycle
+                    images={[
+                      "https://www.vjv.com/media/hyegmdk3/giraffe-walking-savanna-queen-elizabeth-national-park-uganda-shutterstock_58932448.jpg?height=1080&quality=60&width=1920",
+                      "https://www.travelandleisure.com/thmb/4rmCDPTq85-wHGIak69y6Uv1WWo%3D/1500x0/filters%3Ano_upscale%28%29%3Amax_bytes%28150000%29%3Astrip_icc%28%29/TAL-ol-jogi-aerial-view-full-ALISTLIZ1125-fde5875b5cbf433b862221dbaccddf92.jpg",
+                      "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
+                      "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
+                      "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg",
+                      "https://i.pinimg.com/1200x/d0/af/e3/d0afe34b5ae890a0aa78264647847ba6.jpg",
+                      "https://i.pinimg.com/1200x/84/e4/85/84e48535118942a4a468aa686841d974.jpg",
+                      "https://i.pinimg.com/736x/55/e3/3e/55e33e50985ece6ae1b4256b880bc1d1.jpg",
+                      "https://i.pinimg.com/1200x/bb/eb/a8/bbeba83d5cd3a6f8cef52d503aeb99a8.jpg",
+                      "https://i.pinimg.com/736x/a6/fa/e8/a6fae858bd1ecf633229b5dade79c68a.jpg",
+                      "https://i.pinimg.com/474x/b5/c6/13/b5c6134e42151a981a41eaf34166e27f.jpg"
+                    ]}
+                    style={{
+                      position: "absolute",
+                      bottom: "clamp(70px, 3vw, 70px)",
+                      left: "clamp(400px)",
+                      width: "clamp(180px, 36%, 280px)",
+                      height: "clamp(150px, 40vw, 200px)",
+                      borderRadius: 24,
+                      objectFit: "cover",
+                      border: "8px solid white",
+                      boxShadow: "0 30px 70px rgba(0,0,0,.25)",
+                      zIndex: 5,
+                      animation: "floatSoft 6s ease-in-out infinite",
+                    }}
+                    className="iis"
+                    interval={4500}
+                  />
+                  <ImageCycle
+                    images={[
+                      "https://www.vjv.com/media/hyegmdk3/giraffe-walking-savanna-queen-elizabeth-national-park-uganda-shutterstock_58932448.jpg?height=1080&quality=60&width=1920",
+                      "https://www.travelandleisure.com/thmb/4rmCDPTq85-wHGIak69y6Uv1WWo%3D/1500x0/filters%3Ano_upscale%28%29%3Amax_bytes%28150000%29%3Astrip_icc%28%29/TAL-ol-jogi-aerial-view-full-ALISTLIZ1125-fde5875b5cbf433b862221dbaccddf92.jpg",
+                      "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
+                      "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
+                      "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg",
+                      "https://i.pinimg.com/1200x/d0/af/e3/d0afe34b5ae890a0aa78264647847ba6.jpg",
+                      "https://i.pinimg.com/1200x/84/e4/85/84e48535118942a4a468aa686841d974.jpg",
+                      "https://i.pinimg.com/736x/55/e3/3e/55e33e50985ece6ae1b4256b880bc1d1.jpg",
+                      "https://i.pinimg.com/1200x/bb/eb/a8/bbeba83d5cd3a6f8cef52d503aeb99a8.jpg",
+                      "https://i.pinimg.com/736x/a6/fa/e8/a6fae858bd1ecf633229b5dade79c68a.jpg",
+                      "https://i.pinimg.com/474x/b5/c6/13/b5c6134e42151a981a41eaf34166e27f.jpg"
+                    ]}
+                    style={{
+                      position: "absolute",
+                      bottom: "clamp(70px, 3vw, 70px)",
+                      left: "clamp(-40vh)",
+                      width: "clamp(180px, 36%, 280px)",
+                      height: "clamp(150px, 40vw, 200px)",
                       borderRadius: 24,
                       objectFit: "cover",
                       border: "8px solid white",

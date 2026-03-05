@@ -1,2720 +1,970 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { motion, AnimatePresence, useInView, useScroll, useTransform } from 'framer-motion';
-import { 
-  FiMail, FiPhone, FiMapPin, FiClock, FiSend, FiMessageSquare, 
-  FiGlobe, FiCheckCircle, FiUser, FiAlertCircle, FiChevronDown,
-  FiCalendar, FiUsers, FiStar, FiArrowRight, FiMessageCircle,
-  FiHelpCircle, FiChevronRight, FiX, FiCheck, FiZap, FiHeart,
-  FiAward, FiShield, FiHeadphones, FiCoffee
+import React, { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
+import {
+  FiMail, FiPhone, FiMapPin, FiClock, FiSend, FiMessageSquare,
+  FiCheckCircle, FiUser, FiAlertCircle, FiChevronDown,
+  FiCalendar, FiUsers, FiGlobe, FiStar, FiArrowRight, FiArrowLeft,
+  FiMessageCircle, FiHelpCircle, FiShield, FiHeadphones, FiX,
 } from 'react-icons/fi';
-import { 
-  FaFacebookF, FaInstagram, FaTwitter, FaYoutube, FaLinkedinIn,
-  FaWhatsapp, FaTiktok, FaPinterestP
+import {
+  FaFacebookF, FaInstagram, FaTwitter, FaYoutube,
+  FaWhatsapp, FaTiktok,
 } from 'react-icons/fa';
-import { HiSparkles, HiLocationMarker, HiOutlineMail } from 'react-icons/hi';
+import { HiSparkles } from 'react-icons/hi';
 import { BiSupport } from 'react-icons/bi';
 import { RiSendPlaneFill } from 'react-icons/ri';
-import herobg from "../assets/fabrice.jpg"
+import herobg from '../assets/fabrice.jpg';
 
-// ============================================
-// THEME CONFIGURATION
-// ============================================
-const theme = {
-  colors: {
-    primary: '#059669',
-    primaryLight: '#10B981',
-    primaryDark: '#047857',
-    primaryGlow: 'rgba(5, 150, 105, 0.4)',
-    secondary: '#064E3B',
-    accent: '#34D399',
-    white: '#FFFFFF',
-    offWhite: '#F0FDF4',
-    background: '#ECFDF5',
-    backgroundAlt: '#D1FAE5',
-    text: '#1F2937',
-    textLight: '#6B7280',
-    textMuted: '#9CA3AF',
-    border: '#E5E7EB',
-    success: '#10B981',
-    error: '#EF4444',
-    warning: '#F59E0B',
-  },
-  gradients: {
-    primary: 'linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%)',
-    primaryReverse: 'linear-gradient(135deg, #34D399 0%, #10B981 50%, #059669 100%)',
-    hero: 'linear-gradient(135deg, #064E3B 0%, #059669 50%, #10B981 100%)',
-    soft: 'linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 50%, #D1FAE5 100%)',
-    glass: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%)',
-    glow: 'radial-gradient(circle, rgba(5, 150, 105, 0.15) 0%, transparent 70%)',
-  },
-  shadows: {
-    sm: '0 2px 8px rgba(0, 0, 0, 0.05)',
-    md: '0 4px 20px rgba(0, 0, 0, 0.08)',
-    lg: '0 10px 40px rgba(0, 0, 0, 0.1)',
-    xl: '0 25px 80px rgba(0, 0, 0, 0.12)',
-    glow: '0 0 40px rgba(5, 150, 105, 0.3)',
-    glowLg: '0 0 60px rgba(5, 150, 105, 0.4)',
-  },
-  borderRadius: {
-    sm: '8px',
-    md: '12px',
-    lg: '16px',
-    xl: '24px',
-    '2xl': '32px',
-    full: '9999px',
-  },
+/* ══════════════════════════════
+   VALIDATION
+   ══════════════════════════════ */
+const rules = {
+  name: { required: true, minLength: 2, pattern: /^[a-zA-Z\s'-]+$/, msg: { required: 'Full name is required', minLength: 'At least 2 characters', pattern: 'Enter a valid name' } },
+  email: { required: true, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, msg: { required: 'Email is required', pattern: 'Enter a valid email' } },
+  phone: { pattern: /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/, msg: { pattern: 'Enter a valid phone number' } },
+  subject: { required: true, minLength: 5, msg: { required: 'Subject is required', minLength: 'At least 5 characters' } },
+  message: { required: true, minLength: 20, msg: { required: 'Message is required', minLength: 'At least 20 characters' } },
+};
+const validate = (n, v) => {
+  const r = rules[n]; if (!r) return '';
+  if (r.required && !v?.trim()) return r.msg.required;
+  if (v && r.minLength && v.length < r.minLength) return r.msg.minLength;
+  if (v && r.pattern && !r.pattern.test(v)) return r.msg.pattern;
+  return '';
 };
 
-// ============================================
-// ANIMATION VARIANTS
-// ============================================
-const animations = {
-  fadeInUp: {
-    hidden: { opacity: 0, y: 40 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
-    }
-  },
-  fadeInDown: {
-    hidden: { opacity: 0, y: -40 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
-    }
-  },
-  fadeInLeft: {
-    hidden: { opacity: 0, x: -60 },
-    visible: { 
-      opacity: 1, 
-      x: 0,
-      transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] }
-    }
-  },
-  fadeInRight: {
-    hidden: { opacity: 0, x: 60 },
-    visible: { 
-      opacity: 1, 
-      x: 0,
-      transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] }
-    }
-  },
-  scaleIn: {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] }
-    }
-  },
-  staggerContainer: {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1, delayChildren: 0.2 }
-    }
-  },
-  staggerItem: {
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] }
-    }
-  },
-  float: {
-    animate: {
-      y: [0, -10, 0],
-      transition: { duration: 3, repeat: Infinity, ease: "easeInOut" }
-    }
-  },
-  pulse: {
-    animate: {
-      scale: [1, 1.05, 1],
-      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-    }
-  },
-  glow: {
-    animate: {
-      boxShadow: [
-        '0 0 20px rgba(5, 150, 105, 0.2)',
-        '0 0 40px rgba(5, 150, 105, 0.4)',
-        '0 0 20px rgba(5, 150, 105, 0.2)',
-      ],
-      transition: { duration: 2, repeat: Infinity, ease: "easeInOut" }
-    }
-  }
-};
-
-// ============================================
-// VALIDATION RULES
-// ============================================
-const validationRules = {
-  name: {
-    required: true,
-    minLength: 2,
-    maxLength: 50,
-    pattern: /^[a-zA-Z\s'-]+$/,
-    messages: {
-      required: 'Please enter your full name',
-      minLength: 'Name must be at least 2 characters',
-      maxLength: 'Name must be less than 50 characters',
-      pattern: 'Please enter a valid name',
-    },
-  },
-  email: {
-    required: true,
-    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-    messages: {
-      required: 'Email address is required',
-      pattern: 'Please enter a valid email address',
-    },
-  },
-  phone: {
-    required: false,
-    pattern: /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/,
-    messages: {
-      pattern: 'Please enter a valid phone number',
-    },
-  },
-  subject: {
-    required: true,
-    minLength: 5,
-    maxLength: 100,
-    messages: {
-      required: 'Please enter a subject',
-      minLength: 'Subject must be at least 5 characters',
-      maxLength: 'Subject must be less than 100 characters',
-    },
-  },
-  message: {
-    required: true,
-    minLength: 20,
-    maxLength: 2000,
-    messages: {
-      required: 'Please enter your message',
-      minLength: 'Please provide more details (at least 20 characters)',
-      maxLength: 'Message must be less than 2000 characters',
-    },
-  },
-};
-
-// ============================================
-// FLOATING DECORATIONS COMPONENT
-// ============================================
-const FloatingDecorations = () => (
-  <div style={{
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    overflow: 'hidden',
-    pointerEvents: 'none',
-    zIndex: 0,
-  }}>
-    {/* Large gradient circles */}
-    <motion.div
-      animate={{ 
-        scale: [1, 1.2, 1],
-        rotate: [0, 180, 360],
-      }}
-      transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
-      style={{
-        position: 'absolute',
-        top: '-20%',
-        right: '-10%',
-        width: '600px',
-        height: '600px',
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(5, 150, 105, 0.08) 0%, transparent 70%)',
-      }}
-    />
-    <motion.div
-      animate={{ 
-        scale: [1.2, 1, 1.2],
-        rotate: [360, 180, 0],
-      }}
-      transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-      style={{
-        position: 'absolute',
-        bottom: '-15%',
-        left: '-10%',
-        width: '500px',
-        height: '500px',
-        borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(16, 185, 129, 0.06) 0%, transparent 70%)',
-      }}
-    />
-    
-    {/* Floating shapes */}
-    {[...Array(6)].map((_, i) => (
-      <motion.div
-        key={i}
-        animate={{
-          y: [0, -30, 0],
-          x: [0, Math.sin(i) * 20, 0],
-          rotate: [0, 360],
-        }}
-        transition={{
-          duration: 8 + i * 2,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: i * 0.5,
-        }}
-        style={{
-          position: 'absolute',
-          top: `${15 + i * 15}%`,
-          left: `${5 + i * 15}%`,
-          width: `${20 + i * 8}px`,
-          height: `${20 + i * 8}px`,
-          borderRadius: i % 2 === 0 ? '50%' : '30%',
-          background: i % 3 === 0 
-            ? 'rgba(5, 150, 105, 0.1)' 
-            : i % 3 === 1 
-              ? 'rgba(16, 185, 129, 0.08)'
-              : 'rgba(52, 211, 153, 0.06)',
-          border: '1px solid rgba(5, 150, 105, 0.1)',
-        }}
-      />
-    ))}
-    
-    {/* Grid pattern overlay */}
-    <div style={{
-      position: 'absolute',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundImage: `
-        linear-gradient(rgba(5, 150, 105, 0.03) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(5, 150, 105, 0.03) 1px, transparent 1px)
-      `,
-      backgroundSize: '60px 60px',
-    }}/>
-  </div>
-);
-
-// ============================================
-// ANIMATED INPUT COMPONENT
-// ============================================
-const AnimatedInput = ({ 
-  label, 
-  name, 
-  type = 'text', 
-  value, 
-  onChange, 
-  onBlur,
-  placeholder, 
-  required, 
-  error, 
-  touched,
-  icon: Icon,
-  disabled,
-}) => {
-  const [isFocused, setIsFocused] = useState(false);
-  const hasError = touched && error;
-  const isValid = touched && !error && value;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      style={{ marginBottom: '20px' }}
-    >
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        fontSize: '14px',
-        fontWeight: '600',
-        marginBottom: '10px',
-        color: hasError ? theme.colors.error : isFocused ? theme.colors.primary : theme.colors.text,
-        transition: 'color 0.3s ease',
-      }}>
-        {Icon && <Icon size={14} style={{ marginRight: '8px', opacity: 0.7 }} />}
-        {label}
-        {required && <span style={{ color: theme.colors.error, marginLeft: '4px' }}>*</span>}
-      </label>
-      
-      <div style={{ position: 'relative' }}>
-        <motion.input
-          type={type}
-          name={name}
-          value={value}
-          onChange={onChange}
-          onFocus={() => setIsFocused(true)}
-          onBlur={(e) => { setIsFocused(false); onBlur?.(e); }}
-          placeholder={placeholder}
-          disabled={disabled}
-          whileFocus={{ scale: 1.01 }}
-          style={{
-            width: '100%',
-            padding: '16px 48px 16px 20px',
-            fontSize: '15px',
-            fontFamily: "'Inter', sans-serif",
-            border: `2px solid ${hasError ? theme.colors.error : isFocused ? theme.colors.primary : isValid ? theme.colors.success : theme.colors.border}`,
-            borderRadius: theme.borderRadius.lg,
-            outline: 'none',
-            backgroundColor: isFocused ? theme.colors.white : theme.colors.offWhite,
-            boxShadow: isFocused 
-              ? `0 0 0 4px ${hasError ? 'rgba(239, 68, 68, 0.1)' : 'rgba(5, 150, 105, 0.1)'}`
-              : 'none',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxSizing: 'border-box',
-          }}
-        />
-        
-        {/* Animated border effect */}
-        <motion.div
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: isFocused ? 1 : 0 }}
-          style={{
-            position: 'absolute',
-            bottom: 0,
-            left: '5%',
-            width: '90%',
-            height: '3px',
-            background: theme.gradients.primary,
-            borderRadius: '0 0 16px 16px',
-            transformOrigin: 'center',
-          }}
-        />
-        
-        {/* Status icons */}
-        <AnimatePresence>
-          {hasError && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0 }}
-              style={{
-                position: 'absolute',
-                right: '16px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-              }}
-            >
-              <FiAlertCircle size={20} color={theme.colors.error} />
-            </motion.div>
-          )}
-          {isValid && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0 }}
-              style={{
-                position: 'absolute',
-                right: '16px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-              }}
-            >
-              <FiCheckCircle size={20} color={theme.colors.success} />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-      
-      {/* Error message */}
-      <AnimatePresence>
-        {hasError && (
-          <motion.p
-            initial={{ opacity: 0, height: 0, marginTop: 0 }}
-            animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
-            exit={{ opacity: 0, height: 0, marginTop: 0 }}
-            style={{
-              fontSize: '13px',
-              color: theme.colors.error,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
-          >
-            <FiAlertCircle size={14} />
-            {error}
-          </motion.p>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-};
-
-// ============================================
-// ANIMATED SELECT COMPONENT
-// ============================================
-const AnimatedSelect = ({ 
-  label, 
-  name, 
-  value, 
-  onChange, 
-  onBlur,
-  options, 
-  placeholder,
-  icon: Icon,
-}) => {
-  const [isFocused, setIsFocused] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      style={{ marginBottom: '20px' }}
-    >
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        fontSize: '14px',
-        fontWeight: '600',
-        marginBottom: '10px',
-        color: isFocused ? theme.colors.primary : theme.colors.text,
-        transition: 'color 0.3s ease',
-      }}>
-        {Icon && <Icon size={14} style={{ marginRight: '8px', opacity: 0.7 }} />}
-        {label}
-      </label>
-      
-      <div style={{ position: 'relative' }}>
-        <select
-          name={name}
-          value={value}
-          onChange={onChange}
-          onFocus={() => { setIsFocused(true); setIsOpen(true); }}
-          onBlur={(e) => { setIsFocused(false); setIsOpen(false); onBlur?.(e); }}
-          style={{
-            width: '100%',
-            padding: '16px 48px 16px 20px',
-            fontSize: '15px',
-            fontFamily: "'Inter', sans-serif",
-            border: `2px solid ${isFocused ? theme.colors.primary : theme.colors.border}`,
-            borderRadius: theme.borderRadius.lg,
-            outline: 'none',
-            backgroundColor: isFocused ? theme.colors.white : theme.colors.offWhite,
-            boxShadow: isFocused ? `0 0 0 4px rgba(5, 150, 105, 0.1)` : 'none',
-            cursor: 'pointer',
-            appearance: 'none',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxSizing: 'border-box',
-          }}
-        >
-          <option value="">{placeholder}</option>
-          {options.map((option, index) => (
-            <option key={index} value={option.value || option}>
-              {option.label || option}
-            </option>
-          ))}
-        </select>
-        
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          style={{
-            position: 'absolute',
-            right: '16px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            pointerEvents: 'none',
-            color: isFocused ? theme.colors.primary : theme.colors.textMuted,
-          }}
-        >
-          <FiChevronDown size={20} />
-        </motion.div>
-      </div>
-    </motion.div>
-  );
-};
-
-// ============================================
-// ANIMATED TEXTAREA COMPONENT
-// ============================================
-const AnimatedTextarea = ({ 
-  label, 
-  name, 
-  value, 
-  onChange, 
-  onBlur,
-  placeholder, 
-  required, 
-  error, 
-  touched,
-  maxLength,
-}) => {
-  const [isFocused, setIsFocused] = useState(false);
-  const hasError = touched && error;
-  const isValid = touched && !error && value;
-  const charCount = value?.length || 0;
-  const charPercentage = (charCount / maxLength) * 100;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      style={{ marginBottom: '20px' }}
-    >
-      <label style={{
-        display: 'flex',
-        alignItems: 'center',
-        fontSize: '14px',
-        fontWeight: '600',
-        marginBottom: '10px',
-        color: hasError ? theme.colors.error : isFocused ? theme.colors.primary : theme.colors.text,
-        transition: 'color 0.3s ease',
-      }}>
-        <FiMessageSquare size={14} style={{ marginRight: '8px', opacity: 0.7 }} />
-        {label}
-        {required && <span style={{ color: theme.colors.error, marginLeft: '4px' }}>*</span>}
-      </label>
-      
-      <div style={{ position: 'relative' }}>
-        <textarea
-          name={name}
-          value={value}
-          onChange={onChange}
-          onFocus={() => setIsFocused(true)}
-          onBlur={(e) => { setIsFocused(false); onBlur?.(e); }}
-          placeholder={placeholder}
-          maxLength={maxLength}
-          style={{
-            width: '100%',
-            padding: '16px 20px',
-            paddingBottom: '45px',
-            fontSize: '15px',
-            fontFamily: "'Inter', sans-serif",
-            border: `2px solid ${hasError ? theme.colors.error : isFocused ? theme.colors.primary : isValid ? theme.colors.success : theme.colors.border}`,
-            borderRadius: theme.borderRadius.lg,
-            outline: 'none',
-            backgroundColor: isFocused ? theme.colors.white : theme.colors.offWhite,
-            boxShadow: isFocused 
-              ? `0 0 0 4px ${hasError ? 'rgba(239, 68, 68, 0.1)' : 'rgba(5, 150, 105, 0.1)'}`
-              : 'none',
-            resize: 'vertical',
-            minHeight: '160px',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxSizing: 'border-box',
-          }}
-        />
-        
-        {/* Character counter with progress bar */}
-        <div style={{
-          position: 'absolute',
-          bottom: '12px',
-          left: '16px',
-          right: '16px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '12px',
-        }}>
-          <div style={{
-            flex: 1,
-            height: '4px',
-            backgroundColor: theme.colors.border,
-            borderRadius: '2px',
-            overflow: 'hidden',
-          }}>
-            <motion.div
-              animate={{ width: `${charPercentage}%` }}
-              style={{
-                height: '100%',
-                background: charPercentage > 90 
-                  ? theme.colors.error 
-                  : charPercentage > 70 
-                    ? theme.colors.warning 
-                    : theme.gradients.primary,
-                borderRadius: '2px',
-              }}
-            />
-          </div>
-          <span style={{
-            fontSize: '12px',
-            fontWeight: '500',
-            color: charPercentage > 90 ? theme.colors.error : theme.colors.textMuted,
-          }}>
-            {charCount}/{maxLength}
-          </span>
-        </div>
-      </div>
-      
-      <AnimatePresence>
-        {hasError && (
-          <motion.p
-            initial={{ opacity: 0, height: 0, marginTop: 0 }}
-            animate={{ opacity: 1, height: 'auto', marginTop: 8 }}
-            exit={{ opacity: 0, height: 0, marginTop: 0 }}
-            style={{
-              fontSize: '13px',
-              color: theme.colors.error,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}
-          >
-            <FiAlertCircle size={14} />
-            {error}
-          </motion.p>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-};
-
-// ============================================
-// CONTACT INFO CARD COMPONENT
-// ============================================
-const ContactInfoCard = ({ icon: Icon, title, lines, color, index, onClick }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <motion.div
-      variants={animations.staggerItem}
-      whileHover={{ x: 8, scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      onClick={onClick}
-      style={{
-        display: 'flex',
-        gap: '20px',
-        padding: '24px',
-        backgroundColor: theme.colors.white,
-        borderRadius: theme.borderRadius.xl,
-        boxShadow: isHovered ? `0 20px 40px ${color}25` : theme.shadows.md,
-        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-        cursor: onClick ? 'pointer' : 'default',
-        border: `2px solid ${isHovered ? color : 'transparent'}`,
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      {/* Background glow effect */}
-      <motion.div
-        animate={{ opacity: isHovered ? 1 : 0 }}
-        style={{
-          position: 'absolute',
-          top: '50%',
-          left: '0',
-          width: '150px',
-          height: '150px',
-          background: `radial-gradient(circle, ${color}15 0%, transparent 70%)`,
-          transform: 'translate(-50%, -50%)',
-          pointerEvents: 'none',
-        }}
-      />
-      
-      <motion.div
-        whileHover={{ rotate: [0, -10, 10, 0] }}
-        style={{
-          width: '60px',
-          height: '60px',
-          borderRadius: theme.borderRadius.lg,
-          background: `linear-gradient(135deg, ${color} 0%, ${color}CC 100%)`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: theme.colors.white,
-          flexShrink: 0,
-          boxShadow: `0 8px 24px ${color}40`,
-          position: 'relative',
-        }}
-      >
-        <Icon size={26} />
-      </motion.div>
-      
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        <h4 style={{
-          fontSize: '18px',
-          fontWeight: '700',
-          color: theme.colors.text,
-          marginBottom: '8px',
-        }}>
-          {title}
-        </h4>
-        {lines.map((line, i) => (
-          <p key={i} style={{
-            fontSize: '14px',
-            color: theme.colors.textLight,
-            marginBottom: '4px',
-            lineHeight: '1.5',
-          }}>
-            {line}
-          </p>
-        ))}
-      </div>
-      
-      {onClick && (
-        <motion.div
-          animate={{ x: isHovered ? 0 : -10, opacity: isHovered ? 1 : 0 }}
-          style={{
-            position: 'absolute',
-            right: '20px',
-            top: '50%',
-            transform: 'translateY(-50%)',
-            color: color,
-          }}
-        >
-          <FiChevronRight size={24} />
-        </motion.div>
-      )}
-    </motion.div>
-  );
-};
-
-// ============================================
-// SOCIAL LINK COMPONENT
-// ============================================
-const SocialLink = ({ icon: Icon, color, name, url, index }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <motion.a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      title={name}
-      variants={animations.staggerItem}
-      whileHover={{ y: -5, scale: 1.1 }}
-      whileTap={{ scale: 0.9 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      style={{
-        width: '50px',
-        height: '50px',
-        borderRadius: theme.borderRadius.lg,
-        backgroundColor: isHovered ? color : theme.colors.offWhite,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: isHovered ? theme.colors.white : color,
-        fontSize: '20px',
-        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-        boxShadow: isHovered ? `0 10px 30px ${color}40` : 'none',
-        textDecoration: 'none',
-      }}
-    >
-      <Icon />
-    </motion.a>
-  );
-};
-
-// ============================================
-// STAT CARD COMPONENT
-// ============================================
-const StatCard = ({ number, label, icon: Icon, index }) => {
-  const [isHovered, setIsHovered] = useState(false);
+/* ══════════════════════════════
+   SCROLL SECTION WRAPPER
+   ══════════════════════════════ */
+const ScrollReveal = ({ children, delay = 0, direction = 'up', className = '', style = {} }) => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-
+  const inView = useInView(ref, { once: true, margin: '-60px' });
+  const dirs = { up: { y: 40 }, down: { y: -40 }, left: { x: -50 }, right: { x: 50 } };
   return (
     <motion.div
       ref={ref}
-      variants={animations.staggerItem}
-      whileHover={{ y: -5, scale: 1.03 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      style={{
-        backgroundColor: theme.colors.white,
-        padding: '24px 20px',
-        borderRadius: theme.borderRadius.xl,
-        textAlign: 'center',
-        boxShadow: isHovered ? theme.shadows.lg : theme.shadows.sm,
-        transition: 'all 0.3s ease',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
+      className={className}
+      style={style}
+      initial={{ opacity: 0, ...dirs[direction] }}
+      animate={inView ? { opacity: 1, x: 0, y: 0 } : {}}
+      transition={{ duration: 0.7, delay, ease: [0.21, 0.68, 0.35, 0.98] }}
     >
-      <motion.div
-        animate={{ opacity: isHovered ? 1 : 0 }}
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '4px',
-          background: theme.gradients.primary,
-        }}
-      />
-      
-      {Icon && (
-        <motion.div
-          animate={{ scale: isHovered ? 1.1 : 1 }}
-          style={{
-            width: '40px',
-            height: '40px',
-            borderRadius: theme.borderRadius.md,
-            background: theme.colors.offWhite,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            margin: '0 auto 12px',
-            color: theme.colors.primary,
-          }}
-        >
-          <Icon size={20} />
-        </motion.div>
-      )}
-      
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={isInView ? { scale: 1 } : { scale: 0 }}
-        transition={{ delay: index * 0.1, type: "spring", stiffness: 200 }}
-        style={{
-          fontSize: '32px',
-          fontWeight: '800',
-          background: theme.gradients.primary,
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-          marginBottom: '4px',
-        }}
-      >
-        {number}
-      </motion.div>
-      <div style={{
-        fontSize: '13px',
-        color: theme.colors.textLight,
-        fontWeight: '500',
-      }}>
-        {label}
-      </div>
+      {children}
     </motion.div>
   );
 };
 
-// ============================================
-// FAQ ITEM COMPONENT
-// ============================================
-const FAQItem = ({ question, answer, index, isOpen, onClick }) => {
+/* ══════════════════════════════
+   FIELD COMPONENTS
+   ══════════════════════════════ */
+const FieldInput = ({ name, label, icon: Icon, type = 'text', placeholder, required, value, onChange, onBlur, error, touched, full }) => {
+  const [focused, setFocused] = useState(false);
+  const hasErr = touched && error;
+  const valid = touched && !error && value;
   return (
-    <motion.div
-      variants={animations.staggerItem}
-      style={{
-        backgroundColor: theme.colors.white,
-        borderRadius: theme.borderRadius.xl,
-        overflow: 'hidden',
-        boxShadow: isOpen ? theme.shadows.lg : theme.shadows.sm,
-        border: `2px solid ${isOpen ? theme.colors.primary : 'transparent'}`,
-        transition: 'all 0.3s ease',
-      }}
-    >
-      <motion.button
-        onClick={onClick}
-        whileHover={{ backgroundColor: theme.colors.offWhite }}
-        style={{
-          width: '100%',
-          padding: '24px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          backgroundColor: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          textAlign: 'left',
-        }}
-      >
-        <span style={{
-          fontSize: '16px',
-          fontWeight: '600',
-          color: theme.colors.text,
-          paddingRight: '20px',
-        }}>
-          {question}
-        </span>
-        <motion.div
-          animate={{ rotate: isOpen ? 180 : 0 }}
-          style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: theme.borderRadius.full,
-            backgroundColor: isOpen ? theme.colors.primary : theme.colors.offWhite,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: isOpen ? theme.colors.white : theme.colors.primary,
-            flexShrink: 0,
-          }}
-        >
-          <FiChevronDown size={20} />
-        </motion.div>
-      </motion.button>
-      
+    <div className={`ct-field ${full ? 'ct-field--full' : ''}`}>
+      <label className="ct-field-label" style={{ color: hasErr ? '#ef4444' : focused ? '#059669' : undefined }}>
+        {Icon && <Icon size={13} style={{ opacity: .6 }} />} {label}
+        {required && <span className="ct-req">*</span>}
+      </label>
+      <div className={`ct-field-wrap ${focused ? 'focused' : ''}`}>
+        <input type={type} name={name} value={value} placeholder={placeholder}
+          onChange={onChange}
+          onFocus={() => setFocused(true)}
+          onBlur={e => { setFocused(false); onBlur?.(e); }}
+          className={`ct-input ${hasErr ? 'err' : valid ? 'ok' : ''}`}
+        />
+        <div className="ct-underline" />
+        {hasErr && <span className="ct-status"><FiAlertCircle size={17} color="#ef4444" /></span>}
+        {valid && <span className="ct-status"><FiCheckCircle size={17} color="#059669" /></span>}
+      </div>
       <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div style={{
-              padding: '0 24px 24px',
-              fontSize: '15px',
-              color: theme.colors.textLight,
-              lineHeight: '1.7',
-            }}>
-              {answer}
-            </div>
+        {hasErr && (
+          <motion.div className="ct-field-err" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
+            <FiAlertCircle size={12} /> {error}
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 };
 
-// ============================================
-// SUCCESS ANIMATION COMPONENT
-// ============================================
-const SuccessAnimation = ({ email, onReset }) => {
-  const [showConfetti, setShowConfetti] = useState(true);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setShowConfetti(false), 3000);
-    return () => clearTimeout(timer);
-  }, []);
-
+const FieldSelect = ({ name, label, icon: Icon, placeholder, options, value, onChange, onBlur, full }) => {
+  const [focused, setFocused] = useState(false);
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      style={{
-        textAlign: 'center',
-        padding: '60px 40px',
-        position: 'relative',
-      }}
-    >
-      {/* Confetti effect */}
-      <AnimatePresence>
-        {showConfetti && [...Array(20)].map((_, i) => (
-          <motion.div
-            key={i}
-            initial={{ 
-              opacity: 1, 
-              y: 0, 
-              x: 0,
-              scale: 1,
-            }}
-            animate={{ 
-              opacity: 0, 
-              y: -200 - Math.random() * 200,
-              x: (Math.random() - 0.5) * 400,
-              rotate: Math.random() * 720,
-              scale: 0,
-            }}
-            transition={{ 
-              duration: 2 + Math.random(),
-              ease: "easeOut",
-              delay: Math.random() * 0.5,
-            }}
-            style={{
-              position: 'absolute',
-              top: '50%',
-              left: '50%',
-              width: `${8 + Math.random() * 8}px`,
-              height: `${8 + Math.random() * 8}px`,
-              borderRadius: Math.random() > 0.5 ? '50%' : '2px',
-              backgroundColor: [
-                theme.colors.primary,
-                theme.colors.primaryLight,
-                theme.colors.accent,
-                '#FFD700',
-                '#FF69B4',
-              ][Math.floor(Math.random() * 5)],
-            }}
-          />
-        ))}
-      </AnimatePresence>
-      
-      {/* Success icon */}
-      <motion.div
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 200, delay: 0.2 }}
-        style={{
-          width: '120px',
-          height: '120px',
-          borderRadius: '50%',
-          background: theme.gradients.primary,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto 32px',
-          boxShadow: theme.shadows.glowLg,
-        }}
-      >
-        <motion.div
-          initial={{ scale: 0, rotate: -180 }}
-          animate={{ scale: 1, rotate: 0 }}
-          transition={{ delay: 0.5, type: "spring" }}
+    <div className={`ct-field ${full ? 'ct-field--full' : ''}`}>
+      <label className="ct-field-label" style={{ color: focused ? '#059669' : undefined }}>
+        {Icon && <Icon size={13} style={{ opacity: .6 }} />} {label}
+      </label>
+      <div className={`ct-field-wrap ${focused ? 'focused' : ''}`}>
+        <select name={name} value={value} onChange={onChange}
+          onFocus={() => setFocused(true)}
+          onBlur={e => { setFocused(false); onBlur?.(e); }}
+          className="ct-select"
         >
-          <FiCheckCircle size={56} color={theme.colors.white} />
-        </motion.div>
-      </motion.div>
-      
-      <motion.h3
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-        style={{
-          fontFamily: "'Playfair Display', serif",
-          fontSize: '36px',
-          fontWeight: '700',
-          color: theme.colors.text,
-          marginBottom: '16px',
-        }}
-      >
-        Message Sent! 🎉
-      </motion.h3>
-      
-      <motion.p
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        style={{
-          fontSize: '16px',
-          color: theme.colors.textLight,
-          marginBottom: '32px',
-          lineHeight: '1.7',
-          maxWidth: '400px',
-          margin: '0 auto 32px',
-        }}
-      >
-        Thank you for reaching out! Our travel experts will review your inquiry 
-        and get back to you within 24 hours.
-      </motion.p>
-      
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        style={{
-          backgroundColor: theme.colors.offWhite,
-          padding: '20px 28px',
-          borderRadius: theme.borderRadius.xl,
-          marginBottom: '32px',
-          display: 'inline-block',
-        }}
-      >
-        <p style={{ fontSize: '14px', color: theme.colors.textLight, marginBottom: '6px' }}>
-          📧 Confirmation sent to:
-        </p>
-        <p style={{ fontSize: '18px', fontWeight: '600', color: theme.colors.primary }}>
-          {email}
-        </p>
-      </motion.div>
-      
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7 }}
-        style={{
-          display: 'flex',
-          gap: '16px',
-          justifyContent: 'center',
-          flexWrap: 'wrap',
-        }}
-      >
-        <motion.button
-          whileHover={{ scale: 1.05, y: -2 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={onReset}
-          style={{
-            padding: '16px 32px',
-            background: theme.gradients.primary,
-            color: theme.colors.white,
-            border: 'none',
-            borderRadius: theme.borderRadius.lg,
-            fontSize: '15px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            boxShadow: theme.shadows.glow,
-          }}
-        >
-          <FiSend size={18} />
-          Send Another Message
-        </motion.button>
-        
-        <motion.a
-          href="/"
-          whileHover={{ scale: 1.05, y: -2 }}
-          whileTap={{ scale: 0.95 }}
-          style={{
-            padding: '16px 32px',
-            backgroundColor: theme.colors.white,
-            color: theme.colors.primary,
-            border: `2px solid ${theme.colors.primary}`,
-            borderRadius: theme.borderRadius.lg,
-            fontSize: '15px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
-            textDecoration: 'none',
-          }}
-        >
-          <FiArrowRight size={18} />
-          Explore Safaris
-        </motion.a>
-      </motion.div>
-    </motion.div>
+          <option value="">{placeholder}</option>
+          {options.map((o, i) => <option key={i} value={typeof o === 'string' ? o : o.value}>{typeof o === 'string' ? o : o.label}</option>)}
+        </select>
+        <div className="ct-underline" />
+        <span className="ct-sel-arrow" style={{ color: focused ? '#059669' : '#94a3b8' }}>
+          <FiChevronDown size={18} />
+        </span>
+      </div>
+    </div>
   );
 };
 
-// ============================================
-// LIVE CHAT WIDGET COMPONENT
-// ============================================
-const LiveChatWidget = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isMinimized, setIsMinimized] = useState(false);
-
+const FieldTextarea = ({ name, label, placeholder, required, maxLength = 2000, value, onChange, onBlur, error, touched, full }) => {
+  const [focused, setFocused] = useState(false);
+  const hasErr = touched && error;
+  const valid = touched && !error && value;
+  const ct = value?.length || 0;
+  const pct = (ct / maxLength) * 100;
   return (
-    <>
-      {/* Chat button */}
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        onClick={() => setIsOpen(true)}
-        style={{
-          position: 'fixed',
-          bottom: '30px',
-          right: '30px',
-          width: '64px',
-          height: '64px',
-          borderRadius: '50%',
-          background: theme.gradients.primary,
-          border: 'none',
-          cursor: 'pointer',
-          display: isOpen ? 'none' : 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          boxShadow: theme.shadows.glowLg,
-          zIndex: 1000,
-        }}
-      >
-        <FiMessageCircle size={28} color={theme.colors.white} />
-        
-        {/* Pulse ring */}
-        <motion.div
-          animate={{
-            scale: [1, 1.5, 1],
-            opacity: [0.5, 0, 0.5],
-          }}
-          transition={{ duration: 2, repeat: Infinity }}
-          style={{
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            borderRadius: '50%',
-            border: `3px solid ${theme.colors.primary}`,
-          }}
+    <div className={`ct-field ${full ? 'ct-field--full' : ''}`}>
+      <label className="ct-field-label" style={{ color: hasErr ? '#ef4444' : focused ? '#059669' : undefined }}>
+        <FiMessageSquare size={13} style={{ opacity: .6 }} /> {label}
+        {required && <span className="ct-req">*</span>}
+      </label>
+      <div className={`ct-field-wrap ${focused ? 'focused' : ''}`}>
+        <textarea name={name} value={value} placeholder={placeholder} maxLength={maxLength}
+          onChange={onChange}
+          onFocus={() => setFocused(true)}
+          onBlur={e => { setFocused(false); onBlur?.(e); }}
+          className={`ct-textarea ${hasErr ? 'err' : valid ? 'ok' : ''}`}
         />
-      </motion.button>
-      
-      {/* Chat window */}
+        <div className="ct-underline" />
+        <div className="ct-char">
+          <div className="ct-char-track"><div className="ct-char-fill" style={{ width: `${pct}%`, background: pct > 90 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#059669' }} /></div>
+          <span className="ct-char-num" style={{ color: pct > 90 ? '#ef4444' : '#94a3b8' }}>{ct}/{maxLength}</span>
+        </div>
+      </div>
       <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: 100, scale: 0.9 }}
-            animate={{ 
-              opacity: 1, 
-              y: 0, 
-              scale: 1,
-              height: isMinimized ? 'auto' : '500px',
-            }}
-            exit={{ opacity: 0, y: 100, scale: 0.9 }}
-            style={{
-              position: 'fixed',
-              bottom: '30px',
-              right: '30px',
-              width: '380px',
-              maxWidth: 'calc(100vw - 60px)',
-              backgroundColor: theme.colors.white,
-              borderRadius: theme.borderRadius['2xl'],
-              boxShadow: theme.shadows.xl,
-              overflow: 'hidden',
-              zIndex: 1001,
-              display: 'flex',
-              flexDirection: 'column',
-            }}
+        {hasErr && (
+          <motion.div className="ct-field-err" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
+            <FiAlertCircle size={12} /> {error}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+/* ══════════════════════════════
+   STEP ANIMATION VARIANTS
+   ══════════════════════════════ */
+const stepVariants = [
+  // Step 1: slide from right + fade
+  { initial: { opacity: 0, x: 60 }, animate: { opacity: 1, x: 0 }, exit: { opacity: 0, x: -60 } },
+  // Step 2: scale up + fade
+  { initial: { opacity: 0, scale: 0.88, y: 30 }, animate: { opacity: 1, scale: 1, y: 0 }, exit: { opacity: 0, scale: 0.88, y: -30 } },
+  // Step 3: slide from bottom + rotate subtle
+  { initial: { opacity: 0, y: 50, rotateX: 8 }, animate: { opacity: 1, y: 0, rotateX: 0 }, exit: { opacity: 0, y: -40, rotateX: -6 } },
+];
+
+/* ══════════════════════════════
+   MAIN CONTACT COMPONENT
+   ══════════════════════════════ */
+const Contact = () => {
+  const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '', tripType: '', travelDate: '', travelers: '' });
+  const [touched, setTouched] = useState({});
+  const [errors, setErrors] = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [step, setStep] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const [openFaq, setOpenFaq] = useState(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMin, setChatMin] = useState(false);
+  const faqRefs = useRef({});
+
+  const formRef = useRef(null);
+  const faqRef = useRef(null);
+  const faqInView = useInView(faqRef, { once: true, margin: '-60px' });
+
+  const handleChange = e => {
+    const { name, value } = e.target;
+    setForm(p => ({ ...p, [name]: value }));
+    if (touched[name]) setErrors(p => ({ ...p, [name]: validate(name, value) }));
+  };
+  const handleBlur = e => {
+    const { name, value } = e.target;
+    setTouched(p => ({ ...p, [name]: true }));
+    setErrors(p => ({ ...p, [name]: validate(name, value) }));
+  };
+
+  // Step validation
+  const stepFields = [
+    ['name', 'email', 'phone'],
+    ['tripType', 'travelDate', 'travelers'],
+    ['subject', 'message'],
+  ];
+  const validateStep = (s) => {
+    const errs = {};
+    stepFields[s].forEach(f => {
+      const err = validate(f, form[f]);
+      if (err) errs[f] = err;
+    });
+    setErrors(p => ({ ...p, ...errs }));
+    const t = {};
+    stepFields[s].forEach(f => t[f] = true);
+    setTouched(p => ({ ...p, ...t }));
+    return Object.keys(errs).length === 0;
+  };
+
+  const nextStep = () => {
+    if (!validateStep(step)) return;
+    setDirection(1);
+    setStep(s => Math.min(s + 1, 2));
+  };
+  const prevStep = () => {
+    setDirection(-1);
+    setStep(s => Math.max(s - 1, 0));
+  };
+
+  const handleSubmit = async e => {
+    e.preventDefault();
+    if (!validateStep(2)) return;
+    setSubmitting(true); setProgress(0);
+    const iv = setInterval(() => setProgress(p => p >= 90 ? 90 : p + 10), 120);
+    await new Promise(r => setTimeout(r, 2200));
+    clearInterval(iv); setProgress(100);
+    setTimeout(() => { setSubmitting(false); setSubmitted(true); }, 400);
+  };
+
+  const resetForm = () => {
+    setSubmitted(false); setStep(0); setDirection(1); setProgress(0);
+    setForm({ name: '', email: '', phone: '', subject: '', message: '', tripType: '', travelDate: '', travelers: '' });
+    setTouched({}); setErrors({});
+  };
+
+  const contactCards = [
+    { icon: FiMapPin, title: 'Visit Our Office', lines: ['Altuvera House, Safari Way', 'Westlands, Nairobi, Kenya'] },
+    { icon: FiPhone, title: 'Call Us', lines: ['+254 700 123 456', '+254 733 987 654'] },
+    { icon: FiMail, title: 'Email Us', lines: ['hello@altuvera.com', 'bookings@altuvera.com'] },
+    { icon: FiClock, title: 'Working Hours', lines: ['Mon – Fri: 8 AM – 6 PM EAT', 'Sat: 9 AM – 2 PM EAT'] },
+  ];
+
+  const tripTypes = ['🦁 Safari Adventure', '⛰️ Mountain Trekking', '🦍 Gorilla Trekking', '🏖️ Beach Holiday', '🎭 Cultural Tour', '📷 Photography Safari', '💕 Honeymoon', '👨‍👩‍👧‍👦 Family Trip'];
+  const travelerOpts = ['1 — Solo', '2 — Couple / Duo', '3–4 — Small Group', '5–8 — Group', '9+ — Large Group'];
+
+  const socials = [
+    { icon: FaFacebookF, label: 'Facebook', url: '#' },
+    { icon: FaInstagram, label: 'Instagram', url: '#' },
+    { icon: FaTwitter, label: 'Twitter', url: '#' },
+    { icon: FaYoutube, label: 'YouTube', url: '#' },
+    { icon: FaWhatsapp, label: 'WhatsApp', url: '#' },
+    { icon: FaTiktok, label: 'TikTok', url: '#' },
+  ];
+
+  const faqs = [
+    { q: 'How far in advance should I book my safari?', a: 'We recommend 3–6 months ahead, especially for peak season (June–October, December–February). This ensures the best lodge availability and gorilla permits.' },
+    { q: 'What is included in your safari packages?', a: 'Accommodation, all meals, game drives, park fees, airport transfers, and a professional guide. International flights are usually excluded.' },
+    { q: 'Is it safe to go on safari in East Africa?', a: 'Absolutely. East Africa has a strong tourism safety record. Our experienced guides and vetted partners ensure your wellbeing throughout.' },
+    { q: 'Can you build a fully custom itinerary?', a: "Yes — that's our specialty. Share your interests, dates, and budget and we'll craft a bespoke journey for you." },
+  ];
+
+  const quickChannels = [
+    { icon: FaWhatsapp, title: 'WhatsApp', sub: 'Chat instantly', detail: '+254 700 123 456', href: 'https://wa.me/254700123456' },
+    { icon: FiPhone, title: 'Call Us', sub: 'Speak with an expert', detail: '+254 700 123 456', href: 'tel:+254700123456' },
+    { icon: FiMail, title: 'Email', sub: 'Get detailed info', detail: 'hello@altuvera.com', href: 'mailto:hello@altuvera.com' },
+  ];
+
+  const stepLabels = ['Personal Info', 'Trip Details', 'Your Message'];
+  const stepIcons = [FiUser, FiGlobe, FiMessageSquare];
+
+  return (
+    <div className="ct">
+      <style>{`
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+.ct{font-family:'Inter',sans-serif;color:#1e293b;background:#fff;-webkit-font-smoothing:antialiased}
+
+/* ═══ HERO ═══ */
+.ct-hero{position:relative;min-height:72vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.ct-hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;will-change:transform}
+.ct-hero-overlay{position:absolute;inset:0;background:linear-gradient(170deg,rgba(4,78,59,.82) 0%,rgba(5,150,105,.68) 50%,rgba(16,185,129,.55) 100%)}
+.ct-hero-inner{position:relative;z-index:2;text-align:center;padding:0 24px;max-width:800px}
+.ct-hero-badge{display:inline-flex;align-items:center;gap:8px;padding:9px 22px;background:rgba(255,255,255,.1);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.15);border-radius:50px;font-size:13px;font-weight:600;color:#d1fae5;margin-bottom:26px}
+.ct-hero-title{font-family:'Playfair Display',serif;font-size:clamp(34px,7vw,66px);font-weight:800;color:#fff;line-height:1.08;margin-bottom:22px;letter-spacing:-.5px}
+.ct-hero-title em{font-style:normal;background:linear-gradient(90deg,#6ee7b7,#a7f3d0,#d1fae5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ct-hero-desc{font-size:clamp(15px,2vw,18px);color:rgba(255,255,255,.88);line-height:1.7;max-width:540px;margin:0 auto 38px}
+.ct-hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.ct-btn{display:inline-flex;align-items:center;gap:10px;padding:16px 32px;border-radius:16px;font-family:'Inter',sans-serif;font-size:15px;font-weight:650;text-decoration:none;border:none;cursor:pointer;transition:all .4s cubic-bezier(.4,0,.2,1)}
+.ct-btn--white{background:#fff;color:#059669;box-shadow:0 8px 28px rgba(0,0,0,.16)}
+.ct-btn--white:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(0,0,0,.2)}
+.ct-btn--ghost{background:rgba(255,255,255,.1);backdrop-filter:blur(8px);color:#fff;border:2px solid rgba(255,255,255,.22)}
+.ct-btn--ghost:hover{background:rgba(255,255,255,.18);transform:translateY(-3px)}
+.ct-btn--green{background:linear-gradient(135deg,#059669,#10b981);color:#fff;box-shadow:0 8px 28px rgba(5,150,105,.3)}
+.ct-btn--green:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(5,150,105,.38)}
+.ct-btn--outline{background:#fff;color:#059669;border:2px solid #059669}
+.ct-btn--outline:hover{background:#f0fdf4;transform:translateY(-2px)}
+.ct-hero-scroll{position:absolute;bottom:32px;left:50%;transform:translateX(-50%);z-index:2}
+.ct-scroll-pill{width:28px;height:44px;border:2px solid rgba(255,255,255,.25);border-radius:14px;display:flex;justify-content:center;padding-top:9px}
+.ct-scroll-dot{width:4px;height:9px;background:#fff;border-radius:2px}
+
+/* ═══ SECTION COMMON ═══ */
+.ct-section{padding:100px 24px;position:relative;overflow:hidden}
+.ct-section--white{background:#fff}
+.ct-section--green-light{background:linear-gradient(180deg,#f0fdf4,#ecfdf5 50%,#f8fffe)}
+.ct-section--green-light::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 12% 25%,rgba(5,150,105,.04) 0%,transparent 50%),radial-gradient(circle at 88% 70%,rgba(16,185,129,.04) 0%,transparent 50%);pointer-events:none}
+.ct-section--dark{background:linear-gradient(135deg,#064e3b 0%,#059669 60%,#10b981 100%);color:#fff}
+.ct-wrap{max-width:1340px;margin:0 auto;position:relative;z-index:1}
+.ct-wrap--sm{max-width:860px}
+.ct-wrap--md{max-width:1100px}
+
+/* Headers */
+.ct-hdr{text-align:center;margin-bottom:64px}
+.ct-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 20px;background:linear-gradient(135deg,rgba(5,150,105,.1),rgba(16,185,129,.06));border:1px solid rgba(5,150,105,.12);border-radius:50px;font-size:13px;font-weight:600;color:#059669;margin-bottom:20px}
+.ct-badge--light{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.18);color:#d1fae5}
+.ct-title{font-family:'Playfair Display',serif;font-size:clamp(28px,5vw,48px);font-weight:800;line-height:1.12;letter-spacing:-.5px;margin-bottom:14px}
+.ct-title--dark{color:#0f172a}
+.ct-title--white{color:#fff}
+.ct-title em{font-style:normal;background:linear-gradient(135deg,#059669,#10b981,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ct-title--white em{background:linear-gradient(90deg,#6ee7b7,#a7f3d0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ct-subtitle{font-size:17px;color:#64748b;max-width:520px;margin:0 auto;line-height:1.7}
+.ct-subtitle--light{color:rgba(255,255,255,.82)}
+
+/* ═══ GRID ═══ */
+.ct-grid{display:grid;grid-template-columns:1fr;gap:40px}
+@media(min-width:1024px){.ct-grid{grid-template-columns:5fr 7fr;gap:48px}}
+
+/* ─── Info Column ─── */
+.ct-info{display:flex;flex-direction:column;gap:16px}
+.ct-info-title{font-family:'Playfair Display',serif;font-size:26px;font-weight:700;color:#0f172a;margin-bottom:6px}
+.ct-info-desc{font-size:15px;color:#64748b;line-height:1.7;margin-bottom:10px}
+.ct-card{display:flex;gap:16px;padding:20px 22px;background:#fff;border-radius:18px;border:1px solid rgba(5,150,105,.06);box-shadow:0 2px 10px rgba(0,0,0,.03);transition:all .4s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden}
+.ct-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#059669,#10b981);border-radius:4px 0 0 4px;opacity:0;transition:opacity .3s}
+.ct-card:hover{transform:translateX(6px);box-shadow:0 8px 28px rgba(5,150,105,.08);border-color:rgba(5,150,105,.12)}
+.ct-card:hover::before{opacity:1}
+.ct-card-icon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#059669,#10b981);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;box-shadow:0 4px 14px rgba(5,150,105,.25);transition:transform .3s}
+.ct-card:hover .ct-card-icon{transform:rotate(-6deg) scale(1.06)}
+.ct-card-title{font-size:15px;font-weight:700;color:#0f172a;margin-bottom:5px}
+.ct-card-line{font-size:13.5px;color:#64748b;line-height:1.5}
+
+.ct-socials{background:#fff;padding:24px;border-radius:18px;box-shadow:0 2px 10px rgba(0,0,0,.03);border:1px solid rgba(5,150,105,.06)}
+.ct-socials-title{font-size:14px;font-weight:700;color:#0f172a;margin-bottom:16px}
+.ct-socials-row{display:flex;flex-wrap:wrap;gap:10px}
+.ct-social{width:44px;height:44px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:17px;text-decoration:none;background:#f0fdf4;color:#059669;border:1px solid rgba(5,150,105,.08);transition:all .3s cubic-bezier(.4,0,.2,1)}
+.ct-social:hover{background:#059669;color:#fff;transform:translateY(-3px);box-shadow:0 8px 20px rgba(5,150,105,.3);border-color:#059669}
+
+/* ─── Form Card ─── */
+.ct-form-card{background:#fff;border-radius:28px;padding:clamp(28px,5vw,48px);box-shadow:0 6px 36px rgba(0,0,0,.05);border:1px solid rgba(5,150,105,.06);position:relative;overflow:hidden}
+.ct-form-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#059669,#10b981,#34d399,#10b981,#059669);background-size:200% 100%;animation:ct-shimmer 4s ease infinite}
+@keyframes ct-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* Step indicator */
+.ct-steps{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:40px;position:relative}
+.ct-step-item{display:flex;align-items:center;gap:0}
+.ct-step-circle{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;border:2px solid #e2e8f0;background:#fff;color:#94a3b8;transition:all .4s cubic-bezier(.4,0,.2,1);position:relative;z-index:2;cursor:pointer}
+.ct-step-circle.active{background:linear-gradient(135deg,#059669,#10b981);border-color:#059669;color:#fff;box-shadow:0 4px 16px rgba(5,150,105,.3)}
+.ct-step-circle.done{background:#059669;border-color:#059669;color:#fff}
+.ct-step-line{width:clamp(32px,6vw,64px);height:3px;background:#e2e8f0;border-radius:2px;transition:background .4s}
+.ct-step-line.filled{background:linear-gradient(90deg,#059669,#10b981)}
+.ct-step-label{position:absolute;top:52px;font-size:11.5px;font-weight:600;color:#94a3b8;white-space:nowrap;transition:color .3s}
+.ct-step-circle.active+.ct-step-label,.ct-step-circle.active~.ct-step-label{color:#059669}
+.ct-step-labels{display:flex;justify-content:space-between;margin-top:8px;padding:0 4px}
+.ct-step-labels span{font-size:12px;font-weight:600;color:#94a3b8;transition:color .3s;text-align:center;flex:1}
+.ct-step-labels span.active{color:#059669}
+.ct-step-labels span.done{color:#059669}
+
+/* Form fields */
+.ct-form-body{position:relative;min-height:280px;perspective:1000px}
+.ct-form-step{width:100%}
+.ct-form-row{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}
+@media(max-width:640px){.ct-form-row{grid-template-columns:1fr}}
+.ct-field{margin-bottom:20px}
+.ct-field--full{grid-column:1/-1}
+.ct-field-label{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:#334155;margin-bottom:8px;transition:color .3s}
+.ct-req{color:#ef4444;margin-left:2px}
+.ct-field-wrap{position:relative}
+.ct-input,.ct-select,.ct-textarea{width:100%;padding:14px 44px 14px 17px;font-family:'Inter',sans-serif;font-size:14.5px;border:2px solid #e2e8f0;border-radius:14px;outline:none;background:#f8fafc;color:#1e293b;transition:all .35s cubic-bezier(.4,0,.2,1)}
+.ct-input::placeholder,.ct-textarea::placeholder{color:#94a3b8}
+.ct-input:focus,.ct-select:focus,.ct-textarea:focus{border-color:#059669;background:#fff;box-shadow:0 0 0 4px rgba(5,150,105,.07)}
+.ct-input.err,.ct-textarea.err{border-color:#ef4444}
+.ct-input.err:focus,.ct-textarea.err:focus{box-shadow:0 0 0 4px rgba(239,68,68,.07)}
+.ct-input.ok{border-color:#10b981}
+.ct-select{appearance:none;cursor:pointer;padding-right:44px}
+.ct-sel-arrow{position:absolute;right:14px;top:50%;transform:translateY(-50%);pointer-events:none;transition:color .3s}
+.ct-textarea{min-height:140px;resize:vertical;padding-bottom:40px}
+.ct-underline{position:absolute;bottom:0;left:5%;width:90%;height:3px;background:linear-gradient(90deg,#059669,#10b981,#34d399);border-radius:0 0 14px 14px;transform:scaleX(0);transform-origin:center;transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.ct-field-wrap.focused .ct-underline{transform:scaleX(1)}
+.ct-status{position:absolute;right:14px;top:50%;transform:translateY(-50%)}
+.ct-field-err{display:flex;align-items:center;gap:5px;font-size:12px;color:#ef4444;margin-top:6px;font-weight:500;overflow:hidden}
+.ct-char{position:absolute;bottom:11px;left:15px;right:15px;display:flex;align-items:center;gap:10px}
+.ct-char-track{flex:1;height:3px;background:#e2e8f0;border-radius:2px;overflow:hidden}
+.ct-char-fill{height:100%;border-radius:2px;transition:width .3s,background .3s}
+.ct-char-num{font-size:11px;font-weight:500;flex-shrink:0}
+
+/* Form nav */
+.ct-form-nav{display:flex;justify-content:space-between;align-items:center;margin-top:28px;gap:14px}
+.ct-form-nav-left,.ct-form-nav-right{display:flex;gap:12px}
+.ct-nav-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:14px;font-family:'Inter',sans-serif;font-size:14.5px;font-weight:600;cursor:pointer;border:none;transition:all .35s cubic-bezier(.4,0,.2,1)}
+.ct-nav-btn--back{background:#f0fdf4;color:#059669;border:2px solid rgba(5,150,105,.15)}
+.ct-nav-btn--back:hover{background:#d1fae5;transform:translateY(-2px)}
+.ct-nav-btn--next{background:linear-gradient(135deg,#059669,#10b981);color:#fff;box-shadow:0 6px 20px rgba(5,150,105,.25)}
+.ct-nav-btn--next:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(5,150,105,.32)}
+.ct-nav-btn--submit{background:linear-gradient(135deg,#059669,#10b981);color:#fff;box-shadow:0 6px 20px rgba(5,150,105,.25);width:100%;justify-content:center;padding:18px 32px;font-size:15.5px;border-radius:16px;position:relative;overflow:hidden}
+.ct-nav-btn--submit:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 14px 40px rgba(5,150,105,.35)}
+.ct-nav-btn--submit:disabled{opacity:.8;cursor:wait}
+.ct-progress{position:absolute;bottom:0;left:0;height:4px;background:rgba(255,255,255,.35);border-radius:0 2px 2px 0;transition:width .15s}
+
+.ct-privacy{display:flex;align-items:center;justify-content:center;gap:7px;font-size:12px;color:#94a3b8;margin-top:16px}
+
+/* Step heading */
+.ct-step-heading{margin-bottom:28px}
+.ct-step-heading h4{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:#0f172a;margin-bottom:6px}
+.ct-step-heading p{font-size:14px;color:#64748b;line-height:1.6}
+
+/* ═══ SUCCESS ═══ */
+.ct-success{text-align:center;padding:48px 16px}
+.ct-success-icon{width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#059669,#10b981);display:flex;align-items:center;justify-content:center;margin:0 auto 26px;box-shadow:0 12px 40px rgba(5,150,105,.3)}
+.ct-success-title{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;color:#0f172a;margin-bottom:12px}
+.ct-success-text{font-size:15px;color:#64748b;line-height:1.7;max-width:360px;margin:0 auto 26px}
+.ct-success-email{display:inline-block;background:#f0fdf4;padding:14px 24px;border-radius:14px;margin-bottom:28px;border:1px solid rgba(5,150,105,.1)}
+.ct-success-email small{display:block;font-size:12.5px;color:#64748b;margin-bottom:3px}
+.ct-success-email strong{font-size:16px;color:#059669}
+.ct-success-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+/* ═══ FAQ ═══ */
+.ct-faq-list{display:flex;flex-direction:column;gap:14px}
+.ct-faq-item{background:#fff;border-radius:18px;border:1px solid rgba(5,150,105,.06);box-shadow:0 2px 8px rgba(0,0,0,.025);overflow:hidden;transition:all .4s cubic-bezier(.4,0,.2,1);position:relative}
+.ct-faq-item::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#059669,#10b981,#34d399);opacity:0;transition:opacity .3s;border-radius:4px 0 0 4px}
+.ct-faq-item:hover{box-shadow:0 6px 22px rgba(5,150,105,.07);border-color:rgba(5,150,105,.1)}
+.ct-faq-item:hover::before,.ct-faq-item.open::before{opacity:1}
+.ct-faq-item.open{box-shadow:0 8px 28px rgba(5,150,105,.09);border-color:rgba(5,150,105,.12)}
+.ct-faq-btn{width:100%;padding:22px 24px;display:flex;align-items:center;justify-content:space-between;gap:14px;background:none;border:none;cursor:pointer;text-align:left}
+.ct-faq-num{font-family:'Playfair Display',serif;font-size:12.5px;font-weight:700;color:#059669;background:linear-gradient(135deg,rgba(5,150,105,.08),rgba(16,185,129,.05));width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s}
+.ct-faq-item.open .ct-faq-num{background:linear-gradient(135deg,#059669,#10b981);color:#fff}
+.ct-faq-q{flex:1;font-size:15.5px;font-weight:640;color:#1e293b;line-height:1.45;transition:color .3s}
+.ct-faq-item:hover .ct-faq-q{color:#059669}
+.ct-faq-toggle{width:36px;height:36px;border-radius:12px;border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;transition:all .35s cubic-bezier(.4,0,.2,1)}
+.ct-faq-toggle.closed{background:#f0fdf4;color:#059669}
+.ct-faq-toggle.opened{background:linear-gradient(135deg,#059669,#10b981);color:#fff;box-shadow:0 4px 12px rgba(5,150,105,.25)}
+.ct-faq-toggle svg{transition:transform .4s cubic-bezier(.4,0,.2,1)}
+.ct-faq-toggle.opened svg{transform:rotate(180deg)}
+.ct-faq-answer-inner{padding:0 24px 22px 70px;font-size:14.5px;color:#475569;line-height:1.8;position:relative}
+.ct-faq-answer-inner::before{content:'';position:absolute;top:0;left:24px;right:24px;height:1px;background:linear-gradient(90deg,transparent,#e2e8f0,transparent)}
+.ct-faq-answer-inner p{margin:0;padding-top:16px}
+@media(max-width:640px){.ct-faq-answer-inner{padding-left:24px}}
+
+/* ═══ QUICK CHANNELS ═══ */
+.ct-quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px}
+.ct-quick-card{display:flex;align-items:center;gap:16px;padding:26px 24px;background:#fff;border-radius:18px;border:2px solid transparent;box-shadow:0 2px 10px rgba(0,0,0,.03);text-decoration:none;transition:all .4s cubic-bezier(.4,0,.2,1)}
+.ct-quick-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(5,150,105,.1);border-color:rgba(5,150,105,.2)}
+.ct-quick-icon{width:52px;height:52px;border-radius:14px;background:#f0fdf4;display:flex;align-items:center;justify-content:center;flex-shrink:0;color:#059669;transition:all .3s}
+.ct-quick-card:hover .ct-quick-icon{background:linear-gradient(135deg,#059669,#10b981);color:#fff;box-shadow:0 6px 18px rgba(5,150,105,.25)}
+.ct-quick-title{font-size:17px;font-weight:700;color:#0f172a;margin-bottom:2px}
+.ct-quick-sub{font-size:12.5px;color:#94a3b8;margin-bottom:5px}
+.ct-quick-detail{font-size:14.5px;font-weight:600;color:#059669}
+
+/* ═══ CTA PATTERN ═══ */
+.ct-cta-pattern{position:absolute;inset:0;background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23fff' fill-opacity='.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");pointer-events:none}
+.ct-cta-icon{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;margin:0 auto 24px}
+.ct-cta-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+
+/* ═══ CHAT ═══ */
+.ct-chat-btn{position:fixed;bottom:26px;right:26px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#059669,#10b981);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(5,150,105,.35);z-index:999;transition:transform .3s}
+.ct-chat-btn:hover{transform:scale(1.1)}
+.ct-chat-pulse{position:absolute;inset:0;border-radius:50%;border:3px solid #059669;animation:ct-pulse 2s ease-out infinite}
+@keyframes ct-pulse{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.5);opacity:0}}
+.ct-chat-window{position:fixed;bottom:26px;right:26px;width:360px;max-width:calc(100vw - 52px);background:#fff;border-radius:22px;box-shadow:0 20px 60px rgba(0,0,0,.14);overflow:hidden;z-index:1000;display:flex;flex-direction:column}
+.ct-chat-head{background:linear-gradient(135deg,#059669,#10b981);padding:16px 18px;display:flex;align-items:center;justify-content:space-between}
+.ct-chat-head-left{display:flex;align-items:center;gap:11px}
+.ct-chat-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center}
+.ct-chat-name{color:#fff;font-weight:600;font-size:14.5px}
+.ct-chat-status{color:rgba(255,255,255,.8);font-size:12px;display:flex;align-items:center;gap:5px}
+.ct-chat-dot{width:7px;height:7px;border-radius:50%;background:#4ade80}
+.ct-chat-head-btns{display:flex;gap:5px}
+.ct-chat-hbtn{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.15);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;transition:background .2s}
+.ct-chat-hbtn:hover{background:rgba(255,255,255,.28)}
+.ct-chat-body{flex:1;padding:18px;background:#f8fffe;overflow-y:auto;max-height:300px}
+.ct-chat-bubble{background:#fff;padding:13px 15px;border-radius:14px 14px 14px 4px;max-width:85%;box-shadow:0 2px 6px rgba(0,0,0,.04);margin-bottom:12px}
+.ct-chat-bubble p{font-size:13.5px;color:#1e293b;line-height:1.5;margin:0 0 5px}
+.ct-chat-bubble p:last-child{margin-bottom:0}
+.ct-chat-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.ct-chat-chip{padding:6px 13px;background:#fff;border:1px solid #059669;border-radius:50px;font-size:12px;font-weight:500;color:#059669;cursor:pointer;transition:all .2s}
+.ct-chat-chip:hover{background:#059669;color:#fff}
+.ct-chat-footer{padding:13px;border-top:1px solid #e2e8f0;display:flex;gap:9px}
+.ct-chat-input{flex:1;padding:10px 15px;border:1px solid #e2e8f0;border-radius:50px;font-size:13.5px;outline:none;transition:border-color .3s}
+.ct-chat-input:focus{border-color:#059669}
+.ct-chat-send{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#059669,#10b981);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .2s}
+.ct-chat-send:hover{transform:scale(1.06)}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:768px){
+  .ct-hero{min-height:60vh}
+  .ct-section{padding:64px 16px}
+  .ct-hdr{margin-bottom:44px}
+  .ct-info{gap:12px}
+  .ct-step-labels span{font-size:10.5px}
+}
+@media(max-width:480px){
+  .ct-hero-btns,.ct-cta-btns,.ct-success-btns{flex-direction:column;align-items:stretch}
+  .ct-btn,.ct-success-btns>*{justify-content:center;width:100%}
+  .ct-form-nav{flex-direction:column}
+  .ct-form-nav-left,.ct-form-nav-right{width:100%}
+  .ct-nav-btn{width:100%;justify-content:center}
+  .ct-steps{gap:0}
+  .ct-step-line{width:24px}
+}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:7px}
+::-webkit-scrollbar-track{background:#f0fdf4}
+::-webkit-scrollbar-thumb{background:#059669;border-radius:4px}
+::selection{background:#059669;color:#fff}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+      `}</style>
+
+      {/* ════════ HERO ════════ */}
+      <section className="ct-hero">
+        <motion.div
+          className="ct-hero-bg"
+          style={{ backgroundImage: `url(${herobg})` }}
+          initial={{ scale: 1.12 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 12, ease: 'easeOut' }}
+        />
+        <div className="ct-hero-overlay" />
+
+        <div className="ct-hero-inner">
+          <motion.div className="ct-hero-badge"
+            initial={{ opacity: 0, y: -18 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: .3, duration: .65 }}
           >
-            {/* Header */}
-            <div style={{
-              background: theme.gradients.primary,
-              padding: '20px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{
-                  width: '44px',
-                  height: '44px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(255,255,255,0.2)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}>
-                  <BiSupport size={24} color={theme.colors.white} />
-                </div>
+            <HiSparkles size={15} color="#34d399" />
+            Your Safari Adventure Starts Here
+          </motion.div>
+
+          <motion.h1 className="ct-hero-title"
+            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: .4, duration: .75 }}
+          >
+            Let's Plan Your<br /><em>Dream Safari</em>
+          </motion.h1>
+
+          <motion.p className="ct-hero-desc"
+            initial={{ opacity: 0, y: 26 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: .5, duration: .7 }}
+          >
+            Connect with our expert team and let us craft an unforgettable
+            African adventure tailored just for you.
+          </motion.p>
+
+          <motion.div className="ct-hero-btns"
+            initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: .6, duration: .7 }}
+          >
+            <a href="#contact-form" className="ct-btn ct-btn--white">
+              <FiSend size={16} /> Send Message
+            </a>
+            <a href="tel:+254700123456" className="ct-btn ct-btn--ghost">
+              <FiPhone size={16} /> Call Us Now
+            </a>
+          </motion.div>
+        </div>
+
+        <motion.div className="ct-hero-scroll"
+          animate={{ y: [0, 8, 0] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <div className="ct-scroll-pill">
+            <motion.div className="ct-scroll-dot"
+              animate={{ y: [0, 12, 0], opacity: [1, .3, 1] }}
+              transition={{ duration: 1.8, repeat: Infinity }}
+            />
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ════════ MAIN FORM SECTION ════════ */}
+      <section className="ct-section ct-section--green-light" id="contact-form">
+        <div className="ct-wrap">
+          <ScrollReveal>
+            <div className="ct-hdr">
+              <div className="ct-badge"><FiMessageSquare size={14} /> Get In Touch</div>
+              <h2 className="ct-title ct-title--dark">We'd Love to <em>Hear From You</em></h2>
+              <p className="ct-subtitle">Have questions about your dream safari? Our Africa travel experts are here to help.</p>
+            </div>
+          </ScrollReveal>
+
+          <div className="ct-grid">
+            {/* ── LEFT: Info ── */}
+            <ScrollReveal direction="left" delay={.1}>
+              <div className="ct-info">
+                <h3 className="ct-info-title">Contact Information</h3>
+                <p className="ct-info-desc">Reach out through any channel. We're here to plan your perfect adventure.</p>
+
+                {contactCards.map((c, i) => (
+                  <ScrollReveal key={i} delay={.15 + i * .06}>
+                    <div className="ct-card">
+                      <div className="ct-card-icon"><c.icon size={20} /></div>
+                      <div>
+                        <div className="ct-card-title">{c.title}</div>
+                        {c.lines.map((l, j) => <div key={j} className="ct-card-line">{l}</div>)}
+                      </div>
+                    </div>
+                  </ScrollReveal>
+                ))}
+
+                <ScrollReveal delay={.45}>
+                  <div className="ct-socials">
+                    <div className="ct-socials-title">Follow Our Adventures</div>
+                    <div className="ct-socials-row">
+                      {socials.map((s, i) => (
+                        <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" title={s.label} className="ct-social">
+                          <s.icon />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                </ScrollReveal>
+              </div>
+            </ScrollReveal>
+
+            {/* ── RIGHT: Multi-Step Form ── */}
+            <ScrollReveal direction="right" delay={.15}>
+              <div className="ct-form-card" ref={formRef}>
+                <AnimatePresence mode="wait">
+                  {submitted ? (
+                    <motion.div key="done" className="ct-success"
+                      initial={{ opacity: 0, scale: .9 }} animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }} transition={{ duration: .5 }}
+                    >
+                      <motion.div className="ct-success-icon"
+                        initial={{ scale: 0 }} animate={{ scale: 1 }}
+                        transition={{ type: 'spring', stiffness: 180, delay: .2 }}
+                      >
+                        <motion.div initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }}
+                          transition={{ delay: .45, type: 'spring' }}
+                        >
+                          <FiCheckCircle size={44} color="#fff" />
+                        </motion.div>
+                      </motion.div>
+                      <h3 className="ct-success-title">Message Sent! 🎉</h3>
+                      <p className="ct-success-text">Our travel experts will review your inquiry and respond within 24 hours.</p>
+                      <div className="ct-success-email"><small>📧 Confirmation sent to:</small><strong>{form.email}</strong></div>
+                      <div className="ct-success-btns">
+                        <button className="ct-btn ct-btn--green" onClick={resetForm}><FiSend size={15} /> Send Another</button>
+                        <a href="/" className="ct-btn ct-btn--outline"><FiArrowRight size={15} /> Explore Safaris</a>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div key="form" initial={{ opacity: 1 }} exit={{ opacity: 0, y: -16 }}>
+                      {/* Step Indicator */}
+                      <div style={{ marginBottom: 8 }}>
+                        <div className="ct-steps">
+                          {stepLabels.map((lbl, i) => {
+                            const Icon = stepIcons[i];
+                            const isActive = step === i;
+                            const isDone = step > i;
+                            return (
+                              <div className="ct-step-item" key={i}>
+                                {i > 0 && <div className={`ct-step-line ${step >= i ? 'filled' : ''}`} />}
+                                <motion.div
+                                  className={`ct-step-circle ${isActive ? 'active' : isDone ? 'done' : ''}`}
+                                  whileTap={{ scale: .92 }}
+                                  onClick={() => { if (isDone) { setDirection(i < step ? -1 : 1); setStep(i); } }}
+                                  layout
+                                >
+                                  {isDone ? <FiCheckCircle size={16} /> : <Icon size={16} />}
+                                </motion.div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="ct-step-labels">
+                          {stepLabels.map((lbl, i) => (
+                            <span key={i} className={step === i ? 'active' : step > i ? 'done' : ''}>{lbl}</span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Step Content */}
+                      <form onSubmit={handleSubmit}>
+                        <div className="ct-form-body">
+                          <AnimatePresence mode="wait" custom={direction}>
+                            {step === 0 && (
+                              <motion.div key="s0" className="ct-form-step"
+                                initial={stepVariants[0].initial}
+                                animate={stepVariants[0].animate}
+                                exit={stepVariants[0].exit}
+                                transition={{ duration: .45, ease: [.4, 0, .2, 1] }}
+                              >
+                                <div className="ct-step-heading">
+                                  <h4>👤 Personal Information</h4>
+                                  <p>Tell us who you are so we can personalize your experience.</p>
+                                </div>
+                                <div className="ct-form-row">
+                                  <FieldInput name="name" label="Full Name" icon={FiUser} placeholder="John Smith" required
+                                    value={form.name} onChange={handleChange} onBlur={handleBlur}
+                                    error={errors.name} touched={touched.name} full
+                                  />
+                                  <FieldInput name="email" label="Email Address" icon={FiMail} type="email" placeholder="john@example.com" required
+                                    value={form.email} onChange={handleChange} onBlur={handleBlur}
+                                    error={errors.email} touched={touched.email}
+                                  />
+                                  <FieldInput name="phone" label="Phone Number" icon={FiPhone} type="tel" placeholder="+1 234 567 8900"
+                                    value={form.phone} onChange={handleChange} onBlur={handleBlur}
+                                    error={errors.phone} touched={touched.phone}
+                                  />
+                                </div>
+                              </motion.div>
+                            )}
+
+                            {step === 1 && (
+                              <motion.div key="s1" className="ct-form-step"
+                                initial={stepVariants[1].initial}
+                                animate={stepVariants[1].animate}
+                                exit={stepVariants[1].exit}
+                                transition={{ duration: .5, ease: [.4, 0, .2, 1] }}
+                              >
+                                <div className="ct-step-heading">
+                                  <h4>🌍 Trip Details</h4>
+                                  <p>Help us understand your dream adventure.</p>
+                                </div>
+                                <div className="ct-form-row">
+                                  <FieldSelect name="tripType" label="Trip Type" icon={FiGlobe} placeholder="Select your adventure"
+                                    options={tripTypes} value={form.tripType} onChange={handleChange} onBlur={handleBlur}
+                                  />
+                                  <FieldInput name="travelDate" label="Preferred Date" icon={FiCalendar} type="date"
+                                    value={form.travelDate} onChange={handleChange} onBlur={handleBlur}
+                                  />
+                                  <FieldSelect name="travelers" label="Number of Travelers" icon={FiUsers} placeholder="Select group size"
+                                    options={travelerOpts} value={form.travelers} onChange={handleChange} onBlur={handleBlur} full
+                                  />
+                                </div>
+                              </motion.div>
+                            )}
+
+                            {step === 2 && (
+                              <motion.div key="s2" className="ct-form-step"
+                                initial={stepVariants[2].initial}
+                                animate={stepVariants[2].animate}
+                                exit={stepVariants[2].exit}
+                                transition={{ duration: .5, ease: [.4, 0, .2, 1] }}
+                              >
+                                <div className="ct-step-heading">
+                                  <h4>💬 Your Message</h4>
+                                  <p>Share the details of your dream safari with us.</p>
+                                </div>
+                                <div className="ct-form-row">
+                                  <FieldInput name="subject" label="Subject" icon={FiMessageSquare} placeholder="What would you like to know?" required
+                                    value={form.subject} onChange={handleChange} onBlur={handleBlur}
+                                    error={errors.subject} touched={touched.subject} full
+                                  />
+                                  <FieldTextarea name="message" label="Your Message" placeholder="Tell us about your dream African adventure…" required maxLength={2000}
+                                    value={form.message} onChange={handleChange} onBlur={handleBlur}
+                                    error={errors.message} touched={touched.message} full
+                                  />
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
+                        {/* Navigation */}
+                        <div className="ct-form-nav">
+                          <div className="ct-form-nav-left">
+                            {step > 0 && (
+                              <motion.button type="button" className="ct-nav-btn ct-nav-btn--back"
+                                onClick={prevStep}
+                                initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: .3 }}
+                              >
+                                <FiArrowLeft size={16} /> Back
+                              </motion.button>
+                            )}
+                          </div>
+                          <div className="ct-form-nav-right">
+                            {step < 2 ? (
+                              <motion.button type="button" className="ct-nav-btn ct-nav-btn--next"
+                                onClick={nextStep} whileTap={{ scale: .96 }}
+                              >
+                                Next Step <FiArrowRight size={16} />
+                              </motion.button>
+                            ) : (
+                              <button type="submit" className="ct-nav-btn ct-nav-btn--submit" disabled={submitting}>
+                                {submitting ? (
+                                  <>
+                                    <motion.svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                      animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                                    >
+                                      <circle cx="12" cy="12" r="10" stroke="#fff" strokeWidth="3" strokeDasharray="31.4 31.4" strokeLinecap="round" />
+                                    </motion.svg>
+                                    Sending…
+                                  </>
+                                ) : (
+                                  <><RiSendPlaneFill size={17} /> Send Safari Inquiry</>
+                                )}
+                                {submitting && <div className="ct-progress" style={{ width: `${progress}%` }} />}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {step === 2 && (
+                          <div className="ct-privacy"><FiShield size={12} /> Your information is secure and will never be shared.</div>
+                        )}
+                      </form>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </ScrollReveal>
+          </div>
+        </div>
+      </section>
+
+      {/* ════════ FAQ ════════ */}
+      <section className="ct-section ct-section--white" ref={faqRef}>
+        <div className="ct-wrap ct-wrap--sm">
+          <ScrollReveal>
+            <div className="ct-hdr">
+              <div className="ct-badge"><FiHelpCircle size={14} /> Frequently Asked Questions</div>
+              <h2 className="ct-title ct-title--dark">Got <em>Questions</em>?</h2>
+              <p className="ct-subtitle">Find quick answers about our safari experiences.</p>
+            </div>
+          </ScrollReveal>
+
+          <div className="ct-faq-list">
+            {faqs.map((faq, i) => {
+              const isOpen = openFaq === i;
+              const h = faqRefs.current[i]?.scrollHeight || 0;
+              return (
+                <ScrollReveal key={i} delay={i * .05}>
+                  <div className={`ct-faq-item ${isOpen ? 'open' : ''}`}>
+                    <button className="ct-faq-btn" type="button" onClick={() => setOpenFaq(isOpen ? null : i)}>
+                      <span className="ct-faq-num">{String(i + 1).padStart(2, '0')}</span>
+                      <span className="ct-faq-q">{faq.q}</span>
+                      <span className={`ct-faq-toggle ${isOpen ? 'opened' : 'closed'}`}>
+                        <FiChevronDown size={17} />
+                      </span>
+                    </button>
+                    <AnimatePresence initial={false}>
+                      {isOpen && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: .4, ease: [.4, 0, .2, 1] }}
+                          style={{ overflow: 'hidden' }}
+                        >
+                          <div className="ct-faq-answer-inner" ref={el => faqRefs.current[i] = el}>
+                            <p>{faq.a}</p>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </ScrollReveal>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════ QUICK CHANNELS ════════ */}
+      <section className="ct-section ct-section--green-light">
+        <div className="ct-wrap ct-wrap--md">
+          <ScrollReveal>
+            <div className="ct-hdr">
+              <h2 className="ct-title ct-title--dark">Quick Contact <em>Options</em></h2>
+              <p className="ct-subtitle">Choose the way that works best for you</p>
+            </div>
+          </ScrollReveal>
+          <div className="ct-quick-grid">
+            {quickChannels.map((ch, i) => (
+              <ScrollReveal key={i} delay={i * .08}>
+                <a href={ch.href} className="ct-quick-card">
+                  <div className="ct-quick-icon"><ch.icon size={22} /></div>
+                  <div>
+                    <div className="ct-quick-title">{ch.title}</div>
+                    <div className="ct-quick-sub">{ch.sub}</div>
+                    <div className="ct-quick-detail">{ch.detail}</div>
+                  </div>
+                </a>
+              </ScrollReveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════ CTA ════════ */}
+      <section className="ct-section ct-section--dark">
+        <div className="ct-cta-pattern" />
+        <ScrollReveal>
+          <div className="ct-wrap" style={{ textAlign: 'center', maxWidth: 680 }}>
+            <motion.div className="ct-cta-icon"
+              animate={{ scale: [1, 1.06, 1] }}
+              transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <FiHeadphones size={32} color="#fff" />
+            </motion.div>
+            <h2 className="ct-title ct-title--white">Ready to Start Your <em>Adventure</em>?</h2>
+            <p className="ct-subtitle ct-subtitle--light" style={{ marginBottom: 36 }}>
+              Let's discuss your dream African safari. No obligations, just inspiration.
+            </p>
+            <div className="ct-cta-btns">
+              <a href="#contact-form" className="ct-btn ct-btn--white"><HiSparkles size={17} /> Start Planning</a>
+              <a href="/safaris" className="ct-btn ct-btn--ghost">View Safari Packages <FiArrowRight size={16} /></a>
+            </div>
+          </div>
+        </ScrollReveal>
+      </section>
+
+      {/* ════════ CHAT ════════ */}
+      {!chatOpen && (
+        <button className="ct-chat-btn" onClick={() => setChatOpen(true)}>
+          <FiMessageCircle size={24} color="#fff" />
+          <span className="ct-chat-pulse" />
+        </button>
+      )}
+      <AnimatePresence>
+        {chatOpen && (
+          <motion.div className="ct-chat-window"
+            initial={{ opacity: 0, y: 70, scale: .9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 70, scale: .9 }}
+            transition={{ duration: .35, ease: [.4, 0, .2, 1] }}
+          >
+            <div className="ct-chat-head">
+              <div className="ct-chat-head-left">
+                <div className="ct-chat-avatar"><BiSupport size={20} color="#fff" /></div>
                 <div>
-                  <h4 style={{ color: theme.colors.white, fontWeight: '600', fontSize: '16px' }}>
-                    Safari Support
-                  </h4>
-                  <p style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px' }}>
-                    <span style={{
-                      display: 'inline-block',
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '50%',
-                      backgroundColor: '#4ADE80',
-                      marginRight: '6px',
-                    }}/>
-                    Online now
-                  </p>
+                  <div className="ct-chat-name">Safari Support</div>
+                  <div className="ct-chat-status"><span className="ct-chat-dot" /> Online now</div>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setIsMinimized(!isMinimized)}
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: theme.colors.white,
-                  }}
-                >
-                  <FiChevronDown size={18} />
-                </motion.button>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setIsOpen(false)}
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '50%',
-                    backgroundColor: 'rgba(255,255,255,0.2)',
-                    border: 'none',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: theme.colors.white,
-                  }}
-                >
-                  <FiX size={18} />
-                </motion.button>
+              <div className="ct-chat-head-btns">
+                <button className="ct-chat-hbtn" onClick={() => setChatMin(p => !p)}><FiChevronDown size={15} /></button>
+                <button className="ct-chat-hbtn" onClick={() => setChatOpen(false)}><FiX size={15} /></button>
               </div>
             </div>
-            
-            {/* Chat content */}
-            {!isMinimized && (
+            {!chatMin && (
               <>
-                <div style={{
-                  flex: 1,
-                  padding: '20px',
-                  overflowY: 'auto',
-                  backgroundColor: theme.colors.offWhite,
-                }}>
-                  {/* Welcome message */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    style={{
-                      backgroundColor: theme.colors.white,
-                      padding: '16px',
-                      borderRadius: '16px 16px 16px 4px',
-                      maxWidth: '85%',
-                      boxShadow: theme.shadows.sm,
-                    }}
-                  >
-                    <p style={{ fontSize: '14px', color: theme.colors.text, marginBottom: '8px' }}>
-                      👋 Hello! Welcome to Altuvera Safaris!
-                    </p>
-                    <p style={{ fontSize: '14px', color: theme.colors.textLight }}>
-                      How can we help you plan your African adventure today?
-                    </p>
-                  </motion.div>
-                  
-                  {/* Quick replies */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    style={{
-                      marginTop: '16px',
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: '8px',
-                    }}
-                  >
-                    {['Safari packages', 'Best time to visit', 'Group bookings', 'Custom itinerary'].map((text, i) => (
-                      <motion.button
-                        key={i}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                        style={{
-                          padding: '8px 16px',
-                          backgroundColor: theme.colors.white,
-                          border: `1px solid ${theme.colors.primary}`,
-                          borderRadius: theme.borderRadius.full,
-                          fontSize: '13px',
-                          color: theme.colors.primary,
-                          cursor: 'pointer',
-                          fontWeight: '500',
-                        }}
-                      >
-                        {text}
-                      </motion.button>
+                <div className="ct-chat-body">
+                  <div className="ct-chat-bubble">
+                    <p>👋 Hello! Welcome to Altuvera Safaris!</p>
+                    <p>How can we help you today?</p>
+                  </div>
+                  <div className="ct-chat-chips">
+                    {['Safari packages', 'Best time to visit', 'Group bookings', 'Custom itinerary'].map((t, i) => (
+                      <button key={i} className="ct-chat-chip">{t}</button>
                     ))}
-                  </motion.div>
+                  </div>
                 </div>
-                
-                {/* Input area */}
-                <div style={{
-                  padding: '16px',
-                  borderTop: `1px solid ${theme.colors.border}`,
-                  display: 'flex',
-                  gap: '12px',
-                }}>
-                  <input
-                    type="text"
-                    placeholder="Type your message..."
-                    style={{
-                      flex: 1,
-                      padding: '12px 16px',
-                      border: `1px solid ${theme.colors.border}`,
-                      borderRadius: theme.borderRadius.full,
-                      fontSize: '14px',
-                      outline: 'none',
-                    }}
-                  />
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    style={{
-                      width: '44px',
-                      height: '44px',
-                      borderRadius: '50%',
-                      background: theme.gradients.primary,
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <RiSendPlaneFill size={20} color={theme.colors.white} />
-                  </motion.button>
+                <div className="ct-chat-footer">
+                  <input className="ct-chat-input" placeholder="Type your message…" />
+                  <button className="ct-chat-send"><RiSendPlaneFill size={16} color="#fff" /></button>
                 </div>
               </>
             )}
           </motion.div>
         )}
       </AnimatePresence>
-    </>
-  );
-};
-
-// ============================================
-// MAIN CONTACT COMPONENT
-// ============================================
-const Contact = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    subject: '',
-    message: '',
-    tripType: '',
-    travelDate: '',
-    travelers: '',
-  });
-  
-  const [touched, setTouched] = useState({});
-  const [errors, setErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [submitProgress, setSubmitProgress] = useState(0);
-  const [openFAQ, setOpenFAQ] = useState(null);
-  
-  const formRef = useRef(null);
-  const heroRef = useRef(null);
-  const { scrollYProgress } = useScroll();
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.95]);
-
-  // Validation
-  const validateField = (name, value) => {
-    const rules = validationRules[name];
-    if (!rules) return '';
-    if (rules.required && !value?.trim()) return rules.messages.required;
-    if (value && rules.minLength && value.length < rules.minLength) return rules.messages.minLength;
-    if (value && rules.maxLength && value.length > rules.maxLength) return rules.messages.maxLength;
-    if (value && rules.pattern && !rules.pattern.test(value)) return rules.messages.pattern;
-    return '';
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-    Object.keys(validationRules).forEach(field => {
-      const error = validateField(field, formData[field]);
-      if (error) newErrors[field] = error;
-    });
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (touched[name]) {
-      setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
-    }
-  };
-
-  const handleBlur = (e) => {
-    const { name, value } = e.target;
-    setTouched(prev => ({ ...prev, [name]: true }));
-    setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const allTouched = {};
-    Object.keys(formData).forEach(key => allTouched[key] = true);
-    setTouched(allTouched);
-
-    if (!validateForm()) return;
-
-    setIsSubmitting(true);
-    setSubmitProgress(0);
-
-    const progressInterval = setInterval(() => {
-      setSubmitProgress(prev => prev >= 90 ? 90 : prev + 10);
-    }, 100);
-
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    clearInterval(progressInterval);
-    setSubmitProgress(100);
-    
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-    }, 500);
-  };
-
-  const resetForm = () => {
-    setIsSubmitted(false);
-    setFormData({
-      name: '', email: '', phone: '', subject: '',
-      message: '', tripType: '', travelDate: '', travelers: '',
-    });
-    setTouched({});
-    setErrors({});
-    setSubmitProgress(0);
-  };
-
-  // Data
-  const contactInfo = [
-    {
-      icon: FiMapPin,
-      title: 'Visit Our Office',
-      lines: ['Altuvera House, Safari Way', 'Westlands, Nairobi, Kenya'],
-      color: theme.colors.primary,
-    },
-    {
-      icon: FiPhone,
-      title: 'Call Us',
-      lines: ['+254 700 123 456', '+254 733 987 654'],
-      color: '#3B82F6',
-    },
-    {
-      icon: FiMail,
-      title: 'Email Us',
-      lines: ['hello@altuvera.com', 'bookings@altuvera.com'],
-      color: '#8B5CF6',
-    },
-    {
-      icon: FiClock,
-      title: 'Working Hours',
-      lines: ['Mon - Fri: 8AM - 6PM EAT', 'Sat: 9AM - 2PM EAT'],
-      color: '#F59E0B',
-    },
-  ];
-
-  const tripTypes = [
-    { value: 'safari', label: '🦁 Safari Adventure' },
-    { value: 'mountain', label: '⛰️ Mountain Trekking' },
-    { value: 'gorilla', label: '🦍 Gorilla Trekking' },
-    { value: 'beach', label: '🏖️ Beach Holiday' },
-    { value: 'cultural', label: '🎭 Cultural Tour' },
-    { value: 'photography', label: '📷 Photography Safari' },
-    { value: 'honeymoon', label: '💕 Honeymoon' },
-    { value: 'family', label: '👨‍👩‍👧‍👦 Family Trip' },
-  ];
-
-  const socialLinks = [
-    { icon: FaFacebookF, color: '#1877F2', name: 'Facebook', url: '#' },
-    { icon: FaInstagram, color: '#E4405F', name: 'Instagram', url: '#' },
-    { icon: FaTwitter, color: '#1DA1F2', name: 'Twitter', url: '#' },
-    { icon: FaYoutube, color: '#FF0000', name: 'YouTube', url: '#' },
-    { icon: FaLinkedinIn, color: '#0A66C2', name: 'LinkedIn', url: '#' },
-    { icon: FaWhatsapp, color: '#25D366', name: 'WhatsApp', url: '#' },
-    { icon: FaTiktok, color: '#000000', name: 'TikTok', url: '#' },
-    { icon: FaPinterestP, color: '#E60023', name: 'Pinterest', url: '#' },
-  ];
-
-
-
-  const faqs = [
-    {
-      question: 'How far in advance should I book my safari?',
-      answer: 'We recommend booking at least 3-6 months in advance, especially for peak season (June-October and December-February). This ensures availability at the best lodges and camps.',
-    },
-    {
-      question: 'What is included in your safari packages?',
-      answer: 'Our packages typically include accommodation, all meals, game drives, park fees, airport transfers, and a professional guide. International flights are usually not included.',
-    },
-    {
-      question: 'Is it safe to go on safari in East Africa?',
-      answer: 'Yes! East Africa is very safe for tourists. Our experienced guides prioritize your safety, and we only work with reputable lodges and camps that maintain high security standards.',
-    },
-    {
-      question: 'Can you customize an itinerary for me?',
-      answer: 'Absolutely! We specialize in creating custom itineraries tailored to your interests, budget, and timeframe. Just fill out the contact form with your preferences.',
-    },
-  ];
-
-  const quickContactOptions = [
-    {
-      icon: FaWhatsapp,
-      color: '#25D366',
-      title: 'WhatsApp',
-      subtitle: 'Chat instantly',
-      action: '+254 700 123 456',
-      href: 'https://wa.me/254700123456',
-    },
-    {
-      icon: FiPhone,
-      color: '#3B82F6',
-      title: 'Call Us',
-      subtitle: 'Speak with an expert',
-      action: '+254 700 123 456',
-      href: 'tel:+254700123456',
-    },
-    {
-      icon: FiMail,
-      color: '#8B5CF6',
-      title: 'Email',
-      subtitle: 'Get detailed info',
-      action: 'hello@altuvera.com',
-      href: 'mailto:hello@altuvera.com',
-    },
-  ];
-
-  return (
-    <div style={{ backgroundColor: theme.colors.background, minHeight: '100vh' }}>
-      {/* ============================================
-          HERO SECTION
-          ============================================ */}
-      <motion.section
-        ref={heroRef}
-        style={{
-          position: 'relative',
-          minHeight: '70vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: theme.colors.primary,
-          overflow: 'hidden',
-          opacity: heroOpacity,
-          scale: heroScale,
-        }}
-      >
-        {/* Animated background elements */}
-        <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          overflow: 'hidden',
-        }}>
-          {[...Array(20)].map((_, i) => (
-            <motion.div
-              key={i}
-              animate={{
-                y: [0, -1000],
-                opacity: [0, 1, 0],
-              }}
-              transition={{
-                duration: 10 + Math.random() * 10,
-                repeat: Infinity,
-                delay: Math.random() * 10,
-              }}
-              style={{
-                position: 'absolute',
-                bottom: '-50px',
-                left: `${Math.random() * 100}%`,
-                width: '2px',
-                height: '100px',
-                background: `linear-gradient(to top, transparent, rgba(255,255,255,${0.1 + Math.random() * 0.2}), transparent)`,
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Content */}
-        <div style={{
-          position: 'relative',
-          zIndex: 1,
-          textAlign: 'center',
-          padding: '0 24px',
-          maxWidth: '900px',
-        }}>
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              padding: '10px 24px',
-              backgroundColor: 'rgba(255,255,255,0.15)',
-              backdropFilter: 'blur(10px)',
-              borderRadius: theme.borderRadius.full,
-              marginBottom: '24px',
-            }}
-          >
-            <HiSparkles color={theme.colors.accent} size={18} />
-            <span style={{ color: theme.colors.white, fontSize: '14px', fontWeight: '500' }}>
-              Your Safari Adventure Starts Here
-            </span>
-          </motion.div>
-          
-          <motion.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: 'clamp(40px, 8vw, 72px)',
-              fontWeight: '700',
-              color: theme.colors.white,
-              marginBottom: '20px',
-              lineHeight: '1.1',
-            }}
-          >
-            Let's Plan Your
-            <br />
-            <span style={{
-              background: 'linear-gradient(90deg, #34D399, #6EE7B7, #A7F3D0)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}>
-              Dream Safari
-            </span>
-          </motion.h1>
-          
-          <motion.p
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            style={{
-              fontSize: 'clamp(16px, 2vw, 20px)',
-              color: 'rgba(255,255,255,0.85)',
-              maxWidth: '600px',
-              margin: '0 auto 40px',
-              lineHeight: '1.7',
-            }}
-          >
-            Connect with our expert team and let us craft an unforgettable 
-            African adventure tailored just for you.
-          </motion.p>
-          
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            style={{
-              display: 'flex',
-              gap: '16px',
-              justifyContent: 'center',
-              flexWrap: 'wrap',
-            }}
-          >
-            <motion.a
-              href="#contact-form"
-              whileHover={{ scale: 1.05, y: -3 }}
-              whileTap={{ scale: 0.95 }}
-              style={{
-                padding: '18px 36px',
-                background: theme.colors.white,
-                color: theme.colors.primary,
-                borderRadius: theme.borderRadius.full,
-                fontSize: '16px',
-                fontWeight: '600',
-                textDecoration: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-              }}
-            >
-              <FiSend size={18} />
-              Send Message
-            </motion.a>
-            <motion.a
-              href="tel:+254700123456"
-              whileHover={{ scale: 1.05, y: -3 }}
-              whileTap={{ scale: 0.95 }}
-              style={{
-                padding: '18px 36px',
-                background: 'rgba(255,255,255,0.15)',
-                backdropFilter: 'blur(10px)',
-                color: theme.colors.white,
-                border: '2px solid rgba(255,255,255,0.3)',
-                borderRadius: theme.borderRadius.full,
-                fontSize: '16px',
-                fontWeight: '600',
-                textDecoration: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-              }}
-            >
-              <FiPhone size={18} />
-              Call Us Now
-            </motion.a>
-          </motion.div>
-        </div>
-        
-        {/* Scroll indicator */}
-        <motion.div
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2, repeat: Infinity }}
-          style={{
-            position: 'absolute',
-            bottom: '40px',
-            left: '50%',
-            transform: 'translateX(-50%)',
-          }}
-        >
-          <div style={{
-            width: '30px',
-            height: '50px',
-            border: '2px solid rgba(255,255,255,0.3)',
-            borderRadius: '15px',
-            display: 'flex',
-            justifyContent: 'center',
-            paddingTop: '10px',
-          }}>
-            <motion.div
-              animate={{ y: [0, 15, 0], opacity: [1, 0.3, 1] }}
-              transition={{ duration: 1.5, repeat: Infinity }}
-              style={{
-                width: '4px',
-                height: '10px',
-                backgroundColor: theme.colors.white,
-                borderRadius: '2px',
-              }}
-            />
-          </div>
-        </motion.div>
-      </motion.section>
-
-      {/* ============================================
-          MAIN CONTENT SECTION
-          ============================================ */}
-      <section
-        id="contact-form"
-        style={{
-          position: 'relative',
-          padding: '100px 24px',
-          background: theme.gradients.soft,
-        }}
-      >
-        <FloatingDecorations />
-        
-        <div style={{
-          maxWidth: '1400px',
-          margin: '0 auto',
-          position: 'relative',
-          zIndex: 1,
-        }}>
-          {/* Section header */}
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
-            variants={animations.fadeInUp}
-            style={{
-              textAlign: 'center',
-              marginBottom: '80px',
-            }}
-          >
-            <motion.div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '10px 24px',
-                backgroundColor: 'rgba(5, 150, 105, 0.1)',
-                borderRadius: theme.borderRadius.full,
-                marginBottom: '20px',
-              }}
-            >
-              <FiMessageSquare size={16} color={theme.colors.primary} />
-              <span style={{ color: theme.colors.primary, fontSize: '14px', fontWeight: '600' }}>
-                Get In Touch
-              </span>
-            </motion.div>
-            
-            <h2 style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: 'clamp(32px, 5vw, 52px)',
-              fontWeight: '700',
-              color: theme.colors.text,
-              marginBottom: '16px',
-            }}>
-              We'd Love to Hear From You
-            </h2>
-            <p style={{
-              fontSize: '18px',
-              color: theme.colors.textLight,
-              maxWidth: '600px',
-              margin: '0 auto',
-              lineHeight: '1.7',
-            }}>
-              Have questions about your dream safari? Our team of Africa travel 
-              experts is here to help make it happen.
-            </p>
-          </motion.div>
-
-          {/* Main grid */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(12, 1fr)',
-            gap: '40px',
-          }}>
-            {/* Left column - Contact info */}
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={animations.fadeInLeft}
-              style={{
-                gridColumn: 'span 12',
-                '@media (min-width: 1024px)': {
-                  gridColumn: 'span 5',
-                },
-              }}
-              className="contact-info-column"
-            >
-              <div style={{ position: 'sticky', top: '100px' }}>
-                <h3 style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: '32px',
-                  fontWeight: '700',
-                  color: theme.colors.text,
-                  marginBottom: '16px',
-                }}>
-                  Contact Information
-                </h3>
-                <p style={{
-                  fontSize: '16px',
-                  color: theme.colors.textLight,
-                  lineHeight: '1.7',
-                  marginBottom: '32px',
-                }}>
-                  Reach out through any channel that works best for you. 
-                  We're here to help plan your perfect African adventure.
-                </p>
-
-                <motion.div
-                  variants={animations.staggerContainer}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '16px',
-                    marginBottom: '32px',
-                  }}
-                >
-                  {contactInfo.map((info, index) => (
-                    <ContactInfoCard key={index} {...info} index={index} />
-                  ))}
-                </motion.div>
-
-                {/* Social links */}
-                <motion.div
-                  variants={animations.fadeInUp}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  style={{
-                    backgroundColor: theme.colors.white,
-                    padding: '28px',
-                    borderRadius: theme.borderRadius.xl,
-                    boxShadow: theme.shadows.md,
-                    marginBottom: '32px',
-                  }}
-                >
-                  <h4 style={{
-                    fontSize: '16px',
-                    fontWeight: '700',
-                    color: theme.colors.text,
-                    marginBottom: '20px',
-                  }}>
-                    Follow Our Adventures
-                  </h4>
-                  <motion.div
-                    variants={animations.staggerContainer}
-                    initial="hidden"
-                    whileInView="visible"
-                    viewport={{ once: true }}
-                    style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: '12px',
-                    }}
-                  >
-                    {socialLinks.map((social, index) => (
-                      <SocialLink key={index} {...social} index={index} />
-                    ))}
-                  </motion.div>
-                </motion.div>
-              </div>
-            </motion.div>
-
-            {/* Right column - Contact form */}
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={animations.fadeInRight}
-              style={{
-                gridColumn: 'span 12',
-              }}
-              className="contact-form-column"
-            >
-              <motion.div
-                ref={formRef}
-                style={{
-                  backgroundColor: theme.colors.white,
-                  borderRadius: theme.borderRadius['2xl'],
-                  padding: 'clamp(30px, 5vw, 60px)',
-                  boxShadow: theme.shadows.xl,
-                  position: 'relative',
-                  overflow: 'hidden',
-                }}
-              >
-                {/* Background decoration */}
-                <div style={{
-                  position: 'absolute',
-                  top: '-100px',
-                  right: '-100px',
-                  width: '300px',
-                  height: '300px',
-                  background: theme.gradients.glow,
-                  borderRadius: '50%',
-                  pointerEvents: 'none',
-                }}/>
-                <div style={{
-                  position: 'absolute',
-                  bottom: '-50px',
-                  left: '-50px',
-                  width: '200px',
-                  height: '200px',
-                  background: 'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)',
-                  borderRadius: '50%',
-                  pointerEvents: 'none',
-                }}/>
-
-                <AnimatePresence mode="wait">
-                  {isSubmitted ? (
-                    <SuccessAnimation email={formData.email} onReset={resetForm} />
-                  ) : (
-                    <motion.div
-                      key="form"
-                      initial={{ opacity: 1 }}
-                      exit={{ opacity: 0, y: -20 }}
-                    >
-                      {/* Form header */}
-                      <div style={{ position: 'relative', marginBottom: '40px' }}>
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '8px 16px',
-                            backgroundColor: theme.colors.offWhite,
-                            borderRadius: theme.borderRadius.full,
-                            marginBottom: '16px',
-                          }}
-                        >
-                          <FiStar size={14} color={theme.colors.primary} />
-                          <span style={{
-                            fontSize: '13px',
-                            fontWeight: '600',
-                            color: theme.colors.primary,
-                          }}>
-                            Personal Travel Consultation
-                          </span>
-                        </motion.div>
-                        
-                        <h3 style={{
-                          fontFamily: "'Playfair Display', serif",
-                          fontSize: 'clamp(28px, 4vw, 36px)',
-                          fontWeight: '700',
-                          color: theme.colors.text,
-                          marginBottom: '12px',
-                        }}>
-                          Plan Your Dream Safari
-                        </h3>
-                        <p style={{
-                          fontSize: '16px',
-                          color: theme.colors.textLight,
-                          lineHeight: '1.7',
-                        }}>
-                          Share your travel dreams with us and we'll create a 
-                          customized itinerary just for you.
-                        </p>
-                      </div>
-
-                      {/* Form */}
-                      <form onSubmit={handleSubmit}>
-                        <div style={{
-                          display: 'grid',
-                          gridTemplateColumns: 'repeat(2, 1fr)',
-                          gap: '20px',
-                        }} className="form-grid">
-                          <div style={{ gridColumn: 'span 2' }} className="form-field-full">
-                            <AnimatedInput
-                              label="Full Name"
-                              name="name"
-                              value={formData.name}
-                              onChange={handleChange}
-                              onBlur={handleBlur}
-                              placeholder="John Smith"
-                              required
-                              error={errors.name}
-                              touched={touched.name}
-                              icon={FiUser}
-                            />
-                          </div>
-
-                          <div className="form-field-half">
-                            <AnimatedInput
-                              label="Email Address"
-                              name="email"
-                              type="email"
-                              value={formData.email}
-                              onChange={handleChange}
-                              onBlur={handleBlur}
-                              placeholder="john@example.com"
-                              required
-                              error={errors.email}
-                              touched={touched.email}
-                              icon={FiMail}
-                            />
-                          </div>
-
-                          <div className="form-field-half">
-                            <AnimatedInput
-                              label="Phone Number"
-                              name="phone"
-                              type="tel"
-                              value={formData.phone}
-                              onChange={handleChange}
-                              onBlur={handleBlur}
-                              placeholder="+1 234 567 8900"
-                              error={errors.phone}
-                              touched={touched.phone}
-                              icon={FiPhone}
-                            />
-                          </div>
-
-                          <div className="form-field-half">
-                            <AnimatedSelect
-                              label="Trip Type"
-                              name="tripType"
-                              value={formData.tripType}
-                              onChange={handleChange}
-                              onBlur={handleBlur}
-                              options={tripTypes}
-                              placeholder="Select your adventure"
-                              icon={FiGlobe}
-                            />
-                          </div>
-
-                          <div className="form-field-half">
-                            <AnimatedInput
-                              label="Preferred Travel Date"
-                              name="travelDate"
-                              type="date"
-                              value={formData.travelDate}
-                              onChange={handleChange}
-                              onBlur={handleBlur}
-                              icon={FiCalendar}
-                            />
-                          </div>
-
-                          <div style={{ gridColumn: 'span 2' }} className="form-field-full">
-                            <AnimatedSelect
-                              label="Number of Travelers"
-                              name="travelers"
-                              value={formData.travelers}
-                              onChange={handleChange}
-                              onBlur={handleBlur}
-                              options={[
-                                { value: '1', label: '1 Traveler (Solo Adventure)' },
-                                { value: '2', label: '2 Travelers (Couple/Duo)' },
-                                { value: '3-4', label: '3-4 Travelers (Small Group)' },
-                                { value: '5-8', label: '5-8 Travelers (Group)' },
-                                { value: '9+', label: '9+ Travelers (Large Group)' },
-                              ]}
-                              placeholder="Select group size"
-                              icon={FiUsers}
-                            />
-                          </div>
-
-                          <div style={{ gridColumn: 'span 2' }} className="form-field-full">
-                            <AnimatedInput
-                              label="Subject"
-                              name="subject"
-                              value={formData.subject}
-                              onChange={handleChange}
-                              onBlur={handleBlur}
-                              placeholder="What would you like to know?"
-                              required
-                              error={errors.subject}
-                              touched={touched.subject}
-                              icon={FiMessageSquare}
-                            />
-                          </div>
-
-                          <div style={{ gridColumn: 'span 2' }} className="form-field-full">
-                            <AnimatedTextarea
-                              label="Your Message"
-                              name="message"
-                              value={formData.message}
-                              onChange={handleChange}
-                              onBlur={handleBlur}
-                              placeholder="Tell us about your dream African adventure. Include any specific destinations, activities, or experiences you'd like..."
-                              required
-                              error={errors.message}
-                              touched={touched.message}
-                              maxLength={2000}
-                            />
-                          </div>
-                        </div>
-
-                        {/* Submit button */}
-                        <motion.button
-                          type="submit"
-                          disabled={isSubmitting}
-                          whileHover={{ scale: isSubmitting ? 1 : 1.02, y: isSubmitting ? 0 : -3 }}
-                          whileTap={{ scale: isSubmitting ? 1 : 0.98 }}
-                          style={{
-                            width: '100%',
-                            padding: '20px 32px',
-                            background: isSubmitting 
-                              ? theme.colors.primary 
-                              : theme.gradients.primary,
-                            color: theme.colors.white,
-                            border: 'none',
-                            borderRadius: theme.borderRadius.xl,
-                            fontSize: '17px',
-                            fontWeight: '600',
-                            cursor: isSubmitting ? 'wait' : 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '12px',
-                            boxShadow: theme.shadows.glow,
-                            marginTop: '32px',
-                            position: 'relative',
-                            overflow: 'hidden',
-                          }}
-                        >
-                          {isSubmitting ? (
-                            <>
-                              <motion.div
-                                animate={{ rotate: 360 }}
-                                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                              >
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                                  <circle cx="12" cy="12" r="10" stroke="white" strokeWidth="3" strokeDasharray="31.4 31.4" strokeLinecap="round"/>
-                                </svg>
-                              </motion.div>
-                              Sending Your Message...
-                            </>
-                          ) : (
-                            <>
-                              <RiSendPlaneFill size={20} />
-                              Send Safari Inquiry
-                            </>
-                          )}
-                          
-                          {/* Progress bar */}
-                          {isSubmitting && (
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${submitProgress}%` }}
-                              style={{
-                                position: 'absolute',
-                                bottom: 0,
-                                left: 0,
-                                height: '4px',
-                                backgroundColor: 'rgba(255,255,255,0.4)',
-                                borderRadius: '0 2px 2px 0',
-                              }}
-                            />
-                          )}
-                        </motion.button>
-
-                        {/* Privacy note */}
-                        <motion.p
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ delay: 0.5 }}
-                          style={{
-                            fontSize: '13px',
-                            color: theme.colors.textMuted,
-                            textAlign: 'center',
-                            marginTop: '20px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '8px',
-                          }}
-                        >
-                          <FiShield size={14} />
-                          Your information is secure and will never be shared.
-                        </motion.p>
-                      </form>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================
-          FAQ SECTION
-          ============================================ */}
-      <section style={{
-        padding: '100px 24px',
-        backgroundColor: theme.colors.white,
-        position: 'relative',
-      }}>
-        <div style={{
-          maxWidth: '900px',
-          margin: '0 auto',
-        }}>
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={animations.fadeInUp}
-            style={{
-              textAlign: 'center',
-              marginBottom: '60px',
-            }}
-          >
-            <motion.div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '10px 24px',
-                backgroundColor: theme.colors.offWhite,
-                borderRadius: theme.borderRadius.full,
-                marginBottom: '20px',
-              }}
-            >
-              <FiHelpCircle size={16} color={theme.colors.primary} />
-              <span style={{ color: theme.colors.primary, fontSize: '14px', fontWeight: '600' }}>
-                Frequently Asked Questions
-              </span>
-            </motion.div>
-            
-            <h2 style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: 'clamp(32px, 5vw, 48px)',
-              fontWeight: '700',
-              color: theme.colors.text,
-              marginBottom: '16px',
-            }}>
-              Got Questions?
-            </h2>
-            <p style={{
-              fontSize: '18px',
-              color: theme.colors.textLight,
-              maxWidth: '500px',
-              margin: '0 auto',
-            }}>
-              Find quick answers to common questions about our safari experiences.
-            </p>
-          </motion.div>
-
-          <motion.div
-            variants={animations.staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '16px',
-            }}
-          >
-            {faqs.map((faq, index) => (
-              <FAQItem
-                key={index}
-                {...faq}
-                index={index}
-                isOpen={openFAQ === index}
-                onClick={() => setOpenFAQ(openFAQ === index ? null : index)}
-              />
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ============================================
-          QUICK CONTACT SECTION
-          ============================================ */}
-      <section style={{
-        padding: '80px 24px',
-        background: theme.gradients.soft,
-        position: 'relative',
-      }}>
-        <FloatingDecorations />
-        
-        <div style={{
-          maxWidth: '1200px',
-          margin: '0 auto',
-          position: 'relative',
-          zIndex: 1,
-        }}>
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={animations.fadeInUp}
-            style={{
-              textAlign: 'center',
-              marginBottom: '50px',
-            }}
-          >
-            <h2 style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: 'clamp(28px, 4vw, 40px)',
-              fontWeight: '700',
-              color: theme.colors.text,
-              marginBottom: '12px',
-            }}>
-              Quick Contact Options
-            </h2>
-            <p style={{
-              fontSize: '16px',
-              color: theme.colors.textLight,
-            }}>
-              Choose the way that works best for you
-            </p>
-          </motion.div>
-
-          <motion.div
-            variants={animations.staggerContainer}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-              gap: '24px',
-            }}
-          >
-            {quickContactOptions.map((option, index) => (
-              <motion.a
-                key={index}
-                href={option.href}
-                variants={animations.staggerItem}
-                whileHover={{ y: -8, scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                style={{
-                  backgroundColor: theme.colors.white,
-                  padding: '32px',
-                  borderRadius: theme.borderRadius.xl,
-                  boxShadow: theme.shadows.md,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '20px',
-                  textDecoration: 'none',
-                  transition: 'all 0.3s ease',
-                  border: '2px solid transparent',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.borderColor = option.color;
-                  e.currentTarget.style.boxShadow = `0 20px 40px ${option.color}25`;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.borderColor = 'transparent';
-                  e.currentTarget.style.boxShadow = theme.shadows.md;
-                }}
-              >
-                <div style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: theme.borderRadius.lg,
-                  backgroundColor: `${option.color}15`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: option.color,
-                  flexShrink: 0,
-                }}>
-                  <option.icon size={28} />
-                </div>
-                <div>
-                  <h4 style={{
-                    fontSize: '20px',
-                    fontWeight: '700',
-                    color: theme.colors.text,
-                    marginBottom: '4px',
-                  }}>
-                    {option.title}
-                  </h4>
-                  <p style={{
-                    fontSize: '14px',
-                    color: theme.colors.textLight,
-                    marginBottom: '8px',
-                  }}>
-                    {option.subtitle}
-                  </p>
-                  <p style={{
-                    fontSize: '16px',
-                    fontWeight: '600',
-                    color: option.color,
-                  }}>
-                    {option.action}
-                  </p>
-                </div>
-              </motion.a>
-            ))}
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ============================================
-          CTA SECTION
-          ============================================ */}
-      <section style={{
-        padding: '100px 24px',
-        background: theme.gradients.hero,
-        position: 'relative',
-        overflow: 'hidden',
-      }}>
-        {/* Animated background */}
-        <motion.div
-          animate={{
-            backgroundPosition: ['0% 0%', '100% 100%'],
-          }}
-          transition={{ duration: 20, repeat: Infinity, repeatType: 'reverse' }}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'url("data:image/svg+xml,%3Csvg width="60" height="60" viewBox="0 0 60 60" xmlns="http://www.w3.org/2000/svg"%3E%3Cg fill="none" fill-rule="evenodd"%3E%3Cg fill="%23ffffff" fill-opacity="0.05"%3E%3Cpath d="M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")',
-          }}
-        />
-        
-        <div style={{
-          maxWidth: '800px',
-          margin: '0 auto',
-          textAlign: 'center',
-          position: 'relative',
-          zIndex: 1,
-        }}>
-          <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true }}
-            variants={animations.fadeInUp}
-          >
-            <motion.div
-              animate={{ scale: [1, 1.1, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              style={{
-                width: '80px',
-                height: '80px',
-                borderRadius: '50%',
-                background: 'rgba(255,255,255,0.15)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 24px',
-              }}
-            >
-              <FiCoffee size={36} color={theme.colors.white} />
-            </motion.div>
-            
-            <h2 style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: 'clamp(32px, 5vw, 52px)',
-              fontWeight: '700',
-              color: theme.colors.white,
-              marginBottom: '20px',
-              lineHeight: '1.2',
-            }}>
-              Ready to Start Your Adventure?
-            </h2>
-            <p style={{
-              fontSize: 'clamp(16px, 2vw, 20px)',
-              color: 'rgba(255,255,255,0.85)',
-              marginBottom: '40px',
-              lineHeight: '1.7',
-            }}>
-              Let's grab a virtual coffee and discuss your dream African safari. 
-              No obligations, just inspiration.
-            </p>
-            
-            <div style={{
-              display: 'flex',
-              gap: '16px',
-              justifyContent: 'center',
-              flexWrap: 'wrap',
-            }}>
-              <motion.a
-                href="#contact-form"
-                whileHover={{ scale: 1.05, y: -3 }}
-                whileTap={{ scale: 0.95 }}
-                style={{
-                  padding: '18px 40px',
-                  background: theme.colors.white,
-                  color: theme.colors.primary,
-                  borderRadius: theme.borderRadius.full,
-                  fontSize: '17px',
-                  fontWeight: '600',
-                  textDecoration: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-                }}
-              >
-                <HiSparkles size={20} />
-                Start Planning
-              </motion.a>
-              <motion.a
-                href="/safaris"
-                whileHover={{ scale: 1.05, y: -3 }}
-                whileTap={{ scale: 0.95 }}
-                style={{
-                  padding: '18px 40px',
-                  background: 'transparent',
-                  color: theme.colors.white,
-                  border: '2px solid rgba(255,255,255,0.4)',
-                  borderRadius: theme.borderRadius.full,
-                  fontSize: '17px',
-                  fontWeight: '600',
-                  textDecoration: 'none',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
-              >
-                View Safari Packages
-                <FiArrowRight size={18} />
-              </motion.a>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Live Chat Widget */}
-      <LiveChatWidget />
-
-      {/* Global Styles */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
-        
-        * {
-          font-family: 'Inter', sans-serif;
-        }
-        
-        html {
-          scroll-behavior: smooth;
-        }
-        
-        /* Responsive grid adjustments */
-        @media (min-width: 1024px) {
-          .contact-info-column {
-            grid-column: span 5 !important;
-          }
-          .contact-form-column {
-            grid-column: span 7 !important;
-          }
-        }
-        
-        @media (max-width: 768px) {
-          .form-grid {
-            grid-template-columns: 1fr !important;
-          }
-          .form-field-half {
-            grid-column: span 1 !important;
-          }
-          .form-field-full {
-            grid-column: span 1 !important;
-          }
-        }
-        
-        /* Custom scrollbar */
-        ::-webkit-scrollbar {
-          width: 8px;
-        }
-        ::-webkit-scrollbar-track {
-          background: ${theme.colors.offWhite};
-        }
-        ::-webkit-scrollbar-thumb {
-          background: ${theme.colors.primary};
-          border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-          background: ${theme.colors.primaryDark};
-        }
-        
-        /* Selection color */
-        ::selection {
-          background: ${theme.colors.primary};
-          color: white;
-        }
-      `}</style>
     </div>
   );
 };
