@@ -1,5 +1,5 @@
-import React from "react";
-import { Routes, Route } from "react-router-dom";
+import React, { useEffect } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { useApp } from "./context/AppContext";
 import Navbar from "./components/common/Navbar";
 import Footer from "./components/common/Footer";
@@ -32,7 +32,9 @@ import Gallery from "./pages/Gallery";
 import Booking from "./pages/Booking";
 import FAQ from "./pages/FAQ";
 import PaymentTerms from "./pages/PaymentTerms";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Team from "./pages/Team";
+import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 
 // Protected pages
@@ -42,82 +44,254 @@ import Wishlist from "./pages/auth/Wishlist";
 import UserSettings from "./pages/auth/UserSettings";
 
 function App() {
-  const { isLoading } = useApp();
+  const location = useLocation();
+  const { isLoading, setIsLoading } = useApp();
 
-  if (isLoading) {
-    return <Loader />;
-  }
+  useEffect(() => {
+    if (location.pathname !== "/" && isLoading) {
+      setIsLoading(false);
+    }
+  }, [isLoading, location.pathname, setIsLoading]);
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        position: "relative",
+      }}
+    >
       <Navbar />
 
       <main style={{ flex: 1 }}>
         <Routes>
-
           {/* Public */}
-          <Route path="/" element={<PageWrapper title="Home"><Home /></PageWrapper>} />
-          <Route path="/destinations" element={<PageWrapper title="Destinations"><Destinations /></PageWrapper>} />
-          <Route path="/country/:countryId" element={<PageWrapper title="Country"><CountryPage /></PageWrapper>} />
-          <Route path="/country/:countryId/destinations" element={<PageWrapper title="Country Destinations"><CountryDestinations /></PageWrapper>} />
-          <Route path="/destination/:destinationId" element={<PageWrapper title="Destination Details"><DestinationDetail /></PageWrapper>} />
-          <Route path="/tips" element={<PageWrapper title="Travel Tips"><Tips /></PageWrapper>} />
-          <Route path="/explore" element={<PageWrapper title="Explore"><Explore /></PageWrapper>} />
-          <Route path="/posts" element={<PageWrapper title="Blog Posts"><Posts /></PageWrapper>} />
-          <Route path="/post/:slug" element={<PageWrapper title="Post Details"><PostDetail /></PageWrapper>} />
-          <Route path="/interactive-map" element={<PageWrapper title="Interactive Map"><InteractiveMap /></PageWrapper>} />
-          <Route path="/virtual-tour" element={<PageWrapper title="Virtual Tour"><VirtualTour /></PageWrapper>} />
-          <Route path="/services" element={<PageWrapper title="Services"><Services /></PageWrapper>} />
-          <Route path="/about" element={<PageWrapper title="About Us"><About /></PageWrapper>} />
-          <Route path="/payment-terms" element={<PageWrapper title="Payment Terms"><PaymentTerms /></PageWrapper>} />
-          <Route path="/team" element={<PageWrapper title="Our Team"><Team /></PageWrapper>} />
-          <Route path="/contact" element={<PageWrapper title="Contact Us"><Contact /></PageWrapper>} />
-          <Route path="/gallery" element={<PageWrapper title="Gallery"><Gallery /></PageWrapper>} />
-          <Route path="/faq" element={<PageWrapper title="FAQ"><FAQ /></PageWrapper>} />
+          <Route
+            path="/"
+            element={
+              <PageWrapper title="Home">
+                <Home />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/destinations"
+            element={
+              <PageWrapper title="Destinations">
+                <Destinations />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/country/:countryId"
+            element={
+              <PageWrapper title="Country">
+                <CountryPage />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/country/:countryId/destinations"
+            element={
+              <PageWrapper title="Country Destinations">
+                <CountryDestinations />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/destination/:destinationId"
+            element={
+              <PageWrapper title="Destination Details">
+                <DestinationDetail />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/tips"
+            element={
+              <PageWrapper title="Travel Tips">
+                <Tips />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/explore"
+            element={
+              <PageWrapper title="Explore">
+                <Explore />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/posts"
+            element={
+              <PageWrapper title="Blog Posts">
+                <Posts />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/post/:slug"
+            element={
+              <PageWrapper title="Post Details">
+                <PostDetail />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/interactive-map"
+            element={
+              <PageWrapper title="Interactive Map">
+                <InteractiveMap />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/virtual-tour"
+            element={
+              <PageWrapper title="Virtual Tour">
+                <VirtualTour />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/services"
+            element={
+              <PageWrapper title="Services">
+                <Services />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/about"
+            element={
+              <PageWrapper title="About Us">
+                <About />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/payment-terms"
+            element={
+              <PageWrapper title="Payment Terms">
+                <PaymentTerms />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/team"
+            element={
+              <PageWrapper title="Our Team">
+                <Team />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/contact"
+            element={
+              <PageWrapper title="Contact Us">
+                <Contact />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/gallery"
+            element={
+              <PageWrapper title="Gallery">
+                <Gallery />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/faq"
+            element={
+              <PageWrapper title="FAQ">
+                <FAQ />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/privacy"
+            element={
+              <PageWrapper title="Privacy Policy">
+                <PrivacyPolicy />
+              </PageWrapper>
+            }
+          />
+          <Route
+            path="/terms"
+            element={
+              <PageWrapper title="Terms of Service">
+                <TermsOfService />
+              </PageWrapper>
+            }
+          />
 
           {/* Protected */}
-          <Route path="/booking" element={
-            <ProtectedRoute>
-              <PageWrapper title="Booking">
-                <Booking />
+          <Route
+            path="/booking"
+            element={
+              <ProtectedRoute>
+                <PageWrapper title="Booking">
+                  <Booking />
+                </PageWrapper>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <PageWrapper title="My Profile">
+                  <UserProfile />
+                </PageWrapper>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/my-bookings"
+            element={
+              <ProtectedRoute>
+                <PageWrapper title="My Bookings">
+                  <MyBookings />
+                </PageWrapper>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/wishlist"
+            element={
+              <ProtectedRoute>
+                <PageWrapper title="Wishlist">
+                  <Wishlist />
+                </PageWrapper>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <PageWrapper title="Settings">
+                  <UserSettings />
+                </PageWrapper>
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="*"
+            element={
+              <PageWrapper title="Page Not Found">
+                <NotFound />
               </PageWrapper>
-            </ProtectedRoute>
-          } />
-
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <PageWrapper title="My Profile">
-                <UserProfile />
-              </PageWrapper>
-            </ProtectedRoute>
-          } />
-
-          <Route path="/my-bookings" element={
-            <ProtectedRoute>
-              <PageWrapper title="My Bookings">
-                <MyBookings />
-              </PageWrapper>
-            </ProtectedRoute>
-          } />
-
-          <Route path="/wishlist" element={
-            <ProtectedRoute>
-              <PageWrapper title="Wishlist">
-                <Wishlist />
-              </PageWrapper>
-            </ProtectedRoute>
-          } />
-
-          <Route path="/settings" element={
-            <ProtectedRoute>
-              <PageWrapper title="Settings">
-                <UserSettings />
-              </PageWrapper>
-            </ProtectedRoute>
-          } />
-
-          <Route path="*" element={<PageWrapper title="Page Not Found"><NotFound /></PageWrapper>} />
-
+            }
+          />
         </Routes>
       </main>
 
@@ -127,6 +301,7 @@ function App() {
       <PersistentMapViewer />
       <CookieConsent />
       <AuthModal />
+      {isLoading && <Loader />}
     </div>
   );
 }

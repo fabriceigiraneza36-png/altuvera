@@ -21,7 +21,12 @@ const Navbar = () => {
   const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [avatarImageLoaded, setAvatarImageLoaded] = useState(false);
+
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -90,6 +95,10 @@ const Navbar = () => {
     closeMobileMenu();
   }, [location.pathname, closeMobileMenu]);
 
+  useEffect(() => {
+    setAvatarImageLoaded(false);
+  }, [user?.avatar]);
+
   // Body overflow control
   useEffect(() => {
     const shouldLock = isMobileMenuOpen || searchOpen;
@@ -105,6 +114,31 @@ const Navbar = () => {
       searchInputRef.current.focus();
     }
   }, [searchOpen]);
+
+  // Live search effect
+  useEffect(() => {
+    const trimmed = searchValue.trim();
+    if (trimmed.length < 2) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      setIsSearching(true);
+      try {
+        const res = await fetch(`${API_URL}/destinations?search=${encodeURIComponent(trimmed)}&limit=5`);
+        const data = await res.json();
+        setSearchResults(data.data || data || []);
+      } catch (err) {
+        console.error("Search failed", err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchValue, API_URL]);
 
   // ESC key handler
   useEffect(() => {
@@ -193,6 +227,13 @@ const Navbar = () => {
   const getDisplayName = useCallback(() => {
     return user?.fullName || user?.name || user?.email?.split("@")[0] || "User";
   }, [user]);
+
+  const getProviderLabel = useCallback(() => {
+    const provider = (user?.authProvider || "").toLowerCase();
+    if (provider === "google") return "Google";
+    if (provider === "github") return "GitHub";
+    return "Email";
+  }, [user?.authProvider]);
 
   const handleLogout = useCallback(() => {
     closeMobileMenu();
@@ -305,16 +346,22 @@ const Navbar = () => {
                   aria-haspopup="true"
                 >
                   {user?.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt={getDisplayName()}
-                      className="navbar__user-avatar-img"
-                    />
+                    <div className="navbar__user-avatar-shell">
+                      {!avatarImageLoaded && <span className="navbar__avatar-loader" />}
+                      <img
+                        src={user.avatar}
+                        alt={getDisplayName()}
+                        className="navbar__user-avatar-img"
+                        onLoad={() => setAvatarImageLoaded(true)}
+                        onError={() => setAvatarImageLoaded(true)}
+                      />
+                    </div>
                   ) : (
                     <span className="navbar__user-avatar">{getInitials()}</span>
                   )}
                   <span className="navbar__user-name desktop-user-name">
                     {getDisplayName()}
+                    <span className="navbar__user-meta">{getProviderLabel()}</span>
                   </span>
                   <FiChevronDown
                     className={`navbar__user-chevron ${userMenuOpen ? "navbar__user-chevron--open" : ""}`}
@@ -326,6 +373,7 @@ const Navbar = () => {
                     <div className="navbar__user-dropdown-header">
                       <p className="navbar__user-dropdown-name">{getDisplayName()}</p>
                       <p className="navbar__user-dropdown-email">{user?.email}</p>
+                      <span className="navbar__provider-pill">{getProviderLabel()} account</span>
                     </div>
                     {userMenuItems.map((item) => (
                       <Link
@@ -394,6 +442,45 @@ const Navbar = () => {
               <FiSearch size={20} />
             </button>
           </form>
+
+          {/* Results Dropdown */}
+          <div className="search-results">
+            {isSearching && (
+              <div className="search-loading">Searching destinations...</div>
+            )}
+            {!isSearching && searchResults.length > 0 && (
+              <div className="search-results-list">
+                {searchResults.map((result) => (
+                  <Link
+                    key={result.id || result._id}
+                    to={`/destination/${result.slug || result.id}`}
+                    className="search-result-item"
+                    onClick={() => setSearchOpen(false)}
+                  >
+                    <div className="search-result-img">
+                      <img src={result.heroImage || (result.images && result.images[0]) || 'https://via.placeholder.com/80'} alt="" />
+                    </div>
+                    <div className="search-result-info">
+                      <p className="search-result-name">{result.name}</p>
+                      <p className="search-result-meta">
+                        {result.country} • {result.category || 'Destinations'}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+                <Link 
+                  to={`/destinations?search=${encodeURIComponent(searchValue)}`}
+                  className="search-view-all"
+                  onClick={() => setSearchOpen(false)}
+                >
+                  View all results for "{searchValue}"
+                </Link>
+              </div>
+            )}
+            {!isSearching && searchValue.trim().length >= 2 && searchResults.length === 0 && (
+              <div className="search-no-results">No destinations found matching your search.</div>
+            )}
+          </div>
         </div>
         <button
           className="search-overlay__close"
@@ -463,17 +550,23 @@ const Navbar = () => {
               <>
                 <div className="mobile-menu__user-info">
                   {user?.avatar ? (
-                    <img
-                      src={user.avatar}
-                      alt={getDisplayName()}
-                      className="mobile-menu__user-avatar-img"
-                    />
+                    <div className="mobile-menu__user-avatar-shell">
+                      {!avatarImageLoaded && <span className="navbar__avatar-loader" />}
+                      <img
+                        src={user.avatar}
+                        alt={getDisplayName()}
+                        className="mobile-menu__user-avatar-img"
+                        onLoad={() => setAvatarImageLoaded(true)}
+                        onError={() => setAvatarImageLoaded(true)}
+                      />
+                    </div>
                   ) : (
                     <div className="mobile-menu__user-avatar">{getInitials()}</div>
                   )}
                   <div className="mobile-menu__user-details">
                     <div className="mobile-menu__user-name">{getDisplayName()}</div>
                     <div className="mobile-menu__user-email">{user?.email}</div>
+                    <div className="mobile-menu__user-provider">{getProviderLabel()} account</div>
                   </div>
                 </div>
                 {userMenuItems.map((item) => (
@@ -557,10 +650,12 @@ const Navbar = () => {
 
         .navbar--scrolled {
           padding: 10px 0;
-          background-color: rgba(255, 255, 255, 0.98);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.985), rgba(250, 255, 252, 0.97));
           backdrop-filter: blur(20px);
           -webkit-backdrop-filter: blur(20px);
           box-shadow: var(--shadow-md);
+          border-bottom: 1px solid rgba(16, 185, 129, 0.14);
         }
 
         .navbar__container {
@@ -645,6 +740,7 @@ const Navbar = () => {
           border-radius: 8px;
           transition: background-color var(--transition-fast), color var(--transition-fast);
           cursor: pointer;
+          position: relative;
         }
 
         .navbar--scrolled .navbar__nav-link {
@@ -662,6 +758,25 @@ const Navbar = () => {
 
         .navbar__nav-link--active {
           background-color: var(--white-alpha-20);
+        }
+
+        .navbar__nav-link::after {
+          content: "";
+          position: absolute;
+          left: 12px;
+          right: 12px;
+          bottom: 4px;
+          height: 2px;
+          border-radius: 999px;
+          background: linear-gradient(90deg, #34d399, #10b981);
+          transform: scaleX(0);
+          transform-origin: center;
+          transition: transform var(--transition-fast);
+        }
+
+        .navbar__nav-link--active::after,
+        .navbar__nav-link:hover::after {
+          transform: scaleX(1);
         }
 
         .navbar--scrolled .navbar__nav-link--active {
@@ -737,19 +852,21 @@ const Navbar = () => {
           height: 42px;
           border-radius: 12px;
           border: none;
-          background-color: var(--white-alpha-20);
+          background-color: rgba(255, 255, 255, 0.18);
           color: var(--white);
           cursor: pointer;
           display: flex;
           align-items: center;
           justify-content: center;
           position: relative;
-          transition: transform var(--transition-fast), background-color var(--transition-fast);
+          transition: transform var(--transition-fast), background-color var(--transition-fast), box-shadow var(--transition-fast);
+          box-shadow: 0 8px 16px rgba(2, 44, 34, 0.14);
         }
 
         .navbar--scrolled .navbar__icon-btn {
-          background-color: var(--primary-light);
+          background-color: rgba(5, 150, 105, 0.11);
           color: var(--primary-color);
+          box-shadow: 0 8px 18px rgba(5, 150, 105, 0.13);
         }
 
         .navbar__icon-btn:hover {
@@ -792,7 +909,7 @@ const Navbar = () => {
           font-weight: 600;
           cursor: pointer;
           border: none;
-          background-color: var(--primary-color);
+          background: linear-gradient(135deg, #059669, #10b981);
           color: var(--white);
           box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
           transition: transform var(--transition-fast), box-shadow var(--transition-fast);
@@ -805,7 +922,7 @@ const Navbar = () => {
 
         .navbar__cta {
           padding: 11px 22px;
-          background-color: var(--primary-color);
+          background: linear-gradient(135deg, #059669, #10b981);
           color: var(--white);
           border: none;
           border-radius: 12px;
@@ -833,20 +950,23 @@ const Navbar = () => {
           align-items: center;
           gap: 8px;
           padding: 4px 12px 4px 4px;
-          background: var(--white-alpha-15);
-          border: 1.5px solid rgba(255, 255, 255, 0.3);
+          background: rgba(255, 255, 255, 0.16);
+          border: 1.5px solid rgba(255, 255, 255, 0.38);
+          box-shadow: 0 14px 26px rgba(5, 150, 105, 0.18);
           border-radius: 100px;
           cursor: pointer;
-          transition: border-color var(--transition-fast);
+          transition: border-color var(--transition-fast), transform var(--transition-fast);
         }
 
         .navbar--scrolled .navbar__user-trigger {
-          background: rgba(5, 150, 105, 0.08);
-          border-color: var(--border-primary);
+          background: rgba(5, 150, 105, 0.09);
+          border-color: rgba(16, 185, 129, 0.25);
         }
 
         .navbar__user-trigger:hover {
           border-color: rgba(255, 255, 255, 0.6);
+          transform: translateY(-1px);
+          box-shadow: 0 16px 32px rgba(5, 150, 105, 0.22);
         }
 
         .navbar--scrolled .navbar__user-trigger:hover {
@@ -865,6 +985,9 @@ const Navbar = () => {
           font-size: 13px;
           font-weight: 700;
           flex-shrink: 0;
+          box-shadow:
+            inset 0 0 0 2px rgba(255, 255, 255, 0.55),
+            0 6px 14px rgba(6, 78, 59, 0.25);
         }
 
         .navbar__user-avatar-img {
@@ -872,11 +995,27 @@ const Navbar = () => {
           height: 36px;
           border-radius: 50%;
           object-fit: cover;
+          box-shadow:
+            inset 0 0 0 2px rgba(255, 255, 255, 0.55),
+            0 6px 14px rgba(6, 78, 59, 0.25);
+        }
+
+        .navbar__user-avatar-shell {
+          position: relative;
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          overflow: hidden;
+          flex-shrink: 0;
         }
 
         .navbar__user-name {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-start;
+          line-height: 1.1;
           font-size: 14px;
-          font-weight: 500;
+          font-weight: 600;
           color: var(--white);
           max-width: 120px;
           overflow: hidden;
@@ -884,8 +1023,21 @@ const Navbar = () => {
           white-space: nowrap;
         }
 
+        .navbar__user-meta {
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 0.06em;
+          color: rgba(255, 255, 255, 0.84);
+          font-weight: 700;
+          margin-top: 2px;
+        }
+
         .navbar--scrolled .navbar__user-name {
           color: var(--text-dark);
+        }
+
+        .navbar--scrolled .navbar__user-meta {
+          color: #6b7280;
         }
 
         .navbar__user-chevron {
@@ -906,11 +1058,11 @@ const Navbar = () => {
           position: absolute;
           top: calc(100% + 10px);
           right: 0;
-          width: 240px;
-          background-color: var(--white);
-          border-radius: 16px;
-          box-shadow: 0 16px 48px rgba(6, 78, 59, 0.18);
-          border: 1px solid #ecfdf5;
+          width: 270px;
+          background: linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(249, 255, 252, 0.98));
+          border-radius: 18px;
+          box-shadow: 0 24px 60px rgba(6, 78, 59, 0.22);
+          border: 1px solid #d9f6e7;
           z-index: 9999;
           overflow: hidden;
           animation: userMenuDrop 0.2s ease;
@@ -927,8 +1079,17 @@ const Navbar = () => {
           }
         }
 
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
         .navbar__user-dropdown-header {
-          padding: 14px 16px 10px;
+          padding: 16px 16px 12px;
           border-bottom: 1px solid #f0fdf4;
         }
 
@@ -947,20 +1108,34 @@ const Navbar = () => {
           text-overflow: ellipsis;
         }
 
+        .navbar__provider-pill {
+          display: inline-flex;
+          margin-top: 10px;
+          padding: 4px 10px;
+          border-radius: 999px;
+          border: 1px solid #97e9c0;
+          background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+          color: #166534;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.02em;
+        }
+
         .navbar__user-dropdown-item {
           display: flex;
           align-items: center;
           gap: 10px;
-          padding: 11px 16px;
+          padding: 12px 16px;
           font-size: 14px;
           color: #444;
           text-decoration: none;
-          transition: background-color var(--transition-fast), color var(--transition-fast);
+          transition: background-color var(--transition-fast), color var(--transition-fast), padding-left var(--transition-fast);
         }
 
         .navbar__user-dropdown-item:hover {
-          background-color: #f0fdf4;
+          background-color: #ecfdf5;
           color: var(--primary-color);
+          padding-left: 20px;
         }
 
         .navbar__user-dropdown-logout {
@@ -1106,7 +1281,7 @@ const Navbar = () => {
           position: fixed;
           top: 0;
           right: 0;
-          width: min(420px, 88vw);
+          width: min(420px, 92vw);
           bottom: 0;
           background-color: var(--white);
           z-index: 1002;
@@ -1115,6 +1290,7 @@ const Navbar = () => {
           transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
           overflow-y: auto;
           overscroll-behavior: contain;
+          -webkit-overflow-scrolling: touch;
         }
 
         .mobile-menu--open {
@@ -1122,7 +1298,7 @@ const Navbar = () => {
         }
 
         .mobile-menu__content {
-          padding: 92px 22px 36px;
+          padding: calc(80px + env(safe-area-inset-top, 0px)) 20px calc(28px + env(safe-area-inset-bottom, 0px));
         }
 
         .mobile-menu__item {
@@ -1132,7 +1308,8 @@ const Navbar = () => {
         .mobile-menu__link {
           display: block;
           padding: 14px 0;
-          font-size: 22px;
+          min-height: 52px;
+          font-size: 21px;
           font-weight: 700;
           color: var(--text-dark);
           text-decoration: none;
@@ -1150,7 +1327,8 @@ const Navbar = () => {
           align-items: center;
           justify-content: space-between;
           padding: 14px 0;
-          font-size: 22px;
+          min-height: 52px;
+          font-size: 21px;
           font-weight: 700;
           color: var(--text-dark);
           background: transparent;
@@ -1202,9 +1380,10 @@ const Navbar = () => {
         .mobile-menu__dropdown-link {
           display: block;
           text-decoration: none;
-          font-size: 18px;
+          font-size: 17px;
           font-family: var(--font-body);
-          padding: 11px 10px 11px 14px;
+          padding: 12px 10px 12px 14px;
+          min-height: 46px;
           color: var(--text-light);
           border-radius: 10px;
           transition: color var(--transition-fast), background-color var(--transition-fast);
@@ -1250,6 +1429,35 @@ const Navbar = () => {
           object-fit: cover;
         }
 
+        .mobile-menu__user-avatar-shell {
+          position: relative;
+          width: 48px;
+          height: 48px;
+          border-radius: 50%;
+          overflow: hidden;
+          flex-shrink: 0;
+        }
+
+        .navbar__avatar-loader {
+          position: absolute;
+          inset: 0;
+          border-radius: 50%;
+          background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+          display: grid;
+          place-items: center;
+          z-index: 2;
+        }
+
+        .navbar__avatar-loader::after {
+          content: "";
+          width: 14px;
+          height: 14px;
+          border-radius: 999px;
+          border: 2px solid #10b981;
+          border-right-color: transparent;
+          animation: spin 0.8s linear infinite;
+        }
+
         .mobile-menu__user-details {
           overflow: hidden;
         }
@@ -1270,11 +1478,19 @@ const Navbar = () => {
           white-space: nowrap;
         }
 
+        .mobile-menu__user-provider {
+          margin-top: 6px;
+          font-size: 12px;
+          color: #047857;
+          font-weight: 600;
+        }
+
         .mobile-menu__auth-link {
           display: flex;
           align-items: center;
           gap: 10px;
           padding: 12px 0;
+          min-height: 48px;
           font-size: 17px;
           font-weight: 600;
           color: #333;
@@ -1293,6 +1509,7 @@ const Navbar = () => {
           align-items: center;
           gap: 10px;
           padding: 12px 0;
+          min-height: 48px;
           font-size: 17px;
           font-weight: 600;
           color: #dc2626;
@@ -1311,6 +1528,7 @@ const Navbar = () => {
 
         .mobile-menu__auth-btn {
           width: 100%;
+          min-height: 52px;
           padding: 14px;
           border-radius: 12px;
           border: none;
@@ -1333,6 +1551,7 @@ const Navbar = () => {
           display: block;
           text-align: center;
           margin-top: 16px;
+          min-height: 52px;
           padding: 14px 22px;
           background-color: var(--primary-color);
           color: var(--white);
@@ -1401,6 +1620,29 @@ const Navbar = () => {
         }
 
         @media (max-width: 640px) {
+          .mobile-menu {
+            width: 100vw;
+            box-shadow: -8px 0 30px rgba(6, 78, 59, 0.2);
+          }
+
+          .mobile-menu__content {
+            padding: calc(76px + env(safe-area-inset-top, 0px)) 16px calc(24px + env(safe-area-inset-bottom, 0px));
+          }
+
+          .mobile-menu__link,
+          .mobile-menu__toggle {
+            font-size: 20px;
+          }
+
+          .search-overlay__container {
+            padding: 0 14px;
+          }
+
+          .search-overlay__input {
+            font-size: 16px;
+            padding: 18px 56px 18px 18px;
+          }
+
           .navbar__mobile-btn {
             width: 44px;
             height: 44px;
@@ -1409,6 +1651,88 @@ const Navbar = () => {
           .desktop-user-name {
             display: none;
           }
+        }
+
+        /* ========== Live Search ========== */
+        .search-results {
+          margin-top: 20px;
+          width: 100%;
+          max-height: 60vh;
+          overflow-y: auto;
+          scrollbar-width: thin;
+          scrollbar-color: #059669 #f1f5f9;
+        }
+
+        .search-loading, .search-no-results {
+          padding: 20px;
+          text-align: center;
+          color: #fff;
+          font-weight: 500;
+        }
+
+        .search-results-list {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .search-result-item {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+          padding: 12px;
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 12px;
+          text-decoration: none;
+          transition: all 0.2s ease;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .search-result-item:hover {
+          background: rgba(255, 255, 255, 0.1);
+          border-color: #059669;
+          transform: translateX(5px);
+        }
+
+        .search-result-img {
+          width: 50px;
+          height: 50px;
+          border-radius: 8px;
+          overflow: hidden;
+          flex-shrink: 0;
+        }
+
+        .search-result-img img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .search-result-name {
+          color: white;
+          font-weight: 600;
+          margin: 0;
+          font-size: 15px;
+        }
+
+        .search-result-meta {
+          color: rgba(255, 255, 255, 0.6);
+          font-size: 13px;
+          margin: 2px 0 0;
+        }
+
+        .search-view-all {
+          padding: 15px;
+          text-align: center;
+          color: #059669;
+          font-weight: 700;
+          text-decoration: none;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          margin-top: 10px;
+        }
+
+        .search-view-all:hover {
+          text-decoration: underline;
         }
       `}</style>
     </>

@@ -1,0 +1,9 @@
+# SPA fallback
+/*    /index.html   200
+
+# WWW redirect
+https://altuvera.com/*  https://www.altuvera.com/:splat  301!
+
+# Old URL redirects (add as needed)
+/tours/*  /safaris/:splat  301
+/packages/*  /safaris/:splat  301

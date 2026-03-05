@@ -11,7 +11,10 @@ import {
   FiX,
 } from "react-icons/fi";
 import { useApp } from "../../context/AppContext";
-import { toGoogleMapEmbedUrl, toGoogleMapOpenUrl } from "../../utils/mediaEmbed";
+import {
+  toGoogleMapEmbedUrl,
+  toGoogleMapOpenUrl,
+} from "../../utils/mediaEmbed";
 
 const FLOAT_MARGIN = 12;
 
@@ -30,7 +33,8 @@ const controlButtonStyle = {
 };
 
 const getPanelSize = (isExpanded) => {
-  const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1280;
+  const viewportWidth =
+    typeof window !== "undefined" ? window.innerWidth : 1280;
   const width = isExpanded
     ? Math.min(500, Math.max(320, viewportWidth - FLOAT_MARGIN * 2))
     : Math.min(340, Math.max(260, viewportWidth - FLOAT_MARGIN * 2));
@@ -98,7 +102,8 @@ const PersistentMapViewer = () => {
       if (!isFullscreen) setControlsVisible(true);
     };
     document.addEventListener("fullscreenchange", onFullscreenChange);
-    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
   }, []);
 
   useEffect(() => {
@@ -199,8 +204,10 @@ const PersistentMapViewer = () => {
 
   if (!isMapViewerOpen || !activeMap || !embedUrl) return null;
 
-  const showOverlayControls = controlsVisible || (!isTheaterMode && !isBrowserFullscreen);
+  const showOverlayControls =
+    controlsVisible || (!isTheaterMode && !isBrowserFullscreen);
   const compactWidth = getPanelSize(isExpanded).width;
+  const isActuallyExpanded = isExpanded || isTheaterMode || isBrowserFullscreen;
 
   return (
     <AnimatePresence>
@@ -229,10 +236,17 @@ const PersistentMapViewer = () => {
         animate={{
           opacity: 1,
           scale: 1,
-          width: isTheaterMode || isBrowserFullscreen ? "min(1460px, 96vw)" : `${compactWidth}px`,
-          left: isTheaterMode || isBrowserFullscreen ? "50%" : `${position.x}px`,
+          width:
+            isTheaterMode || isBrowserFullscreen
+              ? "min(1100px, 90vw)"
+              : `${compactWidth}px`,
+          left:
+            isTheaterMode || isBrowserFullscreen ? "50%" : `${position.x}px`,
           top: isTheaterMode || isBrowserFullscreen ? "50%" : `${position.y}px`,
-          transform: isTheaterMode || isBrowserFullscreen ? "translate(-50%, -50%)" : "translate(0%, 0%)",
+          transform:
+            isTheaterMode || isBrowserFullscreen
+              ? "translate(-50%, -50%)"
+              : "translate(0%, 0%)",
         }}
         exit={{ opacity: 0, scale: 0.96 }}
         transition={{ type: "spring", stiffness: 260, damping: 28 }}
@@ -249,89 +263,99 @@ const PersistentMapViewer = () => {
           backdropFilter: "blur(20px)",
         }}
       >
-        {!isTheaterMode && !isBrowserFullscreen && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            gap: "10px",
+            borderBottom: "1px solid rgba(255,255,255,0.08)",
+            opacity: isTheaterMode || isBrowserFullscreen ? 0.3 : 1,
+            pointerEvents:
+              isTheaterMode || isBrowserFullscreen ? "none" : "auto",
+            transition: "opacity 0.3s ease",
+            height: isTheaterMode || isBrowserFullscreen ? "0px" : "auto",
+            padding: isTheaterMode || isBrowserFullscreen ? "0px" : "12px 14px",
+            overflow: "hidden",
+          }}
+        >
+          <button
+            onMouseDown={startDrag}
+            onTouchStart={startDrag}
+            style={{
+              ...controlButtonStyle,
+              cursor: isDragging ? "grabbing" : "grab",
+              touchAction: "none",
+            }}
+            title="Drag mini view"
+          >
+            <FiMove size={14} />
+          </button>
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "flex-start",
-              gap: "10px",
-              padding: "12px 14px",
-              borderBottom: "1px solid rgba(255,255,255,0.08)",
+              gap: "8px",
+              minWidth: 0,
+              flex: 1,
             }}
           >
-            <button
-              onMouseDown={startDrag}
-              onTouchStart={startDrag}
+            <FiMapPin size={14} color="#34D399" />
+            <span
               style={{
-                ...controlButtonStyle,
-                cursor: isDragging ? "grabbing" : "grab",
-                touchAction: "none",
-              }}
-              title="Drag mini view"
-            >
-              <FiMove size={14} />
-            </button>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                minWidth: 0,
-                flex: 1,
+                color: "white",
+                fontSize: "12px",
+                fontWeight: 700,
+                letterSpacing: "0.9px",
+                textTransform: "uppercase",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               }}
             >
-              <FiMapPin size={14} color="#34D399" />
-              <span
-                style={{
-                  color: "white",
-                  fontSize: "12px",
-                  fontWeight: 700,
-                  letterSpacing: "0.9px",
-                  textTransform: "uppercase",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                }}
-              >
-                {activeMap.title || "Live Map"}
-              </span>
-            </div>
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                onClick={() => setIsExpanded((value) => !value)}
-                style={controlButtonStyle}
-                title={isExpanded ? "Mini view" : "Expand"}
-              >
-                {isExpanded ? <FiMinus size={16} /> : <FiMaximize2 size={16} />}
-              </button>
-              {isExpanded && (
-                <button
-                  onClick={() => setIsTheaterMode(true)}
-                  style={controlButtonStyle}
-                  title="Theater mode"
-                >
-                  <FiMaximize size={16} />
-                </button>
-              )}
-              <button
-                onClick={handleClose}
-                style={{ ...controlButtonStyle, color: "#FCA5A5" }}
-                title="Close"
-              >
-                <FiX size={16} />
-              </button>
-            </div>
+              {activeMap.title || "Live Map"}
+            </span>
           </div>
-        )}
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button
+              onClick={() => setIsExpanded((value) => !value)}
+              style={controlButtonStyle}
+              title={isExpanded ? "Mini view" : "Expand"}
+            >
+              {isExpanded ? <FiMinus size={16} /> : <FiMaximize2 size={16} />}
+            </button>
+            {isExpanded && (
+              <button
+                onClick={() => setIsTheaterMode(true)}
+                style={controlButtonStyle}
+                title="Theater mode"
+              >
+                <FiMaximize size={16} />
+              </button>
+            )}
+            <button
+              onClick={handleClose}
+              style={{ ...controlButtonStyle, color: "#FCA5A5" }}
+              title="Close"
+            >
+              <FiX size={16} />
+            </button>
+          </div>
+        </div>
 
         <div
           style={{
             position: "relative",
-            display: isExpanded || isTheaterMode || isBrowserFullscreen ? "block" : "none",
+            display: isActuallyExpanded ? "block" : "none",
           }}
         >
-          <div style={{ width: "100%", aspectRatio: "16 / 9", background: "#020617" }}>
+          <div
+            style={{
+              width: "100%",
+              aspectRatio: "16 / 9",
+              background: "#020617",
+            }}
+          >
             <iframe
               title={activeMap.title || "Map"}
               src={embedUrl}
@@ -369,7 +393,11 @@ const PersistentMapViewer = () => {
                 style={controlButtonStyle}
                 title={isBrowserFullscreen ? "Exit fullscreen" : "Fullscreen"}
               >
-                {isBrowserFullscreen ? <FiMinimize2 size={16} /> : <FiMaximize size={16} />}
+                {isBrowserFullscreen ? (
+                  <FiMinimize2 size={16} />
+                ) : (
+                  <FiMaximize size={16} />
+                )}
               </button>
               {(isTheaterMode || isBrowserFullscreen) && (
                 <button
@@ -395,7 +423,7 @@ const PersistentMapViewer = () => {
             </div>
           )}
 
-          {showOverlayControls && (
+          {!isTheaterMode && !isBrowserFullscreen && (
             <div
               style={{
                 position: "absolute",
@@ -408,9 +436,11 @@ const PersistentMapViewer = () => {
                 color: "white",
                 fontSize: "13px",
                 fontWeight: 600,
+                pointerEvents: "none",
               }}
             >
-              {activeMap.title || "Live Map"} - drag handle to move - mini view and fullscreen available.
+              {activeMap.title || "Live Map"} - drag handle to move - mini view
+              and fullscreen available.
             </div>
           )}
         </div>

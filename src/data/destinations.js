@@ -25,9 +25,9 @@ export const destinations = {
       rating: 4.9,
       reviews: 2847,
       images: [
-        'https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=800',
-        'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800',
-        'https://images.unsplash.com/photo-1535941339077-2dd1c7963098?w=800'
+        'https://i.pinimg.com/1200x/1a/19/cf/1a19cfa92b23af4c8f883e4bad203533.jpg',
+        'https://i.pinimg.com/1200x/d8/8b/6b/d88b6baaf8bfc208016c5617fd4df530.jpg',
+        'https://i.pinimg.com/1200x/79/e1/f8/79e1f8e119ebfbd6bb9483af5f0f7123.jpg'
       ],
       coordinates: { lat: -1.4061, lng: 35.0167 }
     },
@@ -56,8 +56,8 @@ export const destinations = {
       rating: 4.7,
       reviews: 1523,
       images: [
-        'https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=800',
-        'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800'
+        'https://images.ctfassets.net/m5us57n7qfgl/1FVIMjaSpl5xdvZsdf66cM/aeefdd710b1965b2bdabdb79ae3e3554/mount-kenya-getty.jpg?f=center&fm=jpg&h=630&q=70&w=1200',
+        'https://cdn.kimkim.com/files/a/content_articles/featured_photos/80b9f674a7409a56d267d82365c4fbdb8ac372bc/big-3ab61929bfc3989f4692c08dacd3fa00.jpg'
       ],
       coordinates: { lat: -0.1521, lng: 37.3084 }
     },
@@ -116,8 +116,8 @@ export const destinations = {
       rating: 4.6,
       reviews: 2104,
       images: [
-        'https://images.unsplash.com/photo-1535941339077-2dd1c7963098?w=800',
-        'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800'
+        'https://i.pinimg.com/736x/23/c8/2f/23c82fef45c0a7947c63a910514d112d.jpg',
+        'https://i.pinimg.com/736x/94/ea/f6/94eaf69cf6e9e0d8828988d8c81be394.jpg'
       ],
       coordinates: { lat: -2.6527, lng: 37.2606 }
     },
@@ -146,8 +146,8 @@ export const destinations = {
       rating: 4.7,
       reviews: 1876,
       images: [
-        'https://lp-cms-production.imgix.net/2022-02/iStock-532057664%20RFC.jpg?auto=format,compress&q=72&w=1095&h=821&fit=crop&crop=faces,edges',
-        'https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcSiIaRzqstI9ci-gcHv4Q2MvvHaUX3FlwfcauQbXoBEgk9rCjTT'
+        'https://www.go2africa.com/wp-content/uploads/2017/08/lamu1-1920x630.jpg',
+        'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTTaw0_6dRLqLrIgcC6zUdUDMeytbukO8wttA&s'
       ],
       coordinates: { lat: -2.2717, lng: 40.9020 }
     }
@@ -178,8 +178,8 @@ export const destinations = {
       rating: 4.9,
       reviews: 4521,
       images: [
-        'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800',
-        'https://images.unsplash.com/photo-1535941339077-2dd1c7963098?w=800'
+        'https://i.pinimg.com/736x/1c/1d/24/1c1d241de1433f22d6159328a4632a18.jpg',
+        'https://i.pinimg.com/736x/1c/1d/24/1c1d241de1433f22d6159328a4632a18.jpg'
       ],
       coordinates: { lat: -2.3333, lng: 34.8333 }
     },
@@ -300,8 +300,8 @@ export const destinations = {
       rating: 5.0,
       reviews: 2341,
       images: [
-        'https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=800',
-        'https://images.unsplash.com/photo-1553775282-20af80779df7?w=800'
+        'https://i.pinimg.com/1200x/81/42/97/81429785ce16b0f6ff2e1a65c701a53f.jpg',
+        'https://i.pinimg.com/1200x/5b/44/d6/5b44d6575310432429bbf2bccd0217ef.jpg'
       ],
       coordinates: { lat: -1.0467, lng: 29.7025 }
     },

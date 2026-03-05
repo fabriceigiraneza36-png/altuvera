@@ -27,8 +27,8 @@ import {
 import PageHeader from '../components/common/PageHeader';
 import AnimatedSection from '../components/common/AnimatedSection';
 import Button from '../components/common/Button';
-import { countries } from '../data/countries';
-import { getDestinationsByCountry } from '../data/destinations';
+import { useCountry } from '../hooks/useCountries';
+import { useCountryDestinations } from '../hooks/useDestinations';
 
 // ============================================================
 // GLOBAL STYLES - Inject once
@@ -1381,7 +1381,6 @@ const CountryDestinations = () => {
   const scrollPosition = useScrollPosition();
   
   // State
-  const [isLoading, setIsLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid');
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('');
@@ -1397,18 +1396,12 @@ const CountryDestinations = () => {
   });
 
   // Data
-  const country = countries.find(c => c.id === countryId);
-  const allDestinations = useMemo(() => 
-    country ? getDestinationsByCountry(countryId) : [], 
-    [countryId, country]
-  );
-
-  // Simulate loading
-  useEffect(() => {
-    setIsLoading(true);
-    const timer = setTimeout(() => setIsLoading(false), 1000);
-    return () => clearTimeout(timer);
-  }, [countryId]);
+  const { country, loading: countryLoading } = useCountry(countryId);
+  const {
+    destinations: allDestinations,
+    loading: destinationsLoading,
+  } = useCountryDestinations(countryId);
+  const isLoading = countryLoading || destinationsLoading;
 
   // Save favorites
   useEffect(() => {
@@ -1524,8 +1517,16 @@ const CountryDestinations = () => {
   ];
 
   // Not found
-  if (!country) {
+  if (!country && !countryLoading) {
     return <CountryNotFound />;
+  }
+
+  if (!country) {
+    return (
+      <section style={{ minHeight: '60vh', display: 'grid', placeItems: 'center' }}>
+        <div>Loading country...</div>
+      </section>
+    );
   }
 
   // Styles

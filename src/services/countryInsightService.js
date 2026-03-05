@@ -55,35 +55,36 @@ const buildPrompt = (country) => {
 
   return `
 You are a travel intelligence analyst.
-Generate current, concise country insights for tourism planning in 2026.
+Generate current, deep, and authoritative country insights for tourism planning in 2026.
 Return ONLY valid JSON (no markdown).
 
 Country profile:
 ${JSON.stringify(compactCountryData, null, 2)}
 
 Rules:
-- Keep language factual and specific.
+- Keep language factual, professional, and sophisticated.
 - No markdown formatting.
 - If a number is uncertain, mark it "estimated".
-- Keep each text field compact and readable.
+- Keep each text field compact yet informative.
 
 JSON schema:
 {
-  "summary": "2-4 sentence destination overview",
-  "demographics": "5-6 concise demographic points separated by semicolons",
-  "economy": "5-6 concise economy points separated by semicolons",
-  "tourismOutlook": "4-5 sentences on tourism demand and trajectory",
+  "definition": "A 1-2 sentence compelling academic/professional definition of the country's essence",
+  "summary": "3-5 sentence destination overview and why it matters in 2026",
+  "demographics": "6-8 concise demographic points separated by semicolons",
+  "economy": "6-8 concise economy points separated by semicolons",
+  "tourismOutlook": "5-6 sentences on tourism demand, infrastructure growth, and trajectory",
   "quickStats": {
     "population": "string",
     "gdp": "string",
     "internetPenetration": "string",
     "internationalArrivals": "string"
   },
-  "topCities": ["string", "string", "string", "string"],
-  "bestTravelMonths": ["string", "string", "string", "string"],
-  "sources": ["source 1", "source 2"],
-  "currentEvents": "single sentence",
-  "trendingAttractions": ["string", "string", "string"]
+  "topCities": ["string", "string", "string", "string", "string"],
+  "bestTravelMonths": ["string", "string", "string", "string", "string"],
+  "sources": ["source 1", "source 2", "source 3"],
+  "currentEvents": "A detailed 1-2 sentence paragraph on significant ongoing events or trends",
+  "trendingAttractions": ["string", "string", "string", "string"]
 }
 `;
 };
@@ -110,7 +111,7 @@ const writeCache = (cacheKey, data) => {
     JSON.stringify({
       timestamp: Date.now(),
       data,
-    })
+    }),
   );
 };
 
@@ -118,7 +119,8 @@ const extractPuterText = (result) => {
   if (typeof result === "string") return result;
   if (typeof result?.text === "string") return result.text;
   if (typeof result?.content === "string") return result.content;
-  if (typeof result?.message?.content === "string") return result.message.content;
+  if (typeof result?.message?.content === "string")
+    return result.message.content;
   if (Array.isArray(result?.message?.content)) {
     return result.message.content
       .map((item) => (typeof item === "string" ? item : item?.text || ""))
@@ -128,32 +130,46 @@ const extractPuterText = (result) => {
 };
 
 const sanitizeInsights = (parsed, country, providerName) => {
+  const definition = cleanMarkdown(parsed?.definition);
   const summary = cleanMarkdown(parsed?.summary);
   const demographics = cleanMarkdown(parsed?.demographics);
   const economy = cleanMarkdown(parsed?.economy);
   const tourismOutlook = cleanMarkdown(parsed?.tourismOutlook);
 
   if (!summary || !demographics || !economy || !tourismOutlook) {
-    throw new Error(`${providerName} response missing required country insight fields.`);
+    throw new Error(
+      `${providerName} response missing required country insight fields.`,
+    );
   }
 
   return {
+    definition: definition || summary.slice(0, 150) + "...",
     summary,
     demographics,
     economy,
     tourismOutlook,
     quickStats: {
-      population: cleanMarkdown(parsed?.quickStats?.population || country.population || "N/A"),
-      gdp: cleanMarkdown(parsed?.quickStats?.gdp || country?.economicInfo?.gdp || "N/A"),
-      internetPenetration: cleanMarkdown(parsed?.quickStats?.internetPenetration || "N/A"),
-      internationalArrivals: cleanMarkdown(parsed?.quickStats?.internationalArrivals || "N/A"),
+      population: cleanMarkdown(
+        parsed?.quickStats?.population || country.population || "N/A",
+      ),
+      gdp: cleanMarkdown(
+        parsed?.quickStats?.gdp || country?.economicInfo?.gdp || "N/A",
+      ),
+      internetPenetration: cleanMarkdown(
+        parsed?.quickStats?.internetPenetration || "N/A",
+      ),
+      internationalArrivals: cleanMarkdown(
+        parsed?.quickStats?.internationalArrivals || "N/A",
+      ),
     },
     topCities: safeArray(parsed?.topCities, [country.capital]).slice(0, 5),
     bestTravelMonths: safeArray(
       parsed?.bestTravelMonths,
-      safeArray(country?.seasons?.dry)
+      safeArray(country?.seasons?.dry),
     ).slice(0, 5),
-    sources: safeArray(parsed?.sources, [`${providerName} generated insights`]).slice(0, 5),
+    sources: safeArray(parsed?.sources, [
+      `${providerName} generated insights`,
+    ]).slice(0, 5),
     currentEvents: cleanMarkdown(parsed?.currentEvents || ""),
     trendingAttractions: safeArray(parsed?.trendingAttractions, []).slice(0, 4),
   };
@@ -190,7 +206,7 @@ const fetchWithDeepSeek = async (prompt) => {
   if (!response.ok) {
     const errBody = await response.json().catch(() => ({}));
     throw new Error(
-      errBody?.error?.message || `DeepSeek API error ${response.status}`
+      errBody?.error?.message || `DeepSeek AI error ${response.status}`,
     );
   }
 
@@ -224,14 +240,15 @@ const fetchWithGemini = async (prompt) => {
   if (!response.ok) {
     const errBody = await response.json().catch(() => ({}));
     throw new Error(
-      errBody?.error?.message || `Gemini API error ${response.status}`
+      errBody?.error?.message || `Gemini AI error ${response.status}`,
     );
   }
 
   const data = await response.json();
   const payloadText =
-    data?.candidates?.[0]?.content?.parts?.map((part) => part.text || "").join("") ||
-    "";
+    data?.candidates?.[0]?.content?.parts
+      ?.map((part) => part.text || "")
+      .join("") || "";
   if (!String(payloadText).trim()) {
     throw new Error("No Gemini payload returned.");
   }
@@ -247,14 +264,16 @@ const ensurePuterLoaded = async () => {
 
   if (!puterLoaderPromise) {
     puterLoaderPromise = new Promise((resolve, reject) => {
-      const existing = document.querySelector('script[src="https://js.puter.com/v2/"]');
+      const existing = document.querySelector(
+        'script[src="https://js.puter.com/v2/"]',
+      );
       if (existing) {
         existing.addEventListener("load", () => {
           if (window.puter?.ai?.chat) resolve(window.puter);
           else reject(new Error("Puter loaded but API is unavailable."));
         });
         existing.addEventListener("error", () =>
-          reject(new Error("Failed to load Puter script."))
+          reject(new Error("Failed to reach Puter AI")),
         );
         return;
       }
@@ -266,7 +285,7 @@ const ensurePuterLoaded = async () => {
         if (window.puter?.ai?.chat) resolve(window.puter);
         else reject(new Error("Puter loaded but API is unavailable."));
       };
-      script.onerror = () => reject(new Error("Failed to load Puter script."));
+      script.onerror = () => reject(new Error("Failed to load Puter AI."));
       document.head.appendChild(script);
     });
   }
@@ -324,9 +343,7 @@ export const countryInsightService = {
       providerErrors.push(`Puter: ${err?.message || "unknown error"}`);
     }
 
-    throw new Error(
-      `All AI providers failed. ${providerErrors.join(" | ")}`
-    );
+    throw new Error(`All AI providers failed. ${providerErrors.join(" | ")}`);
   },
 };
 

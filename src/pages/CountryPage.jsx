@@ -1,50 +1,173 @@
-import React, { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 import { Link, useParams } from "react-router-dom";
 import {
-  FiArrowLeft, FiArrowRight, FiBarChart2, FiCalendar, FiCheck,
-  FiChevronLeft, FiChevronRight, FiClock, FiCompass, FiDollarSign,
-  FiGlobe, FiHeart, FiMapPin, FiMaximize2, FiPlay, FiRefreshCw,
-  FiShield, FiStar, FiSun, FiTrendingUp, FiUsers, FiWifi, FiZap,
-  FiCamera, FiMusic, FiCoffee, FiAnchor, FiActivity, FiAward,
-  FiBookOpen, FiDroplet, FiFeather, FiGrid, FiMap, FiNavigation,
-  FiSunrise, FiTarget, FiX, FiExternalLink, FiInfo, FiThumbsUp,
-  FiMessageCircle, FiShare2, FiChevronDown, FiLayers, FiPackage,
-  FiPocket, FiLink,
+  FiArrowLeft,
+  FiArrowRight,
+  FiBarChart2,
+  FiCalendar,
+  FiCheck,
+  FiChevronLeft,
+  FiChevronRight,
+  FiClock,
+  FiCompass,
+  FiDollarSign,
+  FiGlobe,
+  FiHeart,
+  FiMapPin,
+  FiMaximize2,
+  FiPlay,
+  FiRefreshCw,
+  FiShield,
+  FiStar,
+  FiSun,
+  FiTrendingUp,
+  FiUsers,
+  FiWifi,
+  FiZap,
+  FiCamera,
+  FiMusic,
+  FiCoffee,
+  FiAnchor,
+  FiActivity,
+  FiAward,
+  FiBookOpen,
+  FiDroplet,
+  FiFeather,
+  FiGrid,
+  FiMap,
+  FiNavigation,
+  FiSunrise,
+  FiTarget,
+  FiX,
+  FiExternalLink,
+  FiInfo,
+  FiThumbsUp,
+  FiMessageCircle,
+  FiShare2,
+  FiChevronDown,
+  FiLayers,
+  FiPackage,
+  FiPocket,
+  FiLink,
 } from "react-icons/fi";
 import PageHeader from "../components/common/PageHeader";
 import Button from "../components/common/Button";
 import CookieSettingsButton from "../components/common/CookieSettingsButton";
 import { useApp } from "../context/AppContext";
 import { countries } from "../data/countries";
-import { getDestinationsByCountry } from "../data/destinations";
+import { useCountryDestinations } from "../hooks/useDestinations";
 import useCountryInsights from "../hooks/useCountryInsights";
+import { toGoogleMapEmbedUrl, toGoogleMapOpenUrl } from "../utils/mediaEmbed";
 
 /* ═══ HELPERS ═══ */
-const clean = (v = "") => String(v).replace(/[*#`_]+/g, "").trim();
-const toS = (v = "", m = 4) => (clean(v).match(/[^.!?]+[.!?]?/g) || []).map(clean).filter(Boolean).slice(0, m);
-const toB = (v = "", m = 6) => { const p = clean(v).split(/\n|;|•/).map(clean).filter(Boolean); return p.length > 1 ? p.slice(0, m) : toS(v, m); };
-const toP = (v = "", m = 3) => { const b = String(v || "").replace(/\r\n/g, "\n").split(/\n{2,}/).map(clean).filter(Boolean); if (b.length > 1) return b.slice(0, m); const s = toS(v, m * 2), p = []; for (let i = 0; i < s.length; i += 2) p.push(s[i + 1] ? `${s[i]} ${s[i + 1]}` : s[i]); return p.slice(0, m); };
-const hLL = c => Number.isFinite(c?.mapPosition?.lat) && Number.isFinite(c?.mapPosition?.lng);
-const mEmbed = c => hLL(c) ? `https://www.google.com/maps?q=${c.mapPosition.lat},${c.mapPosition.lng}&z=6&output=embed` : `https://www.google.com/maps?q=${encodeURIComponent(`${c?.capital || ""}, ${c?.name || ""}`.trim())}&z=6&output=embed`;
-const mOpen = c => hLL(c) ? `https://www.google.com/maps/search/?api=1&query=${c.mapPosition.lat},${c.mapPosition.lng}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${c?.capital || ""}, ${c?.name || ""}`.trim())}`;
+const clean = (v = "") =>
+  String(v)
+    .replace(/[*#`_]+/g, "")
+    .trim();
+const toS = (v = "", m = 4) =>
+  (clean(v).match(/[^.!?]+[.!?]?/g) || [])
+    .map(clean)
+    .filter(Boolean)
+    .slice(0, m);
+const toB = (v = "", m = 6) => {
+  const p = clean(v)
+    .split(/\n|;|•/)
+    .map(clean)
+    .filter(Boolean);
+  return p.length > 1 ? p.slice(0, m) : toS(v, m);
+};
+const toP = (v = "", m = 3) => {
+  const b = String(v || "")
+    .replace(/\r\n/g, "\n")
+    .split(/\n{2,}/)
+    .map(clean)
+    .filter(Boolean);
+  if (b.length > 1) return b.slice(0, m);
+  const s = toS(v, m * 2),
+    p = [];
+  for (let i = 0; i < s.length; i += 2)
+    p.push(s[i + 1] ? `${s[i]} ${s[i + 1]}` : s[i]);
+  return p.slice(0, m);
+};
+const hLL = (c) =>
+  Number.isFinite(c?.mapPosition?.lat) && Number.isFinite(c?.mapPosition?.lng);
+const mEmbed = (c) =>
+  toGoogleMapEmbedUrl({
+    lat: c?.mapPosition?.lat,
+    lng: c?.mapPosition?.lng,
+    query: `${c?.capital || ""}, ${c?.name || ""}`.trim(),
+    zoom: 6,
+  });
+const mOpen = (c) =>
+  toGoogleMapOpenUrl({
+    lat: c?.mapPosition?.lat,
+    lng: c?.mapPosition?.lng,
+    query: `${c?.capital || ""}, ${c?.name || ""}`.trim(),
+  });
 
 /* ═══ SCROLL REVEAL ═══ */
 function useReveal(th = 0.08) {
   const ref = useRef(null);
   const [v, sv] = useState(false);
   useEffect(() => {
-    const el = ref.current; if (!el) return;
-    const o = new IntersectionObserver(([e]) => { if (e.isIntersecting) { sv(true); o.unobserve(el); } }, { threshold: th, rootMargin: "0px 0px -30px 0px" });
-    o.observe(el); return () => o.disconnect();
+    const el = ref.current;
+    if (!el) return;
+    const o = new IntersectionObserver(
+      ([e]) => {
+        if (e.isIntersecting) {
+          sv(true);
+          o.unobserve(el);
+        }
+      },
+      { threshold: th, rootMargin: "0px 0px -30px 0px" },
+    );
+    o.observe(el);
+    return () => o.disconnect();
   }, [th]);
   return [ref, v];
 }
 
-function R({ children, a = "up", d = 0, dur = 0.72, className = "", as: T = "div", style: sx, th }) {
+function R({
+  children,
+  a = "up",
+  d = 0,
+  dur = 0.72,
+  className = "",
+  as: T = "div",
+  style: sx,
+  th,
+}) {
   const [ref, v] = useReveal(th);
-  const tf = { up: ["translateY(48px)", "translateY(0)"], down: ["translateY(-48px)", "translateY(0)"], left: ["translateX(-60px)", "translateX(0)"], right: ["translateX(60px)", "translateX(0)"], zoom: ["scale(0.86)", "scale(1)"], fade: ["scale(0.97)", "scale(1)"] };
+  const tf = {
+    up: ["translateY(48px)", "translateY(0)"],
+    down: ["translateY(-48px)", "translateY(0)"],
+    left: ["translateX(-60px)", "translateX(0)"],
+    right: ["translateX(60px)", "translateX(0)"],
+    zoom: ["scale(0.86)", "scale(1)"],
+    fade: ["scale(0.97)", "scale(1)"],
+  };
   const t = tf[a] || tf.up;
-  return <T ref={ref} className={className} style={{ opacity: v ? 1 : 0, transform: v ? t[1] : t[0], transition: `opacity ${dur}s cubic-bezier(.16,1,.3,1) ${d}s, transform ${dur}s cubic-bezier(.16,1,.3,1) ${d}s`, willChange: "opacity, transform", ...sx }}>{children}</T>;
+  return (
+    <T
+      ref={ref}
+      className={className}
+      style={{
+        opacity: v ? 1 : 0,
+        transform: v ? t[1] : t[0],
+        transition: `opacity ${dur}s cubic-bezier(.16,1,.3,1) ${d}s, transform ${dur}s cubic-bezier(.16,1,.3,1) ${d}s`,
+        willChange: "opacity, transform",
+        ...sx,
+      }}
+    >
+      {children}
+    </T>
+  );
 }
 
 /* ═══ COUNTER (scroll-triggered) ═══ */
@@ -56,80 +179,314 @@ function Ct({ end, sfx = "", pfx = "", dc = 0, dur = 2200 }) {
     if (!v || started.current) return;
     started.current = true;
     const num = parseFloat(String(end).replace(/[^0-9.]/g, ""));
-    if (isNaN(num)) { sv(end); return; }
+    if (isNaN(num)) {
+      sv(end);
+      return;
+    }
     const s = performance.now();
-    const tick = now => { const p = Math.min((now - s) / dur, 1); sv((((1 - Math.pow(1 - p, 4))) * num).toFixed(dc)); if (p < 1) requestAnimationFrame(tick); };
+    const tick = (now) => {
+      const p = Math.min((now - s) / dur, 1);
+      sv(((1 - Math.pow(1 - p, 4)) * num).toFixed(dc));
+      if (p < 1) requestAnimationFrame(tick);
+    };
     requestAnimationFrame(tick);
   }, [v, end, dur, dc]);
   const n = parseFloat(String(end).replace(/[^0-9.]/g, ""));
-  return <span ref={ref}>{isNaN(n) ? end : `${pfx}${Number(val).toLocaleString(undefined, { minimumFractionDigits: dc, maximumFractionDigits: dc })}${sfx}`}</span>;
+  return (
+    <span ref={ref}>
+      {isNaN(n)
+        ? end
+        : `${pfx}${Number(val).toLocaleString(undefined, { minimumFractionDigits: dc, maximumFractionDigits: dc })}${sfx}`}
+    </span>
+  );
 }
 
 /* ═══ TYPEWRITER ═══ */
 function TW({ text, speed = 14, className = "", onComplete }) {
-  const [c, sc] = useState(0); const [done, sd] = useState(false);
+  const [c, sc] = useState(0);
+  const [done, sd] = useState(false);
   const safe = typeof text === "string" ? text : "";
-  const raf = useRef(); const last = useRef(0); const idx = useRef(0);
+  const raf = useRef();
+  const last = useRef(0);
+  const idx = useRef(0);
   useEffect(() => {
-    if (!safe) { sc(0); sd(false); return; }
-    sc(0); sd(false); idx.current = 0; last.current = performance.now();
-    const tick = now => {
-      const ch = safe[idx.current] || ""; let dl = speed;
-      if (ch === " ") dl = speed * .25; else if (".!?".includes(ch)) dl = speed * 5; else if (",;:".includes(ch)) dl = speed * 3;
-      if (now - last.current >= dl) { idx.current++; sc(idx.current); last.current = now; if (idx.current >= safe.length) { sd(true); onComplete?.(); return; } }
+    if (!safe) {
+      sc(0);
+      sd(false);
+      return;
+    }
+    sc(0);
+    sd(false);
+    idx.current = 0;
+    last.current = performance.now();
+    const tick = (now) => {
+      const ch = safe[idx.current] || "";
+      let dl = speed;
+      if (ch === " ") dl = speed * 0.25;
+      else if (".!?".includes(ch)) dl = speed * 5;
+      else if (",;:".includes(ch)) dl = speed * 3;
+      if (now - last.current >= dl) {
+        idx.current++;
+        sc(idx.current);
+        last.current = now;
+        if (idx.current >= safe.length) {
+          sd(true);
+          onComplete?.();
+          return;
+        }
+      }
       raf.current = requestAnimationFrame(tick);
     };
     raf.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf.current);
   }, [safe, speed, onComplete]);
   if (!safe) return null;
-  return <p className={`tw ${className}`}><span>{safe.slice(0, c)}</span>{!done && <span className="tw__cur" />}</p>;
+  return (
+    <p className={`tw ${className}`}>
+      <span>{safe.slice(0, c)}</span>
+      {!done && <span className="tw__cur" />}
+    </p>
+  );
 }
 
 /* ═══ GALLERY ═══ */
 function Gal({ imgs }) {
-  const [a, sa] = useState(0); const [lb, slb] = useState(-1);
+  const [a, sa] = useState(0);
+  const [lb, slb] = useState(-1);
   const auto = useRef();
-  useEffect(() => { auto.current = setInterval(() => sa(p => (p + 1) % (imgs?.length || 1)), 5000); return () => clearInterval(auto.current); }, [imgs]);
+  useEffect(() => {
+    auto.current = setInterval(
+      () => sa((p) => (p + 1) % (imgs?.length || 1)),
+      5000,
+    );
+    return () => clearInterval(auto.current);
+  }, [imgs]);
   if (!imgs?.length) return null;
-  return <>
-    <div className="gal" onClick={() => slb(a)}>
-      <img src={imgs[a]?.url} alt={imgs[a]?.cap} className="gal__img" loading="lazy" />
-      <div className="gal__ov"><FiMaximize2 size={20} /><span>{imgs[a]?.cap}</span></div>
-      <button className="gal__n gal__n--l" onClick={e => { e.stopPropagation(); sa(p => (p - 1 + imgs.length) % imgs.length); }}><FiChevronLeft size={20} /></button>
-      <button className="gal__n gal__n--r" onClick={e => { e.stopPropagation(); sa(p => (p + 1) % imgs.length); }}><FiChevronRight size={20} /></button>
-      <span className="gal__c">{a + 1}/{imgs.length}</span>
-      <div className="gal__dots">{imgs.map((_, i) => <button key={i} className={`gal__dot${i === a ? " gal__dot--on" : ""}`} onClick={e => { e.stopPropagation(); sa(i); }} />)}</div>
-    </div>
-    <div className="gal__ths">{imgs.map((img, i) => <button key={i} className={`gal__th${i === a ? " gal__th--on" : ""}`} onClick={() => sa(i)}><img src={img.url} alt={img.cap} loading="lazy" /></button>)}</div>
-    {lb >= 0 && <div className="lb" onClick={() => slb(-1)}><button className="lb__x" onClick={() => slb(-1)}><FiX size={22} /></button><button className="lb__a lb__a--l" onClick={e => { e.stopPropagation(); slb(p => (p - 1 + imgs.length) % imgs.length); }}><FiChevronLeft size={28} /></button><img src={imgs[lb]?.url} alt={imgs[lb]?.cap} className="lb__img" onClick={e => e.stopPropagation()} /><button className="lb__a lb__a--r" onClick={e => { e.stopPropagation(); slb(p => (p + 1) % imgs.length); }}><FiChevronRight size={28} /></button><div className="lb__cap">{imgs[lb]?.cap}{imgs[lb]?.ctx && ` — ${imgs[lb].ctx}`}</div></div>}
-  </>;
+  return (
+    <>
+      <div className="gal" onClick={() => slb(a)}>
+        <img
+          src={imgs[a]?.url}
+          alt={imgs[a]?.cap}
+          className="gal__img"
+          loading="lazy"
+        />
+        <div className="gal__ov">
+          <FiMaximize2 size={20} />
+          <span>{imgs[a]?.cap}</span>
+        </div>
+        <button
+          className="gal__n gal__n--l"
+          onClick={(e) => {
+            e.stopPropagation();
+            sa((p) => (p - 1 + imgs.length) % imgs.length);
+          }}
+        >
+          <FiChevronLeft size={20} />
+        </button>
+        <button
+          className="gal__n gal__n--r"
+          onClick={(e) => {
+            e.stopPropagation();
+            sa((p) => (p + 1) % imgs.length);
+          }}
+        >
+          <FiChevronRight size={20} />
+        </button>
+        <span className="gal__c">
+          {a + 1}/{imgs.length}
+        </span>
+        <div className="gal__dots">
+          {imgs.map((_, i) => (
+            <button
+              key={i}
+              className={`gal__dot${i === a ? " gal__dot--on" : ""}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                sa(i);
+              }}
+            />
+          ))}
+        </div>
+      </div>
+      <div className="gal__ths">
+        {imgs.map((img, i) => (
+          <button
+            key={i}
+            className={`gal__th${i === a ? " gal__th--on" : ""}`}
+            onClick={() => sa(i)}
+          >
+            <img src={img.url} alt={img.cap} loading="lazy" />
+          </button>
+        ))}
+      </div>
+      {lb >= 0 && (
+        <div className="lb" onClick={() => slb(-1)}>
+          <button className="lb__x" onClick={() => slb(-1)}>
+            <FiX size={22} />
+          </button>
+          <button
+            className="lb__a lb__a--l"
+            onClick={(e) => {
+              e.stopPropagation();
+              slb((p) => (p - 1 + imgs.length) % imgs.length);
+            }}
+          >
+            <FiChevronLeft size={28} />
+          </button>
+          <img
+            src={imgs[lb]?.url}
+            alt={imgs[lb]?.cap}
+            className="lb__img"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            className="lb__a lb__a--r"
+            onClick={(e) => {
+              e.stopPropagation();
+              slb((p) => (p + 1) % imgs.length);
+            }}
+          >
+            <FiChevronRight size={28} />
+          </button>
+          <div className="lb__cap">
+            {imgs[lb]?.cap}
+            {imgs[lb]?.ctx && ` — ${imgs[lb].ctx}`}
+          </div>
+        </div>
+      )}
+    </>
+  );
 }
 
 /* ═══ VIDEOS ═══ */
 function Vids({ videos }) {
   const [p, sp] = useState(null);
   if (!videos?.length) return null;
-  return <div className="vid">
-    {p !== null && <R a="fade" className="vid__player"><div className="vid__embed"><iframe src={videos[p].url} title={videos[p].title} frameBorder="0" allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture" allowFullScreen /></div><div className="vid__bar"><h4>{videos[p].title}</h4><button onClick={() => sp(null)}><FiX size={14} /> Close</button></div></R>}
-    <div className="vid__grid">{videos.map((v, i) => <R key={i} a="up" d={i * .08}><button className={`vid__card${p === i ? " vid__card--on" : ""}`} onClick={() => sp(i)}><div className="vid__thumb"><img src={v.thumb} alt={v.title} loading="lazy" /><div className="vid__play"><FiPlay size={22} /></div></div><div className="vid__title">{v.title}</div></button></R>)}</div>
-  </div>;
+  return (
+    <div className="vid">
+      {p !== null && (
+        <R a="fade" className="vid__player">
+          <div className="vid__embed">
+            <iframe
+              src={videos[p].url}
+              title={videos[p].title}
+              frameBorder="0"
+              allow="accelerometer;autoplay;clipboard-write;encrypted-media;gyroscope;picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+          <div className="vid__bar">
+            <h4>{videos[p].title}</h4>
+            <button onClick={() => sp(null)}>
+              <FiX size={14} /> Close
+            </button>
+          </div>
+        </R>
+      )}
+      <div className="vid__grid">
+        {videos.map((v, i) => (
+          <R key={i} a="up" d={i * 0.08}>
+            <button
+              className={`vid__card${p === i ? " vid__card--on" : ""}`}
+              onClick={() => sp(i)}
+            >
+              <div className="vid__thumb">
+                <img src={v.thumb} alt={v.title} loading="lazy" />
+                <div className="vid__play">
+                  <FiPlay size={22} />
+                </div>
+              </div>
+              <div className="vid__title">{v.title}</div>
+            </button>
+          </R>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 /* ═══ AI HELPERS ═══ */
-function Loader() { return <div className="ld"><div className="ld__orb"><div className="ld__ring" /><FiZap className="ld__ic" /></div><h4>Generating Intelligence</h4><p>Querying DeepSeek AI…</p><div className="ld__bars">{[0, .15, .3, .45, .6].map((d, i) => <span key={i} style={{ animationDelay: `${d}s` }} />)}</div><div className="ld__sk" /><div className="ld__sk ld__sk--m" /><div className="ld__sk ld__sk--s" /></div>; }
-function Err({ message, onRetry }) { return <div className="er"><div className="er__ic">⚠️</div><h4>Intelligence Unavailable</h4><p>{message || "Failed."}</p>{onRetry && <button className="er__btn" onClick={onRetry}><FiRefreshCw size={14} /> Retry</button>}</div>; }
-function Stg({ index: i, children }) { const [v, sv] = useState(false); useEffect(() => { const t = setTimeout(() => sv(true), 180 + i * 240); return () => clearTimeout(t); }, [i]); return <div className="aisec" style={{ opacity: v ? 1 : 0, transform: v ? "translateY(0)" : "translateY(12px)", transition: "all .5s cubic-bezier(.16,1,.3,1)" }}>{children}</div>; }
+function Loader() {
+  return (
+    <div className="ld">
+      <div className="ld__orb">
+        <div className="ld__ring" />
+        <FiZap className="ld__ic" />
+      </div>
+      <h4>Synchronizing Neural Core</h4>
+      <p>Consulting High-Precision AI Models...</p>
+      <div className="ld__bars">
+        {[0, 0.15, 0.3, 0.45, 0.6].map((d, i) => (
+          <span key={i} style={{ animationDelay: `${d}s` }} />
+        ))}
+      </div>
+      <div className="ld__sk" />
+      <div className="ld__sk ld__sk--m" />
+      <div className="ld__sk ld__sk--s" />
+    </div>
+  );
+}
+function Err({ message, onRetry }) {
+  return (
+    <div className="er">
+      <div className="er__ic">⚠️</div>
+      <h4>Intelligence Unavailable</h4>
+      <p>{message || "Failed."}</p>
+      {onRetry && (
+        <button className="er__btn" onClick={onRetry}>
+          <FiRefreshCw size={14} /> Retry
+        </button>
+      )}
+    </div>
+  );
+}
+function Stg({ index: i, children }) {
+  const [v, sv] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => sv(true), 180 + i * 240);
+    return () => clearTimeout(t);
+  }, [i]);
+  return (
+    <div
+      className="aisec"
+      style={{
+        opacity: v ? 1 : 0,
+        transform: v ? "translateY(0)" : "translateY(12px)",
+        transition: "all .5s cubic-bezier(.16,1,.3,1)",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
 
 /* ═══ FLOATING SHARE BAR ═══ */
 function ShareBar({ name }) {
   const [show, setShow] = useState(false);
-  useEffect(() => { const h = () => setShow(window.scrollY > 600); window.addEventListener("scroll", h, { passive: true }); return () => window.removeEventListener("scroll", h); }, []);
-  const share = () => { if (navigator.share) navigator.share({ title: `Discover ${name}`, url: window.location.href }); else navigator.clipboard.writeText(window.location.href); };
-  return <div className={`share-bar${show ? " share-bar--on" : ""}`}>
-    <button onClick={share} title="Share"><FiShare2 size={18} /></button>
-    <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} title="Back to top"><FiChevronDown size={18} style={{ transform: "rotate(180deg)" }} /></button>
-  </div>;
+  useEffect(() => {
+    const h = () => setShow(window.scrollY > 600);
+    window.addEventListener("scroll", h, { passive: true });
+    return () => window.removeEventListener("scroll", h);
+  }, []);
+  const share = () => {
+    if (navigator.share)
+      navigator.share({ title: `Discover ${name}`, url: window.location.href });
+    else navigator.clipboard.writeText(window.location.href);
+  };
+  return (
+    <div className={`share-bar${show ? " share-bar--on" : ""}`}>
+      <button onClick={share} title="Share">
+        <FiShare2 size={18} />
+      </button>
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        title="Back to top"
+      >
+        <FiChevronDown size={18} style={{ transform: "rotate(180deg)" }} />
+      </button>
+    </div>
+  );
 }
 
 /* ═══ PARALLAX DIVIDER ═══ */
@@ -137,30 +494,58 @@ function Parallax({ img, title, sub }) {
   const [off, setOff] = useState(0);
   const ref = useRef(null);
   useEffect(() => {
-    const h = () => { if (!ref.current) return; const r = ref.current.getBoundingClientRect(); setOff((r.top * -0.25)); };
-    window.addEventListener("scroll", h, { passive: true }); return () => window.removeEventListener("scroll", h);
+    const h = () => {
+      if (!ref.current) return;
+      const r = ref.current.getBoundingClientRect();
+      setOff(r.top * -0.25);
+    };
+    window.addEventListener("scroll", h, { passive: true });
+    return () => window.removeEventListener("scroll", h);
   }, []);
-  return <div ref={ref} className="px"><div className="px__bg" style={{ backgroundImage: `url(${img})`, transform: `translateY(${off}px)` }} /><div className="px__ov" /><div className="px__ct"><h2>{title}</h2>{sub && <p>{sub}</p>}</div></div>;
+  return (
+    <div ref={ref} className="px">
+      <div
+        className="px__bg"
+        style={{
+          backgroundImage: `url(${img})`,
+          transform: `translateY(${off}px)`,
+        }}
+      />
+      <div className="px__ov" />
+      <div className="px__ct">
+        <h2>{title}</h2>
+        {sub && <p>{sub}</p>}
+      </div>
+    </div>
+  );
 }
 
 /* ═══ OFFICIAL TOURISM LINKS ═══ */
 const OFFICIAL_LINKS = {
-  kenya: { url: "https://www.magicalkenya.com/", label: "Magical Kenya — Official Tourism Board" },
-  uganda: { url: "https://www.visituganda.com/", label: "Visit Uganda — Explore the Pearl of Africa" },
-  tanzania: { url: "https://www.tanzaniatourism.go.tz/", label: "Tanzania Tourism — Official Portal" },
-  rwanda: { url: "https://www.visitrwanda.com/", label: "Visit Rwanda — Official Tourism Website" },
-  "south-africa": { url: "https://www.southafrica.net/", label: "South Africa Tourism — Official Site" },
-  ethiopia: { url: "https://www.ethiopia.travel/", label: "Ethiopia Travel — Official Tourism" },
-  morocco: { url: "https://www.visitmorocco.com/", label: "Visit Morocco — Official Tourism" },
-  egypt: { url: "https://www.experienceegypt.eg/", label: "Experience Egypt — Official Tourism" },
-  namibia: { url: "https://www.namibiatourism.com.na/", label: "Namibia Tourism Board" },
-  botswana: { url: "https://www.botswanatourism.co.bw/", label: "Botswana Tourism — Official" },
-  zambia: { url: "https://www.zambia.travel/", label: "Zambia Travel — Official Tourism" },
-  zimbabwe: { url: "https://www.zimbabwetourism.net/", label: "Zimbabwe Tourism Authority" },
-  madagascar: { url: "https://www.madagascar-tourisme.com/", label: "Madagascar Tourism — Official" },
-  senegal: { url: "https://www.visitsenegal.com/", label: "Visit Senegal — Official Tourism" },
-  ghana: { url: "https://www.visitghana.com/", label: "Visit Ghana — Official Tourism" },
-  mozambique: { url: "https://www.visitmozambique.net/", label: "Visit Mozambique — Official" },
+  kenya: {
+    url: "https://www.magicalkenya.com/",
+    label: "Magical Kenya — Official Tourism Board",
+  },
+  uganda: {
+    url: "https://www.visituganda.com/",
+    label: "Visit Uganda — Explore the Pearl of Africa",
+  },
+  tanzania: {
+    url: "https://www.tanzaniatourism.go.tz/",
+    label: "Tanzania Country — Official Portal",
+  },
+  rwanda: {
+    url: "https://www.visitrwanda.com/",
+    label: "Visit Rwanda — Official Tourism Website",
+  },
+  "south-africa": {
+    url: "https://www.southafrica.net/",
+    label: "South Africa — Official Site",
+  },
+  ethiopia: {
+    url: "https://www.ethiopia.travel/",
+    label: "Ethiopia Travel — Official Tourism",
+  }
 };
 
 const getOfficialLink = (id) => OFFICIAL_LINKS[id] || null;
@@ -168,7 +553,8 @@ const getOfficialLink = (id) => OFFICIAL_LINKS[id] || null;
 /* ═══ COUNTRY DATA ═══ */
 const DATA = {
   kenya: {
-    intro: "Kenya, the crown jewel of East Africa, is a land of breathtaking contrasts where snow-capped mountains meet sun-drenched savannas, ancient cultures thrive alongside one of the continent's most dynamic tech economies, and wildlife roams freely across some of Earth's most iconic landscapes.",
+    intro:
+      "Kenya, the crown jewel of East Africa, is a land of breathtaking contrasts where snow-capped mountains meet sun-drenched savannas, ancient cultures thrive alongside one of the continent's most dynamic tech economies, and wildlife roams freely across some of Earth's most iconic landscapes.",
     discover: [
       "Kenya is defined by extraordinary diversity — geographical, biological, and cultural. Straddling the equator with 580,367 km², the country encompasses everything from the arid Chalbi Desert to the tropical Indian Ocean coast, from Mount Kenya's glaciers to the fertile Rift Valley highlands that produce some of the world's finest tea and coffee. Its 54 national parks and reserves protect ecosystems harboring over 25,000 animal species and 7,000 plant species, making it one of Earth's most biodiverse nations.",
       "The Maasai Mara National Reserve is Kenya's jewel — a vast savanna ecosystem that supports Africa's densest lion population (~850 individuals) and hosts the climactic chapter of the Great Migration each year between July and October. Over 1.5 million wildebeest, 300,000 zebra, and 200,000 Thomson's gazelle make the perilous Mara River crossing, braving six-meter Nile crocodiles in a life-or-death spectacle witnessed by fewer than 50,000 travelers annually — making it one of the world's most exclusive wildlife events.",
@@ -180,51 +566,153 @@ const DATA = {
       "The Kenyan tea industry produces over 500,000 tonnes annually — making it the world's largest black tea exporter — while Kenyan AA coffee from the Mount Kenya highlands is prized by specialty roasters worldwide. The country's flower industry, centered around Lake Naivasha, exports over 500 million stems annually to European markets, providing employment to over 100,000 workers and making Kenya the world's fourth-largest flower exporter.",
     ],
     stats: [
-      { l: "Population", v: 56, s: "M" }, { l: "GDP", v: 113.3, s: "B", p: "$", dc: 1 },
-      { l: "Annual Tourists", v: 2.1, s: "M", dc: 1 }, { l: "National Parks", v: 54 },
-      { l: "Wildlife Species", v: 25000, s: "+" }, { l: "Bird Species", v: 1100, s: "+" },
-      { l: "Coastline", v: 536, s: " km" }, { l: "Ethnic Groups", v: 42 },
-      { l: "Tourism Revenue", v: 1.6, s: "B", p: "$", dc: 1 }, { l: "UNESCO Sites", v: 7 },
-      { l: "Tea Export", v: 500, s: "K tonnes" }, { l: "Renewable Energy", v: 47, s: "%" },
+      { l: "Population", v: 56, s: "M" },
+      { l: "GDP", v: 113.3, s: "B", p: "$", dc: 1 },
+      { l: "Annual Tourists", v: 2.1, s: "M", dc: 1 },
+      { l: "National Parks", v: 54 },
+      { l: "Wildlife Species", v: 25000, s: "+" },
+      { l: "Bird Species", v: 1100, s: "+" },
+      { l: "Coastline", v: 536, s: " km" },
+      { l: "Ethnic Groups", v: 42 },
+      { l: "Tourism Revenue", v: 1.6, s: "B", p: "$", dc: 1 },
+      { l: "UNESCO Sites", v: 7 },
+      { l: "Tea Export", v: 500, s: "K tonnes" },
+      { l: "Renewable Energy", v: 47, s: "%" },
     ],
     facts: [
-      { t: "Capital City", v: "Nairobi", s: "Pop. 4.7M — Africa's 'Silicon Savannah'" },
-      { t: "Official Languages", v: "English & Swahili", s: "42 indigenous languages spoken" },
+      {
+        t: "Capital City",
+        v: "Nairobi",
+        s: "Pop. 4.7M — Africa's 'Silicon Savannah'",
+      },
+      {
+        t: "Official Languages",
+        v: "English & Swahili",
+        s: "42 indigenous languages spoken",
+      },
       { t: "Independence", v: "December 12, 1963", s: "From United Kingdom" },
-      { t: "Highest Point", v: "Mt Kenya — 5,199m", s: "Africa's second highest peak, UNESCO Biosphere" },
+      {
+        t: "Highest Point",
+        v: "Mt Kenya — 5,199m",
+        s: "Africa's second highest peak, UNESCO Biosphere",
+      },
       { t: "Time Zone", v: "EAT (UTC+3)", s: "No daylight saving time" },
-      { t: "Currency", v: "Kenyan Shilling (KES)", s: "1 USD ≈ 129 KES (2025)" },
-      { t: "Internet Penetration", v: "85.2%", s: "40M+ internet users, M-Pesa birthplace" },
-      { t: "Climate", v: "Tropical coast, arid north, temperate highlands", s: "Avg 20-28°C" },
+      {
+        t: "Currency",
+        v: "Kenyan Shilling (KES)",
+        s: "1 USD ≈ 129 KES (2025)",
+      },
+      {
+        t: "Internet Penetration",
+        v: "85.2%",
+        s: "40M+ internet users, M-Pesa birthplace",
+      },
+      {
+        t: "Climate",
+        v: "Tropical coast, arid north, temperate highlands",
+        s: "Avg 20-28°C",
+      },
     ],
     activities: [
-      { n: "Safari Game Drives", d: "World-class wildlife viewing across Maasai Mara, Amboseli, Tsavo, Samburu, and Laikipia with expert naturalist guides. Dawn and dusk excursions through ecosystems hosting Earth's densest large mammal populations." },
-      { n: "Great Migration", d: "Witness 1.5 million wildebeest cross the crocodile-infested Mara River between July-October. Hot air balloon safaris over the migration herds offer unforgettable aerial perspectives, followed by champagne bush breakfasts." },
-      { n: "Coastal Paradise", d: "Diani, Watamu, Malindi, and Lamu offer snorkeling, kitesurfing, deep-sea fishing for marlin and sailfish, whale shark encounters, and glass-bottom boat tours over pristine coral reefs in marine national parks." },
-      { n: "Mount Kenya Climbing", d: "Summit Africa's second-highest peak via Sirimon, Chogoria, or Naro Moru routes, traversing tropical forest, bamboo, moorland, alpine desert, and glacial peaks. Point Lenana (4,985m) is achievable for most fit trekkers." },
-      { n: "Cultural Immersion", d: "Visit Maasai bomas for authentic homestead experiences, learn intricate beadwork, participate in conservation projects, and discover warrior traditions across 42 ethnic communities offering village homestays." },
-      { n: "Bird Watching Paradise", d: "1,100+ species — flamingos carpeting Lake Nakuru pink, martial eagles soaring over the Mara, African fish eagles calling across Lake Naivasha, rare Sokoke Scops Owls in Arabuko-Sokoke coastal forest." },
-      { n: "Hot Air Balloon Safaris", d: "Float silently over the Maasai Mara at dawn as thousands of animals begin their morning routines below. The one-hour flight covers approximately 20km before landing for champagne breakfasts served in the bush." },
-      { n: "Lamu Heritage", d: "Explore UNESCO-listed Lamu Old Town's 14th-century alleys, visit traditional dhow-building workshops, sail on hand-crafted wooden vessels, and experience the annual Maulidi Festival celebrating centuries of Swahili-Arab culture." },
+      {
+        n: "Safari Game Drives",
+        d: "World-class wildlife viewing across Maasai Mara, Amboseli, Tsavo, Samburu, and Laikipia with expert naturalist guides. Dawn and dusk excursions through ecosystems hosting Earth's densest large mammal populations.",
+      },
+      {
+        n: "Great Migration",
+        d: "Witness 1.5 million wildebeest cross the crocodile-infested Mara River between July-October. Hot air balloon safaris over the migration herds offer unforgettable aerial perspectives, followed by champagne bush breakfasts.",
+      },
+      {
+        n: "Coastal Paradise",
+        d: "Diani, Watamu, Malindi, and Lamu offer snorkeling, kitesurfing, deep-sea fishing for marlin and sailfish, whale shark encounters, and glass-bottom boat tours over pristine coral reefs in marine national parks.",
+      },
+      {
+        n: "Mount Kenya Climbing",
+        d: "Summit Africa's second-highest peak via Sirimon, Chogoria, or Naro Moru routes, traversing tropical forest, bamboo, moorland, alpine desert, and glacial peaks. Point Lenana (4,985m) is achievable for most fit trekkers.",
+      },
+      {
+        n: "Cultural Immersion",
+        d: "Visit Maasai bomas for authentic homestead experiences, learn intricate beadwork, participate in conservation projects, and discover warrior traditions across 42 ethnic communities offering village homestays.",
+      },
+      {
+        n: "Bird Watching Paradise",
+        d: "1,100+ species — flamingos carpeting Lake Nakuru pink, martial eagles soaring over the Mara, African fish eagles calling across Lake Naivasha, rare Sokoke Scops Owls in Arabuko-Sokoke coastal forest.",
+      },
+      {
+        n: "Hot Air Balloon Safaris",
+        d: "Float silently over the Maasai Mara at dawn as thousands of animals begin their morning routines below. The one-hour flight covers approximately 20km before landing for champagne breakfasts served in the bush.",
+      },
+      {
+        n: "Lamu Heritage",
+        d: "Explore UNESCO-listed Lamu Old Town's 14th-century alleys, visit traditional dhow-building workshops, sail on hand-crafted wooden vessels, and experience the annual Maulidi Festival celebrating centuries of Swahili-Arab culture.",
+      },
     ],
     videos: [
-      { title: "Kenya Safari — Maasai Mara Wildlife Spectacular", url: "https://www.youtube.com/embed/aOHdpMqKYCY", thumb: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800" },
-      { title: "Great Migration — Mara River Crossing Drama", url: "https://www.youtube.com/embed/IbKn-BPfEV4", thumb: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800" },
-      { title: "Nairobi — Africa's Most Dynamic Capital", url: "https://www.youtube.com/embed/YWbqEGcwDgE", thumb: "https://images.unsplash.com/photo-1611348524140-53c9a25263d6?w=800" },
+      {
+        title: "Kenya Safari — Maasai Mara Wildlife Spectacular",
+        url: "https://www.youtube.com/embed/aOHdpMqKYCY",
+        thumb:
+          "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800",
+      },
+      {
+        title: "Great Migration — Mara River Crossing Drama",
+        url: "https://www.youtube.com/embed/IbKn-BPfEV4",
+        thumb:
+          "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800",
+      },
+      {
+        title: "Nairobi — Africa's Most Dynamic Capital",
+        url: "https://www.youtube.com/embed/YWbqEGcwDgE",
+        thumb:
+          "https://images.unsplash.com/photo-1611348524140-53c9a25263d6?w=800",
+      },
     ],
     gallery: [
-      { url: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=1200", cap: "Lions in the Maasai Mara", ctx: "~850 lions across 1,510 km² — Africa's densest population, protected by 14 community conservancies." },
-      { url: "https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=1200", cap: "Mount Kenya at Sunrise", ctx: "5,199m with retreating equatorial glaciers, bamboo forests, and rare bongo antelope." },
-      { url: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1200", cap: "Great Migration Crossing", ctx: "1.5M+ wildebeest brave 6m crocodiles at Mara River — July to October annually." },
-      { url: "https://images.unsplash.com/photo-1611348524140-53c9a25263d6?w=1200", cap: "Nairobi Skyline", ctx: "Africa's Silicon Savannah — UN headquarters, tech hub, and national park in one city." },
-      { url: "https://images.unsplash.com/photo-1535941339077-2dd1c7963098?w=1200", cap: "Diani Beach", ctx: "17km of powdery white sand — Africa's leading beach destination, multiple award winner." },
-      { url: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=1200", cap: "Amboseli Elephants", ctx: "Framed by Kilimanjaro — the most studied and photographed elephant population in Africa." },
-      { url: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=1200", cap: "Maasai Warriors", ctx: "Semi-nomadic pastoralists with centuries of warrior tradition, cattle culture, and beadwork art." },
-      { url: "https://images.unsplash.com/photo-1504945005722-33670dcaf685?w=1200", cap: "Lake Nakuru Flamingos", ctx: "Up to 2 million lesser flamingos paint the alkaline shore vivid pink at peak seasons." },
+      {
+        url: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=1200",
+        cap: "Lions in the Maasai Mara",
+        ctx: "~850 lions across 1,510 km² — Africa's densest population, protected by 14 community conservancies.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=1200",
+        cap: "Mount Kenya at Sunrise",
+        ctx: "5,199m with retreating equatorial glaciers, bamboo forests, and rare bongo antelope.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1200",
+        cap: "Great Migration Crossing",
+        ctx: "1.5M+ wildebeest brave 6m crocodiles at Mara River — July to October annually.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1611348524140-53c9a25263d6?w=1200",
+        cap: "Nairobi Skyline",
+        ctx: "Africa's Silicon Savannah — UN headquarters, tech hub, and national park in one city.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1535941339077-2dd1c7963098?w=1200",
+        cap: "Diani Beach",
+        ctx: "17km of powdery white sand — Africa's leading beach destination, multiple award winner.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=1200",
+        cap: "Amboseli Elephants",
+        ctx: "Framed by Kilimanjaro — the most studied and photographed elephant population in Africa.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=1200",
+        cap: "Maasai Warriors",
+        ctx: "Semi-nomadic pastoralists with centuries of warrior tradition, cattle culture, and beadwork art.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1504945005722-33670dcaf685?w=1200",
+        cap: "Lake Nakuru Flamingos",
+        ctx: "Up to 2 million lesser flamingos paint the alkaline shore vivid pink at peak seasons.",
+      },
     ],
   },
   uganda: {
-    intro: "Uganda, famously dubbed 'The Pearl of Africa' by Winston Churchill during his 1908 expedition, is a landlocked treasure of extraordinary biodiversity where the source of the world's longest river, the last mountain gorillas on Earth, and some of the most dramatic landscapes in Africa converge in a country smaller than the UK.",
+    intro:
+      "Uganda, famously dubbed 'The Pearl of Africa' by Winston Churchill during his 1908 expedition, is a landlocked treasure of extraordinary biodiversity where the source of the world's longest river, the last mountain gorillas on Earth, and some of the most dramatic landscapes in Africa converge in a country smaller than the UK.",
     discover: [
       "Uganda is defined by water and life. The mighty River Nile begins its 6,650-kilometer journey to the Mediterranean at Jinja, spilling from Lake Victoria — Africa's largest lake (68,800 km²) and the world's second-largest freshwater body. This geographic fact has shaped trade routes, colonial ambitions, and Uganda's identity for centuries. Today, Jinja is East Africa's undisputed adventure capital, drawing thrill-seekers for world-class Grade 5 white-water rafting on rapids named 'The Bad Place,' 'Overtime,' and 'The Dead Dutchman,' plus bungee jumping from a 44-meter platform over the Nile, kayaking, jet boating, and stand-up paddleboarding.",
       "But Uganda's true global treasure lies in the misty forests of the southwest. Bwindi Impenetrable National Park — a UNESCO World Heritage Site draped in perpetual mist at elevations between 1,160m and 2,607m — shelters approximately 459 mountain gorillas, nearly half of the world's remaining population of just over 1,063 individuals. The experience of trekking through dense, tangled undergrowth for up to eight hours to sit quietly among a gorilla family — watching a 220-kilogram silverback tenderly groom his mate while infants somersault through the vegetation and adolescents chest-beat in playful displays — is consistently described by National Geographic, BBC, and Lonely Planet as the single most profound and emotionally overwhelming wildlife encounter available on Earth. Each trek is limited to 8 visitors per gorilla family per day, making it one of the world's most exclusive wildlife experiences.",
@@ -237,169 +725,1455 @@ const DATA = {
       "Culturally, Uganda is a tapestry of over 56 ethnic groups speaking over 40 distinct languages. The Buganda kingdom, established in the 14th century and one of Africa's oldest continuous monarchies, maintains elaborate royal traditions including the coronation ceremonies at the Kasubi Royal Tombs (a UNESCO World Heritage Site). The Karamojong warriors of the remote northeast practice ancient pastoral traditions in landscapes resembling the Serengeti, while the Batwa pygmies — the original forest-dwelling people of the Great Lakes region, standing an average of 150cm tall — share their ancestral knowledge of medicinal plants and forest survival through immersive cultural encounters that directly fund community-led conservation programs.",
     ],
     stats: [
-      { l: "Population", v: 48.6, s: "M", dc: 1 }, { l: "GDP", v: 49.3, s: "B", p: "$", dc: 1 },
-      { l: "Annual Tourists", v: 1.5, s: "M", dc: 1 }, { l: "National Parks", v: 10 },
-      { l: "Mountain Gorillas", v: 459 }, { l: "Bird Species", v: 1060, s: "+" },
-      { l: "Primate Species", v: 13 }, { l: "Nile Length", v: 6650, s: " km" },
-      { l: "Tourism Revenue", v: 1.1, s: "B", p: "$", dc: 1 }, { l: "Ethnic Groups", v: 56, s: "+" },
-      { l: "UNESCO Sites", v: 3 }, { l: "Chimpanzees", v: 1500 },
+      { l: "Population", v: 48.6, s: "M", dc: 1 },
+      { l: "GDP", v: 49.3, s: "B", p: "$", dc: 1 },
+      { l: "Annual Tourists", v: 1.5, s: "M", dc: 1 },
+      { l: "National Parks", v: 10 },
+      { l: "Mountain Gorillas", v: 459 },
+      { l: "Bird Species", v: 1060, s: "+" },
+      { l: "Primate Species", v: 13 },
+      { l: "Nile Length", v: 6650, s: " km" },
+      { l: "Tourism Revenue", v: 1.1, s: "B", p: "$", dc: 1 },
+      { l: "Ethnic Groups", v: 56, s: "+" },
+      { l: "UNESCO Sites", v: 3 },
+      { l: "Chimpanzees", v: 1500 },
     ],
     facts: [
-      { t: "Capital City", v: "Kampala", s: "Built on 7 hills, metro pop. 3.5M, East Africa's cultural hub" },
-      { t: "Official Languages", v: "English & Swahili", s: "Luganda (central), 40+ indigenous languages" },
-      { t: "Independence", v: "October 9, 1962", s: "From United Kingdom, republic since 1963" },
-      { t: "Highest Point", v: "Margherita Peak — 5,109m", s: "Rwenzori 'Mountains of the Moon', equatorial glaciers" },
-      { t: "Time Zone", v: "EAT (UTC+3)", s: "Same as Kenya and Tanzania, no DST" },
-      { t: "Currency", v: "Ugandan Shilling (UGX)", s: "1 USD ≈ 3,740 UGX (2025)" },
-      { t: "Internet", v: "46% penetration", s: "22M+ users, growing mobile-first economy" },
-      { t: "Climate", v: "Tropical, modified by altitude", s: "Avg 21-25°C year-round, 2 rainy seasons" },
+      {
+        t: "Capital City",
+        v: "Kampala",
+        s: "Built on 7 hills, metro pop. 3.5M, East Africa's cultural hub",
+      },
+      {
+        t: "Official Languages",
+        v: "English & Swahili",
+        s: "Luganda (central), 40+ indigenous languages",
+      },
+      {
+        t: "Independence",
+        v: "October 9, 1962",
+        s: "From United Kingdom, republic since 1963",
+      },
+      {
+        t: "Highest Point",
+        v: "Margherita Peak — 5,109m",
+        s: "Rwenzori 'Mountains of the Moon', equatorial glaciers",
+      },
+      {
+        t: "Time Zone",
+        v: "EAT (UTC+3)",
+        s: "Same as Kenya and Tanzania, no DST",
+      },
+      {
+        t: "Currency",
+        v: "Ugandan Shilling (UGX)",
+        s: "1 USD ≈ 3,740 UGX (2025)",
+      },
+      {
+        t: "Internet",
+        v: "46% penetration",
+        s: "22M+ users, growing mobile-first economy",
+      },
+      {
+        t: "Climate",
+        v: "Tropical, modified by altitude",
+        s: "Avg 21-25°C year-round, 2 rainy seasons",
+      },
     ],
     activities: [
-      { n: "Mountain Gorilla Trekking", d: "Trek through Bwindi's dense ancient vegetation to spend a transformative hour with a mountain gorilla family. Watch 220kg silverbacks, playful infants, and nursing mothers — consistently rated Earth's most profound wildlife encounter by National Geographic." },
-      { n: "Chimpanzee Tracking", d: "Track 1,500 habituated chimps across 795 km² of Kibale Forest — observing tool use, hunting behavior, political alliances, and emotional displays that mirror early human evolution. 13 primate species in one forest." },
-      { n: "Nile White Water Rafting", d: "Navigate world-class Grade 5 rapids at the Nile's source in Jinja — 'The Bad Place,' 'Overtime,' and 'The Dead Dutchman.' Half-day to multi-day expeditions with options for bungee jumping and kayaking." },
-      { n: "Murchison Falls Safari", d: "Cruise to the thundering base where the entire Nile forces through a 7m gap, plunging 43m. Game drive 3,840 km² encountering Rothschild's giraffes, elephants, lions, and hippo pods of 80+." },
-      { n: "Rwenzori Mountaineering", d: "Trek the 'Mountains of the Moon' through surreal giant lobelias (6m tall), moss-draped tree heathers, equatorial glaciers, and peaks above 5,000m — one of Earth's most otherworldly hiking experiences." },
-      { n: "Shoebill Tracking", d: "Search for the prehistoric 1.5m-tall shoebill stork — only 5,000-8,000 remain globally — in Mabamba Bay's vast papyrus swamps. Paddle dugout canoes with expert guides for this bucket-list birding experience." },
-      { n: "Cultural Encounters", d: "Experience Karamojong warrior traditions, Batwa pygmy forest wisdom (medicinal plants, honey gathering), Buganda royal ceremonies at UNESCO Kasubi Tombs, and Bagisu circumcision rituals (Imbalu)." },
-      { n: "Lake Bunyonyi Escape", d: "Kayak Africa's second-deepest lake (900m), swim in bilharzia-free waters, explore 29 islands with centuries of Bakiga history, and learn the haunting story of Punishment Island from local guides." },
+      {
+        n: "Mountain Gorilla Trekking",
+        d: "Trek through Bwindi's dense ancient vegetation to spend a transformative hour with a mountain gorilla family. Watch 220kg silverbacks, playful infants, and nursing mothers — consistently rated Earth's most profound wildlife encounter by National Geographic.",
+      },
+      {
+        n: "Chimpanzee Tracking",
+        d: "Track 1,500 habituated chimps across 795 km² of Kibale Forest — observing tool use, hunting behavior, political alliances, and emotional displays that mirror early human evolution. 13 primate species in one forest.",
+      },
+      {
+        n: "Nile White Water Rafting",
+        d: "Navigate world-class Grade 5 rapids at the Nile's source in Jinja — 'The Bad Place,' 'Overtime,' and 'The Dead Dutchman.' Half-day to multi-day expeditions with options for bungee jumping and kayaking.",
+      },
+      {
+        n: "Murchison Falls Safari",
+        d: "Cruise to the thundering base where the entire Nile forces through a 7m gap, plunging 43m. Game drive 3,840 km² encountering Rothschild's giraffes, elephants, lions, and hippo pods of 80+.",
+      },
+      {
+        n: "Rwenzori Mountaineering",
+        d: "Trek the 'Mountains of the Moon' through surreal giant lobelias (6m tall), moss-draped tree heathers, equatorial glaciers, and peaks above 5,000m — one of Earth's most otherworldly hiking experiences.",
+      },
+      {
+        n: "Shoebill Tracking",
+        d: "Search for the prehistoric 1.5m-tall shoebill stork — only 5,000-8,000 remain globally — in Mabamba Bay's vast papyrus swamps. Paddle dugout canoes with expert guides for this bucket-list birding experience.",
+      },
+      {
+        n: "Cultural Encounters",
+        d: "Experience Karamojong warrior traditions, Batwa pygmy forest wisdom (medicinal plants, honey gathering), Buganda royal ceremonies at UNESCO Kasubi Tombs, and Bagisu circumcision rituals (Imbalu).",
+      },
+      {
+        n: "Lake Bunyonyi Escape",
+        d: "Kayak Africa's second-deepest lake (900m), swim in bilharzia-free waters, explore 29 islands with centuries of Bakiga history, and learn the haunting story of Punishment Island from local guides.",
+      },
     ],
     videos: [
-      { title: "Gorilla Trekking — Bwindi Impenetrable Forest", url: "https://www.youtube.com/embed/K3FKRaGJwbk", thumb: "https://images.unsplash.com/photo-1521651201144-634f700b36ef?w=800" },
-      { title: "Source of the Nile — Jinja Adventure Capital", url: "https://www.youtube.com/embed/r88pXkZcXi0", thumb: "https://images.unsplash.com/photo-1596395463364-ce07e4df1c85?w=800" },
-      { title: "Uganda Wildlife Safari — Pearl of Africa", url: "https://www.youtube.com/embed/CVGpEex4t6E", thumb: "https://images.unsplash.com/photo-1619451334792-150fd785ee74?w=800" },
+      {
+        title: "Gorilla Trekking — Bwindi Impenetrable Forest",
+        url: "https://www.youtube.com/embed/K3FKRaGJwbk",
+        thumb:
+          "https://images.unsplash.com/photo-1521651201144-634f700b36ef?w=800",
+      },
+      {
+        title: "Source of the Nile — Jinja Adventure Capital",
+        url: "https://www.youtube.com/embed/r88pXkZcXi0",
+        thumb:
+          "https://images.unsplash.com/photo-1596395463364-ce07e4df1c85?w=800",
+      },
+      {
+        title: "Uganda Wildlife Safari — Pearl of Africa",
+        url: "https://www.youtube.com/embed/CVGpEex4t6E",
+        thumb:
+          "https://images.unsplash.com/photo-1619451334792-150fd785ee74?w=800",
+      },
     ],
     gallery: [
-      { url: "https://images.unsplash.com/photo-1521651201144-634f700b36ef?w=1200", cap: "Mountain Gorilla", ctx: "Bwindi shelters 459 gorillas — nearly half the world's 1,063. Each trek limited to 8 visitors." },
-      { url: "https://images.unsplash.com/photo-1596395463364-ce07e4df1c85?w=1200", cap: "Murchison Falls", ctx: "The entire Nile forces through a 7m gap, plunging 43m — creating a permanent rainbow of spray." },
-      { url: "https://images.unsplash.com/photo-1619451334792-150fd785ee74?w=1200", cap: "Queen Elizabeth NP", ctx: "Ishasha's tree-climbing lions — a behavior observed in only two places on Earth." },
-      { url: "https://images.unsplash.com/photo-1504945005722-33670dcaf685?w=1200", cap: "Lake Bunyonyi", ctx: "900m deep, 29 islands, bilharzia-free — one of Africa's most serene swimming lakes." },
-      { url: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=1200", cap: "Uganda Wildlife", ctx: "364 mammal species across 10 national parks covering 11% of Uganda's total land area." },
-      { url: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=1200", cap: "Batwa People", ctx: "The original 150cm-tall forest dwellers sharing ancestral plant medicine through cultural tourism." },
-      { url: "https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=1200", cap: "Rwenzori Mountains", ctx: "5,109m 'Mountains of the Moon' with equatorial glaciers and 6m giant groundsel plants." },
-      { url: "https://images.unsplash.com/photo-1535941339077-2dd1c7963098?w=1200", cap: "Ssese Islands", ctx: "84 tropical islands in Lake Victoria — beaches, forest walks, and authentic fishing village life." },
+      {
+        url: "https://images.unsplash.com/photo-1521651201144-634f700b36ef?w=1200",
+        cap: "Mountain Gorilla",
+        ctx: "Bwindi shelters 459 gorillas — nearly half the world's 1,063. Each trek limited to 8 visitors.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1596395463364-ce07e4df1c85?w=1200",
+        cap: "Murchison Falls",
+        ctx: "The entire Nile forces through a 7m gap, plunging 43m — creating a permanent rainbow of spray.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1619451334792-150fd785ee74?w=1200",
+        cap: "Queen Elizabeth NP",
+        ctx: "Ishasha's tree-climbing lions — a behavior observed in only two places on Earth.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1504945005722-33670dcaf685?w=1200",
+        cap: "Lake Bunyonyi",
+        ctx: "900m deep, 29 islands, bilharzia-free — one of Africa's most serene swimming lakes.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=1200",
+        cap: "Uganda Wildlife",
+        ctx: "364 mammal species across 10 national parks covering 11% of Uganda's total land area.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=1200",
+        cap: "Batwa People",
+        ctx: "The original 150cm-tall forest dwellers sharing ancestral plant medicine through cultural tourism.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=1200",
+        cap: "Rwenzori Mountains",
+        ctx: "5,109m 'Mountains of the Moon' with equatorial glaciers and 6m giant groundsel plants.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1535941339077-2dd1c7963098?w=1200",
+        cap: "Ssese Islands",
+        ctx: "84 tropical islands in Lake Victoria — beaches, forest walks, and authentic fishing village life.",
+      },
     ],
   },
   // Tanzania, Rwanda, South Africa follow same expanded pattern — shortened here for token limits but follow identical structure
-  tanzania: { intro: "Tanzania stands as one of Africa's most extraordinary destinations, where Kilimanjaro's eternal snows watch over the endless Serengeti.", discover: ["Home to Kilimanjaro at 5,895m, the 30,000 km² Serengeti, and the stunning Ngorongoro Crater, Tanzania encompasses incredible diversity unmatched anywhere.", "The Serengeti hosts Earth's largest mammal migration — 1.5M wildebeest, 300K zebra following ancient 1,800-mile routes visible from space.", "Zanzibar offers UNESCO Stone Town's labyrinthine alleys with centuries of Swahili, Arab, and Indian influence, plus pristine beaches and spice plantations.", "120+ ethnic groups include the Hadzabe hunter-gatherers and Maasai warriors maintaining centuries-old traditions.", "Ngorongoro — world's largest intact caldera at 264 km² — supports ~25,000 animals including Africa's densest black rhino population."], stats: [{ l: "Population", v: 65.5, s: "M", dc: 1 }, { l: "GDP", v: 79.2, s: "B", p: "$", dc: 1 }, { l: "Tourists", v: 1.6, s: "M", dc: 1 }, { l: "Parks", v: 22 }, { l: "Kilimanjaro", v: 5895, s: " m" }, { l: "Birds", v: 1100, s: "+" }, { l: "Coastline", v: 1424, s: " km" }, { l: "Ethnic Groups", v: 120, s: "+" }, { l: "Serengeti", v: 30000, s: " km²" }, { l: "UNESCO", v: 7 }], facts: [{ t: "Capitals", v: "Dodoma / Dar es Salaam", s: "Official / Commercial" }, { t: "Languages", v: "Swahili & English", s: "National language: Swahili" }, { t: "Independence", v: "Dec 9, 1961", s: "United Republic since 1964" }, { t: "Highest", v: "Kilimanjaro — 5,895m", s: "Highest freestanding mountain on Earth" }, { t: "Currency", v: "TZS", s: "1 USD ≈ 2,500 TZS" }, { t: "Internet", v: "57%", s: "36M+ users" }], activities: [{ n: "Kilimanjaro", d: "5,895m via Machame/Lemosho/Marangu." }, { n: "Serengeti Safari", d: "Endless plains, Great Migration." }, { n: "Zanzibar", d: "Beaches, Stone Town, spice tours." }, { n: "Ngorongoro", d: "World's largest intact caldera." }, { n: "Chimps at Gombe", d: "Jane Goodall's research site." }, { n: "Dhow Sailing", d: "Ancient vessels, hidden coves." }], videos: [{ title: "Serengeti", url: "https://www.youtube.com/embed/ajfzOk_CZxE", thumb: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800" }, { title: "Zanzibar", url: "https://www.youtube.com/embed/v8PCWdDPJ5s", thumb: "https://images.unsplash.com/photo-1586861203927-800a5acdcc4d?w=800" }], gallery: [{ url: "https://images.unsplash.com/photo-1621414050946-1b4ea3cf6d68?w=1200", cap: "Kilimanjaro", ctx: "5,895m" }, { url: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1200", cap: "Migration", ctx: "1,800 miles" }, { url: "https://images.unsplash.com/photo-1586861203927-800a5acdcc4d?w=1200", cap: "Zanzibar", ctx: "Spice Island" }, { url: "https://images.unsplash.com/photo-1504945005722-33670dcaf685?w=1200", cap: "Ngorongoro", ctx: "264 km²" }, { url: "https://images.unsplash.com/photo-1528277342758-f1d7613953a2?w=1200", cap: "Stone Town", ctx: "UNESCO" }] },
-  rwanda: { intro: "Rwanda, the 'Land of a Thousand Hills,' has emerged as Africa's most remarkable success story and a world-class luxury travel destination.", discover: ["World-famous for mountain gorilla encounters in Volcanoes National Park — ranked among Earth's top wildlife experiences.", "Kigali: Africa's cleanest, safest capital. Monthly Umuganda, plastics ban, Vision 2050.", "Gorilla permit revenue-sharing transforms communities. 10% of park fees go directly to local people.", "Nyungwe: 13 primate species, Africa's first canopy walkway, 10-million-year-old rainforest.", "Lake Kivu: kayaking, island-hopping, 227km Congo Nile Trail."], stats: [{ l: "Population", v: 14.1, s: "M", dc: 1 }, { l: "GDP", v: 13.3, s: "B", p: "$", dc: 1 }, { l: "Tourists", v: 1.3, s: "M", dc: 1 }, { l: "Parks", v: 4 }, { l: "Gorillas", v: 604 }, { l: "Birds", v: 700, s: "+" }, { l: "GDP Growth", v: 8.2, s: "%", dc: 1 }, { l: "UNESCO", v: 2 }], facts: [{ t: "Capital", v: "Kigali", s: "Africa's cleanest city" }, { t: "Languages", v: "Kinyarwanda, English, French, Swahili", s: "Kinyarwanda: 99%" }, { t: "Independence", v: "July 1, 1962", s: "From Belgium" }, { t: "Highest", v: "Mt Karisimbi — 4,507m", s: "Virunga volcano" }, { t: "Currency", v: "RWF", s: "1 USD ≈ 1,300 RWF" }], activities: [{ n: "Gorilla Trekking", d: "10 families in Volcanoes NP." }, { n: "Golden Monkeys", d: "Rare Virunga bamboo forest species." }, { n: "Nyungwe Canopy", d: "50m above 10M-year-old forest." }, { n: "Lake Kivu", d: "227km Congo Nile Trail." }, { n: "Akagera Safari", d: "Big Five reintroduced." }, { n: "Coffee Tours", d: "Top-10 world specialty." }], videos: [{ title: "Rwanda Gorillas", url: "https://www.youtube.com/embed/4dCq-dshE5s", thumb: "https://images.unsplash.com/photo-1521651201144-634f700b36ef?w=800" }], gallery: [{ url: "https://images.unsplash.com/photo-1521651201144-634f700b36ef?w=1200", cap: "Gorillas", ctx: "10 families" }, { url: "https://images.unsplash.com/photo-1580060405669-fcb07c8e8a66?w=1200", cap: "Kigali", ctx: "Cleanest city" }, { url: "https://images.unsplash.com/photo-1504945005722-33670dcaf685?w=1200", cap: "Lake Kivu", ctx: "Great Lake" }, { url: "https://images.unsplash.com/photo-1549366021-9f761d450615?w=1200", cap: "Hills", ctx: "1,000 hills" }, { url: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=1200", cap: "Nyungwe", ctx: "10M years" }] },
-  "south-africa": { intro: "South Africa, the 'Rainbow Nation,' is a world in one country — a dazzling mosaic of 11 languages, three capitals, two oceans, and limitless experiences.", discover: ["From Kruger's 2M hectares to Cape Town where 600M-year-old Table Mountain meets two oceans.", "560+ wine estates, 300km Garden Route, world's highest bungee (216m Bloukrans).", "From 20,000-year-old San rock art to Mandela's freedom walk — profound history.", "3 capitals, 11 languages, cuisine from Malay bobotie to Zulu potjiekos.", "Shark cage diving, Drakensberg hiking, Soweto cultural tours."], stats: [{ l: "Population", v: 62, s: "M" }, { l: "GDP", v: 399, s: "B", p: "$" }, { l: "Tourists", v: 8.5, s: "M", dc: 1 }, { l: "Parks", v: 21 }, { l: "Wildlife", v: 95000, s: "+" }, { l: "Coastline", v: 2798, s: " km" }, { l: "Languages", v: 11 }, { l: "Wineries", v: 560, s: "+" }, { l: "UNESCO", v: 10 }, { l: "Birds", v: 850, s: "+" }], facts: [{ t: "Capitals", v: "Pretoria, Cape Town, Bloemfontein", s: "Admin, Leg, Judicial" }, { t: "Languages", v: "11 Official", s: "Zulu, Xhosa, Afrikaans, English +7" }, { t: "Democracy", v: "April 27, 1994", s: "Freedom Day" }, { t: "Highest", v: "Mafadi — 3,450m", s: "Drakensberg" }, { t: "Currency", v: "ZAR", s: "1 USD ≈ 18 ZAR" }], activities: [{ n: "Kruger Safari", d: "2M hectares, Big Five, luxury lodges." }, { n: "Table Mountain", d: "600M-year-old New7Wonder, 360° views." }, { n: "Cape Winelands", d: "560+ estates, Michelin dining." }, { n: "Garden Route", d: "300km forests, beaches, 216m bungee." }, { n: "Robben Island", d: "UNESCO — Mandela's 18-year prison." }, { n: "Shark Diving", d: "Great whites in Gansbaai." }], videos: [{ title: "Cape Town", url: "https://www.youtube.com/embed/wLeimq5ig-Q", thumb: "https://images.unsplash.com/photo-1580060405669-fcb07c8e8a66?w=800" }, { title: "Kruger", url: "https://www.youtube.com/embed/0eCEveAHxiU", thumb: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800" }], gallery: [{ url: "https://images.unsplash.com/photo-1580060405669-fcb07c8e8a66?w=1200", cap: "Cape Town", ctx: "Table Mountain 600M years" }, { url: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=1200", cap: "Kruger", ctx: "2M hectares" }, { url: "https://images.unsplash.com/photo-1535941339077-2dd1c7963098?w=1200", cap: "Garden Route", ctx: "300km" }, { url: "https://images.unsplash.com/photo-1549366021-9f761d450615?w=1200", cap: "Winelands", ctx: "1B+ liters/yr" }, { url: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=1200", cap: "Wildlife", ctx: "95,000+ species" }] },
+  tanzania: {
+    intro:
+      "Tanzania stands as one of Africa's most extraordinary destinations, where Kilimanjaro's eternal snows watch over the endless Serengeti.",
+    discover: [
+      "Home to Kilimanjaro at 5,895m, the 30,000 km² Serengeti, and the stunning Ngorongoro Crater, Tanzania encompasses incredible diversity unmatched anywhere.",
+      "The Serengeti hosts Earth's largest mammal migration — 1.5M wildebeest, 300K zebra following ancient 1,800-mile routes visible from space.",
+      "Zanzibar offers UNESCO Stone Town's labyrinthine alleys with centuries of Swahili, Arab, and Indian influence, plus pristine beaches and spice plantations.",
+      "120+ ethnic groups include the Hadzabe hunter-gatherers and Maasai warriors maintaining centuries-old traditions.",
+      "Ngorongoro — world's largest intact caldera at 264 km² — supports ~25,000 animals including Africa's densest black rhino population.",
+    ],
+    stats: [
+      { l: "Population", v: 65.5, s: "M", dc: 1 },
+      { l: "GDP", v: 79.2, s: "B", p: "$", dc: 1 },
+      { l: "Tourists", v: 1.6, s: "M", dc: 1 },
+      { l: "Parks", v: 22 },
+      { l: "Kilimanjaro", v: 5895, s: " m" },
+      { l: "Birds", v: 1100, s: "+" },
+      { l: "Coastline", v: 1424, s: " km" },
+      { l: "Ethnic Groups", v: 120, s: "+" },
+      { l: "Serengeti", v: 30000, s: " km²" },
+      { l: "UNESCO", v: 7 },
+    ],
+    facts: [
+      {
+        t: "Capitals",
+        v: "Dodoma / Dar es Salaam",
+        s: "Official / Commercial",
+      },
+      {
+        t: "Languages",
+        v: "Swahili & English",
+        s: "National language: Swahili",
+      },
+      { t: "Independence", v: "Dec 9, 1961", s: "United Republic since 1964" },
+      {
+        t: "Highest",
+        v: "Kilimanjaro — 5,895m",
+        s: "Highest freestanding mountain on Earth",
+      },
+      { t: "Currency", v: "TZS", s: "1 USD ≈ 2,500 TZS" },
+      { t: "Internet", v: "57%", s: "36M+ users" },
+    ],
+    activities: [
+      { n: "Kilimanjaro", d: "5,895m via Machame/Lemosho/Marangu." },
+      { n: "Serengeti Safari", d: "Endless plains, Great Migration." },
+      { n: "Zanzibar", d: "Beaches, Stone Town, spice tours." },
+      { n: "Ngorongoro", d: "World's largest intact caldera." },
+      { n: "Chimps at Gombe", d: "Jane Goodall's research site." },
+      { n: "Dhow Sailing", d: "Ancient vessels, hidden coves." },
+    ],
+    videos: [
+      {
+        title: "Serengeti",
+        url: "https://www.youtube.com/embed/ajfzOk_CZxE",
+        thumb:
+          "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800",
+      },
+      {
+        title: "Zanzibar",
+        url: "https://www.youtube.com/embed/v8PCWdDPJ5s",
+        thumb:
+          "https://images.unsplash.com/photo-1586861203927-800a5acdcc4d?w=800",
+      },
+    ],
+    gallery: [
+      {
+        url: "https://images.unsplash.com/photo-1621414050946-1b4ea3cf6d68?w=1200",
+        cap: "Kilimanjaro",
+        ctx: "5,895m",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1200",
+        cap: "Migration",
+        ctx: "1,800 miles",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1586861203927-800a5acdcc4d?w=1200",
+        cap: "Zanzibar",
+        ctx: "Spice Island",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1504945005722-33670dcaf685?w=1200",
+        cap: "Ngorongoro",
+        ctx: "264 km²",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1528277342758-f1d7613953a2?w=1200",
+        cap: "Stone Town",
+        ctx: "UNESCO",
+      },
+    ],
+  },
+  rwanda: {
+    intro:
+      "Rwanda, the 'Land of a Thousand Hills,' has emerged as Africa's most remarkable success story, blending world-class luxury eco-tourism with a profound cultural renaissance and breathtaking natural beauty.",
+    discover: [
+      "World-famous for intimate mountain gorilla encounters in Volcanoes National Park — consistently ranked among Earth's top wildlife experiences and a triumph of modern conservation.",
+      "Kigali sets the standard as Africa's cleanest, safest, and most progressive capital. Experience visionary initiatives like monthly Umuganda, the nationwide plastics ban, and the ambitious Vision 2050 framework.",
+      "A trailblazer in eco-tourism, Rwanda's revenue-sharing model transforms communities. 10% of all park fees are reinvested directly into local infrastructure, meaning every visit supports sustainable development.",
+      "Nyungwe Forest National Park protects a 10-million-year-old montane rainforest. Here, you'll find 13 primate species and can walk across East Africa's highest canopy walkway suspended 50m above the jungle floor.",
+      "Lake Kivu offers the perfect aquatic contrast to the dense forests. Kayak its tranquil, bilharzia-free waters, island-hop traditional fishing communities, or hike and cycle the stunning 227km Congo Nile Trail.",
+      "Akagera National Park represents a miraculous rewilding story. Once depleted, it now thrives as a Big Five savanna destination, complete with lions, rhinos, and boat safaris on Lake Ihema.",
+      "Rwandan culture remains vibrant through Intore drumming, intricate Agaseke basket weaving, and a society deeply committed to reconciliation and progress, making it a profoundly moving destination.",
+    ],
+    stats: [
+      { l: "Population", v: 14.1, s: "M", dc: 1 },
+      { l: "GDP", v: 13.3, s: "B", p: "$", dc: 1 },
+      { l: "Tourists", v: 1.3, s: "M", dc: 1 },
+      { l: "Parks", v: 4 },
+      { l: "Gorillas", v: 604 },
+      { l: "Birds", v: 700, s: "+" },
+      { l: "GDP Growth", v: 8.2, s: "%", dc: 1 },
+      { l: "UNESCO", v: 2 },
+      { l: "Primate Species", v: 14 },
+      { l: "Canopy Height", v: 50, s: "m" },
+    ],
+    facts: [
+      { t: "Capital", v: "Kigali", s: "Africa's cleanest, safest city" },
+      {
+        t: "Languages",
+        v: "Kinyarwanda, English, French",
+        s: "Kinyarwanda spoken by 99%",
+      },
+      {
+        t: "Conservation",
+        v: "Umuganda",
+        s: "Mandatory community cleaning day",
+      },
+      {
+        t: "Highest",
+        v: "Mt Karisimbi — 4,507m",
+        s: "Stratovolcano in Virunga",
+      },
+      { t: "Ecology", v: "Plastic Ban", s: "Strictly enforced since 2008" },
+      { t: "Currency", v: "RWF", s: "1 USD ≈ 1,300 RWF" },
+    ],
+    activities: [
+      {
+        n: "Gorilla Trekking",
+        d: "Trek through bamboo forests to spend an awe-inspiring hour with one of the 10 habituated mountain gorilla families in Volcanoes National Park.",
+      },
+      {
+        n: "Golden Monkey Tracking",
+        d: "Follow the playful and endangered golden monkeys as they leap through the high-altitude bamboo forests of the Virunga massif.",
+      },
+      {
+        n: "Nyungwe Canopy Walk",
+        d: "Traverse a 160m long suspension bridge 50m above a 10-million-year-old rainforest, surrounded by endemic birds and primates.",
+      },
+      {
+        n: "Lake Kivu Adventures",
+        d: "Paddle a kayak across peaceful waters, sail with traditional singing fishermen, or conquer the epic 227km Congo Nile Trail.",
+      },
+      {
+        n: "Akagera Big Five Safari",
+        d: "Experience a restored savanna ecosystem. Spot lions, rhinos, elephants, leopards, and buffalo in one of Africa's greatest conservation triumphs.",
+      },
+      {
+        n: "Kigali Cultural Tour",
+        d: "Pay respects at the solemn Genocide Memorial, visit vibrant art galleries, and explore the bustling Kimironko market.",
+      },
+      {
+        n: "Volcano Hiking",
+        d: "Challenge yourself with a demanding hike up Mount Bisoke to witness its stunning crater lake or conquer the towering peak of Karisimbi.",
+      },
+      {
+        n: "Coffee Masterclass",
+        d: "Visit a rural washing station to trace the journey of Rwanda's world-class specialty coffee from volcanic soil tree to perfect cup.",
+      },
+    ],
+    videos: [
+      {
+        title: "Mountain Gorilla Encounters",
+        url: "https://www.youtube.com/embed/4dCq-dshE5s",
+        thumb:
+          "https://images.unsplash.com/photo-1521651201144-634f700b36ef?w=800",
+      },
+      {
+        title: "Nyungwe Forest & Canopy Walk",
+        url: "https://www.youtube.com/embed/P-Y3wGBxIig",
+        thumb:
+          "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=800",
+      },
+      {
+        title: "The Rebirth of Akagera National Park",
+        url: "https://www.youtube.com/embed/2_Hn2L5VqAE",
+        thumb:
+          "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800",
+      },
+    ],
+    gallery: [
+      {
+        url: "https://images.unsplash.com/photo-1521651201144-634f700b36ef?w=1200",
+        cap: "Mountain Gorillas",
+        ctx: "Rwanda guarantees one of the most intimate and highly regulated wildlife encounters on Earth with its habituated gorilla families.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1580060405669-fcb07c8e8a66?w=1200",
+        cap: "Kigali Metropolis",
+        ctx: "Nestled across lush hills, Kigali is globally recognized for its spotless streets, safety, and rapid modernization.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1504945005722-33670dcaf685?w=1200",
+        cap: "Lake Kivu",
+        ctx: "A staggering inland sea sharing a border with DRC, offering idyllic beaches, kayaking, and the famous Congo Nile Trail.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1549366021-9f761d450615?w=1200",
+        cap: "Thousand Hills",
+        ctx: "The country's iconic undulating topography creates dramatic, mist-shrouded valleys dominated by high-altitude tea plantations.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=1200",
+        cap: "Nyungwe Canopy Walk",
+        ctx: "Suspended 50 meters above ground, this walkway offers an exhilarating canopy-level perspective of one of Africa's oldest rainforests.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=1200",
+        cap: "Intore Dancers",
+        ctx: "The 'Dance of Heroes' features highly choreographed leaps and flowing grass wigs, celebrating Rwanda's proud martial and cultural heritage.",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1619451334792-150fd785ee74?w=1200",
+        cap: "Akagera Savanna",
+        ctx: "A triumph of conservation, Akagera has evolved from a depleted park to a thriving haven for lions, rhinos, and wetland avian life.",
+      },
+    ],
+  },
+  "south-africa": {
+    intro:
+      "South Africa, the 'Rainbow Nation,' is a world in one country — a dazzling mosaic of 11 languages, three capitals, two oceans, and limitless experiences.",
+    discover: [
+      "From Kruger's 2M hectares to Cape Town where 600M-year-old Table Mountain meets two oceans.",
+      "560+ wine estates, 300km Garden Route, world's highest bungee (216m Bloukrans).",
+      "From 20,000-year-old San rock art to Mandela's freedom walk — profound history.",
+      "3 capitals, 11 languages, cuisine from Malay bobotie to Zulu potjiekos.",
+      "Shark cage diving, Drakensberg hiking, Soweto cultural tours.",
+    ],
+    stats: [
+      { l: "Population", v: 62, s: "M" },
+      { l: "GDP", v: 399, s: "B", p: "$" },
+      { l: "Tourists", v: 8.5, s: "M", dc: 1 },
+      { l: "Parks", v: 21 },
+      { l: "Wildlife", v: 95000, s: "+" },
+      { l: "Coastline", v: 2798, s: " km" },
+      { l: "Languages", v: 11 },
+      { l: "Wineries", v: 560, s: "+" },
+      { l: "UNESCO", v: 10 },
+      { l: "Birds", v: 850, s: "+" },
+    ],
+    facts: [
+      {
+        t: "Capitals",
+        v: "Pretoria, Cape Town, Bloemfontein",
+        s: "Admin, Leg, Judicial",
+      },
+      {
+        t: "Languages",
+        v: "11 Official",
+        s: "Zulu, Xhosa, Afrikaans, English +7",
+      },
+      { t: "Democracy", v: "April 27, 1994", s: "Freedom Day" },
+      { t: "Highest", v: "Mafadi — 3,450m", s: "Drakensberg" },
+      { t: "Currency", v: "ZAR", s: "1 USD ≈ 18 ZAR" },
+    ],
+    activities: [
+      { n: "Kruger Safari", d: "2M hectares, Big Five, luxury lodges." },
+      { n: "Table Mountain", d: "600M-year-old New7Wonder, 360° views." },
+      { n: "Cape Winelands", d: "560+ estates, Michelin dining." },
+      { n: "Garden Route", d: "300km forests, beaches, 216m bungee." },
+      { n: "Robben Island", d: "UNESCO — Mandela's 18-year prison." },
+      { n: "Shark Diving", d: "Great whites in Gansbaai." },
+    ],
+    videos: [
+      {
+        title: "Cape Town",
+        url: "https://www.youtube.com/embed/wLeimq5ig-Q",
+        thumb:
+          "https://images.unsplash.com/photo-1580060405669-fcb07c8e8a66?w=800",
+      },
+      {
+        title: "Kruger",
+        url: "https://www.youtube.com/embed/0eCEveAHxiU",
+        thumb:
+          "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=800",
+      },
+    ],
+    gallery: [
+      {
+        url: "https://images.unsplash.com/photo-1580060405669-fcb07c8e8a66?w=1200",
+        cap: "Cape Town",
+        ctx: "Table Mountain 600M years",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=1200",
+        cap: "Kruger",
+        ctx: "2M hectares",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1535941339077-2dd1c7963098?w=1200",
+        cap: "Garden Route",
+        ctx: "300km",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1549366021-9f761d450615?w=1200",
+        cap: "Winelands",
+        ctx: "1B+ liters/yr",
+      },
+      {
+        url: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=1200",
+        cap: "Wildlife",
+        ctx: "95,000+ species",
+      },
+    ],
+  },
 };
-const getFB = c => ({ intro: c?.description || `${c?.name || "This country"} is remarkable.`, discover: [c?.description, c?.additionalInfo].filter(Boolean), stats: [], facts: [], activities: (c?.experiences || []).slice(0, 8).map(e => ({ n: clean(e), d: `Experience ${clean(e).toLowerCase()}.` })), videos: [], gallery: c?.heroImage ? [{ url: c.heroImage, cap: c.name, ctx: "" }] : [] });
+const getFB = (c) => {
+  const descParas = c?.fullDescription
+    ? c.fullDescription.split("\n\n").filter(Boolean)
+    : [c?.description];
+  return {
+    intro: c?.description || `${c?.name || "This country"} is remarkable.`,
+    discover: [...descParas, c?.additionalInfo].filter(Boolean),
+    stats: [
+      { l: "Capital", v: c?.capital || "N/A" },
+      { l: "Area", v: c?.area || "N/A" },
+      { l: "Language", v: c?.officialLanguages?.[0] || "N/A" },
+    ],
+    facts: [
+      { t: "Currency", v: c?.currency || "N/A", s: c?.currencySymbol || "" },
+      { t: "Timezone", v: c?.timezone || "N/A", s: "" },
+      { t: "Best Time", v: c?.bestTime || "N/A", s: "To Visit" },
+    ],
+    activities: (c?.experiences || []).slice(0, 8).map((e) => ({
+      n: clean(e),
+      d: `Experience ${clean(e).toLowerCase()}.`,
+    })),
+    videos: c?.videos || [],
+    gallery:
+      c?.gallery ||
+      (c?.images
+        ? c.images.map((url, i) => ({
+            url,
+            cap: `${c?.name} Highlight ${i + 1}`,
+            ctx: `Discover the breathtaking beauty of ${c?.name}.`,
+          }))
+        : c?.heroImage
+          ? [{ url: c.heroImage, cap: c?.name, ctx: "" }]
+          : []),
+  };
+};
 
 /* ═══ MAIN COMPONENT ═══ */
 const CountryPage = () => {
   const { countryId } = useParams();
   const { openMap } = useApp();
-  const country = useMemo(() => countries.find(c => c.id === countryId), [countryId]);
-  const dests = useMemo(() => getDestinationsByCountry(countryId), [countryId]);
-  const { insights, loading: aiL, error: aiE, retry } = useCountryInsights(country);
-  const td = useMemo(() => DATA[countryId] || getFB(country), [countryId, country]);
+  const country = useMemo(
+    () => countries.find((c) => c.id === countryId),
+    [countryId],
+  );
+  const { destinations: dests = [] } = useCountryDestinations(countryId);
+  const {
+    insights,
+    loading: aiL,
+    error: aiE,
+    retry,
+  } = useCountryInsights(country);
+  const td = useMemo(
+    () => DATA[countryId] || getFB(country),
+    [countryId, country],
+  );
   const officialLink = useMemo(() => getOfficialLink(countryId), [countryId]);
 
-  const info = useMemo(() => country ? [{ icon: FiMapPin, l: "Capital", v: clean(country.capital) }, { icon: FiUsers, l: "Population", v: clean(country.population) }, { icon: FiGlobe, l: "Area", v: clean(country.area) }, { icon: FiDollarSign, l: "Currency", v: clean(country.currency) }, { icon: FiClock, l: "Time Zone", v: clean(country.timezone) }, { icon: FiSun, l: "Climate", v: clean(country.climate) }, { icon: FiCalendar, l: "Best Time", v: clean(country.bestTime) }] : [], [country]);
-  const sec = useMemo(() => { if (!insights) return null; const fb = (a, d) => a.length ? a : [d]; return { ov: fb(toP(insights.summary, 3), "—"), dem: fb(toB(insights.demographics, 6), "—"), eco: fb(toB(insights.economy, 6), "—"), tour: fb(toS(insights.tourismOutlook, 5), "—"), src: (insights.sources || []).map(clean).filter(Boolean).slice(0, 5) }; }, [insights]);
-  const aiHL = useMemo(() => { if (aiL) return `Generating live AI profile for ${country?.name || ""}...`; if (sec?.ov?.length) return toS(sec.ov[0], 2).join(" "); return `Discover ${country?.name || ""} — an extraordinary destination.`; }, [aiL, sec, country?.name]);
+  const info = useMemo(
+    () =>
+      country
+        ? [
+            { icon: FiMapPin, l: "Capital", v: clean(country.capital) },
+            { icon: FiUsers, l: "Population", v: clean(country.population) },
+            { icon: FiGlobe, l: "Area", v: clean(country.area) },
+            { icon: FiDollarSign, l: "Currency", v: clean(country.currency) },
+            { icon: FiClock, l: "Time Zone", v: clean(country.timezone) },
+            { icon: FiSun, l: "Climate", v: clean(country.climate) },
+            { icon: FiCalendar, l: "Best Time", v: clean(country.bestTime) },
+          ]
+        : [],
+    [country],
+  );
+  const sec = useMemo(() => {
+    if (!insights) return null;
+    const fb = (a, d) => (a.length ? a : [d]);
+    return {
+      def: clean(insights.definition || insights.summary.slice(0, 100)),
+      ov: fb(toP(insights.summary, 4), "—"),
+      dem: fb(toB(insights.demographics, 8), "—"),
+      eco: fb(toB(insights.economy, 8), "—"),
+      tour: fb(toS(insights.tourismOutlook, 6), "—"),
+      src: (insights.sources || []).map(clean).filter(Boolean).slice(0, 5),
+    };
+  }, [insights]);
+  const aiHL = useMemo(() => {
+    if (aiL) return `Generating live AI profile for ${country?.name || ""}...`;
+    if (sec?.ov?.length) return toS(sec.ov[0], 2).join(" ");
+    return `Discover ${country?.name || ""} — an extraordinary destination.`;
+  }, [aiL, sec, country?.name]);
   const mE = useMemo(() => mEmbed(country), [country]);
   const mO = useMemo(() => mOpen(country), [country]);
-  const mini = useCallback(() => openMap({ title: `${country?.name} Map`, lat: country?.mapPosition?.lat, lng: country?.mapPosition?.lng, query: `${country?.capital || ""}, ${country?.name || ""}`, zoom: 6 }), [openMap, country]);
+  const mini = useCallback(
+    () =>
+      openMap({
+        title: `${country?.name} Map`,
+        lat: country?.mapPosition?.lat,
+        lng: country?.mapPosition?.lng,
+        query: `${country?.capital || ""}, ${country?.name || ""}`,
+        zoom: 6,
+      }),
+    [openMap, country],
+  );
 
-  if (!country) return <div className="cp-404"><div style={{ fontSize: 80 }}>🌍</div><h1>Country Not Found</h1><Button to="/destinations" variant="primary">Explore Destinations</Button></div>;
+  if (!country)
+    return (
+      <div className="cp-404">
+        <div style={{ fontSize: 80 }}>🌍</div>
+        <h1>Country Not Found</h1>
+        <Button to="/destinations" variant="primary">
+          Explore Destinations
+        </Button>
+      </div>
+    );
 
   const mixed = () => {
-    const paras = td.discover || [], imgs = td.gallery || [], acts = td.activities || [], out = [];
-    if (td.intro) out.push(<R key="lead" a="up"><p className="nl__lead">{td.intro}</p></R>);
+    const paras = td.discover || [],
+      imgs = td.gallery || [],
+      acts = td.activities || [],
+      out = [];
+    if (td.intro)
+      out.push(
+        <R key="lead" a="up">
+          <p className="nl__lead">{td.intro}</p>
+        </R>,
+      );
     paras.forEach((p, i) => {
-      const img = imgs[i], ev = i % 2 === 0;
-      out.push(<R key={`p${i}`} a={ev ? "left" : "right"} d={.04}><div className={`nl__row${ev ? "" : " nl__row--flip"}`}>{img && <div className="nl__fig"><img src={img.url} alt={img.cap} loading="lazy" /><span className="nl__figcap"><FiCamera size={11} /> {img.cap}</span></div>}<div className="nl__copy"><p>{p}</p>{img?.ctx && <aside className="nl__aside"><FiInfo size={13} /><em>{img.ctx}</em></aside>}</div></div></R>);
-      if (i > 0 && i % 2 === 1) { const ai = Math.floor(i / 2), pair = [acts[ai * 2], acts[ai * 2 + 1]].filter(Boolean); if (pair.length) out.push(<R key={`ac${ai}`} a="up" d={.06}><div className="nl__acts">{pair.map((ac, j) => <div key={j} className="nl__act"><div className="nl__act-dot" /><div><strong>{ac.n}</strong><p>{ac.d}</p></div></div>)}</div></R>); }
+      const img = imgs[i],
+        ev = i % 2 === 0;
+      out.push(
+        <R key={`p${i}`} a={ev ? "left" : "right"} d={0.04}>
+          <div className={`nl__row${ev ? "" : " nl__row--flip"}`}>
+            {img && (
+              <div className="nl__fig">
+                <img src={img.url} alt={img.cap} loading="lazy" />
+                <span className="nl__figcap">
+                  <FiCamera size={11} /> {img.cap}
+                </span>
+              </div>
+            )}
+            <div className="nl__copy">
+              <p>{p}</p>
+              {img?.ctx && (
+                <aside className="nl__aside">
+                  <FiInfo size={13} />
+                  <em>{img.ctx}</em>
+                </aside>
+              )}
+            </div>
+          </div>
+        </R>,
+      );
+      if (i > 0 && i % 2 === 1) {
+        const ai = Math.floor(i / 2),
+          pair = [acts[ai * 2], acts[ai * 2 + 1]].filter(Boolean);
+        if (pair.length)
+          out.push(
+            <R key={`ac${ai}`} a="up" d={0.06}>
+              <div className="nl__acts">
+                {pair.map((ac, j) => (
+                  <div key={j} className="nl__act">
+                    <div className="nl__act-dot" />
+                    <div>
+                      <strong>{ac.n}</strong>
+                      <p>{ac.d}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </R>,
+          );
+      }
     });
-    const remImgs = imgs.slice(paras.length); if (remImgs.length > 0) out.push(<R key="strip" a="up"><div className="nl__strip">{remImgs.map((img, i) => <div key={i} className="nl__strip-item"><img src={img.url} alt={img.cap} loading="lazy" /><span>{img.cap}</span></div>)}</div></R>);
-    const usedA = Math.floor(paras.length / 2) * 2, remA = acts.slice(usedA); if (remA.length > 0) out.push(<R key="rema" a="up"><div className="nl__acts nl__acts--grid">{remA.map((ac, i) => <div key={i} className="nl__act"><div className="nl__act-dot" /><div><strong>{ac.n}</strong><p>{ac.d}</p></div></div>)}</div></R>);
+    const remImgs = imgs.slice(paras.length);
+    if (remImgs.length > 0)
+      out.push(
+        <R key="strip" a="up">
+          <div className="nl__strip">
+            {remImgs.map((img, i) => (
+              <div key={i} className="nl__strip-item">
+                <img src={img.url} alt={img.cap} loading="lazy" />
+                <span>{img.cap}</span>
+              </div>
+            ))}
+          </div>
+        </R>,
+      );
+    const usedA = Math.floor(paras.length / 2) * 2,
+      remA = acts.slice(usedA);
+    if (remA.length > 0)
+      out.push(
+        <R key="rema" a="up">
+          <div className="nl__acts nl__acts--grid">
+            {remA.map((ac, i) => (
+              <div key={i} className="nl__act">
+                <div className="nl__act-dot" />
+                <div>
+                  <strong>{ac.n}</strong>
+                  <p>{ac.d}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </R>,
+      );
     return out;
   };
 
   return (
-    <div className="cp"><style>{CSS}</style>
+    <div className="cp">
+      <style>{CSS}</style>
       <ShareBar name={country.name} />
-      <PageHeader title={country.name} subtitle={aiHL} backgroundImage={country.heroImage} breadcrumbs={[{ label: "Destinations", path: "/destinations" }, { label: country.name }]} />
-      <section className="s s--ck"><div className="w"><CookieSettingsButton /></div></section>
-      <section className="s s--bk"><div className="w"><div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}><Link to="/destinations" className="bk"><FiArrowLeft size={14} /> All Countries</Link>{officialLink && <a href={officialLink.url} target="_blank" rel="noopener noreferrer" className="bk bk--official"><FiLink size={13} /> {officialLink.label}</a>}</div></div></section>
+      <PageHeader
+        title={country.name}
+        tagline={country.tagline}
+        subtitle={aiHL}
+        backgroundImage={country.heroImage}
+        breadcrumbs={[
+          { label: "Destinations", path: "/destinations" },
+          { label: country.name },
+        ]}
+      />
+      <section className="s s--ck">
+        <div className="w">
+          <CookieSettingsButton />
+        </div>
+      </section>
+      <section className="s s--bk">
+        <div className="w">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              flexWrap: "wrap",
+            }}
+          >
+            <Link to="/destinations" className="bk">
+              <FiArrowLeft size={14} /> All Countries
+            </Link>
+            {officialLink && (
+              <a
+                href={officialLink.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bk bk--official"
+              >
+                <FiLink size={13} /> {officialLink.label}
+              </a>
+            )}
+          </div>
+        </div>
+      </section>
 
       {/* HERO */}
-      <section className="s s--hero"><div className="w col2">
-        <R a="left"><article className="crd crd--hero">
-          <div className="flag-row"><span className="flag">{country.flag}</span><div><span className="tag">{clean(country.tagline)}</span><span className="rgn"><FiMapPin size={10} /> {clean(country.region || "Africa")}</span></div></div>
-          <h2 className="crd__title">Discover {country.name}</h2>
-          <p className="crd__desc crd__desc--xl">{td.intro}</p>
-          {td.discover?.[0] && <p className="crd__desc">{td.discover[0]}</p>}
-          {td.discover?.[1] && <p className="crd__desc">{td.discover[1]}</p>}
-          {officialLink && <a href={officialLink.url} target="_blank" rel="noopener noreferrer" className="official-cta"><FiExternalLink size={15} /> Visit Official {country.name} Tourism Website</a>}
-        </article></R>
-        <R a="right" d={.1}><aside className="crd crd--side">
-          <h3 className="crd__h"><FiGrid size={16} /> Country Snapshot</h3>
-          <div className="info-list">{info.map((it, i) => <R key={it.l} a="left" d={i * .04} as="div" className="inf"><span className="inf__ic"><it.icon size={15} /></span><div><div className="inf__l">{it.l}</div><div className="inf__v">{it.v}</div></div></R>)}</div>
-          <div className="side-cta"><Button to="/booking" variant="primary" icon={<FiCalendar size={15} />}>Plan Your Trip</Button><Button to={`/country/${country.id}/destinations`} variant="secondary" icon={<FiMapPin size={15} />}>Explore Places</Button></div>
-        </aside></R>
-      </div></section>
+      <section className="s s--hero">
+        <div className="w col2">
+          <R a="left">
+            <article className="crd crd--hero">
+              <div className="flag-row">
+                <span className="flag">{country.flag}</span>
+                <div>
+                  <span className="tag">{clean(country.tagline)}</span>
+                  <span className="rgn">
+                    <FiMapPin size={10} /> {clean(country.region || "Africa")}
+                  </span>
+                </div>
+              </div>
+              <h2 className="crd__title">Discover {country.name}</h2>
+              <p className="crd__desc crd__desc--xl">{td.intro}</p>
+              {td.discover?.[0] && (
+                <p className="crd__desc">{td.discover[0]}</p>
+              )}
+              {td.discover?.[1] && (
+                <p className="crd__desc">{td.discover[1]}</p>
+              )}
+              {officialLink && (
+                <a
+                  href={officialLink.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="official-cta"
+                >
+                  <FiExternalLink size={15} /> Visit Official {country.name}{" "}
+                  Tourism Website
+                </a>
+              )}
+            </article>
+          </R>
+          <R a="right" d={0.1}>
+            <aside className="crd crd--side">
+              <h3 className="crd__h">
+                <FiGrid size={16} /> Country Snapshot
+              </h3>
+              <div className="info-list">
+                {info.map((it, i) => (
+                  <R key={it.l} a="left" d={i * 0.04} as="div" className="inf">
+                    <span className="inf__ic">
+                      <it.icon size={15} />
+                    </span>
+                    <div>
+                      <div className="inf__l">{it.l}</div>
+                      <div className="inf__v">{it.v}</div>
+                    </div>
+                  </R>
+                ))}
+              </div>
+              <div className="side-cta">
+                <Button
+                  to="/booking"
+                  variant="primary"
+                  icon={<FiCalendar size={15} />}
+                >
+                  Plan Your Trip
+                </Button>
+                <Button
+                  to={`/country/${country.id}/destinations`}
+                  variant="secondary"
+                  icon={<FiMapPin size={15} />}
+                >
+                  Explore Places
+                </Button>
+              </div>
+            </aside>
+          </R>
+        </div>
+      </section>
 
       {/* STATS */}
-      {td.stats?.length > 0 && <section className="s s--stats"><div className="w"><R a="up"><div className="shdr"><span className="bdg"><FiBarChart2 size={12} /> Live Statistics</span><h2 className="sh">{country.name} by the Numbers</h2></div></R><div className="stats">{td.stats.map((st, i) => <R key={st.l} a="zoom" d={i * .035} as="div" className="stat"><div className="stat__v"><Ct end={st.v} sfx={st.s || ""} pfx={st.p || ""} dc={st.dc || 0} dur={1800 + i * 60} /></div><div className="stat__l">{st.l}</div></R>)}</div></div></section>}
+      {td.stats?.length > 0 && (
+        <section className="s s--stats">
+          <div className="w">
+            <R a="up">
+              <div className="shdr">
+                <span className="bdg">
+                  <FiBarChart2 size={12} /> Live Statistics
+                </span>
+                <h2 className="sh">{country.name} by the Numbers</h2>
+              </div>
+            </R>
+            <div className="stats">
+              {td.stats.map((st, i) => (
+                <R key={st.l} a="zoom" d={i * 0.035} as="div" className="stat">
+                  <div className="stat__v">
+                    <Ct
+                      end={st.v}
+                      sfx={st.s || ""}
+                      pfx={st.p || ""}
+                      dc={st.dc || 0}
+                      dur={1800 + i * 60}
+                    />
+                  </div>
+                  <div className="stat__l">{st.l}</div>
+                </R>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* FACTS */}
-      {td.facts?.length > 0 && <section className="s s--facts"><div className="w"><R a="up"><div className="shdr"><span className="bdg"><FiInfo size={12} /> Essential Facts</span><h2 className="sh">Know Before You Go</h2></div></R><div className="facts">{td.facts.map((f, i) => <R key={f.t} a="up" d={i * .04} as="div" className="fact"><div className="fact__t">{f.t}</div><div className="fact__v">{f.v}</div>{f.s && <div className="fact__s">{f.s}</div>}</R>)}</div></div></section>}
+      {td.facts?.length > 0 && (
+        <section className="s s--facts bg-blue-500">
+          <div className="w">
+            <R a="up">
+              <div className="shdr">
+                <span className="bdg">
+                  <FiInfo size={12} /> Essential Facts
+                </span>
+                <h2 className="sh">Know Before You Go</h2>
+              </div>
+            </R>
+            <div className="facts">
+              {td.facts.map((f, i) => (
+                <R key={f.t} a="up" d={i * 0.04} as="div" className="fact">
+                  <div className="fact__t">{f.t}</div>
+                  <div className="fact__v">{f.v}</div>
+                  {f.s && <div className="fact__s">{f.s}</div>}
+                </R>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
-      {/* PARALLAX */}
-      {td.gallery?.[2] && <Parallax img={td.gallery[2].url} title={`Adventure Awaits in ${country.name}`} sub="From wildlife safaris to cultural immersions — your journey starts here" />}
 
       {/* NEWSLETTER */}
-      <section className="s s--nl"><div className="w w--article"><R a="up"><div className="shdr"><span className="bdg"><FiBookOpen size={12} /> In-Depth Guide</span><h2 className="sh">Everything About {country.name}</h2><p className="ssub">Landscapes, culture, activities, and experiences — with rich media throughout</p></div></R><div className="nl">{mixed()}</div></div></section>
+      <section className="s s--nl">
+        <div className="w w--article">
+          <R a="up">
+            <div className="shdr">
+              <span className="bdg">
+                <FiBookOpen size={12} /> In-Depth Guide
+              </span>
+              <h2 className="sh">Everything About {country.name}</h2>
+              <p className="ssub">
+                Landscapes, culture, activities, and experiences — with rich
+                media throughout
+              </p>
+            </div>
+          </R>
+          <div className="nl">{mixed()}</div>
+        </div>
+      </section>
 
-      {td.videos?.length > 0 && <section className="s s--vid"><div className="w"><R a="up"><div className="shdr"><span className="bdg"><FiPlay size={12} /> Video Showcase</span><h2 className="sh">Experience {country.name} Through Video</h2></div></R><Vids videos={td.videos} /></div></section>}
-      {td.gallery?.length > 2 && <section className="s s--gal"><div className="w"><R a="up"><div className="shdr"><span className="bdg"><FiCamera size={12} /> Photo Gallery</span><h2 className="sh">{country.name} in Pictures</h2></div></R><R a="zoom" d={.1}><Gal imgs={td.gallery} /></R></div></section>}
+      {td.videos?.length > 0 && (
+        <section className="s s--vid bg-blue-500">
+          <div className="w">
+            <R a="up">
+              <div className="shdr">
+                <span className="bdg">
+                  <FiPlay size={12} /> Video Showcase
+                </span>
+                <h2 className="sh">Experience {country.name} Through Video</h2>
+              </div>
+            </R>
+            <Vids videos={td.videos} />
+          </div>
+        </section>
+      )}
+      {td.gallery?.length > 2 && (
+        <section className="s s--gal">
+          <div className="w">
+            <R a="up">
+              <div className="shdr">
+                <span className="bdg">
+                  <FiCamera size={12} /> Photo Gallery
+                </span>
+                <h2 className="sh">{country.name} in Pictures</h2>
+              </div>
+            </R>
+            <R a="zoom" d={0.1}>
+              <Gal imgs={td.gallery} />
+            </R>
+          </div>
+        </section>
+      )}
 
       {/* HIGHLIGHTS */}
-      <section className="s"><div className="w"><R a="up"><div className="shdr"><span className="bdg"><FiStar size={12} /> Highlights</span><h2 className="sh">Why Visit {country.name}?</h2></div></R><div className="g3">{(country.highlights || []).slice(0, 12).map((h, i) => { const Ic = [FiMapPin, FiCompass, FiSun, FiStar, FiGlobe, FiBarChart2, FiTrendingUp, FiCalendar, FiAnchor, FiCamera, FiFeather, FiTarget][i % 12]; return <R key={h} a="up" d={i * .04}><article className="hl"><div className="hl__ic"><Ic size={18} /></div><h4 className="hl__txt">{clean(h)}</h4><span className="hl__n">{String(i + 1).padStart(2, "0")}</span></article></R>; })}</div></div></section>
+      <section className="s bg-blue-500">
+        <div className="w">
+          <R a="up">
+            <div className="shdr">
+              <span className="bdg">
+                <FiStar size={12} /> Highlights
+              </span>
+              <h2 className="sh">Why Visit {country.name}?</h2>
+            </div>
+          </R>
+          <div className="g3">
+            {(country.highlights || []).slice(0, 12).map((h, i) => {
+              const Ic = [
+                FiMapPin,
+                FiCompass,
+                FiSun,
+                FiStar,
+                FiGlobe,
+                FiBarChart2,
+                FiTrendingUp,
+                FiCalendar,
+                FiAnchor,
+                FiCamera,
+                FiFeather,
+                FiTarget,
+              ][i % 12];
+              return (
+                <R key={h} a="up" d={i * 0.04}>
+                  <article className="hl">
+                    <div className="hl__ic">
+                      <Ic size={18} />
+                    </div>
+                    <h4 className="hl__txt">{clean(h)}</h4>
+                    <span className="hl__n">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                  </article>
+                </R>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
       {/* EXPERIENCES */}
-      <section className="s"><div className="w"><R a="up"><article className="crd crd--exp"><span className="bdg"><FiHeart size={12} /> Signature Experiences</span><h3 className="crd__h" style={{ marginTop: 12 }}>Unforgettable Moments</h3><div className="chips">{(country.experiences || []).slice(0, 20).map((e, i) => <R key={e} a="zoom" d={i * .02} as="span" className="chip"><FiCheck size={13} /> {clean(e)}</R>)}</div></article></R></div></section>
+      <section className="s">
+        <div className="w">
+          <R a="up">
+            <article className="crd crd--exp">
+              <span className="bdg">
+                <FiHeart size={12} /> Signature Experiences
+              </span>
+              <h3 className="crd__h" style={{ marginTop: 12 }}>
+                Unforgettable Moments
+              </h3>
+              <div className="chips">
+                {(country.experiences || []).slice(0, 20).map((e, i) => (
+                  <R key={e} a="zoom" d={i * 0.02} as="span" className="chip">
+                    <FiCheck size={13} /> {clean(e)}
+                  </R>
+                ))}
+              </div>
+            </article>
+          </R>
+        </div>
+      </section>
 
       {/* MAP */}
-      <section className="s s--map"><div className="w"><R a="up"><article className="crd"><div className="map-top"><div><span className="bdg"><FiMap size={12} /> Interactive Map</span><h3 className="crd__h">Explore {country.name}</h3></div><div className="map-btns"><button onClick={mini} className="mb mb--p">Mini View <FiMaximize2 size={13} /></button><a href={mO} target="_blank" rel="noopener noreferrer" className="mb mb--s">Google Maps <FiExternalLink size={13} /></a></div></div><div className="map-frame"><iframe title={`${country.name} Map`} src={mE} loading="lazy" allowFullScreen referrerPolicy="no-referrer-when-downgrade" /></div></article></R></div></section>
+      <section className="s s--map">
+        <div className="w">
+          <R a="up">
+            <article className="crd">
+              <div className="map-top">
+                <div>
+                  <span className="bdg">
+                    <FiMap size={12} /> Interactive Map
+                  </span>
+                  <h3 className="crd__h">Explore {country.name}</h3>
+                </div>
+                <div className="map-btns">
+                  <button onClick={mini} className="mb mb--p">
+                    Mini View <FiMaximize2 size={13} />
+                  </button>
+                  <a
+                    href={mO}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mb mb--s"
+                  >
+                    Google Maps <FiExternalLink size={13} />
+                  </a>
+                </div>
+              </div>
+              <div className="map-frame">
+                <iframe
+                  title={`${country.name} Map`}
+                  src={mE}
+                  loading="lazy"
+                  allowFullScreen
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
+            </article>
+          </R>
+        </div>
+      </section>
 
       {/* OFFICIAL LINK BANNER */}
-      {officialLink && <section className="s s--official"><div className="w"><R a="up"><div className="official-banner"><div className="official-banner__body"><FiGlobe size={24} /><div><h3>Official {country.name} Tourism Website</h3><p>Plan your trip with the official tourism board for up-to-date travel advisories, visa info, events, and bookings.</p></div></div><a href={officialLink.url} target="_blank" rel="noopener noreferrer" className="official-banner__link">Visit {officialLink.label.split("—")[0]} <FiExternalLink size={16} /></a></div></R></div></section>}
+      {officialLink && (
+        <section className="s s--official">
+          <div className="w">
+            <R a="up">
+              <div className="official-banner">
+                <div className="official-banner__body">
+                  <FiGlobe size={24} />
+                  <div>
+                    <h3>Official {country.name} Tourism Website</h3>
+                    <p>
+                      Plan your trip with the official tourism board for
+                      up-to-date travel advisories, visa info, events, and
+                      bookings.
+                    </p>
+                  </div>
+                </div>
+                <a
+                  href={officialLink.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="official-banner__link"
+                >
+                  Visit {officialLink.label.split("—")[0]}{" "}
+                  <FiExternalLink size={16} />
+                </a>
+              </div>
+            </R>
+          </div>
+        </section>
+      )}
 
-      {/* AI */}
-      <section className="s s--ai"><div className="w">
-        <R a="up"><div className="ai-top"><div><span className="bdg bdg--lt"><FiZap size={12} /> AI-Powered</span><h3 className="ai-title">Live Country Intelligence</h3><p className="ai-sub">Real-time analytics via DeepSeek AI</p></div>{insights && <button className="ai-ref" onClick={retry}><FiRefreshCw size={14} /> Refresh</button>}</div></R>
-        {aiL && <Loader />}{aiE && !aiL && <Err message={aiE} onRetry={retry} />}
-        {!aiL && !aiE && insights && <div className="col2">
-          <R a="left"><article className="ai-panel"><div className="ai-panel__top"><h4>AI Strategic Brief</h4><span className="ai-live"><span className="ai-dot" /> Live</span></div><div className="ai-scroll">
-            <Stg index={0}><h5>Overview</h5>{(sec?.ov || []).map((p, i) => i === 0 ? <TW key={i} text={p} speed={12} className="tw--ai" /> : <p key={i} className="ai-p">{p}</p>)}</Stg>
-            {insights.currentEvents && <Stg index={1}><h5>📡 Spotlight</h5><TW text={clean(insights.currentEvents)} speed={14} className="tw--ai tw--hl" /></Stg>}
-            <Stg index={2}><h5>Demographics</h5><ul className="ai-ul">{(sec?.dem || []).map((d, i) => <li key={i}>{d}</li>)}</ul></Stg>
-            <Stg index={3}><h5>Economy</h5><ul className="ai-ul">{(sec?.eco || []).map((e, i) => <li key={i}>{e}</li>)}</ul></Stg>
-            <Stg index={4}><h5>Tourism 2025</h5><ol className="ai-ul ai-ul--ol">{(sec?.tour || []).map((t, i) => <li key={i}>{t}</li>)}</ol></Stg>
-            {sec?.src?.length > 0 && <Stg index={5}><h5>Sources</h5><ul className="ai-ul ai-ul--src">{sec.src.map((s, i) => <li key={i}>{s}</li>)}</ul></Stg>}
-          </div></article></R>
-          <R a="right" d={.1}><div className="ai-right">
-            <article className="ai-g"><h4 className="ai-g__t">2025 Snapshot</h4><div className="ai-stats">{[{ l: "Population", v: insights.quickStats?.population, ic: FiUsers }, { l: "GDP", v: insights.quickStats?.gdp, ic: FiTrendingUp }, { l: "Internet", v: insights.quickStats?.internetPenetration, ic: FiWifi }, { l: "Arrivals", v: insights.quickStats?.internationalArrivals, ic: FiGlobe }].map(s => <div key={s.l} className="ai-st"><s.ic size={15} className="ai-st__ic" /><div className="ai-st__v">{clean(s.v)}</div><div className="ai-st__l">{s.l}</div></div>)}</div></article>
-            <article className="ai-g"><div className="ai-meta">{[insights.safetyRating && { ic: FiShield, l: "Safety", v: insights.safetyRating }, insights.costIndex && { ic: FiDollarSign, l: "Budget", v: insights.costIndex }, insights.localCurrency && { ic: FiTrendingUp, l: "Currency", v: insights.localCurrency }, insights.connectivityScore && { ic: FiWifi, l: "Connectivity", v: insights.connectivityScore }].filter(Boolean).map(m => <div key={m.l} className="ai-mi"><m.ic className="ai-mi__ic" size={16} /><div><div className="ai-mi__l">{m.l}</div><div className="ai-mi__v">{clean(m.v)}</div></div></div>)}</div></article>
-            {insights.visaInfo && <article className="ai-g"><h5 className="ai-g__sub">Visa & Entry</h5><p className="ai-g__txt">{clean(insights.visaInfo)}</p></article>}
-            <article className="ai-g"><h5 className="ai-g__sub">Top Cities</h5><div className="chips chips--dk">{(insights.topCities || []).map(c => <span key={c} className="chipg">{clean(c)}</span>)}</div>{(insights.bestTravelMonths || []).length > 0 && <><h5 className="ai-g__sub" style={{ marginTop: 14 }}>Best Months</h5><div className="chips chips--dk">{insights.bestTravelMonths.map(m => <span key={m} className="chipg">{clean(m)}</span>)}</div></>}{(insights.trendingAttractions || []).length > 0 && <><h5 className="ai-g__sub" style={{ marginTop: 14 }}>🔥 Trending</h5><div className="chips chips--dk">{insights.trendingAttractions.map(a => <span key={a} className="chipg chipg--glow">{clean(a)}</span>)}</div></>}</article>
-          </div></R>
-        </div>}
-      </div></section>
+      {/* AI INTELLIGENCE */}
+      <section className="s s--ai">
+        <div className="w">
+          <R a="up">
+            <div className="ai-hdr">
+              <div className="ai-hdr__left">
+                <span className="bdg bdg--ai">
+                  <FiZap size={14} /> Neural Core
+                </span>
+                <h3 className="ai-title">AI-Powered Live Intelligence</h3>
+                <p className="ai-sub">
+                  Real-time strategic analysis and 2026 travel forecasting via
+                  DeepSeek & Gemini
+                </p>
+              </div>
+              {insights && (
+                <button className="ai-ref-btn" onClick={retry}>
+                  <FiRefreshCw size={14} /> Refresh Intelligence
+                </button>
+              )}
+            </div>
+          </R>
+
+          {aiL && (
+            <div className="ai-loading-wrap">
+              <Loader />
+            </div>
+          )}
+
+          {aiE && !aiL && (
+            <div className="ai-error-wrap">
+              <Err message={aiE} onRetry={retry} />
+            </div>
+          )}
+
+          {!aiL && !aiE && insights && (
+            <div className="ai-grid">
+              {/* MAIN CONTENT - WHITE THEME */}
+              <R a="left" className="ai-main">
+                <div className="ai-white-card">
+                  <div className="ai-card-hdr">
+                    <div className="ai-card-ttl">
+                      <FiBookOpen size={18} /> Strategic Overview
+                    </div>
+                    <div className="ai-live-tag">
+                      <span className="ai-dot" /> LIVE FEED
+                    </div>
+                  </div>
+
+                  <div className="ai-content-body">
+                    <Stg index={0}>
+                      <div className="ai-def-box">
+                        <TW text={sec.def} speed={10} className="tw--def" />
+                      </div>
+                    </Stg>
+
+                    <Stg index={1}>
+                      <div className="ai-sec-ttl">Deep Analysis</div>
+                      <div className="ai-paras">
+                        {(sec?.ov || []).map((p, i) => (
+                          <p key={i} className="ai-para-text">
+                            {p}
+                          </p>
+                        ))}
+                      </div>
+                    </Stg>
+
+                    {insights.currentEvents && (
+                      <Stg index={2}>
+                        <div className="ai-spot-box">
+                          <div className="ai-spot-hdr">
+                            <FiActivity size={14} /> Current Pulse
+                          </div>
+                          <TW
+                            text={clean(insights.currentEvents)}
+                            speed={15}
+                            className="tw--pulse"
+                          />
+                        </div>
+                      </Stg>
+                    )}
+
+                    <div className="ai-details-row">
+                      <Stg index={3} className="ai-detail-col">
+                        <div className="ai-sec-ttl">Demographic Shifts</div>
+                        <ul className="ai-detailed-list">
+                          {(sec?.dem || []).map((d, i) => (
+                            <li key={i}>{d}</li>
+                          ))}
+                        </ul>
+                      </Stg>
+                      <Stg index={4} className="ai-detail-col">
+                        <div className="ai-sec-ttl">Economic Indicators</div>
+                        <ul className="ai-detailed-list">
+                          {(sec?.eco || []).map((e, i) => (
+                            <li key={i}>{e}</li>
+                          ))}
+                        </ul>
+                      </Stg>
+                    </div>
+
+                    <Stg index={5}>
+                      <div className="ai-sec-ttl">2026 Tourism Horizon</div>
+                      <div className="ai-outlook-grid">
+                        {(sec?.tour || []).map((t, i) => (
+                          <div key={i} className="ai-outlook-item">
+                            <FiTrendingUp size={12} className="ai-oi-ic" />
+                            {t}
+                          </div>
+                        ))}
+                      </div>
+                    </Stg>
+
+                    {sec?.src?.length > 0 && (
+                      <div className="ai-source-footer">
+                        <span className="ai-src-lbl">Verified Sources:</span>
+                        <div className="ai-src-tags">
+                          {sec.src.map((s, i) => (
+                            <span key={i} className="ai-src-tag">
+                              {s}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </R>
+
+              {/* SIDEBAR CONTENT - DARK/ACCENT THEME */}
+              <R a="right" className="ai-side" d={0.1}>
+                <div className="ai-metrics-stack">
+                  <div className="ai-glass-card">
+                    <h4 className="ai-card-ttl ai-card-ttl--lt">
+                      <FiBarChart2 size={16} /> Data Snapshot
+                    </h4>
+                    <div className="ai-metric-grid">
+                      {[
+                        {
+                          l: "Population",
+                          v: insights.quickStats?.population,
+                          ic: FiUsers,
+                        },
+                        {
+                          l: "GDP Output",
+                          v: insights.quickStats?.gdp,
+                          ic: FiTrendingUp,
+                        },
+                        {
+                          l: "Connectivity",
+                          v: insights.quickStats?.internetPenetration,
+                          ic: FiWifi,
+                        },
+                        {
+                          l: "Annual Inflow",
+                          v: insights.quickStats?.internationalArrivals,
+                          ic: FiGlobe,
+                        },
+                      ].map((s) => (
+                        <div key={s.l} className="ai-metric-item">
+                          <s.ic size={16} />
+                          <div className="ai-mi-v">{clean(s.v)}</div>
+                          <div className="ai-mi-l">{s.l}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="ai-glass-card">
+                    <div className="ai-info-stack">
+                      {[
+                        insights.safetyRating && {
+                          ic: FiShield,
+                          l: "Safety Index",
+                          v: insights.safetyRating,
+                        },
+                        insights.costIndex && {
+                          ic: FiDollarSign,
+                          l: "Cost Index",
+                          v: insights.costIndex,
+                        },
+                        insights.localCurrency && {
+                          ic: FiPackage,
+                          l: "Local Currency",
+                          v: insights.localCurrency,
+                        },
+                        insights.connectivityScore && {
+                          ic: FiWifi,
+                          l: "Data Link",
+                          v: insights.connectivityScore,
+                        },
+                      ]
+                        .filter(Boolean)
+                        .map((m) => (
+                          <div key={m.l} className="ai-info-row">
+                            <div className="ai-ir-ic">
+                              <m.ic size={16} />
+                            </div>
+                            <div className="ai-ir-body">
+                              <div className="ai-ir-l">{m.l}</div>
+                              <div className="ai-ir-v">{clean(m.v)}</div>
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+
+                  <div className="ai-glass-card ai-glass-card--accent">
+                    <h5 className="ai-sec-ttl ai-sec-ttl--lt">
+                      <FiMapPin size={12} /> Key Hubs
+                    </h5>
+                    <div className="ai-chip-wrap">
+                      {(insights.topCities || []).map((c) => (
+                        <span key={c} className="ai-token">
+                          {clean(c)}
+                        </span>
+                      ))}
+                    </div>
+
+                    <h5
+                      className="ai-sec-ttl ai-sec-ttl--lt"
+                      style={{ marginTop: 20 }}
+                    >
+                      <FiCalendar size={12} /> Peak Periods
+                    </h5>
+                    <div className="ai-chip-wrap">
+                      {(insights.bestTravelMonths || []).map((m) => (
+                        <span key={m} className="ai-token ai-token--white">
+                          {m}
+                        </span>
+                      ))}
+                    </div>
+
+                    <h5
+                      className="ai-sec-ttl ai-sec-ttl--lt"
+                      style={{ marginTop: 20 }}
+                    >
+                      <FiZap size={12} /> Trending Now
+                    </h5>
+                    <div className="ai-chip-wrap">
+                      {(insights.trendingAttractions || []).map((a) => (
+                        <span key={a} className="ai-token ai-token--glow">
+                          {clean(a)}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {insights.visaInfo && (
+                    <div className="ai-glass-card ai-glass-card--visa">
+                      <div className="ai-visa-hdr">
+                        <FiNavigation size={18} /> Visa Intelligence
+                      </div>
+                      <p className="ai-visa-text">{clean(insights.visaInfo)}</p>
+                    </div>
+                  )}
+                </div>
+              </R>
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* CUISINE & DEST */}
-      <section className="s s--fin"><div className="w col2">
-        <R a="left"><article className="crd"><span className="bdg"><FiCoffee size={12} /> Culture & Cuisine</span><h3 className="crd__h" style={{ marginTop: 12 }}>Taste & Traditions</h3><p className="crd__desc crd__desc--xl">{clean(country.additionalInfo || country.description || td.intro)}</p>{(country?.cuisine?.specialties || []).length > 0 && <div style={{ marginBottom: 20 }}><div className="lbl">🍽️ Signature Dishes</div><div className="chips">{country.cuisine.specialties.slice(0, 10).map(d => <span key={d} className="chip">{clean(d)}</span>)}</div></div>}{(country.travelTips || []).length > 0 && <div><div className="lbl">💡 Tips</div><ul className="tips">{country.travelTips.slice(0, 8).map(t => <li key={t}>{clean(t)}</li>)}</ul></div>}</article></R>
-        <R a="right" d={.1}><article className="crd"><span className="bdg"><FiMapPin size={12} /> Featured Places</span><h3 className="crd__h" style={{ marginTop: 12 }}>Destinations</h3><div className="dests">{dests.slice(0, 6).map((d, i) => <R key={d.id} a="up" d={i * .04} as={Link} to={`/destination/${d.id}`} className="dst"><img src={d.images[0]} alt={d.name} className="dst__img" loading="lazy" /><div className="dst__body"><div className="dst__type">{clean(d.type)}</div><div className="dst__name">{clean(d.name)}</div><div className="dst__desc">{clean(d.description).slice(0, 120)}…</div></div></R>)}</div><div className="dst-acts"><Button to={`/country/${country.id}/destinations`} variant="primary" icon={<FiArrowRight size={15} />}>View All</Button><Button to="/booking" variant="secondary" icon={<FiCalendar size={15} />}>Plan Trip</Button></div></article></R>
-      </div></section>
+      <section className="s s--fin">
+        <div className="w col2">
+          <R a="left">
+            <article className="crd">
+              <span className="bdg">
+                <FiCoffee size={12} /> Culture & Cuisine
+              </span>
+              <h3 className="crd__h" style={{ marginTop: 12 }}>
+                Taste & Traditions
+              </h3>
+              <p className="crd__desc crd__desc--xl">
+                {clean(
+                  country.additionalInfo || country.description || td.intro,
+                )}
+              </p>
+              {(country?.cuisine?.specialties || []).length > 0 && (
+                <div style={{ marginBottom: 20 }}>
+                  <div className="lbl">🍽️ Signature Dishes</div>
+                  <div className="chips">
+                    {country.cuisine.specialties.slice(0, 10).map((d) => (
+                      <span key={d} className="chip">
+                        {clean(d)}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {(country.travelTips || []).length > 0 && (
+                <div>
+                  <div className="lbl">💡 Tips</div>
+                  <ul className="tips">
+                    {country.travelTips.slice(0, 8).map((t) => (
+                      <li key={t}>{clean(t)}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </article>
+          </R>
+          <R a="right" d={0.1}>
+            <article className="crd">
+              <span className="bdg">
+                <FiMapPin size={12} /> Featured Places
+              </span>
+              <h3 className="crd__h" style={{ marginTop: 12 }}>
+                Destinations
+              </h3>
+              <div className="dests">
+                {dests.slice(0, 6).map((d, i) => (
+                  <R
+                    key={d.id}
+                    a="up"
+                    d={i * 0.04}
+                    as={Link}
+                    to={`/destination/${d.id}`}
+                    className="dst"
+                  >
+                    <img
+                      src={d.images[0]}
+                      alt={d.name}
+                      className="dst__img"
+                      loading="lazy"
+                    />
+                    <div className="dst__body">
+                      <div className="dst__type">{clean(d.type)}</div>
+                      <div className="dst__name">{clean(d.name)}</div>
+                      <div className="dst__desc">
+                        {clean(d.description).slice(0, 120)}…
+                      </div>
+                    </div>
+                  </R>
+                ))}
+              </div>
+              <div className="dst-acts">
+                <Button
+                  to={`/country/${country.id}/destinations`}
+                  variant="primary"
+                  icon={<FiArrowRight size={15} />}
+                >
+                  View All
+                </Button>
+                <Button
+                  to="/booking"
+                  variant="secondary"
+                  icon={<FiCalendar size={15} />}
+                >
+                  Plan Trip
+                </Button>
+              </div>
+            </article>
+          </R>
+        </div>
+      </section>
 
       {/* CTA */}
-      <section className="s s--cta"><div className="w"><R a="up"><div className="cta"><div className="cta__body"><h2>Ready to Explore {country.name}?</h2><p>Our expert team crafts bespoke itineraries tailored to your interests, timeline, and budget. Start planning your dream African adventure today.</p><div className="cta__btns"><Button to="/booking" variant="primary" icon={<FiCalendar size={15} />}>Start Planning</Button><Button to="/contact" variant="secondary" icon={<FiUsers size={15} />}>Talk to Expert</Button>{officialLink && <a href={officialLink.url} target="_blank" rel="noopener noreferrer" className="mb mb--s" style={{ marginTop: 0 }}>Official Site <FiExternalLink size={13} /></a>}</div></div><span className="cta__flag">{country.flag}</span></div></R></div></section>
+      <section className="s s--cta">
+        <div className="w">
+          <R a="up">
+            <div className="cta">
+              <div className="cta__body">
+                <h2>Ready to Explore {country.name}?</h2>
+                <p>
+                  Our expert team crafts bespoke itineraries tailored to your
+                  interests, timeline, and budget. Start planning your dream
+                  African adventure today.
+                </p>
+                <div className="cta__btns">
+                  <Button
+                    to="/booking"
+                    variant="primary"
+                    icon={<FiCalendar size={15} />}
+                  >
+                    Start Planning
+                  </Button>
+                  <Button
+                    to="/contact"
+                    variant="secondary"
+                    icon={<FiUsers size={15} />}
+                  >
+                    Talk to Expert
+                  </Button>
+                  {officialLink && (
+                    <a
+                      href={officialLink.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mb mb--s"
+                      style={{ marginTop: 0 }}
+                    >
+                      Official Site <FiExternalLink size={13} />
+                    </a>
+                  )}
+                </div>
+              </div>
+              <span className="cta__flag">{country.flag}</span>
+            </div>
+          </R>
+        </div>
+      </section>
     </div>
   );
 };
@@ -410,8 +2184,40 @@ const CSS = `
 *{box-sizing:border-box}.cp{background:var(--g50);font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 .w{width:100%;max-width:100%;padding:0 clamp(16px,5vw,72px);margin:0 auto}.w--article{max-width:1080px;margin:0 auto}
 .s{padding:60px 0}.s--ck{padding:12px 0 0;background:#fff}.s--bk{padding:12px 0 0}.s--hero{padding:56px 0 24px}.s--stats{padding:64px 0;background:#fff}.s--facts{padding:56px 0;background:var(--g50)}.s--nl{padding:72px 0;background:#fff}.s--vid{padding:64px 0;background:var(--g50)}.s--gal{padding:64px 0;background:#fff}.s--map{padding:56px 0;background:#fff}.s--fin{padding:64px 0;background:var(--g50)}.s--official{padding:32px 0;background:#fff}
-.s--ai{padding:80px 0;background:linear-gradient(145deg,var(--e900),#064e3b 40%,var(--e800) 70%,var(--e700));position:relative;overflow:hidden}.s--ai::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 20% 50%,rgba(52,211,153,.08),transparent 70%),radial-gradient(ellipse at 80% 20%,rgba(16,185,129,.06),transparent 60%);pointer-events:none}
-.s--cta{padding:80px 0;background:linear-gradient(135deg,var(--e600),var(--e700),var(--e800))}
+.s--ai{padding:100px 0;background:linear-gradient(135deg,#022c22 0%,#064e3b 30%,#065f46 100%);position:relative;overflow:hidden}.s--ai::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 10% 20%,rgba(52,211,153,0.1) 0%,transparent 50%),radial-gradient(circle at 90% 80%,rgba(16,185,129,0.05) 0%,transparent 50%);pointer-events:none}
+.ai-hdr{display:flex;align-items:flex-end;justify-content:space-between;gap:30px;margin-bottom:50px;flex-wrap:wrap;position:relative;z-index:2}.ai-title{font-family:var(--ff);font-size:clamp(32px,5vw,56px);color:#fff;margin:12px 0 8px;line-height:1.1}.ai-sub{color:rgba(255,255,255,0.6);font-size:15px;margin:0;font-weight:400;letter-spacing:0.2px}
+.bdg--ai{background:rgba(255,255,255,0.1);color:var(--e100);border-color:rgba(255,255,255,0.2);box-shadow:0 0 20px rgba(16,185,129,0.15)}
+.ai-ref-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:var(--rf);border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.3s cubic-bezier(0.4,0,0.2,1);backdrop-filter:blur(10px)}.ai-ref-btn:hover{background:rgba(255,255,255,0.15);transform:translateY(-2px);border-color:var(--e300);box-shadow:0 8px 24px rgba(0,0,0,0.1)}
+.ai-grid{display:grid;grid-template-columns:1.8fr 1fr;gap:32px;position:relative;z-index:2}
+.ai-white-card{background:#ffffff;border-radius:var(--r);padding:40px;box-shadow:0 24px 70px rgba(0,0,0,0.2),0 10px 30px rgba(0,0,0,0.1);position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.8)}.ai-white-card::before{content:'';position:absolute;top:0;left:0;right:0;height:6px;background:linear-gradient(90deg,var(--e400),var(--e600))}
+.ai-card-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;border-bottom:1px solid var(--g100);padding-bottom:20px}
+.ai-card-ttl{font-size:20px;color:var(--g900);font-weight:800;display:flex;align-items:center;gap:10px;font-family:var(--ff);letter-spacing:-0.02em}.ai-card-ttl--lt{color:#fff}
+.ai-live-tag{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:800;color:var(--e600);background:var(--e50);padding:5px 12px;border-radius:var(--rf);letter-spacing:1px}
+.ai-content-body{display:grid;gap:28px}
+.ai-def-box{background:var(--g50);padding:24px 28px;border-radius:var(--rl);border-left:5px solid var(--e500);margin-bottom:8px}.tw--def{color:var(--g800) !important;font-size:clamp(18px,2.2vw,22px) !important;line-height:1.6 !important;font-weight:600 !important;font-family:var(--ff) !important}
+.ai-sec-ttl{font-size:11px;font-weight:800;color:var(--e600);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px;display:flex;align-items:center;gap:8px}.ai-sec-ttl--lt{color:var(--e300)}
+.ai-para-text{font-size:16px;line-height:1.8;color:var(--g700);margin:0 0 16px;text-align:justify}
+.ai-spot-box{background:var(--e900);padding:22px 26px;border-radius:var(--rl);color:#fff;border:1px solid var(--e700);box-shadow:inset 0 0 20px rgba(16,185,129,0.1)}.ai-spot-hdr{font-size:10px;font-weight:800;color:var(--e400);text-transform:uppercase;letter-spacing:1.2px;margin-bottom:10px;display:flex;align-items:center;gap:6px}.tw--pulse{color:var(--e50) !important;font-size:15px !important;line-height:1.7 !important;font-style:italic !important}
+.ai-details-row{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.ai-detailed-list{margin:0;padding-left:16px;display:grid;gap:8px;color:var(--g600)}.ai-detailed-list li{font-size:14px;line-height:1.6;font-weight:500}
+.ai-outlook-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.ai-outlook-item{padding:16px 20px;background:var(--g50);border-radius:var(--rm);font-size:13px;color:var(--g800);line-height:1.5;font-weight:600;display:flex;align-items:flex-start;gap:12px;border:1px solid transparent;transition:all 0.3s}.ai-outlook-item:hover{background:#fff;border-color:var(--e200);box-shadow:0 6px 16px rgba(0,0,0,0.04);transform:translateY(-2px)}.ai-oi-ic{color:var(--e500);margin-top:2px;flex-shrink:0}
+.ai-source-footer{margin-top:20px;padding-top:24px;border-top:1px solid var(--g100);display:flex;align-items:center;gap:12px;flex-wrap:wrap}.ai-src-lbl{font-size:11px;font-weight:700;color:var(--g500);text-transform:uppercase}
+.ai-src-tags{display:flex;flex-wrap:wrap;gap:8px}.ai-src-tag{font-size:11px;color:var(--e700);background:var(--e50);padding:4px 10px;border-radius:4px;font-weight:600}
+.ai-metrics-stack{display:grid;gap:20px}
+.ai-glass-card{background:rgba(255,255,255,0.06);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:var(--rl);padding:26px;box-shadow:0 10px 30px rgba(0,0,0,0.1);position:relative;overflow:hidden}.ai-glass-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.05),transparent);pointer-events:none}
+.ai-metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ai-metric-item{padding:18px 14px;background:rgba(255,255,255,0.04);border-radius:var(--rm);border:1px solid rgba(255,255,255,0.06);text-align:center;color:#fff;transition:all 0.3s}.ai-metric-item:hover{background:rgba(255,255,255,0.1);border-color:var(--e400);transform:translateY(-3px)}.ai-metric-item svg{color:var(--e400);margin-bottom:8px}.ai-mi-v{font-size:18px;font-weight:800;letter-spacing:-0.01em}.ai-mi-l{font-size:10px;color:rgba(255,255,255,0.45);text-transform:uppercase;font-weight:700;margin-top:4px}
+.ai-info-stack{display:grid;gap:12px}
+.ai-info-row{display:flex;align-items:center;gap:14px;padding:14px 18px;background:rgba(255,255,255,0.03);border-radius:var(--rm);border:1px solid rgba(255,255,255,0.05);transition:all 0.3s}.ai-info-row:hover{background:rgba(255,255,255,0.08);border-color:var(--e500)}.ai-ir-ic{width:36px;height:36px;border-radius:10px;background:rgba(16,185,129,0.15);color:var(--e400);display:flex;align-items:center;justify-content:center;flex-shrink:0}.ai-ir-l{font-size:9px;font-weight:800;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.8px}.ai-ir-v{font-size:14px;color:#fff;font-weight:700}
+.ai-glass-card--accent{background:linear-gradient(135deg,rgba(5,150,105,0.15),rgba(4,120,87,0.05));border-color:rgba(52,211,153,0.2)}
+.ai-chip-wrap{display:flex;flex-wrap:wrap;gap:8px}.ai-token{font-size:12px;color:#fff;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);padding:6px 14px;border-radius:var(--rf);font-weight:600;transition:all 0.2s}.ai-token:hover{background:rgba(255,255,255,0.15);border-color:var(--e400);transform:scale(1.04)}.ai-token--white{background:#fff;color:var(--g900);border-color:#fff}.ai-token--glow{box-shadow:0 0 15px rgba(52,211,153,0.3);border-color:var(--e300);color:var(--e100)}
+.ai-glass-card--visa{background:rgba(2,44,34,0.4);border-color:rgba(167,243,208,0.2)}.ai-visa-hdr{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:800;color:var(--e100);margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px}.ai-visa-text{font-size:13px;color:rgba(255,255,255,0.75);line-height:1.75;margin:0}
+.ai-loading-wrap,.ai-error-wrap{padding:60px 0;max-width:800px;margin:0 auto}
+@keyframes pul{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.95)}}
+@keyframes blnk{0%,100%{opacity:1}50%{opacity:0.2}}
+@media(max-width:1024px){.ai-grid{grid-template-columns:1fr}.ai-white-card{padding:30px}.ai-details-row{grid-template-columns:1fr}}
+@media(max-width:640px){.ai-card-hdr{flex-direction:column;align-items:flex-start;gap:12px}.ai-metric-grid{grid-template-columns:1fr}.ai-outlook-grid{grid-template-columns:1fr}.ai-hdr{text-align:center;justify-content:center}}
 .col2{display:grid;grid-template-columns:1.6fr 1fr;gap:36px;align-items:start}.g3{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:20px}
 .shdr{text-align:center;margin-bottom:44px}.sh{font-family:var(--ff);font-size:clamp(26px,4.5vw,48px);color:var(--g900);margin:12px 0 6px;line-height:1.15}.ssub{color:var(--g500);font-size:clamp(14px,1.8vw,17px);max-width:640px;margin:0 auto;line-height:1.7}
 .bdg{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:var(--rf);background:var(--e50);color:var(--e600);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;border:1px solid var(--e100)}.bdg--lt{background:rgba(255,255,255,.08);color:var(--e200);border-color:rgba(255,255,255,.12)}
@@ -440,23 +2246,15 @@ const CSS = `
 .vid__player{margin-bottom:24px;border-radius:var(--r);overflow:hidden;border:1px solid var(--e200);box-shadow:0 8px 32px rgba(0,0,0,.08)}.vid__embed{position:relative;padding-top:56.25%;background:#000}.vid__embed iframe{position:absolute;inset:0;width:100%;height:100%}.vid__bar{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:#fff}.vid__bar h4{margin:0;font-size:15px;color:var(--g900);font-weight:700}.vid__bar button{display:inline-flex;align-items:center;gap:5px;padding:6px 14px;border-radius:var(--rf);border:1px solid var(--g200);background:var(--g50);color:var(--g700);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}.vid__bar button:hover{background:var(--g100)}.vid__grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}.vid__card{background:#fff;border-radius:var(--rl);overflow:hidden;border:1px solid var(--g200);cursor:pointer;transition:all .35s;padding:0;text-align:left;width:100%}.vid__card:hover{transform:translateY(-4px);box-shadow:var(--shh);border-color:var(--e300)}.vid__card--on{border-color:var(--e500)}.vid__thumb{position:relative;aspect-ratio:16/9;overflow:hidden}.vid__thumb img{width:100%;height:100%;object-fit:cover;transition:transform .35s}.vid__card:hover .vid__thumb img{transform:scale(1.04)}.vid__play{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.25);transition:background .25s}.vid__card:hover .vid__play{background:rgba(5,150,105,.4)}.vid__play svg{width:44px;height:44px;padding:10px;background:rgba(255,255,255,.95);border-radius:50%;color:var(--e600);transition:transform .25s}.vid__card:hover .vid__play svg{transform:scale(1.08)}.vid__title{padding:12px 16px;font-size:14px;font-weight:700;color:var(--g900)}
 .map-top{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:20px}.map-btns{display:flex;gap:10px;flex-wrap:wrap}.mb{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:var(--rf);font-size:13px;font-weight:700;cursor:pointer;transition:all .25s;text-decoration:none;border:none}.mb--p{background:linear-gradient(135deg,var(--e600),var(--e700));color:#fff;box-shadow:0 3px 10px rgba(5,150,105,.2)}.mb--p:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(5,150,105,.3)}.mb--s{background:var(--e50);color:var(--e700);border:1px solid var(--e200)}.mb--s:hover{background:var(--e100);transform:translateY(-2px)}.map-frame{border-radius:var(--r);overflow:hidden;border:1px solid var(--e100)}.map-frame iframe{width:100%;min-height:480px;border:0;display:block}
 .share-bar{position:fixed;right:20px;bottom:24px;display:flex;flex-direction:column;gap:8px;z-index:999;opacity:0;transform:translateY(20px);transition:all .4s cubic-bezier(.16,1,.3,1);pointer-events:none}.share-bar--on{opacity:1;transform:translateY(0);pointer-events:auto}.share-bar button{width:44px;height:44px;border-radius:50%;border:1px solid var(--e200);background:#fff;color:var(--e700);cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(0,0,0,.08);transition:all .25s}.share-bar button:hover{transform:scale(1.1);box-shadow:0 6px 20px rgba(0,0,0,.12);background:var(--e50)}
-.ai-top{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:36px;flex-wrap:wrap;position:relative;z-index:1}.ai-title{font-family:var(--ff);font-size:clamp(28px,4.5vw,50px);color:#fff;margin:8px 0 6px}.ai-sub{color:rgba(255,255,255,.55);font-size:14px;margin:0}.ai-ref{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border-radius:var(--rf);border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:all .25s;backdrop-filter:blur(6px)}.ai-ref:hover{background:rgba(255,255,255,.14);transform:translateY(-1px)}
-.ai-panel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:var(--r);padding:28px;display:flex;flex-direction:column;min-height:540px;position:relative;z-index:1;backdrop-filter:blur(16px)}.ai-panel::before{content:'';position:absolute;inset:-1px;border-radius:calc(var(--r)+1px);padding:1px;background:linear-gradient(135deg,rgba(52,211,153,.25),transparent 50%,rgba(16,185,129,.15));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}.ai-panel__top{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}.ai-panel__top h4{margin:0;font-size:18px;color:var(--e100);font-weight:700}.ai-live{display:inline-flex;align-items:center;gap:5px;font-size:10px;padding:5px 12px;border-radius:var(--rf);border:1px solid rgba(52,211,153,.35);background:rgba(4,120,87,.3);color:var(--e50);font-weight:700;text-transform:uppercase;letter-spacing:.7px}.ai-dot{width:6px;height:6px;border-radius:50%;background:var(--e400);animation:pul 2s ease-in-out infinite}
-.ai-scroll{flex:1;max-height:560px;overflow-y:auto;padding-right:10px;display:grid;gap:12px}.ai-scroll::-webkit-scrollbar{width:4px}.ai-scroll::-webkit-scrollbar-track{background:transparent}.ai-scroll::-webkit-scrollbar-thumb{background:rgba(52,211,153,.25);border-radius:var(--rf)}
-.aisec{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:var(--rm);padding:16px}.aisec h5{margin:0 0 8px;font-size:10px;color:var(--e200);text-transform:uppercase;letter-spacing:1.3px;font-weight:700}
-.ai-p{margin:6px 0 0;line-height:1.9;font-size:14px;color:rgba(255,255,255,.85)}.ai-ul{margin:0;padding-left:18px;display:grid;gap:6px;color:rgba(255,255,255,.85)}.ai-ul li{font-size:13px;line-height:1.75}.ai-ul--ol{list-style:decimal}.ai-ul--src li{color:rgba(167,243,208,.85);font-size:12px}
-.ai-right{display:grid;gap:14px;position:relative;z-index:1}.ai-g{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:var(--rl);padding:20px;backdrop-filter:blur(12px)}.ai-g__t{font-size:18px;color:var(--e100);font-weight:700;margin:0 0 14px}.ai-g__sub{font-size:10px;color:var(--e200);text-transform:uppercase;letter-spacing:.9px;font-weight:700;margin:0 0 8px}.ai-g__txt{font-size:13px;color:rgba(255,255,255,.85);line-height:1.75;margin:0}
-.ai-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.ai-st{background:rgba(255,255,255,.06);border-radius:var(--rs);padding:14px;border:1px solid rgba(255,255,255,.06);transition:all .25s;text-align:center}.ai-st:hover{background:rgba(255,255,255,.1);transform:translateY(-2px)}.ai-st__ic{color:var(--e400);margin-bottom:6px}.ai-st__v{color:#fff;font-size:16px;font-weight:700}.ai-st__l{color:rgba(255,255,255,.5);font-size:10px;margin-top:3px;text-transform:uppercase;letter-spacing:.4px}
-.ai-meta{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.ai-mi{display:flex;align-items:center;gap:10px;padding:12px;background:rgba(255,255,255,.03);border-radius:var(--rs);border:1px solid rgba(255,255,255,.05);transition:all .25s}.ai-mi:hover{background:rgba(255,255,255,.07)}.ai-mi__ic{color:var(--e400);flex-shrink:0}.ai-mi__l{font-size:9px;text-transform:uppercase;letter-spacing:.4px;color:rgba(255,255,255,.45);font-weight:700}.ai-mi__v{font-size:12px;color:rgba(255,255,255,.9);font-weight:600}
 .dests{display:grid;gap:10px}.dst{text-decoration:none;color:inherit;border:1px solid var(--g200);border-radius:var(--rl);overflow:hidden;display:grid;grid-template-columns:140px 1fr;background:#fff;transition:all .35s}.dst:hover{border-color:var(--e200);box-shadow:var(--shh);transform:translateX(4px)}.dst__img{width:140px;height:106px;object-fit:cover;transition:transform .4s}.dst:hover .dst__img{transform:scale(1.04)}.dst__body{padding:12px 16px}.dst__type{color:var(--e600);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;margin-bottom:3px}.dst__name{font-size:15px;color:var(--g900);font-weight:700;margin-bottom:4px}.dst__desc{font-size:12px;color:var(--g500);line-height:1.6}.dst-acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
 .cta{display:flex;align-items:center;justify-content:space-between;gap:40px}.cta__body{flex:1}.cta h2{font-family:var(--ff);font-size:clamp(28px,4.5vw,48px);color:#fff;margin:0 0 14px;line-height:1.12}.cta p{color:rgba(255,255,255,.8);font-size:clamp(15px,1.8vw,18px);line-height:1.8;margin:0 0 28px;max-width:580px}.cta__btns{display:flex;gap:12px;flex-wrap:wrap;align-items:center}.cta__flag{font-size:110px;filter:drop-shadow(0 6px 28px rgba(0,0,0,.25));animation:flt 4s ease-in-out infinite;flex-shrink:0}
 .tw{margin:0;line-height:1.9;font-size:14px;color:rgba(255,255,255,.92)}.tw--ai{min-height:1.9em}.tw--hl{color:var(--e200);font-style:italic}.tw__cur{display:inline-block;width:2px;height:1.1em;background:var(--e400);margin-left:1px;vertical-align:text-bottom;border-radius:1px;animation:blnk .85s ease-in-out infinite;box-shadow:0 0 8px rgba(52,211,153,.4)}
 .ld{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:var(--r);padding:48px 28px;text-align:center;position:relative;z-index:1;backdrop-filter:blur(16px)}.ld__orb{width:56px;height:56px;margin:0 auto 20px;position:relative;display:flex;align-items:center;justify-content:center}.ld__ring{position:absolute;inset:0;border:2px solid rgba(255,255,255,.08);border-top-color:var(--e400);border-right-color:var(--e400);border-radius:50%;animation:sp 1s cubic-bezier(.4,0,.2,1) infinite}.ld__ic{color:var(--e400);font-size:20px;animation:pul 2s ease-in-out infinite}.ld h4{color:#fff;font-size:18px;font-weight:700;margin:0 0 6px}.ld p{color:rgba(255,255,255,.5);font-size:13px;margin:0 0 24px}.ld__bars{display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:24px;height:24px}.ld__bars span{width:3px;height:100%;background:var(--e400);border-radius:2px;animation:bar 1.2s ease-in-out infinite}.ld__sk{height:8px;border-radius:var(--rf);max-width:420px;margin:0 auto 8px;background:linear-gradient(90deg,rgba(255,255,255,.05),rgba(255,255,255,.14) 40%,rgba(255,255,255,.05));background-size:280% 100%;animation:shm 1.6s ease infinite}.ld__sk--m{max-width:320px}.ld__sk--s{max-width:240px}
 .er{background:rgba(255,255,255,.04);border:1px solid rgba(248,113,113,.2);border-radius:var(--r);padding:40px 28px;text-align:center;position:relative;z-index:1}.er__ic{font-size:36px;margin-bottom:10px}.er h4{color:#fca5a5;font-size:18px;margin:0 0 6px}.er p{color:rgba(255,255,255,.5);font-size:13px;margin:0 0 18px;max-width:380px;margin-left:auto;margin-right:auto}.er__btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:var(--rf);border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:all .25s}.er__btn:hover{background:rgba(255,255,255,.12);transform:translateY(-1px)}
-@keyframes blnk{0%,100%{opacity:1}50%{opacity:.12}}@keyframes sp{to{transform:rotate(360deg)}}@keyframes pul{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(.9)}}@keyframes bar{0%,100%{transform:scaleY(.3);opacity:.35}50%{transform:scaleY(1);opacity:1}}@keyframes shm{0%{background-position:200% 0}100%{background-position:-200% 0}}@keyframes fi{from{opacity:0}to{opacity:1}}@keyframes flt{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes sp{to{transform:rotate(360deg)}}@keyframes bar{0%,100%{transform:scaleY(.3);opacity:.35}50%{transform:scaleY(1);opacity:1}}@keyframes shm{0%{background-position:200% 0}100%{background-position:-200% 0}}@keyframes fi{from{opacity:0}to{opacity:1}}@keyframes flt{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
 @media(max-width:1140px){.col2{grid-template-columns:1fr}.crd--side{position:static}.cta{flex-direction:column;text-align:center}.cta p{margin-left:auto;margin-right:auto}.cta__btns{justify-content:center}.stats{justify-content:flex-start}.official-banner{flex-direction:column;text-align:center}.official-banner__body{flex-direction:column;text-align:center}}
-@media(max-width:768px){.s{padding:44px 0}.s--stats,.s--nl,.s--vid,.s--gal,.s--fin{padding:52px 0}.s--ai,.s--cta{padding:56px 0}.ai-stats,.ai-meta{grid-template-columns:1fr}.ai-panel{min-height:0}.ai-scroll{max-height:440px}.ai-top{flex-direction:column;align-items:flex-start}.nl__row,.nl__row--flip{grid-template-columns:1fr;direction:ltr}.nl__acts,.nl__acts--grid{grid-template-columns:1fr}.dst{grid-template-columns:120px 1fr}.dst__img{width:120px;height:90px}.map-top{flex-direction:column}.gal{aspect-ratio:16/10}.cta__flag{font-size:72px}.stat{padding:16px clamp(10px,2vw,20px)}.stat__v{font-size:clamp(22px,3vw,34px)}.px{height:240px}.share-bar{right:12px;bottom:16px}.share-bar button{width:38px;height:38px}}
-@media(max-width:480px){.w{padding:0 14px}.stats{flex-wrap:wrap}.stat{flex:0 0 33.33%;padding:12px 6px}.stat::after{display:none}.dst{grid-template-columns:1fr}.dst__img{width:100%;height:160px}.ai-panel__top{flex-direction:column;align-items:flex-start;gap:8px}.gal{aspect-ratio:4/3}.gal__th{width:72px;height:48px}.map-frame iframe{min-height:340px}.cta__flag{font-size:56px}.flag{font-size:44px}.px{height:200px}}
+@media(max-width:768px){.s{padding:44px 0}.s--stats,.s--nl,.s--vid,.s--gal,.s--fin{padding:52px 0}.s--ai,.s--cta{padding:56px 0}.ai-panel{min-height:0}.ai-scroll{max-height:440px}.nl__row,.nl__row--flip{grid-template-columns:1fr;direction:ltr}.nl__acts,.nl__acts--grid{grid-template-columns:1fr}.dst{grid-template-columns:120px 1fr}.dst__img{width:120px;height:90px}.map-top{flex-direction:column}.gal{aspect-ratio:16/10}.cta__flag{font-size:72px}.stat{padding:16px clamp(10px,2vw,20px)}.stat__v{font-size:clamp(22px,3vw,34px)}.px{height:240px}.share-bar{right:12px;bottom:16px}}
+@media(max-width:480px){.w{padding:0 14px}.stats{flex-wrap:wrap}.stat{flex:0 0 33.33%;padding:12px 6px}.stat::after{display:none}.dst{grid-template-columns:1fr}.dst__img{width:100%;height:160px}.gal{aspect-ratio:4/3}.gal__th{width:72px;height:48px}.map-frame iframe{min-height:340px}.cta__flag{font-size:56px}.flag{font-size:44px}.px{height:200px}}
 `;
 
 export default CountryPage;

@@ -14,6 +14,7 @@ import {
 import { HiSparkles, HiLocationMarker, HiOutlineMail } from 'react-icons/hi';
 import { BiSupport } from 'react-icons/bi';
 import { RiSendPlaneFill } from 'react-icons/ri';
+import herobg from "../assets/fabrice.jpg"
 
 // ============================================
 // THEME CONFIGURATION
@@ -1576,12 +1577,7 @@ const Contact = () => {
     { icon: FaPinterestP, color: '#E60023', name: 'Pinterest', url: '#' },
   ];
 
-  const stats = [
-    { number: '24h', label: 'Response Time', icon: FiClock },
-    { number: '98%', label: 'Satisfaction', icon: FiHeart },
-    { number: '15+', label: 'Years Experience', icon: FiAward },
-    { number: '10K+', label: 'Happy Travelers', icon: FiUsers },
-  ];
+
 
   const faqs = [
     {
@@ -1642,7 +1638,7 @@ const Contact = () => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: theme.gradients.hero,
+          background: theme.colors.primary,
           overflow: 'hidden',
           opacity: heroOpacity,
           scale: heroScale,
@@ -2004,23 +2000,6 @@ const Contact = () => {
                       <SocialLink key={index} {...social} index={index} />
                     ))}
                   </motion.div>
-                </motion.div>
-
-                {/* Stats */}
-                <motion.div
-                  variants={animations.staggerContainer}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(2, 1fr)',
-                    gap: '16px',
-                  }}
-                >
-                  {stats.map((stat, index) => (
-                    <StatCard key={index} {...stat} index={index} />
-                  ))}
                 </motion.div>
               </div>
             </motion.div>

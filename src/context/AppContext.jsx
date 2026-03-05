@@ -117,13 +117,6 @@ export const AppProvider = ({ children }) => {
     });
   }, [activeVideoId, isPlayerOpen, playerTitle, masterTabId]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, []);
-
   const addToFavorites = (item) => {
     setFavorites((prev) => [...prev, item]);
   };

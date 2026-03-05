@@ -3,28 +3,88 @@ import { FiArrowRight, FiLinkedin, FiMail } from "react-icons/fi";
 import AnimatedSection from "./AnimatedSection";
 import Button from "./Button";
 
+const TeamCard = ({ member, styles }) => {
+  const [imageLoaded, setImageLoaded] = React.useState(false);
+  return (
+    <article
+      style={styles.card}
+      onMouseOver={(e) => {
+        e.currentTarget.style.transform = "translateY(-6px)";
+      }}
+      onMouseOut={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+      }}
+    >
+      <div
+        style={{
+          position: "relative",
+          width: "105px",
+          height: "105px",
+          margin: "0 auto 12px",
+        }}
+      >
+        {!imageLoaded && (
+          <div
+            style={{
+              position: "absolute",
+              inset: 0,
+              backgroundColor: "#e5e7eb",
+              backgroundImage:
+                "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%)",
+              backgroundSize: "200% 100%",
+              animation: "shimmer 1.5s infinite linear",
+              borderRadius: "999px",
+              border: "4px solid #D1FAE5",
+            }}
+          >
+            <style>{`@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }`}</style>
+          </div>
+        )}
+        <img
+          src={member.image}
+          alt={member.name}
+          style={{ ...styles.image, opacity: imageLoaded ? 1 : 0, margin: 0 }}
+          onLoad={() => setImageLoaded(true)}
+          loading="lazy"
+        />
+      </div>
+      <h3 style={styles.name}>{member.name}</h3>
+      <p style={styles.role}>{member.role}</p>
+      <p style={styles.bio}>{member.bio}</p>
+      <div style={styles.socials}>
+        <button style={styles.iconButton} aria-label="LinkedIn profile">
+          <FiLinkedin size={15} />
+        </button>
+        <button style={styles.iconButton} aria-label="Email profile">
+          <FiMail size={15} />
+        </button>
+      </div>
+    </article>
+  );
+};
+
 const TeamContent = () => {
   const members = [
     {
-      name: "James Kariuki",
+      name: "IRADUKUNDA Gideon",
       role: "Founder & CEO",
       image: "https://randomuser.me/api/portraits/men/32.jpg",
       bio: "Leads strategy and partnerships to deliver meaningful travel experiences.",
     },
     {
-      name: "Amara Okonkwo",
+      name: "MUTUZO Enos",
       role: "Head of Operations",
       image: "https://randomuser.me/api/portraits/women/44.jpg",
       bio: "Ensures every itinerary is coordinated with precision and local expertise.",
     },
     {
-      name: "David Mbeki",
+      name: "Lyan Bruce",
       role: "Lead Safari Guide",
       image: "https://randomuser.me/api/portraits/men/67.jpg",
       bio: "Combines wildlife knowledge and field safety for exceptional guided trips.",
     },
     {
-      name: "Sarah Wanjiku",
+      name: "Kingsley vradmil",
       role: "Customer Experience",
       image: "https://randomuser.me/api/portraits/women/28.jpg",
       bio: "Designs guest-first service from first inquiry through post-trip follow-up.",
@@ -138,36 +198,23 @@ const TeamContent = () => {
 
         <div style={styles.grid}>
           {members.map((member, index) => (
-            <AnimatedSection key={member.name} animation="fadeInUp" delay={index * 0.08}>
-              <article
-                style={styles.card}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.transform = "translateY(-6px)";
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                }}
-              >
-                <img src={member.image} alt={member.name} style={styles.image} />
-                <h3 style={styles.name}>{member.name}</h3>
-                <p style={styles.role}>{member.role}</p>
-                <p style={styles.bio}>{member.bio}</p>
-                <div style={styles.socials}>
-                  <button style={styles.iconButton} aria-label="LinkedIn profile">
-                    <FiLinkedin size={15} />
-                  </button>
-                  <button style={styles.iconButton} aria-label="Email profile">
-                    <FiMail size={15} />
-                  </button>
-                </div>
-              </article>
+            <AnimatedSection
+              key={member.name}
+              animation="fadeInUp"
+              delay={index * 0.08}
+            >
+              <TeamCard member={member} styles={styles} />
             </AnimatedSection>
           ))}
         </div>
 
         <AnimatedSection animation="fadeInUp">
           <div style={styles.cta}>
-            <Button to="/contact" variant="primary" icon={<FiArrowRight size={18} />}>
+            <Button
+              to="/contact"
+              variant="primary"
+              icon={<FiArrowRight size={18} />}
+            >
               Connect With Our Team
             </Button>
           </div>

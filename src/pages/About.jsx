@@ -1436,25 +1436,25 @@ const About = () => {
       role: 'Co-Founder & Visionary',
       image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
       bio: 'IGIRANEZA Fabrice is the creative genius and visionary behind Altuvera. In 2026, he transformed his dream of creating transformative travel experiences into reality. With an unwavering belief that travel can change lives, Fabrice designed Altuvera\'s revolutionary "High & Deep Culture" philosophy that now defines modern safari experiences worldwide.',
-      expertise: ['Visionary Leadership', 'Product Design', 'Innovation'],
+      expertise: ['Visionary Leadership', 'Product Design', 'Travel & Ventures'],
       quote: 'I designed Altuvera to prove that travel can transform both the traveler and the world they visit.',
       isFounder: true
     },
     {
-      name: 'James Kariuki',
+      name: 'IRADUKUNDA Gideon',
       role: 'Chief Executive Officer',
       image: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=400&fit=crop',
-      bio: 'James brings over two decades of safari expertise to lead Altuvera\'s operations. His deep knowledge of East African wildlife and cultures, combined with his passion for sustainable tourism, makes him the perfect steward of Fabrice\'s vision.',
+      bio: 'Gideon brings over two decades of safari expertise to lead Altuvera\'s operations. His deep knowledge of East African wildlife and cultures, combined with his passion for sustainable tourism, makes him the perfect steward of Fabrice\'s vision.',
       expertise: ['Safari Operations', 'Wildlife Conservation', 'Strategic Leadership'],
-      quote: 'Every sunrise in Africa teaches me something new. After 25 years, I\'m still learning.',
+      quote: 'Every sunrise in Africa teaches me something new. After 19 years, I\'m still learning.',
       isFounder: false
     },
     {
-      name: 'Amara Okonkwo',
+      name: 'MUTUZO Enos',
       role: 'Chief Operations Officer',
       image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop',
-      bio: 'Amara brings over 15 years of experience in sustainable tourism management. She previously led operations for three major conservation projects across Kenya and Tanzania. Her expertise ensures every Altuvera journey operates seamlessly while maximizing positive impact.',
-      expertise: ['Operations', 'Sustainability', 'Community Relations'],
+      bio: 'Enos brings over 17 years of experience in sustainable tourism management. He previously led operations for three major conservation projects across Kenya and Tanzania. His expertise ensures every Altuvera journey operates seamlessly while maximizing positive impact.',
+      expertise: ['Operations', 'Sustainability', 'Marketing'],
       quote: 'Sustainability isn\'t a feature—it\'s the foundation of everything we do.',
       isFounder: false
     },
@@ -1463,7 +1463,7 @@ const About = () => {
       role: 'Director of Guest Experience',
       image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&h=400&fit=crop',
       bio: 'Sarah has dedicated her career to understanding what makes travel truly memorable. With a background in luxury hospitality, she oversees every aspect of the guest journey—from the first inquiry to post-trip follow-up.',
-      expertise: ['Guest Relations', 'Luxury Hospitality', 'Experience Design'],
+      expertise: ['Community Relations', 'Luxury Hospitality', 'Experience Design'],
       quote: 'The magic is in the details. We remember what you mentioned once, six months ago.',
       isFounder: false
     },

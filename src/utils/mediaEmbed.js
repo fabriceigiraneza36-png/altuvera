@@ -47,13 +47,14 @@ export const toGoogleMapEmbedUrl = ({
   lng,
   query = "",
   zoom = 6,
+  mapType = "m", // 'm' roadmap, 'k' satellite, 'h' hybrid, 'p' terrain
 }) => {
   const hasCoords = Number.isFinite(lat) && Number.isFinite(lng);
-  if (hasCoords) {
-    return `https://www.google.com/maps?q=${lat},${lng}&z=${zoom}&output=embed`;
-  }
-  const safeQuery = encodeURIComponent(String(query || "").trim());
-  return `https://www.google.com/maps?q=${safeQuery}&z=${zoom}&output=embed`;
+  const base = hasCoords
+    ? `https://www.google.com/maps?q=${lat},${lng}`
+    : `https://www.google.com/maps?q=${encodeURIComponent(String(query || "").trim())}`;
+
+  return `${base}&z=${zoom}&t=${mapType}&output=embed&iwloc=near`;
 };
 
 export const toGoogleMapOpenUrl = ({ lat, lng, query = "" }) => {
@@ -62,6 +63,6 @@ export const toGoogleMapOpenUrl = ({ lat, lng, query = "" }) => {
     return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
   }
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    String(query || "").trim()
+    String(query || "").trim(),
   )}`;
 };

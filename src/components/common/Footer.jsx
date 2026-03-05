@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { FiFacebook, FiTwitter, FiInstagram, FiYoutube, FiMail, FiPhone, FiMapPin, FiArrowRight, FiCheck } from 'react-icons/fi';
 
@@ -6,6 +6,9 @@ const Footer = () => {
   const [email, setEmail] = useState('');
   const [subscribed, setSubscribed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [viewportWidth, setViewportWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1280
+  );
 
   const handleSubscribe = (e) => {
     e.preventDefault();
@@ -21,6 +24,14 @@ const Footer = () => {
   };
 
   const currentYear = new Date().getFullYear();
+  const isMobile = viewportWidth <= 640;
+  const isTablet = viewportWidth <= 1024;
+
+  useEffect(() => {
+    const onResize = () => setViewportWidth(window.innerWidth);
+    window.addEventListener('resize', onResize, { passive: true });
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
 
   const styles = {
     footer: {
@@ -109,15 +120,21 @@ const Footer = () => {
     container: {
       maxWidth: '1400px',
       margin: '0 auto',
-      padding: '80px 24px 40px',
+      padding: isMobile
+        ? '56px 16px calc(26px + env(safe-area-inset-bottom, 0px))'
+        : isTablet
+          ? '68px 20px 34px'
+          : '80px 24px 40px',
       position: 'relative',
       zIndex: 1,
     },
     grid: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-      gap: '48px',
-      marginBottom: '60px',
+      gridTemplateColumns: isMobile
+        ? '1fr'
+        : 'repeat(auto-fit, minmax(250px, 1fr))',
+      gap: isMobile ? '28px' : isTablet ? '38px' : '48px',
+      marginBottom: isMobile ? '34px' : '60px',
     },
     column: {},
     logo: {
@@ -127,37 +144,37 @@ const Footer = () => {
       marginBottom: '20px',
     },
     logoIcon: {
-      width: '52px',
-      height: '52px',
+      width: isMobile ? '46px' : '52px',
+      height: isMobile ? '46px' : '52px',
       borderRadius: '14px',
       background: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       color: 'white',
-      fontSize: '22px',
+      fontSize: isMobile ? '20px' : '22px',
       fontWeight: '700',
       fontFamily: "'Playfair Display', serif",
     },
     logoText: {
       fontFamily: "'Playfair Display', serif",
-      fontSize: '30px',
+      fontSize: isMobile ? '26px' : '30px',
       fontWeight: '700',
       color: 'white',
     },
     tagline: {
-      fontSize: '15px',
+      fontSize: isMobile ? '14px' : '15px',
       color: 'rgba(255,255,255,0.7)',
-      marginBottom: '24px',
+      marginBottom: isMobile ? '18px' : '24px',
       lineHeight: '1.7',
     },
     socialLinks: {
       display: 'flex',
-      gap: '12px',
+      gap: isMobile ? '10px' : '12px',
     },
     socialLink: {
-      width: '44px',
-      height: '44px',
+      width: isMobile ? '46px' : '44px',
+      height: isMobile ? '46px' : '44px',
       borderRadius: '12px',
       backgroundColor: 'rgba(255,255,255,0.1)',
       display: 'flex',
@@ -170,9 +187,9 @@ const Footer = () => {
     },
     columnTitle: {
       fontFamily: "'Playfair Display', serif",
-      fontSize: '20px',
+      fontSize: isMobile ? '18px' : '20px',
       fontWeight: '600',
-      marginBottom: '24px',
+      marginBottom: isMobile ? '16px' : '24px',
       color: 'white',
     },
     linksList: {
@@ -181,26 +198,27 @@ const Footer = () => {
       margin: 0,
     },
     linkItem: {
-      marginBottom: '14px',
+      marginBottom: isMobile ? '10px' : '14px',
     },
     link: {
       color: 'rgba(255,255,255,0.7)',
       textDecoration: 'none',
-      fontSize: '15px',
+      fontSize: isMobile ? '14px' : '15px',
       transition: 'all 0.3s ease',
       display: 'inline-flex',
       alignItems: 'center',
       gap: '8px',
+      minHeight: isMobile ? '34px' : 'auto',
     },
     contactItem: {
       display: 'flex',
       alignItems: 'flex-start',
-      gap: '14px',
-      marginBottom: '20px',
+      gap: isMobile ? '12px' : '14px',
+      marginBottom: isMobile ? '14px' : '20px',
     },
     contactIcon: {
-      width: '40px',
-      height: '40px',
+      width: isMobile ? '42px' : '40px',
+      height: isMobile ? '42px' : '40px',
       borderRadius: '10px',
       backgroundColor: 'rgba(5, 150, 105, 0.2)',
       display: 'flex',
@@ -210,7 +228,7 @@ const Footer = () => {
       flexShrink: 0,
     },
     contactText: {
-      fontSize: '15px',
+      fontSize: isMobile ? '14px' : '15px',
       color: 'rgba(255,255,255,0.8)',
       lineHeight: '1.6',
     },
@@ -222,35 +240,38 @@ const Footer = () => {
     bottom: {
       display: 'flex',
       flexWrap: 'wrap',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      gap: '20px',
+      justifyContent: isMobile ? 'flex-start' : 'space-between',
+      alignItems: isMobile ? 'flex-start' : 'center',
+      flexDirection: isMobile ? 'column' : 'row',
+      gap: isMobile ? '14px' : '20px',
     },
     copyright: {
-      fontSize: '14px',
+      fontSize: isMobile ? '13px' : '14px',
       color: 'rgba(255,255,255,0.6)',
     },
     bottomLinks: {
       display: 'flex',
-      gap: '24px',
+      gap: isMobile ? '14px' : '24px',
       flexWrap: 'wrap',
     },
     bottomLink: {
       color: 'rgba(255,255,255,0.6)',
       textDecoration: 'none',
-      fontSize: '14px',
+      fontSize: isMobile ? '13px' : '14px',
       transition: 'color 0.3s ease',
+      minHeight: isMobile ? '30px' : 'auto',
     },
     certifications: {
       display: 'flex',
-      gap: '16px',
+      gap: isMobile ? '10px' : '16px',
       alignItems: 'center',
+      flexWrap: 'wrap',
     },
     certBadge: {
-      padding: '8px 16px',
+      padding: isMobile ? '8px 12px' : '8px 16px',
       backgroundColor: 'rgba(255,255,255,0.1)',
       borderRadius: '8px',
-      fontSize: '12px',
+      fontSize: isMobile ? '11px' : '12px',
       color: '#10B981',
       fontWeight: '600',
     },

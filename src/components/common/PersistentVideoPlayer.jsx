@@ -30,18 +30,30 @@ const btnStyle = {
   transition: "all 0.2s ease",
 };
 
-const getPanelSize = (isExpanded) => {
-  const viewportWidth = typeof window !== "undefined" ? window.innerWidth : 1280;
+const getPanelSize = (isExpanded, isTheaterMode, isBrowserFullscreen) => {
+  const viewportWidth =
+    typeof window !== "undefined" ? window.innerWidth : 1280;
+
+  if (isTheaterMode || isBrowserFullscreen) {
+    const width = Math.min(860, viewportWidth * 0.85);
+    const height = Math.round((width * 9) / 16) + (isBrowserFullscreen ? 0 : 0);
+    return { width, height };
+  }
+
   const width = isExpanded
-    ? Math.min(500, Math.max(320, viewportWidth - FLOAT_MARGIN * 2))
-    : Math.min(330, Math.max(260, viewportWidth - FLOAT_MARGIN * 2));
-  const mediaHeight = isExpanded ? Math.round((width * 9) / 16) : 0;
-  return { width, height: 58 + mediaHeight };
+    ? Math.min(480, Math.max(300, viewportWidth - FLOAT_MARGIN * 2))
+    : 160; // Much smaller when "minimized"
+
+  const mediaHeight = isExpanded
+    ? Math.round((width * 9) / 16)
+    : Math.round((width * 9) / 16); // Keep aspect ratio even when small
+
+  return { width, height: (isExpanded ? 58 : 0) + mediaHeight };
 };
 
 const clampPosition = (position, isExpanded) => {
   if (typeof window === "undefined") return position;
-  const { width, height } = getPanelSize(isExpanded);
+  const { width, height } = getPanelSize(isExpanded, false, false);
   return {
     x: Math.min(
       Math.max(FLOAT_MARGIN, position.x),
@@ -56,7 +68,7 @@ const clampPosition = (position, isExpanded) => {
 
 const getDefaultPosition = (isExpanded) => {
   if (typeof window === "undefined") return { x: 24, y: 24 };
-  const { width, height } = getPanelSize(isExpanded);
+  const { width, height } = getPanelSize(isExpanded, false, false);
   return {
     x: Math.max(FLOAT_MARGIN, window.innerWidth - width - 24),
     y: Math.max(FLOAT_MARGIN, window.innerHeight - height - 24),
@@ -64,7 +76,14 @@ const getDefaultPosition = (isExpanded) => {
 };
 
 const PersistentVideoPlayer = () => {
-  const { isPlayerOpen, activeVideoId, playerTitle, closePlayer, isMaster, playVideo } = useApp();
+  const {
+    isPlayerOpen,
+    activeVideoId,
+    playerTitle,
+    closePlayer,
+    isMaster,
+    playVideo,
+  } = useApp();
 
   const [isExpanded, setIsExpanded] = useState(true);
   const [isTheaterMode, setIsTheaterMode] = useState(false);
@@ -104,7 +123,8 @@ const PersistentVideoPlayer = () => {
       if (!isFs) setControlsVisible(true);
     };
     document.addEventListener("fullscreenchange", onFullScreenChange);
-    return () => document.removeEventListener("fullscreenchange", onFullScreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", onFullScreenChange);
   }, []);
 
   useEffect(() => {
@@ -209,13 +229,20 @@ const PersistentVideoPlayer = () => {
     closePlayer();
   };
 
-  const showOverlayControls = controlsVisible || (!isTheaterMode && !isBrowserFullscreen);
-  const compactWidth = getPanelSize(isExpanded).width;
+  const showOverlayControls =
+    controlsVisible || (!isTheaterMode && !isBrowserFullscreen);
+  const currentSize = getPanelSize(
+    isExpanded,
+    isTheaterMode,
+    isBrowserFullscreen,
+  );
+  const isActuallyExpanded = isExpanded || isTheaterMode || isBrowserFullscreen;
 
   return (
     <AnimatePresence>
       {(isTheaterMode || isBrowserFullscreen) && (
         <motion.div
+          key="player-overlay"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -234,18 +261,25 @@ const PersistentVideoPlayer = () => {
       )}
 
       <motion.div
+        key="player-frame"
         ref={frameRef}
+        layout
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{
           opacity: 1,
           scale: 1,
-          width: isTheaterMode || isBrowserFullscreen ? "min(1460px, 96vw)" : `${compactWidth}px`,
-          left: isTheaterMode || isBrowserFullscreen ? "50%" : `${position.x}px`,
+          width: getPanelSize(isExpanded, isTheaterMode, isBrowserFullscreen)
+            .width,
+          height: getPanelSize(isExpanded, isTheaterMode, isBrowserFullscreen)
+            .height,
+          left:
+            isTheaterMode || isBrowserFullscreen ? "50%" : `${position.x}px`,
           top: isTheaterMode || isBrowserFullscreen ? "50%" : `${position.y}px`,
-          transform: isTheaterMode || isBrowserFullscreen ? "translate(-50%, -50%)" : "translate(0%, 0%)",
+          x: isTheaterMode || isBrowserFullscreen ? "-50%" : 0,
+          y: isTheaterMode || isBrowserFullscreen ? "-50%" : 0,
         }}
         exit={{ opacity: 0, scale: 0.96 }}
-        transition={{ type: "spring", stiffness: 290, damping: 30 }}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
         onMouseMove={keepControlsVisible}
         onMouseEnter={keepControlsVisible}
         style={{
@@ -255,92 +289,111 @@ const PersistentVideoPlayer = () => {
           backdropFilter: "blur(24px)",
           borderRadius: isTheaterMode || isBrowserFullscreen ? "20px" : "24px",
           border: "1px solid rgba(255, 255, 255, 0.15)",
-          boxShadow: "0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)",
+          boxShadow:
+            "0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)",
           overflow: "hidden",
         }}
       >
-        {!isTheaterMode && !isBrowserFullscreen && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            gap: "10px",
+            background: "rgba(255, 255, 255, 0.05)",
+            borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+            opacity: isTheaterMode || isBrowserFullscreen ? 0.3 : 1,
+            pointerEvents:
+              isTheaterMode || isBrowserFullscreen ? "none" : "auto",
+            transition: "opacity 0.3s ease",
+            height: isTheaterMode || isBrowserFullscreen ? "0px" : "auto",
+            padding: isTheaterMode || isBrowserFullscreen ? "0px" : "12px 14px",
+            overflow: "hidden",
+          }}
+        >
+          <button
+            onMouseDown={startDrag}
+            onTouchStart={startDrag}
+            style={{
+              ...btnStyle,
+              cursor: isDragging ? "grabbing" : "grab",
+              touchAction: "none",
+            }}
+            title="Drag mini view"
+          >
+            <FiMove size={14} />
+          </button>
           <div
             style={{
-              padding: "12px 14px",
               display: "flex",
               alignItems: "center",
-              justifyContent: "flex-start",
               gap: "10px",
-              background: "rgba(255, 255, 255, 0.05)",
-              borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+              flex: 1,
+              minWidth: 0,
             }}
           >
-            <button
-              onMouseDown={startDrag}
-              onTouchStart={startDrag}
+            <FiZap
+              size={14}
+              style={{ color: isMaster ? "#10B981" : "#9ca3af" }}
+            />
+            <span
               style={{
-                ...btnStyle,
-                cursor: isDragging ? "grabbing" : "grab",
-                touchAction: "none",
-              }}
-              title="Drag mini view"
-            >
-              <FiMove size={14} />
-            </button>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-                flex: 1,
-                minWidth: 0,
+                fontSize: "12px",
+                color: "white",
+                fontWeight: "700",
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                textTransform: "uppercase",
+                letterSpacing: "0.9px",
               }}
             >
-              <FiZap size={14} style={{ color: isMaster ? "#10B981" : "#9ca3af" }} />
-              <span
-                style={{
-                  fontSize: "12px",
-                  color: "white",
-                  fontWeight: "700",
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  textTransform: "uppercase",
-                  letterSpacing: "0.9px",
-                }}
-              >
-                {isMaster ? playerTitle || "Altuvera Story" : "Synced Playback"}
-              </span>
-            </div>
-
-            <div style={{ display: "flex", gap: "8px" }}>
-              <button
-                onClick={() => setIsExpanded((prev) => !prev)}
-                style={btnStyle}
-                title={isExpanded ? "Mini view" : "Expand"}
-              >
-                {isExpanded ? <FiMinus size={15} /> : <FiMaximize2 size={15} />}
-              </button>
-              {isExpanded && (
-                <button
-                  onClick={() => setIsTheaterMode(true)}
-                  style={btnStyle}
-                  title="Theater mode"
-                >
-                  <FiMaximize size={15} />
-                </button>
-              )}
-              <button onClick={handleClose} style={{ ...btnStyle, color: "#FCA5A5" }} title="Close">
-                <FiX size={15} />
-              </button>
-            </div>
+              {isMaster ? playerTitle || "Altuvera Story" : "Synced Playback"}
+            </span>
           </div>
-        )}
+
+          <div style={{ display: "flex", gap: "8px" }}>
+            <button
+              onClick={() => setIsExpanded((prev) => !prev)}
+              style={btnStyle}
+              title={isExpanded ? "Mini view" : "Expand"}
+            >
+              {isExpanded ? <FiMinus size={15} /> : <FiMaximize2 size={15} />}
+            </button>
+            {isExpanded && (
+              <button
+                onClick={() => setIsTheaterMode(true)}
+                style={btnStyle}
+                title="Theater mode"
+              >
+                <FiMaximize size={15} />
+              </button>
+            )}
+            <button
+              onClick={handleClose}
+              style={{ ...btnStyle, color: "#FCA5A5" }}
+              title="Close"
+            >
+              <FiX size={15} />
+            </button>
+          </div>
+        </div>
 
         <div
           style={{
             position: "relative",
-            display: isExpanded || isTheaterMode || isBrowserFullscreen ? "block" : "none",
+            width: "100%",
+            height: "100%",
           }}
         >
-          {isMaster ? (
-            <div style={{ width: "100%", aspectRatio: "16/9", background: "black" }}>
+          <div
+            style={{
+              width: "100%",
+              aspectRatio: "16/9",
+              background: "black",
+            }}
+          >
+            {isMaster ? (
               <iframe
                 src={embedUrl}
                 title="Altuvera Story Player"
@@ -348,59 +401,65 @@ const PersistentVideoPlayer = () => {
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 allowFullScreen
               />
-            </div>
-          ) : (
-            <div
-              style={{
-                width: "100%",
-                aspectRatio: "16/9",
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "rgba(0,0,0,0.6)",
-                gap: "20px",
-                padding: "30px",
-                textAlign: "center",
-              }}
-            >
-              <FiAirplay size={48} style={{ color: "#10B981", opacity: 0.8 }} />
-              <div>
-                <div
-                  style={{
-                    color: "white",
-                    fontWeight: "600",
-                    fontSize: "16px",
-                    marginBottom: "5px",
-                  }}
-                >
-                  Synchronized Experience
-                </div>
-                <div style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}>
-                  Playing in another open tab.
-                </div>
-              </div>
-              <button
-                onClick={handleTakeOver}
+            ) : (
+              <div
                 style={{
-                  background: "linear-gradient(135deg, #059669 0%, #10B981 100%)",
-                  color: "white",
-                  border: "none",
-                  padding: "10px 24px",
-                  borderRadius: "50px",
-                  fontSize: "13px",
-                  fontWeight: "600",
-                  cursor: "pointer",
+                  width: "100%",
+                  height: "100%",
                   display: "flex",
+                  flexDirection: "column",
                   alignItems: "center",
-                  gap: "10px",
-                  boxShadow: "0 10px 20px rgba(5, 150, 105, 0.3)",
+                  justifyContent: "center",
+                  background: "rgba(0,0,0,0.6)",
+                  gap: "20px",
+                  padding: "30px",
+                  textAlign: "center",
                 }}
               >
-                <FiRefreshCw size={14} /> Pull playback to this tab.
-              </button>
-            </div>
-          )}
+                <FiAirplay
+                  size={48}
+                  style={{ color: "#10B981", opacity: 0.8 }}
+                />
+                <div>
+                  <div
+                    style={{
+                      color: "white",
+                      fontWeight: "600",
+                      fontSize: "16px",
+                      marginBottom: "5px",
+                    }}
+                  >
+                    Synchronized Experience
+                  </div>
+                  <div
+                    style={{ color: "rgba(255,255,255,0.5)", fontSize: "13px" }}
+                  >
+                    Playing in another open tab.
+                  </div>
+                </div>
+                <button
+                  onClick={handleTakeOver}
+                  style={{
+                    background:
+                      "linear-gradient(135deg, #059669 0%, #10B981 100%)",
+                    color: "white",
+                    border: "none",
+                    padding: "10px 24px",
+                    borderRadius: "50px",
+                    fontSize: "13px",
+                    fontWeight: "600",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    boxShadow: "0 10px 20px rgba(5, 150, 105, 0.3)",
+                  }}
+                >
+                  <FiRefreshCw size={14} /> Pull playback to this tab.
+                </button>
+              </div>
+            )}
+          </div>
 
           {showOverlayControls && (
             <div
@@ -417,7 +476,11 @@ const PersistentVideoPlayer = () => {
                 style={btnStyle}
                 title={isBrowserFullscreen ? "Exit fullscreen" : "Fullscreen"}
               >
-                {isBrowserFullscreen ? <FiMinimize2 size={16} /> : <FiMaximize size={16} />}
+                {isBrowserFullscreen ? (
+                  <FiMinimize2 size={16} />
+                ) : (
+                  <FiMaximize size={16} />
+                )}
               </button>
               {(isTheaterMode || isBrowserFullscreen) && (
                 <button
@@ -433,13 +496,17 @@ const PersistentVideoPlayer = () => {
                   <FiMinimize2 size={16} />
                 </button>
               )}
-              <button onClick={handleClose} style={{ ...btnStyle, color: "#FCA5A5" }} title="Close">
+              <button
+                onClick={handleClose}
+                style={{ ...btnStyle, color: "#FCA5A5" }}
+                title="Close"
+              >
                 <FiX size={16} />
               </button>
             </div>
           )}
 
-          {showOverlayControls && (
+          {!isTheaterMode && !isBrowserFullscreen && (
             <div
               style={{
                 position: "absolute",
@@ -452,9 +519,11 @@ const PersistentVideoPlayer = () => {
                 color: "rgba(255,255,255,0.92)",
                 fontSize: "12px",
                 fontWeight: 600,
+                pointerEvents: "none",
               }}
             >
-              Hover to reveal controls - drag handle to move - mini view and fullscreen available.
+              Hover to reveal controls - drag handle to move - mini view and
+              fullscreen available.
             </div>
           )}
         </div>

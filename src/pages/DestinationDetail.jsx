@@ -64,11 +64,11 @@ import {
 import PageHeader from "../components/common/PageHeader";
 import AnimatedSection from "../components/common/AnimatedSection";
 import Button from "../components/common/Button";
-import { countries } from "../data/countries";
+import { useCountry } from "../hooks/useCountries";
 import {
-  getDestinationById,
-  getDestinationsByCountry,
-} from "../data/destinations";
+  useCountryDestinations,
+  useDestination,
+} from "../hooks/useDestinations";
 
 // CSS Keyframes
 const keyframesStyle = `
@@ -135,7 +135,11 @@ const keyframesStyle = `
 const DestinationDetail = () => {
   const { destinationId } = useParams();
   const navigate = useNavigate();
-  const destination = getDestinationById(destinationId);
+  const { destination, loading: destinationLoading } = useDestination(destinationId);
+  const { country } = useCountry(destination?.countryId || destination?.country_id);
+  const { destinations: countryDestinations } = useCountryDestinations(
+    destination?.countryId || destination?.country_id
+  );
   
   // States
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -361,6 +365,22 @@ const DestinationDetail = () => {
     }));
   };
 
+  if (destinationLoading) {
+    return (
+      <div
+        style={{
+          minHeight: "60vh",
+          display: "grid",
+          placeItems: "center",
+          fontSize: "18px",
+          color: "#6B7280",
+        }}
+      >
+        Loading destination...
+      </div>
+    );
+  }
+
   if (!destination) {
     return (
       <>
@@ -428,8 +448,7 @@ const DestinationDetail = () => {
     );
   }
 
-  const country = countries.find((c) => c.id === destination.countryId);
-  const relatedDestinations = getDestinationsByCountry(destination.countryId)
+  const relatedDestinations = (countryDestinations || [])
     .filter((d) => d.id !== destination.id)
     .slice(0, 3);
 

@@ -8,6 +8,8 @@ const Loader = () => {
     'Preparing your adventure',
     'Loading destinations',
     'Gathering experiences',
+    "Conducting Destinations",
+    "Pondering medias",
     'Almost ready',
   ];
 

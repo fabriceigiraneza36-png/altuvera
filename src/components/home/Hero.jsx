@@ -13,140 +13,162 @@ import Button from "../common/Button";
 import { useApp } from "../../context/AppContext";
 import { useScrollTriggeredSlide } from "../../hooks/useScrollTriggeredSlide";
 
+export const HERO_SLIDES = [
+    {
+     // https://i.pinimg.com/1200x/cc/22/42/cc2242dbd24507eca2cd4313ffbd5c72.jpg
+      image: "https://i.pinimg.com/1200x/cc/22/42/cc2242dbd24507eca2cd4313ffbd5c72.jpg",
+      fallback: "https://i.pinimg.com/1200x/cc/22/42/cc2242dbd24507eca2cd4313ffbd5c72.jpg",
+      title: "Witness the Great Migration",
+      subtitle: "Experience nature's greatest spectacle across the vast Serengeti and Maasai Mara plains",
+      location: "Kenya & Tanzania",
+      animationPreset: "cinematicDrift",
+      overlayGradient: "linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 50%, rgba(16,185,129,0.15) 100%)",
+    },
+    {
+      image: "https://i.pinimg.com/1200x/f7/d8/79/f7d879d6a1486f026ba9ba9c30a3a125.jpg",
+      fallback: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?auto=format&fit=crop&w=3840",
+      title: "Meet the Mountain Gorillas",
+      subtitle: "An intimate encounter with our closest relatives in their misty forest home",
+      location: "Rwanda & Uganda",
+      animationPreset: "softFocus",
+      overlayGradient: "linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(34,85,51,0.35) 100%)",
+    },
+    {
+      image: "https://pictures.altai-travel.com/1920x1040/kilimanjaro-national-park-tanzania-istock-3490.jpg",
+      fallback: "https://www.andbeyond.com/wp-content/uploads/sites/5/Elephants-and-mount-kilimanjaro.jpg",
+      title: "Summit Mount Kilimanjaro",
+      subtitle: "Conquer Africa's highest peak and stand at the legendary roof of the continent",
+      location: "Tanzania",
+      animationPreset: "risingHorizon",
+      overlayGradient: "linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 60%, rgba(255,255,255,0.05) 100%)",
+    },
+    {
+      image: "https://i.pinimg.com/1200x/0a/43/ca/0a43cafc5ea639697427a07f078506e3.jpg",
+      fallback: "https://images.unsplash.com/photo-1529876751255-1c6d8f09ff1d?auto=format&fit=crop&w=3840",
+      title: "Discover Ancient Wonders",
+      subtitle: "Explore the rock-hewn churches of Lalibela and Ethiopia's 3,000-year timeless heritage",
+      location: "Ethiopia",
+      animationPreset: "zoomOut",
+      overlayGradient: "linear-gradient(45deg, rgba(139,69,19,0.35) 0%, rgba(0,0,0,0.45) 100%)",
+    },
+    {
+      image: "https://images.squarespace-cdn.com/content/v1/57b88db03e00be38aec142b0/1526928305567-Y0MTKDAAGPS2IP0YXMSO/03_What_To_Do_In_Gisenyi_in_Lake_Kivu_Rwanda_Visiting_Gisenyi_HandZaround.jpg?format=1500w",
+      fallback: "https://images.trvl-media.com/place/3000470585/420aa538-86d3-463e-ab29-6105311b6442.jpg",
+      title: "Lake Kivu Sunrise in Rwanda",
+      subtitle: "Serene dawn over Lake Kivu with misty waters and distant hills at sunrise",
+      location: "Lake Kivu, Rwanda",
+      animationPreset: "parallaxDepth",
+      overlayGradient: "linear-gradient(180deg, rgba(255,140,0,0.15) 0%, rgba(0,0,0,0.5) 100%)",
+    },
+    {
+      image: "https://yellowzebrasafaris.com/media/46316/serengeti-safaris-tanzania-wildlife-adventures.jpg?format=jpg&height=1024&v=1da5e0fb8b7e1f0&width=2048",
+      fallback: "https://www.serengeti.com/assets/img/serengeti-national-park-savannah-landscape.jpg",
+      title: "Serengeti Grasslands",
+      subtitle: "Endless grasslands and wildlife roaming under wide Tanzanian skies",
+      location: "Tanzania",
+      animationPreset: "horizontalPan",
+      overlayGradient: "linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.15) 50%, rgba(218,165,32,0.15) 100%)",
+    },
+    {
+      image: "https://img1.wsimg.com/isteam/ip/29cc5507-095f-4b8e-ad81-fae5576e3852/GettyImages-148679836-5b03d89030371300373c5135.jpg/:/cr=t:0%25,l:0%25,w:100%25,h:100%25/rs=w:1280",
+      fallback: "https://i.pinimg.com/1200x/8c/8d/39/8c8d391974e82e3a2c2422ee8775394b.jpg",
+      title: "Ngorongoro Caldera Vista",
+      subtitle: "Breathtaking crater views and rich wildlife habitats high in Tanzanian highlands",
+      location: "Tanzania",
+      animationPreset: "cinematicWide",
+      overlayGradient: "linear-gradient(135deg, rgba(0,100,0,0.25) 0%, rgba(0,0,0,0.5) 100%)",
+    },
+    {
+      image: "https://ugandarwandagorillatours.com/wp-content/uploads/2019/02/bwindi-forest-uganda-gorilla-safaris.jpg",
+      fallback: "https://i.pinimg.com/1200x/1e/5b/d2/1e5bd2291f7be957992fbc3c13a8f9a2.jpg",
+      title: "Bwindi Rainforest",
+      subtitle: "Mist‑covered rainforests rich with gorillas and biodiversity in Uganda",
+      location: "Uganda",
+      animationPreset: "verticalReveal",
+      overlayGradient: "linear-gradient(180deg, rgba(0,50,0,0.4) 0%, rgba(0,0,0,0.6) 100%)",
+    },
+    {
+      image: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/15/26/6d/0c/views-from-the-western.jpg?h=1200&s=1&w=1200",
+      fallback: "https://i.natgeofe.com/n/2c6a7c2d-5dcc-4c19-9707-5fd50222374c/Magashi_05-19-98e.JPG",
+      title: "Akagera National Park",
+      subtitle: "Open landscapes and wildlife safaris across eastern Rwanda's pristine wilderness",
+      location: "Rwanda",
+      animationPreset: "dynamicSweep",
+      overlayGradient: "linear-gradient(45deg, rgba(0,0,0,0.45) 0%, rgba(16,185,129,0.15) 100%)",
+    },
+    {
+      image: "https://i.pinimg.com/736x/3f/48/50/3f485098d9bf8b3a79fe2e6946ea0302.jpg",
+      fallback: "https://www.explore.com/img/gallery/the-best-way-to-view-mount-kilimanjaro-in-kenya/l-intro-1673982083.jpg",
+      title: "Amboseli & Kilimanjaro",
+      subtitle: "Iconic African wildlife framed by majestic Mount Kilimanjaro in Kenya",
+      location: "Kenya",
+      animationPreset: "rotateZoom",
+      overlayGradient: "linear-gradient(0deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.25) 50%, rgba(135,206,235,0.15) 100%)",
+    },
+  ];
+
 const Hero = () => {
+  const slides = HERO_SLIDES;
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [direction, setDirection] = useState(1);
   const { playVideo, openMap, isPlayerOpen } = useApp();
 
   const tourismVideos = [
-    "eoTKXtrRjmY", // Wild Kenya Safari
-    "8YVlT7GFqzA", // Serengeti Safari Tanzania
-    "86aGcUQq_1E", // Maasai Mara Migration
-    "0RZknKnFqOg", // East Africa Documentary
-    "wP4AAYn5tqY", // Akagera National Park Rwanda
-    "siqAfzwCVuw", // Zanzibar Coastal Safari
-    "4cX_JIMJwGY", // Mount Kilimanjaro Expedition
-    "eoTKXtrRjmY", // Wildlife of East Africa
-    "86aGcUQq_1E", // The Big Five Safari
-    "8YVlT7GFqzA", // Nature's Greatest Spectacle
+    "eoTKXtrRjmY",
+    "8YVlT7GFqzA",
+    "86aGcUQq_1E",
+    "0RZknKnFqOg",
+    "wP4AAYn5tqY",
+    "siqAfzwCVuw",
+    "4cX_JIMJwGY",
+    "eoTKXtrRjmY",
+    "86aGcUQq_1E",
+    "8YVlT7GFqzA",
   ];
 
-  const slides = [
-    // Original 4 slides with Pinterest images — UNTOUCHED
-    {
-      image:
-        "https://i.pinimg.com/1200x/cc/22/42/cc2242dbd24507eca2cd4313ffbd5c72.jpg",
-      fallback:
-        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTuP9o7T_O079eC2mp4oycAJ6Nr5RibfoESnQ&s",
-      title: "Witness the Great Migration",
-      subtitle:
-        "Experience nature's greatest spectacle across the vast Serengeti and Maasai Mara plains",
-      location: "Kenya & Tanzania",
-      animation: { scale: [1, 1.15] },
+  const slideAnimationPresets = {
+    cinematicDrift: {
+      initial: { scale: 1.2, x: "5%", y: "3%" },
+      animate: { scale: 1, x: "-3%", y: "-2%" },
     },
-    {
-      image:
-        "https://i.pinimg.com/1200x/f7/d8/79/f7d879d6a1486f026ba9ba9c30a3a125.jpg",
-      fallback:
-        "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?auto=format&fit=crop&w=3840",
-      title: "Meet the Mountain Gorillas",
-      subtitle:
-        "An intimate encounter with our closest relatives in their misty forest home",
-      location: "Rwanda & Uganda",
-      animation: { x: ["-5%", "5%"] },
+    verticalReveal: {
+      initial: { scale: 1.25, y: "8%" },
+      animate: { scale: 1.05, y: "-5%" },
     },
-    {
-      image:
-        "https://pictures.altai-travel.com/1920x1040/kilimanjaro-national-park-tanzania-istock-3490.jpg",
-      fallback:
-        "https://www.andbeyond.com/wp-content/uploads/sites/5/Elephants-and-mount-kilimanjaro.jpg",
-      title: "Summit Mount Kilimanjaro",
-      subtitle:
-        "Conquer Africa's highest peak and stand at the legendary roof of the continent",
-      location: "Tanzania",
-      animation: { y: ["5%", "-5%"] },
+    horizontalPan: {
+      initial: { scale: 1.1, x: "-8%" },
+      animate: { scale: 1.02, x: "5%" },
     },
-    {
-      image:
-        "https://i.pinimg.com/1200x/0a/43/ca/0a43cafc5ea639697427a07f078506e3.jpg",
-      fallback:
-        "https://images.unsplash.com/photo-1529876751255-1c6d8f09ff1d?auto=format&fit=crop&w=3840",
-      title: "Discover Ancient Wonders",
-      subtitle:
-        "Explore the rock-hewn churches of Lalibela and Ethiopia's 3,000-year timeless heritage",
-      location: "Ethiopia",
-      animation: { scale: [1.1, 1] },
+    zoomOut: {
+      initial: { scale: 1.3 },
+      animate: { scale: 1 },
     },
-
-    // **New East Africa HD/4K Unsplash Images**
-    {
-      image:
-        "https://images.squarespace-cdn.com/content/v1/57b88db03e00be38aec142b0/1526928305567-Y0MTKDAAGPS2IP0YXMSO/03_What_To_Do_In_Gisenyi_in_Lake_Kivu_Rwanda_Visiting_Gisenyi_HandZaround.jpg?format=1500w",
-      fallback:
-        "https://images.trvl-media.com/place/3000470585/420aa538-86d3-463e-ab29-6105311b6442.jpg",
-      title: "Lake Kivu Sunrise in Rwanda",
-      subtitle:
-        "Serene dawn over Lake Kivu with misty waters and distant hills at sunrise",
-      location: "Lake Kivu, Rwanda",
-      animation: { scale: [1, 1.1] },
+    rotateZoom: {
+      initial: { scale: 1.15, rotate: 2 },
+      animate: { scale: 1, rotate: 0 },
     },
-
-    {
-      image:
-        "https://yellowzebrasafaris.com/media/46316/serengeti-safaris-tanzania-wildlife-adventures.jpg?format=jpg&height=1024&v=1da5e0fb8b7e1f0&width=2048",
-      fallback:
-        "https://www.serengeti.com/assets/img/serengeti-national-park-savannah-landscape.jpg",
-      title: "Serengeti Grasslands",
-      subtitle:
-        "Endless grasslands and wildlife roaming under wide Tanzanian skies",
-      location: "Tanzania",
-      animation: { x: ["-3%", "3%"] },
+    parallaxDepth: {
+      initial: { scale: 1.2, y: "10%" },
+      animate: { scale: 1.02, y: "-3%" },
     },
-    {
-      image:
-        "https://img1.wsimg.com/isteam/ip/29cc5507-095f-4b8e-ad81-fae5576e3852/GettyImages-148679836-5b03d89030371300373c5135.jpg/:/cr=t:0%25,l:0%25,w:100%25,h:100%25/rs=w:1280",
-      fallback:
-        "https://i.pinimg.com/1200x/8c/8d/39/8c8d391974e82e3a2c2422ee8775394b.jpg",
-      title: "Ngorongoro Caldera Vista",
-      subtitle:
-        "Breathtaking crater views and rich wildlife habitats high in Tanzanian highlands",
-      location: "Tanzania",
-      animation: { y: ["-2%", "2%"] },
+    softFocus: {
+      initial: { scale: 1.08 },
+      animate: { scale: 1.02 },
     },
-    {
-      image:
-        "https://ugandarwandagorillatours.com/wp-content/uploads/2019/02/bwindi-forest-uganda-gorilla-safaris.jpg",
-      fallback:
-        "https://i.pinimg.com/1200x/1e/5b/d2/1e5bd2291f7be957992fbc3c13a8f9a2.jpg",
-      title: "Bwindi Rainforest",
-      subtitle:
-        "Mist‑covered rainforests rich with gorillas and biodiversity in Uganda",
-      location: "Uganda",
-      animation: { rotate: [0, 7] },
+    dynamicSweep: {
+      initial: { scale: 1.15, x: "8%", y: "-5%" },
+      animate: { scale: 1, x: "-4%", y: "3%" },
     },
-    {
-      image:
-        "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/15/26/6d/0c/views-from-the-western.jpg?h=1200&s=1&w=1200",
-      fallback:
-        "https://i.natgeofe.com/n/2c6a7c2d-5dcc-4c19-9707-5fd50222374c/Magashi_05-19-98e.JPG",
-      title: "Akagera National Park",
-      subtitle:
-        "Open landscapes and wildlife safaris across eastern Rwanda’s pristine wilderness",
-      location: "Rwanda",
-      animation: { scale: [1, 1.05] },
+    risingHorizon: {
+      initial: { scale: 1.2, y: "12%" },
+      animate: { scale: 1, y: "-5%" },
     },
-    {
-      image:
-        "https://i.pinimg.com/736x/3f/48/50/3f485098d9bf8b3a79fe2e6946ea0302.jpg",
-      fallback:
-        "https://www.explore.com/img/gallery/the-best-way-to-view-mount-kilimanjaro-in-kenya/l-intro-1673982083.jpg",
-      title: "Amboseli & Kilimanjaro",
-      subtitle:
-        "Iconic African wildlife framed by majestic Mount Kilimanjaro in Kenya",
-      location: "Kenya",
-      animation: { skewX: [0, 8] },
+    cinematicWide: {
+      initial: { scale: 1.25, x: "-5%" },
+      animate: { scale: 1.02, x: "4%" },
     },
-  ];
+  };
 
   const [imageErrors, setImageErrors] = useState({});
 
@@ -155,12 +177,19 @@ const Hero = () => {
   };
 
   const nextSlide = useCallback(() => {
+    setDirection(1);
     setCurrentSlide((prev) => (prev + 1) % slides.length);
+  }, [slides.length]);
+
+  const prevSlide = useCallback(() => {
+    setDirection(-1);
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
   }, [slides.length]);
 
   const containerRef = useScrollTriggeredSlide(nextSlide, 300);
 
   const goToSlide = (index) => {
+    setDirection(index > currentSlide ? 1 : -1);
     setCurrentSlide(index);
     setIsPaused(true);
     setTimeout(() => setIsPaused(false), 10000);
@@ -168,11 +197,11 @@ const Hero = () => {
 
   useEffect(() => {
     if (isPaused || isPlayerOpen) return;
-    const timer = setInterval(nextSlide, 6000);
+    const timer = setInterval(nextSlide, 7000);
     return () => clearInterval(timer);
   }, [isPaused, isPlayerOpen, nextSlide]);
 
-  // Preload all images on component mount
+  // Preload images
   useEffect(() => {
     slides.forEach((slide) => {
       const img = new Image();
@@ -206,12 +235,18 @@ const Hero = () => {
     });
   };
 
+  const getCurrentAnimation = (index) => {
+    const preset = slides[index].animationPreset;
+    return slideAnimationPresets[preset] || slideAnimationPresets.cinematicDrift;
+  };
+
   const styles = {
     hero: {
       position: "relative",
       height: "100vh",
       minHeight: "800px",
       overflow: "hidden",
+      backgroundColor: "#111",
     },
     slidesContainer: {
       position: "absolute",
@@ -226,12 +261,32 @@ const Hero = () => {
       left: 0,
       right: 0,
       bottom: 0,
-      transition: "opacity 1.5s ease",
+      overflow: "hidden",
     },
     slideImage: {
       width: "100%",
       height: "100%",
       objectFit: "cover",
+      willChange: "transform",
+    },
+    overlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 2,
+      pointerEvents: "none",
+    },
+    vignetteOverlay: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: "radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.35) 100%)",
+      zIndex: 3,
+      pointerEvents: "none",
     },
     pattern: {
       position: "absolute",
@@ -239,8 +294,9 @@ const Hero = () => {
       left: 0,
       right: 0,
       bottom: 0,
-      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-      opacity: 0.5,
+      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+      zIndex: 4,
+      pointerEvents: "none",
     },
     content: {
       position: "relative",
@@ -260,12 +316,11 @@ const Hero = () => {
       alignItems: "center",
       gap: "16px",
       marginBottom: "24px",
-      opacity: 0,
     },
     taglineLine: {
       width: "60px",
       height: "2px",
-      backgroundColor: "#10B981",
+      background: "linear-gradient(90deg, transparent, #10B981, transparent)",
     },
     tagline: {
       fontFamily: "'Inter', sans-serif",
@@ -282,9 +337,8 @@ const Hero = () => {
       color: "white",
       marginBottom: "24px",
       lineHeight: "1.1",
-      textShadow: "0 4px 30px rgba(0, 0, 0, 0.3)",
+      textShadow: "0 4px 30px rgba(0, 0, 0, 0.5)",
       maxWidth: "900px",
-      opacity: 0,
     },
     subtitle: {
       fontSize: "clamp(16px, 2vw, 20px)",
@@ -292,7 +346,7 @@ const Hero = () => {
       marginBottom: "16px",
       maxWidth: "700px",
       lineHeight: "1.7",
-      opacity: 0,
+      textShadow: "0 2px 10px rgba(0, 0, 0, 0.3)",
     },
     location: {
       display: "inline-flex",
@@ -307,14 +361,12 @@ const Hero = () => {
       fontWeight: "600",
       marginBottom: "40px",
       border: "1px solid rgba(255, 255, 255, 0.2)",
-      opacity: 0,
     },
     buttons: {
       display: "flex",
       gap: "20px",
       flexWrap: "wrap",
       justifyContent: "center",
-      opacity: 0,
     },
     playButton: {
       display: "flex",
@@ -362,22 +414,31 @@ const Hero = () => {
       left: "50%",
       transform: "translateX(-50%)",
       display: "flex",
-      gap: "12px",
+      gap: "8px",
       zIndex: 10,
     },
     indicator: {
-      width: "12px",
-      height: "12px",
-      borderRadius: "50%",
+      width: "32px",
+      height: "4px",
+      borderRadius: "2px",
       backgroundColor: "rgba(255, 255, 255, 0.3)",
       cursor: "pointer",
       transition: "all 0.3s ease",
-      border: "2px solid transparent",
+      border: "none",
+      position: "relative",
+      overflow: "hidden",
     },
     indicatorActive: {
+      backgroundColor: "rgba(255, 255, 255, 0.4)",
+      width: "48px",
+    },
+    indicatorProgress: {
+      position: "absolute",
+      top: 0,
+      left: 0,
+      height: "100%",
       backgroundColor: "#10B981",
-      transform: "scale(1.2)",
-      border: "2px solid white",
+      borderRadius: "2px",
     },
     scrollIndicator: {
       position: "absolute",
@@ -391,14 +452,15 @@ const Hero = () => {
       color: "white",
       cursor: "pointer",
       zIndex: 10,
-      animation: "bounce 2s infinite",
-      transition: "opacity 0.3s ease",
+      background: "none",
+      border: "none",
     },
     scrollText: {
       fontSize: "12px",
       fontWeight: "500",
       textTransform: "uppercase",
       letterSpacing: "2px",
+      opacity: 0.8,
     },
     stats: {
       position: "absolute",
@@ -429,10 +491,9 @@ const Hero = () => {
       width: "300px",
       height: "300px",
       borderRadius: "50%",
-      background:
-        "radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, transparent 70%)",
-      animation: "float 6s ease-in-out infinite",
+      background: "radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 70%)",
       pointerEvents: "none",
+      zIndex: 5,
     },
   };
 
@@ -444,28 +505,30 @@ const Hero = () => {
             0%, 100% { transform: translateX(-50%) translateY(0); }
             50% { transform: translateX(-50%) translateY(-10px); }
           }
-          @keyframes float {
-            0%, 100% { transform: translate(0, 0); }
-            50% { transform: translate(20px, -20px); }
-          }
-          @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-          }
           .play-btn-hover:hover {
             background-color: white !important;
             color: #059669 !important;
             transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
           }
           .play-btn-hover:hover .play-icon-inner {
             background-color: #059669 !important;
             color: white !important;
+            transform: scale(1.1);
           }
           .map-btn-hover:hover {
             transform: translateY(-3px);
             background-color: rgba(16, 185, 129, 0.35) !important;
-            box-shadow: 0 10px 20px rgba(16,185,129,0.2);
+            box-shadow: 0 10px 30px rgba(16,185,129,0.3);
+          }
+          .indicator-btn:hover {
+            background-color: rgba(255, 255, 255, 0.5);
+          }
+          .scroll-indicator-btn:hover {
+            opacity: 0.7;
+          }
+          .scroll-indicator-btn {
+            animation: bounce 2s infinite;
           }
           @media (max-width: 768px) {
             .hero-stats { display: none !important; }
@@ -473,176 +536,255 @@ const Hero = () => {
         `}
       </style>
 
-      <div
+      {/* Floating Elements */}
+      <motion.div
         style={{ ...styles.floatingElement, top: "10%", left: "-100px" }}
-      ></div>
-      <div
-        style={{
-          ...styles.floatingElement,
-          bottom: "20%",
-          right: "-100px",
-          animationDelay: "-3s",
+        animate={{
+          x: [0, 30, 0],
+          y: [0, -20, 0],
         }}
-      ></div>
+        transition={{
+          duration: 10,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
+      <motion.div
+        style={{ ...styles.floatingElement, bottom: "20%", right: "-100px" }}
+        animate={{
+          x: [0, -30, 0],
+          y: [0, 20, 0],
+        }}
+        transition={{
+          duration: 12,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
 
+      {/* SLIDES - Cross-fade without black screen */}
       <div style={styles.slidesContainer}>
-        <AnimatePresence>
+        <AnimatePresence initial={false}>
+          {slides.map((slide, index) => (
+            index === currentSlide && (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{
+                  opacity: { duration: 0.8, ease: "easeInOut" },
+                }}
+                style={{
+                  ...styles.slide,
+                  zIndex: index === currentSlide ? 1 : 0,
+                }}
+              >
+                <motion.img
+                  src={imageErrors[index] ? slide.fallback : slide.image}
+                  alt={slide.title}
+                  onError={() => handleImageError(index)}
+                  initial={getCurrentAnimation(index).initial}
+                  animate={getCurrentAnimation(index).animate}
+                  transition={{
+                    duration: 7,
+                    ease: "linear",
+                  }}
+                  style={styles.slideImage}
+                />
+                {/* Slide-specific gradient overlay */}
+                <div
+                  style={{
+                    ...styles.overlay,
+                    background: slide.overlayGradient,
+                  }}
+                />
+              </motion.div>
+            )
+          ))}
+        </AnimatePresence>
+      </div>
+
+      {/* Static Overlays */}
+      <div style={styles.vignetteOverlay} />
+      <div style={styles.pattern} />
+
+      {/* Content with smooth transitions */}
+      <div style={styles.content}>
+        <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 2, ease: "easeOut" }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
             style={{
-              ...styles.slide,
-              zIndex: 1
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
             }}
           >
-            <motion.img
-              src={
-                imageErrors[currentSlide]
-                  ? slides[currentSlide].fallback
-                  : slides[currentSlide].image
-              }
-              alt={slides[currentSlide].title}
-              onError={() => handleImageError(currentSlide)}
-              initial={{
-                scale: slides[currentSlide].animation.scale
-                  ? slides[currentSlide].animation.scale[0]
-                  : 1.1,
-                x: slides[currentSlide].animation.x
-                  ? slides[currentSlide].animation.x[0]
-                  : 0,
-                y: slides[currentSlide].animation.y
-                  ? slides[currentSlide].animation.y[0]
-                  : 0,
-                rotate: slides[currentSlide].animation.rotate
-                  ? slides[currentSlide].animation.rotate[0]
-                  : 0
-              }}
-              animate={slides[currentSlide].animation}
-              transition={{
-                duration: 6,
-                ease: "linear",
-              }}
-              style={styles.slideImage}
-            />
+            {/* Tagline */}
+            <motion.div
+              style={styles.taglineContainer}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <motion.div
+                style={styles.taglineLine}
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+              />
+              <span style={styles.tagline}>
+                True adventure in High & Deep Culture
+              </span>
+              <motion.div
+                style={styles.taglineLine}
+                initial={{ scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+              />
+            </motion.div>
+
+            {/* Title */}
+            <motion.h1
+              style={styles.title}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
+              {slides[currentSlide].title}
+            </motion.h1>
+
+            {/* Subtitle */}
+            <motion.p
+              style={styles.subtitle}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+            >
+              {slides[currentSlide].subtitle}
+            </motion.p>
+
+            {/* Location */}
+            <motion.div
+              style={styles.location}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <motion.span
+                animate={{ scale: [1, 1.15, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+              >
+                📍
+              </motion.span>
+              {slides[currentSlide].location}
+            </motion.div>
+
+            {/* Buttons */}
+            <motion.div
+              style={styles.buttons}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              <motion.div
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <Button
+                  to="/destinations"
+                  variant="primary"
+                  size="large"
+                  icon={<FiArrowRight size={18} />}
+                >
+                  Explore Destinations
+                </Button>
+              </motion.div>
+              
+              <motion.button
+                style={styles.playButton}
+                onClick={handleWatchStory}
+                className="play-btn-hover"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                <div style={styles.playIcon} className="play-icon-inner">
+                  <FiPlay size={16} />
+                </div>
+                Watch Our Story
+              </motion.button>
+              
+            </motion.div>
           </motion.div>
         </AnimatePresence>
       </div>
 
-      <div style={styles.pattern}></div>
-
-      <div style={styles.content}>
-        <motion.div 
-          style={styles.taglineContainer}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
-          <div style={styles.taglineLine}></div>
-          <span style={styles.tagline}>
-            True adventure in High & Deep Culture
-          </span>
-          <div style={styles.taglineLine}></div>
-        </motion.div>
-
-        <motion.h1
-          style={styles.title}
-          key={`title-${currentSlide}`}
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
-          {slides[currentSlide].title}
-        </motion.h1>
-
-        <motion.p
-          style={styles.subtitle}
-          key={`sub-${currentSlide}`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-        >
-          {slides[currentSlide].subtitle}
-        </motion.p>
-
-        <motion.div
-          style={styles.location}
-          key={`loc-${currentSlide}`}
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-        >
-          <span>📍</span> {slides[currentSlide].location}
-        </motion.div>
-
-        <motion.div 
-          style={styles.buttons}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.8 }}
-        >
-          <Button
-            to="/destinations"
-            variant="primary"
-            size="large"
-            icon={<FiArrowRight size={18} />}
-          >
-            Explore Destinations
-          </Button>
-          <button
-            style={styles.playButton}
-            onClick={handleWatchStory}
-            className="play-btn-hover"
-          >
-            <div style={styles.playIcon} className="play-icon-inner">
-              <FiPlay size={16} />
-            </div>
-            Watch Our Story
-          </button>
-          <button
-            style={styles.mapButton}
-            onClick={handleWatchMap}
-            className="map-btn-hover"
-          >
-            <FiMap size={16} />
-            Watch Live Map
-          </button>
-        </motion.div>
-      </div>
-
+      {/* Slide Indicators with Progress */}
       <div style={styles.slideIndicators}>
         {slides.map((_, index) => (
           <button
             key={index}
+            className="indicator-btn"
             style={{
               ...styles.indicator,
               ...(currentSlide === index ? styles.indicatorActive : {}),
             }}
             onClick={() => goToSlide(index)}
-          />
+          >
+            {currentSlide === index && !isPaused && !isPlayerOpen && (
+              <motion.div
+                style={styles.indicatorProgress}
+                initial={{ width: "0%" }}
+                animate={{ width: "100%" }}
+                transition={{ duration: 7, ease: "linear" }}
+                key={`progress-${currentSlide}`}
+              />
+            )}
+          </button>
         ))}
       </div>
 
-      <button style={styles.scrollIndicator} onClick={scrollToContent}>
+      {/* Scroll Indicator */}
+      <motion.button
+        style={styles.scrollIndicator}
+        onClick={scrollToContent}
+        className="scroll-indicator-btn"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1.5 }}
+        whileHover={{ scale: 1.1 }}
+      >
         <span style={styles.scrollText}>Scroll Down</span>
-        <FiChevronDown size={24} />
-      </button>
+        <motion.div
+          animate={{ y: [0, 6, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity }}
+        >
+          <FiChevronDown size={24} />
+        </motion.div>
+      </motion.button>
 
+      {/* Stats */}
       <div style={styles.stats} className="hero-stats">
         {[
-          { num: "10+", lab: "Countries" },
+          { num: "2+", lab: "Countries" },
           { num: "500+", lab: "Destinations" },
           { num: "15K+", lab: "Happy Travelers" },
           { num: "98%", lab: "Satisfaction" },
         ].map((st, i) => (
-          <div key={i} style={styles.stat}>
+          <motion.div
+            key={i}
+            style={styles.stat}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.2 + i * 0.15 }}
+          >
             <div style={styles.statNumber}>{st.num}</div>
             <div style={styles.statLabel}>{st.lab}</div>
-          </div>
+          </motion.div>
         ))}
       </div>
     </section>
