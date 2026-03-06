@@ -1062,63 +1062,63 @@ const Home = () => {
   const galleryImages = useMemo(
     () => [
       {
-        src: "https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=900",
+        src: "https://i.pinimg.com/1200x/9b/93/6e/9b936e97002c0ceff3abeb21bf93b6be.jpg",
         alt: "Lion Pride at Dawn",
         location: "Serengeti, Tanzania",
         category: "Wildlife",
         h: 420,
       },
       {
-        src: "https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=900",
+        src: "https://i.pinimg.com/1200x/2a/79/76/2a7976e8a307a072cecfe31610f29b8b.jpg",
         alt: "Kilimanjaro Sunrise",
         location: "Amboseli, Kenya",
         category: "Landscapes",
         h: 280,
       },
       {
-        src: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=900",
+        src: "https://i.pinimg.com/1200x/1b/43/8f/1b438ff35ac3e041bda7e258bcc0e97f.jpg",
         alt: "Elephant Migration",
         location: "Tsavo, Kenya",
         category: "Wildlife",
         h: 340,
       },
       {
-        src: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=900",
+        src: "https://i.pinimg.com/1200x/a8/cd/38/a8cd38c9fa7a14ce7db3356c0157f6ce.jpg",
         alt: "Zanzibar Paradise",
         location: "Zanzibar, Tanzania",
         category: "Landscapes",
         h: 300,
       },
       {
-        src: "https://images.unsplash.com/photo-1580674287404-60e2e0fcb95e?w=900",
+        src: "https://i.pinimg.com/736x/47/3d/2b/473d2bf229cd5d69c001c016eb5a0bde.jpg",
         alt: "Mountain Gorilla",
         location: "Bwindi, Uganda",
         category: "Wildlife",
         h: 440,
       },
       {
-        src: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=900",
+        src: "https://i.pinimg.com/1200x/1e/9a/98/1e9a98f815e57a936dcd66df6b1b97a3.jpg",
         alt: "Maasai Ceremony",
         location: "Masai Mara, Kenya",
         category: "Culture",
         h: 260,
       },
       {
-        src: "https://images.unsplash.com/photo-1609198092458-38a293c7ac4b?w=900",
+        src: "https://i.pinimg.com/1200x/97/d0/5a/97d05abdeb44c63add9fc725123a9dac.jpg",
         alt: "Summit Glory",
         location: "Kilimanjaro, Tanzania",
         category: "Adventure",
         h: 360,
       },
       {
-        src: "https://images.unsplash.com/photo-1553775282-20af80779df7?w=900",
+        src: "https://i.pinimg.com/1200x/93/c0/f2/93c0f2b631667dfdb301b13ce2c58342.jpg",
         alt: "Savannah Sunset",
         location: "Serengeti, Tanzania",
         category: "Landscapes",
         h: 320,
       },
       {
-        src: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=900",
+        src: "https://i.pinimg.com/736x/d5/42/5e/d5425e1bcc16b46e4cf40cf2f420e0ef.jpg",
         alt: "Crater Highlands",
         location: "Ngorongoro, Tanzania",
         category: "Adventure",
@@ -1148,7 +1148,7 @@ const Home = () => {
         description:
           "Witness over two million wildebeest, zebras, and gazelles thundering across the plains in nature's most spectacular wildlife event. Our expert guides position you at the best river crossings and calving grounds for front-row seats to this ancient drama that has played out for millennia.",
         image:
-          "https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=1200",
+          "https://www.yourafricansafari.com/media/images/photos/2019/8/image_22741.jpg",
         stats: {
           Duration: "7–14 Days",
           Group: "Max 8 Guests",
@@ -1161,7 +1161,7 @@ const Home = () => {
         description:
           "Trek through emerald bamboo forests to sit just meters from a family of endangered mountain gorillas. With fewer than 1,000 remaining in the wild, this is one of the planet's most humbling and transformative wildlife encounters — a moment that will reshape your understanding of our connection to nature.",
         image:
-          "https://images.unsplash.com/photo-1580674287404-60e2e0fcb95e?w=1200",
+          "https://i.pinimg.com/736x/47/68/82/476882571830551aee93bee95882881c.jpg",
         stats: { Duration: "3–5 Days", Group: "Max 6 Guests", Rating: "5.0/5" },
       },
       {
@@ -1170,7 +1170,7 @@ const Home = () => {
         description:
           "Stand on the highest point in Africa at 5,895 meters as the sun rises over the continent. Our experienced mountain guides, premium equipment, and carefully planned acclimatization schedules ensure the highest summit success rates in the industry. This is more than a climb — it's a personal transformation.",
         image:
-          "https://images.unsplash.com/photo-1609198092458-38a293c7ac4b?w=1200",
+          "https://i.pinimg.com/1200x/02/d0/5f/02d05f9e9e112c1aeefc87aafdb77adf.jpg",
         stats: {
           Duration: "6–9 Days",
           Group: "Max 10 Guests",
@@ -3008,7 +3008,7 @@ const Home = () => {
 
       {/* ═══════ FINAL CTA ═══════ */}
       <ParallaxSection
-        image="https://i.pinimg.com/736x/b5/15/5f/b5155f7921d34e9d5cdfd5545cda2db8.jpg"
+        image="https://i.pinimg.com/1200x/e9/54/7b/e9547bbaf9b1f804746e812843f15d84.jpg"
         height="82vh"
         overlay="linear-gradient(135deg, rgba(2,44,34,.93) 0%, rgba(5,150,105,.8) 100%)"
       >

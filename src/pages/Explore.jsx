@@ -380,32 +380,32 @@ const WHY_ITEMS = [
 
 const PHOTO_MOSAIC = [
   {
-    src: 'https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=600&q=80',
+    src: 'https://i.pinimg.com/736x/97/eb/eb/97ebeb7dcf336ef09da93fc5b82ddca4.jpg',
     alt: 'Wildebeest migration across savanna',
     span: 'large',
   },
   {
-    src: 'https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=600&q=80',
+    src: 'https://i.pinimg.com/736x/3a/43/1a/3a431ae84e7a33b8f9c9148217a9e565.jpg',
     alt: 'Mountain gorilla in forest',
     span: 'small',
   },
   {
-    src: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80',
+    src: 'https://i.pinimg.com/736x/a9/17/2c/a9172c1dde8dffc71089d946b9f39fab.jpg',
     alt: 'Tropical beach with palm trees',
     span: 'small',
   },
   {
-    src: 'https://images.unsplash.com/photo-1551632811-561732d1e306?w=600&q=80',
+    src: 'https://i.pinimg.com/736x/2c/57/d1/2c57d115d74f1f79c19904ef9ee905ca.jpg',
     alt: 'Mountain landscape with clouds',
     span: 'medium',
   },
   {
-    src: 'https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=600&q=80',
+    src: 'https://i.pinimg.com/1200x/a6/54/92/a654922a354e2c6545a050c8115c2d8a.jpg',
     alt: 'Masai warrior at sunset',
     span: 'medium',
   },
   {
-    src: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=600&q=80',
+    src: 'https://i.pinimg.com/1200x/8f/bc/04/8fbc04bc4d47c8a6b1c6ce9c038f352b.jpg',
     alt: 'Safari vehicle and elephants',
     span: 'large',
   },
@@ -2075,6 +2075,12 @@ function Explore() {
                 <SlideshowCard
                   images={[
                     'https://i.pinimg.com/736x/93/6a/84/936a8464a479f3f955c9ec40cdd54f9b.jpg',
+                    'https://i.pinimg.com/1200x/a4/fd/0d/a4fd0d8ace7ed69162c5ef9d54e982f5.jpg',
+                    'https://i.pinimg.com/1200x/03/de/a7/03dea79b65be75f66457f6e1f4650d97.jpg',
+                    'https://i.pinimg.com/474x/96/99/da/9699dad536d1b8035c73b523da63b6ca.jpg',
+                    'https://i.pinimg.com/1200x/a4/fd/0d/a4fd0d8ace7ed69162c5ef9d54e982f5.jpg',
+                    'https://i.pinimg.com/1200x/03/de/a7/03dea79b65be75f66457f6e1f4650d97.jpg',
+                    'https://i.pinimg.com/474x/96/99/da/9699dad536d1b8035c73b523da63b6ca.jpg',
                     'https://i.pinimg.com/1200x/a4/fd/0d/a4fd0d8ace7ed69162c5ef9d54e982f5.jpg',
                     'https://i.pinimg.com/1200x/03/de/a7/03dea79b65be75f66457f6e1f4650d97.jpg',
                     'https://i.pinimg.com/474x/96/99/da/9699dad536d1b8035c73b523da63b6ca.jpg',

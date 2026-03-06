@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
+import { Link } from "react-router-dom"; // for routing
 
 const countries = [
   { name: "Rwanda", code: "rw" },
@@ -9,27 +10,53 @@ const countries = [
 ];
 
 export default function EastAfricaFlags() {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    const container = containerRef.current;
+
+    const handleMove = (e) => {
+      const x = (e.clientX / window.innerWidth - 0.5) * 20;
+      const y = (e.clientY / window.innerHeight - 0.5) * 10;
+      container.style.setProperty("--windX", `${x}deg`);
+      container.style.setProperty("--windY", `${y}deg`);
+    };
+
+    window.addEventListener("mousemove", handleMove);
+    return () => window.removeEventListener("mousemove", handleMove);
+  }, []);
+
   return (
-    <div className="page">
+    <div ref={containerRef} className="flags-section">
       <style>{styles}</style>
 
-      <div className="grid">
+      <div className="flags-container">
         {countries.map((country) => (
-          <div key={country.code} className="card">
-            <div className="flag-wrapper">
-              <div className="flag">
+          <Link
+            key={country.code}
+            to={`/country/${country.name.toLowerCase()}`}
+            className="flag-item"
+          >
+            <div className="flag-canvas">
+              <div className="flag-cloth">
                 <img
-                  src={`https://flagcdn.com/w320/${country.code}.svg`}
-                  srcSet={`https://flagcdn.com/w640/${country.code}.svg 2x`}
+                  src={`https://flagcdn.com/w640/${country.code}.png`}
+                  srcSet={`https://flagcdn.com/w1280/${country.code}.png 2x`}
                   alt={`Flag of ${country.name}`}
-                  loading="lazy"
-                  width="320"
-                  height="213"
                 />
+                {/* Ripple layers */}
+                <div className="ripple ripple1"></div>
+                <div className="ripple ripple2"></div>
+                <div className="ripple ripple3"></div>
+                {/* Moving light reflection */}
+                <div className="light"></div>
+                {/* Fabric grain */}
+                <div className="fabric"></div>
               </div>
             </div>
-            <span className="country-name">{country.name}</span>
-          </div>
+
+            <h3 className="country-label">{country.name}</h3>
+          </Link>
         ))}
       </div>
     </div>
@@ -37,184 +64,163 @@ export default function EastAfricaFlags() {
 }
 
 const styles = `
-  .page {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 2rem;
-    font-family: system-ui, -apple-system, 'Inter', sans-serif;
-    background: radial-gradient(circle at 20% 20%, #1f2a44 0%, #0b1220 60%),
-                linear-gradient(135deg, #0b1220, #111c36);
-  }
 
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 2rem;
-    max-width: 1200px;
-    width: 100%;
-  }
+/* SECTION */
+.flags-section {
+  --windX:0deg;
+  --windY:0deg;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:linear-gradient(135deg,#ffffff,#e6fdf2,#ffffff);
+  padding:4rem 2rem;
+  font-family:Inter,sans-serif;
+}
 
-  .card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
-    padding: 1.5rem;
-    border-radius: 1.5rem;
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
-  }
+/* GRID */
+.flags-container {
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:2.5rem;
+  max-width:1200px;
+  width:100%;
+}
 
-  .card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.15);
-  }
+/* FLAG ITEM */
+.flag-item {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:0.8rem;
+  text-decoration:none;
+  transition:transform 0.4s ease, box-shadow 0.4s ease;
+}
 
-  .flag-wrapper {
-    width: 100%;
-    max-width: 280px;
-    border-radius: 0.75rem;
-    overflow: hidden;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  }
+.flag-item:hover {
+  transform:translateY(-5px) scale(1.03);
+  box-shadow:0 18px 50px rgba(16,185,129,0.35),0 6px 18px rgba(0,0,0,0.18);
+}
 
-  .flag {
-    position: relative;
-    width: 100%;
-    padding-bottom: 66.25%; /* 1.5:1 aspect ratio (standard flag proportions) */
-    background: #f0f0f0;
-    overflow: hidden;
-    transform-origin: center;
-    animation: gentleWave 12s ease-in-out infinite;
-  }
+/* CANVAS */
+.flag-canvas {
+  perspective:1400px;
+  width:100%;
+  max-width:300px;
+}
 
-  .flag img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
+/* FLAG CLOTH */
+.flag-cloth {
+  position:relative;
+  width:100%;
+  padding-bottom:66%;
+  border-radius:12px;
+  overflow:hidden;
+  transform-origin:left;
+  animation:mainWave 3.2s ease-in-out infinite;
+  transform: rotateY(var(--windX)) rotateX(var(--windY));
+  box-shadow:0 12px 35px rgba(0,0,0,0.18);
+  transition:transform 0.3s ease;
+}
 
-  /* Enhanced lighting effect */
-  .flag::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(
-      115deg,
-      rgba(255, 255, 255, 0.3) 0%,
-      rgba(255, 255, 255, 0.1) 30%,
-      rgba(0, 0, 0, 0.2) 60%,
-      rgba(255, 255, 255, 0.15) 100%
-    );
-    mix-blend-mode: overlay;
-    pointer-events: none;
-    z-index: 2;
-    animation: lightSweep 8s linear infinite;
-  }
+.flag-cloth img {
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:1;
+}
 
-  /* Subtle ripple effect */
-  .flag::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-      90deg,
-      rgba(255, 255, 255, 0.03) 0px,
-      rgba(255, 255, 255, 0.03) 4px,
-      transparent 8px,
-      transparent 24px
-    );
-    opacity: 0.5;
-    pointer-events: none;
-    z-index: 2;
-    animation: rippleMove 10s ease-in-out infinite;
-  }
+/* RIPPLE LAYERS */
+.ripple {
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  mix-blend-mode:overlay;
+  z-index:2;
+}
 
-  @keyframes gentleWave {
-    0% {
-      transform: perspective(800px) rotateY(0deg) scale(1);
-    }
-    25% {
-      transform: perspective(800px) rotateY(4deg) scale(1.02);
-    }
-    50% {
-      transform: perspective(800px) rotateY(-3deg) scale(0.99);
-    }
-    75% {
-      transform: perspective(800px) rotateY(4deg) scale(1.02);
-    }
-    100% {
-      transform: perspective(800px) rotateY(0deg) scale(1);
-    }
-  }
+.ripple1 { background:linear-gradient(120deg,rgba(255,255,255,0.4),transparent 60%); animation:ripple1Anim 2.6s linear infinite; }
+.ripple2 { background:linear-gradient(140deg,rgba(0,0,0,0.25),transparent 70%); animation:ripple2Anim 3.3s linear infinite; }
+.ripple3 { background:linear-gradient(100deg,rgba(255,255,255,0.3),transparent 65%); animation:ripple3Anim 4s linear infinite; }
 
-  @keyframes lightSweep {
-    0% {
-      transform: translateX(-120%) skewX(-15deg);
-    }
-    100% {
-      transform: translateX(120%) skewX(-15deg);
-    }
-  }
+/* LIGHT REFLECTION */
+.light {
+  position:absolute;
+  inset:0;
+  background:linear-gradient(120deg,rgba(255,255,255,0.45),transparent 45%,rgba(0,0,0,0.25),transparent 70%);
+  mix-blend-mode:overlay;
+  animation:lightMove 3s linear infinite;
+  z-index:3;
+}
 
-  @keyframes rippleMove {
-    0% {
-      transform: translateX(0) translateY(0);
-    }
-    33% {
-      transform: translateX(-8px) translateY(-2px);
-    }
-    66% {
-      transform: translateX(4px) translateY(2px);
-    }
-    100% {
-      transform: translateX(0) translateY(0);
-    }
-  }
+/* FABRIC GRAIN */
+.fabric {
+  position:absolute;
+  inset:0;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,0.05),transparent 2px);
+  z-index:4;
+  pointer-events:none;
+}
 
-  .country-name {
-    color: rgba(255, 255, 255, 0.95);
-    font-size: 1.125rem;
-    font-weight: 500;
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-    margin-top: 0.5rem;
-  }
+/* COUNTRY LABEL */
+.country-label {
+  font-size:1.15rem;
+  font-weight:600;
+  letter-spacing:1px;
+  color:#065f46;
+  text-transform:uppercase;
+  transition:0.4s ease;
+  text-align:center;
+  text-shadow:0 2px 8px rgba(0,0,0,0.25);
+}
 
-  /* Responsive adjustments */
-  @media (max-width: 768px) {
-    .page {
-      padding: 1rem;
-    }
-    
-    .grid {
-      gap: 1rem;
-    }
-    
-    .country-name {
-      font-size: 1rem;
-    }
-  }
+.flag-item:hover .country-label {
+  color:#047857;
+  transform:translateY(-2px);
+  text-shadow:0 4px 12px rgba(16,185,129,0.45);
+}
 
-  /* Optional: Add a subtle loading animation for images */
-  .flag img {
-    transition: opacity 0.3s ease;
-    opacity: 0;
-  }
+/* MAIN FLAG WAVE */
+@keyframes mainWave {
+  0% { transform:rotateY(var(--windX)) skewX(0deg); }
+  25% { transform:rotateY(calc(var(--windX)-8deg)) skewX(1deg); }
+  50% { transform:rotateY(calc(var(--windX)+6deg)) skewX(-1deg); }
+  75% { transform:rotateY(calc(var(--windX)-6deg)) skewX(0.5deg); }
+  100% { transform:rotateY(var(--windX)) skewX(0deg); }
+}
 
-  .flag img[src] {
-    opacity: 1;
-  }
+/* RIPPLE ANIMATIONS */
+@keyframes ripple1Anim {0%{transform:translateX(-120%)}100%{transform:translateX(200%)}}
+@keyframes ripple2Anim {0%{transform:translateX(-150%)}100%{transform:translateX(180%)}}
+@keyframes ripple3Anim {0%{transform:translateX(-130%)}100%{transform:translateX(210%)}}
+
+/* LIGHT ANIMATION */
+@keyframes lightMove {0%{transform:translateX(-120%)}100%{transform:translateX(200%)}}
+
+/* RESPONSIVE DESIGN */
+
+/* Tablets */
+@media(max-width:1024px){
+  .flags-container {grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:2rem;}
+  .flag-canvas {max-width:280px;}
+  .country-label {font-size:1.05rem;}
+}
+
+/* Mobile */
+@media(max-width:768px){
+  .flags-container {grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:1.8rem;}
+  .flag-canvas {max-width:240px;}
+  .flag-item:hover {transform:scale(1.02) translateY(-3px);}
+  .country-label {font-size:1rem;}
+}
+
+/* Small mobile */
+@media(max-width:480px){
+  .flags-container {grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1.5rem;}
+  .flag-canvas {max-width:200px;}
+  .country-label {font-size:0.95rem;}
+}
+
 `;
