@@ -1,45 +1,108 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence, useInView } from 'framer-motion';
+import React, { useState, useRef, useEffect } from "react";
+import { motion, AnimatePresence, useInView } from "framer-motion";
 import {
-  FiMail, FiPhone, FiMapPin, FiClock, FiSend, FiMessageSquare,
-  FiCheckCircle, FiUser, FiAlertCircle, FiChevronDown,
-  FiCalendar, FiUsers, FiGlobe, FiStar, FiArrowRight, FiArrowLeft,
-  FiMessageCircle, FiHelpCircle, FiShield, FiHeadphones, FiX,
-} from 'react-icons/fi';
+  FiMail,
+  FiPhone,
+  FiMapPin,
+  FiClock,
+  FiSend,
+  FiMessageSquare,
+  FiCheckCircle,
+  FiUser,
+  FiAlertCircle,
+  FiChevronDown,
+  FiCalendar,
+  FiUsers,
+  FiGlobe,
+  FiStar,
+  FiArrowRight,
+  FiArrowLeft,
+  FiMessageCircle,
+  FiHelpCircle,
+  FiShield,
+  FiHeadphones,
+  FiX,
+} from "react-icons/fi";
 import {
-  FaFacebookF, FaInstagram, FaTwitter, FaYoutube,
-  FaWhatsapp, FaTiktok,
-} from 'react-icons/fa';
-import { HiSparkles } from 'react-icons/hi';
-import { BiSupport } from 'react-icons/bi';
-import { RiSendPlaneFill } from 'react-icons/ri';
-import herobg from '../assets/fabrice.jpg';
+  FaFacebookF,
+  FaInstagram,
+  FaTwitter,
+  FaYoutube,
+  FaWhatsapp,
+  FaTiktok,
+} from "react-icons/fa";
+import { HiSparkles } from "react-icons/hi";
+import { BiSupport } from "react-icons/bi";
+import { RiSendPlaneFill } from "react-icons/ri";
+import herobg from "../assets/fabrice.jpg";
 
 /* ══════════════════════════════
    VALIDATION
    ══════════════════════════════ */
 const rules = {
-  name: { required: true, minLength: 2, pattern: /^[a-zA-Z\s'-]+$/, msg: { required: 'Full name is required', minLength: 'At least 2 characters', pattern: 'Enter a valid name' } },
-  email: { required: true, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, msg: { required: 'Email is required', pattern: 'Enter a valid email' } },
-  phone: { pattern: /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/, msg: { pattern: 'Enter a valid phone number' } },
-  subject: { required: true, minLength: 5, msg: { required: 'Subject is required', minLength: 'At least 5 characters' } },
-  message: { required: true, minLength: 20, msg: { required: 'Message is required', minLength: 'At least 20 characters' } },
+  name: {
+    required: true,
+    minLength: 2,
+    pattern: /^[a-zA-Z\s'-]+$/,
+    msg: {
+      required: "Full name is required",
+      minLength: "At least 2 characters",
+      pattern: "Enter a valid name",
+    },
+  },
+  email: {
+    required: true,
+    pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    msg: { required: "Email is required", pattern: "Enter a valid email" },
+  },
+  phone: {
+    pattern: /^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/,
+    msg: { pattern: "Enter a valid phone number" },
+  },
+  subject: {
+    required: true,
+    minLength: 5,
+    msg: {
+      required: "Subject is required",
+      minLength: "At least 5 characters",
+    },
+  },
+  message: {
+    required: true,
+    minLength: 20,
+    msg: {
+      required: "Message is required",
+      minLength: "At least 20 characters",
+    },
+  },
 };
 const validate = (n, v) => {
-  const r = rules[n]; if (!r) return '';
+  const r = rules[n];
+  if (!r) return "";
   if (r.required && !v?.trim()) return r.msg.required;
   if (v && r.minLength && v.length < r.minLength) return r.msg.minLength;
   if (v && r.pattern && !r.pattern.test(v)) return r.msg.pattern;
-  return '';
+  return "";
 };
 
 /* ══════════════════════════════
    SCROLL SECTION WRAPPER
    ══════════════════════════════ */
-const ScrollReveal = ({ children, delay = 0, direction = 'up', className = '', style = {} }) => {
+const ScrollReveal = ({
+  children,
+  delay = 0,
+  direction = "up",
+  className = "",
+  style = {},
+}) => {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: '-60px' });
-  const dirs = { up: { y: 40 }, down: { y: -40 }, left: { x: -50 }, right: { x: 50 } };
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  const dirs = {
+    up: { y: 40 },
+    down: { y: -40 },
+    left: { x: -50 },
+    right: { x: 50 },
+  };
   return (
     <motion.div
       ref={ref}
@@ -57,30 +120,66 @@ const ScrollReveal = ({ children, delay = 0, direction = 'up', className = '', s
 /* ══════════════════════════════
    FIELD COMPONENTS
    ══════════════════════════════ */
-const FieldInput = ({ name, label, icon: Icon, type = 'text', placeholder, required, value, onChange, onBlur, error, touched, full }) => {
+const FieldInput = ({
+  name,
+  label,
+  icon: Icon,
+  type = "text",
+  placeholder,
+  required,
+  value,
+  onChange,
+  onBlur,
+  error,
+  touched,
+  full,
+}) => {
   const [focused, setFocused] = useState(false);
   const hasErr = touched && error;
   const valid = touched && !error && value;
   return (
-    <div className={`ct-field ${full ? 'ct-field--full' : ''}`}>
-      <label className="ct-field-label" style={{ color: hasErr ? '#ef4444' : focused ? '#059669' : undefined }}>
-        {Icon && <Icon size={13} style={{ opacity: .6 }} />} {label}
+    <div className={`ct-field ${full ? "ct-field--full" : ""}`}>
+      <label
+        className="ct-field-label"
+        style={{ color: hasErr ? "#ef4444" : focused ? "#059669" : undefined }}
+      >
+        {Icon && <Icon size={13} style={{ opacity: 0.6 }} />} {label}
         {required && <span className="ct-req">*</span>}
       </label>
-      <div className={`ct-field-wrap ${focused ? 'focused' : ''}`}>
-        <input type={type} name={name} value={value} placeholder={placeholder}
+      <div className={`ct-field-wrap ${focused ? "focused" : ""}`}>
+        <input
+          type={type}
+          name={name}
+          value={value}
+          placeholder={placeholder}
           onChange={onChange}
           onFocus={() => setFocused(true)}
-          onBlur={e => { setFocused(false); onBlur?.(e); }}
-          className={`ct-input ${hasErr ? 'err' : valid ? 'ok' : ''}`}
+          onBlur={(e) => {
+            setFocused(false);
+            onBlur?.(e);
+          }}
+          className={`ct-input ${hasErr ? "err" : valid ? "ok" : ""}`}
         />
         <div className="ct-underline" />
-        {hasErr && <span className="ct-status"><FiAlertCircle size={17} color="#ef4444" /></span>}
-        {valid && <span className="ct-status"><FiCheckCircle size={17} color="#059669" /></span>}
+        {hasErr && (
+          <span className="ct-status">
+            <FiAlertCircle size={17} color="#ef4444" />
+          </span>
+        )}
+        {valid && (
+          <span className="ct-status">
+            <FiCheckCircle size={17} color="#059669" />
+          </span>
+        )}
       </div>
       <AnimatePresence>
         {hasErr && (
-          <motion.div className="ct-field-err" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
+          <motion.div
+            className="ct-field-err"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+          >
             <FiAlertCircle size={12} /> {error}
           </motion.div>
         )}
@@ -89,24 +188,50 @@ const FieldInput = ({ name, label, icon: Icon, type = 'text', placeholder, requi
   );
 };
 
-const FieldSelect = ({ name, label, icon: Icon, placeholder, options, value, onChange, onBlur, full }) => {
+const FieldSelect = ({
+  name,
+  label,
+  icon: Icon,
+  placeholder,
+  options,
+  value,
+  onChange,
+  onBlur,
+  full,
+}) => {
   const [focused, setFocused] = useState(false);
   return (
-    <div className={`ct-field ${full ? 'ct-field--full' : ''}`}>
-      <label className="ct-field-label" style={{ color: focused ? '#059669' : undefined }}>
-        {Icon && <Icon size={13} style={{ opacity: .6 }} />} {label}
+    <div className={`ct-field ${full ? "ct-field--full" : ""}`}>
+      <label
+        className="ct-field-label"
+        style={{ color: focused ? "#059669" : undefined }}
+      >
+        {Icon && <Icon size={13} style={{ opacity: 0.6 }} />} {label}
       </label>
-      <div className={`ct-field-wrap ${focused ? 'focused' : ''}`}>
-        <select name={name} value={value} onChange={onChange}
+      <div className={`ct-field-wrap ${focused ? "focused" : ""}`}>
+        <select
+          name={name}
+          value={value}
+          onChange={onChange}
           onFocus={() => setFocused(true)}
-          onBlur={e => { setFocused(false); onBlur?.(e); }}
+          onBlur={(e) => {
+            setFocused(false);
+            onBlur?.(e);
+          }}
           className="ct-select"
         >
           <option value="">{placeholder}</option>
-          {options.map((o, i) => <option key={i} value={typeof o === 'string' ? o : o.value}>{typeof o === 'string' ? o : o.label}</option>)}
+          {options.map((o, i) => (
+            <option key={i} value={typeof o === "string" ? o : o.value}>
+              {typeof o === "string" ? o : o.label}
+            </option>
+          ))}
         </select>
         <div className="ct-underline" />
-        <span className="ct-sel-arrow" style={{ color: focused ? '#059669' : '#94a3b8' }}>
+        <span
+          className="ct-sel-arrow"
+          style={{ color: focused ? "#059669" : "#94a3b8" }}
+        >
           <FiChevronDown size={18} />
         </span>
       </div>
@@ -114,34 +239,75 @@ const FieldSelect = ({ name, label, icon: Icon, placeholder, options, value, onC
   );
 };
 
-const FieldTextarea = ({ name, label, placeholder, required, maxLength = 2000, value, onChange, onBlur, error, touched, full }) => {
+const FieldTextarea = ({
+  name,
+  label,
+  placeholder,
+  required,
+  maxLength = 2000,
+  value,
+  onChange,
+  onBlur,
+  error,
+  touched,
+  full,
+}) => {
   const [focused, setFocused] = useState(false);
   const hasErr = touched && error;
   const valid = touched && !error && value;
   const ct = value?.length || 0;
   const pct = (ct / maxLength) * 100;
   return (
-    <div className={`ct-field ${full ? 'ct-field--full' : ''}`}>
-      <label className="ct-field-label" style={{ color: hasErr ? '#ef4444' : focused ? '#059669' : undefined }}>
-        <FiMessageSquare size={13} style={{ opacity: .6 }} /> {label}
+    <div className={`ct-field ${full ? "ct-field--full" : ""}`}>
+      <label
+        className="ct-field-label"
+        style={{ color: hasErr ? "#ef4444" : focused ? "#059669" : undefined }}
+      >
+        <FiMessageSquare size={13} style={{ opacity: 0.6 }} /> {label}
         {required && <span className="ct-req">*</span>}
       </label>
-      <div className={`ct-field-wrap ${focused ? 'focused' : ''}`}>
-        <textarea name={name} value={value} placeholder={placeholder} maxLength={maxLength}
+      <div className={`ct-field-wrap ${focused ? "focused" : ""}`}>
+        <textarea
+          name={name}
+          value={value}
+          placeholder={placeholder}
+          maxLength={maxLength}
           onChange={onChange}
           onFocus={() => setFocused(true)}
-          onBlur={e => { setFocused(false); onBlur?.(e); }}
-          className={`ct-textarea ${hasErr ? 'err' : valid ? 'ok' : ''}`}
+          onBlur={(e) => {
+            setFocused(false);
+            onBlur?.(e);
+          }}
+          className={`ct-textarea ${hasErr ? "err" : valid ? "ok" : ""}`}
         />
         <div className="ct-underline" />
         <div className="ct-char">
-          <div className="ct-char-track"><div className="ct-char-fill" style={{ width: `${pct}%`, background: pct > 90 ? '#ef4444' : pct > 70 ? '#f59e0b' : '#059669' }} /></div>
-          <span className="ct-char-num" style={{ color: pct > 90 ? '#ef4444' : '#94a3b8' }}>{ct}/{maxLength}</span>
+          <div className="ct-char-track">
+            <div
+              className="ct-char-fill"
+              style={{
+                width: `${pct}%`,
+                background:
+                  pct > 90 ? "#ef4444" : pct > 70 ? "#f59e0b" : "#059669",
+              }}
+            />
+          </div>
+          <span
+            className="ct-char-num"
+            style={{ color: pct > 90 ? "#ef4444" : "#94a3b8" }}
+          >
+            {ct}/{maxLength}
+          </span>
         </div>
       </div>
       <AnimatePresence>
         {hasErr && (
-          <motion.div className="ct-field-err" initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}>
+          <motion.div
+            className="ct-field-err"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+          >
             <FiAlertCircle size={12} /> {error}
           </motion.div>
         )}
@@ -155,18 +321,39 @@ const FieldTextarea = ({ name, label, placeholder, required, maxLength = 2000, v
    ══════════════════════════════ */
 const stepVariants = [
   // Step 1: slide from right + fade
-  { initial: { opacity: 0, x: 60 }, animate: { opacity: 1, x: 0 }, exit: { opacity: 0, x: -60 } },
+  {
+    initial: { opacity: 0, x: 60 },
+    animate: { opacity: 1, x: 0 },
+    exit: { opacity: 0, x: -60 },
+  },
   // Step 2: scale up + fade
-  { initial: { opacity: 0, scale: 0.88, y: 30 }, animate: { opacity: 1, scale: 1, y: 0 }, exit: { opacity: 0, scale: 0.88, y: -30 } },
+  {
+    initial: { opacity: 0, scale: 0.88, y: 30 },
+    animate: { opacity: 1, scale: 1, y: 0 },
+    exit: { opacity: 0, scale: 0.88, y: -30 },
+  },
   // Step 3: slide from bottom + rotate subtle
-  { initial: { opacity: 0, y: 50, rotateX: 8 }, animate: { opacity: 1, y: 0, rotateX: 0 }, exit: { opacity: 0, y: -40, rotateX: -6 } },
+  {
+    initial: { opacity: 0, y: 50, rotateX: 8 },
+    animate: { opacity: 1, y: 0, rotateX: 0 },
+    exit: { opacity: 0, y: -40, rotateX: -6 },
+  },
 ];
 
 /* ══════════════════════════════
    MAIN CONTACT COMPONENT
    ══════════════════════════════ */
 const Contact = () => {
-  const [form, setForm] = useState({ name: '', email: '', phone: '', subject: '', message: '', tripType: '', travelDate: '', travelers: '' });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    subject: "",
+    message: "",
+    tripType: "",
+    travelDate: "",
+    travelers: "",
+  });
   const [touched, setTouched] = useState({});
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -181,97 +368,180 @@ const Contact = () => {
 
   const formRef = useRef(null);
   const faqRef = useRef(null);
-  const faqInView = useInView(faqRef, { once: true, margin: '-60px' });
+  const faqInView = useInView(faqRef, { once: true, margin: "-60px" });
 
-  const handleChange = e => {
+  const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm(p => ({ ...p, [name]: value }));
-    if (touched[name]) setErrors(p => ({ ...p, [name]: validate(name, value) }));
+    setForm((p) => ({ ...p, [name]: value }));
+    if (touched[name])
+      setErrors((p) => ({ ...p, [name]: validate(name, value) }));
   };
-  const handleBlur = e => {
+  const handleBlur = (e) => {
     const { name, value } = e.target;
-    setTouched(p => ({ ...p, [name]: true }));
-    setErrors(p => ({ ...p, [name]: validate(name, value) }));
+    setTouched((p) => ({ ...p, [name]: true }));
+    setErrors((p) => ({ ...p, [name]: validate(name, value) }));
   };
 
   // Step validation
   const stepFields = [
-    ['name', 'email', 'phone'],
-    ['tripType', 'travelDate', 'travelers'],
-    ['subject', 'message'],
+    ["name", "email", "phone"],
+    ["tripType", "travelDate", "travelers"],
+    ["subject", "message"],
   ];
   const validateStep = (s) => {
     const errs = {};
-    stepFields[s].forEach(f => {
+    stepFields[s].forEach((f) => {
       const err = validate(f, form[f]);
       if (err) errs[f] = err;
     });
-    setErrors(p => ({ ...p, ...errs }));
+    setErrors((p) => ({ ...p, ...errs }));
     const t = {};
-    stepFields[s].forEach(f => t[f] = true);
-    setTouched(p => ({ ...p, ...t }));
+    stepFields[s].forEach((f) => (t[f] = true));
+    setTouched((p) => ({ ...p, ...t }));
     return Object.keys(errs).length === 0;
   };
 
   const nextStep = () => {
     if (!validateStep(step)) return;
     setDirection(1);
-    setStep(s => Math.min(s + 1, 2));
+    setStep((s) => Math.min(s + 1, 2));
   };
   const prevStep = () => {
     setDirection(-1);
-    setStep(s => Math.max(s - 1, 0));
+    setStep((s) => Math.max(s - 1, 0));
   };
 
-  const handleSubmit = async e => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateStep(2)) return;
-    setSubmitting(true); setProgress(0);
-    const iv = setInterval(() => setProgress(p => p >= 90 ? 90 : p + 10), 120);
-    await new Promise(r => setTimeout(r, 2200));
-    clearInterval(iv); setProgress(100);
-    setTimeout(() => { setSubmitting(false); setSubmitted(true); }, 400);
+    setSubmitting(true);
+    setProgress(0);
+    const iv = setInterval(
+      () => setProgress((p) => (p >= 90 ? 90 : p + 10)),
+      120,
+    );
+    await new Promise((r) => setTimeout(r, 2200));
+    clearInterval(iv);
+    setProgress(100);
+    setTimeout(() => {
+      setSubmitting(false);
+      setSubmitted(true);
+    }, 400);
   };
 
   const resetForm = () => {
-    setSubmitted(false); setStep(0); setDirection(1); setProgress(0);
-    setForm({ name: '', email: '', phone: '', subject: '', message: '', tripType: '', travelDate: '', travelers: '' });
-    setTouched({}); setErrors({});
+    setSubmitted(false);
+    setStep(0);
+    setDirection(1);
+    setProgress(0);
+    setForm({
+      name: "",
+      email: "",
+      phone: "",
+      subject: "",
+      message: "",
+      tripType: "",
+      travelDate: "",
+      travelers: "",
+    });
+    setTouched({});
+    setErrors({});
   };
 
   const contactCards = [
-    { icon: FiMapPin, title: 'Visit Our Office', lines: ['Altuvera House, Safari Way', 'Westlands, Nairobi, Kenya'] },
-    { icon: FiPhone, title: 'Call Us', lines: ['+254 700 123 456', '+254 733 987 654'] },
-    { icon: FiMail, title: 'Email Us', lines: ['hello@altuvera.com', 'bookings@altuvera.com'] },
-    { icon: FiClock, title: 'Working Hours', lines: ['Mon – Fri: 8 AM – 6 PM EAT', 'Sat: 9 AM – 2 PM EAT'] },
+    {
+      icon: FiMapPin,
+      title: "Visit Our Office",
+      lines: ["Altuvera House, Safari Way", "Westlands, Nairobi, Kenya"],
+    },
+    {
+      icon: FiPhone,
+      title: "Call Us",
+      lines: ["+254 700 123 456", "+254 733 987 654"],
+    },
+    {
+      icon: FiMail,
+      title: "Email Us",
+      lines: ["hello@altuvera.com", "bookings@altuvera.com"],
+    },
+    {
+      icon: FiClock,
+      title: "Working Hours",
+      lines: ["Mon – Fri: 8 AM – 6 PM EAT", "Sat: 9 AM – 2 PM EAT"],
+    },
   ];
 
-  const tripTypes = ['🦁 Safari Adventure', '⛰️ Mountain Trekking', '🦍 Gorilla Trekking', '🏖️ Beach Holiday', '🎭 Cultural Tour', '📷 Photography Safari', '💕 Honeymoon', '👨‍👩‍👧‍👦 Family Trip'];
-  const travelerOpts = ['1 — Solo', '2 — Couple / Duo', '3–4 — Small Group', '5–8 — Group', '9+ — Large Group'];
+  const tripTypes = [
+    "🦁 Safari Adventure",
+    "⛰️ Mountain Trekking",
+    "🦍 Gorilla Trekking",
+    "🏖️ Beach Holiday",
+    "🎭 Cultural Tour",
+    "📷 Photography Safari",
+    "💕 Honeymoon",
+    "👨‍👩‍👧‍👦 Family Trip",
+  ];
+  const travelerOpts = [
+    "1 — Solo",
+    "2 — Couple / Duo",
+    "3–4 — Small Group",
+    "5–8 — Group",
+    "9+ — Large Group",
+  ];
 
   const socials = [
-    { icon: FaFacebookF, label: 'Facebook', url: '#' },
-    { icon: FaInstagram, label: 'Instagram', url: '#' },
-    { icon: FaTwitter, label: 'Twitter', url: '#' },
-    { icon: FaYoutube, label: 'YouTube', url: '#' },
-    { icon: FaWhatsapp, label: 'WhatsApp', url: '#' },
-    { icon: FaTiktok, label: 'TikTok', url: '#' },
+    { icon: FaFacebookF, label: "Facebook", url: "#" },
+    { icon: FaInstagram, label: "Instagram", url: "#" },
+    { icon: FaTwitter, label: "Twitter", url: "#" },
+    { icon: FaYoutube, label: "YouTube", url: "#" },
+    { icon: FaWhatsapp, label: "WhatsApp", url: "#" },
+    { icon: FaTiktok, label: "TikTok", url: "#" },
   ];
 
   const faqs = [
-    { q: 'How far in advance should I book my safari?', a: 'We recommend 3–6 months ahead, especially for peak season (June–October, December–February). This ensures the best lodge availability and gorilla permits.' },
-    { q: 'What is included in your safari packages?', a: 'Accommodation, all meals, game drives, park fees, airport transfers, and a professional guide. International flights are usually excluded.' },
-    { q: 'Is it safe to go on safari in East Africa?', a: 'Absolutely. East Africa has a strong tourism safety record. Our experienced guides and vetted partners ensure your wellbeing throughout.' },
-    { q: 'Can you build a fully custom itinerary?', a: "Yes — that's our specialty. Share your interests, dates, and budget and we'll craft a bespoke journey for you." },
+    {
+      q: "How far in advance should I book my safari?",
+      a: "We recommend 3–6 months ahead, especially for peak season (June–October, December–February). This ensures the best lodge availability and gorilla permits.",
+    },
+    {
+      q: "What is included in your safari packages?",
+      a: "Accommodation, all meals, game drives, park fees, airport transfers, and a professional guide. International flights are usually excluded.",
+    },
+    {
+      q: "Is it safe to go on safari in East Africa?",
+      a: "Absolutely. East Africa has a strong tourism safety record. Our experienced guides and vetted partners ensure your wellbeing throughout.",
+    },
+    {
+      q: "Can you build a fully custom itinerary?",
+      a: "Yes — that's our specialty. Share your interests, dates, and budget and we'll craft a bespoke journey for you.",
+    },
   ];
 
   const quickChannels = [
-    { icon: FaWhatsapp, title: 'WhatsApp', sub: 'Chat instantly', detail: '+254 700 123 456', href: 'https://wa.me/254700123456' },
-    { icon: FiPhone, title: 'Call Us', sub: 'Speak with an expert', detail: '+254 700 123 456', href: 'tel:+254700123456' },
-    { icon: FiMail, title: 'Email', sub: 'Get detailed info', detail: 'hello@altuvera.com', href: 'mailto:hello@altuvera.com' },
+    {
+      icon: FaWhatsapp,
+      title: "WhatsApp",
+      sub: "Chat instantly",
+      detail: "+254 700 123 456",
+      href: "https://wa.me/254700123456",
+    },
+    {
+      icon: FiPhone,
+      title: "Call Us",
+      sub: "Speak with an expert",
+      detail: "+254 700 123 456",
+      href: "tel:+254700123456",
+    },
+    {
+      icon: FiMail,
+      title: "Email",
+      sub: "Get detailed info",
+      detail: "hello@altuvera.com",
+      href: "mailto:hello@altuvera.com",
+    },
   ];
 
-  const stepLabels = ['Personal Info', 'Trip Details', 'Your Message'];
+  const stepLabels = ["Personal Info", "Trip Details", "Your Message"];
   const stepIcons = [FiUser, FiGlobe, FiMessageSquare];
 
   return (
@@ -284,7 +554,7 @@ const Contact = () => {
 /* ═══ HERO ═══ */
 .ct-hero{position:relative;min-height:72vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
 .ct-hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;will-change:transform}
-.ct-hero-overlay{position:absolute;inset:0;background:linear-gradient(170deg,rgba(4,78,59,.82) 0%,rgba(5,150,105,.68) 50%,rgba(16,185,129,.55) 100%)}
+.ct-hero-overlay{position:absolute;inset:0;background:linear-gradient(170deg,rgba(249, 255, 249, 0.24) 0%,rgba(5,150,105,.68) 50%,rgba(16,185,129,.55) 100%)}
 .ct-hero-inner{position:relative;z-index:2;text-align:center;padding:0 24px;max-width:800px}
 .ct-hero-badge{display:inline-flex;align-items:center;gap:8px;padding:9px 22px;background:rgba(255,255,255,.1);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.15);border-radius:50px;font-size:13px;font-weight:600;color:#d1fae5;margin-bottom:26px}
 .ct-hero-title{font-family:'Playfair Display',serif;font-size:clamp(34px,7vw,66px);font-weight:800;color:#fff;line-height:1.08;margin-bottom:22px;letter-spacing:-.5px}
@@ -525,37 +795,47 @@ const Contact = () => {
           style={{ backgroundImage: `url(${herobg})` }}
           initial={{ scale: 1.12 }}
           animate={{ scale: 1 }}
-          transition={{ duration: 12, ease: 'easeOut' }}
+          transition={{ duration: 12, ease: "easeOut" }}
         />
         <div className="ct-hero-overlay" />
 
         <div className="ct-hero-inner">
-          <motion.div className="ct-hero-badge"
-            initial={{ opacity: 0, y: -18 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: .3, duration: .65 }}
+          <motion.div
+            className="ct-hero-badge"
+            initial={{ opacity: 0, y: -18 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.65 }}
           >
             <HiSparkles size={15} color="#34d399" />
             Your Safari Adventure Starts Here
           </motion.div>
 
-          <motion.h1 className="ct-hero-title"
-            initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: .4, duration: .75 }}
+          <motion.h1
+            className="ct-hero-title"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.75 }}
           >
-            Let's Plan Your<br /><em>Dream Safari</em>
+            Let's Plan Your
+            <br />
+            <em>Dream Safari</em>
           </motion.h1>
 
-          <motion.p className="ct-hero-desc"
-            initial={{ opacity: 0, y: 26 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: .5, duration: .7 }}
+          <motion.p
+            className="ct-hero-desc"
+            initial={{ opacity: 0, y: 26 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.7 }}
           >
             Connect with our expert team and let us craft an unforgettable
             African adventure tailored just for you.
           </motion.p>
 
-          <motion.div className="ct-hero-btns"
-            initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: .6, duration: .7 }}
+          <motion.div
+            className="ct-hero-btns"
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6, duration: 0.7 }}
           >
             <a href="#contact-form" className="ct-btn ct-btn--white">
               <FiSend size={16} /> Send Message
@@ -566,13 +846,15 @@ const Contact = () => {
           </motion.div>
         </div>
 
-        <motion.div className="ct-hero-scroll"
+        <motion.div
+          className="ct-hero-scroll"
           animate={{ y: [0, 8, 0] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
         >
           <div className="ct-scroll-pill">
-            <motion.div className="ct-scroll-dot"
-              animate={{ y: [0, 12, 0], opacity: [1, .3, 1] }}
+            <motion.div
+              className="ct-scroll-dot"
+              animate={{ y: [0, 12, 0], opacity: [1, 0.3, 1] }}
               transition={{ duration: 1.8, repeat: Infinity }}
             />
           </div>
@@ -584,37 +866,62 @@ const Contact = () => {
         <div className="ct-wrap">
           <ScrollReveal>
             <div className="ct-hdr">
-              <div className="ct-badge"><FiMessageSquare size={14} /> Get In Touch</div>
-              <h2 className="ct-title ct-title--dark">We'd Love to <em>Hear From You</em></h2>
-              <p className="ct-subtitle">Have questions about your dream safari? Our Africa travel experts are here to help.</p>
+              <div className="ct-badge">
+                <FiMessageSquare size={14} /> Get In Touch
+              </div>
+              <h2 className="ct-title ct-title--dark">
+                We'd Love to <em>Hear From You</em>
+              </h2>
+              <p className="ct-subtitle">
+                Have questions about your dream safari? Our Africa travel
+                experts are here to help.
+              </p>
             </div>
           </ScrollReveal>
 
           <div className="ct-grid">
             {/* ── LEFT: Info ── */}
-            <ScrollReveal direction="left" delay={.1}>
+            <ScrollReveal direction="left" delay={0.1}>
               <div className="ct-info">
                 <h3 className="ct-info-title">Contact Information</h3>
-                <p className="ct-info-desc">Reach out through any channel. We're here to plan your perfect adventure.</p>
+                <p className="ct-info-desc">
+                  Reach out through any channel. We're here to plan your perfect
+                  adventure.
+                </p>
 
                 {contactCards.map((c, i) => (
-                  <ScrollReveal key={i} delay={.15 + i * .06}>
+                  <ScrollReveal key={i} delay={0.15 + i * 0.06}>
                     <div className="ct-card">
-                      <div className="ct-card-icon"><c.icon size={20} /></div>
+                      <div className="ct-card-icon">
+                        <c.icon size={20} />
+                      </div>
                       <div>
                         <div className="ct-card-title">{c.title}</div>
-                        {c.lines.map((l, j) => <div key={j} className="ct-card-line">{l}</div>)}
+                        {c.lines.map((l, j) => (
+                          <div key={j} className="ct-card-line">
+                            {l}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </ScrollReveal>
                 ))}
 
-                <ScrollReveal delay={.45}>
+                <ScrollReveal delay={0.45}>
                   <div className="ct-socials">
-                    <div className="ct-socials-title">Follow Our Adventures</div>
+                    <div className="ct-socials-title">
+                      Follow Our Adventures
+                    </div>
                     <div className="ct-socials-row">
                       {socials.map((s, i) => (
-                        <a key={i} href={s.url} target="_blank" rel="noopener noreferrer" title={s.label} className="ct-social">
+                        <a
+                          key={i}
+                          href={s.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={s.label}
+                          className="ct-social"
+                        >
                           <s.icon />
                         </a>
                       ))}
@@ -625,34 +932,64 @@ const Contact = () => {
             </ScrollReveal>
 
             {/* ── RIGHT: Multi-Step Form ── */}
-            <ScrollReveal direction="right" delay={.15}>
+            <ScrollReveal direction="right" delay={0.15}>
               <div className="ct-form-card" ref={formRef}>
                 <AnimatePresence mode="wait">
                   {submitted ? (
-                    <motion.div key="done" className="ct-success"
-                      initial={{ opacity: 0, scale: .9 }} animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0 }} transition={{ duration: .5 }}
+                    <motion.div
+                      key="done"
+                      className="ct-success"
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.5 }}
                     >
-                      <motion.div className="ct-success-icon"
-                        initial={{ scale: 0 }} animate={{ scale: 1 }}
-                        transition={{ type: 'spring', stiffness: 180, delay: .2 }}
+                      <motion.div
+                        className="ct-success-icon"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 180,
+                          delay: 0.2,
+                        }}
                       >
-                        <motion.div initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }}
-                          transition={{ delay: .45, type: 'spring' }}
+                        <motion.div
+                          initial={{ scale: 0, rotate: -180 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ delay: 0.45, type: "spring" }}
                         >
                           <FiCheckCircle size={44} color="#fff" />
                         </motion.div>
                       </motion.div>
                       <h3 className="ct-success-title">Message Sent! 🎉</h3>
-                      <p className="ct-success-text">Our travel experts will review your inquiry and respond within 24 hours.</p>
-                      <div className="ct-success-email"><small>📧 Confirmation sent to:</small><strong>{form.email}</strong></div>
+                      <p className="ct-success-text">
+                        Our travel experts will review your inquiry and respond
+                        within 24 hours.
+                      </p>
+                      <div className="ct-success-email">
+                        <small>📧 🍭 Message Conveyed to:
+                        </small>
+                        <strong>{form.email}</strong>
+                      </div>
                       <div className="ct-success-btns">
-                        <button className="ct-btn ct-btn--green" onClick={resetForm}><FiSend size={15} /> Send Another</button>
-                        <a href="/" className="ct-btn ct-btn--outline"><FiArrowRight size={15} /> Explore Safaris</a>
+                        <button
+                          className="ct-btn ct-btn--green"
+                          onClick={resetForm}
+                        >
+                          <FiSend size={15} /> Send Another
+                        </button>
+                        <a href="/" className="ct-btn ct-btn--outline">
+                          <FiArrowRight size={15} /> Explore Safaris
+                        </a>
                       </div>
                     </motion.div>
                   ) : (
-                    <motion.div key="form" initial={{ opacity: 1 }} exit={{ opacity: 0, y: -16 }}>
+                    <motion.div
+                      key="form"
+                      initial={{ opacity: 1 }}
+                      exit={{ opacity: 0, y: -16 }}
+                    >
                       {/* Step Indicator */}
                       <div style={{ marginBottom: 8 }}>
                         <div className="ct-steps">
@@ -662,14 +999,27 @@ const Contact = () => {
                             const isDone = step > i;
                             return (
                               <div className="ct-step-item" key={i}>
-                                {i > 0 && <div className={`ct-step-line ${step >= i ? 'filled' : ''}`} />}
+                                {i > 0 && (
+                                  <div
+                                    className={`ct-step-line ${step >= i ? "filled" : ""}`}
+                                  />
+                                )}
                                 <motion.div
-                                  className={`ct-step-circle ${isActive ? 'active' : isDone ? 'done' : ''}`}
-                                  whileTap={{ scale: .92 }}
-                                  onClick={() => { if (isDone) { setDirection(i < step ? -1 : 1); setStep(i); } }}
+                                  className={`ct-step-circle ${isActive ? "active" : isDone ? "done" : ""}`}
+                                  whileTap={{ scale: 0.92 }}
+                                  onClick={() => {
+                                    if (isDone) {
+                                      setDirection(i < step ? -1 : 1);
+                                      setStep(i);
+                                    }
+                                  }}
                                   layout
                                 >
-                                  {isDone ? <FiCheckCircle size={16} /> : <Icon size={16} />}
+                                  {isDone ? (
+                                    <FiCheckCircle size={16} />
+                                  ) : (
+                                    <Icon size={16} />
+                                  )}
                                 </motion.div>
                               </div>
                             );
@@ -677,7 +1027,14 @@ const Contact = () => {
                         </div>
                         <div className="ct-step-labels">
                           {stepLabels.map((lbl, i) => (
-                            <span key={i} className={step === i ? 'active' : step > i ? 'done' : ''}>{lbl}</span>
+                            <span
+                              key={i}
+                              className={
+                                step === i ? "active" : step > i ? "done" : ""
+                              }
+                            >
+                              {lbl}
+                            </span>
                           ))}
                         </div>
                       </div>
@@ -687,77 +1044,165 @@ const Contact = () => {
                         <div className="ct-form-body">
                           <AnimatePresence mode="wait" custom={direction}>
                             {step === 0 && (
-                              <motion.div key="s0" className="ct-form-step"
+                              <motion.div
+                                key="s0"
+                                className="ct-form-step"
                                 initial={stepVariants[0].initial}
                                 animate={stepVariants[0].animate}
                                 exit={stepVariants[0].exit}
-                                transition={{ duration: .45, ease: [.4, 0, .2, 1] }}
+                                transition={{
+                                  duration: 0.45,
+                                  ease: [0.4, 0, 0.2, 1],
+                                }}
                               >
                                 <div className="ct-step-heading">
                                   <h4>👤 Personal Information</h4>
-                                  <p>Tell us who you are so we can personalize your experience.</p>
+                                  <p>
+                                    Tell us who you are so we can personalize
+                                    your experience.
+                                  </p>
                                 </div>
                                 <div className="ct-form-row">
-                                  <FieldInput name="name" label="Full Name" icon={FiUser} placeholder="John Smith" required
-                                    value={form.name} onChange={handleChange} onBlur={handleBlur}
-                                    error={errors.name} touched={touched.name} full
+                                  <FieldInput
+                                    name="name"
+                                    label="Full Name"
+                                    icon={FiUser}
+                                    placeholder="John Smith"
+                                    required
+                                    value={form.name}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    error={errors.name}
+                                    touched={touched.name}
+                                    full
                                   />
-                                  <FieldInput name="email" label="Email Address" icon={FiMail} type="email" placeholder="john@example.com" required
-                                    value={form.email} onChange={handleChange} onBlur={handleBlur}
-                                    error={errors.email} touched={touched.email}
+                                  <FieldInput
+                                    name="email"
+                                    label="Email Address"
+                                    icon={FiMail}
+                                    type="email"
+                                    placeholder="john@example.com"
+                                    required
+                                    value={form.email}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    error={errors.email}
+                                    touched={touched.email}
                                   />
-                                  <FieldInput name="phone" label="Phone Number" icon={FiPhone} type="tel" placeholder="+1 234 567 8900"
-                                    value={form.phone} onChange={handleChange} onBlur={handleBlur}
-                                    error={errors.phone} touched={touched.phone}
+                                  <FieldInput
+                                    name="phone"
+                                    label="Phone Number"
+                                    icon={FiPhone}
+                                    type="tel"
+                                    placeholder="+1 234 567 8900"
+                                    value={form.phone}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    error={errors.phone}
+                                    touched={touched.phone}
                                   />
                                 </div>
                               </motion.div>
                             )}
 
                             {step === 1 && (
-                              <motion.div key="s1" className="ct-form-step"
+                              <motion.div
+                                key="s1"
+                                className="ct-form-step"
                                 initial={stepVariants[1].initial}
                                 animate={stepVariants[1].animate}
                                 exit={stepVariants[1].exit}
-                                transition={{ duration: .5, ease: [.4, 0, .2, 1] }}
+                                transition={{
+                                  duration: 0.5,
+                                  ease: [0.4, 0, 0.2, 1],
+                                }}
                               >
                                 <div className="ct-step-heading">
                                   <h4>🌍 Trip Details</h4>
-                                  <p>Help us understand your dream adventure.</p>
+                                  <p>
+                                    Help us understand your dream adventure.
+                                  </p>
                                 </div>
                                 <div className="ct-form-row">
-                                  <FieldSelect name="tripType" label="Trip Type" icon={FiGlobe} placeholder="Select your adventure"
-                                    options={tripTypes} value={form.tripType} onChange={handleChange} onBlur={handleBlur}
+                                  <FieldSelect
+                                    name="tripType"
+                                    label="Trip Type"
+                                    icon={FiGlobe}
+                                    placeholder="Select your adventure"
+                                    options={tripTypes}
+                                    value={form.tripType}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
                                   />
-                                  <FieldInput name="travelDate" label="Preferred Date" icon={FiCalendar} type="date"
-                                    value={form.travelDate} onChange={handleChange} onBlur={handleBlur}
+                                  <FieldInput
+                                    name="travelDate"
+                                    label="Preferred Date"
+                                    icon={FiCalendar}
+                                    type="date"
+                                    value={form.travelDate}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
                                   />
-                                  <FieldSelect name="travelers" label="Number of Travelers" icon={FiUsers} placeholder="Select group size"
-                                    options={travelerOpts} value={form.travelers} onChange={handleChange} onBlur={handleBlur} full
+                                  <FieldSelect
+                                    name="travelers"
+                                    label="Number of Travelers"
+                                    icon={FiUsers}
+                                    placeholder="Select group size"
+                                    options={travelerOpts}
+                                    value={form.travelers}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    full
                                   />
                                 </div>
                               </motion.div>
                             )}
 
                             {step === 2 && (
-                              <motion.div key="s2" className="ct-form-step"
+                              <motion.div
+                                key="s2"
+                                className="ct-form-step"
                                 initial={stepVariants[2].initial}
                                 animate={stepVariants[2].animate}
                                 exit={stepVariants[2].exit}
-                                transition={{ duration: .5, ease: [.4, 0, .2, 1] }}
+                                transition={{
+                                  duration: 0.5,
+                                  ease: [0.4, 0, 0.2, 1],
+                                }}
                               >
                                 <div className="ct-step-heading">
                                   <h4>💬 Your Message</h4>
-                                  <p>Share the details of your dream safari with us.</p>
+                                  <p>
+                                    Share the details of your dream safari with
+                                    us.
+                                  </p>
                                 </div>
                                 <div className="ct-form-row">
-                                  <FieldInput name="subject" label="Subject" icon={FiMessageSquare} placeholder="What would you like to know?" required
-                                    value={form.subject} onChange={handleChange} onBlur={handleBlur}
-                                    error={errors.subject} touched={touched.subject} full
+                                  <FieldInput
+                                    name="subject"
+                                    label="Subject"
+                                    icon={FiMessageSquare}
+                                    placeholder="What would you like to know?"
+                                    required
+                                    value={form.subject}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    error={errors.subject}
+                                    touched={touched.subject}
+                                    full
                                   />
-                                  <FieldTextarea name="message" label="Your Message" placeholder="Tell us about your dream African adventure…" required maxLength={2000}
-                                    value={form.message} onChange={handleChange} onBlur={handleBlur}
-                                    error={errors.message} touched={touched.message} full
+                                  <FieldTextarea
+                                    name="message"
+                                    label="Your Message"
+                                    placeholder="Tell us about your dream African adventure…"
+                                    required
+                                    maxLength={2000}
+                                    value={form.message}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    error={errors.message}
+                                    touched={touched.message}
+                                    full
                                   />
                                 </div>
                               </motion.div>
@@ -769,10 +1214,13 @@ const Contact = () => {
                         <div className="ct-form-nav">
                           <div className="ct-form-nav-left">
                             {step > 0 && (
-                              <motion.button type="button" className="ct-nav-btn ct-nav-btn--back"
+                              <motion.button
+                                type="button"
+                                className="ct-nav-btn ct-nav-btn--back"
                                 onClick={prevStep}
-                                initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: .3 }}
+                                initial={{ opacity: 0, x: -16 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.3 }}
                               >
                                 <FiArrowLeft size={16} /> Back
                               </motion.button>
@@ -780,33 +1228,68 @@ const Contact = () => {
                           </div>
                           <div className="ct-form-nav-right">
                             {step < 2 ? (
-                              <motion.button type="button" className="ct-nav-btn ct-nav-btn--next"
-                                onClick={nextStep} whileTap={{ scale: .96 }}
+                              <motion.button
+                                type="button"
+                                className="ct-nav-btn ct-nav-btn--next"
+                                onClick={nextStep}
+                                whileTap={{ scale: 0.96 }}
                               >
                                 Next Step <FiArrowRight size={16} />
                               </motion.button>
                             ) : (
-                              <button type="submit" className="ct-nav-btn ct-nav-btn--submit" disabled={submitting}>
+                              <button
+                                type="submit"
+                                className="ct-nav-btn ct-nav-btn--submit"
+                                disabled={submitting}
+                              >
                                 {submitting ? (
                                   <>
-                                    <motion.svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                                      animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                                    <motion.svg
+                                      width="18"
+                                      height="18"
+                                      viewBox="0 0 24 24"
+                                      fill="none"
+                                      animate={{ rotate: 360 }}
+                                      transition={{
+                                        duration: 1,
+                                        repeat: Infinity,
+                                        ease: "linear",
+                                      }}
                                     >
-                                      <circle cx="12" cy="12" r="10" stroke="#fff" strokeWidth="3" strokeDasharray="31.4 31.4" strokeLinecap="round" />
+                                      <circle
+                                        cx="12"
+                                        cy="12"
+                                        r="10"
+                                        stroke="#fff"
+                                        strokeWidth="3"
+                                        strokeDasharray="31.4 31.4"
+                                        strokeLinecap="round"
+                                      />
                                     </motion.svg>
                                     Sending…
                                   </>
                                 ) : (
-                                  <><RiSendPlaneFill size={17} /> Send Safari Inquiry</>
+                                  <>
+                                    <RiSendPlaneFill size={17} /> Send Safari
+                                    Inquiry
+                                  </>
                                 )}
-                                {submitting && <div className="ct-progress" style={{ width: `${progress}%` }} />}
+                                {submitting && (
+                                  <div
+                                    className="ct-progress"
+                                    style={{ width: `${progress}%` }}
+                                  />
+                                )}
                               </button>
                             )}
                           </div>
                         </div>
 
                         {step === 2 && (
-                          <div className="ct-privacy"><FiShield size={12} /> Your information is secure and will never be shared.</div>
+                          <div className="ct-privacy">
+                            <FiShield size={12} /> Your information is secure
+                            and will never be shared.
+                          </div>
                         )}
                       </form>
                     </motion.div>
@@ -823,9 +1306,15 @@ const Contact = () => {
         <div className="ct-wrap ct-wrap--sm">
           <ScrollReveal>
             <div className="ct-hdr">
-              <div className="ct-badge"><FiHelpCircle size={14} /> Frequently Asked Questions</div>
-              <h2 className="ct-title ct-title--dark">Got <em>Questions</em>?</h2>
-              <p className="ct-subtitle">Find quick answers about our safari experiences.</p>
+              <div className="ct-badge">
+                <FiHelpCircle size={14} /> Frequently Asked Questions
+              </div>
+              <h2 className="ct-title ct-title--dark">
+                Got <em>Questions</em>?
+              </h2>
+              <p className="ct-subtitle">
+                Find quick answers about our safari experiences.
+              </p>
             </div>
           </ScrollReveal>
 
@@ -834,12 +1323,20 @@ const Contact = () => {
               const isOpen = openFaq === i;
               const h = faqRefs.current[i]?.scrollHeight || 0;
               return (
-                <ScrollReveal key={i} delay={i * .05}>
-                  <div className={`ct-faq-item ${isOpen ? 'open' : ''}`}>
-                    <button className="ct-faq-btn" type="button" onClick={() => setOpenFaq(isOpen ? null : i)}>
-                      <span className="ct-faq-num">{String(i + 1).padStart(2, '0')}</span>
+                <ScrollReveal key={i} delay={i * 0.05}>
+                  <div className={`ct-faq-item ${isOpen ? "open" : ""}`}>
+                    <button
+                      className="ct-faq-btn"
+                      type="button"
+                      onClick={() => setOpenFaq(isOpen ? null : i)}
+                    >
+                      <span className="ct-faq-num">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
                       <span className="ct-faq-q">{faq.q}</span>
-                      <span className={`ct-faq-toggle ${isOpen ? 'opened' : 'closed'}`}>
+                      <span
+                        className={`ct-faq-toggle ${isOpen ? "opened" : "closed"}`}
+                      >
                         <FiChevronDown size={17} />
                       </span>
                     </button>
@@ -847,12 +1344,15 @@ const Contact = () => {
                       {isOpen && (
                         <motion.div
                           initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: 'auto', opacity: 1 }}
+                          animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: .4, ease: [.4, 0, .2, 1] }}
-                          style={{ overflow: 'hidden' }}
+                          transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+                          style={{ overflow: "hidden" }}
                         >
-                          <div className="ct-faq-answer-inner" ref={el => faqRefs.current[i] = el}>
+                          <div
+                            className="ct-faq-answer-inner"
+                            ref={(el) => (faqRefs.current[i] = el)}
+                          >
                             <p>{faq.a}</p>
                           </div>
                         </motion.div>
@@ -871,15 +1371,21 @@ const Contact = () => {
         <div className="ct-wrap ct-wrap--md">
           <ScrollReveal>
             <div className="ct-hdr">
-              <h2 className="ct-title ct-title--dark">Quick Contact <em>Options</em></h2>
-              <p className="ct-subtitle">Choose the way that works best for you</p>
+              <h2 className="ct-title ct-title--dark">
+                Quick Contact <em>Options</em>
+              </h2>
+              <p className="ct-subtitle">
+                Choose the way that works best for you
+              </p>
             </div>
           </ScrollReveal>
           <div className="ct-quick-grid">
             {quickChannels.map((ch, i) => (
-              <ScrollReveal key={i} delay={i * .08}>
+              <ScrollReveal key={i} delay={i * 0.08}>
                 <a href={ch.href} className="ct-quick-card">
-                  <div className="ct-quick-icon"><ch.icon size={22} /></div>
+                  <div className="ct-quick-icon">
+                    <ch.icon size={22} />
+                  </div>
                   <div>
                     <div className="ct-quick-title">{ch.title}</div>
                     <div className="ct-quick-sub">{ch.sub}</div>
@@ -896,20 +1402,38 @@ const Contact = () => {
       <section className="ct-section ct-section--dark">
         <div className="ct-cta-pattern" />
         <ScrollReveal>
-          <div className="ct-wrap" style={{ textAlign: 'center', maxWidth: 680 }}>
-            <motion.div className="ct-cta-icon"
+          <div
+            className="ct-wrap"
+            style={{ textAlign: "center", maxWidth: 680 }}
+          >
+            <motion.div
+              className="ct-cta-icon"
               animate={{ scale: [1, 1.06, 1] }}
-              transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{
+                duration: 2.8,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
             >
               <FiHeadphones size={32} color="#fff" />
             </motion.div>
-            <h2 className="ct-title ct-title--white">Ready to Start Your <em>Adventure</em>?</h2>
-            <p className="ct-subtitle ct-subtitle--light" style={{ marginBottom: 36 }}>
-              Let's discuss your dream African safari. No obligations, just inspiration.
+            <h2 className="ct-title ct-title--white">
+              Ready to Start Your <em>Adventure</em>?
+            </h2>
+            <p
+              className="ct-subtitle ct-subtitle--light"
+              style={{ marginBottom: 36 }}
+            >
+              Let's discuss your dream African safari. No obligations, just
+              inspiration.
             </p>
             <div className="ct-cta-btns">
-              <a href="#contact-form" className="ct-btn ct-btn--white"><HiSparkles size={17} /> Start Planning</a>
-              <a href="/safaris" className="ct-btn ct-btn--ghost">View Safari Packages <FiArrowRight size={16} /></a>
+              <a href="#contact-form" className="ct-btn ct-btn--white">
+                <HiSparkles size={17} /> Start Planning
+              </a>
+              <a href="/safaris" className="ct-btn ct-btn--ghost">
+                View Safari Packages <FiArrowRight size={16} />
+              </a>
             </div>
           </div>
         </ScrollReveal>
@@ -924,23 +1448,38 @@ const Contact = () => {
       )}
       <AnimatePresence>
         {chatOpen && (
-          <motion.div className="ct-chat-window"
-            initial={{ opacity: 0, y: 70, scale: .9 }}
+          <motion.div
+            className="ct-chat-window"
+            initial={{ opacity: 0, y: 70, scale: 0.9 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 70, scale: .9 }}
-            transition={{ duration: .35, ease: [.4, 0, .2, 1] }}
+            exit={{ opacity: 0, y: 70, scale: 0.9 }}
+            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
           >
             <div className="ct-chat-head">
               <div className="ct-chat-head-left">
-                <div className="ct-chat-avatar"><BiSupport size={20} color="#fff" /></div>
+                <div className="ct-chat-avatar">
+                  <BiSupport size={20} color="#fff" />
+                </div>
                 <div>
                   <div className="ct-chat-name">Safari Support</div>
-                  <div className="ct-chat-status"><span className="ct-chat-dot" /> Online now</div>
+                  <div className="ct-chat-status">
+                    <span className="ct-chat-dot" /> Online now
+                  </div>
                 </div>
               </div>
               <div className="ct-chat-head-btns">
-                <button className="ct-chat-hbtn" onClick={() => setChatMin(p => !p)}><FiChevronDown size={15} /></button>
-                <button className="ct-chat-hbtn" onClick={() => setChatOpen(false)}><FiX size={15} /></button>
+                <button
+                  className="ct-chat-hbtn"
+                  onClick={() => setChatMin((p) => !p)}
+                >
+                  <FiChevronDown size={15} />
+                </button>
+                <button
+                  className="ct-chat-hbtn"
+                  onClick={() => setChatOpen(false)}
+                >
+                  <FiX size={15} />
+                </button>
               </div>
             </div>
             {!chatMin && (
@@ -951,14 +1490,26 @@ const Contact = () => {
                     <p>How can we help you today?</p>
                   </div>
                   <div className="ct-chat-chips">
-                    {['Safari packages', 'Best time to visit', 'Group bookings', 'Custom itinerary'].map((t, i) => (
-                      <button key={i} className="ct-chat-chip">{t}</button>
+                    {[
+                      "Safari packages",
+                      "Best time to visit",
+                      "Group bookings",
+                      "Custom itinerary",
+                    ].map((t, i) => (
+                      <button key={i} className="ct-chat-chip">
+                        {t}
+                      </button>
                     ))}
                   </div>
                 </div>
                 <div className="ct-chat-footer">
-                  <input className="ct-chat-input" placeholder="Type your message…" />
-                  <button className="ct-chat-send"><RiSendPlaneFill size={16} color="#fff" /></button>
+                  <input
+                    className="ct-chat-input"
+                    placeholder="Type your message…"
+                  />
+                  <button className="ct-chat-send">
+                    <RiSendPlaneFill size={16} color="#fff" />
+                  </button>
                 </div>
               </>
             )}

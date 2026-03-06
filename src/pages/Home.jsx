@@ -1540,7 +1540,7 @@ const Home = () => {
                     style={{
                       position: "absolute",
                       bottom: "clamp(70px, 3vw, 70px)",
-                      left: "clamp(400px)",
+                      left: "clamp(13pc, 13.6pc , 30pc)",
                       width: "clamp(180px, 36%, 280px)",
                       height: "clamp(150px, 40vw, 200px)",
                       borderRadius: 24,
@@ -1569,8 +1569,8 @@ const Home = () => {
                     ]}
                     style={{
                       position: "absolute",
-                      bottom: "clamp(70px, 3vw, 70px)",
-                      left: "clamp(-40vh)",
+                      bottom: "clamp(28pc, 3vw, 70px)",
+                      left: "clamp(28pc, 10pc, 30pc)",
                       width: "clamp(180px, 36%, 280px)",
                       height: "clamp(150px, 40vw, 200px)",
                       borderRadius: 24,
