@@ -233,11 +233,21 @@ The country has produced numerous world-champion long-distance runners, with the
     ],
 
     images: [
-      "https://images.goway.com/production/hero_image/Giraffe%20Amboseli%20National%20Park_Reversed_iStock-1462966666.jpg?VersionId=ZrBAA8FYBeoazJCbH4OkKMP1R5H392Lv",
-      "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800",
-      "https://i.pinimg.com/736x/5e/ad/4b/5ead4ba9e719637e929b1298bc39f1ac.jpg",
-      "https://i.pinimg.com/1200x/12/fc/19/12fc1998263a48de01ba54afa75602db.jpg",
-      "https://i.pinimg.com/1200x/2d/26/94/2d2694ba6f709020b09926035f97e66d.jpg",
+      "https://i.pinimg.com/736x/ae/36/83/ae36836c0d16b701e49815d3e9fe7ac7.jpg",
+      "https://i.pinimg.com/736x/33/28/87/332887a1538592057b622ee9076902a7.jpg",
+      "https://i.pinimg.com/736x/36/4d/98/364d98d68e705c5e2e4c7f97f21d07e4.jpg",
+      "https://i.pinimg.com/1200x/be/14/aa/be14aa92f392ed009b4df8f607035770.jpg",
+      "https://i.pinimg.com/736x/ab/27/44/ab27441b5068194670a5f2272c289225.jpg",
+      "https://i.pinimg.com/736x/36/4d/98/364d98d68e705c5e2e4c7f97f21d07e4.jpg",
+      "https://i.pinimg.com/1200x/be/14/aa/be14aa92f392ed009b4df8f607035770.jpg",
+      "https://i.pinimg.com/736x/ab/27/44/ab27441b5068194670a5f2272c289225.jpg",
+      "https://i.pinimg.com/736x/33/28/87/332887a1538592057b622ee9076902a7.jpg",
+      "https://i.pinimg.com/736x/36/4d/98/364d98d68e705c5e2e4c7f97f21d07e4.jpg",
+      "https://i.pinimg.com/1200x/be/14/aa/be14aa92f392ed009b4df8f607035770.jpg",
+      "https://i.pinimg.com/736x/ab/27/44/ab27441b5068194670a5f2272c289225.jpg",
+      "https://i.pinimg.com/736x/36/4d/98/364d98d68e705c5e2e4c7f97f21d07e4.jpg",
+      "https://i.pinimg.com/1200x/be/14/aa/be14aa92f392ed009b4df8f607035770.jpg",
+      "https://i.pinimg.com/736x/ab/27/44/ab27441b5068194670a5f2272c289225.jpg",
     ],
 
     heroImage:

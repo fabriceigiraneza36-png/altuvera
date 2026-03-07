@@ -1,2669 +1,4665 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+  createContext,
+  useContext,
+} from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import {
-  FiMapPin,
-  FiStar,
-  FiClock,
-  FiCheck,
-  FiCalendar,
-  FiUsers,
-  FiCamera,
-  FiHeart,
-  FiShare2,
-  FiChevronLeft,
-  FiChevronRight,
-  FiArrowRight,
-  FiArrowLeft,
-  FiX,
-  FiMaximize2,
-  FiDownload,
-  FiMessageCircle,
-  FiPhone,
-  FiMail,
-  FiSun,
-  FiDroplet,
-  FiWind,
-  FiThermometer,
-  FiPlay,
-  FiGrid,
-  FiChevronDown,
-  FiChevronUp,
-  FiInfo,
-  FiAlertCircle,
-  FiShield,
-  FiGlobe,
-  FiNavigation,
-  FiCoffee,
-  FiBookmark,
-  FiPrinter,
-  FiMap,
-  FiCompass,
-  FiSunrise,
-  FiSunset,
-  FiCloudRain,
-  FiUmbrella,
-  FiPackage,
-  FiHelpCircle,
-  FiThumbsUp,
-  FiThumbsDown,
-  FiEdit3,
-  FiCreditCard,
-  FiWifi,
-  FiZap,
-  FiBattery,
-  FiActivity,
-  FiAward,
-  FiTrendingUp,
-  FiEye,
-  FiLayers,
-  FiTarget,
-  FiFlag,
-  FiHome,
-  FiTruck,
+  FiMapPin, FiStar, FiClock, FiCheck, FiCalendar, FiUsers,
+  FiCamera, FiHeart, FiShare2, FiChevronLeft, FiChevronRight,
+  FiArrowRight, FiArrowLeft, FiX, FiMaximize2, FiDownload,
+  FiMessageCircle, FiPhone, FiMail, FiSun, FiDroplet, FiWind,
+  FiThermometer, FiGrid, FiChevronDown, FiChevronUp, FiInfo,
+  FiShield, FiGlobe, FiNavigation, FiBookmark, FiPrinter,
+  FiMap, FiCompass, FiSunrise, FiSunset, FiPackage, FiHelpCircle,
+  FiThumbsUp, FiCoffee, FiZap, FiEye, FiLoader, FiAlertTriangle,
+  FiHome, FiExternalLink, FiCopy, FiCheckCircle, FiAlertCircle,
+  FiXCircle, FiPlay, FiPause, FiVolume2, FiVolumeX, FiRefreshCw,
+  FiFilter, FiSearch, FiMoreHorizontal, FiEdit, FiTrash2,
+  FiPlus, FiMinus, FiSettings, FiLogIn, FiUserPlus, FiAward,
+  FiTrendingUp, FiActivity, FiBell, FiLock, FiUnlock
 } from "react-icons/fi";
-import PageHeader from "../components/common/PageHeader";
-import AnimatedSection from "../components/common/AnimatedSection";
-import Button from "../components/common/Button";
 import { useCountry } from "../hooks/useCountries";
-import {
-  useCountryDestinations,
-  useDestination,
-} from "../hooks/useDestinations";
+import { useCountryDestinations, useDestination } from "../hooks/useDestinations";
 
-// CSS Keyframes
-const keyframesStyle = `
+// ═══════════════════════════════════════════════════════════════════════════
+// DESIGN SYSTEM & THEME
+// ═══════════════════════════════════════════════════════════════════════════
+const THEME = {
+  colors: {
+    primary: {
+      50: '#ECFDF5', 100: '#D1FAE5', 200: '#A7F3D0', 300: '#6EE7B7',
+      400: '#34D399', 500: '#10B981', 600: '#059669', 700: '#047857',
+      800: '#065F46', 900: '#064E3B',
+    },
+    neutral: {
+      0: '#FFFFFF', 50: '#FAFAFA', 100: '#F5F5F5', 200: '#E5E5E5',
+      300: '#D4D4D4', 400: '#A3A3A3', 500: '#737373', 600: '#525252',
+      700: '#404040', 800: '#262626', 900: '#171717',
+    },
+    semantic: {
+      success: '#059669', warning: '#F59E0B', error: '#DC2626', info: '#3B82F6',
+    },
+    gradient: {
+      primary: 'linear-gradient(135deg, #059669 0%, #10B981 100%)',
+      hero: 'linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.75) 100%)',
+      card: 'linear-gradient(145deg, #FFFFFF 0%, #F9FAFB 100%)',
+    }
+  },
+  typography: {
+    fontFamily: {
+      heading: "'Playfair Display', Georgia, 'Times New Roman', serif",
+      body: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      mono: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
+    },
+    fontSize: {
+      xs: '0.75rem', sm: '0.875rem', base: '1rem', lg: '1.125rem',
+      xl: '1.25rem', '2xl': '1.5rem', '3xl': '1.875rem', '4xl': '2.25rem',
+      '5xl': '3rem', '6xl': '3.75rem',
+    },
+    fontWeight: {
+      normal: 400, medium: 500, semibold: 600, bold: 700, extrabold: 800,
+    },
+    lineHeight: {
+      tight: 1.25, snug: 1.375, normal: 1.5, relaxed: 1.625, loose: 2,
+    },
+  },
+  spacing: {
+    px: '1px', 0: '0', 1: '0.25rem', 2: '0.5rem', 3: '0.75rem', 4: '1rem',
+    5: '1.25rem', 6: '1.5rem', 8: '2rem', 10: '2.5rem', 12: '3rem',
+    16: '4rem', 20: '5rem', 24: '6rem', 32: '8rem', 40: '10rem',
+  },
+  borderRadius: {
+    none: '0', sm: '0.25rem', DEFAULT: '0.5rem', md: '0.75rem',
+    lg: '1rem', xl: '1.25rem', '2xl': '1.5rem', '3xl': '2rem', full: '9999px',
+  },
+  shadows: {
+    sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
+    DEFAULT: '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)',
+    md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
+    lg: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)',
+    xl: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+    '2xl': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+    glow: '0 0 40px rgba(5, 150, 105, 0.35)',
+    inner: 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)',
+  },
+  transitions: {
+    fast: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
+    DEFAULT: '300ms cubic-bezier(0.4, 0, 0.2, 1)',
+    slow: '500ms cubic-bezier(0.4, 0, 0.2, 1)',
+    spring: '500ms cubic-bezier(0.34, 1.56, 0.64, 1)',
+    bounce: '600ms cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+  },
+  breakpoints: {
+    xs: 480, sm: 640, md: 768, lg: 1024, xl: 1280, '2xl': 1536,
+  },
+  zIndex: {
+    dropdown: 1000, sticky: 1020, fixed: 1030, modal: 1040, popover: 1050, tooltip: 1060, toast: 1070,
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GLOBAL STYLES & KEYFRAMES
+// ═══════════════════════════════════════════════════════════════════════════
+const globalStyles = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700;800&display=swap');
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family: ${THEME.typography.fontFamily.body};
+    color: ${THEME.colors.neutral[800]};
+    background-color: ${THEME.colors.neutral[50]};
+    line-height: ${THEME.typography.lineHeight.normal};
+  }
+
+  /* Animations */
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
   @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(40px); }
+    from { opacity: 0; transform: translateY(24px); }
     to { opacity: 1; transform: translateY(0); }
   }
+
   @keyframes fadeInDown {
-    from { opacity: 0; transform: translateY(-40px); }
+    from { opacity: 0; transform: translateY(-24px); }
     to { opacity: 1; transform: translateY(0); }
   }
+
   @keyframes fadeInLeft {
-    from { opacity: 0; transform: translateX(-40px); }
+    from { opacity: 0; transform: translateX(-24px); }
     to { opacity: 1; transform: translateX(0); }
   }
+
   @keyframes fadeInRight {
-    from { opacity: 0; transform: translateX(40px); }
+    from { opacity: 0; transform: translateX(24px); }
     to { opacity: 1; transform: translateX(0); }
   }
+
   @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.9); }
+    from { opacity: 0; transform: scale(0.92); }
     to { opacity: 1; transform: scale(1); }
   }
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-  }
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-  }
-  @keyframes slideInFromBottom {
+
+  @keyframes slideUp {
     from { opacity: 0; transform: translateY(100%); }
     to { opacity: 1; transform: translateY(0); }
   }
-  @keyframes heartBeat {
-    0%, 100% { transform: scale(1); }
-    25% { transform: scale(1.2); }
-    50% { transform: scale(1); }
-    75% { transform: scale(1.2); }
+
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-100%); }
+    to { opacity: 1; transform: translateY(0); }
   }
-  @keyframes rotateIn {
-    from { opacity: 0; transform: rotate(-180deg) scale(0); }
-    to { opacity: 1; transform: rotate(0) scale(1); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
   }
+
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+  }
+
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
   @keyframes shimmer {
     0% { background-position: -200% 0; }
     100% { background-position: 200% 0; }
   }
-  @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
+
+  @keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    14% { transform: scale(1.3); }
+    28% { transform: scale(1); }
+    42% { transform: scale(1.3); }
+    70% { transform: scale(1); }
   }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+
   @keyframes glow {
     0%, 100% { box-shadow: 0 0 20px rgba(5, 150, 105, 0.3); }
     50% { box-shadow: 0 0 40px rgba(5, 150, 105, 0.6); }
   }
-  @keyframes progressFill {
-    from { width: 0%; }
-    to { width: var(--progress); }
+
+  @keyframes progressBar {
+    from { width: 0; }
+    to { width: var(--progress, 100%); }
+  }
+
+  @keyframes ripple {
+    0% { transform: scale(0); opacity: 1; }
+    100% { transform: scale(4); opacity: 0; }
+  }
+
+  @keyframes toastIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  @keyframes toastOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+  }
+
+  /* Reduced Motion */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: ${THEME.colors.neutral[100]};
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: ${THEME.colors.primary[400]};
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: ${THEME.colors.primary[500]};
+  }
+
+  /* Selection */
+  ::selection {
+    background: ${THEME.colors.primary[200]};
+    color: ${THEME.colors.primary[900]};
+  }
+
+  /* Focus */
+  :focus-visible {
+    outline: 2px solid ${THEME.colors.primary[500]};
+    outline-offset: 2px;
+  }
+
+  /* Print */
+  @media print {
+    .no-print { display: none !important; }
+    .print-break { page-break-before: always; }
+    body { background: white; }
   }
 `;
 
-const DestinationDetail = () => {
-  const { destinationId } = useParams();
-  const navigate = useNavigate();
-  const { destination, loading: destinationLoading } = useDestination(destinationId);
-  const { country } = useCountry(destination?.countryId || destination?.country_id);
-  const { destinations: countryDestinations } = useCountryDestinations(
-    destination?.countryId || destination?.country_id
+// ═══════════════════════════════════════════════════════════════════════════
+// CONTEXT PROVIDERS
+// ═══════════════════════════════════════════════════════════════════════════
+const ToastContext = createContext(null);
+
+const ToastProvider = ({ children }) => {
+  const [toasts, setToasts] = useState([]);
+
+  const addToast = useCallback((message, type = 'info', duration = 4000) => {
+    const id = Date.now() + Math.random();
+    setToasts(prev => [...prev, { id, message, type, duration }]);
+    if (duration > 0) {
+      setTimeout(() => removeToast(id), duration);
+    }
+    return id;
+  }, []);
+
+  const removeToast = useCallback((id) => {
+    setToasts(prev => prev.filter(t => t.id !== id));
+  }, []);
+
+  const toast = useMemo(() => ({
+    success: (msg, dur) => addToast(msg, 'success', dur),
+    error: (msg, dur) => addToast(msg, 'error', dur),
+    warning: (msg, dur) => addToast(msg, 'warning', dur),
+    info: (msg, dur) => addToast(msg, 'info', dur),
+    remove: removeToast,
+  }), [addToast, removeToast]);
+
+  return (
+    <ToastContext.Provider value={toast}>
+      {children}
+      <ToastContainer toasts={toasts} onRemove={removeToast} />
+    </ToastContext.Provider>
   );
-  
-  // States
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isFavorite, setIsFavorite] = useState(false);
-  const [isBookmarked, setIsBookmarked] = useState(false);
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
-  const [touchStart, setTouchStart] = useState(0);
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const [expandedFaq, setExpandedFaq] = useState(null);
-  const [selectedTip, setSelectedTip] = useState(0);
-  const [showAllReviews, setShowAllReviews] = useState(false);
-  const [helpfulReviews, setHelpfulReviews] = useState({});
-  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
-  
-  const contentRef = useRef(null);
-  const galleryRef = useRef(null);
+};
 
-  // Responsive breakpoints
-  const isMobile = windowWidth < 768;
-  const isTablet = windowWidth >= 768 && windowWidth < 1024;
-  const isDesktop = windowWidth >= 1024;
+const useToast = () => {
+  const context = useContext(ToastContext);
+  if (!context) throw new Error('useToast must be used within ToastProvider');
+  return context;
+};
 
-  // Mock data for additional features
-  const weatherData = {
-    current: { temp: "24°C", condition: "Sunny", humidity: "65%", wind: "12 km/h" },
-    forecast: [
-      { day: "Mon", temp: "25°C", icon: "☀️" },
-      { day: "Tue", temp: "23°C", icon: "⛅" },
-      { day: "Wed", temp: "22°C", icon: "🌧️" },
-      { day: "Thu", temp: "24°C", icon: "☀️" },
-      { day: "Fri", temp: "26°C", icon: "☀️" },
-    ],
-  };
-
-  const packingList = [
-    { category: "Essentials", items: ["Passport & ID", "Travel Insurance", "Cash & Cards", "Phone & Charger"] },
-    { category: "Clothing", items: ["Comfortable shoes", "Light layers", "Rain jacket", "Sun hat"] },
-    { category: "Health", items: ["First aid kit", "Sunscreen SPF50+", "Insect repellent", "Medications"] },
-    { category: "Gear", items: ["Camera", "Power bank", "Reusable water bottle", "Day backpack"] },
-  ];
-
-  const travelTips = [
-    { icon: "💡", title: "Best Time to Visit", tip: "Early morning (6-8 AM) offers the best lighting and fewer crowds." },
-    { icon: "📸", title: "Photo Spots", tip: "The eastern viewpoint offers stunning sunrise shots. Bring a tripod!" },
-    { icon: "👟", title: "What to Wear", tip: "Comfortable walking shoes are essential. The terrain can be uneven." },
-    { icon: "🍽️", title: "Local Food", tip: "Try the local street food markets for authentic cuisine at great value." },
-    { icon: "💬", title: "Language", tip: "Learn basic greetings in the local language - locals appreciate the effort!" },
-    { icon: "🚗", title: "Getting Around", tip: "Book transportation in advance during peak season for better rates." },
-  ];
-
-  const safetyInfo = [
-    { level: "Overall Safety", rating: 4.5, description: "Generally very safe for tourists" },
-    { level: "Health Services", rating: 4.0, description: "Good medical facilities nearby" },
-    { level: "Infrastructure", rating: 4.2, description: "Well-maintained paths and facilities" },
-    { level: "Communication", rating: 4.8, description: "Good mobile coverage available" },
-  ];
-
-  const accessibilityInfo = [
-    { feature: "Wheelchair Access", available: true, note: "Main areas accessible" },
-    { feature: "Audio Guides", available: true, note: "Available in 8 languages" },
-    { feature: "Rest Areas", available: true, note: "Every 500 meters" },
-    { feature: "Assistance Dogs", available: true, note: "Welcome in all areas" },
-    { feature: "Braille Signage", available: false, note: "Limited availability" },
-  ];
-
-  const localCulture = [
-    { title: "Greetings", description: "A slight bow or nod is customary when greeting locals." },
-    { title: "Dress Code", description: "Modest clothing is appreciated, especially at cultural sites." },
-    { title: "Photography", description: "Always ask permission before photographing people." },
-    { title: "Tipping", description: "Tipping is not mandatory but appreciated for good service." },
-  ];
-
-  const faqData = [
-    { question: "What is the best time of year to visit?", answer: "The ideal time is during spring (March-May) and autumn (September-November) when weather is mild and crowds are smaller." },
-    { question: "How long should I plan for this destination?", answer: `We recommend ${destination?.duration || "2-3 days"} to fully experience all the highlights without rushing.` },
-    { question: "Is this suitable for families with children?", answer: "Yes! This destination offers activities suitable for all ages. Children under 12 have special guided tours available." },
-    { question: "What languages are spoken here?", answer: "The primary language is local, but English is widely understood in tourist areas. Guides are available in multiple languages." },
-    { question: "Are there food options for dietary restrictions?", answer: "Yes, vegetarian, vegan, and gluten-free options are available at most restaurants in the area." },
-    { question: "What payment methods are accepted?", answer: "Major credit cards are widely accepted. ATMs are available, but carrying some cash is recommended." },
-  ];
-
-  const reviewsData = [
-    { id: 1, name: "Sarah M.", avatar: "👩", rating: 5, date: "2 weeks ago", title: "Absolutely breathtaking!", comment: "One of the most beautiful places I've ever visited. The local guides were knowledgeable and friendly.", helpful: 24, images: 3, verified: true },
-    { id: 2, name: "John D.", avatar: "👨", rating: 4, date: "1 month ago", title: "Great experience overall", comment: "Beautiful scenery and well-organized. Would recommend going early morning to avoid crowds.", helpful: 18, images: 2, verified: true },
-    { id: 3, name: "Emily R.", avatar: "👩‍🦰", rating: 5, date: "1 month ago", title: "Must visit!", comment: "Exceeded all expectations. The sunset views are absolutely magical. Don't miss the local food!", helpful: 31, images: 5, verified: true },
-    { id: 4, name: "Michael T.", avatar: "🧔", rating: 4, date: "2 months ago", title: "Beautiful but crowded", comment: "Stunning location. Visit during weekdays if possible. The facilities are clean and well-maintained.", helpful: 12, images: 1, verified: false },
-  ];
-
-  const itinerary = [
-    { time: "06:00", activity: "Sunrise viewing", description: "Best time for photography", icon: <FiSunrise /> },
-    { time: "08:00", activity: "Breakfast", description: "Local cuisine experience", icon: <FiCoffee /> },
-    { time: "09:30", activity: "Guided tour", description: "Main attractions walk", icon: <FiMap /> },
-    { time: "12:30", activity: "Lunch break", description: "Rest and refuel", icon: <FiCoffee /> },
-    { time: "14:00", activity: "Free exploration", description: "Discover hidden gems", icon: <FiCompass /> },
-    { time: "17:00", activity: "Sunset spot", description: "Golden hour views", icon: <FiSunset /> },
-  ];
-
-  const nearbyAttractions = [
-    { name: "Mountain Viewpoint", distance: "2.5 km", time: "15 min drive", type: "Nature" },
-    { name: "Historic Temple", distance: "4.0 km", time: "25 min drive", type: "Culture" },
-    { name: "Local Market", distance: "1.2 km", time: "5 min walk", type: "Shopping" },
-    { name: "Waterfall Trail", distance: "6.0 km", time: "30 min drive", type: "Adventure" },
-  ];
-
-  const transportOptions = [
-    { mode: "By Air", details: "Nearest airport: International Airport (45 km)", icon: "✈️", time: "1 hour" },
-    { mode: "By Train", details: "Direct trains from major cities daily", icon: "🚂", time: "3-4 hours" },
-    { mode: "By Bus", details: "Regular bus services available", icon: "🚌", time: "4-5 hours" },
-    { mode: "By Car", details: "Well-connected highways, parking available", icon: "🚗", time: "Varies" },
-  ];
-
-  const essentialPhrases = [
-    { phrase: "Hello", local: "Merhaba", pronunciation: "mer-HA-ba" },
-    { phrase: "Thank you", local: "Teşekkürler", pronunciation: "teh-shek-KOOR-ler" },
-    { phrase: "Please", local: "Lütfen", pronunciation: "LOOT-fen" },
-    { phrase: "Excuse me", local: "Pardon", pronunciation: "par-DON" },
-    { phrase: "How much?", local: "Ne kadar?", pronunciation: "neh ka-DAR" },
-  ];
+// ═══════════════════════════════════════════════════════════════════════════
+// CUSTOM HOOKS
+// ═══════════════════════════════════════════════════════════════════════════
+const useWindowSize = () => {
+  const [size, setSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1200,
+    height: typeof window !== 'undefined' ? window.innerHeight : 800,
+  });
 
   useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 100);
+    let timeoutId;
+    const handleResize = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        setSize({ width: window.innerWidth, height: window.innerHeight });
+      }, 100);
     };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      clearTimeout(timeoutId);
+    };
   }, []);
 
-  useEffect(() => {
-    if (!isAutoPlaying || isLightboxOpen || !destination) return;
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % destination.images.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [isAutoPlaying, isLightboxOpen, destination]);
+  return {
+    ...size,
+    isMobile: size.width < THEME.breakpoints.md,
+    isTablet: size.width >= THEME.breakpoints.md && size.width < THEME.breakpoints.lg,
+    isDesktop: size.width >= THEME.breakpoints.lg,
+    isLargeDesktop: size.width >= THEME.breakpoints.xl,
+  };
+};
+
+const useScrollPosition = (threshold = 80) => {
+  const [state, setState] = useState({ scrollY: 0, isScrolled: false, direction: null });
+  const prevScrollY = useRef(0);
 
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (isLightboxOpen) {
-        if (e.key === "Escape") setIsLightboxOpen(false);
-        if (e.key === "ArrowLeft") prevImage();
-        if (e.key === "ArrowRight") nextImage();
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          setState({
+            scrollY: currentScrollY,
+            isScrolled: currentScrollY > threshold,
+            direction: currentScrollY > prevScrollY.current ? 'down' : 'up',
+          });
+          prevScrollY.current = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
       }
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isLightboxOpen]);
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [threshold]);
 
-  const nextImage = useCallback(() => {
-    if (!destination) return;
-    setIsImageLoaded(false);
-    setCurrentImageIndex((prev) => (prev + 1) % destination.images.length);
-  }, [destination]);
+  return state;
+};
 
-  const prevImage = useCallback(() => {
-    if (!destination) return;
-    setIsImageLoaded(false);
-    setCurrentImageIndex(
-      (prev) => (prev - 1 + destination.images.length) % destination.images.length
+const useLocalStorage = (key, initialValue) => {
+  const [storedValue, setStoredValue] = useState(() => {
+    if (typeof window === 'undefined') return initialValue;
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      console.warn(`Error reading localStorage key "${key}":`, error);
+      return initialValue;
+    }
+  });
+
+  const setValue = useCallback((value) => {
+    try {
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem(key, JSON.stringify(valueToStore));
+      }
+    } catch (error) {
+      console.warn(`Error setting localStorage key "${key}":`, error);
+    }
+  }, [key, storedValue]);
+
+  return [storedValue, setValue];
+};
+
+const useKeyPress = (targetKey, handler, options = {}) => {
+  const { ctrl = false, shift = false, alt = false, preventDefault = true } = options;
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      const matchesKey = event.key === targetKey || event.code === targetKey;
+      const matchesModifiers =
+        (!ctrl || event.ctrlKey || event.metaKey) &&
+        (!shift || event.shiftKey) &&
+        (!alt || event.altKey);
+
+      if (matchesKey && matchesModifiers) {
+        if (preventDefault) event.preventDefault();
+        handler(event);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [targetKey, handler, ctrl, shift, alt, preventDefault]);
+};
+
+const useIntersectionObserver = (options = {}) => {
+  const [entry, setEntry] = useState(null);
+  const [node, setNode] = useState(null);
+
+  const observer = useRef(null);
+
+  useEffect(() => {
+    if (observer.current) observer.current.disconnect();
+
+    observer.current = new IntersectionObserver(
+      ([entry]) => setEntry(entry),
+      { threshold: 0.1, rootMargin: '0px', ...options }
     );
-  }, [destination]);
 
-  const handleTouchStart = (e) => {
-    setTouchStart(e.touches[0].clientX);
+    if (node) observer.current.observe(node);
+
+    return () => {
+      if (observer.current) observer.current.disconnect();
+    };
+  }, [node, options.threshold, options.rootMargin]);
+
+  return [setNode, entry];
+};
+
+const useClipboard = (timeout = 2000) => {
+  const [copied, setCopied] = useState(false);
+
+  const copy = useCallback(async (text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), timeout);
+      return true;
+    } catch (error) {
+      console.error('Failed to copy:', error);
+      return false;
+    }
+  }, [timeout]);
+
+  return { copied, copy };
+};
+
+const useDebounce = (value, delay = 300) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
+const useClickOutside = (handler) => {
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handleClick = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        handler(event);
+      }
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('touchstart', handleClick);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('touchstart', handleClick);
+    };
+  }, [handler]);
+
+  return ref;
+};
+
+const useLockBodyScroll = (lock = true) => {
+  useEffect(() => {
+    if (!lock) return;
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = originalStyle;
+    };
+  }, [lock]);
+};
+
+const useSwipe = (onSwipeLeft, onSwipeRight, threshold = 50) => {
+  const touchStart = useRef(null);
+
+  const handleTouchStart = useCallback((e) => {
+    touchStart.current = e.touches[0].clientX;
+  }, []);
+
+  const handleTouchEnd = useCallback((e) => {
+    if (touchStart.current === null) return;
+    const touchEnd = e.changedTouches[0].clientX;
+    const diff = touchStart.current - touchEnd;
+
+    if (Math.abs(diff) > threshold) {
+      if (diff > 0 && onSwipeLeft) onSwipeLeft();
+      else if (diff < 0 && onSwipeRight) onSwipeRight();
+    }
+    touchStart.current = null;
+  }, [onSwipeLeft, onSwipeRight, threshold]);
+
+  return { onTouchStart: handleTouchStart, onTouchEnd: handleTouchEnd };
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MOCK DATA
+// ═══════════════════════════════════════════════════════════════════════════
+const MOCK_DATA = {
+  weather: {
+    current: {
+      temp: 24,
+      feelsLike: 26,
+      condition: 'Sunny',
+      humidity: 65,
+      wind: 12,
+      uv: 6,
+      visibility: 10,
+      pressure: 1015,
+    },
+    forecast: [
+      { day: 'Mon', high: 25, low: 18, condition: 'sunny', icon: '☀️', precipitation: 0 },
+      { day: 'Tue', high: 23, low: 17, condition: 'partly-cloudy', icon: '⛅', precipitation: 10 },
+      { day: 'Wed', high: 22, low: 16, condition: 'rainy', icon: '🌧️', precipitation: 60 },
+      { day: 'Thu', high: 24, low: 17, condition: 'sunny', icon: '☀️', precipitation: 5 },
+      { day: 'Fri', high: 26, low: 19, condition: 'sunny', icon: '☀️', precipitation: 0 },
+      { day: 'Sat', high: 27, low: 20, condition: 'sunny', icon: '☀️', precipitation: 0 },
+      { day: 'Sun', high: 25, low: 18, condition: 'partly-cloudy', icon: '⛅', precipitation: 15 },
+    ],
+  },
+  packingList: [
+    {
+      category: 'Essentials',
+      icon: '🎒',
+      color: THEME.colors.primary[500],
+      items: [
+        { name: 'Passport & ID', essential: true, checked: false },
+        { name: 'Travel Insurance Docs', essential: true, checked: false },
+        { name: 'Cash & Credit Cards', essential: true, checked: false },
+        { name: 'Phone & Charger', essential: true, checked: false },
+        { name: 'Travel Adapter', essential: false, checked: false },
+      ],
+    },
+    {
+      category: 'Clothing',
+      icon: '👕',
+      color: THEME.colors.semantic.info,
+      items: [
+        { name: 'Comfortable Walking Shoes', essential: true, checked: false },
+        { name: 'Light Layers', essential: false, checked: false },
+        { name: 'Rain Jacket', essential: false, checked: false },
+        { name: 'Sun Hat', essential: false, checked: false },
+        { name: 'Swimwear', essential: false, checked: false },
+      ],
+    },
+    {
+      category: 'Health & Safety',
+      icon: '💊',
+      color: THEME.colors.semantic.error,
+      items: [
+        { name: 'First Aid Kit', essential: true, checked: false },
+        { name: 'Sunscreen SPF50+', essential: true, checked: false },
+        { name: 'Insect Repellent', essential: false, checked: false },
+        { name: 'Personal Medications', essential: true, checked: false },
+        { name: 'Hand Sanitizer', essential: false, checked: false },
+      ],
+    },
+    {
+      category: 'Electronics & Gear',
+      icon: '📷',
+      color: THEME.colors.semantic.warning,
+      items: [
+        { name: 'Camera', essential: false, checked: false },
+        { name: 'Power Bank', essential: true, checked: false },
+        { name: 'Reusable Water Bottle', essential: true, checked: false },
+        { name: 'Day Backpack', essential: true, checked: false },
+        { name: 'Headphones', essential: false, checked: false },
+      ],
+    },
+  ],
+  travelTips: [
+    {
+      id: 1,
+      icon: '🌅',
+      title: 'Best Time to Visit',
+      content: 'Early morning (6-8 AM) offers the best lighting for photography and significantly fewer crowds. Consider arriving before sunrise for the most magical experience.',
+      category: 'timing',
+    },
+    {
+      id: 2,
+      icon: '📸',
+      title: 'Photography Spots',
+      content: 'The eastern viewpoint offers stunning sunrise shots. Bring a tripod for long exposures. The golden hour before sunset is equally impressive from the western terrace.',
+      category: 'photography',
+    },
+    {
+      id: 3,
+      icon: '👟',
+      title: 'What to Wear',
+      content: 'Comfortable walking shoes are essential as the terrain can be uneven in some areas. Dress in layers as temperatures can vary throughout the day.',
+      category: 'preparation',
+    },
+    {
+      id: 4,
+      icon: '🍽️',
+      title: 'Local Food',
+      content: 'Don\'t miss the local street food markets for authentic cuisine at great value. Try the regional specialties early in the day when ingredients are freshest.',
+      category: 'food',
+    },
+    {
+      id: 5,
+      icon: '💬',
+      title: 'Language Tips',
+      content: 'Learn basic greetings in the local language - locals greatly appreciate the effort! A simple "hello" and "thank you" go a long way.',
+      category: 'culture',
+    },
+    {
+      id: 6,
+      icon: '🚗',
+      title: 'Getting Around',
+      content: 'Book transportation in advance during peak season for better rates. Local ride-sharing apps often offer the best value for short distances.',
+      category: 'transport',
+    },
+  ],
+  safetyInfo: [
+    { label: 'Overall Safety', rating: 4.5, description: 'Generally very safe for tourists with low crime rates', color: THEME.colors.primary[500] },
+    { label: 'Health Services', rating: 4.0, description: 'Good medical facilities and pharmacies nearby', color: THEME.colors.semantic.info },
+    { label: 'Infrastructure', rating: 4.2, description: 'Well-maintained paths, signage, and facilities', color: THEME.colors.primary[400] },
+    { label: 'Communication', rating: 4.8, description: 'Excellent mobile coverage and WiFi availability', color: THEME.colors.primary[600] },
+    { label: 'Emergency Services', rating: 4.3, description: 'Quick response times, multilingual operators', color: THEME.colors.semantic.warning },
+  ],
+  accessibility: [
+    { feature: 'Wheelchair Access', available: true, details: 'Main areas fully accessible with ramps and elevators', icon: '♿' },
+    { feature: 'Audio Guides', available: true, details: 'Available in 12 languages including sign language', icon: '🎧' },
+    { feature: 'Rest Areas', available: true, details: 'Shaded seating every 300-500 meters', icon: '🪑' },
+    { feature: 'Service Animals', available: true, details: 'Welcome in all public areas', icon: '🐕' },
+    { feature: 'Braille Signage', available: true, details: 'Available at major points of interest', icon: '⠿' },
+    { feature: 'Accessible Restrooms', available: true, details: 'Located throughout the venue', icon: '🚻' },
+  ],
+  faqs: [
+    {
+      id: 1,
+      question: 'What is the best time of year to visit?',
+      answer: 'The ideal time is during spring (March-May) and autumn (September-November) when weather is mild, crowds are smaller, and prices are more reasonable. Summer offers longer days but expect more tourists.',
+      category: 'planning',
+    },
+    {
+      id: 2,
+      question: 'How long should I plan for this destination?',
+      answer: 'We recommend 2-3 full days to fully experience all the highlights without rushing. If you want to explore nearby attractions, consider extending to 4-5 days.',
+      category: 'planning',
+    },
+    {
+      id: 3,
+      question: 'Is this suitable for families with children?',
+      answer: 'Absolutely! This destination offers activities suitable for all ages. Children under 12 have special guided tours available, and there are dedicated play areas and family-friendly dining options.',
+      category: 'family',
+    },
+    {
+      id: 4,
+      question: 'What languages are spoken here?',
+      answer: 'The primary language is local, but English is widely understood in tourist areas. Guides are available in multiple languages including Spanish, French, German, Chinese, and Japanese.',
+      category: 'practical',
+    },
+    {
+      id: 5,
+      question: 'Are there food options for dietary restrictions?',
+      answer: 'Yes! Vegetarian, vegan, gluten-free, and halal options are available at most restaurants. We recommend informing restaurants of allergies in advance.',
+      category: 'food',
+    },
+    {
+      id: 6,
+      question: 'What payment methods are accepted?',
+      answer: 'Major credit cards (Visa, Mastercard, Amex) are widely accepted. ATMs are available, but carrying some cash is recommended for small vendors and tips.',
+      category: 'practical',
+    },
+  ],
+  reviews: [
+    {
+      id: 1,
+      author: { name: 'Sarah Mitchell', avatar: '👩', location: 'New York, USA', trips: 24 },
+      rating: 5,
+      date: '2024-01-15',
+      title: 'Absolutely breathtaking experience!',
+      content: 'One of the most beautiful places I\'ve ever visited. The local guides were incredibly knowledgeable and friendly. The sunrise view alone is worth the trip. Highly recommend the early morning tour!',
+      helpful: 47,
+      photos: 5,
+      verified: true,
+      response: { author: 'Destination Team', content: 'Thank you for your wonderful review, Sarah! We\'re thrilled you enjoyed your experience.' },
+    },
+    {
+      id: 2,
+      author: { name: 'James Chen', avatar: '👨', location: 'Singapore', trips: 18 },
+      rating: 4,
+      date: '2024-01-08',
+      title: 'Great experience with minor crowds',
+      content: 'Beautiful scenery and well-organized facilities. Would recommend going early morning to avoid the afternoon crowds. The facilities are clean and staff are helpful.',
+      helpful: 32,
+      photos: 3,
+      verified: true,
+      response: null,
+    },
+    {
+      id: 3,
+      author: { name: 'Emily Rodriguez', avatar: '👩‍🦰', location: 'Barcelona, Spain', trips: 31 },
+      rating: 5,
+      date: '2023-12-22',
+      title: 'A must-visit destination!',
+      content: 'Exceeded all my expectations. The sunset views are absolutely magical - truly unforgettable. The local food scene is amazing too. Don\'t miss the night market nearby!',
+      helpful: 58,
+      photos: 8,
+      verified: true,
+      response: null,
+    },
+    {
+      id: 4,
+      author: { name: 'Michael Thompson', avatar: '🧔', location: 'London, UK', trips: 12 },
+      rating: 4,
+      date: '2023-12-10',
+      title: 'Beautiful but plan ahead',
+      content: 'Stunning location with excellent photo opportunities. Visit during weekdays if possible to avoid weekend crowds. Book your tickets online in advance - saves a lot of time.',
+      helpful: 21,
+      photos: 2,
+      verified: false,
+      response: null,
+    },
+  ],
+  itinerary: [
+    { time: '05:30', activity: 'Early Morning Departure', description: 'Beat the crowds for the best experience', icon: <FiSunrise />, duration: '30 min' },
+    { time: '06:00', activity: 'Sunrise Viewing', description: 'Witness the magical golden hour', icon: <FiSun />, duration: '1.5 hr' },
+    { time: '07:30', activity: 'Photography Session', description: 'Capture stunning morning light', icon: <FiCamera />, duration: '1 hr' },
+    { time: '08:30', activity: 'Local Breakfast', description: 'Traditional cuisine experience', icon: <FiCoffee />, duration: '1 hr' },
+    { time: '09:30', activity: 'Guided Walking Tour', description: 'Explore main attractions with expert guide', icon: <FiMap />, duration: '2.5 hr' },
+    { time: '12:00', activity: 'Lunch Break', description: 'Rest and try local specialties', icon: <FiCoffee />, duration: '1.5 hr' },
+    { time: '13:30', activity: 'Free Exploration', description: 'Discover hidden gems at your pace', icon: <FiCompass />, duration: '3 hr' },
+    { time: '16:30', activity: 'Afternoon Tea', description: 'Relax with scenic views', icon: <FiCoffee />, duration: '1 hr' },
+    { time: '17:30', activity: 'Sunset Spot', description: 'Golden hour from western viewpoint', icon: <FiSunset />, duration: '1.5 hr' },
+    { time: '19:00', activity: 'Dinner & Evening', description: 'Local restaurant recommendations', icon: <FiStar />, duration: '2 hr' },
+  ],
+  nearbyAttractions: [
+    { id: 1, name: 'Mountain Viewpoint', distance: 2.5, time: '15 min drive', type: 'Nature', rating: 4.7, image: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400' },
+    { id: 2, name: 'Historic Temple', distance: 4.0, time: '25 min drive', type: 'Culture', rating: 4.8, image: 'https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=400' },
+    { id: 3, name: 'Local Market', distance: 1.2, time: '5 min walk', type: 'Shopping', rating: 4.5, image: 'https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=400' },
+    { id: 4, name: 'Waterfall Trail', distance: 6.0, time: '30 min drive', type: 'Adventure', rating: 4.6, image: 'https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=400' },
+    { id: 5, name: 'Botanical Garden', distance: 3.5, time: '20 min drive', type: 'Nature', rating: 4.4, image: 'https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=400' },
+  ],
+  transportOptions: [
+    { mode: 'By Air', icon: '✈️', details: 'International Airport (XYZ) - 45 km away', duration: '45 min - 1 hr', price: '$$', tips: 'Book airport transfer in advance' },
+    { mode: 'By Train', icon: '🚂', details: 'Direct high-speed trains from major cities', duration: '2-4 hours', price: '$', tips: 'First class offers more comfort' },
+    { mode: 'By Bus', icon: '🚌', details: 'Regular services from regional bus stations', duration: '3-5 hours', price: '$', tips: 'Book VIP buses for comfort' },
+    { mode: 'By Car', icon: '🚗', details: 'Well-connected highways, parking available', duration: 'Varies', price: '$$', tips: 'GPS navigation recommended' },
+    { mode: 'By Ferry', icon: '⛴️', details: 'Scenic coastal route available', duration: '2-3 hours', price: '$$', tips: 'Book deck seats for views' },
+  ],
+  localPhrases: [
+    { english: 'Hello', local: 'Merhaba', pronunciation: 'mer-HA-ba', audio: true },
+    { english: 'Thank you', local: 'Teşekkürler', pronunciation: 'teh-shek-KOOR-ler', audio: true },
+    { english: 'Please', local: 'Lütfen', pronunciation: 'LOOT-fen', audio: true },
+    { english: 'Excuse me', local: 'Pardon', pronunciation: 'par-DON', audio: true },
+    { english: 'Goodbye', local: 'Hoşça kal', pronunciation: 'HOSH-cha kal', audio: true },
+    { english: 'How much?', local: 'Ne kadar?', pronunciation: 'neh ka-DAR', audio: true },
+    { english: 'Yes / No', local: 'Evet / Hayır', pronunciation: 'eh-VET / ha-YIR', audio: true },
+    { english: 'Help!', local: 'İmdat!', pronunciation: 'im-DAT', audio: true },
+  ],
+  culturalTips: [
+    { title: 'Greetings', description: 'A slight bow or nod is customary when greeting locals. Handshakes are common in business settings.', icon: '🙏' },
+    { title: 'Dress Code', description: 'Modest clothing is appreciated, especially at religious or cultural sites. Cover shoulders and knees.', icon: '👔' },
+    { title: 'Photography', description: 'Always ask permission before photographing people. Some sacred sites may prohibit photography.', icon: '📷' },
+    { title: 'Tipping', description: 'Tipping 10-15% is customary at restaurants. Round up taxi fares. Hotel porters appreciate small tips.', icon: '💰' },
+    { title: 'Bargaining', description: 'Expected at markets and street vendors. Start at 50-60% of asking price and negotiate respectfully.', icon: '🤝' },
+    { title: 'Punctuality', description: 'Being on time is appreciated for tours and reservations. Social events may be more relaxed.', icon: '⏰' },
+  ],
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UTILITY FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+const formatDate = (date, format = 'short') => {
+  const d = new Date(date);
+  const options = format === 'short'
+    ? { month: 'short', day: 'numeric' }
+    : { year: 'numeric', month: 'long', day: 'numeric' };
+  return d.toLocaleDateString('en-US', options);
+};
+
+const formatRelativeTime = (date) => {
+  const now = new Date();
+  const then = new Date(date);
+  const diff = Math.floor((now - then) / 1000);
+
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
+  if (diff < 604800) return `${Math.floor(diff / 86400)} days ago`;
+  if (diff < 2592000) return `${Math.floor(diff / 604800)} weeks ago`;
+  return formatDate(date);
+};
+
+const cn = (...classes) => classes.filter(Boolean).join(' ');
+
+const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UTILITY COMPONENTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Toast Container
+const ToastContainer = ({ toasts, onRemove }) => {
+  const icons = {
+    success: <FiCheckCircle size={20} />,
+    error: <FiXCircle size={20} />,
+    warning: <FiAlertCircle size={20} />,
+    info: <FiInfo size={20} />,
   };
 
-  const handleTouchEnd = (e) => {
-    const touchEnd = e.changedTouches[0].clientX;
-    const diff = touchStart - touchEnd;
-    if (Math.abs(diff) > 50) {
-      if (diff > 0) nextImage();
-      else prevImage();
+  const colors = {
+    success: { bg: THEME.colors.primary[50], border: THEME.colors.primary[500], text: THEME.colors.primary[700] },
+    error: { bg: '#FEF2F2', border: THEME.colors.semantic.error, text: '#991B1B' },
+    warning: { bg: '#FFFBEB', border: THEME.colors.semantic.warning, text: '#92400E' },
+    info: { bg: '#EFF6FF', border: THEME.colors.semantic.info, text: '#1E40AF' },
+  };
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: THEME.spacing[4],
+        right: THEME.spacing[4],
+        zIndex: THEME.zIndex.toast,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: THEME.spacing[3],
+        maxWidth: '400px',
+        width: '100%',
+        pointerEvents: 'none',
+      }}
+    >
+      {toasts.map((toast) => {
+        const c = colors[toast.type] || colors.info;
+        return (
+          <div
+            key={toast.id}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: THEME.spacing[3],
+              padding: THEME.spacing[4],
+              backgroundColor: c.bg,
+              borderLeft: `4px solid ${c.border}`,
+              borderRadius: THEME.borderRadius.lg,
+              boxShadow: THEME.shadows.lg,
+              animation: 'toastIn 0.3s ease',
+              pointerEvents: 'auto',
+            }}
+          >
+            <span style={{ color: c.border, flexShrink: 0 }}>{icons[toast.type]}</span>
+            <p style={{ flex: 1, fontSize: THEME.typography.fontSize.sm, color: c.text, fontWeight: THEME.typography.fontWeight.medium }}>
+              {toast.message}
+            </p>
+            <button
+              onClick={() => onRemove(toast.id)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: c.text,
+                cursor: 'pointer',
+                padding: THEME.spacing[1],
+                borderRadius: THEME.borderRadius.sm,
+                opacity: 0.7,
+                transition: `opacity ${THEME.transitions.fast}`,
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+              onMouseLeave={(e) => e.currentTarget.style.opacity = '0.7'}
+            >
+              <FiX size={16} />
+            </button>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// Skeleton Loader
+const Skeleton = ({ width = '100%', height = '20px', borderRadius = THEME.borderRadius.md, className = '' }) => (
+  <div
+    className={className}
+    style={{
+      width,
+      height,
+      borderRadius,
+      background: `linear-gradient(90deg, ${THEME.colors.neutral[200]} 25%, ${THEME.colors.neutral[100]} 50%, ${THEME.colors.neutral[200]} 75%)`,
+      backgroundSize: '200% 100%',
+      animation: 'shimmer 1.5s infinite',
+    }}
+  />
+);
+
+// Loading Spinner
+const Spinner = ({ size = 24, color = THEME.colors.primary[500] }) => (
+  <div
+    style={{
+      width: size,
+      height: size,
+      border: `3px solid ${THEME.colors.neutral[200]}`,
+      borderTopColor: color,
+      borderRadius: '50%',
+      animation: 'spin 0.8s linear infinite',
+    }}
+  />
+);
+
+// Badge Component
+const Badge = ({ children, variant = 'default', size = 'md', icon, dot = false }) => {
+  const variants = {
+    default: { bg: THEME.colors.primary[100], color: THEME.colors.primary[700], border: THEME.colors.primary[200] },
+    success: { bg: THEME.colors.primary[100], color: THEME.colors.primary[700], border: THEME.colors.primary[200] },
+    warning: { bg: '#FEF3C7', color: '#92400E', border: '#FDE68A' },
+    error: { bg: '#FEE2E2', color: '#991B1B', border: '#FECACA' },
+    info: { bg: '#DBEAFE', color: '#1E40AF', border: '#BFDBFE' },
+    neutral: { bg: THEME.colors.neutral[100], color: THEME.colors.neutral[700], border: THEME.colors.neutral[200] },
+    outline: { bg: 'transparent', color: THEME.colors.primary[600], border: THEME.colors.primary[300] },
+  };
+
+  const sizes = {
+    sm: { padding: `${THEME.spacing[1]} ${THEME.spacing[2]}`, fontSize: '10px' },
+    md: { padding: `${THEME.spacing[1]} ${THEME.spacing[3]}`, fontSize: '11px' },
+    lg: { padding: `${THEME.spacing[2]} ${THEME.spacing[4]}`, fontSize: '12px' },
+  };
+
+  const v = variants[variant] || variants.default;
+  const s = sizes[size] || sizes.md;
+
+  return (
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: THEME.spacing[1],
+        padding: s.padding,
+        backgroundColor: v.bg,
+        color: v.color,
+        border: `1px solid ${v.border}`,
+        borderRadius: THEME.borderRadius.full,
+        fontSize: s.fontSize,
+        fontWeight: THEME.typography.fontWeight.semibold,
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px',
+        lineHeight: 1,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      {dot && (
+        <span
+          style={{
+            width: 6,
+            height: 6,
+            borderRadius: '50%',
+            backgroundColor: v.color,
+          }}
+        />
+      )}
+      {icon && <span style={{ display: 'flex' }}>{icon}</span>}
+      {children}
+    </span>
+  );
+};
+
+// Button Component
+const Button = ({
+  children,
+  variant = 'primary',
+  size = 'md',
+  icon,
+  iconPosition = 'left',
+  fullWidth = false,
+  disabled = false,
+  loading = false,
+  as: Component = 'button',
+  to,
+  href,
+  onClick,
+  type = 'button',
+  className = '',
+  style: customStyle = {},
+  ...props
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [isPressed, setIsPressed] = useState(false);
+  const [ripples, setRipples] = useState([]);
+
+  const variants = {
+    primary: {
+      bg: THEME.colors.gradient.primary,
+      bgHover: THEME.colors.primary[700],
+      color: THEME.colors.neutral[0],
+      border: 'none',
+      shadow: '0 4px 14px rgba(5, 150, 105, 0.35)',
+      shadowHover: '0 6px 20px rgba(5, 150, 105, 0.45)',
+    },
+    secondary: {
+      bg: THEME.colors.neutral[0],
+      bgHover: THEME.colors.primary[50],
+      color: THEME.colors.primary[600],
+      border: `2px solid ${THEME.colors.primary[500]}`,
+      shadow: 'none',
+      shadowHover: '0 4px 12px rgba(5, 150, 105, 0.15)',
+    },
+    outline: {
+      bg: THEME.colors.neutral[0],
+      bgHover: THEME.colors.neutral[50],
+      color: THEME.colors.neutral[700],
+      border: `2px solid ${THEME.colors.neutral[300]}`,
+      shadow: 'none',
+      shadowHover: THEME.shadows.sm,
+    },
+    ghost: {
+      bg: 'transparent',
+      bgHover: THEME.colors.primary[50],
+      color: THEME.colors.primary[600],
+      border: 'none',
+      shadow: 'none',
+      shadowHover: 'none',
+    },
+    danger: {
+      bg: THEME.colors.semantic.error,
+      bgHover: '#B91C1C',
+      color: THEME.colors.neutral[0],
+      border: 'none',
+      shadow: '0 4px 14px rgba(220, 38, 38, 0.35)',
+      shadowHover: '0 6px 20px rgba(220, 38, 38, 0.45)',
+    },
+  };
+
+  const sizes = {
+    xs: { padding: `${THEME.spacing[1]} ${THEME.spacing[2]}`, fontSize: THEME.typography.fontSize.xs, height: '28px' },
+    sm: { padding: `${THEME.spacing[2]} ${THEME.spacing[3]}`, fontSize: THEME.typography.fontSize.sm, height: '36px' },
+    md: { padding: `${THEME.spacing[2]} ${THEME.spacing[5]}`, fontSize: THEME.typography.fontSize.sm, height: '44px' },
+    lg: { padding: `${THEME.spacing[3]} ${THEME.spacing[6]}`, fontSize: THEME.typography.fontSize.base, height: '52px' },
+    xl: { padding: `${THEME.spacing[4]} ${THEME.spacing[8]}`, fontSize: THEME.typography.fontSize.lg, height: '60px' },
+  };
+
+  const v = variants[variant] || variants.primary;
+  const s = sizes[size] || sizes.md;
+
+  const handleClick = (e) => {
+    if (disabled || loading) return;
+
+    // Ripple effect
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    const id = generateId();
+    setRipples(prev => [...prev, { id, x, y }]);
+    setTimeout(() => setRipples(prev => prev.filter(r => r.id !== id)), 600);
+
+    onClick?.(e);
+  };
+
+  const buttonStyle = {
+    position: 'relative',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: THEME.spacing[2],
+    padding: s.padding,
+    minHeight: s.height,
+    fontSize: s.fontSize,
+    fontWeight: THEME.typography.fontWeight.semibold,
+    fontFamily: THEME.typography.fontFamily.body,
+    color: v.color,
+    background: variant === 'primary' && isHovered ? v.bgHover : v.bg,
+    border: v.border,
+    borderRadius: THEME.borderRadius.lg,
+    cursor: disabled || loading ? 'not-allowed' : 'pointer',
+    opacity: disabled ? 0.5 : 1,
+    width: fullWidth ? '100%' : 'auto',
+    textDecoration: 'none',
+    overflow: 'hidden',
+    transition: `all ${THEME.transitions.DEFAULT}`,
+    boxShadow: isHovered && !disabled ? v.shadowHover : v.shadow,
+    transform: isPressed && !disabled ? 'scale(0.98)' : isHovered && !disabled ? 'translateY(-2px)' : 'none',
+    ...customStyle,
+  };
+
+  const content = (
+    <>
+      {ripples.map((ripple) => (
+        <span
+          key={ripple.id}
+          style={{
+            position: 'absolute',
+            left: ripple.x,
+            top: ripple.y,
+            width: 10,
+            height: 10,
+            marginLeft: -5,
+            marginTop: -5,
+            borderRadius: '50%',
+            backgroundColor: 'rgba(255, 255, 255, 0.4)',
+            animation: 'ripple 0.6s ease-out',
+            pointerEvents: 'none',
+          }}
+        />
+      ))}
+      {loading && <Spinner size={16} color={v.color} />}
+      {!loading && icon && iconPosition === 'left' && <span style={{ display: 'flex' }}>{icon}</span>}
+      <span>{children}</span>
+      {!loading && icon && iconPosition === 'right' && <span style={{ display: 'flex' }}>{icon}</span>}
+    </>
+  );
+
+  const commonProps = {
+    style: buttonStyle,
+    className,
+    onMouseEnter: () => setIsHovered(true),
+    onMouseLeave: () => { setIsHovered(false); setIsPressed(false); },
+    onMouseDown: () => setIsPressed(true),
+    onMouseUp: () => setIsPressed(false),
+    ...props,
+  };
+
+  if (to) {
+    return <Link to={to} onClick={handleClick} {...commonProps}>{content}</Link>;
+  }
+
+  if (href) {
+    return <a href={href} onClick={handleClick} {...commonProps}>{content}</a>;
+  }
+
+  return (
+    <button type={type} onClick={handleClick} disabled={disabled || loading} {...commonProps}>
+      {content}
+    </button>
+  );
+};
+
+// IconButton Component
+const IconButton = ({
+  icon,
+  onClick,
+  variant = 'default',
+  size = 'md',
+  active = false,
+  disabled = false,
+  tooltip,
+  badge,
+  ...props
+}) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  const variants = {
+    default: {
+      bg: active ? THEME.colors.primary[600] : 'rgba(255, 255, 255, 0.15)',
+      bgHover: active ? THEME.colors.primary[700] : 'rgba(255, 255, 255, 0.25)',
+      color: THEME.colors.neutral[0],
+      border: '1px solid rgba(255, 255, 255, 0.2)',
+    },
+    solid: {
+      bg: active ? THEME.colors.primary[600] : THEME.colors.neutral[0],
+      bgHover: active ? THEME.colors.primary[700] : THEME.colors.neutral[100],
+      color: active ? THEME.colors.neutral[0] : THEME.colors.neutral[600],
+      border: `1px solid ${THEME.colors.neutral[200]}`,
+    },
+    ghost: {
+      bg: active ? THEME.colors.primary[100] : 'transparent',
+      bgHover: THEME.colors.primary[100],
+      color: active ? THEME.colors.primary[600] : THEME.colors.neutral[600],
+      border: 'none',
+    },
+    outline: {
+      bg: 'transparent',
+      bgHover: THEME.colors.primary[50],
+      color: active ? THEME.colors.primary[600] : THEME.colors.neutral[600],
+      border: `2px solid ${active ? THEME.colors.primary[500] : THEME.colors.neutral[300]}`,
+    },
+  };
+
+  const sizes = {
+    sm: 32,
+    md: 40,
+    lg: 48,
+    xl: 56,
+  };
+
+  const v = variants[variant] || variants.default;
+  const s = sizes[size] || sizes.md;
+
+  return (
+    <div style={{ position: 'relative', display: 'inline-flex' }}>
+      <button
+        onClick={onClick}
+        disabled={disabled}
+        onMouseEnter={() => { setIsHovered(true); if (tooltip) setTimeout(() => setShowTooltip(true), 500); }}
+        onMouseLeave={() => { setIsHovered(false); setShowTooltip(false); }}
+        style={{
+          width: s,
+          height: s,
+          borderRadius: THEME.borderRadius.full,
+          backgroundColor: isHovered ? v.bgHover : v.bg,
+          border: v.border,
+          color: v.color,
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled ? 0.5 : 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: `all ${THEME.transitions.DEFAULT}`,
+          backdropFilter: 'blur(10px)',
+          transform: isHovered && !disabled ? 'scale(1.08)' : 'scale(1)',
+        }}
+        {...props}
+      >
+        {icon}
+      </button>
+      {badge !== undefined && (
+        <span
+          style={{
+            position: 'absolute',
+            top: -4,
+            right: -4,
+            minWidth: 18,
+            height: 18,
+            padding: '0 5px',
+            backgroundColor: THEME.colors.semantic.error,
+            color: THEME.colors.neutral[0],
+            fontSize: '10px',
+            fontWeight: THEME.typography.fontWeight.bold,
+            borderRadius: THEME.borderRadius.full,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            border: `2px solid ${THEME.colors.neutral[0]}`,
+          }}
+        >
+          {badge}
+        </span>
+      )}
+      {showTooltip && tooltip && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            marginBottom: THEME.spacing[2],
+            padding: `${THEME.spacing[1]} ${THEME.spacing[2]}`,
+            backgroundColor: THEME.colors.neutral[900],
+            color: THEME.colors.neutral[0],
+            fontSize: THEME.typography.fontSize.xs,
+            fontWeight: THEME.typography.fontWeight.medium,
+            borderRadius: THEME.borderRadius.sm,
+            whiteSpace: 'nowrap',
+            animation: 'fadeIn 0.15s ease',
+            zIndex: THEME.zIndex.tooltip,
+          }}
+        >
+          {tooltip}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: -4,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '4px solid transparent',
+              borderRight: '4px solid transparent',
+              borderTop: `4px solid ${THEME.colors.neutral[900]}`,
+            }}
+          />
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Card Component
+const Card = ({
+  children,
+  padding = THEME.spacing[6],
+  hover = false,
+  animate = true,
+  delay = 0,
+  onClick,
+  className = '',
+  style: customStyle = {},
+  ...props
+}) => {
+  const [ref, entry] = useIntersectionObserver({ threshold: 0.1 });
+  const [isHovered, setIsHovered] = useState(false);
+  const isVisible = !animate || entry?.isIntersecting;
+
+  return (
+    <div
+      ref={ref}
+      onClick={onClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      className={className}
+      style={{
+        backgroundColor: THEME.colors.neutral[0],
+        borderRadius: THEME.borderRadius['2xl'],
+        padding,
+        boxShadow: isHovered && hover ? THEME.shadows.xl : THEME.shadows.md,
+        border: `1px solid ${THEME.colors.neutral[200]}`,
+        cursor: onClick ? 'pointer' : 'default',
+        transition: `all ${THEME.transitions.DEFAULT}`,
+        opacity: isVisible ? 1 : 0,
+        transform: isVisible
+          ? isHovered && hover ? 'translateY(-4px)' : 'translateY(0)'
+          : 'translateY(20px)',
+        transitionDelay: `${delay}ms`,
+        ...customStyle,
+      }}
+      {...props}
+    >
+      {children}
+    </div>
+  );
+};
+
+// Section Header Component
+const SectionHeader = ({ icon, title, subtitle, action, badge }) => (
+  <div
+    style={{
+      display: 'flex',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      marginBottom: THEME.spacing[6],
+      gap: THEME.spacing[4],
+      flexWrap: 'wrap',
+    }}
+  >
+    <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[4] }}>
+      {icon && (
+        <div
+          style={{
+            width: 52,
+            height: 52,
+            borderRadius: THEME.borderRadius.xl,
+            background: THEME.colors.gradient.primary,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: THEME.colors.neutral[0],
+            flexShrink: 0,
+            boxShadow: '0 4px 14px rgba(5, 150, 105, 0.25)',
+          }}
+        >
+          {icon}
+        </div>
+      )}
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[2] }}>
+          <h3
+            style={{
+              fontFamily: THEME.typography.fontFamily.heading,
+              fontSize: THEME.typography.fontSize['2xl'],
+              fontWeight: THEME.typography.fontWeight.bold,
+              color: THEME.colors.neutral[900],
+              margin: 0,
+              lineHeight: THEME.typography.lineHeight.tight,
+            }}
+          >
+            {title}
+          </h3>
+          {badge}
+        </div>
+        {subtitle && (
+          <p
+            style={{
+              fontSize: THEME.typography.fontSize.sm,
+              color: THEME.colors.neutral[500],
+              margin: `${THEME.spacing[1]} 0 0`,
+              lineHeight: THEME.typography.lineHeight.normal,
+            }}
+          >
+            {subtitle}
+          </p>
+        )}
+      </div>
+    </div>
+    {action}
+  </div>
+);
+
+// Star Rating Component
+const StarRating = ({ rating, size = 16, showValue = false, interactive = false, onChange }) => {
+  const [hoverRating, setHoverRating] = useState(0);
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[1] }}>
+      {[1, 2, 3, 4, 5].map((star) => {
+        const filled = (interactive ? hoverRating || rating : rating) >= star;
+        const halfFilled = !filled && (interactive ? hoverRating || rating : rating) >= star - 0.5;
+
+        return (
+          <button
+            key={star}
+            type="button"
+            onClick={() => interactive && onChange?.(star)}
+            onMouseEnter={() => interactive && setHoverRating(star)}
+            onMouseLeave={() => interactive && setHoverRating(0)}
+            style={{
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              cursor: interactive ? 'pointer' : 'default',
+              display: 'flex',
+              transition: `transform ${THEME.transitions.fast}`,
+              transform: interactive && hoverRating >= star ? 'scale(1.2)' : 'scale(1)',
+            }}
+          >
+            <FiStar
+              size={size}
+              style={{
+                fill: filled ? THEME.colors.semantic.warning : halfFilled ? `url(#half-${star})` : 'none',
+                color: THEME.colors.semantic.warning,
+                transition: `all ${THEME.transitions.fast}`,
+              }}
+            />
+          </button>
+        );
+      })}
+      {showValue && (
+        <span
+          style={{
+            marginLeft: THEME.spacing[2],
+            fontSize: size * 0.875,
+            fontWeight: THEME.typography.fontWeight.semibold,
+            color: THEME.colors.neutral[700],
+          }}
+        >
+          {rating.toFixed(1)}
+        </span>
+      )}
+    </div>
+  );
+};
+
+// Progress Bar Component
+const ProgressBar = ({
+  value,
+  max = 100,
+  label,
+  showValue = true,
+  size = 'md',
+  color = THEME.colors.primary[500],
+  animated = true,
+}) => {
+  const percentage = Math.min(100, Math.max(0, (value / max) * 100));
+  const heights = { sm: 4, md: 8, lg: 12 };
+  const h = heights[size] || heights.md;
+
+  return (
+    <div style={{ marginBottom: THEME.spacing[4] }}>
+      {(label || showValue) && (
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: THEME.spacing[2],
+          }}
+        >
+          {label && (
+            <span
+              style={{
+                fontSize: THEME.typography.fontSize.sm,
+                fontWeight: THEME.typography.fontWeight.medium,
+                color: THEME.colors.neutral[700],
+              }}
+            >
+              {label}
+            </span>
+          )}
+          {showValue && (
+            <span
+              style={{
+                fontSize: THEME.typography.fontSize.sm,
+                fontWeight: THEME.typography.fontWeight.semibold,
+                color,
+              }}
+            >
+              {value}/{max}
+            </span>
+          )}
+        </div>
+      )}
+      <div
+        style={{
+          height: h,
+          backgroundColor: THEME.colors.neutral[200],
+          borderRadius: THEME.borderRadius.full,
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            height: '100%',
+            width: `${percentage}%`,
+            background: `linear-gradient(90deg, ${color} 0%, ${THEME.colors.primary[400]} 100%)`,
+            borderRadius: THEME.borderRadius.full,
+            transition: animated ? `width 1s ${THEME.transitions.spring}` : 'none',
+          }}
+        />
+      </div>
+    </div>
+  );
+};
+
+// Tab Component
+const Tab = ({ children, active, onClick, icon, count }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: THEME.spacing[2],
+        padding: `${THEME.spacing[4]} ${THEME.spacing[5]}`,
+        fontSize: THEME.typography.fontSize.sm,
+        fontWeight: THEME.typography.fontWeight.semibold,
+        fontFamily: THEME.typography.fontFamily.body,
+        color: active ? THEME.colors.primary[600] : THEME.colors.neutral[500],
+        backgroundColor: active ? THEME.colors.primary[50] : isHovered ? THEME.colors.neutral[50] : 'transparent',
+        border: 'none',
+        borderBottom: `3px solid ${active ? THEME.colors.primary[500] : 'transparent'}`,
+        borderRadius: `${THEME.borderRadius.lg} ${THEME.borderRadius.lg} 0 0`,
+        cursor: 'pointer',
+        transition: `all ${THEME.transitions.DEFAULT}`,
+        whiteSpace: 'nowrap',
+        marginBottom: '-1px',
+      }}
+    >
+      {icon && <span style={{ display: 'flex' }}>{icon}</span>}
+      <span>{children}</span>
+      {count !== undefined && (
+        <span
+          style={{
+            minWidth: 20,
+            height: 20,
+            padding: '0 6px',
+            backgroundColor: active ? THEME.colors.primary[500] : THEME.colors.neutral[300],
+            color: THEME.colors.neutral[0],
+            fontSize: '10px',
+            fontWeight: THEME.typography.fontWeight.bold,
+            borderRadius: THEME.borderRadius.full,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {count}
+        </span>
+      )}
+    </button>
+  );
+};
+
+// Accordion Component
+const Accordion = ({ items, allowMultiple = false }) => {
+  const [openItems, setOpenItems] = useState([]);
+
+  const toggle = (index) => {
+    if (allowMultiple) {
+      setOpenItems(prev =>
+        prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+      );
+    } else {
+      setOpenItems(prev => prev.includes(index) ? [] : [index]);
     }
   };
 
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: THEME.spacing[3] }}>
+      {items.map((item, index) => {
+        const isOpen = openItems.includes(index);
+        return (
+          <div
+            key={item.id || index}
+            style={{
+              borderRadius: THEME.borderRadius.xl,
+              border: `1px solid ${THEME.colors.neutral[200]}`,
+              overflow: 'hidden',
+              backgroundColor: THEME.colors.neutral[0],
+            }}
+          >
+            <button
+              onClick={() => toggle(index)}
+              style={{
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: THEME.spacing[5],
+                backgroundColor: isOpen ? THEME.colors.primary[50] : THEME.colors.neutral[0],
+                border: 'none',
+                cursor: 'pointer',
+                textAlign: 'left',
+                transition: `background-color ${THEME.transitions.DEFAULT}`,
+              }}
+            >
+              <span
+                style={{
+                  fontSize: THEME.typography.fontSize.base,
+                  fontWeight: THEME.typography.fontWeight.semibold,
+                  color: THEME.colors.neutral[900],
+                  paddingRight: THEME.spacing[4],
+                }}
+              >
+                {item.question}
+              </span>
+              <span
+                style={{
+                  color: THEME.colors.primary[500],
+                  transition: `transform ${THEME.transitions.DEFAULT}`,
+                  transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                  flexShrink: 0,
+                }}
+              >
+                <FiChevronDown size={20} />
+              </span>
+            </button>
+            <div
+              style={{
+                maxHeight: isOpen ? '500px' : '0',
+                overflow: 'hidden',
+                transition: `max-height ${THEME.transitions.slow}`,
+              }}
+            >
+              <div
+                style={{
+                  padding: `0 ${THEME.spacing[5]} ${THEME.spacing[5]}`,
+                  fontSize: THEME.typography.fontSize.sm,
+                  color: THEME.colors.neutral[600],
+                  lineHeight: THEME.typography.lineHeight.relaxed,
+                }}
+              >
+                {item.answer}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+// Modal Component
+const Modal = ({ isOpen, onClose, title, children, size = 'md', showClose = true }) => {
+  const modalRef = useClickOutside(onClose);
+  useLockBodyScroll(isOpen);
+  useKeyPress('Escape', onClose);
+
+  if (!isOpen) return null;
+
+  const sizes = {
+    sm: '400px',
+    md: '500px',
+    lg: '700px',
+    xl: '900px',
+    full: '95vw',
+  };
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backdropFilter: 'blur(4px)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: THEME.zIndex.modal,
+        padding: THEME.spacing[4],
+        animation: 'fadeIn 0.2s ease',
+      }}
+    >
+      <div
+        ref={modalRef}
+        style={{
+          backgroundColor: THEME.colors.neutral[0],
+          borderRadius: THEME.borderRadius['2xl'],
+          maxWidth: sizes[size] || sizes.md,
+          width: '100%',
+          maxHeight: '90vh',
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          animation: 'scaleIn 0.3s ease',
+          boxShadow: THEME.shadows['2xl'],
+        }}
+      >
+        {(title || showClose) && (
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: THEME.spacing[6],
+              borderBottom: `1px solid ${THEME.colors.neutral[200]}`,
+            }}
+          >
+            {title && (
+              <h2
+                style={{
+                  fontFamily: THEME.typography.fontFamily.heading,
+                  fontSize: THEME.typography.fontSize['xl'],
+                  fontWeight: THEME.typography.fontWeight.bold,
+                  color: THEME.colors.neutral[900],
+                  margin: 0,
+                }}
+              >
+                {title}
+              </h2>
+            )}
+            {showClose && (
+              <IconButton
+                icon={<FiX size={20} />}
+                onClick={onClose}
+                variant="ghost"
+                size="sm"
+              />
+            )}
+          </div>
+        )}
+        <div style={{ flex: 1, overflow: 'auto', padding: THEME.spacing[6] }}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Empty State Component
+const EmptyState = ({ icon, title, description, action }) => (
+  <div
+    style={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: THEME.spacing[12],
+      textAlign: 'center',
+    }}
+  >
+    {icon && (
+      <div
+        style={{
+          width: 80,
+          height: 80,
+          borderRadius: THEME.borderRadius.full,
+          backgroundColor: THEME.colors.primary[100],
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: THEME.spacing[6],
+          color: THEME.colors.primary[500],
+        }}
+      >
+        {icon}
+      </div>
+    )}
+    <h3
+      style={{
+        fontFamily: THEME.typography.fontFamily.heading,
+        fontSize: THEME.typography.fontSize['xl'],
+        fontWeight: THEME.typography.fontWeight.semibold,
+        color: THEME.colors.neutral[900],
+        marginBottom: THEME.spacing[2],
+      }}
+    >
+      {title}
+    </h3>
+    {description && (
+      <p
+        style={{
+          fontSize: THEME.typography.fontSize.base,
+          color: THEME.colors.neutral[500],
+          marginBottom: THEME.spacing[6],
+          maxWidth: '400px',
+        }}
+      >
+        {description}
+      </p>
+    )}
+    {action}
+  </div>
+);
+
+// Image Gallery Component
+const ImageGallery = ({
+  images,
+  currentIndex,
+  setCurrentIndex,
+  autoPlay = true,
+  autoPlayInterval = 5000,
+  showThumbnails = true,
+  showControls = true,
+  onImageClick,
+}) => {
+  const [isPaused, setIsPaused] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  const swipeHandlers = useSwipe(
+    () => setCurrentIndex(prev => (prev + 1) % images.length),
+    () => setCurrentIndex(prev => (prev - 1 + images.length) % images.length)
+  );
+
+  useEffect(() => {
+    if (!autoPlay || isPaused) return;
+    const interval = setInterval(() => {
+      setCurrentIndex(prev => (prev + 1) % images.length);
+    }, autoPlayInterval);
+    return () => clearInterval(interval);
+  }, [autoPlay, isPaused, autoPlayInterval, images.length, setCurrentIndex]);
+
+  useEffect(() => {
+    setImageLoaded(false);
+  }, [currentIndex]);
+
+  return (
+    <div
+      style={{ position: 'relative', width: '100%', height: '100%' }}
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      {...swipeHandlers}
+    >
+      {/* Main Image */}
+      <div
+        style={{
+          position: 'relative',
+          width: '100%',
+          height: '100%',
+          overflow: 'hidden',
+          cursor: onImageClick ? 'pointer' : 'default',
+        }}
+        onClick={onImageClick}
+      >
+        <img
+          src={images[currentIndex]}
+          alt={`Slide ${currentIndex + 1}`}
+          onLoad={() => setImageLoaded(true)}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            transition: `all ${THEME.transitions.slow}`,
+            transform: imageLoaded ? 'scale(1)' : 'scale(1.05)',
+            opacity: imageLoaded ? 1 : 0,
+          }}
+        />
+        {!imageLoaded && (
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: THEME.colors.neutral[200],
+            }}
+          >
+            <Spinner size={32} />
+          </div>
+        )}
+      </div>
+
+      {/* Controls */}
+      {showControls && images.length > 1 && (
+        <>
+          <IconButton
+            icon={<FiChevronLeft size={24} />}
+            onClick={() => setCurrentIndex(prev => (prev - 1 + images.length) % images.length)}
+            variant="default"
+            size="lg"
+            style={{
+              position: 'absolute',
+              left: THEME.spacing[4],
+              top: '50%',
+              transform: 'translateY(-50%)',
+            }}
+          />
+          <IconButton
+            icon={<FiChevronRight size={24} />}
+            onClick={() => setCurrentIndex(prev => (prev + 1) % images.length)}
+            variant="default"
+            size="lg"
+            style={{
+              position: 'absolute',
+              right: THEME.spacing[4],
+              top: '50%',
+              transform: 'translateY(-50%)',
+            }}
+          />
+        </>
+      )}
+
+      {/* Indicators */}
+      {showThumbnails && images.length > 1 && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: THEME.spacing[4],
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            gap: THEME.spacing[2],
+          }}
+        >
+          {images.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrentIndex(i)}
+              style={{
+                width: currentIndex === i ? 24 : 10,
+                height: 10,
+                borderRadius: THEME.borderRadius.full,
+                backgroundColor: currentIndex === i ? THEME.colors.neutral[0] : 'rgba(255,255,255,0.4)',
+                border: 'none',
+                cursor: 'pointer',
+                transition: `all ${THEME.transitions.DEFAULT}`,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Counter */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: THEME.spacing[4],
+          right: THEME.spacing[4],
+          display: 'flex',
+          alignItems: 'center',
+          gap: THEME.spacing[2],
+          padding: `${THEME.spacing[2]} ${THEME.spacing[3]}`,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: THEME.borderRadius.full,
+          color: THEME.colors.neutral[0],
+          fontSize: THEME.typography.fontSize.sm,
+          fontWeight: THEME.typography.fontWeight.medium,
+        }}
+      >
+        <FiCamera size={14} />
+        <span>{currentIndex + 1} / {images.length}</span>
+      </div>
+    </div>
+  );
+};
+
+// Lightbox Component
+const Lightbox = ({ images, currentIndex, setCurrentIndex, onClose }) => {
+  useLockBodyScroll(true);
+  useKeyPress('Escape', onClose);
+  useKeyPress('ArrowLeft', () => setCurrentIndex(prev => (prev - 1 + images.length) % images.length));
+  useKeyPress('ArrowRight', () => setCurrentIndex(prev => (prev + 1) % images.length));
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        inset: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.95)',
+        zIndex: THEME.zIndex.modal + 10,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        animation: 'fadeIn 0.2s ease',
+      }}
+      onClick={onClose}
+    >
+      {/* Close Button */}
+      <IconButton
+        icon={<FiX size={24} />}
+        onClick={onClose}
+        variant="default"
+        size="lg"
+        style={{ position: 'absolute', top: THEME.spacing[4], right: THEME.spacing[4], zIndex: 10 }}
+      />
+
+      {/* Navigation */}
+      <IconButton
+        icon={<FiChevronLeft size={28} />}
+        onClick={(e) => { e.stopPropagation(); setCurrentIndex(prev => (prev - 1 + images.length) % images.length); }}
+        variant="default"
+        size="xl"
+        style={{ position: 'absolute', left: THEME.spacing[4], top: '50%', transform: 'translateY(-50%)' }}
+      />
+      <IconButton
+        icon={<FiChevronRight size={28} />}
+        onClick={(e) => { e.stopPropagation(); setCurrentIndex(prev => (prev + 1) % images.length); }}
+        variant="default"
+        size="xl"
+        style={{ position: 'absolute', right: THEME.spacing[4], top: '50%', transform: 'translateY(-50%)' }}
+      />
+
+      {/* Image */}
+      <img
+        src={images[currentIndex]}
+        alt=""
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          maxWidth: '90vw',
+          maxHeight: '85vh',
+          objectFit: 'contain',
+          borderRadius: THEME.borderRadius.lg,
+          animation: 'scaleIn 0.3s ease',
+        }}
+      />
+
+      {/* Thumbnails */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: THEME.spacing[6],
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          gap: THEME.spacing[2],
+          padding: THEME.spacing[2],
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: THEME.borderRadius.lg,
+        }}
+      >
+        {images.map((img, i) => (
+          <button
+            key={i}
+            onClick={(e) => { e.stopPropagation(); setCurrentIndex(i); }}
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: THEME.borderRadius.md,
+              overflow: 'hidden',
+              border: currentIndex === i ? `2px solid ${THEME.colors.primary[500]}` : '2px solid transparent',
+              opacity: currentIndex === i ? 1 : 0.6,
+              cursor: 'pointer',
+              transition: `all ${THEME.transitions.DEFAULT}`,
+              padding: 0,
+              background: 'none',
+            }}
+          >
+            <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          </button>
+        ))}
+      </div>
+
+      {/* Counter */}
+      <div
+        style={{
+          position: 'absolute',
+          top: THEME.spacing[4],
+          left: '50%',
+          transform: 'translateX(-50%)',
+          padding: `${THEME.spacing[2]} ${THEME.spacing[4]}`,
+          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: THEME.borderRadius.full,
+          color: THEME.colors.neutral[0],
+          fontSize: THEME.typography.fontSize.sm,
+          fontWeight: THEME.typography.fontWeight.semibold,
+        }}
+      >
+        {currentIndex + 1} of {images.length}
+      </div>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SECTION COMPONENTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Hero Section
+const HeroSection = ({
+  destination,
+  country,
+  currentImageIndex,
+  setCurrentImageIndex,
+  isFavorite,
+  setIsFavorite,
+  isBookmarked,
+  setIsBookmarked,
+  onShare,
+  onOpenLightbox,
+  onScrollToContent,
+  isMobile,
+  toast,
+}) => {
+  const handleFavoriteClick = () => {
+    setIsFavorite(!isFavorite);
+    toast[isFavorite ? 'info' : 'success'](
+      isFavorite ? 'Removed from favorites' : 'Added to favorites!'
+    );
+  };
+
+  const handleBookmarkClick = () => {
+    setIsBookmarked(!isBookmarked);
+    toast[isBookmarked ? 'info' : 'success'](
+      isBookmarked ? 'Removed from saved' : 'Saved for later!'
+    );
+  };
+
+  return (
+    <section
+      style={{
+        position: 'relative',
+        height: isMobile ? '75vh' : '92vh',
+        minHeight: isMobile ? '500px' : '650px',
+        overflow: 'hidden',
+      }}
+    >
+      {/* Image Gallery */}
+      <ImageGallery
+        images={destination.images}
+        currentIndex={currentImageIndex}
+        setCurrentIndex={setCurrentImageIndex}
+        autoPlay={true}
+        autoPlayInterval={6000}
+        showThumbnails={true}
+        showControls={!isMobile}
+        onImageClick={onOpenLightbox}
+      />
+
+      {/* Gradient Overlay */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: THEME.colors.gradient.hero,
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* Top Actions */}
+      <div
+        className="no-print"
+        style={{
+          position: 'absolute',
+          top: THEME.spacing[4],
+          right: isMobile ? THEME.spacing[4] : THEME.spacing[8],
+          display: 'flex',
+          gap: THEME.spacing[3],
+          zIndex: 20,
+          animation: 'fadeInDown 0.6s ease forwards',
+        }}
+      >
+        <IconButton
+          icon={<FiHeart size={20} style={{ fill: isFavorite ? 'currentColor' : 'none' }} />}
+          onClick={handleFavoriteClick}
+          active={isFavorite}
+          tooltip="Add to favorites"
+        />
+        <IconButton
+          icon={<FiBookmark size={20} style={{ fill: isBookmarked ? 'currentColor' : 'none' }} />}
+          onClick={handleBookmarkClick}
+          active={isBookmarked}
+          tooltip="Save for later"
+        />
+        <IconButton
+          icon={<FiShare2 size={20} />}
+          onClick={onShare}
+          tooltip="Share"
+        />
+        <IconButton
+          icon={<FiMaximize2 size={20} />}
+          onClick={onOpenLightbox}
+          tooltip="View gallery"
+        />
+      </div>
+
+      {/* Hero Content */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: isMobile ? `${THEME.spacing[6]} ${THEME.spacing[4]} ${THEME.spacing[24]}` : `${THEME.spacing[10]} ${THEME.spacing[12]} ${THEME.spacing[32]}`,
+          color: THEME.colors.neutral[0],
+          zIndex: 10,
+        }}
+      >
+        {/* Breadcrumbs */}
+        <nav
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: THEME.spacing[2],
+            marginBottom: THEME.spacing[4],
+            fontSize: THEME.typography.fontSize.sm,
+            opacity: 0.9,
+            flexWrap: 'wrap',
+            animation: 'fadeInUp 0.6s ease forwards',
+          }}
+        >
+          {[
+            { to: '/', label: 'Home', icon: <FiHome size={14} /> },
+            { to: '/destinations', label: 'Destinations' },
+            { to: `/country/${destination.countryId || destination.country_id}`, label: country?.name || 'Country' },
+            { label: destination.name, current: true },
+          ].map((item, i, arr) => (
+            <React.Fragment key={i}>
+              {item.to ? (
+                <Link
+                  to={item.to}
+                  style={{
+                    color: 'inherit',
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: THEME.spacing[1],
+                    transition: `opacity ${THEME.transitions.fast}`,
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+                >
+                  {item.icon}
+                  {item.label}
+                </Link>
+              ) : (
+                <span style={{ fontWeight: THEME.typography.fontWeight.semibold }}>{item.label}</span>
+              )}
+              {i < arr.length - 1 && <FiChevronRight size={14} style={{ opacity: 0.6 }} />}
+            </React.Fragment>
+          ))}
+        </nav>
+
+        {/* Title */}
+        <h1
+          style={{
+            fontFamily: THEME.typography.fontFamily.heading,
+            fontSize: isMobile ? THEME.typography.fontSize['4xl'] : THEME.typography.fontSize['6xl'],
+            fontWeight: THEME.typography.fontWeight.bold,
+            margin: `0 0 ${THEME.spacing[3]}`,
+            textShadow: '0 4px 30px rgba(0,0,0,0.4)',
+            lineHeight: THEME.typography.lineHeight.tight,
+            animation: 'fadeInUp 0.6s ease 0.1s both',
+          }}
+        >
+          {destination.name}
+        </h1>
+
+        {/* Description */}
+        <p
+          style={{
+            fontSize: isMobile ? THEME.typography.fontSize.base : THEME.typography.fontSize.lg,
+            maxWidth: '700px',
+            lineHeight: THEME.typography.lineHeight.relaxed,
+            marginBottom: THEME.spacing[5],
+            opacity: 0.95,
+            animation: 'fadeInUp 0.6s ease 0.2s both',
+          }}
+        >
+          {destination.description}
+        </p>
+
+        {/* Stats */}
+        <div
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: THEME.spacing[3],
+            animation: 'fadeInUp 0.6s ease 0.3s both',
+          }}
+        >
+          {[
+            { icon: <FiStar size={14} style={{ fill: THEME.colors.semantic.warning, color: THEME.colors.semantic.warning }} />, label: `${destination.rating} Rating` },
+            { icon: <FiClock size={14} />, label: destination.duration },
+            { icon: <FiUsers size={14} />, label: destination.difficulty },
+            { icon: <FiMessageCircle size={14} />, label: `${destination.reviews}+ Reviews` },
+          ].map((stat, i) => (
+            <div
+              key={i}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: THEME.spacing[2],
+                padding: `${THEME.spacing[2]} ${THEME.spacing[4]}`,
+                backgroundColor: 'rgba(255,255,255,0.15)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: THEME.borderRadius.full,
+                fontSize: THEME.typography.fontSize.sm,
+                fontWeight: THEME.typography.fontWeight.medium,
+              }}
+            >
+              {stat.icon}
+              <span>{stat.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Scroll Indicator */}
+      {!isMobile && (
+        <button
+          onClick={onScrollToContent}
+          style={{
+            position: 'absolute',
+            bottom: THEME.spacing[8],
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: THEME.spacing[2],
+            color: THEME.colors.neutral[0],
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            zIndex: 20,
+            animation: 'fadeInUp 0.6s ease 0.5s both, bounce 2s ease-in-out 1.5s infinite',
+          }}
+        >
+          <span
+            style={{
+              fontSize: THEME.typography.fontSize.xs,
+              fontWeight: THEME.typography.fontWeight.semibold,
+              letterSpacing: '2px',
+              textTransform: 'uppercase',
+            }}
+          >
+            Explore
+          </span>
+          <FiChevronDown size={24} />
+        </button>
+      )}
+    </section>
+  );
+};
+
+// Quick Actions Bar
+const QuickActionsBar = ({ destination, onDownload, onPrint, onShare, isMobile, isScrolled, viewCount = 2847 }) => (
+  <div
+    className="no-print"
+    style={{
+      backgroundColor: THEME.colors.neutral[0],
+      borderBottom: `1px solid ${THEME.colors.neutral[200]}`,
+      padding: `${THEME.spacing[3]} ${isMobile ? THEME.spacing[4] : THEME.spacing[8]}`,
+      position: 'sticky',
+      top: 0,
+      zIndex: THEME.zIndex.sticky,
+      boxShadow: isScrolled ? THEME.shadows.md : 'none',
+      transition: `box-shadow ${THEME.transitions.DEFAULT}`,
+    }}
+  >
+    <div
+      style={{
+        maxWidth: '1400px',
+        margin: '0 auto',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: THEME.spacing[4],
+        flexWrap: 'wrap',
+      }}
+    >
+      <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[3], flexWrap: 'wrap' }}>
+        <span style={{ fontSize: THEME.typography.fontSize.sm, color: THEME.colors.neutral[500], fontWeight: THEME.typography.fontWeight.medium }}>
+          Quick Actions:
+        </span>
+        <Button variant="outline" size="sm" icon={<FiDownload size={14} />} onClick={onDownload}>
+          {!isMobile && 'Download'}
+        </Button>
+        <Button variant="outline" size="sm" icon={<FiPrinter size={14} />} onClick={onPrint}>
+          {!isMobile && 'Print'}
+        </Button>
+        <Button variant="outline" size="sm" icon={<FiShare2 size={14} />} onClick={onShare}>
+          {!isMobile && 'Share'}
+        </Button>
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: THEME.spacing[2],
+          padding: `${THEME.spacing[2]} ${THEME.spacing[4]}`,
+          backgroundColor: THEME.colors.primary[50],
+          borderRadius: THEME.borderRadius.lg,
+        }}
+      >
+        <FiEye size={16} style={{ color: THEME.colors.primary[600] }} />
+        <span style={{ fontSize: THEME.typography.fontSize.sm, fontWeight: THEME.typography.fontWeight.semibold, color: THEME.colors.primary[700] }}>
+          {viewCount.toLocaleString()} views today
+        </span>
+      </div>
+    </div>
+  </div>
+);
+
+// Overview Section
+const OverviewSection = ({ destination, country }) => {
+  const weather = MOCK_DATA.weather;
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: THEME.spacing[6] }}>
+      {/* About Card */}
+      <Card delay={0}>
+        <SectionHeader
+          icon={<FiInfo size={24} />}
+          title="About This Destination"
+          subtitle="Everything you need to know"
+          badge={<Badge variant="success" dot>Popular</Badge>}
+        />
+        <div style={{ marginBottom: THEME.spacing[5] }}>
+          <Badge icon={<FiMapPin size={10} />}>{destination.type}</Badge>
+        </div>
+        <p
+          style={{
+            fontSize: THEME.typography.fontSize.base,
+            color: THEME.colors.neutral[600],
+            lineHeight: THEME.typography.lineHeight.relaxed,
+            marginBottom: THEME.spacing[6],
+          }}
+        >
+          {destination.fullDescription || destination.description}
+        </p>
+
+        {/* Quick Info Grid */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+            gap: THEME.spacing[4],
+          }}
+        >
+          {[
+            { icon: <FiMapPin size={20} />, label: 'Location', value: country?.name || 'Unknown' },
+            { icon: <FiClock size={20} />, label: 'Duration', value: destination.duration },
+            { icon: <FiUsers size={20} />, label: 'Difficulty', value: destination.difficulty },
+            { icon: <FiCalendar size={20} />, label: 'Best Time', value: destination.bestTime || 'Spring-Fall' },
+          ].map((item, i) => (
+            <div
+              key={i}
+              style={{
+                padding: THEME.spacing[4],
+                backgroundColor: THEME.colors.neutral[50],
+                borderRadius: THEME.borderRadius.xl,
+                textAlign: 'center',
+                border: `1px solid ${THEME.colors.neutral[200]}`,
+                transition: `all ${THEME.transitions.DEFAULT}`,
+              }}
+            >
+              <div
+                style={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: THEME.borderRadius.lg,
+                  backgroundColor: THEME.colors.primary[100],
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: `0 auto ${THEME.spacing[3]}`,
+                  color: THEME.colors.primary[600],
+                }}
+              >
+                {item.icon}
+              </div>
+              <div style={{ fontSize: THEME.typography.fontSize.xs, color: THEME.colors.neutral[500], marginBottom: THEME.spacing[1] }}>
+                {item.label}
+              </div>
+              <div style={{ fontSize: THEME.typography.fontSize.base, fontWeight: THEME.typography.fontWeight.semibold, color: THEME.colors.neutral[900] }}>
+                {item.value}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Weather Card */}
+      <Card delay={100}>
+        <SectionHeader
+          icon={<FiSun size={24} />}
+          title="Current Weather"
+          subtitle="Live conditions & 7-day forecast"
+          action={
+            <Button variant="ghost" size="sm" icon={<FiRefreshCw size={14} />}>
+              Refresh
+            </Button>
+          }
+        />
+
+        {/* Current Weather */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
+            gap: THEME.spacing[3],
+            marginBottom: THEME.spacing[6],
+          }}
+        >
+          {[
+            { icon: <FiThermometer size={24} />, value: `${weather.current.temp}°C`, label: 'Temperature', color: THEME.colors.semantic.error },
+            { icon: <FiSun size={24} />, value: weather.current.condition, label: 'Condition', color: THEME.colors.semantic.warning },
+            { icon: <FiDroplet size={24} />, value: `${weather.current.humidity}%`, label: 'Humidity', color: THEME.colors.semantic.info },
+            { icon: <FiWind size={24} />, value: `${weather.current.wind} km/h`, label: 'Wind', color: THEME.colors.neutral[500] },
+          ].map((item, i) => (
+            <div
+              key={i}
+              style={{
+                padding: THEME.spacing[4],
+                backgroundColor: THEME.colors.primary[50],
+                borderRadius: THEME.borderRadius.xl,
+                textAlign: 'center',
+              }}
+            >
+              <div style={{ color: item.color, marginBottom: THEME.spacing[2] }}>{item.icon}</div>
+              <div style={{ fontSize: THEME.typography.fontSize.lg, fontWeight: THEME.typography.fontWeight.bold, color: THEME.colors.neutral[900] }}>
+                {item.value}
+              </div>
+              <div style={{ fontSize: THEME.typography.fontSize.xs, color: THEME.colors.neutral[500] }}>{item.label}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Forecast */}
+        <div
+          style={{
+            display: 'flex',
+            gap: THEME.spacing[2],
+            overflowX: 'auto',
+            paddingBottom: THEME.spacing[2],
+            margin: `0 -${THEME.spacing[2]}`,
+            padding: `0 ${THEME.spacing[2]}`,
+          }}
+        >
+          {weather.forecast.map((day, i) => (
+            <div
+              key={i}
+              style={{
+                flex: '0 0 auto',
+                minWidth: 85,
+                padding: THEME.spacing[3],
+                backgroundColor: i === 0 ? THEME.colors.primary[100] : THEME.colors.neutral[50],
+                borderRadius: THEME.borderRadius.xl,
+                textAlign: 'center',
+                border: i === 0 ? `2px solid ${THEME.colors.primary[300]}` : `1px solid ${THEME.colors.neutral[200]}`,
+              }}
+            >
+              <div style={{ fontSize: THEME.typography.fontSize.xs, fontWeight: THEME.typography.fontWeight.semibold, color: THEME.colors.neutral[500], marginBottom: THEME.spacing[2] }}>
+                {day.day}
+              </div>
+              <div style={{ fontSize: '28px', marginBottom: THEME.spacing[2] }}>{day.icon}</div>
+              <div style={{ fontSize: THEME.typography.fontSize.sm, fontWeight: THEME.typography.fontWeight.bold, color: THEME.colors.neutral[900] }}>
+                {day.high}°
+              </div>
+              <div style={{ fontSize: THEME.typography.fontSize.xs, color: THEME.colors.neutral[400] }}>
+                {day.low}°
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Itinerary Card */}
+      <Card delay={200}>
+        <SectionHeader
+          icon={<FiCalendar size={24} />}
+          title="Suggested Itinerary"
+          subtitle="Make the most of your day"
+          action={
+            <Button variant="ghost" size="sm" icon={<FiDownload size={14} />}>
+              Export
+            </Button>
+          }
+        />
+
+        <div style={{ position: 'relative', paddingLeft: THEME.spacing[8] }}>
+          {/* Timeline Line */}
+          <div
+            style={{
+              position: 'absolute',
+              left: 15,
+              top: 16,
+              bottom: 16,
+              width: 2,
+              backgroundColor: THEME.colors.primary[200],
+              borderRadius: THEME.borderRadius.full,
+            }}
+          />
+
+          {MOCK_DATA.itinerary.map((item, i) => (
+            <div
+              key={i}
+              style={{
+                display: 'flex',
+                gap: THEME.spacing[4],
+                marginBottom: i < MOCK_DATA.itinerary.length - 1 ? THEME.spacing[5] : 0,
+                position: 'relative',
+              }}
+            >
+              {/* Timeline Dot */}
+              <div
+                style={{
+                  position: 'absolute',
+                  left: -THEME.spacing[8],
+                  top: 2,
+                  width: 32,
+                  height: 32,
+                  borderRadius: THEME.borderRadius.full,
+                  backgroundColor: THEME.colors.primary[500],
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: THEME.colors.neutral[0],
+                  fontSize: THEME.typography.fontSize.xs,
+                  zIndex: 1,
+                  boxShadow: `0 0 0 4px ${THEME.colors.neutral[0]}, 0 0 0 6px ${THEME.colors.primary[200]}`,
+                }}
+              >
+                {item.icon}
+              </div>
+
+              {/* Content */}
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[3], marginBottom: THEME.spacing[1] }}>
+                  <span style={{ fontSize: THEME.typography.fontSize.sm, fontWeight: THEME.typography.fontWeight.bold, color: THEME.colors.primary[600] }}>
+                    {item.time}
+                  </span>
+                  <Badge variant="neutral" size="sm">{item.duration}</Badge>
+                </div>
+                <div style={{ fontSize: THEME.typography.fontSize.base, fontWeight: THEME.typography.fontWeight.semibold, color: THEME.colors.neutral[900], marginBottom: THEME.spacing[1] }}>
+                  {item.activity}
+                </div>
+                <div style={{ fontSize: THEME.typography.fontSize.sm, color: THEME.colors.neutral[500] }}>
+                  {item.description}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+// Highlights Section
+const HighlightsSection = ({ destination }) => (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: THEME.spacing[6] }}>
+    {/* Main Highlights */}
+    <Card delay={0}>
+      <SectionHeader
+        icon={<FiStar size={24} />}
+        title="Experience Highlights"
+        subtitle="What makes this place special"
+      />
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: THEME.spacing[4],
+        }}
+      >
+        {(destination.highlights || []).map((highlight, i) => (
+          <div
+            key={i}
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: THEME.spacing[3],
+              padding: THEME.spacing[4],
+              backgroundColor: THEME.colors.neutral[50],
+              borderRadius: THEME.borderRadius.xl,
+              border: `1px solid ${THEME.colors.neutral[200]}`,
+              transition: `all ${THEME.transitions.DEFAULT}`,
+            }}
+          >
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: THEME.borderRadius.lg,
+                background: THEME.colors.gradient.primary,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: THEME.colors.neutral[0],
+                flexShrink: 0,
+              }}
+            >
+              <FiCheck size={18} />
+            </div>
+            <span style={{ fontSize: THEME.typography.fontSize.sm, color: THEME.colors.neutral[700], lineHeight: THEME.typography.lineHeight.relaxed }}>
+              {highlight}
+            </span>
+          </div>
+        ))}
+      </div>
+    </Card>
+
+    {/* Nearby Attractions */}
+    <Card delay={100}>
+      <SectionHeader
+        icon={<FiMapPin size={24} />}
+        title="Nearby Attractions"
+        subtitle="Explore the surrounding area"
+        action={
+          <Button variant="ghost" size="sm" icon={<FiMap size={14} />}>
+            View Map
+          </Button>
+        }
+      />
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: THEME.spacing[4],
+        }}
+      >
+        {MOCK_DATA.nearbyAttractions.map((attraction, i) => (
+          <div
+            key={i}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: THEME.spacing[4],
+              padding: THEME.spacing[4],
+              backgroundColor: THEME.colors.neutral[50],
+              borderRadius: THEME.borderRadius.xl,
+              border: `1px solid ${THEME.colors.neutral[200]}`,
+              cursor: 'pointer',
+              transition: `all ${THEME.transitions.DEFAULT}`,
+            }}
+          >
+            <div
+              style={{
+                width: 60,
+                height: 60,
+                borderRadius: THEME.borderRadius.lg,
+                overflow: 'hidden',
+                flexShrink: 0,
+              }}
+            >
+              <img src={attraction.image} alt={attraction.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: THEME.typography.fontSize.base, fontWeight: THEME.typography.fontWeight.semibold, color: THEME.colors.neutral[900], marginBottom: THEME.spacing[1] }}>
+                {attraction.name}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[3], fontSize: THEME.typography.fontSize.xs, color: THEME.colors.neutral[500] }}>
+                <span>{attraction.distance} km</span>
+                <span>•</span>
+                <span>{attraction.time}</span>
+                <span>•</span>
+                <StarRating rating={attraction.rating} size={12} />
+              </div>
+            </div>
+            <Badge variant="neutral" size="sm">{attraction.type}</Badge>
+          </div>
+        ))}
+      </div>
+    </Card>
+
+    {/* Photo Gallery */}
+    <Card delay={200}>
+      <SectionHeader
+        icon={<FiCamera size={24} />}
+        title="Photo Gallery"
+        subtitle={`${destination.images?.length || 0} photos from travelers`}
+      />
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+          gap: THEME.spacing[3],
+        }}
+      >
+        {(destination.images || []).slice(0, 8).map((img, i) => (
+          <div
+            key={i}
+            style={{
+              position: 'relative',
+              aspectRatio: '1',
+              borderRadius: THEME.borderRadius.xl,
+              overflow: 'hidden',
+              cursor: 'pointer',
+            }}
+          >
+            <img
+              src={img}
+              alt=""
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                transition: `transform ${THEME.transitions.DEFAULT}`,
+              }}
+            />
+            {i === 7 && (destination.images?.length || 0) > 8 && (
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  backgroundColor: 'rgba(0,0,0,0.65)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: THEME.colors.neutral[0],
+                  fontSize: THEME.typography.fontSize.xl,
+                  fontWeight: THEME.typography.fontWeight.bold,
+                }}
+              >
+                +{(destination.images?.length || 0) - 8}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </Card>
+  </div>
+);
+
+// Planning Section
+const PlanningSection = ({ toast }) => {
+  const [checkedItems, setCheckedItems] = useState({});
+
+  const toggleItem = (category, item) => {
+    const key = `${category}-${item}`;
+    setCheckedItems(prev => {
+      const newState = { ...prev, [key]: !prev[key] };
+      if (newState[key]) {
+        toast.success(`"${item}" checked off!`);
+      }
+      return newState;
+    });
+  };
+
+  const totalItems = MOCK_DATA.packingList.reduce((acc, cat) => acc + cat.items.length, 0);
+  const checkedCount = Object.values(checkedItems).filter(Boolean).length;
+  const progress = Math.round((checkedCount / totalItems) * 100);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: THEME.spacing[6] }}>
+      {/* Packing List */}
+      <Card delay={0}>
+        <SectionHeader
+          icon={<FiPackage size={24} />}
+          title="Packing Checklist"
+          subtitle={`${checkedCount} of ${totalItems} items packed`}
+          action={
+            <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[3] }}>
+              <div style={{ width: 120 }}>
+                <ProgressBar value={progress} max={100} showValue={false} size="sm" />
+              </div>
+              <Badge variant={progress === 100 ? 'success' : 'neutral'}>{progress}%</Badge>
+            </div>
+          }
+        />
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: THEME.spacing[5],
+          }}
+        >
+          {MOCK_DATA.packingList.map((category, i) => (
+            <div
+              key={i}
+              style={{
+                padding: THEME.spacing[5],
+                backgroundColor: THEME.colors.neutral[50],
+                borderRadius: THEME.borderRadius.xl,
+                border: `1px solid ${THEME.colors.neutral[200]}`,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: THEME.spacing[2],
+                  marginBottom: THEME.spacing[4],
+                }}
+              >
+                <span style={{ fontSize: '24px' }}>{category.icon}</span>
+                <span style={{ fontSize: THEME.typography.fontSize.base, fontWeight: THEME.typography.fontWeight.bold, color: THEME.colors.neutral[900] }}>
+                  {category.category}
+                </span>
+              </div>
+              {category.items.map((item, j) => {
+                const key = `${category.category}-${item.name}`;
+                const isChecked = checkedItems[key];
+                return (
+                  <div
+                    key={j}
+                    onClick={() => toggleItem(category.category, item.name)}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: THEME.spacing[3],
+                      padding: `${THEME.spacing[3]} 0`,
+                      borderBottom: j < category.items.length - 1 ? `1px solid ${THEME.colors.neutral[200]}` : 'none',
+                      cursor: 'pointer',
+                      transition: `opacity ${THEME.transitions.fast}`,
+                      opacity: isChecked ? 0.6 : 1,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 22,
+                        height: 22,
+                        borderRadius: THEME.borderRadius.sm,
+                        border: `2px solid ${isChecked ? THEME.colors.primary[500] : THEME.colors.neutral[300]}`,
+                        backgroundColor: isChecked ? THEME.colors.primary[500] : 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: THEME.colors.neutral[0],
+                        transition: `all ${THEME.transitions.DEFAULT}`,
+                        flexShrink: 0,
+                      }}
+                    >
+                      {isChecked && <FiCheck size={14} />}
+                    </div>
+                    <span
+                      style={{
+                        flex: 1,
+                        fontSize: THEME.typography.fontSize.sm,
+                        color: THEME.colors.neutral[700],
+                        textDecoration: isChecked ? 'line-through' : 'none',
+                      }}
+                    >
+                      {item.name}
+                    </span>
+                    {item.essential && (
+                      <Badge variant="warning" size="sm">Essential</Badge>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Transport Options */}
+      <Card delay={100}>
+        <SectionHeader
+          icon={<FiNavigation size={24} />}
+          title="Getting There"
+          subtitle="Transportation options"
+        />
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: THEME.spacing[4],
+          }}
+        >
+          {MOCK_DATA.transportOptions.map((option, i) => (
+            <div
+              key={i}
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: THEME.spacing[4],
+                padding: THEME.spacing[4],
+                backgroundColor: THEME.colors.neutral[50],
+                borderRadius: THEME.borderRadius.xl,
+                border: `1px solid ${THEME.colors.neutral[200]}`,
+              }}
+            >
+              <span style={{ fontSize: '32px', flexShrink: 0 }}>{option.icon}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: THEME.typography.fontSize.base, fontWeight: THEME.typography.fontWeight.bold, color: THEME.colors.neutral[900], marginBottom: THEME.spacing[1] }}>
+                  {option.mode}
+                </div>
+                <div style={{ fontSize: THEME.typography.fontSize.sm, color: THEME.colors.neutral[500], marginBottom: THEME.spacing[2] }}>
+                  {option.details}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[2], flexWrap: 'wrap' }}>
+                  <Badge>{option.duration}</Badge>
+                  <Badge variant="neutral">{option.price}</Badge>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Local Phrases */}
+      <Card delay={200}>
+        <SectionHeader
+          icon={<FiGlobe size={24} />}
+          title="Useful Phrases"
+          subtitle="Learn basic local language"
+        />
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+            gap: THEME.spacing[3],
+          }}
+        >
+          {MOCK_DATA.localPhrases.map((phrase, i) => (
+            <div
+              key={i}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: THEME.spacing[4],
+                backgroundColor: THEME.colors.neutral[50],
+                borderRadius: THEME.borderRadius.xl,
+                border: `1px solid ${THEME.colors.neutral[200]}`,
+                gap: THEME.spacing[4],
+              }}
+            >
+              <span style={{ fontSize: THEME.typography.fontSize.sm, color: THEME.colors.neutral[500], minWidth: 80 }}>
+                {phrase.english}
+              </span>
+              <div style={{ textAlign: 'right', flex: 1 }}>
+                <div style={{ fontSize: THEME.typography.fontSize.base, fontWeight: THEME.typography.fontWeight.bold, color: THEME.colors.neutral[900] }}>
+                  {phrase.local}
+                </div>
+                <div style={{ fontSize: THEME.typography.fontSize.xs, color: THEME.colors.primary[600], fontStyle: 'italic' }}>
+                  {phrase.pronunciation}
+                </div>
+              </div>
+              {phrase.audio && (
+                <IconButton
+                  icon={<FiVolume2 size={16} />}
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => console.log('Playing audio...')}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
+  );
+};
+
+// Tips Section
+const TipsSection = ({ selectedTip, setSelectedTip }) => {
+  const [expandedFaq, setExpandedFaq] = useState(null);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: THEME.spacing[6] }}>
+      {/* Travel Tips Carousel */}
+      <Card delay={0}>
+        <SectionHeader
+          icon={<FiZap size={24} />}
+          title="Insider Tips"
+          subtitle="Pro tips from experienced travelers"
+        />
+        <div
+          style={{
+            padding: THEME.spacing[8],
+            background: `linear-gradient(135deg, ${THEME.colors.primary[50]} 0%, ${THEME.colors.primary[100]} 100%)`,
+            borderRadius: THEME.borderRadius['2xl'],
+            textAlign: 'center',
+            border: `2px solid ${THEME.colors.primary[200]}`,
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          <div style={{ fontSize: '56px', marginBottom: THEME.spacing[4] }}>
+            {MOCK_DATA.travelTips[selectedTip].icon}
+          </div>
+          <h4
+            style={{
+              fontFamily: THEME.typography.fontFamily.heading,
+              fontSize: THEME.typography.fontSize.xl,
+              fontWeight: THEME.typography.fontWeight.bold,
+              color: THEME.colors.neutral[900],
+              marginBottom: THEME.spacing[3],
+            }}
+          >
+            {MOCK_DATA.travelTips[selectedTip].title}
+          </h4>
+          <p
+            style={{
+              fontSize: THEME.typography.fontSize.base,
+              color: THEME.colors.neutral[600],
+              lineHeight: THEME.typography.lineHeight.relaxed,
+              maxWidth: '500px',
+              margin: '0 auto',
+            }}
+          >
+            {MOCK_DATA.travelTips[selectedTip].content}
+          </p>
+
+          {/* Navigation Arrows */}
+          <IconButton
+            icon={<FiChevronLeft size={20} />}
+            onClick={() => setSelectedTip(prev => (prev - 1 + MOCK_DATA.travelTips.length) % MOCK_DATA.travelTips.length)}
+            variant="solid"
+            style={{ position: 'absolute', left: THEME.spacing[4], top: '50%', transform: 'translateY(-50%)' }}
+          />
+          <IconButton
+            icon={<FiChevronRight size={20} />}
+            onClick={() => setSelectedTip(prev => (prev + 1) % MOCK_DATA.travelTips.length)}
+            variant="solid"
+            style={{ position: 'absolute', right: THEME.spacing[4], top: '50%', transform: 'translateY(-50%)' }}
+          />
+        </div>
+
+        {/* Dots */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: THEME.spacing[2], marginTop: THEME.spacing[5] }}>
+          {MOCK_DATA.travelTips.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setSelectedTip(i)}
+              style={{
+                width: selectedTip === i ? 28 : 10,
+                height: 10,
+                borderRadius: THEME.borderRadius.full,
+                backgroundColor: selectedTip === i ? THEME.colors.primary[500] : THEME.colors.neutral[300],
+                border: 'none',
+                cursor: 'pointer',
+                transition: `all ${THEME.transitions.DEFAULT}`,
+              }}
+            />
+          ))}
+        </div>
+      </Card>
+
+      {/* Safety Information */}
+      <Card delay={100}>
+        <SectionHeader
+          icon={<FiShield size={24} />}
+          title="Safety Information"
+          subtitle="Know before you go"
+        />
+        {MOCK_DATA.safetyInfo.map((item, i) => (
+          <div key={i} style={{ marginBottom: i < MOCK_DATA.safetyInfo.length - 1 ? THEME.spacing[5] : 0 }}>
+            <ProgressBar value={item.rating} max={5} label={item.label} color={item.color} />
+            <p style={{ fontSize: THEME.typography.fontSize.xs, color: THEME.colors.neutral[500], marginTop: `-${THEME.spacing[2]}` }}>
+              {item.description}
+            </p>
+          </div>
+        ))}
+      </Card>
+
+      {/* Accessibility */}
+      <Card delay={150}>
+        <SectionHeader
+          icon={<FiUsers size={24} />}
+          title="Accessibility"
+          subtitle="Facilities & services available"
+        />
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: THEME.spacing[4],
+          }}
+        >
+          {MOCK_DATA.accessibility.map((item, i) => (
+            <div
+              key={i}
+              style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: THEME.spacing[4],
+                padding: THEME.spacing[4],
+                backgroundColor: item.available ? THEME.colors.primary[50] : THEME.colors.neutral[50],
+                borderRadius: THEME.borderRadius.xl,
+                border: `1px solid ${item.available ? THEME.colors.primary[200] : THEME.colors.neutral[200]}`,
+              }}
+            >
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: THEME.borderRadius.lg,
+                  backgroundColor: item.available ? THEME.colors.primary[100] : THEME.colors.neutral[200],
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '20px',
+                  flexShrink: 0,
+                }}
+              >
+                {item.icon}
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[2], marginBottom: THEME.spacing[1] }}>
+                  <span style={{ fontSize: THEME.typography.fontSize.sm, fontWeight: THEME.typography.fontWeight.semibold, color: THEME.colors.neutral[900] }}>
+                    {item.feature}
+                  </span>
+                  {item.available ? (
+                    <FiCheckCircle size={14} style={{ color: THEME.colors.primary[500] }} />
+                  ) : (
+                    <FiXCircle size={14} style={{ color: THEME.colors.neutral[400] }} />
+                  )}
+                </div>
+                <div style={{ fontSize: THEME.typography.fontSize.xs, color: THEME.colors.neutral[500] }}>
+                  {item.details}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* Cultural Tips */}
+      <Card delay={180}>
+        <SectionHeader
+          icon={<FiGlobe size={24} />}
+          title="Local Culture & Etiquette"
+          subtitle="Respect local customs"
+        />
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+            gap: THEME.spacing[4],
+          }}
+        >
+          {MOCK_DATA.culturalTips.map((tip, i) => (
+            <div
+              key={i}
+              style={{
+                padding: THEME.spacing[5],
+                backgroundColor: THEME.colors.neutral[50],
+                borderRadius: THEME.borderRadius.xl,
+                borderLeft: `4px solid ${THEME.colors.primary[500]}`,
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[2], marginBottom: THEME.spacing[3] }}>
+                <span style={{ fontSize: '20px' }}>{tip.icon}</span>
+                <span style={{ fontSize: THEME.typography.fontSize.base, fontWeight: THEME.typography.fontWeight.bold, color: THEME.colors.neutral[900] }}>
+                  {tip.title}
+                </span>
+              </div>
+              <p style={{ fontSize: THEME.typography.fontSize.sm, color: THEME.colors.neutral[600], lineHeight: THEME.typography.lineHeight.relaxed }}>
+                {tip.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* FAQ */}
+      <Card delay={200}>
+        <SectionHeader
+          icon={<FiHelpCircle size={24} />}
+          title="Frequently Asked Questions"
+          subtitle="Common questions answered"
+        />
+        <Accordion items={MOCK_DATA.faqs} allowMultiple={false} />
+      </Card>
+    </div>
+  );
+};
+
+// Continuing from ReviewsSection...
+
+const ReviewsSection = ({ destination, helpfulReviews, toggleHelpful, showAllReviews, setShowAllReviews, toast }) => {
+  const [filterRating, setFilterRating] = useState(0);
+  const [sortBy, setSortBy] = useState('recent');
+
+  const filteredReviews = useMemo(() => {
+    let reviews = [...MOCK_DATA.reviews];
+    
+    // Filter by rating
+    if (filterRating > 0) {
+      reviews = reviews.filter(r => r.rating >= filterRating);
+    }
+    
+    // Sort
+    switch (sortBy) {
+      case 'recent':
+        reviews.sort((a, b) => new Date(b.date) - new Date(a.date));
+        break;
+      case 'helpful':
+        reviews.sort((a, b) => b.helpful - a.helpful);
+        break;
+      case 'highest':
+        reviews.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'lowest':
+        reviews.sort((a, b) => a.rating - b.rating);
+        break;
+      default:
+        break;
+    }
+    
+    return reviews;
+  }, [filterRating, sortBy]);
+
+  const displayedReviews = showAllReviews ? filteredReviews : filteredReviews.slice(0, 3);
+
+  const ratingDistribution = useMemo(() => {
+    const dist = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    MOCK_DATA.reviews.forEach(r => {
+      dist[r.rating] = (dist[r.rating] || 0) + 1;
+    });
+    return dist;
+  }, []);
+
+  const averageRating = useMemo(() => {
+    const total = MOCK_DATA.reviews.reduce((acc, r) => acc + r.rating, 0);
+    return (total / MOCK_DATA.reviews.length).toFixed(1);
+  }, []);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: THEME.spacing[6] }}>
+      <Card delay={0}>
+        <SectionHeader
+          icon={<FiMessageCircle size={24} />}
+          title="Traveler Reviews"
+          subtitle={`${destination.reviews}+ verified reviews`}
+          action={
+            <Button variant="secondary" size="sm" icon={<FiEdit size={14} />}>
+              Write Review
+            </Button>
+          }
+        />
+
+        {/* Rating Summary */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'stretch',
+            gap: THEME.spacing[6],
+            padding: THEME.spacing[6],
+            backgroundColor: '#FEF3C7',
+            borderRadius: THEME.borderRadius['2xl'],
+            marginBottom: THEME.spacing[6],
+            flexWrap: 'wrap',
+          }}
+        >
+          {/* Overall Rating */}
+          <div style={{ textAlign: 'center', minWidth: 120 }}>
+            <div
+              style={{
+                fontFamily: THEME.typography.fontFamily.heading,
+                fontSize: THEME.typography.fontSize['5xl'],
+                fontWeight: THEME.typography.fontWeight.bold,
+                color: '#92400E',
+                lineHeight: 1,
+              }}
+            >
+              {averageRating}
+            </div>
+            <div style={{ margin: `${THEME.spacing[2]} 0` }}>
+              <StarRating rating={parseFloat(averageRating)} size={18} />
+            </div>
+            <div style={{ fontSize: THEME.typography.fontSize.sm, color: '#92400E', fontWeight: THEME.typography.fontWeight.medium }}>
+              {destination.reviews}+ reviews
+            </div>
+          </div>
+
+          {/* Rating Distribution */}
+          <div style={{ flex: 1, minWidth: 200 }}>
+            {[5, 4, 3, 2, 1].map((star) => {
+              const count = ratingDistribution[star] || 0;
+              const percentage = Math.round((count / MOCK_DATA.reviews.length) * 100);
+              return (
+                <div
+                  key={star}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: THEME.spacing[3],
+                    marginBottom: THEME.spacing[2],
+                    cursor: 'pointer',
+                    opacity: filterRating === 0 || filterRating === star ? 1 : 0.4,
+                    transition: `opacity ${THEME.transitions.fast}`,
+                  }}
+                  onClick={() => setFilterRating(filterRating === star ? 0 : star)}
+                >
+                  <span style={{ fontSize: THEME.typography.fontSize.sm, color: '#92400E', minWidth: 50 }}>
+                    {star} star
+                  </span>
+                  <div style={{ flex: 1, height: 8, backgroundColor: '#FDE68A', borderRadius: THEME.borderRadius.full, overflow: 'hidden' }}>
+                    <div
+                      style={{
+                        height: '100%',
+                        width: `${percentage}%`,
+                        backgroundColor: '#F59E0B',
+                        borderRadius: THEME.borderRadius.full,
+                        transition: `width ${THEME.transitions.DEFAULT}`,
+                      }}
+                    />
+                  </div>
+                  <span style={{ fontSize: THEME.typography.fontSize.sm, color: '#92400E', minWidth: 40, textAlign: 'right' }}>
+                    {percentage}%
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Quick Stats */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: THEME.spacing[3], minWidth: 150 }}>
+            {[
+              { label: 'Would Recommend', value: '96%', icon: <FiThumbsUp size={16} /> },
+              { label: 'Return Visitors', value: '42%', icon: <FiRefreshCw size={16} /> },
+              { label: 'With Photos', value: '78%', icon: <FiCamera size={16} /> },
+            ].map((stat, i) => (
+              <div
+                key={i}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: THEME.spacing[2],
+                  padding: THEME.spacing[2],
+                  backgroundColor: 'rgba(255,255,255,0.5)',
+                  borderRadius: THEME.borderRadius.lg,
+                }}
+              >
+                <span style={{ color: '#92400E' }}>{stat.icon}</span>
+                <div>
+                  <div style={{ fontSize: THEME.typography.fontSize.sm, fontWeight: THEME.typography.fontWeight.bold, color: '#92400E' }}>
+                    {stat.value}
+                  </div>
+                  <div style={{ fontSize: THEME.typography.fontSize.xs, color: '#B45309' }}>{stat.label}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Filters & Sort */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: THEME.spacing[4],
+            marginBottom: THEME.spacing[5],
+            flexWrap: 'wrap',
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[2] }}>
+            <span style={{ fontSize: THEME.typography.fontSize.sm, color: THEME.colors.neutral[500] }}>Filter:</span>
+            {[0, 5, 4, 3].map((rating) => (
+              <button
+                key={rating}
+                onClick={() => setFilterRating(filterRating === rating ? 0 : rating)}
+                style={{
+                  padding: `${THEME.spacing[1]} ${THEME.spacing[3]}`,
+                  borderRadius: THEME.borderRadius.full,
+                  border: `1px solid ${filterRating === rating ? THEME.colors.primary[500] : THEME.colors.neutral[300]}`,
+                  backgroundColor: filterRating === rating ? THEME.colors.primary[50] : THEME.colors.neutral[0],
+                  color: filterRating === rating ? THEME.colors.primary[600] : THEME.colors.neutral[600],
+                  fontSize: THEME.typography.fontSize.sm,
+                  fontWeight: THEME.typography.fontWeight.medium,
+                  cursor: 'pointer',
+                  transition: `all ${THEME.transitions.fast}`,
+                }}
+              >
+                {rating === 0 ? 'All' : `${rating}+ ★`}
+              </button>
+            ))}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[2] }}>
+            <span style={{ fontSize: THEME.typography.fontSize.sm, color: THEME.colors.neutral[500] }}>Sort by:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              style={{
+                padding: `${THEME.spacing[2]} ${THEME.spacing[3]}`,
+                borderRadius: THEME.borderRadius.lg,
+                border: `1px solid ${THEME.colors.neutral[300]}`,
+                backgroundColor: THEME.colors.neutral[0],
+                fontSize: THEME.typography.fontSize.sm,
+                fontWeight: THEME.typography.fontWeight.medium,
+                color: THEME.colors.neutral[700],
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+            >
+              <option value="recent">Most Recent</option>
+              <option value="helpful">Most Helpful</option>
+              <option value="highest">Highest Rated</option>
+              <option value="lowest">Lowest Rated</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Reviews List */}
+        {displayedReviews.length === 0 ? (
+          <EmptyState
+            icon={<FiMessageCircle size={32} />}
+            title="No reviews match your filter"
+            description="Try adjusting your filters to see more reviews"
+            action={
+              <Button variant="secondary" size="sm" onClick={() => setFilterRating(0)}>
+                Clear Filters
+              </Button>
+            }
+          />
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: THEME.spacing[4] }}>
+            {displayedReviews.map((review) => (
+              <div
+                key={review.id}
+                style={{
+                  padding: THEME.spacing[5],
+                  backgroundColor: THEME.colors.neutral[50],
+                  borderRadius: THEME.borderRadius['2xl'],
+                  border: `1px solid ${THEME.colors.neutral[200]}`,
+                }}
+              >
+                {/* Review Header */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    justifyContent: 'space-between',
+                    marginBottom: THEME.spacing[4],
+                    gap: THEME.spacing[4],
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[3] }}>
+                    <div
+                      style={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: THEME.borderRadius.full,
+                        backgroundColor: THEME.colors.primary[100],
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '24px',
+                      }}
+                    >
+                      {review.author.avatar}
+                    </div>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[2], marginBottom: THEME.spacing[1] }}>
+                        <span style={{ fontSize: THEME.typography.fontSize.base, fontWeight: THEME.typography.fontWeight.bold, color: THEME.colors.neutral[900] }}>
+                          {review.author.name}
+                        </span>
+                        {review.verified && (
+                          <Badge variant="success" size="sm" icon={<FiCheckCircle size={10} />}>
+                            Verified
+                          </Badge>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[2], fontSize: THEME.typography.fontSize.xs, color: THEME.colors.neutral[500] }}>
+                        <span>{review.author.location}</span>
+                        <span>•</span>
+                        <span>{review.author.trips} trips</span>
+                        <span>•</span>
+                        <span>{formatRelativeTime(review.date)}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <StarRating rating={review.rating} size={16} />
+                </div>
+
+                {/* Review Content */}
+                <h4
+                  style={{
+                    fontSize: THEME.typography.fontSize.lg,
+                    fontWeight: THEME.typography.fontWeight.bold,
+                    color: THEME.colors.neutral[900],
+                    marginBottom: THEME.spacing[2],
+                  }}
+                >
+                  {review.title}
+                </h4>
+                <p
+                  style={{
+                    fontSize: THEME.typography.fontSize.sm,
+                    color: THEME.colors.neutral[600],
+                    lineHeight: THEME.typography.lineHeight.relaxed,
+                    marginBottom: THEME.spacing[4],
+                  }}
+                >
+                  {review.content}
+                </p>
+
+                {/* Photos */}
+                {review.photos > 0 && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: THEME.spacing[2],
+                      marginBottom: THEME.spacing[4],
+                      padding: THEME.spacing[3],
+                      backgroundColor: THEME.colors.neutral[100],
+                      borderRadius: THEME.borderRadius.lg,
+                      width: 'fit-content',
+                    }}
+                  >
+                    <FiCamera size={16} style={{ color: THEME.colors.neutral[500] }} />
+                    <span style={{ fontSize: THEME.typography.fontSize.sm, color: THEME.colors.neutral[600] }}>
+                      {review.photos} photos attached
+                    </span>
+                    <Button variant="ghost" size="xs">View</Button>
+                  </div>
+                )}
+
+                {/* Response */}
+                {review.response && (
+                  <div
+                    style={{
+                      padding: THEME.spacing[4],
+                      backgroundColor: THEME.colors.primary[50],
+                      borderRadius: THEME.borderRadius.xl,
+                      borderLeft: `4px solid ${THEME.colors.primary[500]}`,
+                      marginBottom: THEME.spacing[4],
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[2], marginBottom: THEME.spacing[2] }}>
+                      <FiMessageCircle size={14} style={{ color: THEME.colors.primary[600] }} />
+                      <span style={{ fontSize: THEME.typography.fontSize.sm, fontWeight: THEME.typography.fontWeight.semibold, color: THEME.colors.primary[700] }}>
+                        Response from {review.response.author}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: THEME.typography.fontSize.sm, color: THEME.colors.neutral[600], lineHeight: THEME.typography.lineHeight.relaxed }}>
+                      {review.response.content}
+                    </p>
+                  </div>
+                )}
+
+                {/* Actions */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[4] }}>
+                  <button
+                    onClick={() => {
+                      toggleHelpful(review.id);
+                      toast.success(helpfulReviews[review.id] ? 'Removed helpful vote' : 'Marked as helpful!');
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: THEME.spacing[2],
+                      padding: `${THEME.spacing[2]} ${THEME.spacing[3]}`,
+                      borderRadius: THEME.borderRadius.lg,
+                      border: `1px solid ${helpfulReviews[review.id] ? THEME.colors.primary[300] : THEME.colors.neutral[300]}`,
+                      backgroundColor: helpfulReviews[review.id] ? THEME.colors.primary[50] : THEME.colors.neutral[0],
+                      color: helpfulReviews[review.id] ? THEME.colors.primary[600] : THEME.colors.neutral[600],
+                      fontSize: THEME.typography.fontSize.sm,
+                      fontWeight: THEME.typography.fontWeight.medium,
+                      cursor: 'pointer',
+                      transition: `all ${THEME.transitions.fast}`,
+                    }}
+                  >
+                    <FiThumbsUp size={14} style={{ fill: helpfulReviews[review.id] ? 'currentColor' : 'none' }} />
+                    Helpful ({review.helpful + (helpfulReviews[review.id] ? 1 : 0)})
+                  </button>
+                  <button
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: THEME.spacing[2],
+                      padding: `${THEME.spacing[2]} ${THEME.spacing[3]}`,
+                      borderRadius: THEME.borderRadius.lg,
+                      border: `1px solid ${THEME.colors.neutral[300]}`,
+                      backgroundColor: THEME.colors.neutral[0],
+                      color: THEME.colors.neutral[600],
+                      fontSize: THEME.typography.fontSize.sm,
+                      fontWeight: THEME.typography.fontWeight.medium,
+                      cursor: 'pointer',
+                      transition: `all ${THEME.transitions.fast}`,
+                    }}
+                  >
+                    <FiShare2 size={14} />
+                    Share
+                  </button>
+                  <button
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: THEME.spacing[2],
+                      padding: `${THEME.spacing[2]} ${THEME.spacing[3]}`,
+                      borderRadius: THEME.borderRadius.lg,
+                      border: 'none',
+                      backgroundColor: 'transparent',
+                      color: THEME.colors.neutral[500],
+                      fontSize: THEME.typography.fontSize.sm,
+                      fontWeight: THEME.typography.fontWeight.medium,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <FiAlertCircle size={14} />
+                    Report
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Show More Button */}
+        {filteredReviews.length > 3 && (
+          <Button
+            variant="secondary"
+            fullWidth
+            onClick={() => setShowAllReviews(!showAllReviews)}
+            icon={showAllReviews ? <FiChevronUp size={18} /> : <FiChevronDown size={18} />}
+            style={{ marginTop: THEME.spacing[5] }}
+          >
+            {showAllReviews ? 'Show Less' : `Show All ${filteredReviews.length} Reviews`}
+          </Button>
+        )}
+      </Card>
+    </div>
+  );
+};
+
+// Sidebar Component
+const Sidebar = ({ destination, country, isMobile, onShare, toast }) => {
+  const { copied, copy } = useClipboard();
+
+  if (isMobile) return null;
+
+  const handleCopyLink = () => {
+    copy(window.location.href);
+    toast.success('Link copied to clipboard!');
+  };
+
+  return (
+    <aside style={{ display: 'flex', flexDirection: 'column', gap: THEME.spacing[5] }}>
+      {/* Main Booking Card */}
+      <div
+        style={{
+          backgroundColor: THEME.colors.neutral[0],
+          borderRadius: THEME.borderRadius['2xl'],
+          padding: THEME.spacing[6],
+          boxShadow: THEME.shadows.xl,
+          border: `1px solid ${THEME.colors.neutral[200]}`,
+          position: 'sticky',
+          top: 80,
+        }}
+      >
+        {/* Rating */}
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: THEME.spacing[4],
+            padding: THEME.spacing[4],
+            backgroundColor: '#FEF3C7',
+            borderRadius: THEME.borderRadius.xl,
+            marginBottom: THEME.spacing[5],
+          }}
+        >
+          <div
+            style={{
+              fontFamily: THEME.typography.fontFamily.heading,
+              fontSize: THEME.typography.fontSize['4xl'],
+              fontWeight: THEME.typography.fontWeight.bold,
+              color: '#92400E',
+            }}
+          >
+            {destination.rating}
+          </div>
+          <div>
+            <StarRating rating={destination.rating} size={16} />
+            <div style={{ fontSize: THEME.typography.fontSize.sm, color: '#92400E', marginTop: THEME.spacing[1] }}>
+              {destination.reviews}+ reviews
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Info Grid */}
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: THEME.spacing[3],
+            marginBottom: THEME.spacing[5],
+          }}
+        >
+          {[
+            { icon: <FiClock size={18} />, value: destination.duration, label: 'Duration' },
+            { icon: <FiUsers size={18} />, value: destination.difficulty, label: 'Difficulty' },
+            { icon: <FiMapPin size={18} />, value: destination.type, label: 'Type' },
+            { icon: <FiCalendar size={18} />, value: 'Spring', label: 'Best Time' },
+          ].map((item, i) => (
+            <div
+              key={i}
+              style={{
+                padding: THEME.spacing[4],
+                backgroundColor: THEME.colors.neutral[50],
+                borderRadius: THEME.borderRadius.xl,
+                textAlign: 'center',
+                border: `1px solid ${THEME.colors.neutral[200]}`,
+              }}
+            >
+              <div
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: THEME.borderRadius.lg,
+                  backgroundColor: THEME.colors.primary[100],
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: `0 auto ${THEME.spacing[2]}`,
+                  color: THEME.colors.primary[600],
+                }}
+              >
+                {item.icon}
+              </div>
+              <div style={{ fontSize: THEME.typography.fontSize.sm, fontWeight: THEME.typography.fontWeight.bold, color: THEME.colors.neutral[900] }}>
+                {item.value}
+              </div>
+              <div style={{ fontSize: THEME.typography.fontSize.xs, color: THEME.colors.neutral[500] }}>
+                {item.label}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* CTA Buttons */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: THEME.spacing[3], marginBottom: THEME.spacing[5] }}>
+          <Button to="/contact" icon={<FiMail size={18} />} fullWidth size="lg">
+            Request Information
+          </Button>
+          <Button to="/booking" variant="secondary" icon={<FiCalendar size={18} />} fullWidth>
+            Plan My Trip
+          </Button>
+          <Button
+            variant="outline"
+            icon={<FiDownload size={18} />}
+            fullWidth
+            onClick={() => toast.info('Download starting...')}
+          >
+            Download Guide (PDF)
+          </Button>
+        </div>
+
+        {/* Features */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: THEME.spacing[2], marginBottom: THEME.spacing[5] }}>
+          {['Free Cancellation', 'Expert Guides', 'Small Groups', '24/7 Support'].map((feature, i) => (
+            <Badge key={i} variant="success" size="sm" icon={<FiCheck size={10} />}>
+              {feature}
+            </Badge>
+          ))}
+        </div>
+
+        {/* Contact Info */}
+        <div
+          style={{
+            padding: THEME.spacing[5],
+            backgroundColor: THEME.colors.primary[50],
+            borderRadius: THEME.borderRadius.xl,
+            border: `2px solid ${THEME.colors.primary[200]}`,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: THEME.spacing[2],
+              marginBottom: THEME.spacing[4],
+              fontSize: THEME.typography.fontSize.base,
+              fontWeight: THEME.typography.fontWeight.bold,
+              color: THEME.colors.neutral[900],
+            }}
+          >
+            <FiPhone size={18} style={{ color: THEME.colors.primary[600] }} />
+            Need Help Planning?
+          </div>
+          {[
+            { icon: <FiPhone size={16} />, text: '+1 (555) 123-4567', action: 'tel:+15551234567' },
+            { icon: <FiMail size={16} />, text: 'travel@explorer.com', action: 'mailto:travel@explorer.com' },
+            { icon: <FiMessageCircle size={16} />, text: 'Live Chat Available', action: null },
+          ].map((contact, i) => (
+            <a
+              key={i}
+              href={contact.action || '#'}
+              onClick={contact.action ? undefined : (e) => { e.preventDefault(); toast.info('Opening chat...'); }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: THEME.spacing[3],
+                padding: `${THEME.spacing[3]} 0`,
+                fontSize: THEME.typography.fontSize.sm,
+                color: THEME.colors.neutral[700],
+                textDecoration: 'none',
+                borderBottom: i < 2 ? `1px solid ${THEME.colors.primary[200]}` : 'none',
+                transition: `color ${THEME.transitions.fast}`,
+              }}
+            >
+              <span style={{ color: THEME.colors.primary[600] }}>{contact.icon}</span>
+              {contact.text}
+            </a>
+          ))}
+        </div>
+      </div>
+
+      {/* Map Card */}
+      <div
+        style={{
+          backgroundColor: THEME.colors.neutral[0],
+          borderRadius: THEME.borderRadius['2xl'],
+          overflow: 'hidden',
+          boxShadow: THEME.shadows.lg,
+          border: `1px solid ${THEME.colors.neutral[200]}`,
+        }}
+      >
+        <div
+          style={{
+            height: 200,
+            backgroundColor: THEME.colors.neutral[200],
+            backgroundImage: 'url("https://images.unsplash.com/photo-1524661135-423995f22d0b?w=600")',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            position: 'relative',
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundColor: 'rgba(0,0,0,0.3)',
+            }}
+          />
+          <Button
+            variant="primary"
+            size="sm"
+            icon={<FiMap size={16} />}
+            onClick={() => toast.info('Opening map...')}
+            style={{ position: 'relative', zIndex: 1 }}
+          >
+            View on Map
+          </Button>
+        </div>
+        <div style={{ padding: THEME.spacing[4] }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[2], marginBottom: THEME.spacing[2] }}>
+            <FiMapPin size={16} style={{ color: THEME.colors.primary[600] }} />
+            <span style={{ fontSize: THEME.typography.fontSize.sm, fontWeight: THEME.typography.fontWeight.semibold, color: THEME.colors.neutral[900] }}>
+              {destination.name}
+            </span>
+          </div>
+          <p style={{ fontSize: THEME.typography.fontSize.xs, color: THEME.colors.neutral[500] }}>
+            {country?.name || 'Location'} • Click to view interactive map
+          </p>
+        </div>
+      </div>
+
+      {/* Share Card */}
+      <div
+        style={{
+          backgroundColor: THEME.colors.neutral[0],
+          borderRadius: THEME.borderRadius['2xl'],
+          padding: THEME.spacing[5],
+          boxShadow: THEME.shadows.lg,
+          border: `1px solid ${THEME.colors.neutral[200]}`,
+        }}
+      >
+        <div style={{ fontSize: THEME.typography.fontSize.base, fontWeight: THEME.typography.fontWeight.bold, color: THEME.colors.neutral[900], marginBottom: THEME.spacing[4] }}>
+          Share This Destination
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: THEME.spacing[3] }}>
+          {[
+            { icon: '📋', label: 'Copy', action: handleCopyLink },
+            { icon: '✉️', label: 'Email', action: () => window.open(`mailto:?subject=${encodeURIComponent(destination.name)}&body=${encodeURIComponent(window.location.href)}`) },
+            { icon: '💬', label: 'WhatsApp', action: () => window.open(`https://wa.me/?text=${encodeURIComponent(destination.name + ' ' + window.location.href)}`) },
+            { icon: '🐦', label: 'Twitter', action: () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(destination.name)}&url=${encodeURIComponent(window.location.href)}`) },
+          ].map((option, i) => (
+            <button
+              key={i}
+              onClick={option.action}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: THEME.spacing[2],
+                padding: THEME.spacing[3],
+                backgroundColor: THEME.colors.neutral[50],
+                border: `1px solid ${THEME.colors.neutral[200]}`,
+                borderRadius: THEME.borderRadius.xl,
+                cursor: 'pointer',
+                transition: `all ${THEME.transitions.fast}`,
+              }}
+            >
+              <span style={{ fontSize: '22px' }}>{option.icon}</span>
+              <span style={{ fontSize: THEME.typography.fontSize.xs, fontWeight: THEME.typography.fontWeight.semibold, color: THEME.colors.neutral[600] }}>
+                {option.label}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </aside>
+  );
+};
+
+// Related Destinations Component
+const RelatedDestinations = ({ destinations, country, isMobile, isTablet }) => {
+  if (!destinations || destinations.length === 0) return null;
+
+  return (
+    <section
+      style={{
+        marginTop: THEME.spacing[16],
+        paddingTop: THEME.spacing[12],
+        borderTop: `2px solid ${THEME.colors.neutral[200]}`,
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'flex-start',
+          justifyContent: 'space-between',
+          marginBottom: THEME.spacing[8],
+          gap: THEME.spacing[4],
+          flexWrap: 'wrap',
+        }}
+      >
+        <SectionHeader
+          icon={<FiCompass size={24} />}
+          title={`More in ${country?.name || 'This Region'}`}
+          subtitle="Discover similar destinations"
+        />
+        <Button
+          to={`/country/${destinations[0]?.countryId || destinations[0]?.country_id}`}
+          variant="ghost"
+          icon={<FiArrowRight size={18} />}
+          iconPosition="right"
+        >
+          View All
+        </Button>
+      </div>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : isTablet ? 'repeat(2, 1fr)' : 'repeat(3, 1fr)',
+          gap: THEME.spacing[6],
+        }}
+      >
+        {destinations.map((dest, i) => (
+          <Link
+            key={dest.id}
+            to={`/destination/${dest.id}`}
+            style={{
+              backgroundColor: THEME.colors.neutral[0],
+              borderRadius: THEME.borderRadius['2xl'],
+              overflow: 'hidden',
+              boxShadow: THEME.shadows.lg,
+              border: `1px solid ${THEME.colors.neutral[200]}`,
+              textDecoration: 'none',
+              transition: `all ${THEME.transitions.DEFAULT}`,
+              animation: `fadeInUp 0.5s ease ${i * 0.1}s both`,
+            }}
+          >
+            <div style={{ position: 'relative', height: 200, overflow: 'hidden' }}>
+              <img
+                src={dest.images?.[0]}
+                alt={dest.name}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                  transition: `transform ${THEME.transitions.slow}`,
+                }}
+              />
+              <div
+                style={{
+                  position: 'absolute',
+                  top: THEME.spacing[3],
+                  right: THEME.spacing[3],
+                }}
+              >
+                <Badge>{dest.type}</Badge>
+              </div>
+            </div>
+            <div style={{ padding: THEME.spacing[5] }}>
+              <h4
+                style={{
+                  fontFamily: THEME.typography.fontFamily.heading,
+                  fontSize: THEME.typography.fontSize.xl,
+                  fontWeight: THEME.typography.fontWeight.bold,
+                  color: THEME.colors.neutral[900],
+                  marginBottom: THEME.spacing[3],
+                }}
+              >
+                {dest.name}
+              </h4>
+              <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[4], fontSize: THEME.typography.fontSize.sm, color: THEME.colors.neutral[500] }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[1] }}>
+                  <FiStar size={14} style={{ fill: THEME.colors.semantic.warning, color: THEME.colors.semantic.warning }} />
+                  {dest.rating}
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[1] }}>
+                  <FiClock size={14} />
+                  {dest.duration}
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[1] }}>
+                  <FiUsers size={14} />
+                  {dest.difficulty}
+                </span>
+              </div>
+            </div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+};
+
+// Mobile CTA Component
+const MobileCTA = ({ destination, isFavorite, setIsFavorite, toast }) => (
+  <div
+    className="no-print"
+    style={{
+      position: 'fixed',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      padding: THEME.spacing[4],
+      backgroundColor: THEME.colors.neutral[0],
+      boxShadow: '0 -4px 30px rgba(0,0,0,0.12)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: THEME.spacing[3],
+      zIndex: THEME.zIndex.fixed,
+      animation: 'slideUp 0.4s ease',
+    }}
+  >
+    <div style={{ display: 'flex', alignItems: 'center', gap: THEME.spacing[2] }}>
+      <StarRating rating={destination.rating} size={14} />
+      <span style={{ fontSize: THEME.typography.fontSize.xs, color: THEME.colors.neutral[500] }}>
+        {destination.reviews}+ reviews
+      </span>
+    </div>
+    <div style={{ display: 'flex', gap: THEME.spacing[2] }}>
+      <IconButton
+        icon={<FiHeart size={20} style={{ fill: isFavorite ? 'currentColor' : 'none' }} />}
+        onClick={() => {
+          setIsFavorite(!isFavorite);
+          toast[isFavorite ? 'info' : 'success'](isFavorite ? 'Removed from favorites' : 'Added to favorites!');
+        }}
+        active={isFavorite}
+        variant="solid"
+      />
+      <Button to="/contact" size="sm" icon={<FiMail size={16} />}>
+        Inquire Now
+      </Button>
+    </div>
+  </div>
+);
+
+// Share Modal Component
+const ShareModal = ({ isOpen, onClose, destination, toast }) => {
+  const { copy } = useClipboard();
+
+  const shareOptions = [
+    {
+      icon: '📋',
+      label: 'Copy Link',
+      action: async () => {
+        await copy(window.location.href);
+        toast.success('Link copied to clipboard!');
+        onClose();
+      },
+    },
+    {
+      icon: '✉️',
+      label: 'Email',
+      action: () => {
+        window.open(`mailto:?subject=${encodeURIComponent(destination.name)}&body=${encodeURIComponent(`Check out this amazing destination: ${window.location.href}`)}`);
+        onClose();
+      },
+    },
+    {
+      icon: '💬',
+      label: 'WhatsApp',
+      action: () => {
+        window.open(`https://wa.me/?text=${encodeURIComponent(`${destination.name} - ${window.location.href}`)}`);
+        onClose();
+      },
+    },
+    {
+      icon: '🐦',
+      label: 'Twitter',
+      action: () => {
+        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Discover ${destination.name}`)}&url=${encodeURIComponent(window.location.href)}`);
+        onClose();
+      },
+    },
+    {
+      icon: '📘',
+      label: 'Facebook',
+      action: () => {
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`);
+        onClose();
+      },
+    },
+    {
+      icon: '💼',
+      label: 'LinkedIn',
+      action: () => {
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`);
+        onClose();
+      },
+    },
+    {
+      icon: '📌',
+      label: 'Pinterest',
+      action: () => {
+        window.open(`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(window.location.href)}&description=${encodeURIComponent(destination.name)}`);
+        onClose();
+      },
+    },
+    {
+      icon: '💬',
+      label: 'Telegram',
+      action: () => {
+        window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(destination.name)}`);
+        onClose();
+      },
+    },
+  ];
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Share This Destination" size="md">
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: THEME.spacing[4],
+          marginBottom: THEME.spacing[6],
+        }}
+      >
+        {shareOptions.map((option, i) => (
+          <button
+            key={i}
+            onClick={option.action}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: THEME.spacing[2],
+              padding: THEME.spacing[4],
+              backgroundColor: THEME.colors.neutral[50],
+              border: `2px solid ${THEME.colors.neutral[200]}`,
+              borderRadius: THEME.borderRadius.xl,
+              cursor: 'pointer',
+              transition: `all ${THEME.transitions.DEFAULT}`,
+            }}
+          >
+            <span style={{ fontSize: '28px' }}>{option.icon}</span>
+            <span style={{ fontSize: THEME.typography.fontSize.xs, fontWeight: THEME.typography.fontWeight.semibold, color: THEME.colors.neutral[700] }}>
+              {option.label}
+            </span>
+          </button>
+        ))}
+      </div>
+      <Button variant="outline" fullWidth onClick={onClose}>
+        Cancel
+      </Button>
+    </Modal>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
+const DestinationDetailContent = () => {
+  const { destinationId } = useParams();
+  const navigate = useNavigate();
+  const toast = useToast();
+  const { isMobile, isTablet, isDesktop } = useWindowSize();
+  const { isScrolled, direction } = useScrollPosition(80);
+  const contentRef = useRef(null);
+
+  // Data fetching
+  const { destination, loading: destinationLoading } = useDestination(destinationId);
+  const { country } = useCountry(destination?.countryId || destination?.country_id);
+  const { destinations: countryDestinations } = useCountryDestinations(destination?.countryId || destination?.country_id);
+
+  // State
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isFavorite, setIsFavorite] = useLocalStorage(`favorite_${destinationId}`, false);
+  const [isBookmarked, setIsBookmarked] = useLocalStorage(`bookmark_${destinationId}`, false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [selectedTip, setSelectedTip] = useState(0);
+  const [showAllReviews, setShowAllReviews] = useState(false);
+  const [helpfulReviews, setHelpfulReviews] = useLocalStorage(`helpful_reviews_${destinationId}`, {});
+
+  // Keyboard shortcuts
+  useKeyPress('Escape', () => {
+    if (isLightboxOpen) setIsLightboxOpen(false);
+    if (showShareModal) setShowShareModal(false);
+  });
+
+  // Related destinations
+  const relatedDestinations = useMemo(
+    () => (countryDestinations || []).filter((d) => d.id !== destination?.id).slice(0, 3),
+    [countryDestinations, destination]
+  );
+
+  // Handlers
   const handleShare = async () => {
-    if (navigator.share) {
+    if (navigator.share && isMobile) {
       try {
         await navigator.share({
           title: destination.name,
           text: destination.description,
           url: window.location.href,
         });
+        toast.success('Shared successfully!');
       } catch (err) {
-        setShowShareModal(true);
+        if (err.name !== 'AbortError') {
+          setShowShareModal(true);
+        }
       }
     } else {
       setShowShareModal(true);
     }
   };
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(window.location.href);
-    alert("Link copied to clipboard!");
-    setShowShareModal(false);
+  const handleDownload = () => {
+    toast.info('Preparing your travel guide PDF...');
+    setTimeout(() => toast.success('Download started!'), 1500);
   };
 
   const handlePrint = () => {
-    window.print();
-  };
-
-  const handleDownloadGuide = () => {
-    alert("Downloading travel guide PDF...");
+    toast.info('Opening print dialog...');
+    setTimeout(() => window.print(), 500);
   };
 
   const scrollToContent = () => {
-    contentRef.current?.scrollIntoView({ behavior: "smooth" });
+    contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const toggleHelpful = (reviewId) => {
-    setHelpfulReviews(prev => ({
+    setHelpfulReviews((prev) => ({
       ...prev,
-      [reviewId]: !prev[reviewId]
+      [reviewId]: !prev[reviewId],
     }));
   };
 
+  // Tab configuration
+  const tabs = useMemo(() => [
+    { id: 'overview', label: 'Overview', icon: <FiGrid size={16} /> },
+    { id: 'highlights', label: 'Highlights', icon: <FiStar size={16} /> },
+    { id: 'planning', label: 'Planning', icon: <FiCalendar size={16} /> },
+    { id: 'tips', label: 'Tips & Info', icon: <FiInfo size={16} /> },
+    { id: 'reviews', label: 'Reviews', icon: <FiMessageCircle size={16} />, count: MOCK_DATA.reviews.length },
+  ], []);
+
+  // Loading state
   if (destinationLoading) {
     return (
       <div
         style={{
-          minHeight: "60vh",
-          display: "grid",
-          placeItems: "center",
-          fontSize: "18px",
-          color: "#6B7280",
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          gap: THEME.spacing[5],
+          backgroundColor: THEME.colors.neutral[50],
         }}
       >
-        Loading destination...
+        <Spinner size={48} color={THEME.colors.primary[500]} />
+        <p style={{ fontSize: THEME.typography.fontSize.lg, color: THEME.colors.neutral[500], fontWeight: THEME.typography.fontWeight.medium }}>
+          Loading destination...
+        </p>
       </div>
     );
   }
 
+  // Not found state
   if (!destination) {
     return (
-      <>
-        <style>{keyframesStyle}</style>
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          padding: THEME.spacing[8],
+          backgroundColor: THEME.colors.primary[50],
+          textAlign: 'center',
+        }}
+      >
         <div
           style={{
-            minHeight: "100vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexDirection: "column",
-            padding: "40px 20px",
-            background: "linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 50%, #D1FAE5 100%)",
-            textAlign: "center",
+            width: 120,
+            height: 120,
+            borderRadius: THEME.borderRadius.full,
+            background: THEME.colors.gradient.primary,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: THEME.spacing[8],
+            animation: 'float 3s ease-in-out infinite',
+            boxShadow: THEME.shadows.glow,
           }}
         >
-          <div style={{ animation: "float 3s ease-in-out infinite", marginBottom: "40px" }}>
-            <div
-              style={{
-                width: "120px",
-                height: "120px",
-                borderRadius: "50%",
-                background: "linear-gradient(135deg, #059669 0%, #10B981 100%)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto",
-                boxShadow: "0 20px 60px rgba(5, 150, 105, 0.3)",
-              }}
-            >
-              <FiMapPin size={48} color="white" />
-            </div>
-          </div>
-          <h1
-            style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: isMobile ? "32px" : "48px",
-              marginBottom: "20px",
-              color: "#1a1a1a",
-              animation: "fadeInUp 0.8s ease forwards",
-            }}
-          >
-            Destination Not Found
-          </h1>
-          <p
-            style={{
-              fontSize: "18px",
-              color: "#6B7280",
-              marginBottom: "40px",
-              maxWidth: "500px",
-              animation: "fadeInUp 0.8s ease 0.2s forwards",
-              opacity: 0,
-              animationFillMode: "forwards",
-            }}
-          >
-            The destination you're looking for doesn't exist or has been moved.
-          </p>
-          <div style={{ animation: "fadeInUp 0.8s ease 0.4s forwards", opacity: 0, animationFillMode: "forwards" }}>
-            <Button to="/destinations" variant="primary">
-              Explore All Destinations
-            </Button>
-          </div>
+          <FiAlertTriangle size={48} color={THEME.colors.neutral[0]} />
         </div>
-      </>
+        <h1
+          style={{
+            fontFamily: THEME.typography.fontFamily.heading,
+            fontSize: isMobile ? THEME.typography.fontSize['3xl'] : THEME.typography.fontSize['5xl'],
+            fontWeight: THEME.typography.fontWeight.bold,
+            color: THEME.colors.neutral[900],
+            marginBottom: THEME.spacing[4],
+            animation: 'fadeInUp 0.6s ease forwards',
+          }}
+        >
+          Destination Not Found
+        </h1>
+        <p
+          style={{
+            fontSize: THEME.typography.fontSize.lg,
+            color: THEME.colors.neutral[600],
+            marginBottom: THEME.spacing[8],
+            maxWidth: 450,
+            lineHeight: THEME.typography.lineHeight.relaxed,
+            animation: 'fadeInUp 0.6s ease 0.1s both',
+          }}
+        >
+          The destination you're looking for doesn't exist or may have been moved.
+        </p>
+        <div style={{ animation: 'fadeInUp 0.6s ease 0.2s both' }}>
+          <Button to="/destinations" size="lg" icon={<FiCompass size={20} />}>
+            Explore All Destinations
+          </Button>
+        </div>
+      </div>
     );
   }
-
-  const relatedDestinations = (countryDestinations || [])
-    .filter((d) => d.id !== destination.id)
-    .slice(0, 3);
-
-  const tabs = [
-    { id: "overview", label: "Overview", icon: <FiGrid size={16} /> },
-    { id: "highlights", label: "Highlights", icon: <FiStar size={16} /> },
-    { id: "planning", label: "Planning", icon: <FiCalendar size={16} /> },
-    { id: "tips", label: "Tips & Info", icon: <FiInfo size={16} /> },
-    { id: "reviews", label: "Reviews", icon: <FiMessageCircle size={16} /> },
-  ];
-
-  const styles = {
-    // Hero Section
-    heroSection: {
-      position: "relative",
-      height: isMobile ? "75vh" : "90vh",
-      minHeight: isMobile ? "550px" : "650px",
-      overflow: "hidden",
-    },
-    heroBackground: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-    },
-    heroImage: {
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-      transition: "transform 0.8s ease, opacity 0.5s ease",
-      transform: isImageLoaded ? "scale(1)" : "scale(1.1)",
-      opacity: isImageLoaded ? 1 : 0,
-    },
-    heroOverlay: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: "linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.7) 100%)",
-    },
-    heroContent: {
-      position: "absolute",
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: isMobile ? "30px 20px 120px" : "60px 60px 140px",
-      color: "white",
-      zIndex: 10,
-    },
-    breadcrumbs: {
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-      marginBottom: "20px",
-      fontSize: "14px",
-      opacity: 0.9,
-      flexWrap: "wrap",
-      animation: "fadeInUp 0.8s ease forwards",
-    },
-    breadcrumbLink: {
-      color: "white",
-      textDecoration: "none",
-      transition: "opacity 0.3s ease",
-    },
-    heroTitle: {
-      fontFamily: "'Playfair Display', serif",
-      fontSize: isMobile ? "36px" : isTablet ? "52px" : "68px",
-      fontWeight: "700",
-      marginBottom: "16px",
-      textShadow: "0 4px 20px rgba(0,0,0,0.3)",
-      animation: "fadeInUp 0.8s ease 0.2s forwards",
-      opacity: 0,
-      animationFillMode: "forwards",
-      lineHeight: "1.1",
-    },
-    heroSubtitle: {
-      fontSize: isMobile ? "16px" : "20px",
-      maxWidth: "700px",
-      lineHeight: "1.7",
-      opacity: 0.95,
-      animation: "fadeInUp 0.8s ease 0.4s forwards",
-      animationFillMode: "forwards",
-    },
-    heroStats: {
-      display: "flex",
-      flexWrap: "wrap",
-      gap: isMobile ? "16px" : "30px",
-      marginTop: "24px",
-      animation: "fadeInUp 0.8s ease 0.6s forwards",
-      opacity: 0,
-      animationFillMode: "forwards",
-    },
-    heroStat: {
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-      padding: "10px 18px",
-      backgroundColor: "rgba(255, 255, 255, 0.15)",
-      backdropFilter: "blur(10px)",
-      borderRadius: "30px",
-      fontSize: "14px",
-      fontWeight: "500",
-    },
-    // Back Button
-    backButton: {
-      position: "fixed",
-      top: isScrolled ? "20px" : "100px",
-      left: isMobile ? "15px" : "40px",
-      zIndex: 1000,
-      display: "flex",
-      alignItems: "center",
-      gap: "10px",
-      color: isScrolled ? "#059669" : "white",
-      textDecoration: "none",
-      fontSize: "14px",
-      fontWeight: "600",
-      padding: isMobile ? "10px 16px" : "12px 20px",
-      backgroundColor: isScrolled ? "white" : "rgba(255, 255, 255, 0.15)",
-      backdropFilter: "blur(10px)",
-      borderRadius: "50px",
-      border: isScrolled ? "1px solid #E5E7EB" : "1px solid rgba(255, 255, 255, 0.2)",
-      transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-      boxShadow: isScrolled ? "0 4px 20px rgba(0,0,0,0.1)" : "none",
-    },
-    // Top Actions
-    topActions: {
-      position: "absolute",
-      top: "20px",
-      right: isMobile ? "15px" : "40px",
-      display: "flex",
-      gap: "12px",
-      zIndex: 20,
-      animation: "fadeInDown 0.8s ease forwards",
-    },
-    actionButton: {
-      width: "48px",
-      height: "48px",
-      borderRadius: "50%",
-      backgroundColor: "rgba(255, 255, 255, 0.2)",
-      backdropFilter: "blur(10px)",
-      border: "1px solid rgba(255, 255, 255, 0.3)",
-      color: "white",
-      cursor: "pointer",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      transition: "all 0.3s ease",
-    },
-    // Image Counter & Controls
-    imageControls: {
-      position: "absolute",
-      bottom: isMobile ? "20px" : "40px",
-      right: isMobile ? "20px" : "60px",
-      display: "flex",
-      alignItems: "center",
-      gap: "12px",
-      zIndex: 20,
-      animation: "fadeInUp 0.8s ease 0.6s forwards",
-      opacity: 0,
-      animationFillMode: "forwards",
-    },
-    imageCounter: {
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
-      backdropFilter: "blur(10px)",
-      padding: "10px 20px",
-      borderRadius: "30px",
-      color: "white",
-      fontSize: "14px",
-      fontWeight: "600",
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-    },
-    navButton: {
-      width: isMobile ? "44px" : "52px",
-      height: isMobile ? "44px" : "52px",
-      borderRadius: "50%",
-      backgroundColor: "rgba(255, 255, 255, 0.2)",
-      backdropFilter: "blur(10px)",
-      border: "1px solid rgba(255, 255, 255, 0.3)",
-      color: "white",
-      cursor: "pointer",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      transition: "all 0.3s ease",
-    },
-    // Thumbnail Strip
-    thumbnailStrip: {
-      position: "absolute",
-      bottom: isMobile ? "80px" : "100px",
-      left: "50%",
-      transform: "translateX(-50%)",
-      display: "flex",
-      gap: "10px",
-      zIndex: 20,
-      animation: "fadeInUp 0.8s ease 0.5s forwards",
-      opacity: 0,
-      animationFillMode: "forwards",
-    },
-    thumbnailDot: {
-      width: "12px",
-      height: "12px",
-      borderRadius: "50%",
-      backgroundColor: "rgba(255, 255, 255, 0.4)",
-      cursor: "pointer",
-      transition: "all 0.3s ease",
-      border: "2px solid transparent",
-    },
-    thumbnailDotActive: {
-      backgroundColor: "white",
-      transform: "scale(1.2)",
-      border: "2px solid #059669",
-    },
-    // Scroll Indicator
-    scrollIndicator: {
-      position: "absolute",
-      bottom: "30px",
-      left: "50%",
-      transform: "translateX(-50%)",
-      display: isMobile ? "none" : "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      gap: "8px",
-      color: "white",
-      cursor: "pointer",
-      zIndex: 20,
-      animation: "fadeInUp 0.8s ease 0.8s forwards, bounce 2s ease-in-out infinite 1s",
-      opacity: 0,
-      animationFillMode: "forwards",
-    },
-    // Quick Actions Bar (below hero)
-    quickActionsBar: {
-      backgroundColor: "white",
-      borderBottom: "1px solid #E5E7EB",
-      padding: isMobile ? "16px 20px" : "20px 40px",
-      position: "sticky",
-      top: "0",
-      zIndex: 100,
-      boxShadow: "0 4px 20px rgba(0, 0, 0, 0.05)",
-    },
-    quickActionsContainer: {
-      maxWidth: "1400px",
-      margin: "0 auto",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      flexWrap: "wrap",
-      gap: "16px",
-    },
-    quickActionsLeft: {
-      display: "flex",
-      alignItems: "center",
-      gap: isMobile ? "12px" : "20px",
-      flexWrap: "wrap",
-    },
-    quickActionsRight: {
-      display: "flex",
-      alignItems: "center",
-      gap: "12px",
-    },
-    quickActionBtn: {
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-      padding: "10px 18px",
-      borderRadius: "10px",
-      border: "2px solid #E5E7EB",
-      backgroundColor: "white",
-      cursor: "pointer",
-      fontSize: "14px",
-      fontWeight: "600",
-      color: "#374151",
-      transition: "all 0.3s ease",
-    },
-    // Main Content Section
-    contentSection: {
-      backgroundColor: "#FAFFFE",
-      padding: isMobile ? "40px 20px 100px" : "60px 40px 120px",
-      position: "relative",
-    },
-    contentContainer: {
-      maxWidth: "1400px",
-      margin: "0 auto",
-    },
-    // Tabs
-    tabsWrapper: {
-      marginBottom: "40px",
-      overflowX: "auto",
-      borderBottom: "2px solid #E5E7EB",
-    },
-    tabsContainer: {
-      display: "flex",
-      gap: "8px",
-      minWidth: "max-content",
-    },
-    tab: {
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-      padding: isMobile ? "14px 18px" : "16px 24px",
-      fontSize: isMobile ? "13px" : "14px",
-      fontWeight: "600",
-      color: "#6B7280",
-      cursor: "pointer",
-      borderBottom: "3px solid transparent",
-      transition: "all 0.3s ease",
-      whiteSpace: "nowrap",
-      background: "none",
-      border: "none",
-      borderRadius: "12px 12px 0 0",
-      marginBottom: "-2px",
-    },
-    tabActive: {
-      color: "#059669",
-      borderBottomColor: "#059669",
-      backgroundColor: "#F0FDF4",
-    },
-    // Content Grid
-    contentGrid: {
-      display: "grid",
-      gridTemplateColumns: isMobile ? "1fr" : isTablet ? "1fr" : "1fr 380px",
-      gap: isMobile ? "40px" : "50px",
-    },
-    // Main Content
-    mainContent: {
-      animation: "fadeInLeft 0.8s ease forwards",
-    },
-    // Section Styles
-    sectionCard: {
-      backgroundColor: "white",
-      borderRadius: "20px",
-      padding: isMobile ? "24px" : "32px",
-      marginBottom: "30px",
-      boxShadow: "0 4px 25px rgba(0, 0, 0, 0.04)",
-      border: "1px solid #E5E7EB",
-    },
-    sectionHeader: {
-      display: "flex",
-      alignItems: "center",
-      gap: "14px",
-      marginBottom: "24px",
-    },
-    sectionIcon: {
-      width: "48px",
-      height: "48px",
-      borderRadius: "14px",
-      background: "linear-gradient(135deg, #059669 0%, #10B981 100%)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      color: "white",
-    },
-    sectionTitle: {
-      fontFamily: "'Playfair Display', serif",
-      fontSize: isMobile ? "22px" : "26px",
-      fontWeight: "700",
-      color: "#1a1a1a",
-    },
-    sectionSubtitle: {
-      fontSize: "14px",
-      color: "#6B7280",
-      marginTop: "4px",
-    },
-    // Badge
-    badge: {
-      display: "inline-flex",
-      alignItems: "center",
-      gap: "8px",
-      padding: "10px 20px",
-      background: "linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)",
-      color: "#059669",
-      fontSize: "13px",
-      fontWeight: "700",
-      borderRadius: "30px",
-      marginBottom: "20px",
-      textTransform: "uppercase",
-      letterSpacing: "0.5px",
-    },
-    // Description
-    description: {
-      fontSize: isMobile ? "15px" : "16px",
-      color: "#4B5563",
-      lineHeight: "1.9",
-      marginBottom: "24px",
-    },
-    // Highlights Grid
-    highlightsList: {
-      display: "grid",
-      gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
-      gap: "16px",
-    },
-    highlightItem: {
-      display: "flex",
-      alignItems: "flex-start",
-      gap: "14px",
-      padding: "18px",
-      backgroundColor: "#F9FAFB",
-      borderRadius: "14px",
-      border: "1px solid #E5E7EB",
-      transition: "all 0.3s ease",
-    },
-    highlightIcon: {
-      width: "36px",
-      height: "36px",
-      borderRadius: "10px",
-      background: "linear-gradient(135deg, #059669 0%, #10B981 100%)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      color: "white",
-      flexShrink: 0,
-    },
-    // Weather Card
-    weatherGrid: {
-      display: "grid",
-      gridTemplateColumns: "repeat(4, 1fr)",
-      gap: "16px",
-      marginBottom: "24px",
-    },
-    weatherItem: {
-      textAlign: "center",
-      padding: "16px",
-      backgroundColor: "#F0FDF4",
-      borderRadius: "12px",
-    },
-    weatherForecast: {
-      display: "flex",
-      gap: "12px",
-      overflowX: "auto",
-      paddingBottom: "8px",
-    },
-    forecastDay: {
-      flex: "0 0 auto",
-      textAlign: "center",
-      padding: "14px 20px",
-      backgroundColor: "#F9FAFB",
-      borderRadius: "12px",
-      minWidth: "80px",
-    },
-    // Packing List
-    packingGrid: {
-      display: "grid",
-      gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
-      gap: "20px",
-    },
-    packingCategory: {
-      padding: "20px",
-      backgroundColor: "#F9FAFB",
-      borderRadius: "14px",
-      border: "1px solid #E5E7EB",
-    },
-    packingTitle: {
-      fontSize: "16px",
-      fontWeight: "700",
-      color: "#1a1a1a",
-      marginBottom: "14px",
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-    },
-    packingItem: {
-      display: "flex",
-      alignItems: "center",
-      gap: "10px",
-      padding: "10px 0",
-      fontSize: "14px",
-      color: "#4B5563",
-      borderBottom: "1px solid #E5E7EB",
-    },
-    // Tips Carousel
-    tipsCarousel: {
-      position: "relative",
-    },
-    tipCard: {
-      padding: "28px",
-      backgroundColor: "#F0FDF4",
-      borderRadius: "16px",
-      border: "2px solid #D1FAE5",
-      textAlign: "center",
-    },
-    tipIcon: {
-      fontSize: "48px",
-      marginBottom: "16px",
-    },
-    tipTitle: {
-      fontSize: "18px",
-      fontWeight: "700",
-      color: "#1a1a1a",
-      marginBottom: "12px",
-    },
-    tipText: {
-      fontSize: "15px",
-      color: "#4B5563",
-      lineHeight: "1.7",
-    },
-    tipDots: {
-      display: "flex",
-      justifyContent: "center",
-      gap: "8px",
-      marginTop: "20px",
-    },
-    tipDot: {
-      width: "10px",
-      height: "10px",
-      borderRadius: "50%",
-      backgroundColor: "#D1FAE5",
-      cursor: "pointer",
-      transition: "all 0.3s ease",
-    },
-    tipDotActive: {
-      backgroundColor: "#059669",
-      transform: "scale(1.2)",
-    },
-    // Safety Rating
-    safetyItem: {
-      marginBottom: "20px",
-    },
-    safetyHeader: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: "8px",
-    },
-    safetyLabel: {
-      fontSize: "14px",
-      fontWeight: "600",
-      color: "#374151",
-    },
-    safetyValue: {
-      fontSize: "14px",
-      fontWeight: "700",
-      color: "#059669",
-    },
-    safetyBar: {
-      height: "8px",
-      backgroundColor: "#E5E7EB",
-      borderRadius: "4px",
-      overflow: "hidden",
-    },
-    safetyProgress: {
-      height: "100%",
-      background: "linear-gradient(90deg, #059669 0%, #10B981 100%)",
-      borderRadius: "4px",
-      transition: "width 1s ease",
-    },
-    safetyDescription: {
-      fontSize: "13px",
-      color: "#6B7280",
-      marginTop: "6px",
-    },
-    // Accessibility List
-    accessibilityItem: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      padding: "14px 0",
-      borderBottom: "1px solid #E5E7EB",
-    },
-    accessibilityLeft: {
-      display: "flex",
-      alignItems: "center",
-      gap: "12px",
-    },
-    accessibilityIcon: {
-      width: "32px",
-      height: "32px",
-      borderRadius: "8px",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    // FAQ
-    faqItem: {
-      marginBottom: "12px",
-      borderRadius: "14px",
-      overflow: "hidden",
-      border: "1px solid #E5E7EB",
-      backgroundColor: "white",
-    },
-    faqQuestion: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      padding: "18px 20px",
-      cursor: "pointer",
-      fontSize: "15px",
-      fontWeight: "600",
-      color: "#1a1a1a",
-      transition: "background-color 0.3s ease",
-    },
-    faqAnswer: {
-      padding: "0 20px 18px",
-      fontSize: "14px",
-      color: "#4B5563",
-      lineHeight: "1.8",
-    },
-    // Reviews
-    reviewCard: {
-      padding: "24px",
-      backgroundColor: "#F9FAFB",
-      borderRadius: "16px",
-      marginBottom: "16px",
-      border: "1px solid #E5E7EB",
-    },
-    reviewHeader: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      marginBottom: "14px",
-      flexWrap: "wrap",
-      gap: "12px",
-    },
-    reviewAuthor: {
-      display: "flex",
-      alignItems: "center",
-      gap: "12px",
-    },
-    reviewAvatar: {
-      width: "48px",
-      height: "48px",
-      borderRadius: "50%",
-      backgroundColor: "#D1FAE5",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: "24px",
-    },
-    reviewName: {
-      fontSize: "15px",
-      fontWeight: "700",
-      color: "#1a1a1a",
-    },
-    reviewDate: {
-      fontSize: "13px",
-      color: "#6B7280",
-    },
-    reviewStars: {
-      display: "flex",
-      gap: "2px",
-    },
-    reviewTitle: {
-      fontSize: "16px",
-      fontWeight: "700",
-      color: "#1a1a1a",
-      marginBottom: "10px",
-    },
-    reviewComment: {
-      fontSize: "14px",
-      color: "#4B5563",
-      lineHeight: "1.7",
-      marginBottom: "14px",
-    },
-    reviewActions: {
-      display: "flex",
-      alignItems: "center",
-      gap: "20px",
-    },
-    reviewAction: {
-      display: "flex",
-      alignItems: "center",
-      gap: "6px",
-      fontSize: "13px",
-      color: "#6B7280",
-      cursor: "pointer",
-      transition: "color 0.3s ease",
-      background: "none",
-      border: "none",
-      padding: "0",
-    },
-    // Itinerary
-    itineraryList: {
-      position: "relative",
-      paddingLeft: "30px",
-    },
-    itineraryLine: {
-      position: "absolute",
-      left: "11px",
-      top: "20px",
-      bottom: "20px",
-      width: "2px",
-      backgroundColor: "#D1FAE5",
-    },
-    itineraryItem: {
-      display: "flex",
-      gap: "20px",
-      marginBottom: "24px",
-      position: "relative",
-    },
-    itineraryDot: {
-      position: "absolute",
-      left: "-30px",
-      top: "4px",
-      width: "24px",
-      height: "24px",
-      borderRadius: "50%",
-      backgroundColor: "#059669",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      color: "white",
-      fontSize: "12px",
-      zIndex: 1,
-    },
-    itineraryTime: {
-      fontSize: "14px",
-      fontWeight: "700",
-      color: "#059669",
-      minWidth: "60px",
-    },
-    itineraryContent: {
-      flex: 1,
-    },
-    itineraryActivity: {
-      fontSize: "16px",
-      fontWeight: "600",
-      color: "#1a1a1a",
-      marginBottom: "4px",
-    },
-    itineraryDesc: {
-      fontSize: "14px",
-      color: "#6B7280",
-    },
-    // Transport Options
-    transportGrid: {
-      display: "grid",
-      gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
-      gap: "16px",
-    },
-    transportCard: {
-      display: "flex",
-      alignItems: "center",
-      gap: "16px",
-      padding: "20px",
-      backgroundColor: "#F9FAFB",
-      borderRadius: "14px",
-      border: "1px solid #E5E7EB",
-    },
-    transportIcon: {
-      fontSize: "32px",
-    },
-    transportInfo: {
-      flex: 1,
-    },
-    transportMode: {
-      fontSize: "15px",
-      fontWeight: "700",
-      color: "#1a1a1a",
-      marginBottom: "4px",
-    },
-    transportDetails: {
-      fontSize: "13px",
-      color: "#6B7280",
-    },
-    transportTime: {
-      fontSize: "13px",
-      fontWeight: "600",
-      color: "#059669",
-      backgroundColor: "#D1FAE5",
-      padding: "6px 12px",
-      borderRadius: "20px",
-    },
-    // Nearby Attractions
-    nearbyList: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "12px",
-    },
-    nearbyItem: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      padding: "16px",
-      backgroundColor: "#F9FAFB",
-      borderRadius: "12px",
-      border: "1px solid #E5E7EB",
-      transition: "all 0.3s ease",
-    },
-    nearbyLeft: {
-      display: "flex",
-      alignItems: "center",
-      gap: "14px",
-    },
-    nearbyIcon: {
-      width: "40px",
-      height: "40px",
-      borderRadius: "10px",
-      backgroundColor: "#D1FAE5",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      color: "#059669",
-    },
-    nearbyName: {
-      fontSize: "15px",
-      fontWeight: "600",
-      color: "#1a1a1a",
-    },
-    nearbyMeta: {
-      fontSize: "13px",
-      color: "#6B7280",
-    },
-    nearbyType: {
-      fontSize: "12px",
-      fontWeight: "600",
-      color: "#059669",
-      backgroundColor: "#D1FAE5",
-      padding: "4px 10px",
-      borderRadius: "20px",
-    },
-    // Phrases
-    phrasesList: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "12px",
-    },
-    phraseItem: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      padding: "14px 18px",
-      backgroundColor: "#F9FAFB",
-      borderRadius: "12px",
-      border: "1px solid #E5E7EB",
-    },
-    phraseEnglish: {
-      fontSize: "14px",
-      color: "#6B7280",
-    },
-    phraseLocal: {
-      fontSize: "15px",
-      fontWeight: "700",
-      color: "#1a1a1a",
-    },
-    phrasePronunciation: {
-      fontSize: "12px",
-      color: "#059669",
-      fontStyle: "italic",
-    },
-    // Sidebar
-    sidebar: {
-      animation: "fadeInRight 0.8s ease forwards",
-    },
-    sidebarCard: {
-      backgroundColor: "white",
-      borderRadius: "20px",
-      padding: isMobile ? "24px" : "28px",
-      boxShadow: "0 10px 50px rgba(0, 0, 0, 0.06)",
-      border: "1px solid #E5E7EB",
-      marginBottom: "24px",
-      position: isDesktop ? "sticky" : "relative",
-      top: isDesktop ? "100px" : "0",
-    },
-    // Quick Info Card
-    quickInfoGrid: {
-      display: "grid",
-      gridTemplateColumns: "repeat(2, 1fr)",
-      gap: "16px",
-      marginBottom: "24px",
-    },
-    quickInfoItem: {
-      padding: "16px",
-      backgroundColor: "#F9FAFB",
-      borderRadius: "14px",
-      textAlign: "center",
-    },
-    quickInfoIcon: {
-      width: "40px",
-      height: "40px",
-      borderRadius: "10px",
-      background: "linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      margin: "0 auto 10px",
-      color: "#059669",
-    },
-    quickInfoValue: {
-      fontSize: "16px",
-      fontWeight: "700",
-      color: "#1a1a1a",
-      marginBottom: "2px",
-    },
-    quickInfoLabel: {
-      fontSize: "12px",
-      color: "#6B7280",
-    },
-    // Rating Display
-    ratingDisplay: {
-      display: "flex",
-      alignItems: "center",
-      gap: "16px",
-      padding: "20px",
-      backgroundColor: "#FEF3C7",
-      borderRadius: "16px",
-      marginBottom: "24px",
-    },
-    ratingBig: {
-      fontSize: "42px",
-      fontWeight: "700",
-      color: "#92400E",
-      fontFamily: "'Playfair Display', serif",
-    },
-    ratingDetails: {
-      flex: 1,
-    },
-    ratingStars: {
-      display: "flex",
-      gap: "3px",
-      marginBottom: "4px",
-    },
-    ratingCount: {
-      fontSize: "13px",
-      color: "#92400E",
-    },
-    // Contact Card
-    contactCard: {
-      padding: "24px",
-      backgroundColor: "#F0FDF4",
-      borderRadius: "16px",
-      border: "2px solid #D1FAE5",
-    },
-    contactTitle: {
-      fontSize: "16px",
-      fontWeight: "700",
-      color: "#1a1a1a",
-      marginBottom: "16px",
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-    },
-    contactItem: {
-      display: "flex",
-      alignItems: "center",
-      gap: "12px",
-      padding: "12px 0",
-      fontSize: "14px",
-      color: "#374151",
-      cursor: "pointer",
-      transition: "color 0.3s ease",
-      borderBottom: "1px solid #D1FAE5",
-    },
-    // CTA Buttons
-    ctaButtons: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "12px",
-      marginBottom: "24px",
-    },
-    ctaButton: {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: "10px",
-      padding: "16px 24px",
-      borderRadius: "14px",
-      fontSize: "15px",
-      fontWeight: "700",
-      cursor: "pointer",
-      transition: "all 0.3s ease",
-      border: "none",
-      textDecoration: "none",
-      textAlign: "center",
-    },
-    ctaPrimary: {
-      background: "linear-gradient(135deg, #059669 0%, #10B981 100%)",
-      color: "white",
-      boxShadow: "0 8px 25px rgba(5, 150, 105, 0.3)",
-    },
-    ctaSecondary: {
-      backgroundColor: "white",
-      color: "#059669",
-      border: "2px solid #059669",
-    },
-    // Related Section
-    relatedSection: {
-      marginTop: "80px",
-      paddingTop: "60px",
-      borderTop: "2px solid #E5E7EB",
-    },
-    relatedHeader: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginBottom: "40px",
-      flexWrap: "wrap",
-      gap: "20px",
-    },
-    relatedGrid: {
-      display: "grid",
-      gridTemplateColumns: isMobile ? "1fr" : isTablet ? "repeat(2, 1fr)" : "repeat(3, 1fr)",
-      gap: "24px",
-    },
-    relatedCard: {
-      backgroundColor: "white",
-      borderRadius: "20px",
-      overflow: "hidden",
-      boxShadow: "0 4px 25px rgba(0, 0, 0, 0.05)",
-      border: "1px solid #E5E7EB",
-      transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-      textDecoration: "none",
-    },
-    relatedImageWrapper: {
-      position: "relative",
-      height: "180px",
-      overflow: "hidden",
-    },
-    relatedImage: {
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-      transition: "transform 0.5s ease",
-    },
-    relatedContent: {
-      padding: "20px",
-    },
-    relatedType: {
-      fontSize: "11px",
-      color: "#059669",
-      fontWeight: "700",
-      textTransform: "uppercase",
-      letterSpacing: "0.5px",
-      marginBottom: "8px",
-    },
-    relatedTitle: {
-      fontFamily: "'Playfair Display', serif",
-      fontSize: "18px",
-      fontWeight: "700",
-      color: "#1a1a1a",
-      marginBottom: "12px",
-    },
-    relatedMeta: {
-      display: "flex",
-      alignItems: "center",
-      gap: "16px",
-      fontSize: "13px",
-      color: "#6B7280",
-    },
-    // Modals
-    modal: {
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: "rgba(0, 0, 0, 0.6)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      zIndex: 10000,
-      padding: "20px",
-      animation: "fadeIn 0.3s ease",
-    },
-    modalContent: {
-      backgroundColor: "white",
-      borderRadius: "24px",
-      padding: "32px",
-      maxWidth: "450px",
-      width: "100%",
-      animation: "scaleIn 0.3s ease",
-    },
-    modalTitle: {
-      fontFamily: "'Playfair Display', serif",
-      fontSize: "24px",
-      fontWeight: "700",
-      marginBottom: "24px",
-      textAlign: "center",
-    },
-    shareOptions: {
-      display: "grid",
-      gridTemplateColumns: "repeat(4, 1fr)",
-      gap: "16px",
-      marginBottom: "24px",
-    },
-    shareOption: {
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      gap: "8px",
-      padding: "18px 12px",
-      backgroundColor: "#F9FAFB",
-      borderRadius: "16px",
-      cursor: "pointer",
-      transition: "all 0.3s ease",
-      border: "2px solid transparent",
-    },
-    // Lightbox
-    lightbox: {
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: "rgba(0, 0, 0, 0.95)",
-      zIndex: 10000,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    lightboxClose: {
-      position: "absolute",
-      top: "20px",
-      right: "20px",
-      width: "50px",
-      height: "50px",
-      borderRadius: "50%",
-      backgroundColor: "rgba(255, 255, 255, 0.1)",
-      border: "none",
-      color: "white",
-      cursor: "pointer",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      transition: "all 0.3s ease",
-    },
-    lightboxImage: {
-      maxWidth: "90vw",
-      maxHeight: "85vh",
-      objectFit: "contain",
-      borderRadius: "8px",
-    },
-    lightboxNav: {
-      position: "absolute",
-      top: "50%",
-      transform: "translateY(-50%)",
-      width: "60px",
-      height: "60px",
-      borderRadius: "50%",
-      backgroundColor: "rgba(255, 255, 255, 0.1)",
-      border: "none",
-      color: "white",
-      cursor: "pointer",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      transition: "all 0.3s ease",
-    },
-    // Mobile CTA
-    mobileCTA: {
-      position: "fixed",
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: "16px 20px",
-      backgroundColor: "white",
-      boxShadow: "0 -4px 30px rgba(0, 0, 0, 0.1)",
-      display: isMobile ? "flex" : "none",
-      alignItems: "center",
-      justifyContent: "space-between",
-      gap: "12px",
-      zIndex: 1000,
-      animation: "slideInFromBottom 0.5s ease",
-    },
-  };
 
   return (
     <>
-      <style>{keyframesStyle}</style>
-      
-      {/* Hero Section */}
-      <section style={styles.heroSection}>
-        <div
-          style={styles.heroBackground}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-        >
-          <img
-            src={destination.images[currentImageIndex]}
-            alt={destination.name}
-            style={styles.heroImage}
-            onLoad={() => setIsImageLoaded(true)}
-          />
-          <div style={styles.heroOverlay} />
-        </div>
-
-        {/* Top Actions */}
-        <div style={styles.topActions}>
-          <button
-            style={{
-              ...styles.actionButton,
-              backgroundColor: isFavorite ? "#059669" : "rgba(255, 255, 255, 0.2)",
-              animation: isFavorite ? "heartBeat 0.6s ease" : "none",
-            }}
-            onClick={() => setIsFavorite(!isFavorite)}
-            title="Add to favorites"
-          >
-            <FiHeart size={20} style={{ fill: isFavorite ? "white" : "none" }} />
-          </button>
-          <button
-            style={{
-              ...styles.actionButton,
-              backgroundColor: isBookmarked ? "#059669" : "rgba(255, 255, 255, 0.2)",
-            }}
-            onClick={() => setIsBookmarked(!isBookmarked)}
-            title="Save for later"
-          >
-            <FiBookmark size={20} style={{ fill: isBookmarked ? "white" : "none" }} />
-          </button>
-          <button
-            style={styles.actionButton}
-            onClick={handleShare}
-            title="Share"
-          >
-            <FiShare2 size={20} />
-          </button>
-          <button
-            style={styles.actionButton}
-            onClick={() => setIsLightboxOpen(true)}
-            title="View gallery"
-          >
-            <FiMaximize2 size={20} />
-          </button>
-        </div>
-
-        {/* Hero Content */}
-        <div style={styles.heroContent}>
-          <div style={styles.breadcrumbs}>
-            <Link to="/" style={styles.breadcrumbLink}>Home</Link>
-            <span>›</span>
-            <Link to="/destinations" style={styles.breadcrumbLink}>Destinations</Link>
-            <span>›</span>
-            <Link to={`/country/${destination.countryId}`} style={styles.breadcrumbLink}>{country?.name}</Link>
-            <span>›</span>
-            <span style={{ fontWeight: "600" }}>{destination.name}</span>
-          </div>
-          <h1 style={styles.heroTitle}>{destination.name}</h1>
-          <p style={styles.heroSubtitle}>{destination.description}</p>
-          
-          <div style={styles.heroStats}>
-            <div style={styles.heroStat}>
-              <FiStar size={16} style={{ fill: "#FFD700", color: "#FFD700" }} />
-              <span>{destination.rating} Rating</span>
-            </div>
-            <div style={styles.heroStat}>
-              <FiClock size={16} />
-              <span>{destination.duration}</span>
-            </div>
-            <div style={styles.heroStat}>
-              <FiUsers size={16} />
-              <span>{destination.difficulty}</span>
-            </div>
-            <div style={styles.heroStat}>
-              <FiMessageCircle size={16} />
-              <span>{destination.reviews}+ Reviews</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Thumbnail Dots */}
-        <div style={styles.thumbnailStrip}>
-          {destination.images.map((_, index) => (
-            <div
-              key={index}
-              style={{
-                ...styles.thumbnailDot,
-                ...(currentImageIndex === index ? styles.thumbnailDotActive : {}),
-              }}
-              onClick={() => {
-                setCurrentImageIndex(index);
-                setIsAutoPlaying(false);
-              }}
-            />
-          ))}
-        </div>
-
-        {/* Image Controls */}
-        <div style={styles.imageControls}>
-          <div style={styles.imageCounter}>
-            <FiCamera size={16} />
-            <span>{currentImageIndex + 1} / {destination.images.length}</span>
-          </div>
-          <button
-            style={styles.navButton}
-            onClick={() => { prevImage(); setIsAutoPlaying(false); }}
-            onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "#059669"; e.currentTarget.style.transform = "scale(1.1)"; }}
-            onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.2)"; e.currentTarget.style.transform = "scale(1)"; }}
-          >
-            <FiChevronLeft size={22} />
-          </button>
-          <button
-            style={styles.navButton}
-            onClick={() => { nextImage(); setIsAutoPlaying(false); }}
-            onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "#059669"; e.currentTarget.style.transform = "scale(1.1)"; }}
-            onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.2)"; e.currentTarget.style.transform = "scale(1)"; }}
-          >
-            <FiChevronRight size={22} />
-          </button>
-        </div>
-
-        {/* Scroll Indicator */}
-        <div style={styles.scrollIndicator} onClick={scrollToContent}>
-          <span style={{ fontSize: "12px", fontWeight: "600", letterSpacing: "2px" }}>EXPLORE MORE</span>
-          <FiChevronDown size={22} />
-        </div>
-      </section>
-
-      {/* Back Button */}
+      {/* Back Navigation */}
       <Link
         to="/destinations"
-        style={styles.backButton}
-        onMouseOver={(e) => { e.currentTarget.style.transform = "translateX(-5px)"; e.currentTarget.style.boxShadow = "0 6px 25px rgba(0,0,0,0.15)"; }}
-        onMouseOut={(e) => { e.currentTarget.style.transform = "translateX(0)"; e.currentTarget.style.boxShadow = isScrolled ? "0 4px 20px rgba(0,0,0,0.1)" : "none"; }}
+        className="no-print"
+        style={{
+          position: 'fixed',
+          top: isScrolled ? THEME.spacing[4] : THEME.spacing[24],
+          left: isMobile ? THEME.spacing[4] : THEME.spacing[8],
+          zIndex: THEME.zIndex.fixed,
+          display: 'flex',
+          alignItems: 'center',
+          gap: THEME.spacing[2],
+          color: isScrolled ? THEME.colors.primary[600] : THEME.colors.neutral[0],
+          textDecoration: 'none',
+          fontSize: THEME.typography.fontSize.sm,
+          fontWeight: THEME.typography.fontWeight.semibold,
+          padding: `${THEME.spacing[2]} ${THEME.spacing[4]}`,
+          backgroundColor: isScrolled ? THEME.colors.neutral[0] : 'rgba(255,255,255,0.15)',
+          backdropFilter: 'blur(10px)',
+          borderRadius: THEME.borderRadius.full,
+          border: isScrolled ? `1px solid ${THEME.colors.neutral[200]}` : '1px solid rgba(255,255,255,0.2)',
+          boxShadow: isScrolled ? THEME.shadows.lg : 'none',
+          transition: `all ${THEME.transitions.DEFAULT}`,
+          transform: direction === 'down' && isScrolled ? 'translateY(-100px)' : 'translateY(0)',
+        }}
       >
         <FiArrowLeft size={18} />
-        {!isMobile && <span>Back</span>}
+        {!isMobile && 'Back to Destinations'}
       </Link>
 
-      {/* Quick Actions Bar */}
-      <div style={styles.quickActionsBar}>
-        <div style={styles.quickActionsContainer}>
-          <div style={styles.quickActionsLeft}>
-            <span style={{ fontSize: "14px", color: "#6B7280" }}>Quick Actions:</span>
-            <button
-              style={styles.quickActionBtn}
-              onClick={handleDownloadGuide}
-              onMouseOver={(e) => { e.currentTarget.style.borderColor = "#059669"; e.currentTarget.style.color = "#059669"; }}
-              onMouseOut={(e) => { e.currentTarget.style.borderColor = "#E5E7EB"; e.currentTarget.style.color = "#374151"; }}
-            >
-              <FiDownload size={16} />
-              {!isMobile && "Download Guide"}
-            </button>
-            <button
-              style={styles.quickActionBtn}
-              onClick={handlePrint}
-              onMouseOver={(e) => { e.currentTarget.style.borderColor = "#059669"; e.currentTarget.style.color = "#059669"; }}
-              onMouseOut={(e) => { e.currentTarget.style.borderColor = "#E5E7EB"; e.currentTarget.style.color = "#374151"; }}
-            >
-              <FiPrinter size={16} />
-              {!isMobile && "Print"}
-            </button>
-            <button
-              style={styles.quickActionBtn}
-              onClick={handleShare}
-              onMouseOver={(e) => { e.currentTarget.style.borderColor = "#059669"; e.currentTarget.style.color = "#059669"; }}
-              onMouseOut={(e) => { e.currentTarget.style.borderColor = "#E5E7EB"; e.currentTarget.style.color = "#374151"; }}
-            >
-              <FiShare2 size={16} />
-              {!isMobile && "Share"}
-            </button>
-          </div>
-          <div style={styles.quickActionsRight}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "10px 18px", backgroundColor: "#F0FDF4", borderRadius: "10px", color: "#059669", fontWeight: "600", fontSize: "14px" }}>
-              <FiEye size={16} />
-              <span>2.4k views today</span>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Hero Section */}
+      <HeroSection
+        destination={destination}
+        country={country}
+        currentImageIndex={currentImageIndex}
+        setCurrentImageIndex={setCurrentImageIndex}
+        isFavorite={isFavorite}
+        setIsFavorite={setIsFavorite}
+        isBookmarked={isBookmarked}
+        setIsBookmarked={setIsBookmarked}
+        onShare={handleShare}
+        onOpenLightbox={() => setIsLightboxOpen(true)}
+        onScrollToContent={scrollToContent}
+        isMobile={isMobile}
+        toast={toast}
+      />
 
-      {/* Main Content Section */}
-      <section style={styles.contentSection} ref={contentRef}>
-        <div style={styles.contentContainer}>
-          {/* Tabs */}
-          <div style={styles.tabsWrapper}>
-            <div style={styles.tabsContainer}>
+      {/* Quick Actions Bar */}
+      <QuickActionsBar
+        destination={destination}
+        onDownload={handleDownload}
+        onPrint={handlePrint}
+        onShare={handleShare}
+        isMobile={isMobile}
+        isScrolled={isScrolled}
+      />
+
+      {/* Main Content */}
+      <main
+        ref={contentRef}
+        style={{
+          backgroundColor: THEME.colors.neutral[50],
+          padding: isMobile ? `${THEME.spacing[8]} ${THEME.spacing[4]} ${THEME.spacing[32]}` : `${THEME.spacing[12]} ${THEME.spacing[8]} ${THEME.spacing[24]}`,
+        }}
+      >
+        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
+          {/* Tabs Navigation */}
+          <div
+            style={{
+              marginBottom: THEME.spacing[8],
+              overflowX: 'auto',
+              borderBottom: `1px solid ${THEME.colors.neutral[200]}`,
+              WebkitOverflowScrolling: 'touch',
+            }}
+          >
+            <div style={{ display: 'flex', gap: THEME.spacing[1], minWidth: 'max-content' }}>
               {tabs.map((tab) => (
-                <button
+                <Tab
                   key={tab.id}
-                  style={{
-                    ...styles.tab,
-                    ...(activeTab === tab.id ? styles.tabActive : {}),
-                  }}
+                  active={activeTab === tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  onMouseOver={(e) => { if (activeTab !== tab.id) { e.currentTarget.style.color = "#059669"; e.currentTarget.style.backgroundColor = "#F0FDF4"; } }}
-                  onMouseOut={(e) => { if (activeTab !== tab.id) { e.currentTarget.style.color = "#6B7280"; e.currentTarget.style.backgroundColor = "transparent"; } }}
+                  icon={tab.icon}
+                  count={tab.count}
                 >
-                  {tab.icon}
                   {tab.label}
-                </button>
+                </Tab>
               ))}
             </div>
           </div>
 
-          <div style={styles.contentGrid}>
-            {/* Main Content */}
-            <div style={styles.mainContent}>
-              
-              {/* OVERVIEW TAB */}
-              {activeTab === "overview" && (
-                <div style={{ animation: "fadeInUp 0.5s ease" }}>
-                  {/* About Section */}
-                  <div style={styles.sectionCard}>
-                    <div style={styles.sectionHeader}>
-                      <div style={styles.sectionIcon}>
-                        <FiInfo size={22} />
-                      </div>
-                      <div>
-                        <h2 style={styles.sectionTitle}>About This Destination</h2>
-                        <p style={styles.sectionSubtitle}>Everything you need to know</p>
-                      </div>
-                    </div>
-                    <span style={styles.badge}>
-                      <FiMapPin size={14} />
-                      {destination.type}
-                    </span>
-                    <p style={styles.description}>{destination.fullDescription}</p>
-                    
-                    {/* Meta Info */}
-                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: "16px", marginTop: "24px" }}>
-                      {[
-                        { icon: <FiMapPin size={18} />, label: "Location", value: country?.name },
-                        { icon: <FiClock size={18} />, label: "Duration", value: destination.duration },
-                        { icon: <FiUsers size={18} />, label: "Difficulty", value: destination.difficulty },
-                        { icon: <FiCalendar size={18} />, label: "Best Time", value: destination.bestTime },
-                      ].map((item, i) => (
-                        <div key={i} style={{ padding: "16px", backgroundColor: "#F9FAFB", borderRadius: "12px", textAlign: "center" }}>
-                          <div style={{ color: "#059669", marginBottom: "8px" }}>{item.icon}</div>
-                          <div style={{ fontSize: "13px", color: "#6B7280", marginBottom: "4px" }}>{item.label}</div>
-                          <div style={{ fontSize: "15px", fontWeight: "600", color: "#1a1a1a" }}>{item.value}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Weather Section */}
-                  <div style={styles.sectionCard}>
-                    <div style={styles.sectionHeader}>
-                      <div style={styles.sectionIcon}>
-                        <FiSun size={22} />
-                      </div>
-                      <div>
-                        <h2 style={styles.sectionTitle}>Current Weather</h2>
-                        <p style={styles.sectionSubtitle}>Live conditions & forecast</p>
-                      </div>
-                    </div>
-                    <div style={{ ...styles.weatherGrid, gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)" }}>
-                      <div style={styles.weatherItem}>
-                        <FiThermometer size={24} style={{ color: "#059669", marginBottom: "8px" }} />
-                        <div style={{ fontSize: "24px", fontWeight: "700", color: "#1a1a1a" }}>{weatherData.current.temp}</div>
-                        <div style={{ fontSize: "13px", color: "#6B7280" }}>Temperature</div>
-                      </div>
-                      <div style={styles.weatherItem}>
-                        <FiSun size={24} style={{ color: "#F59E0B", marginBottom: "8px" }} />
-                        <div style={{ fontSize: "16px", fontWeight: "600", color: "#1a1a1a" }}>{weatherData.current.condition}</div>
-                        <div style={{ fontSize: "13px", color: "#6B7280" }}>Condition</div>
-                      </div>
-                      <div style={styles.weatherItem}>
-                        <FiDroplet size={24} style={{ color: "#3B82F6", marginBottom: "8px" }} />
-                        <div style={{ fontSize: "18px", fontWeight: "600", color: "#1a1a1a" }}>{weatherData.current.humidity}</div>
-                        <div style={{ fontSize: "13px", color: "#6B7280" }}>Humidity</div>
-                      </div>
-                      <div style={styles.weatherItem}>
-                        <FiWind size={24} style={{ color: "#6B7280", marginBottom: "8px" }} />
-                        <div style={{ fontSize: "18px", fontWeight: "600", color: "#1a1a1a" }}>{weatherData.current.wind}</div>
-                        <div style={{ fontSize: "13px", color: "#6B7280" }}>Wind Speed</div>
-                      </div>
-                    </div>
-                    <div style={styles.weatherForecast}>
-                      {weatherData.forecast.map((day, i) => (
-                        <div key={i} style={styles.forecastDay}>
-                          <div style={{ fontSize: "13px", fontWeight: "600", color: "#6B7280", marginBottom: "8px" }}>{day.day}</div>
-                          <div style={{ fontSize: "28px", marginBottom: "6px" }}>{day.icon}</div>
-                          <div style={{ fontSize: "14px", fontWeight: "600", color: "#1a1a1a" }}>{day.temp}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Suggested Itinerary */}
-                  <div style={styles.sectionCard}>
-                    <div style={styles.sectionHeader}>
-                      <div style={styles.sectionIcon}>
-                        <FiCalendar size={22} />
-                      </div>
-                      <div>
-                        <h2 style={styles.sectionTitle}>Suggested Itinerary</h2>
-                        <p style={styles.sectionSubtitle}>Make the most of your day</p>
-                      </div>
-                    </div>
-                    <div style={styles.itineraryList}>
-                      <div style={styles.itineraryLine} />
-                      {itinerary.map((item, i) => (
-                        <div key={i} style={styles.itineraryItem}>
-                          <div style={styles.itineraryDot}>{item.icon}</div>
-                          <div style={styles.itineraryTime}>{item.time}</div>
-                          <div style={styles.itineraryContent}>
-                            <div style={styles.itineraryActivity}>{item.activity}</div>
-                            <div style={styles.itineraryDesc}>{item.description}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+          {/* Content Grid */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile || isTablet ? '1fr' : '1fr 400px',
+              gap: THEME.spacing[10],
+              alignItems: 'start',
+            }}
+          >
+            {/* Main Content Area */}
+            <div>
+              {activeTab === 'overview' && (
+                <OverviewSection destination={destination} country={country} />
               )}
-
-              {/* HIGHLIGHTS TAB */}
-              {activeTab === "highlights" && (
-                <div style={{ animation: "fadeInUp 0.5s ease" }}>
-                  {/* Highlights */}
-                  <div style={styles.sectionCard}>
-                    <div style={styles.sectionHeader}>
-                      <div style={styles.sectionIcon}>
-                        <FiStar size={22} />
-                      </div>
-                      <div>
-                        <h2 style={styles.sectionTitle}>Experience Highlights</h2>
-                        <p style={styles.sectionSubtitle}>What makes this place special</p>
-                      </div>
-                    </div>
-                    <div style={styles.highlightsList}>
-                      {destination.highlights.map((highlight, i) => (
-                        <div
-                          key={i}
-                          style={styles.highlightItem}
-                          onMouseOver={(e) => { e.currentTarget.style.transform = "translateX(8px)"; e.currentTarget.style.borderColor = "#059669"; e.currentTarget.style.backgroundColor = "#F0FDF4"; }}
-                          onMouseOut={(e) => { e.currentTarget.style.transform = "translateX(0)"; e.currentTarget.style.borderColor = "#E5E7EB"; e.currentTarget.style.backgroundColor = "#F9FAFB"; }}
-                        >
-                          <div style={styles.highlightIcon}>
-                            <FiCheck size={18} />
-                          </div>
-                          <span style={{ fontSize: "15px", color: "#374151", fontWeight: "500", lineHeight: "1.5" }}>{highlight}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Nearby Attractions */}
-                  <div style={styles.sectionCard}>
-                    <div style={styles.sectionHeader}>
-                      <div style={styles.sectionIcon}>
-                        <FiMapPin size={22} />
-                      </div>
-                      <div>
-                        <h2 style={styles.sectionTitle}>Nearby Attractions</h2>
-                        <p style={styles.sectionSubtitle}>Explore the surrounding area</p>
-                      </div>
-                    </div>
-                    <div style={styles.nearbyList}>
-                      {nearbyAttractions.map((attraction, i) => (
-                        <div
-                          key={i}
-                          style={styles.nearbyItem}
-                          onMouseOver={(e) => { e.currentTarget.style.borderColor = "#059669"; e.currentTarget.style.backgroundColor = "#F0FDF4"; }}
-                          onMouseOut={(e) => { e.currentTarget.style.borderColor = "#E5E7EB"; e.currentTarget.style.backgroundColor = "#F9FAFB"; }}
-                        >
-                          <div style={styles.nearbyLeft}>
-                            <div style={styles.nearbyIcon}>
-                              <FiNavigation size={18} />
-                            </div>
-                            <div>
-                              <div style={styles.nearbyName}>{attraction.name}</div>
-                              <div style={styles.nearbyMeta}>{attraction.distance} • {attraction.time}</div>
-                            </div>
-                          </div>
-                          <span style={styles.nearbyType}>{attraction.type}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Photo Gallery Preview */}
-                  <div style={styles.sectionCard}>
-                    <div style={styles.sectionHeader}>
-                      <div style={styles.sectionIcon}>
-                        <FiCamera size={22} />
-                      </div>
-                      <div>
-                        <h2 style={styles.sectionTitle}>Photo Gallery</h2>
-                        <p style={styles.sectionSubtitle}>{destination.images.length} photos from travelers</p>
-                      </div>
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: "12px" }}>
-                      {destination.images.slice(0, 4).map((img, i) => (
-                        <div
-                          key={i}
-                          style={{ position: "relative", borderRadius: "12px", overflow: "hidden", cursor: "pointer", height: "120px" }}
-                          onClick={() => { setCurrentImageIndex(i); setIsLightboxOpen(true); }}
-                        >
-                          <img src={img} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.3s ease" }} onMouseOver={(e) => e.target.style.transform = "scale(1.1)"} onMouseOut={(e) => e.target.style.transform = "scale(1)"} />
-                          {i === 3 && destination.images.length > 4 && (
-                            <div style={{ position: "absolute", inset: 0, backgroundColor: "rgba(0,0,0,0.6)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "18px", fontWeight: "700" }}>
-                              +{destination.images.length - 4} more
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+              {activeTab === 'highlights' && (
+                <HighlightsSection destination={destination} />
               )}
-
-              {/* PLANNING TAB */}
-              {activeTab === "planning" && (
-                <div style={{ animation: "fadeInUp 0.5s ease" }}>
-                  {/* Packing List */}
-                  <div style={styles.sectionCard}>
-                    <div style={styles.sectionHeader}>
-                      <div style={styles.sectionIcon}>
-                        <FiPackage size={22} />
-                      </div>
-                      <div>
-                        <h2 style={styles.sectionTitle}>What to Pack</h2>
-                        <p style={styles.sectionSubtitle}>Essential items for your trip</p>
-                      </div>
-                    </div>
-                    <div style={styles.packingGrid}>
-                      {packingList.map((category, i) => (
-                        <div key={i} style={styles.packingCategory}>
-                          <div style={styles.packingTitle}>
-                            <FiPackage size={18} style={{ color: "#059669" }} />
-                            {category.category}
-                          </div>
-                          {category.items.map((item, j) => (
-                            <div key={j} style={styles.packingItem}>
-                              <FiCheck size={16} style={{ color: "#059669" }} />
-                              <span>{item}</span>
-                            </div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Getting There */}
-                  <div style={styles.sectionCard}>
-                    <div style={styles.sectionHeader}>
-                      <div style={styles.sectionIcon}>
-                        <FiNavigation size={22} />
-                      </div>
-                      <div>
-                        <h2 style={styles.sectionTitle}>Getting There</h2>
-                        <p style={styles.sectionSubtitle}>Transportation options</p>
-                      </div>
-                    </div>
-                    <div style={styles.transportGrid}>
-                      {transportOptions.map((option, i) => (
-                        <div key={i} style={styles.transportCard}>
-                          <div style={styles.transportIcon}>{option.icon}</div>
-                          <div style={styles.transportInfo}>
-                            <div style={styles.transportMode}>{option.mode}</div>
-                            <div style={styles.transportDetails}>{option.details}</div>
-                          </div>
-                          <div style={styles.transportTime}>{option.time}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Local Phrases */}
-                  <div style={styles.sectionCard}>
-                    <div style={styles.sectionHeader}>
-                      <div style={styles.sectionIcon}>
-                        <FiGlobe size={22} />
-                      </div>
-                      <div>
-                        <h2 style={styles.sectionTitle}>Useful Phrases</h2>
-                        <p style={styles.sectionSubtitle}>Basic local language</p>
-                      </div>
-                    </div>
-                    <div style={styles.phrasesList}>
-                      {essentialPhrases.map((phrase, i) => (
-                        <div key={i} style={styles.phraseItem}>
-                          <span style={styles.phraseEnglish}>{phrase.phrase}</span>
-                          <div style={{ textAlign: "right" }}>
-                            <div style={styles.phraseLocal}>{phrase.local}</div>
-                            <div style={styles.phrasePronunciation}>{phrase.pronunciation}</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+              {activeTab === 'planning' && (
+                <PlanningSection toast={toast} />
               )}
-
-              {/* TIPS & INFO TAB */}
-              {activeTab === "tips" && (
-                <div style={{ animation: "fadeInUp 0.5s ease" }}>
-                  {/* Travel Tips Carousel */}
-                  <div style={styles.sectionCard}>
-                    <div style={styles.sectionHeader}>
-                      <div style={styles.sectionIcon}>
-                        <FiZap size={22} />
-                      </div>
-                      <div>
-                        <h2 style={styles.sectionTitle}>Insider Tips</h2>
-                        <p style={styles.sectionSubtitle}>Pro tips from experienced travelers</p>
-                      </div>
-                    </div>
-                    <div style={styles.tipsCarousel}>
-                      <div style={styles.tipCard}>
-                        <div style={styles.tipIcon}>{travelTips[selectedTip].icon}</div>
-                        <div style={styles.tipTitle}>{travelTips[selectedTip].title}</div>
-                        <div style={styles.tipText}>{travelTips[selectedTip].tip}</div>
-                      </div>
-                      <div style={styles.tipDots}>
-                        {travelTips.map((_, i) => (
-                          <div
-                            key={i}
-                            style={{
-                              ...styles.tipDot,
-                              ...(selectedTip === i ? styles.tipDotActive : {}),
-                            }}
-                            onClick={() => setSelectedTip(i)}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Safety Information */}
-                  <div style={styles.sectionCard}>
-                    <div style={styles.sectionHeader}>
-                      <div style={styles.sectionIcon}>
-                        <FiShield size={22} />
-                      </div>
-                      <div>
-                        <h2 style={styles.sectionTitle}>Safety Information</h2>
-                        <p style={styles.sectionSubtitle}>Know before you go</p>
-                      </div>
-                    </div>
-                    {safetyInfo.map((item, i) => (
-                      <div key={i} style={styles.safetyItem}>
-                        <div style={styles.safetyHeader}>
-                          <span style={styles.safetyLabel}>{item.level}</span>
-                          <span style={styles.safetyValue}>{item.rating}/5</span>
-                        </div>
-                        <div style={styles.safetyBar}>
-                          <div style={{ ...styles.safetyProgress, width: `${(item.rating / 5) * 100}%` }} />
-                        </div>
-                        <div style={styles.safetyDescription}>{item.description}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Accessibility */}
-                  <div style={styles.sectionCard}>
-                    <div style={styles.sectionHeader}>
-                      <div style={styles.sectionIcon}>
-                        <FiUsers size={22} />
-                      </div>
-                      <div>
-                        <h2 style={styles.sectionTitle}>Accessibility</h2>
-                        <p style={styles.sectionSubtitle}>Facilities & services available</p>
-                      </div>
-                    </div>
-                    {accessibilityInfo.map((item, i) => (
-                      <div key={i} style={styles.accessibilityItem}>
-                        <div style={styles.accessibilityLeft}>
-                          <div style={{ ...styles.accessibilityIcon, backgroundColor: item.available ? "#D1FAE5" : "#FEE2E2", color: item.available ? "#059669" : "#DC2626" }}>
-                            {item.available ? <FiCheck size={16} /> : <FiX size={16} />}
-                          </div>
-                          <div>
-                            <div style={{ fontSize: "15px", fontWeight: "600", color: "#1a1a1a" }}>{item.feature}</div>
-                            <div style={{ fontSize: "13px", color: "#6B7280" }}>{item.note}</div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Local Culture */}
-                  <div style={styles.sectionCard}>
-                    <div style={styles.sectionHeader}>
-                      <div style={styles.sectionIcon}>
-                        <FiGlobe size={22} />
-                      </div>
-                      <div>
-                        <h2 style={styles.sectionTitle}>Local Culture & Etiquette</h2>
-                        <p style={styles.sectionSubtitle}>Respect local customs</p>
-                      </div>
-                    </div>
-                    <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)", gap: "16px" }}>
-                      {localCulture.map((item, i) => (
-                        <div key={i} style={{ padding: "18px", backgroundColor: "#F9FAFB", borderRadius: "12px", borderLeft: "4px solid #059669" }}>
-                          <div style={{ fontSize: "15px", fontWeight: "700", color: "#1a1a1a", marginBottom: "8px" }}>{item.title}</div>
-                          <div style={{ fontSize: "14px", color: "#4B5563", lineHeight: "1.6" }}>{item.description}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* FAQ */}
-                  <div style={styles.sectionCard}>
-                    <div style={styles.sectionHeader}>
-                      <div style={styles.sectionIcon}>
-                        <FiHelpCircle size={22} />
-                      </div>
-                      <div>
-                        <h2 style={styles.sectionTitle}>Frequently Asked Questions</h2>
-                        <p style={styles.sectionSubtitle}>Common questions answered</p>
-                      </div>
-                    </div>
-                    {faqData.map((faq, i) => (
-                      <div key={i} style={styles.faqItem}>
-                        <div
-                          style={{ ...styles.faqQuestion, backgroundColor: expandedFaq === i ? "#F0FDF4" : "white" }}
-                          onClick={() => setExpandedFaq(expandedFaq === i ? null : i)}
-                        >
-                          <span>{faq.question}</span>
-                          {expandedFaq === i ? <FiChevronUp size={20} style={{ color: "#059669" }} /> : <FiChevronDown size={20} />}
-                        </div>
-                        {expandedFaq === i && (
-                          <div style={styles.faqAnswer}>{faq.answer}</div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              {activeTab === 'tips' && (
+                <TipsSection selectedTip={selectedTip} setSelectedTip={setSelectedTip} />
               )}
-
-              {/* REVIEWS TAB */}
-              {activeTab === "reviews" && (
-                <div style={{ animation: "fadeInUp 0.5s ease" }}>
-                  {/* Reviews Summary */}
-                  <div style={styles.sectionCard}>
-                    <div style={styles.sectionHeader}>
-                      <div style={styles.sectionIcon}>
-                        <FiMessageCircle size={22} />
-                      </div>
-                      <div>
-                        <h2 style={styles.sectionTitle}>Traveler Reviews</h2>
-                        <p style={styles.sectionSubtitle}>{destination.reviews}+ verified reviews</p>
-                      </div>
-                    </div>
-
-                    {/* Rating Summary */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "30px", padding: "24px", backgroundColor: "#F9FAFB", borderRadius: "16px", marginBottom: "30px", flexWrap: "wrap" }}>
-                      <div style={{ textAlign: "center" }}>
-                        <div style={{ fontSize: "56px", fontWeight: "700", color: "#1a1a1a", fontFamily: "'Playfair Display', serif" }}>{destination.rating}</div>
-                        <div style={{ display: "flex", gap: "3px", justifyContent: "center", marginBottom: "4px" }}>
-                          {[...Array(5)].map((_, i) => (
-                            <FiStar key={i} size={18} style={{ fill: i < Math.floor(destination.rating) ? "#F59E0B" : "none", color: "#F59E0B" }} />
-                          ))}
-                        </div>
-                        <div style={{ fontSize: "13px", color: "#6B7280" }}>{destination.reviews} reviews</div>
-                      </div>
-                      <div style={{ flex: 1, minWidth: "200px" }}>
-                        {[5, 4, 3, 2, 1].map((star) => (
-                          <div key={star} style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
-                            <span style={{ fontSize: "13px", color: "#6B7280", minWidth: "40px" }}>{star} star</span>
-                            <div style={{ flex: 1, height: "8px", backgroundColor: "#E5E7EB", borderRadius: "4px", overflow: "hidden" }}>
-                              <div style={{ height: "100%", backgroundColor: "#F59E0B", width: `${star === 5 ? 70 : star === 4 ? 20 : star === 3 ? 7 : star === 2 ? 2 : 1}%`, borderRadius: "4px" }} />
-                            </div>
-                            <span style={{ fontSize: "13px", color: "#6B7280", minWidth: "35px" }}>{star === 5 ? "70%" : star === 4 ? "20%" : star === 3 ? "7%" : star === 2 ? "2%" : "1%"}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Reviews List */}
-                    {reviewsData.slice(0, showAllReviews ? reviewsData.length : 3).map((review) => (
-                      <div key={review.id} style={styles.reviewCard}>
-                        <div style={styles.reviewHeader}>
-                          <div style={styles.reviewAuthor}>
-                            <div style={styles.reviewAvatar}>{review.avatar}</div>
-                            <div>
-                              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                <span style={styles.reviewName}>{review.name}</span>
-                                {review.verified && (
-                                  <span style={{ fontSize: "11px", backgroundColor: "#D1FAE5", color: "#059669", padding: "2px 8px", borderRadius: "10px", fontWeight: "600" }}>Verified</span>
-                                )}
-                              </div>
-                              <span style={styles.reviewDate}>{review.date}</span>
-                            </div>
-                          </div>
-                          <div style={styles.reviewStars}>
-                            {[...Array(5)].map((_, i) => (
-                              <FiStar key={i} size={16} style={{ fill: i < review.rating ? "#F59E0B" : "none", color: "#F59E0B" }} />
-                            ))}
-                          </div>
-                        </div>
-                        <div style={styles.reviewTitle}>{review.title}</div>
-                        <div style={styles.reviewComment}>{review.comment}</div>
-                        {review.images > 0 && (
-                          <div style={{ marginBottom: "14px", display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", color: "#6B7280" }}>
-                            <FiCamera size={14} />
-                            <span>{review.images} photos</span>
-                          </div>
-                        )}
-                        <div style={styles.reviewActions}>
-                          <button
-                            style={{ ...styles.reviewAction, color: helpfulReviews[review.id] ? "#059669" : "#6B7280" }}
-                            onClick={() => toggleHelpful(review.id)}
-                          >
-                            <FiThumbsUp size={14} style={{ fill: helpfulReviews[review.id] ? "#059669" : "none" }} />
-                            <span>Helpful ({review.helpful + (helpfulReviews[review.id] ? 1 : 0)})</span>
-                          </button>
-                          <button style={styles.reviewAction}>
-                            <FiMessageCircle size={14} />
-                            <span>Reply</span>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-
-                    {reviewsData.length > 3 && (
-                      <button
-                        onClick={() => setShowAllReviews(!showAllReviews)}
-                        style={{ width: "100%", padding: "16px", backgroundColor: "#F0FDF4", border: "2px solid #D1FAE5", borderRadius: "12px", fontSize: "15px", fontWeight: "600", color: "#059669", cursor: "pointer", transition: "all 0.3s ease", display: "flex", alignItems: "center", justifyContent: "center", gap: "8px" }}
-                        onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "#D1FAE5"; }}
-                        onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "#F0FDF4"; }}
-                      >
-                        {showAllReviews ? <><FiChevronUp size={18} /> Show Less</> : <><FiChevronDown size={18} /> Show All {reviewsData.length} Reviews</>}
-                      </button>
-                    )}
-                  </div>
-                </div>
+              {activeTab === 'reviews' && (
+                <ReviewsSection
+                  destination={destination}
+                  helpfulReviews={helpfulReviews}
+                  toggleHelpful={toggleHelpful}
+                  showAllReviews={showAllReviews}
+                  setShowAllReviews={setShowAllReviews}
+                  toast={toast}
+                />
               )}
             </div>
 
             {/* Sidebar */}
-            <div style={styles.sidebar}>
-              <div style={styles.sidebarCard}>
-                {/* Rating Display */}
-                <div style={styles.ratingDisplay}>
-                  <div style={styles.ratingBig}>{destination.rating}</div>
-                  <div style={styles.ratingDetails}>
-                    <div style={styles.ratingStars}>
-                      {[...Array(5)].map((_, i) => (
-                        <FiStar key={i} size={18} style={{ fill: i < Math.floor(destination.rating) ? "#F59E0B" : "none", color: "#F59E0B" }} />
-                      ))}
-                    </div>
-                    <div style={styles.ratingCount}>{destination.reviews}+ reviews</div>
-                  </div>
-                </div>
-
-                {/* Quick Info */}
-                <div style={styles.quickInfoGrid}>
-                  {[
-                    { icon: <FiClock size={18} />, value: destination.duration, label: "Duration" },
-                    { icon: <FiUsers size={18} />, value: destination.difficulty, label: "Difficulty" },
-                    { icon: <FiMapPin size={18} />, value: destination.type, label: "Type" },
-                    { icon: <FiCalendar size={18} />, value: destination.bestTime?.split(" ")[0] || "Spring", label: "Best Time" },
-                  ].map((item, i) => (
-                    <div key={i} style={styles.quickInfoItem}>
-                      <div style={styles.quickInfoIcon}>{item.icon}</div>
-                      <div style={styles.quickInfoValue}>{item.value}</div>
-                      <div style={styles.quickInfoLabel}>{item.label}</div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* CTA Buttons */}
-                <div style={styles.ctaButtons}>
-                  <Link
-                    to="/contact"
-                    style={{ ...styles.ctaButton, ...styles.ctaPrimary }}
-                    onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = "0 12px 35px rgba(5, 150, 105, 0.4)"; }}
-                    onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 8px 25px rgba(5, 150, 105, 0.3)"; }}
-                  >
-                    <FiMail size={18} />
-                    Request Information
-                  </Link>
-                  <Link
-                    to="/booking"
-                    style={{ ...styles.ctaButton, ...styles.ctaSecondary }}
-                    onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "#F0FDF4"; }}
-                    onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "white"; }}
-                  >
-                    <FiCalendar size={18} />
-                    Plan My Trip
-                  </Link>
-                  <button
-                    style={{ ...styles.ctaButton, backgroundColor: "#F9FAFB", color: "#374151", border: "2px solid #E5E7EB" }}
-                    onClick={handleDownloadGuide}
-                    onMouseOver={(e) => { e.currentTarget.style.borderColor = "#059669"; e.currentTarget.style.color = "#059669"; }}
-                    onMouseOut={(e) => { e.currentTarget.style.borderColor = "#E5E7EB"; e.currentTarget.style.color = "#374151"; }}
-                  >
-                    <FiDownload size={18} />
-                    Download Guide (PDF)
-                  </button>
-                </div>
-
-                {/* Features */}
-                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "24px" }}>
-                  {["Free Cancellation", "Expert Guides", "Small Groups", "24/7 Support"].map((feature, i) => (
-                    <span key={i} style={{ display: "flex", alignItems: "center", gap: "6px", padding: "8px 14px", backgroundColor: "#F0FDF4", color: "#059669", fontSize: "12px", fontWeight: "600", borderRadius: "20px", border: "1px solid #D1FAE5" }}>
-                      <FiCheck size={12} /> {feature}
-                    </span>
-                  ))}
-                </div>
-
-                {/* Contact Card */}
-                <div style={styles.contactCard}>
-                  <div style={styles.contactTitle}>
-                    <FiPhone size={18} style={{ color: "#059669" }} />
-                    Need Help Planning?
-                  </div>
-                  <div
-                    style={styles.contactItem}
-                    onMouseOver={(e) => e.currentTarget.style.color = "#059669"}
-                    onMouseOut={(e) => e.currentTarget.style.color = "#374151"}
-                  >
-                    <FiPhone size={18} style={{ color: "#059669" }} />
-                    <span>+1 (555) 123-4567</span>
-                  </div>
-                  <div
-                    style={styles.contactItem}
-                    onMouseOver={(e) => e.currentTarget.style.color = "#059669"}
-                    onMouseOut={(e) => e.currentTarget.style.color = "#374151"}
-                  >
-                    <FiMail size={18} style={{ color: "#059669" }} />
-                    <span>travel@explorer.com</span>
-                  </div>
-                  <div
-                    style={{ ...styles.contactItem, borderBottom: "none" }}
-                    onMouseOver={(e) => e.currentTarget.style.color = "#059669"}
-                    onMouseOut={(e) => e.currentTarget.style.color = "#374151"}
-                  >
-                    <FiMessageCircle size={18} style={{ color: "#059669" }} />
-                    <span>Live Chat Available</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Map Placeholder */}
-              <div style={{ ...styles.sidebarCard, padding: "0", overflow: "hidden", position: "relative", height: "200px", top: "0" }}>
-                <div style={{ width: "100%", height: "100%", backgroundColor: "#E5E7EB", display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: "12px" }}>
-                  <FiMap size={48} style={{ color: "#9CA3AF" }} />
-                  <span style={{ fontSize: "14px", color: "#6B7280", fontWeight: "500" }}>Interactive Map</span>
-                  <button
-                    style={{ padding: "10px 20px", backgroundColor: "#059669", color: "white", border: "none", borderRadius: "8px", fontSize: "13px", fontWeight: "600", cursor: "pointer" }}
-                    onClick={() => alert("Opening map...")}
-                  >
-                    View on Map
-                  </button>
-                </div>
-              </div>
-
-              {/* Share Card */}
-              <div style={{ ...styles.sidebarCard, top: "0" }}>
-                <div style={{ fontSize: "15px", fontWeight: "700", color: "#1a1a1a", marginBottom: "16px" }}>Share This Destination</div>
-                <div style={{ display: "flex", gap: "12px" }}>
-                  {[
-                    { icon: "📱", label: "Copy", action: copyToClipboard },
-                    { icon: "✉️", label: "Email", action: () => window.open(`mailto:?subject=${destination.name}&body=${window.location.href}`) },
-                    { icon: "💬", label: "WhatsApp", action: () => window.open(`https://wa.me/?text=${encodeURIComponent(destination.name + " " + window.location.href)}`) },
-                    { icon: "🐦", label: "Twitter", action: () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(destination.name)}&url=${window.location.href}`) },
-                  ].map((option, i) => (
-                    <button
-                      key={i}
-                      onClick={option.action}
-                      style={{ flex: 1, padding: "14px 8px", backgroundColor: "#F9FAFB", border: "2px solid #E5E7EB", borderRadius: "12px", cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", gap: "6px", transition: "all 0.3s ease" }}
-                      onMouseOver={(e) => { e.currentTarget.style.borderColor = "#059669"; e.currentTarget.style.backgroundColor = "#F0FDF4"; }}
-                      onMouseOut={(e) => { e.currentTarget.style.borderColor = "#E5E7EB"; e.currentTarget.style.backgroundColor = "#F9FAFB"; }}
-                    >
-                      <span style={{ fontSize: "20px" }}>{option.icon}</span>
-                      <span style={{ fontSize: "11px", fontWeight: "600", color: "#6B7280" }}>{option.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <Sidebar
+              destination={destination}
+              country={country}
+              isMobile={isMobile || isTablet}
+              onShare={handleShare}
+              toast={toast}
+            />
           </div>
 
           {/* Related Destinations */}
-          {relatedDestinations.length > 0 && (
-            <div style={styles.relatedSection}>
-              <div style={styles.relatedHeader}>
-                <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                  <div style={styles.sectionIcon}>
-                    <FiMapPin size={22} />
-                  </div>
-                  <div>
-                    <h2 style={{ ...styles.sectionTitle, marginBottom: "4px" }}>More in {country?.name}</h2>
-                    <p style={{ fontSize: "14px", color: "#6B7280" }}>Explore similar destinations</p>
-                  </div>
-                </div>
-                <Link
-                  to={`/country/${destination.countryId}`}
-                  style={{ display: "flex", alignItems: "center", gap: "8px", color: "#059669", textDecoration: "none", fontWeight: "600", fontSize: "15px", padding: "10px 20px", backgroundColor: "#F0FDF4", borderRadius: "10px", transition: "all 0.3s ease" }}
-                  onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "#D1FAE5"; e.currentTarget.style.gap = "12px"; }}
-                  onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "#F0FDF4"; e.currentTarget.style.gap = "8px"; }}
-                >
-                  View All <FiArrowRight size={18} />
-                </Link>
-              </div>
-              <div style={styles.relatedGrid}>
-                {relatedDestinations.map((dest, index) => (
-                  <Link
-                    key={dest.id}
-                    to={`/destination/${dest.id}`}
-                    style={{ ...styles.relatedCard, animation: `fadeInUp 0.6s ease ${index * 0.15}s forwards`, opacity: 0, animationFillMode: "forwards" }}
-                    onMouseOver={(e) => { e.currentTarget.style.transform = "translateY(-10px)"; e.currentTarget.style.boxShadow = "0 20px 50px rgba(5, 150, 105, 0.12)"; e.currentTarget.querySelector("img").style.transform = "scale(1.1)"; }}
-                    onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 25px rgba(0, 0, 0, 0.05)"; e.currentTarget.querySelector("img").style.transform = "scale(1)"; }}
-                  >
-                    <div style={styles.relatedImageWrapper}>
-                      <img src={dest.images[0]} alt={dest.name} style={styles.relatedImage} />
-                    </div>
-                    <div style={styles.relatedContent}>
-                      <span style={styles.relatedType}>{dest.type}</span>
-                      <h3 style={styles.relatedTitle}>{dest.name}</h3>
-                      <div style={styles.relatedMeta}>
-                        <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          <FiStar size={14} style={{ fill: "#F59E0B", color: "#F59E0B" }} />
-                          {dest.rating}
-                        </span>
-                        <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          <FiClock size={14} />
-                          {dest.duration}
-                        </span>
-                        <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                          <FiUsers size={14} />
-                          {dest.difficulty}
-                        </span>
-                      </div>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
+          <RelatedDestinations
+            destinations={relatedDestinations}
+            country={country}
+            isMobile={isMobile}
+            isTablet={isTablet}
+          />
         </div>
-      </section>
+      </main>
 
       {/* Mobile CTA */}
-      <div style={styles.mobileCTA}>
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div style={{ display: "flex", gap: "3px" }}>
-            {[...Array(5)].map((_, i) => (
-              <FiStar key={i} size={14} style={{ fill: i < Math.floor(destination.rating) ? "#F59E0B" : "none", color: "#F59E0B" }} />
-            ))}
-          </div>
-          <span style={{ fontSize: "13px", color: "#6B7280" }}>{destination.reviews}+ reviews</span>
-        </div>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button
-            onClick={() => setIsFavorite(!isFavorite)}
-            style={{ width: "44px", height: "44px", borderRadius: "12px", border: "2px solid #E5E7EB", backgroundColor: isFavorite ? "#F0FDF4" : "white", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-          >
-            <FiHeart size={20} style={{ color: isFavorite ? "#059669" : "#6B7280", fill: isFavorite ? "#059669" : "none" }} />
-          </button>
-          <Link
-            to="/contact"
-            style={{ padding: "12px 24px", background: "linear-gradient(135deg, #059669 0%, #10B981 100%)", color: "white", borderRadius: "12px", fontSize: "14px", fontWeight: "700", textDecoration: "none", display: "flex", alignItems: "center", gap: "8px" }}
-          >
-            <FiMail size={16} />
-            Inquire
-          </Link>
-        </div>
-      </div>
+      {isMobile && (
+        <MobileCTA
+          destination={destination}
+          isFavorite={isFavorite}
+          setIsFavorite={setIsFavorite}
+          toast={toast}
+        />
+      )}
 
       {/* Lightbox */}
-      {isLightboxOpen && (
-        <div style={styles.lightbox} onClick={() => setIsLightboxOpen(false)}>
-          <button
-            style={styles.lightboxClose}
-            onClick={() => setIsLightboxOpen(false)}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.2)"}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)"}
-          >
-            <FiX size={24} />
-          </button>
-          <button
-            style={{ ...styles.lightboxNav, left: "20px" }}
-            onClick={(e) => { e.stopPropagation(); prevImage(); }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#059669"}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)"}
-          >
-            <FiChevronLeft size={28} />
-          </button>
-          <img
-            src={destination.images[currentImageIndex]}
-            alt={destination.name}
-            style={styles.lightboxImage}
-            onClick={(e) => e.stopPropagation()}
-          />
-          <button
-            style={{ ...styles.lightboxNav, right: "20px" }}
-            onClick={(e) => { e.stopPropagation(); nextImage(); }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#059669"}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.1)"}
-          >
-            <FiChevronRight size={28} />
-          </button>
-          <div style={{ position: "absolute", bottom: "30px", left: "50%", transform: "translateX(-50%)", display: "flex", gap: "10px" }}>
-            {destination.images.map((_, index) => (
-              <div
-                key={index}
-                style={{ width: "12px", height: "12px", borderRadius: "50%", backgroundColor: currentImageIndex === index ? "white" : "rgba(255,255,255,0.4)", cursor: "pointer", transition: "all 0.3s ease" }}
-                onClick={(e) => { e.stopPropagation(); setCurrentImageIndex(index); }}
-              />
-            ))}
-          </div>
-        </div>
+      {isLightboxOpen && destination.images && (
+        <Lightbox
+          images={destination.images}
+          currentIndex={currentImageIndex}
+          setCurrentIndex={setCurrentImageIndex}
+          onClose={() => setIsLightboxOpen(false)}
+        />
       )}
 
       {/* Share Modal */}
-      {showShareModal && (
-        <div style={styles.modal} onClick={() => setShowShareModal(false)}>
-          <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
-            <h3 style={styles.modalTitle}>Share This Destination</h3>
-            <div style={styles.shareOptions}>
-              {[
-                { icon: "📱", label: "Copy Link", action: copyToClipboard },
-                { icon: "✉️", label: "Email", action: () => window.open(`mailto:?subject=${destination.name}&body=${window.location.href}`) },
-                { icon: "💬", label: "WhatsApp", action: () => window.open(`https://wa.me/?text=${encodeURIComponent(destination.name + " " + window.location.href)}`) },
-                { icon: "🐦", label: "Twitter", action: () => window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(destination.name)}&url=${window.location.href}`) },
-              ].map((option, i) => (
-                <button
-                  key={i}
-                  style={styles.shareOption}
-                  onClick={option.action}
-                  onMouseOver={(e) => { e.currentTarget.style.backgroundColor = "#D1FAE5"; e.currentTarget.style.borderColor = "#059669"; e.currentTarget.style.transform = "translateY(-4px)"; }}
-                  onMouseOut={(e) => { e.currentTarget.style.backgroundColor = "#F9FAFB"; e.currentTarget.style.borderColor = "transparent"; e.currentTarget.style.transform = "translateY(0)"; }}
-                >
-                  <span style={{ fontSize: "28px" }}>{option.icon}</span>
-                  <span style={{ fontSize: "12px", fontWeight: "600", color: "#374151" }}>{option.label}</span>
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => setShowShareModal(false)}
-              style={{ width: "100%", padding: "16px", backgroundColor: "#F3F4F6", border: "none", borderRadius: "12px", fontSize: "15px", fontWeight: "600", cursor: "pointer", transition: "all 0.3s ease" }}
-              onMouseOver={(e) => e.currentTarget.style.backgroundColor = "#E5E7EB"}
-              onMouseOut={(e) => e.currentTarget.style.backgroundColor = "#F3F4F6"}
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
+      <ShareModal
+        isOpen={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        destination={destination}
+        toast={toast}
+      />
+    </>
+  );
+};
+
+// Main Export with Providers
+const DestinationDetail = () => {
+  return (
+    <>
+      <style>{globalStyles}</style>
+      <ToastProvider>
+        <DestinationDetailContent />
+      </ToastProvider>
     </>
   );
 };
