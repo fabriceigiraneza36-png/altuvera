@@ -14,7 +14,6 @@ import {
   FiChevronDown,
   FiUsers,
   FiCalendar,
-  FiDollarSign,
   FiHeart,
   FiShare2,
   FiArrowLeft,
@@ -22,13 +21,24 @@ import {
   FiCamera,
   FiSun,
   FiCompass,
-  FiAward
+  FiAward,
+  FiMessageCircle
 } from 'react-icons/fi';
+import { FaWhatsapp } from 'react-icons/fa';
 import PageHeader from '../components/common/PageHeader';
 import AnimatedSection from '../components/common/AnimatedSection';
 import Button from '../components/common/Button';
 import { useCountry } from '../hooks/useCountries';
 import { useCountryDestinations } from '../hooks/useDestinations';
+
+// ============================================================
+// CONTACT INFO
+// ============================================================
+const CONTACT_INFO = {
+  name: "IGIRANEZA Fabrice",
+  whatsapp: "+250792352409",
+  whatsappDisplay: "+250 792 352 409",
+};
 
 // ============================================================
 // GLOBAL STYLES - Inject once
@@ -90,6 +100,11 @@ const GlobalStyles = () => (
       .cta-button:hover {
         transform: translateY(-3px) scale(1.02);
         box-shadow: 0 15px 40px rgba(0, 128, 0, 0.35);
+      }
+      
+      .whatsapp-button:hover {
+        transform: translateY(-3px) scale(1.02);
+        box-shadow: 0 15px 40px rgba(37, 211, 102, 0.35);
       }
       
       .favorite-btn:hover {
@@ -173,6 +188,17 @@ const useImageSlider = (images, interval = 4000) => {
 };
 
 // ============================================================
+// HELPER FUNCTIONS
+// ============================================================
+
+const getWhatsAppLink = (destinationName) => {
+  const message = encodeURIComponent(
+    `Hello ${CONTACT_INFO.name}! I'm interested in booking "${destinationName}". Could you please provide me with pricing details and availability?`
+  );
+  return `https://wa.me/${CONTACT_INFO.whatsapp.replace(/[^0-9]/g, '')}?text=${message}`;
+};
+
+// ============================================================
 // SUB-COMPONENTS
 // ============================================================
 
@@ -244,9 +270,8 @@ const DestinationCardSkeleton = () => {
             <div key={i} style={{ ...styles.feature, ...styles.shimmer }} />
           ))}
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div style={{ ...styles.shimmer, height: '24px', width: '80px', borderRadius: '6px' }} />
-          <div style={{ ...styles.shimmer, height: '44px', width: '130px', borderRadius: '30px' }} />
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <div style={{ ...styles.shimmer, height: '50px', width: '100%', borderRadius: '30px' }} />
         </div>
       </div>
     </div>
@@ -287,6 +312,12 @@ const DestinationCard = ({
     } else {
       navigator.clipboard.writeText(`${window.location.origin}/destination/${destination.id}`);
     }
+  };
+
+  const handleWhatsAppClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    window.open(getWhatsAppLink(destination.name), '_blank');
   };
 
   const styles = {
@@ -495,31 +526,37 @@ const DestinationCard = ({
     },
     footer: {
       display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
+      flexDirection: 'column',
+      gap: '12px',
       paddingTop: '20px',
       borderTop: '2px solid #e8f5e9',
       marginTop: 'auto',
     },
-    priceWrapper: {
+    inquiryNote: {
       display: 'flex',
-      flexDirection: 'column',
+      alignItems: 'center',
+      gap: '8px',
+      fontSize: '13px',
+      color: '#5a7a5a',
+      fontStyle: 'italic',
     },
-    priceLabel: {
-      fontSize: '12px',
-      color: '#81c784',
-      fontWeight: '500',
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-      marginBottom: '4px',
-    },
-    price: {
-      fontSize: '26px',
-      fontWeight: '700',
-      background: 'linear-gradient(135deg, #1b5e20 0%, #43a047 100%)',
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-      backgroundClip: 'text',
+    whatsappButton: {
+      padding: '16px 28px',
+      background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+      color: '#fff',
+      border: 'none',
+      borderRadius: '30px',
+      fontSize: '15px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      transition: 'all 0.4s ease',
+      boxShadow: '0 10px 30px rgba(37, 211, 102, 0.3)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '10px',
+      textDecoration: 'none',
+      width: '100%',
     },
     ctaButton: {
       padding: '14px 28px',
@@ -534,8 +571,10 @@ const DestinationCard = ({
       boxShadow: '0 10px 30px rgba(0, 128, 0, 0.3)',
       display: 'flex',
       alignItems: 'center',
+      justifyContent: 'center',
       gap: '8px',
       textDecoration: 'none',
+      width: '100%',
     },
   };
 
@@ -703,17 +742,18 @@ const DestinationCard = ({
 
             {/* Footer */}
             <div style={styles.footer}>
-              <div style={styles.priceWrapper}>
-                <span style={styles.priceLabel}>Starting from</span>
-                <span style={styles.price}>{destination.price}</span>
+              <div style={styles.inquiryNote}>
+                <FiMessageCircle size={16} />
+                <span>Contact us for personalized pricing</span>
               </div>
-              <span 
-                className="cta-button"
-                style={styles.ctaButton}
+              <button
+                className="whatsapp-button"
+                style={styles.whatsappButton}
+                onClick={handleWhatsAppClick}
               >
-                Reserve Now
-                <FiArrowRight size={18} />
-              </span>
+                <FaWhatsapp size={20} />
+                Inquire on WhatsApp
+              </button>
             </div>
           </div>
         </article>
@@ -1161,27 +1201,78 @@ const BackToTopButton = ({ visible }) => {
       zIndex: 1000,
     },
   };
+};
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+/**
+ * Floating WhatsApp Button
+ */
+const FloatingWhatsAppButton = () => {
+  const [isHovered, setIsHovered] = useState(false);
+
+  const styles = {
+    wrapper: {
+      position: 'fixed',
+      bottom: '32px',
+      left: '32px',
+      zIndex: 1000,
+      display: 'flex',
+      alignItems: 'center',
+      gap: '12px',
+    },
+    button: {
+      width: '60px',
+      height: '60px',
+      borderRadius: '50%',
+      background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+      border: 'none',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      cursor: 'pointer',
+      boxShadow: '0 12px 35px rgba(37, 211, 102, 0.4)',
+      transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+      transform: isHovered ? 'scale(1.1)' : 'scale(1)',
+    },
+    tooltip: {
+      background: 'white',
+      padding: '12px 18px',
+      borderRadius: '12px',
+      boxShadow: '0 8px 25px rgba(0, 0, 0, 0.15)',
+      fontSize: '14px',
+      fontWeight: '600',
+      color: '#1b5e20',
+      whiteSpace: 'nowrap',
+      opacity: isHovered ? 1 : 0,
+      transform: isHovered ? 'translateX(0)' : 'translateX(-10px)',
+      transition: 'all 0.3s ease',
+      fontFamily: "'Poppins', sans-serif",
+    },
+  };
+
+  const handleClick = () => {
+    const message = encodeURIComponent(
+      `Hello ${CONTACT_INFO.name}! I'm browsing your destinations and would like to know more about pricing and availability.`
+    );
+    window.open(`https://wa.me/${CONTACT_INFO.whatsapp.replace(/[^0-9]/g, '')}?text=${message}`, '_blank');
   };
 
   return (
-    <button
-      style={styles.button}
-      onClick={scrollToTop}
-      aria-label="Back to top"
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-6px) scale(1.1)';
-        e.currentTarget.style.boxShadow = '0 20px 50px rgba(0, 128, 0, 0.45)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0) scale(1)';
-        e.currentTarget.style.boxShadow = '0 12px 35px rgba(0, 128, 0, 0.35)';
-      }}
+    <div 
+      style={styles.wrapper}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
-      <FiChevronUp size={28} style={{ color: 'white' }} />
-    </button>
+      <div style={styles.tooltip}>
+        Chat with us for pricing!
+      </div>
+      <button
+        style={styles.button}
+        onClick={handleClick}
+        aria-label="Contact us on WhatsApp"
+      >
+        <FaWhatsapp size={28} style={{ color: 'white' }} />
+      </button>
+    </div>
   );
 };
 
@@ -1385,7 +1476,6 @@ const CountryDestinations = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('');
   const [filterType, setFilterType] = useState('');
-  const [priceRange, setPriceRange] = useState('');
   const [favorites, setFavorites] = useState(() => {
     try {
       const saved = localStorage.getItem('favoriteDestinations');
@@ -1422,7 +1512,6 @@ const CountryDestinations = () => {
     setSearchQuery('');
     setSortBy('');
     setFilterType('');
-    setPriceRange('');
   }, []);
 
   // Filter and sort
@@ -1442,32 +1531,17 @@ const CountryDestinations = () => {
       result = result.filter(d => d.type === filterType);
     }
 
-    if (priceRange) {
-      const priceNum = (str) => parseInt(str.replace(/[^0-9]/g, '')) || 0;
-      result = result.filter(d => {
-        const price = priceNum(d.price);
-        switch (priceRange) {
-          case 'budget': return price < 500;
-          case 'mid': return price >= 500 && price < 1500;
-          case 'luxury': return price >= 1500;
-          default: return true;
-        }
-      });
-    }
-
     if (sortBy) {
       result.sort((a, b) => {
         switch (sortBy) {
-          case 'price-low':
-            return parseInt(a.price.replace(/[^0-9]/g, '')) - parseInt(b.price.replace(/[^0-9]/g, ''));
-          case 'price-high':
-            return parseInt(b.price.replace(/[^0-9]/g, '')) - parseInt(a.price.replace(/[^0-9]/g, ''));
           case 'rating':
             return b.rating - a.rating;
           case 'reviews':
             return b.reviews - a.reviews;
           case 'name':
             return a.name.localeCompare(b.name);
+          case 'name-desc':
+            return b.name.localeCompare(a.name);
           default:
             return 0;
         }
@@ -1475,7 +1549,7 @@ const CountryDestinations = () => {
     }
 
     return result;
-  }, [allDestinations, searchQuery, filterType, priceRange, sortBy]);
+  }, [allDestinations, searchQuery, filterType, sortBy]);
 
   // Filter options
   const destinationTypes = useMemo(() => {
@@ -1485,18 +1559,10 @@ const CountryDestinations = () => {
 
   const sortOptions = [
     { value: '', label: 'Default' },
-    { value: 'price-low', label: 'Price: Low to High' },
-    { value: 'price-high', label: 'Price: High to Low' },
     { value: 'rating', label: 'Highest Rated' },
     { value: 'reviews', label: 'Most Reviewed' },
     { value: 'name', label: 'Name: A-Z' },
-  ];
-
-  const priceOptions = [
-    { value: '', label: 'All Prices' },
-    { value: 'budget', label: 'Budget (< $500)' },
-    { value: 'mid', label: 'Mid-Range ($500-$1500)' },
-    { value: 'luxury', label: 'Luxury ($1500+)' },
+    { value: 'name-desc', label: 'Name: Z-A' },
   ];
 
   // Stats
@@ -1512,7 +1578,6 @@ const CountryDestinations = () => {
   // Active filters
   const activeFilters = [
     ...(filterType ? [{ key: 'type', label: filterType, clear: () => setFilterType('') }] : []),
-    ...(priceRange ? [{ key: 'price', label: priceOptions.find(p => p.value === priceRange)?.label, clear: () => setPriceRange('') }] : []),
     ...(sortBy ? [{ key: 'sort', label: sortOptions.find(s => s.value === sortBy)?.label, clear: () => setSortBy('') }] : []),
   ];
 
@@ -1578,6 +1643,63 @@ const CountryDestinations = () => {
       fontSize: isMobile ? '16px' : '18px',
       color: '#5a7a5a',
       lineHeight: '1.9',
+    },
+    contactBanner: {
+      background: 'linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%)',
+      borderRadius: '20px',
+      padding: '24px 32px',
+      marginBottom: '32px',
+      display: 'flex',
+      flexDirection: isMobile ? 'column' : 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      gap: '20px',
+      border: '2px solid rgba(67, 160, 71, 0.2)',
+    },
+    contactInfo: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '16px',
+    },
+    contactIcon: {
+      width: '56px',
+      height: '56px',
+      borderRadius: '50%',
+      background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      boxShadow: '0 8px 25px rgba(37, 211, 102, 0.3)',
+    },
+    contactText: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '4px',
+    },
+    contactTitle: {
+      fontSize: '16px',
+      fontWeight: '700',
+      color: '#1b5e20',
+    },
+    contactSubtitle: {
+      fontSize: '14px',
+      color: '#5a7a5a',
+    },
+    contactButton: {
+      padding: '14px 28px',
+      background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
+      color: '#fff',
+      border: 'none',
+      borderRadius: '30px',
+      fontSize: '15px',
+      fontWeight: '600',
+      cursor: 'pointer',
+      transition: 'all 0.4s ease',
+      boxShadow: '0 10px 30px rgba(37, 211, 102, 0.3)',
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      textDecoration: 'none',
     },
     statsGrid: {
       display: 'grid',
@@ -1669,6 +1791,33 @@ const CountryDestinations = () => {
             </div>
           </AnimatedSection>
 
+          {/* Contact Banner */}
+          <AnimatedSection animation="fadeInUp" delay={0.1}>
+            <div style={styles.contactBanner}>
+              <div style={styles.contactInfo}>
+                <div style={styles.contactIcon}>
+                  <FaWhatsapp size={28} style={{ color: 'white' }} />
+                </div>
+                <div style={styles.contactText}>
+                  <span style={styles.contactTitle}>Get Personalized Pricing</span>
+                  <span style={styles.contactSubtitle}>
+                    Contact {CONTACT_INFO.name} on WhatsApp: {CONTACT_INFO.whatsappDisplay}
+                  </span>
+                </div>
+              </div>
+              <a
+                href={`https://wa.me/${CONTACT_INFO.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Hello ${CONTACT_INFO.name}! I'm interested in exploring destinations in ${country.name}. Could you help me with pricing and availability?`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={styles.contactButton}
+                className="whatsapp-button"
+              >
+                <FaWhatsapp size={20} />
+                Chat Now
+              </a>
+            </div>
+          </AnimatedSection>
+
           {/* Statistics */}
           {allDestinations.length > 0 && (
             <div style={styles.statsGrid}>
@@ -1721,14 +1870,6 @@ const CountryDestinations = () => {
                         icon={FiFilter}
                       />
                     )}
-
-                    <FilterDropdown
-                      label="Price Range"
-                      options={priceOptions}
-                      value={priceRange}
-                      onChange={setPriceRange}
-                      icon={FiDollarSign}
-                    />
 
                     <FilterDropdown
                       label="Sort By"
@@ -1790,7 +1931,7 @@ const CountryDestinations = () => {
               ) : (
                 <EmptyState
                   country={country}
-                  searchQuery={searchQuery || filterType || priceRange}
+                  searchQuery={searchQuery || filterType}
                   onClearFilters={clearFilters}
                 />
               )}
@@ -1803,6 +1944,9 @@ const CountryDestinations = () => {
           )}
         </div>
       </section>
+
+      {/* Floating WhatsApp Button */}
+      <FloatingWhatsAppButton />
 
       {/* Back to Top */}
       <BackToTopButton visible={scrollPosition > 500} />

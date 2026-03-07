@@ -134,8 +134,7 @@ const FEATURED_EXPERIENCES = [
     description:
       "Witness millions of wildebeest cross the Mara River in nature's greatest spectacle. Traverse the vast Serengeti plains alongside predators and prey in an ecosystem unchanged for millennia.",
     category: 'safari',
-    price: 3500,
-    originalPrice: 4200,
+
     rating: 4.9,
     reviewCount: 124,
     highlights: ['Mara River Crossing', 'Luxury Camps', 'Hot Air Balloon'],
@@ -156,9 +155,9 @@ const FEATURED_EXPERIENCES = [
     description:
       'Face-to-face encounters with endangered mountain gorillas in their misty volcanic habitat. Trek through bamboo forests and sit among gentle giants.',
     category: 'wildlife',
-    price: 4200,
-    originalPrice: null,
+   
     rating: 5.0,
+
     reviewCount: 89,
     highlights: ['Gorilla Families', 'Volcano Hikes', 'Conservation'],
     groupSize: '2-6',
@@ -178,8 +177,7 @@ const FEATURED_EXPERIENCES = [
     description:
       "Conquer Africa's highest peak through five distinct climate zones. From lush rainforest to arctic summit, a truly unforgettable adventure.",
     category: 'adventure',
-    price: 2800,
-    originalPrice: 3200,
+
     rating: 4.8,
     reviewCount: 156,
     highlights: ['Uhuru Peak', '5 Climate Zones', 'Expert Guides'],
@@ -200,8 +198,7 @@ const FEATURED_EXPERIENCES = [
     description:
       "Turquoise waters, white-sand beaches, and the intoxicating aroma of spice gardens. Explore Stone Town's winding alleys and dive into pristine coral reefs.",
     category: 'beach',
-    price: 1800,
-    originalPrice: 2100,
+
     rating: 4.7,
     reviewCount: 203,
     highlights: ['Stone Town', 'Spice Tours', 'Snorkeling'],
@@ -222,8 +219,7 @@ const FEATURED_EXPERIENCES = [
     description:
       'Live among the legendary Masai warriors. Learn ancient traditions, participate in ceremonies, craft beadwork, and understand the bond between people and land.',
     category: 'cultural',
-    price: 1200,
-    originalPrice: null,
+
     rating: 4.9,
     reviewCount: 67,
     highlights: ['Village Stay', 'Traditional Dance', 'Beadwork'],
@@ -244,8 +240,7 @@ const FEATURED_EXPERIENCES = [
     description:
       'The ultimate luxury safari. Private game drives in custom 4x4s, five-star lodges with infinity pools, gourmet bush dinners under a canopy of stars.',
     category: 'safari',
-    price: 5800,
-    originalPrice: 6500,
+  
     rating: 5.0,
     reviewCount: 45,
     highlights: ['Private Drives', '5-Star Lodge', 'Bush Dinner'],
@@ -417,12 +412,6 @@ const MAX_COUNTRIES = 6;
    HELPERS
    =================================================================== */
 
-const formatPrice = (amount) =>
-  new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-  }).format(amount);
 
 const renderStars = (rating) =>
   Array.from({ length: 5 }, (_, i) => (
@@ -951,11 +940,7 @@ function GalleryShowcase({ data }) {
 function ExperienceCard({ exp, index }) {
   const [hovered, setHovered] = useState(false);
   const [liked, setLiked] = useState(false);
-  const hasDiscount =
-    exp.originalPrice && exp.originalPrice > exp.price;
-  const discount = hasDiscount
-    ? Math.round((1 - exp.price / exp.originalPrice) * 100)
-    : 0;
+
 
   return (
     <article
@@ -1020,21 +1005,7 @@ function ExperienceCard({ exp, index }) {
                 <FiAward size={11} /> Featured
               </span>
             )}
-            {hasDiscount && (
-              <span
-                style={{
-                  padding: '5px 14px',
-                  backgroundColor: G[800],
-                  borderRadius: 30,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: G[300],
-                  textTransform: 'uppercase',
-                }}
-              >
-                Save {discount}%
-              </span>
-            )}
+
           </div>
           <button
             onClick={(e) => {
@@ -1200,31 +1171,7 @@ function ExperienceCard({ exp, index }) {
               <FiUsers size={13} color={G[600]} /> {exp.groupSize}
             </span>
           </div>
-          <div style={{ textAlign: 'right' }}>
-            {hasDiscount && (
-              <span
-                style={{
-                  fontSize: 13,
-                  textDecoration: 'line-through',
-                  color: N[400],
-                  display: 'block',
-                }}
-              >
-                {formatPrice(exp.originalPrice)}
-              </span>
-            )}
-            <span style={{ fontSize: 11, color: N[400] }}>From</span>
-            <div
-              style={{
-                fontSize: 22,
-                fontWeight: 800,
-                color: G[700],
-                lineHeight: 1,
-              }}
-            >
-              {formatPrice(exp.price)}
-            </div>
-          </div>
+
         </div>
 
         <Link

@@ -11,7 +11,7 @@ import {
 } from "react-icons/fi";
 import { useApp } from "../../context/AppContext";
 import { useUserAuth } from "../../context/UserAuthContext";
-import logoimg from "../../assets/unnamed.jpg";
+import logoimg from "../../assets/altuvera.png";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -53,6 +53,7 @@ const Navbar = () => {
           { name: "Uganda", path: "/country/uganda" },
           { name: "Rwanda", path: "/country/rwanda" },
           { name: "Ethiopia", path: "/country/ethiopia" },
+          {name: "Djibouti", path: "/country/djibouti"}
         ],
       },
       { name: "Interactive Map", path: "/interactive-map" },
@@ -214,10 +215,12 @@ const Navbar = () => {
         style={{ "--scroll-progress": Math.min(scrollY / 200, 1) }}
       >
         <div className="nav__inner">
-          {/* Logo */}
+          {/* Logo - Enhanced */}
           <Link to="/" className="nav__logo" aria-label="Altuvera Home">
             <div className="nav__logo-glow" />
-            <img src={logoimg} alt="Altuvera" className="nav__logo-img" draggable={false} />
+            <div className="nav__logo-img-wrapper">
+              <img src={logoimg} alt="Altuvera" className="nav__logo-img" draggable={false} />
+            </div>
             <span className="nav__logo-text">Altuvera</span>
           </Link>
 
@@ -343,7 +346,7 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Hamburger - stays in original right position */}
+          {/* Hamburger */}
           <button
             className={`nav__hamburger ${isMobileMenuOpen ? "nav__hamburger--open" : ""}`}
             onClick={() => setIsMobileMenuOpen((p) => !p)}
@@ -409,7 +412,9 @@ const Navbar = () => {
       <aside className={`mm ${isMobileMenuOpen ? "mm--open" : ""}`} aria-hidden={!isMobileMenuOpen}>
         <div className="mm__head">
           <Link to="/" className="mm__logo" onClick={() => setIsMobileMenuOpen(false)}>
-            <img src={logoimg} alt="Altuvera" className="mm__logo-img" />
+            <div className="mm__logo-img-wrapper">
+              <img src={logoimg} alt="Altuvera" className="mm__logo-img" />
+            </div>
             <span className="mm__logo-text">Altuvera</span>
           </Link>
           <button className="mm__close-btn" onClick={() => setIsMobileMenuOpen(false)} aria-label="Close">
@@ -553,40 +558,53 @@ const Navbar = () => {
 }
 .nav--scrolled .nav__progress{opacity:1}
 
-/* ══════════ LOGO ══════════ */
+/* ══════════ LOGO - ENHANCED & SCALED UP ══════════ */
 .nav__logo{
-  display:flex;align-items:center;gap:10px;
+  display:flex;align-items:center;gap:12px;
   text-decoration:none;flex-shrink:0;position:relative;
   transition:transform var(--fast) var(--smooth);
 }
-.nav__logo:hover{transform:scale(1.04)}
+.nav__logo:hover{transform:scale(1.03)}
 .nav__logo:active{transform:scale(.98)}
 
 .nav__logo-glow{
-  position:absolute;left:50%;top:50%;
-  width:60px;height:60px;
+  position:absolute;left:28px;top:50%;
+  width:70px;height:70px;
   transform:translate(-50%,-50%);
-  background:radial-gradient(circle,rgba(16,185,129,.25) 0%,transparent 70%);
+  background:radial-gradient(circle,rgba(16,185,129,.35) 0%,transparent 70%);
   border-radius:50%;pointer-events:none;
   opacity:0;transition:opacity var(--med);
 }
 .nav__logo:hover .nav__logo-glow{opacity:1}
 
+/* Logo Image Wrapper - For better control */
+.nav__logo-img-wrapper{
+  position:relative;
+  width:54px;height:54px;
+  flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+
 .nav__logo-img{
-  width:46px;height:46px;border-radius:var(--r);
-  object-fit:cover;
-  box-shadow:0 4px 16px rgba(5,150,105,.25);
-  border:2.5px solid rgba(255,255,255,.5);
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  border-radius:14px;
+  filter:drop-shadow(0 4px 12px rgba(5,150,105,.3));
   transition:all var(--med) var(--smooth);
   position:relative;z-index:1;
 }
-.nav--scrolled .nav__logo-img{
-  width:40px;height:40px;
-  border-color:rgba(5,150,105,.2);
-  box-shadow:0 4px 14px rgba(5,150,105,.18);
+
+/* Scrolled state - slightly smaller but still visible */
+.nav--scrolled .nav__logo-img-wrapper{
+  width:48px;height:48px;
 }
+.nav--scrolled .nav__logo-img{
+  filter:drop-shadow(0 3px 10px rgba(5,150,105,.25));
+}
+
 .nav__logo-text{
-  font-family:var(--fd);font-size:clamp(20px,2.2vw,27px);
+  font-family:var(--fd);font-size:clamp(22px,2.4vw,28px);
   font-weight:700;color:var(--wh);letter-spacing:-.4px;
   text-shadow:0 2px 10px rgba(0,0,0,.2);
   transition:color var(--med),text-shadow var(--med);
@@ -1024,14 +1042,21 @@ const Navbar = () => {
   border-bottom:1px solid var(--brd);
   background:var(--wh);flex-shrink:0;
 }
-.mm__logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-.mm__logo-img{
-  width:38px;height:38px;border-radius:10px;
-  object-fit:cover;
-  box-shadow:0 3px 10px rgba(5,150,105,.2);
-  border:2px solid rgba(5,150,105,.15);
+.mm__logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+
+/* Mobile Menu Logo - Enhanced */
+.mm__logo-img-wrapper{
+  width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
 }
-.mm__logo-text{font-family:var(--fd);font-size:22px;font-weight:700;color:var(--c)}
+.mm__logo-img{
+  width:100%;height:100%;
+  object-fit:contain;
+  border-radius:12px;
+  filter:drop-shadow(0 3px 10px rgba(5,150,105,.25));
+}
+.mm__logo-text{font-family:var(--fd);font-size:24px;font-weight:700;color:var(--c)}
 
 .mm__close-btn{
   width:40px;height:40px;border:none;border-radius:10px;
@@ -1212,7 +1237,7 @@ const Navbar = () => {
 }
 @media(max-width:860px){
   .nav__logo-text{display:none}
-  .nav__logo-img{width:42px;height:42px}
+  .nav__logo-img-wrapper{width:48px;height:48px}
 }
 @media(max-width:640px){
   .mm{width:100vw;border-radius:0}
@@ -1220,11 +1245,11 @@ const Navbar = () => {
   .nav__hline{width:20px}
   .srch__box{padding:0 14px}
   .srch__input{font-size:16px;padding:18px 52px 18px 48px}
-  .nav__logo-img{width:38px;height:38px;border-radius:10px}
+  .nav__logo-img-wrapper{width:44px;height:44px}
   .mm__body{padding-left:16px;padding-right:16px}
 }
 @media(max-width:380px){
-  .nav__logo-img{width:36px;height:36px;border-radius:8px}
+  .nav__logo-img-wrapper{width:40px;height:40px}
   .nav__hamburger{width:40px;height:40px;border-radius:10px}
   .nav__hline{width:18px;height:2px}
   .nav__hline--1{transform:translateY(-3.5px)}
@@ -1233,6 +1258,7 @@ const Navbar = () => {
   .nav__hamburger--open .nav__hline--3{transform:translateY(-2px) rotate(-45deg)}
   .mm__body{padding-left:14px;padding-right:14px}
   .mm__link,.mm__toggle{font-size:17px;padding:14px 4px}
+  .mm__logo-img-wrapper{width:40px;height:40px}
 }
 
 /* ═══ reduced motion ═══ */

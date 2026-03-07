@@ -36,6 +36,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import Team from "./pages/Team";
 import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
+import WhatsAppButton from "./components/common/WhatsAppButton";
 
 // Protected pages
 import UserProfile from "./pages/auth/UserProfile";
@@ -301,6 +302,7 @@ function App() {
       <PersistentMapViewer />
       <CookieConsent />
       <AuthModal />
+      <WhatsAppButton /> 
       {isLoading && <Loader />}
     </div>
   );

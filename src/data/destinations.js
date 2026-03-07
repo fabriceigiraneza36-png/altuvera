@@ -21,7 +21,6 @@ export const destinations = {
       bestTime: 'July to October for migration; year-round for wildlife',
       duration: '3-5 days recommended',
       difficulty: 'Easy',
-      price: '$$$',
       rating: 4.9,
       reviews: 2847,
       images: [
@@ -52,7 +51,6 @@ export const destinations = {
       bestTime: 'January to February, August to September',
       duration: '4-6 days',
       difficulty: 'Moderate to Challenging',
-      price: '$$',
       rating: 4.7,
       reviews: 1523,
       images: [
@@ -82,7 +80,6 @@ export const destinations = {
       bestTime: 'December to March, June to October',
       duration: '3-7 days',
       difficulty: 'Easy',
-      price: '$$',
       rating: 4.8,
       reviews: 3215,
       images: [
@@ -112,7 +109,6 @@ export const destinations = {
       bestTime: 'June to October, January to February',
       duration: '2-3 days',
       difficulty: 'Easy',
-      price: '$$',
       rating: 4.6,
       reviews: 2104,
       images: [
@@ -142,7 +138,6 @@ export const destinations = {
       bestTime: 'December to March, June to October',
       duration: '3-5 days',
       difficulty: 'Easy',
-      price: '$$',
       rating: 4.7,
       reviews: 1876,
       images: [
@@ -174,7 +169,6 @@ export const destinations = {
       bestTime: 'June to October for migration; December to March for calving',
       duration: '3-5 days',
       difficulty: 'Easy',
-      price: '$$$',
       rating: 4.9,
       reviews: 4521,
       images: [
@@ -204,7 +198,7 @@ export const destinations = {
       bestTime: 'January to March, June to October',
       duration: '5-9 days depending on route',
       difficulty: 'Challenging',
-      price: '$$$',
+      
       rating: 4.8,
       reviews: 3876,
       images: [
@@ -234,7 +228,7 @@ export const destinations = {
       bestTime: 'June to September; year-round for wildlife',
       duration: '1-2 days',
       difficulty: 'Easy',
-      price: '$$$',
+      
       rating: 4.9,
       reviews: 3654,
       images: [
@@ -264,7 +258,7 @@ export const destinations = {
       bestTime: 'June to October, December to February',
       duration: '4-7 days',
       difficulty: 'Easy',
-      price: '$$',
+      
       rating: 4.8,
       reviews: 4123,
       images: [
@@ -296,7 +290,7 @@ export const destinations = {
       bestTime: 'June to September, December to February',
       duration: '2-4 days',
       difficulty: 'Moderate to Challenging',
-      price: '$$$',
+      
       rating: 5.0,
       reviews: 2341,
       images: [
@@ -326,7 +320,7 @@ export const destinations = {
       bestTime: 'June to September, December to February',
       duration: '2-3 days',
       difficulty: 'Easy',
-      price: '$$',
+      
       rating: 4.7,
       reviews: 1987,
       images: [
@@ -358,7 +352,7 @@ export const destinations = {
       bestTime: 'June to September, December to February',
       duration: '2-4 days',
       difficulty: 'Moderate to Challenging',
-      price: '$$$',
+      
       rating: 4.9,
       reviews: 2156,
       images: [
@@ -390,7 +384,7 @@ export const destinations = {
       bestTime: 'October to March; January for Timkat',
       duration: '2-3 days',
       difficulty: 'Easy',
-      price: '$$',
+      
       rating: 4.9,
       reviews: 1876,
       images: [
@@ -420,7 +414,7 @@ export const destinations = {
       bestTime: 'October to March',
       duration: '3-10 days',
       difficulty: 'Moderate to Challenging',
-      price: '$$',
+      
       rating: 4.8,
       reviews: 1432,
       images: [
@@ -452,7 +446,6 @@ export const destinations = {
       bestTime: 'June to September',
       duration: '2-3 days',
       difficulty: 'Easy',
-      price: '$',
       rating: 4.3,
       reviews: 543,
       images: [
@@ -484,7 +477,7 @@ export const destinations = {
       bestTime: 'December to March',
       duration: '5-7 days',
       difficulty: 'Challenging',
-      price: '$$$',
+      
       rating: 4.5,
       reviews: 87,
       images: [
@@ -494,102 +487,7 @@ export const destinations = {
       coordinates: { lat: 6.2, lng: 33.8 }
     }
   ],
-  eritrea: [
-    {
-      id: 'asmara',
-      countryId: 'eritrea',
-      name: 'Asmara',
-      type: 'Architecture & Culture',
-      description: 'A UNESCO World Heritage city showcasing preserved Italian modernist architecture.',
-      fullDescription: `Asmara, Eritrea's capital, is a UNESCO World Heritage Site for its extraordinarily well-preserved Italian modernist architecture. Built during Italian colonization in the 1930s, the city features futurist, art deco, and rationalist buildings that form one of the world's most concentrated collections of modernist architecture.
 
-      Cinema Impero, Fiat Tagliero Service Station (shaped like an airplane), and numerous apartment buildings, shops, and government offices showcase the architectural ambition of the era. The city's elevation at 2,400 meters provides a pleasant climate, perfect for exploring on foot.
-
-      The coffee culture here is exceptional – the Italian influence remains in the numerous espresso bars and cafes that line the palm-tree-lined boulevards.`,
-      highlights: [
-        'Fiat Tagliero Service Station',
-        'Cinema Impero',
-        'Art Deco architecture',
-        'Coffee culture',
-        'Boulevard strolls'
-      ],
-      bestTime: 'October to March',
-      duration: '2-3 days',
-      difficulty: 'Easy',
-      price: '$',
-      rating: 4.4,
-      reviews: 412,
-      images: [
-        'https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=800',
-        'https://images.unsplash.com/photo-1504973960431-1c467e159aa4?w=800'
-      ],
-      coordinates: { lat: 15.3229, lng: 38.9251 }
-    }
-  ],
-  djibouti: [
-    {
-      id: 'lake-assal',
-      countryId: 'djibouti',
-      name: 'Lake Assal',
-      type: 'Natural Wonder',
-      description: 'Africa\'s lowest point and one of Earth\'s saltiest lakes.',
-      fullDescription: `Lake Assal, lying 155 meters below sea level, is Africa's lowest point and one of the saltiest bodies of water on Earth – ten times saltier than the ocean. The lake's shores are encrusted with brilliant white salt deposits that sparkle under the intense sun, creating an otherworldly landscape.
-
-      The drive to Lake Assal passes through dramatic volcanic terrain, with lava fields and colored rock formations adding to the lunar atmosphere. The Afar people still harvest salt here as they have for centuries, loading the valuable commodity onto camel caravans.
-
-      Swimming (floating, really) in the hypersaline water is a unique experience, though the harsh environment demands respect – bring plenty of water and protection from the sun.`,
-      highlights: [
-        'Float in hypersaline water',
-        'Salt formations',
-        'Africa\'s lowest point',
-        'Afar salt caravans',
-        'Volcanic landscapes'
-      ],
-      bestTime: 'November to April',
-      duration: '1 day',
-      difficulty: 'Easy',
-      price: '$$',
-      rating: 4.6,
-      reviews: 321,
-      images: [
-        'https://images.unsplash.com/photo-1510155324852-d5d2dbe7a5e8?w=800',
-        'https://images.unsplash.com/photo-1517960413843-0aee8e2b3285?w=800'
-      ],
-      coordinates: { lat: 11.6500, lng: 42.4167 }
-    }
-  ],
-  somalia: [
-    {
-      id: 'laas-geel',
-      countryId: 'somalia',
-      name: 'Laas Geel',
-      type: 'Archaeological',
-      description: 'Stunning Neolithic rock art caves in the hills near Hargeisa.',
-      fullDescription: `Laas Geel, located in Somaliland, contains some of the best-preserved Neolithic rock art in Africa. Discovered in 2002 by a French archaeological team, the cave paintings date back approximately 5,000-10,000 years and depict cattle, wild animals, and human figures in vibrant reds, whites, and oranges.
-
-      The caves sit in a dramatic landscape of rocky outcrops and wadis (dry riverbeds) outside Hargeisa. The art's exceptional preservation results from the overhang of the rock shelters, which protected the paintings from the elements.
-
-      The site offers a window into the region's pastoral past, when the area was greener and supported cattle-herding communities. Local guides from Hargeisa can arrange visits, typically combined with other sites in the area.`,
-      highlights: [
-        'Well-preserved cave paintings',
-        'Ancient cattle depictions',
-        'Dramatic rock formations',
-        'Archaeological significance',
-        'Off-the-beaten-path adventure'
-      ],
-      bestTime: 'December to February',
-      duration: '1 day',
-      difficulty: 'Easy',
-      price: '$',
-      rating: 4.7,
-      reviews: 156,
-      images: [
-        'https://images.unsplash.com/photo-1517960413843-0aee8e2b3285?w=800',
-        'https://images.unsplash.com/photo-1504973960431-1c467e159aa4?w=800'
-      ],
-      coordinates: { lat: 9.7833, lng: 44.4667 }
-    }
-  ]
 };
 
 export const getAllDestinations = () => {

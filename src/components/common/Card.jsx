@@ -17,7 +17,6 @@ const Card = ({
   rating,
   reviews,
   duration,
-  price,
   type,
   to,
   badge,
@@ -176,15 +175,6 @@ const Card = ({
       paddingTop: "16px",
       borderTop: "1px solid #E5E7EB",
       marginTop: "auto",
-    },
-    price: {
-      fontSize: "14px",
-      color: "#6B7280",
-    },
-    priceValue: {
-      fontSize: "20px",
-      fontWeight: "700",
-      color: "#059669",
     },
     link: {
       display: "flex",
@@ -350,11 +340,6 @@ const Card = ({
           )}
         </div>
         <div style={styles.footer}>
-          {price && (
-            <div style={styles.price}>
-              From <span style={styles.priceValue}>{price}</span>
-            </div>
-          )}
           <span style={styles.link}>
             Explore <FiArrowRight size={16} />
           </span>

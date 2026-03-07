@@ -12,6 +12,7 @@
   "dependencies": {
     "@react-google-maps/api": "^2.20.8",
     "@tailwindcss/vite": "^4.2.1",
+    "canvas-confetti": "^1.9.4",
     "framer-motion": "^10.18.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.575.0",

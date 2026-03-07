@@ -298,7 +298,6 @@ export const tips = [
     - **Tanzania**: e-Visa required for most nationalities. Apply via official immigration website. Single entry $50, multiple entry $100. Can also get visa on arrival (but e-Visa recommended).
     - **Uganda**: e-Visa system. Single entry $50, East African Tourist Visa $100 (allows multiple entries to Kenya, Uganda, Rwanda). Must apply online.
     - **Rwanda**: Visa on arrival for all African Union citizens and many others; e-Visa also available. Single entry $50. East African Tourist Visa valid here too.
-    - **South Sudan**, **Burundi**: separate visas required, often only obtainable in advance.
 
     Important: have printed copies of your visa approval, return flight ticket, and proof of sufficient funds. Yellow Fever certificate is mandatory for all countries; carry it.
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import logoimg from "../../assets/unnamed.jpg";
+import logoimg from "../../assets/altuvera.png";
 import {
   FiFacebook,
   FiTwitter,
@@ -11,7 +11,9 @@ import {
   FiMapPin,
   FiArrowRight,
   FiCheck,
+  FiLinkedin
 } from "react-icons/fi";
+import { FaXTwitter } from "react-icons/fa6";
 
 const Footer = () => {
   const [email, setEmail] = useState("");
@@ -308,19 +310,32 @@ const Footer = () => {
   ];
 
   const socialIcons = [
-    {
-      icon: FiFacebook,
-      label: "Facebook",
-      url: "https://www.facebook.com/profile.php?id=61585299893450",
-    },
-    { icon: FiTwitter, label: "Twitter", url: "#" },
-    {
-      icon: FiInstagram,
-      label: "Instagram",
-      url: "https://www.instagram.com/altu.vera1/",
-    },
-    { icon: FiYoutube, label: "YouTube", url: "#" },
-  ];
+  {
+    icon: FiFacebook,
+    label: "Facebook",
+    url: "https://www.facebook.com/profile.php?id=61585299893450",
+  },
+  {
+    icon: FaXTwitter,
+    label: "X",
+    url: "https://x.com/altuverasafari",
+  },
+  {
+    icon: FiInstagram,
+    label: "Instagram",
+    url: "https://www.instagram.com/altu.vera1/",
+  },
+  {
+    icon: FiLinkedin,
+    label: "LinkedIn",
+    url: "https://www.linkedin.com/in/altuvera-safari-14b9033b5/",
+  },
+  {
+    icon: FiYoutube,
+    label: "YouTube",
+    url: "#",
+  },
+];
 
   return (
     <footer style={styles.footer}>

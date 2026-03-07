@@ -1,48 +1,339 @@
 // ImageCycle.jsx
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+  memo,
+} from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useScrollTriggeredSlide } from "../../hooks/useScrollTriggeredSlide";
-import { FiChevronLeft, FiChevronRight, FiPause, FiPlay } from "react-icons/fi";
+import {
+  FiChevronLeft,
+  FiChevronRight,
+  FiPause,
+  FiPlay,
+} from "react-icons/fi";
 
-// ═══════════════════════════════════════════════════════════════
-// ULTRA IMAGE CYCLE — Premium Image Carousel
-// Responsive, Accessible, Performance-Optimized
-// ═══════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════════
+// APEX IMAGE CYCLE v5 — Cinematic Triple-Phase Slide Animations
+// Each slide has 3 unique entrance styles that cycle automatically
+// Zero flicker · GPU composited · Accessible · Professional
+// ═══════════════════════════════════════════════════════════════════
 
-// Inject keyframes once
-const injectKeyframes = () => {
-  if (document.getElementById("image-cycle-keyframes")) return;
-  const style = document.createElement("style");
-  style.id = "image-cycle-keyframes";
-  style.textContent = `
-    @keyframes imageCycleShimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
-    }
-    @keyframes imageCycleKenBurns {
-      0% { transform: scale(1) translate(0, 0); }
-      50% { transform: scale(1.08) translate(-1%, -1%); }
-      100% { transform: scale(1) translate(0, 0); }
-    }
-    @keyframes imageCyclePulse {
-      0%, 100% { opacity: 0.4; }
-      50% { opacity: 0.8; }
-    }
-    @keyframes imageCycleProgress {
-      from { transform: scaleX(0); }
-      to { transform: scaleX(1); }
-    }
-  `;
-  document.head.appendChild(style);
+// ─── Inject Global Keyframes Once ───────────────────────────────
+const injectKeyframes = (() => {
+  let done = false;
+  return () => {
+    if (done) return;
+    done = true;
+    const s = document.createElement("style");
+    s.id = "apex-v5-kf";
+    s.textContent = `
+      @keyframes apexShimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+      @keyframes apexFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+      @keyframes apexSpin{to{transform:rotate(360deg)}}
+      @keyframes apexKenBurns{0%{transform:scale(1) translate(0,0)}50%{transform:scale(1.04) translate(-0.3%,-0.3%)}100%{transform:scale(1) translate(0,0)}}
+    `;
+    document.head.appendChild(s);
+  };
+})();
+
+// ─── Easing Presets ─────────────────────────────────────────────
+const EASE = {
+  silk: [0.25, 0.46, 0.45, 0.94],
+  expo: [0.16, 1, 0.3, 1],
+  smooth: [0.22, 1, 0.36, 1],
+  cinematic: [0.33, 1, 0.68, 1],
+  elegant: [0.43, 0.13, 0.23, 0.96],
+  luxe: [0.19, 1, 0.22, 1],
 };
 
-// Loading Skeleton Component
-const ImageSkeleton = () => (
+// ═══════════════════════════════════════════════════════════════════
+// TRIPLE-PHASE ANIMATION SYSTEM
+// Each slide index maps to a unique set of 3 entrance animations
+// Visit 1 → Phase A, Visit 2 → Phase B, Visit 3 → Phase C, then loop
+// ═══════════════════════════════════════════════════════════════════
+
+const SLIDE_PHASES = [
+  // ── Slide 0: Ethereal Set ──
+  {
+    A: {
+      initial: { opacity: 0, scale: 1.06, y: "1%" },
+      animate: { opacity: 1, scale: 1, y: "0%" },
+      exit: { opacity: 0, scale: 0.97, y: "-0.5%" },
+      transition: { duration: 1.1, ease: EASE.silk },
+    },
+    B: {
+      initial: { opacity: 0, x: "5%", scale: 1.02 },
+      animate: { opacity: 1, x: "0%", scale: 1 },
+      exit: { opacity: 0, x: "-3%", scale: 0.99 },
+      transition: { duration: 0.95, ease: EASE.smooth },
+    },
+    C: {
+      initial: { opacity: 0, scale: 0.9, rotate: 1.5 },
+      animate: { opacity: 1, scale: 1, rotate: 0 },
+      exit: { opacity: 0, scale: 1.05, rotate: -0.8 },
+      transition: { duration: 1.2, ease: EASE.cinematic },
+    },
+  },
+  // ── Slide 1: Horizon Set ──
+  {
+    A: {
+      initial: { opacity: 0, x: "-4%", y: "1.5%" },
+      animate: { opacity: 1, x: "0%", y: "0%" },
+      exit: { opacity: 0, x: "2.5%", y: "-1%" },
+      transition: { duration: 1.05, ease: EASE.smooth },
+    },
+    B: {
+      initial: { opacity: 0, scale: 1.1, y: "-2%" },
+      animate: { opacity: 1, scale: 1, y: "0%" },
+      exit: { opacity: 0, scale: 0.94, y: "1%" },
+      transition: { duration: 1.15, ease: EASE.silk },
+    },
+    C: {
+      initial: { opacity: 0, x: "3%", rotate: -1.2 },
+      animate: { opacity: 1, x: "0%", rotate: 0 },
+      exit: { opacity: 0, x: "-2%", rotate: 0.6 },
+      transition: { duration: 1, ease: EASE.elegant },
+    },
+  },
+  // ── Slide 2: Ascend Set ──
+  {
+    A: {
+      initial: { opacity: 0, y: "4%", scale: 1.01 },
+      animate: { opacity: 1, y: "0%", scale: 1 },
+      exit: { opacity: 0, y: "-2.5%", scale: 0.99 },
+      transition: { duration: 1.1, ease: EASE.cinematic },
+    },
+    B: {
+      initial: { opacity: 0, scale: 0.88 },
+      animate: { opacity: 1, scale: 1 },
+      exit: { opacity: 0, scale: 1.08 },
+      transition: { duration: 1.25, ease: EASE.luxe },
+    },
+    C: {
+      initial: { opacity: 0, x: "-3.5%", y: "-1.5%" },
+      animate: { opacity: 1, x: "0%", y: "0%" },
+      exit: { opacity: 0, x: "2%", y: "1%" },
+      transition: { duration: 1, ease: EASE.smooth },
+    },
+  },
+  // ── Slide 3: Prism Set ──
+  {
+    A: {
+      initial: { opacity: 0, scale: 1.08, rotate: -1 },
+      animate: { opacity: 1, scale: 1, rotate: 0 },
+      exit: { opacity: 0, scale: 0.95, rotate: 0.5 },
+      transition: { duration: 1.15, ease: EASE.elegant },
+    },
+    B: {
+      initial: { opacity: 0, y: "-3.5%", x: "2%" },
+      animate: { opacity: 1, y: "0%", x: "0%" },
+      exit: { opacity: 0, y: "2%", x: "-1.5%" },
+      transition: { duration: 1.05, ease: EASE.cinematic },
+    },
+    C: {
+      initial: { opacity: 0, scale: 0.93, y: "2%" },
+      animate: { opacity: 1, scale: 1, y: "0%" },
+      exit: { opacity: 0, scale: 1.04, y: "-1.5%" },
+      transition: { duration: 1.2, ease: EASE.silk },
+    },
+  },
+  // ── Slide 4: Drift Set ──
+  {
+    A: {
+      initial: { opacity: 0, x: "4.5%", scale: 1.015 },
+      animate: { opacity: 1, x: "0%", scale: 1 },
+      exit: { opacity: 0, x: "-3%", scale: 0.995 },
+      transition: { duration: 1, ease: EASE.smooth },
+    },
+    B: {
+      initial: { opacity: 0, scale: 1.12 },
+      animate: { opacity: 1, scale: 1 },
+      exit: { opacity: 0, scale: 0.92 },
+      transition: { duration: 1.2, ease: EASE.luxe },
+    },
+    C: {
+      initial: { opacity: 0, y: "3%", rotate: 1.8 },
+      animate: { opacity: 1, y: "0%", rotate: 0 },
+      exit: { opacity: 0, y: "-2%", rotate: -0.9 },
+      transition: { duration: 1.1, ease: EASE.elegant },
+    },
+  },
+  // ── Slide 5: Velvet Set ──
+  {
+    A: {
+      initial: { opacity: 0, y: "-3%", scale: 1.03 },
+      animate: { opacity: 1, y: "0%", scale: 1 },
+      exit: { opacity: 0, y: "2%", scale: 0.98 },
+      transition: { duration: 1.05, ease: EASE.cinematic },
+    },
+    B: {
+      initial: { opacity: 0, x: "-5%", rotate: 0.8 },
+      animate: { opacity: 1, x: "0%", rotate: 0 },
+      exit: { opacity: 0, x: "3%", rotate: -0.4 },
+      transition: { duration: 1, ease: EASE.smooth },
+    },
+    C: {
+      initial: { opacity: 0, scale: 0.86 },
+      animate: { opacity: 1, scale: 1 },
+      exit: { opacity: 0, scale: 1.1 },
+      transition: { duration: 1.3, ease: EASE.silk },
+    },
+  },
+  // ── Slide 6: Aurora Set ──
+  {
+    A: {
+      initial: { opacity: 0, x: "2.5%", y: "2.5%" },
+      animate: { opacity: 1, x: "0%", y: "0%" },
+      exit: { opacity: 0, x: "-1.5%", y: "-1.5%" },
+      transition: { duration: 1.1, ease: EASE.silk },
+    },
+    B: {
+      initial: { opacity: 0, scale: 1.07, rotate: -1.5 },
+      animate: { opacity: 1, scale: 1, rotate: 0 },
+      exit: { opacity: 0, scale: 0.96, rotate: 0.7 },
+      transition: { duration: 1.15, ease: EASE.elegant },
+    },
+    C: {
+      initial: { opacity: 0, y: "4%", x: "-1.5%" },
+      animate: { opacity: 1, y: "0%", x: "0%" },
+      exit: { opacity: 0, y: "-2.5%", x: "1%" },
+      transition: { duration: 1.05, ease: EASE.cinematic },
+    },
+  },
+  // ── Slide 7: Zenith Set ──
+  {
+    A: {
+      initial: { opacity: 0, scale: 0.91, rotate: 1.2 },
+      animate: { opacity: 1, scale: 1, rotate: 0 },
+      exit: { opacity: 0, scale: 1.06, rotate: -0.6 },
+      transition: { duration: 1.2, ease: EASE.luxe },
+    },
+    B: {
+      initial: { opacity: 0, x: "4%", y: "-2%" },
+      animate: { opacity: 1, x: "0%", y: "0%" },
+      exit: { opacity: 0, x: "-2.5%", y: "1.5%" },
+      transition: { duration: 1, ease: EASE.smooth },
+    },
+    C: {
+      initial: { opacity: 0, scale: 1.09 },
+      animate: { opacity: 1, scale: 1 },
+      exit: { opacity: 0, scale: 0.93 },
+      transition: { duration: 1.15, ease: EASE.silk },
+    },
+  },
+  // ── Slide 8: Mirage Set ──
+  {
+    A: {
+      initial: { opacity: 0, x: "-3%", scale: 1.04 },
+      animate: { opacity: 1, x: "0%", scale: 1 },
+      exit: { opacity: 0, x: "2%", scale: 0.97 },
+      transition: { duration: 1.05, ease: EASE.elegant },
+    },
+    B: {
+      initial: { opacity: 0, y: "3.5%", rotate: -1 },
+      animate: { opacity: 1, y: "0%", rotate: 0 },
+      exit: { opacity: 0, y: "-2%", rotate: 0.5 },
+      transition: { duration: 1.1, ease: EASE.cinematic },
+    },
+    C: {
+      initial: { opacity: 0, scale: 0.87, x: "1.5%" },
+      animate: { opacity: 1, scale: 1, x: "0%" },
+      exit: { opacity: 0, scale: 1.07, x: "-1%" },
+      transition: { duration: 1.25, ease: EASE.luxe },
+    },
+  },
+  // ── Slide 9: Cosmos Set ──
+  {
+    A: {
+      initial: { opacity: 0, scale: 1.05, y: "-2.5%" },
+      animate: { opacity: 1, scale: 1, y: "0%" },
+      exit: { opacity: 0, scale: 0.96, y: "1.5%" },
+      transition: { duration: 1.1, ease: EASE.silk },
+    },
+    B: {
+      initial: { opacity: 0, x: "-4.5%", y: "1%" },
+      animate: { opacity: 1, x: "0%", y: "0%" },
+      exit: { opacity: 0, x: "3%", y: "-0.5%" },
+      transition: { duration: 1, ease: EASE.smooth },
+    },
+    C: {
+      initial: { opacity: 0, rotate: 2, scale: 0.94 },
+      animate: { opacity: 1, rotate: 0, scale: 1 },
+      exit: { opacity: 0, rotate: -1, scale: 1.04 },
+      transition: { duration: 1.2, ease: EASE.elegant },
+    },
+  },
+  // ── Slide 10: Nova Set ──
+  {
+    A: {
+      initial: { opacity: 0, y: "3.5%", x: "1.5%" },
+      animate: { opacity: 1, y: "0%", x: "0%" },
+      exit: { opacity: 0, y: "-2%", x: "-1%" },
+      transition: { duration: 1.05, ease: EASE.cinematic },
+    },
+    B: {
+      initial: { opacity: 0, scale: 1.11, rotate: 0.8 },
+      animate: { opacity: 1, scale: 1, rotate: 0 },
+      exit: { opacity: 0, scale: 0.93, rotate: -0.4 },
+      transition: { duration: 1.2, ease: EASE.luxe },
+    },
+    C: {
+      initial: { opacity: 0, x: "4%", scale: 0.97 },
+      animate: { opacity: 1, x: "0%", scale: 1 },
+      exit: { opacity: 0, x: "-2.5%", scale: 1.02 },
+      transition: { duration: 1, ease: EASE.smooth },
+    },
+  },
+  // ── Slide 11: Eclipse Set ──
+  {
+    A: {
+      initial: { opacity: 0, scale: 0.89 },
+      animate: { opacity: 1, scale: 1 },
+      exit: { opacity: 0, scale: 1.08 },
+      transition: { duration: 1.3, ease: EASE.silk },
+    },
+    B: {
+      initial: { opacity: 0, x: "3%", y: "2%", rotate: -0.6 },
+      animate: { opacity: 1, x: "0%", y: "0%", rotate: 0 },
+      exit: { opacity: 0, x: "-2%", y: "-1.5%", rotate: 0.3 },
+      transition: { duration: 1.1, ease: EASE.elegant },
+    },
+    C: {
+      initial: { opacity: 0, y: "-4%", scale: 1.03 },
+      animate: { opacity: 1, y: "0%", scale: 1 },
+      exit: { opacity: 0, y: "2.5%", scale: 0.98 },
+      transition: { duration: 1.05, ease: EASE.cinematic },
+    },
+  },
+];
+
+const PHASE_KEYS = ["A", "B", "C"];
+
+const getTriplePhaseAnimation = (slideIndex, visitCount, reducedMotion) => {
+  if (reducedMotion) {
+    return {
+      initial: { opacity: 0 },
+      animate: { opacity: 1 },
+      exit: { opacity: 0 },
+      transition: { duration: 0.25 },
+    };
+  }
+  const set = SLIDE_PHASES[slideIndex % SLIDE_PHASES.length];
+  const phase = PHASE_KEYS[visitCount % 3];
+  return set[phase];
+};
+
+// ─── Skeleton ───────────────────────────────────────────────────
+const Skeleton = memo(() => (
   <div
     style={{
       position: "absolute",
       inset: 0,
-      background: "linear-gradient(135deg, #1F2937 0%, #111827 50%, #1F2937 100%)",
+      background: "#040406",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -52,225 +343,260 @@ const ImageSkeleton = () => (
       style={{
         position: "absolute",
         inset: 0,
-        background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.03) 50%, transparent 100%)",
+        background:
+          "linear-gradient(90deg,transparent 0%,rgba(255,255,255,.008) 40%,rgba(255,255,255,.018) 50%,rgba(255,255,255,.008) 60%,transparent 100%)",
         backgroundSize: "200% 100%",
-        animation: "imageCycleShimmer 2s infinite linear",
+        animation: "apexShimmer 2s infinite ease-in-out",
       }}
     />
     <div
       style={{
-        width: "60px",
-        height: "60px",
+        width: "40px",
+        height: "40px",
         borderRadius: "50%",
-        background: "rgba(16, 185, 129, 0.1)",
+        background: "rgba(139,92,246,.025)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
+        animation: "apexFloat 2.5s ease-in-out infinite",
       }}
     >
       <div
         style={{
-          width: "24px",
-          height: "24px",
+          width: "14px",
+          height: "14px",
           borderRadius: "50%",
-          border: "3px solid rgba(16, 185, 129, 0.2)",
-          borderTopColor: "#10B981",
-          animation: "spin 1s linear infinite",
+          border: "1.5px solid rgba(139,92,246,.06)",
+          borderTopColor: "rgba(139,92,246,.45)",
+          animation: "apexSpin .85s linear infinite",
         }}
       />
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   </div>
-);
+));
+Skeleton.displayName = "Skeleton";
 
-// Navigation Button Component
-const NavButton = ({ direction, onClick, visible }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const isLeft = direction === "left";
+// ─── Nav Arrow ──────────────────────────────────────────────────
+const NavArrow = memo(({ dir, onClick, show }) => {
+  const [h, setH] = useState(false);
+  const [p, setP] = useState(false);
+  const left = dir === "left";
 
   return (
     <motion.button
-      initial={{ opacity: 0, x: isLeft ? -20 : 20 }}
-      animate={{
-        opacity: visible ? 1 : 0,
-        x: visible ? 0 : isLeft ? -20 : 20,
+      initial={{ opacity: 0, x: left ? -14 : 14 }}
+      animate={{ opacity: show ? 1 : 0, x: show ? 0 : left ? -14 : 14 }}
+      transition={{ duration: 0.5, ease: EASE.expo }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
       }}
-      transition={{ duration: 0.3 }}
-      onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => setH(true)}
+      onMouseLeave={() => {
+        setH(false);
+        setP(false);
+      }}
+      onMouseDown={() => setP(true)}
+      onMouseUp={() => setP(false)}
+      aria-label={left ? "Previous" : "Next"}
       style={{
         position: "absolute",
         top: "50%",
-        [isLeft ? "left" : "right"]: "16px",
-        transform: "translateY(-50%)",
-        width: "44px",
-        height: "44px",
-        borderRadius: "50%",
-        border: "1px solid rgba(255, 255, 255, 0.2)",
-        background: isHovered
-          ? "rgba(255, 255, 255, 0.95)"
-          : "rgba(255, 255, 255, 0.15)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        color: isHovered ? "#065F46" : "#FFFFFF",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        cursor: "pointer",
-        zIndex: 20,
-        transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-        boxShadow: isHovered
-          ? "0 8px 24px rgba(0, 0, 0, 0.3)"
-          : "0 4px 12px rgba(0, 0, 0, 0.15)",
-        pointerEvents: visible ? "auto" : "none",
-      }}
-      aria-label={isLeft ? "Previous image" : "Next image"}
-    >
-      {isLeft ? <FiChevronLeft size={20} /> : <FiChevronRight size={20} />}
-    </motion.button>
-  );
-};
-
-// Dot Indicator Component
-const DotIndicator = ({ total, current, onSelect, visible }) => {
-  if (total <= 1) return null;
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: visible ? 1 : 0.6, y: 0 }}
-      style={{
-        position: "absolute",
-        bottom: "20px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        display: "flex",
-        gap: "8px",
-        padding: "8px 14px",
-        background: "rgba(0, 0, 0, 0.4)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        borderRadius: "100px",
-        border: "1px solid rgba(255, 255, 255, 0.1)",
-        zIndex: 20,
-      }}
-    >
-      {Array.from({ length: total }).map((_, idx) => (
-        <button
-          key={idx}
-          onClick={() => onSelect(idx)}
-          style={{
-            width: idx === current ? "24px" : "8px",
-            height: "8px",
-            borderRadius: "100px",
-            border: "none",
-            background:
-              idx === current
-                ? "linear-gradient(135deg, #34D399 0%, #10B981 100%)"
-                : "rgba(255, 255, 255, 0.4)",
-            cursor: "pointer",
-            transition: "all 0.4s cubic-bezier(0.16, 1, 0.3, 1)",
-            padding: 0,
-          }}
-          aria-label={`Go to image ${idx + 1}`}
-          aria-current={idx === current ? "true" : "false"}
-        />
-      ))}
-    </motion.div>
-  );
-};
-
-// Progress Bar Component
-const ProgressBar = ({ duration, isPlaying, onComplete }) => {
-  const [key, setKey] = useState(0);
-
-  useEffect(() => {
-    if (isPlaying) {
-      setKey((prev) => prev + 1);
-    }
-  }, [isPlaying]);
-
-  useEffect(() => {
-    if (!isPlaying) return;
-    const timer = setTimeout(onComplete, duration);
-    return () => clearTimeout(timer);
-  }, [key, duration, isPlaying, onComplete]);
-
-  return (
-    <div
-      style={{
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: "3px",
-        background: "rgba(255, 255, 255, 0.1)",
-        zIndex: 25,
-        overflow: "hidden",
-      }}
-    >
-      {isPlaying && (
-        <div
-          key={key}
-          style={{
-            width: "100%",
-            height: "100%",
-            background: "linear-gradient(90deg, #10B981, #34D399)",
-            transformOrigin: "left",
-            animation: `imageCycleProgress ${duration}ms linear forwards`,
-          }}
-        />
-      )}
-    </div>
-  );
-};
-
-// Play/Pause Button
-const PlayPauseButton = ({ isPlaying, onToggle, visible }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <motion.button
-      initial={{ opacity: 0, scale: 0.8 }}
-      animate={{
-        opacity: visible ? 1 : 0,
-        scale: visible ? 1 : 0.8,
-      }}
-      transition={{ duration: 0.3 }}
-      onClick={onToggle}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        position: "absolute",
-        top: "16px",
-        right: "16px",
+        [left ? "left" : "right"]: "14px",
+        transform: `translateY(-50%) scale(${p ? 0.88 : h ? 1.06 : 1})`,
         width: "40px",
         height: "40px",
         borderRadius: "12px",
-        border: "1px solid rgba(255, 255, 255, 0.2)",
-        background: isHovered
-          ? "rgba(255, 255, 255, 0.2)"
-          : "rgba(0, 0, 0, 0.4)",
-        backdropFilter: "blur(12px)",
-        WebkitBackdropFilter: "blur(12px)",
-        color: "#FFFFFF",
+        border: "none",
+        outline: "none",
+        background: h ? "rgba(255,255,255,.92)" : "rgba(255,255,255,.05)",
+        backdropFilter: "blur(30px) saturate(200%)",
+        WebkitBackdropFilter: "blur(30px) saturate(200%)",
+        color: h ? "#0a0a14" : "rgba(255,255,255,.75)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         cursor: "pointer",
-        zIndex: 20,
-        transition: "all 0.3s ease",
-        pointerEvents: visible ? "auto" : "none",
+        zIndex: 30,
+        transition: "all .4s cubic-bezier(.22,1,.36,1)",
+        boxShadow: h
+          ? "0 6px 24px rgba(0,0,0,.25)"
+          : "none",
+        pointerEvents: show ? "auto" : "none",
       }}
-      aria-label={isPlaying ? "Pause slideshow" : "Play slideshow"}
     >
-      {isPlaying ? <FiPause size={16} /> : <FiPlay size={16} />}
+      {left ? (
+        <FiChevronLeft size={16} strokeWidth={2.5} />
+      ) : (
+        <FiChevronRight size={16} strokeWidth={2.5} />
+      )}
     </motion.button>
   );
-};
+});
+NavArrow.displayName = "NavArrow";
 
-// Main Component
+// ─── Dots ───────────────────────────────────────────────────────
+const Dots = memo(({ total, current, onSelect, show }) => {
+  if (total <= 1) return null;
+  return (
+    <motion.nav
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: show ? 1 : 0.25, y: show ? 0 : 3 }}
+      transition={{ duration: 0.5, ease: EASE.expo }}
+      aria-label="Slide navigation"
+      style={{
+        position: "absolute",
+        bottom: "16px",
+        left: "50%",
+        transform: "translateX(-50%)",
+        display: "flex",
+        alignItems: "center",
+        gap: "4px",
+        padding: "5px 10px",
+        background: "rgba(0,0,0,.18)",
+        backdropFilter: "blur(30px) saturate(200%)",
+        WebkitBackdropFilter: "blur(30px) saturate(200%)",
+        borderRadius: "100px",
+        border: "none",
+        zIndex: 30,
+      }}
+    >
+      {Array.from({ length: total }).map((_, i) => {
+        const active = i === current;
+        return (
+          <motion.button
+            key={i}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(i);
+            }}
+            layout
+            animate={{
+              width: active ? "20px" : "5px",
+              opacity: active ? 1 : 0.28,
+            }}
+            whileHover={{ opacity: 0.65, scale: 1.25 }}
+            transition={{ duration: 0.45, ease: EASE.expo }}
+            style={{
+              height: "5px",
+              borderRadius: "100px",
+              border: "none",
+              outline: "none",
+              background: active
+                ? "linear-gradient(135deg,#c084fc,#8b5cf6,#7c3aed)"
+                : "rgba(255,255,255,.4)",
+              cursor: "pointer",
+              padding: 0,
+              boxShadow: active ? "0 0 8px rgba(139,92,246,.35)" : "none",
+            }}
+            aria-label={`Slide ${i + 1}`}
+            aria-current={active ? "true" : undefined}
+          />
+        );
+      })}
+    </motion.nav>
+  );
+});
+Dots.displayName = "Dots";
+
+// ─── Play / Pause ───────────────────────────────────────────────
+const PlayPause = memo(({ playing, onToggle, show }) => {
+  const [h, setH] = useState(false);
+  return (
+    <motion.button
+      initial={{ opacity: 0, scale: 0.6 }}
+      animate={{ opacity: show ? 1 : 0, scale: show ? 1 : 0.6 }}
+      transition={{ duration: 0.4, ease: EASE.expo }}
+      onClick={(e) => {
+        e.stopPropagation();
+        onToggle();
+      }}
+      onMouseEnter={() => setH(true)}
+      onMouseLeave={() => setH(false)}
+      aria-label={playing ? "Pause" : "Play"}
+      style={{
+        position: "absolute",
+        top: "14px",
+        right: "14px",
+        width: "34px",
+        height: "34px",
+        borderRadius: "10px",
+        border: "none",
+        outline: "none",
+        background: h ? "rgba(255,255,255,.09)" : "rgba(0,0,0,.15)",
+        backdropFilter: "blur(24px) saturate(180%)",
+        WebkitBackdropFilter: "blur(24px) saturate(180%)",
+        color: "#fff",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        cursor: "pointer",
+        zIndex: 30,
+        transition: "all .35s ease",
+        pointerEvents: show ? "auto" : "none",
+      }}
+    >
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={playing ? "on" : "off"}
+          initial={{ scale: 0.15, opacity: 0, rotate: -30 }}
+          animate={{ scale: 1, opacity: 1, rotate: 0 }}
+          exit={{ scale: 0.15, opacity: 0, rotate: 30 }}
+          transition={{ duration: 0.16 }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {playing ? (
+            <FiPause size={12} />
+          ) : (
+            <FiPlay size={12} style={{ marginLeft: 1 }} />
+          )}
+        </motion.div>
+      </AnimatePresence>
+    </motion.button>
+  );
+});
+PlayPause.displayName = "PlayPause";
+
+// ─── Counter ────────────────────────────────────────────────────
+const Counter = memo(({ current, total, show }) => (
+  <motion.div
+    initial={{ opacity: 0, y: -5 }}
+    animate={{ opacity: show ? 0.7 : 0.22, y: 0 }}
+    transition={{ duration: 0.45, ease: EASE.expo }}
+    aria-live="polite"
+    style={{
+      position: "absolute",
+      top: "14px",
+      left: "14px",
+      padding: "3px 9px",
+      background: "rgba(0,0,0,.15)",
+      backdropFilter: "blur(24px) saturate(180%)",
+      WebkitBackdropFilter: "blur(24px) saturate(180%)",
+      borderRadius: "100px",
+      border: "none",
+      color: "rgba(255,255,255,.7)",
+      fontSize: "10px",
+      fontWeight: 600,
+      fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,sans-serif",
+      letterSpacing: ".5px",
+      zIndex: 30,
+      userSelect: "none",
+    }}
+  >
+    <span style={{ color: "#c084fc", fontWeight: 700 }}>{current + 1}</span>
+    <span style={{ margin: "0 2px", opacity: 0.25 }}>·</span>
+    <span>{total}</span>
+  </motion.div>
+));
+Counter.displayName = "Counter";
+
+// ═══════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════════
 const ImageCycle = ({
   images = [],
   interval = 6000,
@@ -278,13 +604,12 @@ const ImageCycle = ({
   className = "",
   showControls = true,
   showDots = true,
-  showProgress = true,
   showPlayPause = false,
   kenBurns = false,
   pauseOnHover = true,
   autoPlay = true,
   overlay = true,
-  overlayGradient = "linear-gradient(180deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.4) 100%)",
+  overlayGradient = "linear-gradient(180deg,rgba(0,0,0,.003) 0%,rgba(0,0,0,.035) 40%,rgba(0,0,0,.28) 100%)",
   onSlideChange,
   aspectRatio,
 }) => {
@@ -293,347 +618,519 @@ const ImageCycle = ({
     [images]
   );
 
-  const [index, setIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(autoPlay);
-  const [isHovered, setIsHovered] = useState(false);
-  const [loadedImages, setLoadedImages] = useState(new Set());
-  const [touchStart, setTouchStart] = useState(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const [idx, setIdx] = useState(0);
+  const [playing, setPlaying] = useState(autoPlay);
+  const [hovered, setHovered] = useState(false);
+  const [loaded, setLoaded] = useState(() => new Set());
+  const [touchX, setTouchX] = useState(null);
+  const [touchY, setTouchY] = useState(null);
+  const [mobile, setMobile] = useState(false);
+  const [swipeHinted, setSwipeHinted] = useState(false);
 
+  // Track visit count per slide for triple-phase cycling
+  const visitCounts = useRef({});
+
+  const timerRef = useRef(null);
   const containerRef = useRef(null);
+  const reducedMotion = useReducedMotion();
 
-  // Inject keyframes
   useEffect(() => {
     injectKeyframes();
   }, []);
 
-  // Responsive check
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
+    const c = () => setMobile(window.innerWidth < 768);
+    c();
+    window.addEventListener("resize", c, { passive: true });
+    return () => window.removeEventListener("resize", c);
   }, []);
 
-  // Reduced motion preference
-  const prefersReducedMotion = useMemo(() => {
-    if (typeof window === "undefined" || !window.matchMedia) return false;
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  }, []);
+  // ── Preload all images eagerly ──
+  useEffect(() => {
+    if (!safeImages.length) return;
+    let alive = true;
+    safeImages.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+      const done = () => {
+        if (!alive) return;
+        setLoaded((p) => {
+          if (p.has(src)) return p;
+          const n = new Set(p);
+          n.add(src);
+          return n;
+        });
+      };
+      img.onload = done;
+      img.onerror = done;
+      if (img.complete) done();
+    });
+    return () => {
+      alive = false;
+    };
+  }, [safeImages]);
 
-  // Navigation functions
-  const goToSlide = useCallback(
-    (newIndex) => {
+  // ── Navigation ──
+  const go = useCallback(
+    (to) => {
       if (safeImages.length <= 1) return;
-      const normalized = ((newIndex % safeImages.length) + safeImages.length) % safeImages.length;
-      setIndex(normalized);
-      onSlideChange?.(normalized);
+      const n =
+        ((to % safeImages.length) + safeImages.length) % safeImages.length;
+      setIdx(n);
+      onSlideChange?.(n);
     },
     [safeImages.length, onSlideChange]
   );
 
-  const nextSlide = useCallback(() => {
-    goToSlide(index + 1);
-  }, [goToSlide, index]);
+  const next = useCallback(() => go(idx + 1), [go, idx]);
+  const prev = useCallback(() => go(idx - 1), [go, idx]);
 
-  const prevSlide = useCallback(() => {
-    goToSlide(index - 1);
-  }, [goToSlide, index]);
-
-  // Scroll-triggered slide
-  const scrollRef = useScrollTriggeredSlide(nextSlide, 250);
-
-  // Combine refs
+  const scrollRef = useScrollTriggeredSlide(next, 250);
   useEffect(() => {
-    if (scrollRef.current && containerRef.current) {
+    if (scrollRef?.current && containerRef.current)
       scrollRef.current = containerRef.current;
-    }
   }, [scrollRef]);
 
-  // Auto-play logic
-  const shouldPlay = isPlaying && safeImages.length > 1 && (!pauseOnHover || !isHovered);
+  // ── Autoplay ──
+  const shouldPlay =
+    playing && safeImages.length > 1 && (!pauseOnHover || !hovered);
 
-  // Preload next image
   useEffect(() => {
-    if (safeImages.length <= 1) return;
-    const nextIndex = (index + 1) % safeImages.length;
-    const img = new Image();
-    img.src = safeImages[nextIndex];
-    img.onload = () => {
-      setLoadedImages((prev) => new Set(prev).add(safeImages[nextIndex]));
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
+    if (shouldPlay) timerRef.current = setInterval(next, interval);
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [index, safeImages]);
+  }, [shouldPlay, interval, next]);
 
-  // Handle image load
-  const handleImageLoad = useCallback((src) => {
-    setLoadedImages((prev) => new Set(prev).add(src));
+  // ── Track visits & get animation ──
+  useEffect(() => {
+    const key = idx;
+    if (!visitCounts.current[key]) visitCounts.current[key] = 0;
+    visitCounts.current[key]++;
+  }, [idx]);
+
+  const currentVisit = visitCounts.current[idx] || 1;
+
+  const anim = useMemo(
+    () => getTriplePhaseAnimation(idx, currentVisit - 1, reducedMotion),
+    [idx, currentVisit, reducedMotion]
+  );
+
+  // ── Image load handler ──
+  const markLoaded = useCallback((src) => {
+    setLoaded((p) => {
+      if (p.has(src)) return p;
+      const n = new Set(p);
+      n.add(src);
+      return n;
+    });
   }, []);
 
-  // Touch handlers for swipe
-  const handleTouchStart = (e) => {
-    setTouchStart(e.touches[0].clientX);
+  // ── Touch ──
+  const onTS = (e) => {
+    setTouchX(e.touches[0].clientX);
+    setTouchY(e.touches[0].clientY);
   };
-
-  const handleTouchEnd = (e) => {
-    if (touchStart === null) return;
-    const touchEnd = e.changedTouches[0].clientX;
-    const diff = touchStart - touchEnd;
-    const threshold = 50;
-
-    if (diff > threshold) {
-      nextSlide();
-    } else if (diff < -threshold) {
-      prevSlide();
+  const onTE = (e) => {
+    if (touchX === null) return;
+    const dx = touchX - e.changedTouches[0].clientX;
+    const dy = Math.abs(touchY - e.changedTouches[0].clientY);
+    if (Math.abs(dx) > 36 && Math.abs(dx) > dy) {
+      dx > 0 ? next() : prev();
+      if (!swipeHinted) setSwipeHinted(true);
     }
-    setTouchStart(null);
+    setTouchX(null);
+    setTouchY(null);
   };
 
-  // Keyboard navigation
+  // ── Keyboard ──
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (!isHovered) return;
-      if (e.key === "ArrowLeft") prevSlide();
-      if (e.key === "ArrowRight") nextSlide();
+    const h = (e) => {
+      if (!hovered) return;
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        prev();
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        next();
+      }
       if (e.key === " ") {
         e.preventDefault();
-        setIsPlaying((p) => !p);
+        setPlaying((p) => !p);
       }
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isHovered, nextSlide, prevSlide]);
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [hovered, next, prev]);
 
-  // Styles
-  const styles = {
-    container: {
-      position: "relative",
-      overflow: "hidden",
-      transform: "translateZ(0)",
-      background: "linear-gradient(135deg, #0F172A 0%, #1E293B 100%)",
-      borderRadius: "inherit",
-      ...(aspectRatio && { aspectRatio }),
-      ...style,
-    },
-    image: {
-      position: "absolute",
-      inset: 0,
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-      willChange: "opacity, transform",
-      ...(kenBurns &&
-        !prefersReducedMotion && {
-          animation: `imageCycleKenBurns ${interval * 1.5}ms ease-in-out infinite`,
-        }),
-    },
-    overlay: {
-      position: "absolute",
-      inset: 0,
-      background: overlayGradient,
-      pointerEvents: "none",
-      zIndex: 5,
-    },
-    ambientGlow: {
-      position: "absolute",
-      inset: 0,
-      pointerEvents: "none",
-      zIndex: 3,
-    },
-    emptyState: {
-      position: "absolute",
-      inset: 0,
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: "16px",
-      background: "linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.04) 100%)",
-    },
-    emptyIcon: {
-      width: "64px",
-      height: "64px",
-      borderRadius: "50%",
-      background: "rgba(16, 185, 129, 0.1)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    emptyText: {
-      color: "rgba(255, 255, 255, 0.5)",
-      fontSize: "14px",
-      fontWeight: 500,
-    },
-    counter: {
-      position: "absolute",
-      top: "16px",
-      left: "16px",
-      padding: "6px 12px",
-      background: "rgba(0, 0, 0, 0.5)",
-      backdropFilter: "blur(8px)",
-      borderRadius: "8px",
-      color: "white",
-      fontSize: "12px",
-      fontWeight: 600,
-      zIndex: 20,
-      border: "1px solid rgba(255, 255, 255, 0.1)",
-    },
-  };
+  // ── Derived ──
+  const cur = safeImages[idx];
+  const curLoaded = loaded.has(cur);
+  const prevIdx =
+    safeImages.length > 1
+      ? (idx - 1 + safeImages.length) % safeImages.length
+      : 0;
+  const backdrop = safeImages[prevIdx];
+  const hasNav = showControls && safeImages.length > 1;
+  const uiShow = hovered || mobile;
 
-  // Empty state
-  if (safeImages.length === 0) {
+  // ─── Empty State ──────────────────────────────────────────────
+  if (!safeImages.length) {
     return (
       <div
         ref={containerRef}
         className={className}
-        style={styles.container}
         role="img"
-        aria-label="No images available"
+        aria-label="No images"
+        style={{
+          position: "relative",
+          overflow: "hidden",
+          background: "#040406",
+          borderRadius: "inherit",
+          border: "none",
+          outline: "none",
+          ...(aspectRatio && { aspectRatio }),
+          ...style,
+        }}
       >
-        <div style={styles.emptyState}>
-          <div style={styles.emptyIcon}>
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "12px",
+            background:
+              "radial-gradient(ellipse at center,rgba(139,92,246,.015) 0%,transparent 70%)",
+          }}
+        >
+          <motion.div
+            animate={{ y: [0, -4, 0] }}
+            transition={{
+              duration: 3.5,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            style={{
+              width: "56px",
+              height: "56px",
+              borderRadius: "16px",
+              background: "rgba(139,92,246,.02)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "none",
+            }}
+          >
             <svg
-              width="28"
-              height="28"
+              width="24"
+              height="24"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#10B981"
+              stroke="rgba(139,92,246,.25)"
               strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+              <rect x="3" y="3" width="18" height="18" rx="3" />
               <circle cx="8.5" cy="8.5" r="1.5" />
-              <polyline points="21 15 16 10 5 21" />
+              <path d="M21 15l-5-5L5 21" />
             </svg>
-          </div>
-          <span style={styles.emptyText}>No images available</span>
+          </motion.div>
+          <span
+            style={{
+              color: "rgba(255,255,255,.18)",
+              fontSize: "11px",
+              fontWeight: 500,
+              fontFamily: "'Inter',-apple-system,sans-serif",
+              letterSpacing: ".3px",
+            }}
+          >
+            No images available
+          </span>
         </div>
       </div>
     );
   }
 
-  const currentImage = safeImages[index];
-  const isCurrentLoaded = loadedImages.has(currentImage);
-  const showNavigation = showControls && safeImages.length > 1;
-
   return (
     <div
       ref={containerRef}
       className={className}
-      style={styles.container}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      onTouchStart={onTS}
+      onTouchEnd={onTE}
       role="region"
       aria-roledescription="carousel"
-      aria-label={`Image carousel, showing image ${index + 1} of ${safeImages.length}`}
+      aria-label={`Image ${idx + 1} of ${safeImages.length}`}
       tabIndex={0}
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        transform: "translateZ(0)",
+        background: "#040406",
+        borderRadius: "inherit",
+        border: "none",
+        outline: "none",
+        boxShadow: "none",
+        isolation: "isolate",
+        WebkitTapHighlightColor: "transparent",
+        ...(aspectRatio && { aspectRatio }),
+        ...style,
+      }}
     >
-      {/* Loading Skeleton */}
-      {!isCurrentLoaded && <ImageSkeleton />}
+      {/* ═══ L0 — Persistent Backdrop ═══ */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          zIndex: 0,
+          background: "#040406",
+        }}
+      >
+        {loaded.has(backdrop) ? (
+          <img
+            src={backdrop}
+            alt=""
+            draggable={false}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              border: "none",
+              outline: "none",
+              display: "block",
+            }}
+          />
+        ) : loaded.size > 0 ? (
+          <img
+            src={[...loaded][0]}
+            alt=""
+            draggable={false}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              border: "none",
+              outline: "none",
+              display: "block",
+            }}
+          />
+        ) : null}
+      </div>
 
-      {/* Images */}
-      <AnimatePresence mode="wait">
-        <motion.img
-          key={`${currentImage}-${index}`}
-          src={currentImage}
-          alt={`Slide ${index + 1} of ${safeImages.length}`}
-          initial={{
-            opacity: 0,
-            scale: prefersReducedMotion ? 1 : 1.05,
-          }}
-          animate={{
-            opacity: isCurrentLoaded ? 1 : 0,
-            scale: 1,
-          }}
-          exit={{
-            opacity: 0,
-            scale: prefersReducedMotion ? 1 : 0.98,
-          }}
-          transition={{
-            duration: prefersReducedMotion ? 0.2 : 0.8,
-            ease: [0.22, 1, 0.36, 1],
-          }}
-          onLoad={() => handleImageLoad(currentImage)}
-          loading="lazy"
-          decoding="async"
-          style={styles.image}
-        />
+      {/* ═══ L1 — Skeleton ═══ */}
+      <AnimatePresence>
+        {loaded.size === 0 && (
+          <motion.div
+            key="skel"
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.8, ease: EASE.silk }}
+            style={{ position: "absolute", inset: 0, zIndex: 3 }}
+          >
+            <Skeleton />
+          </motion.div>
+        )}
       </AnimatePresence>
 
-      {/* Overlay */}
-      {overlay && <div style={styles.overlay} />}
-
-      {/* Ambient Glow Animation */}
-      {!prefersReducedMotion && (
+      {/* ═══ L2 — Animated Slide with Triple-Phase Animation ═══ */}
+      <AnimatePresence mode="sync" initial={false}>
         <motion.div
-          animate={{
-            background: [
-              "radial-gradient(ellipse at 20% 30%, rgba(16, 185, 129, 0.08) 0%, transparent 50%)",
-              "radial-gradient(ellipse at 80% 70%, rgba(16, 185, 129, 0.08) 0%, transparent 50%)",
-              "radial-gradient(ellipse at 20% 30%, rgba(16, 185, 129, 0.08) 0%, transparent 50%)",
-            ],
+          key={`${idx}-${currentVisit}`}
+          initial={anim.initial}
+          animate={anim.animate}
+          exit={anim.exit}
+          transition={anim.transition}
+          style={{
+            position: "absolute",
+            inset: 0,
+            zIndex: 2,
+            border: "none",
+            outline: "none",
+            willChange: "opacity, transform",
           }}
-          transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-          style={styles.ambientGlow}
+        >
+          <img
+            src={cur}
+            alt={`Slide ${idx + 1}`}
+            onLoad={() => markLoaded(cur)}
+            loading="eager"
+            decoding="async"
+            draggable={false}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              border: "none",
+              outline: "none",
+              display: "block",
+              opacity: curLoaded ? 1 : 0,
+              transition: "opacity .2s ease",
+              ...(kenBurns &&
+                !reducedMotion && {
+                  animation: `apexKenBurns ${interval * 1.5}ms ease-in-out infinite`,
+                }),
+            }}
+          />
+        </motion.div>
+      </AnimatePresence>
+
+      {/* ═══ L3 — Overlay ═══ */}
+      {overlay && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: overlayGradient,
+            pointerEvents: "none",
+            zIndex: 10,
+            border: "none",
+          }}
         />
       )}
 
-      {/* Counter Badge */}
-      {safeImages.length > 1 && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: isHovered || isMobile ? 1 : 0.7, y: 0 }}
-          style={styles.counter}
-        >
-          {index + 1} / {safeImages.length}
-        </motion.div>
-      )}
-
-      {/* Navigation Arrows */}
-      {showNavigation && !isMobile && (
+      {/* ═══ L4 — Ambient Glow ═══ */}
+      {!reducedMotion && (
         <>
-          <NavButton
-            direction="left"
-            onClick={prevSlide}
-            visible={isHovered}
+          <motion.div
+            animate={{ opacity: [0.04, 0.1, 0.04] }}
+            transition={{
+              duration: 11,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              top: "-16%",
+              left: "-8%",
+              width: "40%",
+              height: "40%",
+              borderRadius: "50%",
+              background:
+                "radial-gradient(circle,rgba(139,92,246,.035) 0%,transparent 70%)",
+              pointerEvents: "none",
+              zIndex: 9,
+              filter: "blur(60px)",
+            }}
           />
-          <NavButton
-            direction="right"
-            onClick={nextSlide}
-            visible={isHovered}
+          <motion.div
+            animate={{ opacity: [0.03, 0.07, 0.03] }}
+            transition={{
+              duration: 13,
+              repeat: Infinity,
+              ease: "easeInOut",
+              delay: 5,
+            }}
+            aria-hidden="true"
+            style={{
+              position: "absolute",
+              bottom: "-12%",
+              right: "-5%",
+              width: "34%",
+              height: "34%",
+              borderRadius: "50%",
+              background:
+                "radial-gradient(circle,rgba(59,130,246,.025) 0%,transparent 70%)",
+              pointerEvents: "none",
+              zIndex: 9,
+              filter: "blur(60px)",
+            }}
           />
         </>
       )}
 
-      {/* Play/Pause Button */}
+      {/* ═══ L5 — Vignette ═══ */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "absolute",
+          inset: 0,
+          pointerEvents: "none",
+          zIndex: 11,
+          boxShadow: "inset 0 0 60px 10px rgba(0,0,0,.04)",
+          border: "none",
+        }}
+      />
+
+      {/* ═══ UI ═══ */}
+
+      {safeImages.length > 1 && (
+        <Counter current={idx} total={safeImages.length} show={uiShow} />
+      )}
+
+      {hasNav && !mobile && (
+        <>
+          <NavArrow dir="left" onClick={prev} show={hovered} />
+          <NavArrow dir="right" onClick={next} show={hovered} />
+        </>
+      )}
+
+      {mobile && safeImages.length > 1 && !swipeHinted && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 0.4 }}
+          transition={{ delay: 2, duration: 0.8 }}
+          onAnimationComplete={() =>
+            setTimeout(() => setSwipeHinted(true), 4500)
+          }
+          style={{
+            position: "absolute",
+            bottom: "52px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 30,
+            pointerEvents: "none",
+          }}
+        >
+          <motion.div
+            animate={{ x: [-8, 8, -8] }}
+            transition={{ duration: 2, repeat: 3, ease: "easeInOut" }}
+            style={{
+              width: "24px",
+              height: "2.5px",
+              borderRadius: "100px",
+              background: "rgba(255,255,255,.15)",
+              border: "none",
+            }}
+          />
+        </motion.div>
+      )}
+
       {showPlayPause && safeImages.length > 1 && (
-        <PlayPauseButton
-          isPlaying={isPlaying}
-          onToggle={() => setIsPlaying((p) => !p)}
-          visible={isHovered || isMobile}
+        <PlayPause
+          playing={playing}
+          onToggle={() => setPlaying((p) => !p)}
+          show={uiShow}
         />
       )}
 
-      {/* Dot Indicators */}
-      {showDots && safeImages.length > 1 && safeImages.length <= 10 && (
-        <DotIndicator
+      {showDots && safeImages.length > 1 && safeImages.length <= 12 && (
+        <Dots
           total={safeImages.length}
-          current={index}
-          onSelect={goToSlide}
-          visible={isHovered || isMobile}
-        />
-      )}
-
-      {/* Progress Bar */}
-      {showProgress && safeImages.length > 1 && (
-        <ProgressBar
-          duration={interval}
-          isPlaying={shouldPlay}
-          onComplete={nextSlide}
+          current={idx}
+          onSelect={go}
+          show={uiShow}
         />
       )}
     </div>
   );
 };
 
-export default ImageCycle;
+export default memo(ImageCycle);

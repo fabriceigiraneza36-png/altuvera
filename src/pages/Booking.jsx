@@ -1,4 +1,3 @@
-
 import React, {
   useState,
   useEffect,
@@ -26,7 +25,6 @@ import {
   FiMessageSquare,
   FiHeart,
   FiClock,
-  FiDollarSign,
   FiHome,
   FiSend,
   FiChevronDown,
@@ -36,23 +34,26 @@ import {
   FiAward,
   FiShield,
   FiZap,
-  FiTrendingUp,
-  FiEdit3,
   FiX,
   FiInfo,
   FiPlus,
   FiMinus,
   FiLoader,
-  FiRefreshCw,
+  FiHeadphones,
+  FiFeather,
+  FiSun,
+  FiMoon,
+  FiNavigation,
+  FiCoffee,
+  FiHelpCircle,
 } from "react-icons/fi";
+import { FaWhatsapp } from "react-icons/fa";
 import {
   motion,
   AnimatePresence,
   useMotionValue,
   useTransform,
   useSpring,
-  useInView,
-  useScroll,
 } from "framer-motion";
 import PageHeader from "../components/common/PageHeader";
 import AnimatedSection from "../components/common/AnimatedSection";
@@ -61,31 +62,196 @@ import { countries as countriesData } from "../data/countries";
 import { services as servicesData } from "../data/services";
 import { useUserAuth } from "../context/UserAuthContext";
 
+// ═══════════════════════════════════════════════════════════════════════════
+// CONSTANTS & CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════════
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   BOOKING CONTEXT - Concurrent State Management
-   ═══════════════════════════════════════════════════════════════════════════ */
-const BookingContext = createContext(null);
-
-const useBooking = () => {
-  const context = useContext(BookingContext);
-  if (!context) throw new Error("useBooking must be used within BookingProvider");
-  return context;
+const ADMIN_CONTACT = {
+  name: "IGIRANEZA Fabrice",
+  whatsapp: "+250792352409",
+  whatsappDisplay: "+250 792 352 409",
+  role: "Travel Consultant",
 };
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   CONFETTI CELEBRATION COMPONENT
-   ═══════════════════════════════════════════════════════════════════════════ */
+const THEME = {
+  primary: "#059669",
+  primaryLight: "#10B981",
+  primaryLighter: "#34D399",
+  primaryDark: "#065F46",
+  primaryDarker: "#064E3B",
+  accent: "#047857",
+  success: "#22C55E",
+  warning: "#F59E0B",
+  error: "#EF4444",
+  white: "#FFFFFF",
+  background: "#F0FDF4",
+  backgroundAlt: "#ECFDF5",
+  gray50: "#F9FAFB",
+  gray100: "#F3F4F6",
+  gray200: "#E5E7EB",
+  gray300: "#D1D5DB",
+  gray400: "#9CA3AF",
+  gray500: "#6B7280",
+  gray600: "#4B5563",
+  gray700: "#374151",
+  gray800: "#1F2937",
+  gray900: "#111827",
+  text: "#1a1a1a",
+  textLight: "#6B7280",
+  shadow: "rgba(5, 150, 105, 0.15)",
+  shadowDark: "rgba(5, 150, 105, 0.25)",
+};
+
+const STEPS = [
+  {
+    number: 1,
+    title: "Destination & Dates",
+    shortTitle: "Trip",
+    icon: <FiCompass size={22} />,
+    description: "Choose where and when",
+  },
+  {
+    number: 2,
+    title: "Travelers & Stay",
+    shortTitle: "Group",
+    icon: <FiUsers size={22} />,
+    description: "Tell us about your group",
+  },
+  {
+    number: 3,
+    title: "Interests",
+    shortTitle: "Activities",
+    icon: <FiHeart size={22} />,
+    description: "What excites you most",
+  },
+  {
+    number: 4,
+    title: "Contact Details",
+    shortTitle: "Details",
+    icon: <FiUser size={22} />,
+    description: "How can we reach you",
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GLOBAL STYLES
+// ═══════════════════════════════════════════════════════════════════════════
+
+const GlobalStyles = () => (
+  <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
+    
+    * { box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    input, select, textarea, button {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    
+    input[type=number] {
+      -moz-appearance: textfield;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+    }
+    
+    ::selection {
+      background: rgba(5, 150, 105, 0.2);
+      color: ${THEME.primaryDark};
+    }
+    
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: ${THEME.backgroundAlt};
+      border-radius: 10px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(135deg, ${THEME.primary}, ${THEME.primaryDark});
+      border-radius: 10px;
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes pulse-ring {
+      0% { transform: scale(0.8); opacity: 0.8; }
+      50% { transform: scale(1.2); opacity: 0; }
+      100% { transform: scale(0.8); opacity: 0; }
+    }
+    
+    @keyframes gradient-shift {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    
+    .gradient-text {
+      background: linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.primaryLight} 50%, ${THEME.primaryLighter} 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+  `}</style>
+);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HELPER FUNCTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+const getWhatsAppLink = (message) => {
+  const phoneNumber = ADMIN_CONTACT.whatsapp.replace(/[^0-9]/g, "");
+  const encodedMessage = encodeURIComponent(message);
+  return `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFETTI CELEBRATION COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
+
 const ConfettiCelebration = memo(({ active, duration = 5000 }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
     if (!active) return;
-    
+
     const canvas = canvasRef.current;
     if (!canvas) return;
-    
+
     const ctx = canvas.getContext("2d");
     const DPR = window.devicePixelRatio || 1;
 
@@ -99,39 +265,44 @@ const ConfettiCelebration = memo(({ active, duration = 5000 }) => {
     resize();
 
     const colors = [
-      "#10B981", "#059669", "#F59E0B", "#EF4444", "#8B5CF6",
-      "#06B6D4", "#F97316", "#EC4899", "#22C55E", "#3B82F6"
+      THEME.primary,
+      THEME.primaryLight,
+      THEME.primaryLighter,
+      THEME.success,
+      THEME.white,
+      "#A7F3D0",
+      "#6EE7B7",
+      "#D1FAE5",
     ];
 
     const particles = [];
     const startTime = performance.now();
 
-    // Create particles in bursts
-    for (let burst = 0; burst < 12; burst++) {
-      const burstDelay = burst * 150;
-      const burstX = (0.1 + Math.random() * 0.8) * window.innerWidth;
-      const burstY = Math.random() * window.innerHeight * 0.3;
-      
-      for (let i = 0; i < 80; i++) {
+    for (let burst = 0; burst < 10; burst++) {
+      const burstDelay = burst * 180;
+      const burstX = (0.15 + Math.random() * 0.7) * window.innerWidth;
+      const burstY = Math.random() * window.innerHeight * 0.4;
+
+      for (let i = 0; i < 60; i++) {
         const angle = Math.random() * Math.PI * 2;
-        const velocity = 12 + Math.random() * 20;
-        
+        const velocity = 10 + Math.random() * 18;
+
         particles.push({
-          x: burstX + (Math.random() - 0.5) * 100,
+          x: burstX + (Math.random() - 0.5) * 80,
           y: burstY,
           vx: Math.cos(angle) * velocity,
-          vy: Math.sin(angle) * velocity - 8,
-          size: 4 + Math.random() * 12,
+          vy: Math.sin(angle) * velocity - 6,
+          size: 4 + Math.random() * 10,
           color: colors[Math.floor(Math.random() * colors.length)],
           rotation: Math.random() * 360,
-          rotationSpeed: (Math.random() - 0.5) * 15,
-          gravity: 0.3 + Math.random() * 0.4,
-          friction: 0.98,
+          rotationSpeed: (Math.random() - 0.5) * 12,
+          gravity: 0.25 + Math.random() * 0.35,
+          friction: 0.985,
           opacity: 1,
           delay: burstDelay,
-          shape: Math.random() > 0.5 ? 'rect' : 'circle',
+          shape: Math.random() > 0.5 ? "rect" : "circle",
           wobble: Math.random() * Math.PI * 2,
-          wobbleSpeed: 0.05 + Math.random() * 0.1,
+          wobbleSpeed: 0.04 + Math.random() * 0.08,
         });
       }
     }
@@ -141,20 +312,20 @@ const ConfettiCelebration = memo(({ active, duration = 5000 }) => {
       ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
       const elapsed = now - startTime;
 
-      particles.forEach(p => {
+      particles.forEach((p) => {
         if (elapsed < p.delay) return;
-        
+
         const t = elapsed - p.delay;
-        
+
         p.vy += p.gravity;
         p.vx *= p.friction;
         p.vy *= p.friction;
-        p.x += p.vx + Math.sin(p.wobble + t * p.wobbleSpeed) * 2;
+        p.x += p.vx + Math.sin(p.wobble + t * p.wobbleSpeed) * 1.5;
         p.y += p.vy;
         p.rotation += p.rotationSpeed;
-        
-        if (elapsed > duration * 0.6) {
-          p.opacity -= 0.02;
+
+        if (elapsed > duration * 0.65) {
+          p.opacity -= 0.018;
         }
 
         if (p.opacity > 0 && p.y < window.innerHeight + 100) {
@@ -163,15 +334,15 @@ const ConfettiCelebration = memo(({ active, duration = 5000 }) => {
           ctx.translate(p.x, p.y);
           ctx.rotate((p.rotation * Math.PI) / 180);
           ctx.fillStyle = p.color;
-          
-          if (p.shape === 'rect') {
+
+          if (p.shape === "rect") {
             ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
           } else {
             ctx.beginPath();
             ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
             ctx.fill();
           }
-          
+
           ctx.restore();
         }
       });
@@ -205,34 +376,42 @@ const ConfettiCelebration = memo(({ active, duration = 5000 }) => {
   );
 });
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   FLOATING PARTICLES BACKGROUND
-   ═══════════════════════════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════════════════════════
+// FLOATING PARTICLES BACKGROUND
+// ═══════════════════════════════════════════════════════════════════════════
+
 const FloatingParticles = memo(() => {
   return (
-    <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
-      {[...Array(20)].map((_, i) => (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        overflow: "hidden",
+        pointerEvents: "none",
+      }}
+    >
+      {[...Array(15)].map((_, i) => (
         <motion.div
           key={i}
           style={{
             position: "absolute",
-            width: 4 + Math.random() * 8,
-            height: 4 + Math.random() * 8,
+            width: 4 + Math.random() * 6,
+            height: 4 + Math.random() * 6,
             borderRadius: "50%",
-            background: `rgba(5, 150, 105, ${0.1 + Math.random() * 0.2})`,
+            background: `rgba(5, 150, 105, ${0.08 + Math.random() * 0.15})`,
             left: `${Math.random() * 100}%`,
             top: `${Math.random() * 100}%`,
           }}
           animate={{
-            y: [0, -30, 0],
-            x: [0, Math.random() * 20 - 10, 0],
-            opacity: [0.3, 0.6, 0.3],
-            scale: [1, 1.2, 1],
+            y: [0, -25, 0],
+            x: [0, Math.random() * 15 - 7.5, 0],
+            opacity: [0.2, 0.5, 0.2],
+            scale: [1, 1.15, 1],
           }}
           transition={{
-            duration: 4 + Math.random() * 4,
+            duration: 5 + Math.random() * 4,
             repeat: Infinity,
-            delay: Math.random() * 2,
+            delay: Math.random() * 3,
             ease: "easeInOut",
           }}
         />
@@ -241,689 +420,920 @@ const FloatingParticles = memo(() => {
   );
 });
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   MAGNETIC BUTTON WRAPPER
-   ═══════════════════════════════════════════════════════════════════════════ */
-const MagneticButton = memo(({ children, strength = 0.3, className, style, ...props }) => {
-  const ref = useRef(null);
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const springX = useSpring(x, { stiffness: 200, damping: 20 });
-  const springY = useSpring(y, { stiffness: 200, damping: 20 });
+// ═══════════════════════════════════════════════════════════════════════════
+// MAGNETIC BUTTON WRAPPER
+// ═══════════════════════════════════════════════════════════════════════════
 
-  const handleMouseMove = useCallback((e) => {
-    const rect = ref.current?.getBoundingClientRect();
-    if (!rect) return;
-    x.set((e.clientX - rect.left - rect.width / 2) * strength);
-    y.set((e.clientY - rect.top - rect.height / 2) * strength);
-  }, [strength, x, y]);
+const MagneticButton = memo(
+  ({ children, strength = 0.25, className, style, ...props }) => {
+    const ref = useRef(null);
+    const x = useMotionValue(0);
+    const y = useMotionValue(0);
+    const springX = useSpring(x, { stiffness: 180, damping: 18 });
+    const springY = useSpring(y, { stiffness: 180, damping: 18 });
 
-  const handleMouseLeave = useCallback(() => {
-    x.set(0);
-    y.set(0);
-  }, [x, y]);
+    const handleMouseMove = useCallback(
+      (e) => {
+        const rect = ref.current?.getBoundingClientRect();
+        if (!rect) return;
+        x.set((e.clientX - rect.left - rect.width / 2) * strength);
+        y.set((e.clientY - rect.top - rect.height / 2) * strength);
+      },
+      [strength, x, y],
+    );
 
-  return (
-    <motion.div
-      ref={ref}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{ x: springX, y: springY, display: "inline-block", ...style }}
-      className={className}
-      {...props}
-    >
-      {children}
-    </motion.div>
-  );
-});
+    const handleMouseLeave = useCallback(() => {
+      x.set(0);
+      y.set(0);
+    }, [x, y]);
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   GLASS MORPHISM CARD
-   ═══════════════════════════════════════════════════════════════════════════ */
-const GlassCard = memo(({ children, style, className, hover = true, glow = false, ...props }) => {
+    return (
+      <motion.div
+        ref={ref}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        style={{ x: springX, y: springY, display: "inline-block", ...style }}
+        className={className}
+        {...props}
+      >
+        {children}
+      </motion.div>
+    );
+  },
+);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// GLASS MORPHISM CARD
+// ═══════════════════════════════════════════════════════════════════════════
+
+const GlassCard = memo(
+  ({ children, style, className, hover = true, glow = false, ...props }) => {
+    const [isHovered, setIsHovered] = useState(false);
+
+    return (
+      <motion.div
+        onHoverStart={() => setIsHovered(true)}
+        onHoverEnd={() => setIsHovered(false)}
+        style={{
+          background: "rgba(255, 255, 255, 0.97)",
+          backdropFilter: "blur(24px)",
+          borderRadius: 32,
+          border: `1px solid rgba(5, 150, 105, 0.1)`,
+          boxShadow:
+            isHovered && hover
+              ? `0 32px 64px -16px ${THEME.shadow}, 0 0 0 1px rgba(5, 150, 105, 0.08)`
+              : `0 24px 48px -16px rgba(0, 0, 0, 0.06)`,
+          transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+          position: "relative",
+          overflow: "hidden",
+          ...style,
+        }}
+        className={className}
+        {...props}
+      >
+        {glow && (
+          <motion.div
+            style={{
+              position: "absolute",
+              top: "-50%",
+              left: "-50%",
+              width: "200%",
+              height: "200%",
+              background: `radial-gradient(circle at center, rgba(5, 150, 105, 0.04) 0%, transparent 50%)`,
+              pointerEvents: "none",
+            }}
+            animate={{ rotate: [0, 360] }}
+            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          />
+        )}
+        {children}
+      </motion.div>
+    );
+  },
+);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// WHATSAPP CONTACT BANNER
+// ═══════════════════════════════════════════════════════════════════════════
+
+const WhatsAppContactBanner = memo(({ isMobile }) => {
   const [isHovered, setIsHovered] = useState(false);
-  
-  return (
-    <motion.div
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      style={{
-        background: "rgba(255, 255, 255, 0.95)",
-        backdropFilter: "blur(20px)",
-        borderRadius: 28,
-        border: "1px solid rgba(255, 255, 255, 0.5)",
-        boxShadow: isHovered && hover
-          ? "0 30px 60px -12px rgba(5, 150, 105, 0.15), 0 0 0 1px rgba(5, 150, 105, 0.1)"
-          : "0 20px 40px -12px rgba(0, 0, 0, 0.08)",
-        transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-        position: "relative",
-        overflow: "hidden",
-        ...style,
-      }}
-      className={className}
-      {...props}
-    >
-      {glow && (
-        <motion.div
-          style={{
-            position: "absolute",
-            top: "-50%",
-            left: "-50%",
-            width: "200%",
-            height: "200%",
-            background: "radial-gradient(circle at center, rgba(5, 150, 105, 0.05) 0%, transparent 50%)",
-            pointerEvents: "none",
-          }}
-          animate={{
-            rotate: [0, 360],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "linear",
-          }}
-        />
-      )}
-      {children}
-    </motion.div>
-  );
-});
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   ANIMATED PROGRESS STEPPER
-   ═══════════════════════════════════════════════════════════════════════════ */
-const ProgressStepper = memo(({ steps, currentStep, onStepClick, isMobile }) => {
-  const progressPercent = ((currentStep - 1) / (steps.length - 1)) * 100;
-  
-  return (
-    <div style={{ marginBottom: isMobile ? 32 : 50, padding: "0 20px" }}>
-      <div style={{ position: "relative", display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        {/* Progress Line Background */}
-        <div
-          style={{
-            position: "absolute",
-            top: isMobile ? 22 : 28,
-            left: isMobile ? 35 : 70,
-            right: isMobile ? 35 : 70,
-            height: 4,
-            background: "linear-gradient(90deg, #E5E7EB 0%, #F3F4F6 100%)",
-            borderRadius: 4,
-            zIndex: 0,
-          }}
-        />
-        
-        {/* Animated Progress Fill */}
-        <motion.div
-          style={{
-            position: "absolute",
-            top: isMobile ? 22 : 28,
-            left: isMobile ? 35 : 70,
-            height: 4,
-            background: "linear-gradient(90deg, #059669 0%, #10B981 50%, #34D399 100%)",
-            borderRadius: 4,
-            zIndex: 1,
-            boxShadow: "0 0 20px rgba(5, 150, 105, 0.4)",
-          }}
-          initial={{ width: 0 }}
-          animate={{ width: `calc(${progressPercent}% - ${isMobile ? 70 : 140}px * ${progressPercent / 100})` }}
-          transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
-        />
-
-        {steps.map((step, index) => {
-          const isActive = currentStep === step.number;
-          const isCompleted = currentStep > step.number;
-          const isClickable = step.number < currentStep;
-
-          return (
-            <motion.div
-              key={step.number}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                zIndex: 2,
-                flex: 1,
-                cursor: isClickable ? "pointer" : "default",
-              }}
-              onClick={() => isClickable && onStepClick(step.number)}
-              whileHover={isClickable ? { scale: 1.05 } : {}}
-              whileTap={isClickable ? { scale: 0.95 } : {}}
-            >
-              <motion.div
-                style={{
-                  width: isMobile ? 44 : 56,
-                  height: isMobile ? 44 : 56,
-                  borderRadius: "50%",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  marginBottom: isMobile ? 8 : 12,
-                  position: "relative",
-                  border: "3px solid",
-                }}
-                animate={{
-                  backgroundColor: isCompleted || isActive ? "#059669" : "white",
-                  borderColor: isCompleted || isActive ? "#059669" : "#E5E7EB",
-                  scale: isActive ? 1.1 : 1,
-                  boxShadow: isActive
-                    ? "0 0 0 8px rgba(5, 150, 105, 0.15), 0 8px 24px rgba(5, 150, 105, 0.3)"
-                    : isCompleted
-                    ? "0 4px 12px rgba(5, 150, 105, 0.2)"
-                    : "0 2px 8px rgba(0, 0, 0, 0.05)",
-                }}
-                transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
-              >
-                {/* Pulse Animation for Active Step */}
-                {isActive && (
-                  <motion.div
-                    style={{
-                      position: "absolute",
-                      inset: -8,
-                      borderRadius: "50%",
-                      border: "2px solid #059669",
-                    }}
-                    animate={{
-                      scale: [1, 1.3, 1],
-                      opacity: [0.6, 0, 0.6],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                  />
-                )}
-                
-                <AnimatePresence mode="wait">
-                  {isCompleted ? (
-                    <motion.div
-                      key="check"
-                      initial={{ scale: 0, rotate: -180 }}
-                      animate={{ scale: 1, rotate: 0 }}
-                      exit={{ scale: 0, rotate: 180 }}
-                      transition={{ duration: 0.3 }}
-                    >
-                      <FiCheck size={isMobile ? 20 : 24} color="white" strokeWidth={3} />
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="icon"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      style={{ color: isActive ? "white" : "#9CA3AF" }}
-                    >
-                      {step.icon}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </motion.div>
-
-              <motion.span
-                style={{
-                  fontSize: isMobile ? 11 : 14,
-                  fontWeight: 600,
-                  textAlign: "center",
-                  maxWidth: isMobile ? 60 : 100,
-                  lineHeight: 1.3,
-                }}
-                animate={{
-                  color: isActive ? "#059669" : isCompleted ? "#065F46" : "#9CA3AF",
-                }}
-              >
-                {isMobile ? step.shortTitle : step.title}
-              </motion.span>
-            </motion.div>
-          );
-        })}
-      </div>
-    </div>
-  );
-});
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   FORM INPUT COMPONENT
-   ═══════════════════════════════════════════════════════════════════════════ */
-const FormInput = memo(({
-  name,
-  label,
-  type = "text",
-  placeholder,
-  required,
-  icon: Icon,
-  value,
-  onChange,
-  onBlur,
-  error,
-  touched,
-  isMobile,
-  helpText,
-  ...props
-}) => {
-  const [isFocused, setIsFocused] = useState(false);
-  const inputRef = useRef(null);
-  const hasError = touched && error;
-  const isValid = touched && !error && value;
+  const handleClick = () => {
+    const message = `Hello ${ADMIN_CONTACT.name}! 👋\n\nI'm interested in planning a trip with Altuvera Tours. Could you help me with information about destinations, availability, and pricing?\n\nThank you!`;
+    window.open(getWhatsAppLink(message), "_blank");
+  };
 
   return (
     <motion.div
-      style={{ position: "relative" }}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
+      transition={{ delay: 0.2 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      onClick={handleClick}
+      style={{
+        background: `linear-gradient(135deg, ${THEME.backgroundAlt} 0%, ${THEME.background} 100%)`,
+        borderRadius: 20,
+        padding: isMobile ? "18px 20px" : "22px 28px",
+        marginBottom: isMobile ? 28 : 40,
+        display: "flex",
+        flexDirection: isMobile ? "column" : "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: isMobile ? 16 : 24,
+        border: `2px solid rgba(5, 150, 105, 0.15)`,
+        cursor: "pointer",
+        transition: "all 0.3s ease",
+        boxShadow: isHovered
+          ? `0 12px 32px ${THEME.shadow}`
+          : "0 4px 16px rgba(0, 0, 0, 0.04)",
+        transform: isHovered ? "translateY(-2px)" : "translateY(0)",
+      }}
     >
-      <label
+      <div
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 8,
-          fontSize: isMobile ? 13 : 14,
-          fontWeight: 600,
-          color: "#1a1a1a",
-          marginBottom: 10,
+          gap: 16,
         }}
       >
-        {Icon && <Icon size={16} style={{ color: "#059669" }} />}
-        {label}
-        {required && <span style={{ color: "#EF4444", fontSize: 12 }}>*</span>}
-      </label>
-      
-      <div style={{ position: "relative" }}>
-        <motion.input
-          ref={inputRef}
-          type={type}
-          name={name}
-          value={value}
-          onChange={onChange}
-          onFocus={() => setIsFocused(true)}
-          onBlur={(e) => {
-            setIsFocused(false);
-            onBlur?.(e);
-          }}
-          placeholder={placeholder}
+        <motion.div
+          animate={{ scale: isHovered ? 1.1 : 1 }}
           style={{
-            width: "100%",
-            padding: isMobile ? "14px 16px" : "16px 20px",
-            paddingRight: isValid ? 48 : 20,
-            fontSize: isMobile ? 16 : 15,
-            border: "2px solid",
-            borderColor: hasError ? "#EF4444" : isFocused ? "#059669" : isValid ? "#10B981" : "#E5E7EB",
-            borderRadius: 14,
-            backgroundColor: hasError ? "#FEF2F2" : isFocused ? "white" : isValid ? "#F0FDF4" : "#FAFAFA",
-            outline: "none",
-            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-            boxShadow: isFocused
-              ? "0 0 0 4px rgba(5, 150, 105, 0.1), 0 4px 12px rgba(5, 150, 105, 0.08)"
-              : hasError
-              ? "0 0 0 4px rgba(239, 68, 68, 0.1)"
-              : "none",
+            width: 56,
+            height: 56,
+            borderRadius: "50%",
+            background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 8px 24px rgba(37, 211, 102, 0.35)",
+            flexShrink: 0,
           }}
-          animate={{
-            x: hasError ? [0, -5, 5, -5, 5, 0] : 0,
+        >
+          <FaWhatsapp size={28} color="white" />
+        </motion.div>
+        <div>
+          <div
+            style={{
+              fontSize: isMobile ? 15 : 17,
+              fontWeight: 700,
+              color: THEME.primaryDark,
+              marginBottom: 4,
+            }}
+          >
+            Chat with {ADMIN_CONTACT.name}
+          </div>
+          <div
+            style={{
+              fontSize: isMobile ? 13 : 14,
+              color: THEME.textLight,
+            }}
+          >
+            Get personalized quotes & instant support
+          </div>
+        </div>
+      </div>
+
+      <motion.div
+        animate={{ x: isHovered ? 5 : 0 }}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          padding: isMobile ? "12px 20px" : "14px 24px",
+          background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+          borderRadius: 14,
+          color: "white",
+          fontWeight: 600,
+          fontSize: isMobile ? 14 : 15,
+          boxShadow: "0 6px 20px rgba(37, 211, 102, 0.3)",
+          width: isMobile ? "100%" : "auto",
+          justifyContent: "center",
+        }}
+      >
+        <FaWhatsapp size={18} />
+        {ADMIN_CONTACT.whatsappDisplay}
+        <FiArrowRight size={16} />
+      </motion.div>
+    </motion.div>
+  );
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ANIMATED PROGRESS STEPPER
+// ═══════════════════════════════════════════════════════════════════════════
+
+const ProgressStepper = memo(
+  ({ steps, currentStep, onStepClick, isMobile }) => {
+    const progressPercent = ((currentStep - 1) / (steps.length - 1)) * 100;
+
+    return (
+      <div style={{ marginBottom: isMobile ? 28 : 44, padding: "0 16px" }}>
+        <div
+          style={{
+            position: "relative",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
           }}
-          transition={{ duration: 0.4 }}
-          {...props}
-        />
-        
+        >
+          {/* Progress Line Background */}
+          <div
+            style={{
+              position: "absolute",
+              top: isMobile ? 20 : 26,
+              left: isMobile ? 30 : 60,
+              right: isMobile ? 30 : 60,
+              height: 4,
+              background: THEME.gray200,
+              borderRadius: 4,
+              zIndex: 0,
+            }}
+          />
+
+          {/* Animated Progress Fill */}
+          <motion.div
+            style={{
+              position: "absolute",
+              top: isMobile ? 20 : 26,
+              left: isMobile ? 30 : 60,
+              height: 4,
+              background: `linear-gradient(90deg, ${THEME.primary} 0%, ${THEME.primaryLight} 50%, ${THEME.primaryLighter} 100%)`,
+              borderRadius: 4,
+              zIndex: 1,
+              boxShadow: `0 0 16px ${THEME.shadowDark}`,
+            }}
+            initial={{ width: 0 }}
+            animate={{
+              width: `calc(${progressPercent}% - ${isMobile ? 60 : 120}px * ${progressPercent / 100})`,
+            }}
+            transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+          />
+
+          {steps.map((step) => {
+            const isActive = currentStep === step.number;
+            const isCompleted = currentStep > step.number;
+            const isClickable = step.number < currentStep;
+
+            return (
+              <motion.div
+                key={step.number}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  zIndex: 2,
+                  flex: 1,
+                  cursor: isClickable ? "pointer" : "default",
+                }}
+                onClick={() => isClickable && onStepClick(step.number)}
+                whileHover={isClickable ? { scale: 1.03 } : {}}
+                whileTap={isClickable ? { scale: 0.97 } : {}}
+              >
+                <motion.div
+                  style={{
+                    width: isMobile ? 40 : 52,
+                    height: isMobile ? 40 : 52,
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    marginBottom: isMobile ? 8 : 12,
+                    position: "relative",
+                    border: "3px solid",
+                  }}
+                  animate={{
+                    backgroundColor:
+                      isCompleted || isActive ? THEME.primary : THEME.white,
+                    borderColor:
+                      isCompleted || isActive ? THEME.primary : THEME.gray200,
+                    scale: isActive ? 1.08 : 1,
+                    boxShadow: isActive
+                      ? `0 0 0 6px rgba(5, 150, 105, 0.12), 0 8px 20px ${THEME.shadowDark}`
+                      : isCompleted
+                        ? `0 4px 12px ${THEME.shadow}`
+                        : "0 2px 6px rgba(0, 0, 0, 0.04)",
+                  }}
+                  transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
+                >
+                  {isActive && (
+                    <motion.div
+                      style={{
+                        position: "absolute",
+                        inset: -6,
+                        borderRadius: "50%",
+                        border: `2px solid ${THEME.primary}`,
+                      }}
+                      animate={{
+                        scale: [1, 1.25, 1],
+                        opacity: [0.5, 0, 0.5],
+                      }}
+                      transition={{
+                        duration: 2.5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    />
+                  )}
+
+                  <AnimatePresence mode="wait">
+                    {isCompleted ? (
+                      <motion.div
+                        key="check"
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        exit={{ scale: 0, rotate: 180 }}
+                        transition={{ duration: 0.25 }}
+                      >
+                        <FiCheck
+                          size={isMobile ? 18 : 22}
+                          color="white"
+                          strokeWidth={3}
+                        />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="icon"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={{ color: isActive ? "white" : THEME.gray400 }}
+                      >
+                        {React.cloneElement(step.icon, {
+                          size: isMobile ? 18 : 22,
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
+
+                <motion.span
+                  style={{
+                    fontSize: isMobile ? 10 : 13,
+                    fontWeight: 600,
+                    textAlign: "center",
+                    maxWidth: isMobile ? 55 : 90,
+                    lineHeight: 1.3,
+                  }}
+                  animate={{
+                    color: isActive
+                      ? THEME.primary
+                      : isCompleted
+                        ? THEME.primaryDark
+                        : THEME.gray400,
+                  }}
+                >
+                  {isMobile ? step.shortTitle : step.title}
+                </motion.span>
+              </motion.div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  },
+);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FORM INPUT COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
+
+const FormInput = memo(
+  ({
+    name,
+    label,
+    type = "text",
+    placeholder,
+    required,
+    icon: Icon,
+    value,
+    onChange,
+    onBlur,
+    error,
+    touched,
+    isMobile,
+    helpText,
+    ...props
+  }) => {
+    const [isFocused, setIsFocused] = useState(false);
+    const hasError = touched && error;
+    const isValid = touched && !error && value;
+
+    return (
+      <motion.div
+        style={{ position: "relative" }}
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+      >
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: isMobile ? 13 : 14,
+            fontWeight: 600,
+            color: THEME.text,
+            marginBottom: 10,
+          }}
+        >
+          {Icon && <Icon size={16} style={{ color: THEME.primary }} />}
+          {label}
+          {required && (
+            <span style={{ color: THEME.error, fontSize: 12 }}>*</span>
+          )}
+        </label>
+
+        <div style={{ position: "relative" }}>
+          <motion.input
+            type={type}
+            name={name}
+            value={value}
+            onChange={onChange}
+            onFocus={() => setIsFocused(true)}
+            onBlur={(e) => {
+              setIsFocused(false);
+              onBlur?.(e);
+            }}
+            placeholder={placeholder}
+            style={{
+              width: "100%",
+              padding: isMobile ? "14px 16px" : "16px 20px",
+              paddingRight: isValid ? 48 : 20,
+              fontSize: isMobile ? 16 : 15,
+              border: "2px solid",
+              borderColor: hasError
+                ? THEME.error
+                : isFocused
+                  ? THEME.primary
+                  : isValid
+                    ? THEME.primaryLight
+                    : THEME.gray200,
+              borderRadius: 14,
+              backgroundColor: hasError
+                ? "#FEF2F2"
+                : isFocused
+                  ? THEME.white
+                  : isValid
+                    ? THEME.background
+                    : THEME.gray50,
+              outline: "none",
+              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              boxShadow: isFocused
+                ? `0 0 0 4px rgba(5, 150, 105, 0.08), 0 4px 12px ${THEME.shadow}`
+                : hasError
+                  ? "0 0 0 4px rgba(239, 68, 68, 0.08)"
+                  : "none",
+            }}
+            animate={{
+              x: hasError ? [0, -4, 4, -4, 4, 0] : 0,
+            }}
+            transition={{ duration: 0.35 }}
+            {...props}
+          />
+
+          <AnimatePresence>
+            {isValid && (
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                style={{
+                  position: "absolute",
+                  right: 16,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                }}
+              >
+                <FiCheckCircle size={20} color={THEME.primaryLight} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         <AnimatePresence>
-          {isValid && (
+          {hasError && (
+            <motion.div
+              initial={{ opacity: 0, y: -8, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: "auto" }}
+              exit={{ opacity: 0, y: -8, height: 0 }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                marginTop: 8,
+                padding: "8px 12px",
+                fontSize: 13,
+                color: "#DC2626",
+                backgroundColor: "#FEF2F2",
+                borderRadius: 8,
+              }}
+            >
+              <FiAlertCircle size={14} />
+              {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {helpText && !hasError && (
+          <p style={{ marginTop: 6, fontSize: 12, color: THEME.gray400 }}>
+            {helpText}
+          </p>
+        )}
+      </motion.div>
+    );
+  },
+);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FORM SELECT COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
+
+const FormSelect = memo(
+  ({
+    name,
+    label,
+    options,
+    required,
+    placeholder,
+    icon: Icon,
+    value,
+    onChange,
+    onBlur,
+    error,
+    touched,
+    isMobile,
+  }) => {
+    const [isFocused, setIsFocused] = useState(false);
+    const hasError = touched && error;
+    const isValid = touched && !error && value;
+
+    return (
+      <motion.div
+        style={{ position: "relative" }}
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+      >
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+            fontSize: isMobile ? 13 : 14,
+            fontWeight: 600,
+            color: THEME.text,
+            marginBottom: 10,
+          }}
+        >
+          {Icon && <Icon size={16} style={{ color: THEME.primary }} />}
+          {label}
+          {required && (
+            <span style={{ color: THEME.error, fontSize: 12 }}>*</span>
+          )}
+        </label>
+
+        <div style={{ position: "relative" }}>
+          <select
+            name={name}
+            value={value}
+            onChange={onChange}
+            onFocus={() => setIsFocused(true)}
+            onBlur={(e) => {
+              setIsFocused(false);
+              onBlur?.(e);
+            }}
+            style={{
+              width: "100%",
+              padding: isMobile ? "14px 16px" : "16px 20px",
+              paddingRight: 48,
+              fontSize: isMobile ? 16 : 15,
+              border: "2px solid",
+              borderColor: hasError
+                ? THEME.error
+                : isFocused
+                ? THEME.primary
+                : isValid
+                ? THEME.primaryLight
+                : THEME.gray200,
+              borderRadius: 14,
+              backgroundColor: hasError
+                ? "#FEF2F2"
+                : isFocused
+                ? THEME.white
+                : isValid
+                ? THEME.background
+                : THEME.gray50,
+              outline: "none",
+              cursor: "pointer",
+              appearance: "none",
+              WebkitAppearance: "none",
+              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              boxShadow: isFocused
+                ? `0 0 0 4px rgba(5, 150, 105, 0.08), 0 4px 12px ${THEME.shadow}`
+                : "none",
+            }}
+          >
+            <option value="">
+              {placeholder || `Select ${label.toLowerCase()}`}
+            </option>
+            {Array.isArray(options) && options.map((opt, optIndex) => {
+              // Handle different option formats
+              let optionId, optionLabel, optionFlag;
+              
+              if (typeof opt === 'string') {
+                optionId = opt;
+                optionLabel = opt;
+              } else if (typeof opt === 'object' && opt !== null) {
+                optionId = opt.id || opt.value || opt._id || opt.name || optIndex;
+                optionLabel = opt.name || opt.title || opt.label || opt.category || String(optionId);
+                optionFlag = opt.flag || '';
+              } else {
+                optionId = optIndex;
+                optionLabel = String(opt);
+              }
+
+              return (
+                <option
+                  key={`${name}-option-${optionId}-${optIndex}`}
+                  value={optionId}
+                >
+                  {optionFlag && `${optionFlag} `}{optionLabel}
+                </option>
+              );
+            })}
+          </select>
+
+          <div
+            style={{
+              position: "absolute",
+              right: 16,
+              top: "50%",
+              transform: "translateY(-50%)",
+              pointerEvents: "none",
+              color: THEME.gray500,
+            }}
+          >
+            <FiChevronDown size={20} />
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {hasError && (
+            <motion.div
+              initial={{ opacity: 0, y: -8, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: "auto" }}
+              exit={{ opacity: 0, y: -8, height: 0 }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                marginTop: 8,
+                padding: "8px 12px",
+                fontSize: 13,
+                color: "#DC2626",
+                backgroundColor: "#FEF2F2",
+                borderRadius: 8,
+              }}
+            >
+              <FiAlertCircle size={14} />
+              {error}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    );
+  }
+);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COUNTER COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
+
+const Counter = memo(
+  ({ label, description, value, onChange, min = 0, max = 20, isMobile }) => {
+    const isAtMin = value <= min;
+    const isAtMax = value >= max;
+
+    return (
+      <motion.div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: isMobile ? 18 : 24,
+          backgroundColor: value > min ? THEME.background : THEME.gray50,
+          borderRadius: 18,
+          border: `2px solid ${value > min ? THEME.primaryLighter : THEME.gray200}`,
+          transition: "all 0.3s ease",
+        }}
+        whileHover={{ borderColor: THEME.primary }}
+      >
+        <div>
+          <div
+            style={{
+              fontSize: isMobile ? 15 : 17,
+              fontWeight: 700,
+              color: THEME.text,
+              marginBottom: 2,
+            }}
+          >
+            {label}
+          </div>
+          <div style={{ fontSize: 13, color: THEME.textLight }}>
+            {description}
+          </div>
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: isMobile ? 14 : 18,
+          }}
+        >
+          <motion.button
+            type="button"
+            onClick={() => !isAtMin && onChange(value - 1)}
+            disabled={isAtMin}
+            style={{
+              width: isMobile ? 42 : 48,
+              height: isMobile ? 42 : 48,
+              borderRadius: 14,
+              border: `2px solid ${THEME.gray200}`,
+              backgroundColor: THEME.white,
+              cursor: isAtMin ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: isAtMin ? 0.4 : 1,
+              transition: "all 0.2s ease",
+            }}
+            whileHover={
+              !isAtMin ? { scale: 1.05, borderColor: THEME.primary } : {}
+            }
+            whileTap={!isAtMin ? { scale: 0.95 } : {}}
+          >
+            <FiMinus size={20} color={THEME.gray700} />
+          </motion.button>
+
+          <motion.span
+            key={value}
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            style={{
+              fontSize: isMobile ? 24 : 28,
+              fontWeight: 800,
+              color: THEME.primary,
+              minWidth: 44,
+              textAlign: "center",
+            }}
+          >
+            {value}
+          </motion.span>
+
+          <motion.button
+            type="button"
+            onClick={() => !isAtMax && onChange(value + 1)}
+            disabled={isAtMax}
+            style={{
+              width: isMobile ? 42 : 48,
+              height: isMobile ? 42 : 48,
+              borderRadius: 14,
+              border: `2px solid ${THEME.primary}`,
+              backgroundColor: THEME.primary,
+              cursor: isAtMax ? "not-allowed" : "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              opacity: isAtMax ? 0.4 : 1,
+              transition: "all 0.2s ease",
+            }}
+            whileHover={!isAtMax ? { scale: 1.05 } : {}}
+            whileTap={!isAtMax ? { scale: 0.95 } : {}}
+          >
+            <FiPlus size={20} color="white" />
+          </motion.button>
+        </div>
+      </motion.div>
+    );
+  },
+);
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SELECTION CARD COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
+
+const SelectionCard = memo(
+  ({ selected, onClick, icon, title, description, badge, isMobile }) => {
+    return (
+      <motion.div
+        onClick={onClick}
+        style={{
+          padding: isMobile ? 18 : 24,
+          borderRadius: 18,
+          border: `2px solid ${selected ? THEME.primary : THEME.gray200}`,
+          backgroundColor: selected ? THEME.background : THEME.white,
+          cursor: "pointer",
+          position: "relative",
+          overflow: "hidden",
+          display: "flex",
+          alignItems: "flex-start",
+          gap: 14,
+        }}
+        whileHover={{
+          borderColor: THEME.primary,
+          boxShadow: `0 8px 24px ${THEME.shadow}`,
+          y: -2,
+        }}
+        whileTap={{ scale: 0.98 }}
+        transition={{ duration: 0.2 }}
+      >
+        <span style={{ fontSize: isMobile ? 28 : 34, flexShrink: 0 }}>
+          {icon}
+        </span>
+
+        <div style={{ flex: 1 }}>
+          <h4
+            style={{
+              fontSize: isMobile ? 15 : 17,
+              fontWeight: 700,
+              color: THEME.text,
+              marginBottom: 4,
+            }}
+          >
+            {title}
+          </h4>
+          <p
+            style={{
+              fontSize: isMobile ? 12 : 14,
+              color: THEME.textLight,
+              lineHeight: 1.5,
+            }}
+          >
+            {description}
+          </p>
+          {badge && (
+            <span
+              style={{
+                display: "inline-block",
+                marginTop: 8,
+                padding: "4px 10px",
+                fontSize: 11,
+                fontWeight: 700,
+                color: THEME.primary,
+                backgroundColor: `rgba(5, 150, 105, 0.1)`,
+                borderRadius: 6,
+              }}
+            >
+              {badge}
+            </span>
+          )}
+        </div>
+
+        <AnimatePresence>
+          {selected && (
             <motion.div
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
               style={{
                 position: "absolute",
-                right: 16,
-                top: "50%",
-                transform: "translateY(-50%)",
+                top: 12,
+                right: 12,
+                width: 26,
+                height: 26,
+                borderRadius: "50%",
+                backgroundColor: THEME.primary,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              <FiCheckCircle size={20} color="#10B981" />
+              <FiCheck size={14} color="white" strokeWidth={3} />
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </motion.div>
+    );
+  },
+);
 
-      <AnimatePresence>
-        {hasError && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: "auto" }}
-            exit={{ opacity: 0, y: -10, height: 0 }}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              marginTop: 8,
-              padding: "8px 12px",
-              fontSize: 13,
-              color: "#DC2626",
-              backgroundColor: "#FEF2F2",
-              borderRadius: 8,
-            }}
-          >
-            <FiAlertCircle size={14} />
-            {error}
-          </motion.div>
-        )}
-      </AnimatePresence>
+// ═══════════════════════════════════════════════════════════════════════════
+// INTEREST TAG COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
 
-      {helpText && !hasError && (
-        <p style={{ marginTop: 6, fontSize: 12, color: "#9CA3AF" }}>{helpText}</p>
-      )}
-    </motion.div>
-  );
-});
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   FORM SELECT COMPONENT
-   ═══════════════════════════════════════════════════════════════════════════ */
-const FormSelect = memo(({
-  name,
-  label,
-  options,
-  required,
-  placeholder,
-  icon: Icon,
-  value,
-  onChange,
-  onBlur,
-  error,
-  touched,
-  isMobile,
-}) => {
-  const [isFocused, setIsFocused] = useState(false);
-  const hasError = touched && error;
-  const isValid = touched && !error && value;
-
-  return (
-    <motion.div
-      style={{ position: "relative" }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <label
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 8,
-          fontSize: isMobile ? 13 : 14,
-          fontWeight: 600,
-          color: "#1a1a1a",
-          marginBottom: 10,
-        }}
-      >
-        {Icon && <Icon size={16} style={{ color: "#059669" }} />}
-        {label}
-        {required && <span style={{ color: "#EF4444", fontSize: 12 }}>*</span>}
-      </label>
-      
-      <div style={{ position: "relative" }}>
-        <select
-          name={name}
-          value={value}
-          onChange={onChange}
-          onFocus={() => setIsFocused(true)}
-          onBlur={(e) => {
-            setIsFocused(false);
-            onBlur?.(e);
-          }}
-          style={{
-            width: "100%",
-            padding: isMobile ? "14px 16px" : "16px 20px",
-            paddingRight: 48,
-            fontSize: isMobile ? 16 : 15,
-            border: "2px solid",
-            borderColor: hasError ? "#EF4444" : isFocused ? "#059669" : isValid ? "#10B981" : "#E5E7EB",
-            borderRadius: 14,
-            backgroundColor: hasError ? "#FEF2F2" : isFocused ? "white" : isValid ? "#F0FDF4" : "#FAFAFA",
-            outline: "none",
-            cursor: "pointer",
-            appearance: "none",
-            WebkitAppearance: "none",
-            transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-            boxShadow: isFocused
-              ? "0 0 0 4px rgba(5, 150, 105, 0.1), 0 4px 12px rgba(5, 150, 105, 0.08)"
-              : "none",
-          }}
-        >
-          <option value="">{placeholder || `Select ${label.toLowerCase()}`}</option>
-          {options.map((opt) => (
-            <option key={opt.id || opt.value || opt._id} value={opt.id || opt.value || opt._id}>
-              {opt.flag ? `${opt.flag} ` : ""}{opt.name || opt.title || opt.label}
-            </option>
-          ))}
-        </select>
-        
-        <div
-          style={{
-            position: "absolute",
-            right: 16,
-            top: "50%",
-            transform: "translateY(-50%)",
-            pointerEvents: "none",
-            color: "#6B7280",
-          }}
-        >
-          <FiChevronDown size={20} />
-        </div>
-      </div>
-
-      <AnimatePresence>
-        {hasError && (
-          <motion.div
-            initial={{ opacity: 0, y: -10, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: "auto" }}
-            exit={{ opacity: 0, y: -10, height: 0 }}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              marginTop: 8,
-              padding: "8px 12px",
-              fontSize: 13,
-              color: "#DC2626",
-              backgroundColor: "#FEF2F2",
-              borderRadius: 8,
-            }}
-          >
-            <FiAlertCircle size={14} />
-            {error}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-});
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   COUNTER COMPONENT
-   ═══════════════════════════════════════════════════════════════════════════ */
-const Counter = memo(({ label, description, value, onChange, min = 0, max = 20, isMobile }) => {
-  const isAtMin = value <= min;
-  const isAtMax = value >= max;
-
-  return (
-    <motion.div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: isMobile ? 18 : 24,
-        backgroundColor: value > min ? "#F0FDF4" : "#FAFAFA",
-        borderRadius: 18,
-        border: `2px solid ${value > min ? "#DCFCE7" : "#E5E7EB"}`,
-        transition: "all 0.3s ease",
-      }}
-      whileHover={{ borderColor: "#059669" }}
-    >
-      <div>
-        <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 700, color: "#1a1a1a", marginBottom: 2 }}>
-          {label}
-        </div>
-        <div style={{ fontSize: 13, color: "#6B7280" }}>{description}</div>
-      </div>
-      
-      <div style={{ display: "flex", alignItems: "center", gap: isMobile ? 14 : 18 }}>
-        <motion.button
-          type="button"
-          onClick={() => !isAtMin && onChange(value - 1)}
-          disabled={isAtMin}
-          style={{
-            width: isMobile ? 42 : 48,
-            height: isMobile ? 42 : 48,
-            borderRadius: 14,
-            border: "2px solid #E5E7EB",
-            backgroundColor: "white",
-            cursor: isAtMin ? "not-allowed" : "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: isAtMin ? 0.4 : 1,
-            transition: "all 0.2s ease",
-          }}
-          whileHover={!isAtMin ? { scale: 1.05, borderColor: "#059669" } : {}}
-          whileTap={!isAtMin ? { scale: 0.95 } : {}}
-        >
-          <FiMinus size={20} color="#374151" />
-        </motion.button>
-        
-        <motion.span
-          key={value}
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          style={{
-            fontSize: isMobile ? 24 : 28,
-            fontWeight: 800,
-            color: "#059669",
-            minWidth: 44,
-            textAlign: "center",
-          }}
-        >
-          {value}
-        </motion.span>
-        
-        <motion.button
-          type="button"
-          onClick={() => !isAtMax && onChange(value + 1)}
-          disabled={isAtMax}
-          style={{
-            width: isMobile ? 42 : 48,
-            height: isMobile ? 42 : 48,
-            borderRadius: 14,
-            border: "2px solid #059669",
-            backgroundColor: "#059669",
-            cursor: isAtMax ? "not-allowed" : "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            opacity: isAtMax ? 0.4 : 1,
-            transition: "all 0.2s ease",
-          }}
-          whileHover={!isAtMax ? { scale: 1.05 } : {}}
-          whileTap={!isAtMax ? { scale: 0.95 } : {}}
-        >
-          <FiPlus size={20} color="white" />
-        </motion.button>
-      </div>
-    </motion.div>
-  );
-});
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   SELECTION CARD COMPONENT
-   ═══════════════════════════════════════════════════════════════════════════ */
-const SelectionCard = memo(({ selected, onClick, icon, title, description, badge, isMobile }) => {
-  return (
-    <motion.div
-      onClick={onClick}
-      style={{
-        padding: isMobile ? 18 : 24,
-        borderRadius: 18,
-        border: `2px solid ${selected ? "#059669" : "#E5E7EB"}`,
-        backgroundColor: selected ? "#F0FDF4" : "white",
-        cursor: "pointer",
-        position: "relative",
-        overflow: "hidden",
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 14,
-      }}
-      whileHover={{
-        borderColor: "#059669",
-        boxShadow: "0 8px 24px rgba(5, 150, 105, 0.12)",
-        y: -2,
-      }}
-      whileTap={{ scale: 0.98 }}
-      transition={{ duration: 0.2 }}
-    >
-      <span style={{ fontSize: isMobile ? 28 : 34, flexShrink: 0 }}>{icon}</span>
-      
-      <div style={{ flex: 1 }}>
-        <h4 style={{ fontSize: isMobile ? 15 : 17, fontWeight: 700, color: "#1a1a1a", marginBottom: 4 }}>
-          {title}
-        </h4>
-        <p style={{ fontSize: isMobile ? 12 : 14, color: "#6B7280", lineHeight: 1.5 }}>
-          {description}
-        </p>
-        {badge && (
-          <span
-            style={{
-              display: "inline-block",
-              marginTop: 8,
-              padding: "4px 10px",
-              fontSize: 11,
-              fontWeight: 700,
-              color: "#059669",
-              backgroundColor: "rgba(5, 150, 105, 0.1)",
-              borderRadius: 6,
-            }}
-          >
-            {badge}
-          </span>
-        )}
-      </div>
-
-      <AnimatePresence>
-        {selected && (
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            style={{
-              position: "absolute",
-              top: 12,
-              right: 12,
-              width: 26,
-              height: 26,
-              borderRadius: "50%",
-              backgroundColor: "#059669",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <FiCheck size={14} color="white" strokeWidth={3} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-});
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   INTEREST TAG COMPONENT
-   ═══════════════════════════════════════════════════════════════════════════ */
 const InterestTag = memo(({ selected, onClick, icon, name, isMobile }) => {
   return (
     <motion.div
       onClick={onClick}
       style={{
         padding: isMobile ? "14px 12px" : "18px 16px",
-        borderRadius: 14,
-        border: `2px solid ${selected ? "#059669" : "#E5E7EB"}`,
-        backgroundColor: selected ? "#059669" : "white",
+        borderRadius: 16,
+        border: `2px solid ${selected ? THEME.primary : THEME.gray200}`,
+        backgroundColor: selected ? THEME.primary : THEME.white,
         cursor: "pointer",
         textAlign: "center",
         display: "flex",
@@ -932,21 +1342,21 @@ const InterestTag = memo(({ selected, onClick, icon, name, isMobile }) => {
         gap: 8,
       }}
       whileHover={{
-        borderColor: "#059669",
+        borderColor: THEME.primary,
         y: -2,
-        boxShadow: "0 4px 12px rgba(5, 150, 105, 0.15)",
+        boxShadow: `0 6px 16px ${THEME.shadow}`,
       }}
       whileTap={{ scale: 0.95 }}
       animate={{
-        backgroundColor: selected ? "#059669" : "white",
+        backgroundColor: selected ? THEME.primary : THEME.white,
       }}
     >
-      <span style={{ fontSize: isMobile ? 24 : 28 }}>{icon}</span>
+      <span style={{ fontSize: isMobile ? 26 : 32 }}>{icon}</span>
       <span
         style={{
           fontSize: isMobile ? 11 : 13,
           fontWeight: 600,
-          color: selected ? "white" : "#1a1a1a",
+          color: selected ? THEME.white : THEME.text,
           lineHeight: 1.3,
         }}
       >
@@ -956,895 +1366,1088 @@ const InterestTag = memo(({ selected, onClick, icon, name, isMobile }) => {
   );
 });
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   TRIP SUMMARY COMPONENT
-   ═══════════════════════════════════════════════════════════════════════════ */
-const TripSummary = memo(({ formData, getTripDuration, getTotalVisitors, getDestinationName, accommodationTypes, isMobile }) => {
-  const items = [
-    {
-      icon: FiMapPin,
-      label: "Destination",
-      value: getDestinationName(),
-    },
-    {
-      icon: FiCalendar,
-      label: "Duration",
-      value: getTripDuration() || "Not set",
-    },
-    {
-      icon: FiUsers,
-      label: "Travelers",
-      value: `${getTotalVisitors()} ${getTotalVisitors() === 1 ? "person" : "people"}`,
-    },
-    {
-      icon: FiHome,
-      label: "Accommodation",
-      value: accommodationTypes.find(a => a.id === formData.accommodation)?.name || "Not selected",
-    },
-  ];
+// ═══════════════════════════════════════════════════════════════════════════
+// TRIP SUMMARY COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      style={{
-        padding: isMobile ? 20 : 28,
-        background: "linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)",
-        borderRadius: 22,
-        border: "2px solid #DCFCE7",
-        marginBottom: isMobile ? 28 : 36,
-      }}
-    >
-      <div
+const TripSummary = memo(
+  ({
+    formData,
+    getTripDuration,
+    getTotalVisitors,
+    getDestinationName,
+    accommodationTypes,
+    isMobile,
+  }) => {
+    const items = [
+      {
+        icon: FiMapPin,
+        label: "Destination",
+        value: getDestinationName(),
+      },
+      {
+        icon: FiCalendar,
+        label: "Duration",
+        value: getTripDuration() || "Not set",
+      },
+      {
+        icon: FiUsers,
+        label: "Travelers",
+        value: `${getTotalVisitors()} ${getTotalVisitors() === 1 ? "person" : "people"}`,
+      },
+      {
+        icon: FiHome,
+        label: "Accommodation",
+        value:
+          accommodationTypes.find((a) => a.id === formData.accommodation)
+            ?.name || "Not selected",
+      },
+    ];
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          marginBottom: 20,
-          fontSize: isMobile ? 14 : 16,
-          fontWeight: 700,
-          color: "#065F46",
+          padding: isMobile ? 20 : 28,
+          background: `linear-gradient(135deg, ${THEME.background} 0%, ${THEME.backgroundAlt} 100%)`,
+          borderRadius: 22,
+          border: `2px solid ${THEME.primaryLighter}`,
+          marginBottom: isMobile ? 28 : 36,
         }}
       >
-        <FiCheckCircle size={20} />
-        Your Trip Summary
-      </div>
-      
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)",
-          gap: isMobile ? 14 : 18,
-        }}
-      >
-        {items.map((item, i) => (
-          <motion.div
-            key={item.label}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.1 }}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 12,
-            }}
-          >
-            <div
-              style={{
-                width: 42,
-                height: 42,
-                borderRadius: 12,
-                backgroundColor: "white",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.05)",
-                flexShrink: 0,
-              }}
-            >
-              <item.icon size={18} color="#059669" />
-            </div>
-            <div>
-              <div style={{ fontSize: 11, color: "#6B7280", marginBottom: 2 }}>{item.label}</div>
-              <div style={{ fontSize: isMobile ? 12 : 14, fontWeight: 700, color: "#065F46" }}>{item.value}</div>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    </motion.div>
-  );
-});
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   STEP CONTENT COMPONENTS
-   ═══════════════════════════════════════════════════════════════════════════ */
-const StepOne = memo(({ formData, setFormData, errors, touched, handleChange, handleBlur, categoriesList, destinationsList, countriesList, servicesData, getTripDuration, isMobile }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -50 }}
-      transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-    >
-      <div style={{ textAlign: "center", marginBottom: isMobile ? 32 : 44 }}>
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: "spring", bounce: 0.5 }}
-          style={{
-            width: 70,
-            height: 70,
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #059669 0%, #10B981 100%)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto 20px",
-            boxShadow: "0 10px 30px rgba(5, 150, 105, 0.3)",
-          }}
-        >
-          <FiCompass size={32} color="white" />
-        </motion.div>
-        <h2
-          style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: isMobile ? 26 : 38,
-            fontWeight: 700,
-            color: "#1a1a1a",
-            marginBottom: 10,
-            lineHeight: 1.2,
-          }}
-        >
-          Where's Your Dream <span style={{ color: "#059669" }}>Destination?</span>
-        </h2>
-        <p style={{ fontSize: isMobile ? 14 : 17, color: "#6B7280", lineHeight: 1.6 }}>
-          Let's start planning your perfect African adventure
-        </p>
-      </div>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-          gap: isMobile ? 20 : 28,
-        }}
-      >
-        <FormSelect
-          name="tripType"
-          label="Safari Experience"
-          icon={FiSunrise}
-          options={categoriesList.length > 0 ? categoriesList.map(c => ({ id: c.name || c, name: c.name || c })) : servicesData}
-          required
-          placeholder="What type of adventure?"
-          value={formData.tripType}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          error={errors.tripType}
-          touched={touched.tripType}
-          isMobile={isMobile}
-        />
-
-        <FormSelect
-          name="destination"
-          label="Where would you like to explore?"
-          icon={FiGlobe}
-          options={destinationsList.length > 0 ? destinationsList : countriesList}
-          required
-          placeholder="Select your destination..."
-          value={formData.destination}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          error={errors.destination}
-          touched={touched.destination}
-          isMobile={isMobile}
-        />
-
-        <FormInput
-          name="startDate"
-          label="Start Date"
-          type="date"
-          icon={FiCalendar}
-          required
-          value={formData.startDate}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          error={errors.startDate}
-          touched={touched.startDate}
-          isMobile={isMobile}
-          min={new Date().toISOString().split("T")[0]}
-        />
-
-        <FormInput
-          name="endDate"
-          label="End Date"
-          type="date"
-          icon={FiCalendar}
-          required
-          value={formData.endDate}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          error={errors.endDate}
-          touched={touched.endDate}
-          isMobile={isMobile}
-          min={formData.startDate || new Date().toISOString().split("T")[0]}
-        />
-      </div>
-
-      <AnimatePresence>
-        {getTripDuration() && (
-          <motion.div
-            initial={{ opacity: 0, y: 20, height: 0 }}
-            animate={{ opacity: 1, y: 0, height: "auto" }}
-            exit={{ opacity: 0, y: 20, height: 0 }}
-            style={{
-              marginTop: 28,
-              padding: isMobile ? 18 : 24,
-              background: "linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)",
-              borderRadius: 18,
-              border: "2px solid #DCFCE7",
-              display: "flex",
-              alignItems: "center",
-              gap: 16,
-            }}
-          >
-            <div
-              style={{
-                width: 52,
-                height: 52,
-                borderRadius: 14,
-                backgroundColor: "white",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                boxShadow: "0 4px 12px rgba(0, 0, 0, 0.05)",
-              }}
-            >
-              <FiClock size={24} color="#059669" />
-            </div>
-            <div>
-              <div style={{ fontSize: 14, color: "#065F46", fontWeight: 600 }}>Trip Duration</div>
-              <div style={{ fontSize: isMobile ? 24 : 32, fontWeight: 800, color: "#059669" }}>
-                {getTripDuration()}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
-  );
-});
-
-const StepTwo = memo(({ formData, setFormData, groupTypes, accommodationTypes, getTotalVisitors, isMobile }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -50 }}
-      transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-    >
-      <div style={{ textAlign: "center", marginBottom: isMobile ? 32 : 44 }}>
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: "spring", bounce: 0.5 }}
-          style={{
-            width: 70,
-            height: 70,
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #059669 0%, #10B981 100%)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto 20px",
-            boxShadow: "0 10px 30px rgba(5, 150, 105, 0.3)",
-          }}
-        >
-          <FiUsers size={32} color="white" />
-        </motion.div>
-        <h2
-          style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: isMobile ? 26 : 38,
-            fontWeight: 700,
-            color: "#1a1a1a",
-            marginBottom: 10,
-          }}
-        >
-          Who's Joining the <span style={{ color: "#059669" }}>Adventure?</span>
-        </h2>
-        <p style={{ fontSize: isMobile ? 14 : 17, color: "#6B7280" }}>
-          Tell us about your travel group
-        </p>
-      </div>
-
-      {/* Group Type Selection */}
-      <div style={{ marginBottom: 36 }}>
         <div
           style={{
             display: "flex",
             alignItems: "center",
             gap: 10,
-            marginBottom: 18,
-            fontSize: isMobile ? 15 : 17,
+            marginBottom: 20,
+            fontSize: isMobile ? 14 : 16,
             fontWeight: 700,
-            color: "#1a1a1a",
+            color: THEME.primaryDark,
           }}
         >
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              backgroundColor: "#F0FDF4",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <FiUsers size={18} color="#059669" />
-          </div>
-          Group Type
+          <FiCheckCircle size={20} />
+          Your Trip Summary
         </div>
+
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: isMobile ? "repeat(3, 1fr)" : "repeat(5, 1fr)",
-            gap: isMobile ? 10 : 14,
+            gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(4, 1fr)",
+            gap: isMobile ? 14 : 18,
           }}
         >
-          {groupTypes.map((type, i) => (
+          {items.map((item, i) => (
             <motion.div
-              key={type.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              onClick={() => setFormData(prev => ({ ...prev, groupType: type.id }))}
-              style={{
-                padding: isMobile ? "16px 10px" : "20px 14px",
-                borderRadius: 16,
-                border: `2px solid ${formData.groupType === type.id ? "#059669" : "#E5E7EB"}`,
-                backgroundColor: formData.groupType === type.id ? "#F0FDF4" : "white",
-                cursor: "pointer",
-                textAlign: "center",
-                transition: "all 0.2s ease",
-              }}
-            >
-              <div style={{ fontSize: isMobile ? 28 : 34, marginBottom: 8 }}>{type.icon}</div>
-              <div style={{ fontSize: isMobile ? 12 : 14, fontWeight: 600, color: "#1a1a1a" }}>
-                {isMobile ? type.name : type.fullName}
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-
-      {/* Travelers Count */}
-      <div style={{ marginBottom: 36 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            marginBottom: 18,
-            fontSize: isMobile ? 15 : 17,
-            fontWeight: 700,
-            color: "#1a1a1a",
-          }}
-        >
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              backgroundColor: "#F0FDF4",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <FiUsers size={18} color="#059669" />
-          </div>
-          Number of Travelers
-        </div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-            gap: 18,
-          }}
-        >
-          <Counter
-            label="Adults"
-            description="18 years and above"
-            value={formData.adults}
-            onChange={(val) => setFormData(prev => ({ ...prev, adults: val }))}
-            min={1}
-            max={20}
-            isMobile={isMobile}
-          />
-          <Counter
-            label="Children"
-            description="2-17 years old"
-            value={formData.children}
-            onChange={(val) => setFormData(prev => ({ ...prev, children: val }))}
-            min={0}
-            max={15}
-            isMobile={isMobile}
-          />
-        </div>
-
-        {/* Total Travelers */}
-        <motion.div
-          key={getTotalVisitors()}
-          initial={{ scale: 0.95 }}
-          animate={{ scale: 1 }}
-          style={{
-            marginTop: 20,
-            padding: isMobile ? 18 : 24,
-            background: "linear-gradient(135deg, #F0FDF4 0%, #ECFDF5 100%)",
-            borderRadius: 18,
-            border: "2px solid #DCFCE7",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 12, color: "#065F46", fontWeight: 600, fontSize: isMobile ? 15 : 17 }}>
-            <FiUsers size={24} color="#059669" />
-            Total Travelers
-          </div>
-          <motion.span
-            key={getTotalVisitors()}
-            initial={{ scale: 0.5 }}
-            animate={{ scale: 1 }}
-            style={{ fontSize: isMobile ? 36 : 48, fontWeight: 800, color: "#059669" }}
-          >
-            {getTotalVisitors()}
-          </motion.span>
-        </motion.div>
-      </div>
-
-      {/* Accommodation */}
-      <div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            marginBottom: 18,
-            fontSize: isMobile ? 15 : 17,
-            fontWeight: 700,
-            color: "#1a1a1a",
-          }}
-        >
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              backgroundColor: "#F0FDF4",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <FiHome size={18} color="#059669" />
-          </div>
-          Accommodation Level
-        </div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-            gap: 16,
-          }}
-        >
-          {accommodationTypes.map((type, i) => (
-            <motion.div
-              key={type.id}
-              initial={{ opacity: 0, y: 20 }}
+              key={item.label}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.08 }}
-            >
-              <SelectionCard
-                selected={formData.accommodation === type.id}
-                onClick={() => setFormData(prev => ({ ...prev, accommodation: type.id }))}
-                icon={type.icon}
-                title={type.name}
-                description={type.description}
-                isMobile={isMobile}
-              />
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </motion.div>
-  );
-});
-
-const StepThree = memo(({ formData, setFormData, budgetRanges, interests, handleInterestToggle, isMobile }) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -50 }}
-      transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-    >
-      <div style={{ textAlign: "center", marginBottom: isMobile ? 32 : 44 }}>
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: "spring", bounce: 0.5 }}
-          style={{
-            width: 70,
-            height: 70,
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #059669 0%, #10B981 100%)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto 20px",
-            boxShadow: "0 10px 30px rgba(5, 150, 105, 0.3)",
-          }}
-        >
-          <FiHeart size={32} color="white" />
-        </motion.div>
-        <h2
-          style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: isMobile ? 26 : 38,
-            fontWeight: 700,
-            color: "#1a1a1a",
-            marginBottom: 10,
-          }}
-        >
-          What Excites You <span style={{ color: "#059669" }}>Most?</span>
-        </h2>
-        <p style={{ fontSize: isMobile ? 14 : 17, color: "#6B7280" }}>
-          Select your interests and budget preferences
-        </p>
-      </div>
-
-      {/* Budget Range */}
-      <div style={{ marginBottom: 40 }}>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            marginBottom: 18,
-            fontSize: isMobile ? 15 : 17,
-            fontWeight: 700,
-            color: "#1a1a1a",
-          }}
-        >
-          <div
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              backgroundColor: "#F0FDF4",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            <FiDollarSign size={18} color="#059669" />
-          </div>
-          Budget Preference
-          <span style={{ fontSize: 12, color: "#6B7280", fontWeight: 500 }}>
-            (We'll confirm pricing with you)
-          </span>
-        </div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
-            gap: 12,
-          }}
-        >
-          {budgetRanges.map((budget, i) => (
-            <motion.div
-              key={budget.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              onClick={() => setFormData(prev => ({ ...prev, budgetRange: budget.id }))}
               style={{
-                padding: isMobile ? "16px 12px" : "22px 18px",
-                borderRadius: 14,
-                border: `2px solid ${formData.budgetRange === budget.id ? "#059669" : "#E5E7EB"}`,
-                backgroundColor: formData.budgetRange === budget.id ? "#059669" : "white",
-                cursor: "pointer",
-                textAlign: "center",
-                transition: "all 0.2s ease",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
               }}
             >
               <div
                 style={{
-                  fontSize: isMobile ? 14 : 16,
-                  fontWeight: 700,
-                  color: formData.budgetRange === budget.id ? "white" : "#1a1a1a",
+                  width: 42,
+                  height: 42,
+                  borderRadius: 12,
+                  backgroundColor: THEME.white,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: "0 2px 8px rgba(0, 0, 0, 0.04)",
+                  flexShrink: 0,
                 }}
               >
-                {budget.name}
+                <item.icon size={18} color={THEME.primary} />
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: THEME.textLight,
+                    marginBottom: 2,
+                  }}
+                >
+                  {item.label}
+                </div>
+                <div
+                  style={{
+                    fontSize: isMobile ? 12 : 14,
+                    fontWeight: 700,
+                    color: THEME.primaryDark,
+                  }}
+                >
+                  {item.value}
+                </div>
               </div>
             </motion.div>
           ))}
         </div>
-      </div>
+      </motion.div>
+    );
+  },
+);
 
-      {/* Interests */}
-      <div>
+// ═══════════════════════════════════════════════════════════════════════════
+// STEP CONTENT COMPONENTS
+// ═══════════════════════════════════════════════════════════════════════════
+
+const StepOne = memo(
+  ({
+    formData,
+    setFormData,
+    errors,
+    touched,
+    handleChange,
+    handleBlur,
+    categoriesList,
+    destinationsList,
+    countriesList,
+    servicesData,
+    getTripDuration,
+    isMobile,
+  }) => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: 40 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -40 }}
+        transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
+      >
+        <div style={{ textAlign: "center", marginBottom: isMobile ? 32 : 44 }}>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.15, type: "spring", bounce: 0.5 }}
+            style={{
+              width: 68,
+              height: 68,
+              borderRadius: "50%",
+              background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.primaryLight} 100%)`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 20px",
+              boxShadow: `0 12px 32px ${THEME.shadowDark}`,
+            }}
+          >
+            <FiCompass size={30} color="white" />
+          </motion.div>
+          <h2
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: isMobile ? 26 : 36,
+              fontWeight: 700,
+              color: THEME.text,
+              marginBottom: 10,
+              lineHeight: 1.2,
+            }}
+          >
+            Where's Your Dream{" "}
+            <span style={{ color: THEME.primary }}>Destination?</span>
+          </h2>
+          <p
+            style={{
+              fontSize: isMobile ? 14 : 16,
+              color: THEME.textLight,
+              lineHeight: 1.6,
+            }}
+          >
+            Let's start planning your perfect African adventure
+          </p>
+        </div>
+
         <div
           style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+            gap: isMobile ? 20 : 24,
+          }}
+        >
+          <FormSelect
+  name="tripType"
+  label="Safari Experience"
+  icon={FiSunrise}
+  options={
+    categoriesList.length > 0
+      ? categoriesList.map((c) => {
+          // Handle API response format: { category: "Safari", count: 5 }
+          if (typeof c === 'object' && c !== null) {
+            if (c.category) {
+              return { id: c.category, name: c.category };
+            }
+            if (c.name) {
+              return { id: c.name, name: c.name };
+            }
+            // Fallback for unknown object structure
+            return { id: String(c), name: String(c) };
+          }
+          // Handle string format
+          return { id: c, name: c };
+        })
+      : servicesData.map(s => ({ 
+          id: s.id || s.value || s.name, 
+          name: s.name || s.title || s 
+        }))
+  }
+  required
+  placeholder="What type of adventure?"
+  value={formData.tripType}
+  onChange={handleChange}
+  onBlur={handleBlur}
+  error={errors.tripType}
+  touched={touched.tripType}
+  isMobile={isMobile}
+/>
+
+          <FormSelect
+            name="destination"
+            label="Where would you like to explore?"
+            icon={FiGlobe}
+            options={
+              destinationsList.length > 0 ? destinationsList : countriesList
+            }
+            required
+            placeholder="Select your destination..."
+            value={formData.destination}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={errors.destination}
+            touched={touched.destination}
+            isMobile={isMobile}
+          />
+
+          <FormInput
+            name="startDate"
+            label="Start Date"
+            type="date"
+            icon={FiCalendar}
+            required
+            value={formData.startDate}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={errors.startDate}
+            touched={touched.startDate}
+            isMobile={isMobile}
+            min={new Date().toISOString().split("T")[0]}
+          />
+
+          <FormInput
+            name="endDate"
+            label="End Date"
+            type="date"
+            icon={FiCalendar}
+            required
+            value={formData.endDate}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={errors.endDate}
+            touched={touched.endDate}
+            isMobile={isMobile}
+            min={formData.startDate || new Date().toISOString().split("T")[0]}
+          />
+        </div>
+
+        <AnimatePresence>
+          {getTripDuration() && (
+            <motion.div
+              initial={{ opacity: 0, y: 16, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: "auto" }}
+              exit={{ opacity: 0, y: 16, height: 0 }}
+              style={{
+                marginTop: 28,
+                padding: isMobile ? 18 : 24,
+                background: `linear-gradient(135deg, ${THEME.background} 0%, ${THEME.backgroundAlt} 100%)`,
+                borderRadius: 18,
+                border: `2px solid ${THEME.primaryLighter}`,
+                display: "flex",
+                alignItems: "center",
+                gap: 16,
+              }}
+            >
+              <div
+                style={{
+                  width: 52,
+                  height: 52,
+                  borderRadius: 14,
+                  backgroundColor: THEME.white,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  boxShadow: `0 4px 12px ${THEME.shadow}`,
+                }}
+              >
+                <FiClock size={24} color={THEME.primary} />
+              </div>
+              <div>
+                <div
+                  style={{
+                    fontSize: 14,
+                    color: THEME.primaryDark,
+                    fontWeight: 600,
+                  }}
+                >
+                  Trip Duration
+                </div>
+                <div
+                  style={{
+                    fontSize: isMobile ? 24 : 30,
+                    fontWeight: 800,
+                    color: THEME.primary,
+                  }}
+                >
+                  {getTripDuration()}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    );
+  },
+);
+
+const StepTwo = memo(
+  ({
+    formData,
+    setFormData,
+    groupTypes,
+    accommodationTypes,
+    getTotalVisitors,
+    isMobile,
+  }) => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: 40 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -40 }}
+        transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
+      >
+        <div style={{ textAlign: "center", marginBottom: isMobile ? 32 : 44 }}>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.15, type: "spring", bounce: 0.5 }}
+            style={{
+              width: 68,
+              height: 68,
+              borderRadius: "50%",
+              background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.primaryLight} 100%)`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 20px",
+              boxShadow: `0 12px 32px ${THEME.shadowDark}`,
+            }}
+          >
+            <FiUsers size={30} color="white" />
+          </motion.div>
+          <h2
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: isMobile ? 26 : 36,
+              fontWeight: 700,
+              color: THEME.text,
+              marginBottom: 10,
+            }}
+          >
+            Who's Joining the{" "}
+            <span style={{ color: THEME.primary }}>Adventure?</span>
+          </h2>
+          <p style={{ fontSize: isMobile ? 14 : 16, color: THEME.textLight }}>
+            Tell us about your travel group
+          </p>
+        </div>
+
+        {/* Group Type Selection */}
+        <div style={{ marginBottom: 36 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 18,
+              fontSize: isMobile ? 15 : 17,
+              fontWeight: 700,
+              color: THEME.text,
+            }}
+          >
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                backgroundColor: THEME.background,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <FiUsers size={18} color={THEME.primary} />
+            </div>
+            Group Type
+          </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile
+                ? "repeat(3, 1fr)"
+                : "repeat(5, 1fr)",
+              gap: isMobile ? 10 : 14,
+            }}
+          >
+            {groupTypes.map((type, i) => (
+              <motion.div
+                key={type.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                onClick={() =>
+                  setFormData((prev) => ({ ...prev, groupType: type.id }))
+                }
+                style={{
+                  padding: isMobile ? "16px 10px" : "20px 14px",
+                  borderRadius: 16,
+                  border: `2px solid ${formData.groupType === type.id ? THEME.primary : THEME.gray200}`,
+                  backgroundColor:
+                    formData.groupType === type.id
+                      ? THEME.background
+                      : THEME.white,
+                  cursor: "pointer",
+                  textAlign: "center",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <div style={{ fontSize: isMobile ? 28 : 34, marginBottom: 8 }}>
+                  {type.icon}
+                </div>
+                <div
+                  style={{
+                    fontSize: isMobile ? 12 : 14,
+                    fontWeight: 600,
+                    color: THEME.text,
+                  }}
+                >
+                  {isMobile ? type.name : type.fullName}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+
+        {/* Travelers Count */}
+        <div style={{ marginBottom: 36 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 18,
+              fontSize: isMobile ? 15 : 17,
+              fontWeight: 700,
+              color: THEME.text,
+            }}
+          >
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                backgroundColor: THEME.background,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <FiUsers size={18} color={THEME.primary} />
+            </div>
+            Number of Travelers
+          </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+              gap: 18,
+            }}
+          >
+            <Counter
+              label="Adults"
+              description="18 years and above"
+              value={formData.adults}
+              onChange={(val) =>
+                setFormData((prev) => ({ ...prev, adults: val }))
+              }
+              min={1}
+              max={20}
+              isMobile={isMobile}
+            />
+            <Counter
+              label="Children"
+              description="2-17 years old"
+              value={formData.children}
+              onChange={(val) =>
+                setFormData((prev) => ({ ...prev, children: val }))
+              }
+              min={0}
+              max={15}
+              isMobile={isMobile}
+            />
+          </div>
+
+          {/* Total Travelers */}
+          <motion.div
+            key={getTotalVisitors()}
+            initial={{ scale: 0.95 }}
+            animate={{ scale: 1 }}
+            style={{
+              marginTop: 20,
+              padding: isMobile ? 18 : 24,
+              background: `linear-gradient(135deg, ${THEME.background} 0%, ${THEME.backgroundAlt} 100%)`,
+              borderRadius: 18,
+              border: `2px solid ${THEME.primaryLighter}`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                color: THEME.primaryDark,
+                fontWeight: 600,
+                fontSize: isMobile ? 15 : 17,
+              }}
+            >
+              <FiUsers size={24} color={THEME.primary} />
+              Total Travelers
+            </div>
+            <motion.span
+              key={getTotalVisitors()}
+              initial={{ scale: 0.5 }}
+              animate={{ scale: 1 }}
+              style={{
+                fontSize: isMobile ? 36 : 44,
+                fontWeight: 800,
+                color: THEME.primary,
+              }}
+            >
+              {getTotalVisitors()}
+            </motion.span>
+          </motion.div>
+        </div>
+
+        {/* Accommodation */}
+        <div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 18,
+              fontSize: isMobile ? 15 : 17,
+              fontWeight: 700,
+              color: THEME.text,
+            }}
+          >
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                backgroundColor: THEME.background,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <FiHome size={18} color={THEME.primary} />
+            </div>
+            Accommodation Style
+          </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+              gap: 16,
+            }}
+          >
+            {accommodationTypes.map((type, i) => (
+              <motion.div
+                key={type.id}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.06 }}
+              >
+                <SelectionCard
+                  selected={formData.accommodation === type.id}
+                  onClick={() =>
+                    setFormData((prev) => ({ ...prev, accommodation: type.id }))
+                  }
+                  icon={type.icon}
+                  title={type.name}
+                  description={type.description}
+                  isMobile={isMobile}
+                />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+    );
+  },
+);
+
+const StepThree = memo(
+  ({ formData, setFormData, interests, handleInterestToggle, isMobile }) => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: 40 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -40 }}
+        transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
+      >
+        <div style={{ textAlign: "center", marginBottom: isMobile ? 32 : 44 }}>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.15, type: "spring", bounce: 0.5 }}
+            style={{
+              width: 68,
+              height: 68,
+              borderRadius: "50%",
+              background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.primaryLight} 100%)`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 20px",
+              boxShadow: `0 12px 32px ${THEME.shadowDark}`,
+            }}
+          >
+            <FiHeart size={30} color="white" />
+          </motion.div>
+          <h2
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: isMobile ? 26 : 36,
+              fontWeight: 700,
+              color: THEME.text,
+              marginBottom: 10,
+            }}
+          >
+            What Excites You <span style={{ color: THEME.primary }}>Most?</span>
+          </h2>
+          <p style={{ fontSize: isMobile ? 14 : 16, color: THEME.textLight }}>
+            Select your interests to personalize your experience
+          </p>
+        </div>
+
+        {/* Interests */}
+        <div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 18,
+              fontSize: isMobile ? 15 : 17,
+              fontWeight: 700,
+              color: THEME.text,
+            }}
+          >
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                backgroundColor: THEME.background,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <FiStar size={18} color={THEME.primary} />
+            </div>
+            Select Your Interests
+            <span
+              style={{ fontSize: 12, color: THEME.textLight, fontWeight: 500 }}
+            >
+              (Select as many as you like)
+            </span>
+          </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile
+                ? "repeat(2, 1fr)"
+                : "repeat(4, 1fr)",
+              gap: 14,
+            }}
+          >
+            {interests.map((interest, i) => (
+              <motion.div
+                key={interest.name}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.04 }}
+              >
+                <InterestTag
+                  selected={formData.interests.includes(interest.name)}
+                  onClick={() => handleInterestToggle(interest.name)}
+                  icon={interest.icon}
+                  name={interest.name}
+                  isMobile={isMobile}
+                />
+              </motion.div>
+            ))}
+          </div>
+
+          {formData.interests.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={{
+                marginTop: 24,
+                padding: "16px 20px",
+                backgroundColor: THEME.background,
+                borderRadius: 14,
+                border: `2px solid ${THEME.primaryLighter}`,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <FiCheckCircle size={20} color={THEME.primary} />
+              <span style={{ fontSize: 14, color: THEME.primaryDark }}>
+                <strong>{formData.interests.length}</strong>{" "}
+                {formData.interests.length === 1 ? "interest" : "interests"}{" "}
+                selected
+              </span>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Special Preferences Note */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          style={{
+            marginTop: 36,
+            padding: isMobile ? 20 : 24,
+            background: `linear-gradient(135deg, rgba(37, 211, 102, 0.08) 0%, rgba(5, 150, 105, 0.05) 100%)`,
+            borderRadius: 18,
+            border: "1px solid rgba(37, 211, 102, 0.2)",
             display: "flex",
-            alignItems: "center",
-            gap: 10,
-            marginBottom: 18,
-            fontSize: isMobile ? 15 : 17,
-            fontWeight: 700,
-            color: "#1a1a1a",
+            alignItems: "flex-start",
+            gap: 16,
           }}
         >
           <div
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              backgroundColor: "#F0FDF4",
+              width: 48,
+              height: 48,
+              borderRadius: 14,
+              background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              flexShrink: 0,
             }}
           >
-            <FiStar size={18} color="#059669" />
+            <FaWhatsapp size={24} color="white" />
           </div>
-          Select Your Interests
-          <span style={{ fontSize: 12, color: "#6B7280", fontWeight: 500 }}>
-            (Select as many as you like)
-          </span>
+          <div>
+            <div
+              style={{
+                fontSize: isMobile ? 15 : 16,
+                fontWeight: 700,
+                color: THEME.primaryDark,
+                marginBottom: 6,
+              }}
+            >
+              Personalized Pricing Available
+            </div>
+            <p
+              style={{
+                fontSize: isMobile ? 13 : 14,
+                color: THEME.textLight,
+                lineHeight: 1.6,
+                margin: 0,
+              }}
+            >
+              After submitting your request, our travel expert{" "}
+              <strong>{ADMIN_CONTACT.name}</strong> will contact you via
+              WhatsApp with a customized quote tailored to your preferences.
+            </p>
+          </div>
+        </motion.div>
+      </motion.div>
+    );
+  },
+);
+
+const StepFour = memo(
+  ({
+    formData,
+    setFormData,
+    errors,
+    touched,
+    handleChange,
+    handleBlur,
+    getTripDuration,
+    getTotalVisitors,
+    getDestinationName,
+    accommodationTypes,
+    isMobile,
+  }) => {
+    return (
+      <motion.div
+        initial={{ opacity: 0, x: 40 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -40 }}
+        transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
+      >
+        <div style={{ textAlign: "center", marginBottom: isMobile ? 32 : 44 }}>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.15, type: "spring", bounce: 0.5 }}
+            style={{
+              width: 68,
+              height: 68,
+              borderRadius: "50%",
+              background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.primaryLight} 100%)`,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 20px",
+              boxShadow: `0 12px 32px ${THEME.shadowDark}`,
+            }}
+          >
+            <FiUser size={30} color="white" />
+          </motion.div>
+          <h2
+            style={{
+              fontFamily: "'Playfair Display', serif",
+              fontSize: isMobile ? 26 : 36,
+              fontWeight: 700,
+              color: THEME.text,
+              marginBottom: 10,
+            }}
+          >
+            Almost <span style={{ color: THEME.primary }}>There!</span>
+          </h2>
+          <p style={{ fontSize: isMobile ? 14 : 16, color: THEME.textLight }}>
+            How can we reach you?
+          </p>
         </div>
+
+        <TripSummary
+          formData={formData}
+          getTripDuration={getTripDuration}
+          getTotalVisitors={getTotalVisitors}
+          getDestinationName={getDestinationName}
+          accommodationTypes={accommodationTypes}
+          isMobile={isMobile}
+        />
+
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
-            gap: 12,
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+            gap: isMobile ? 20 : 24,
           }}
         >
-          {interests.map((interest, i) => (
-            <motion.div
-              key={interest.name}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.04 }}
-            >
-              <InterestTag
-                selected={formData.interests.includes(interest.name)}
-                onClick={() => handleInterestToggle(interest.name)}
-                icon={interest.icon}
-                name={interest.name}
-                isMobile={isMobile}
-              />
-            </motion.div>
-          ))}
+          <FormInput
+            name="name"
+            label="Full Name"
+            placeholder="John Smith"
+            required
+            icon={FiUser}
+            value={formData.name}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={errors.name}
+            touched={touched.name}
+            isMobile={isMobile}
+          />
+
+          <FormInput
+            name="email"
+            label="Email Address"
+            type="email"
+            placeholder="john@example.com"
+            required
+            icon={FiMail}
+            value={formData.email}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={errors.email}
+            touched={touched.email}
+            isMobile={isMobile}
+          />
+
+          <FormInput
+            name="phone"
+            label="Phone Number"
+            type="tel"
+            placeholder="+1 234 567 8900"
+            required
+            icon={FiPhone}
+            value={formData.phone}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={errors.phone}
+            touched={touched.phone}
+            isMobile={isMobile}
+          />
+
+          <FormInput
+            name="country"
+            label="Your Country"
+            placeholder="United States"
+            required
+            icon={FiGlobe}
+            value={formData.country}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={errors.country}
+            touched={touched.country}
+            isMobile={isMobile}
+          />
         </div>
 
-        {formData.interests.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          style={{ marginTop: 28 }}
+        >
+          <label
             style={{
-              marginTop: 20,
-              padding: "14px 18px",
-              backgroundColor: "#F0FDF4",
-              borderRadius: 12,
-              fontSize: 14,
-              color: "#065F46",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+              fontSize: isMobile ? 13 : 14,
+              fontWeight: 600,
+              color: THEME.text,
+              marginBottom: 10,
             }}
           >
-            <strong>{formData.interests.length}</strong> {formData.interests.length === 1 ? "interest" : "interests"} selected
-          </motion.div>
-        )}
-      </div>
-    </motion.div>
-  );
-});
-
-const StepFour = memo(({
-  formData,
-  setFormData,
-  errors,
-  touched,
-  handleChange,
-  handleBlur,
-  getTripDuration,
-  getTotalVisitors,
-  getDestinationName,
-  accommodationTypes,
-  isMobile,
-}) => {
-  return (
-    <motion.div
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: -50 }}
-      transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-    >
-      <div style={{ textAlign: "center", marginBottom: isMobile ? 32 : 44 }}>
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: "spring", bounce: 0.5 }}
-          style={{
-            width: 70,
-            height: 70,
-            borderRadius: "50%",
-            background: "linear-gradient(135deg, #059669 0%, #10B981 100%)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "0 auto 20px",
-            boxShadow: "0 10px 30px rgba(5, 150, 105, 0.3)",
-          }}
-        >
-          <FiUser size={32} color="white" />
+            <FiMessageSquare size={16} style={{ color: THEME.primary }} />
+            Special Requests or Questions
+          </label>
+          <textarea
+            name="specialRequests"
+            value={formData.specialRequests}
+            onChange={handleChange}
+            placeholder="Any special requirements, dietary needs, celebrations, or questions..."
+            style={{
+              width: "100%",
+              padding: isMobile ? "14px 16px" : "18px 22px",
+              fontSize: isMobile ? 16 : 15,
+              border: `2px solid ${THEME.gray200}`,
+              borderRadius: 16,
+              backgroundColor: THEME.gray50,
+              outline: "none",
+              resize: "vertical",
+              minHeight: isMobile ? 110 : 130,
+              fontFamily: "inherit",
+              transition: "all 0.3s ease",
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = THEME.primary;
+              e.target.style.backgroundColor = THEME.white;
+              e.target.style.boxShadow = `0 0 0 4px rgba(5, 150, 105, 0.08)`;
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = THEME.gray200;
+              e.target.style.backgroundColor = THEME.gray50;
+              e.target.style.boxShadow = "none";
+            }}
+          />
         </motion.div>
-        <h2
+
+        {/* WhatsApp Info */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
           style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: isMobile ? 26 : 38,
-            fontWeight: 700,
-            color: "#1a1a1a",
-            marginBottom: 10,
-          }}
-        >
-          Almost <span style={{ color: "#059669" }}>There!</span>
-        </h2>
-        <p style={{ fontSize: isMobile ? 14 : 17, color: "#6B7280" }}>
-          How can we reach you?
-        </p>
-      </div>
-
-      <TripSummary
-        formData={formData}
-        getTripDuration={getTripDuration}
-        getTotalVisitors={getTotalVisitors}
-        getDestinationName={getDestinationName}
-        accommodationTypes={accommodationTypes}
-        isMobile={isMobile}
-      />
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-          gap: isMobile ? 20 : 28,
-        }}
-      >
-        <FormInput
-          name="name"
-          label="Full Name"
-          placeholder="John Smith"
-          required
-          icon={FiUser}
-          value={formData.name}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          error={errors.name}
-          touched={touched.name}
-          isMobile={isMobile}
-        />
-
-        <FormInput
-          name="email"
-          label="Email Address"
-          type="email"
-          placeholder="john@example.com"
-          required
-          icon={FiMail}
-          value={formData.email}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          error={errors.email}
-          touched={touched.email}
-          isMobile={isMobile}
-        />
-
-        <FormInput
-          name="phone"
-          label="Phone Number"
-          type="tel"
-          placeholder="+1 234 567 8900"
-          required
-          icon={FiPhone}
-          value={formData.phone}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          error={errors.phone}
-          touched={touched.phone}
-          isMobile={isMobile}
-        />
-
-        <FormInput
-          name="country"
-          label="Your Country"
-          placeholder="United States"
-          required
-          icon={FiGlobe}
-          value={formData.country}
-          onChange={handleChange}
-          onBlur={handleBlur}
-          error={errors.country}
-          touched={touched.country}
-          isMobile={isMobile}
-        />
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        style={{ marginTop: 28 }}
-      >
-        <label
-          style={{
+            marginTop: 28,
+            padding: isMobile ? 18 : 24,
+            background: `linear-gradient(135deg, rgba(37, 211, 102, 0.1) 0%, rgba(5, 150, 105, 0.06) 100%)`,
+            borderRadius: 18,
+            border: "1px solid rgba(37, 211, 102, 0.25)",
             display: "flex",
             alignItems: "center",
-            gap: 8,
-            fontSize: isMobile ? 13 : 14,
-            fontWeight: 600,
-            color: "#1a1a1a",
-            marginBottom: 10,
+            gap: 16,
           }}
         >
-          <FiMessageSquare size={16} style={{ color: "#059669" }} />
-          Special Requests or Questions
-        </label>
-        <textarea
-          name="specialRequests"
-          value={formData.specialRequests}
-          onChange={handleChange}
-          placeholder="Any special requirements, dietary needs, celebrations, or questions..."
-          style={{
-            width: "100%",
-            padding: isMobile ? "14px 16px" : "18px 22px",
-            fontSize: isMobile ? 16 : 15,
-            border: "2px solid #E5E7EB",
-            borderRadius: 16,
-            backgroundColor: "#FAFAFA",
-            outline: "none",
-            resize: "vertical",
-            minHeight: isMobile ? 110 : 130,
-            fontFamily: "inherit",
-            transition: "all 0.3s ease",
-          }}
-          onFocus={(e) => {
-            e.target.style.borderColor = "#059669";
-            e.target.style.backgroundColor = "white";
-            e.target.style.boxShadow = "0 0 0 4px rgba(5, 150, 105, 0.1)";
-          }}
-          onBlur={(e) => {
-            e.target.style.borderColor = "#E5E7EB";
-            e.target.style.backgroundColor = "#FAFAFA";
-            e.target.style.boxShadow = "none";
-          }}
-        />
+          <div
+            style={{
+              width: 50,
+              height: 50,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              boxShadow: "0 6px 20px rgba(37, 211, 102, 0.3)",
+            }}
+          >
+            <FaWhatsapp size={26} color="white" />
+          </div>
+          <div>
+            <div
+              style={{
+                fontSize: isMobile ? 14 : 15,
+                fontWeight: 700,
+                color: THEME.primaryDark,
+                marginBottom: 4,
+              }}
+            >
+              Your request will be sent via WhatsApp
+            </div>
+            <p
+              style={{
+                fontSize: isMobile ? 12 : 13,
+                color: THEME.textLight,
+                margin: 0,
+              }}
+            >
+              {ADMIN_CONTACT.name} will respond within 24 hours with a
+              personalized quote
+            </p>
+          </div>
+        </motion.div>
       </motion.div>
-    </motion.div>
-  );
-});
+    );
+  },
+);
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   SUCCESS SCREEN
-   ═══════════════════════════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════════════════════════
+// SUCCESS SCREEN
+// ═══════════════════════════════════════════════════════════════════════════
+
 const SuccessScreen = memo(({ isMobile }) => {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5 }}
-      style={{ textAlign: "center", padding: isMobile ? "50px 20px" : "70px 40px" }}
+      style={{
+        textAlign: "center",
+        padding: isMobile ? "50px 20px" : "70px 40px",
+      }}
     >
       <motion.div
         initial={{ scale: 0 }}
@@ -1854,12 +2457,12 @@ const SuccessScreen = memo(({ isMobile }) => {
           width: isMobile ? 110 : 140,
           height: isMobile ? 110 : 140,
           borderRadius: "50%",
-          background: "linear-gradient(135deg, #059669 0%, #10B981 100%)",
+          background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.primaryLight} 100%)`,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           margin: "0 auto 30px",
-          boxShadow: "0 20px 50px rgba(5, 150, 105, 0.35)",
+          boxShadow: `0 24px 56px ${THEME.shadowDark}`,
         }}
       >
         <motion.div
@@ -1879,7 +2482,7 @@ const SuccessScreen = memo(({ isMobile }) => {
           fontFamily: "'Playfair Display', serif",
           fontSize: isMobile ? 30 : 44,
           fontWeight: 700,
-          color: "#1a1a1a",
+          color: THEME.text,
           marginBottom: 16,
         }}
       >
@@ -1894,17 +2497,17 @@ const SuccessScreen = memo(({ isMobile }) => {
           display: "inline-flex",
           alignItems: "center",
           gap: 10,
-          padding: isMobile ? "12px 24px" : "16px 32px",
-          backgroundColor: "#25D366",
+          padding: isMobile ? "14px 26px" : "16px 32px",
+          background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
           color: "white",
           borderRadius: 50,
           fontSize: isMobile ? 14 : 16,
           fontWeight: 600,
           marginBottom: 24,
-          boxShadow: "0 6px 20px rgba(37, 211, 102, 0.4)",
+          boxShadow: "0 8px 24px rgba(37, 211, 102, 0.4)",
         }}
       >
-        <FiMessageSquare size={20} />
+        <FaWhatsapp size={22} />
         Message sent via WhatsApp
       </motion.div>
 
@@ -1914,23 +2517,75 @@ const SuccessScreen = memo(({ isMobile }) => {
         transition={{ delay: 0.6 }}
         style={{
           fontSize: isMobile ? 15 : 18,
-          color: "#6B7280",
+          color: THEME.textLight,
           marginBottom: 32,
-          maxWidth: 520,
+          maxWidth: 540,
           marginLeft: "auto",
           marginRight: "auto",
           lineHeight: 1.7,
         }}
       >
-        Thank you for your interest in traveling with Altuvera! Your booking details have been sent to our team. 
-        We'll reach out within 24 hours with a personalized itinerary.
+        Thank you for your interest in traveling with Altuvera!{" "}
+        <strong>{ADMIN_CONTACT.name}</strong> will reach out within 24 hours
+        with a personalized itinerary and quote.
       </motion.p>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.65 }}
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: 12,
+          padding: "20px 28px",
+          background: THEME.background,
+          borderRadius: 18,
+          marginBottom: 32,
+          maxWidth: 400,
+          marginLeft: "auto",
+          marginRight: "auto",
+        }}
+      >
+        <span style={{ fontSize: 14, color: THEME.textLight }}>
+          Need immediate assistance?
+        </span>
+        <a
+          href={getWhatsAppLink(
+            `Hello ${ADMIN_CONTACT.name}! I just submitted a booking request and wanted to follow up.`,
+          )}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "12px 24px",
+            background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+            color: "white",
+            borderRadius: 12,
+            fontSize: 15,
+            fontWeight: 600,
+            textDecoration: "none",
+            boxShadow: "0 6px 20px rgba(37, 211, 102, 0.3)",
+          }}
+        >
+          <FaWhatsapp size={18} />
+          Chat with {ADMIN_CONTACT.name}
+        </a>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.7 }}
-        style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}
+        style={{
+          display: "flex",
+          gap: 14,
+          justifyContent: "center",
+          flexWrap: "wrap",
+        }}
       >
         <MagneticButton>
           <Button to="/" variant="primary" size="large">
@@ -1947,9 +2602,10 @@ const SuccessScreen = memo(({ isMobile }) => {
   );
 });
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   MAIN BOOKING COMPONENT
-   ═══════════════════════════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════════════════════════
+// MAIN BOOKING COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
+
 const Booking = () => {
   const { authFetch, user } = useUserAuth();
 
@@ -1966,7 +2622,9 @@ const Booking = () => {
   const [isAnimating, setIsAnimating] = useState(false);
 
   // Window size
-  const [windowWidth, setWindowWidth] = useState(typeof window !== "undefined" ? window.innerWidth : 1200);
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200,
+  );
   const isMobile = windowWidth < 640;
   const isTablet = windowWidth >= 640 && windowWidth < 1024;
 
@@ -1981,7 +2639,6 @@ const Booking = () => {
     groupType: "couple",
     accommodation: "mid-range",
     interests: [],
-    budgetRange: "standard",
     name: user?.fullName || user?.name || "",
     email: user?.email || "",
     phone: user?.phone || "",
@@ -1995,7 +2652,7 @@ const Booking = () => {
   // Update form data when user changes
   useEffect(() => {
     if (user) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         name: user.fullName || user.name || prev.name,
         email: user.email || prev.email,
@@ -2009,9 +2666,15 @@ const Booking = () => {
     (async () => {
       try {
         const [cRes, catRes, destRes] = await Promise.all([
-          fetch(`${API_URL}/countries`).then(r => r.json()).catch(() => ({})),
-          fetch(`${API_URL}/destinations/categories`).then(r => r.json()).catch(() => ({})),
-          fetch(`${API_URL}/destinations`).then(r => r.json()).catch(() => ({})),
+          fetch(`${API_URL}/countries`)
+            .then((r) => r.json())
+            .catch(() => ({})),
+          fetch(`${API_URL}/destinations/categories`)
+            .then((r) => r.json())
+            .catch(() => ({})),
+          fetch(`${API_URL}/destinations`)
+            .then((r) => r.json())
+            .catch(() => ({})),
         ]);
 
         setCountriesList(cRes.data || cRes || countriesData || []);
@@ -2026,6 +2689,32 @@ const Booking = () => {
     })();
   }, []);
 
+  // Inside the Booking component, after fetching data:
+useEffect(() => {
+  (async () => {
+    try {
+      const [cRes, catRes, destRes] = await Promise.all([
+        fetch(`${API_URL}/countries`).then(r => r.json()).catch(() => ({})),
+        fetch(`${API_URL}/destinations/categories`).then(r => r.json()).catch(() => ({})),
+        fetch(`${API_URL}/destinations`).then(r => r.json()).catch(() => ({})),
+      ]);
+
+      // ✅ ADD THIS TO SEE THE ACTUAL DATA
+      console.log('Categories Response:', catRes);
+      console.log('Categories Data:', catRes.data);
+
+      setCountriesList(cRes.data || cRes || countriesData || []);
+      setCategoriesList(catRes.data || catRes || []);
+      setDestinationsList(destRes.data || destRes || []);
+    } catch (err) {
+      console.error("Failed to fetch booking data", err);
+      setCountriesList(countriesData || []);
+    } finally {
+      setLoadingData(false);
+    }
+  })();
+}, []);
+
   // Handle resize
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -2034,164 +2723,207 @@ const Booking = () => {
   }, []);
 
   // Interests options
-  const interests = useMemo(() => [
-    { name: "Wildlife Safari", icon: "🦁" },
-    { name: "Mountain Trekking", icon: "🏔️" },
-    { name: "Gorilla Tracking", icon: "🦍" },
-    { name: "Beach & Relaxation", icon: "🏖️" },
-    { name: "Cultural Experiences", icon: "🎭" },
-    { name: "Photography", icon: "📸" },
-    { name: "Bird Watching", icon: "🦅" },
-    { name: "Adventure Sports", icon: "🪂" },
-  ], []);
+  const interests = useMemo(
+    () => [
+      { name: "Wildlife Safari", icon: "🦁" },
+      { name: "Mountain Trekking", icon: "🏔️" },
+      { name: "Gorilla Tracking", icon: "🦍" },
+      { name: "Beach & Relaxation", icon: "🏖️" },
+      { name: "Cultural Experiences", icon: "🎭" },
+      { name: "Photography", icon: "📸" },
+      { name: "Bird Watching", icon: "🦅" },
+      { name: "Adventure Sports", icon: "🪂" },
+    ],
+    [],
+  );
 
   // Accommodation types
-  const accommodationTypes = useMemo(() => [
-    { id: "budget", name: "Budget", description: "Comfortable lodges & camps", icon: "🏕️" },
-    { id: "mid-range", name: "Mid-Range", description: "Quality lodges & tented camps", icon: "🏨" },
-    { id: "luxury", name: "Luxury", description: "Premium lodges & camps", icon: "🏰" },
-    { id: "ultra-luxury", name: "Ultra Luxury", description: "Exclusive private experiences", icon: "👑" },
-  ], []);
+  const accommodationTypes = useMemo(
+    () => [
+      {
+        id: "budget",
+        name: "Budget Friendly",
+        description: "Comfortable lodges & camps",
+        icon: "🏕️",
+      },
+      {
+        id: "mid-range",
+        name: "Mid-Range",
+        description: "Quality lodges & tented camps",
+        icon: "🏨",
+      },
+      {
+        id: "luxury",
+        name: "Luxury",
+        description: "Premium lodges & camps",
+        icon: "🏰",
+      },
+      {
+        id: "ultra-luxury",
+        name: "Ultra Luxury",
+        description: "Exclusive private experiences",
+        icon: "👑",
+      },
+    ],
+    [],
+  );
 
   // Group types
-  const groupTypes = useMemo(() => [
-    { id: "solo", name: "Solo", fullName: "Solo Traveler", icon: "🧑" },
-    { id: "couple", name: "Couple", fullName: "Couple", icon: "💑" },
-    { id: "family", name: "Family", fullName: "Family", icon: "👨‍👩‍👧‍👦" },
-    { id: "friends", name: "Friends", fullName: "Friends", icon: "👥" },
-    { id: "business", name: "Business", fullName: "Business", icon: "💼" },
-  ], []);
-
-  // Budget ranges
-  const budgetRanges = useMemo(() => [
-    { id: "economy", name: "Economy" },
-    { id: "standard", name: "Standard" },
-    { id: "premium", name: "Premium" },
-    { id: "luxury", name: "Luxury" },
-  ], []);
+  const groupTypes = useMemo(
+    () => [
+      { id: "solo", name: "Solo", fullName: "Solo Traveler", icon: "🧑" },
+      { id: "couple", name: "Couple", fullName: "Couple", icon: "💑" },
+      { id: "family", name: "Family", fullName: "Family", icon: "👨‍👩‍👧‍👦" },
+      { id: "friends", name: "Friends", fullName: "Friends", icon: "👥" },
+      { id: "business", name: "Business", fullName: "Business", icon: "💼" },
+    ],
+    [],
+  );
 
   // Validation rules
-  const validationRules = useMemo(() => ({
-    tripType: { required: true, message: "Please select a trip type" },
-    destination: { required: true, message: "Please select a destination" },
-    startDate: {
-      required: true,
-      message: "Please select a start date",
-      validate: (value) => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        if (new Date(value) < today) return "Start date cannot be in the past";
-        return null;
+  const validationRules = useMemo(
+    () => ({
+      tripType: { required: true, message: "Please select a trip type" },
+      destination: { required: true, message: "Please select a destination" },
+      startDate: {
+        required: true,
+        message: "Please select a start date",
+        validate: (value) => {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          if (new Date(value) < today)
+            return "Start date cannot be in the past";
+          return null;
+        },
       },
-    },
-    endDate: {
-      required: true,
-      message: "Please select an end date",
-      validate: (value) => {
-        if (formData.startDate && new Date(value) <= new Date(formData.startDate)) {
-          return "End date must be after start date";
-        }
-        return null;
+      endDate: {
+        required: true,
+        message: "Please select an end date",
+        validate: (value) => {
+          if (
+            formData.startDate &&
+            new Date(value) <= new Date(formData.startDate)
+          ) {
+            return "End date must be after start date";
+          }
+          return null;
+        },
       },
-    },
-    name: {
-      required: true,
-      message: "Full name is required",
-      minLength: 3,
-      pattern: /^[a-zA-Z\s'-]+$/,
-      patternMessage: "Please enter a valid name (letters only)",
-    },
-    email: {
-      required: true,
-      message: "Email is required",
-      pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-      patternMessage: "Please enter a valid email address",
-    },
-    phone: {
-      required: true,
-      message: "Phone number is required",
-      pattern: /^[\d\s+\-()]{8,20}$/,
-      patternMessage: "Please enter a valid phone number",
-    },
-    country: { required: true, message: "Please enter your country" },
-  }), [formData.startDate]);
+      name: {
+        required: true,
+        message: "Full name is required",
+        minLength: 3,
+        pattern: /^[a-zA-Z\s'-]+$/,
+        patternMessage: "Please enter a valid name (letters only)",
+      },
+      email: {
+        required: true,
+        message: "Email is required",
+        pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+        patternMessage: "Please enter a valid email address",
+      },
+      phone: {
+        required: true,
+        message: "Phone number is required",
+        pattern: /^[\d\s+\-()]{8,20}$/,
+        patternMessage: "Please enter a valid phone number",
+      },
+      country: { required: true, message: "Please enter your country" },
+    }),
+    [formData.startDate],
+  );
 
   // Validate single field
-  const validateField = useCallback((name, value) => {
-    const rules = validationRules[name];
-    if (!rules) return null;
+  const validateField = useCallback(
+    (name, value) => {
+      const rules = validationRules[name];
+      if (!rules) return null;
 
-    if (rules.required && (!value || (typeof value === "string" && !value.trim()))) {
-      return rules.message;
-    }
-    if (rules.minLength && value.length < rules.minLength) {
-      return `Minimum ${rules.minLength} characters required`;
-    }
-    if (rules.pattern && !rules.pattern.test(value)) {
-      return rules.patternMessage;
-    }
-    if (rules.validate) {
-      return rules.validate(value);
-    }
-    return null;
-  }, [validationRules]);
+      if (
+        rules.required &&
+        (!value || (typeof value === "string" && !value.trim()))
+      ) {
+        return rules.message;
+      }
+      if (rules.minLength && value.length < rules.minLength) {
+        return `Minimum ${rules.minLength} characters required`;
+      }
+      if (rules.pattern && !rules.pattern.test(value)) {
+        return rules.patternMessage;
+      }
+      if (rules.validate) {
+        return rules.validate(value);
+      }
+      return null;
+    },
+    [validationRules],
+  );
 
   // Handle input change
-  const handleChange = useCallback((e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+  const handleChange = useCallback(
+    (e) => {
+      const { name, value } = e.target;
+      setFormData((prev) => ({ ...prev, [name]: value }));
 
-    if (touched[name]) {
-      const error = validateField(name, value);
-      setErrors(prev => ({ ...prev, [name]: error }));
-    }
-  }, [touched, validateField]);
+      if (touched[name]) {
+        const error = validateField(name, value);
+        setErrors((prev) => ({ ...prev, [name]: error }));
+      }
+    },
+    [touched, validateField],
+  );
 
   // Handle input blur
-  const handleBlur = useCallback((e) => {
-    const { name, value } = e.target;
-    setTouched(prev => ({ ...prev, [name]: true }));
-    const error = validateField(name, value);
-    setErrors(prev => ({ ...prev, [name]: error }));
-  }, [validateField]);
+  const handleBlur = useCallback(
+    (e) => {
+      const { name, value } = e.target;
+      setTouched((prev) => ({ ...prev, [name]: true }));
+      const error = validateField(name, value);
+      setErrors((prev) => ({ ...prev, [name]: error }));
+    },
+    [validateField],
+  );
 
   // Handle interest toggle
   const handleInterestToggle = useCallback((interest) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       interests: prev.interests.includes(interest)
-        ? prev.interests.filter(i => i !== interest)
+        ? prev.interests.filter((i) => i !== interest)
         : [...prev.interests, interest],
     }));
   }, []);
 
   // Validate step
-  const validateStep = useCallback((step) => {
-    const stepFields = {
-      1: ["tripType", "destination", "startDate", "endDate"],
-      2: [],
-      3: [],
-      4: ["name", "email", "phone", "country"],
-    };
+  const validateStep = useCallback(
+    (step) => {
+      const stepFields = {
+        1: ["tripType", "destination", "startDate", "endDate"],
+        2: [],
+        3: [],
+        4: ["name", "email", "phone", "country"],
+      };
 
-    const fields = stepFields[step] || [];
-    let isValid = true;
-    const newErrors = {};
-    const newTouched = {};
+      const fields = stepFields[step] || [];
+      let isValid = true;
+      const newErrors = {};
+      const newTouched = {};
 
-    fields.forEach(field => {
-      newTouched[field] = true;
-      const error = validateField(field, formData[field]);
-      if (error) {
-        newErrors[field] = error;
-        isValid = false;
-      }
-    });
+      fields.forEach((field) => {
+        newTouched[field] = true;
+        const error = validateField(field, formData[field]);
+        if (error) {
+          newErrors[field] = error;
+          isValid = false;
+        }
+      });
 
-    setTouched(prev => ({ ...prev, ...newTouched }));
-    setErrors(prev => ({ ...prev, ...newErrors }));
-    return isValid;
-  }, [formData, validateField]);
+      setTouched((prev) => ({ ...prev, ...newTouched }));
+      setErrors((prev) => ({ ...prev, ...newErrors }));
+      return isValid;
+    },
+    [formData, validateField],
+  );
 
   // Get trip duration
   const getTripDuration = useCallback(() => {
@@ -2205,30 +2937,42 @@ const Booking = () => {
   }, [formData.startDate, formData.endDate]);
 
   // Get total visitors
-  const getTotalVisitors = useCallback(() => formData.adults + formData.children, [formData.adults, formData.children]);
+  const getTotalVisitors = useCallback(
+    () => formData.adults + formData.children,
+    [formData.adults, formData.children],
+  );
 
   // Get destination name
   const getDestinationName = useCallback(() => {
-    const dest = destinationsList.find(c => c.id === formData.destination || c._id === formData.destination);
+    const dest = destinationsList.find(
+      (c) => c.id === formData.destination || c._id === formData.destination,
+    );
     if (dest) return `${dest.flag || "📍"} ${dest.name}`;
-    const country = countriesList.find(c => c.id === formData.destination || c.slug === formData.destination);
+    const country = countriesList.find(
+      (c) => c.id === formData.destination || c.slug === formData.destination,
+    );
     return country ? `${country.flag || "🏳️"} ${country.name}` : "Not selected";
   }, [formData.destination, destinationsList, countriesList]);
 
   // Send WhatsApp message
   const sendWhatsAppMessage = useCallback(() => {
-    const phoneNumber = "256792352409";
     const tripDuration = getTripDuration() || "Not specified";
     const totalVisitors = getTotalVisitors();
     const destinationName = getDestinationName();
-    const accommodationType = accommodationTypes.find(a => a.id === formData.accommodation)?.name || "Not specified";
-    const groupTypeName = groupTypes.find(g => g.id === formData.groupType)?.fullName || "Not specified";
-    const budgetName = budgetRanges.find(b => b.id === formData.budgetRange)?.name || "Not specified";
-    const interestsList = formData.interests.length > 0 ? formData.interests.join(", ") : "None selected";
+    const accommodationType =
+      accommodationTypes.find((a) => a.id === formData.accommodation)?.name ||
+      "Not specified";
+    const groupTypeName =
+      groupTypes.find((g) => g.id === formData.groupType)?.fullName ||
+      "Not specified";
+    const interestsList =
+      formData.interests.length > 0
+        ? formData.interests.join(", ")
+        : "None selected";
 
     const message = `🌍 *NEW BOOKING REQUEST - ALTUVERA TOURS*
 
-Hello Admin! 👋
+Hello ${ADMIN_CONTACT.name}! 👋
 
 You have received a new booking inquiry:
 
@@ -2243,7 +2987,7 @@ You have received a new booking inquiry:
 ━━━━━━━━━━━━━━━━━━━━━
 • *Trip Type:* ${formData.tripType || "Not specified"}
 • *Destination:* ${destinationName}
-• *Travel Dates:* ${formData.startDate} to ${formData.endDate}
+• *Travel Dates:* ${formatDate(formData.startDate)} to ${formatDate(formData.endDate)}
 • *Duration:* ${tripDuration}
 
 👥 *GROUP INFORMATION*
@@ -2255,8 +2999,7 @@ You have received a new booking inquiry:
 
 ⭐ *PREFERENCES*
 ━━━━━━━━━━━━━━━━━━━━━
-• *Accommodation:* ${accommodationType}
-• *Budget Range:* ${budgetName}
+• *Accommodation Style:* ${accommodationType}
 • *Interests:* ${interestsList}
 
 💬 *SPECIAL REQUESTS*
@@ -2264,52 +3007,70 @@ You have received a new booking inquiry:
 ${formData.specialRequests || "No special requests"}
 
 ━━━━━━━━━━━━━━━━━━━━━
-📅 *Submitted:* ${new Date().toLocaleString()}`;
+📅 *Submitted:* ${new Date().toLocaleString()}
 
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-    window.open(whatsappUrl, "_blank");
-  }, [formData, getTripDuration, getTotalVisitors, getDestinationName, accommodationTypes, groupTypes, budgetRanges]);
+Please provide a personalized quote and itinerary. Thank you!`;
+
+    window.open(getWhatsAppLink(message), "_blank");
+  }, [
+    formData,
+    getTripDuration,
+    getTotalVisitors,
+    getDestinationName,
+    accommodationTypes,
+    groupTypes,
+  ]);
 
   // Handle form submit
-  const handleSubmit = useCallback(async (e) => {
-    e.preventDefault();
-    if (!validateStep(4)) return;
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (!validateStep(4)) return;
 
-    setIsSubmitting(true);
-    try {
-      await authFetch(`${API_URL}/bookings`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          tripDuration: getTripDuration(),
-          totalTravelers: getTotalVisitors(),
-          destinationName: getDestinationName(),
-          status: "Pending",
-        }),
-      });
+      setIsSubmitting(true);
+      try {
+        await authFetch(`${API_URL}/bookings`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            ...formData,
+            tripDuration: getTripDuration(),
+            totalTravelers: getTotalVisitors(),
+            destinationName: getDestinationName(),
+            status: "Pending",
+          }),
+        });
 
-      sendWhatsAppMessage();
-      setIsSubmitted(true);
-    } catch (err) {
-      console.error("Booking submission error:", err);
-      sendWhatsAppMessage();
-      setIsSubmitted(true);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [validateStep, authFetch, formData, getTripDuration, getTotalVisitors, getDestinationName, sendWhatsAppMessage]);
+        sendWhatsAppMessage();
+        setIsSubmitted(true);
+      } catch (err) {
+        console.error("Booking submission error:", err);
+        sendWhatsAppMessage();
+        setIsSubmitted(true);
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [
+      validateStep,
+      authFetch,
+      formData,
+      getTripDuration,
+      getTotalVisitors,
+      getDestinationName,
+      sendWhatsAppMessage,
+    ],
+  );
 
   // Navigate to next step
   const nextStep = useCallback(() => {
     if (validateStep(currentStep)) {
       setIsAnimating(true);
       setTimeout(() => {
-        setCurrentStep(prev => Math.min(prev + 1, 4));
+        setCurrentStep((prev) => Math.min(prev + 1, 4));
         setIsAnimating(false);
         window.scrollTo({ top: 0, behavior: "smooth" });
-      }, 300);
+      }, 250);
     }
   }, [currentStep, validateStep]);
 
@@ -2317,22 +3078,25 @@ ${formData.specialRequests || "No special requests"}
   const prevStep = useCallback(() => {
     setIsAnimating(true);
     setTimeout(() => {
-      setCurrentStep(prev => Math.max(prev - 1, 1));
+      setCurrentStep((prev) => Math.max(prev - 1, 1));
       setIsAnimating(false);
       window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 300);
+    }, 250);
   }, []);
 
   // Handle step click
-  const handleStepClick = useCallback((stepNumber) => {
-    if (stepNumber < currentStep) {
-      setIsAnimating(true);
-      setTimeout(() => {
-        setCurrentStep(stepNumber);
-        setIsAnimating(false);
-      }, 300);
-    }
-  }, [currentStep]);
+  const handleStepClick = useCallback(
+    (stepNumber) => {
+      if (stepNumber < currentStep) {
+        setIsAnimating(true);
+        setTimeout(() => {
+          setCurrentStep(stepNumber);
+          setIsAnimating(false);
+        }, 250);
+      }
+    },
+    [currentStep],
+  );
 
   // Render current step content
   const renderStepContent = () => {
@@ -2371,7 +3135,6 @@ ${formData.specialRequests || "No special requests"}
         return (
           <StepThree
             {...commonProps}
-            budgetRanges={budgetRanges}
             interests={interests}
             handleInterestToggle={handleInterestToggle}
           />
@@ -2395,6 +3158,7 @@ ${formData.specialRequests || "No special requests"}
   if (loadingData) {
     return (
       <div>
+        <GlobalStyles />
         <PageHeader
           title="Book Your Adventure"
           subtitle="Start planning your East African adventure today."
@@ -2404,7 +3168,7 @@ ${formData.specialRequests || "No special requests"}
         <section
           style={{
             padding: isMobile ? "60px 20px" : "100px 24px",
-            backgroundColor: "#F8FAF9",
+            backgroundColor: THEME.background,
             minHeight: "60vh",
             display: "flex",
             alignItems: "center",
@@ -2413,13 +3177,13 @@ ${formData.specialRequests || "No special requests"}
         >
           <motion.div
             animate={{ rotate: 360 }}
-            transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
             style={{
-              width: 60,
-              height: 60,
+              width: 56,
+              height: 56,
               borderRadius: "50%",
-              border: "4px solid #E5E7EB",
-              borderTopColor: "#059669",
+              border: `4px solid ${THEME.gray200}`,
+              borderTopColor: THEME.primary,
             }}
           />
         </section>
@@ -2431,6 +3195,7 @@ ${formData.specialRequests || "No special requests"}
   if (isSubmitted) {
     return (
       <div>
+        <GlobalStyles />
         <ConfettiCelebration active={true} duration={5000} />
         <PageHeader
           title="Booking Request"
@@ -2441,14 +3206,24 @@ ${formData.specialRequests || "No special requests"}
         <section
           style={{
             padding: isMobile ? "40px 16px 100px" : "80px 24px 140px",
-            backgroundColor: "#F8FAF9",
+            backgroundColor: THEME.background,
             minHeight: "70vh",
             position: "relative",
           }}
         >
           <FloatingParticles />
-          <div style={{ maxWidth: 800, margin: "0 auto", position: "relative", zIndex: 1 }}>
-            <GlassCard glow style={{ padding: isMobile ? "30px 20px" : "50px 60px" }}>
+          <div
+            style={{
+              maxWidth: 800,
+              margin: "0 auto",
+              position: "relative",
+              zIndex: 1,
+            }}
+          >
+            <GlassCard
+              glow
+              style={{ padding: isMobile ? "30px 20px" : "50px 60px" }}
+            >
               <SuccessScreen isMobile={isMobile} />
             </GlassCard>
           </div>
@@ -2460,49 +3235,7 @@ ${formData.specialRequests || "No special requests"}
   // Main booking form
   return (
     <div>
-      {/* Global styles */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700;800&display=swap');
-        
-        * { box-sizing: border-box; }
-        
-        input, select, textarea, button {
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-        }
-        
-        input::-webkit-outer-spin-button,
-        input::-webkit-inner-spin-button {
-          -webkit-appearance: none;
-          margin: 0;
-        }
-        
-        input[type=number] {
-          -moz-appearance: textfield;
-        }
-        
-        @keyframes shimmer {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
-        }
-        
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-        
-        @keyframes pulse-ring {
-          0% { transform: scale(0.8); opacity: 0.8; }
-          50% { transform: scale(1.2); opacity: 0; }
-          100% { transform: scale(0.8); opacity: 0; }
-        }
-        
-        .gradient-text {
-          background: linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          background-clip: text;
-        }
-      `}</style>
+      <GlobalStyles />
 
       <PageHeader
         title="Book Your Adventure"
@@ -2513,8 +3246,12 @@ ${formData.specialRequests || "No special requests"}
 
       <section
         style={{
-          padding: isMobile ? "40px 16px 100px" : isTablet ? "50px 24px 120px" : "80px 24px 140px",
-          backgroundColor: "#F8FAF9",
+          padding: isMobile
+            ? "40px 16px 100px"
+            : isTablet
+              ? "50px 24px 120px"
+              : "80px 24px 140px",
+          backgroundColor: THEME.background,
           minHeight: "100vh",
           position: "relative",
           overflow: "hidden",
@@ -2537,57 +3274,69 @@ ${formData.specialRequests || "No special requests"}
         {/* Decorative blobs */}
         <motion.div
           animate={{
-            scale: [1, 1.1, 1],
-            rotate: [0, 5, 0],
+            scale: [1, 1.08, 1],
+            rotate: [0, 4, 0],
           }}
           transition={{
-            duration: 15,
+            duration: 18,
             repeat: Infinity,
             ease: "easeInOut",
           }}
           style={{
             position: "absolute",
-            top: -200,
-            right: -200,
-            width: 500,
-            height: 500,
+            top: -180,
+            right: -180,
+            width: 450,
+            height: 450,
             borderRadius: "60% 40% 30% 70% / 60% 30% 70% 40%",
-            background: "linear-gradient(135deg, rgba(5, 150, 105, 0.08) 0%, rgba(16, 185, 129, 0.04) 100%)",
-            filter: "blur(40px)",
+            background: `linear-gradient(135deg, rgba(5, 150, 105, 0.06) 0%, rgba(16, 185, 129, 0.03) 100%)`,
+            filter: "blur(50px)",
             pointerEvents: "none",
             zIndex: 0,
           }}
         />
         <motion.div
           animate={{
-            scale: [1, 1.15, 1],
-            rotate: [0, -5, 0],
+            scale: [1, 1.12, 1],
+            rotate: [0, -4, 0],
           }}
           transition={{
-            duration: 18,
+            duration: 22,
             repeat: Infinity,
             ease: "easeInOut",
-            delay: 2,
+            delay: 3,
           }}
           style={{
             position: "absolute",
-            bottom: -150,
-            left: -150,
-            width: 400,
-            height: 400,
+            bottom: -130,
+            left: -130,
+            width: 380,
+            height: 380,
             borderRadius: "40% 60% 70% 30% / 40% 50% 60% 50%",
-            background: "linear-gradient(135deg, rgba(16, 185, 129, 0.06) 0%, rgba(52, 211, 153, 0.03) 100%)",
-            filter: "blur(40px)",
+            background: `linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(52, 211, 153, 0.02) 100%)`,
+            filter: "blur(50px)",
             pointerEvents: "none",
             zIndex: 0,
           }}
         />
 
-        <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative", zIndex: 1 }}>
-          {/* Progress Stepper */}
+        <div
+          style={{
+            maxWidth: 1100,
+            margin: "0 auto",
+            position: "relative",
+            zIndex: 1,
+          }}
+        >
+          {/* WhatsApp Contact Banner */}
           <AnimatedSection animation="fadeInUp">
+            <WhatsAppContactBanner isMobile={isMobile} />
+          </AnimatedSection>
+
+          {/* Progress Stepper */}
+          <AnimatedSection animation="fadeInUp" delay={0.05}>
             <ProgressStepper
-              steps={steps}
+              steps={STEPS}
               currentStep={currentStep}
               onStepClick={handleStepClick}
               isMobile={isMobile}
@@ -2599,10 +3348,14 @@ ${formData.specialRequests || "No special requests"}
             <GlassCard
               glow
               style={{
-                padding: isMobile ? "30px 22px" : isTablet ? "45px 35px" : "55px 70px",
+                padding: isMobile
+                  ? "30px 22px"
+                  : isTablet
+                    ? "45px 35px"
+                    : "55px 70px",
                 opacity: isAnimating ? 0 : 1,
-                transform: isAnimating ? "translateY(20px)" : "translateY(0)",
-                transition: "all 0.3s ease",
+                transform: isAnimating ? "translateY(16px)" : "translateY(0)",
+                transition: "all 0.25s ease",
               }}
             >
               <form onSubmit={handleSubmit}>
@@ -2614,17 +3367,18 @@ ${formData.specialRequests || "No special requests"}
 
                 {/* Navigation Buttons */}
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 }}
+                  transition={{ delay: 0.35 }}
                   style={{
                     display: "flex",
-                    justifyContent: currentStep > 1 ? "space-between" : "flex-end",
+                    justifyContent:
+                      currentStep > 1 ? "space-between" : "flex-end",
                     alignItems: isMobile ? "stretch" : "center",
                     flexDirection: isMobile ? "column-reverse" : "row",
                     marginTop: isMobile ? 36 : 50,
                     paddingTop: isMobile ? 28 : 36,
-                    borderTop: "2px solid #F3F4F6",
+                    borderTop: `2px solid ${THEME.gray100}`,
                     gap: 14,
                   }}
                 >
@@ -2640,9 +3394,9 @@ ${formData.specialRequests || "No special requests"}
                           gap: 10,
                           padding: isMobile ? "15px 24px" : "17px 32px",
                           borderRadius: 16,
-                          border: "2px solid #E5E7EB",
+                          border: `2px solid ${THEME.gray200}`,
                           backgroundColor: "transparent",
-                          color: "#374151",
+                          color: THEME.gray700,
                           fontSize: isMobile ? 14 : 16,
                           fontWeight: 600,
                           cursor: "pointer",
@@ -2650,8 +3404,8 @@ ${formData.specialRequests || "No special requests"}
                           transition: "all 0.3s ease",
                         }}
                         whileHover={{
-                          backgroundColor: "#F9FAFB",
-                          borderColor: "#D1D5DB",
+                          backgroundColor: THEME.gray50,
+                          borderColor: THEME.gray300,
                           scale: 1.02,
                         }}
                         whileTap={{ scale: 0.98 }}
@@ -2675,17 +3429,17 @@ ${formData.specialRequests || "No special requests"}
                           padding: isMobile ? "15px 24px" : "17px 36px",
                           borderRadius: 16,
                           border: "none",
-                          background: "linear-gradient(135deg, #059669 0%, #10B981 100%)",
+                          background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.primaryLight} 100%)`,
                           color: "white",
                           fontSize: isMobile ? 14 : 16,
                           fontWeight: 600,
                           cursor: "pointer",
                           width: isMobile ? "100%" : "auto",
-                          boxShadow: "0 6px 20px rgba(5, 150, 105, 0.35)",
+                          boxShadow: `0 8px 24px ${THEME.shadowDark}`,
                           transition: "all 0.3s ease",
                         }}
                         whileHover={{
-                          boxShadow: "0 10px 30px rgba(5, 150, 105, 0.45)",
+                          boxShadow: `0 12px 32px ${THEME.shadowDark}`,
                           scale: 1.02,
                           y: -2,
                         }}
@@ -2707,8 +3461,8 @@ ${formData.specialRequests || "No special requests"}
                           borderRadius: 16,
                           border: "none",
                           background: isSubmitting
-                            ? "linear-gradient(135deg, #9CA3AF 0%, #6B7280 100%)"
-                            : "linear-gradient(135deg, #059669 0%, #10B981 100%)",
+                            ? `linear-gradient(135deg, ${THEME.gray400} 0%, ${THEME.gray500} 100%)`
+                            : "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
                           color: "white",
                           fontSize: isMobile ? 14 : 16,
                           fontWeight: 600,
@@ -2716,13 +3470,14 @@ ${formData.specialRequests || "No special requests"}
                           width: isMobile ? "100%" : "auto",
                           boxShadow: isSubmitting
                             ? "none"
-                            : "0 6px 20px rgba(5, 150, 105, 0.35)",
+                            : "0 8px 24px rgba(37, 211, 102, 0.35)",
                           transition: "all 0.3s ease",
                         }}
                         whileHover={
                           !isSubmitting
                             ? {
-                                boxShadow: "0 10px 30px rgba(5, 150, 105, 0.45)",
+                                boxShadow:
+                                  "0 12px 32px rgba(37, 211, 102, 0.45)",
                                 scale: 1.02,
                                 y: -2,
                               }
@@ -2734,7 +3489,11 @@ ${formData.specialRequests || "No special requests"}
                           <>
                             <motion.div
                               animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                              transition={{
+                                duration: 1,
+                                repeat: Infinity,
+                                ease: "linear",
+                              }}
                             >
                               <FiLoader size={18} />
                             </motion.div>
@@ -2742,8 +3501,10 @@ ${formData.specialRequests || "No special requests"}
                           </>
                         ) : (
                           <>
-                            <FiSend size={18} />
-                            {isMobile ? "Submit" : "Submit via WhatsApp"}
+                            <FaWhatsapp size={20} />
+                            {isMobile
+                              ? "Submit via WhatsApp"
+                              : "Submit Request via WhatsApp"}
                           </>
                         )}
                       </motion.button>
@@ -2755,7 +3516,7 @@ ${formData.specialRequests || "No special requests"}
           </AnimatedSection>
 
           {/* Trust badges */}
-          <AnimatedSection animation="fadeInUp" delay={0.3}>
+          <AnimatedSection animation="fadeInUp" delay={0.25}>
             <motion.div
               style={{
                 display: "flex",
@@ -2767,25 +3528,25 @@ ${formData.specialRequests || "No special requests"}
               }}
             >
               {[
-                { icon: FiShield, text: "Secure Booking" },
-                { icon: FiAward, text: "Best Price Guarantee" },
-                { icon: FiMessageSquare, text: "24/7 Support" },
+                { icon: FiShield, text: "Secure & Verified" },
+                { icon: FiAward, text: "Expert Guidance" },
+                { icon: FiHeadphones, text: "24/7 WhatsApp Support" },
               ].map((item, i) => (
                 <motion.div
                   key={item.text}
-                  initial={{ opacity: 0, y: 20 }}
+                  initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.4 + i * 0.1 }}
+                  transition={{ delay: 0.35 + i * 0.08 }}
                   style={{
                     display: "flex",
                     alignItems: "center",
                     gap: 8,
-                    color: "#6B7280",
+                    color: THEME.textLight,
                     fontSize: isMobile ? 12 : 14,
                     fontWeight: 500,
                   }}
                 >
-                  <item.icon size={18} color="#059669" />
+                  <item.icon size={18} color={THEME.primary} />
                   {item.text}
                 </motion.div>
               ))}
