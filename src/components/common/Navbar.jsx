@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+  useMemo,
+} from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FiChevronDown,
@@ -32,7 +38,8 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { favorites } = useApp();
-  const { user, isAuthenticated, authLoading, openModal, logout } = useUserAuth();
+  const { user, isAuthenticated, authLoading, openModal, logout } =
+    useUserAuth();
 
   const headerRef = useRef(null);
   const userMenuRef = useRef(null);
@@ -53,7 +60,7 @@ const Navbar = () => {
           { name: "Uganda", path: "/country/uganda" },
           { name: "Rwanda", path: "/country/rwanda" },
           { name: "Ethiopia", path: "/country/ethiopia" },
-          {name: "Djibouti", path: "/country/djibouti"}
+          { name: "Djibouti", path: "/country/djibouti" },
         ],
       },
       { name: "Interactive Map", path: "/interactive-map" },
@@ -70,7 +77,7 @@ const Navbar = () => {
       },
       { name: "Contact", path: "/contact" },
     ],
-    []
+    [],
   );
 
   const userMenuItems = useMemo(
@@ -80,7 +87,7 @@ const Navbar = () => {
       { to: "/wishlist", icon: FiHeart, label: "Wishlist" },
       { to: "/settings", icon: FiSettings, label: "Settings" },
     ],
-    []
+    [],
   );
 
   // Advanced scroll handler with hide/show + parallax
@@ -122,7 +129,9 @@ const Navbar = () => {
   useEffect(() => {
     document.body.style.overflow =
       isMobileMenuOpen || searchOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isMobileMenuOpen, searchOpen]);
 
   useEffect(() => {
@@ -131,14 +140,24 @@ const Navbar = () => {
 
   useEffect(() => {
     const q = searchValue.trim();
-    if (q.length < 2) { setSearchResults([]); setIsSearching(false); return; }
+    if (q.length < 2) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
     const id = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const res = await fetch(`${API_URL}/destinations?search=${encodeURIComponent(q)}&limit=5`);
+        const res = await fetch(
+          `${API_URL}/destinations?search=${encodeURIComponent(q)}&limit=5`,
+        );
         const data = await res.json();
         setSearchResults(data.data || data || []);
-      } catch { /* silent */ } finally { setIsSearching(false); }
+      } catch {
+        /* silent */
+      } finally {
+        setIsSearching(false);
+      }
     }, 300);
     return () => clearTimeout(id);
   }, [searchValue, API_URL]);
@@ -151,18 +170,27 @@ const Navbar = () => {
 
   useEffect(() => {
     const fn = (e) => {
-      if (headerRef.current && !headerRef.current.contains(e.target)) setActiveDropdown(null);
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false);
+      if (headerRef.current && !headerRef.current.contains(e.target))
+        setActiveDropdown(null);
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target))
+        setUserMenuOpen(false);
     };
     document.addEventListener("mousedown", fn);
     return () => document.removeEventListener("mousedown", fn);
   }, []);
 
-  const handleSearchSubmit = useCallback((e) => {
-    e.preventDefault();
-    const q = searchValue.trim();
-    if (q) { navigate(`/destinations?search=${encodeURIComponent(q)}`); setSearchOpen(false); setSearchValue(""); }
-  }, [searchValue, navigate]);
+  const handleSearchSubmit = useCallback(
+    (e) => {
+      e.preventDefault();
+      const q = searchValue.trim();
+      if (q) {
+        navigate(`/destinations?search=${encodeURIComponent(q)}`);
+        setSearchOpen(false);
+        setSearchValue("");
+      }
+    },
+    [searchValue, navigate],
+  );
 
   const toggleMobileDropdown = useCallback((name) => {
     setActiveMobileDropdown((p) => (p === name ? null : name));
@@ -178,25 +206,46 @@ const Navbar = () => {
   }, []);
 
   const handleDesktopClick = useCallback((e, link) => {
-    if (link.dropdown) { e.preventDefault(); setActiveDropdown((p) => (p === link.name ? null : link.name)); }
+    if (link.dropdown) {
+      e.preventDefault();
+      setActiveDropdown((p) => (p === link.name ? null : link.name));
+    }
   }, []);
 
-  const handleDesktopDblClick = useCallback((e, link) => {
-    if (link.dropdown) { e.preventDefault(); setActiveDropdown(null); navigate(link.path); }
-  }, [navigate]);
+  const handleDesktopDblClick = useCallback(
+    (e, link) => {
+      if (link.dropdown) {
+        e.preventDefault();
+        setActiveDropdown(null);
+        navigate(link.path);
+      }
+    },
+    [navigate],
+  );
 
   const isActive = useCallback(
-    (link) => location.pathname === link.path || link.dropdown?.some((d) => d.path === location.pathname) || false,
-    [location.pathname]
+    (link) =>
+      location.pathname === link.path ||
+      link.dropdown?.some((d) => d.path === location.pathname) ||
+      false,
+    [location.pathname],
   );
 
   const getInitials = useCallback(() => {
     const n = user?.fullName || user?.name || "";
-    return n ? n.split(" ").map((w) => w[0]).join("").toUpperCase().slice(0, 2) : user?.email?.[0]?.toUpperCase() || "U";
+    return n
+      ? n
+          .split(" ")
+          .map((w) => w[0])
+          .join("")
+          .toUpperCase()
+          .slice(0, 2)
+      : user?.email?.[0]?.toUpperCase() || "U";
   }, [user]);
 
   const displayName = useMemo(
-    () => user?.fullName || user?.name || user?.email?.split("@")[0] || "User", [user]
+    () => user?.fullName || user?.name || user?.email?.split("@")[0] || "User",
+    [user],
   );
 
   const providerLabel = useMemo(() => {
@@ -204,7 +253,11 @@ const Navbar = () => {
     return p === "google" ? "Google" : p === "github" ? "GitHub" : "Email";
   }, [user?.authProvider]);
 
-  const handleLogout = useCallback(() => { closeAll(); logout(); navigate("/"); }, [closeAll, logout, navigate]);
+  const handleLogout = useCallback(() => {
+    closeAll();
+    logout();
+    navigate("/");
+  }, [closeAll, logout, navigate]);
 
   return (
     <>
@@ -219,7 +272,12 @@ const Navbar = () => {
           <Link to="/" className="nav__logo" aria-label="Altuvera Home">
             <div className="nav__logo-glow" />
             <div className="nav__logo-img-wrapper">
-              <img src={logoimg} alt="Altuvera" className="nav__logo-img" draggable={false} />
+              <img
+                src={logoimg}
+                alt="Altuvera"
+                className="nav__logo-img"
+                draggable={false}
+              />
             </div>
             <span className="nav__logo-text">Altuvera</span>
           </Link>
@@ -231,7 +289,9 @@ const Navbar = () => {
                 key={link.name}
                 className="nav__item"
                 style={{ "--i": i }}
-                onMouseEnter={() => link.dropdown && handleDropdownEnter(link.name)}
+                onMouseEnter={() =>
+                  link.dropdown && handleDropdownEnter(link.name)
+                }
                 onMouseLeave={handleDropdownLeave}
               >
                 <Link
@@ -239,7 +299,9 @@ const Navbar = () => {
                   onClick={(e) => handleDesktopClick(e, link)}
                   onDoubleClick={(e) => handleDesktopDblClick(e, link)}
                   className={`nav__link ${isActive(link) ? "nav__link--active" : ""}`}
-                  aria-expanded={link.dropdown ? activeDropdown === link.name : undefined}
+                  aria-expanded={
+                    link.dropdown ? activeDropdown === link.name : undefined
+                  }
                 >
                   <span className="nav__link-text">{link.name}</span>
                   {link.dropdown && (
@@ -252,7 +314,9 @@ const Navbar = () => {
                 </Link>
 
                 {link.dropdown && (
-                  <div className={`nav__dropdown ${activeDropdown === link.name ? "nav__dropdown--open" : ""}`}>
+                  <div
+                    className={`nav__dropdown ${activeDropdown === link.name ? "nav__dropdown--open" : ""}`}
+                  >
                     <div className="nav__dropdown-inner">
                       {link.dropdown.map((sub, si) => (
                         <Link
@@ -275,15 +339,25 @@ const Navbar = () => {
 
           {/* Desktop Actions */}
           <div className="nav__actions">
-            <button className="nav__icon-btn" onClick={() => setSearchOpen(true)} aria-label="Search">
+            <button
+              className="nav__icon-btn"
+              onClick={() => setSearchOpen(true)}
+              aria-label="Search"
+            >
               <FiSearch size={19} />
               <span className="nav__icon-ripple" />
             </button>
 
             <Link to="/gallery" className="nav__icon-link">
-              <span className="nav__icon-btn" role="button" aria-label="Favorites">
+              <span
+                className="nav__icon-btn"
+                role="button"
+                aria-label="Favorites"
+              >
                 <FiHeart size={19} />
-                {favorites.length > 0 && <span className="nav__badge">{favorites.length}</span>}
+                {favorites.length > 0 && (
+                  <span className="nav__badge">{favorites.length}</span>
+                )}
                 <span className="nav__icon-ripple" />
               </span>
             </Link>
@@ -301,28 +375,44 @@ const Navbar = () => {
                   {user?.avatar ? (
                     <span className="nav__avatar-wrap">
                       {!avatarLoaded && <span className="nav__avatar-spin" />}
-                      <img src={user.avatar} alt="" className="nav__avatar-img"
-                        onLoad={() => setAvatarLoaded(true)} onError={() => setAvatarLoaded(true)} />
+                      <img
+                        src={user.avatar}
+                        alt=""
+                        className="nav__avatar-img"
+                        onLoad={() => setAvatarLoaded(true)}
+                        onError={() => setAvatarLoaded(true)}
+                      />
                     </span>
                   ) : (
-                    <span className="nav__avatar-initials">{getInitials()}</span>
+                    <span className="nav__avatar-initials">
+                      {getInitials()}
+                    </span>
                   )}
                   <span className="nav__user-info">
                     {displayName}
                     <small>{providerLabel}</small>
                   </span>
-                  <FiChevronDown className={`nav__user-chev ${userMenuOpen ? "nav__user-chev--open" : ""}`} />
+                  <FiChevronDown
+                    className={`nav__user-chev ${userMenuOpen ? "nav__user-chev--open" : ""}`}
+                  />
                 </button>
 
-                <div className={`nav__user-drop ${userMenuOpen ? "nav__user-drop--open" : ""}`}>
+                <div
+                  className={`nav__user-drop ${userMenuOpen ? "nav__user-drop--open" : ""}`}
+                >
                   <div className="nav__user-drop-head">
                     <p className="nav__user-drop-name">{displayName}</p>
                     <p className="nav__user-drop-email">{user?.email}</p>
                     <span className="nav__pill">{providerLabel} account</span>
                   </div>
                   {userMenuItems.map((m, mi) => (
-                    <Link key={m.to} to={m.to} className="nav__user-drop-item" style={{ "--mi": mi }}
-                      onClick={() => setUserMenuOpen(false)}>
+                    <Link
+                      key={m.to}
+                      to={m.to}
+                      className="nav__user-drop-item"
+                      style={{ "--mi": mi }}
+                      onClick={() => setUserMenuOpen(false)}
+                    >
                       <m.icon size={16} />
                       {m.label}
                     </Link>
@@ -333,15 +423,28 @@ const Navbar = () => {
                 </div>
               </div>
             ) : (
-              <button className="nav__sign-btn" onClick={() => openModal("login")}>
+              <button
+                className="nav__sign-btn"
+                onClick={() => openModal("login")}
+              >
                 <span>Sign In</span>
               </button>
             )}
 
             <Link to="/booking" className="nav__cta">
               <span>Book Now</span>
-              <svg className="nav__cta-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
+              <svg
+                className="nav__cta-arrow"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
             </Link>
           </div>
@@ -362,62 +465,126 @@ const Navbar = () => {
         </div>
 
         {/* Scroll progress bar */}
-        <div className="nav__progress" style={{ transform: `scaleX(${Math.min(scrollY / (document.documentElement.scrollHeight - window.innerHeight || 1), 1)})` }} />
+        <div
+          className="nav__progress"
+          style={{
+            transform: `scaleX(${Math.min(scrollY / (document.documentElement.scrollHeight - window.innerHeight || 1), 1)})`,
+          }}
+        />
       </nav>
 
       {/* Search Overlay */}
-      <div className={`srch ${searchOpen ? "srch--open" : ""}`} onClick={() => setSearchOpen(false)}>
+      <div
+        className={`srch ${searchOpen ? "srch--open" : ""}`}
+        onClick={() => setSearchOpen(false)}
+      >
         <div className="srch__box" onClick={(e) => e.stopPropagation()}>
           <form onSubmit={handleSearchSubmit} className="srch__form">
             <FiSearch className="srch__icon" size={22} />
-            <input ref={searchInputRef} type="text" placeholder="Search destinations, experiences..."
-              value={searchValue} onChange={(e) => setSearchValue(e.target.value)} className="srch__input" />
+            <input
+              ref={searchInputRef}
+              type="text"
+              placeholder="Search destinations, experiences..."
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              className="srch__input"
+            />
             {searchValue && (
-              <button type="button" className="srch__clear" onClick={() => setSearchValue("")}>✕</button>
+              <button
+                type="button"
+                className="srch__clear"
+                onClick={() => setSearchValue("")}
+              >
+                ✕
+              </button>
             )}
           </form>
           <div className="srch__results">
-            {isSearching && <p className="srch__status"><span className="srch__spinner" />Searching…</p>}
+            {isSearching && (
+              <p className="srch__status">
+                <span className="srch__spinner" />
+                Searching…
+              </p>
+            )}
             {!isSearching && searchResults.length > 0 && (
               <div className="srch__list">
                 {searchResults.map((r, ri) => (
-                  <Link key={r.id || r._id} to={`/destination/${r.slug || r.id}`}
-                    className="srch__item" style={{ "--ri": ri }} onClick={() => setSearchOpen(false)}>
-                    <img src={r.heroImage || r.images?.[0] || "https://via.placeholder.com/80"} alt="" className="srch__thumb" />
+                  <Link
+                    key={r.id || r._id}
+                    to={`/destination/${r.slug || r.id}`}
+                    className="srch__item"
+                    style={{ "--ri": ri }}
+                    onClick={() => setSearchOpen(false)}
+                  >
+                    <img
+                      src={
+                        r.heroImage ||
+                        r.images?.[0] ||
+                        "https://via.placeholder.com/80"
+                      }
+                      alt=""
+                      className="srch__thumb"
+                    />
                     <div>
                       <p className="srch__name">{r.name}</p>
-                      <p className="srch__meta">{r.country} · {r.category || "Destination"}</p>
+                      <p className="srch__meta">
+                        {r.country} · {r.category || "Destination"}
+                      </p>
                     </div>
                   </Link>
                 ))}
-                <Link to={`/destinations?search=${encodeURIComponent(searchValue)}`}
-                  className="srch__all" onClick={() => setSearchOpen(false)}>
+                <Link
+                  to={`/destinations?search=${encodeURIComponent(searchValue)}`}
+                  className="srch__all"
+                  onClick={() => setSearchOpen(false)}
+                >
                   View all results for &ldquo;{searchValue}&rdquo;
                 </Link>
               </div>
             )}
-            {!isSearching && searchValue.trim().length >= 2 && searchResults.length === 0 && (
-              <p className="srch__status">No destinations found.</p>
-            )}
+            {!isSearching &&
+              searchValue.trim().length >= 2 &&
+              searchResults.length === 0 && (
+                <p className="srch__status">No destinations found.</p>
+              )}
           </div>
         </div>
-        <button className="srch__close" onClick={() => setSearchOpen(false)} aria-label="Close search">✕</button>
+        <button
+          className="srch__close"
+          onClick={() => setSearchOpen(false)}
+          aria-label="Close search"
+        >
+          ✕
+        </button>
       </div>
 
       {/* Backdrop */}
-      <div className={`backdrop ${isMobileMenuOpen ? "backdrop--open" : ""}`}
-        onClick={() => setIsMobileMenuOpen(false)} />
+      <div
+        className={`backdrop ${isMobileMenuOpen ? "backdrop--open" : ""}`}
+        onClick={() => setIsMobileMenuOpen(false)}
+      />
 
       {/* Mobile Menu */}
-      <aside className={`mm ${isMobileMenuOpen ? "mm--open" : ""}`} aria-hidden={!isMobileMenuOpen}>
+      <aside
+        className={`mm ${isMobileMenuOpen ? "mm--open" : ""}`}
+        aria-hidden={!isMobileMenuOpen}
+      >
         <div className="mm__head">
-          <Link to="/" className="mm__logo" onClick={() => setIsMobileMenuOpen(false)}>
+          <Link
+            to="/"
+            className="mm__logo"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
             <div className="mm__logo-img-wrapper">
               <img src={logoimg} alt="Altuvera" className="mm__logo-img" />
             </div>
             <span className="mm__logo-text">Altuvera</span>
           </Link>
-          <button className="mm__close-btn" onClick={() => setIsMobileMenuOpen(false)} aria-label="Close">
+          <button
+            className="mm__close-btn"
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-label="Close"
+          >
             <span className="mm__close-x">✕</span>
           </button>
         </div>
@@ -433,13 +600,22 @@ const Navbar = () => {
                     aria-expanded={activeMobileDropdown === link.name}
                   >
                     <span className="mm__toggle-text">{link.name}</span>
-                    <FiChevronDown size={18}
-                      className={`mm__chev ${activeMobileDropdown === link.name ? "mm__chev--open" : ""}`} />
+                    <FiChevronDown
+                      size={18}
+                      className={`mm__chev ${activeMobileDropdown === link.name ? "mm__chev--open" : ""}`}
+                    />
                   </button>
-                  <div className={`mm__sub ${activeMobileDropdown === link.name ? "mm__sub--open" : ""}`}>
+                  <div
+                    className={`mm__sub ${activeMobileDropdown === link.name ? "mm__sub--open" : ""}`}
+                  >
                     {link.dropdown.map((sub, si) => (
-                      <Link key={sub.name} to={sub.path} className="mm__sub-link" style={{ "--si": si }}
-                        onClick={() => setIsMobileMenuOpen(false)}>
+                      <Link
+                        key={sub.name}
+                        to={sub.path}
+                        className="mm__sub-link"
+                        style={{ "--si": si }}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                      >
                         <span className="mm__sub-dot" />
                         {sub.name}
                       </Link>
@@ -447,9 +623,11 @@ const Navbar = () => {
                   </div>
                 </>
               ) : (
-                <Link to={link.path}
+                <Link
+                  to={link.path}
                   className={`mm__link ${location.pathname === link.path ? "mm__link--active" : ""}`}
-                  onClick={() => setIsMobileMenuOpen(false)}>
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
                   {link.name}
                 </Link>
               )}
@@ -466,8 +644,13 @@ const Navbar = () => {
                   {user?.avatar ? (
                     <span className="mm__pav-wrap">
                       {!avatarLoaded && <span className="nav__avatar-spin" />}
-                      <img src={user.avatar} alt="" className="mm__pav-img"
-                        onLoad={() => setAvatarLoaded(true)} onError={() => setAvatarLoaded(true)} />
+                      <img
+                        src={user.avatar}
+                        alt=""
+                        className="mm__pav-img"
+                        onLoad={() => setAvatarLoaded(true)}
+                        onError={() => setAvatarLoaded(true)}
+                      />
                     </span>
                   ) : (
                     <span className="mm__pav-init">{getInitials()}</span>
@@ -479,8 +662,12 @@ const Navbar = () => {
                   </div>
                 </div>
                 {userMenuItems.map((m) => (
-                  <Link key={m.to} to={m.to} className="mm__auth-link"
-                    onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link
+                    key={m.to}
+                    to={m.to}
+                    className="mm__auth-link"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
                     <m.icon size={18} /> {m.label}
                   </Link>
                 ))}
@@ -489,16 +676,35 @@ const Navbar = () => {
                 </button>
               </>
             ) : (
-              <button className="mm__sign" onClick={() => { setIsMobileMenuOpen(false); openModal("login"); }}>
+              <button
+                className="mm__sign"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  openModal("login");
+                }}
+              >
                 Sign In / Sign Up
               </button>
             )}
           </div>
 
-          <Link to="/booking" className="mm__cta" onClick={() => setIsMobileMenuOpen(false)}>
+          <Link
+            to="/booking"
+            className="mm__cta"
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
             Book Your Adventure
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M5 12h14M12 5l7 7-7 7"/>
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
           </Link>
         </div>
@@ -568,10 +774,10 @@ const Navbar = () => {
 .nav__logo:active{transform:scale(.98)}
 
 .nav__logo-glow{
-  position:absolute;left:28px;top:50%;
-  width:70px;height:70px;
+  position:absolute;left:32px;top:50%;
+  width:80px;height:80px;
   transform:translate(-50%,-50%);
-  background:radial-gradient(circle,rgba(16,185,129,.35) 0%,transparent 70%);
+  background:radial-gradient(circle,rgba(255,255,255,.2) 0%,transparent 70%);
   border-radius:50%;pointer-events:none;
   opacity:0;transition:opacity var(--med);
 }
@@ -580,9 +786,14 @@ const Navbar = () => {
 /* Logo Image Wrapper - For better control */
 .nav__logo-img-wrapper{
   position:relative;
-  width:54px;height:54px;
+  width:64px;height:64px;
   flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
+  background:var(--wh);
+  border-radius:18px;
+  padding:6px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.05);
+  transition:all var(--med) var(--smooth);
 }
 
 .nav__logo-img{
@@ -590,26 +801,30 @@ const Navbar = () => {
   height:100%;
   object-fit:contain;
   border-radius:14px;
-  filter:drop-shadow(0 4px 12px rgba(5,150,105,.3));
+  filter:drop-shadow(0 4px 15px rgba(0,0,0,.15));
   transition:all var(--med) var(--smooth);
   position:relative;z-index:1;
 }
 
-/* Scrolled state - slightly smaller but still visible */
+/* Scrolled state */
 .nav--scrolled .nav__logo-img-wrapper{
-  width:48px;height:48px;
+  width:56px;height:56px;
+  border-radius:14px;
 }
 .nav--scrolled .nav__logo-img{
-  filter:drop-shadow(0 3px 10px rgba(5,150,105,.25));
+  filter:drop-shadow(0 2px 8px rgba(0,0,0,.08));
 }
 
 .nav__logo-text{
-  font-family:var(--fd);font-size:clamp(22px,2.4vw,28px);
-  font-weight:700;color:var(--wh);letter-spacing:-.4px;
-  text-shadow:0 2px 10px rgba(0,0,0,.2);
-  transition:color var(--med),text-shadow var(--med);
+  font-family:var(--fd);font-size:clamp(24px,2.6vw,32px);
+  font-weight:800;color:var(--wh);letter-spacing:-.8px;
+  text-shadow:0 3px 15px rgba(0,0,0,.3);
+  transition:all var(--med) var(--smooth);
 }
-.nav--scrolled .nav__logo-text{color:var(--c);text-shadow:none}
+.nav--scrolled .nav__logo-text{
+  color:var(--txt);
+  text-shadow:none;
+}
 
 /* ══════════ NAV LINKS ══════════ */
 .nav__links{

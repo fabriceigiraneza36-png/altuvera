@@ -1431,8 +1431,8 @@ const Contact = () => {
               <a href="#contact-form" className="ct-btn ct-btn--white">
                 <HiSparkles size={17} /> Start Planning
               </a>
-              <a href="/safaris" className="ct-btn ct-btn--ghost">
-                View Safari Packages <FiArrowRight size={16} />
+              <a href="/services" className="ct-btn ct-btn--ghost">
+                View All Our Offerings <FiArrowRight size={16} />
               </a>
             </div>
           </div>

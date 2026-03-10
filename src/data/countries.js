@@ -534,7 +534,7 @@ Tanzania's agricultural sector produces world-renowned Tanzanian coffee (particu
       "Kenya",
       "Uganda",
       "Rwanda",
-      "",
+      "Burundi",
       "Democratic Republic of Congo",
       "Zambia",
       "Malawi",
@@ -788,15 +788,15 @@ Uganda hosts one of Africa's largest refugee populations, primarily from South S
     ],
 
     images: [
-      "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=800",
-      "https://images.unsplash.com/photo-1553775282-20af80779df7?w=800",
-      "https://images.unsplash.com/photo-1578507065211-1c4e99a5fd24?w=800",
-      "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800",
-      "https://images.unsplash.com/photo-1535941339077-2dd1c7963098?w=800",
+      "https://i.pinimg.com/1200x/94/2a/fb/942afb15b4d4bfe3f4550d55fc834331.jpg",
+      "https://rwandaecocompany.com/wp-content/uploads/2021/09/hiking-elgon.jpg",
+      "https://i.pinimg.com/736x/c1/66/12/c1661233858938875fc7782f8be5cfc2.jpg",
+      "https://i.pinimg.com/1200x/b9/18/db/b918db4955d96a0eb843f06259c5ddec.jpg",
+      "https://i.pinimg.com/1200x/6e/a1/4e/6ea14e7a928f1f9f02f02fc0b558eed1.jpg",
     ],
 
     heroImage:
-      "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=1920",
+      "https://img.freepik.com/free-photo/flag-uganda_1401-248.jpg?semt=ais_rp_50_assets&w=740&q=80",
 
     mapPosition: { lat: 1.373333, lng: 32.290275 },
 
@@ -1044,14 +1044,14 @@ Rwanda is increasingly positioning itself as a conference and business tourism d
     ],
 
     heroImage:
-      "https://images.unsplash.com/photo-1580746738783-63c5b771c993?w=1920",
+      "https://i.pinimg.com/736x/8d/0f/8b/8d0f8be952d9eacaa01776a9557c98a0.jpg",
 
     mapPosition: { lat: -1.940278, lng: 29.873888 },
 
     neighboringCountries: [
       "Uganda",
       "Tanzania",
-      "",
+      "Burundi",
       "Democratic Republic of Congo",
     ],
 
@@ -1502,14 +1502,16 @@ The country's tiny size (roughly equivalent to Massachusetts) and strategic loca
     ],
 
     images: [
-      "https://images.unsplash.com/photo-1510155324852-d5d2dbe7a5e8?w=800",
-      "https://images.unsplash.com/photo-1504973960431-1c467e159aa4?w=800",
-      "https://images.unsplash.com/photo-1517960413843-0aee8e2b3285?w=800",
-      "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=800",
+      "https://media.evendo.com/locations-resized/CityDetails/original/d4fa3d2c-b64a-4fba-881f-af127ccdf9c7",
+      "https://i.pinimg.com/1200x/1e/02/46/1e0246d24313863a07928baf6d5b31e5.jpg",
+      "https://ik.imgkit.net/3vlqs5axxjf/external/http://images.ntmllc.com/v4/destination/Djibouti/Lake-Abbe/316748_SCN_lake-abbe_iStock-601939858_ZE3A6C.jpg?tr=w-1200%2Cfo-auto",
+      "https://img.liveaboard.com/imageserver/picture_library/site/diving/djibouti/goubet-al-kharab/goubet-al-kharab-xl.jpg",
+      "https://i.pinimg.com/736x/04/93/94/049394701f3133c97ebcb3672e3458c8.jpg",
+      "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcR6bth-0a2T54xpM-r0YjVNpwi-ou6aVqEhp5IzVjScwNtdHsHQlRobQ3xPAnHl",
     ],
 
     heroImage:
-      "https://images.unsplash.com/photo-1510155324852-d5d2dbe7a5e8?w=1920",
+      "https://i.pinimg.com/1200x/b7/7d/66/b77d66ef7375282b57cb56016c29ed9d.jpg",
 
     mapPosition: { lat: 11.5886, lng: 43.1456 },
 
@@ -1757,6 +1759,50 @@ Frankincense and myrrh, traded from the Somali coast for over 5,000 years, conti
         "Frankincense",
       ],
     },
+  },
+  {
+    id: "south-africa",
+    name: "South Africa",
+    capital: "Pretoria / Cape Town / Bloemfontein",
+    flag: "🇿🇦",
+    tagline: "A World in One Country",
+    motto: "!ke e: /xarra //ke (Unity in Diversity)",
+    independence: "May 31, 1910 (Union); May 31, 1961 (Republic)",
+    description:
+      "South Africa offers a stunning mix of landscapes, from the iconic Table Mountain and wild Safaris in Kruger National Park to the lush Garden Route and world-class vineyards.",
+    fullDescription: `South Africa is often described as "a world in one country" due to its incredible diversity of landscapes, cultures, and experiences. From the cosmopolitan energy of Cape Town and Johannesburg to the wilderness of the Kruger National Park, and from the rugged coastline of the Wild Coast to the peaks of the Drakensberg Mountains, South Africa caters to every type of traveler.
+
+The country's history is deeply intertwined with its modern identity. Visiting Robben Island, where Nelson Mandela was imprisoned, provides a somber but essential understanding of the nation's journey to democracy. Today, South Africa is a vibrant mosaic of cultures, often referred to as the "Rainbow Nation," celebrating its 11 official languages and rich heritage.
+
+For wildlife enthusiasts, the Kruger National Park is a premier destination, home to the Big Five and countless other species. The country also boasts exceptional marine life, with opportunities for whale watching in Hermanus and shark cage diving in Gansbaai.
+
+South Africa's culinary scene is equally diverse, featuring everything from traditional braais (barbecues) to world-class fine dining. The Cape Winelands, surrounding Stellenbosch and Franschhoek, offer some of the world's best wines in breathtaking settings.`,
+    population: "60 million",
+    area: "1,221,037 km²",
+    languages: ["isiZulu", "isiXhosa", "Afrikaans", "English", "and 7 others"],
+    officialLanguages: ["11 official languages"],
+    currency: "South African Rand (ZAR)",
+    currencySymbol: "R",
+    timezone: "South Africa Standard Time (UTC+2)",
+    callingCode: "+27",
+    drivingSide: "Left",
+    highlights: [
+      "Table Mountain",
+      "Kruger National Park",
+      "Robben Island",
+      "Cape Winelands",
+      "Garden Route",
+      "Blyde River Canyon",
+      "Shark Cage Diving",
+      "V&A Waterfront",
+    ],
+    heroImage:
+      "https://images.unsplash.com/photo-1577941334032-495e8659556d?w=1920",
+    images: [
+      "https://images.unsplash.com/photo-1549488344-1f9b8d2bd1f3?w=800",
+      "https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=800",
+      "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800",
+    ],
   },
 ];
 

@@ -13,36 +13,40 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import PageWrapper from "./components/common/PageWrapper";
 import "leaflet/dist/leaflet.css";
 
-// Public pages
-import Home from "./pages/Home";
-import Destinations from "./pages/Destinations";
-import CountryPage from "./pages/CountryPage";
-import CountryDestinations from "./pages/CountryDestinations";
-import DestinationDetail from "./pages/DestinationDetail";
-import Tips from "./pages/Tips";
-import Explore from "./pages/Explore";
-import Posts from "./pages/Posts";
-import PostDetail from "./pages/PostDetail";
-import InteractiveMap from "./pages/InteractiveMap";
-import VirtualTour from "./pages/VirtualTour";
-import Services from "./pages/Services";
-import About from "./pages/About";
-import Contact from "./pages/Contact";
-import Gallery from "./pages/Gallery";
-import Booking from "./pages/Booking";
-import FAQ from "./pages/FAQ";
-import PaymentTerms from "./pages/PaymentTerms";
-import PrivacyPolicy from "./pages/PrivacyPolicy";
-import Team from "./pages/Team";
-import TermsOfService from "./pages/TermsOfService";
-import NotFound from "./pages/NotFound";
+// Regular components
 import WhatsAppButton from "./components/common/WhatsAppButton";
 
+// Lazy load all pages
+const Home = React.lazy(() => import("./pages/Home"));
+const Destinations = React.lazy(() => import("./pages/Destinations"));
+const CountryPage = React.lazy(() => import("./pages/CountryPage"));
+const CountryDestinations = React.lazy(
+  () => import("./pages/CountryDestinations"),
+);
+const DestinationDetail = React.lazy(() => import("./pages/DestinationDetail"));
+const Tips = React.lazy(() => import("./pages/Tips"));
+const Explore = React.lazy(() => import("./pages/Explore"));
+const Posts = React.lazy(() => import("./pages/Posts"));
+const PostDetail = React.lazy(() => import("./pages/PostDetail"));
+const InteractiveMap = React.lazy(() => import("./pages/InteractiveMap"));
+const VirtualTour = React.lazy(() => import("./pages/VirtualTour"));
+const Services = React.lazy(() => import("./pages/Services"));
+const About = React.lazy(() => import("./pages/About"));
+const Contact = React.lazy(() => import("./pages/Contact"));
+const Gallery = React.lazy(() => import("./pages/Gallery"));
+const Booking = React.lazy(() => import("./pages/Booking"));
+const FAQ = React.lazy(() => import("./pages/FAQ"));
+const PaymentTerms = React.lazy(() => import("./pages/PaymentTerms"));
+const PrivacyPolicy = React.lazy(() => import("./pages/PrivacyPolicy"));
+const Team = React.lazy(() => import("./pages/Team"));
+const TermsOfService = React.lazy(() => import("./pages/TermsOfService"));
+const NotFound = React.lazy(() => import("./pages/NotFound"));
+
 // Protected pages
-import UserProfile from "./pages/auth/UserProfile";
-import MyBookings from "./pages/auth/MyBookings";
-import Wishlist from "./pages/auth/Wishlist";
-import UserSettings from "./pages/auth/UserSettings";
+const UserProfile = React.lazy(() => import("./pages/auth/UserProfile"));
+const MyBookings = React.lazy(() => import("./pages/auth/MyBookings"));
+const Wishlist = React.lazy(() => import("./pages/auth/Wishlist"));
+const UserSettings = React.lazy(() => import("./pages/auth/UserSettings"));
 
 function App() {
   const location = useLocation();
@@ -66,234 +70,236 @@ function App() {
       <Navbar />
 
       <main style={{ flex: 1 }}>
-        <Routes>
-          {/* Public */}
-          <Route
-            path="/"
-            element={
-              <PageWrapper title="Home">
-                <Home />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/destinations"
-            element={
-              <PageWrapper title="Destinations">
-                <Destinations />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/country/:countryId"
-            element={
-              <PageWrapper title="Country">
-                <CountryPage />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/country/:countryId/destinations"
-            element={
-              <PageWrapper title="Country Destinations">
-                <CountryDestinations />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/destination/:destinationId"
-            element={
-              <PageWrapper title="Destination Details">
-                <DestinationDetail />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/tips"
-            element={
-              <PageWrapper title="Travel Tips">
-                <Tips />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/explore"
-            element={
-              <PageWrapper title="Explore">
-                <Explore />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/posts"
-            element={
-              <PageWrapper title="Blog Posts">
-                <Posts />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/post/:slug"
-            element={
-              <PageWrapper title="Post Details">
-                <PostDetail />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/interactive-map"
-            element={
-              <PageWrapper title="Interactive Map">
-                <InteractiveMap />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/virtual-tour"
-            element={
-              <PageWrapper title="Virtual Tour">
-                <VirtualTour />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/services"
-            element={
-              <PageWrapper title="Services">
-                <Services />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/about"
-            element={
-              <PageWrapper title="About Us">
-                <About />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/payment-terms"
-            element={
-              <PageWrapper title="Payment Terms">
-                <PaymentTerms />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/team"
-            element={
-              <PageWrapper title="Our Team">
-                <Team />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/contact"
-            element={
-              <PageWrapper title="Contact Us">
-                <Contact />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/gallery"
-            element={
-              <PageWrapper title="Gallery">
-                <Gallery />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/faq"
-            element={
-              <PageWrapper title="FAQ">
-                <FAQ />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/privacy"
-            element={
-              <PageWrapper title="Privacy Policy">
-                <PrivacyPolicy />
-              </PageWrapper>
-            }
-          />
-          <Route
-            path="/terms"
-            element={
-              <PageWrapper title="Terms of Service">
-                <TermsOfService />
-              </PageWrapper>
-            }
-          />
-
-          {/* Protected */}
-          <Route
-            path="/booking"
-            element={
-              <ProtectedRoute>
-                <PageWrapper title="Booking">
-                  <Booking />
+        <React.Suspense fallback={<Loader />}>
+          <Routes>
+            {/* Public */}
+            <Route
+              path="/"
+              element={
+                <PageWrapper title="Home">
+                  <Home />
                 </PageWrapper>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <PageWrapper title="My Profile">
-                  <UserProfile />
+              }
+            />
+            <Route
+              path="/destinations"
+              element={
+                <PageWrapper title="Destinations">
+                  <Destinations />
                 </PageWrapper>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/my-bookings"
-            element={
-              <ProtectedRoute>
-                <PageWrapper title="My Bookings">
-                  <MyBookings />
+              }
+            />
+            <Route
+              path="/country/:countryId"
+              element={
+                <PageWrapper title="Country">
+                  <CountryPage />
                 </PageWrapper>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/wishlist"
-            element={
-              <ProtectedRoute>
-                <PageWrapper title="Wishlist">
-                  <Wishlist />
+              }
+            />
+            <Route
+              path="/country/:countryId/destinations"
+              element={
+                <PageWrapper title="Country Destinations">
+                  <CountryDestinations />
                 </PageWrapper>
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/settings"
-            element={
-              <ProtectedRoute>
-                <PageWrapper title="Settings">
-                  <UserSettings />
+              }
+            />
+            <Route
+              path="/destination/:destinationId"
+              element={
+                <PageWrapper title="Destination Details">
+                  <DestinationDetail />
                 </PageWrapper>
-              </ProtectedRoute>
-            }
-          />
+              }
+            />
+            <Route
+              path="/tips"
+              element={
+                <PageWrapper title="Travel Tips">
+                  <Tips />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="/explore"
+              element={
+                <PageWrapper title="Explore">
+                  <Explore />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="/posts"
+              element={
+                <PageWrapper title="Blog Posts">
+                  <Posts />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="/post/:slug"
+              element={
+                <PageWrapper title="Post Details">
+                  <PostDetail />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="/interactive-map"
+              element={
+                <PageWrapper title="Interactive Map">
+                  <InteractiveMap />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="/virtual-tour"
+              element={
+                <PageWrapper title="Virtual Tour">
+                  <VirtualTour />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="/services"
+              element={
+                <PageWrapper title="Services">
+                  <Services />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="/about"
+              element={
+                <PageWrapper title="About Us">
+                  <About />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="/payment-terms"
+              element={
+                <PageWrapper title="Payment Terms">
+                  <PaymentTerms />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="/team"
+              element={
+                <PageWrapper title="Our Team">
+                  <Team />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="/contact"
+              element={
+                <PageWrapper title="Contact Us">
+                  <Contact />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="/gallery"
+              element={
+                <PageWrapper title="Gallery">
+                  <Gallery />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="/faq"
+              element={
+                <PageWrapper title="FAQ">
+                  <FAQ />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="/privacy"
+              element={
+                <PageWrapper title="Privacy Policy">
+                  <PrivacyPolicy />
+                </PageWrapper>
+              }
+            />
+            <Route
+              path="/terms"
+              element={
+                <PageWrapper title="Terms of Service">
+                  <TermsOfService />
+                </PageWrapper>
+              }
+            />
 
-          <Route
-            path="*"
-            element={
-              <PageWrapper title="Page Not Found">
-                <NotFound />
-              </PageWrapper>
-            }
-          />
-        </Routes>
+            {/* Protected */}
+            <Route
+              path="/booking"
+              element={
+                <ProtectedRoute>
+                  <PageWrapper title="Booking">
+                    <Booking />
+                  </PageWrapper>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <PageWrapper title="My Profile">
+                    <UserProfile />
+                  </PageWrapper>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/my-bookings"
+              element={
+                <ProtectedRoute>
+                  <PageWrapper title="My Bookings">
+                    <MyBookings />
+                  </PageWrapper>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/wishlist"
+              element={
+                <ProtectedRoute>
+                  <PageWrapper title="Wishlist">
+                    <Wishlist />
+                  </PageWrapper>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <PageWrapper title="Settings">
+                    <UserSettings />
+                  </PageWrapper>
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="*"
+              element={
+                <PageWrapper title="Page Not Found">
+                  <NotFound />
+                </PageWrapper>
+              }
+            />
+          </Routes>
+        </React.Suspense>
       </main>
 
       <Footer />
@@ -302,7 +308,7 @@ function App() {
       <PersistentMapViewer />
       <CookieConsent />
       <AuthModal />
-      <WhatsAppButton /> 
+      <WhatsAppButton />
       {isLoading && <Loader />}
     </div>
   );

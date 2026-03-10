@@ -19,120 +19,140 @@ import {
   FiStar,
   FiX,
   FiChevronRight,
-  FiPlay,
   FiPhone,
   FiMail,
   FiMessageCircle,
+  FiMapPin,
+  FiCalendar,
+  FiCompass,
+  FiGlobe,
+  FiSun,
 } from "react-icons/fi";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import PageHeader from "../components/common/PageHeader";
 import Button from "../components/common/Button";
 import CookieSettingsButton from "../components/common/CookieSettingsButton";
+import AnimatedSection from "../components/common/AnimatedSection";
+import { useMediaQuery } from "../hooks/useMediaQuery";
+import useScrollProgress from "../hooks/useScrollProgress";
 import { services } from "../data/services";
 import ServiceIcon from "../components/icons/ServiceIconSimple";
 
 // ============================================================================
-// CONSTANTS & THEME
+// GREEN-WHITE ONLY THEME
 // ============================================================================
 
 const THEME = {
   colors: {
     primary: {
-      50: "#ECFDF5",
-      100: "#D1FAE5",
-      200: "#A7F3D0",
-      300: "#6EE7B7",
-      400: "#34D399",
-      500: "#10B981",
-      600: "#059669",
-      700: "#047857",
-      800: "#065F46",
-      900: "#064E3B",
+      50: "#F0FDF4",
+      100: "#DCFCE7",
+      200: "#BBF7D0",
+      300: "#86EFAC",
+      400: "#4ADE80",
+      500: "#22C55E",
+      600: "#16A34A",
+      700: "#15803D",
+      800: "#166534",
+      900: "#14532D",
+      950: "#052E16",
     },
-    neutral: {
-      50: "#F9FAFB",
-      100: "#F3F4F6",
-      200: "#E5E7EB",
-      300: "#D1D5DB",
-      400: "#9CA3AF",
-      500: "#6B7280",
-      600: "#4B5563",
-      700: "#374151",
-      800: "#1F2937",
-      900: "#111827",
-    },
-    accent: {
-      amber: "#F59E0B",
-      red: "#EF4444",
-      pink: "#EC4899",
-      indigo: "#6366F1",
-      cyan: "#06B6D4",
-    },
+    white: "#FFFFFF",
+    offWhite: "#FAFFFE",
+    lightGreen: "#F0FDF4",
+    paleGreen: "#E8F8ED",
+    textDark: "#14532D",
+    textMedium: "#166534",
+    textBody: "#1C6E3A",
+    textMuted: "#4A9B6B",
+    textLight: "#6BBF8A",
+    border: "#D1FAE5",
+    borderLight: "#E8F8ED",
+    overlay: "rgba(5, 46, 22, 0.85)",
   },
-  shadows: {
-    sm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-    md: "0 4px 6px -1px rgba(0, 0, 0, 0.1)",
-    lg: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-    xl: "0 20px 25px -5px rgba(0, 0, 0, 0.1)",
-    "2xl": "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-    glow: "0 0 40px rgba(5, 150, 105, 0.15)",
-    glowStrong: "0 0 60px rgba(5, 150, 105, 0.25)",
+  fonts: {
+    heading: "'Playfair Display', Georgia, 'Times New Roman', serif",
+    body: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
   },
-  gradients: {
-    primary: "linear-gradient(135deg, #059669 0%, #10B981 100%)",
-    primaryDark: "linear-gradient(135deg, #064E3B 0%, #065F46 100%)",
-    hero: "linear-gradient(135deg, #022C22 0%, #065F46 50%, #047857 100%)",
-    card: "linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%)",
-    overlay: "linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.8) 100%)",
-  },
-  borderRadius: {
+  radii: {
     sm: "8px",
     md: "12px",
     lg: "16px",
-    xl: "24px",
-    "2xl": "32px",
+    xl: "20px",
+    "2xl": "24px",
+    "3xl": "32px",
     full: "9999px",
   },
+  shadows: {
+    sm: "0 1px 3px rgba(22,163,74,0.06), 0 1px 2px rgba(22,163,74,0.04)",
+    md: "0 4px 12px rgba(22,163,74,0.08), 0 2px 4px rgba(22,163,74,0.04)",
+    lg: "0 12px 24px rgba(22,163,74,0.1), 0 4px 8px rgba(22,163,74,0.04)",
+    xl: "0 20px 40px rgba(22,163,74,0.12), 0 8px 16px rgba(22,163,74,0.06)",
+    "2xl": "0 28px 56px rgba(22,163,74,0.15)",
+    glow: "0 0 40px rgba(22,163,74,0.12)",
+    cardHover:
+      "0 24px 48px rgba(22,163,74,0.14), 0 0 0 1px rgba(22,163,74,0.08)",
+  },
   transitions: {
-    fast: "0.15s ease",
-    normal: "0.3s ease",
-    smooth: "0.4s cubic-bezier(0.4, 0, 0.2, 1)",
-    bounce: "0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)",
+    fast: "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+    base: "250ms cubic-bezier(0.4, 0, 0.2, 1)",
+    smooth: "400ms cubic-bezier(0.22, 1, 0.36, 1)",
+    spring: "500ms cubic-bezier(0.34, 1.56, 0.64, 1)",
   },
 };
+
+// ============================================================================
+// DATA
+// ============================================================================
+
+const ROTATING_HERO_TEXTS = [
+  "Unforgettable journeys crafted with precision",
+  "Expert-guided adventures across East Africa",
+  "Luxury meets authentic wilderness experience",
+  "Personalized itineraries for every traveler",
+  "Where dreams become extraordinary memories",
+];
 
 const PROCESS_STEPS = [
   {
     step: "01",
     title: "Discovery Call",
-    description:
-      "Share your travel dreams, preferences, and expectations with our expert consultants.",
-    icon: "💬",
-    color: THEME.colors.accent.indigo,
+    icon: FiMessageCircle,
+    descriptions: [
+      "Share your travel dreams and preferences",
+      "Discuss budget, dates, and group size",
+      "Get expert recommendations instantly",
+    ],
   },
   {
     step: "02",
     title: "Custom Itinerary",
-    description:
-      "Receive a personalized travel plan crafted specifically for your unique adventure.",
-    icon: "📋",
-    color: THEME.colors.accent.amber,
+    icon: FiCalendar,
+    descriptions: [
+      "Receive a tailored travel blueprint",
+      "Every detail designed around you",
+      "Handpicked accommodations and routes",
+    ],
   },
   {
     step: "03",
     title: "Fine-Tuning",
-    description:
-      "Collaborate with us to perfect every detail until your trip is exactly right.",
-    icon: "✨",
-    color: THEME.colors.accent.pink,
+    icon: FiCompass,
+    descriptions: [
+      "Refine every detail to perfection",
+      "Add special requests and surprises",
+      "Finalize your dream itinerary",
+    ],
   },
   {
     step: "04",
     title: "Adventure Time",
-    description:
-      "Embark on your journey with 24/7 on-ground support and peace of mind.",
-    icon: "🚀",
-    color: THEME.colors.primary[600],
+    icon: FiMapPin,
+    descriptions: [
+      "Embark with 24/7 ground support",
+      "Expert guides at every destination",
+      "Create memories that last forever",
+    ],
   },
 ];
 
@@ -140,87 +160,106 @@ const WHY_CHOOSE_US = [
   {
     icon: FiAward,
     title: "Expert Local Guides",
-    description:
-      "Certified professionals with decades of combined experience and deep regional expertise.",
-    color: THEME.colors.accent.amber,
     stat: "50+",
     statLabel: "Expert Guides",
+    descriptions: [
+      "Our guides bring decades of combined field experience across diverse African terrains and ecosystems.",
+      "Each team member is a certified wildlife and safety expert committed to providing a secure and educational journey.",
+      "They share deep regional cultural knowledge and hidden stories that provide an authentic perspective of every destination.",
+    ],
   },
   {
     icon: FiShield,
     title: "Safety Guaranteed",
-    description:
-      "Comprehensive safety protocols, full insurance coverage, and emergency support systems.",
-    color: THEME.colors.accent.red,
     stat: "100%",
     statLabel: "Safety Record",
+    descriptions: [
+      "We implement rigorous comprehensive safety protocols that strictly adhere to the highest international travel standards.",
+      "Full premium insurance coverage is included in every booking to ensure you can explore with absolute peace of mind.",
+      "Our emergency support systems are active 24/7 with a dedicated response team ready to assist you at any moment.",
+    ],
   },
   {
     icon: FiHeart,
     title: "Personalized Care",
-    description:
-      "Every journey is uniquely tailored to match your travel style and preferences.",
-    color: THEME.colors.accent.pink,
     stat: "5000+",
     statLabel: "Happy Travelers",
+    descriptions: [
+      "Every itinerary is meticulously tailored to match your unique travel style, interests, and personal pace.",
+      "We specialize in designing unique experiences that go beyond the ordinary to create life-changing memories.",
+      "Our dedicated planners pay close attention to every small detail to ensure your journey is seamless and stress-free.",
+    ],
   },
   {
     icon: FiClock,
     title: "24/7 Support",
-    description:
-      "Round-the-clock assistance from booking to return, wherever you are.",
-    color: THEME.colors.accent.indigo,
     stat: "24/7",
     statLabel: "Available",
+    descriptions: [
+      "Our round-the-clock live assistance ensures that expert help is always available whenever you might need it.",
+      "We provide continuous support from the initial booking phase until the very moment you return home safely.",
+      "Professional travel consultants are always just a call away to handle requests or provide immediate ground assistance.",
+    ],
   },
   {
     icon: FiUsers,
     title: "Small Groups",
-    description:
-      "Intimate group sizes ensuring authentic experiences and personal attention.",
-    color: THEME.colors.primary[600],
     stat: "8-12",
     statLabel: "Max Group Size",
+    descriptions: [
+      "We focus on intimate and authentic experiences that allow for meaningful connections with nature and local communities.",
+      "Small group sizes ensure you receive maximum personal attention and expert guidance throughout your entire expedition.",
+      "We guarantee no overcrowded tours ever, preserving the exclusivity and quiet majesty of the wilderness for our guests.",
+    ],
   },
   {
     icon: FiStar,
     title: "Best Value",
-    description:
-      "Premium experiences at competitive prices with transparent, all-inclusive pricing.",
-    color: THEME.colors.accent.cyan,
     stat: "4.9★",
     statLabel: "Average Rating",
+    descriptions: [
+      "We deliver premium quality and luxury experiences at fair and competitive pricing reflecting true artisanal value.",
+      "Our transparent all-inclusive rates mean you can enjoy your adventure without worrying about hidden extras or fees.",
+      "We believe in providing the best possible value by combining comfort, adventure, and world-class service in one package.",
+    ],
   },
 ];
 
 const TESTIMONIALS = [
   {
     quote:
-      "The safari exceeded all our expectations. Every detail was perfectly planned.",
+      "The safari exceeded all our expectations. Every detail was perfectly planned and the guides were incredibly knowledgeable.",
     author: "Sarah Mitchell",
     role: "Wildlife Photographer",
     avatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100",
+      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
     rating: 5,
   },
   {
     quote:
-      "Altuvera made our honeymoon absolutely magical. Highly recommended!",
+      "Altuvera made our honeymoon absolutely magical. From the Serengeti to Zanzibar, every moment was perfect.",
     author: "James & Emily",
     role: "Honeymoon Trip",
     avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100",
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
     rating: 5,
   },
   {
     quote:
-      "Professional, responsive, and truly passionate about African travel.",
+      "Professional, responsive, and truly passionate about African travel. I've booked three trips with them now.",
     author: "Michael Chen",
     role: "Adventure Traveler",
     avatar:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100",
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
     rating: 5,
   },
+];
+
+const CTA_ROTATING_TEXTS = [
+  "🌍 Trusted by 5000+ travelers worldwide",
+  "⭐ Rated 4.9/5 across all platforms",
+  "🏆 Award-winning East Africa specialists",
+  "🛡️ 100% satisfaction guarantee",
 ];
 
 // ============================================================================
@@ -228,1074 +267,1543 @@ const TESTIMONIALS = [
 // ============================================================================
 
 const useMediaQuery = (query) => {
-  const [matches, setMatches] = useState(false);
+  const [matches, setMatches] = useState(() => {
+    if (typeof window !== "undefined") {
+      return window.matchMedia(query).matches;
+    }
+    return false;
+  });
 
   useEffect(() => {
+    if (typeof window === "undefined") return undefined;
     const media = window.matchMedia(query);
-    if (media.matches !== matches) {
-      setMatches(media.matches);
-    }
-    const listener = () => setMatches(media.matches);
+    const listener = (e) => setMatches(e.matches);
     media.addEventListener("change", listener);
+    setMatches(media.matches);
     return () => media.removeEventListener("change", listener);
-  }, [matches, query]);
+  }, [query]);
 
   return matches;
 };
 
 const useScrollProgress = () => {
   const [progress, setProgress] = useState(0);
+  const rafRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => {
-      const totalHeight =
-        document.documentElement.scrollHeight - window.innerHeight;
-      const currentProgress = (window.scrollY / totalHeight) * 100;
-      setProgress(currentProgress);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(() => {
+        const totalHeight =
+          document.documentElement.scrollHeight - window.innerHeight;
+        if (totalHeight > 0) {
+          setProgress((window.scrollY / totalHeight) * 100);
+        }
+      });
     };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, []);
 
   return progress;
+};
+
+const useKeyboardClose = (onClose) => {
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [onClose]);
+};
+
+const useRotatingIndex = (length, interval = 3000) => {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (length <= 1) return undefined;
+    const timer = setInterval(() => {
+      setIndex((prev) => (prev + 1) % length);
+    }, interval);
+    return () => clearInterval(timer);
+  }, [length, interval]);
+
+  return index;
 };
 
 // ============================================================================
 // ANIMATION VARIANTS
 // ============================================================================
 
-const fadeInUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
-  },
-};
-
-const fadeInLeft = {
-  hidden: { opacity: 0, x: -30 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
-  },
-};
-
-const fadeInRight = {
-  hidden: { opacity: 0, x: 30 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] },
-  },
-};
-
-const scaleIn = {
-  hidden: { opacity: 0, scale: 0.9 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
-  },
-};
-
 const staggerContainer = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      staggerChildren: 0.1,
-      delayChildren: 0.1,
-    },
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
   },
 };
 
-const cardHover = {
-  rest: { scale: 1, y: 0 },
-  hover: {
-    scale: 1.02,
-    y: -8,
-    transition: { duration: 0.3, ease: "easeOut" },
+const staggerItem = {
+  hidden: { opacity: 0, y: 24 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+  },
+};
+
+const textSwap = {
+  enter: { opacity: 0, y: 14, filter: "blur(4px)" },
+  center: {
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
+  },
+  exit: {
+    opacity: 0,
+    y: -14,
+    filter: "blur(4px)",
+    transition: { duration: 0.3, ease: [0.4, 0, 1, 1] },
   },
 };
 
 // ============================================================================
-// SUB-COMPONENTS
+// GLOBAL STYLES
 // ============================================================================
+
+const GlobalStyles = () => (
+  <style>{`
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    .svc-focus:focus-visible {
+      outline: 3px solid ${THEME.colors.primary[500]};
+      outline-offset: 4px;
+      border-radius: ${THEME.radii["2xl"]};
+    }
+
+    .modal-scroll::-webkit-scrollbar { width: 5px; }
+    .modal-scroll::-webkit-scrollbar-track { background: ${THEME.colors.primary[50]}; }
+    .modal-scroll::-webkit-scrollbar-thumb { background: ${THEME.colors.primary[300]}; border-radius: 3px; }
+    .modal-scroll::-webkit-scrollbar-thumb:hover { background: ${THEME.colors.primary[500]}; }
+
+    .contact-link {
+      text-decoration: none;
+      transition: all ${THEME.transitions.base};
+    }
+    .contact-link:hover {
+      background-color: ${THEME.colors.primary[50]} !important;
+      border-color: ${THEME.colors.primary[300]} !important;
+      transform: translateX(4px);
+    }
+    .contact-link:focus-visible {
+      outline: 2px solid ${THEME.colors.primary[500]};
+      outline-offset: 2px;
+    }
+
+    @media (max-width: 480px) {
+      .grid-services { grid-template-columns: 1fr !important; gap: 16px !important; }
+      .grid-process { grid-template-columns: 1fr !important; gap: 40px !important; }
+      .grid-why { grid-template-columns: 1fr !important; gap: 16px !important; }
+      .grid-testimonials { grid-template-columns: 1fr !important; gap: 16px !important; }
+    }
+    @media (min-width: 481px) and (max-width: 768px) {
+      .grid-services { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
+      .grid-process { grid-template-columns: repeat(2, 1fr) !important; gap: 32px !important; }
+      .grid-why { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
+      .grid-testimonials { grid-template-columns: 1fr !important; gap: 16px !important; }
+    }
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .grid-services { grid-template-columns: repeat(2, 1fr) !important; gap: 24px !important; }
+      .grid-process { grid-template-columns: repeat(2, 1fr) !important; gap: 24px !important; }
+      .grid-why { grid-template-columns: repeat(2, 1fr) !important; gap: 20px !important; }
+      .grid-testimonials { grid-template-columns: repeat(2, 1fr) !important; gap: 20px !important; }
+    }
+    @media (min-width: 1025px) {
+      .grid-services { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important; gap: 28px !important; }
+      .grid-process { grid-template-columns: repeat(4, 1fr) !important; gap: 28px !important; }
+      .grid-why { grid-template-columns: repeat(3, 1fr) !important; gap: 24px !important; }
+      .grid-testimonials { grid-template-columns: repeat(3, 1fr) !important; gap: 24px !important; }
+    }
+  `}</style>
+);
+
+// ============================================================================
+// SHARED TINY COMPONENTS
+// ============================================================================
+
+const ImageSkeleton = () => (
+  <div
+    aria-hidden="true"
+    style={{
+      position: "absolute",
+      inset: 0,
+      backgroundColor: THEME.colors.primary[100],
+      backgroundImage: `linear-gradient(90deg, transparent 0%, ${THEME.colors.primary[50]} 50%, transparent 100%)`,
+      backgroundSize: "200% 100%",
+      animation: "shimmer 1.5s infinite linear",
+      zIndex: 1,
+    }}
+  />
+);
 
 /**
- * Animated Section Wrapper
+ * Animated text that cycles through an array of strings
  */
-const AnimatedSection = ({ children, className, style, delay = 0 }) => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
+const RotatingText = React.memo(({ texts, interval = 3000, style = {} }) => {
+  const idx = useRotatingIndex(texts.length, interval);
 
   return (
-    <motion.div
-      ref={ref}
-      initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
-      variants={{
-        hidden: { opacity: 0, y: 40 },
-        visible: {
-          opacity: 1,
-          y: 0,
-          transition: { duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] },
-        },
+    <div
+      style={{
+        position: "relative",
+        height: "24px",
+        overflow: "hidden",
+        ...style,
       }}
-      className={className}
-      style={style}
     >
-      {children}
-    </motion.div>
-  );
-};
-
-/**
- * Section Header Component
- */
-const SectionHeader = ({
-  label,
-  title,
-  subtitle,
-  alignment = "center",
-  light = false,
-  labelIcon = null,
-}) => {
-  const styles = {
-    container: {
-      textAlign: alignment,
-      marginBottom: "clamp(40px, 8vw, 70px)",
-      maxWidth: alignment === "center" ? "800px" : "none",
-      margin:
-        alignment === "center" ? "0 auto clamp(40px, 8vw, 70px)" : undefined,
-    },
-    label: {
-      display: "inline-flex",
-      alignItems: "center",
-      gap: "10px",
-      padding: "12px 24px",
-      backgroundColor: light
-        ? "rgba(255, 255, 255, 0.1)"
-        : THEME.colors.primary[50],
-      borderRadius: THEME.borderRadius.full,
-      color: light ? THEME.colors.primary[300] : THEME.colors.primary[600],
-      fontSize: "13px",
-      fontWeight: "700",
-      marginBottom: "24px",
-      textTransform: "uppercase",
-      letterSpacing: "2px",
-      backdropFilter: light ? "blur(10px)" : "none",
-      border: light ? "1px solid rgba(255, 255, 255, 0.1)" : "none",
-    },
-    title: {
-      fontFamily: "'Playfair Display', Georgia, serif",
-      fontSize: "clamp(32px, 5vw, 52px)",
-      fontWeight: "700",
-      color: light ? "white" : THEME.colors.neutral[900],
-      marginBottom: subtitle ? "20px" : 0,
-      lineHeight: "1.15",
-      letterSpacing: "-0.02em",
-    },
-    subtitle: {
-      fontSize: "clamp(16px, 2vw, 19px)",
-      color: light ? "rgba(255, 255, 255, 0.8)" : THEME.colors.neutral[500],
-      lineHeight: "1.8",
-      maxWidth: alignment === "center" ? "650px" : "none",
-      margin: alignment === "center" ? "0 auto" : 0,
-    },
-  };
-
-  return (
-    <div style={styles.container}>
-      <motion.span
-        style={styles.label}
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
-      >
-        {labelIcon && <span style={{ fontSize: "16px" }}>{labelIcon}</span>}
-        {label}
-      </motion.span>
-      <motion.h2
-        style={styles.title}
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-      >
-        {title}
-      </motion.h2>
-      {subtitle && (
-        <motion.p
-          style={styles.subtitle}
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={idx}
+          variants={textSwap}
+          initial="enter"
+          animate="center"
+          exit="exit"
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
         >
-          {subtitle}
-        </motion.p>
-      )}
+          {texts[idx]}
+        </motion.span>
+      </AnimatePresence>
     </div>
   );
-};
+});
+RotatingText.displayName = "RotatingText";
 
 /**
- * Service Card Component
+ * Dot progress bar for rotating content
  */
-const ServiceCard = ({ service, index, onClick, isMobile }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-50px" });
+const DotProgress = React.memo(({ total, active, vertical = false }) => (
+  <div
+    style={{
+      display: "flex",
+      flexDirection: vertical ? "column" : "row",
+      gap: vertical ? "3px" : "5px",
+      alignItems: "center",
+    }}
+  >
+    {Array.from({ length: total }).map((_, i) => (
+      <div
+        key={i}
+        style={{
+          width: !vertical && i === active ? "16px" : "5px",
+          height: vertical ? (i === active ? "16px" : "5px") : "4px",
+          borderRadius: THEME.radii.full,
+          backgroundColor:
+            i === active
+              ? THEME.colors.primary[500]
+              : THEME.colors.primary[200],
+          transition: `all ${THEME.transitions.smooth}`,
+        }}
+      />
+    ))}
+  </div>
+));
+DotProgress.displayName = "DotProgress";
 
-  const styles = useMemo(
-    () => ({
-      card: {
-        position: "relative",
-        backgroundColor: "white",
-        borderRadius: THEME.borderRadius.xl,
-        overflow: "hidden",
-        boxShadow: isHovered ? THEME.shadows.glowStrong : THEME.shadows.lg,
-        transition: THEME.transitions.smooth,
-        cursor: "pointer",
-        border: `1px solid ${isHovered ? THEME.colors.primary[200] : THEME.colors.neutral[200]}`,
-        transform:
-          isHovered && !isMobile ? "translateY(-12px)" : "translateY(0)",
-      },
-      imageContainer: {
-        position: "relative",
-        height: isMobile ? "180px" : "220px",
-        overflow: "hidden",
-      },
-      image: {
-        width: "100%",
-        height: "100%",
-        objectFit: "cover",
-        transition: "transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)",
-        transform: isHovered ? "scale(1.1)" : "scale(1)",
-      },
-      imageOverlay: {
-        position: "absolute",
-        inset: 0,
-        background: `linear-gradient(180deg, 
-        rgba(0,0,0,0) 0%, 
-        rgba(0,0,0,0.1) 50%,
-        rgba(0,0,0,0.4) 100%)`,
-        transition: THEME.transitions.normal,
-      },
-      badge: {
-        position: "absolute",
-        top: "16px",
-        left: "16px",
-        padding: "8px 16px",
-        backgroundColor: "rgba(255, 255, 255, 0.95)",
-        backdropFilter: "blur(10px)",
-        borderRadius: THEME.borderRadius.full,
-        fontSize: "12px",
-        fontWeight: "700",
-        color: THEME.colors.primary[700],
-        textTransform: "uppercase",
-        letterSpacing: "0.5px",
-      },
-      iconContainer: {
-        position: "absolute",
-        bottom: "-30px",
-        right: "24px",
-        width: "64px",
-        height: "64px",
-        borderRadius: THEME.borderRadius.lg,
-        background: THEME.gradients.primary,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        boxShadow: `0 8px 24px rgba(5, 150, 105, 0.35)`,
-        zIndex: 2,
-        transition: THEME.transitions.smooth,
-        transform: isHovered
-          ? "scale(1.1) rotate(-5deg)"
-          : "scale(1) rotate(0deg)",
-      },
-      content: {
-        padding: isMobile ? "24px 20px" : "32px 28px",
-        paddingTop: isMobile ? "20px" : "24px",
-      },
-      title: {
-        fontFamily: "'Playfair Display', Georgia, serif",
-        fontSize: isMobile ? "20px" : "24px",
-        fontWeight: "700",
-        color: THEME.colors.neutral[900],
-        marginBottom: "12px",
-        lineHeight: "1.3",
-        transition: THEME.transitions.normal,
-      },
-      description: {
-        fontSize: isMobile ? "14px" : "15px",
-        color: THEME.colors.neutral[500],
-        lineHeight: "1.7",
-        marginBottom: "20px",
-        display: "-webkit-box",
-        WebkitLineClamp: 2,
-        WebkitBoxOrient: "vertical",
-        overflow: "hidden",
-      },
-      features: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "10px",
-        marginBottom: "24px",
-      },
-      feature: {
-        display: "flex",
-        alignItems: "center",
-        gap: "12px",
-        fontSize: "14px",
-        color: THEME.colors.neutral[600],
-      },
-      featureIcon: {
-        width: "22px",
-        height: "22px",
-        borderRadius: "50%",
-        backgroundColor: THEME.colors.primary[50],
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        color: THEME.colors.primary[600],
-        flexShrink: 0,
-      },
-      button: {
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        width: "100%",
-        padding: "14px 20px",
-        backgroundColor: isHovered
-          ? THEME.colors.primary[600]
-          : THEME.colors.primary[50],
-        borderRadius: THEME.borderRadius.lg,
-        border: "none",
-        cursor: "pointer",
-        transition: THEME.transitions.smooth,
-      },
-      buttonText: {
-        fontSize: "14px",
-        fontWeight: "600",
-        color: isHovered ? "white" : THEME.colors.primary[700],
-        transition: THEME.transitions.normal,
-      },
-      buttonIcon: {
-        width: "32px",
-        height: "32px",
-        borderRadius: "50%",
-        backgroundColor: isHovered
-          ? "rgba(255,255,255,0.2)"
-          : THEME.colors.primary[100],
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        color: isHovered ? "white" : THEME.colors.primary[600],
-        transition: THEME.transitions.smooth,
-        transform: isHovered ? "translateX(4px)" : "translateX(0)",
-      },
-      progressBar: {
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        height: "4px",
-        backgroundColor: THEME.colors.primary[500],
-        width: isHovered ? "100%" : "0%",
-        transition: "width 0.4s ease",
-      },
-    }),
-    [isHovered, isMobile],
+// ============================================================================
+// SECTION HEADER
+// ============================================================================
+
+const SectionHeader = React.memo(
+  ({
+    label,
+    title,
+    subtitle,
+    alignment = "center",
+    light = false,
+    rotatingTexts = null,
+  }) => {
+    const ref = useRef(null);
+    const isInView = useInView(ref, { once: true, margin: "-60px" });
+
+    return (
+      <motion.div
+        ref={ref}
+        initial="hidden"
+        animate={isInView ? "visible" : "hidden"}
+        variants={staggerContainer}
+        style={{
+          textAlign: alignment,
+          marginBottom: "clamp(40px, 7vw, 72px)",
+          maxWidth: alignment === "center" ? "760px" : "none",
+          marginLeft: alignment === "center" ? "auto" : undefined,
+          marginRight: alignment === "center" ? "auto" : undefined,
+        }}
+      >
+        <motion.span
+          variants={staggerItem}
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: "8px",
+            padding: "8px 20px",
+            backgroundColor: light
+              ? "rgba(255,255,255,0.08)"
+              : THEME.colors.primary[50],
+            borderRadius: THEME.radii.full,
+            color: light
+              ? THEME.colors.primary[300]
+              : THEME.colors.primary[700],
+            fontSize: "11px",
+            fontWeight: "700",
+            fontFamily: THEME.fonts.body,
+            marginBottom: "20px",
+            textTransform: "uppercase",
+            letterSpacing: "2.5px",
+            backdropFilter: light ? "blur(12px)" : "none",
+            border: light
+              ? "1px solid rgba(255,255,255,0.1)"
+              : `1px solid ${THEME.colors.primary[200]}`,
+          }}
+        >
+          {label}
+        </motion.span>
+
+        <motion.h2
+          variants={staggerItem}
+          style={{
+            fontFamily: THEME.fonts.heading,
+            fontSize: "clamp(28px, 5.5vw, 52px)",
+            fontWeight: "800",
+            color: light ? THEME.colors.white : THEME.colors.textDark,
+            marginBottom: subtitle || rotatingTexts ? "20px" : 0,
+            lineHeight: "1.1",
+            letterSpacing: "-0.03em",
+          }}
+        >
+          {typeof title === "string" ? <SplitText>{title}</SplitText> : title}
+        </motion.h2>
+
+        {subtitle && (
+          <motion.p
+            variants={staggerItem}
+            style={{
+              fontSize: "clamp(14px, 2vw, 17px)",
+              color: light ? "rgba(255,255,255,0.7)" : THEME.colors.textMuted,
+              lineHeight: "1.75",
+              maxWidth: alignment === "center" ? "600px" : "none",
+              margin: alignment === "center" ? "0 auto" : 0,
+              fontFamily: THEME.fonts.body,
+            }}
+          >
+            {subtitle}
+          </motion.p>
+        )}
+
+        {rotatingTexts && (
+          <motion.div variants={staggerItem}>
+            <RotatingText
+              texts={rotatingTexts}
+              interval={3500}
+              style={{
+                fontSize: "clamp(14px, 2vw, 17px)",
+                color: light ? "rgba(255,255,255,0.7)" : THEME.colors.textMuted,
+                fontFamily: THEME.fonts.body,
+                fontStyle: "italic",
+                height: "28px",
+                display: "flex",
+                justifyContent:
+                  alignment === "center" ? "center" : "flex-start",
+              }}
+            />
+          </motion.div>
+        )}
+      </motion.div>
+    );
+  },
+);
+SectionHeader.displayName = "SectionHeader";
+
+// ============================================================================
+// SERVICE CARD
+// ============================================================================
+
+const ServiceCard = React.memo(({ service, index, onClick, isMobile }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-60px" });
+
+  const rotatingFeatures = useMemo(
+    () =>
+      service.features && service.features.length > 0
+        ? service.features.slice(0, 4)
+        : [service.description],
+    [service.features, service.description],
+  );
+
+  const activeIdx = useRotatingIndex(rotatingFeatures.length, 3500);
+
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onClick(service);
+      }
+    },
+    [onClick, service],
   );
 
   return (
     <motion.article
       ref={ref}
-      initial={{ opacity: 0, y: 50 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }}
-      transition={{ duration: 0.6, delay: index * 0.1 }}
-      style={styles.card}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      className="svc-focus"
+      variants={staggerItem}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      style={{
+        position: "relative",
+        backgroundColor: THEME.colors.white,
+        borderRadius: THEME.radii["2xl"],
+        overflow: "hidden",
+        boxShadow: isHovered ? THEME.shadows.cardHover : THEME.shadows.md,
+        transition: `all ${THEME.transitions.smooth}`,
+        cursor: "pointer",
+        border: `1px solid ${isHovered ? THEME.colors.primary[300] : THEME.colors.border}`,
+        transform:
+          isHovered && !isMobile ? "translateY(-10px)" : "translateY(0)",
+        willChange: "transform, box-shadow",
+      }}
+      onMouseEnter={() => !isMobile && setIsHovered(true)}
+      onMouseLeave={() => !isMobile && setIsHovered(false)}
       onClick={() => onClick(service)}
+      onKeyDown={handleKeyDown}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => e.key === "Enter" && onClick(service)}
       aria-label={`Learn more about ${service.title}`}
     >
-      <div style={styles.imageContainer}>
-        {/* Skeleton loader */}
-        {!imageLoaded && (
+      {/* Image */}
+      <div
+        style={{
+          position: "relative",
+          height: isMobile ? "180px" : "220px",
+          overflow: "hidden",
+        }}
+      >
+        {!imageLoaded && <ImageSkeleton />}
+        <img
+          src={service.image}
+          alt=""
+          role="presentation"
+          loading={index > 2 ? "lazy" : "eager"}
+          onLoad={() => setImageLoaded(true)}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            transition: `transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity ${THEME.transitions.base}`,
+            transform: isHovered ? "scale(1.06)" : "scale(1)",
+            opacity: imageLoaded ? 1 : 0,
+          }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            background: `linear-gradient(180deg, transparent 40%, ${THEME.colors.primary[950]}80 100%)`,
+          }}
+        />
+        <span
+          style={{
+            position: "absolute",
+            top: "14px",
+            left: "14px",
+            padding: "6px 14px",
+            backgroundColor: "rgba(255,255,255,0.92)",
+            backdropFilter: "blur(8px)",
+            borderRadius: THEME.radii.full,
+            fontSize: "10px",
+            fontWeight: "700",
+            fontFamily: THEME.fonts.body,
+            color: THEME.colors.primary[700],
+            textTransform: "uppercase",
+            letterSpacing: "1px",
+            border: `1px solid ${THEME.colors.primary[100]}`,
+          }}
+        >
+          Premium
+        </span>
+        <div
+          style={{
+            position: "absolute",
+            bottom: "-26px",
+            right: "20px",
+            width: "52px",
+            height: "52px",
+            borderRadius: THEME.radii.lg,
+            background: `linear-gradient(135deg, ${THEME.colors.primary[600]}, ${THEME.colors.primary[500]})`,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: `0 8px 24px rgba(22,163,74,0.2)`,
+            zIndex: 2,
+            transition: `transform ${THEME.transitions.spring}`,
+            transform: isHovered
+              ? "scale(1.12) rotate(-5deg)"
+              : "scale(1) rotate(0deg)",
+            border: `3px solid ${THEME.colors.white}`,
+          }}
+        >
+          <ServiceIcon name={service.iconName} size={22} color="white" />
+        </div>
+      </div>
+
+      {/* Content */}
+      <div style={{ padding: isMobile ? "22px 18px 18px" : "26px 24px 22px" }}>
+        <h3
+          style={{
+            fontFamily: THEME.fonts.heading,
+            fontSize: isMobile ? "18px" : "20px",
+            fontWeight: "700",
+            color: THEME.colors.textDark,
+            marginBottom: "8px",
+            lineHeight: "1.3",
+          }}
+        >
+          {service.title}
+        </h3>
+
+        <p
+          style={{
+            fontSize: "13px",
+            fontFamily: THEME.fonts.body,
+            color: THEME.colors.textMuted,
+            lineHeight: "1.65",
+            marginBottom: "14px",
+            display: "-webkit-box",
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: "vertical",
+            overflow: "hidden",
+          }}
+        >
+          {service.description}
+        </p>
+
+        {/* Dynamic rotating highlight */}
+        <div
+          style={{
+            padding: "12px 14px",
+            backgroundColor: THEME.colors.primary[50],
+            borderRadius: THEME.radii.md,
+            border: `1px solid ${THEME.colors.primary[100]}`,
+            marginBottom: "16px",
+            minHeight: "48px",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
+          <DotProgress
+            total={Math.min(rotatingFeatures.length, 4)}
+            active={activeIdx}
+            vertical
+          />
+          <div
+            style={{
+              flex: 1,
+              position: "relative",
+              height: "20px",
+              overflow: "hidden",
+            }}
+          >
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={activeIdx}
+                variants={textSwap}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                style={{
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  fontSize: "12px",
+                  fontFamily: THEME.fonts.body,
+                  fontWeight: "600",
+                  color: THEME.colors.primary[700],
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  lineHeight: "20px",
+                }}
+              >
+                {rotatingFeatures[activeIdx]}
+              </motion.span>
+            </AnimatePresence>
+          </div>
+        </div>
+
+        {/* Feature chips */}
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: "6px",
+            marginBottom: "18px",
+          }}
+        >
+          {service.features.slice(0, 3).map((feature, idx) => (
+            <span
+              key={idx}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "5px",
+                padding: "4px 10px",
+                backgroundColor: THEME.colors.lightGreen,
+                borderRadius: THEME.radii.full,
+                fontSize: "11px",
+                fontFamily: THEME.fonts.body,
+                color: THEME.colors.primary[700],
+                fontWeight: "500",
+                border: `1px solid ${THEME.colors.primary[100]}`,
+                maxWidth: "160px",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <FiCheck size={10} strokeWidth={3} style={{ flexShrink: 0 }} />
+              {feature}
+            </span>
+          ))}
+        </div>
+
+        {/* CTA */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: "11px 16px",
+            backgroundColor: isHovered
+              ? THEME.colors.primary[600]
+              : THEME.colors.primary[50],
+            borderRadius: THEME.radii.lg,
+            transition: `all ${THEME.transitions.smooth}`,
+            border: `1px solid ${isHovered ? THEME.colors.primary[600] : THEME.colors.primary[200]}`,
+          }}
+        >
+          <span
+            style={{
+              fontSize: "13px",
+              fontWeight: "600",
+              fontFamily: THEME.fonts.body,
+              color: isHovered ? THEME.colors.white : THEME.colors.primary[700],
+              transition: `color ${THEME.transitions.base}`,
+            }}
+          >
+            Explore Service
+          </span>
+          <span
+            style={{
+              width: "28px",
+              height: "28px",
+              borderRadius: "50%",
+              backgroundColor: isHovered
+                ? "rgba(255,255,255,0.2)"
+                : THEME.colors.primary[100],
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: isHovered ? THEME.colors.white : THEME.colors.primary[600],
+              transition: `all ${THEME.transitions.smooth}`,
+              transform: isHovered ? "translateX(3px)" : "translateX(0)",
+            }}
+          >
+            <FiArrowRight size={13} />
+          </span>
+        </div>
+      </div>
+
+      {/* Bottom accent */}
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          height: "3px",
+          background: `linear-gradient(90deg, ${THEME.colors.primary[400]}, ${THEME.colors.primary[600]})`,
+          width: isHovered ? "100%" : "0%",
+          transition: "width 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
+        }}
+      />
+    </motion.article>
+  );
+});
+ServiceCard.displayName = "ServiceCard";
+
+// ============================================================================
+// PROCESS STEP CARD
+// ============================================================================
+
+const ProcessStepCard = React.memo(({ step, index, total, isMobile }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-40px" });
+  const StepIcon = step.icon;
+  const descIdx = useRotatingIndex(step.descriptions.length, 2800);
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 40 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
+      transition={{
+        duration: 0.6,
+        delay: index * 0.12,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      style={{
+        position: "relative",
+        textAlign: "center",
+        padding: isMobile ? "40px 20px 28px" : "52px 28px 36px",
+        backgroundColor: isHovered
+          ? "rgba(255,255,255,0.1)"
+          : "rgba(255,255,255,0.04)",
+        backdropFilter: "blur(20px)",
+        borderRadius: THEME.radii["2xl"],
+        border: `1px solid ${isHovered ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.06)"}`,
+        transition: `all ${THEME.transitions.smooth}`,
+        transform: isHovered ? "translateY(-6px)" : "translateY(0)",
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Step badge */}
+      <div
+        style={{
+          position: "absolute",
+          top: "-20px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          width: "40px",
+          height: "40px",
+          borderRadius: "50%",
+          background: `linear-gradient(135deg, ${THEME.colors.primary[500]}, ${THEME.colors.primary[400]})`,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "13px",
+          fontWeight: "800",
+          fontFamily: THEME.fonts.body,
+          color: THEME.colors.white,
+          boxShadow: `0 6px 20px rgba(22,163,74,0.2)`,
+          border: "3px solid rgba(255,255,255,0.15)",
+        }}
+      >
+        {step.step}
+      </div>
+
+      {/* Icon */}
+      <div
+        style={{
+          width: "64px",
+          height: "64px",
+          borderRadius: THEME.radii.xl,
+          backgroundColor: "rgba(255,255,255,0.06)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          margin: "0 auto 18px",
+          transition: `all ${THEME.transitions.smooth}`,
+          transform: isHovered ? "scale(1.08)" : "scale(1)",
+          color: THEME.colors.primary[300],
+          border: "1px solid rgba(255,255,255,0.08)",
+        }}
+      >
+        <StepIcon size={isMobile ? 24 : 28} />
+      </div>
+
+      <h3
+        style={{
+          fontFamily: THEME.fonts.heading,
+          fontSize: isMobile ? "18px" : "20px",
+          fontWeight: "700",
+          color: THEME.colors.white,
+          marginBottom: "12px",
+          lineHeight: "1.3",
+        }}
+      >
+        {step.title}
+      </h3>
+
+      {/* Dynamic rotating description */}
+      <div style={{ height: "44px", overflow: "hidden", position: "relative" }}>
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={descIdx}
+            variants={textSwap}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            style={{
+              position: "absolute",
+              inset: 0,
+              fontSize: isMobile ? "12px" : "13px",
+              fontFamily: THEME.fonts.body,
+              color: "rgba(255,255,255,0.6)",
+              lineHeight: "1.65",
+              margin: 0,
+            }}
+          >
+            {step.descriptions[descIdx]}
+          </motion.p>
+        </AnimatePresence>
+      </div>
+
+      <div
+        style={{ marginTop: "12px", display: "flex", justifyContent: "center" }}
+      >
+        <DotProgress total={step.descriptions.length} active={descIdx} />
+      </div>
+
+      {/* Connector */}
+      {!isMobile && index < total - 1 && (
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            top: "50%",
+            right: "-14px",
+            transform: "translateY(-50%)",
+            zIndex: 3,
+          }}
+        >
+          <FiChevronRight
+            size={18}
+            style={{ color: "rgba(255,255,255,0.2)" }}
+          />
+        </div>
+      )}
+    </motion.div>
+  );
+});
+ProcessStepCard.displayName = "ProcessStepCard";
+
+// ============================================================================
+// WHY CHOOSE CARD
+// ============================================================================
+
+const WhyChooseCard = React.memo(({ item, index, isMobile }) => {
+  const [isHovered, setIsHovered] = useState(false);
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-40px" });
+  const IconComponent = item.icon;
+  const descIdx = useRotatingIndex(item.descriptions.length, 3200);
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      transition={{
+        duration: 0.5,
+        delay: index * 0.08,
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      style={{
+        position: "relative",
+        backgroundColor: THEME.colors.white,
+        borderRadius: THEME.radii["2xl"],
+        padding: isMobile ? "24px 20px" : "32px 28px",
+        boxShadow: isHovered ? THEME.shadows.cardHover : THEME.shadows.sm,
+        transition: `all ${THEME.transitions.smooth}`,
+        transform: isHovered ? "translateY(-6px)" : "translateY(0)",
+        border: `1px solid ${isHovered ? THEME.colors.primary[300] : THEME.colors.border}`,
+        overflow: "hidden",
+      }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* Top accent */}
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          right: 0,
+          height: "3px",
+          background: `linear-gradient(90deg, ${THEME.colors.primary[400]}, ${THEME.colors.primary[600]})`,
+          transform: isHovered ? "scaleX(1)" : "scaleX(0)",
+          transformOrigin: "left",
+          transition: `transform ${THEME.transitions.smooth}`,
+        }}
+      />
+
+      {/* Header */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "14px",
+          marginBottom: "14px",
+        }}
+      >
+        <div
+          style={{
+            width: "48px",
+            height: "48px",
+            borderRadius: THEME.radii.lg,
+            backgroundColor: THEME.colors.primary[50],
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: THEME.colors.primary[600],
+            flexShrink: 0,
+            transition: `transform ${THEME.transitions.spring}`,
+            transform: isHovered ? "scale(1.08) rotate(-3deg)" : "scale(1)",
+            border: `1px solid ${THEME.colors.primary[100]}`,
+          }}
+        >
+          <IconComponent size={22} />
+        </div>
+        <h3
+          style={{
+            fontFamily: THEME.fonts.heading,
+            fontSize: isMobile ? "17px" : "19px",
+            fontWeight: "700",
+            color: THEME.colors.textDark,
+            margin: 0,
+            lineHeight: "1.3",
+          }}
+        >
+          {item.title}
+        </h3>
+      </div>
+
+      {/* Dynamic description */}
+      <div
+        style={{
+          height: "68px",
+          overflow: "hidden",
+          position: "relative",
+          marginBottom: "14px",
+        }}
+      >
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={descIdx}
+            variants={textSwap}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            style={{
+              position: "absolute",
+              inset: 0,
+              fontSize: "13px",
+              fontFamily: THEME.fonts.body,
+              color: THEME.colors.textMuted,
+              lineHeight: "1.65",
+              margin: 0,
+            }}
+          >
+            {item.descriptions[descIdx]}
+          </motion.p>
+        </AnimatePresence>
+      </div>
+
+      <div style={{ marginBottom: "18px" }}>
+        <DotProgress total={item.descriptions.length} active={descIdx} />
+      </div>
+
+      {/* Stat */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "baseline",
+          gap: "8px",
+          padding: "12px 16px",
+          backgroundColor: THEME.colors.primary[50],
+          borderRadius: THEME.radii.lg,
+          border: `1px solid ${THEME.colors.primary[100]}`,
+        }}
+      >
+        <span
+          style={{
+            fontSize: "24px",
+            fontWeight: "800",
+            fontFamily: THEME.fonts.body,
+            color: THEME.colors.primary[600],
+            lineHeight: "1",
+          }}
+        >
+          {item.stat}
+        </span>
+        <span
+          style={{
+            fontSize: "11px",
+            fontFamily: THEME.fonts.body,
+            color: THEME.colors.textMuted,
+            fontWeight: "500",
+            textTransform: "uppercase",
+            letterSpacing: "0.5px",
+          }}
+        >
+          {item.statLabel}
+        </span>
+      </div>
+    </motion.div>
+  );
+});
+WhyChooseCard.displayName = "WhyChooseCard";
+
+// ============================================================================
+// TESTIMONIAL CARD — **FIXED: no isMobile reference**
+// ============================================================================
+
+const TestimonialCard = React.memo(({ testimonial, index }) => {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: "-40px" });
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      transition={{ duration: 0.5, delay: index * 0.1 }}
+      style={{
+        backgroundColor: THEME.colors.white,
+        borderRadius: THEME.radii["2xl"],
+        padding: "clamp(22px, 4vw, 28px)",
+        boxShadow: THEME.shadows.md,
+        border: `1px solid ${THEME.colors.border}`,
+        display: "flex",
+        flexDirection: "column",
+        height: "100%",
+      }}
+    >
+      {/* Stars — green only */}
+      <div style={{ display: "flex", gap: "3px", marginBottom: "18px" }}>
+        {Array.from({ length: testimonial.rating }).map((_, i) => (
+          <FiStar
+            key={i}
+            size={15}
+            fill={THEME.colors.primary[500]}
+            color={THEME.colors.primary[500]}
+          />
+        ))}
+      </div>
+
+      {/* Quote */}
+      <p
+        style={{
+          fontSize: "clamp(14px, 2vw, 15px)",
+          fontFamily: THEME.fonts.body,
+          color: THEME.colors.textBody,
+          lineHeight: "1.75",
+          marginBottom: "22px",
+          fontStyle: "italic",
+          flex: 1,
+        }}
+      >
+        &ldquo;{testimonial.quote}&rdquo;
+      </p>
+
+      {/* Author */}
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div
+          style={{
+            width: "44px",
+            height: "44px",
+            borderRadius: "50%",
+            overflow: "hidden",
+            border: `2px solid ${THEME.colors.primary[200]}`,
+            backgroundColor: THEME.colors.primary[50],
+            flexShrink: 0,
+          }}
+        >
+          <img
+            src={testimonial.avatar}
+            alt={testimonial.author}
+            loading="lazy"
+            onLoad={() => setImgLoaded(true)}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              opacity: imgLoaded ? 1 : 0,
+              transition: `opacity ${THEME.transitions.base}`,
+            }}
+          />
+        </div>
+        <div>
+          <div
+            style={{
+              fontSize: "14px",
+              fontWeight: "700",
+              fontFamily: THEME.fonts.body,
+              color: THEME.colors.textDark,
+              marginBottom: "2px",
+            }}
+          >
+            {testimonial.author}
+          </div>
+          <div
+            style={{
+              fontSize: "12px",
+              fontFamily: THEME.fonts.body,
+              color: THEME.colors.textMuted,
+            }}
+          >
+            {testimonial.role}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+});
+TestimonialCard.displayName = "TestimonialCard";
+
+// ============================================================================
+// SERVICE MODAL
+// ============================================================================
+
+const ServiceModal = React.memo(({ service, onClose }) => {
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const modalRef = useRef(null);
+  const activeFeatureIdx = useRotatingIndex(
+    service.features ? service.features.length : 0,
+    2500,
+  );
+
+  useKeyboardClose(onClose);
+
+  useEffect(() => {
+    const scrollY = window.scrollY;
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (modalRef.current) modalRef.current.focus();
+  }, []);
+
+  const contactOptions = useMemo(
+    () => [
+      {
+        href: "tel:+1234567890",
+        icon: FiPhone,
+        label: "Call Us Now",
+        isExternal: true,
+      },
+      {
+        href: "mailto:info@altuvera.com",
+        icon: FiMail,
+        label: "Email Us",
+        isExternal: true,
+      },
+      {
+        href: "/contact",
+        icon: FiMessageCircle,
+        label: "Live Chat",
+        isExternal: false,
+      },
+    ],
+    [],
+  );
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.25 }}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label={`${service.title} details`}
+      style={{
+        position: "fixed",
+        inset: 0,
+        backgroundColor: THEME.colors.overlay,
+        backdropFilter: "blur(10px)",
+        zIndex: 10000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: isMobile ? "10px" : "28px",
+      }}
+    >
+      <motion.div
+        ref={modalRef}
+        tabIndex={-1}
+        className="modal-scroll"
+        initial={{ scale: 0.92, opacity: 0, y: 20 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.92, opacity: 0, y: 20 }}
+        transition={{ type: "spring", damping: 28, stiffness: 340 }}
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          backgroundColor: THEME.colors.white,
+          borderRadius: isMobile ? THEME.radii.xl : THEME.radii["3xl"],
+          maxWidth: "860px",
+          width: "100%",
+          maxHeight: "92vh",
+          overflowY: "auto",
+          position: "relative",
+          boxShadow: THEME.shadows["2xl"],
+          outline: "none",
+        }}
+      >
+        {/* Close */}
+        <motion.button
+          onClick={onClose}
+          whileHover={{
+            scale: 1.05,
+            backgroundColor: THEME.colors.primary[600],
+          }}
+          whileTap={{ scale: 0.95 }}
+          aria-label="Close dialog"
+          style={{
+            position: "absolute",
+            top: "14px",
+            right: "14px",
+            width: "40px",
+            height: "40px",
+            borderRadius: "50%",
+            backgroundColor: "rgba(0,0,0,0.45)",
+            color: THEME.colors.white,
+            border: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            zIndex: 10,
+            transition: `background-color ${THEME.transitions.base}`,
+          }}
+        >
+          <FiX size={18} />
+        </motion.button>
+
+        {/* Hero */}
+        <div
+          style={{
+            position: "relative",
+            height: isMobile ? "200px" : "300px",
+            overflow: "hidden",
+            borderRadius: `${isMobile ? THEME.radii.xl : THEME.radii["3xl"]} ${isMobile ? THEME.radii.xl : THEME.radii["3xl"]} 0 0`,
+          }}
+        >
+          {!imgLoaded && <ImageSkeleton />}
+          <img
+            src={service.image}
+            alt={`${service.title} experience`}
+            onLoad={() => setImgLoaded(true)}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              opacity: imgLoaded ? 1 : 0,
+              transition: `opacity ${THEME.transitions.base}`,
+            }}
+          />
           <div
             style={{
               position: "absolute",
               inset: 0,
-              backgroundColor: "#e5e7eb",
-              backgroundImage:
-                "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0) 100%)",
-              backgroundSize: "200% 100%",
-              animation: "shimmer 1.5s infinite linear",
-              zIndex: 1,
+              background: `linear-gradient(to top, ${THEME.colors.primary[950]}DD 0%, ${THEME.colors.primary[950]}40 50%, transparent 100%)`,
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              bottom: 0,
+              left: 0,
+              right: 0,
+              padding: isMobile ? "18px" : "32px",
+              color: THEME.colors.white,
             }}
           >
-            <style>{`@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }`}</style>
-          </div>
-        )}
-        <img
-          src={service.image}
-          alt={service.title}
-          style={{ ...styles.image, opacity: imageLoaded ? 1 : 0 }}
-          onLoad={() => setImageLoaded(true)}
-          loading={index > 3 ? "lazy" : "eager"}
-        />
-        <div style={styles.imageOverlay} />
-        <span style={styles.badge}>Premium</span>
-        <div style={styles.iconContainer}>
-          <ServiceIcon name={service.iconName} size={28} color="white" />
-        </div>
-      </div>
-
-      <div style={styles.content}>
-        <h3 style={styles.title}>{service.title}</h3>
-        <p style={styles.description}>{service.description}</p>
-
-        <div style={styles.features}>
-          {service.features.slice(0, 3).map((feature, idx) => (
-            <div key={idx} style={styles.feature}>
-              <span style={styles.featureIcon}>
-                <FiCheck size={12} strokeWidth={3} />
-              </span>
-              <span>{feature}</span>
-            </div>
-          ))}
-        </div>
-
-        <button style={styles.button}>
-          <span style={styles.buttonText}>Explore Service</span>
-          <span style={styles.buttonIcon}>
-            <FiArrowRight size={16} />
-          </span>
-        </button>
-      </div>
-
-      <div style={styles.progressBar} />
-    </motion.article>
-  );
-};
-
-/**
- * Process Step Card
- */
-const ProcessStepCard = ({ step, index, total, isMobile }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-30px" });
-
-  const styles = useMemo(
-    () => ({
-      card: {
-        position: "relative",
-        textAlign: "center",
-        padding: isMobile ? "32px 24px" : "48px 32px",
-        paddingTop: isMobile ? "48px" : "64px",
-        backgroundColor: isHovered
-          ? "rgba(255, 255, 255, 0.12)"
-          : "rgba(255, 255, 255, 0.06)",
-        backdropFilter: "blur(20px)",
-        borderRadius: THEME.borderRadius.xl,
-        border: `1px solid ${isHovered ? "rgba(255, 255, 255, 0.2)" : "rgba(255, 255, 255, 0.08)"}`,
-        transition: THEME.transitions.smooth,
-        transform: isHovered ? "translateY(-8px)" : "translateY(0)",
-      },
-      stepNumber: {
-        position: "absolute",
-        top: "-24px",
-        left: "50%",
-        transform: "translateX(-50%)",
-        width: "52px",
-        height: "52px",
-        borderRadius: "50%",
-        background: `linear-gradient(135deg, ${step.color} 0%, ${step.color}CC 100%)`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: "16px",
-        fontWeight: "800",
-        color: "white",
-        boxShadow: `0 8px 24px ${step.color}50`,
-        border: "4px solid rgba(255, 255, 255, 0.1)",
-      },
-      icon: {
-        fontSize: isMobile ? "40px" : "56px",
-        marginBottom: "20px",
-        display: "block",
-        filter: isHovered ? "drop-shadow(0 4px 12px rgba(0,0,0,0.3))" : "none",
-        transition: THEME.transitions.normal,
-        transform: isHovered ? "scale(1.1)" : "scale(1)",
-      },
-      title: {
-        fontFamily: "'Playfair Display', Georgia, serif",
-        fontSize: isMobile ? "20px" : "24px",
-        fontWeight: "700",
-        color: "white",
-        marginBottom: "12px",
-      },
-      description: {
-        fontSize: isMobile ? "14px" : "15px",
-        color: "rgba(255, 255, 255, 0.7)",
-        lineHeight: "1.7",
-      },
-      connector: {
-        position: "absolute",
-        top: "80px",
-        right: "-40px",
-        width: "80px",
-        height: "2px",
-        background:
-          "linear-gradient(90deg, rgba(255,255,255,0.3) 0%, transparent 100%)",
-        display: isMobile || index === total - 1 ? "none" : "block",
-      },
-    }),
-    [isHovered, step.color, index, total, isMobile],
-  );
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 40 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
-      transition={{ duration: 0.6, delay: index * 0.15 }}
-      style={styles.card}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div style={styles.stepNumber}>{step.step}</div>
-      <span style={styles.icon} role="img" aria-hidden="true">
-        {step.icon}
-      </span>
-      <h3 style={styles.title}>{step.title}</h3>
-      <p style={styles.description}>{step.description}</p>
-      <div style={styles.connector} />
-    </motion.div>
-  );
-};
-
-/**
- * Why Choose Us Card
- */
-const WhyChooseCard = ({ item, index, isMobile }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-30px" });
-  const IconComponent = item.icon;
-
-  const styles = useMemo(
-    () => ({
-      card: {
-        position: "relative",
-        backgroundColor: "white",
-        borderRadius: THEME.borderRadius.xl,
-        padding: isMobile ? "28px" : "36px",
-        boxShadow: isHovered ? THEME.shadows.glow : THEME.shadows.md,
-        transition: THEME.transitions.smooth,
-        transform: isHovered ? "translateY(-8px)" : "translateY(0)",
-        border: `1px solid ${isHovered ? THEME.colors.primary[200] : THEME.colors.neutral[100]}`,
-        overflow: "hidden",
-      },
-      accentBar: {
-        position: "absolute",
-        top: 0,
-        left: 0,
-        right: 0,
-        height: "4px",
-        background: `linear-gradient(90deg, ${item.color} 0%, ${item.color}80 100%)`,
-        transform: isHovered ? "scaleX(1)" : "scaleX(0)",
-        transformOrigin: "left",
-        transition: THEME.transitions.smooth,
-      },
-      header: {
-        display: "flex",
-        alignItems: isMobile ? "flex-start" : "center",
-        gap: "20px",
-        marginBottom: "20px",
-        flexDirection: isMobile ? "column" : "row",
-      },
-      iconContainer: {
-        width: "64px",
-        height: "64px",
-        borderRadius: THEME.borderRadius.lg,
-        background: `linear-gradient(135deg, ${item.color} 0%, ${item.color}CC 100%)`,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        color: "white",
-        boxShadow: `0 8px 20px ${item.color}40`,
-        flexShrink: 0,
-        transition: THEME.transitions.smooth,
-        transform: isHovered
-          ? "scale(1.1) rotate(-5deg)"
-          : "scale(1) rotate(0deg)",
-      },
-      content: {
-        flex: 1,
-      },
-      title: {
-        fontFamily: "'Playfair Display', Georgia, serif",
-        fontSize: isMobile ? "20px" : "22px",
-        fontWeight: "700",
-        color: THEME.colors.neutral[900],
-        marginBottom: "8px",
-      },
-      description: {
-        fontSize: "15px",
-        color: THEME.colors.neutral[500],
-        lineHeight: "1.7",
-        marginBottom: "20px",
-      },
-      stats: {
-        display: "flex",
-        alignItems: "baseline",
-        gap: "8px",
-        padding: "16px 20px",
-        backgroundColor: THEME.colors.neutral[50],
-        borderRadius: THEME.borderRadius.lg,
-        border: `1px solid ${THEME.colors.neutral[100]}`,
-      },
-      statValue: {
-        fontSize: "28px",
-        fontWeight: "800",
-        color: item.color,
-        lineHeight: "1",
-      },
-      statLabel: {
-        fontSize: "13px",
-        color: THEME.colors.neutral[500],
-        fontWeight: "500",
-      },
-    }),
-    [isHovered, item.color, isMobile],
-  );
-
-  return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 40 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
-      transition={{ duration: 0.6, delay: index * 0.1 }}
-      style={styles.card}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      <div style={styles.accentBar} />
-      <div style={styles.header}>
-        <div style={styles.iconContainer}>
-          <IconComponent size={28} />
-        </div>
-        <div style={styles.content}>
-          <h3 style={styles.title}>{item.title}</h3>
-        </div>
-      </div>
-      <p style={styles.description}>{item.description}</p>
-      <div style={styles.stats}>
-        <span style={styles.statValue}>{item.stat}</span>
-        <span style={styles.statLabel}>{item.statLabel}</span>
-      </div>
-    </motion.div>
-  );
-};
-
-/**
- * Testimonial Card
- */
-const TestimonialCard = ({ testimonial, index }) => {
-  const styles = {
-    card: {
-      backgroundColor: "white",
-      borderRadius: THEME.borderRadius.xl,
-      padding: "32px",
-      boxShadow: THEME.shadows.lg,
-      border: `1px solid ${THEME.colors.neutral[100]}`,
-    },
-    stars: {
-      display: "flex",
-      gap: "4px",
-      marginBottom: "20px",
-    },
-    star: {
-      color: THEME.colors.accent.amber,
-    },
-    quote: {
-      fontSize: "17px",
-      color: THEME.colors.neutral[700],
-      lineHeight: "1.8",
-      marginBottom: "24px",
-      fontStyle: "italic",
-    },
-    author: {
-      display: "flex",
-      alignItems: "center",
-      gap: "16px",
-    },
-    avatar: {
-      width: "56px",
-      height: "56px",
-      borderRadius: "50%",
-      objectFit: "cover",
-      border: `3px solid ${THEME.colors.primary[100]}`,
-    },
-    authorInfo: {},
-    authorName: {
-      fontSize: "16px",
-      fontWeight: "700",
-      color: THEME.colors.neutral[900],
-      marginBottom: "4px",
-    },
-    authorRole: {
-      fontSize: "14px",
-      color: THEME.colors.neutral[500],
-    },
-  };
-
-  return (
-    <motion.div
-      style={styles.card}
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-    >
-      <div style={styles.stars}>
-        {[...Array(testimonial.rating)].map((_, i) => (
-          <FiStar
-            key={i}
-            size={18}
-            fill={THEME.colors.accent.amber}
-            style={styles.star}
-          />
-        ))}
-      </div>
-      <p style={styles.quote}>"{testimonial.quote}"</p>
-      <div style={styles.author}>
-        <img
-          src={testimonial.avatar}
-          alt={testimonial.author}
-          style={styles.avatar}
-        />
-        <div style={styles.authorInfo}>
-          <div style={styles.authorName}>{testimonial.author}</div>
-          <div style={styles.authorRole}>{testimonial.role}</div>
-        </div>
-      </div>
-    </motion.div>
-  );
-};
-
-/**
- * Service Detail Modal
- */
-const ServiceModal = ({ service, onClose }) => {
-  const isMobile = useMediaQuery("(max-width: 768px)");
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "unset";
-    };
-  }, []);
-
-  const styles = {
-    backdrop: {
-      position: "fixed",
-      inset: 0,
-      backgroundColor: "rgba(0, 0, 0, 0.8)",
-      backdropFilter: "blur(12px)",
-      zIndex: 9999,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: isMobile ? "16px" : "32px",
-    },
-    modal: {
-      backgroundColor: "white",
-      borderRadius: THEME.borderRadius["2xl"],
-      maxWidth: "900px",
-      width: "100%",
-      maxHeight: "92vh",
-      overflowY: "auto",
-      position: "relative",
-      boxShadow: THEME.shadows["2xl"],
-    },
-    closeButton: {
-      position: "absolute",
-      top: "20px",
-      right: "20px",
-      width: "48px",
-      height: "48px",
-      borderRadius: "50%",
-      backgroundColor: "rgba(0, 0, 0, 0.6)",
-      color: "white",
-      border: "none",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      cursor: "pointer",
-      zIndex: 10,
-      transition: THEME.transitions.normal,
-    },
-    imageSection: {
-      position: "relative",
-      height: isMobile ? "250px" : "350px",
-    },
-    image: {
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-    },
-    imageOverlay: {
-      position: "absolute",
-      inset: 0,
-      background:
-        "linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)",
-    },
-    imageContent: {
-      position: "absolute",
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: isMobile ? "24px" : "40px",
-      color: "white",
-    },
-    badge: {
-      display: "inline-block",
-      padding: "10px 20px",
-      backgroundColor: THEME.colors.primary[500],
-      borderRadius: THEME.borderRadius.full,
-      fontSize: "13px",
-      fontWeight: "700",
-      marginBottom: "16px",
-      textTransform: "uppercase",
-      letterSpacing: "1px",
-    },
-    modalTitle: {
-      fontFamily: "'Playfair Display', Georgia, serif",
-      fontSize: isMobile ? "28px" : "40px",
-      fontWeight: "700",
-      margin: 0,
-      lineHeight: "1.2",
-    },
-    content: {
-      padding: isMobile ? "28px" : "48px",
-    },
-    grid: {
-      display: "grid",
-      gridTemplateColumns: isMobile ? "1fr" : "1.5fr 1fr",
-      gap: isMobile ? "32px" : "48px",
-    },
-    section: {
-      marginBottom: "32px",
-    },
-    sectionTitle: {
-      fontSize: "18px",
-      fontWeight: "700",
-      color: THEME.colors.neutral[900],
-      marginBottom: "16px",
-      display: "flex",
-      alignItems: "center",
-      gap: "10px",
-    },
-    text: {
-      fontSize: "16px",
-      color: THEME.colors.neutral[600],
-      lineHeight: "1.8",
-    },
-    featuresList: {
-      listStyle: "none",
-      padding: 0,
-      margin: 0,
-    },
-    featureItem: {
-      display: "flex",
-      alignItems: "flex-start",
-      gap: "14px",
-      marginBottom: "16px",
-      fontSize: "15px",
-      color: THEME.colors.neutral[600],
-    },
-    featureIcon: {
-      width: "26px",
-      height: "26px",
-      borderRadius: "50%",
-      backgroundColor: THEME.colors.primary[100],
-      color: THEME.colors.primary[600],
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      flexShrink: 0,
-      marginTop: "2px",
-    },
-    ctaCard: {
-      backgroundColor: THEME.colors.primary[50],
-      padding: "32px",
-      borderRadius: THEME.borderRadius.xl,
-      border: `1px solid ${THEME.colors.primary[100]}`,
-    },
-    ctaTitle: {
-      fontSize: "16px",
-      fontWeight: "700",
-      color: THEME.colors.primary[800],
-      marginBottom: "12px",
-      textTransform: "uppercase",
-      letterSpacing: "1px",
-    },
-    ctaText: {
-      fontSize: "15px",
-      color: THEME.colors.neutral[600],
-      marginBottom: "24px",
-      lineHeight: "1.7",
-    },
-    contactOptions: {
-      display: "flex",
-      flexDirection: "column",
-      gap: "12px",
-      marginTop: "24px",
-    },
-    contactOption: {
-      display: "flex",
-      alignItems: "center",
-      gap: "12px",
-      padding: "14px 18px",
-      backgroundColor: "white",
-      borderRadius: THEME.borderRadius.lg,
-      fontSize: "14px",
-      color: THEME.colors.neutral[700],
-      border: `1px solid ${THEME.colors.neutral[200]}`,
-      transition: THEME.transitions.normal,
-      cursor: "pointer",
-      textDecoration: "none",
-    },
-  };
-
-  return (
-    <motion.div
-      style={styles.backdrop}
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
-    >
-      <motion.div
-        style={styles.modal}
-        initial={{ scale: 0.9, opacity: 0, y: 30 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.9, opacity: 0, y: 30 }}
-        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <motion.button
-          style={styles.closeButton}
-          onClick={onClose}
-          whileHover={{
-            scale: 1.1,
-            backgroundColor: THEME.colors.primary[600],
-          }}
-          whileTap={{ scale: 0.95 }}
-          aria-label="Close modal"
-        >
-          <FiX size={24} />
-        </motion.button>
-
-        <div style={styles.imageSection}>
-          <img src={service.image} alt={service.title} style={styles.image} />
-          <div style={styles.imageOverlay} />
-          <div style={styles.imageContent}>
-            <span style={styles.badge}>Signature Experience</span>
-            <h2 style={styles.modalTitle}>{service.title}</h2>
+            <span
+              style={{
+                display: "inline-block",
+                padding: "6px 16px",
+                backgroundColor: THEME.colors.primary[500],
+                borderRadius: THEME.radii.full,
+                fontSize: "10px",
+                fontWeight: "700",
+                fontFamily: THEME.fonts.body,
+                marginBottom: "12px",
+                textTransform: "uppercase",
+                letterSpacing: "1.2px",
+              }}
+            >
+              Signature Experience
+            </span>
+            <h2
+              style={{
+                fontFamily: THEME.fonts.heading,
+                fontSize: isMobile ? "24px" : "34px",
+                fontWeight: "700",
+                margin: 0,
+                lineHeight: "1.2",
+              }}
+            >
+              {service.title}
+            </h2>
           </div>
         </div>
 
-        <div style={styles.content}>
-          <div style={styles.grid}>
+        {/* Body */}
+        <div style={{ padding: isMobile ? "22px 18px" : "36px" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "1.4fr 1fr",
+              gap: isMobile ? "28px" : "36px",
+            }}
+          >
+            {/* Left column */}
             <div>
-              <div style={styles.section}>
-                <h3 style={styles.sectionTitle}>
-                  <span style={{ fontSize: "20px" }}>📖</span>
+              <div style={{ marginBottom: "28px" }}>
+                <h3
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: "700",
+                    fontFamily: THEME.fonts.body,
+                    color: THEME.colors.textDark,
+                    marginBottom: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.8px",
+                  }}
+                >
+                  <FiCompass size={16} color={THEME.colors.primary[600]} />
                   About This Experience
                 </h3>
-                <p style={styles.text}>
+                <p
+                  style={{
+                    fontSize: "14px",
+                    fontFamily: THEME.fonts.body,
+                    color: THEME.colors.textMuted,
+                    lineHeight: "1.75",
+                    margin: 0,
+                  }}
+                >
                   {service.description} Our expert team ensures every aspect of
-                  your
-                  {service.title.toLowerCase()} experience is meticulously
+                  your {service.title.toLowerCase()} experience is meticulously
                   curated to exceed world-class standards and create lasting
                   memories.
                 </p>
               </div>
 
-              <div style={styles.section}>
-                <h3 style={styles.sectionTitle}>
-                  <span style={{ fontSize: "20px" }}>✨</span>
-                  What's Included
+              {/* Features with auto-highlight */}
+              <div>
+                <h3
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: "700",
+                    fontFamily: THEME.fonts.body,
+                    color: THEME.colors.textDark,
+                    marginBottom: "14px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.8px",
+                  }}
+                >
+                  <FiCheck size={16} color={THEME.colors.primary[600]} />
+                  What&apos;s Included
                 </h3>
-                <ul style={styles.featuresList}>
-                  {service.features.map((feature, idx) => (
-                    <motion.li
-                      key={idx}
-                      style={styles.featureItem}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: idx * 0.05 }}
-                    >
-                      <span style={styles.featureIcon}>
-                        <FiCheck size={14} strokeWidth={3} />
-                      </span>
-                      <span>{feature}</span>
-                    </motion.li>
-                  ))}
+                <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+                  {service.features.map((feature, idx) => {
+                    const isActive = idx === activeFeatureIdx;
+                    return (
+                      <motion.li
+                        key={idx}
+                        initial={{ opacity: 0, x: -16 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{
+                          delay: 0.1 + idx * 0.04,
+                          ease: [0.22, 1, 0.36, 1],
+                        }}
+                        style={{
+                          display: "flex",
+                          alignItems: "flex-start",
+                          gap: "10px",
+                          marginBottom: "8px",
+                          fontSize: "13px",
+                          fontFamily: THEME.fonts.body,
+                          color: isActive
+                            ? THEME.colors.primary[700]
+                            : THEME.colors.textMuted,
+                          lineHeight: "1.6",
+                          padding: "8px 12px",
+                          borderRadius: THEME.radii.md,
+                          backgroundColor: isActive
+                            ? THEME.colors.primary[50]
+                            : "transparent",
+                          border: `1px solid ${isActive ? THEME.colors.primary[200] : "transparent"}`,
+                          transition: `all ${THEME.transitions.smooth}`,
+                          fontWeight: isActive ? "600" : "400",
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: "22px",
+                            height: "22px",
+                            borderRadius: "50%",
+                            backgroundColor: isActive
+                              ? THEME.colors.primary[500]
+                              : THEME.colors.primary[100],
+                            color: isActive
+                              ? THEME.colors.white
+                              : THEME.colors.primary[600],
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                            marginTop: "1px",
+                            transition: `all ${THEME.transitions.base}`,
+                          }}
+                        >
+                          <FiCheck size={11} strokeWidth={3} />
+                        </span>
+                        <span>{feature}</span>
+                      </motion.li>
+                    );
+                  })}
                 </ul>
               </div>
             </div>
 
+            {/* Right column — CTA */}
             <div>
-              <div style={styles.ctaCard}>
-                <h4 style={styles.ctaTitle}>Ready to Book?</h4>
-                <p style={styles.ctaText}>
+              <div
+                style={{
+                  backgroundColor: THEME.colors.primary[50],
+                  padding: isMobile ? "22px" : "28px",
+                  borderRadius: THEME.radii.xl,
+                  border: `1px solid ${THEME.colors.primary[100]}`,
+                  position: isMobile ? "static" : "sticky",
+                  top: "24px",
+                }}
+              >
+                <h4
+                  style={{
+                    fontSize: "13px",
+                    fontWeight: "700",
+                    fontFamily: THEME.fonts.body,
+                    color: THEME.colors.primary[800],
+                    marginBottom: "8px",
+                    textTransform: "uppercase",
+                    letterSpacing: "1px",
+                  }}
+                >
+                  Ready to Book?
+                </h4>
+                <p
+                  style={{
+                    fontSize: "13px",
+                    fontFamily: THEME.fonts.body,
+                    color: THEME.colors.textMuted,
+                    marginBottom: "20px",
+                    lineHeight: "1.65",
+                  }}
+                >
                   Let our expert team craft your perfect{" "}
-                  {service.title.toLowerCase()}
-                  experience, tailored just for you.
+                  {service.title.toLowerCase()} experience, tailored just for
+                  you.
                 </p>
+
                 <Button
                   to="/booking"
                   variant="primary"
                   fullWidth
                   size="large"
-                  icon={<FiArrowRight size={18} />}
+                  icon={<FiArrowRight size={15} />}
                 >
                   Start Planning
                 </Button>
 
-                <div style={styles.contactOptions}>
-                  <a href="tel:+1234567890" style={styles.contactOption}>
-                    <FiPhone size={18} color={THEME.colors.primary[600]} />
-                    <span>Call Us Now</span>
-                  </a>
-                  <a
-                    href="mailto:info@altuvera.com"
-                    style={styles.contactOption}
-                  >
-                    <FiMail size={18} color={THEME.colors.primary[600]} />
-                    <span>Email Us</span>
-                  </a>
-                  <Link to="/contact" style={styles.contactOption}>
-                    <FiMessageCircle
-                      size={18}
-                      color={THEME.colors.primary[600]}
-                    />
-                    <span>Live Chat</span>
-                  </Link>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                    marginTop: "18px",
+                  }}
+                >
+                  {contactOptions.map((opt) => {
+                    const IconComp = opt.icon;
+                    const linkStyle = {
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                      padding: "10px 14px",
+                      backgroundColor: THEME.colors.white,
+                      borderRadius: THEME.radii.md,
+                      fontSize: "12px",
+                      fontFamily: THEME.fonts.body,
+                      fontWeight: "500",
+                      color: THEME.colors.textBody,
+                      border: `1px solid ${THEME.colors.border}`,
+                      textDecoration: "none",
+                      cursor: "pointer",
+                    };
+
+                    return opt.isExternal ? (
+                      <a
+                        key={opt.label}
+                        href={opt.href}
+                        className="contact-link"
+                        style={linkStyle}
+                      >
+                        <IconComp size={14} color={THEME.colors.primary[600]} />
+                        <span>{opt.label}</span>
+                      </a>
+                    ) : (
+                      <Link
+                        key={opt.label}
+                        to={opt.href}
+                        className="contact-link"
+                        style={linkStyle}
+                        onClick={onClose}
+                      >
+                        <IconComp size={14} color={THEME.colors.primary[600]} />
+                        <span>{opt.label}</span>
+                      </Link>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -1304,16 +1812,17 @@ const ServiceModal = ({ service, onClose }) => {
       </motion.div>
     </motion.div>
   );
-};
+});
+ServiceModal.displayName = "ServiceModal";
 
 // ============================================================================
-// MAIN COMPONENT
+// MAIN PAGE
 // ============================================================================
 
 const Services = () => {
   const [selectedService, setSelectedService] = useState(null);
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const isTablet = useMediaQuery("(max-width: 1024px)");
+  const isSmallMobile = useMediaQuery("(max-width: 480px)");
   const scrollProgress = useScrollProgress();
 
   const handleServiceClick = useCallback((service) => {
@@ -1324,155 +1833,58 @@ const Services = () => {
     setSelectedService(null);
   }, []);
 
-  const styles = useMemo(
-    () => ({
-      progressBar: {
-        position: "fixed",
-        top: 0,
-        left: 0,
-        height: "3px",
-        backgroundColor: THEME.colors.primary[500],
-        width: `${scrollProgress}%`,
-        zIndex: 9999,
-        transition: "width 0.1s ease-out",
-      },
-      section: {
-        padding: isMobile ? "60px 16px" : isTablet ? "80px 24px" : "100px 32px",
-      },
-      container: {
-        maxWidth: "1400px",
-        margin: "0 auto",
-      },
-      servicesSection: {
-        backgroundColor: THEME.colors.neutral[50],
-      },
-      servicesGrid: {
-        display: "grid",
-        gridTemplateColumns: isMobile
-          ? "1fr"
-          : isTablet
-            ? "repeat(2, 1fr)"
-            : "repeat(auto-fill, minmax(340px, 1fr))",
-        gap: isMobile ? "24px" : "32px",
-      },
-      processSection: {
-        background: THEME.gradients.hero,
-        position: "relative",
-        overflow: "hidden",
-      },
-      processPattern: {
-        position: "absolute",
-        inset: 0,
-        backgroundImage: `radial-gradient(circle at 20% 80%, rgba(16, 185, 129, 0.15) 0%, transparent 50%),
-                        radial-gradient(circle at 80% 20%, rgba(5, 150, 105, 0.1) 0%, transparent 50%)`,
-        pointerEvents: "none",
-      },
-      processGrid: {
-        display: "grid",
-        gridTemplateColumns: isMobile
-          ? "1fr"
-          : isTablet
-            ? "repeat(2, 1fr)"
-            : "repeat(4, 1fr)",
-        gap: isMobile ? "48px" : "32px",
-        position: "relative",
-        zIndex: 2,
-      },
-      whySection: {
-        backgroundColor: "white",
-      },
-      whyGrid: {
-        display: "grid",
-        gridTemplateColumns: isMobile
-          ? "1fr"
-          : isTablet
-            ? "repeat(2, 1fr)"
-            : "repeat(3, 1fr)",
-        gap: isMobile ? "24px" : "28px",
-      },
-      testimonialsSection: {
-        backgroundColor: THEME.colors.neutral[50],
-      },
-      testimonialsGrid: {
-        display: "grid",
-        gridTemplateColumns: isMobile
-          ? "1fr"
-          : isTablet
-            ? "1fr"
-            : "repeat(3, 1fr)",
-        gap: "28px",
-      },
-      ctaSection: {
-        backgroundColor: "white",
-      },
-      ctaCard: {
-        maxWidth: "1000px",
-        margin: "0 auto",
-        padding: isMobile ? "40px 24px" : "80px 60px",
-        background: THEME.gradients.primary,
-        borderRadius: isMobile
-          ? THEME.borderRadius.xl
-          : THEME.borderRadius["2xl"],
-        boxShadow: `${THEME.shadows["2xl"]}, 0 0 80px rgba(5, 150, 105, 0.2)`,
-        position: "relative",
-        overflow: "hidden",
-        textAlign: "center",
-      },
-      ctaGlow: {
-        position: "absolute",
-        top: "-50%",
-        left: "-50%",
-        width: "200%",
-        height: "200%",
-        background:
-          "radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 50%)",
-        pointerEvents: "none",
-      },
-      ctaContent: {
-        position: "relative",
-        zIndex: 2,
-      },
-      ctaTitle: {
-        fontFamily: "'Playfair Display', Georgia, serif",
-        fontSize: isMobile ? "28px" : "42px",
-        fontWeight: "700",
-        color: "white",
-        marginBottom: "20px",
-        lineHeight: "1.2",
-      },
-      ctaText: {
-        fontSize: isMobile ? "16px" : "18px",
-        color: "rgba(255, 255, 255, 0.9)",
-        marginBottom: "36px",
-        maxWidth: "600px",
-        marginLeft: "auto",
-        marginRight: "auto",
-        lineHeight: "1.8",
-      },
-      ctaButtons: {
-        display: "flex",
-        gap: "16px",
-        justifyContent: "center",
-        flexWrap: "wrap",
-      },
-    }),
-    [isMobile, isTablet, scrollProgress],
-  );
+  const sectionPadding = isSmallMobile
+    ? "48px 14px"
+    : isMobile
+      ? "56px 18px"
+      : "100px 40px";
 
   return (
     <>
       <Helmet>
-        <title>Our Services | Altuvera - Premium East Africa Travel</title>
+        <title>
+          Our Services | Altuvera — Premium East Africa Travel Experiences
+        </title>
         <meta
           name="description"
           content="Discover Altuvera's premium safari services: wildlife expeditions, mountain climbing, gorilla trekking, beach holidays, and bespoke cultural experiences across East Africa."
         />
-        <meta property="og:title" content="Our Services | Altuvera" />
+        <meta
+          property="og:title"
+          content="Our Services | Altuvera — Premium East Africa Travel"
+        />
         <meta property="og:type" content="website" />
+        <link
+          rel="preconnect"
+          href="https://images.unsplash.com"
+          crossOrigin="anonymous"
+        />
       </Helmet>
 
-      {/* Scroll Progress Bar */}
-      <div style={styles.progressBar} />
+      <GlobalStyles />
+
+      {/* Scroll Progress */}
+      <div
+        role="progressbar"
+        aria-valuenow={Math.round(scrollProgress)}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Page scroll progress"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          height: "3px",
+          background: `linear-gradient(90deg, ${THEME.colors.primary[400]}, ${THEME.colors.primary[600]})`,
+          width: `${scrollProgress}%`,
+          zIndex: 10001,
+          transition: "width 80ms linear",
+          boxShadow:
+            scrollProgress > 0
+              ? `0 0 10px ${THEME.colors.primary[400]}60`
+              : "none",
+        }}
+      />
 
       {/* Page Header */}
       <PageHeader
@@ -1482,156 +1894,382 @@ const Services = () => {
         breadcrumbs={[{ label: "Services", path: "/services" }]}
       />
 
+      {/* Cookie Settings */}
       <div
         style={{
-          padding: isMobile ? "10px 16px 0" : "14px 24px 0",
-          backgroundColor: "white",
+          padding: isMobile ? "8px 18px 0" : "12px 28px 0",
+          backgroundColor: THEME.colors.white,
         }}
       >
-        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
+        <div style={{ maxWidth: "1320px", margin: "0 auto" }}>
           <CookieSettingsButton />
         </div>
       </div>
 
-      {/* Services Grid Section */}
-      <section style={{ ...styles.section, ...styles.servicesSection }}>
-        <div style={styles.container}>
-          <SectionHeader
-            labelIcon="✨"
-            label="What We Offer"
-            title="Tailored Travel Experiences"
-            subtitle="From thrilling safaris to cultural immersions, discover our complete range of services crafted to make your East African journey extraordinary."
-          />
-
-          <div style={styles.servicesGrid}>
-            {services.map((service, index) => (
-              <ServiceCard
-                key={service.id}
-                service={service}
-                index={index}
-                onClick={handleServiceClick}
-                isMobile={isMobile}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Process Section */}
-      <section style={{ ...styles.section, ...styles.processSection }}>
-        <div style={styles.processPattern} />
-        <div style={styles.container}>
-          <SectionHeader
-            labelIcon="🎯"
-            label="Our Process"
-            title="How It Works"
-            subtitle="From your first inquiry to touchdown, we make planning your adventure seamless and enjoyable."
-            light
-          />
-
-          <div style={styles.processGrid}>
-            {PROCESS_STEPS.map((step, index) => (
-              <ProcessStepCard
-                key={step.step}
-                step={step}
-                index={index}
-                total={PROCESS_STEPS.length}
-                isMobile={isMobile}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Why Choose Us Section */}
-      <section style={{ ...styles.section, ...styles.whySection }}>
-        <div style={styles.container}>
-          <SectionHeader
-            labelIcon="💎"
-            label="Why Altuvera"
-            title="The Altuvera Difference"
-            subtitle="Experience the difference that comes with expertise, passion, and an unwavering commitment to excellence."
-          />
-
-          <div style={styles.whyGrid}>
-            {WHY_CHOOSE_US.map((item, index) => (
-              <WhyChooseCard
-                key={item.title}
-                item={item}
-                index={index}
-                isMobile={isMobile}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonials Section */}
-      <section style={{ ...styles.section, ...styles.testimonialsSection }}>
-        <div style={styles.container}>
-          <SectionHeader
-            labelIcon="💬"
-            label="Testimonials"
-            title="What Our Travelers Say"
-            subtitle="Don't just take our word for it — hear from adventurers who've experienced the Altuvera difference."
-          />
-
-          <div style={styles.testimonialsGrid}>
-            {TESTIMONIALS.map((testimonial, index) => (
-              <TestimonialCard
-                key={testimonial.author}
-                testimonial={testimonial}
-                index={index}
-              />
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section style={{ ...styles.section, ...styles.ctaSection }}>
-        <div style={styles.container}>
+      {/* Rotating Hero Tagline */}
+      <section
+        style={{
+          padding: isSmallMobile
+            ? "36px 14px 12px"
+            : isMobile
+              ? "40px 18px 16px"
+              : "56px 40px 24px",
+          backgroundColor: THEME.colors.white,
+        }}
+      >
+        <div
+          style={{ maxWidth: "1320px", margin: "0 auto", textAlign: "center" }}
+        >
           <motion.div
-            style={styles.ctaCard}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "12px",
+              padding: "14px 28px",
+              backgroundColor: THEME.colors.primary[50],
+              borderRadius: THEME.radii.full,
+              border: `1px solid ${THEME.colors.primary[200]}`,
+            }}
+          >
+            <FiGlobe size={16} color={THEME.colors.primary[600]} />
+            <RotatingText
+              texts={ROTATING_HERO_TEXTS}
+              interval={4000}
+              style={{
+                fontSize: isMobile ? "13px" : "15px",
+                fontFamily: THEME.fonts.body,
+                fontWeight: "600",
+                color: THEME.colors.primary[700],
+                width: isMobile ? "240px" : "340px",
+                textAlign: "center",
+                height: "22px",
+              }}
+            />
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ============================== SERVICES ============================== */}
+      <section
+        style={{
+          padding: sectionPadding,
+          backgroundColor: THEME.colors.lightGreen,
+        }}
+      >
+        <div style={{ maxWidth: "1320px", margin: "0 auto" }}>
+          <AnimatedSection animation="perspectiveIn">
+            <SectionHeader
+              label="✦ What We Offer"
+              title="Tailored Travel Experiences"
+              subtitle="From thrilling safaris to cultural immersions, discover our complete range of services crafted to make your East African journey extraordinary."
+            />
+          </AnimatedSection>
+          <div
+            className="grid-services"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+              gap: "28px",
+            }}
+          >
+            {services.map((service, index) => (
+              <AnimatedSection
+                key={service.id}
+                animation="flipIn"
+                delay={index * 0.1}
+              >
+                <ServiceCard
+                  service={service}
+                  index={index}
+                  onClick={handleServiceClick}
+                  isMobile={isMobile}
+                />
+              </AnimatedSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================== PROCESS ============================== */}
+      <section
+        style={{
+          padding: sectionPadding,
+          background: `linear-gradient(135deg, ${THEME.colors.primary[950]} 0%, ${THEME.colors.primary[900]} 40%, ${THEME.colors.primary[800]} 100%)`,
+          position: "relative",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          aria-hidden="true"
+          style={{
+            position: "absolute",
+            inset: 0,
+            backgroundImage: `radial-gradient(circle at 10% 90%, ${THEME.colors.primary[600]}15 0%, transparent 50%), radial-gradient(circle at 90% 10%, ${THEME.colors.primary[500]}10 0%, transparent 50%)`,
+            pointerEvents: "none",
+          }}
+        />
+        <div
+          style={{
+            maxWidth: "1320px",
+            margin: "0 auto",
+            position: "relative",
+            zIndex: 1,
+          }}
+        >
+          <AnimatedSection animation="slideReveal">
+            <SectionHeader
+              label="✦ Our Process"
+              title="How It Works"
+              subtitle="From your first inquiry to touchdown, we make planning your adventure seamless and enjoyable."
+              light
+            />
+          </AnimatedSection>
+          <div
+            className="grid-process"
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile
+                ? "repeat(2, 1fr)"
+                : "repeat(4, 1fr)",
+              gap: "28px",
+            }}
+          >
+            {PROCESS_STEPS.map((step, index) => (
+              <AnimatedSection
+                key={step.step}
+                animation="slideReveal"
+                delay={index * 0.15}
+                direction={index % 2 === 0 ? "left" : "right"}
+              >
+                <ProcessStepCard
+                  step={step}
+                  index={index}
+                  total={PROCESS_STEPS.length}
+                  isMobile={isMobile}
+                />
+              </AnimatedSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================== WHY US ============================== */}
+      <section
+        style={{ padding: sectionPadding, backgroundColor: THEME.colors.white }}
+      >
+        <div style={{ maxWidth: "1320px", margin: "0 auto" }}>
+          <AnimatedSection animation="zoomIn">
+            <SectionHeader
+              label="✦ Why Altuvera"
+              title="The Altuvera Difference"
+              subtitle="Experience the difference that comes with expertise, passion, and an unwavering commitment to excellence."
+            />
+          </AnimatedSection>
+          <div
+            className="grid-why"
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+              gap: "24px",
+            }}
+          >
+            {WHY_CHOOSE_US.map((item, index) => (
+              <AnimatedSection
+                key={item.title}
+                animation="zoomIn"
+                delay={index * 0.1}
+              >
+                <WhyChooseCard item={item} index={index} isMobile={isMobile} />
+              </AnimatedSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================== TESTIMONIALS ============================== */}
+      <section
+        style={{
+          padding: sectionPadding,
+          backgroundColor: THEME.colors.lightGreen,
+        }}
+      >
+        <div style={{ maxWidth: "1320px", margin: "0 auto" }}>
+          <AnimatedSection animation="blurIn">
+            <SectionHeader
+              label="✦ Testimonials"
+              title="What Our Travelers Say"
+              subtitle="Don't just take our word for it — hear from adventurers who've experienced the Altuvera difference."
+            />
+          </AnimatedSection>
+          <div
+            className="grid-testimonials"
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+              gap: "24px",
+            }}
+          >
+            {TESTIMONIALS.map((testimonial, index) => (
+              <AnimatedSection
+                key={testimonial.author}
+                animation="blurIn"
+                delay={index * 0.2}
+              >
+                <TestimonialCard testimonial={testimonial} index={index} />
+              </AnimatedSection>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================== CTA ============================== */}
+      <section
+        style={{ padding: sectionPadding, backgroundColor: THEME.colors.white }}
+      >
+        <div style={{ maxWidth: "1320px", margin: "0 auto" }}>
+          <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
+            viewport={{ once: true, margin: "-80px" }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              maxWidth: "920px",
+              margin: "0 auto",
+              padding: isSmallMobile
+                ? "40px 22px"
+                : isMobile
+                  ? "48px 28px"
+                  : "72px 56px",
+              background: `linear-gradient(135deg, ${THEME.colors.primary[700]} 0%, ${THEME.colors.primary[600]} 50%, ${THEME.colors.primary[500]} 100%)`,
+              borderRadius: isMobile ? THEME.radii.xl : THEME.radii["3xl"],
+              boxShadow: `${THEME.shadows["2xl"]}, 0 0 80px ${THEME.colors.primary[500]}20`,
+              position: "relative",
+              overflow: "hidden",
+              textAlign: "center",
+            }}
           >
-            <div style={styles.ctaGlow} />
-            <div style={styles.ctaContent}>
-              <motion.h2
-                style={styles.ctaTitle}
-                initial={{ opacity: 0, y: 20 }}
+            <div
+              aria-hidden="true"
+              style={{
+                position: "absolute",
+                top: "-40%",
+                left: "-30%",
+                width: "160%",
+                height: "160%",
+                background:
+                  "radial-gradient(ellipse, rgba(255,255,255,0.06) 0%, transparent 60%)",
+                pointerEvents: "none",
+              }}
+            />
+
+            <div style={{ position: "relative", zIndex: 2 }}>
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
+                transition={{ delay: 0.1, duration: 0.5 }}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  padding: "8px 20px",
+                  backgroundColor: "rgba(255,255,255,0.12)",
+                  borderRadius: THEME.radii.full,
+                  color: THEME.colors.primary[100],
+                  fontSize: "11px",
+                  fontWeight: "700",
+                  fontFamily: THEME.fonts.body,
+                  marginBottom: "20px",
+                  textTransform: "uppercase",
+                  letterSpacing: "2px",
+                  border: "1px solid rgba(255,255,255,0.12)",
+                }}
+              >
+                <FiSun size={13} />
+                Start Your Adventure
+              </motion.div>
+
+              <motion.h2
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                style={{
+                  fontFamily: THEME.fonts.heading,
+                  fontSize: isSmallMobile ? "24px" : isMobile ? "26px" : "38px",
+                  fontWeight: "700",
+                  color: THEME.colors.white,
+                  marginBottom: "16px",
+                  lineHeight: "1.2",
+                  letterSpacing: "-0.02em",
+                }}
               >
                 Ready to Start Your Journey?
               </motion.h2>
+
               <motion.p
-                style={styles.ctaText}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.3 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                style={{
+                  fontSize: isMobile ? "14px" : "16px",
+                  fontFamily: THEME.fonts.body,
+                  color: "rgba(255,255,255,0.85)",
+                  marginBottom: "28px",
+                  maxWidth: "520px",
+                  marginLeft: "auto",
+                  marginRight: "auto",
+                  lineHeight: "1.75",
+                }}
               >
                 Contact our expert team today and let us help you plan the
                 adventure of a lifetime across the breathtaking landscapes of
                 East Africa.
               </motion.p>
+
+              {/* Rotating trust badges */}
               <motion.div
-                style={styles.ctaButtons}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.35, duration: 0.5 }}
+                style={{ marginBottom: "28px" }}
+              >
+                <RotatingText
+                  texts={CTA_ROTATING_TEXTS}
+                  interval={3000}
+                  style={{
+                    fontSize: "13px",
+                    fontFamily: THEME.fonts.body,
+                    color: "rgba(255,255,255,0.7)",
+                    height: "22px",
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                />
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ delay: 0.4 }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+                style={{
+                  display: "flex",
+                  gap: "12px",
+                  justifyContent: "center",
+                  flexWrap: "wrap",
+                }}
               >
                 <Button
                   to="/booking"
                   variant="white"
                   size="large"
-                  icon={<FiArrowRight size={18} />}
+                  icon={<FiArrowRight size={15} />}
                 >
                   Start Planning
                 </Button>
@@ -1640,8 +2278,8 @@ const Services = () => {
                   variant="outline"
                   size="large"
                   style={{
-                    borderColor: "rgba(255,255,255,0.5)",
-                    color: "white",
+                    borderColor: "rgba(255,255,255,0.35)",
+                    color: THEME.colors.white,
                     backgroundColor: "transparent",
                   }}
                 >
@@ -1653,10 +2291,14 @@ const Services = () => {
         </div>
       </section>
 
-      {/* Service Detail Modal */}
-      <AnimatePresence>
+      {/* Modal */}
+      <AnimatePresence mode="wait">
         {selectedService && (
-          <ServiceModal service={selectedService} onClose={handleCloseModal} />
+          <ServiceModal
+            key={selectedService.id}
+            service={selectedService}
+            onClose={handleCloseModal}
+          />
         )}
       </AnimatePresence>
     </>

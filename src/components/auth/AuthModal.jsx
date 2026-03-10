@@ -48,27 +48,26 @@ const ROLE_OPTIONS = [
   {
     value: "user",
     label: "Traveler",
-    icon: "🌍",
+    icon: HiGlobe,
     description: "Explore destinations",
     color: "#3b82f6",
   },
   {
     value: "photographer",
     label: "Photographer",
-    icon: "📸",
+    icon: HiPhotograph,
     description: "Capture moments",
     color: "#8b5cf6",
   },
   {
     value: "planner",
     label: "Travel Planner",
-    icon: "🗺️",
+    icon: HiSparkles,
     description: "Create itineraries",
     color: "#059669",
   },
 ];
 
-// ============================================================================
 // Utility Functions
 // ============================================================================
 
@@ -826,30 +825,41 @@ export default function AuthModal() {
         aria-labelledby="auth-modal-title"
         onClick={(event) => event.stopPropagation()}
       >
-        {/* ===== HEADER ===== */}
-        <header className="auth-modal-header">
-          <div className="auth-modal-brand">
-            <div className="auth-brand-logo">
-              <span className="auth-brand-icon" aria-hidden="true">
-                A
-              </span>
-              <div className="auth-brand-glow" aria-hidden="true" />
-            </div>
-            <div className="auth-brand-info">
-              <span className="auth-brand-text">Altuvera</span>
-              <span className="auth-brand-tagline">Travel Platform</span>
-            </div>
+        {/* Side Panel - NEW */}
+        <div className="auth-side-panel">
+          <div className="auth-side-image" />
+          <div className="auth-side-overlay" />
+          <div className="auth-side-content">
+            <h3 className="auth-side-title">Discover East Africa</h3>
+            <p className="auth-side-text">Join thousands of travelers exploring the wild beauty and ancient culture of the Rift Valley.</p>
           </div>
+        </div>
 
-          <button
-            className="auth-close-btn"
-            onClick={closeModal}
-            aria-label="Close authentication modal"
-            type="button"
-          >
-            <HiX aria-hidden="true" />
-          </button>
-        </header>
+        <div className="auth-main-panel">
+          {/* ===== HEADER ===== */}
+          <header className="auth-modal-header">
+            <div className="auth-modal-brand">
+              <div className="auth-brand-logo">
+                <span className="auth-brand-icon" aria-hidden="true">
+                  A
+                </span>
+                <div className="auth-brand-glow" aria-hidden="true" />
+              </div>
+              <div className="auth-brand-info">
+                <span className="auth-brand-text">Altuvera</span>
+                <span className="auth-brand-tagline">Premium Adventures</span>
+              </div>
+            </div>
+
+            <button
+              className="auth-close-btn"
+              onClick={closeModal}
+              aria-label="Close authentication modal"
+              type="button"
+            >
+              <HiX aria-hidden="true" />
+            </button>
+          </header>
 
         {/* ===== TABS ===== */}
         {!isVerify && (
@@ -1349,6 +1359,9 @@ export default function AuthModal() {
                       aria-label="Select your role"
                     >
                       {ROLE_OPTIONS.map((option) => (
+                        (() => {
+                          const RoleIcon = option.icon;
+                          return (
                         <button
                           key={option.value}
                           type="button"
@@ -1362,7 +1375,7 @@ export default function AuthModal() {
                           aria-checked={formData.role === option.value}
                         >
                           <span className="auth-role-icon" aria-hidden="true">
-                            {option.icon}
+                            <RoleIcon aria-hidden="true" />
                           </span>
                           <span className="auth-role-label">
                             {option.label}
@@ -1371,6 +1384,8 @@ export default function AuthModal() {
                             {option.description}
                           </span>
                         </button>
+                          );
+                        })()
                       ))}
                     </div>
                   </label>
@@ -1693,7 +1708,7 @@ export default function AuthModal() {
                     {codeRowState === "verifying"
                       ? "Verifying..."
                       : codeRowState === "success"
-                        ? "✓ Verified!"
+                        ? "Verified!"
                         : loading
                           ? "Verifying..."
                           : "Verify & Continue"}

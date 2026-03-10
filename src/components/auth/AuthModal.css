@@ -55,7 +55,7 @@
 .auth-modal-overlay {
   position: fixed;
   inset: 0;
-  z-index: 10000;
+  z-index: 20000;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -99,26 +99,83 @@
 
 /* Modal Container */
 .auth-modal {
-  width: min(560px, 96%);
+  width: min(900px, 96%);
+  min-height: 600px;
   max-height: 92vh;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.99),
-    rgba(250, 253, 252, 0.98)
-  );
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: white;
   border-radius: var(--auth-radius-xl);
   box-shadow:
     0 32px 65px -20px rgba(2, 44, 34, 0.5),
-    0 12px 24px -8px rgba(2, 44, 34, 0.22),
-    0 0 0 1px rgba(255, 255, 255, 0.55) inset;
+    0 12px 24px -8px rgba(2, 44, 34, 0.22);
   overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  display: flex !important;
+  flex-direction: row !important; /* Split layout */
   animation: authSlideUp 500ms var(--auth-ease-spring);
   position: relative;
   border: 1px solid rgba(5, 150, 105, 0.16);
+}
+
+.auth-side-panel {
+  flex: 1.1;
+  position: relative;
+  background: #022c22;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 48px;
+  color: white;
+  overflow: hidden;
+}
+
+@media (max-width: 860px) {
+  .auth-side-panel { display: none; }
+  .auth-modal { width: min(480px, 96%); flex-direction: column !important; }
+}
+
+.auth-side-image {
+  position: absolute;
+  inset: 0;
+  background-image: url('https://images.unsplash.com/photo-1547471080-7cc2032047ed?auto=format&fit=crop&w=800');
+  background-size: cover;
+  background-position: center;
+  opacity: 0.6;
+  transition: transform 10s linear;
+}
+
+.auth-modal:hover .auth-side-image {
+  transform: scale(1.15);
+}
+
+.auth-side-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, #022c22 0%, transparent 60%);
+  z-index: 1;
+}
+
+.auth-side-content {
+  position: relative;
+  z-index: 2;
+}
+
+.auth-side-title {
+  font-family: var(--fd);
+  font-size: 2.2rem;
+  margin-bottom: 16px;
+  line-height: 1.2;
+}
+
+.auth-side-text {
+  font-size: 0.95rem;
+  opacity: 0.85;
+  line-height: 1.6;
+}
+
+.auth-main-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
 }
 
 .auth-modal::before {

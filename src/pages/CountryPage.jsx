@@ -135,7 +135,7 @@ function useReveal(th = 0.08) {
           o.unobserve(el);
         }
       },
-      { threshold: th, rootMargin: "0px 0px -30px 0px" }
+      { threshold: th, rootMargin: "0px 0px -30px 0px" },
     );
     o.observe(el);
     return () => o.disconnect();
@@ -276,7 +276,7 @@ function Gal({ imgs }) {
   useEffect(() => {
     auto.current = setInterval(
       () => sa((p) => (p + 1) % (imgs?.length || 1)),
-      5000
+      5000,
     );
     return () => clearInterval(auto.current);
   }, [imgs]);
@@ -551,6 +551,10 @@ const OFFICIAL_LINKS = {
     url: "https://www.ethiopia.travel/",
     label: "Ethiopia Travel — Official Tourism",
   },
+  somalia: {
+    url: "https://www.visit-somalia.com/",
+    label: "Visit Somalia — Official Portal",
+  },
 };
 const getOfficialLink = (id) => OFFICIAL_LINKS[id] || null;
 
@@ -597,11 +601,13 @@ const DATA = {
       slug: "kenya",
       name: "Kenya",
       region: "East Africa",
-      tagline: "The classic safari-and-sea itinerary—big cats, Rift Valley lakes, and a living Swahili coast.",
+      tagline:
+        "The classic safari-and-sea itinerary—big cats, Rift Valley lakes, and a living Swahili coast.",
       theme: { accent: "#E11D48", surface: "#0B1220", textOnAccent: "#FFFFFF" },
 
       seo: {
-        title: "Visit Kenya | Safaris, Beaches, Culture & Practical Travel Guide",
+        title:
+          "Visit Kenya | Safaris, Beaches, Culture & Practical Travel Guide",
         description:
           "Plan a Kenya trip with safari highlights (Maasai Mara, Amboseli, Tsavo), Indian Ocean beaches (Diani, Lamu), best seasons, itineraries, and travel essentials.",
       },
@@ -616,7 +622,10 @@ const DATA = {
         keyAirports: [
           { code: "NBO", name: "Jomo Kenyatta International (Nairobi)" },
           { code: "MBA", name: "Moi International (Mombasa)" },
-          { code: "WIL", name: "Wilson Airport (Nairobi – domestic/safari flights)" },
+          {
+            code: "WIL",
+            name: "Wilson Airport (Nairobi – domestic/safari flights)",
+          },
         ],
       },
 
@@ -635,8 +644,19 @@ const DATA = {
           "Swahili coastal heritage and Indian Ocean resorts",
           "Rift Valley lakes and world-class birding",
         ],
-        idealTripLength: ["7–10 days (first-timers)", "10–14 days (safari + coast)", "4–6 days (short safari)"],
-        travelStyles: ["Couples", "Family", "Photography", "Luxury", "Adventure", "Culture & Heritage"],
+        idealTripLength: [
+          "7–10 days (first-timers)",
+          "10–14 days (safari + coast)",
+          "4–6 days (short safari)",
+        ],
+        travelStyles: [
+          "Couples",
+          "Family",
+          "Photography",
+          "Luxury",
+          "Adventure",
+          "Culture & Heritage",
+        ],
       },
 
       whenToGo: {
@@ -646,20 +666,36 @@ const DATA = {
           {
             name: "Peak safari season (drier)",
             months: "Jun–Oct",
-            pros: ["Excellent wildlife visibility", "Comfortable safari conditions"],
-            watchFor: ["Higher prices and occupancy", "Advance booking recommended"],
+            pros: [
+              "Excellent wildlife visibility",
+              "Comfortable safari conditions",
+            ],
+            watchFor: [
+              "Higher prices and occupancy",
+              "Advance booking recommended",
+            ],
           },
           {
             name: "Short dry season",
             months: "Jan–Feb",
-            pros: ["Great general safari conditions", "Hotter and sunnier coast"],
+            pros: [
+              "Great general safari conditions",
+              "Hotter and sunnier coast",
+            ],
             watchFor: ["Warm mid-day temperatures in some parks"],
           },
           {
             name: "Greener months",
             months: "Mar–May",
-            pros: ["Lush landscapes", "Often better value", "Good photography light after rains"],
-            watchFor: ["Muddy roads in some areas", "Some camps may close seasonally"],
+            pros: [
+              "Lush landscapes",
+              "Often better value",
+              "Good photography light after rains",
+            ],
+            watchFor: [
+              "Muddy roads in some areas",
+              "Some camps may close seasonally",
+            ],
           },
           {
             name: "Short rains",
@@ -735,9 +771,15 @@ const DATA = {
             type: "kpi.strip",
             id: "kpis",
             items: [
-              { label: "Top wildlife areas", value: "Mara • Amboseli • Tsavo • Samburu" },
+              {
+                label: "Top wildlife areas",
+                value: "Mara • Amboseli • Tsavo • Samburu",
+              },
               { label: "Iconic coast", value: "Diani • Watamu • Lamu" },
-              { label: "UNESCO highlights", value: "Lamu • Mt Kenya • Fort Jesus • Turkana" },
+              {
+                label: "UNESCO highlights",
+                value: "Lamu • Mt Kenya • Fort Jesus • Turkana",
+              },
               { label: "Gateway", value: "Nairobi (NBO/WIL)" },
             ],
           },
@@ -750,8 +792,7 @@ const DATA = {
             items: [
               {
                 title: "Efficient safari circuits",
-                body:
-                  "Kenya’s parks, conservancies, and airstrips are set up for multi-stop trips. Many travelers do a short flight to the Mara, then connect to Amboseli or Tsavo, and finish on the coast—without losing days to long drives.",
+                body: "Kenya’s parks, conservancies, and airstrips are set up for multi-stop trips. Many travelers do a short flight to the Mara, then connect to Amboseli or Tsavo, and finish on the coast—without losing days to long drives.",
                 media: {
                   src: "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1600&q=80",
                   alt: "Wildlife on open plains",
@@ -760,8 +801,7 @@ const DATA = {
               },
               {
                 title: "Conservancy-led experiences",
-                body:
-                  "Community and private conservancies often allow walking safaris and night drives (where permitted). These models can also generate direct local revenue through land leases, jobs, and ranger programs.",
+                body: "Community and private conservancies often allow walking safaris and night drives (where permitted). These models can also generate direct local revenue through land leases, jobs, and ranger programs.",
                 media: {
                   src: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?auto=format&fit=crop&w=1600&q=80",
                   alt: "Cultural experience and guiding",
@@ -770,8 +810,7 @@ const DATA = {
               },
               {
                 title: "Safari + beach is seamless",
-                body:
-                  "Kenya’s Indian Ocean coast is a genuine second chapter—snorkeling and reefs in marine parks, dhow sailing, and heritage towns. It’s a classic way to decompress after early mornings on game drives.",
+                body: "Kenya’s Indian Ocean coast is a genuine second chapter—snorkeling and reefs in marine parks, dhow sailing, and heritage towns. It’s a classic way to decompress after early mornings on game drives.",
                 media: {
                   src: "https://images.unsplash.com/photo-1535941339077-2dd1c7963098?auto=format&fit=crop&w=1600&q=80",
                   alt: "White-sand beach and palm trees",
@@ -785,13 +824,13 @@ const DATA = {
             type: "cards.media",
             id: "top-places",
             title: "Top places to visit",
-            subtitle: "Build your route around these regions, then layer in culture, food, and rest days.",
+            subtitle:
+              "Build your route around these regions, then layer in culture, food, and rest days.",
             columns: { xs: 1, sm: 2, lg: 3 },
             cards: [
               {
                 title: "Maasai Mara & conservancies",
-                text:
-                  "Kenya’s most famous safari landscape—big cats, river ecosystems, and strong guiding. Consider adding a conservancy stay for quieter viewing and (often) walking/night activities.",
+                text: "Kenya’s most famous safari landscape—big cats, river ecosystems, and strong guiding. Consider adding a conservancy stay for quieter viewing and (often) walking/night activities.",
                 media: {
                   src: "https://images.unsplash.com/photo-1552410260-0fd9b577afa6?auto=format&fit=crop&w=1600&q=80",
                   alt: "Safari vehicle watching wildlife",
@@ -799,8 +838,7 @@ const DATA = {
               },
               {
                 title: "Amboseli National Park",
-                text:
-                  "Known for elephants and wide-open views with Kilimanjaro often visible on clear mornings. Excellent for photography when conditions align.",
+                text: "Known for elephants and wide-open views with Kilimanjaro often visible on clear mornings. Excellent for photography when conditions align.",
                 media: {
                   src: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?auto=format&fit=crop&w=1600&q=80",
                   alt: "Elephants in open landscape",
@@ -808,8 +846,7 @@ const DATA = {
               },
               {
                 title: "Tsavo East & Tsavo West",
-                text:
-                  "A vast, rugged wilderness between Nairobi and the coast—ideal if you’re combining safari with Mombasa or Diani. Scenic geology and big landscapes are the draw.",
+                text: "A vast, rugged wilderness between Nairobi and the coast—ideal if you’re combining safari with Mombasa or Diani. Scenic geology and big landscapes are the draw.",
                 media: {
                   src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80",
                   alt: "Dramatic landscape and open terrain",
@@ -817,8 +854,7 @@ const DATA = {
               },
               {
                 title: "Nairobi",
-                text:
-                  "A lively gateway city for food, art, and day trips—plus Nairobi National Park. Plan at least one flexible day for museums, markets, and curated local experiences.",
+                text: "A lively gateway city for food, art, and day trips—plus Nairobi National Park. Plan at least one flexible day for museums, markets, and curated local experiences.",
                 media: {
                   src: "https://images.unsplash.com/photo-1611348524140-53c9a25263d6?auto=format&fit=crop&w=1600&q=80",
                   alt: "City skyline at dusk",
@@ -826,8 +862,7 @@ const DATA = {
               },
               {
                 title: "Lamu Archipelago (UNESCO)",
-                text:
-                  "Car-free alleys, coral-stone architecture, and dhow culture. Best for travelers who want heritage with a slower coastal rhythm.",
+                text: "Car-free alleys, coral-stone architecture, and dhow culture. Best for travelers who want heritage with a slower coastal rhythm.",
                 media: {
                   src: "https://images.unsplash.com/photo-1528127269322-539801943592?auto=format&fit=crop&w=1600&q=80",
                   alt: "Historic stone town streets",
@@ -835,8 +870,7 @@ const DATA = {
               },
               {
                 title: "Rift Valley lakes",
-                text:
-                  "Boat rides, escarpments, and birdlife. Flamingo numbers vary year-to-year, but the overall biodiversity and scenery remain excellent.",
+                text: "Boat rides, escarpments, and birdlife. Flamingo numbers vary year-to-year, but the overall biodiversity and scenery remain excellent.",
                 media: {
                   src: "https://images.unsplash.com/photo-1502082553048-f009c37129b9?auto=format&fit=crop&w=1600&q=80",
                   alt: "Lake landscape with birds",
@@ -852,8 +886,7 @@ const DATA = {
             items: [
               {
                 title: "Classic 4x4 game drives",
-                text:
-                  "Dawn and late-afternoon drives for the best light and animal activity. Many lodges tailor drives for photographers, families, or birding-focused travelers.",
+                text: "Dawn and late-afternoon drives for the best light and animal activity. Many lodges tailor drives for photographers, families, or birding-focused travelers.",
                 media: {
                   src: "https://images.unsplash.com/photo-1508672019048-805c876b67e2?auto=format&fit=crop&w=1600&q=80",
                   alt: "Safari at sunrise",
@@ -861,8 +894,7 @@ const DATA = {
               },
               {
                 title: "Hot-air balloon over the Mara (seasonal)",
-                text:
-                  "A sunrise flight with sweeping savanna views. Weather dependent and typically booked well in advance during peak months.",
+                text: "A sunrise flight with sweeping savanna views. Weather dependent and typically booked well in advance during peak months.",
                 media: {
                   src: "https://images.unsplash.com/photo-1520962922320-2038eebab146?auto=format&fit=crop&w=1600&q=80",
                   alt: "Hot air balloons over plains",
@@ -870,8 +902,7 @@ const DATA = {
               },
               {
                 title: "Swahili coast snorkeling & dhow sailing",
-                text:
-                  "Reefs, lagoons, and traditional sailing—ideal as a relaxing second leg after safari. Choose marine operators that follow wildlife-safe codes.",
+                text: "Reefs, lagoons, and traditional sailing—ideal as a relaxing second leg after safari. Choose marine operators that follow wildlife-safe codes.",
                 media: {
                   src: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1600&q=80",
                   alt: "Ocean lagoon and boat",
@@ -879,8 +910,7 @@ const DATA = {
               },
               {
                 title: "Mount Kenya trekking",
-                text:
-                  "A highland trek through forest and alpine zones. Point Lenana is a popular non-technical objective for fit trekkers.",
+                text: "A highland trek through forest and alpine zones. Point Lenana is a popular non-technical objective for fit trekkers.",
                 media: {
                   src: "https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?auto=format&fit=crop&w=1600&q=80",
                   alt: "Mountain at sunrise",
@@ -924,7 +954,13 @@ const DATA = {
                 title: "14 days: conservancies + Rift Valley + Lamu",
                 days: 14,
                 pace: "In-depth",
-                route: ["Nairobi", "Laikipia", "Mara (conservancy)", "Rift Valley lakes", "Lamu"],
+                route: [
+                  "Nairobi",
+                  "Laikipia",
+                  "Mara (conservancy)",
+                  "Rift Valley lakes",
+                  "Lamu",
+                ],
                 notes:
                   "For travelers who want guiding depth, walking options, and a heritage-focused coast rather than a resort scene.",
               },
@@ -962,18 +998,21 @@ const DATA = {
             items: [
               {
                 title: "Kenya Safari — Maasai Mara",
-                url: "https://www.youtube.com/embed/aOHdpMqKYCY",
-                thumb: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1200&q=80",
+                url: "https://youtu.be/xTYnb78h4G4",
+                thumb:
+                  "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1200&q=80",
               },
               {
                 title: "Nairobi — City & Wildlife",
                 url: "https://www.youtube.com/embed/YWbqEGcwDgE",
-                thumb: "https://images.unsplash.com/photo-1611348524140-53c9a25263d6?auto=format&fit=crop&w=1200&q=80",
+                thumb:
+                  "https://images.unsplash.com/photo-1611348524140-53c9a25263d6?auto=format&fit=crop&w=1200&q=80",
               },
               {
                 title: "Kenya Coast — Swahili Shores",
                 url: "https://www.youtube.com/embed/1a9zq3b3Gm8",
-                thumb: "https://images.unsplash.com/photo-1535941339077-2dd1c7963098?auto=format&fit=crop&w=1200&q=80",
+                thumb:
+                  "https://images.unsplash.com/photo-1535941339077-2dd1c7963098?auto=format&fit=crop&w=1200&q=80",
               },
             ],
           },
@@ -1027,11 +1066,13 @@ const DATA = {
       slug: "uganda",
       name: "Uganda",
       region: "East Africa / Great Lakes",
-      tagline: "The Pearl of Africa—gorillas, chimps, the Nile, and compact biodiversity-rich safaris.",
+      tagline:
+        "The Pearl of Africa—gorillas, chimps, the Nile, and compact biodiversity-rich safaris.",
       theme: { accent: "#22C55E", surface: "#08130E", textOnAccent: "#06110C" },
 
       seo: {
-        title: "Visit Uganda | Gorilla Trekking, Nile Adventures & Safari Planning",
+        title:
+          "Visit Uganda | Gorilla Trekking, Nile Adventures & Safari Planning",
         description:
           "Discover Uganda’s gorilla trekking in Bwindi, chimp tracking in Kibale, Nile adventures in Jinja, and classic safaris in Murchison and Queen Elizabeth—plus best seasons and travel essentials.",
       },
@@ -1061,16 +1102,35 @@ const DATA = {
           "Boat safaris on the Nile and Kazinga Channel",
           "Adventure travel around Jinja",
         ],
-        idealTripLength: ["6–9 days (gorillas + 1–2 parks)", "10–14 days (gorillas + chimps + 2 safaris)"],
-        travelStyles: ["Adventure", "Wildlife", "Birding", "Culture", "Photographers"],
+        idealTripLength: [
+          "6–9 days (gorillas + 1–2 parks)",
+          "10–14 days (gorillas + chimps + 2 safaris)",
+        ],
+        travelStyles: [
+          "Adventure",
+          "Wildlife",
+          "Birding",
+          "Culture",
+          "Photographers",
+        ],
       },
 
       whenToGo: {
         summary:
           "Uganda is visitable year-round. Drier months often make trekking and park roads easier, but forests can be wet in any season.",
         seasons: [
-          { name: "Drier periods", months: "Dec–Feb & Jun–Aug", pros: ["Better trail conditions"], watchFor: ["Higher demand"] },
-          { name: "Wetter periods", months: "Mar–May & Sep–Nov", pros: ["Lush forests", "Often better value"], watchFor: ["Mud and rain showers"] },
+          {
+            name: "Drier periods",
+            months: "Dec–Feb & Jun–Aug",
+            pros: ["Better trail conditions"],
+            watchFor: ["Higher demand"],
+          },
+          {
+            name: "Wetter periods",
+            months: "Mar–May & Sep–Nov",
+            pros: ["Lush forests", "Often better value"],
+            watchFor: ["Mud and rain showers"],
+          },
         ],
       },
 
@@ -1088,9 +1148,21 @@ const DATA = {
           },
         ],
         entry: [
-          { title: "Visa", detail: "Most travelers use an e-visa system or eligible arrival options (nationality-dependent)." },
-          { title: "Health", detail: "Yellow fever proof is commonly required; malaria prevention is advised in many regions." },
-          { title: "Trekking readiness", detail: "Expect steep, slippery trails. Porters are available and support local livelihoods." },
+          {
+            title: "Visa",
+            detail:
+              "Most travelers use an e-visa system or eligible arrival options (nationality-dependent).",
+          },
+          {
+            title: "Health",
+            detail:
+              "Yellow fever proof is commonly required; malaria prevention is advised in many regions.",
+          },
+          {
+            title: "Trekking readiness",
+            detail:
+              "Expect steep, slippery trails. Porters are available and support local livelihoods.",
+          },
         ],
       },
 
@@ -1103,7 +1175,12 @@ const DATA = {
             title: "Uganda",
             subtitle:
               "Forest primates, river safaris, and the Nile’s adventure capital—remarkable diversity packed into a single itinerary.",
-            badges: ["Gorilla trekking", "Chimp tracking", "Nile adventures", "Birding"],
+            badges: [
+              "Gorilla trekking",
+              "Chimp tracking",
+              "Nile adventures",
+              "Birding",
+            ],
             media: {
               kind: "image",
               src: "https://images.unsplash.com/photo-1521651201144-634f700b36ef?auto=format&fit=crop&w=1920&q=80",
@@ -1121,7 +1198,10 @@ const DATA = {
             id: "kpi-grid",
             columns: { xs: 2, md: 4 },
             items: [
-              { label: "Top parks", value: "Bwindi • Kibale • Murchison • Queen Elizabeth" },
+              {
+                label: "Top parks",
+                value: "Bwindi • Kibale • Murchison • Queen Elizabeth",
+              },
               { label: "Adventure hub", value: "Jinja (Nile)" },
               { label: "Best add-on", value: "Lake Bunyonyi reset days" },
               { label: "UNESCO", value: "Bwindi • Rwenzori • Kasubi Tombs" },
@@ -1132,12 +1212,12 @@ const DATA = {
             type: "editorial.stack",
             id: "editorial",
             title: "Uganda’s strongest travel combo",
-            subtitle: "A practical way to build a trip that feels varied (without excessive transit).",
+            subtitle:
+              "A practical way to build a trip that feels varied (without excessive transit).",
             items: [
               {
                 heading: "1) Primates first",
-                body:
-                  "Start with chimp tracking in Kibale (near Fort Portal) before gorilla trekking in Bwindi. This sequencing helps you ease into early starts and forest hiking before the biggest trek day.",
+                body: "Start with chimp tracking in Kibale (near Fort Portal) before gorilla trekking in Bwindi. This sequencing helps you ease into early starts and forest hiking before the biggest trek day.",
                 media: {
                   src: "https://images.unsplash.com/photo-1516408388733-2f8364f2e00b?auto=format&fit=crop&w=1600&q=80",
                   alt: "Tropical forest canopy",
@@ -1145,8 +1225,7 @@ const DATA = {
               },
               {
                 heading: "2) Add a classic safari",
-                body:
-                  "Pair the forest with a savanna park: Murchison Falls for Nile boat safari drama, or Queen Elizabeth for the Kazinga Channel’s dense wildlife viewing. Many itineraries include both for variety.",
+                body: "Pair the forest with a savanna park: Murchison Falls for Nile boat safari drama, or Queen Elizabeth for the Kazinga Channel’s dense wildlife viewing. Many itineraries include both for variety.",
                 media: {
                   src: "https://images.unsplash.com/photo-1596395463364-ce07e4df1c85?auto=format&fit=crop&w=1600&q=80",
                   alt: "Waterfall and river landscape",
@@ -1154,8 +1233,7 @@ const DATA = {
               },
               {
                 heading: "3) Finish with water and rest",
-                body:
-                  "Lake Bunyonyi is a popular decompression stop after Bwindi—cooler air, island views, and gentle activities before returning to Entebbe.",
+                body: "Lake Bunyonyi is a popular decompression stop after Bwindi—cooler air, island views, and gentle activities before returning to Entebbe.",
                 media: {
                   src: "https://images.unsplash.com/photo-1504945005722-33670dcaf685?auto=format&fit=crop&w=1600&q=80",
                   alt: "Lake with islands and hills",
@@ -1172,8 +1250,7 @@ const DATA = {
             cards: [
               {
                 title: "Bwindi Impenetrable National Park (UNESCO)",
-                text:
-                  "One of the world’s most important mountain gorilla habitats. Treks are guided and strictly managed—plan for steep, muddy trails.",
+                text: "One of the world’s most important mountain gorilla habitats. Treks are guided and strictly managed—plan for steep, muddy trails.",
                 media: {
                   src: "https://images.unsplash.com/photo-1521651201144-634f700b36ef?auto=format&fit=crop&w=1600&q=80",
                   alt: "Gorilla in the forest",
@@ -1181,8 +1258,7 @@ const DATA = {
               },
               {
                 title: "Kibale Forest National Park",
-                text:
-                  "Premier chimp tracking in a primate-rich forest. Pair with Bigodi community wetlands for a slower, birdy afternoon.",
+                text: "Premier chimp tracking in a primate-rich forest. Pair with Bigodi community wetlands for a slower, birdy afternoon.",
                 media: {
                   src: "https://images.unsplash.com/photo-1516408388733-2f8364f2e00b?auto=format&fit=crop&w=1600&q=80",
                   alt: "Dense green forest trail",
@@ -1190,8 +1266,7 @@ const DATA = {
               },
               {
                 title: "Murchison Falls National Park",
-                text:
-                  "Game drives plus a standout boat safari to the falls. A strong choice if you want a “river safari” feel alongside savanna wildlife.",
+                text: "Game drives plus a standout boat safari to the falls. A strong choice if you want a “river safari” feel alongside savanna wildlife.",
                 media: {
                   src: "https://images.unsplash.com/photo-1596395463364-ce07e4df1c85?auto=format&fit=crop&w=1600&q=80",
                   alt: "River and falls",
@@ -1199,8 +1274,7 @@ const DATA = {
               },
               {
                 title: "Queen Elizabeth National Park",
-                text:
-                  "Classic safari landscapes and the Kazinga Channel boat cruise, often with excellent hippo and bird viewing.",
+                text: "Classic safari landscapes and the Kazinga Channel boat cruise, often with excellent hippo and bird viewing.",
                 media: {
                   src: "https://images.unsplash.com/photo-1619451334792-150fd785ee74?auto=format&fit=crop&w=1600&q=80",
                   alt: "Savanna wildlife scene",
@@ -1208,8 +1282,7 @@ const DATA = {
               },
               {
                 title: "Jinja (Source of the Nile area)",
-                text:
-                  "Rafting, kayaking, and relaxed riverside cafés. Choose reputable operators with strong safety standards and certified guides.",
+                text: "Rafting, kayaking, and relaxed riverside cafés. Choose reputable operators with strong safety standards and certified guides.",
                 media: {
                   src: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80",
                   alt: "River landscape suitable for rafting",
@@ -1217,8 +1290,7 @@ const DATA = {
               },
               {
                 title: "Rwenzori Mountains (UNESCO)",
-                text:
-                  "A unique trekking environment with Afro-alpine flora and high peaks. Multi-day routes require experienced guides and good preparation.",
+                text: "A unique trekking environment with Afro-alpine flora and high peaks. Multi-day routes require experienced guides and good preparation.",
                 media: {
                   src: "https://images.unsplash.com/photo-1458442310124-dde6edb43d10?auto=format&fit=crop&w=1600&q=80",
                   alt: "Mountain landscape and clouds",
@@ -1237,22 +1309,43 @@ const DATA = {
                 title: "6 days: gorillas + Lake Bunyonyi",
                 days: 6,
                 pace: "Efficient",
-                route: ["Entebbe", "Bwindi (2–3 nights)", "Lake Bunyonyi", "Entebbe"],
-                notes: "Best for travelers with limited time who want the core primate experience plus a rest buffer.",
+                route: [
+                  "Entebbe",
+                  "Bwindi (2–3 nights)",
+                  "Lake Bunyonyi",
+                  "Entebbe",
+                ],
+                notes:
+                  "Best for travelers with limited time who want the core primate experience plus a rest buffer.",
               },
               {
                 title: "9 days: chimps + gorillas + QENP",
                 days: 9,
                 pace: "Balanced",
-                route: ["Entebbe", "Kibale", "Queen Elizabeth", "Bwindi", "Entebbe"],
-                notes: "A classic ‘forest + savanna’ structure with manageable driving days.",
+                route: [
+                  "Entebbe",
+                  "Kibale",
+                  "Queen Elizabeth",
+                  "Bwindi",
+                  "Entebbe",
+                ],
+                notes:
+                  "A classic ‘forest + savanna’ structure with manageable driving days.",
               },
               {
                 title: "12 days: Murchison + Kibale + gorillas",
                 days: 12,
                 pace: "In-depth",
-                route: ["Entebbe", "Murchison", "Kibale", "Queen Elizabeth", "Bwindi", "Entebbe"],
-                notes: "Adds a Nile boat safari and broader wildlife variety, ideal for birders and photographers.",
+                route: [
+                  "Entebbe",
+                  "Murchison",
+                  "Kibale",
+                  "Queen Elizabeth",
+                  "Bwindi",
+                  "Entebbe",
+                ],
+                notes:
+                  "Adds a Nile boat safari and broader wildlife variety, ideal for birders and photographers.",
               },
             ],
           },
@@ -1289,14 +1382,38 @@ const DATA = {
             title: "Photo highlights",
             columns: { xs: 2, md: 3, xl: 4 },
             items: [
-              { src: "https://images.unsplash.com/photo-1521651201144-634f700b36ef?auto=format&fit=crop&w=1600&q=80", alt: "Gorilla close-up" },
-              { src: "https://images.unsplash.com/photo-1516408388733-2f8364f2e00b?auto=format&fit=crop&w=1600&q=80", alt: "Forest canopy" },
-              { src: "https://images.unsplash.com/photo-1596395463364-ce07e4df1c85?auto=format&fit=crop&w=1600&q=80", alt: "Waterfall river" },
-              { src: "https://images.unsplash.com/photo-1504945005722-33670dcaf685?auto=format&fit=crop&w=1600&q=80", alt: "Lake scenery" },
-              { src: "https://images.unsplash.com/photo-1619451334792-150fd785ee74?auto=format&fit=crop&w=1600&q=80", alt: "Savanna wildlife" },
-              { src: "https://images.unsplash.com/photo-1458442310124-dde6edb43d10?auto=format&fit=crop&w=1600&q=80", alt: "Mountain clouds" },
-              { src: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80", alt: "River view" },
-              { src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80", alt: "Landscape light" },
+              {
+                src: "https://images.unsplash.com/photo-1521651201144-634f700b36ef?auto=format&fit=crop&w=1600&q=80",
+                alt: "Gorilla close-up",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1516408388733-2f8364f2e00b?auto=format&fit=crop&w=1600&q=80",
+                alt: "Forest canopy",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1596395463364-ce07e4df1c85?auto=format&fit=crop&w=1600&q=80",
+                alt: "Waterfall river",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1504945005722-33670dcaf685?auto=format&fit=crop&w=1600&q=80",
+                alt: "Lake scenery",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1619451334792-150fd785ee74?auto=format&fit=crop&w=1600&q=80",
+                alt: "Savanna wildlife",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1458442310124-dde6edb43d10?auto=format&fit=crop&w=1600&q=80",
+                alt: "Mountain clouds",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80",
+                alt: "River view",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80",
+                alt: "Landscape light",
+              },
             ],
           },
         ],
@@ -1308,7 +1425,8 @@ const DATA = {
       slug: "tanzania",
       name: "Tanzania",
       region: "East Africa",
-      tagline: "Serengeti migration drama, Ngorongoro’s crater, Kilimanjaro’s summit, and Zanzibar’s coast.",
+      tagline:
+        "Serengeti migration drama, Ngorongoro’s crater, Kilimanjaro’s summit, and Zanzibar’s coast.",
       theme: { accent: "#F59E0B", surface: "#0B1220", textOnAccent: "#0B1220" },
 
       seo: {
@@ -1350,26 +1468,67 @@ const DATA = {
           "Zanzibar’s Stone Town (UNESCO) and reef lagoons",
           "Remote chimp trekking (Mahale/Gombe) for specialists",
         ],
-        idealTripLength: ["8–12 days (northern circuit + Zanzibar)", "12–16 days (add Serengeti depth or southern parks)"],
-        travelStyles: ["Wildlife", "Honeymoon", "Adventure", "Luxury", "Family", "Photography"],
+        idealTripLength: [
+          "8–12 days (northern circuit + Zanzibar)",
+          "12–16 days (add Serengeti depth or southern parks)",
+        ],
+        travelStyles: [
+          "Wildlife",
+          "Honeymoon",
+          "Adventure",
+          "Luxury",
+          "Family",
+          "Photography",
+        ],
       },
 
       whenToGo: {
         summary:
           "Tanzania is year-round. Dry months are classic safari season; green months can be spectacular and often quieter. Migration location varies by rainfall and time of year.",
         seasons: [
-          { name: "Dry season", months: "Jun–Oct", pros: ["Easier wildlife viewing", "Great for northern Serengeti"], watchFor: ["Peak pricing"] },
-          { name: "Green season", months: "Nov–Mar", pros: ["Lush landscapes", "Excellent photography"], watchFor: ["Short showers possible"] },
-          { name: "Long rains", months: "Mar–May", pros: ["Lower crowds in some areas"], watchFor: ["Some camps close; road conditions vary"] },
+          {
+            name: "Dry season",
+            months: "Jun–Oct",
+            pros: ["Easier wildlife viewing", "Great for northern Serengeti"],
+            watchFor: ["Peak pricing"],
+          },
+          {
+            name: "Green season",
+            months: "Nov–Mar",
+            pros: ["Lush landscapes", "Excellent photography"],
+            watchFor: ["Short showers possible"],
+          },
+          {
+            name: "Long rains",
+            months: "Mar–May",
+            pros: ["Lower crowds in some areas"],
+            watchFor: ["Some camps close; road conditions vary"],
+          },
         ],
       },
 
       practical: {
         entry: [
-          { title: "Visa", detail: "Rules vary by nationality; confirm e-visa/arrival options before booking." },
-          { title: "Health", detail: "Malaria prevention is commonly advised; yellow fever proof may be required depending on routing." },
-          { title: "Park fees", detail: "Fees are park- and residency-dependent and change; your operator typically includes them in quotes." },
-          { title: "Kilimanjaro planning", detail: "Route choice and acclimatization are key. Ask about porter welfare standards and safety protocols." },
+          {
+            title: "Visa",
+            detail:
+              "Rules vary by nationality; confirm e-visa/arrival options before booking.",
+          },
+          {
+            title: "Health",
+            detail:
+              "Malaria prevention is commonly advised; yellow fever proof may be required depending on routing.",
+          },
+          {
+            title: "Park fees",
+            detail:
+              "Fees are park- and residency-dependent and change; your operator typically includes them in quotes.",
+          },
+          {
+            title: "Kilimanjaro planning",
+            detail:
+              "Route choice and acclimatization are key. Ask about porter welfare standards and safety protocols.",
+          },
         ],
       },
 
@@ -1381,7 +1540,12 @@ const DATA = {
             title: "Tanzania",
             subtitle:
               "One itinerary can include the Serengeti’s migration ecosystem, Ngorongoro’s volcanic drama, a Kilimanjaro summit attempt, and a Zanzibar beach finish.",
-            badges: ["Great Migration", "Ngorongoro", "Kilimanjaro", "Zanzibar"],
+            badges: [
+              "Great Migration",
+              "Ngorongoro",
+              "Kilimanjaro",
+              "Zanzibar",
+            ],
             media: {
               kind: "image",
               src: "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1920&q=80",
@@ -1402,8 +1566,7 @@ const DATA = {
             cards: [
               {
                 title: "Serengeti National Park (UNESCO)",
-                text:
-                  "A vast ecosystem of predators and grazing herds. Where you stay matters—choose camps that match the season’s wildlife location.",
+                text: "A vast ecosystem of predators and grazing herds. Where you stay matters—choose camps that match the season’s wildlife location.",
                 media: {
                   src: "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1600&q=80",
                   alt: "Wildlife on open plains",
@@ -1411,8 +1574,7 @@ const DATA = {
               },
               {
                 title: "Ngorongoro Conservation Area (UNESCO)",
-                text:
-                  "A striking caldera landscape with strong wildlife density on the crater floor. Early starts help avoid peak congestion.",
+                text: "A striking caldera landscape with strong wildlife density on the crater floor. Early starts help avoid peak congestion.",
                 media: {
                   src: "https://images.unsplash.com/photo-1504945005722-33670dcaf685?auto=format&fit=crop&w=1600&q=80",
                   alt: "Crater landscape",
@@ -1420,8 +1582,7 @@ const DATA = {
               },
               {
                 title: "Tarangire National Park",
-                text:
-                  "Known for elephants and baobab scenery, often excellent in the drier months when wildlife concentrates near the river.",
+                text: "Known for elephants and baobab scenery, often excellent in the drier months when wildlife concentrates near the river.",
                 media: {
                   src: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?auto=format&fit=crop&w=1600&q=80",
                   alt: "Elephants in savanna",
@@ -1429,8 +1590,7 @@ const DATA = {
               },
               {
                 title: "Zanzibar (Stone Town UNESCO)",
-                text:
-                  "Swahili coastal heritage and beach time. Combine a Stone Town stay with a reef-side hotel for the best of both.",
+                text: "Swahili coastal heritage and beach time. Combine a Stone Town stay with a reef-side hotel for the best of both.",
                 media: {
                   src: "https://images.unsplash.com/photo-1586861203927-800a5acdcc4d?auto=format&fit=crop&w=1600&q=80",
                   alt: "Zanzibar beach and ocean",
@@ -1438,8 +1598,7 @@ const DATA = {
               },
               {
                 title: "Kilimanjaro National Park (UNESCO)",
-                text:
-                  "A multi-day, non-technical trek to Africa’s highest peak. Success depends on pace and acclimatization more than athleticism.",
+                text: "A multi-day, non-technical trek to Africa’s highest peak. Success depends on pace and acclimatization more than athleticism.",
                 media: {
                   src: "https://images.unsplash.com/photo-1621414050946-1b4ea3cf6d68?auto=format&fit=crop&w=1600&q=80",
                   alt: "Kilimanjaro landscape",
@@ -1447,8 +1606,7 @@ const DATA = {
               },
               {
                 title: "Mahale or Gombe (chimp trekking)",
-                text:
-                  "Remote, specialist add-ons on Lake Tanganyika. Best for travelers who have time and want a unique primate focus beyond savanna safaris.",
+                text: "Remote, specialist add-ons on Lake Tanganyika. Best for travelers who have time and want a unique primate focus beyond savanna safaris.",
                 media: {
                   src: "https://images.unsplash.com/photo-1516408388733-2f8364f2e00b?auto=format&fit=crop&w=1600&q=80",
                   alt: "Forest near lake region",
@@ -1467,22 +1625,40 @@ const DATA = {
                 title: "8 days: northern circuit highlights",
                 days: 8,
                 pace: "Classic",
-                route: ["Arusha", "Tarangire", "Ngorongoro", "Serengeti (3 nights)", "Arusha"],
-                notes: "Best for first-timers who want a strong mix of landscapes and wildlife without rushing.",
+                route: [
+                  "Arusha",
+                  "Tarangire",
+                  "Ngorongoro",
+                  "Serengeti (3 nights)",
+                  "Arusha",
+                ],
+                notes:
+                  "Best for first-timers who want a strong mix of landscapes and wildlife without rushing.",
               },
               {
                 title: "12 days: safari + Zanzibar",
                 days: 12,
                 pace: "Balanced",
-                route: ["Arusha", "Serengeti", "Ngorongoro", "Fly to Zanzibar", "Beach (4–5 nights)"],
-                notes: "A flagship Tanzania trip—excellent for couples and families who want a relaxed finish.",
+                route: [
+                  "Arusha",
+                  "Serengeti",
+                  "Ngorongoro",
+                  "Fly to Zanzibar",
+                  "Beach (4–5 nights)",
+                ],
+                notes:
+                  "A flagship Tanzania trip—excellent for couples and families who want a relaxed finish.",
               },
               {
                 title: "14 days: Kilimanjaro + safari",
                 days: 14,
                 pace: "Ambitious",
-                route: ["Kilimanjaro trek (7–9 days)", "Safari (Tarangire/Ngorongoro/Serengeti)"],
-                notes: "Plan a buffer day between the trek and safari, and choose a route with good acclimatization profile.",
+                route: [
+                  "Kilimanjaro trek (7–9 days)",
+                  "Safari (Tarangire/Ngorongoro/Serengeti)",
+                ],
+                notes:
+                  "Plan a buffer day between the trek and safari, and choose a route with good acclimatization profile.",
               },
             ],
           },
@@ -1519,14 +1695,38 @@ const DATA = {
             title: "Photo highlights",
             columns: { xs: 2, md: 3, xl: 4 },
             items: [
-              { src: "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1600&q=80", alt: "Serengeti wildlife" },
-              { src: "https://images.unsplash.com/photo-1586861203927-800a5acdcc4d?auto=format&fit=crop&w=1600&q=80", alt: "Zanzibar beach" },
-              { src: "https://images.unsplash.com/photo-1621414050946-1b4ea3cf6d68?auto=format&fit=crop&w=1600&q=80", alt: "Kilimanjaro view" },
-              { src: "https://images.unsplash.com/photo-1528277342758-f1d7613953a2?auto=format&fit=crop&w=1600&q=80", alt: "Stone Town streets" },
-              { src: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1600&q=80", alt: "Ocean lagoon" },
-              { src: "https://images.unsplash.com/photo-1504945005722-33670dcaf685?auto=format&fit=crop&w=1600&q=80", alt: "Crater scenery" },
-              { src: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?auto=format&fit=crop&w=1600&q=80", alt: "Elephants" },
-              { src: "https://images.unsplash.com/photo-1516408388733-2f8364f2e00b?auto=format&fit=crop&w=1600&q=80", alt: "Forest region" },
+              {
+                src: "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1600&q=80",
+                alt: "Serengeti wildlife",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1586861203927-800a5acdcc4d?auto=format&fit=crop&w=1600&q=80",
+                alt: "Zanzibar beach",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1621414050946-1b4ea3cf6d68?auto=format&fit=crop&w=1600&q=80",
+                alt: "Kilimanjaro view",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1528277342758-f1d7613953a2?auto=format&fit=crop&w=1600&q=80",
+                alt: "Stone Town streets",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1600&q=80",
+                alt: "Ocean lagoon",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1504945005722-33670dcaf685?auto=format&fit=crop&w=1600&q=80",
+                alt: "Crater scenery",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?auto=format&fit=crop&w=1600&q=80",
+                alt: "Elephants",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1516408388733-2f8364f2e00b?auto=format&fit=crop&w=1600&q=80",
+                alt: "Forest region",
+              },
             ],
           },
         ],
@@ -1538,11 +1738,13 @@ const DATA = {
       slug: "rwanda",
       name: "Rwanda",
       region: "Great Lakes (East/Central Africa)",
-      tagline: "A highland country with premium gorilla trekking, rainforest canopy walks, and efficient logistics.",
+      tagline:
+        "A highland country with premium gorilla trekking, rainforest canopy walks, and efficient logistics.",
       theme: { accent: "#3B82F6", surface: "#071021", textOnAccent: "#FFFFFF" },
 
       seo: {
-        title: "Visit Rwanda | Gorilla Trekking, Nyungwe Rainforest & Akagera Safaris",
+        title:
+          "Visit Rwanda | Gorilla Trekking, Nyungwe Rainforest & Akagera Safaris",
         description:
           "Explore Rwanda’s gorilla trekking in Volcanoes National Park, Nyungwe rainforest canopy walk, Akagera Big Five safaris, and Lake Kivu—plus seasons and travel tips.",
       },
@@ -1572,25 +1774,61 @@ const DATA = {
           "Akagera conservation-led Big Five safaris",
           "Short transfer times and strong guiding infrastructure",
         ],
-        idealTripLength: ["4–6 days (gorillas + Kigali)", "7–10 days (add Nyungwe or Akagera)", "10–12 days (all three parks + Lake Kivu)"],
-        travelStyles: ["Luxury", "Wildlife", "Culture", "Active travel", "Short high-impact trips"],
+        idealTripLength: [
+          "4–6 days (gorillas + Kigali)",
+          "7–10 days (add Nyungwe or Akagera)",
+          "10–12 days (all three parks + Lake Kivu)",
+        ],
+        travelStyles: [
+          "Luxury",
+          "Wildlife",
+          "Culture",
+          "Active travel",
+          "Short high-impact trips",
+        ],
       },
 
       whenToGo: {
         summary:
           "Rwanda’s high elevation keeps temperatures moderate. Drier months generally make trekking trails easier, but conditions can change quickly in the mountains.",
         seasons: [
-          { name: "Drier", months: "Jun–Sep & Dec–Feb", pros: ["Better trail conditions"], watchFor: ["High demand for permits"] },
-          { name: "Wetter", months: "Mar–May & Oct–Nov", pros: ["Lush scenery", "Often quieter"], watchFor: ["Mud and rain"] },
+          {
+            name: "Drier",
+            months: "Jun–Sep & Dec–Feb",
+            pros: ["Better trail conditions"],
+            watchFor: ["High demand for permits"],
+          },
+          {
+            name: "Wetter",
+            months: "Mar–May & Oct–Nov",
+            pros: ["Lush scenery", "Often quieter"],
+            watchFor: ["Mud and rain"],
+          },
         ],
       },
 
       practical: {
         entry: [
-          { title: "Visa", detail: "Visa options depend on nationality; confirm current rules before travel." },
-          { title: "Gorilla permits", detail: "Limited and can sell out. Prices and rules can change—book well in advance." },
-          { title: "Health protocols", detail: "Primate tourism often includes strict distancing/health measures—follow ranger guidance." },
-          { title: "Getting around", detail: "Transfers are efficient; private vehicles are common for multi-park routes." },
+          {
+            title: "Visa",
+            detail:
+              "Visa options depend on nationality; confirm current rules before travel.",
+          },
+          {
+            title: "Gorilla permits",
+            detail:
+              "Limited and can sell out. Prices and rules can change—book well in advance.",
+          },
+          {
+            title: "Health protocols",
+            detail:
+              "Primate tourism often includes strict distancing/health measures—follow ranger guidance.",
+          },
+          {
+            title: "Getting around",
+            detail:
+              "Transfers are efficient; private vehicles are common for multi-park routes.",
+          },
         ],
       },
 
@@ -1602,7 +1840,12 @@ const DATA = {
             title: "Rwanda",
             subtitle:
               "Premium primate trekking, rainforest canopy walks, and conservation success stories—wrapped in a compact, easy-to-navigate itinerary.",
-            badges: ["Gorillas", "Nyungwe rainforest", "Akagera safari", "Kigali culture"],
+            badges: [
+              "Gorillas",
+              "Nyungwe rainforest",
+              "Akagera safari",
+              "Kigali culture",
+            ],
             media: {
               kind: "image",
               src: "https://images.unsplash.com/photo-1521651201144-634f700b36ef?auto=format&fit=crop&w=1920&q=80",
@@ -1610,7 +1853,10 @@ const DATA = {
               aspectRatio: "16/10",
             },
             ctas: [
-              { label: "Gorilla trekking guide", href: "/plan/rwanda/gorillas" },
+              {
+                label: "Gorilla trekking guide",
+                href: "/plan/rwanda/gorillas",
+              },
               { label: "Add Akagera safari", href: "/plan/rwanda/akagera" },
             ],
           },
@@ -1623,8 +1869,7 @@ const DATA = {
             items: [
               {
                 title: "High-value conservation tourism",
-                body:
-                  "Rwanda is known for structured, permit-based wildlife experiences, high guiding standards, and a tourism model that prioritizes conservation outcomes and controlled visitor impact—especially around primates.",
+                body: "Rwanda is known for structured, permit-based wildlife experiences, high guiding standards, and a tourism model that prioritizes conservation outcomes and controlled visitor impact—especially around primates.",
                 media: {
                   src: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?auto=format&fit=crop&w=1600&q=80",
                   alt: "Nature landscape",
@@ -1632,8 +1877,7 @@ const DATA = {
               },
               {
                 title: "A capital that’s worth time",
-                body:
-                  "Kigali is more than a gateway: food culture, galleries, markets, and carefully curated historical sites. Many trips benefit from one unhurried day here before trekking.",
+                body: "Kigali is more than a gateway: food culture, galleries, markets, and carefully curated historical sites. Many trips benefit from one unhurried day here before trekking.",
                 media: {
                   src: "https://images.unsplash.com/photo-1580060405669-fcb07c8e8a66?auto=format&fit=crop&w=1600&q=80",
                   alt: "City on green hills",
@@ -1641,8 +1885,7 @@ const DATA = {
               },
               {
                 title: "Add a lake reset day",
-                body:
-                  "Lake Kivu provides a softer counterpoint to early starts and steep trekking. It’s ideal for a recovery night or two—especially if you’re combining Volcanoes with Nyungwe.",
+                body: "Lake Kivu provides a softer counterpoint to early starts and steep trekking. It’s ideal for a recovery night or two—especially if you’re combining Volcanoes with Nyungwe.",
                 media: {
                   src: "https://images.unsplash.com/photo-1504945005722-33670dcaf685?auto=format&fit=crop&w=1600&q=80",
                   alt: "Lake view",
@@ -1659,8 +1902,7 @@ const DATA = {
             cards: [
               {
                 title: "Volcanoes National Park",
-                text:
-                  "Mountain gorilla trekking and golden monkey tracking in the Virunga volcanoes. Plan for weather shifts and steep trails.",
+                text: "Mountain gorilla trekking and golden monkey tracking in the Virunga volcanoes. Plan for weather shifts and steep trails.",
                 media: {
                   src: "https://images.unsplash.com/photo-1521651201144-634f700b36ef?auto=format&fit=crop&w=1600&q=80",
                   alt: "Gorilla image",
@@ -1668,8 +1910,7 @@ const DATA = {
               },
               {
                 title: "Nyungwe National Park",
-                text:
-                  "Montane rainforest with chimp trekking options and a canopy walkway. Great for hikers and primate enthusiasts.",
+                text: "Montane rainforest with chimp trekking options and a canopy walkway. Great for hikers and primate enthusiasts.",
                 media: {
                   src: "https://images.unsplash.com/photo-1516408388733-2f8364f2e00b?auto=format&fit=crop&w=1600&q=80",
                   alt: "Rainforest canopy",
@@ -1677,8 +1918,7 @@ const DATA = {
               },
               {
                 title: "Akagera National Park",
-                text:
-                  "Savanna game drives and boat safaris on Lake Ihema. A flagship restoration success with strong conservation management.",
+                text: "Savanna game drives and boat safaris on Lake Ihema. A flagship restoration success with strong conservation management.",
                 media: {
                   src: "https://images.unsplash.com/photo-1619451334792-150fd785ee74?auto=format&fit=crop&w=1600&q=80",
                   alt: "Savanna wildlife",
@@ -1686,8 +1926,7 @@ const DATA = {
               },
               {
                 title: "Lake Kivu",
-                text:
-                  "Kayaking, gentle hikes, and the Congo Nile Trail. A scenic break between parks, with comfortable lakeside lodges.",
+                text: "Kayaking, gentle hikes, and the Congo Nile Trail. A scenic break between parks, with comfortable lakeside lodges.",
                 media: {
                   src: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1600&q=80",
                   alt: "Lake shoreline",
@@ -1695,8 +1934,7 @@ const DATA = {
               },
               {
                 title: "Kigali",
-                text:
-                  "Markets, contemporary art, cafés, and guided cultural tours. Build in time for meaningful historical context where appropriate.",
+                text: "Markets, contemporary art, cafés, and guided cultural tours. Build in time for meaningful historical context where appropriate.",
                 media: {
                   src: "https://images.unsplash.com/photo-1580060405669-fcb07c8e8a66?auto=format&fit=crop&w=1600&q=80",
                   alt: "Kigali city view",
@@ -1704,8 +1942,7 @@ const DATA = {
               },
               {
                 title: "Tea & coffee landscapes (regional add-ons)",
-                text:
-                  "Rwanda’s specialty coffee and highland tea are excellent add-on experiences—washing stations, tastings, and scenic rural routes.",
+                text: "Rwanda’s specialty coffee and highland tea are excellent add-on experiences—washing stations, tastings, and scenic rural routes.",
                 media: {
                   src: "https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=1600&q=80",
                   alt: "Coffee or tea farm",
@@ -1725,21 +1962,31 @@ const DATA = {
                 days: 4,
                 pace: "Short premium",
                 route: ["Kigali", "Volcanoes NP (2 nights)", "Kigali"],
-                notes: "High-impact trip with minimal transit—best when permits are secured early.",
+                notes:
+                  "High-impact trip with minimal transit—best when permits are secured early.",
               },
               {
                 title: "7 days: gorillas + Lake Kivu + Kigali",
                 days: 7,
                 pace: "Balanced",
                 route: ["Kigali", "Volcanoes NP", "Lake Kivu", "Kigali"],
-                notes: "Adds recovery time and a different landscape to complement trekking intensity.",
+                notes:
+                  "Adds recovery time and a different landscape to complement trekking intensity.",
               },
               {
                 title: "10 days: Volcanoes + Nyungwe + Akagera",
                 days: 10,
                 pace: "Full circuit",
-                route: ["Kigali", "Volcanoes NP", "Lake Kivu", "Nyungwe", "Akagera", "Kigali"],
-                notes: "A complete Rwanda itinerary: primates, rainforest, savanna, and lake scenery.",
+                route: [
+                  "Kigali",
+                  "Volcanoes NP",
+                  "Lake Kivu",
+                  "Nyungwe",
+                  "Akagera",
+                  "Kigali",
+                ],
+                notes:
+                  "A complete Rwanda itinerary: primates, rainforest, savanna, and lake scenery.",
               },
             ],
           },
@@ -1776,14 +2023,38 @@ const DATA = {
             title: "Photo highlights",
             columns: { xs: 2, md: 3, xl: 4 },
             items: [
-              { src: "https://images.unsplash.com/photo-1521651201144-634f700b36ef?auto=format&fit=crop&w=1600&q=80", alt: "Gorilla" },
-              { src: "https://images.unsplash.com/photo-1516408388733-2f8364f2e00b?auto=format&fit=crop&w=1600&q=80", alt: "Rainforest" },
-              { src: "https://images.unsplash.com/photo-1619451334792-150fd785ee74?auto=format&fit=crop&w=1600&q=80", alt: "Akagera wildlife" },
-              { src: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1600&q=80", alt: "Lake Kivu vibe" },
-              { src: "https://images.unsplash.com/photo-1580060405669-fcb07c8e8a66?auto=format&fit=crop&w=1600&q=80", alt: "Kigali city" },
-              { src: "https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=1600&q=80", alt: "Coffee/tea landscapes" },
-              { src: "https://images.unsplash.com/photo-1458442310124-dde6edb43d10?auto=format&fit=crop&w=1600&q=80", alt: "Highland scenery" },
-              { src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80", alt: "Sunset landscape" },
+              {
+                src: "https://images.unsplash.com/photo-1521651201144-634f700b36ef?auto=format&fit=crop&w=1600&q=80",
+                alt: "Gorilla",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1516408388733-2f8364f2e00b?auto=format&fit=crop&w=1600&q=80",
+                alt: "Rainforest",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1619451334792-150fd785ee74?auto=format&fit=crop&w=1600&q=80",
+                alt: "Akagera wildlife",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1600&q=80",
+                alt: "Lake Kivu vibe",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1580060405669-fcb07c8e8a66?auto=format&fit=crop&w=1600&q=80",
+                alt: "Kigali city",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1442512595331-e89e73853f31?auto=format&fit=crop&w=1600&q=80",
+                alt: "Coffee/tea landscapes",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1458442310124-dde6edb43d10?auto=format&fit=crop&w=1600&q=80",
+                alt: "Highland scenery",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80",
+                alt: "Sunset landscape",
+              },
             ],
           },
         ],
@@ -1795,11 +2066,13 @@ const DATA = {
       slug: "south-africa",
       name: "South Africa",
       region: "Southern Africa",
-      tagline: "Safaris, cities, wine routes, and coastlines—one of the world’s best-value multi-experience trips.",
+      tagline:
+        "Safaris, cities, wine routes, and coastlines—one of the world’s best-value multi-experience trips.",
       theme: { accent: "#A855F7", surface: "#0B0F1A", textOnAccent: "#FFFFFF" },
 
       seo: {
-        title: "Visit South Africa | Kruger Safaris, Cape Town, Winelands & Road Trips",
+        title:
+          "Visit South Africa | Kruger Safaris, Cape Town, Winelands & Road Trips",
         description:
           "Explore South Africa’s Big Five safaris, Cape Town and Table Mountain, the Winelands, Garden Route road trips, and practical travel tips for planning.",
       },
@@ -1810,7 +2083,9 @@ const DATA = {
           { name: "Cape Town", type: "legislative" },
           { name: "Bloemfontein", type: "judicial" },
         ],
-        languages: ["11 official languages (incl. English, Zulu, Xhosa, Afrikaans)"],
+        languages: [
+          "11 official languages (incl. English, Zulu, Xhosa, Afrikaans)",
+        ],
         currency: { code: "ZAR", name: "South African Rand" },
         timeZone: "SAST (UTC+2)",
         plugs: ["M", "N (varies)"],
@@ -1838,26 +2113,67 @@ const DATA = {
           "Garden Route road trip culture",
           "Powerful modern history and museums",
         ],
-        idealTripLength: ["7–10 days (Cape Town + safari)", "12–16 days (add Garden Route or Winelands depth)"],
-        travelStyles: ["Self-drive", "Luxury", "City breaks", "Family", "Adventure", "Food & wine"],
+        idealTripLength: [
+          "7–10 days (Cape Town + safari)",
+          "12–16 days (add Garden Route or Winelands depth)",
+        ],
+        travelStyles: [
+          "Self-drive",
+          "Luxury",
+          "City breaks",
+          "Family",
+          "Adventure",
+          "Food & wine",
+        ],
       },
 
       whenToGo: {
         summary:
           "South Africa is year-round, with opposite seasons to Europe/North America. Cape Town is best in summer; Kruger viewing is excellent in the dry winter months.",
         seasons: [
-          { name: "Cape Town summer", months: "Nov–Mar", pros: ["Warm, dry, beach-friendly"], watchFor: ["Peak demand around holidays"] },
-          { name: "Kruger winter (dry)", months: "May–Sep", pros: ["Excellent wildlife viewing"], watchFor: ["Cold nights on safari"] },
-          { name: "Shoulder months", months: "Apr & Oct", pros: ["Good value", "Pleasant temps"], watchFor: ["Variable weather"] },
+          {
+            name: "Cape Town summer",
+            months: "Nov–Mar",
+            pros: ["Warm, dry, beach-friendly"],
+            watchFor: ["Peak demand around holidays"],
+          },
+          {
+            name: "Kruger winter (dry)",
+            months: "May–Sep",
+            pros: ["Excellent wildlife viewing"],
+            watchFor: ["Cold nights on safari"],
+          },
+          {
+            name: "Shoulder months",
+            months: "Apr & Oct",
+            pros: ["Good value", "Pleasant temps"],
+            watchFor: ["Variable weather"],
+          },
         ],
       },
 
       practical: {
         entry: [
-          { title: "Visa", detail: "Many nationalities are visa-exempt; others need visas in advance. Confirm current rules." },
-          { title: "Safety", detail: "Varies by city/area—use standard precautions and local advice; reputable operators improve logistics." },
-          { title: "Power", detail: "Power interruptions can occur. Most hotels/lodges have backup systems—ask before booking if it matters." },
-          { title: "Self-drive", detail: "Excellent option with good highways. Long distances—consider domestic flights for multi-region trips." },
+          {
+            title: "Visa",
+            detail:
+              "Many nationalities are visa-exempt; others need visas in advance. Confirm current rules.",
+          },
+          {
+            title: "Safety",
+            detail:
+              "Varies by city/area—use standard precautions and local advice; reputable operators improve logistics.",
+          },
+          {
+            title: "Power",
+            detail:
+              "Power interruptions can occur. Most hotels/lodges have backup systems—ask before booking if it matters.",
+          },
+          {
+            title: "Self-drive",
+            detail:
+              "Excellent option with good highways. Long distances—consider domestic flights for multi-region trips.",
+          },
         ],
       },
 
@@ -1877,8 +2193,14 @@ const DATA = {
               aspectRatio: "16/10",
             },
             ctas: [
-              { label: "Plan a Cape Town + safari trip", href: "/plan/south-africa" },
-              { label: "Self-drive routes", href: "/plan/south-africa/road-trips" },
+              {
+                label: "Plan a Cape Town + safari trip",
+                href: "/plan/south-africa",
+              },
+              {
+                label: "Self-drive routes",
+                href: "/plan/south-africa/road-trips",
+              },
             ],
           },
 
@@ -1890,8 +2212,7 @@ const DATA = {
             cards: [
               {
                 title: "Kruger & private reserves",
-                text:
-                  "Choose Kruger for breadth and self-drive flexibility, or private reserves for off-road tracking, night drives, and fewer vehicles at sightings (rules vary by reserve).",
+                text: "Choose Kruger for breadth and self-drive flexibility, or private reserves for off-road tracking, night drives, and fewer vehicles at sightings (rules vary by reserve).",
                 media: {
                   src: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1600&q=80",
                   alt: "Safari wildlife",
@@ -1899,8 +2220,7 @@ const DATA = {
               },
               {
                 title: "Cape Town & Cape Peninsula",
-                text:
-                  "Table Mountain, coastal drives, beaches, and day trips—pair with the Winelands for food and tastings.",
+                text: "Table Mountain, coastal drives, beaches, and day trips—pair with the Winelands for food and tastings.",
                 media: {
                   src: "https://images.unsplash.com/photo-1580060405669-fcb07c8e8a66?auto=format&fit=crop&w=1600&q=80",
                   alt: "Cape Town city view",
@@ -1908,8 +2228,7 @@ const DATA = {
               },
               {
                 title: "Cape Winelands",
-                text:
-                  "Historic towns, tasting routes, and standout dining. Great for a 2–4 night add-on with a driver or guided tastings.",
+                text: "Historic towns, tasting routes, and standout dining. Great for a 2–4 night add-on with a driver or guided tastings.",
                 media: {
                   src: "https://images.unsplash.com/photo-1549366021-9f761d450615?auto=format&fit=crop&w=1600&q=80",
                   alt: "Vineyard landscape",
@@ -1917,8 +2236,7 @@ const DATA = {
               },
               {
                 title: "Garden Route",
-                text:
-                  "A classic coastal road trip with forests, lagoons, and adventure stops. Very flexible for families and outdoor travelers.",
+                text: "A classic coastal road trip with forests, lagoons, and adventure stops. Very flexible for families and outdoor travelers.",
                 media: {
                   src: "https://images.unsplash.com/photo-1535941339077-2dd1c7963098?auto=format&fit=crop&w=1600&q=80",
                   alt: "Coastal scenery",
@@ -1926,8 +2244,7 @@ const DATA = {
               },
               {
                 title: "Johannesburg & Soweto",
-                text:
-                  "Museums, contemporary art, and essential modern history. Best experienced via informed local guides and curated visits.",
+                text: "Museums, contemporary art, and essential modern history. Best experienced via informed local guides and curated visits.",
                 media: {
                   src: "https://images.unsplash.com/photo-1598899134739-24c46f58b8c4?auto=format&fit=crop&w=1600&q=80",
                   alt: "Urban streetscape",
@@ -1935,8 +2252,7 @@ const DATA = {
               },
               {
                 title: "Drakensberg mountains",
-                text:
-                  "Hiking, dramatic escarpments, and scenic lodge stays—ideal if you want a mountain chapter beyond the coast.",
+                text: "Hiking, dramatic escarpments, and scenic lodge stays—ideal if you want a mountain chapter beyond the coast.",
                 media: {
                   src: "https://images.unsplash.com/photo-1458442310124-dde6edb43d10?auto=format&fit=crop&w=1600&q=80",
                   alt: "Mountain range",
@@ -1956,21 +2272,24 @@ const DATA = {
                 days: 8,
                 pace: "City + food",
                 route: ["Cape Town (5 nights)", "Winelands (2–3 nights)"],
-                notes: "Ideal for first-timers who want scenery, beaches, restaurants, and relaxed day trips.",
+                notes:
+                  "Ideal for first-timers who want scenery, beaches, restaurants, and relaxed day trips.",
               },
               {
                 title: "10 days: Cape Town + safari",
                 days: 10,
                 pace: "Iconic",
                 route: ["Cape Town", "Fly to Kruger region (3 nights)"],
-                notes: "A balanced ‘two-center’ itinerary with minimal long driving.",
+                notes:
+                  "A balanced ‘two-center’ itinerary with minimal long driving.",
               },
               {
                 title: "14 days: road trip + safari",
                 days: 14,
                 pace: "Varied",
                 route: ["Cape Town", "Garden Route", "Fly to Kruger region"],
-                notes: "Best if you enjoy driving days and want a wide variety of landscapes and activities.",
+                notes:
+                  "Best if you enjoy driving days and want a wide variety of landscapes and activities.",
               },
             ],
           },
@@ -2007,14 +2326,38 @@ const DATA = {
             title: "Photo highlights",
             columns: { xs: 2, md: 3, xl: 4 },
             items: [
-              { src: "https://images.unsplash.com/photo-1580060405669-fcb07c8e8a66?auto=format&fit=crop&w=1600&q=80", alt: "Cape Town" },
-              { src: "https://images.unsplash.com/photo-1549366021-9f761d450615?auto=format&fit=crop&w=1600&q=80", alt: "Winelands" },
-              { src: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1600&q=80", alt: "Safari scene" },
-              { src: "https://images.unsplash.com/photo-1535941339077-2dd1c7963098?auto=format&fit=crop&w=1600&q=80", alt: "Coastline drive" },
-              { src: "https://images.unsplash.com/photo-1458442310124-dde6edb43d10?auto=format&fit=crop&w=1600&q=80", alt: "Mountains" },
-              { src: "https://images.unsplash.com/photo-1598899134739-24c46f58b8c4?auto=format&fit=crop&w=1600&q=80", alt: "City culture" },
-              { src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80", alt: "Landscape sunset" },
-              { src: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1600&q=80", alt: "Ocean view" },
+              {
+                src: "https://images.unsplash.com/photo-1580060405669-fcb07c8e8a66?auto=format&fit=crop&w=1600&q=80",
+                alt: "Cape Town",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1549366021-9f761d450615?auto=format&fit=crop&w=1600&q=80",
+                alt: "Winelands",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1600&q=80",
+                alt: "Safari scene",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1535941339077-2dd1c7963098?auto=format&fit=crop&w=1600&q=80",
+                alt: "Coastline drive",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1458442310124-dde6edb43d10?auto=format&fit=crop&w=1600&q=80",
+                alt: "Mountains",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1598899134739-24c46f58b8c4?auto=format&fit=crop&w=1600&q=80",
+                alt: "City culture",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80",
+                alt: "Landscape sunset",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1600&q=80",
+                alt: "Ocean view",
+              },
             ],
           },
         ],
@@ -2026,7 +2369,8 @@ const DATA = {
       slug: "djibouti",
       name: "Djibouti",
       region: "Horn of Africa",
-      tagline: "Volcanic deserts, salt lakes below sea level, and seasonal whale shark encounters.",
+      tagline:
+        "Volcanic deserts, salt lakes below sea level, and seasonal whale shark encounters.",
       theme: { accent: "#06B6D4", surface: "#06151A", textOnAccent: "#001014" },
 
       seo: {
@@ -2060,26 +2404,65 @@ const DATA = {
           "Lac Abbé’s limestone chimneys and desert photography",
           "Gulf of Tadjoura whale shark snorkeling (seasonal; conditions vary)",
         ],
-        idealTripLength: ["3–5 days (core highlights)", "6–8 days (add diving + Day Forest)"],
-        travelStyles: ["Adventure", "Photography", "Off-the-beaten-path", "Marine life"],
+        idealTripLength: [
+          "3–5 days (core highlights)",
+          "6–8 days (add diving + Day Forest)",
+        ],
+        travelStyles: [
+          "Adventure",
+          "Photography",
+          "Off-the-beaten-path",
+          "Marine life",
+        ],
       },
 
       whenToGo: {
         summary:
           "Djibouti can be extremely hot. Many travelers prefer the cooler months for desert travel; whale shark season is typically in cooler months but varies by year and conditions.",
         seasons: [
-          { name: "Cooler months", months: "Nov–Mar", pros: ["Better for inland travel"], watchFor: ["Still sunny and dry—bring sun protection"] },
-          { name: "Hot months", months: "May–Sep", pros: ["Fewer visitors"], watchFor: ["Extreme inland heat; plan carefully"] },
-          { name: "Whale shark window (often)", months: "Oct–Feb", pros: ["Best chance for encounters"], watchFor: ["Sightings are never guaranteed"] },
+          {
+            name: "Cooler months",
+            months: "Nov–Mar",
+            pros: ["Better for inland travel"],
+            watchFor: ["Still sunny and dry—bring sun protection"],
+          },
+          {
+            name: "Hot months",
+            months: "May–Sep",
+            pros: ["Fewer visitors"],
+            watchFor: ["Extreme inland heat; plan carefully"],
+          },
+          {
+            name: "Whale shark window (often)",
+            months: "Oct–Feb",
+            pros: ["Best chance for encounters"],
+            watchFor: ["Sightings are never guaranteed"],
+          },
         ],
       },
 
       practical: {
         entry: [
-          { title: "Visa", detail: "Visa options vary by nationality; confirm e-visa/arrival eligibility and requirements before travel." },
-          { title: "Heat & hydration", detail: "Desert excursions require ample water, sun protection, and conservative scheduling." },
-          { title: "Transport", detail: "Inland highlights typically require a 4x4 and an experienced driver/guide due to remoteness." },
-          { title: "Marine wildlife etiquette", detail: "Choose operators that prohibit touching, chasing, or crowding whale sharks." },
+          {
+            title: "Visa",
+            detail:
+              "Visa options vary by nationality; confirm e-visa/arrival eligibility and requirements before travel.",
+          },
+          {
+            title: "Heat & hydration",
+            detail:
+              "Desert excursions require ample water, sun protection, and conservative scheduling.",
+          },
+          {
+            title: "Transport",
+            detail:
+              "Inland highlights typically require a 4x4 and an experienced driver/guide due to remoteness.",
+          },
+          {
+            title: "Marine wildlife etiquette",
+            detail:
+              "Choose operators that prohibit touching, chasing, or crowding whale sharks.",
+          },
         ],
       },
 
@@ -2091,7 +2474,12 @@ const DATA = {
             title: "Djibouti",
             subtitle:
               "A small country with outsized landscapes—rift valleys, salt lakes, lava fields, and a coastline that hosts whale sharks in season.",
-            badges: ["Lake Assal", "Lac Abbé", "Whale sharks (seasonal)", "Afar Rift"],
+            badges: [
+              "Lake Assal",
+              "Lac Abbé",
+              "Whale sharks (seasonal)",
+              "Afar Rift",
+            ],
             media: {
               kind: "image",
               src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1920&q=80",
@@ -2111,8 +2499,7 @@ const DATA = {
             items: [
               {
                 heading: "Geology-first travel",
-                body:
-                  "Djibouti isn’t a classic big-game safari destination. Its strength is the Afar Rift: salt flats, volcanic terrain, and stark, cinematic scenery that feels unlike most of Africa’s mainstream routes.",
+                body: "Djibouti isn’t a classic big-game safari destination. Its strength is the Afar Rift: salt flats, volcanic terrain, and stark, cinematic scenery that feels unlike most of Africa’s mainstream routes.",
                 media: {
                   src: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80",
                   alt: "Rift-like dramatic terrain",
@@ -2120,8 +2507,7 @@ const DATA = {
               },
               {
                 heading: "Seasonal marine encounters",
-                body:
-                  "The Gulf of Tadjoura is known for whale shark trips in season. Choose operators that keep distance and avoid crowding. Visibility and sightings vary with conditions.",
+                body: "The Gulf of Tadjoura is known for whale shark trips in season. Choose operators that keep distance and avoid crowding. Visibility and sightings vary with conditions.",
                 media: {
                   src: "https://images.unsplash.com/photo-1544551763-cede9a7f1f0c?auto=format&fit=crop&w=1600&q=80",
                   alt: "Underwater ocean scene",
@@ -2129,8 +2515,7 @@ const DATA = {
               },
               {
                 heading: "Logistics matter",
-                body:
-                  "Distances can be short on a map but slow in practice due to terrain and heat. Guided 4x4 excursions are common for Lake Assal and Lac Abbé.",
+                body: "Distances can be short on a map but slow in practice due to terrain and heat. Guided 4x4 excursions are common for Lake Assal and Lac Abbé.",
                 media: {
                   src: "https://images.unsplash.com/photo-1558980394-0c3b1d1bd3a1?auto=format&fit=crop&w=1600&q=80",
                   alt: "Off-road travel scene",
@@ -2147,8 +2532,7 @@ const DATA = {
             cards: [
               {
                 title: "Lake Assal",
-                text:
-                  "A salt lake in a volcanic depression with bright white crusts and dramatic rift views. Best visited with enough water and heat planning.",
+                text: "A salt lake in a volcanic depression with bright white crusts and dramatic rift views. Best visited with enough water and heat planning.",
                 media: {
                   src: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=1600&q=80",
                   alt: "Salt flat landscape",
@@ -2156,8 +2540,7 @@ const DATA = {
               },
               {
                 title: "Lac Abbé (desert chimneys)",
-                text:
-                  "Known for limestone chimneys and geothermal steam vents—especially striking at sunrise and sunset. Often best as an overnight trip.",
+                text: "Known for limestone chimneys and geothermal steam vents—especially striking at sunrise and sunset. Often best as an overnight trip.",
                 media: {
                   src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80",
                   alt: "Desert silhouettes at golden hour",
@@ -2165,8 +2548,7 @@ const DATA = {
               },
               {
                 title: "Gulf of Tadjoura",
-                text:
-                  "Seasonal whale shark snorkeling and coastal boat trips. Confirm timing locally and prioritize responsible operators.",
+                text: "Seasonal whale shark snorkeling and coastal boat trips. Confirm timing locally and prioritize responsible operators.",
                 media: {
                   src: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1600&q=80",
                   alt: "Turquoise sea lagoon",
@@ -2174,8 +2556,7 @@ const DATA = {
               },
               {
                 title: "Moucha Islands (easy beach day)",
-                text:
-                  "A relaxed coastal add-on for swimming and snorkeling conditions permitting—ideal as a low-effort break in the itinerary.",
+                text: "A relaxed coastal add-on for swimming and snorkeling conditions permitting—ideal as a low-effort break in the itinerary.",
                 media: {
                   src: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=1600&q=80",
                   alt: "Tropical island shoreline",
@@ -2183,8 +2564,7 @@ const DATA = {
               },
               {
                 title: "Djibouti City",
-                text:
-                  "Waterfront and markets reflecting French, Arab, Afar, and Somali influences. Useful as a base for organizing guided excursions.",
+                text: "Waterfront and markets reflecting French, Arab, Afar, and Somali influences. Useful as a base for organizing guided excursions.",
                 media: {
                   src: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1600&q=80",
                   alt: "Coastal city street scene",
@@ -2192,8 +2572,7 @@ const DATA = {
               },
               {
                 title: "Day Forest / Goda Mountains (seasonal)",
-                text:
-                  "Higher-elevation relief from the heat and different vegetation zones. Best visited with current local conditions and a guide.",
+                text: "Higher-elevation relief from the heat and different vegetation zones. Best visited with current local conditions and a guide.",
                 media: {
                   src: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=80",
                   alt: "Forest trail",
@@ -2213,21 +2592,34 @@ const DATA = {
                 days: 3,
                 pace: "Short adventure",
                 route: ["Djibouti City", "Lake Assal day trip", "City + coast"],
-                notes: "A strong intro for business travelers or stopovers who want one big landscape highlight.",
+                notes:
+                  "A strong intro for business travelers or stopovers who want one big landscape highlight.",
               },
               {
                 title: "5 days: Assal + Lac Abbé + Tadjoura",
                 days: 5,
                 pace: "Core circuit",
-                route: ["Djibouti City", "Lake Assal", "Lac Abbé (overnight)", "Tadjoura coast"],
-                notes: "A classic loop that combines geology and sea time with realistic pacing.",
+                route: [
+                  "Djibouti City",
+                  "Lake Assal",
+                  "Lac Abbé (overnight)",
+                  "Tadjoura coast",
+                ],
+                notes:
+                  "A classic loop that combines geology and sea time with realistic pacing.",
               },
               {
                 title: "7 days: whale sharks + desert + islands",
                 days: 7,
                 pace: "In-depth",
-                route: ["Tadjoura (marine days)", "Lake Assal", "Lac Abbé", "Moucha Islands"],
-                notes: "Best in cooler months; keep marine days flexible for conditions.",
+                route: [
+                  "Tadjoura (marine days)",
+                  "Lake Assal",
+                  "Lac Abbé",
+                  "Moucha Islands",
+                ],
+                notes:
+                  "Best in cooler months; keep marine days flexible for conditions.",
               },
             ],
           },
@@ -2264,14 +2656,483 @@ const DATA = {
             title: "Photo highlights",
             columns: { xs: 2, md: 3, xl: 4 },
             items: [
-              { src: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=1600&q=80", alt: "Salt flats" },
-              { src: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80", alt: "Rift landscape" },
-              { src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80", alt: "Desert sunset" },
-              { src: "https://images.unsplash.com/photo-1544551763-cede9a7f1f0c?auto=format&fit=crop&w=1600&q=80", alt: "Marine scene" },
-              { src: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1600&q=80", alt: "Turquoise waters" },
-              { src: "https://images.unsplash.com/photo-1558980394-0c3b1d1bd3a1?auto=format&fit=crop&w=1600&q=80", alt: "4x4 travel" },
-              { src: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1600&q=80", alt: "City scene" },
-              { src: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=80", alt: "Forest break" },
+              {
+                src: "https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&w=1600&q=80",
+                alt: "Salt flats",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80",
+                alt: "Rift landscape",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1600&q=80",
+                alt: "Desert sunset",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1544551763-cede9a7f1f0c?auto=format&fit=crop&w=1600&q=80",
+                alt: "Marine scene",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1500375592092-40eb2168fd21?auto=format&fit=crop&w=1600&q=80",
+                alt: "Turquoise waters",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1558980394-0c3b1d1bd3a1?auto=format&fit=crop&w=1600&q=80",
+                alt: "4x4 travel",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1600&q=80",
+                alt: "City scene",
+              },
+              {
+                src: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=80",
+                alt: "Forest break",
+              },
+            ],
+          },
+        ],
+      },
+    },
+
+    ethiopia: {
+      id: "ethiopia",
+      slug: "ethiopia",
+      name: "Ethiopia",
+      region: "East/Horn of Africa",
+      tagline:
+        "The land of origins—ancient history, dramatic highlands, and unique wildlife.",
+      theme: { accent: "#0EA5E9", surface: "#0F172A", textOnAccent: "#FFFFFF" },
+
+      seo: {
+        title: "Visit Ethiopia | Lalibela, Simien Mountains & Omo Valley",
+        description:
+          "Discover Ethiopia’s rock-hewn churches, high-altitude trekking in the Simien Mountains, and the diverse cultures of the Omo Valley.",
+      },
+
+      essentials: {
+        capitals: [{ name: "Addis Ababa", type: "capital" }],
+        languages: ["Amharic", "Oromo", "Somali", "Tigrinya"],
+        currency: { code: "ETB", name: "Ethiopian Birr" },
+        timeZone: "EAT (UTC+3)",
+        plugs: ["C", "F", "G"],
+        drivingSide: "right",
+      },
+
+      page: {
+        blocks: [
+          {
+            type: "hero.split",
+            id: "hero",
+            title: "Ethiopia",
+            subtitle:
+              "The land of origins—ancient history, dramatic highlands, and unique wildlife found nowhere else on Earth.",
+            badges: ["Lalibela", "Simien Mountains", "Omo Valley", "Danakil"],
+            media: {
+              kind: "image",
+              src: "https://images.unsplash.com/photo-1523438097201-512ae7d59c44?auto=format&fit=crop&w=1920&q=80",
+              alt: "Ancient rock church in Lalibela",
+              aspectRatio: "16/10",
+            },
+            ctas: [
+              { label: "Build Ethiopia route", href: "/plan/ethiopia" },
+              { label: "Best time to visit", href: "#when-to-go" },
+            ],
+          },
+          {
+            type: "kpi.strip",
+            id: "kpis",
+            items: [
+              { label: "UNESCO sites", value: "9" },
+              { label: "Highest peak", value: "Ras Dashen (4,550m)" },
+              { label: "Wildlife", value: "Gelada • Wolf • Ibex" },
+              { label: "Unique trait", value: "Own calendar & time" },
+            ],
+          },
+          {
+            type: "editorial.grid",
+            id: "culture-grid",
+            title: "A journey through time and culture",
+            columns: { xs: 1, md: 3 },
+            items: [
+              {
+                title: "Ancient civilizations",
+                body: "From the obelisks of Axum to the castles of Gondar, Ethiopia's history spans thousands of years of independent development and unique Christian heritage.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1569144654912-5f146d155a23?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Historic stone ruins",
+                  aspectRatio: "4/3",
+                },
+              },
+              {
+                title: "Living traditions",
+                body: "The coffee ceremony, colorful festivals like Timkat, and the diverse cultures of the Omo Valley offer a deep dive into unchanged traditions.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1510155324852-d5d2dbe7a5e8?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Coffee ceremony",
+                  aspectRatio: "4/3",
+                },
+              },
+              {
+                title: "Dramatic landscapes",
+                body: "Hike the Simien escarpments or descend into the Danakil Depression—one of the hottest and lowest places on the planet.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Mountain landscape",
+                  aspectRatio: "4/3",
+                },
+              },
+            ],
+          },
+          {
+            type: "cards.media",
+            id: "top-places",
+            title: "Top places to visit",
+            columns: { xs: 1, sm: 2, lg: 3 },
+            cards: [
+              {
+                title: "Lalibela",
+                text: "UNESCO-listed rock-hewn churches, a feat of medieval engineering and faith.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1523438097201-512ae7d59c44?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Rock church",
+                },
+              },
+              {
+                title: "Simien Mountains",
+                text: "High-altitude trekking with Gelada baboons and massive escarpment views.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1569144654912-5f146d155a23?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Simien mountains",
+                },
+              },
+              {
+                title: "Danakil Depression",
+                text: "Sulfuric springs and lava lakes in one of Earth's most extreme environments.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1510155324852-d5d2dbe7a5e8?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Danakil desert",
+                },
+              },
+              {
+                title: "Omo Valley",
+                text: "Diverse set of tribes maintaining ancient customs and body art.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Omo valley people",
+                },
+              },
+              {
+                title: "Gondar",
+                text: "The 'Camelot of Africa' with its 17th-century royal enclosure.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1535941339077-2dd1c7963098?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Gondar castle",
+                },
+              },
+              {
+                title: "Bale Mountains",
+                text: "Home to the rare Ethiopian wolf and endemic mountain nyala.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Ethiopian wolf",
+                },
+              },
+            ],
+          },
+          {
+            type: "carousel.experiences",
+            id: "experiences",
+            title: "Signature experiences",
+            items: [
+              {
+                title: "Explore Lalibela's Churches",
+                text: "Descend into the hand-carved medieval churches during early morning service.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1523438097201-512ae7d59c44?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Lalibela churches",
+                },
+              },
+              {
+                title: "Ethiopian Coffee Ceremony",
+                text: "Experience the aromatic ritual that defines Ethiopian hospitality.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1510155324852-d5d2dbe7a5e8?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Coffee ceremony",
+                },
+              },
+              {
+                title: "Danakil Adventure",
+                text: "Camp near the Erta Ale lava lake and watch the ground glow red.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Volcano lava",
+                },
+              },
+              {
+                title: "Simien Mountains Hike",
+                text: "Walk among troops of Gelada baboons on the edge of the world.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1569144654912-5f146d155a23?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Gelada baboons",
+                },
+              },
+            ],
+          },
+          {
+            type: "itineraries.cards",
+            id: "itineraries",
+            title: "Sample itineraries",
+            columns: { xs: 1, md: 3 },
+            items: [
+              {
+                title: "8 days: The Historic Route",
+                days: 8,
+                pace: "Classic",
+                route: ["Addis Ababa", "Lalibela", "Gondar", "Axum"],
+                notes: "Best for history buffs and first-time visitors.",
+              },
+              {
+                title: "10 days: Nature & Wildlife",
+                days: 10,
+                pace: "Balanced",
+                route: [
+                  "Addis Ababa",
+                  "Simien Mountains",
+                  "Bale Mountains",
+                  "Lake Tana",
+                ],
+                notes: "Ideal for trekking and spotting rare endemic species.",
+              },
+              {
+                title: "14 days: The Grand Tour",
+                days: 14,
+                pace: "In-depth",
+                route: [
+                  "Addis Ababa",
+                  "Historic North",
+                  "Danakil",
+                  "Omo Valley",
+                ],
+                notes:
+                  "The ultimate Ethiopian adventure covering all major highlights.",
+              },
+            ],
+          },
+        ],
+      },
+    },
+
+    somalia: {
+      id: "somalia",
+      slug: "somalia",
+      name: "Somalia",
+      region: "Horn of Africa",
+      tagline:
+        "Pristine coastlines, ancient history, and a resilient, vibrant culture.",
+      theme: { accent: "#38BDF8", surface: "#0F172A", textOnAccent: "#FFFFFF" },
+
+      seo: {
+        title: "Visit Somalia | Mogadishu & Coastal Wonders",
+        description:
+          "Explore Somalia’s hidden gems, from the white sands of Liido Beach to historic coastal towns.",
+      },
+
+      essentials: {
+        capitals: [{ name: "Mogadishu", type: "capital" }],
+        languages: ["Somali", "Arabic"],
+        currency: { code: "SOS", name: "Somali Shilling" },
+        timeZone: "EAT (UTC+3)",
+        plugs: ["C", "G"],
+        drivingSide: "right",
+      },
+
+      page: {
+        blocks: [
+          {
+            type: "hero.split",
+            id: "hero",
+            title: "Somalia",
+            subtitle:
+              "Pristine coastlines, ancient history, and a resilient, vibrant culture. Discover a land of ancient shores and untouched beauty.",
+            badges: ["Mogadishu", "Liido Beach", "Berbera", "Laas Geel"],
+            media: {
+              kind: "image",
+              src: "https://images.unsplash.com/photo-1517960413843-0aee8e2b3285?auto=format&fit=crop&w=1920&q=80",
+              alt: "Aerial view of Mogadishu coast",
+              aspectRatio: "16/10",
+            },
+            ctas: [
+              { label: "Plan coastal route", href: "/plan/somalia" },
+              { label: "Best time to visit", href: "#when-to-go" },
+            ],
+          },
+          {
+            type: "kpi.strip",
+            id: "kpis",
+            items: [
+              { label: "Coastline", value: "3,300+ km" },
+              { label: "Oldest Art", value: "Laas Geel (5,000+ years)" },
+              { label: "Marine Life", value: "Turtles • Dolphins • Reefs" },
+              { label: "Culture", value: "Nation of Poets" },
+            ],
+          },
+          {
+            type: "editorial.grid",
+            id: "discovery-grid",
+            title: "Africa's longest coast and deep history",
+            columns: { xs: 1, md: 3 },
+            items: [
+              {
+                title: "Prehistoric art",
+                body: "Laas Geel contains some of the best-preserved rock art in Africa, depicting life from over 5,000 years ago.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1517960413843-0aee8e2b3285?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Cave art",
+                  aspectRatio: "4/3",
+                },
+              },
+              {
+                title: "Untouched beaches",
+                body: "From Liido Beach to the shores of Berbera, Somalia offers miles of white sand and turquoise waters.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1504973960431-1c467e159aa4?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Beach view",
+                  aspectRatio: "4/3",
+                },
+              },
+              {
+                title: "Maritime heritage",
+                body: "Ancient port cities like Zeila have linked Africa to the world for millennia through trade and seafaring.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Old harbor",
+                  aspectRatio: "4/3",
+                },
+              },
+            ],
+          },
+          {
+            type: "cards.media",
+            id: "top-places",
+            title: "Top places to visit",
+            columns: { xs: 1, sm: 2, lg: 3 },
+            cards: [
+              {
+                title: "Laas Geel",
+                text: "Vibrant ancient rock paintings in a cave complex near Hargeisa.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1517960413843-0aee8e2b3285?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Rock art",
+                },
+              },
+              {
+                title: "Liido Beach",
+                text: "Mogadishu's most popular social spot, perfect for swimming and seafood.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1504973960431-1c467e159aa4?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Liido beach",
+                },
+              },
+              {
+                title: "Berbera",
+                text: "Historical port town with Ottoman architecture and clear lagoons.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Berbera coast",
+                },
+              },
+              {
+                title: "Zeila",
+                text: "Ruins of an ancient Islamic city that was once a major regional hub.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1547970810-dc1eac37d174?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Ancient ruins",
+                },
+              },
+              {
+                title: "Daallo Forest",
+                text: "High-altitude forest with waterfalls and unique botanical species.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Green forest",
+                },
+              },
+              {
+                title: "Sheikh Mountains",
+                text: "Scenic mountain town with cooler temperatures and colonial history.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1458442310124-dde6edb43d10?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Mountain town",
+                },
+              },
+            ],
+          },
+          {
+            type: "carousel.experiences",
+            id: "experiences",
+            title: "Signature experiences",
+            items: [
+              {
+                title: "Discover Laas Geel Art",
+                text: "A guided tour of pre-historic paintings in a stunning natural setting.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1517960413843-0aee8e2b3285?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Cave painting",
+                },
+              },
+              {
+                title: "Coastal Excursions in Berbera",
+                text: "Boat trips to reefs and shipwrecks in the Gulf of Aden.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1504973960431-1c467e159aa4?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Coastal boat",
+                },
+              },
+              {
+                title: "Somali Cuisine Tasting",
+                text: "Enjoy traditional dishes like bariis (rice) and camel milk tea.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1547970810-dc1eac37d174?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Somali food",
+                },
+              },
+              {
+                title: "Hargeisa Market Walk",
+                text: "Bustling markets filled with color, gold, and local livestock trade.",
+                media: {
+                  src: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1600&q=80",
+                  alt: "Market scene",
+                },
+              },
+            ],
+          },
+          {
+            type: "itineraries.cards",
+            id: "itineraries",
+            title: "Sample itineraries",
+            columns: { xs: 1, md: 3 },
+            items: [
+              {
+                title: "4 days: Somaliland Highlights",
+                days: 4,
+                pace: "Efficient",
+                route: ["Hargeisa", "Laas Geel", "Berbera"],
+                notes: "Most common and accessible route for first-timers.",
+              },
+              {
+                title: "6 days: North & Coastal",
+                days: 6,
+                pace: "Balanced",
+                route: ["Hargeisa", "Sheikh Mountains", "Berbera", "Zeila"],
+                notes: "Includes scenic mountains and deep ancient history.",
+              },
+              {
+                title: "10 days: Expedition Somalia",
+                days: 10,
+                pace: "Ambitious",
+                route: ["Mogadishu", "Hargeisa", "Berbera", "Daallo Forest"],
+                notes: "Requires careful logistics and security planning.",
+              },
             ],
           },
         ],
@@ -2286,13 +3147,30 @@ const DATA = {
  */
 function kenyaSeasonItems() {
   return [
-    { label: "Jun–Oct", title: "Drier season / peak safari", detail: "Excellent wildlife visibility; migration often peaks in the Mara mid-year (timing varies)." },
-    { label: "Jan–Feb", title: "Short dry season", detail: "Strong safari conditions; warm coastal weather." },
-    { label: "Mar–May", title: "Long rains", detail: "Greener landscapes; fewer crowds; some roads can be challenging." },
-    { label: "Nov–Dec", title: "Short rains", detail: "Shoulder season with fresh scenery; showers are often brief." },
+    {
+      label: "Jun–Oct",
+      title: "Drier season / peak safari",
+      detail:
+        "Excellent wildlife visibility; migration often peaks in the Mara mid-year (timing varies).",
+    },
+    {
+      label: "Jan–Feb",
+      title: "Short dry season",
+      detail: "Strong safari conditions; warm coastal weather.",
+    },
+    {
+      label: "Mar–May",
+      title: "Long rains",
+      detail:
+        "Greener landscapes; fewer crowds; some roads can be challenging.",
+    },
+    {
+      label: "Nov–Dec",
+      title: "Short rains",
+      detail: "Shoulder season with fresh scenery; showers are often brief.",
+    },
   ];
 }
-
 
 const getFB = (c) => {
   const descParas = c?.fullDescription
@@ -2338,7 +3216,7 @@ const CountryPage = () => {
   const { openMap } = useApp();
   const country = useMemo(
     () => countries.find((c) => c.id === countryId),
-    [countryId]
+    [countryId],
   );
   const { destinations: dests = [] } = useCountryDestinations(countryId);
   const {
@@ -2349,7 +3227,7 @@ const CountryPage = () => {
   } = useCountryInsights(country);
   const td = useMemo(
     () => DATA[countryId] || getFB(country),
-    [countryId, country]
+    [countryId, country],
   );
   const officialLink = useMemo(() => getOfficialLink(countryId), [countryId]);
 
@@ -2366,7 +3244,7 @@ const CountryPage = () => {
             { icon: FiCalendar, l: "Best Time", v: clean(country.bestTime) },
           ]
         : [],
-    [country]
+    [country],
   );
 
   const sec = useMemo(() => {
@@ -2383,7 +3261,8 @@ const CountryPage = () => {
   }, [insights]);
 
   const aiHL = useMemo(() => {
-    if (aiL) return `Generating live AI profile for ${country?.name || ""}...`;
+    if (aiL)
+      return `Pondering Live Country profile for ${country?.name || ""}...`;
     if (sec?.ov?.length) return toS(sec.ov[0], 2).join(" ");
     return `Discover ${country?.name || ""} — an extraordinary destination.`;
   }, [aiL, sec, country?.name]);
@@ -2399,7 +3278,7 @@ const CountryPage = () => {
         query: `${country?.capital || ""}, ${country?.name || ""}`,
         zoom: 6,
       }),
-    [openMap, country]
+    [openMap, country],
   );
 
   if (!country)
@@ -2425,7 +3304,7 @@ const CountryPage = () => {
       out.push(
         <R key="lead" a="up">
           <p className="cp-guide__lead">{td.intro}</p>
-        </R>
+        </R>,
       );
     }
 
@@ -2453,7 +3332,7 @@ const CountryPage = () => {
               )}
             </div>
           </div>
-        </R>
+        </R>,
       );
 
       if (i > 0 && i % 2 === 1) {
@@ -2473,7 +3352,7 @@ const CountryPage = () => {
                   </div>
                 ))}
               </div>
-            </R>
+            </R>,
           );
         }
       }
@@ -2491,7 +3370,7 @@ const CountryPage = () => {
               </div>
             ))}
           </div>
-        </R>
+        </R>,
       );
     }
 
@@ -2511,7 +3390,7 @@ const CountryPage = () => {
               </div>
             ))}
           </div>
-        </R>
+        </R>,
       );
     }
     return out;
@@ -2576,8 +3455,7 @@ const CountryPage = () => {
                       {clean(country.tagline)}
                     </span>
                     <span className="cp-hero__region">
-                      <FiMapPin size={11} />{" "}
-                      {clean(country.region || "Africa")}
+                      <FiMapPin size={11} /> {clean(country.region || "Africa")}
                     </span>
                   </div>
                 </div>
@@ -2611,8 +3489,8 @@ const CountryPage = () => {
                   {info.map((it, i) => (
                     <R
                       key={it.l}
-                      a="left"
-                      d={i * 0.04}
+                      animation="flipIn"
+                      delay={i * 0.04}
                       as="div"
                       className="cp-info-item"
                     >
@@ -2664,7 +3542,13 @@ const CountryPage = () => {
             </R>
             <div className="cp-stats-grid">
               {td.stats.map((st, i) => (
-                <R key={st.l} a="zoom" d={i * 0.035} as="div" className="cp-stat">
+                <R
+                  key={st.l}
+                  animation="zoomIn"
+                  delay={i * 0.08}
+                  as="div"
+                  className="cp-stat"
+                >
                   <div className="cp-stat__value">
                     <Ct
                       end={st.v}
@@ -2756,9 +3640,7 @@ const CountryPage = () => {
                 <span className="cp-badge">
                   <FiCamera size={12} /> Photo Gallery
                 </span>
-                <h2 className="cp-section-title">
-                  {country.name} in Pictures
-                </h2>
+                <h2 className="cp-section-title">{country.name} in Pictures</h2>
               </div>
             </R>
             <R a="zoom" d={0.1}>
@@ -2782,8 +3664,18 @@ const CountryPage = () => {
           <div className="cp-highlights-grid">
             {(country.highlights || []).slice(0, 12).map((h, i) => {
               const Ic = [
-                FiMapPin, FiCompass, FiSun, FiStar, FiGlobe, FiBarChart2,
-                FiTrendingUp, FiCalendar, FiAnchor, FiCamera, FiFeather, FiTarget,
+                FiMapPin,
+                FiCompass,
+                FiSun,
+                FiStar,
+                FiGlobe,
+                FiBarChart2,
+                FiTrendingUp,
+                FiCalendar,
+                FiAnchor,
+                FiCamera,
+                FiFeather,
+                FiTarget,
               ][i % 12];
               return (
                 <R key={h} a="up" d={i * 0.04}>
@@ -2842,12 +3734,13 @@ const CountryPage = () => {
                   <span className="cp-badge">
                     <FiMap size={12} /> Interactive Map
                   </span>
-                  <h3 className="cp-card__heading">
-                    Explore {country.name}
-                  </h3>
+                  <h3 className="cp-card__heading">Explore {country.name}</h3>
                 </div>
                 <div className="cp-map-actions">
-                  <button onClick={mini} className="cp-map-btn cp-map-btn--primary">
+                  <button
+                    onClick={mini}
+                    className="cp-map-btn cp-map-btn--primary"
+                  >
                     Mini View <FiMaximize2 size={13} />
                   </button>
                   <a
@@ -2909,7 +3802,7 @@ const CountryPage = () => {
       {/* ═══ AI INTELLIGENCE ═══ */}
       <section className="cp-section cp-section--ai">
         <div className="cp-container">
-          <R a="up">
+          <R animation="perspectiveIn">
             <div className="cp-ai-header">
               <div className="cp-ai-header__left">
                 <span className="cp-badge cp-badge--ai">
@@ -2944,7 +3837,7 @@ const CountryPage = () => {
           {!aiL && !aiE && insights && (
             <div className="cp-ai-grid">
               {/* Main Content */}
-              <R a="left" className="cp-ai-main">
+              <R animation="slideReveal" className="cp-ai-main">
                 <div className="cp-ai-white-card">
                   <div className="cp-ai-card-header">
                     <div className="cp-ai-card-title">
@@ -3042,7 +3935,7 @@ const CountryPage = () => {
               </R>
 
               {/* Sidebar */}
-              <R a="right" className="cp-ai-sidebar" d={0.1}>
+              <R animation="blurIn" className="cp-ai-sidebar" delay={0.2}>
                 <div className="cp-ai-sidebar-stack">
                   <div className="cp-ai-glass">
                     <h4 className="cp-ai-glass__title">
@@ -3050,10 +3943,26 @@ const CountryPage = () => {
                     </h4>
                     <div className="cp-ai-metrics">
                       {[
-                        { l: "Population", v: insights.quickStats?.population, ic: FiUsers },
-                        { l: "GDP Output", v: insights.quickStats?.gdp, ic: FiTrendingUp },
-                        { l: "Connectivity", v: insights.quickStats?.internetPenetration, ic: FiWifi },
-                        { l: "Annual Inflow", v: insights.quickStats?.internationalArrivals, ic: FiGlobe },
+                        {
+                          l: "Population",
+                          v: insights.quickStats?.population,
+                          ic: FiUsers,
+                        },
+                        {
+                          l: "GDP Output",
+                          v: insights.quickStats?.gdp,
+                          ic: FiTrendingUp,
+                        },
+                        {
+                          l: "Connectivity",
+                          v: insights.quickStats?.internetPenetration,
+                          ic: FiWifi,
+                        },
+                        {
+                          l: "Annual Inflow",
+                          v: insights.quickStats?.internationalArrivals,
+                          ic: FiGlobe,
+                        },
                       ].map((s) => (
                         <div key={s.l} className="cp-ai-metric">
                           <s.ic size={18} />
@@ -3097,9 +4006,7 @@ const CountryPage = () => {
                               <m.ic size={16} />
                             </div>
                             <div>
-                              <div className="cp-ai-info-row__label">
-                                {m.l}
-                              </div>
+                              <div className="cp-ai-info-row__label">{m.l}</div>
                               <div className="cp-ai-info-row__value">
                                 {clean(m.v)}
                               </div>
@@ -3140,10 +4047,7 @@ const CountryPage = () => {
                     </h5>
                     <div className="cp-ai-tokens">
                       {(insights.trendingAttractions || []).map((a) => (
-                        <span
-                          key={a}
-                          className="cp-ai-token cp-ai-token--glow"
-                        >
+                        <span key={a} className="cp-ai-token cp-ai-token--glow">
                           {clean(a)}
                         </span>
                       ))}
@@ -3181,7 +4085,7 @@ const CountryPage = () => {
                 </h3>
                 <p className="cp-card__text-lg">
                   {clean(
-                    country.additionalInfo || country.description || td.intro
+                    country.additionalInfo || country.description || td.intro,
                   )}
                 </p>
                 {(country?.cuisine?.specialties || []).length > 0 && (
@@ -3403,7 +4307,7 @@ const CSS = `
 }
 
 .cp-section--hero {
-  padding: clamp(40px, 6vw, 80px) 0;
+  padding: clamp(1a40px, 26vw, 180px) 0;
   background: linear-gradient(180deg, var(--cp-green-50) 0%, var(--cp-white) 100%);
 }
 

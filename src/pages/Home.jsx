@@ -108,9 +108,9 @@ const useWindowSize = () => {
 const useSmoothScroll = () => {
   useEffect(() => {
     const html = document.documentElement;
-    html.style.scrollBehavior = 'smooth';
+    html.style.scrollBehavior = "smooth";
     return () => {
-      html.style.scrollBehavior = '';
+      html.style.scrollBehavior = "";
     };
   }, []);
 };
@@ -779,10 +779,11 @@ const Home = () => {
   const [activeProcess, setActiveProcess] = useState(0);
   const [galleryFilter, setGalleryFilter] = useState("All");
   const [lightboxIdx, setLightboxIdx] = useState(-1);
-  const { destinations: allDestinations = [], loading: destinationsLoading } = useDestinations({
-    limit: 24,
-    sort: "-featured",
-  });
+  const { destinations: allDestinations = [], loading: destinationsLoading } =
+    useDestinations({
+      limit: 24,
+      sort: "-featured",
+    });
 
   const nextTestimonial = useCallback(() => {
     setActiveTestimonial((p) => (p + 1) % (testimonials?.length || 1));
@@ -1192,7 +1193,6 @@ const Home = () => {
     [],
   );
 
-
   /* ═════════════════ RENDER ═════════════════ */
   return (
     <div ref={homeRootRef} style={{ overflowX: "hidden" }}>
@@ -1229,7 +1229,10 @@ const Home = () => {
         .blob{position:absolute;border-radius:60% 40% 30% 70%/60% 30% 70% 40%;animation:morphBlob 12s ease-in-out infinite;pointer-events:none;filter:blur(60px);opacity:.06}
 
         /* Destination */
-        .dg{display:grid;grid-template-columns:repeat(3,1fr);gap:28px}
+        /* Destination Grid - Responsive */
+        .dg{display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:28px}
+        @media(max-width: 1400px) { .dg { grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); } }
+        @media(max-width: 480px) { .dg { grid-template-columns: 1fr; } }
         .dc{border-radius:24px;overflow:hidden;position:relative;background:#fff;box-shadow:0 2px 20px rgba(0,0,0,.05);transition:all .6s cubic-bezier(.4,0,.2,1);text-decoration:none;display:flex;flex-direction:column}
         .dc:hover{box-shadow:0 30px 70px rgba(5,150,105,.16)}
         .dc .db{position:absolute;inset:-3px;border-radius:27px;padding:3px;background:conic-gradient(from 0deg,#059669,#10B981,#34D399,#059669);opacity:0;transition:opacity .6s;z-index:-1}
@@ -1456,271 +1459,311 @@ const Home = () => {
                   paddingTop: 40,
                   borderTop: "1px solid #E5E7EB",
                 }}
-              >
-              </StaggerWrap>
+              ></StaggerWrap>
             </div>
-<div className="iw" style={{ position: "relative" }}>
-  <AnimatedSection animation="rotateIn" delay={0.2}>
-    <div
-      style={{
-        position: "relative",
-        minHeight: "clamp(360px, 52vw, 580px)",
-        width: "100%",
-      }}
-    >
-      <ImageCycle
-        images={[
-          "https://i.pinimg.com/736x/c2/26/91/c22691ef2c1f5a1e9544ec1e62774740.jpg",
-          "https://i.pinimg.com/736x/77/d2/9c/77d29c30fa04d28e1b657c5669401f92.jpg",
-          "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
-          "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
-          "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg",
-          "https://i.pinimg.com/1200x/d0/af/e3/d0afe34b5ae890a0aa78264647847ba6.jpg",
-          "https://i.pinimg.com/1200x/84/e4/85/84e48535118942a4a468aa686841d974.jpg",
-          "https://i.pinimg.com/736x/55/e3/3e/55e33e50985ece6ae1b4256b880bc1d1.jpg",
-          "https://i.pinimg.com/1200x/bb/eb/a8/bbeba83d5cd3a6f8cef52d503aeb99a8.jpg",
-          "https://i.pinimg.com/736x/a6/fa/e8/a6fae858bd1ecf633229b5dade79c68a.jpg",
-          "https://i.pinimg.com/474x/b5/c6/13/b5c6134e42151a981a41eaf34166e27f.jpg"
-        ]}
-        style={{
-          width: "100%",
-          height: "clamp(360px, 52vw, 520px)",
-          borderRadius: 28,
-          objectFit: "cover",
-          boxShadow: "0 30px 80px rgba(0,0,0,.15)",
-        }}
-        showControllers={false}
-        interval={7000}
-      />
-      {/* Child cards container for row layout */}
-      <div style={{
-        position: "absolute",
-        bottom: "clamp(-40px, -5vw, -50px)", // Pushed much further down
-        left: 0,
-        right: 0,
-        display: "flex",
-        justifyContent: "center",
-        gap: "clamp(15px, 3vw, 25px)",
-        padding: "0 clamp(10px, 5%, 40px)",
-        zIndex: 10,
-        pointerEvents: "none",
-      }}>
-        <ImageCycle
-          images={[
-            "https://www.vjv.com/media/hyegmdk3/giraffe-walking-savanna-queen-elizabeth-national-park-uganda-shutterstock_58932448.jpg?height=1080&quality=60&width=1920",
-            "https://www.travelandleisure.com/thmb/4rmCDPTq85-wHGIak69y6Uv1WWo%3D/1500x0/filters%3Ano_upscale%28%29%3Amax_bytes%28150000%29%3Astrip_icc%28%29/TAL-ol-jogi-aerial-view-full-ALISTLIZ1125-fde5875b5cbf433b862221dbaccddf92.jpg",
-            "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
-            "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
-            "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg"
-          ]}
-          style={{
-            width: "clamp(140px, 28%, 220px)",
-            height: "clamp(110px, 30vw, 160px)",
-            borderRadius: 20,
-            objectFit: "cover",
-            boxShadow: "0 20px 40px rgba(0,0,0,.3)",
-            pointerEvents: "auto",
-            transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-            animation: "floatSoft 6s ease-in-out infinite",
-            transform: "translateY(0)",
-            cursor: "pointer",
-            outline: "none",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-12px) scale(1.05)";
-            e.currentTarget.style.boxShadow = "0 30px 60px rgba(0,0,0,.4)";
-            e.currentTarget.style.filter = "brightness(1.1) contrast(1.05)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0) scale(1)";
-            e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,.3)";
-            e.currentTarget.style.filter = "brightness(1) contrast(1)";
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.transform = "translateY(-8px) scale(1.03)";
-            e.currentTarget.style.boxShadow = "0 25px 50px rgba(5,150,105,.5)";
-            e.currentTarget.style.outline = "3px solid rgba(5,150,105,.5)";
-            e.currentTarget.style.outlineOffset = "3px";
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.transform = "translateY(0) scale(1)";
-            e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,.3)";
-            e.currentTarget.style.outline = "none";
-          }}
-          tabIndex={0}
-          showControllers={false}
-          interval={0}
-        />
-        <ImageCycle
-          images={[
-            "https://www.vjv.com/media/hyegmdk3/giraffe-walking-savanna-queen-elizabeth-national-park-uganda-shutterstock_58932448.jpg?height=1080&quality=60&width=1920",
-            "https://www.travelandleisure.com/thmb/4rmCDPTq85-wHGIak69y6Uv1WWo%3D/1500x0/filters%3Ano_upscale%28%29%3Amax_bytes%28150000%29%3Astrip_icc%28%29/TAL-ol-jogi-aerial-view-full-ALISTLIZ1125-fde5875b5cbf433b862221dbaccddf92.jpg",
-            "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
-            "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
-            "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg"
-          ]}
-          style={{
-            width: "clamp(140px, 28%, 220px)",
-            height: "clamp(110px, 30vw, 160px)",
-            borderRadius: 20,
-            objectFit: "cover",
-            boxShadow: "0 20px 40px rgba(0,0,0,.3)",
-            pointerEvents: "auto",
-            transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-            animation: "floatSoft 6s ease-in-out infinite 0.5s",
-            transform: "translateY(0)",
-            cursor: "pointer",
-            outline: "none",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-12px) scale(1.05)";
-            e.currentTarget.style.boxShadow = "0 30px 60px rgba(0,0,0,.4)";
-            e.currentTarget.style.filter = "brightness(1.1) contrast(1.05)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0) scale(1)";
-            e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,.3)";
-            e.currentTarget.style.filter = "brightness(1) contrast(1)";
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.transform = "translateY(-8px) scale(1.03)";
-            e.currentTarget.style.boxShadow = "0 25px 50px rgba(5,150,105,.5)";
-            e.currentTarget.style.outline = "3px solid rgba(5,150,105,.5)";
-            e.currentTarget.style.outlineOffset = "3px";
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.transform = "translateY(0) scale(1)";
-            e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,.3)";
-            e.currentTarget.style.outline = "none";
-          }}
-          tabIndex={0}
-          showControllers={false}
-          interval={0}
-        />
-        <ImageCycle
-          images={[
-            "https://www.vjv.com/media/hyegmdk3/giraffe-walking-savanna-queen-elizabeth-national-park-uganda-shutterstock_58932448.jpg?height=1080&quality=60&width=1920",
-            "https://www.travelandleisure.com/thmb/4rmCDPTq85-wHGIak69y6Uv1WWo%3D/1500x0/filters%3Ano_upscale%28%29%3Amax_bytes%28150000%29%3Astrip_icc%28%29/TAL-ol-jogi-aerial-view-full-ALISTLIZ1125-fde5875b5cbf433b862221dbaccddf92.jpg",
-            "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
-            "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
-            "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg"
-          ]}
-          style={{
-            width: "clamp(140px, 28%, 220px)",
-            height: "clamp(110px, 30vw, 160px)",
-            borderRadius: 20,
-            objectFit: "cover",
-            boxShadow: "0 20px 40px rgba(0,0,0,.3)",
-            pointerEvents: "auto",
-            transition: "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-            animation: "floatSoft 6s ease-in-out infinite 1s",
-            transform: "translateY(0)",
-            cursor: "pointer",
-            outline: "none",
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-12px) scale(1.05)";
-            e.currentTarget.style.boxShadow = "0 30px 60px rgba(0,0,0,.4)";
-            e.currentTarget.style.filter = "brightness(1.1) contrast(1.05)";
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = "translateY(0) scale(1)";
-            e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,.3)";
-            e.currentTarget.style.filter = "brightness(1) contrast(1)";
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.transform = "translateY(-8px) scale(1.03)";
-            e.currentTarget.style.boxShadow = "0 25px 50px rgba(5,150,105,.5)";
-            e.currentTarget.style.outline = "3px solid rgba(5,150,105,.5)";
-            e.currentTarget.style.outlineOffset = "3px";
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.transform = "translateY(0) scale(1)";
-            e.currentTarget.style.boxShadow = "0 20px 40px rgba(0,0,0,.3)";
-            e.currentTarget.style.outline = "none";
-          }}
-          tabIndex={0}
-          showControllers={false}
-          interval={0}
-        />
-      </div>
-      <motion.div
-        animate={reduced ? {} : { y: [0, -12, 0] }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-        style={{
-          position: "absolute",
-          top: "clamp(6px, 3vw, 20px)",
-          right: "clamp(12px, 3vw, 28px)",
-          width: "clamp(60px, 18vw, 105px)",
-          height: "clamp(60px, 18vw, 120px)",
-          borderRadius: 24,
-          display: "flex",
-          backdropFilter: 'blur(3px)',
-          alignItems: "center",
-          flexDirection: "column",
-          color: "white",
-          boxShadow: "0 20px 50px rgba(5,150,105,.45)",
-          zIndex: 10,
-          transition: "all 0.3s ease",
-          cursor: "pointer",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.transform = "scale(1.05)";
-          e.currentTarget.style.boxShadow = "0 30px 60px rgba(5,150,105,.6)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.transform = "scale(1)";
-          e.currentTarget.style.boxShadow = "0 20px 50px rgba(5,150,105,.45)";
-        }}
-        onFocus={(e) => {
-          e.currentTarget.style.outline = "3px solid rgba(255,255,255,.8)";
-          e.currentTarget.style.outlineOffset = "3px";
-        }}
-        onBlur={(e) => {
-          e.currentTarget.style.outline = "none";
-        }}
-        tabIndex={0}
-      >
-        <span
-          style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: "clamp(30px, 4vw, 48px)",
-            fontWeight: 800,
-          }}
-        >
-          10+
-        </span>
-        <span
-          style={{
-            fontSize: 11,
-            textTransform: "uppercase",
-            letterSpacing: 1.5,
-            fontWeight: 700,
-          }}
-        >
-          Countries
-        </span>
-      </motion.div>
-      <div
-        style={{
-          position: "absolute",
-          bottom: -30,
-          right: -30,
-          width: 130,
-          height: 130,
-          borderRadius: "50%",
-          border: "3px dashed rgba(5,150,105,.15)",
-          animation: "rotateSlow 25s linear infinite",
-          pointerEvents: "none",
-        }}
-      />
-    </div>
-  </AnimatedSection>
-</div>            
+            <div className="iw" style={{ position: "relative" }}>
+              <AnimatedSection animation="rotateIn" delay={0.2}>
+                <div
+                  style={{
+                    position: "relative",
+                    minHeight: "clamp(360px, 52vw, 580px)",
+                    width: "100%",
+                  }}
+                >
+                  <ImageCycle
+                    images={[
+                      "https://i.pinimg.com/736x/c2/26/91/c22691ef2c1f5a1e9544ec1e62774740.jpg",
+                      "https://i.pinimg.com/736x/77/d2/9c/77d29c30fa04d28e1b657c5669401f92.jpg",
+                      "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
+                      "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
+                      "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg",
+                      "https://i.pinimg.com/1200x/d0/af/e3/d0afe34b5ae890a0aa78264647847ba6.jpg",
+                      "https://i.pinimg.com/1200x/84/e4/85/84e48535118942a4a468aa686841d974.jpg",
+                      "https://i.pinimg.com/736x/55/e3/3e/55e33e50985ece6ae1b4256b880bc1d1.jpg",
+                      "https://i.pinimg.com/1200x/bb/eb/a8/bbeba83d5cd3a6f8cef52d503aeb99a8.jpg",
+                      "https://i.pinimg.com/736x/a6/fa/e8/a6fae858bd1ecf633229b5dade79c68a.jpg",
+                      "https://i.pinimg.com/474x/b5/c6/13/b5c6134e42151a981a41eaf34166e27f.jpg",
+                    ]}
+                    style={{
+                      width: "100%",
+                      height: "clamp(360px, 52vw, 520px)",
+                      borderRadius: 28,
+                      objectFit: "cover",
+                      boxShadow: "0 30px 80px rgba(0,0,0,.15)",
+                    }}
+                    showControllers={false}
+                    interval={7000}
+                  />
+                  {/* Child cards container for row layout */}
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "clamp(-40px, -5vw, -50px)", // Pushed much further down
+                      left: 0,
+                      right: 0,
+                      display: "flex",
+                      justifyContent: "center",
+                      gap: "clamp(15px, 3vw, 25px)",
+                      padding: "0 clamp(10px, 5%, 40px)",
+                      zIndex: 10,
+                      pointerEvents: "none",
+                    }}
+                  >
+                    <ImageCycle
+                      images={[
+                        "https://www.vjv.com/media/hyegmdk3/giraffe-walking-savanna-queen-elizabeth-national-park-uganda-shutterstock_58932448.jpg?height=1080&quality=60&width=1920",
+                        "https://www.travelandleisure.com/thmb/4rmCDPTq85-wHGIak69y6Uv1WWo%3D/1500x0/filters%3Ano_upscale%28%29%3Amax_bytes%28150000%29%3Astrip_icc%28%29/TAL-ol-jogi-aerial-view-full-ALISTLIZ1125-fde5875b5cbf433b862221dbaccddf92.jpg",
+                        "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
+                        "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
+                        "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg",
+                      ]}
+                      style={{
+                        width: "clamp(140px, 28%, 220px)",
+                        height: "clamp(110px, 30vw, 160px)",
+                        borderRadius: 20,
+                        objectFit: "cover",
+                        boxShadow: "0 20px 40px rgba(0,0,0,.3)",
+                        pointerEvents: "auto",
+                        transition:
+                          "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                        animation: "floatSoft 6s ease-in-out infinite",
+                        transform: "translateY(0)",
+                        cursor: "pointer",
+                        outline: "none",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform =
+                          "translateY(-12px) scale(1.05)";
+                        e.currentTarget.style.boxShadow =
+                          "0 30px 60px rgba(0,0,0,.4)";
+                        e.currentTarget.style.filter =
+                          "brightness(1.1) contrast(1.05)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform =
+                          "translateY(0) scale(1)";
+                        e.currentTarget.style.boxShadow =
+                          "0 20px 40px rgba(0,0,0,.3)";
+                        e.currentTarget.style.filter =
+                          "brightness(1) contrast(1)";
+                      }}
+                      onFocus={(e) => {
+                        e.currentTarget.style.transform =
+                          "translateY(-8px) scale(1.03)";
+                        e.currentTarget.style.boxShadow =
+                          "0 25px 50px rgba(5,150,105,.5)";
+                        e.currentTarget.style.outline =
+                          "3px solid rgba(5,150,105,.5)";
+                        e.currentTarget.style.outlineOffset = "3px";
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.transform =
+                          "translateY(0) scale(1)";
+                        e.currentTarget.style.boxShadow =
+                          "0 20px 40px rgba(0,0,0,.3)";
+                        e.currentTarget.style.outline = "none";
+                      }}
+                      tabIndex={0}
+                      showControllers={false}
+                      interval={0}
+                    />
+                    <ImageCycle
+                      images={[
+                        "https://www.vjv.com/media/hyegmdk3/giraffe-walking-savanna-queen-elizabeth-national-park-uganda-shutterstock_58932448.jpg?height=1080&quality=60&width=1920",
+                        "https://www.travelandleisure.com/thmb/4rmCDPTq85-wHGIak69y6Uv1WWo%3D/1500x0/filters%3Ano_upscale%28%29%3Amax_bytes%28150000%29%3Astrip_icc%28%29/TAL-ol-jogi-aerial-view-full-ALISTLIZ1125-fde5875b5cbf433b862221dbaccddf92.jpg",
+                        "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
+                        "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
+                        "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg",
+                      ]}
+                      style={{
+                        width: "clamp(140px, 28%, 220px)",
+                        height: "clamp(110px, 30vw, 160px)",
+                        borderRadius: 20,
+                        objectFit: "cover",
+                        boxShadow: "0 20px 40px rgba(0,0,0,.3)",
+                        pointerEvents: "auto",
+                        transition:
+                          "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                        animation: "floatSoft 6s ease-in-out infinite 0.5s",
+                        transform: "translateY(0)",
+                        cursor: "pointer",
+                        outline: "none",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform =
+                          "translateY(-12px) scale(1.05)";
+                        e.currentTarget.style.boxShadow =
+                          "0 30px 60px rgba(0,0,0,.4)";
+                        e.currentTarget.style.filter =
+                          "brightness(1.1) contrast(1.05)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform =
+                          "translateY(0) scale(1)";
+                        e.currentTarget.style.boxShadow =
+                          "0 20px 40px rgba(0,0,0,.3)";
+                        e.currentTarget.style.filter =
+                          "brightness(1) contrast(1)";
+                      }}
+                      onFocus={(e) => {
+                        e.currentTarget.style.transform =
+                          "translateY(-8px) scale(1.03)";
+                        e.currentTarget.style.boxShadow =
+                          "0 25px 50px rgba(5,150,105,.5)";
+                        e.currentTarget.style.outline =
+                          "3px solid rgba(5,150,105,.5)";
+                        e.currentTarget.style.outlineOffset = "3px";
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.transform =
+                          "translateY(0) scale(1)";
+                        e.currentTarget.style.boxShadow =
+                          "0 20px 40px rgba(0,0,0,.3)";
+                        e.currentTarget.style.outline = "none";
+                      }}
+                      tabIndex={0}
+                      showControllers={false}
+                      interval={0}
+                    />
+                    <ImageCycle
+                      images={[
+                        "https://www.vjv.com/media/hyegmdk3/giraffe-walking-savanna-queen-elizabeth-national-park-uganda-shutterstock_58932448.jpg?height=1080&quality=60&width=1920",
+                        "https://www.travelandleisure.com/thmb/4rmCDPTq85-wHGIak69y6Uv1WWo%3D/1500x0/filters%3Ano_upscale%28%29%3Amax_bytes%28150000%29%3Astrip_icc%28%29/TAL-ol-jogi-aerial-view-full-ALISTLIZ1125-fde5875b5cbf433b862221dbaccddf92.jpg",
+                        "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
+                        "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
+                        "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg",
+                      ]}
+                      style={{
+                        width: "clamp(140px, 28%, 220px)",
+                        height: "clamp(110px, 30vw, 160px)",
+                        borderRadius: 20,
+                        objectFit: "cover",
+                        boxShadow: "0 20px 40px rgba(0,0,0,.3)",
+                        pointerEvents: "auto",
+                        transition:
+                          "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                        animation: "floatSoft 6s ease-in-out infinite 1s",
+                        transform: "translateY(0)",
+                        cursor: "pointer",
+                        outline: "none",
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform =
+                          "translateY(-12px) scale(1.05)";
+                        e.currentTarget.style.boxShadow =
+                          "0 30px 60px rgba(0,0,0,.4)";
+                        e.currentTarget.style.filter =
+                          "brightness(1.1) contrast(1.05)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform =
+                          "translateY(0) scale(1)";
+                        e.currentTarget.style.boxShadow =
+                          "0 20px 40px rgba(0,0,0,.3)";
+                        e.currentTarget.style.filter =
+                          "brightness(1) contrast(1)";
+                      }}
+                      onFocus={(e) => {
+                        e.currentTarget.style.transform =
+                          "translateY(-8px) scale(1.03)";
+                        e.currentTarget.style.boxShadow =
+                          "0 25px 50px rgba(5,150,105,.5)";
+                        e.currentTarget.style.outline =
+                          "3px solid rgba(5,150,105,.5)";
+                        e.currentTarget.style.outlineOffset = "3px";
+                      }}
+                      onBlur={(e) => {
+                        e.currentTarget.style.transform =
+                          "translateY(0) scale(1)";
+                        e.currentTarget.style.boxShadow =
+                          "0 20px 40px rgba(0,0,0,.3)";
+                        e.currentTarget.style.outline = "none";
+                      }}
+                      tabIndex={0}
+                      showControllers={false}
+                      interval={0}
+                    />
+                  </div>
+                  <motion.div
+                    animate={reduced ? {} : { y: [0, -12, 0] }}
+                    transition={{
+                      duration: 10,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    }}
+                    style={{
+                      position: "absolute",
+                      top: "clamp(6px, 3vw, 20px)",
+                      right: "clamp(12px, 3vw, 28px)",
+                      width: "clamp(60px, 18vw, 105px)",
+                      height: "clamp(60px, 18vw, 120px)",
+                      borderRadius: 24,
+                      display: "flex",
+                      backdropFilter: "blur(3px)",
+                      alignItems: "center",
+                      flexDirection: "column",
+                      color: "white",
+                      boxShadow: "0 20px 50px rgba(5,150,105,.45)",
+                      zIndex: 10,
+                      transition: "all 0.3s ease",
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "scale(1.05)";
+                      e.currentTarget.style.boxShadow =
+                        "0 30px 60px rgba(5,150,105,.6)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "scale(1)";
+                      e.currentTarget.style.boxShadow =
+                        "0 20px 50px rgba(5,150,105,.45)";
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.outline =
+                        "3px solid rgba(255,255,255,.8)";
+                      e.currentTarget.style.outlineOffset = "3px";
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.outline = "none";
+                    }}
+                    tabIndex={0}
+                  >
+                    <span
+                      style={{
+                        fontFamily: "'Playfair Display', serif",
+                        fontSize: "clamp(30px, 4vw, 48px)",
+                        fontWeight: 800,
+                      }}
+                    >
+                      10+
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        textTransform: "uppercase",
+                        letterSpacing: 1.5,
+                        fontWeight: 700,
+                      }}
+                    >
+                      Countries
+                    </span>
+                  </motion.div>
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: -30,
+                      right: -30,
+                      width: 130,
+                      height: 130,
+                      borderRadius: "50%",
+                      border: "3px dashed rgba(5,150,105,.15)",
+                      animation: "rotateSlow 25s linear infinite",
+                      pointerEvents: "none",
+                    }}
+                  />
+                </div>
+              </AnimatedSection>
+            </div>
           </div>
         </div>
       </section>
@@ -1744,7 +1787,7 @@ const Home = () => {
           }}
         />
         <div className="ctr">
-          <AnimatedSection animation="fadeInUp">
+          <AnimatedSection animation="blurIn">
             <div className="sh">
               <span className="sl">
                 <FiMapPin size={14} /> Explore Our Destinations
@@ -1850,7 +1893,7 @@ const Home = () => {
         }}
       >
         <div className="ctr">
-          <AnimatedSection animation="fadeInUp">
+          <AnimatedSection animation="perspectiveIn">
             <div className="sh">
               <span className="sl">
                 <FiTarget size={14} /> How It Works
@@ -2069,15 +2112,11 @@ const Home = () => {
         </div>
       </section>
 
-      
       {/* Countries Aside Component */}
       {!isMobile && <CountryGrid />}
 
       {/* ═══════ CINEMATIC PARALLAX ═══════ */}
-      <ParallaxSection
-        image={chatgpt}
-        height="78vh"
-      >
+      <ParallaxSection image={chatgpt} height="78vh">
         <motion.div
           initial={{ scale: 0 }}
           whileInView={{ scale: 1 }}
@@ -2170,7 +2209,7 @@ const Home = () => {
         style={{ background: "linear-gradient(180deg, #F8FAFC 0%, #fff 100%)" }}
       >
         <div className="ctr">
-          <AnimatedSection animation="fadeInUp">
+          <AnimatedSection animation="skewIn">
             <div className="sh">
               <span className="sl">
                 <FiZap size={14} /> Signature Experiences
@@ -2326,8 +2365,7 @@ const Home = () => {
       <section
         className="sp"
         style={{ background: "linear-gradient(180deg, #fff 0%, #F0FDF4 100%)" }}
-      >
-      </section>
+      ></section>
 
       {/* ═══════ GALLERY ═══════ */}
       <section
@@ -2566,9 +2604,7 @@ const Home = () => {
             position: "relative",
             zIndex: 1,
           }}
-        >
-
-        </div>
+        ></div>
       </section>
 
       {/* ═══════ BLOG ═══════ */}
@@ -3153,8 +3189,8 @@ const Home = () => {
               lineHeight: 1.7,
             }}
           >
-            Start planning today and join 5+ travelers who've discovered
-            what makes Altuvera truly unforgettable.
+            Start planning today and join 5+ travelers who've discovered what
+            makes Altuvera truly unforgettable.
           </p>
         </TextReveal>
         <TextReveal delay={0.5}>

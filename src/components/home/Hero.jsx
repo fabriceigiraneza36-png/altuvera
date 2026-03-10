@@ -14,98 +14,138 @@ import { useApp } from "../../context/AppContext";
 import { useScrollTriggeredSlide } from "../../hooks/useScrollTriggeredSlide";
 
 export const HERO_SLIDES = [
-    {
-     // https://i.pinimg.com/1200x/cc/22/42/cc2242dbd24507eca2cd4313ffbd5c72.jpg
-      image: "https://i.pinimg.com/1200x/cc/22/42/cc2242dbd24507eca2cd4313ffbd5c72.jpg",
-      fallback: "https://i.pinimg.com/1200x/cc/22/42/cc2242dbd24507eca2cd4313ffbd5c72.jpg",
-      title: "Witness the Great Migration",
-      subtitle: "Experience nature's greatest spectacle across the vast Serengeti and Maasai Mara plains",
-      location: "Kenya & Tanzania",
-      animationPreset: "cinematicDrift",
-      overlayGradient: "linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 50%, rgba(16,185,129,0.15) 100%)",
-    },
-    {
-      image: "https://i.pinimg.com/1200x/f7/d8/79/f7d879d6a1486f026ba9ba9c30a3a125.jpg",
-      fallback: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?auto=format&fit=crop&w=3840",
-      title: "Meet the Mountain Gorillas",
-      subtitle: "An intimate encounter with our closest relatives in their misty forest home",
-      location: "Rwanda & Uganda",
-      animationPreset: "softFocus",
-      overlayGradient: "linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(34,85,51,0.35) 100%)",
-    },
-    {
-      image: "https://pictures.altai-travel.com/1920x1040/kilimanjaro-national-park-tanzania-istock-3490.jpg",
-      fallback: "https://www.andbeyond.com/wp-content/uploads/sites/5/Elephants-and-mount-kilimanjaro.jpg",
-      title: "Summit Mount Kilimanjaro",
-      subtitle: "Conquer Africa's highest peak and stand at the legendary roof of the continent",
-      location: "Tanzania",
-      animationPreset: "risingHorizon",
-      overlayGradient: "linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 60%, rgba(255,255,255,0.05) 100%)",
-    },
-    {
-      image: "https://i.pinimg.com/1200x/0a/43/ca/0a43cafc5ea639697427a07f078506e3.jpg",
-      fallback: "https://images.unsplash.com/photo-1529876751255-1c6d8f09ff1d?auto=format&fit=crop&w=3840",
-      title: "Discover Ancient Wonders",
-      subtitle: "Explore the rock-hewn churches of Lalibela and Ethiopia's 3,000-year timeless heritage",
-      location: "Ethiopia",
-      animationPreset: "zoomOut",
-      overlayGradient: "linear-gradient(45deg, rgba(139,69,19,0.35) 0%, rgba(0,0,0,0.45) 100%)",
-    },
-    {
-      image: "https://images.squarespace-cdn.com/content/v1/57b88db03e00be38aec142b0/1526928305567-Y0MTKDAAGPS2IP0YXMSO/03_What_To_Do_In_Gisenyi_in_Lake_Kivu_Rwanda_Visiting_Gisenyi_HandZaround.jpg?format=1500w",
-      fallback: "https://images.trvl-media.com/place/3000470585/420aa538-86d3-463e-ab29-6105311b6442.jpg",
-      title: "Lake Kivu Sunrise in Rwanda",
-      subtitle: "Serene dawn over Lake Kivu with misty waters and distant hills at sunrise",
-      location: "Lake Kivu, Rwanda",
-      animationPreset: "parallaxDepth",
-      overlayGradient: "linear-gradient(180deg, rgba(255,140,0,0.15) 0%, rgba(0,0,0,0.5) 100%)",
-    },
-    {
-      image: "https://yellowzebrasafaris.com/media/46316/serengeti-safaris-tanzania-wildlife-adventures.jpg?format=jpg&height=1024&v=1da5e0fb8b7e1f0&width=2048",
-      fallback: "https://www.serengeti.com/assets/img/serengeti-national-park-savannah-landscape.jpg",
-      title: "Serengeti Grasslands",
-      subtitle: "Endless grasslands and wildlife roaming under wide Tanzanian skies",
-      location: "Tanzania",
-      animationPreset: "horizontalPan",
-      overlayGradient: "linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.15) 50%, rgba(218,165,32,0.15) 100%)",
-    },
-    {
-      image: "https://img1.wsimg.com/isteam/ip/29cc5507-095f-4b8e-ad81-fae5576e3852/GettyImages-148679836-5b03d89030371300373c5135.jpg/:/cr=t:0%25,l:0%25,w:100%25,h:100%25/rs=w:1280",
-      fallback: "https://i.pinimg.com/1200x/8c/8d/39/8c8d391974e82e3a2c2422ee8775394b.jpg",
-      title: "Ngorongoro Caldera Vista",
-      subtitle: "Breathtaking crater views and rich wildlife habitats high in Tanzanian highlands",
-      location: "Tanzania",
-      animationPreset: "cinematicWide",
-      overlayGradient: "linear-gradient(135deg, rgba(0,100,0,0.25) 0%, rgba(0,0,0,0.5) 100%)",
-    },
-    {
-      image: "https://ugandarwandagorillatours.com/wp-content/uploads/2019/02/bwindi-forest-uganda-gorilla-safaris.jpg",
-      fallback: "https://i.pinimg.com/1200x/1e/5b/d2/1e5bd2291f7be957992fbc3c13a8f9a2.jpg",
-      title: "Bwindi Rainforest",
-      subtitle: "Mist‑covered rainforests rich with gorillas and biodiversity in Uganda",
-      location: "Uganda",
-      animationPreset: "verticalReveal",
-      overlayGradient: "linear-gradient(180deg, rgba(0,50,0,0.4) 0%, rgba(0,0,0,0.6) 100%)",
-    },
-    {
-      image: "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/15/26/6d/0c/views-from-the-western.jpg?h=1200&s=1&w=1200",
-      fallback: "https://i.natgeofe.com/n/2c6a7c2d-5dcc-4c19-9707-5fd50222374c/Magashi_05-19-98e.JPG",
-      title: "Akagera National Park",
-      subtitle: "Open landscapes and wildlife safaris across eastern Rwanda's pristine wilderness",
-      location: "Rwanda",
-      animationPreset: "dynamicSweep",
-      overlayGradient: "linear-gradient(45deg, rgba(0,0,0,0.45) 0%, rgba(16,185,129,0.15) 100%)",
-    },
-    {
-      image: "https://i.pinimg.com/736x/3f/48/50/3f485098d9bf8b3a79fe2e6946ea0302.jpg",
-      fallback: "https://www.explore.com/img/gallery/the-best-way-to-view-mount-kilimanjaro-in-kenya/l-intro-1673982083.jpg",
-      title: "Amboseli & Kilimanjaro",
-      subtitle: "Iconic African wildlife framed by majestic Mount Kilimanjaro in Kenya",
-      location: "Kenya",
-      animationPreset: "rotateZoom",
-      overlayGradient: "linear-gradient(0deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.25) 50%, rgba(135,206,235,0.15) 100%)",
-    },
-  ];
+  {
+    // https://i.pinimg.com/1200x/cc/22/42/cc2242dbd24507eca2cd4313ffbd5c72.jpg
+    image:
+      "https://i.pinimg.com/1200x/cc/22/42/cc2242dbd24507eca2cd4313ffbd5c72.jpg",
+    fallback:
+      "https://i.pinimg.com/1200x/cc/22/42/cc2242dbd24507eca2cd4313ffbd5c72.jpg",
+    title: "Witness the Great Migration",
+    subtitle:
+      "Experience nature's greatest spectacle across the vast Serengeti and Maasai Mara plains",
+    location: "Kenya & Tanzania",
+    animationPreset: "cinematicDrift",
+    overlayGradient:
+      "linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 50%, rgba(16,185,129,0.15) 100%)",
+  },
+  {
+    image:
+      "https://i.pinimg.com/1200x/f7/d8/79/f7d879d6a1486f026ba9ba9c30a3a125.jpg",
+    fallback:
+      "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?auto=format&fit=crop&w=3840",
+    title: "Meet the Mountain Gorillas",
+    subtitle:
+      "An intimate encounter with our closest relatives in their misty forest home",
+    location: "Rwanda & Uganda",
+    animationPreset: "softFocus",
+    overlayGradient:
+      "linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(34,85,51,0.35) 100%)",
+  },
+  {
+    image:
+      "https://pictures.altai-travel.com/1920x1040/kilimanjaro-national-park-tanzania-istock-3490.jpg",
+    fallback:
+      "https://www.andbeyond.com/wp-content/uploads/sites/5/Elephants-and-mount-kilimanjaro.jpg",
+    title: "Summit Mount Kilimanjaro",
+    subtitle:
+      "Conquer Africa's highest peak and stand at the legendary roof of the continent",
+    location: "Tanzania",
+    animationPreset: "risingHorizon",
+    overlayGradient:
+      "linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 60%, rgba(255,255,255,0.05) 100%)",
+  },
+  {
+    image:
+      "https://i.pinimg.com/1200x/0a/43/ca/0a43cafc5ea639697427a07f078506e3.jpg",
+    fallback:
+      "https://images.unsplash.com/photo-1529876751255-1c6d8f09ff1d?auto=format&fit=crop&w=3840",
+    title: "Discover Ancient Wonders",
+    subtitle:
+      "Explore the rock-hewn churches of Lalibela and Ethiopia's 3,000-year timeless heritage",
+    location: "Ethiopia",
+    animationPreset: "zoomOut",
+    overlayGradient:
+      "linear-gradient(45deg, rgba(139,69,19,0.35) 0%, rgba(0,0,0,0.45) 100%)",
+  },
+  {
+    image:
+      "https://images.squarespace-cdn.com/content/v1/57b88db03e00be38aec142b0/1526928305567-Y0MTKDAAGPS2IP0YXMSO/03_What_To_Do_In_Gisenyi_in_Lake_Kivu_Rwanda_Visiting_Gisenyi_HandZaround.jpg?format=1500w",
+    fallback:
+      "https://images.trvl-media.com/place/3000470585/420aa538-86d3-463e-ab29-6105311b6442.jpg",
+    title: "Lake Kivu Sunrise in Rwanda",
+    subtitle:
+      "Serene dawn over Lake Kivu with misty waters and distant hills at sunrise",
+    location: "Lake Kivu, Rwanda",
+    animationPreset: "parallaxDepth",
+    overlayGradient:
+      "linear-gradient(180deg, rgba(255,140,0,0.15) 0%, rgba(0,0,0,0.5) 100%)",
+  },
+  {
+    image:
+      "https://yellowzebrasafaris.com/media/46316/serengeti-safaris-tanzania-wildlife-adventures.jpg?format=jpg&height=1024&v=1da5e0fb8b7e1f0&width=2048",
+    fallback:
+      "https://www.serengeti.com/assets/img/serengeti-national-park-savannah-landscape.jpg",
+    title: "Serengeti Grasslands",
+    subtitle:
+      "Endless grasslands and wildlife roaming under wide Tanzanian skies",
+    location: "Tanzania",
+    animationPreset: "horizontalPan",
+    overlayGradient:
+      "linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.15) 50%, rgba(218,165,32,0.15) 100%)",
+  },
+  {
+    image:
+      "https://img1.wsimg.com/isteam/ip/29cc5507-095f-4b8e-ad81-fae5576e3852/GettyImages-148679836-5b03d89030371300373c5135.jpg/:/cr=t:0%25,l:0%25,w:100%25,h:100%25/rs=w:1280",
+    fallback:
+      "https://i.pinimg.com/1200x/8c/8d/39/8c8d391974e82e3a2c2422ee8775394b.jpg",
+    title: "Ngorongoro Caldera Vista",
+    subtitle:
+      "Breathtaking crater views and rich wildlife habitats high in Tanzanian highlands",
+    location: "Tanzania",
+    animationPreset: "cinematicWide",
+    overlayGradient:
+      "linear-gradient(135deg, rgba(0,100,0,0.25) 0%, rgba(0,0,0,0.5) 100%)",
+  },
+  {
+    image:
+      "https://ugandarwandagorillatours.com/wp-content/uploads/2019/02/bwindi-forest-uganda-gorilla-safaris.jpg",
+    fallback:
+      "https://i.pinimg.com/1200x/1e/5b/d2/1e5bd2291f7be957992fbc3c13a8f9a2.jpg",
+    title: "Bwindi Rainforest",
+    subtitle:
+      "Mist‑covered rainforests rich with gorillas and biodiversity in Uganda",
+    location: "Uganda",
+    animationPreset: "verticalReveal",
+    overlayGradient:
+      "linear-gradient(180deg, rgba(0,50,0,0.4) 0%, rgba(0,0,0,0.6) 100%)",
+  },
+  {
+    image:
+      "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/15/26/6d/0c/views-from-the-western.jpg?h=1200&s=1&w=1200",
+    fallback:
+      "https://i.natgeofe.com/n/2c6a7c2d-5dcc-4c19-9707-5fd50222374c/Magashi_05-19-98e.JPG",
+    title: "Akagera National Park",
+    subtitle:
+      "Open landscapes and wildlife safaris across eastern Rwanda's pristine wilderness",
+    location: "Rwanda",
+    animationPreset: "dynamicSweep",
+    overlayGradient:
+      "linear-gradient(45deg, rgba(0,0,0,0.45) 0%, rgba(16,185,129,0.15) 100%)",
+  },
+  {
+    image:
+      "https://i.pinimg.com/736x/3f/48/50/3f485098d9bf8b3a79fe2e6946ea0302.jpg",
+    fallback:
+      "https://www.explore.com/img/gallery/the-best-way-to-view-mount-kilimanjaro-in-kenya/l-intro-1673982083.jpg",
+    title: "Amboseli & Kilimanjaro",
+    subtitle:
+      "Iconic African wildlife framed by majestic Mount Kilimanjaro in Kenya",
+    location: "Kenya",
+    animationPreset: "rotateZoom",
+    overlayGradient:
+      "linear-gradient(0deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.25) 50%, rgba(135,206,235,0.15) 100%)",
+  },
+];
 
 const Hero = () => {
   const slides = HERO_SLIDES;
@@ -237,7 +277,9 @@ const Hero = () => {
 
   const getCurrentAnimation = (index) => {
     const preset = slides[index].animationPreset;
-    return slideAnimationPresets[preset] || slideAnimationPresets.cinematicDrift;
+    return (
+      slideAnimationPresets[preset] || slideAnimationPresets.cinematicDrift
+    );
   };
 
   const styles = {
@@ -284,7 +326,8 @@ const Hero = () => {
       left: 0,
       right: 0,
       bottom: 0,
-      background: "radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.35) 100%)",
+      background:
+        "radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.35) 100%)",
       zIndex: 3,
       pointerEvents: "none",
     },
@@ -491,7 +534,8 @@ const Hero = () => {
       width: "300px",
       height: "300px",
       borderRadius: "50%",
-      background: "radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 70%)",
+      background:
+        "radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 70%)",
       pointerEvents: "none",
       zIndex: 5,
     },
@@ -565,43 +609,44 @@ const Hero = () => {
       {/* SLIDES - Cross-fade without black screen */}
       <div style={styles.slidesContainer}>
         <AnimatePresence initial={false}>
-          {slides.map((slide, index) => (
-            index === currentSlide && (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{
-                  opacity: { duration: 0.8, ease: "easeInOut" },
-                }}
-                style={{
-                  ...styles.slide,
-                  zIndex: index === currentSlide ? 1 : 0,
-                }}
-              >
-                <motion.img
-                  src={imageErrors[index] ? slide.fallback : slide.image}
-                  alt={slide.title}
-                  onError={() => handleImageError(index)}
-                  initial={getCurrentAnimation(index).initial}
-                  animate={getCurrentAnimation(index).animate}
+          {slides.map(
+            (slide, index) =>
+              index === currentSlide && (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
                   transition={{
-                    duration: 7,
-                    ease: "linear",
+                    opacity: { duration: 0.8, ease: "easeInOut" },
                   }}
-                  style={styles.slideImage}
-                />
-                {/* Slide-specific gradient overlay */}
-                <div
                   style={{
-                    ...styles.overlay,
-                    background: slide.overlayGradient,
+                    ...styles.slide,
+                    zIndex: index === currentSlide ? 1 : 0,
                   }}
-                />
-              </motion.div>
-            )
-          ))}
+                >
+                  <motion.img
+                    src={imageErrors[index] ? slide.fallback : slide.image}
+                    alt={slide.title}
+                    onError={() => handleImageError(index)}
+                    initial={getCurrentAnimation(index).initial}
+                    animate={getCurrentAnimation(index).animate}
+                    transition={{
+                      duration: 7,
+                      ease: "linear",
+                    }}
+                    style={styles.slideImage}
+                  />
+                  {/* Slide-specific gradient overlay */}
+                  <div
+                    style={{
+                      ...styles.overlay,
+                      background: slide.overlayGradient,
+                    }}
+                  />
+                </motion.div>
+              ),
+          )}
         </AnimatePresence>
       </div>
 
@@ -627,15 +672,19 @@ const Hero = () => {
             {/* Tagline */}
             <motion.div
               style={styles.taglineContainer}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
+              transition={{
+                duration: 0.8,
+                delay: 0.2,
+                ease: [0.16, 1, 0.3, 1],
+              }}
             >
               <motion.div
                 style={styles.taglineLine}
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
+                transition={{ duration: 1, delay: 0.5 }}
               />
               <span style={styles.tagline}>
                 True adventure in High & Deep Culture
@@ -644,26 +693,34 @@ const Hero = () => {
                 style={styles.taglineLine}
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
-                transition={{ duration: 0.6, delay: 0.3 }}
+                transition={{ duration: 1, delay: 0.5 }}
               />
             </motion.div>
 
-            {/* Title */}
-            <motion.h1
-              style={styles.title}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-            >
-              {slides[currentSlide].title}
-            </motion.h1>
+            {/* Title with Mask Reveal */}
+            <div style={{ overflow: "hidden", marginBottom: "24px" }}>
+              <motion.h1
+                style={styles.title}
+                initial={{ y: "100%", opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{
+                  duration: 1,
+                  delay: 0.3,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                key={`title-${currentSlide}`}
+              >
+                {slides[currentSlide].title}
+              </motion.h1>
+            </div>
 
-            {/* Subtitle */}
+            {/* Subtitle with Blur In */}
             <motion.p
               style={styles.subtitle}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
+              initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
+              animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
+              transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
+              key={`sub-${currentSlide}`}
             >
               {slides[currentSlide].subtitle}
             </motion.p>
@@ -704,7 +761,7 @@ const Hero = () => {
                   Explore Destinations
                 </Button>
               </motion.div>
-              
+
               <motion.button
                 style={styles.playButton}
                 onClick={handleWatchStory}
@@ -717,7 +774,6 @@ const Hero = () => {
                 </div>
                 Watch Our Story
               </motion.button>
-              
             </motion.div>
           </motion.div>
         </AnimatePresence>
