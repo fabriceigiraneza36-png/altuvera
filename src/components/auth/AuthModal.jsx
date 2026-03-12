@@ -54,7 +54,7 @@ const SIDE_MEDIA = [
   {
     type: "video",
     // Public sample video (Google Cloud bucket) - reliable for autoplay tests
-    src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    src: "https://v1.pinimg.com/videos/mc/expMp4/aa/b8/fd/aab8fd3ea52cd2f120e0dc5fc6263d84_t1.mp4",
     poster: "https://i.pinimg.com/736x/9a/56/27/9a5627c41868a6f8861341e82df30b84.jpg",
     alt: "Savanna wildlife video",
   },
@@ -111,23 +111,25 @@ const clampIndex = (idx, length) => {
 const getAnimVariant = (idx) => String(((Number(idx) || 0) % 5) + 1);
 
 const SideMediaRotator = ({ items = SIDE_MEDIA, intervalMs = 6500 }) => {
-  const safeItems = Array.isArray(items) ? items.filter(Boolean) : [];
+  const safeItems = useMemo(
+    () => (Array.isArray(items) ? items.filter(Boolean) : []),
+    [items],
+  );
   const [index, setIndex] = useState(0);
   const [navDir, setNavDir] = useState("next"); // "next" | "prev"
   const [outgoing, setOutgoing] = useState(null);
   const outgoingTimerRef = useRef(null);
   const lastIndexRef = useRef(0);
+  const outgoingDurationMs = 980;
   const timerRef = useRef(null);
   const videoRef = useRef(null);
 
-  const goTo = useCallback(
-    (nextIndex) => {
-      setIndex((prev) =>
-        clampIndex(typeof nextIndex === "number" ? nextIndex : prev, safeItems.length),
-      );
-    },
-    [safeItems.length],
-  );
+  const toImageFallback = useCallback((item) => {
+    if (!item) return null;
+    if (item.type !== "video") return item;
+    if (!item.poster) return null;
+    return { type: "image", src: item.poster, alt: item.alt || "" };
+  }, []);
 
   const next = useCallback(() => {
     setNavDir("next");
@@ -156,11 +158,14 @@ const SideMediaRotator = ({ items = SIDE_MEDIA, intervalMs = 6500 }) => {
 
     if (prevItem && nextItem && prevIdx !== index) {
       setOutgoing({
-        item: prevItem,
+        item: prevItem.type === "video" ? toImageFallback(prevItem) : prevItem,
         idx: prevIdx,
         key: `${Date.now()}-${prevIdx}-${prevItem?.src || ""}`,
       });
-      outgoingTimerRef.current = setTimeout(() => setOutgoing(null), 760);
+      outgoingTimerRef.current = setTimeout(
+        () => setOutgoing(null),
+        outgoingDurationMs,
+      );
     }
 
     lastIndexRef.current = index;
@@ -168,7 +173,7 @@ const SideMediaRotator = ({ items = SIDE_MEDIA, intervalMs = 6500 }) => {
       if (outgoingTimerRef.current) clearTimeout(outgoingTimerRef.current);
       outgoingTimerRef.current = null;
     };
-  }, [index, safeItems]);
+  }, [index, outgoingDurationMs, safeItems, toImageFallback]);
 
   useEffect(() => {
     if (safeItems.length <= 1) return undefined;
@@ -252,6 +257,32 @@ const SideMediaRotator = ({ items = SIDE_MEDIA, intervalMs = 6500 }) => {
     setMediaLoading(false);
   }, []);
 
+  // If a video fails and we have no poster fallback, stop showing the spinner.
+  useEffect(() => {
+    if (!videoError) return;
+    if (current?.type !== "video") return;
+    const fb = toImageFallback(current);
+    if (!fb) setMediaLoading(false);
+  }, [current, toImageFallback, videoError]);
+
+  // Opportunistic prefetch of the next slides (images + video posters).
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (safeItems.length <= 1) return;
+
+    [1, 2].forEach((offset) => {
+      const it = safeItems[clampIndex(index + offset, safeItems.length)];
+      if (!it) return;
+
+      const src = it.type === "image" ? it.src : it.poster;
+      if (!src) return;
+
+      const img = new Image();
+      img.decoding = "async";
+      img.src = src;
+    });
+  }, [index, safeItems]);
+
   const renderLayer = useCallback(
     ({ item, idx, phase, layerKey }) => {
       if (!item) return null;
@@ -273,6 +304,7 @@ const SideMediaRotator = ({ items = SIDE_MEDIA, intervalMs = 6500 }) => {
             controls={false}
             disablePictureInPicture
             crossOrigin="anonymous"
+            onCanPlay={phase === "in" ? handleMediaReady : undefined}
             onLoadedData={phase === "in" ? handleMediaReady : undefined}
             onError={phase === "in" ? () => {
               handleVideoError();
@@ -303,6 +335,9 @@ const SideMediaRotator = ({ items = SIDE_MEDIA, intervalMs = 6500 }) => {
     [handleMediaReady, handleVideoError],
   );
 
+  const effectiveCurrent =
+    current?.type === "video" && videoError ? toImageFallback(current) : current;
+
   return (
     <div
       className="auth-side-media"
@@ -317,7 +352,7 @@ const SideMediaRotator = ({ items = SIDE_MEDIA, intervalMs = 6500 }) => {
       })}
 
       {renderLayer({
-        item: current?.type === "video" && videoError ? null : current,
+        item: effectiveCurrent,
         idx: index,
         phase: "in",
         layerKey: `in-${index}-${current?.src || ""}`,

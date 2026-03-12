@@ -146,6 +146,7 @@
   user-select:none;
   cursor:default;
   --dir: 1;
+  overflow: hidden;
 }
 .auth-side-media[data-dir="prev"]{ --dir: -1; }
 .auth-side-media__el{

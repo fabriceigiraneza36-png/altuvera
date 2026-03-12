@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSearchParams } from "react-router-dom";
 import { FiSearch } from 'react-icons/fi';
 import PageHeader from '../components/common/PageHeader';
 import AnimatedSection from '../components/common/AnimatedSection';
@@ -8,9 +9,28 @@ import { getAllDestinations } from '../data/destinations';
 import DestinationCard from '../components/common/DestinationCard';
 
 const Destinations = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get("search") || "");
   const [selectedCountry, setSelectedCountry] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
+
+  // Sync URL -> input (handles direct links and back/forward navigation)
+  useEffect(() => {
+    const urlValue = searchParams.get("search") || "";
+    if (urlValue !== searchQuery) setSearchQuery(urlValue);
+  }, [searchParams, searchQuery]);
+
+  // Sync input -> URL (replace to avoid a history entry per keystroke)
+  useEffect(() => {
+    const urlValue = searchParams.get("search") || "";
+    if (urlValue === searchQuery) return;
+
+    const next = new URLSearchParams(searchParams);
+    if (searchQuery) next.set("search", searchQuery);
+    else next.delete("search");
+
+    setSearchParams(next, { replace: true });
+  }, [searchParams, searchQuery, setSearchParams]);
 
   const allDestinations = getAllDestinations();
   

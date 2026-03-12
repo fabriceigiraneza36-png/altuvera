@@ -88,6 +88,22 @@ const flagAnimVariant = (key = "") => {
   return String((hash % 5) + 1);
 };
 
+const COUNTRY_FLAG_ISO2 = {
+  kenya: "ke",
+  tanzania: "tz",
+  uganda: "ug",
+  rwanda: "rw",
+  ethiopia: "et",
+  djibouti: "dj",
+};
+
+const toFlagCdnUrl = (countryId, width = 1280) => {
+  const code = COUNTRY_FLAG_ISO2[String(countryId || "").toLowerCase()];
+  if (!code) return null;
+  const w = Number(width) || 1280;
+  return `https://flagcdn.com/w${w}/${code}.png`;
+};
+
 const toB = (v = "", m = 6) => {
   const p = clean(v)
     .split(/\n|;|•/)
@@ -3333,10 +3349,19 @@ const CountryPage = () => {
       </>
     );
 
+  const flagHeroImage = useMemo(() => toFlagCdnUrl(countryId, 1280), [countryId]);
+  const flagSlideImage = useMemo(() => toFlagCdnUrl(countryId, 640), [countryId]);
+  const galleryImages = useMemo(() => {
+    const base = Array.isArray(td.gallery) ? td.gallery.filter(Boolean) : [];
+    if (!flagSlideImage) return base;
+    const deduped = base.filter((u) => u !== flagSlideImage);
+    return [flagSlideImage, ...deduped];
+  }, [flagSlideImage, td.gallery]);
+
   /* Mixed content builder for the In-Depth Guide section */
   const mixed = () => {
     const paras = td.discover || [];
-    const imgs = td.gallery || [];
+    const imgs = galleryImages;
     const acts = td.activities || [];
     const out = [];
 
@@ -3513,7 +3538,7 @@ const CountryPage = () => {
         title={country.name}
         tagline={country.tagline}
         subtitle={aiHL}
-        backgroundImage={country.heroImage}
+        backgroundImage={flagHeroImage || country.heroImage}
         breadcrumbs={[
           { label: "Destinations", path: "/destinations" },
           { label: country.name },
@@ -3745,7 +3770,7 @@ const CountryPage = () => {
       )}
 
       {/* ═══ GALLERY ═══ */}
-      {td.gallery?.length > 2 && (
+      {galleryImages?.length > 2 && (
         <section className="cp-section cp-section--gallery">
           <div className="cp-container">
             <R a="up">
@@ -3757,7 +3782,7 @@ const CountryPage = () => {
               </div>
             </R>
             <R a="zoom" d={0.1}>
-              <Gal imgs={td.gallery} />
+              <Gal imgs={galleryImages} />
             </R>
           </div>
         </section>
