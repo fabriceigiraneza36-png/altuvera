@@ -1,126 +1,128 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
+        xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 
+  <!-- Base -->
   <url>
     <loc>https://altuvera.vercel.app/</loc>
-    <lastmod>2025-01-15</lastmod>
+    <lastmod>2026-03-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
-    <image:image>
-      <image:loc>https://altuvera.vercel.app/images/og-image-safari.jpg</image:loc>
-      <image:title>Altuvera East African Safari Tours</image:title>
-    </image:image>
   </url>
 
+  <!-- Main Pages -->
+  <url><loc>https://altuvera.vercel.app/destinations</loc><lastmod>2026-03-12</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://altuvera.vercel.app/explore</loc><lastmod>2026-03-12</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://altuvera.vercel.app/services</loc><lastmod>2026-03-12</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://altuvera.vercel.app/about</loc><lastmod>2026-03-12</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://altuvera.vercel.app/contact</loc><lastmod>2026-03-12</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://altuvera.vercel.app/gallery</loc><lastmod>2026-03-12</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://altuvera.vercel.app/tips</loc><lastmod>2026-03-12</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://altuvera.vercel.app/posts</loc><lastmod>2026-03-12</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://altuvera.vercel.app/interactive-map</loc><lastmod>2026-03-12</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://altuvera.vercel.app/virtual-tour</loc><lastmod>2026-03-12</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://altuvera.vercel.app/team</loc><lastmod>2026-03-12</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://altuvera.vercel.app/faq</loc><lastmod>2026-03-12</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://altuvera.vercel.app/privacy</loc><lastmod>2026-03-12</lastmod><changefreq>yearly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://altuvera.vercel.app/terms</loc><lastmod>2026-03-12</lastmod><changefreq>yearly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://altuvera.vercel.app/payment-terms</loc><lastmod>2026-03-12</lastmod><changefreq>yearly</changefreq><priority>0.5</priority></url>
+
+  <!-- Country Pages -->
+  <url><loc>https://altuvera.vercel.app/country/kenya</loc><lastmod>2026-03-12</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://altuvera.vercel.app/country/kenya/destinations</loc><lastmod>2026-03-12</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://altuvera.vercel.app/country/tanzania</loc><lastmod>2026-03-12</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://altuvera.vercel.app/country/tanzania/destinations</loc><lastmod>2026-03-12</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://altuvera.vercel.app/country/uganda</loc><lastmod>2026-03-12</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://altuvera.vercel.app/country/uganda/destinations</loc><lastmod>2026-03-12</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://altuvera.vercel.app/country/rwanda</loc><lastmod>2026-03-12</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://altuvera.vercel.app/country/rwanda/destinations</loc><lastmod>2026-03-12</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>
+  <url><loc>https://altuvera.vercel.app/country/ethiopia</loc><lastmod>2026-03-12</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://altuvera.vercel.app/country/ethiopia/destinations</loc><lastmod>2026-03-12</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://altuvera.vercel.app/country/djibouti</loc><lastmod>2026-03-12</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://altuvera.vercel.app/country/djibouti/destinations</loc><lastmod>2026-03-12</lastmod><changefreq>monthly</changefreq><priority>0.65</priority></url>
+
+  <!-- Destinations (examples / key pages) -->
   <url>
-    <loc>https://altuvera.vercel.app/safaris</loc>
-    <lastmod>2025-01-15</lastmod>
-    <changefreq>weekly</changefreq>
+    <loc>https://altuvera.vercel.app/destination/maasai-mara</loc>
+    <lastmod>2026-03-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://i.pinimg.com/1200x/1a/19/cf/1a19cfa92b23af4c8f883e4bad203533.jpg</image:loc>
+      <image:title>Maasai Mara National Reserve</image:title>
+    </image:image>
+  </url>
+  <url><loc>https://altuvera.vercel.app/destination/mount-kenya</loc><lastmod>2026-03-12</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://altuvera.vercel.app/destination/diani-beach</loc><lastmod>2026-03-12</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://altuvera.vercel.app/destination/amboseli</loc><lastmod>2026-03-12</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://altuvera.vercel.app/destination/lamu</loc><lastmod>2026-03-12</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+
+  <url>
+    <loc>https://altuvera.vercel.app/destination/serengeti</loc>
+    <lastmod>2026-03-12</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://i.pinimg.com/736x/1c/1d/24/1c1d241de1433f22d6159328a4632a18.jpg</image:loc>
+      <image:title>Serengeti National Park</image:title>
+    </image:image>
   </url>
-
   <url>
-    <loc>https://altuvera.vercel.app/safaris/maasai-mara-migration</loc>
-    <lastmod>2025-01-10</lastmod>
+    <loc>https://altuvera.vercel.app/destination/kilimanjaro</loc>
+    <lastmod>2026-03-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.9</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1551632811-561732d1e306?w=1200</image:loc>
+      <image:title>Mount Kilimanjaro</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://altuvera.vercel.app/destination/ngorongoro</loc>
+    <lastmod>2026-03-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://altuvera.vercel.app/images/maasai-mara-migration.jpg</image:loc>
-      <image:title>Maasai Mara Great Migration Safari</image:title>
+      <image:loc>https://images.unsplash.com/photo-1473116763249-2faaef81ccda?w=1200</image:loc>
+      <image:title>Ngorongoro Crater</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://altuvera.vercel.app/destination/zanzibar</loc>
+    <lastmod>2026-03-12</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200</image:loc>
+      <image:title>Zanzibar Beach</image:title>
     </image:image>
   </url>
 
   <url>
-    <loc>https://altuvera.vercel.app/safaris/uganda-gorilla-trekking</loc>
-    <lastmod>2025-01-10</lastmod>
+    <loc>https://altuvera.vercel.app/destination/bwindi</loc>
+    <lastmod>2026-03-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://i.pinimg.com/1200x/81/42/97/81429785ce16b0f6ff2e1a65c701a53f.jpg</image:loc>
+      <image:title>Bwindi Impenetrable Forest</image:title>
+    </image:image>
   </url>
+  <url><loc>https://altuvera.vercel.app/destination/murchison-falls</loc><lastmod>2026-03-12</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
 
   <url>
-    <loc>https://altuvera.vercel.app/safaris/serengeti-zanzibar</loc>
-    <lastmod>2025-01-10</lastmod>
+    <loc>https://altuvera.vercel.app/destination/volcanoes</loc>
+    <lastmod>2026-03-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1580746738783-63c5b771c993?w=1200</image:loc>
+      <image:title>Volcanoes National Park</image:title>
+    </image:image>
   </url>
 
-  <url>
-    <loc>https://altuvera.vercel.app/cultural-tours</loc>
-    <lastmod>2025-01-12</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://altuvera.vercel.app/gorilla-trekking</loc>
-    <lastmod>2025-01-12</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://altuvera.vercel.app/destinations</loc>
-    <lastmod>2025-01-12</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://altuvera.vercel.app/destinations/kenya</loc>
-    <lastmod>2025-01-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://altuvera.vercel.app/destinations/tanzania</loc>
-    <lastmod>2025-01-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://altuvera.vercel.app/destinations/uganda</loc>
-    <lastmod>2025-01-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://altuvera.vercel.app/destinations/rwanda</loc>
-    <lastmod>2025-01-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://altuvera.vercel.app/destinations/ethiopia</loc>
-    <lastmod>2025-01-10</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://altuvera.vercel.app/about</loc>
-    <lastmod>2025-01-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <url>
-    <loc>https://altuvera.vercel.app/contact</loc>
-    <lastmod>2025-01-01</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-
-  <url>
-    <loc>https://altuvera.vercel.app/blog</loc>
-    <lastmod>2025-01-15</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
+  <url><loc>https://altuvera.vercel.app/destination/lalibela</loc><lastmod>2026-03-12</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://altuvera.vercel.app/destination/simien-mountains</loc><lastmod>2026-03-12</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
 
 </urlset>
+

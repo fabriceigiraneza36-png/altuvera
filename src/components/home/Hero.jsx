@@ -232,12 +232,12 @@ const Hero = () => {
     setDirection(index > currentSlide ? 1 : -1);
     setCurrentSlide(index);
     setIsPaused(true);
-    setTimeout(() => setIsPaused(false), 10000);
+    setTimeout(() => setIsPaused(false), 16000);
   };
 
   useEffect(() => {
     if (isPaused || isPlayerOpen) return;
-    const timer = setInterval(nextSlide, 7000);
+    const timer = setInterval(nextSlide, 11000);
     return () => clearInterval(timer);
   }, [isPaused, isPlayerOpen, nextSlide]);
 
@@ -618,7 +618,7 @@ const Hero = () => {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{
-                    opacity: { duration: 0.8, ease: "easeInOut" },
+                    opacity: { duration: 1.2, ease: "easeInOut" },
                   }}
                   style={{
                     ...styles.slide,
@@ -632,7 +632,7 @@ const Hero = () => {
                     initial={getCurrentAnimation(index).initial}
                     animate={getCurrentAnimation(index).animate}
                     transition={{
-                      duration: 7,
+                      duration: 12,
                       ease: "linear",
                     }}
                     style={styles.slideImage}
@@ -796,7 +796,7 @@ const Hero = () => {
                 style={styles.indicatorProgress}
                 initial={{ width: "0%" }}
                 animate={{ width: "100%" }}
-                transition={{ duration: 7, ease: "linear" }}
+                transition={{ duration: 11, ease: "linear" }}
                 key={`progress-${currentSlide}`}
               />
             )}

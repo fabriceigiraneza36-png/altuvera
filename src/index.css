@@ -89,6 +89,117 @@ body {
   color: #fff;
 }
 
+/* ─────────────────────────────────────────────
+   Emoji Flags (Wind-blown Hover)
+   Usage: <span className="av-flag">🇰🇪</span>
+   Optional sizing: style={{ "--av-flag-size": "clamp(18px, 2vw, 28px)" }}
+────────────────────────────────────────────── */
+.av-flag {
+  --av-flag-size: clamp(16px, 1.5vw, 22px);
+  --av-flag-idle: avFlagIdle1;
+  display: inline-block;
+  line-height: 1;
+  font-size: var(--av-flag-size);
+  transform-origin: 0% 55%;
+  will-change: transform, filter;
+  flex: 0 0 auto;
+  filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.12));
+  animation:
+    avFlagEnter 520ms var(--ui-ease-out) both,
+    var(--av-flag-idle) 6.4s ease-in-out 520ms infinite;
+}
+
+/* Screen-reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.av-flag[data-av-flag-anim="2"] { --av-flag-idle: avFlagIdle2; }
+.av-flag[data-av-flag-anim="3"] { --av-flag-idle: avFlagIdle3; }
+.av-flag[data-av-flag-anim="4"] { --av-flag-idle: avFlagIdle4; }
+.av-flag[data-av-flag-anim="5"] { --av-flag-idle: avFlagIdle5; }
+
+@media (hover: hover) and (pointer: fine) {
+  .av-flag:hover {
+    animation:
+      avFlagGust 320ms var(--ui-ease-out) both,
+      avFlagWave 1400ms ease-in-out 320ms infinite;
+  }
+}
+
+@keyframes avFlagEnter {
+  0% { opacity: 0; transform: translateY(8px) rotate(-2deg) skewX(0deg) scale(0.96); filter: blur(2px) saturate(1.05); }
+  100% { opacity: 1; transform: none; filter: drop-shadow(0 3px 10px rgba(0, 0, 0, 0.12)); }
+}
+
+@keyframes avFlagGust {
+  0% { transform: translateX(0) rotate(0deg) skewX(0deg) scale(1); }
+  55% { transform: translateX(1px) rotate(6deg) skewX(-8deg) scale(1.02); }
+  100% { transform: translateX(0) rotate(1.5deg) skewX(-3deg) scale(1.01); }
+}
+
+@keyframes avFlagIdle1 {
+  0% { transform: rotate(0.5deg) skewX(-1deg) translateY(0); }
+  45% { transform: rotate(-1.8deg) skewX(4deg) translateY(-1px); }
+  100% { transform: rotate(0.5deg) skewX(-1deg) translateY(0); }
+}
+
+@keyframes avFlagIdle2 {
+  0% { transform: rotate(0deg) skewX(0deg) translateY(0); }
+  25% { transform: rotate(1.6deg) skewX(-3.5deg) translateY(-1px); }
+  50% { transform: rotate(-1.2deg) skewX(3deg) translateY(0); }
+  75% { transform: rotate(1deg) skewX(-2.2deg) translateY(1px); }
+  100% { transform: rotate(0deg) skewX(0deg) translateY(0); }
+}
+
+@keyframes avFlagIdle3 {
+  0% { transform: rotate(0.8deg) skewX(-2deg) translateX(0); }
+  40% { transform: rotate(-2.4deg) skewX(5deg) translateX(1px); }
+  70% { transform: rotate(1.4deg) skewX(-3.5deg) translateX(0); }
+  100% { transform: rotate(0.8deg) skewX(-2deg) translateX(0); }
+}
+
+@keyframes avFlagIdle4 {
+  0% { transform: rotate(0deg) skewX(0deg) scale(1); }
+  32% { transform: rotate(-1.8deg) skewX(4.5deg) scale(1.01); }
+  62% { transform: rotate(1.2deg) skewX(-3deg) scale(1.005); }
+  100% { transform: rotate(0deg) skewX(0deg) scale(1); }
+}
+
+@keyframes avFlagIdle5 {
+  0% { transform: rotate(0.6deg) skewX(-1.5deg) translateY(0); }
+  30% { transform: rotate(-1.4deg) skewX(3.2deg) translateY(-1px); }
+  55% { transform: rotate(1deg) skewX(-2.4deg) translateY(1px); }
+  100% { transform: rotate(0.6deg) skewX(-1.5deg) translateY(0); }
+}
+
+@keyframes avFlagWave {
+  0% { transform: rotate(1.5deg) skewX(-3deg); }
+  25% { transform: rotate(-3deg) skewX(6deg); }
+  50% { transform: rotate(2.5deg) skewX(-5deg); }
+  75% { transform: rotate(-2deg) skewX(4deg); }
+  100% { transform: rotate(1.5deg) skewX(-3deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .av-flag,
+  .av-flag:hover {
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+}
+
 img,
 video {
   max-width: 100%;

@@ -6,6 +6,7 @@ import React, {
   useCallback,
 } from "react";
 import { Link, useParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import {
   FiArrowLeft,
   FiArrowRight,
@@ -64,6 +65,7 @@ import { countries } from "../data/countries";
 import { useCountryDestinations } from "../hooks/useDestinations";
 import useCountryInsights from "../hooks/useCountryInsights";
 import { toGoogleMapEmbedUrl, toGoogleMapOpenUrl } from "../utils/mediaEmbed";
+import { toAbsoluteUrl, toMetaDescription } from "../utils/seo";
 
 /* ═══════════════════════════════════════════════════════ */
 /*  HELPERS                                                */
@@ -78,6 +80,13 @@ const toS = (v = "", m = 4) =>
     .map(clean)
     .filter(Boolean)
     .slice(0, m);
+
+const flagAnimVariant = (key = "") => {
+  const s = clean(key);
+  let hash = 0;
+  for (let i = 0; i < s.length; i += 1) hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
+  return String((hash % 5) + 1);
+};
 
 const toB = (v = "", m = 6) => {
   const p = clean(v)
@@ -3281,9 +3290,39 @@ const CountryPage = () => {
     [openMap, country],
   );
 
+  const canonicalUrl = useMemo(
+    () => toAbsoluteUrl(`/country/${countryId}`),
+    [countryId],
+  );
+  const ogImage = useMemo(() => {
+    return (
+      country?.heroImage ||
+      country?.images?.[0] ||
+      toAbsoluteUrl("/green%20logo.ico")
+    );
+  }, [country]);
+  const seoTitle = useMemo(() => {
+    if (!country) return "Country Not Found | Altuvera";
+    return `${country.name} Safaris & Tours | Altuvera`;
+  }, [country]);
+  const seoDescription = useMemo(() => {
+    if (!country) return "The requested country page was not found.";
+    return toMetaDescription(
+      country.description ||
+        `Explore ${country.name}: safaris, culture, highlights, and bookable destinations with Altuvera.`,
+      160,
+    );
+  }, [country]);
+
   if (!country)
     return (
-      <div className="cp-notfound">
+      <>
+        <Helmet>
+          <title>Country Not Found | Altuvera</title>
+          <meta name="robots" content="noindex, follow" />
+          <link rel="canonical" href={canonicalUrl} />
+        </Helmet>
+        <div className="cp-notfound">
         <div className="cp-notfound__emoji">🌍</div>
         <h1>Country Not Found</h1>
         <p>The destination you're looking for doesn't exist in our database.</p>
@@ -3291,6 +3330,7 @@ const CountryPage = () => {
           Explore All Destinations
         </Button>
       </div>
+      </>
     );
 
   /* Mixed content builder for the In-Depth Guide section */
@@ -3398,6 +3438,74 @@ const CountryPage = () => {
 
   return (
     <div className="cp-page">
+      <Helmet>
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
+        <meta property="og:image" content={ogImage} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDescription} />
+        <meta name="twitter:image" content={ogImage} />
+
+        <script type="application/ld+json">
+          {JSON.stringify(
+            {
+              "@context": "https://schema.org",
+              "@graph": [
+                {
+                  "@type": "WebPage",
+                  "@id": canonicalUrl,
+                  url: canonicalUrl,
+                  name: seoTitle,
+                  description: seoDescription,
+                  isPartOf: {
+                    "@type": "WebSite",
+                    "@id": toAbsoluteUrl("/"),
+                    url: toAbsoluteUrl("/"),
+                    name: "Altuvera",
+                  },
+                  about: {
+                    "@type": "Country",
+                    name: country?.name,
+                  },
+                },
+                {
+                  "@type": "BreadcrumbList",
+                  itemListElement: [
+                    {
+                      "@type": "ListItem",
+                      position: 1,
+                      name: "Home",
+                      item: toAbsoluteUrl("/"),
+                    },
+                    {
+                      "@type": "ListItem",
+                      position: 2,
+                      name: "Destinations",
+                      item: toAbsoluteUrl("/destinations"),
+                    },
+                    {
+                      "@type": "ListItem",
+                      position: 3,
+                      name: country?.name,
+                      item: canonicalUrl,
+                    },
+                  ],
+                },
+              ],
+            },
+            null,
+            0,
+          )}
+        </script>
+      </Helmet>
       <style>{CSS}</style>
       <ShareBar name={country.name} />
 
@@ -3449,7 +3557,12 @@ const CountryPage = () => {
             <R a="left">
               <article className="cp-card cp-card--hero">
                 <div className="cp-hero__flag-row">
-                  <span className="cp-hero__flag">{country.flag}</span>
+                  <span
+                    className="cp-hero__flag av-flag"
+                    data-av-flag-anim={flagAnimVariant(country?.id || country?.name)}
+                  >
+                    {country.flag}
+                  </span>
                   <div>
                     <span className="cp-badge cp-badge--primary">
                       {clean(country.tagline)}
@@ -4207,7 +4320,14 @@ const CountryPage = () => {
                   )}
                 </div>
               </div>
-              <span className="cp-cta__flag">{country.flag}</span>
+              <span className="cp-cta__flag" aria-hidden="true">
+                <span
+                  className="cp-cta__flag-inner av-flag"
+                  data-av-flag-anim={flagAnimVariant((country?.id || country?.name) + ":cta")}
+                >
+                  {country.flag}
+                </span>
+              </span>
             </div>
           </R>
         </div>
@@ -4555,7 +4675,7 @@ const CSS = `
 }
 
 .cp-hero__flag {
-  font-size: clamp(48px, 6vw, 64px);
+  --av-flag-size: clamp(36px, 4.8vw, 56px);
   filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
 }
 
@@ -5714,10 +5834,13 @@ const CSS = `
 }
 
 .cp-cta__flag {
-  font-size: clamp(72px, 10vw, 120px);
-  filter: drop-shadow(0 8px 32px rgba(0,0,0,0.25));
   animation: cpFloat 4s ease-in-out infinite;
   flex-shrink: 0;
+}
+
+.cp-cta__flag-inner {
+  --av-flag-size: clamp(56px, 8vw, 96px);
+  filter: drop-shadow(0 8px 32px rgba(0,0,0,0.25));
 }
 
 /* ─── Final Grid ─── */
@@ -6445,7 +6568,7 @@ const CSS = `
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   }
 
-  .cp-cta__flag { font-size: 80px; }
+  .cp-cta__flag-inner { --av-flag-size: 76px; }
 
   .cp-ai-card-header {
     flex-direction: column;
@@ -6488,8 +6611,8 @@ const CSS = `
 
   .cp-map-frame iframe { min-height: 300px; }
 
-  .cp-cta__flag { font-size: 64px; }
-  .cp-hero__flag { font-size: 48px; }
+  .cp-cta__flag-inner { --av-flag-size: 60px; }
+  .cp-hero__flag { --av-flag-size: 42px; }
 
   .cp-facts-grid { grid-template-columns: 1fr; }
   .cp-highlights-grid { grid-template-columns: 1fr; }

@@ -1384,7 +1384,7 @@ const Home = () => {
                 </span>
               </TextReveal>
               <TextReveal delay={0.08}>
-                <h2
+                <h1
                   style={{
                     fontFamily: "'Playfair Display', serif",
                     fontSize: "clamp(36px, 4.2vw, 58px)",
@@ -1396,7 +1396,7 @@ const Home = () => {
                 >
                   Discover the <span className="tg">Untamed Magic</span> of East
                   Africa
-                </h2>
+                </h1>
               </TextReveal>
               <TextReveal delay={0.14}>
                 <p
@@ -1499,7 +1499,10 @@ const Home = () => {
                       boxShadow: "0 30px 80px rgba(0,0,0,.15)",
                     }}
                     showControllers={false}
-                    interval={7000}
+                    clickToNavigate
+                    hintStorageKey="altuvera_intro_media_hint_v1"
+                    hintText="Tip: Click/tap left or right side to change media"
+                    interval={12000}
                   />
                   {/* Child cards container for row layout */}
                   <div
@@ -1572,6 +1575,9 @@ const Home = () => {
                       }}
                       tabIndex={0}
                       showControllers={false}
+                      clickToNavigate
+                      hintStorageKey="altuvera_intro_media_hint_v1"
+                      hintText="Tip: Click/tap left or right side to change media"
                       interval={0}
                     />
                     <ImageCycle
@@ -1630,6 +1636,9 @@ const Home = () => {
                       }}
                       tabIndex={0}
                       showControllers={false}
+                      clickToNavigate
+                      hintStorageKey="altuvera_intro_media_hint_v1"
+                      hintText="Tip: Click/tap left or right side to change media"
                       interval={0}
                     />
                     <ImageCycle
@@ -1688,6 +1697,9 @@ const Home = () => {
                       }}
                       tabIndex={0}
                       showControllers={false}
+                      clickToNavigate
+                      hintStorageKey="altuvera_intro_media_hint_v1"
+                      hintText="Tip: Click/tap left or right side to change media"
                       interval={0}
                     />
                   </div>

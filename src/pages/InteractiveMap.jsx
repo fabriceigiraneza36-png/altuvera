@@ -67,6 +67,13 @@ import { toGoogleMapEmbedUrl } from "../utils/mediaEmbed";
 /* ═══════════════════════════════════════════════════════
    GLOBAL STYLES
    ═══════════════════════════════════════════════════════ */
+const flagAnimVariant = (key = "") => {
+  const s = String(key);
+  let hash = 0;
+  for (let i = 0; i < s.length; i += 1) hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
+  return String((hash % 5) + 1);
+};
+
 const injectStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap');
 
@@ -1143,8 +1150,10 @@ const MapMarker = React.memo(
             />
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span
+                className="av-flag"
+                data-av-flag-anim={flagAnimVariant(country?.code || country?.name)}
                 style={{
-                  fontSize: 24,
+                  "--av-flag-size": "22px",
                   filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.08))",
                 }}
               >
@@ -1315,8 +1324,10 @@ const CountryQuickCard = ({
       }}
     >
       <span
+        className="av-flag"
+        data-av-flag-anim={flagAnimVariant((country?.code || country?.name) + ":hero")}
         style={{
-          fontSize: 28,
+          "--av-flag-size": "24px",
           filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
         }}
       >
@@ -2100,7 +2111,14 @@ const InteractiveMap = () => {
                             gap: 14,
                           }}
                         >
-                          <span style={{ fontSize: 36 }}>
+                          <span
+                            className="av-flag"
+                            data-av-flag-anim={flagAnimVariant(
+                              (selectedCountry?.code || selectedCountry?.name) +
+                                ":toast",
+                            )}
+                            style={{ "--av-flag-size": "30px" }}
+                          >
                             {selectedCountry.flag}
                           </span>
                           <div style={{ flex: 1, minWidth: 0 }}>
@@ -2190,7 +2208,14 @@ const InteractiveMap = () => {
                             }}
                           >
                             {selectedCountry ? (
-                              <span style={{ fontSize: 22 }}>
+                              <span
+                                className="av-flag"
+                                data-av-flag-anim={flagAnimVariant(
+                                  (selectedCountry?.code ||
+                                    selectedCountry?.name) + ":chip",
+                                )}
+                                style={{ "--av-flag-size": "20px" }}
+                              >
                                 {selectedCountry.flag}
                               </span>
                             ) : (
@@ -2503,8 +2528,13 @@ const InteractiveMap = () => {
                                     }}
                                   >
                                     <span
+                                      className="av-flag"
+                                      data-av-flag-anim={flagAnimVariant(
+                                        (country?.code || country?.name) +
+                                          ":list",
+                                      )}
                                       style={{
-                                        fontSize: 30,
+                                        "--av-flag-size": "26px",
                                         filter:
                                           "drop-shadow(0 2px 4px rgba(0,0,0,0.08))",
                                       }}
@@ -2657,8 +2687,13 @@ const InteractiveMap = () => {
                                 />
 
                                 <span
+                                  className="av-flag"
+                                  data-av-flag-anim={flagAnimVariant(
+                                    (selectedCountry?.code ||
+                                      selectedCountry?.name) + ":panel",
+                                  )}
                                   style={{
-                                    fontSize: 64,
+                                    "--av-flag-size": "clamp(44px, 6vw, 60px)",
                                     display: "block",
                                     marginBottom: 12,
                                     filter:

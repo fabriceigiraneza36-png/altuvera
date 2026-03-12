@@ -29,14 +29,17 @@ export default defineConfig({
     cssMinify: true,
 
     // inline small assets to reduce requests
-    assetsInlineLimit: 4096,
+    assetsInlineLimit: 8192,
+
+    // Enable compression
+    reportCompressedSize: true,
 
     rollupOptions: {
       output: {
         manualChunks(id) {
           if (id.includes("node_modules")) {
 
-            // React core
+            // React core - keep together for better caching
             if (
               id.includes("react") ||
               id.includes("react-dom") ||
@@ -45,19 +48,24 @@ export default defineConfig({
               return "react-core";
             }
 
-            // animations
+            // animations - lazy load framer-motion
             if (id.includes("framer-motion")) {
               return "animations";
             }
 
-            // maps
+            // maps - lazy load leaflet
             if (id.includes("leaflet")) {
               return "maps";
             }
 
-            // icons
+            // icons - separate chunk
             if (id.includes("react-icons")) {
               return "icons";
+            }
+
+            // lucide icons
+            if (id.includes("lucide-react")) {
+              return "lucide";
             }
 
             // other dependencies
@@ -78,12 +86,12 @@ export default defineConfig({
             return "assets/css/[name]-[hash][extname]";
           }
 
-          return "assets/[name]-[hash][extname]";
+          return "assets/[name]-[hash].[ext]";
         },
       },
     },
 
-    chunkSizeWarningLimit: 800,
+    chunkSizeWarningLimit: 1000,
   },
 
   optimizeDeps: {
@@ -94,12 +102,23 @@ export default defineConfig({
       "framer-motion",
       "leaflet",
       "react-icons",
+      "lucide-react",
     ],
+    // Pre-build dependencies for faster dev server startup
+    esbuildOptions: {
+      target: "esnext",
+    },
   },
 
   resolve: {
     alias: {
       "@": "/src",
     },
+  },
+  
+  // Experimental features for better performance
+  experimental: {
+    // Enable faster HMR
+    hmrPartialAccept: true,
   },
 });

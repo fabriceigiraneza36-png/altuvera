@@ -2,12 +2,54 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 const countries = [
-  { name: "Rwanda", code: "rw", delay: 0, duration: 18 },
-  { name: "Kenya", code: "ke", delay: -4, duration: 16 },
-  { name: "Tanzania", code: "tz", delay: -8, duration: 19 },
-  { name: "Uganda", code: "ug", delay: -2.5, duration: 17 },
-  { name: "Ethiopia", code: "et", delay: -6, duration: 18.5 },
-  { name: "Djibouti", code: "dj", delay: -10, duration: 17.5 }
+  {
+    name: "Rwanda",
+    code: "rw",
+    delay: 0,
+    duration: 18,
+    idle: { ry: 3.2, sk: 0.35, rz: 0.32 },
+    active: { ry: 14, sk: 1.5, rz: 1.6, z: 22 },
+  },
+  {
+    name: "Kenya",
+    code: "ke",
+    delay: -4,
+    duration: 16,
+    idle: { ry: 4.6, sk: 0.6, rz: 0.55 },
+    active: { ry: 18, sk: 2.2, rz: 2.2, z: 32 },
+  },
+  {
+    name: "Tanzania",
+    code: "tz",
+    delay: -8,
+    duration: 19,
+    idle: { ry: 4.0, sk: 0.45, rz: 0.4 },
+    active: { ry: 16, sk: 1.8, rz: 1.9, z: 28 },
+  },
+  {
+    name: "Uganda",
+    code: "ug",
+    delay: -2.5,
+    duration: 17,
+    idle: { ry: 3.6, sk: 0.5, rz: 0.48 },
+    active: { ry: 15, sk: 1.7, rz: 1.8, z: 26 },
+  },
+  {
+    name: "Ethiopia",
+    code: "et",
+    delay: -6,
+    duration: 18.5,
+    idle: { ry: 5.2, sk: 0.72, rz: 0.62 },
+    active: { ry: 20, sk: 2.6, rz: 2.4, z: 36 },
+  },
+  {
+    name: "Djibouti",
+    code: "dj",
+    delay: -10,
+    duration: 17.5,
+    idle: { ry: 3.4, sk: 0.38, rz: 0.36 },
+    active: { ry: 13, sk: 1.4, rz: 1.5, z: 20 },
+  },
 ];
 
 export default function EastAfricaFlags() {
@@ -101,7 +143,7 @@ export default function EastAfricaFlags() {
 
       {/* Grid */}
       <div className="grid">
-        {countries.map((country) => (
+        {countries.map((country, idx) => (
           <Link
             key={country.code}
             to={`/country/${country.name.toLowerCase()}`}
@@ -110,7 +152,15 @@ export default function EastAfricaFlags() {
               "--d": `${country.delay}s`,
               "--t": `${country.duration}s`,
               "--fi": `url(#f-idle-${country.code})`,
-              "--fh": `url(#f-hover-${country.code})`
+              "--fh": `url(#f-hover-${country.code})`,
+              "--enter": `${idx * 90}ms`,
+              "--w-ry": country.idle.ry,
+              "--w-sk": country.idle.sk,
+              "--w-rz": country.idle.rz,
+              "--a-ry": country.active.ry,
+              "--a-sk": country.active.sk,
+              "--a-rz": country.active.rz,
+              "--a-z": `${country.active.z}px`,
             }}
             onMouseEnter={() => setActiveFlag(country.code)}
             onMouseLeave={() => setActiveFlag(null)}
@@ -202,8 +252,8 @@ const styles = `
 .grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 6rem 5rem;
-  max-width: 1600px;
+  gap: 4.5rem 3.5rem;
+  max-width: 1400px;
   width: 100%;
 }
 
@@ -213,6 +263,7 @@ const styles = `
 .card {
   --d: 0s;
   --t: 18s;
+  --enter: 0ms;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -221,6 +272,10 @@ const styles = `
   cursor: pointer;
   outline: none;
   -webkit-tap-highlight-color: transparent;
+  opacity: 0;
+  transform: translateY(14px) scale(0.98);
+  animation: cardEnter 700ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: var(--enter);
 }
 
 .card:focus-visible .cloth {
@@ -234,7 +289,7 @@ const styles = `
 .scene {
   position: relative;
   width: 100%;
-  max-width: 380px;
+  max-width: 360px;
   perspective: 1800px;
   transform-style: preserve-3d;
 }
@@ -254,13 +309,20 @@ const styles = `
    CLOTH (The Animated Flag)
 ============================================= */
 .cloth {
+  --w-ry: 4;
+  --w-sk: 0.5;
+  --w-rz: 0.5;
+  --a-ry: 16;
+  --a-sk: 1.8;
+  --a-rz: 2;
+  --a-z: 28px;
   position: relative;
   width: 100%;
   aspect-ratio: 3 / 2;
   transform-origin: 0% 50%;
   overflow: hidden;
   filter: var(--fi);
-  animation: wave var(--t) cubic-bezier(0.35, 0, 0.25, 1) infinite;
+  animation: waveCustom var(--t) cubic-bezier(0.35, 0, 0.25, 1) infinite;
   animation-delay: var(--d);
   transition: 
     filter 1.5s cubic-bezier(0.22, 1, 0.36, 1),
@@ -275,7 +337,7 @@ const styles = `
 
 .card.active .cloth {
   filter: var(--fh);
-  animation-name: waveActive;
+  animation-name: waveActiveCustom;
   animation-duration: 6s;
   box-shadow:
     0 45px 90px -20px rgba(0, 0, 0, 0.28),
@@ -806,6 +868,160 @@ const styles = `
   }
 }
 
+@keyframes cardEnter {
+  0% { opacity: 0; transform: translateY(14px) scale(0.98); filter: saturate(1.06); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: none; }
+}
+
+@keyframes waveCustom {
+  0%, 100% {
+    transform:
+      rotateY(0deg)
+      rotateZ(0deg)
+      rotateX(0deg)
+      skewY(0deg)
+      scaleX(1);
+  }
+  10% {
+    transform:
+      rotateY(calc(var(--w-ry) * -1deg))
+      rotateZ(calc(var(--w-rz) * 1deg))
+      rotateX(-0.3deg)
+      skewY(calc(var(--w-sk) * -1deg))
+      scaleX(1.006);
+  }
+  20% {
+    transform:
+      rotateY(calc(var(--w-ry) * 0.75deg))
+      rotateZ(calc(var(--w-rz) * -0.7deg))
+      rotateX(0.2deg)
+      skewY(calc(var(--w-sk) * 0.7deg))
+      scaleX(0.997);
+  }
+  30% {
+    transform:
+      rotateY(calc(var(--w-ry) * -0.9deg))
+      rotateZ(calc(var(--w-rz) * 0.8deg))
+      rotateX(-0.25deg)
+      skewY(calc(var(--w-sk) * -0.85deg))
+      scaleX(1.004);
+  }
+  40% {
+    transform:
+      rotateY(calc(var(--w-ry) * 0.65deg))
+      rotateZ(calc(var(--w-rz) * -0.6deg))
+      rotateX(0.15deg)
+      skewY(calc(var(--w-sk) * 0.6deg))
+      scaleX(0.998);
+  }
+  50% {
+    transform:
+      rotateY(calc(var(--w-ry) * -0.55deg))
+      rotateZ(calc(var(--w-rz) * 0.5deg))
+      rotateX(-0.15deg)
+      skewY(calc(var(--w-sk) * -0.5deg))
+      scaleX(1.003);
+  }
+  60% {
+    transform:
+      rotateY(calc(var(--w-ry) * 0.8deg))
+      rotateZ(calc(var(--w-rz) * -0.7deg))
+      rotateX(0.2deg)
+      skewY(calc(var(--w-sk) * 0.7deg))
+      scaleX(0.996);
+  }
+  70% {
+    transform:
+      rotateY(calc(var(--w-ry) * -0.75deg))
+      rotateZ(calc(var(--w-rz) * 0.7deg))
+      rotateX(-0.2deg)
+      skewY(calc(var(--w-sk) * -0.7deg))
+      scaleX(1.005);
+  }
+  80% {
+    transform:
+      rotateY(calc(var(--w-ry) * 0.55deg))
+      rotateZ(calc(var(--w-rz) * -0.5deg))
+      rotateX(0.12deg)
+      skewY(calc(var(--w-sk) * 0.5deg))
+      scaleX(0.998);
+  }
+  90% {
+    transform:
+      rotateY(calc(var(--w-ry) * -0.4deg))
+      rotateZ(calc(var(--w-rz) * 0.36deg))
+      rotateX(-0.1deg)
+      skewY(calc(var(--w-sk) * -0.35deg))
+      scaleX(1.002);
+  }
+}
+
+@keyframes waveActiveCustom {
+  0%, 100% {
+    transform:
+      rotateY(0deg)
+      rotateZ(0deg)
+      rotateX(0deg)
+      skewY(0deg)
+      scaleX(1)
+      translateZ(0);
+  }
+  10% {
+    transform:
+      rotateY(calc(var(--a-ry) * -1deg))
+      rotateZ(calc(var(--a-rz) * 1deg))
+      rotateX(-1.3deg)
+      skewY(calc(var(--a-sk) * -1deg))
+      scaleX(1.018)
+      translateZ(var(--a-z));
+  }
+  22% {
+    transform:
+      rotateY(calc(var(--a-ry) * 0.62deg))
+      rotateZ(calc(var(--a-rz) * -0.7deg))
+      rotateX(1deg)
+      skewY(calc(var(--a-sk) * 0.7deg))
+      scaleX(0.988)
+      translateZ(calc(var(--a-z) + 10px));
+  }
+  36% {
+    transform:
+      rotateY(calc(var(--a-ry) * -0.75deg))
+      rotateZ(calc(var(--a-rz) * 0.85deg))
+      rotateX(-1.1deg)
+      skewY(calc(var(--a-sk) * -0.85deg))
+      scaleX(1.014)
+      translateZ(calc(var(--a-z) - 6px));
+  }
+  52% {
+    transform:
+      rotateY(calc(var(--a-ry) * 0.8deg))
+      rotateZ(calc(var(--a-rz) * -0.8deg))
+      rotateX(1.15deg)
+      skewY(calc(var(--a-sk) * 0.8deg))
+      scaleX(0.992)
+      translateZ(calc(var(--a-z) + 14px));
+  }
+  70% {
+    transform:
+      rotateY(calc(var(--a-ry) * -0.6deg))
+      rotateZ(calc(var(--a-rz) * 0.65deg))
+      rotateX(-0.95deg)
+      skewY(calc(var(--a-sk) * -0.6deg))
+      scaleX(1.01)
+      translateZ(calc(var(--a-z) - 2px));
+  }
+  86% {
+    transform:
+      rotateY(calc(var(--a-ry) * 0.45deg))
+      rotateZ(calc(var(--a-rz) * -0.5deg))
+      rotateX(0.75deg)
+      skewY(calc(var(--a-sk) * 0.45deg))
+      scaleX(0.995)
+      translateZ(calc(var(--a-z) + 4px));
+  }
+}
+
 /* =============================================
    SHADOW ROLL KEYFRAMES
 ============================================= */
@@ -1134,6 +1350,11 @@ const styles = `
    REDUCED MOTION
 ============================================= */
 @media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
   .cloth,
   .shadow,
   .light,

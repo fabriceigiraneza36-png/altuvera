@@ -1,416 +1,627 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import logoimg from "../../assets/altuvera.png";
 
 const Loader = () => {
   const [progress, setProgress] = useState(0);
-  const [loadingText, setLoadingText] = useState("Preparing your adventure");
+  const [displayProgress, setDisplayProgress] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
-  const [randomRotations, setRandomRotations] = useState([]);
+  const [isExiting, setIsExiting] = useState(false);
   const progressIntervalRef = useRef(null);
-  const textIntervalRef = useRef(null);
+  const displayIntervalRef = useRef(null);
 
   const loadingMessages = [
-    "Preparing your adventure",
-    "Discovering hidden gems",
-    "Charting unique paths",
-    "Curating experiences",
-    "Weaving local stories",
-    "Almost ready for takeoff",
+    { threshold: 0, text: "Preparing your adventure" },
+    { threshold: 20, text: "Discovering hidden gems" },
+    { threshold: 40, text: "Charting unique paths" },
+    { threshold: 60, text: "Curating experiences" },
+    { threshold: 80, text: "Almost ready for takeoff" },
   ];
 
-  // Generate random rotations for floating elements
-  useEffect(() => {
-    setRandomRotations(loadingMessages.map(() => Math.random() * 360));
-  }, []);
+  const getLoadingText = () => {
+    for (let i = loadingMessages.length - 1; i >= 0; i--) {
+      if (displayProgress >= loadingMessages[i].threshold) {
+        return loadingMessages[i].text;
+      }
+    }
+    return loadingMessages[0].text;
+  };
 
-  // Cleanup intervals on unmount
+  const bubbles = useMemo(
+    () =>
+      Array.from({ length: 10 }, (_, i) => ({
+        id: i,
+        left: `${8 + Math.random() * 84}%`,
+        size: 16 + Math.random() * 16,
+        opacity: 0.14 + Math.random() * 0.1,
+        duration: `${11 + Math.random() * 6}s`,
+        delay: `${Math.random() * 4}s`,
+      })),
+    [],
+  );
+
+  const particles = useMemo(
+    () =>
+      Array.from({ length: 8 }, (_, i) => ({
+        id: i,
+        left: `${8 + Math.random() * 84}%`,
+        size: 3 + Math.random() * 2,
+        delay: `${Math.random() * 6}s`,
+        duration: `${8 + Math.random() * 5}s`,
+        opacity: 0.14 + Math.random() * 0.1,
+      })),
+    [],
+  );
+
   useEffect(() => {
     return () => {
-      if (progressIntervalRef.current)
-        clearInterval(progressIntervalRef.current);
-      if (textIntervalRef.current) clearInterval(textIntervalRef.current);
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+      if (displayIntervalRef.current) clearInterval(displayIntervalRef.current);
     };
   }, []);
 
-  // Smooth progress animation with easing
+  // Faster actual loading progress
   useEffect(() => {
     progressIntervalRef.current = setInterval(() => {
       setProgress((prev) => {
         if (prev >= 100) {
-          // Smooth exit animation
-          setTimeout(() => setIsVisible(false), 500);
+          clearInterval(progressIntervalRef.current);
           return 100;
         }
-        // Smoother progress increments with easing
-        const increment = Math.min(15, (100 - prev) * 0.15);
-        return Math.min(100, prev + increment * (0.5 + Math.random() * 0.5));
-      });
-    }, 200);
 
-    textIntervalRef.current = setInterval(() => {
-      setLoadingText((prev) => {
-        const currentIndex = loadingMessages.indexOf(prev);
-        return loadingMessages[(currentIndex + 1) % loadingMessages.length];
+        if (prev < 35) {
+          return Math.min(100, prev + 8 + Math.random() * 8);
+        }
+        if (prev < 70) {
+          return Math.min(100, prev + 5 + Math.random() * 5);
+        }
+        if (prev < 92) {
+          return Math.min(100, prev + 2 + Math.random() * 3);
+        }
+        return Math.min(100, prev + 1 + Math.random() * 1.5);
       });
-    }, 1200); // Slightly slower for better readability
+    }, 120);
 
-    return () => {
-      clearInterval(progressIntervalRef.current);
-      clearInterval(textIntervalRef.current);
-    };
+    return () => clearInterval(progressIntervalRef.current);
   }, []);
 
-  // Calculate rotation for floating elements
-  const getFloatingRotation = useCallback(
-    (index) => {
-      const baseRotation = randomRotations[index] || 0;
-      return `rotate(${baseRotation + ((Date.now() * 0.01) % 360)}deg)`;
-    },
-    [randomRotations],
-  );
+  // Real-time visible percentage counting
+  useEffect(() => {
+    displayIntervalRef.current = setInterval(() => {
+      setDisplayProgress((prev) => {
+        if (prev < progress) {
+          return prev + 1;
+        }
+
+        if (progress === 100 && prev >= 100) {
+          clearInterval(displayIntervalRef.current);
+          setTimeout(() => {
+            setIsExiting(true);
+            setTimeout(() => setIsVisible(false), 850);
+          }, 120);
+          return 100;
+        }
+
+        return prev;
+      });
+    }, 18);
+
+    return () => clearInterval(displayIntervalRef.current);
+  }, [progress]);
 
   if (!isVisible) return null;
 
   const styles = {
     container: {
       position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background: "linear-gradient(145deg, #022C22 0%, #064e3b 100%)",
+      inset: 0,
+      background: "#ffffff",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      zIndex: 9999,
+      overflow: "hidden",
+      opacity: isExiting ? 0 : 1,
+      filter: isExiting ? "blur(4px)" : "blur(0px)",
+      transform: isExiting ? "scale(1.02)" : "scale(1)",
+      transition:
+        "opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1), filter 0.85s cubic-bezier(0.22, 1, 0.36, 1), transform 0.85s cubic-bezier(0.22, 1, 0.36, 1)",
+    },
+    whiteBase: {
+      position: "absolute",
+      inset: 0,
+      background: "#ffffff",
+      zIndex: 0,
+    },
+    ambientGlow: {
+      position: "absolute",
+      inset: 0,
+      background:
+        "radial-gradient(circle at 50% 45%, rgba(16,185,129,0.04) 0%, rgba(16,185,129,0.015) 26%, transparent 58%)",
+      zIndex: 1,
+      pointerEvents: "none",
+    },
+    content: {
+      position: "relative",
+      zIndex: 10,
       display: "flex",
       flexDirection: "column",
       alignItems: "center",
       justifyContent: "center",
-      zIndex: 9999,
-      opacity: progress >= 100 ? 0 : 1,
-      transition: "opacity 0.5s ease-out",
-    },
-    pattern: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundImage: `
-        radial-gradient(circle at 30% 40%, rgba(16, 185, 129, 0.1) 0%, transparent 20%),
-        radial-gradient(circle at 70% 60%, rgba(5, 150, 105, 0.1) 0%, transparent 25%),
-        url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2310B981' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-      pointerEvents: "none",
-      animation: "slowPulse 8s ease-in-out infinite",
-    },
-    content: {
-      position: "relative",
-      zIndex: 2,
       textAlign: "center",
-      transform: `scale(${1 - progress * 0.002})`,
-      transition: "transform 0.3s ease",
+      width: "100%",
+      padding: "24px",
+      opacity: isExiting ? 0 : 1,
+      transform: isExiting ? "translateY(-14px) scale(0.99)" : "translateY(0) scale(1)",
+      transition:
+        "opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
     },
     logoContainer: {
-      marginBottom: "30px",
-      animation: "float 4s ease-in-out infinite",
-      filter: "drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3))",
-    },
-    logo: {
-      width: "120px",
-      height: "120px",
-      borderRadius: "32px",
-      background:
-        "linear-gradient(135deg, #059669 0%, #10B981 50%, #34D399 100%)",
+      position: "relative",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      color: "white",
-      fontSize: "56px",
-      fontWeight: "800",
-      fontFamily: "'Playfair Display', serif",
-      margin: "0 auto",
-      boxShadow: "0 25px 40px -10px rgba(5, 150, 105, 0.5)",
-      position: "relative",
-      overflow: "hidden",
+      marginBottom: "28px",
+      width: "200px",
+      height: "200px",
     },
-    logoGlow: {
+    logo: {
+      width: "118px",
+      height: "118px",
+      objectFit: "contain",
+      position: "relative",
+      zIndex: 5,
+      animation: "logoFloat 4.8s cubic-bezier(0.37, 0, 0.63, 1) infinite",
+    },
+    logoRing: {
       position: "absolute",
-      top: "-50%",
-      left: "-50%",
-      width: "200%",
-      height: "200%",
+      top: "50%",
+      left: "50%",
+      transform: "translate(-50%, -50%)",
+      borderRadius: "50%",
+      border: "1px solid rgba(16, 185, 129, 0.16)",
+      animation: "ringExpand 4.2s cubic-bezier(0.22, 1, 0.36, 1) infinite",
+    },
+    logoHalo: {
+      position: "absolute",
+      top: "50%",
+      left: "50%",
+      width: "150px",
+      height: "150px",
+      transform: "translate(-50%, -50%)",
+      borderRadius: "50%",
       background:
-        "radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%)",
-      animation: "rotate 8s linear infinite",
+        "radial-gradient(circle, rgba(16,185,129,0.08) 0%, rgba(16,185,129,0.03) 38%, transparent 72%)",
+      filter: "blur(10px)",
     },
     text: {
       fontFamily: "'Playfair Display', serif",
-      fontSize: "52px",
-      fontWeight: "800",
-      color: "white",
+      fontSize: "44px",
+      fontWeight: "700",
+      color: "#111111",
       marginBottom: "10px",
-      letterSpacing: "-1px",
-      textShadow: "0 2px 10px rgba(0, 0, 0, 0.2)",
-      background: "linear-gradient(135deg, #fff 0%, #e0f2fe 100%)",
-      WebkitBackgroundClip: "text",
-      WebkitTextFillColor: "transparent",
+      letterSpacing: "-0.5px",
     },
     tagline: {
       fontFamily: "'Dancing Script', cursive",
-      fontSize: "24px",
+      fontSize: "20px",
       color: "#10B981",
-      marginBottom: "50px",
-      opacity: 0.9,
-      transform: "translateY(0)",
-      animation: "fadeInUp 0.8s ease-out",
+      marginBottom: "40px",
+      opacity: 0.92,
     },
     progressWrapper: {
-      position: "relative",
-      width: "320px",
-      margin: "0 auto",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      width: "280px",
+      maxWidth: "85vw",
     },
     progressContainer: {
       width: "100%",
-      height: "8px",
-      backgroundColor: "rgba(255, 255, 255, 0.1)",
-      borderRadius: "4px",
+      height: "4px",
+      backgroundColor: "rgba(16, 185, 129, 0.08)",
+      borderRadius: "999px",
       overflow: "hidden",
-      marginBottom: "20px",
-      backdropFilter: "blur(5px)",
-      boxShadow: "inset 0 2px 4px rgba(0, 0, 0, 0.1)",
+      marginBottom: "16px",
     },
     progressBar: {
       height: "100%",
-      background:
-        "linear-gradient(90deg, #059669 0%, #10B981 50%, #34D399 80%, #6EE7B7 100%)",
-      borderRadius: "4px",
-      transition: "width 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-      width: `${Math.min(progress, 100)}%`,
+      background: "linear-gradient(90deg, #059669 0%, #10B981 58%, #34D399 100%)",
+      borderRadius: "999px",
+      transition: "width 0.16s linear",
+      width: `${Math.min(displayProgress, 100)}%`,
       position: "relative",
       overflow: "hidden",
     },
     progressShine: {
       position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
+      inset: 0,
       background:
-        "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)",
-      animation: "shine 1.5s infinite",
+        "linear-gradient(90deg, transparent, rgba(255,255,255,0.65), transparent)",
+      animation: "shine 2.2s linear infinite",
     },
     loadingText: {
-      fontSize: "14px",
-      color: "rgba(255, 255, 255, 0.7)",
-      letterSpacing: "3px",
+      fontSize: "12px",
+      color: "#444444",
+      letterSpacing: "2.5px",
       textTransform: "uppercase",
       fontWeight: "500",
-      transition: "opacity 0.3s ease",
+      marginBottom: "8px",
+      minHeight: "18px",
+      textAlign: "center",
+    },
+    loadingDots: {
+      display: "inline-flex",
+      marginLeft: "4px",
     },
     loadingDot: {
       display: "inline-block",
-      animation: "pulse 1.5s ease-in-out infinite",
+      color: "#10B981",
+      animation: "dotBounce 1.6s ease-in-out infinite",
+      fontSize: "14px",
+      lineHeight: 1,
     },
-    mountains: {
+    percentText: {
+      fontSize: "12px",
+      color: "#888888",
+      letterSpacing: "1px",
+      fontWeight: "500",
+      fontVariantNumeric: "tabular-nums",
+    },
+    floatingBubble: {
       position: "absolute",
-      bottom: "60px",
+      borderRadius: "50%",
+      pointerEvents: "none",
+      border: "1px solid rgba(16, 185, 129, 0.09)",
+      background:
+        "radial-gradient(circle at 32% 28%, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.58) 18%, rgba(16,185,129,0.11) 55%, rgba(16,185,129,0.04) 76%, transparent 100%)",
+      boxShadow:
+        "inset 0 0 10px rgba(255,255,255,0.6), 0 0 10px rgba(16,185,129,0.05)",
+      willChange: "transform, opacity",
+    },
+    particle: {
+      position: "absolute",
+      borderRadius: "50%",
+      pointerEvents: "none",
+    },
+    mountainsContainer: {
+      position: "absolute",
+      bottom: "30px",
       left: "50%",
       transform: "translateX(-50%)",
       display: "flex",
       alignItems: "flex-end",
-      gap: "10px",
-      opacity: 0.3,
-      filter: "drop-shadow(0 10px 10px rgba(0, 0, 0, 0.2))",
+      justifyContent: "center",
+      gap: "6px",
+      opacity: isExiting ? 0 : 0.12,
+      transition: "opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1)",
+      zIndex: 3,
     },
     mountain: {
       width: 0,
       height: 0,
       borderStyle: "solid",
       borderColor: "transparent transparent #10B981 transparent",
-      transition: "transform 0.3s ease",
-      animation: "mountainFloat 4s ease-in-out infinite",
-    },
-    floatingCircle: {
-      position: "absolute",
-      borderRadius: "50%",
-      background:
-        "radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%)",
-      pointerEvents: "none",
-      filter: "blur(20px)",
-    },
-    particle: {
-      position: "absolute",
-      width: "4px",
-      height: "4px",
-      background: "#10B981",
-      borderRadius: "50%",
-      opacity: 0.3,
-      animation: "particleFloat 3s ease-in-out infinite",
+      animation: "mountainSway 7s ease-in-out infinite",
     },
   };
-
-  // Generate floating particles
-  const particles = Array.from({ length: 20 }, (_, i) => ({
-    id: i,
-    left: `${Math.random() * 100}%`,
-    top: `${Math.random() * 100}%`,
-    delay: `${Math.random() * 5}s`,
-    duration: `${3 + Math.random() * 4}s`,
-  }));
 
   return (
     <div style={styles.container}>
       <style>
         {`
-          @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(2deg); }
+          @keyframes logoFloat {
+            0%, 100% { transform: translateY(0px) scale(1); }
+            50% { transform: translateY(-7px) scale(1.01); }
           }
-          @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(0.95); }
-          }
-          @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-          }
-          @keyframes shine {
-            0% { transform: translateX(-100%); }
-            50% { transform: translateX(100%); }
-            100% { transform: translateX(200%); }
-          }
-          @keyframes slowPulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
-          }
-          @keyframes fadeInUp {
-            from {
+
+          @keyframes ringExpand {
+            0% {
+              transform: translate(-50%, -50%) scale(0.94);
               opacity: 0;
-              transform: translateY(20px);
             }
-            to {
-              opacity: 0.9;
+            16% {
+              opacity: 0.52;
+            }
+            72% {
+              opacity: 0.12;
+            }
+            100% {
+              transform: translate(-50%, -50%) scale(1.16);
+              opacity: 0;
+            }
+          }
+
+          @keyframes dotBounce {
+            0%, 80%, 100% {
               transform: translateY(0);
+              opacity: 0.35;
+            }
+            40% {
+              transform: translateY(-4px);
+              opacity: 1;
             }
           }
-          @keyframes mountainFloat {
+
+          @keyframes shine {
+            0% { transform: translateX(-160%); }
+            100% { transform: translateX(220%); }
+          }
+
+          @keyframes mountainSway {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
+            50% { transform: translateY(-2px); }
           }
-          @keyframes particleFloat {
-            0%, 100% { transform: translate(0, 0); }
-            25% { transform: translate(10px, -10px); }
-            50% { transform: translate(20px, 5px); }
-            75% { transform: translate(5px, 15px); }
+
+          @keyframes bubbleFloatDown1 {
+            0% {
+              transform: translate3d(0px, -12vh, 0) scale(0.95);
+              opacity: 0;
+            }
+            10% {
+              opacity: 1;
+            }
+            35% {
+              transform: translate3d(8px, 10vh, 0) scale(1);
+            }
+            62% {
+              transform: translate3d(-5px, 34vh, 0) scale(1.01);
+            }
+            82% {
+              transform: translate3d(4px, 56vh, 0) scale(0.995);
+              opacity: 0.9;
+            }
+            100% {
+              transform: translate3d(0px, 72vh, 0) scale(0.99);
+              opacity: 0;
+            }
           }
-          @keyframes glow {
-            0%, 100% { filter: brightness(1); }
-            50% { filter: brightness(1.2); }
+
+          @keyframes bubbleFloatDown2 {
+            0% {
+              transform: translate3d(0px, -14vh, 0) scale(0.95);
+              opacity: 0;
+            }
+            12% {
+              opacity: 1;
+            }
+            30% {
+              transform: translate3d(-8px, 12vh, 0) scale(1.01);
+            }
+            58% {
+              transform: translate3d(-14px, 36vh, 0) scale(1.02);
+            }
+            84% {
+              transform: translate3d(-7px, 60vh, 0) scale(1);
+              opacity: 0.88;
+            }
+            100% {
+              transform: translate3d(0px, 74vh, 0) scale(0.99);
+              opacity: 0;
+            }
+          }
+
+          @keyframes bubbleFloatDown3 {
+            0% {
+              transform: translate3d(0px, -11vh, 0) scale(0.95);
+              opacity: 0;
+            }
+            10% {
+              opacity: 1;
+            }
+            36% {
+              transform: translate3d(7px, 14vh, 0) scale(1);
+            }
+            66% {
+              transform: translate3d(12px, 40vh, 0) scale(1.015);
+            }
+            86% {
+              transform: translate3d(5px, 61vh, 0) scale(1);
+              opacity: 0.9;
+            }
+            100% {
+              transform: translate3d(0px, 76vh, 0) scale(0.99);
+              opacity: 0;
+            }
+          }
+
+          @keyframes bubbleFloatDown4 {
+            0% {
+              transform: translate3d(0px, -13vh, 0) scale(0.94);
+              opacity: 0;
+            }
+            10% {
+              opacity: 1;
+            }
+            34% {
+              transform: translate3d(-5px, 11vh, 0) scale(1);
+            }
+            60% {
+              transform: translate3d(9px, 35vh, 0) scale(1.02);
+            }
+            84% {
+              transform: translate3d(3px, 59vh, 0) scale(1);
+              opacity: 0.88;
+            }
+            100% {
+              transform: translate3d(0px, 75vh, 0) scale(0.99);
+              opacity: 0;
+            }
+          }
+
+          @keyframes particleDrift {
+            0% {
+              transform: translateY(-16px);
+              opacity: 0;
+            }
+            10% {
+              opacity: 1;
+            }
+            90% {
+              opacity: 1;
+            }
+            100% {
+              transform: translateY(calc(100vh + 18px));
+              opacity: 0;
+            }
+          }
+
+          @media (max-width: 768px) {
+            .loader-title {
+              font-size: 34px !important;
+            }
+            .loader-tagline {
+              font-size: 17px !important;
+              margin-bottom: 34px !important;
+            }
+            .loader-logo-wrap {
+              width: 170px !important;
+              height: 170px !important;
+              margin-bottom: 22px !important;
+            }
+            .loader-logo {
+              width: 98px !important;
+              height: 98px !important;
+            }
+            .loader-progress {
+              width: 240px !important;
+            }
+          }
+
+          @media (max-width: 480px) {
+            .loader-title {
+              font-size: 28px !important;
+            }
+            .loader-tagline {
+              font-size: 15px !important;
+              margin-bottom: 28px !important;
+            }
+            .loader-logo-wrap {
+              width: 145px !important;
+              height: 145px !important;
+              margin-bottom: 18px !important;
+            }
+            .loader-logo {
+              width: 84px !important;
+              height: 84px !important;
+            }
+            .loader-progress {
+              width: 82vw !important;
+              max-width: 260px !important;
+            }
           }
         `}
       </style>
 
-      <div style={styles.pattern}></div>
+      <div style={styles.whiteBase}></div>
+      <div style={styles.ambientGlow}></div>
 
-      {/* Particles */}
+      {bubbles.map((bubble, index) => (
+        <div
+          key={bubble.id}
+          style={{
+            ...styles.floatingBubble,
+            left: bubble.left,
+            top: "-10vh",
+            width: `${bubble.size}px`,
+            height: `${bubble.size}px`,
+            opacity: bubble.opacity,
+            animation: `bubbleFloatDown${(index % 4) + 1} ${bubble.duration} cubic-bezier(0.22, 1, 0.36, 1) infinite`,
+            animationDelay: bubble.delay,
+          }}
+        />
+      ))}
+
       {particles.map((particle) => (
         <div
           key={particle.id}
           style={{
             ...styles.particle,
             left: particle.left,
-            top: particle.top,
+            top: "-20px",
+            width: `${particle.size}px`,
+            height: `${particle.size}px`,
+            background: `rgba(16, 185, 129, ${particle.opacity})`,
+            boxShadow: "0 0 6px rgba(16,185,129,0.16)",
+            animation: `particleDrift ${particle.duration} linear infinite`,
             animationDelay: particle.delay,
-            animationDuration: particle.duration,
           }}
         />
       ))}
 
-      {/* Floating Circles */}
-      <div
-        style={{
-          ...styles.floatingCircle,
-          width: "500px",
-          height: "500px",
-          top: "-200px",
-          left: "-200px",
-          animation: "float 8s ease-in-out infinite",
-        }}
-      ></div>
-      <div
-        style={{
-          ...styles.floatingCircle,
-          width: "400px",
-          height: "400px",
-          bottom: "-150px",
-          right: "-150px",
-          animation: "float 10s ease-in-out infinite reverse",
-        }}
-      ></div>
-      <div
-        style={{
-          ...styles.floatingCircle,
-          width: "300px",
-          height: "300px",
-          top: "40%",
-          right: "20%",
-          animation: "float 12s ease-in-out infinite",
-        }}
-      ></div>
-
       <div style={styles.content}>
-        <div style={styles.logoContainer}>
-          <div style={styles.logo}>
-            <div style={styles.logoGlow}></div>
-            <img
-              src={logoimg}
-              alt="Altuvera"
-              style={{
-                width: "80%",
-                height: "80%",
-                objectFit: "contain",
-                position: "relative",
-                zIndex: 1,
-                filter: "drop-shadow(0 4px 8px rgba(0,0,0,0.2))",
-              }}
-            />
-          </div>
-        </div>
-        <h1 style={styles.text}>Altuvera</h1>
-        <p style={styles.tagline}>True adventure in High Places & Deep Culture</p>
+        <div style={styles.logoContainer} className="loader-logo-wrap">
+          <div style={styles.logoHalo}></div>
 
-        <div style={styles.progressWrapper}>
+          <div style={{ ...styles.logoRing, width: "150px", height: "150px" }}></div>
+          <div
+            style={{
+              ...styles.logoRing,
+              width: "188px",
+              height: "188px",
+              borderColor: "rgba(16, 185, 129, 0.11)",
+              animationDelay: "0.8s",
+            }}
+          ></div>
+          <div
+            style={{
+              ...styles.logoRing,
+              width: "224px",
+              height: "224px",
+              borderWidth: "1px",
+              borderColor: "rgba(16, 185, 129, 0.07)",
+              animationDelay: "1.6s",
+            }}
+          ></div>
+
+          <img
+            src={logoimg}
+            alt="Altuvera"
+            style={styles.logo}
+            className="loader-logo"
+          />
+        </div>
+
+        <h1 style={styles.text} className="loader-title">
+          Altuvera
+        </h1>
+
+        <p style={styles.tagline} className="loader-tagline">
+          True adventure in High Places & Deep Culture
+        </p>
+
+        <div style={styles.progressWrapper} className="loader-progress">
           <div style={styles.progressContainer}>
             <div style={styles.progressBar}>
               <div style={styles.progressShine}></div>
             </div>
           </div>
+
           <p style={styles.loadingText}>
-            {loadingText}
-            <span style={styles.loadingDot}>.</span>
-            <span style={{ ...styles.loadingDot, animationDelay: "0.2s" }}>
-              .
-            </span>
-            <span style={{ ...styles.loadingDot, animationDelay: "0.4s" }}>
-              .
+            {getLoadingText()}
+            <span style={styles.loadingDots}>
+              <span style={styles.loadingDot}>.</span>
+              <span style={{ ...styles.loadingDot, animationDelay: "0.2s" }}>.</span>
+              <span style={{ ...styles.loadingDot, animationDelay: "0.4s" }}>.</span>
             </span>
           </p>
-          <p
-            style={{
-              ...styles.loadingText,
-              fontSize: "12px",
-              marginTop: "10px",
-              opacity: 0.5,
-            }}
-          >
-            {Math.round(progress)}%
-          </p>
+
+          <p style={styles.percentText}>{displayProgress}%</p>
         </div>
       </div>
 
-      <div style={styles.mountains}>
+      <div style={styles.mountainsContainer}>
         <div
           style={{
             ...styles.mountain,
-            borderWidth: "0 25px 45px 25px",
+            borderWidth: "0 18px 32px 18px",
             animationDelay: "0s",
+          }}
+        ></div>
+        <div
+          style={{
+            ...styles.mountain,
+            borderWidth: "0 26px 48px 26px",
+            animationDelay: "0.4s",
           }}
         ></div>
         <div
@@ -423,22 +634,15 @@ const Loader = () => {
         <div
           style={{
             ...styles.mountain,
-            borderWidth: "0 30px 55px 30px",
-            animationDelay: "0.4s",
+            borderWidth: "0 28px 52px 28px",
+            animationDelay: "0.5s",
           }}
         ></div>
         <div
           style={{
             ...styles.mountain,
-            borderWidth: "0 22px 40px 22px",
-            animationDelay: "0.6s",
-          }}
-        ></div>
-        <div
-          style={{
-            ...styles.mountain,
-            borderWidth: "0 20px 35px 20px",
-            animationDelay: "0.8s",
+            borderWidth: "0 20px 36px 20px",
+            animationDelay: "0.3s",
           }}
         ></div>
       </div>

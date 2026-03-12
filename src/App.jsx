@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
-import { Routes, Route, useLocation } from "react-router-dom";
+import { Routes, Route, useLocation, Navigate } from "react-router-dom";
 import { useApp } from "./context/AppContext";
+import { getRedirectUrl } from "./utils/routeUtils";
 import Navbar from "./components/common/Navbar";
 import Footer from "./components/common/Footer";
 import ScrollToTop from "./components/common/ScrollToTop";
@@ -47,6 +48,24 @@ const UserProfile = React.lazy(() => import("./pages/auth/UserProfile"));
 const MyBookings = React.lazy(() => import("./pages/auth/MyBookings"));
 const Wishlist = React.lazy(() => import("./pages/auth/Wishlist"));
 const UserSettings = React.lazy(() => import("./pages/auth/UserSettings"));
+
+// Smart Redirect Component - handles typos and incorrect URLs
+const SmartRedirect = () => {
+  const location = useLocation();
+  const redirectUrl = getRedirectUrl(location.pathname);
+  
+  if (redirectUrl) {
+    // Use replace to avoid creating history entries for bad URLs
+    return <Navigate to={redirectUrl} replace />;
+  }
+  
+  // No redirect found, show 404
+  return (
+    <PageWrapper title="Page Not Found">
+      <NotFound />
+    </PageWrapper>
+  );
+};
 
 function App() {
   const location = useLocation();
@@ -288,6 +307,12 @@ function App() {
                   </PageWrapper>
                 </ProtectedRoute>
               }
+            />
+
+            {/* Smart Redirect - handles typos and incorrect URLs */}
+            <Route
+              path="/:pathMatch(.*)*"
+              element={<SmartRedirect />}
             />
 
             <Route

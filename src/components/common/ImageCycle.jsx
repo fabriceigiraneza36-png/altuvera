@@ -603,16 +603,25 @@ const ImageCycle = ({
   style = {},
   className = "",
   showControls = true,
+  // Back-compat alias used in some pages
+  showControllers,
   showDots = true,
   showPlayPause = false,
   kenBurns = false,
   pauseOnHover = true,
   autoPlay = true,
+  clickToNavigate = false,
+  hideArrows = false,
+  hintStorageKey,
+  hintText = "Tip: Tap/click left or right side to change media",
   overlay = true,
   overlayGradient = "linear-gradient(180deg,rgba(0,0,0,.003) 0%,rgba(0,0,0,.035) 40%,rgba(0,0,0,.28) 100%)",
   onSlideChange,
   aspectRatio,
 }) => {
+  const effectiveShowControls =
+    typeof showControllers === "boolean" ? showControllers : showControls;
+
   const safeImages = useMemo(
     () => (Array.isArray(images) ? images.filter(Boolean) : []),
     [images]
@@ -626,6 +635,7 @@ const ImageCycle = ({
   const [touchY, setTouchY] = useState(null);
   const [mobile, setMobile] = useState(false);
   const [swipeHinted, setSwipeHinted] = useState(false);
+  const [hintVisible, setHintVisible] = useState(false);
 
   // Track visit count per slide for triple-phase cycling
   const visitCounts = useRef({});
@@ -644,6 +654,24 @@ const ImageCycle = ({
     window.addEventListener("resize", c, { passive: true });
     return () => window.removeEventListener("resize", c);
   }, []);
+
+  useEffect(() => {
+    if (!clickToNavigate || safeImages.length <= 1) return undefined;
+    if (!hintStorageKey) return undefined;
+    try {
+      const seen = localStorage.getItem(hintStorageKey) === "1";
+      if (seen) return undefined;
+      setHintVisible(true);
+      localStorage.setItem(hintStorageKey, "1");
+      const t = setTimeout(() => setHintVisible(false), 5200);
+      return () => clearTimeout(t);
+    } catch {
+      // If storage is unavailable, still show once per mount.
+      setHintVisible(true);
+      const t = setTimeout(() => setHintVisible(false), 5200);
+      return () => clearTimeout(t);
+    }
+  }, [clickToNavigate, hintStorageKey, safeImages.length]);
 
   // ── Preload all images eagerly ──
   useEffect(() => {
@@ -692,8 +720,9 @@ const ImageCycle = ({
   }, [scrollRef]);
 
   // ── Autoplay ──
+  const autoplayEnabled = typeof interval === "number" && interval > 0;
   const shouldPlay =
-    playing && safeImages.length > 1 && (!pauseOnHover || !hovered);
+    autoplayEnabled && playing && safeImages.length > 1 && (!pauseOnHover || !hovered);
 
   useEffect(() => {
     if (timerRef.current) {
@@ -776,7 +805,7 @@ const ImageCycle = ({
       ? (idx - 1 + safeImages.length) % safeImages.length
       : 0;
   const backdrop = safeImages[prevIdx];
-  const hasNav = showControls && safeImages.length > 1;
+  const hasNav = effectiveShowControls && safeImages.length > 1;
   const uiShow = hovered || mobile;
 
   // ─── Empty State ──────────────────────────────────────────────
@@ -864,6 +893,22 @@ const ImageCycle = ({
     <div
       ref={containerRef}
       className={className}
+      onClick={(e) => {
+        if (!clickToNavigate || safeImages.length <= 1) return;
+        if (e.defaultPrevented) return;
+
+        const target = e.target;
+        if (
+          target?.closest?.("button,a,input,select,textarea,[data-imgcycle-control]")
+        ) {
+          return;
+        }
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const mid = rect.left + rect.width / 2;
+        e.clientX < mid ? prev() : next();
+        if (!swipeHinted) setSwipeHinted(true);
+      }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       onTouchStart={onTS}
@@ -1071,14 +1116,18 @@ const ImageCycle = ({
 
       {/* ═══ UI ═══ */}
 
-      {safeImages.length > 1 && (
+      {effectiveShowControls && safeImages.length > 1 && (
         <Counter current={idx} total={safeImages.length} show={uiShow} />
       )}
 
-      {hasNav && !mobile && (
+      {hasNav && !mobile && !hideArrows && (
         <>
-          <NavArrow dir="left" onClick={prev} show={hovered} />
-          <NavArrow dir="right" onClick={next} show={hovered} />
+          <div data-imgcycle-control>
+            <NavArrow dir="left" onClick={prev} show={hovered} />
+          </div>
+          <div data-imgcycle-control>
+            <NavArrow dir="right" onClick={next} show={hovered} />
+          </div>
         </>
       )}
 
@@ -1113,7 +1162,7 @@ const ImageCycle = ({
         </motion.div>
       )}
 
-      {showPlayPause && safeImages.length > 1 && (
+      {effectiveShowControls && showPlayPause && safeImages.length > 1 && (
         <PlayPause
           playing={playing}
           onToggle={() => setPlaying((p) => !p)}
@@ -1121,13 +1170,50 @@ const ImageCycle = ({
         />
       )}
 
-      {showDots && safeImages.length > 1 && safeImages.length <= 12 && (
+      {effectiveShowControls && showDots && safeImages.length > 1 && safeImages.length <= 12 && (
         <Dots
           total={safeImages.length}
           current={idx}
           onSelect={go}
           show={uiShow}
         />
+      )}
+
+      {clickToNavigate && safeImages.length > 1 && hintText && (
+        <AnimatePresence>
+          {hintVisible && (
+            <motion.div
+              key="imgcycle-hint"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 0.92, y: 0 }}
+              exit={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.35, ease: EASE.expo }}
+              style={{
+                position: "absolute",
+                left: "50%",
+                bottom: "14px",
+                transform: "translateX(-50%)",
+                zIndex: 40,
+                pointerEvents: "none",
+                padding: "10px 14px",
+                borderRadius: "999px",
+                background: "rgba(0,0,0,0.28)",
+                border: "1px solid rgba(255,255,255,0.14)",
+                color: "rgba(255,255,255,0.9)",
+                fontSize: "12px",
+                fontWeight: 700,
+                letterSpacing: "0.2px",
+                backdropFilter: "blur(14px)",
+                WebkitBackdropFilter: "blur(14px)",
+                boxShadow: "0 14px 30px rgba(0,0,0,0.25)",
+                whiteSpace: "nowrap",
+              }}
+              aria-hidden="true"
+            >
+              {hintText}
+            </motion.div>
+          )}
+        </AnimatePresence>
       )}
     </div>
   );

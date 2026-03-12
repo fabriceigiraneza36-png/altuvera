@@ -37,6 +37,308 @@ import EmailAutocompleteInput from "../common/EmailAutocompleteInput";
 import "./AuthModal.css";
 
 // ============================================================================
+// Side Media (Images + Videos)
+// ============================================================================
+
+const SIDE_MEDIA = [
+  {
+    type: "image",
+    src: "https://i.pinimg.com/736x/9a/56/27/9a5627c41868a6f8861341e82df30b84.jpg",
+    alt: "Safari landscape",
+  },
+  {
+    type: "image",
+    src: "https://i.pinimg.com/736x/c2/26/91/c22691ef2c1f5a1e9544ec1e62774740.jpg",
+    alt: "Wildlife in East Africa",
+  },
+  {
+    type: "video",
+    // Public sample video (Google Cloud bucket) - reliable for autoplay tests
+    src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    poster: "https://i.pinimg.com/736x/9a/56/27/9a5627c41868a6f8861341e82df30b84.jpg",
+    alt: "Savanna wildlife video",
+  },
+  {
+    type: "image",
+    src: "https://i.pinimg.com/1200x/37/97/46/37974679b2a1c892e16ba2fda5aa9914.jpg",
+    alt: "Elephants at sunset",
+  },
+  {
+    type: "image",
+    src: "https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=1400&auto=format&fit=crop&q=70",
+    alt: "Mountain landscape in East Africa",
+  },
+  {
+    type: "video",
+    src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+    poster: "https://i.pinimg.com/1200x/37/97/46/37974679b2a1c892e16ba2fda5aa9914.jpg",
+    alt: "Elephants Dream sample video",
+  },
+  {
+    type: "image",
+    src: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=1400&auto=format&fit=crop&q=70",
+    alt: "Safari jeep at golden hour",
+  },
+  {
+    type: "video",
+    src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
+    poster: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=1200&auto=format&fit=crop&q=70",
+    alt: "Sintel sample video",
+  },
+  {
+    type: "image",
+    src: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1400&auto=format&fit=crop&q=70",
+    alt: "Sunrise over savanna",
+  },
+  {
+    type: "video",
+    src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+    poster: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&auto=format&fit=crop&q=70",
+    alt: "For Bigger Blazes sample video",
+  },
+  {
+    type: "image",
+    src: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1400&auto=format&fit=crop&q=70",
+    alt: "Elephant close-up in the wild",
+  },
+];
+
+const clampIndex = (idx, length) => {
+  if (length <= 0) return 0;
+  return ((idx % length) + length) % length;
+};
+
+const getAnimVariant = (idx) => String(((Number(idx) || 0) % 5) + 1);
+
+const SideMediaRotator = ({ items = SIDE_MEDIA, intervalMs = 6500 }) => {
+  const safeItems = Array.isArray(items) ? items.filter(Boolean) : [];
+  const [index, setIndex] = useState(0);
+  const [navDir, setNavDir] = useState("next"); // "next" | "prev"
+  const [outgoing, setOutgoing] = useState(null);
+  const outgoingTimerRef = useRef(null);
+  const lastIndexRef = useRef(0);
+  const timerRef = useRef(null);
+  const videoRef = useRef(null);
+
+  const goTo = useCallback(
+    (nextIndex) => {
+      setIndex((prev) =>
+        clampIndex(typeof nextIndex === "number" ? nextIndex : prev, safeItems.length),
+      );
+    },
+    [safeItems.length],
+  );
+
+  const next = useCallback(() => {
+    setNavDir("next");
+    setIndex((prev) => clampIndex(prev + 1, safeItems.length));
+  }, [safeItems.length]);
+
+  const prev = useCallback(() => {
+    setNavDir("prev");
+    setIndex((prev) => clampIndex(prev - 1, safeItems.length));
+  }, [safeItems.length]);
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = null;
+  }, []);
+
+  useEffect(() => clearTimer, [clearTimer]);
+
+  useEffect(() => {
+    if (safeItems.length <= 1) return undefined;
+    if (outgoingTimerRef.current) clearTimeout(outgoingTimerRef.current);
+
+    const prevIdx = lastIndexRef.current;
+    const prevItem = safeItems[clampIndex(prevIdx, safeItems.length)];
+    const nextItem = safeItems[clampIndex(index, safeItems.length)];
+
+    if (prevItem && nextItem && prevIdx !== index) {
+      setOutgoing({
+        item: prevItem,
+        idx: prevIdx,
+        key: `${Date.now()}-${prevIdx}-${prevItem?.src || ""}`,
+      });
+      outgoingTimerRef.current = setTimeout(() => setOutgoing(null), 760);
+    }
+
+    lastIndexRef.current = index;
+    return () => {
+      if (outgoingTimerRef.current) clearTimeout(outgoingTimerRef.current);
+      outgoingTimerRef.current = null;
+    };
+  }, [index, safeItems]);
+
+  useEffect(() => {
+    if (safeItems.length <= 1) return undefined;
+    clearTimer();
+
+    const current = safeItems[index];
+    const isVideo = current?.type === "video";
+
+    if (!isVideo) {
+      timerRef.current = setTimeout(next, intervalMs);
+      return undefined;
+    }
+
+    // For videos: attempt autoplay; advance on end; also fallback to interval.
+    timerRef.current = setTimeout(next, Math.max(intervalMs, 12000));
+    return undefined;
+  }, [clearTimer, index, intervalMs, next, safeItems]);
+
+  useEffect(() => {
+    const current = safeItems[index];
+    if (current?.type !== "video") return undefined;
+
+    const el = videoRef.current;
+    if (!el) return undefined;
+
+    const tryPlay = () => {
+      el.muted = true;
+      const p = el.play?.();
+      if (p && typeof p.catch === "function") p.catch(() => {});
+    };
+
+    tryPlay();
+
+    const onEnded = () => next();
+    const onLoaded = () => {
+      // If duration is known and reasonable, schedule a precise advance.
+      const d = Number(el.duration);
+      if (!Number.isFinite(d) || d <= 0) return;
+      clearTimer();
+      timerRef.current = setTimeout(next, Math.min(30000, Math.max(6000, d * 1000 + 400)));
+    };
+
+    el.addEventListener("ended", onEnded);
+    el.addEventListener("loadedmetadata", onLoaded);
+    return () => {
+      el.removeEventListener("ended", onEnded);
+      el.removeEventListener("loadedmetadata", onLoaded);
+    };
+  }, [clearTimer, index, next, safeItems]);
+
+  const handleDoubleClick = useCallback(
+    (event) => {
+      if (safeItems.length <= 1) return;
+      const rect = event.currentTarget.getBoundingClientRect();
+      const midX = rect.left + rect.width / 2;
+      if (event.clientX < midX) prev();
+      else next();
+    },
+    [next, prev, safeItems.length],
+  );
+
+  const [videoError, setVideoError] = useState(false);
+
+  const current = safeItems[clampIndex(index, safeItems.length)];
+  const [mediaLoading, setMediaLoading] = useState(true);
+
+  // Reset video error when index changes
+  useEffect(() => {
+    setVideoError(false);
+  }, [index]);
+
+  useEffect(() => {
+    setMediaLoading(true);
+  }, [index]);
+
+  const handleVideoError = useCallback(() => {
+    setVideoError(true);
+  }, []);
+
+  const handleMediaReady = useCallback(() => {
+    setMediaLoading(false);
+  }, []);
+
+  const renderLayer = useCallback(
+    ({ item, idx, phase, layerKey }) => {
+      if (!item) return null;
+      const isVideo = item?.type === "video";
+      const variant = getAnimVariant(idx);
+
+      if (isVideo) {
+        // Keep video transition simple (fade) while images get slide-in/out.
+        return (
+          <video
+            key={layerKey}
+            ref={phase === "in" ? videoRef : undefined}
+            className={`auth-side-media__el auth-side-media__layer is-video is-${phase}`}
+            poster={item.poster}
+            autoPlay
+            muted
+            playsInline
+            preload="auto"
+            controls={false}
+            disablePictureInPicture
+            crossOrigin="anonymous"
+            onLoadedData={phase === "in" ? handleMediaReady : undefined}
+            onError={phase === "in" ? () => {
+              handleVideoError();
+              handleMediaReady();
+            } : undefined}
+            aria-label={item.alt || "Background video"}
+          >
+            <source src={item.src} type="video/mp4" />
+          </video>
+        );
+      }
+
+      return (
+        <img
+          key={layerKey}
+          className={`auth-side-media__el auth-side-media__layer is-image is-${phase}`}
+          data-anim={variant}
+          src={item?.src}
+          alt={item?.alt || ""}
+          loading="eager"
+          decoding="async"
+          draggable={false}
+          onLoad={phase === "in" ? handleMediaReady : undefined}
+          onError={phase === "in" ? handleMediaReady : undefined}
+        />
+      );
+    },
+    [handleMediaReady, handleVideoError],
+  );
+
+  return (
+    <div
+      className="auth-side-media"
+      data-dir={navDir}
+      onDoubleClick={handleDoubleClick}
+    >
+      {outgoing?.item && renderLayer({
+        item: outgoing.item,
+        idx: outgoing.idx,
+        phase: "out",
+        layerKey: outgoing.key,
+      })}
+
+      {renderLayer({
+        item: current?.type === "video" && videoError ? null : current,
+        idx: index,
+        phase: "in",
+        layerKey: `in-${index}-${current?.src || ""}`,
+      })}
+
+      {mediaLoading && (
+        <div className="auth-side-media__loading" aria-hidden="true">
+          <div className="auth-side-media__spinner" />
+        </div>
+      )}
+
+      {safeItems.length > 1 && (
+        <div className="auth-side-hint" aria-hidden="true">
+          Double-click left/right to change
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ============================================================================
 // Constants & Configuration
 // ============================================================================
 
@@ -829,7 +1131,7 @@ export default function AuthModal() {
       >
         {/* Side Panel - NEW */}
         <div className="auth-side-panel">
-          <div className="auth-side-image" />
+          <SideMediaRotator />
           <div className="auth-side-overlay" />
           <div className="auth-side-content">
             <h3 className="auth-side-title">Discover East Africa</h3>

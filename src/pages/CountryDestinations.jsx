@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Helmet } from "react-helmet-async";
 import { 
   FiMapPin, 
   FiStar, 
@@ -31,6 +32,7 @@ import Button from '../components/common/Button';
 import { useCountry } from '../hooks/useCountries';
 import { useCountryDestinations } from '../hooks/useDestinations';
 import { useWishlist } from "../hooks/useWishlist";
+import { toAbsoluteUrl, toMetaDescription } from "../utils/seo";
 
 // ============================================================
 // CONTACT INFO
@@ -1608,8 +1610,8 @@ const CountryDestinations = () => {
       marginRight: 'auto',
     },
     flagWrapper: {
-      width: isMobile ? '100px' : '120px',
-      height: isMobile ? '100px' : '120px',
+      width: isMobile ? '88px' : '104px',
+      height: isMobile ? '88px' : '104px',
       borderRadius: '50%',
       background: 'rgba(255, 255, 255, 0.95)',
       backdropFilter: 'blur(20px)',
@@ -1618,10 +1620,10 @@ const CountryDestinations = () => {
       justifyContent: 'center',
       margin: '0 auto 28px',
       boxShadow: '0 20px 50px rgba(0, 128, 0, 0.15)',
-      border: '4px solid white',
+      border: '3px solid white',
     },
     flag: {
-      fontSize: isMobile ? '48px' : '56px',
+      '--av-flag-size': isMobile ? '40px' : '46px',
     },
     title: {
       fontFamily: "'Playfair Display', serif",
@@ -1754,6 +1756,40 @@ const CountryDestinations = () => {
 
   return (
     <div style={styles.page}>
+      <Helmet>
+        <title>{`${country.name} Destinations | Altuvera`}</title>
+        <meta
+          name="description"
+          content={toMetaDescription(
+            `Explore ${country.name}'s best destinations, highlights, and bookable experiences. Browse ${allDestinations.length} places and plan your trip with Altuvera.`,
+            160,
+          )}
+        />
+        <link
+          rel="canonical"
+          href={toAbsoluteUrl(`/country/${country.id}/destinations`)}
+        />
+        <meta property="og:type" content="website" />
+        <meta
+          property="og:url"
+          content={toAbsoluteUrl(`/country/${country.id}/destinations`)}
+        />
+        <meta
+          property="og:title"
+          content={`${country.name} Destinations | Altuvera`}
+        />
+        <meta
+          property="og:description"
+          content={toMetaDescription(
+            `Explore ${country.name}'s best destinations, highlights, and bookable experiences.`,
+            155,
+          )}
+        />
+        <meta
+          property="og:image"
+          content={country.heroImage || country.images?.[0] || toAbsoluteUrl("/green%20logo.ico")}
+        />
+      </Helmet>
       <GlobalStyles />
 
       {/* Page Header */}
@@ -1776,7 +1812,13 @@ const CountryDestinations = () => {
           <AnimatedSection animation="fadeInUp">
             <div style={styles.intro}>
               <div style={styles.flagWrapper}>
-                <span style={styles.flag}>{country.flag}</span>
+                <span
+                  className="av-flag"
+                  data-av-flag-anim={String((((country?.id || country?.name || "").length + 3) % 5) + 1)}
+                  style={styles.flag}
+                >
+                  {country.flag}
+                </span>
               </div>
               <h2 style={styles.title}>Discover {country.name}</h2>
               <p style={styles.description}>{country.description}</p>

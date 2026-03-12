@@ -1250,14 +1250,19 @@ function CountryCard({ country }) {
       />
       <span
         style={{
-          fontSize: 52,
           marginBottom: 14,
           transition: 'transform 0.3s',
           transform: h ? 'scale(1.15)' : 'scale(1)',
           display: 'block',
         }}
       >
-        {country.flag}
+        <span
+          className="av-flag"
+          data-av-flag-anim={String((((country?.name || "").length + 2) % 5) + 1)}
+          style={{ "--av-flag-size": "clamp(38px, 5vw, 50px)" }}
+        >
+          {country.flag}
+        </span>
       </span>
       <h3
         style={{
