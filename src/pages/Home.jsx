@@ -59,6 +59,7 @@ import { testimonials } from "../data/testimonials";
 import { services } from "../data/services";
 import { posts } from "../data/posts";
 import { useDestinations } from "../hooks/useDestinations";
+import { useWishlist } from "../hooks/useWishlist";
 import ImageCycle from "../components/common/ImageCycle";
 import { useScrollTriggeredSlide } from "../hooks/useScrollTriggeredSlide";
 import chatgpt from "../assets/chatgpt.png";
@@ -785,6 +786,11 @@ const Home = () => {
       limit: 24,
       sort: "-featured",
     });
+  const { loadWishlist, toggleWishlist, isWishlisted } = useWishlist();
+
+  useEffect(() => {
+    loadWishlist();
+  }, [loadWishlist]);
 
   const nextTestimonial = useCallback(() => {
     setActiveTestimonial((p) => (p + 1) % (testimonials?.length || 1));
@@ -1821,6 +1827,55 @@ const Home = () => {
                       className="iz"
                     />
                     <div className="dog" />
+                    <button
+                      type="button"
+                      aria-label={
+                        isWishlisted(d?._id || d?.id || d?.slug)
+                          ? "Remove from wishlist"
+                          : "Add to wishlist"
+                      }
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        toggleWishlist(d?._id || d?.id || d?.slug);
+                      }}
+                      style={{
+                        position: "absolute",
+                        top: 14,
+                        left: 14,
+                        width: 40,
+                        height: 40,
+                        borderRadius: 999,
+                        border: "1px solid rgba(255,255,255,0.25)",
+                        background: isWishlisted(d?._id || d?.id || d?.slug)
+                          ? "rgba(5,150,105,0.9)"
+                          : "rgba(0,0,0,0.35)",
+                        color: "white",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        cursor: "pointer",
+                        backdropFilter: "blur(10px)",
+                        boxShadow: "0 10px 24px rgba(0,0,0,0.18)",
+                        transition: "transform .2s ease, background .2s ease",
+                        zIndex: 6,
+                      }}
+                      onMouseOver={(e) =>
+                        (e.currentTarget.style.transform = "translateY(-1px)")
+                      }
+                      onMouseOut={(e) =>
+                        (e.currentTarget.style.transform = "translateY(0)")
+                      }
+                    >
+                      <FiHeart
+                        size={18}
+                        style={{
+                          fill: isWishlisted(d?._id || d?.id || d?.slug)
+                            ? "currentColor"
+                            : "transparent",
+                        }}
+                      />
+                    </button>
                     <div className="deb">
                       <FiEye size={22} color="#fff" />
                     </div>

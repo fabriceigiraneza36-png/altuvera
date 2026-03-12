@@ -2676,26 +2676,61 @@ const Booking = () => {
   const isMobile = windowWidth < 640;
   const isTablet = windowWidth >= 640 && windowWidth < 1024;
 
+  const BOOKING_DRAFT_KEY = "altuvera_booking_draft_v1";
+
   // Form data
-  const [formData, setFormData] = useState({
-    tripType: "",
-    destination: "",
-    startDate: "",
-    endDate: "",
-    adults: 2,
-    children: 0,
-    groupType: "couple",
-    accommodation: "mid-range",
-    interests: [],
-    name: user?.fullName || user?.name || "",
-    email: user?.email || "",
-    phone: user?.phone || "",
-    country: "",
-    specialRequests: "",
+  const [formData, setFormData] = useState(() => {
+    const defaults = {
+      tripType: "",
+      destination: "",
+      startDate: "",
+      endDate: "",
+      adults: 2,
+      children: 0,
+      groupType: "couple",
+      accommodation: "mid-range",
+      interests: [],
+      name: user?.fullName || user?.name || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+      country: "",
+      specialRequests: "",
+    };
+
+    try {
+      const raw =
+        sessionStorage.getItem(BOOKING_DRAFT_KEY) ||
+        localStorage.getItem(BOOKING_DRAFT_KEY);
+      if (!raw) return defaults;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== "object") return defaults;
+      return { ...defaults, ...parsed };
+    } catch {
+      return defaults;
+    }
   });
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
+
+  useEffect(() => {
+    if (isSubmitted) {
+      sessionStorage.removeItem(BOOKING_DRAFT_KEY);
+      localStorage.removeItem(BOOKING_DRAFT_KEY);
+    }
+  }, [BOOKING_DRAFT_KEY, isSubmitted]);
+
+  useEffect(() => {
+    if (isSubmitted) return;
+    const id = setTimeout(() => {
+      try {
+        sessionStorage.setItem(BOOKING_DRAFT_KEY, JSON.stringify(formData));
+      } catch {
+        // ignore storage failures
+      }
+    }, 250);
+    return () => clearTimeout(id);
+  }, [BOOKING_DRAFT_KEY, formData, isSubmitted]);
 
   // Update form data when user changes
   useEffect(() => {
