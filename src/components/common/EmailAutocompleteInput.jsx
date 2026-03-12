@@ -2,6 +2,7 @@ import React, {
   forwardRef,
   useCallback,
   useEffect,
+  useId,
   useMemo,
   useRef,
 } from "react";
@@ -16,9 +17,6 @@ const DEFAULT_DOMAINS = [
   "protonmail.com",
   "aol.com",
 ];
-
-const shouldSkipAutocomplete = (inputType = "") =>
-  inputType.startsWith("delete") || inputType === "insertFromPaste";
 
 const getCompletion = (value, domains) => {
   const v = typeof value === "string" ? value : "";
@@ -46,6 +44,24 @@ const getCompletion = (value, domains) => {
   return completed;
 };
 
+const getSuggestions = (value, domains, limit = 6) => {
+  const v = typeof value === "string" ? value : "";
+  const at = v.indexOf("@");
+  if (at < 0) return [];
+
+  const local = v.slice(0, at);
+  const domainPart = v.slice(at + 1);
+  if (!local) return [];
+
+  const typedDomain = domainPart.toLowerCase();
+  const matches =
+    typedDomain.length === 0
+      ? domains
+      : domains.filter((d) => d.startsWith(typedDomain));
+
+  return matches.slice(0, limit).map((d) => `${local}@${d}`);
+};
+
 const mergeRefs = (a, b) => (node) => {
   if (typeof a === "function") a(node);
   else if (a) a.current = node;
@@ -69,7 +85,7 @@ export default forwardRef(function EmailAutocompleteInput(
   ref,
 ) {
   const innerRef = useRef(null);
-  const pendingSelectionRef = useRef(null);
+  const datalistId = useId();
 
   const normalizedDomains = useMemo(() => {
     const list = Array.isArray(domains) ? domains : DEFAULT_DOMAINS;
@@ -78,40 +94,16 @@ export default forwardRef(function EmailAutocompleteInput(
       .filter(Boolean);
   }, [domains]);
 
-  useEffect(() => {
-    const sel = pendingSelectionRef.current;
-    if (!sel) return;
-    const el = innerRef.current;
-    if (!el) return;
-    try {
-      el.setSelectionRange(sel.start, sel.end);
-    } catch {
-      // ignore
-    }
-    pendingSelectionRef.current = null;
-  }, [value]);
+  const suggestions = useMemo(
+    () => getSuggestions(value, normalizedDomains),
+    [normalizedDomains, value],
+  );
 
   const handleChange = useCallback(
     (e) => {
-      const nextRaw = e.target.value;
-      const inputType = e?.nativeEvent?.inputType || "";
-      const cursor = e.target.selectionStart ?? nextRaw.length;
-
-      if (shouldSkipAutocomplete(inputType)) {
-        onValueChange?.(nextRaw);
-        return;
-      }
-
-      const completed = getCompletion(nextRaw, normalizedDomains);
-      if (!completed) {
-        onValueChange?.(nextRaw);
-        return;
-      }
-
-      pendingSelectionRef.current = { start: cursor, end: completed.length };
-      onValueChange?.(completed);
+      onValueChange?.(e.target.value);
     },
-    [normalizedDomains, onValueChange],
+    [onValueChange],
   );
 
   const handleKeyDown = useCallback(
@@ -133,28 +125,36 @@ export default forwardRef(function EmailAutocompleteInput(
       }
 
       onValueChange?.(completed);
-      pendingSelectionRef.current = { start: completed.length, end: completed.length };
     },
     [normalizedDomains, onKeyDown, onValueChange],
   );
 
   return (
-    <input
-      {...props}
-      ref={mergeRefs(ref, innerRef)}
-      name={name}
-      type="email"
-      inputMode={inputMode}
-      autoComplete={autoComplete}
-      value={value}
-      onChange={handleChange}
-      onBlur={onBlur}
-      onFocus={onFocus}
-      onKeyDown={handleKeyDown}
-      spellCheck={false}
-      autoCapitalize="none"
-      autoCorrect="off"
-    />
+    <>
+      <input
+        {...props}
+        ref={mergeRefs(ref, innerRef)}
+        name={name}
+        type="email"
+        inputMode={inputMode}
+        autoComplete={autoComplete}
+        list={suggestions.length ? datalistId : undefined}
+        value={value}
+        onChange={handleChange}
+        onBlur={onBlur}
+        onFocus={onFocus}
+        onKeyDown={handleKeyDown}
+        spellCheck={false}
+        autoCapitalize="none"
+        autoCorrect="off"
+      />
+      {suggestions.length > 0 && (
+        <datalist id={datalistId}>
+          {suggestions.map((s) => (
+            <option key={s} value={s} />
+          ))}
+        </datalist>
+      )}
+    </>
   );
 });
-

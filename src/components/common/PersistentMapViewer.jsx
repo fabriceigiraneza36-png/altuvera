@@ -545,7 +545,6 @@ const PersistentMapViewer = () => {
         animate={{
           opacity: 1,
           scale: 1,
-          y: 0,
           width: isFullView ? "min(1000px, 90vw)" : `${compactWidth}px`,
           left: isFullView ? "50%" : `${position.x}px`,
           top: isFullView ? "50%" : `${position.y}px`,

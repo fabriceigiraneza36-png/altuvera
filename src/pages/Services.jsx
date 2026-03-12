@@ -267,51 +267,6 @@ const CTA_ROTATING_TEXTS = [
 // HOOKS
 // ============================================================================
 
-const useMediaQuery = (query) => {
-  const [matches, setMatches] = useState(() => {
-    if (typeof window !== "undefined") {
-      return window.matchMedia(query).matches;
-    }
-    return false;
-  });
-
-  useEffect(() => {
-    if (typeof window === "undefined") return undefined;
-    const media = window.matchMedia(query);
-    const listener = (e) => setMatches(e.matches);
-    media.addEventListener("change", listener);
-    setMatches(media.matches);
-    return () => media.removeEventListener("change", listener);
-  }, [query]);
-
-  return matches;
-};
-
-const useScrollProgress = () => {
-  const [progress, setProgress] = useState(0);
-  const rafRef = useRef(null);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-      rafRef.current = requestAnimationFrame(() => {
-        const totalHeight =
-          document.documentElement.scrollHeight - window.innerHeight;
-        if (totalHeight > 0) {
-          setProgress((window.scrollY / totalHeight) * 100);
-        }
-      });
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, []);
-
-  return progress;
-};
-
 const useKeyboardClose = (onClose) => {
   useEffect(() => {
     const handler = (e) => {

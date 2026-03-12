@@ -847,7 +847,13 @@ const FormInput = memo(
           )}
         </label>
 
-        <div style={{ position: "relative" }}>
+        <motion.div
+          style={{ position: "relative" }}
+          animate={{
+            x: hasError ? [0, -4, 4, -4, 4, 0] : 0,
+          }}
+          transition={{ duration: 0.35 }}
+        >
           {type === "email" ? (
             <EmailAutocompleteInput
               name={name}
@@ -934,10 +940,6 @@ const FormInput = memo(
                     ? "0 0 0 4px rgba(239, 68, 68, 0.08)"
                     : "none",
               }}
-              animate={{
-                x: hasError ? [0, -4, 4, -4, 4, 0] : 0,
-              }}
-              transition={{ duration: 0.35 }}
               {...props}
             />
           )}
@@ -959,7 +961,7 @@ const FormInput = memo(
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </motion.div>
 
         <AnimatePresence>
           {hasError && (

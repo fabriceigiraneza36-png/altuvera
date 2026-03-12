@@ -99,7 +99,7 @@
 
 /* Modal Container */
 .auth-modal {
-  width: min(900px, 96%);
+  width: min(1040px, 96%);
   min-height: 600px;
   max-height: 92vh;
   background: white;
@@ -116,13 +116,13 @@
 }
 
 .auth-side-panel {
-  flex: 1.1;
+  flex: 1.25;
   position: relative;
   background: #022c22;
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 48px;
+  padding: 56px;
   color: white;
   overflow: hidden;
 }
@@ -138,7 +138,8 @@
   background-image: url('https://images.unsplash.com/photo-1547471080-7cc2032047ed?auto=format&fit=crop&w=800');
   background-size: cover;
   background-position: center;
-  opacity: 0.6;
+  opacity: 0.66;
+  filter: saturate(1.05) contrast(1.05);
   transition: transform 10s linear;
 }
 
@@ -149,7 +150,9 @@
 .auth-side-overlay {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, #022c22 0%, transparent 60%);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(16, 185, 129, 0.22), transparent 45%),
+    linear-gradient(to top, rgba(2,44,34,0.98) 0%, rgba(2,44,34,0.15) 60%, rgba(2,44,34,0.04) 100%);
   z-index: 1;
 }
 
@@ -163,13 +166,60 @@
   font-size: 2.2rem;
   margin-bottom: 16px;
   line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 .auth-side-text {
   font-size: 0.95rem;
   opacity: 0.85;
   line-height: 1.6;
+  max-width: 34ch;
 }
+
+/* Distinct animations for login vs signup */
+@keyframes authHeaderInLeft {
+  from { opacity: 0; transform: translateX(-10px) translateY(-4px); }
+  to { opacity: 1; transform: translateX(0) translateY(0); }
+}
+@keyframes authHeaderInRight {
+  from { opacity: 0; transform: translateX(10px) translateY(-4px); }
+  to { opacity: 1; transform: translateX(0) translateY(0); }
+}
+@keyframes authFieldInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes authFieldInDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.auth-view--login .auth-view-header{
+  animation: authHeaderInLeft 420ms var(--auth-ease-out) both;
+}
+.auth-view--register .auth-view-header{
+  animation: authHeaderInRight 420ms var(--auth-ease-out) both;
+}
+
+.auth-view--login .auth-field,
+.auth-view--login .auth-checkbox-label,
+.auth-view--login .auth-btn{
+  animation: authFieldInUp 460ms var(--auth-ease-out) both;
+}
+.auth-view--register .auth-field,
+.auth-view--register .auth-checkbox-label,
+.auth-view--register .auth-btn{
+  animation: authFieldInDown 460ms var(--auth-ease-out) both;
+}
+
+.auth-view--login .auth-field:nth-of-type(1){animation-delay:70ms}
+.auth-view--login .auth-field:nth-of-type(2){animation-delay:120ms}
+.auth-view--login .auth-field:nth-of-type(3){animation-delay:170ms}
+.auth-view--login .auth-field:nth-of-type(4){animation-delay:220ms}
+.auth-view--register .auth-field:nth-of-type(1){animation-delay:70ms}
+.auth-view--register .auth-field:nth-of-type(2){animation-delay:120ms}
+.auth-view--register .auth-field:nth-of-type(3){animation-delay:170ms}
+.auth-view--register .auth-field:nth-of-type(4){animation-delay:220ms}
 
 .auth-main-panel {
   flex: 1;
