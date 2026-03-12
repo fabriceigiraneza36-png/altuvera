@@ -258,6 +258,14 @@
   font-family: "Playfair Display", Georgia, serif;
   position: relative;
   z-index: 1;
+  overflow: hidden;
+}
+
+.auth-brand-icon-img {
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.18));
 }
 
 .auth-brand-glow {

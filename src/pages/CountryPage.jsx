@@ -3226,7 +3226,7 @@ const CountryPage = () => {
     retry,
   } = useCountryInsights(country);
   const td = useMemo(
-    () => DATA[countryId] || getFB(country),
+    () => DATA?.countries?.[countryId] || getFB(country),
     [countryId, country],
   );
   const officialLink = useMemo(() => getOfficialLink(countryId), [countryId]);

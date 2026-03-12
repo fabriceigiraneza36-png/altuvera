@@ -13,6 +13,10 @@ const AnimatedSection = ({
   ...props
 }) => {
   const [ref, isVisible] = useScrollAnimation(threshold);
+  const reduceMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const animations = {
     fadeInUp: {
@@ -94,9 +98,13 @@ const AnimatedSection = ({
 
   const animatedStyle = {
     ...style,
-    ...(isVisible ? currentAnimation.animate : currentAnimation.initial),
-    transition: `all ${duration}s cubic-bezier(0.4, 0, 0.2, 1) ${delay}s`,
-    willChange: "opacity, transform",
+    ...((reduceMotion || isVisible)
+      ? currentAnimation.animate
+      : currentAnimation.initial),
+    transition: reduceMotion
+      ? "none"
+      : `opacity ${duration}s cubic-bezier(0.4, 0, 0.2, 1) ${delay}s, transform ${duration}s cubic-bezier(0.4, 0, 0.2, 1) ${delay}s, filter ${duration}s cubic-bezier(0.4, 0, 0.2, 1) ${delay}s, clip-path ${duration}s cubic-bezier(0.4, 0, 0.2, 1) ${delay}s`,
+    willChange: reduceMotion ? "auto" : "opacity, transform, filter, clip-path",
   };
 
   return (

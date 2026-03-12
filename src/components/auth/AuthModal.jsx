@@ -32,6 +32,7 @@ import {
 import { FiGithub } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { useUserAuth } from "../../context/UserAuthContext";
+import logoimg from "../../assets/altuvera.png";
 import "./AuthModal.css";
 
 // ============================================================================
@@ -840,9 +841,15 @@ export default function AuthModal() {
           <header className="auth-modal-header">
             <div className="auth-modal-brand">
               <div className="auth-brand-logo">
-                <span className="auth-brand-icon" aria-hidden="true">
-                  A
-                </span>
+                <div className="auth-brand-icon">
+                  <img
+                    src={logoimg}
+                    alt="Altuvera"
+                    className="auth-brand-icon-img"
+                    loading="eager"
+                    decoding="async"
+                  />
+                </div>
                 <div className="auth-brand-glow" aria-hidden="true" />
               </div>
               <div className="auth-brand-info">
@@ -1759,5 +1766,6 @@ export default function AuthModal() {
         </footer>
       </div>
     </div>
+  </div>
   );
 }

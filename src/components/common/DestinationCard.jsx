@@ -701,13 +701,15 @@ const DestinationCard = ({ destination, index = 0, variant = "default" }) => {
   const styles = {
     card: {
       position: "relative",
-      background: "#FFFFFF",
+      background: "var(--ui-surface, #FFFFFF)",
       borderRadius: isMobile ? "20px" : "24px",
       overflow: "hidden",
       boxShadow: isHovered
-        ? "0 25px 50px -12px rgba(5, 150, 105, 0.25), 0 0 0 1px rgba(5, 150, 105, 0.1)"
-        : "0 10px 40px -15px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.03)",
-      transition: "all 0.5s cubic-bezier(0.16, 1, 0.3, 1)",
+        ? "var(--ui-shadow-lg, 0 26px 70px rgba(2, 44, 34, 0.16))"
+        : "var(--ui-shadow-md, 0 10px 30px rgba(2, 44, 34, 0.12))",
+      border: "1px solid var(--ui-border, rgba(2, 44, 34, 0.12))",
+      transition:
+        "transform 500ms var(--ui-ease-out, cubic-bezier(0.22, 1, 0.36, 1)), box-shadow 500ms var(--ui-ease-out, cubic-bezier(0.22, 1, 0.36, 1))",
       transform: isHovered && !isMobile ? "translateY(-8px)" : "translateY(0)",
       display: "flex",
       flexDirection: "column",

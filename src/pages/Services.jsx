@@ -18,6 +18,7 @@ import {
   FiClock,
   FiStar,
   FiX,
+  FiChevronLeft,
   FiChevronRight,
   FiPhone,
   FiMail,
@@ -644,6 +645,19 @@ SectionHeader.displayName = "SectionHeader";
 
 const ServiceCard = React.memo(({ service, index, onClick, isMobile }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const images = useMemo(() => {
+    const gallery =
+      Array.isArray(service.gallery) && service.gallery.length > 0
+        ? service.gallery
+        : null;
+    const fallback =
+      Array.isArray(service.images) && service.images.length > 0
+        ? service.images
+        : null;
+    return gallery || fallback || [service.image];
+  }, [service.gallery, service.images, service.image]);
+
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [imageLoaded, setImageLoaded] = useState(false);
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-60px" });
@@ -657,6 +671,13 @@ const ServiceCard = React.memo(({ service, index, onClick, isMobile }) => {
   );
 
   const activeIdx = useRotatingIndex(rotatingFeatures.length, 3500);
+  const slideIdx = useRotatingIndex(images.length, 4200);
+
+  useEffect(() => {
+    if (images.length <= 1) return;
+    setImageLoaded(false);
+    setActiveImageIndex(slideIdx);
+  }, [images.length, slideIdx]);
 
   const handleKeyDown = useCallback(
     (e) => {
@@ -705,21 +726,30 @@ const ServiceCard = React.memo(({ service, index, onClick, isMobile }) => {
         }}
       >
         {!imageLoaded && <ImageSkeleton />}
-        <img
-          src={service.image}
-          alt=""
-          role="presentation"
-          loading={index > 2 ? "lazy" : "eager"}
-          onLoad={() => setImageLoaded(true)}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            transition: `transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity ${THEME.transitions.base}`,
-            transform: isHovered ? "scale(1.06)" : "scale(1)",
-            opacity: imageLoaded ? 1 : 0,
-          }}
-        />
+        <AnimatePresence mode="wait">
+          <motion.img
+            key={`${service.id}-${activeImageIndex}`}
+            src={images[activeImageIndex]}
+            alt=""
+            role="presentation"
+            loading={index > 2 ? "lazy" : "eager"}
+            onLoad={() => setImageLoaded(true)}
+            initial={{ opacity: 0, scale: 1.06 }}
+            animate={{ opacity: imageLoaded ? 1 : 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 1.01 }}
+            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              transform: isHovered ? "scale(1.04)" : "scale(1)",
+              transition: `transform 800ms ${THEME.transitions.smooth}`,
+              opacity: imageLoaded ? 1 : 0,
+            }}
+          />
+        </AnimatePresence>
         <div
           style={{
             position: "absolute",
@@ -727,6 +757,112 @@ const ServiceCard = React.memo(({ service, index, onClick, isMobile }) => {
             background: `linear-gradient(180deg, transparent 40%, ${THEME.colors.primary[950]}80 100%)`,
           }}
         />
+
+        {/* Slideshow controls */}
+        {images.length > 1 && (
+          <>
+            <button
+              type="button"
+              aria-label="Previous image"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setImageLoaded(false);
+                setActiveImageIndex(
+                  (prev) => (prev - 1 + images.length) % images.length,
+                );
+              }}
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "12px",
+                transform: "translateY(-50%)",
+                width: "40px",
+                height: "40px",
+                borderRadius: "50%",
+                border: "1px solid rgba(255,255,255,0.22)",
+                background: "rgba(255,255,255,0.14)",
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
+                color: THEME.colors.white,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                opacity: isHovered && !isMobile ? 1 : 0,
+                pointerEvents: isHovered && !isMobile ? "auto" : "none",
+                transition: `opacity ${THEME.transitions.base}`,
+                zIndex: 4,
+              }}
+            >
+              <FiChevronLeft size={18} />
+            </button>
+            <button
+              type="button"
+              aria-label="Next image"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setImageLoaded(false);
+                setActiveImageIndex((prev) => (prev + 1) % images.length);
+              }}
+              style={{
+                position: "absolute",
+                top: "50%",
+                right: "12px",
+                transform: "translateY(-50%)",
+                width: "40px",
+                height: "40px",
+                borderRadius: "50%",
+                border: "1px solid rgba(255,255,255,0.22)",
+                background: "rgba(255,255,255,0.14)",
+                backdropFilter: "blur(10px)",
+                WebkitBackdropFilter: "blur(10px)",
+                color: THEME.colors.white,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                cursor: "pointer",
+                opacity: isHovered && !isMobile ? 1 : 0,
+                pointerEvents: isHovered && !isMobile ? "auto" : "none",
+                transition: `opacity ${THEME.transitions.base}`,
+                zIndex: 4,
+              }}
+            >
+              <FiChevronRight size={18} />
+            </button>
+
+            <div
+              aria-label="Image position"
+              style={{
+                position: "absolute",
+                left: "14px",
+                bottom: "14px",
+                display: "flex",
+                gap: "6px",
+                zIndex: 4,
+              }}
+            >
+              {images.slice(0, 6).map((_, i) => {
+                const isActive = i === activeImageIndex;
+                return (
+                  <span
+                    key={i}
+                    style={{
+                      width: isActive ? "22px" : "8px",
+                      height: "8px",
+                      borderRadius: "999px",
+                      background: isActive
+                        ? "rgba(255,255,255,0.92)"
+                        : "rgba(255,255,255,0.44)",
+                      transition: `all ${THEME.transitions.base}`,
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </>
+        )}
         <span
           style={{
             position: "absolute",

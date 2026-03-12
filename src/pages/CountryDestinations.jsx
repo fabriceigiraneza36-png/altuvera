@@ -323,19 +323,19 @@ const DestinationCard = ({
   const styles = {
     card: {
       width: '100%',
-      background: 'rgba(255, 255, 255, 0.95)',
+      background: 'var(--ui-surface, rgba(255, 255, 255, 0.95))',
       backdropFilter: 'blur(20px)',
       borderRadius: viewMode === 'list' ? '24px' : '28px',
       overflow: 'hidden',
       boxShadow: isHovered 
-        ? '0 35px 80px rgba(0, 128, 0, 0.25)' 
-        : '0 25px 60px rgba(0, 128, 0, 0.12)',
-      transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+        ? 'var(--ui-shadow-lg, 0 26px 70px rgba(2, 44, 34, 0.16))' 
+        : 'var(--ui-shadow-md, 0 10px 30px rgba(2, 44, 34, 0.12))',
+      border: '1px solid var(--ui-border, rgba(2, 44, 34, 0.12))',
+      transition: 'transform 0.55s var(--ui-ease-out, cubic-bezier(0.22, 1, 0.36, 1)), box-shadow 0.55s var(--ui-ease-out, cubic-bezier(0.22, 1, 0.36, 1))',
       transform: isHovered ? 'translateY(-12px) scale(1.01)' : 'translateY(0) scale(1)',
       position: 'relative',
       display: viewMode === 'list' ? 'flex' : 'block',
       cursor: 'pointer',
-      border: '1px solid rgba(67, 160, 71, 0.1)',
     },
     imageContainer: {
       position: 'relative',
@@ -1918,14 +1918,21 @@ const CountryDestinations = () => {
               ) : filteredDestinations.length > 0 ? (
                 <div style={styles.grid}>
                   {filteredDestinations.map((destination, index) => (
-                    <DestinationCard
+                    <AnimatedSection
                       key={destination.id}
-                      destination={destination}
-                      index={index}
-                      viewMode={viewMode}
-                      favorites={favorites}
-                      onToggleFavorite={toggleFavorite}
-                    />
+                      animation="perspectiveIn"
+                      delay={Math.min(0.35, index * 0.04)}
+                      duration={0.65}
+                      style={{ height: "100%" }}
+                    >
+                      <DestinationCard
+                        destination={destination}
+                        index={index}
+                        viewMode={viewMode}
+                        favorites={favorites}
+                        onToggleFavorite={toggleFavorite}
+                      />
+                    </AnimatedSection>
                   ))}
                 </div>
               ) : (
