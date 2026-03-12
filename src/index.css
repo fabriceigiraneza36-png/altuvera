@@ -1,130 +1,301 @@
-* {
+/* ═══════════════════════════════════════════════════════════════════
+   Altuvera – Global Stylesheet
+   • Reset & CSS custom properties
+   • Scroll animation utilities  (data-animate attribute system)
+   • Responsive helpers
+   • Keyframes
+   • Component utilities
+═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Reset ──────────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
+/* ─── Design tokens ──────────────────────────────────────────────── */
 :root {
-  --ui-primary: #059669;
-  --ui-primary-2: #10b981;
-  --ui-ink: #0f172a;
-  --ui-ink-muted: #475569;
-  --ui-surface: #ffffff;
-  --ui-surface-2: #f0fdf4;
-  --ui-border: rgba(2, 44, 34, 0.12);
-  --ui-shadow-sm: 0 1px 2px rgba(2, 44, 34, 0.06);
-  --ui-shadow-md: 0 10px 30px rgba(2, 44, 34, 0.12);
-  --ui-shadow-lg: 0 26px 70px rgba(2, 44, 34, 0.16);
+  /* Brand */
+  --clr-primary: #059669;
+  --clr-primary-2: #10b981;
+  --clr-primary-3: #34d399;
+  --clr-primary-dark: #047857;
+  --clr-accent: #f59e0b;
+
+  /* Ink */
+  --clr-ink: #0f172a;
+  --clr-ink-muted: #475569;
+  --clr-ink-faint: #94a3b8;
+
+  /* Surface */
+  --clr-surface: #ffffff;
+  --clr-surface-2: #f0fdf4;
+  --clr-surface-3: #f8fafc;
+  --clr-border: rgba(2, 44, 34, 0.1);
+
+  /* Shadows */
+  --shadow-xs: 0 1px 3px rgba(2, 44, 34, 0.06);
+  --shadow-sm: 0 4px 12px rgba(2, 44, 34, 0.08);
+  --shadow-md: 0 10px 30px rgba(2, 44, 34, 0.12);
+  --shadow-lg: 0 24px 56px rgba(2, 44, 34, 0.15);
+  --shadow-xl: 0 40px 80px rgba(2, 44, 34, 0.18);
+
+  /* Keep legacy aliases so existing components don't break */
+  --ui-primary: var(--clr-primary);
+  --ui-primary-2: var(--clr-primary-2);
+  --ui-ink: var(--clr-ink);
+  --ui-ink-muted: var(--clr-ink-muted);
+  --ui-surface: var(--clr-surface);
+  --ui-surface-2: var(--clr-surface-2);
+  --ui-border: var(--clr-border);
+  --ui-shadow-sm: var(--shadow-xs);
+  --ui-shadow-md: var(--shadow-md);
+  --ui-shadow-lg: var(--shadow-lg);
   --ui-radius-md: 14px;
   --ui-radius-lg: 20px;
   --ui-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Scroll-animation timing */
+  --anim-dur: 0.65s;
+  --anim-ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+/* ─── Base ───────────────────────────────────────────────────────── */
 html {
   scroll-behavior: smooth;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
+  -webkit-text-size-adjust: 100%;
+  font-size: 16px;
 }
 
 body {
-  font-family: "Poppins", sans-serif;
-  background-color: #ffffff;
-  color: #1a1a1a;
+  font-family:
+    "Poppins",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  background-color: var(--clr-surface);
+  color: var(--clr-ink);
   line-height: 1.6;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 ::selection {
-  background-color: #059669;
-  color: white;
+  background-color: var(--clr-primary);
+  color: #fff;
 }
 
+img,
+video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────── */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 9px;
 }
-
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: #f1f5f9;
 }
-
 ::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, #059669, #10b981);
   border-radius: 5px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #047857, #059669);
 }
 
+/* ═══════════════════════════════════════════════════════════════════
+   SCROLL ANIMATION SYSTEM
+   Usage: add  data-animate="fadeInUp"  (or other value below)
+   and optionally  data-delay="200"  (ms) on any element.
+   The IntersectionObserver in useScrollAnimation picks it up,
+   but if you want pure-CSS fallback use this system instead.
+
+   Apply the class  .animate-on-scroll  to any wrapper and the
+   children become animated as they enter the viewport.
+
+   Individual element approach: add class from the list below
+   to element + class  .scroll-hidden  and then JS adds
+   .scroll-visible  when in view. (AnimatedSection handles this.)
+═══════════════════════════════════════════════════════════════════ */
+
+/* Hidden state – all scroll-animated elements start here */
+[data-animate] {
+  opacity: 0;
+  will-change: opacity, transform, filter;
+  transition:
+    opacity var(--anim-dur) var(--anim-ease),
+    transform var(--anim-dur) var(--anim-ease),
+    filter var(--anim-dur) var(--anim-ease);
+}
+[data-animate="fadeInUp"] {
+  transform: translateY(40px);
+}
+[data-animate="fadeInDown"] {
+  transform: translateY(-40px);
+}
+[data-animate="fadeInLeft"] {
+  transform: translateX(-50px);
+}
+[data-animate="fadeInRight"] {
+  transform: translateX(50px);
+}
+[data-animate="scaleIn"] {
+  transform: scale(0.88);
+}
+[data-animate="zoomIn"] {
+  transform: scale(0.78);
+  filter: blur(6px);
+}
+[data-animate="slideReveal"] {
+  transform: skewY(3deg) translateY(36px);
+}
+[data-animate="flipIn"] {
+  transform: perspective(900px) rotateY(-18deg) scale(1.04);
+}
+[data-animate="blurIn"] {
+  transform: scale(1.1);
+  filter: blur(18px);
+}
+[data-animate="fadeIn"] {
+  /* opacity already 0 */
+}
+
+/* Visible state – added by IntersectionObserver / AnimatedSection */
+[data-animate].is-visible {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+
+/* Delay helpers (add data-delay or class) */
+.anim-delay-100 {
+  transition-delay: 0.1s !important;
+}
+.anim-delay-150 {
+  transition-delay: 0.15s !important;
+}
+.anim-delay-200 {
+  transition-delay: 0.2s !important;
+}
+.anim-delay-300 {
+  transition-delay: 0.3s !important;
+}
+.anim-delay-400 {
+  transition-delay: 0.4s !important;
+}
+.anim-delay-500 {
+  transition-delay: 0.5s !important;
+}
+.anim-delay-600 {
+  transition-delay: 0.6s !important;
+}
+.anim-delay-700 {
+  transition-delay: 0.7s !important;
+}
+.anim-delay-800 {
+  transition-delay: 0.8s !important;
+}
+
+/* Staggered children: parent gets .stagger-children,
+   each child is staggered automatically via nth-child */
+.stagger-children > [data-animate]:nth-child(1) {
+  transition-delay: 0.05s;
+}
+.stagger-children > [data-animate]:nth-child(2) {
+  transition-delay: 0.12s;
+}
+.stagger-children > [data-animate]:nth-child(3) {
+  transition-delay: 0.19s;
+}
+.stagger-children > [data-animate]:nth-child(4) {
+  transition-delay: 0.26s;
+}
+.stagger-children > [data-animate]:nth-child(5) {
+  transition-delay: 0.33s;
+}
+.stagger-children > [data-animate]:nth-child(6) {
+  transition-delay: 0.4s;
+}
+.stagger-children > [data-animate]:nth-child(7) {
+  transition-delay: 0.47s;
+}
+.stagger-children > [data-animate]:nth-child(8) {
+  transition-delay: 0.54s;
+}
+.stagger-children > [data-animate]:nth-child(n + 9) {
+  transition-delay: 0.6s;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   KEYFRAMES
+═══════════════════════════════════════════════════════════════════ */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(32px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
-
 @keyframes fadeInDown {
   from {
     opacity: 0;
-    transform: translateY(-30px);
+    transform: translateY(-32px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
-
 @keyframes fadeInLeft {
   from {
     opacity: 0;
-    transform: translateX(-30px);
+    transform: translateX(-40px);
   }
   to {
     opacity: 1;
     transform: translateX(0);
   }
 }
-
 @keyframes fadeInRight {
   from {
     opacity: 0;
-    transform: translateX(30px);
+    transform: translateX(40px);
   }
   to {
     opacity: 1;
     transform: translateX(0);
   }
 }
-
 @keyframes scaleIn {
   from {
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.88);
   }
   to {
     opacity: 1;
     transform: scale(1);
   }
 }
-
 @keyframes float {
   0%,
   100% {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-20px);
+    transform: translateY(-18px);
   }
 }
-
 @keyframes pulse {
   0%,
   100% {
@@ -134,7 +305,6 @@ body {
     opacity: 0.5;
   }
 }
-
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -143,7 +313,6 @@ body {
     background-position: 200% 0;
   }
 }
-
 @keyframes rotate {
   from {
     transform: rotate(0deg);
@@ -152,7 +321,6 @@ body {
     transform: rotate(360deg);
   }
 }
-
 @keyframes wave {
   0%,
   100% {
@@ -168,8 +336,118 @@ body {
     transform: translateX(-10px) translateY(-10px);
   }
 }
+@keyframes gradientSlide {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
 
-/* Service icon hover: hide icon by default, reveal on card hover */
+/* ═══════════════════════════════════════════════════════════════════
+   RESPONSIVE HELPERS
+═══════════════════════════════════════════════════════════════════ */
+
+/* Fluid container */
+.container {
+  width: 100%;
+  max-width: 1280px;
+  margin-inline: auto;
+  padding-inline: clamp(16px, 4vw, 64px);
+}
+
+/* Responsive grid system */
+.grid-auto {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: clamp(16px, 2.5vw, 32px);
+}
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(16px, 2.5vw, 32px);
+}
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(16px, 2.5vw, 32px);
+}
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: clamp(12px, 2vw, 28px);
+}
+
+@media (max-width: 1100px) {
+  .grid-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 860px) {
+  .grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 600px) {
+  .grid-4,
+  .grid-3,
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Fluid section spacing */
+.section {
+  padding-block: clamp(56px, 10vw, 120px);
+}
+.section--sm {
+  padding-block: clamp(32px, 6vw, 72px);
+}
+
+/* Fluid typography */
+.text-hero {
+  font-size: clamp(2rem, 5vw + 0.5rem, 4rem);
+  font-family: "Playfair Display", serif;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+.text-heading {
+  font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+  font-family: "Playfair Display", serif;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+.text-subheading {
+  font-size: clamp(1rem, 2vw, 1.3rem);
+  font-weight: 500;
+  color: var(--clr-ink-muted);
+  line-height: 1.6;
+}
+
+/* Hide-on breakpoints */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+@media (min-width: 769px) {
+  .hide-desktop {
+    display: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SERVICE CARD – icon reveal on hover
+═══════════════════════════════════════════════════════════════════ */
 .service-card .service-icon {
   opacity: 0;
   transform: translateY(8px);
@@ -181,7 +459,30 @@ body {
   opacity: 1;
   transform: translateY(0);
 }
-
 .service-card .service-icon img {
   display: block;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   REDUCED MOTION – respect OS preference
+═══════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  [data-animate] {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    transition: none !important;
+  }
 }

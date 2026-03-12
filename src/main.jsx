@@ -6,6 +6,7 @@ import { HelmetProvider } from "react-helmet-async";
 import App from "./App.jsx";
 import { AppProvider } from "./context/AppContext.jsx";
 import { UserAuthProvider } from "./context/UserAuthContext.jsx";
+import { initScrollObserver } from "./utils/scrollObserver.js";
 import "./index.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
@@ -24,5 +25,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         </AppProvider>
       </HelmetProvider>
     </BrowserRouter>
-  </React.StrictMode>
+  </React.StrictMode>,
 );
+
+// Activate global CSS scroll animation system
+initScrollObserver();
