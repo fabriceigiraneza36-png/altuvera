@@ -1,10 +1,22 @@
 // src/services/countryService.js
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+// Use proxy in dev (/api), full URL in production
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+
+// Determine the correct base URL based on environment
+const getBaseUrl = () => {
+  // In development, use the proxy (/api -> localhost:5000/api)
+  // In production, use the full URL
+  if (import.meta.env.DEV) {
+    return API_BASE;
+  }
+  return API_BASE_URL;
+};
 
 class CountryService {
   constructor() {
-    this.base = `${API_BASE}/countries`;
+    this.base = `${getBaseUrl()}/countries`;
     this.abortControllers = new Map();
   }
 

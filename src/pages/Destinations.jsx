@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from "react-router-dom";
 import { FiSearch } from 'react-icons/fi';
 import PageHeader from '../components/common/PageHeader';
 import AnimatedSection from '../components/common/AnimatedSection';
 import Button from '../components/common/Button';
 import { countries } from '../data/countries';
-import { getAllDestinations } from '../data/destinations';
 import DestinationCard from '../components/common/DestinationCard';
+import { useCountryDestinations, useDestinations } from "../hooks/useDestinations";
 
 const Destinations = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -32,17 +32,38 @@ const Destinations = () => {
     setSearchParams(next, { replace: true });
   }, [searchParams, searchQuery, setSearchParams]);
 
-  const allDestinations = getAllDestinations();
-  
-  const types = [...new Set(allDestinations.map(d => d.type))];
-  
-  const filteredDestinations = allDestinations.filter(dest => {
-    const matchesSearch = dest.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         dest.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCountry = selectedCountry === 'all' || dest.countryId === selectedCountry;
-    const matchesType = selectedType === 'all' || dest.type === selectedType;
-    return matchesSearch && matchesCountry && matchesType;
-  });
+  const {
+    destinations: allDestinations,
+    loading: allLoading,
+    error: allError,
+  } = useDestinations();
+  const {
+    destinations: countryDestinations,
+    loading: countryLoading,
+    error: countryError,
+  } = useCountryDestinations(selectedCountry !== "all" ? selectedCountry : "");
+
+  const activeDestinations =
+    selectedCountry === "all" ? allDestinations : countryDestinations;
+
+  const types = useMemo(
+    () => [...new Set(activeDestinations.map((d) => d.type).filter(Boolean))],
+    [activeDestinations]
+  );
+
+  const filteredDestinations = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    return activeDestinations.filter((dest) => {
+      const name = (dest.name || "").toLowerCase();
+      const description = (dest.description || "").toLowerCase();
+      const matchesSearch = name.includes(query) || description.includes(query);
+      const matchesType = selectedType === "all" || dest.type === selectedType;
+      return matchesSearch && matchesType;
+    });
+  }, [activeDestinations, searchQuery, selectedType]);
+
+  const loading = selectedCountry === "all" ? allLoading : countryLoading;
+  const error = selectedCountry === "all" ? allError : countryError;
 
   const styles = {
     section: {
@@ -213,7 +234,29 @@ const Destinations = () => {
             </div>
           </AnimatedSection>
 
-          {filteredDestinations.length > 0 ? (
+          {loading ? (
+            <AnimatedSection animation="fadeInUp">
+              <div style={styles.noResults} className="destinations-no-results">
+                <h3 style={styles.noResultsTitle}>Loading destinations...</h3>
+                <p style={styles.noResultsText}>
+                  Fetching the latest destinations from the server.
+                </p>
+              </div>
+            </AnimatedSection>
+          ) : error ? (
+            <AnimatedSection animation="fadeInUp">
+              <div style={styles.noResults} className="destinations-no-results">
+                <h3 style={styles.noResultsTitle}>Unable to load destinations</h3>
+                <p style={styles.noResultsText}>{error}</p>
+                <Button
+                  onClick={() => window.location.reload()}
+                  variant="primary"
+                >
+                  Retry
+                </Button>
+              </div>
+            </AnimatedSection>
+          ) : filteredDestinations.length > 0 ? (
             <div style={styles.grid} className="destinations-grid">
               {filteredDestinations.map((destination, index) => (
                 <DestinationCard 

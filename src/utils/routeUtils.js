@@ -298,6 +298,12 @@ export const getAllKnownRoutes = () => [
 
 // Route preloading helper
 export const preloadRoute = (pathname) => {
+  const runLoader = (loader) => {
+    if (typeof loader !== 'function') return null;
+    if (typeof loader.preload === 'function') return loader.preload();
+    return loader();
+  };
+
   // Map pathname to the component that needs to be loaded
   const routeToComponent = {
     '/': () => import('../pages/Home'),
@@ -329,7 +335,7 @@ export const preloadRoute = (pathname) => {
   if (normalizedPath.startsWith('/country/')) {
     const loader = routeToComponent['/destinations'];
     if (loader) {
-      loader.preload();
+      runLoader(loader);
     }
     return;
   }
@@ -338,7 +344,7 @@ export const preloadRoute = (pathname) => {
   if (normalizedPath.startsWith('/destination/')) {
     const loader = routeToComponent['/destinations'];
     if (loader) {
-      loader.preload();
+      runLoader(loader);
     }
     return;
   }
@@ -347,7 +353,7 @@ export const preloadRoute = (pathname) => {
   if (normalizedPath.startsWith('/post/')) {
     const loader = routeToComponent['/posts'];
     if (loader) {
-      loader.preload();
+      runLoader(loader);
     }
     return;
   }
@@ -355,6 +361,6 @@ export const preloadRoute = (pathname) => {
   // Check exact match or prefix match for country pages
   const loader = routeToComponent[normalizedPath];
   if (loader) {
-    loader.preload();
+    runLoader(loader);
   }
 };

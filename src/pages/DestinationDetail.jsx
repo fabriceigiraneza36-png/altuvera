@@ -18,11 +18,19 @@ import {
   FiMap, FiCompass, FiSunrise, FiSunset, FiPackage, FiHelpCircle,
   FiThumbsUp, FiCoffee, FiZap, FiEye, FiLoader, FiAlertTriangle,
   FiHome, FiExternalLink, FiCopy, FiCheckCircle, FiAlertCircle,
-  FiXCircle, FiPlay, FiPause, FiVolume2, FiVolumeX, FiRefreshCw,
+  FiXCircle, FiPlay, FiPause, FiVolume2, FiVolumeX, FiRefreshCw, FiLink,
   FiFilter, FiSearch, FiMoreHorizontal, FiEdit, FiTrash2,
   FiPlus, FiMinus, FiSettings, FiLogIn, FiUserPlus, FiAward,
   FiTrendingUp, FiActivity, FiBell, FiLock, FiUnlock
 } from "react-icons/fi";
+import {
+  FaWhatsapp,
+  FaFacebookF,
+  FaLinkedinIn,
+  FaPinterestP,
+  FaTelegramPlane,
+  FaTwitter,
+} from "react-icons/fa";
 import { useCountry } from "../hooks/useCountries";
 import { useCountryDestinations, useDestination } from "../hooks/useDestinations";
 import { useWishlist } from "../hooks/useWishlist";

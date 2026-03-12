@@ -311,7 +311,7 @@ function App() {
 
             {/* Smart Redirect - handles typos and incorrect URLs */}
             <Route
-              path="/:pathMatch(.*)*"
+              path="/:pathMatch(.*)/*"
               element={<SmartRedirect />}
             />
 

@@ -484,6 +484,9 @@ DotProgress.displayName = "DotProgress";
 // SECTION HEADER
 // ============================================================================
 
+const SplitText = React.memo(({ children }) => <>{children}</>);
+SplitText.displayName = "SplitText";
+
 const SectionHeader = React.memo(
   ({
     label,

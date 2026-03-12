@@ -20,6 +20,7 @@ import { useUserAuth } from "../../context/UserAuthContext";
 import logoimg from "../../assets/altuvera.png";
 import { getAllDestinations } from "../../data/destinations";
 import { preloadRoute } from "../../utils/routeUtils";
+import { useCountries } from "../../hooks/useCountries";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -43,6 +44,9 @@ const Navbar = () => {
   const { user, isAuthenticated, authLoading, openModal, logout } =
     useUserAuth();
 
+  // Fetch countries from backend API
+  const { countries: backendCountries } = useCountries({ featured: true });
+
   const headerRef = useRef(null);
   const userMenuRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -51,6 +55,32 @@ const Navbar = () => {
   const latestSearchRef = useRef("");
 
   const localDestinations = useMemo(() => getAllDestinations(), []);
+  
+  // Build destinations dropdown from backend with fallback to static
+  const destinationsDropdown = useMemo(() => {
+    const items = [{ name: "All Destinations", path: "/destinations" }];
+    
+    if (backendCountries && backendCountries.length > 0) {
+      backendCountries.forEach((country) => {
+        items.push({
+          name: country.name,
+          path: `/country/${country.slug || country.name.toLowerCase()}`
+        });
+      });
+    } else {
+      // Fallback to static list
+      items.push(
+        { name: "Kenya", path: "/country/kenya" },
+        { name: "Tanzania", path: "/country/tanzania" },
+        { name: "Uganda", path: "/country/uganda" },
+        { name: "Rwanda", path: "/country/rwanda" },
+        { name: "Ethiopia", path: "/country/ethiopia" },
+        { name: "Djibouti", path: "/country/djibouti" }
+      );
+    }
+    
+    return items;
+  }, [backendCountries]);
 
   const navLinks = useMemo(
     () => [
@@ -59,15 +89,7 @@ const Navbar = () => {
       {
         name: "Destinations",
         path: "/destinations",
-        dropdown: [
-          { name: "All Destinations", path: "/destinations" },
-          { name: "Kenya", path: "/country/kenya" },
-          { name: "Tanzania", path: "/country/tanzania" },
-          { name: "Uganda", path: "/country/uganda" },
-          { name: "Rwanda", path: "/country/rwanda" },
-          { name: "Ethiopia", path: "/country/ethiopia" },
-          { name: "Djibouti", path: "/country/djibouti" },
-        ],
+        dropdown: destinationsDropdown,
       },
       { name: "Interactive Map", path: "/interactive-map" },
       { name: "Tips", path: "/tips" },
@@ -83,7 +105,7 @@ const Navbar = () => {
       },
       { name: "Contact", path: "/contact" },
     ],
-    [],
+    [destinationsDropdown],
   );
 
   const userMenuItems = useMemo(
@@ -176,12 +198,12 @@ const Navbar = () => {
         const name = (d?.name || "").toLowerCase();
         const desc = (d?.description || "").toLowerCase();
         const country = (d?.country || "").toLowerCase();
-        const location = (d?.location || "").toLowerCase();
+        const loc = (d?.location || "").toLowerCase();
         return (
           name.includes(qLower) ||
           desc.includes(qLower) ||
           country.includes(qLower) ||
-          location.includes(qLower)
+          loc.includes(qLower)
         );
       })
       .sort((a, b) => {
@@ -788,7 +810,6 @@ const Navbar = () => {
   --fb:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
 }
 
-/* NAVBAR */
 .nav{
   position:fixed;
   top:0;
