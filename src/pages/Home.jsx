@@ -53,6 +53,7 @@ import Hero, { HERO_SLIDES } from "../components/home/Hero";
 import CountryGrid from "../components/home/CountriesAside";
 import AnimatedSection from "../components/common/AnimatedSection";
 import Button from "../components/common/Button";
+import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 import { useApp } from "../context/AppContext";
 import { testimonials } from "../data/testimonials";
 import { services } from "../data/services";
@@ -3056,11 +3057,10 @@ const Home = () => {
                   margin: "0 auto",
                 }}
               >
-                <input
-                  type="email"
+                <EmailAutocompleteInput
                   placeholder="Enter your email address"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onValueChange={setEmail}
                   required
                   style={{
                     flex: 1,

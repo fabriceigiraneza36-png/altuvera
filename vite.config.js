@@ -1,79 +1,105 @@
-import { defineConfig, splitVendorChunkPlugin } from "vite";
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [
     react({
-      // Use Babel's automatic JSX transform for smaller output
       babel: {
         plugins: [],
       },
     }),
-    splitVendorChunkPlugin(),
   ],
 
   server: {
     port: 5173,
     open: true,
+    strictPort: true,
+  },
+
+  preview: {
+    port: 5173,
+    strictPort: true,
   },
 
   build: {
     outDir: "dist",
-    sourcemap: false, // disable in prod for smaller bundles
     target: "esnext",
+    sourcemap: false,
     minify: "esbuild",
     cssMinify: true,
-    // Increase inline limit so small assets are inlined (saves requests)
+
+    // inline small assets to reduce requests
     assetsInlineLimit: 4096,
+
     rollupOptions: {
       output: {
-        // Fine-grained manual chunking – keeps route chunks small
         manualChunks(id) {
           if (id.includes("node_modules")) {
-            // Core React runtime
+
+            // React core
             if (
+              id.includes("react") ||
               id.includes("react-dom") ||
-              id.includes("react/") ||
               id.includes("react-router")
             ) {
               return "react-core";
             }
-            // Animation libraries
+
+            // animations
             if (id.includes("framer-motion")) {
-              return "framer-motion";
+              return "animations";
             }
-            // Map libraries
+
+            // maps
             if (id.includes("leaflet")) {
-              return "leaflet";
+              return "maps";
             }
-            // Icon libraries
+
+            // icons
             if (id.includes("react-icons")) {
               return "icons";
             }
-            // Everything else from node_modules
+
+            // other dependencies
             return "vendor";
           }
         },
-        // Use content-hash file names for long-lived cache headers
+
         chunkFileNames: "assets/js/[name]-[hash].js",
         entryFileNames: "assets/js/[name]-[hash].js",
-        assetFileNames: "assets/[ext]/[name]-[hash].[ext]",
+        assetFileNames: ({ name }) => {
+          if (!name) return "assets/[name]-[hash].[ext]";
+
+          if (/\.(png|jpe?g|svg|gif|webp|avif)$/.test(name)) {
+            return "assets/images/[name]-[hash][extname]";
+          }
+
+          if (/\.css$/.test(name)) {
+            return "assets/css/[name]-[hash][extname]";
+          }
+
+          return "assets/[name]-[hash][extname]";
+        },
       },
     },
-    // Report bundle size warnings at 500 kB
-    chunkSizeWarningLimit: 500,
+
+    chunkSizeWarningLimit: 800,
   },
 
-  // Optimise deps pre-bundling (speeds up cold-start in dev)
   optimizeDeps: {
     include: [
       "react",
       "react-dom",
       "react-router-dom",
       "framer-motion",
-      "react-icons/fi",
-      "react-icons/hi",
-      "react-icons/md",
+      "leaflet",
+      "react-icons",
     ],
+  },
+
+  resolve: {
+    alias: {
+      "@": "/src",
+    },
   },
 });

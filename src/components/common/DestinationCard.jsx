@@ -17,6 +17,7 @@ import {
 } from "react-icons/fi";
 import { MdOutlineEco } from "react-icons/md";
 import { useApp } from "../../context/AppContext";
+import { useWishlist } from "../../hooks/useWishlist";
 
 // ═══════════════════════════════════════════════════════════════
 // ULTRA DESTINATION CARD — Premium Travel Card Component
@@ -290,14 +291,14 @@ const RatingBadge = memo(({ rating, reviews }) => (
   </motion.div>
 ));
 
-// Like Button Component
-const LikeButton = memo(({ isLiked, likes, onToggle }) => {
+// Wishlist Button Component
+const WishlistButton = memo(({ active, onToggle }) => {
   const [isAnimating, setIsAnimating] = useState(false);
 
   const handleClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!isLiked) {
+    if (!active) {
       setIsAnimating(true);
       setTimeout(() => setIsAnimating(false), 800);
     }
@@ -314,20 +315,20 @@ const LikeButton = memo(({ isLiked, likes, onToggle }) => {
         alignItems: "center",
         gap: "6px",
         padding: "8px 14px",
-        background: isLiked ? "rgba(239, 68, 68, 0.08)" : "transparent",
-        border: `1px solid ${isLiked ? "rgba(239, 68, 68, 0.2)" : "#E5E7EB"}`,
+        background: active ? "rgba(239, 68, 68, 0.08)" : "transparent",
+        border: `1px solid ${active ? "rgba(239, 68, 68, 0.2)" : "#E5E7EB"}`,
         borderRadius: "100px",
         cursor: "pointer",
         transition: "all 0.3s ease",
       }}
-      aria-label={isLiked ? "Unlike destination" : "Like destination"}
-      aria-pressed={isLiked}
+      aria-label={active ? "Remove from wishlist" : "Add to wishlist"}
+      aria-pressed={active}
     >
       <FiHeart
         size={16}
         style={{
-          color: isLiked ? "#EF4444" : "#9CA3AF",
-          fill: isLiked ? "#EF4444" : "none",
+          color: active ? "#EF4444" : "#9CA3AF",
+          fill: active ? "#EF4444" : "none",
           animation: isAnimating ? "destCardHeartBeat 0.8s ease" : "none",
           transition: "all 0.3s ease",
         }}
@@ -336,11 +337,11 @@ const LikeButton = memo(({ isLiked, likes, onToggle }) => {
         style={{
           fontSize: "13px",
           fontWeight: 600,
-          color: isLiked ? "#EF4444" : "#6B7280",
-          minWidth: "32px",
+          color: active ? "#EF4444" : "#6B7280",
+          minWidth: "46px",
         }}
       >
-        {formatNumber(likes)}
+        {active ? "Saved" : "Save"}
       </span>
     </motion.button>
   );
@@ -572,8 +573,6 @@ const DestinationCard = ({ destination, index = 0, variant = "default" }) => {
   }, [destination]);
 
   const [current, setCurrent] = useState(0);
-  const [likes, setLikes] = useState(() => Math.floor(Math.random() * 500) + 150);
-  const [isLiked, setIsLiked] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -581,6 +580,12 @@ const DestinationCard = ({ destination, index = 0, variant = "default" }) => {
   const [touchStart, setTouchStart] = useState(null);
 
   const { playVideo, openMap } = useApp();
+  const { loadWishlist, toggleWishlist, isWishlisted } = useWishlist();
+  const destinationKey = useMemo(
+    () => destination?._id || destination?.id || destination?.slug,
+    [destination],
+  );
+  const wished = isWishlisted(destinationKey);
 
   // Responsive check
   useEffect(() => {
@@ -616,10 +621,13 @@ const DestinationCard = ({ destination, index = 0, variant = "default" }) => {
     [images.length]
   );
 
-  const toggleLike = useCallback(() => {
-    setIsLiked((prev) => !prev);
-    setLikes((prev) => (isLiked ? prev - 1 : prev + 1));
-  }, [isLiked]);
+  useEffect(() => {
+    loadWishlist();
+  }, [loadWishlist]);
+
+  const toggleWish = useCallback(() => {
+    toggleWishlist(destinationKey);
+  }, [destinationKey, toggleWishlist]);
 
   // Video data
   const tourismVideos = useMemo(
@@ -910,7 +918,7 @@ const DestinationCard = ({ destination, index = 0, variant = "default" }) => {
           >
             {destination.name}
           </h3>
-          <LikeButton isLiked={isLiked} likes={likes} onToggle={toggleLike} />
+          <WishlistButton active={wished} onToggle={toggleWish} />
         </div>
 
         {/* Stats Bar */}

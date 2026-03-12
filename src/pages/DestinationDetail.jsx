@@ -25,6 +25,7 @@ import {
 } from "react-icons/fi";
 import { useCountry } from "../hooks/useCountries";
 import { useCountryDestinations, useDestination } from "../hooks/useDestinations";
+import { useWishlist } from "../hooks/useWishlist";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DESIGN SYSTEM & THEME
@@ -2124,7 +2125,7 @@ const HeroSection = ({
   currentImageIndex,
   setCurrentImageIndex,
   isFavorite,
-  setIsFavorite,
+  onToggleFavorite,
   isBookmarked,
   setIsBookmarked,
   onShare,
@@ -2134,7 +2135,7 @@ const HeroSection = ({
   toast,
 }) => {
   const handleFavoriteClick = () => {
-    setIsFavorite(!isFavorite);
+    onToggleFavorite?.();
     toast[isFavorite ? 'info' : 'success'](
       isFavorite ? 'Removed from favorites' : 'Added to favorites!'
     );
@@ -4144,7 +4145,7 @@ const RelatedDestinations = ({ destinations, country, isMobile, isTablet }) => {
 };
 
 // Mobile CTA Component
-const MobileCTA = ({ destination, isFavorite, setIsFavorite, toast }) => (
+const MobileCTA = ({ destination, isFavorite, onToggleFavorite, toast }) => (
   <div
     className="no-print"
     style={{
@@ -4173,7 +4174,7 @@ const MobileCTA = ({ destination, isFavorite, setIsFavorite, toast }) => (
       <IconButton
         icon={<FiHeart size={20} style={{ fill: isFavorite ? 'currentColor' : 'none' }} />}
         onClick={() => {
-          setIsFavorite(!isFavorite);
+          onToggleFavorite?.();
           toast[isFavorite ? 'info' : 'success'](isFavorite ? 'Removed from favorites' : 'Added to favorites!');
         }}
         active={isFavorite}
@@ -4317,7 +4318,6 @@ const DestinationDetailContent = () => {
 
   // State
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isFavorite, setIsFavorite] = useLocalStorage(`favorite_${destinationId}`, false);
   const [isBookmarked, setIsBookmarked] = useLocalStorage(`bookmark_${destinationId}`, false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
@@ -4325,6 +4325,21 @@ const DestinationDetailContent = () => {
   const [selectedTip, setSelectedTip] = useState(0);
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [helpfulReviews, setHelpfulReviews] = useLocalStorage(`helpful_reviews_${destinationId}`, {});
+
+  const { loadWishlist, toggleWishlist, isWishlisted } = useWishlist();
+  const destinationKey = useMemo(
+    () => destination?._id || destination?.id || destinationId,
+    [destination, destinationId],
+  );
+  const isFavorite = isWishlisted(destinationKey);
+
+  useEffect(() => {
+    loadWishlist();
+  }, [loadWishlist]);
+
+  const handleToggleFavorite = useCallback(() => {
+    toggleWishlist(destinationKey);
+  }, [destinationKey, toggleWishlist]);
 
   // Keyboard shortcuts
   useKeyPress('Escape', () => {
@@ -4513,7 +4528,7 @@ const DestinationDetailContent = () => {
         currentImageIndex={currentImageIndex}
         setCurrentImageIndex={setCurrentImageIndex}
         isFavorite={isFavorite}
-        setIsFavorite={setIsFavorite}
+        onToggleFavorite={handleToggleFavorite}
         isBookmarked={isBookmarked}
         setIsBookmarked={setIsBookmarked}
         onShare={handleShare}
@@ -4626,7 +4641,7 @@ const DestinationDetailContent = () => {
         <MobileCTA
           destination={destination}
           isFavorite={isFavorite}
-          setIsFavorite={setIsFavorite}
+          onToggleFavorite={handleToggleFavorite}
           toast={toast}
         />
       )}

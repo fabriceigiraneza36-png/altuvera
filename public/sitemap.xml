@@ -4,124 +4,123 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
   <url>
-    <loc>https://www.altuvera.com/</loc>
+    <loc>https://altuvera.vercel.app/</loc>
     <lastmod>2025-01-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
     <image:image>
-      <image:loc>https://www.altuvera.com/images/og-image-safari.jpg</image:loc>
+      <image:loc>https://altuvera.vercel.app/images/og-image-safari.jpg</image:loc>
       <image:title>Altuvera East African Safari Tours</image:title>
     </image:image>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.altuvera.com/" />
-    <xhtml:link rel="alternate" hreflang="fr" href="https://www.altuvera.com/fr/" />
   </url>
 
   <url>
-    <loc>https://www.altuvera.com/safaris</loc>
+    <loc>https://altuvera.vercel.app/safaris</loc>
     <lastmod>2025-01-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://www.altuvera.com/safaris/maasai-mara-migration</loc>
+    <loc>https://altuvera.vercel.app/safaris/maasai-mara-migration</loc>
     <lastmod>2025-01-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://www.altuvera.com/images/maasai-mara-migration.jpg</image:loc>
+      <image:loc>https://altuvera.vercel.app/images/maasai-mara-migration.jpg</image:loc>
       <image:title>Maasai Mara Great Migration Safari</image:title>
     </image:image>
   </url>
 
   <url>
-    <loc>https://www.altuvera.com/safaris/uganda-gorilla-trekking</loc>
+    <loc>https://altuvera.vercel.app/safaris/uganda-gorilla-trekking</loc>
     <lastmod>2025-01-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.altuvera.com/safaris/serengeti-zanzibar</loc>
+    <loc>https://altuvera.vercel.app/safaris/serengeti-zanzibar</loc>
     <lastmod>2025-01-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.altuvera.com/cultural-tours</loc>
+    <loc>https://altuvera.vercel.app/cultural-tours</loc>
     <lastmod>2025-01-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.altuvera.com/gorilla-trekking</loc>
+    <loc>https://altuvera.vercel.app/gorilla-trekking</loc>
     <lastmod>2025-01-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.altuvera.com/destinations</loc>
+    <loc>https://altuvera.vercel.app/destinations</loc>
     <lastmod>2025-01-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.altuvera.com/destinations/kenya</loc>
+    <loc>https://altuvera.vercel.app/destinations/kenya</loc>
     <lastmod>2025-01-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.altuvera.com/destinations/tanzania</loc>
+    <loc>https://altuvera.vercel.app/destinations/tanzania</loc>
     <lastmod>2025-01-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.altuvera.com/destinations/uganda</loc>
+    <loc>https://altuvera.vercel.app/destinations/uganda</loc>
     <lastmod>2025-01-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.altuvera.com/destinations/rwanda</loc>
+    <loc>https://altuvera.vercel.app/destinations/rwanda</loc>
     <lastmod>2025-01-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.altuvera.com/destinations/ethiopia</loc>
+    <loc>https://altuvera.vercel.app/destinations/ethiopia</loc>
     <lastmod>2025-01-10</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.altuvera.com/about</loc>
+    <loc>https://altuvera.vercel.app/about</loc>
     <lastmod>2025-01-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://www.altuvera.com/contact</loc>
+    <loc>https://altuvera.vercel.app/contact</loc>
     <lastmod>2025-01-01</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://www.altuvera.com/blog</loc>
+    <loc>https://altuvera.vercel.app/blog</loc>
     <lastmod>2025-01-15</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
+
 </urlset>

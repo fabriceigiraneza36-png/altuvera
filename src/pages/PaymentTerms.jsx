@@ -54,6 +54,7 @@ import {
 import { FaWhatsapp } from "react-icons/fa";
 import PageHeader from "../components/common/PageHeader";
 import AnimatedSection from "../components/common/AnimatedSection";
+import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 
 /* ═══════════════════════════════════════════════════════
    ADMIN CONFIGURATION
@@ -434,19 +435,35 @@ const FloatingField = ({
             ))}
           </select>
         ) : (
-          <input
-            ref={inputRef}
-            type={type}
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            onFocus={() => setFocused(true)}
-            onBlur={() => setFocused(false)}
-            placeholder={placeholder}
-            autoComplete={autoComplete}
-            maxLength={maxLength}
-            disabled={disabled}
-            style={fieldStyle}
-          />
+          type === "email" ? (
+            <EmailAutocompleteInput
+              ref={inputRef}
+              value={value}
+              onValueChange={onChange}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              placeholder={placeholder}
+              autoComplete={autoComplete}
+              maxLength={maxLength}
+              disabled={disabled}
+              style={fieldStyle}
+              aria-invalid={Boolean(showError)}
+            />
+          ) : (
+            <input
+              ref={inputRef}
+              type={type}
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              onFocus={() => setFocused(true)}
+              onBlur={() => setFocused(false)}
+              placeholder={placeholder}
+              autoComplete={autoComplete}
+              maxLength={maxLength}
+              disabled={disabled}
+              style={fieldStyle}
+            />
+          )
         )}
 
         {/* Right status icon */}

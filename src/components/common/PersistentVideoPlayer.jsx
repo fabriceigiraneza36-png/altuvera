@@ -42,7 +42,7 @@ const getPanelSize = (isExpanded, isTheaterMode, isBrowserFullscreen) => {
 
   const width = isExpanded
     ? Math.min(480, Math.max(300, viewportWidth - FLOAT_MARGIN * 2))
-    : 160; // Much smaller when "minimized"
+    : Math.min(240, Math.max(190, viewportWidth - FLOAT_MARGIN * 2)); // compact mini view
 
   const mediaHeight = isExpanded
     ? Math.round((width * 9) / 16)
@@ -302,12 +302,31 @@ const PersistentVideoPlayer = () => {
             gap: "10px",
             background: "rgba(255, 255, 255, 0.05)",
             borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
-            opacity: isTheaterMode || isBrowserFullscreen ? 0.3 : 1,
+            opacity:
+              isTheaterMode || isBrowserFullscreen
+                ? 0.3
+                : isExpanded
+                  ? 1
+                  : 0,
             pointerEvents:
-              isTheaterMode || isBrowserFullscreen ? "none" : "auto",
+              isTheaterMode || isBrowserFullscreen
+                ? "none"
+                : isExpanded
+                  ? "auto"
+                  : "none",
             transition: "opacity 0.3s ease",
-            height: isTheaterMode || isBrowserFullscreen ? "0px" : "auto",
-            padding: isTheaterMode || isBrowserFullscreen ? "0px" : "12px 14px",
+            height:
+              isTheaterMode || isBrowserFullscreen
+                ? "0px"
+                : isExpanded
+                  ? "auto"
+                  : "0px",
+            padding:
+              isTheaterMode || isBrowserFullscreen
+                ? "0px"
+                : isExpanded
+                  ? "12px 14px"
+                  : "0px",
             overflow: "hidden",
           }}
         >
@@ -461,6 +480,27 @@ const PersistentVideoPlayer = () => {
             )}
           </div>
 
+          {!isExpanded && !isTheaterMode && !isBrowserFullscreen && (
+            <button
+              onMouseDown={startDrag}
+              onTouchStart={startDrag}
+              style={{
+                ...btnStyle,
+                position: "absolute",
+                top: "12px",
+                left: "12px",
+                cursor: isDragging ? "grabbing" : "grab",
+                touchAction: "none",
+                background: "rgba(15, 23, 42, 0.55)",
+                border: "1px solid rgba(255,255,255,0.14)",
+                backdropFilter: "blur(18px)",
+              }}
+              title="Drag player"
+            >
+              <FiMove size={14} />
+            </button>
+          )}
+
           {showOverlayControls && (
             <div
               style={{
@@ -471,6 +511,15 @@ const PersistentVideoPlayer = () => {
                 gap: "8px",
               }}
             >
+              {!isTheaterMode && !isBrowserFullscreen && !isExpanded && (
+                <button
+                  onClick={() => setIsExpanded((prev) => !prev)}
+                  style={btnStyle}
+                  title={isExpanded ? "Mini view" : "Expand"}
+                >
+                  {isExpanded ? <FiMinus size={16} /> : <FiMaximize2 size={16} />}
+                </button>
+              )}
               <button
                 onClick={handleToggleFullscreen}
                 style={btnStyle}
@@ -506,7 +555,7 @@ const PersistentVideoPlayer = () => {
             </div>
           )}
 
-          {!isTheaterMode && !isBrowserFullscreen && (
+          {isExpanded && !isTheaterMode && !isBrowserFullscreen && (
             <div
               style={{
                 position: "absolute",

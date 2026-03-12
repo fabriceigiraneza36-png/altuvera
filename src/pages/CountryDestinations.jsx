@@ -30,6 +30,7 @@ import AnimatedSection from '../components/common/AnimatedSection';
 import Button from '../components/common/Button';
 import { useCountry } from '../hooks/useCountries';
 import { useCountryDestinations } from '../hooks/useDestinations';
+import { useWishlist } from "../hooks/useWishlist";
 
 // ============================================================
 // CONTACT INFO
@@ -1476,14 +1477,8 @@ const CountryDestinations = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('');
   const [filterType, setFilterType] = useState('');
-  const [favorites, setFavorites] = useState(() => {
-    try {
-      const saved = localStorage.getItem('favoriteDestinations');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const { loadWishlist, toggleWishlist, wishlistIds } = useWishlist();
+  const favorites = useMemo(() => Array.from(wishlistIds), [wishlistIds]);
 
   // Data
   const { country, loading: countryLoading } = useCountry(countryId);
@@ -1493,19 +1488,16 @@ const CountryDestinations = () => {
   } = useCountryDestinations(countryId);
   const isLoading = countryLoading || destinationsLoading;
 
-  // Save favorites
   useEffect(() => {
-    localStorage.setItem('favoriteDestinations', JSON.stringify(favorites));
-  }, [favorites]);
+    loadWishlist();
+  }, [loadWishlist]);
 
-  // Toggle favorite
-  const toggleFavorite = useCallback((id) => {
-    setFavorites(prev => 
-      prev.includes(id) 
-        ? prev.filter(fav => fav !== id)
-        : [...prev, id]
-    );
-  }, []);
+  const toggleFavorite = useCallback(
+    (id) => {
+      toggleWishlist(id);
+    },
+    [toggleWishlist],
+  );
 
   // Clear filters
   const clearFilters = useCallback(() => {

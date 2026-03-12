@@ -58,6 +58,7 @@ import {
 import PageHeader from "../components/common/PageHeader";
 import AnimatedSection from "../components/common/AnimatedSection";
 import Button from "../components/common/Button";
+import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 import { countries as countriesData } from "../data/countries";
 import { services as servicesData } from "../data/services";
 import { useUserAuth } from "../context/UserAuthContext";
@@ -847,52 +848,99 @@ const FormInput = memo(
         </label>
 
         <div style={{ position: "relative" }}>
-          <motion.input
-            type={type}
-            name={name}
-            value={value}
-            onChange={onChange}
-            onFocus={() => setIsFocused(true)}
-            onBlur={(e) => {
-              setIsFocused(false);
-              onBlur?.(e);
-            }}
-            placeholder={placeholder}
-            style={{
-              width: "100%",
-              padding: isMobile ? "14px 16px" : "16px 20px",
-              paddingRight: isValid ? 48 : 20,
-              fontSize: isMobile ? 16 : 15,
-              border: "2px solid",
-              borderColor: hasError
-                ? THEME.error
-                : isFocused
-                  ? THEME.primary
-                  : isValid
-                    ? THEME.primaryLight
-                    : THEME.gray200,
-              borderRadius: 14,
-              backgroundColor: hasError
-                ? "#FEF2F2"
-                : isFocused
-                  ? THEME.white
-                  : isValid
-                    ? THEME.background
-                    : THEME.gray50,
-              outline: "none",
-              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              boxShadow: isFocused
-                ? `0 0 0 4px rgba(5, 150, 105, 0.08), 0 4px 12px ${THEME.shadow}`
-                : hasError
-                  ? "0 0 0 4px rgba(239, 68, 68, 0.08)"
-                  : "none",
-            }}
-            animate={{
-              x: hasError ? [0, -4, 4, -4, 4, 0] : 0,
-            }}
-            transition={{ duration: 0.35 }}
-            {...props}
-          />
+          {type === "email" ? (
+            <EmailAutocompleteInput
+              name={name}
+              value={value}
+              onValueChange={(next) => {
+                onChange?.({ target: { name, value: next } });
+              }}
+              onFocus={() => setIsFocused(true)}
+              onBlur={(e) => {
+                setIsFocused(false);
+                onBlur?.(e);
+              }}
+              placeholder={placeholder}
+              style={{
+                width: "100%",
+                padding: isMobile ? "14px 16px" : "16px 20px",
+                paddingRight: isValid ? 48 : 20,
+                fontSize: isMobile ? 16 : 15,
+                border: "2px solid",
+                borderColor: hasError
+                  ? THEME.error
+                  : isFocused
+                    ? THEME.primary
+                    : isValid
+                      ? THEME.primaryLight
+                      : THEME.gray200,
+                borderRadius: 14,
+                backgroundColor: hasError
+                  ? "#FEF2F2"
+                  : isFocused
+                    ? THEME.white
+                    : isValid
+                      ? THEME.background
+                      : THEME.gray50,
+                outline: "none",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                boxShadow: isFocused
+                  ? `0 0 0 4px rgba(5, 150, 105, 0.08), 0 4px 12px ${THEME.shadow}`
+                  : hasError
+                    ? "0 0 0 4px rgba(239, 68, 68, 0.08)"
+                    : "none",
+              }}
+              aria-invalid={hasError}
+              {...props}
+            />
+          ) : (
+            <motion.input
+              type={type}
+              name={name}
+              value={value}
+              onChange={onChange}
+              onFocus={() => setIsFocused(true)}
+              onBlur={(e) => {
+                setIsFocused(false);
+                onBlur?.(e);
+              }}
+              placeholder={placeholder}
+              style={{
+                width: "100%",
+                padding: isMobile ? "14px 16px" : "16px 20px",
+                paddingRight: isValid ? 48 : 20,
+                fontSize: isMobile ? 16 : 15,
+                border: "2px solid",
+                borderColor: hasError
+                  ? THEME.error
+                  : isFocused
+                    ? THEME.primary
+                    : isValid
+                      ? THEME.primaryLight
+                      : THEME.gray200,
+                borderRadius: 14,
+                backgroundColor: hasError
+                  ? "#FEF2F2"
+                  : isFocused
+                    ? THEME.white
+                    : isValid
+                      ? THEME.background
+                      : THEME.gray50,
+                outline: "none",
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                boxShadow: isFocused
+                  ? `0 0 0 4px rgba(5, 150, 105, 0.08), 0 4px 12px ${THEME.shadow}`
+                  : hasError
+                    ? "0 0 0 4px rgba(239, 68, 68, 0.08)"
+                    : "none",
+              }}
+              animate={{
+                x: hasError ? [0, -4, 4, -4, 4, 0] : 0,
+              }}
+              transition={{ duration: 0.35 }}
+              {...props}
+            />
+          )}
 
           <AnimatePresence>
             {isValid && (

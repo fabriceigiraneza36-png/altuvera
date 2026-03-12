@@ -6,6 +6,7 @@ import { HelmetProvider } from "react-helmet-async";
 import App from "./App.jsx";
 import { AppProvider } from "./context/AppContext.jsx";
 import { UserAuthProvider } from "./context/UserAuthContext.jsx";
+import { WishlistProvider } from "./context/WishlistContext.jsx";
 import { initScrollObserver } from "./utils/scrollObserver.js";
 import "./index.css";
 
@@ -20,7 +21,9 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <HelmetProvider>
         <AppProvider>
           <UserAuthProvider>
-            <App />
+            <WishlistProvider>
+              <App />
+            </WishlistProvider>
           </UserAuthProvider>
         </AppProvider>
       </HelmetProvider>

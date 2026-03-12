@@ -35,6 +35,7 @@ import { HiSparkles } from "react-icons/hi";
 import { BiSupport } from "react-icons/bi";
 import { RiSendPlaneFill } from "react-icons/ri";
 import herobg from "../assets/fabrice.jpg";
+import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 
 /* ══════════════════════════════
    VALIDATION
@@ -147,19 +148,35 @@ const FieldInput = ({
         {required && <span className="ct-req">*</span>}
       </label>
       <div className={`ct-field-wrap ${focused ? "focused" : ""}`}>
-        <input
-          type={type}
-          name={name}
-          value={value}
-          placeholder={placeholder}
-          onChange={onChange}
-          onFocus={() => setFocused(true)}
-          onBlur={(e) => {
-            setFocused(false);
-            onBlur?.(e);
-          }}
-          className={`ct-input ${hasErr ? "err" : valid ? "ok" : ""}`}
-        />
+        {type === "email" ? (
+          <EmailAutocompleteInput
+            name={name}
+            value={value}
+            onValueChange={(next) => onChange?.({ target: { name, value: next } })}
+            placeholder={placeholder}
+            onFocus={() => setFocused(true)}
+            onBlur={(e) => {
+              setFocused(false);
+              onBlur?.(e);
+            }}
+            className={`ct-input ${hasErr ? "err" : valid ? "ok" : ""}`}
+            aria-invalid={hasErr}
+          />
+        ) : (
+          <input
+            type={type}
+            name={name}
+            value={value}
+            placeholder={placeholder}
+            onChange={onChange}
+            onFocus={() => setFocused(true)}
+            onBlur={(e) => {
+              setFocused(false);
+              onBlur?.(e);
+            }}
+            className={`ct-input ${hasErr ? "err" : valid ? "ok" : ""}`}
+          />
+        )}
         <div className="ct-underline" />
         {hasErr && (
           <span className="ct-status">

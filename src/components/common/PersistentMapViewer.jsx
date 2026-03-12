@@ -590,6 +590,9 @@ const PersistentMapViewer = () => {
 
           {/* Header Controls */}
           <div style={styles.controls}>
+            <ControlButton href={openUrl} title="Open in Google Maps">
+              <FiExternalLink size={15} />
+            </ControlButton>
             {!isFullView && (
               <ControlButton
                 onClick={() => setIsExpanded((v) => !v)}

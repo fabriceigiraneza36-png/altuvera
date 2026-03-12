@@ -18,6 +18,7 @@ import {
 import { useApp } from "../../context/AppContext";
 import { useUserAuth } from "../../context/UserAuthContext";
 import logoimg from "../../assets/altuvera.png";
+import { getAllDestinations } from "../../data/destinations";
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -45,6 +46,10 @@ const Navbar = () => {
   const userMenuRef = useRef(null);
   const searchInputRef = useRef(null);
   const dropdownTimer = useRef(null);
+  const searchAbortRef = useRef(null);
+  const latestSearchRef = useRef("");
+
+  const localDestinations = useMemo(() => getAllDestinations(), []);
 
   const navLinks = useMemo(
     () => [
@@ -140,27 +145,83 @@ const Navbar = () => {
 
   useEffect(() => {
     const q = searchValue.trim();
+    latestSearchRef.current = q;
+
+    if (searchAbortRef.current) {
+      searchAbortRef.current.abort();
+      searchAbortRef.current = null;
+    }
+
     if (q.length < 2) {
       setSearchResults([]);
       setIsSearching(false);
       return;
     }
+
+    const normalizeKey = (item) => item?._id || item?.id || item?.slug || item?.name;
+    const toResult = (item) => ({
+      id: item?._id || item?.id || item?.slug,
+      slug: item?.slug || item?.id,
+      name: item?.name || item?.title || "Destination",
+      country: item?.country || item?.countryName || item?.location || "",
+      category: item?.category || item?.type || "Destination",
+      heroImage: item?.heroImage || item?.image || item?.images?.[0] || "",
+    });
+
+    // Instant local suggestions (always "real" destinations in this repo)
+    const qLower = q.toLowerCase();
+    const localMatches = localDestinations
+      .filter((d) => {
+        const name = (d?.name || "").toLowerCase();
+        const desc = (d?.description || "").toLowerCase();
+        const country = (d?.country || "").toLowerCase();
+        const location = (d?.location || "").toLowerCase();
+        return (
+          name.includes(qLower) ||
+          desc.includes(qLower) ||
+          country.includes(qLower) ||
+          location.includes(qLower)
+        );
+      })
+      .sort((a, b) => {
+        const an = (a?.name || "").toLowerCase();
+        const bn = (b?.name || "").toLowerCase();
+        const aStarts = an.startsWith(qLower) ? 1 : 0;
+        const bStarts = bn.startsWith(qLower) ? 1 : 0;
+        if (aStarts !== bStarts) return bStarts - aStarts;
+        return an.localeCompare(bn);
+      })
+      .slice(0, 6)
+      .map(toResult);
+
+    setSearchResults(localMatches);
+
     const id = setTimeout(async () => {
       setIsSearching(true);
+      const controller = new AbortController();
+      searchAbortRef.current = controller;
       try {
         const res = await fetch(
           `${API_URL}/destinations?search=${encodeURIComponent(q)}&limit=5`,
+          { signal: controller.signal },
         );
         const data = await res.json();
-        setSearchResults(data.data || data || []);
+        if (latestSearchRef.current !== q) return;
+        const remoteItems = (data?.data || data || []).map(toResult);
+
+        const merged = new Map();
+        for (const item of localMatches) merged.set(normalizeKey(item), item);
+        for (const item of remoteItems) merged.set(normalizeKey(item), item);
+
+        setSearchResults(Array.from(merged.values()).slice(0, 8));
       } catch {
         /* silent */
       } finally {
-        setIsSearching(false);
+        if (latestSearchRef.current === q) setIsSearching(false);
       }
     }, 300);
     return () => clearTimeout(id);
-  }, [searchValue, API_URL]);
+  }, [searchValue, API_URL, localDestinations]);
 
   useEffect(() => {
     const fn = (e) => e.key === "Escape" && closeAll();
@@ -506,7 +567,7 @@ const Navbar = () => {
                 Searching…
               </p>
             )}
-            {!isSearching && searchResults.length > 0 && (
+            {searchResults.length > 0 && (
               <div className="srch__list">
                 {searchResults.map((r, ri) => (
                   <Link
@@ -786,13 +847,14 @@ const Navbar = () => {
 /* Logo Image Wrapper - For better control */
 .nav__logo-img-wrapper{
   position:relative;
-  width:64px;height:64px;
+  width:48px;height:48px;
   flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
-  background:var(--wh);
-  border-radius:18px;
-  padding:6px;
-  box-shadow:0 4px 20px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.05);
+  background:transparent;
+  border-radius:14px;
+  padding:0;
+  box-shadow:none;
+  border:1px solid rgba(255,255,255,0.14);
   transition:all var(--med) var(--smooth);
 }
 
@@ -800,16 +862,17 @@ const Navbar = () => {
   width:100%;
   height:100%;
   object-fit:contain;
-  border-radius:14px;
-  filter:drop-shadow(0 4px 15px rgba(0,0,0,.15));
+  border-radius:12px;
+  filter:drop-shadow(0 6px 18px rgba(0,0,0,.18));
   transition:all var(--med) var(--smooth);
   position:relative;z-index:1;
 }
 
 /* Scrolled state */
 .nav--scrolled .nav__logo-img-wrapper{
-  width:56px;height:56px;
-  border-radius:14px;
+  width:44px;height:44px;
+  border-radius:12px;
+  border:1px solid rgba(2,44,34,0.12);
 }
 .nav--scrolled .nav__logo-img{
   filter:drop-shadow(0 2px 8px rgba(0,0,0,.08));

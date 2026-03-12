@@ -9,8 +9,8 @@ Disallow: /*.json$
 Disallow: /search?*
 
 # Sitemaps
-Sitemap: https://www.altuvera.com/sitemap.xml
-Sitemap: https://www.altuvera.com/sitemap-images.xml
+Sitemap: https://altuvera.vercel.app/sitemap.xml
+Sitemap: https://altuvera.vercel.app/sitemap-images.xml
 
 # Crawl-delay for polite crawling
 User-agent: Googlebot

@@ -33,6 +33,7 @@ import { FiGithub } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { useUserAuth } from "../../context/UserAuthContext";
 import logoimg from "../../assets/altuvera.png";
+import EmailAutocompleteInput from "../common/EmailAutocompleteInput";
 import "./AuthModal.css";
 
 // ============================================================================
@@ -943,13 +944,10 @@ export default function AuthModal() {
                     <span className="auth-field-label">Email Address</span>
                     <div className="auth-input-wrap">
                       <HiMail className="auth-input-icon" aria-hidden="true" />
-                      <input
+                      <EmailAutocompleteInput
                         ref={firstInputRef}
-                        type="email"
                         value={formData.email}
-                        onChange={(event) =>
-                          updateField("email", event.target.value)
-                        }
+                        onValueChange={(next) => updateField("email", next)}
                         placeholder="you@example.com"
                         autoComplete="email"
                         required
@@ -1164,12 +1162,11 @@ export default function AuthModal() {
                               className="auth-input-icon"
                               aria-hidden="true"
                             />
-                            <input
+                            <EmailAutocompleteInput
                               ref={firstInputRef}
-                              type="email"
                               value={formData.email}
-                              onChange={(event) =>
-                                updateField("email", event.target.value)
+                              onValueChange={(next) =>
+                                updateField("email", next)
                               }
                               placeholder="traveler@example.com"
                               autoComplete="email"

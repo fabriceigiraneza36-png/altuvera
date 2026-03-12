@@ -34,6 +34,7 @@ import {
 } from 'react-icons/fi';
 import PageHeader from '../components/common/PageHeader';
 import AnimatedSection from '../components/common/AnimatedSection';
+import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 import { posts } from '../data/posts';
 
 /* ═══════════════════════════════════════════════════════
@@ -1826,10 +1827,9 @@ const Posts = () => {
                   flexWrap: isMobile ? 'wrap' : 'nowrap',
                 }}
               >
-                <input
-                  type="email"
+                <EmailAutocompleteInput
                   value={emailInput}
-                  onChange={(e) => setEmailInput(e.target.value)}
+                  onValueChange={setEmailInput}
                   placeholder="Enter your email address"
                   required
                   className="ps-focus-ring"

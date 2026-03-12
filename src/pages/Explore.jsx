@@ -29,7 +29,9 @@ import {
 import PageHeader from '../components/common/PageHeader';
 import AnimatedSection from '../components/common/AnimatedSection';
 import Button from '../components/common/Button';
+import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 import { countries } from '../data/countries';
+import { useWishlist } from "../hooks/useWishlist";
 
 /* ===================================================================
    DESIGN TOKENS — GREEN & WHITE PALETTE
@@ -939,7 +941,13 @@ function GalleryShowcase({ data }) {
 
 function ExperienceCard({ exp, index }) {
   const [hovered, setHovered] = useState(false);
-  const [liked, setLiked] = useState(false);
+  const { loadWishlist, toggleWishlist, isWishlisted } = useWishlist();
+  const expKey = exp?._id || exp?.id || exp?.slug;
+  const liked = isWishlisted(expKey);
+
+  useEffect(() => {
+    loadWishlist();
+  }, [loadWishlist]);
 
 
   return (
@@ -1011,7 +1019,7 @@ function ExperienceCard({ exp, index }) {
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              setLiked(!liked);
+              toggleWishlist(expKey);
             }}
             style={{
               width: 38,
@@ -1717,10 +1725,9 @@ function NewsletterBlock() {
               justifyContent: 'center',
             }}
           >
-            <input
-              type="email"
+            <EmailAutocompleteInput
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onValueChange={setEmail}
               required
               placeholder="Enter your email"
               style={{
