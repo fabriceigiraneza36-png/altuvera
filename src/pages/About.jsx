@@ -17,61 +17,81 @@ import image from '../assets/image.jpg';
 import Button from '../components/common/Button';
 import CookieSettingsButton from '../components/common/CookieSettingsButton';
 import { toYouTubeEmbedUrl } from '../utils/mediaEmbed';
+import { fetchVideoDurations, getVideoThumbnail } from '../utils/youtubeService';
 
-// Evolution Data for Timeline
+// Evolution Data for Timeline - Company Revolution Story
+// Timeline: September 2025 - March 2026 (Present) with Future Vision
+// Equal 2-month intervals
+
 const EvolutionData = [
   {
-    year: "2026",
-    title: "The Genesis",
-    description: "Altuvera was born from the visionary mind of IGIRANEZA Fabrice, who dreamed of creating travel experiences that transcend ordinary tourism (While he was in Level 5 Tour-> [Tourism & hospitality]). With a single vehicle and unwavering determination, the first safari operation launched in East Africa.",
+    year: "September 2025",
+    title: "The Genesis: Foundation Established",
+    description: "Altuvera was founded by IGIRANEZA Fabrice, an ambitious entrepreneur specializing in Tourism & Hospitality (Level 5 Tour Program). Identifying a critical gap between conventional tourism and transformative travel experiences, Fabrice launched the company's inaugural safari operation in East Africa. With one operational vehicle and a clear vision, the 'True Adventures In High Places & Deep Culture' philosophy was born—establishing the foundational principles that would guide all future operations.",
     icon: <Sprout className="w-6 h-6" />,
     tag: "Foundation",
-    details: ["Founded by IGIRANEZA Fabrice", "First safari operation launched", "Mission: Transform travel forever"],
+    details: [
+      "Company officially founded by IGIRANEZA Fabrice",
+      "First East African safari operation launched",
+      "Core philosophy 'True Adventures In High Places & Deep Culture' established",
+      "Initial operational framework and quality standards defined"
+    ],
     image: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800"
   },
   {
-    year: "2027",
-    title: "Conservation Partnership",
-    description: "Established groundbreaking partnerships with wildlife conservancies across East Africa. Every safari began directly funding anti-poaching efforts and community development programs.",
+    year: "November 2025",
+    title: "Conservation Partnerships Initiated",
+    description: "Altuvera formalized strategic alliances with recognized wildlife conservancies across East Africa. A transparent contribution model was implemented, ensuring every booking directly supports anti-poaching efforts and community development initiatives. This integration positioned Altuvera as a purpose-driven operator committed to environmental stewardship and social responsibility from its earliest stages.",
     icon: <Heart className="w-6 h-6" />,
-    tag: "First Growth",
-    details: ["Wildlife conservancy partnerships", "Anti-poaching fund established", "Community development programs."],
+    tag: "Conservation Alliance",
+    details: [
+      "Partnerships established with 3 wildlife conservancies",
+      "Altuvera Conservation Fund officially launched",
+      "Community support initiatives introduced in 2 rural areas",
+      "Transparent fund allocation protocols implemented"
+    ],
     image: "https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=800"
   },
   {
-    year: "2028",
-    title: "Regional Expansion",
-    description: "Extended our footprint across four nations: Kenya, Tanzania, Rwanda, and Uganda. Each expansion carefully maintained our signature quality and ethical standards.",
+    year: "January 2026",
+    title: "Operational Expansion Across East Africa",
+    description: "Altuvera strategically expanded operations across four East African nations: Kenya, Tanzania, Rwanda, and Uganda. Each market entry was executed with precision, maintaining the company's commitment to authenticity, quality, and ethical practices. This expansion transformed Altuvera into a comprehensive regional provider offering diverse, interconnected African experiences tailored to discerning travelers.",
     icon: <Globe className="w-6 h-6" />,
-    tag: "Expansion",
-    details: ["Kenya & Tanzania operations", "Rwanda gorilla trekking", "Uganda experiences launched"],
+    tag: "Regional Growth",
+    details: [
+      "Kenya: Masai Mara and Amboseli circuits launched",
+      "Tanzania: Serengeti and Ngorongoro itineraries introduced",
+      "Rwanda: Gorilla trekking experiences established",
+      "Uganda: Bwindi and Queen Elizabeth programs developed"
+    ],
     image: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=800"
   },
   {
-    year: "2029",
-    title: "Sustainability Leadership",
-    description: "Became the first major safari operator to eliminate all single-use plastics. Implemented 150% carbon offset program and achieved B-Corp certification.",
+    year: "March 2026",
+    title: "Present Day: Sustainability & Digital Integration",
+    description: "Altuvera currently operates as a recognized East African safari provider with a growing reputation for excellence. Active sustainability initiatives include single-use plastic reduction and carbon offset programs. Digital infrastructure development is underway, featuring enhanced booking systems and client communication platforms. The company continues strengthening its conservation partnerships while expanding its service portfolio.",
     icon: <Trees className="w-6 h-6" />,
-    tag: "Eco-Pioneer",
-    details: ["Plastic-free certification", "Carbon negative operations", "B-Corp certified"],
+    tag: "Current Operations",
+    details: [
+      "Single-use plastic reduction program actively implemented",
+      "Carbon offset initiatives integrated into operations",
+      "Digital booking and communication systems enhanced",
+      "Conservation fund actively supporting wildlife protection"
+    ],
     image: "https://images.unsplash.com/photo-1534177616064-ef548ae5e58e?w=800"
   },
   {
-    year: "2030",
-    title: "Digital Innovation",
-    description: "Launched immersive virtual safari previews and AI-powered trip matching. Technology enhanced guest connections while maintaining authentic experiences.",
-    icon: <Smartphone className="w-6 h-6" />,
-    tag: "Innovation",
-    details: ["Virtual safari platform", "AI trip matching", "24/7 global support"],
-    image: "https://images.unsplash.com/photo-1549366021-9f761d450615?w=800"
-  },
-  {
-    year: "2031",
-    title: "Global Canopy",
-    description: "A worldwide network spanning multiple continents, now leading the transition to completely carbon-negative adventure tourism with the High & Deep Culture philosophy.",
-    icon: <Plane className="w-6 h-6" />,
-    tag: "The Canopy",
-    details: ["Global operations", "High & Deep Culture", "Industry leadership"],
+    year: "The Future",
+    title: "Continuous Growth: The Journey Ahead",
+    description: "Altuvera remains committed to continuous innovation, sustainable expansion, and industry leadership. Our roadmap includes achieving full B-Corp certification, launching immersive virtual safari previews, implementing AI-powered trip personalization, and establishing a global operational network. The 'True Adventures In High Places & Deep Culture' philosophy will continue guiding our mission to deliver transformative travel experiences that benefit travelers, communities, and ecosystems alike.",
+    icon: <Rocket className="w-6 h-6" />,
+    tag: "Vision Forward",
+    details: [
+      "B-Corp certification targeted for environmental and social excellence",
+      "Virtual safari preview platform in development",
+      "AI-powered personalized itinerary matching planned",
+      "Global expansion strategy under active preparation"
+    ],
     image: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=800"
   }
 ];
@@ -1427,6 +1447,8 @@ const StatCard = ({ value, suffix, label, description, icon: Icon }) => (
 const About = () => {
   const [videoModal, setVideoModal] = useState({ isOpen: false, url: '' });
   const [lightbox, setLightbox] = useState({ isOpen: false, currentIndex: 0 });
+  const [videoDurations, setVideoDurations] = useState({});
+  const [isLoadingDurations, setIsLoadingDurations] = useState(true);
 
   const heroImage = "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1920";
 
@@ -1539,36 +1561,37 @@ const About = () => {
     }
   ];
 
-  const videos = [
-    {
-      title: 'The Altuvera Experience',
-      thumbnail: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800',
-      url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-      duration: '4:32',
-      category: 'Featured'
-    },
-    {
-      title: 'Great Migration Documentary',
-      thumbnail: 'https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=800',
-      url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-      duration: '12:45',
-      category: 'Wildlife'
-    },
-    {
-      title: 'Meet IGIRANEZA Fabrice',
-      thumbnail: 'https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=800',
-      url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-      duration: '6:18',
-      category: 'Founder'
-    },
-    {
-      title: 'Luxury Safari Lodges Tour',
-      thumbnail: 'https://images.unsplash.com/photo-1493246507139-91e8fad9978e?w=800',
-      url: 'https://www.youtube.com/embed/dQw4w9WgXcQ',
-      duration: '8:55',
-      category: 'Lodges'
-    }
+  // YouTube video IDs for Altuvera Experience section
+  const YOUTUBE_VIDEOS = [
+    { id: 'dTlfCgkHN6s', title: 'The Beauty of Rwanda - Documentary', category: 'Featured' },
+    { id: 'IvCfINrZrLk', title: "East Africa's Great Migration: A Nat Hab Traveler Story", category: 'Wildlife' },
+    { id: 'xdFYFB3vyoo', title: 'Lake Victoria', category: 'Nature' }
   ];
+
+  // Fetch video durations on component mount
+  useEffect(() => {
+    const loadDurations = async () => {
+      try {
+        const videoIds = YOUTUBE_VIDEOS.map(v => v.id);
+        const durations = await fetchVideoDurations(videoIds);
+        setVideoDurations(durations);
+      } catch (error) {
+        console.error('Error loading video durations:', error);
+      } finally {
+        setIsLoadingDurations(false);
+      }
+    };
+    loadDurations();
+  }, []);
+
+  // Build videos array with real thumbnails and durations
+  const videos = YOUTUBE_VIDEOS.map((video) => ({
+    title: video.title,
+    thumbnail: getVideoThumbnail(video.id, 'high'),
+    url: `https://www.youtube.com/embed/${video.id}`,
+    duration: videoDurations[video.id] || 'Loading...',
+    category: video.category
+  }));
 
   const galleryImages = [
     { url: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1200', caption: 'Majestic Elephant Herd', location: 'Amboseli, Kenya', size: 'tall' },
@@ -1811,7 +1834,7 @@ const About = () => {
                   }}
                 >
                   <img
-                    src="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=600"
+                    src="https://i.pinimg.com/736x/f3/8e/5d/f38e5ddcc6677a39515284b5c2c7a2e4.jpg"
                     alt="Safari Experience"
                     style={{
                       width: '100%',
@@ -1831,7 +1854,7 @@ const About = () => {
                   }}
                 >
                   <img
-                    src="https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=600"
+                    src="https://i.pinimg.com/1200x/81/45/9e/81459ea63d041cdb6e64d080c07f4937.jpg"
                     alt="Wildlife"
                     style={{
                       width: '100%',
@@ -1851,7 +1874,7 @@ const About = () => {
                   }}
                 >
                   <img
-                    src="https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=600"
+                    src="https://i.pinimg.com/1200x/e8/c3/dc/e8c3dc61a18c07053646caddbc45a454.jpg"
                     alt="Culture"
                     style={{
                       width: '100%',
@@ -1888,48 +1911,51 @@ const About = () => {
             </FadeInSection>
 
             {/* Text Content */}
-            <FadeInSection direction="right" delay={0.15}>
-              <span style={styles.label}>Our Philosophy</span>
-              
-              <h2 style={styles.h2}>
-                Understanding <span style={{ color: '#059669' }}>High & Deep Culture</span>
-              </h2>
-              
-              <div style={{
-                width: '80px',
-                height: '4px',
-                background: 'linear-gradient(90deg, #059669, #10B981)',
-                marginBottom: '28px',
-                borderRadius: '2px'
-              }} />
-              
-              <p style={styles.p}>
-                The concept of <strong style={{ color: '#059669' }}>"High & Deep Culture"</strong> is 
-                the philosophical foundation designed by IGIRANEZA Fabrice. It emerged from years of 
-                observing what truly moves people during their African journeys—and what leaves them 
-                unchanged despite spectacular surroundings.
-              </p>
-              
-              <p style={styles.p}>
-                <strong style={{ color: '#059669' }}>"High Culture"</strong> represents our commitment 
-                to excellence in every tangible aspect. Accommodations that blend luxury with authentic 
-                African aesthetics. Guides who communicate with eloquence. Logistics so seamless they 
-                become invisible.
-              </p>
-              
-              <p style={styles.p}>
-                <strong style={{ color: '#059669' }}>"Deep Culture"</strong> is where transformation 
-                happens. Genuine human connection and understanding. Sharing meals with Maasai families. 
-                Learning the stories behind traditions. The unscripted moments of wonder as Africa 
-                reveals truths about nature, humanity, and yourself.
-              </p>
+      <FadeInSection direction="right" delay={0.15}>
+  <span style={styles.label}>Our Philosophy</span>
+  
+  <h2 style={styles.h2}>
+    Understanding <span style={{ color: '#059669' }}>True Adventures In High Places & Deep Culture</span>
+  </h2>
+  
+  <div style={{
+    width: '80px',
+    height: '4px',
+    background: 'linear-gradient(90deg, #059669, #10B981)',
+    marginBottom: '28px',
+    borderRadius: '2px'
+  }} />
+  
+  <p style={styles.p}>
+    The concept of <strong style={{ color: '#059669' }}>"True Adventures In High Places & Deep Culture"</strong> is 
+    the philosophical foundation designed by IGIRANEZA Fabrice. It emerged from years of 
+    observing what truly moves people during their African journeys—and what leaves them 
+    unchanged despite spectacular surroundings.
+  </p>
+  
+  <p style={styles.p}>
+    <strong style={{ color: '#059669' }}>"True Adventures In High Places"</strong> represents our commitment 
+    to excellence in every tangible aspect and the pursuit of extraordinary destinations. From the misty peaks 
+    of mountain gorilla habitats to the volcanic highlands, we guide you to Africa's most elevated 
+    experiences—both literally and figuratively. Accommodations that blend luxury with authentic 
+    African aesthetics. Guides who communicate with eloquence. Logistics so seamless they 
+    become invisible.
+  </p>
+  
+  <p style={styles.p}>
+    <strong style={{ color: '#059669' }}>"Deep Culture"</strong> is where transformation 
+    happens. Genuine human connection and understanding. Sharing meals with local families. 
+    Learning the stories behind traditions. The unscripted moments of wonder as Africa 
+    reveals truths about nature, humanity, and yourself.
+  </p>
 
-              <p style={styles.p}>
-                Together, High and Deep Culture create journeys that are both comfortable and 
-                challenging, both luxurious and authentic, both escapes from ordinary life and 
-                invitations to engage more deeply with the world.
-              </p>
-            </FadeInSection>
+  <p style={styles.p}>
+    Together, True Adventures In High Places and Deep Culture create journeys that are both comfortable and 
+    challenging, both luxurious and authentic, both escapes from ordinary life and 
+    invitations to engage more deeply with the world.
+  </p>
+</FadeInSection>
+
           </div>
         </div>
       </section>

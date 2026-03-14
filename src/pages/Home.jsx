@@ -61,7 +61,9 @@ import { posts } from "../data/posts";
 import { useDestinations } from "../hooks/useDestinations";
 import { useWishlist } from "../hooks/useWishlist";
 import ImageCycle from "../components/common/ImageCycle";
+import Confetti from "../components/common/Confetti";
 import { useScrollTriggeredSlide } from "../hooks/useScrollTriggeredSlide";
+import { useUserAuth } from "../context/UserAuthContext";
 import chatgpt from "../assets/chatgpt.png";
 
 /* ═══════════════════════════════════════════
@@ -778,7 +780,9 @@ const Home = () => {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const [email, setEmail] = useState("");
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const { user, isAuthenticated } = useUserAuth();
   const [activeProcess, setActiveProcess] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
   const [galleryFilter, setGalleryFilter] = useState("All");
   const [lightboxIdx, setLightboxIdx] = useState(-1);
   const { destinations: allDestinations = [], loading: destinationsLoading } =
@@ -818,11 +822,21 @@ const Home = () => {
       e.preventDefault();
       if (email) {
         setIsSubscribed(true);
+        setShowConfetti(true);
         setEmail("");
-        setTimeout(() => setIsSubscribed(false), 5000);
+
+        // If not logged in, suggest login/register and pre-fill email
+        if (!isAuthenticated) {
+          sessionStorage.setItem("pending_subscription_email", email);
+          // We could redirect here or just show a message.
+          // The user said: "allow subscription for unlogged in users, we will send them confirmation to their email so they can login and then their credentails (username and email) will be autofilled in our auth system"
+          // This implies we should maybe show a success message first.
+        }
+
+        setTimeout(() => setShowConfetti(false), 5000);
       }
     },
-    [email],
+    [email, isAuthenticated],
   );
 
   const getDestImg = useCallback(
@@ -1070,74 +1084,83 @@ const Home = () => {
   const galleryImages = useMemo(
     () => [
       {
-        src: "https://i.pinimg.com/1200x/9b/93/6e/9b936e97002c0ceff3abeb21bf93b6be.jpg",
-        alt: "Lion Pride at Dawn",
-        location: "Serengeti, Tanzania",
+        id: 1,
+        src: "https://images.unsplash.com/photo-1614027164847-1b28cfe1df60?w=1200",
+        alt: "Lion at Dawn",
+        location: "Maasai Mara, Kenya",
         category: "Wildlife",
         h: 420,
       },
       {
-        src: "https://i.pinimg.com/1200x/2a/79/76/2a7976e8a307a072cecfe31610f29b8b.jpg",
-        alt: "Kilimanjaro Sunrise",
-        location: "Amboseli, Kenya",
-        category: "Landscapes",
-        h: 280,
-      },
-      {
-        src: "https://i.pinimg.com/1200x/1b/43/8f/1b438ff35ac3e041bda7e258bcc0e97f.jpg",
-        alt: "Elephant Migration",
-        location: "Tsavo, Kenya",
-        category: "Wildlife",
-        h: 340,
-      },
-      {
-        src: "https://i.pinimg.com/1200x/a8/cd/38/a8cd38c9fa7a14ce7db3356c0157f6ce.jpg",
-        alt: "Zanzibar Paradise",
-        location: "Zanzibar, Tanzania",
-        category: "Landscapes",
-        h: 300,
-      },
-      {
-        src: "https://i.pinimg.com/736x/47/3d/2b/473d2bf229cd5d69c001c016eb5a0bde.jpg",
+        id: 3,
+        src: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=1200",
         alt: "Mountain Gorilla",
         location: "Bwindi, Uganda",
         category: "Wildlife",
         h: 440,
       },
       {
-        src: "https://i.pinimg.com/1200x/1e/9a/98/1e9a98f815e57a936dcd66df6b1b97a3.jpg",
-        alt: "Maasai Ceremony",
-        location: "Masai Mara, Kenya",
-        category: "Culture",
-        h: 260,
+        id: 8,
+        src: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1200",
+        alt: "Ngorongoro Crater",
+        location: "Tanzania",
+        category: "Landscapes",
+        h: 280,
       },
       {
-        src: "https://i.pinimg.com/1200x/97/d0/5a/97d05abdeb44c63add9fc725123a9dac.jpg",
-        alt: "Summit Glory",
-        location: "Kilimanjaro, Tanzania",
+        id: 12,
+        src: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=1200",
+        alt: "Lalibela Churches",
+        location: "Ethiopia",
+        category: "Culture",
+        h: 300,
+      },
+      {
+        id: 16,
+        src: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1200",
+        alt: "Kilimanjaro Summit",
+        location: "Tanzania",
         category: "Adventure",
         h: 360,
       },
       {
-        src: "https://i.pinimg.com/1200x/93/c0/f2/93c0f2b631667dfdb301b13ce2c58342.jpg",
-        alt: "Savannah Sunset",
+        id: 18,
+        src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200",
+        alt: "Hot Air Balloon",
         location: "Serengeti, Tanzania",
-        category: "Landscapes",
-        h: 320,
-      },
-      {
-        src: "https://i.pinimg.com/736x/d5/42/5e/d5425e1bcc16b46e4cf40cf2f420e0ef.jpg",
-        alt: "Crater Highlands",
-        location: "Ngorongoro, Tanzania",
         category: "Adventure",
         h: 380,
+      },
+      {
+        id: 19,
+        src: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200",
+        alt: "Diani Beach",
+        location: "Kenya",
+        category: "Beaches",
+        h: 260,
+      },
+      {
+        id: 20,
+        src: "https://images.unsplash.com/photo-1590523277543-a94c2e4ebc9b?w=1200",
+        alt: "Zanzibar Sunset",
+        location: "Tanzania",
+        category: "Beaches",
+        h: 340,
+      },
+      {
+        id: 6,
+        src: "https://images.unsplash.com/photo-1564769625905-50e93615e769?w=1200",
+        alt: "Giraffe Sunset",
+        location: "Nairobi, Kenya",
+        category: "Wildlife",
+        h: 320,
       },
     ],
     [],
   );
 
   const galleryCats = useMemo(
-    () => ["All", "Wildlife", "Landscapes", "Culture", "Adventure"],
+    () => ["All", "Wildlife", "Landscapes", "Culture", "Adventure", "Beaches"],
     [],
   );
   const filteredGallery = useMemo(
@@ -1146,6 +1169,11 @@ const Home = () => {
         ? galleryImages
         : galleryImages.filter((g) => g.category === galleryFilter),
     [galleryFilter, galleryImages],
+  );
+
+  const displayedGallery = useMemo(
+    () => filteredGallery.slice(0, 10),
+    [filteredGallery],
   );
 
   const signatureExperiences = useMemo(
@@ -1204,6 +1232,7 @@ const Home = () => {
   return (
     <div ref={homeRootRef} style={{ overflowX: "hidden" }}>
       <ScrollProgress />
+      <Confetti active={showConfetti} duration={5000} />
 
       {/* ─── Global Styles ─── */}
       <style>{`
@@ -2471,7 +2500,7 @@ const Home = () => {
                   <FiCamera size={14} /> Visual Stories
                 </span>
                 <h2 className="st" style={{ marginBottom: 14 }}>
-                  Moments That <span className="tg">Take Your Breath Away</span>
+                  Moments We've <span className="tg">Captured</span>
                 </h2>
                 <p style={{ fontSize: 16, color: "#64748B", lineHeight: 1.75 }}>
                   A curated collection of real moments captured by our travelers
@@ -2495,60 +2524,73 @@ const Home = () => {
           {/* Filter */}
           <AnimatedSection animation="fadeInUp">
             <div className="gf">
-              {galleryCats.map((cat) => (
-                <motion.button
-                  key={cat}
-                  className={`gfb ${galleryFilter === cat ? "act" : ""}`}
-                  onClick={() => setGalleryFilter(cat)}
-                  whileTap={{ scale: 0.95 }}
+              {galleryCats.map((c) => (
+                <button
+                  key={c}
+                  className={`gfb ${galleryFilter === c ? "act" : ""}`}
+                  onClick={() => setGalleryFilter(c)}
                 >
-                  {cat}
-                </motion.button>
+                  {c}
+                </button>
               ))}
             </div>
-          </AnimatedSection>
 
-          {/* Masonry */}
-          <motion.div className="gm" layout>
-            <AnimatePresence mode="popLayout">
-              {filteredGallery.map((img, i) => (
-                <motion.div
-                  key={img.src + galleryFilter}
-                  className="gi"
-                  layout
-                  initial={{ opacity: 0, scale: 0.9, y: 40 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: -30 }}
-                  transition={{ duration: 0.5, delay: i * 0.05 }}
-                  onClick={() => setLightboxIdx(galleryImages.indexOf(img))}
-                  role="button"
-                  tabIndex={0}
-                  aria-label={`View ${img.alt}`}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter")
-                      setLightboxIdx(galleryImages.indexOf(img));
-                  }}
-                >
-                  <img
-                    src={img.src}
-                    alt={img.alt}
-                    style={{ height: isMobile ? 260 : img.h }}
-                    loading="lazy"
-                  />
-                  <div className="gio">
-                    <span className="gcat">{img.category}</span>
-                    <span className="galt">{img.alt}</span>
-                    <span className="gloc">
-                      <FiMapPin size={12} /> {img.location}
-                    </span>
-                  </div>
-                  <div className="gii">
-                    <FiMaximize2 size={20} color="#fff" />
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
+            {/* Masonry */}
+            <div className="gm">
+              <AnimatePresence mode="popLayout">
+                {displayedGallery.map((img, i) => (
+                  <motion.div
+                    key={img.src + galleryFilter}
+                    className="gi"
+                    layout
+                    initial={{ opacity: 0, scale: 0.9, y: 40 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.9, y: -30 }}
+                    transition={{ duration: 0.5, delay: i * 0.05 }}
+                    onClick={() => setLightboxIdx(galleryImages.indexOf(img))}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`View ${img.alt}`}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter")
+                        setLightboxIdx(galleryImages.indexOf(img));
+                    }}
+                  >
+                    <img
+                      src={img.src}
+                      alt={img.alt}
+                      style={{ height: isMobile ? 260 : img.h }}
+                      loading="lazy"
+                    />
+                    <div className="gio">
+                      <span className="gcat">{img.category}</span>
+                      <span className="galt">{img.alt}</span>
+                      <span className="gloc">
+                        <FiMapPin size={12} /> {img.location}
+                      </span>
+                    </div>
+                    <div className="gii">
+                      <FiMaximize2 size={20} color="#fff" />
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+
+            {filteredGallery.length > 10 && (
+              <div style={{ textAlign: "center", marginTop: 48 }}>
+                <MagneticWrap>
+                  <Button
+                    to="/gallery"
+                    variant="outline"
+                    icon={<FiArrowRight size={18} />}
+                  >
+                    View Full Gallery
+                  </Button>
+                </MagneticWrap>
+              </div>
+            )}
+          </AnimatedSection>
 
           {/* Gallery stats */}
           <AnimatedSection animation="fadeInUp">
@@ -3093,7 +3135,7 @@ const Home = () => {
               migration alerts, and insider tips delivered weekly. Join 25,000+
               fellow adventurers.
             </p>
-            {isSubscribed ? (
+            {isSubscribed || user?.subscribed ? (
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}

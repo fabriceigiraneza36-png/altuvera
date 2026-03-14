@@ -1511,13 +1511,19 @@ const ServiceModal = React.memo(({ service, onClose }) => {
   const contactOptions = useMemo(
     () => [
       {
-        href: "tel:+1234567890",
+        href: "tel:+250780702773",
         icon: FiPhone,
-        label: "Call Us Now",
+        label: (
+          <span>
+            +250 780 702 773
+            <br />
+            +250 792 352 409
+          </span>
+        ),
         isExternal: true,
       },
       {
-        href: "mailto:info@altuvera.com",
+        href: "mailto:altuverasafari@gmail.com",
         icon: FiMail,
         label: "Email Us",
         isExternal: true,

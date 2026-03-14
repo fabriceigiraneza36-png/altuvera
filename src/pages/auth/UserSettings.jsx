@@ -14,6 +14,7 @@ import {
   HiExclamationCircle,
 } from "react-icons/hi";
 import "./AuthPages.css";
+import { Link } from "react-router-dom";
 
 export default function UserSettings() {
   const { user, logout, updateProfile } = useUserAuth();
@@ -240,6 +241,12 @@ export default function UserSettings() {
           <button className="danger-btn" onClick={handleLogout}>
             <HiLogout style={{ marginRight: "6px" }} /> Sign Out
           </button>
+        </div>
+
+        <div style={{ marginTop: "1rem" }}>
+          <Link to="/auth/user-account-control" style={{ color: "#10b981", fontWeight: "600" }}>
+            Go to User Account Control
+          </Link>
         </div>
       </DashboardLayout>
     </>

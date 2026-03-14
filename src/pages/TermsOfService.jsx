@@ -75,9 +75,7 @@ const sections = [
   },
   {
     title: "12. Contact",
-    body: [
-      "For terms-related questions, contact info@altuvera.com.",
-    ],
+    body: ["For terms-related questions, contact altuverasafari@gmail.com."],
   },
 ];
 

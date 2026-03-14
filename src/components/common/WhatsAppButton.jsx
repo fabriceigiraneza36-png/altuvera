@@ -1,25 +1,58 @@
 // WhatsAppButton.jsx
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import confetti from 'canvas-confetti';
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
 
 // ============================================================
 // CONFIGURATION
 // ============================================================
 const CONTACT_INFO = {
   name: "IGIRANEZA Fabrice",
+  phone1: "+250 780 702 773",
+  phone2: "+250 792 352 409",
   whatsapp: "+250792352409",
   whatsappDisplay: "+250 792 352 409",
 };
 
 const PRESET_MESSAGES = [
-  { id: 1, label: "General Inquiry", emoji: "💬", message: "Hello! I'm interested in learning more about your travel services." },
-  { id: 2, label: "Book a Trip", emoji: "✈️", message: "Hi! I would like to book a trip. Can you help me?" },
-  { id: 3, label: "Tour Packages", emoji: "🎒", message: "Hello! I'm interested in your tour packages." },
-  { id: 4, label: "Custom Itinerary", emoji: "📋", message: "Hi! I need help creating a custom travel itinerary." },
-  { id: 5, label: "Get Support", emoji: "🤝", message: "Hello! I need assistance with my booking." },
-  { id: 6, label: "Price Quote", emoji: "💰", message: "Hi! Can I get a price quote for your services?" },
+  {
+    id: 1,
+    label: "General Inquiry",
+    emoji: "💬",
+    message:
+      "Hello! I'm interested in learning more about your travel services.",
+  },
+  {
+    id: 2,
+    label: "Book a Trip",
+    emoji: "✈️",
+    message: "Hi! I would like to book a trip. Can you help me?",
+  },
+  {
+    id: 3,
+    label: "Tour Packages",
+    emoji: "🎒",
+    message: "Hello! I'm interested in your tour packages.",
+  },
+  {
+    id: 4,
+    label: "Custom Itinerary",
+    emoji: "📋",
+    message: "Hi! I need help creating a custom travel itinerary.",
+  },
+  {
+    id: 5,
+    label: "Get Support",
+    emoji: "🤝",
+    message: "Hello! I need assistance with my booking.",
+  },
+  {
+    id: 6,
+    label: "Price Quote",
+    emoji: "💰",
+    message: "Hi! Can I get a price quote for your services?",
+  },
 ];
 
 // ============================================================
@@ -27,7 +60,7 @@ const PRESET_MESSAGES = [
 // ============================================================
 class NotificationTracker {
   constructor() {
-    this.storageKey = 'altuvera_wa_state';
+    this.storageKey = "altuvera_wa_state";
   }
 
   getState() {
@@ -69,7 +102,11 @@ class NotificationTracker {
   shouldShowBadge() {
     const state = this.getState();
     // Show badge if user sent a message and enough time passed
-    if (state.expectReplyAfter && Date.now() > state.expectReplyAfter && !state.pendingBadge) {
+    if (
+      state.expectReplyAfter &&
+      Date.now() > state.expectReplyAfter &&
+      !state.pendingBadge
+    ) {
       this.setState({ pendingBadge: true });
       return true;
     }
@@ -110,43 +147,118 @@ const Icons = {
     </svg>
   ),
   Close: ({ size = 20, color = "#128C7E" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
   ),
   Send: ({ size = 20, color = "#fff" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="22" y1="2" x2="11" y2="13" />
+      <polygon points="22 2 15 22 11 13 2 9 22 2" />
     </svg>
   ),
   User: ({ size = 16, color = "#25D366" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
     </svg>
   ),
   MessageSquare: ({ size = 16, color = "#25D366" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
     </svg>
   ),
   Chat: ({ size = 22, color = "#fff" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
     </svg>
   ),
   Phone: ({ size = 14, color = "#128C7E" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
     </svg>
   ),
   Shield: ({ size = 14, color = "#25D366" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
       <polyline points="9 12 11 14 15 10" />
     </svg>
   ),
   Rocket: ({ size = 40, color = "#fff" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
       <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
       <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
@@ -154,30 +266,78 @@ const Icons = {
     </svg>
   ),
   ArrowRight: ({ size = 18, color = "#128C7E" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="5" y1="12" x2="19" y2="12" />
+      <polyline points="12 5 19 12 12 19" />
     </svg>
   ),
   ArrowLeft: ({ size = 16, color = "#128C7E" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <line x1="19" y1="12" x2="5" y2="12" />
+      <polyline points="12 19 5 12 12 5" />
     </svg>
   ),
   Check: ({ size = 12, color = "#fff" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <polyline points="20 6 9 17 4 12" />
     </svg>
   ),
   ExternalLink: ({ size = 14, color = "#128C7E" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
       <polyline points="15 3 21 3 21 9" />
       <line x1="10" y1="14" x2="21" y2="3" />
     </svg>
   ),
   Clock: ({ size = 14, color = "#25D366" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="10" />
+      <polyline points="12 6 12 12 16 14" />
     </svg>
   ),
 };
@@ -187,19 +347,49 @@ const Icons = {
 // ============================================================
 const fireConfetti = () => {
   const end = Date.now() + 2500;
-  const colors = ['#25D366', '#128C7E', '#ffffff', '#dcfce7', '#a7f3d0'];
-  const defaults = { startVelocity: 25, spread: 360, ticks: 50, zIndex: 99999999 };
+  const colors = ["#25D366", "#128C7E", "#ffffff", "#dcfce7", "#a7f3d0"];
+  const defaults = {
+    startVelocity: 25,
+    spread: 360,
+    ticks: 50,
+    zIndex: 99999999,
+  };
 
   const interval = setInterval(() => {
     if (Date.now() > end) return clearInterval(interval);
-    confetti({ ...defaults, particleCount: 30, origin: { x: Math.random(), y: Math.random() * 0.4 }, colors });
+    confetti({
+      ...defaults,
+      particleCount: 30,
+      origin: { x: Math.random(), y: Math.random() * 0.4 },
+      colors,
+    });
   }, 200);
 
-  confetti({ particleCount: 80, spread: 60, origin: { y: 0.65 }, colors, zIndex: 99999999 });
+  confetti({
+    particleCount: 80,
+    spread: 60,
+    origin: { y: 0.65 },
+    colors,
+    zIndex: 99999999,
+  });
 
   setTimeout(() => {
-    confetti({ particleCount: 40, angle: 60, spread: 50, origin: { x: 0 }, colors, zIndex: 99999999 });
-    confetti({ particleCount: 40, angle: 120, spread: 50, origin: { x: 1 }, colors, zIndex: 99999999 });
+    confetti({
+      particleCount: 40,
+      angle: 60,
+      spread: 50,
+      origin: { x: 0 },
+      colors,
+      zIndex: 99999999,
+    });
+    confetti({
+      particleCount: 40,
+      angle: 120,
+      spread: 50,
+      origin: { x: 1 },
+      colors,
+      zIndex: 99999999,
+    });
   }, 300);
 };
 
@@ -210,13 +400,15 @@ const WhatsAppButton = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [selectedPreset, setSelectedPreset] = useState(null);
-  const [customMessage, setCustomMessage] = useState('');
-  const [userName, setUserName] = useState('');
+  const [customMessage, setCustomMessage] = useState("");
+  const [userName, setUserName] = useState("");
   const [isVisible, setIsVisible] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showBadge, setShowBadge] = useState(false);
-  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200,
+  );
   const badgeTimerRef = useRef(null);
 
   const isMobile = windowWidth < 480;
@@ -224,8 +416,8 @@ const WhatsAppButton = () => {
   // ── Lifecycle ──
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   useEffect(() => {
@@ -255,22 +447,27 @@ const WhatsAppButton = () => {
 
   useEffect(() => {
     if (isModalOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = "";
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isModalOpen]);
 
   // ── Helpers ──
-  const generateWhatsAppURL = useCallback((message = '') => {
-    const phone = CONTACT_INFO.whatsapp.replace(/\D/g, '');
-    if (message) {
-      const full = userName ? `Hi, I'm ${userName}.\n\n${message}` : message;
-      return `https://api.whatsapp.com/send/?phone=${phone}&text=${encodeURIComponent(full)}&type=phone_number&app_absent=0`;
-    }
-    return `https://api.whatsapp.com/send/?phone=${phone}&type=phone_number&app_absent=0`;
-  }, [userName]);
+  const generateWhatsAppURL = useCallback(
+    (message = "") => {
+      const phone = CONTACT_INFO.whatsapp.replace(/\D/g, "");
+      if (message) {
+        const full = userName ? `Hi, I'm ${userName}.\n\n${message}` : message;
+        return `https://api.whatsapp.com/send/?phone=${phone}&text=${encodeURIComponent(full)}&type=phone_number&app_absent=0`;
+      }
+      return `https://api.whatsapp.com/send/?phone=${phone}&type=phone_number&app_absent=0`;
+    },
+    [userName],
+  );
 
   const handleOpenModal = useCallback(() => {
     setIsModalOpen(true);
@@ -284,8 +481,8 @@ const WhatsAppButton = () => {
     setTimeout(() => {
       setStep(1);
       setSelectedPreset(null);
-      setCustomMessage('');
-      setUserName('');
+      setCustomMessage("");
+      setUserName("");
       setShowSuccess(false);
       setIsSending(false);
     }, 300);
@@ -297,7 +494,7 @@ const WhatsAppButton = () => {
     fireConfetti();
     tracker.recordMessageSent();
     setTimeout(() => {
-      window.open(generateWhatsAppURL(), '_blank');
+      window.open(generateWhatsAppURL(), "_blank");
       setIsSending(false);
       setTimeout(handleCloseModal, 600);
     }, 1400);
@@ -305,7 +502,7 @@ const WhatsAppButton = () => {
 
   const handleSendMessage = useCallback(() => {
     const msg = selectedPreset
-      ? PRESET_MESSAGES.find(p => p.id === selectedPreset)?.message
+      ? PRESET_MESSAGES.find((p) => p.id === selectedPreset)?.message
       : customMessage;
     if (!msg) return;
 
@@ -315,7 +512,7 @@ const WhatsAppButton = () => {
     tracker.recordMessageSent();
 
     setTimeout(() => {
-      window.open(generateWhatsAppURL(msg), '_blank');
+      window.open(generateWhatsAppURL(msg), "_blank");
       setIsSending(false);
       setTimeout(handleCloseModal, 600);
     }, 1400);
@@ -333,39 +530,68 @@ const WhatsAppButton = () => {
         {isVisible && (
           <motion.div
             style={{
-              position: 'fixed', bottom: isMobile ? '16px' : '24px',
-              left: isMobile ? '16px' : '24px', zIndex: 999999,
-              display: 'flex', alignItems: 'center', gap: '10px',
+              position: "fixed",
+              bottom: isMobile ? "16px" : "24px",
+              left: isMobile ? "16px" : "24px",
+              zIndex: 999999,
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
             }}
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.2 }}
+            transition={{
+              type: "spring",
+              stiffness: 260,
+              damping: 20,
+              delay: 0.2,
+            }}
           >
             {/* Pulse rings */}
             <motion.div
               style={{
-                position: 'absolute', width: '58px', height: '58px',
-                borderRadius: '50%', backgroundColor: '#25D366',
-                left: '-3px', top: '-3px', zIndex: 0,
+                position: "absolute",
+                width: "58px",
+                height: "58px",
+                borderRadius: "50%",
+                backgroundColor: "#25D366",
+                left: "-3px",
+                top: "-3px",
+                zIndex: 0,
               }}
               animate={{ scale: [1, 1.4, 1], opacity: [0.4, 0, 0.4] }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{
+                duration: 2.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
             />
 
             {/* Main button */}
             <motion.button
               onClick={handleOpenModal}
               style={{
-                width: '52px', height: '52px', borderRadius: '50%',
-                background: 'linear-gradient(135deg, #25D366 0%, #128C7E 100%)',
-                border: '3px solid #fff', cursor: 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 4px 20px rgba(37,211,102,0.45)',
-                position: 'relative', zIndex: 2, outline: 'none',
+                width: "52px",
+                height: "52px",
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+                border: "3px solid #fff",
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                boxShadow: "0 4px 20px rgba(37,211,102,0.45)",
+                position: "relative",
+                zIndex: 2,
+                outline: "none",
               }}
               animate={{ y: [0, -5, 0] }}
-              transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+              transition={{
+                duration: 2.5,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
               whileHover={{ scale: 1.12 }}
               whileTap={{ scale: 0.92 }}
             >
@@ -376,13 +602,22 @@ const WhatsAppButton = () => {
                 {showBadge && (
                   <motion.div
                     style={{
-                      position: 'absolute', top: '-5px', right: '-5px',
-                      width: '20px', height: '20px', borderRadius: '50%',
-                      background: '#dc2626', color: '#fff', fontSize: '11px',
-                      fontWeight: '800', display: 'flex', alignItems: 'center',
-                      justifyContent: 'center', border: '2px solid #fff',
-                      boxShadow: '0 2px 8px rgba(220,38,38,0.5)',
-                      fontFamily: 'system-ui, sans-serif',
+                      position: "absolute",
+                      top: "-5px",
+                      right: "-5px",
+                      width: "20px",
+                      height: "20px",
+                      borderRadius: "50%",
+                      background: "#dc2626",
+                      color: "#fff",
+                      fontSize: "11px",
+                      fontWeight: "800",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      border: "2px solid #fff",
+                      boxShadow: "0 2px 8px rgba(220,38,38,0.5)",
+                      fontFamily: "system-ui, sans-serif",
                     }}
                     initial={{ scale: 0 }}
                     animate={{ scale: [1, 1.2, 1] }}
@@ -398,17 +633,28 @@ const WhatsAppButton = () => {
             {/* Tooltip */}
             <motion.div
               style={{
-                backgroundColor: '#fff', color: '#128C7E', padding: '7px 14px',
-                borderRadius: '20px', fontSize: '13px', fontWeight: '600',
-                boxShadow: '0 3px 15px rgba(0,0,0,0.08)', whiteSpace: 'nowrap',
-                border: '1px solid #e8f5e9', display: 'flex', alignItems: 'center', gap: '5px',
-                fontFamily: 'system-ui, -apple-system, sans-serif',
+                backgroundColor: "#fff",
+                color: "#128C7E",
+                padding: "7px 14px",
+                borderRadius: "20px",
+                fontSize: "13px",
+                fontWeight: "600",
+                boxShadow: "0 3px 15px rgba(0,0,0,0.08)",
+                whiteSpace: "nowrap",
+                border: "1px solid #e8f5e9",
+                display: "flex",
+                alignItems: "center",
+                gap: "5px",
+                fontFamily: "system-ui, -apple-system, sans-serif",
               }}
               initial={{ opacity: 0, x: -15 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 1.5, type: 'spring' }}
+              transition={{ delay: 1.5, type: "spring" }}
             >
-              <motion.span animate={{ opacity: [1, 0.6, 1] }} transition={{ duration: 1.5, repeat: Infinity }}>
+              <motion.span
+                animate={{ opacity: [1, 0.6, 1] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
                 💬
               </motion.span>
               Chat with us!
@@ -422,12 +668,18 @@ const WhatsAppButton = () => {
         {isModalOpen && (
           <motion.div
             style={{
-              position: 'fixed', inset: 0,
-              backgroundColor: 'rgba(0,0,0,0.45)',
-              backdropFilter: 'blur(6px)', WebkitBackdropFilter: 'blur(6px)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              zIndex: 9999999, padding: '16px',
-              fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              position: "fixed",
+              inset: 0,
+              backgroundColor: "rgba(0,0,0,0.45)",
+              backdropFilter: "blur(6px)",
+              WebkitBackdropFilter: "blur(6px)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 9999999,
+              padding: "16px",
+              fontFamily:
+                'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -436,37 +688,58 @@ const WhatsAppButton = () => {
           >
             <motion.div
               style={{
-                backgroundColor: '#ffffff', borderRadius: '22px',
-                width: isMobile ? '100%' : '400px', maxWidth: '400px',
-                maxHeight: isMobile ? '92vh' : '88vh',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
-                display: 'flex', flexDirection: 'column',
-                overflow: 'hidden', position: 'relative',
+                backgroundColor: "#ffffff",
+                borderRadius: "22px",
+                width: isMobile ? "100%" : "400px",
+                maxWidth: "400px",
+                maxHeight: isMobile ? "92vh" : "88vh",
+                boxShadow: "0 20px 60px rgba(0,0,0,0.18)",
+                display: "flex",
+                flexDirection: "column",
+                overflow: "hidden",
+                position: "relative",
               }}
               initial={{ opacity: 0, scale: 0.88, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.88, y: 50 }}
-              transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+              transition={{ type: "spring", stiffness: 320, damping: 28 }}
               onClick={(e) => e.stopPropagation()}
             >
               {/* Green accent bar */}
-              <div style={{
-                height: '4px', flexShrink: 0,
-                background: 'linear-gradient(90deg, #25D366, #128C7E, #25D366)',
-              }} />
+              <div
+                style={{
+                  height: "4px",
+                  flexShrink: 0,
+                  background:
+                    "linear-gradient(90deg, #25D366, #128C7E, #25D366)",
+                }}
+              />
 
               {/* Close button */}
               <motion.button
                 onClick={handleCloseModal}
                 style={{
-                  position: 'absolute', top: '14px', right: '14px',
-                  width: '34px', height: '34px', borderRadius: '50%',
-                  border: '1px solid #e8f5e9', backgroundColor: '#fff',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', zIndex: 20,
-                  boxShadow: '0 2px 6px rgba(0,0,0,0.06)', outline: 'none',
+                  position: "absolute",
+                  top: "14px",
+                  right: "14px",
+                  width: "34px",
+                  height: "34px",
+                  borderRadius: "50%",
+                  border: "1px solid #e8f5e9",
+                  backgroundColor: "#fff",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  zIndex: 20,
+                  boxShadow: "0 2px 6px rgba(0,0,0,0.06)",
+                  outline: "none",
                 }}
-                whileHover={{ scale: 1.1, rotate: 90, backgroundColor: '#dcfce7' }}
+                whileHover={{
+                  scale: 1.1,
+                  rotate: 90,
+                  backgroundColor: "#dcfce7",
+                }}
                 whileTap={{ scale: 0.9 }}
               >
                 <Icons.Close size={14} />
@@ -477,55 +750,90 @@ const WhatsAppButton = () => {
                 {showSuccess && (
                   <motion.div
                     style={{
-                      position: 'absolute', inset: 0, backgroundColor: '#fff',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      zIndex: 50, borderRadius: '22px',
+                      position: "absolute",
+                      inset: 0,
+                      backgroundColor: "#fff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      zIndex: 50,
+                      borderRadius: "22px",
                     }}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
                     <motion.div
-                      style={{ textAlign: 'center', padding: '40px 24px' }}
+                      style={{ textAlign: "center", padding: "40px 24px" }}
                       initial={{ scale: 0, rotate: -180 }}
                       animate={{ scale: 1, rotate: 0 }}
-                      transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+                      transition={{
+                        type: "spring",
+                        stiffness: 200,
+                        damping: 15,
+                      }}
                     >
                       <motion.div
                         style={{
-                          width: '80px', height: '80px', borderRadius: '50%',
-                          background: 'linear-gradient(135deg, #25D366, #128C7E)',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          margin: '0 auto 20px',
-                          boxShadow: '0 10px 35px rgba(37,211,102,0.35)',
+                          width: "80px",
+                          height: "80px",
+                          borderRadius: "50%",
+                          background:
+                            "linear-gradient(135deg, #25D366, #128C7E)",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          margin: "0 auto 20px",
+                          boxShadow: "0 10px 35px rgba(37,211,102,0.35)",
                         }}
                         animate={{ scale: [1, 1.15, 1] }}
                         transition={{ duration: 0.5, repeat: 2 }}
                       >
                         <Icons.Rocket />
                       </motion.div>
-                      <h3 style={{
-                        margin: '0 0 8px', fontSize: '1.25rem',
-                        fontWeight: '700', color: '#1a1a1a',
-                      }}>
+                      <h3
+                        style={{
+                          margin: "0 0 8px",
+                          fontSize: "1.25rem",
+                          fontWeight: "700",
+                          color: "#1a1a1a",
+                        }}
+                      >
                         Opening WhatsApp!
                       </h3>
-                      <p style={{ margin: 0, fontSize: '0.88rem', color: '#777' }}>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: "0.88rem",
+                          color: "#777",
+                        }}
+                      >
                         Connecting you now…
                       </p>
-                      <div style={{
-                        display: 'flex', justifyContent: 'center',
-                        gap: '8px', marginTop: '22px',
-                      }}>
-                        {[0, 1, 2].map(i => (
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          gap: "8px",
+                          marginTop: "22px",
+                        }}
+                      >
+                        {[0, 1, 2].map((i) => (
                           <motion.span
                             key={i}
                             style={{
-                              width: '10px', height: '10px', borderRadius: '50%',
-                              backgroundColor: '#25D366', display: 'inline-block',
+                              width: "10px",
+                              height: "10px",
+                              borderRadius: "50%",
+                              backgroundColor: "#25D366",
+                              display: "inline-block",
                             }}
                             animate={{ y: [0, -12, 0] }}
-                            transition={{ duration: 0.5, repeat: Infinity, delay: i * 0.15 }}
+                            transition={{
+                              duration: 0.5,
+                              repeat: Infinity,
+                              delay: i * 0.15,
+                            }}
                           />
                         ))}
                       </div>
@@ -535,120 +843,205 @@ const WhatsAppButton = () => {
               </AnimatePresence>
 
               {/* ═══ HEADER — Fixed ═══ */}
-              <div style={{
-                textAlign: 'center', flexShrink: 0,
-                padding: isMobile ? '18px 16px 14px' : '22px 24px 14px',
-                background: 'linear-gradient(180deg, #f0fdf4 0%, #fff 100%)',
-              }}>
+              <div
+                style={{
+                  textAlign: "center",
+                  flexShrink: 0,
+                  padding: isMobile ? "18px 16px 14px" : "22px 24px 14px",
+                  background: "linear-gradient(180deg, #f0fdf4 0%, #fff 100%)",
+                }}
+              >
                 <motion.div
                   style={{
-                    width: '56px', height: '56px', borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #25D366, #128C7E)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    margin: '0 auto 10px', border: '3px solid #fff',
-                    boxShadow: '0 6px 22px rgba(37,211,102,0.3)',
+                    width: "56px",
+                    height: "56px",
+                    borderRadius: "50%",
+                    background: "linear-gradient(135deg, #25D366, #128C7E)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    margin: "0 auto 10px",
+                    border: "3px solid #fff",
+                    boxShadow: "0 6px 22px rgba(37,211,102,0.3)",
                   }}
                   animate={{
                     boxShadow: [
-                      '0 6px 22px rgba(37,211,102,0.25)',
-                      '0 6px 32px rgba(37,211,102,0.45)',
-                      '0 6px 22px rgba(37,211,102,0.25)',
-                    ]
+                      "0 6px 22px rgba(37,211,102,0.25)",
+                      "0 6px 32px rgba(37,211,102,0.45)",
+                      "0 6px 22px rgba(37,211,102,0.25)",
+                    ],
                   }}
                   transition={{ duration: 2.5, repeat: Infinity }}
                 >
                   <Icons.WhatsApp size={26} />
                 </motion.div>
 
-                <h3 style={{
-                  margin: '0 0 3px', fontSize: '1.2rem',
-                  fontWeight: '700', color: '#111',
-                }}>
+                <h3
+                  style={{
+                    margin: "0 0 3px",
+                    fontSize: "1.2rem",
+                    fontWeight: "700",
+                    color: "#111",
+                  }}
+                >
                   Let's Connect!
                 </h3>
 
-                <p style={{ margin: '0 0 8px', fontSize: '0.85rem', color: '#666' }}>
-                  Chat with <strong style={{ color: '#128C7E' }}>{CONTACT_INFO.name}</strong>
+                <p
+                  style={{
+                    margin: "0 0 8px",
+                    fontSize: "0.85rem",
+                    color: "#666",
+                  }}
+                >
+                  Chat with{" "}
+                  <strong style={{ color: "#128C7E" }}>
+                    {CONTACT_INFO.name}
+                  </strong>
                 </p>
 
-                <div style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '5px',
-                  backgroundColor: '#e8f5e9', padding: '4px 12px', borderRadius: '20px',
-                  fontSize: '0.78rem', color: '#128C7E', fontWeight: '600',
-                  border: '1px solid #c8e6c9',
-                }}>
+                <div
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "5px",
+                    backgroundColor: "#e8f5e9",
+                    padding: "6px 14px",
+                    borderRadius: "16px",
+                    fontSize: "0.75rem",
+                    color: "#128C7E",
+                    fontWeight: "600",
+                    border: "1px solid #c8e6c9",
+                  }}
+                >
                   <Icons.Phone />
-                  <span>{CONTACT_INFO.whatsappDisplay}</span>
+                  <span style={{ lineHeight: "1.4", textAlign: "left" }}>
+                    {CONTACT_INFO.phone1}
+                    <br />
+                    {CONTACT_INFO.phone2}
+                  </span>
                 </div>
 
-                <div style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  gap: '5px', marginTop: '8px',
-                }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "5px",
+                    marginTop: "8px",
+                  }}
+                >
                   <motion.div
                     style={{
-                      width: '7px', height: '7px', borderRadius: '50%',
-                      backgroundColor: '#25D366',
+                      width: "7px",
+                      height: "7px",
+                      borderRadius: "50%",
+                      backgroundColor: "#25D366",
                     }}
                     animate={{ scale: [1, 1.4, 1], opacity: [1, 0.6, 1] }}
                     transition={{ duration: 1.5, repeat: Infinity }}
                   />
-                  <span style={{ fontSize: '0.72rem', color: '#999' }}>
+                  <span style={{ fontSize: "0.72rem", color: "#999" }}>
                     Online • Replies instantly
                   </span>
                 </div>
               </div>
 
               {/* ═══ SCROLLABLE CONTENT ═══ */}
-              <div style={{
-                flex: 1, overflowY: 'auto', overflowX: 'hidden',
-                WebkitOverflowScrolling: 'touch',
-              }}>
+              <div
+                style={{
+                  flex: 1,
+                  overflowY: "auto",
+                  overflowX: "hidden",
+                  WebkitOverflowScrolling: "touch",
+                }}
+              >
                 <AnimatePresence mode="wait">
                   {/* ── STEP 1: Choose action ── */}
                   {step === 1 && (
                     <motion.div
                       key="step1"
-                      style={{ padding: isMobile ? '14px 16px 18px' : '16px 24px 22px' }}
+                      style={{
+                        padding: isMobile ? "14px 16px 18px" : "16px 24px 22px",
+                      }}
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: 20 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <p style={{
-                        textAlign: 'center', color: '#888', fontSize: '0.84rem',
-                        margin: '0 0 14px', fontWeight: '500',
-                      }}>
+                      <p
+                        style={{
+                          textAlign: "center",
+                          color: "#888",
+                          fontSize: "0.84rem",
+                          margin: "0 0 14px",
+                          fontWeight: "500",
+                        }}
+                      >
                         How would you like to start?
                       </p>
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div
+                        style={{
+                          display: "flex",
+                          flexDirection: "column",
+                          gap: "10px",
+                        }}
+                      >
                         {/* Option: Quick message */}
                         <motion.button
                           onClick={() => setStep(2)}
                           style={{
-                            display: 'flex', alignItems: 'center', gap: '12px',
-                            padding: '14px', backgroundColor: '#fff',
-                            border: '2px solid #c8e6c9', borderRadius: '16px',
-                            cursor: 'pointer', textAlign: 'left', width: '100%',
-                            outline: 'none', transition: 'border-color 0.15s',
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                            padding: "14px",
+                            backgroundColor: "#fff",
+                            border: "2px solid #c8e6c9",
+                            borderRadius: "16px",
+                            cursor: "pointer",
+                            textAlign: "left",
+                            width: "100%",
+                            outline: "none",
+                            transition: "border-color 0.15s",
                           }}
-                          whileHover={{ scale: 1.015, y: -2, borderColor: '#25D366', boxShadow: '0 8px 25px rgba(37,211,102,0.1)' }}
+                          whileHover={{
+                            scale: 1.015,
+                            y: -2,
+                            borderColor: "#25D366",
+                            boxShadow: "0 8px 25px rgba(37,211,102,0.1)",
+                          }}
                           whileTap={{ scale: 0.98 }}
                         >
-                          <div style={{
-                            width: '44px', height: '44px', borderRadius: '12px',
-                            background: 'linear-gradient(135deg, #25D366, #128C7E)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            flexShrink: 0, boxShadow: '0 4px 12px rgba(37,211,102,0.2)',
-                          }}>
+                          <div
+                            style={{
+                              width: "44px",
+                              height: "44px",
+                              borderRadius: "12px",
+                              background:
+                                "linear-gradient(135deg, #25D366, #128C7E)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                              boxShadow: "0 4px 12px rgba(37,211,102,0.2)",
+                            }}
+                          >
                             <Icons.Chat />
                           </div>
                           <div style={{ flex: 1 }}>
-                            <strong style={{ fontSize: '0.92rem', color: '#111', display: 'block' }}>
+                            <strong
+                              style={{
+                                fontSize: "0.92rem",
+                                color: "#111",
+                                display: "block",
+                              }}
+                            >
                               Send a Message
                             </strong>
-                            <span style={{ fontSize: '0.78rem', color: '#888' }}>
+                            <span
+                              style={{ fontSize: "0.78rem", color: "#888" }}
+                            >
                               Choose a preset or write your own
                             </span>
                           </div>
@@ -665,30 +1058,56 @@ const WhatsAppButton = () => {
                           onClick={handleDirectOpen}
                           disabled={isSending}
                           style={{
-                            display: 'flex', alignItems: 'center', gap: '12px',
-                            padding: '14px', backgroundColor: '#fff',
-                            border: '2px solid #c8e6c9', borderRadius: '16px',
-                            cursor: 'pointer', textAlign: 'left', width: '100%',
-                            outline: 'none', opacity: isSending ? 0.6 : 1,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px",
+                            padding: "14px",
+                            backgroundColor: "#fff",
+                            border: "2px solid #c8e6c9",
+                            borderRadius: "16px",
+                            cursor: "pointer",
+                            textAlign: "left",
+                            width: "100%",
+                            outline: "none",
+                            opacity: isSending ? 0.6 : 1,
                           }}
-                          whileHover={{ scale: 1.015, y: -2, borderColor: '#25D366', boxShadow: '0 8px 25px rgba(37,211,102,0.1)' }}
+                          whileHover={{
+                            scale: 1.015,
+                            y: -2,
+                            borderColor: "#25D366",
+                            boxShadow: "0 8px 25px rgba(37,211,102,0.1)",
+                          }}
                           whileTap={{ scale: 0.98 }}
                         >
                           <motion.div
                             style={{
-                              width: '44px', height: '44px', borderRadius: '12px',
-                              background: 'linear-gradient(135deg, #128C7E, #0a6847)',
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              flexShrink: 0, boxShadow: '0 4px 12px rgba(18,140,126,0.2)',
+                              width: "44px",
+                              height: "44px",
+                              borderRadius: "12px",
+                              background:
+                                "linear-gradient(135deg, #128C7E, #0a6847)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              flexShrink: 0,
+                              boxShadow: "0 4px 12px rgba(18,140,126,0.2)",
                             }}
                           >
                             <Icons.WhatsApp size={22} />
                           </motion.div>
                           <div style={{ flex: 1 }}>
-                            <strong style={{ fontSize: '0.92rem', color: '#111', display: 'block' }}>
+                            <strong
+                              style={{
+                                fontSize: "0.92rem",
+                                color: "#111",
+                                display: "block",
+                              }}
+                            >
                               Open WhatsApp Directly
                             </strong>
-                            <span style={{ fontSize: '0.78rem', color: '#888' }}>
+                            <span
+                              style={{ fontSize: "0.78rem", color: "#888" }}
+                            >
                               Jump straight into chat
                             </span>
                           </div>
@@ -699,17 +1118,28 @@ const WhatsAppButton = () => {
                       {/* Response time badge */}
                       <motion.div
                         style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          gap: '6px', marginTop: '16px', padding: '8px 14px',
-                          backgroundColor: '#f0fdf4', borderRadius: '12px',
-                          border: '1px solid #e8f5e9',
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "6px",
+                          marginTop: "16px",
+                          padding: "8px 14px",
+                          backgroundColor: "#f0fdf4",
+                          borderRadius: "12px",
+                          border: "1px solid #e8f5e9",
                         }}
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
                       >
                         <Icons.Clock />
-                        <span style={{ fontSize: '0.75rem', color: '#128C7E', fontWeight: '500' }}>
+                        <span
+                          style={{
+                            fontSize: "0.75rem",
+                            color: "#128C7E",
+                            fontWeight: "500",
+                          }}
+                        >
                           Typical response time: under 5 minutes
                         </span>
                       </motion.div>
@@ -720,7 +1150,9 @@ const WhatsAppButton = () => {
                   {step === 2 && (
                     <motion.div
                       key="step2"
-                      style={{ padding: isMobile ? '14px 16px 18px' : '16px 24px 22px' }}
+                      style={{
+                        padding: isMobile ? "14px 16px 18px" : "16px 24px 22px",
+                      }}
                       initial={{ opacity: 0, x: 20 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -20 }}
@@ -730,10 +1162,18 @@ const WhatsAppButton = () => {
                       <motion.button
                         onClick={() => setStep(1)}
                         style={{
-                          display: 'inline-flex', alignItems: 'center', gap: '5px',
-                          background: 'none', border: 'none', color: '#128C7E',
-                          fontSize: '0.82rem', cursor: 'pointer', padding: '0',
-                          marginBottom: '16px', fontWeight: '600', outline: 'none',
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "5px",
+                          background: "none",
+                          border: "none",
+                          color: "#128C7E",
+                          fontSize: "0.82rem",
+                          cursor: "pointer",
+                          padding: "0",
+                          marginBottom: "16px",
+                          fontWeight: "600",
+                          outline: "none",
                         }}
                         whileHover={{ x: -3 }}
                         whileTap={{ scale: 0.95 }}
@@ -743,15 +1183,29 @@ const WhatsAppButton = () => {
                       </motion.button>
 
                       {/* Name input */}
-                      <div style={{ marginBottom: '18px' }}>
-                        <label style={{
-                          display: 'flex', alignItems: 'center', gap: '6px',
-                          fontSize: '0.84rem', fontWeight: '600', color: '#222',
-                          marginBottom: '8px',
-                        }}>
+                      <div style={{ marginBottom: "18px" }}>
+                        <label
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            fontSize: "0.84rem",
+                            fontWeight: "600",
+                            color: "#222",
+                            marginBottom: "8px",
+                          }}
+                        >
                           <Icons.User />
                           <span>Your Name</span>
-                          <span style={{ fontSize: '0.7rem', color: '#bbb', fontWeight: '400' }}>(optional)</span>
+                          <span
+                            style={{
+                              fontSize: "0.7rem",
+                              color: "#bbb",
+                              fontWeight: "400",
+                            }}
+                          >
+                            (optional)
+                          </span>
                         </label>
                         <input
                           type="text"
@@ -759,69 +1213,105 @@ const WhatsAppButton = () => {
                           onChange={(e) => setUserName(e.target.value)}
                           placeholder="Enter your name…"
                           style={{
-                            width: '100%', padding: '12px 16px', borderRadius: '12px',
-                            border: '2px solid #c8e6c9', fontSize: '0.9rem',
-                            outline: 'none', boxSizing: 'border-box',
-                            backgroundColor: '#fff', color: '#1a1a1a',
-                            transition: 'border-color 0.15s, box-shadow 0.15s',
-                            fontFamily: 'inherit',
+                            width: "100%",
+                            padding: "12px 16px",
+                            borderRadius: "12px",
+                            border: "2px solid #c8e6c9",
+                            fontSize: "0.9rem",
+                            outline: "none",
+                            boxSizing: "border-box",
+                            backgroundColor: "#fff",
+                            color: "#1a1a1a",
+                            transition: "border-color 0.15s, box-shadow 0.15s",
+                            fontFamily: "inherit",
                           }}
                           onFocus={(e) => {
-                            e.target.style.borderColor = '#25D366';
-                            e.target.style.boxShadow = '0 0 0 3px rgba(37,211,102,0.1)';
+                            e.target.style.borderColor = "#25D366";
+                            e.target.style.boxShadow =
+                              "0 0 0 3px rgba(37,211,102,0.1)";
                           }}
                           onBlur={(e) => {
-                            e.target.style.borderColor = '#c8e6c9';
-                            e.target.style.boxShadow = 'none';
+                            e.target.style.borderColor = "#c8e6c9";
+                            e.target.style.boxShadow = "none";
                           }}
                         />
                       </div>
 
                       {/* Preset Messages */}
-                      <div style={{ marginBottom: '18px' }}>
-                        <label style={{
-                          display: 'flex', alignItems: 'center', gap: '6px',
-                          fontSize: '0.84rem', fontWeight: '600', color: '#222',
-                          marginBottom: '8px',
-                        }}>
+                      <div style={{ marginBottom: "18px" }}>
+                        <label
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            fontSize: "0.84rem",
+                            fontWeight: "600",
+                            color: "#222",
+                            marginBottom: "8px",
+                          }}
+                        >
                           <Icons.MessageSquare />
                           <span>Quick Messages</span>
                         </label>
 
-                        <div style={{
-                          display: 'grid', gap: '8px',
-                          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-                        }}>
+                        <div
+                          style={{
+                            display: "grid",
+                            gap: "8px",
+                            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                          }}
+                        >
                           {PRESET_MESSAGES.map((preset, index) => {
                             const isActive = selectedPreset === preset.id;
                             return (
                               <motion.button
                                 key={preset.id}
-                                onClick={() => { setSelectedPreset(preset.id); setCustomMessage(''); }}
+                                onClick={() => {
+                                  setSelectedPreset(preset.id);
+                                  setCustomMessage("");
+                                }}
                                 style={{
-                                  display: 'flex', alignItems: 'center', gap: '8px',
-                                  padding: '10px 12px',
-                                  backgroundColor: isActive ? '#dcfce7' : '#fff',
-                                  border: `2px solid ${isActive ? '#25D366' : '#c8e6c9'}`,
-                                  borderRadius: '12px', cursor: 'pointer',
-                                  textAlign: 'left', width: '100%',
-                                  position: 'relative', outline: 'none',
-                                  transition: 'border-color 0.1s, background-color 0.1s',
+                                  display: "flex",
+                                  alignItems: "center",
+                                  gap: "8px",
+                                  padding: "10px 12px",
+                                  backgroundColor: isActive
+                                    ? "#dcfce7"
+                                    : "#fff",
+                                  border: `2px solid ${isActive ? "#25D366" : "#c8e6c9"}`,
+                                  borderRadius: "12px",
+                                  cursor: "pointer",
+                                  textAlign: "left",
+                                  width: "100%",
+                                  position: "relative",
+                                  outline: "none",
+                                  transition:
+                                    "border-color 0.1s, background-color 0.1s",
                                 }}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.04 }}
                                 whileHover={{
-                                  borderColor: '#25D366',
-                                  backgroundColor: isActive ? '#dcfce7' : '#f0fdf4',
+                                  borderColor: "#25D366",
+                                  backgroundColor: isActive
+                                    ? "#dcfce7"
+                                    : "#f0fdf4",
                                 }}
                                 whileTap={{ scale: 0.97 }}
                               >
-                                <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{preset.emoji}</span>
-                                <span style={{
-                                  flex: 1, fontSize: '0.8rem', fontWeight: '500',
-                                  color: isActive ? '#128C7E' : '#333',
-                                }}>
+                                <span
+                                  style={{ fontSize: "1.1rem", flexShrink: 0 }}
+                                >
+                                  {preset.emoji}
+                                </span>
+                                <span
+                                  style={{
+                                    flex: 1,
+                                    fontSize: "0.8rem",
+                                    fontWeight: "500",
+                                    color: isActive ? "#128C7E" : "#333",
+                                  }}
+                                >
                                   {preset.label}
                                 </span>
 
@@ -829,17 +1319,29 @@ const WhatsAppButton = () => {
                                   {isActive && (
                                     <motion.span
                                       style={{
-                                        position: 'absolute', top: '-6px', right: '-6px',
-                                        width: '20px', height: '20px', borderRadius: '50%',
-                                        background: 'linear-gradient(135deg, #25D366, #128C7E)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        border: '2px solid #fff',
-                                        boxShadow: '0 2px 8px rgba(37,211,102,0.3)',
+                                        position: "absolute",
+                                        top: "-6px",
+                                        right: "-6px",
+                                        width: "20px",
+                                        height: "20px",
+                                        borderRadius: "50%",
+                                        background:
+                                          "linear-gradient(135deg, #25D366, #128C7E)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        border: "2px solid #fff",
+                                        boxShadow:
+                                          "0 2px 8px rgba(37,211,102,0.3)",
                                       }}
                                       initial={{ scale: 0 }}
                                       animate={{ scale: 1 }}
                                       exit={{ scale: 0 }}
-                                      transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                                      transition={{
+                                        type: "spring",
+                                        stiffness: 500,
+                                        damping: 25,
+                                      }}
                                     >
                                       <Icons.Check />
                                     </motion.span>
@@ -852,42 +1354,64 @@ const WhatsAppButton = () => {
                       </div>
 
                       {/* Custom message */}
-                      <div style={{ marginBottom: '20px' }}>
-                        <label style={{
-                          display: 'flex', alignItems: 'center', gap: '6px',
-                          fontSize: '0.84rem', fontWeight: '600', color: '#222',
-                          marginBottom: '8px',
-                        }}>
+                      <div style={{ marginBottom: "20px" }}>
+                        <label
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "6px",
+                            fontSize: "0.84rem",
+                            fontWeight: "600",
+                            color: "#222",
+                            marginBottom: "8px",
+                          }}
+                        >
                           <span>✍️ Or write your own</span>
                         </label>
                         <textarea
                           value={customMessage}
-                          onChange={(e) => { setCustomMessage(e.target.value); setSelectedPreset(null); }}
+                          onChange={(e) => {
+                            setCustomMessage(e.target.value);
+                            setSelectedPreset(null);
+                          }}
                           placeholder="Type your message here…"
                           rows={3}
                           style={{
-                            width: '100%', padding: '12px 16px', borderRadius: '12px',
-                            border: '2px solid #c8e6c9', fontSize: '0.9rem',
-                            resize: 'vertical', fontFamily: 'inherit', outline: 'none',
-                            boxSizing: 'border-box', minHeight: '82px',
-                            backgroundColor: '#fff', color: '#1a1a1a',
-                            lineHeight: '1.5',
-                            transition: 'border-color 0.15s, box-shadow 0.15s',
+                            width: "100%",
+                            padding: "12px 16px",
+                            borderRadius: "12px",
+                            border: "2px solid #c8e6c9",
+                            fontSize: "0.9rem",
+                            resize: "vertical",
+                            fontFamily: "inherit",
+                            outline: "none",
+                            boxSizing: "border-box",
+                            minHeight: "82px",
+                            backgroundColor: "#fff",
+                            color: "#1a1a1a",
+                            lineHeight: "1.5",
+                            transition: "border-color 0.15s, box-shadow 0.15s",
                           }}
                           onFocus={(e) => {
-                            e.target.style.borderColor = '#25D366';
-                            e.target.style.boxShadow = '0 0 0 3px rgba(37,211,102,0.1)';
+                            e.target.style.borderColor = "#25D366";
+                            e.target.style.boxShadow =
+                              "0 0 0 3px rgba(37,211,102,0.1)";
                           }}
                           onBlur={(e) => {
-                            e.target.style.borderColor = '#c8e6c9';
-                            e.target.style.boxShadow = 'none';
+                            e.target.style.borderColor = "#c8e6c9";
+                            e.target.style.boxShadow = "none";
                           }}
                         />
                         {customMessage && (
-                          <span style={{
-                            display: 'block', textAlign: 'right',
-                            fontSize: '0.7rem', color: '#bbb', marginTop: '4px',
-                          }}>
+                          <span
+                            style={{
+                              display: "block",
+                              textAlign: "right",
+                              fontSize: "0.7rem",
+                              color: "#bbb",
+                              marginTop: "4px",
+                            }}
+                          >
                             {customMessage.length} characters
                           </span>
                         )}
@@ -898,31 +1422,60 @@ const WhatsAppButton = () => {
                         onClick={handleSendMessage}
                         disabled={!canSend || isSending}
                         style={{
-                          width: '100%', padding: '14px 20px', borderRadius: '14px',
-                          border: 'none', cursor: canSend ? 'pointer' : 'not-allowed',
+                          width: "100%",
+                          padding: "14px 20px",
+                          borderRadius: "14px",
+                          border: "none",
+                          cursor: canSend ? "pointer" : "not-allowed",
                           background: canSend
-                            ? 'linear-gradient(135deg, #25D366, #128C7E)'
-                            : 'linear-gradient(135deg, #a7f3d0, #86efac)',
-                          color: '#fff', fontSize: '0.94rem', fontWeight: '600',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          gap: '10px', outline: 'none',
-                          boxShadow: canSend ? '0 4px 18px rgba(37,211,102,0.3)' : 'none',
+                            ? "linear-gradient(135deg, #25D366, #128C7E)"
+                            : "linear-gradient(135deg, #a7f3d0, #86efac)",
+                          color: "#fff",
+                          fontSize: "0.94rem",
+                          fontWeight: "600",
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          gap: "10px",
+                          outline: "none",
+                          boxShadow: canSend
+                            ? "0 4px 18px rgba(37,211,102,0.3)"
+                            : "none",
                           opacity: canSend ? 1 : 0.55,
-                          transition: 'opacity 0.15s',
+                          transition: "opacity 0.15s",
                         }}
-                        whileHover={canSend ? { scale: 1.02, boxShadow: '0 6px 25px rgba(37,211,102,0.35)' } : {}}
+                        whileHover={
+                          canSend
+                            ? {
+                                scale: 1.02,
+                                boxShadow: "0 6px 25px rgba(37,211,102,0.35)",
+                              }
+                            : {}
+                        }
                         whileTap={canSend ? { scale: 0.98 } : {}}
                       >
                         {isSending ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "10px",
+                            }}
+                          >
                             <motion.div
                               style={{
-                                width: '18px', height: '18px', borderRadius: '50%',
-                                border: '2px solid rgba(255,255,255,0.3)',
-                                borderTopColor: '#fff',
+                                width: "18px",
+                                height: "18px",
+                                borderRadius: "50%",
+                                border: "2px solid rgba(255,255,255,0.3)",
+                                borderTopColor: "#fff",
                               }}
                               animate={{ rotate: 360 }}
-                              transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
+                              transition={{
+                                duration: 0.7,
+                                repeat: Infinity,
+                                ease: "linear",
+                              }}
                             />
                             <span>Preparing…</span>
                           </div>
@@ -945,13 +1498,20 @@ const WhatsAppButton = () => {
               </div>
 
               {/* ═══ FOOTER — Fixed ═══ */}
-              <div style={{
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                gap: '6px', padding: '12px 20px 14px',
-                fontSize: '0.75rem', color: '#bbb',
-                borderTop: '1px solid #f0fdf4', backgroundColor: '#fafffe',
-                flexShrink: 0,
-              }}>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "6px",
+                  padding: "12px 20px 14px",
+                  fontSize: "0.75rem",
+                  color: "#bbb",
+                  borderTop: "1px solid #f0fdf4",
+                  backgroundColor: "#fafffe",
+                  flexShrink: 0,
+                }}
+              >
                 <Icons.Shield />
                 <span>Secure & Private Conversation</span>
               </div>

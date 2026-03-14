@@ -17,7 +17,7 @@ export const HERO_SLIDES = [
   {
     // https://i.pinimg.com/1200x/cc/22/42/cc2242dbd24507eca2cd4313ffbd5c72.jpg
     image:
-      "https://i.pinimg.com/1200x/cc/22/42/cc2242dbd24507eca2cd4313ffbd5c72.jpg",
+      "https://drive.google.com/uc?export=view&id=15LlHLEX_dDLEqMVPX2C3M4Gz6FfsAkWY",
     fallback:
       "https://i.pinimg.com/1200x/cc/22/42/cc2242dbd24507eca2cd4313ffbd5c72.jpg",
     title: "Witness the Great Migration",
@@ -30,7 +30,7 @@ export const HERO_SLIDES = [
   },
   {
     image:
-      "https://i.pinimg.com/1200x/f7/d8/79/f7d879d6a1486f026ba9ba9c30a3a125.jpg",
+      "https://www.mtsobek.com/nitropack_static/aBwthfDLsZqGYpagCyAFteriaJiDCBzD/assets/images/optimized/rev-dab170e/mts-wp-uploads.s3.us-west-1.amazonaws.com/2025/08/PGS-Header-scaled.jpg",
     fallback:
       "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?auto=format&fit=crop&w=3840",
     title: "Meet the Mountain Gorillas",
@@ -134,9 +134,9 @@ export const HERO_SLIDES = [
   },
   {
     image:
-      "https://i.pinimg.com/736x/3f/48/50/3f485098d9bf8b3a79fe2e6946ea0302.jpg",
+      "https://i.pinimg.com/1200x/77/19/ad/7719adaae5f3d0c347a8d034aee9c9b2.jpg",
     fallback:
-      "https://www.explore.com/img/gallery/the-best-way-to-view-mount-kilimanjaro-in-kenya/l-intro-1673982083.jpg",
+      "https://i.pinimg.com/1200x/77/19/ad/7719adaae5f3d0c347a8d034aee9c9b2.jpg",
     title: "Amboseli & Kilimanjaro",
     subtitle:
       "Iconic African wildlife framed by majestic Mount Kilimanjaro in Kenya",

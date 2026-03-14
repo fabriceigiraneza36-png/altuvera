@@ -71,6 +71,8 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 const ADMIN_CONTACT = {
   name: "IGIRANEZA Fabrice",
+  phone1: "+250 780 702 773",
+  phone2: "+250 792 352 409",
   whatsapp: "+250792352409",
   whatsappDisplay: "+250 792 352 409",
   role: "Travel Consultant",
@@ -502,6 +504,7 @@ const GlassCard = memo(
               height: "200%",
               background: `radial-gradient(circle at center, rgba(5, 150, 105, 0.04) 0%, transparent 50%)`,
               pointerEvents: "none",
+              zIndex: 0,
             }}
             animate={{ rotate: [0, 360] }}
             transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
@@ -523,6 +526,14 @@ const WhatsAppContactBanner = memo(({ isMobile }) => {
   const handleClick = () => {
     const message = `Hello ${ADMIN_CONTACT.name}! 👋\n\nI'm interested in planning a trip with Altuvera Tours. Could you help me with information about destinations, availability, and pricing?\n\nThank you!`;
     window.open(getWhatsAppLink(message), "_blank");
+  };
+
+  const styles = {
+    contactText: {
+      fontSize: isMobile ? "13px" : "15px",
+      lineHeight: "1.6",
+      textAlign: isMobile ? "center" : "left",
+    },
   };
 
   return (
@@ -602,20 +613,23 @@ const WhatsAppContactBanner = memo(({ isMobile }) => {
         style={{
           display: "flex",
           alignItems: "center",
-          gap: 10,
+          gap: 12,
           padding: isMobile ? "12px 20px" : "14px 24px",
           background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
           borderRadius: 14,
           color: "white",
           fontWeight: 600,
-          fontSize: isMobile ? 14 : 15,
           boxShadow: "0 6px 20px rgba(37, 211, 102, 0.3)",
           width: isMobile ? "100%" : "auto",
           justifyContent: "center",
         }}
       >
         <FaWhatsapp size={18} />
-        {ADMIN_CONTACT.whatsappDisplay}
+        <span style={styles.contactText}>
+          {ADMIN_CONTACT.phone1}
+          <br />
+          {ADMIN_CONTACT.phone2}
+        </span>
         <FiArrowRight size={16} />
       </motion.div>
     </motion.div>
@@ -1064,18 +1078,18 @@ const FormSelect = memo(
               borderColor: hasError
                 ? THEME.error
                 : isFocused
-                ? THEME.primary
-                : isValid
-                ? THEME.primaryLight
-                : THEME.gray200,
+                  ? THEME.primary
+                  : isValid
+                    ? THEME.primaryLight
+                    : THEME.gray200,
               borderRadius: 14,
               backgroundColor: hasError
                 ? "#FEF2F2"
                 : isFocused
-                ? THEME.white
-                : isValid
-                ? THEME.background
-                : THEME.gray50,
+                  ? THEME.white
+                  : isValid
+                    ? THEME.background
+                    : THEME.gray50,
               outline: "none",
               cursor: "pointer",
               appearance: "none",
@@ -1089,31 +1103,39 @@ const FormSelect = memo(
             <option value="">
               {placeholder || `Select ${label.toLowerCase()}`}
             </option>
-            {Array.isArray(options) && options.map((opt, optIndex) => {
-              // Handle different option formats
-              let optionId, optionLabel, optionFlag;
-              
-              if (typeof opt === 'string') {
-                optionId = opt;
-                optionLabel = opt;
-              } else if (typeof opt === 'object' && opt !== null) {
-                optionId = opt.id || opt.value || opt._id || opt.name || optIndex;
-                optionLabel = opt.name || opt.title || opt.label || opt.category || String(optionId);
-                optionFlag = opt.flag || '';
-              } else {
-                optionId = optIndex;
-                optionLabel = String(opt);
-              }
+            {Array.isArray(options) &&
+              options.map((opt, optIndex) => {
+                // Handle different option formats
+                let optionId, optionLabel, optionFlag;
 
-              return (
-                <option
-                  key={`${name}-option-${optionId}-${optIndex}`}
-                  value={optionId}
-                >
-                  {optionFlag && `${optionFlag} `}{optionLabel}
-                </option>
-              );
-            })}
+                if (typeof opt === "string") {
+                  optionId = opt;
+                  optionLabel = opt;
+                } else if (typeof opt === "object" && opt !== null) {
+                  optionId =
+                    opt.id || opt.value || opt._id || opt.name || optIndex;
+                  optionLabel =
+                    opt.name ||
+                    opt.title ||
+                    opt.label ||
+                    opt.category ||
+                    String(optionId);
+                  optionFlag = opt.flag || "";
+                } else {
+                  optionId = optIndex;
+                  optionLabel = String(opt);
+                }
+
+                return (
+                  <option
+                    key={`${name}-option-${optionId}-${optIndex}`}
+                    value={optionId}
+                  >
+                    {optionFlag && `${optionFlag} `}
+                    {optionLabel}
+                  </option>
+                );
+              })}
           </select>
 
           <div
@@ -1155,7 +1177,7 @@ const FormSelect = memo(
         </AnimatePresence>
       </motion.div>
     );
-  }
+  },
 );
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1544,6 +1566,111 @@ const TripSummary = memo(
 );
 
 // ═══════════════════════════════════════════════════════════════════════════
+// PROFILE IMAGE UPLOAD COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════
+
+const ProfileImageUpload = ({ user, formData, setFormData, isMobile }) => {
+  const [preview, setPreview] = useState(
+    user?.avatar || formData.userImage || "",
+  );
+  const fileInputRef = useRef(null);
+
+  const handleFile = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Check size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("File too large. Maximum size is 5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreview(reader.result);
+      setFormData((prev) => ({ ...prev, userImage: reader.result }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  return (
+    <div style={{ marginBottom: 32, textAlign: "center" }}>
+      <div
+        style={{
+          position: "relative",
+          width: isMobile ? 100 : 120,
+          height: isMobile ? 100 : 120,
+          margin: "0 auto",
+          cursor: "pointer",
+        }}
+        onClick={() => fileInputRef.current.click()}
+      >
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            borderRadius: "50%",
+            overflow: "hidden",
+            border: `3px solid ${THEME.primary}`,
+            background: THEME.gray100,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {preview ? (
+            <img
+              src={preview}
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              alt="Profile Preview"
+            />
+          ) : (
+            <FiUser size={isMobile ? 50 : 60} color={THEME.gray400} />
+          )}
+        </div>
+        <div
+          style={{
+            position: "absolute",
+            bottom: 0,
+            right: 0,
+            background: THEME.primary,
+            borderRadius: "50%",
+            width: isMobile ? 32 : 36,
+            height: isMobile ? 32 : 36,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            border: "3px solid white",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+          }}
+        >
+          <FiCamera size={isMobile ? 16 : 18} color="white" />
+        </div>
+      </div>
+      <input
+        type="file"
+        ref={fileInputRef}
+        hidden
+        accept="image/*"
+        onChange={handleFile}
+      />
+      <p
+        style={{
+          fontSize: 13,
+          color: THEME.textLight,
+          marginTop: 12,
+          fontWeight: 500,
+        }}
+      >
+        {user
+          ? "Personalize your booking profile"
+          : "Upload your photo for this booking"}
+      </p>
+    </div>
+  );
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
 // STEP CONTENT COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -1620,40 +1747,40 @@ const StepOne = memo(
           }}
         >
           <FormSelect
-  name="tripType"
-  label="Safari Experience"
-  icon={FiSunrise}
-  options={
-    categoriesList.length > 0
-      ? categoriesList.map((c) => {
-          // Handle API response format: { category: "Safari", count: 5 }
-          if (typeof c === 'object' && c !== null) {
-            if (c.category) {
-              return { id: c.category, name: c.category };
+            name="tripType"
+            label="Safari Experience"
+            icon={FiSunrise}
+            options={
+              categoriesList.length > 0
+                ? categoriesList.map((c) => {
+                    // Handle API response format: { category: "Safari", count: 5 }
+                    if (typeof c === "object" && c !== null) {
+                      if (c.category) {
+                        return { id: c.category, name: c.category };
+                      }
+                      if (c.name) {
+                        return { id: c.name, name: c.name };
+                      }
+                      // Fallback for unknown object structure
+                      return { id: String(c), name: String(c) };
+                    }
+                    // Handle string format
+                    return { id: c, name: c };
+                  })
+                : servicesData.map((s) => ({
+                    id: s.id || s.value || s.name,
+                    name: s.name || s.title || s,
+                  }))
             }
-            if (c.name) {
-              return { id: c.name, name: c.name };
-            }
-            // Fallback for unknown object structure
-            return { id: String(c), name: String(c) };
-          }
-          // Handle string format
-          return { id: c, name: c };
-        })
-      : servicesData.map(s => ({ 
-          id: s.id || s.value || s.name, 
-          name: s.name || s.title || s 
-        }))
-  }
-  required
-  placeholder="What type of adventure?"
-  value={formData.tripType}
-  onChange={handleChange}
-  onBlur={handleBlur}
-  error={errors.tripType}
-  touched={touched.tripType}
-  isMobile={isMobile}
-/>
+            required
+            placeholder="What type of adventure?"
+            value={formData.tripType}
+            onChange={handleChange}
+            onBlur={handleBlur}
+            error={errors.tripType}
+            touched={touched.tripType}
+            isMobile={isMobile}
+          />
 
           <FormSelect
             name="destination"
@@ -2255,6 +2382,7 @@ const StepFour = memo(
     getTotalVisitors,
     getDestinationName,
     accommodationTypes,
+    user,
     isMobile,
   }) => {
     return (
@@ -2295,9 +2423,16 @@ const StepFour = memo(
             Almost <span style={{ color: THEME.primary }}>There!</span>
           </h2>
           <p style={{ fontSize: isMobile ? 14 : 16, color: THEME.textLight }}>
-            How can we reach you?
+            Confirm your profile and contact details
           </p>
         </div>
+
+        <ProfileImageUpload
+          user={user}
+          formData={formData}
+          setFormData={setFormData}
+          isMobile={isMobile}
+        />
 
         <TripSummary
           formData={formData}
@@ -2305,9 +2440,9 @@ const StepFour = memo(
           getTotalVisitors={getTotalVisitors}
           getDestinationName={getDestinationName}
           accommodationTypes={accommodationTypes}
+          user={user}
           isMobile={isMobile}
         />
-
         <div
           style={{
             display: "grid",
@@ -2692,6 +2827,7 @@ const Booking = () => {
       groupType: "couple",
       accommodation: "mid-range",
       interests: [],
+      userImage: user?.avatar || "",
       name: user?.fullName || user?.name || "",
       email: user?.email || "",
       phone: user?.phone || "",
@@ -2775,30 +2911,36 @@ const Booking = () => {
   }, []);
 
   // Inside the Booking component, after fetching data:
-useEffect(() => {
-  (async () => {
-    try {
-      const [cRes, catRes, destRes] = await Promise.all([
-        fetch(`${API_URL}/countries`).then(r => r.json()).catch(() => ({})),
-        fetch(`${API_URL}/destinations/categories`).then(r => r.json()).catch(() => ({})),
-        fetch(`${API_URL}/destinations`).then(r => r.json()).catch(() => ({})),
-      ]);
+  useEffect(() => {
+    (async () => {
+      try {
+        const [cRes, catRes, destRes] = await Promise.all([
+          fetch(`${API_URL}/countries`)
+            .then((r) => r.json())
+            .catch(() => ({})),
+          fetch(`${API_URL}/destinations/categories`)
+            .then((r) => r.json())
+            .catch(() => ({})),
+          fetch(`${API_URL}/destinations`)
+            .then((r) => r.json())
+            .catch(() => ({})),
+        ]);
 
-      // ✅ ADD THIS TO SEE THE ACTUAL DATA
-      console.log('Categories Response:', catRes);
-      console.log('Categories Data:', catRes.data);
+        // ✅ ADD THIS TO SEE THE ACTUAL DATA
+        console.log("Categories Response:", catRes);
+        console.log("Categories Data:", catRes.data);
 
-      setCountriesList(cRes.data || cRes || countriesData || []);
-      setCategoriesList(catRes.data || catRes || []);
-      setDestinationsList(destRes.data || destRes || []);
-    } catch (err) {
-      console.error("Failed to fetch booking data", err);
-      setCountriesList(countriesData || []);
-    } finally {
-      setLoadingData(false);
-    }
-  })();
-}, []);
+        setCountriesList(cRes.data || cRes || countriesData || []);
+        setCategoriesList(catRes.data || catRes || []);
+        setDestinationsList(destRes.data || destRes || []);
+      } catch (err) {
+        console.error("Failed to fetch booking data", err);
+        setCountriesList(countriesData || []);
+      } finally {
+        setLoadingData(false);
+      }
+    })();
+  }, []);
 
   // Handle resize
   useEffect(() => {
@@ -3232,6 +3374,7 @@ Please provide a personalized quote and itinerary. Thank you!`;
             getTotalVisitors={getTotalVisitors}
             getDestinationName={getDestinationName}
             accommodationTypes={accommodationTypes}
+            user={user}
           />
         );
       default:

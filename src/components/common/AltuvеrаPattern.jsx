@@ -1,42 +1,79 @@
 import React from 'react';
 
 const AltuveraPattern = ({ 
-  variant = 'default', 
-  opacity = 0.05,
+  variant = 'topography', 
+  opacity = 0.04,
   color = '#059669',
   animated = false,
   style = {},
 }) => {
   const getPattern = () => {
-    const encodedColor = encodeURIComponent(color);
+    const c = encodeURIComponent(color);
+    const o = opacity;
     
     const patterns = {
-      default: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='${encodedColor}' fill-opacity='${opacity}'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-      dots: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='${encodedColor}' fill-opacity='${opacity}'%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3C/g%3E%3C/svg%3E")`,
-      diagonal: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='${encodedColor}' fill-opacity='${opacity}'%3E%3Cpath d='M0 0h20v20H0V0zm20 20h20v20H20V20z'/%3E%3C/g%3E%3C/svg%3E")`,
-      waves: `url("data:image/svg+xml,%3Csvg width='100' height='20' viewBox='0 0 100 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M21.184 20c.357-.13.72-.264 1.088-.402l1.768-.661C33.64 15.347 39.647 14 50 14c10.271 0 15.362 1.222 24.629 4.928.955.383 1.869.74 2.75 1.072h6.225c-2.51-.73-5.139-1.691-8.233-2.928C65.888 13.278 60.562 12 50 12c-10.626 0-16.855 1.397-26.66 5.063l-1.767.662c-2.475.923-4.66 1.674-6.724 2.275h6.335zm0-20C13.258 2.892 8.077 4 0 4V2c5.744 0 9.951-.574 14.85-2h6.334zM77.38 0C85.239 2.966 90.502 4 100 4V2c-6.842 0-11.386-.542-16.396-2h-6.225zM0 14c8.44 0 13.718-1.21 22.272-4.402l1.768-.661C33.64 5.347 39.647 4 50 4c10.271 0 15.362 1.222 24.629 4.928C84.112 12.722 89.438 14 100 14v-2c-10.271 0-15.362-1.222-24.629-4.928C65.888 3.278 60.562 2 50 2 39.374 2 33.145 3.397 23.34 7.063l-1.767.662C13.223 10.84 8.163 12 0 12v2z' fill='${encodedColor}' fill-opacity='${opacity}' fill-rule='evenodd'/%3E%3C/svg%3E")`,
-      hexagons: `url("data:image/svg+xml,%3Csvg width='28' height='49' viewBox='0 0 28 49' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill-rule='evenodd'%3E%3Cg fill='${encodedColor}' fill-opacity='${opacity}'%3E%3Cpath d='M13.99 9.25l13 7.5v15l-13 7.5L1 31.75v-15l12.99-7.5zM3 17.9v12.7l10.99 6.34 11-6.35V17.9l-11-6.34L3 17.9zM0 15l12.98-7.5V0h-2v6.35L0 12.69v2.3zm0 18.5L12.98 41v8h-2v-6.85L0 35.81v-2.3zM15 0v7.5L27.99 15H28v-2.31h-.01L17 6.35V0h-2zm0 49v-8l12.99-7.5H28v2.31h-.01L17 42.15V49h-2z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-      mountains: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='100' height='100'%3E%3Cpolygon fill='${encodedColor}' fill-opacity='${opacity}' points='50,20 80,80 20,80'/%3E%3Cpolygon fill='${encodedColor}' fill-opacity='${opacity * 0.5}' points='30,40 50,80 10,80'/%3E%3Cpolygon fill='${encodedColor}' fill-opacity='${opacity * 0.5}' points='70,40 90,80 50,80'/%3E%3C/svg%3E")`,
+      // Elegant topographic lines - perfect for safari/adventure
+      topography: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='600' viewBox='0 0 600 600'%3E%3Cpath fill='none' stroke='${c}' stroke-opacity='${o}' stroke-width='1' d='M0 300c150-100 300 100 600 0M0 350c150-80 350 80 600 0M0 250c200-80 400 80 600 0M0 400c100-60 500 60 600 0M0 200c250-60 350 60 600 0'/%3E%3C/svg%3E")`,
+
+      // Clean geometric grid - professional/modern
+      grid: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Crect fill='none' stroke='${c}' stroke-opacity='${o}' stroke-width='0.5' x='0.5' y='0.5' width='39' height='39'/%3E%3C/svg%3E")`,
+
+      // Subtle dots - minimal and clean
+      dots: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24'%3E%3Ccircle fill='${c}' fill-opacity='${o}' cx='12' cy='12' r='1.5'/%3E%3C/svg%3E")`,
+
+      // African-inspired geometric
+      tribal: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath fill='none' stroke='${c}' stroke-opacity='${o}' stroke-width='1' d='M30 0v60M0 30h60M15 0v60M45 0v60M0 15h60M0 45h60'/%3E%3Cpath fill='${c}' fill-opacity='${o * 0.5}' d='M28 28h4v4h-4z'/%3E%3C/svg%3E")`,
+
+      // Mountain range silhouette
+      mountains: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60' viewBox='0 0 120 60'%3E%3Cpath fill='none' stroke='${c}' stroke-opacity='${o}' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' d='M0 55 L20 25 L35 40 L55 15 L75 35 L90 20 L120 55'/%3E%3C/svg%3E")`,
+
+      // Compass rose inspired
+      compass: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Ccircle fill='none' stroke='${c}' stroke-opacity='${o}' cx='40' cy='40' r='20'/%3E%3Cpath fill='none' stroke='${c}' stroke-opacity='${o}' d='M40 15v10M40 55v10M15 40h10M55 40h10'/%3E%3C/svg%3E")`,
+
+      // Flowing waves - beach/water themes
+      waves: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='30' viewBox='0 0 120 30'%3E%3Cpath fill='none' stroke='${c}' stroke-opacity='${o}' stroke-width='1.5' stroke-linecap='round' d='M0 15c20-10 40 10 60 0s40 10 60 0'/%3E%3C/svg%3E")`,
+
+      // Safari grass/savanna
+      savanna: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath fill='none' stroke='${c}' stroke-opacity='${o}' stroke-width='1' stroke-linecap='round' d='M5 40V25c0-5 3-8 3-12M15 40V28c0-4 2-6 2-10M25 40V30c0-3 2-5 2-8M35 40V27c0-4 3-7 3-11'/%3E%3C/svg%3E")`,
+
+      // Diamond/luxury pattern
+      diamond: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Cpath fill='none' stroke='${c}' stroke-opacity='${o}' stroke-width='1' d='M24 4L44 24L24 44L4 24Z'/%3E%3C/svg%3E")`,
+
+      // Tree canopy - forest/nature
+      canopy: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Ccircle fill='none' stroke='${c}' stroke-opacity='${o}' cx='30' cy='30' r='15'/%3E%3Ccircle fill='none' stroke='${c}' stroke-opacity='${o * 0.5}' cx='30' cy='30' r='25'/%3E%3C/svg%3E")`,
+
+      // Hexagonal - modern/tech feel
+      hex: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='43.4' viewBox='0 0 50 43.4'%3E%3Cpath fill='none' stroke='${c}' stroke-opacity='${o}' stroke-width='1' d='M25 0l25 14.4v14.4L25 43.4 0 28.8V14.4z'/%3E%3C/svg%3E")`,
+
+      // Crosshatch - classic/elegant
+      crosshatch: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath fill='none' stroke='${c}' stroke-opacity='${o}' stroke-width='0.5' d='M0 0l40 40M40 0L0 40'/%3E%3C/svg%3E")`,
+
+      // Animal print inspired (subtle)
+      spots: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cellipse fill='${c}' fill-opacity='${o}' cx='25' cy='25' rx='8' ry='6' transform='rotate(20 25 25)'/%3E%3Cellipse fill='${c}' fill-opacity='${o}' cx='75' cy='30' rx='10' ry='7' transform='rotate(-15 75 30)'/%3E%3Cellipse fill='${c}' fill-opacity='${o}' cx='50' cy='70' rx='9' ry='6' transform='rotate(10 50 70)'/%3E%3C/svg%3E")`,
+
+      // Feather/leaf - organic
+      leaf: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cpath fill='none' stroke='${c}' stroke-opacity='${o}' stroke-width='1.5' stroke-linecap='round' d='M40 10c0 30-25 35-25 55M40 10c0 30 25 35 25 55M40 10v55'/%3E%3C/svg%3E")`,
+
+      // Minimal plus signs
+      plus: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath fill='none' stroke='${c}' stroke-opacity='${o}' stroke-width='1.5' stroke-linecap='round' d='M16 8v16M8 16h16'/%3E%3C/svg%3E")`,
     };
     
-    return patterns[variant] || patterns.default;
+    return patterns[variant] || patterns.topography;
   };
 
   const baseStyles = {
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    inset: 0,
     backgroundImage: getPattern(),
     backgroundRepeat: 'repeat',
     pointerEvents: 'none',
     zIndex: 0,
+    transition: 'opacity 0.3s ease',
     ...style,
   };
 
   const animationStyles = animated ? {
-    animation: 'patternMove 30s linear infinite',
+    animation: 'altuveraPatternMove 45s linear infinite',
   } : {};
 
   return (
@@ -44,15 +81,60 @@ const AltuveraPattern = ({
       {animated && (
         <style>
           {`
-            @keyframes patternMove {
+            @keyframes altuveraPatternMove {
               0% { background-position: 0 0; }
-              100% { background-position: 100px 100px; }
+              100% { background-position: 200px 200px; }
             }
           `}
         </style>
       )}
-      <div style={{ ...baseStyles, ...animationStyles }}></div>
+      <div 
+        style={{ ...baseStyles, ...animationStyles }}
+        aria-hidden="true"
+      />
     </>
+  );
+};
+
+// Pattern preview component for development
+export const PatternPreview = ({ color = '#059669' }) => {
+  const variants = [
+    'topography', 'grid', 'dots', 'tribal', 'mountains', 
+    'compass', 'waves', 'savanna', 'diamond', 'canopy',
+    'hex', 'crosshatch', 'spots', 'leaf', 'plus'
+  ];
+
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+      {variants.map(v => (
+        <div 
+          key={v} 
+          style={{ 
+            position: 'relative', 
+            height: '120px', 
+            background: '#f8fafc',
+            borderRadius: '8px',
+            overflow: 'hidden',
+            border: '1px solid #e2e8f0'
+          }}
+        >
+          <AltuveraPattern variant={v} color={color} opacity={0.08} />
+          <span style={{ 
+            position: 'absolute', 
+            bottom: '8px', 
+            left: '8px', 
+            fontSize: '12px',
+            fontWeight: 500,
+            color: '#64748b',
+            background: 'white',
+            padding: '2px 8px',
+            borderRadius: '4px'
+          }}>
+            {v}
+          </span>
+        </div>
+      ))}
+    </div>
   );
 };
 

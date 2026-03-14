@@ -7,7 +7,7 @@ const Team = () => {
     <div>
       <PageHeader
         title="Our Team"
-        subtitle="Meet the people who plan, guide, and support your East Africa journey."
+        subtitle="Meet the passionate professionals who craft, guide, and support your extraordinary East African adventures."
         backgroundImage="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1920"
         breadcrumbs={[{ label: "Team" }]}
       />

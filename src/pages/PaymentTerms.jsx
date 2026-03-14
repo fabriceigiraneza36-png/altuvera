@@ -61,6 +61,8 @@ import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput"
    ═══════════════════════════════════════════════════════ */
 const ADMIN = {
   name: "IGIRANEZA Fabrice",
+  phone1: "+250 780 702 773",
+  phone2: "+250 792 352 409",
   whatsapp: "+250792352409",
   whatsappDisplay: "+250 792 352 409",
   email: "bookings@altuvera.com",
@@ -671,6 +673,12 @@ const MultiStepContactModal = ({ isOpen, onClose, contextMessage }) => {
   const STEP_LABELS = ["Personal", "Contact", "Preference", "Review", "Done"];
 
   const [step, setStep] = useState(1);
+  const styles = {
+    contactText: {
+      fontSize: "15px",
+      lineHeight: "1.6",
+    },
+  };
   const [slideDir, setSlideDir] = useState("right");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -3893,7 +3901,13 @@ const PaymentTerms = () => {
                 {
                   icon: <FaWhatsapp size={22} />,
                   label: "WhatsApp",
-                  value: ADMIN.whatsappDisplay,
+                  value: (
+                    <span style={styles.contactText}>
+                      {ADMIN.phone1}
+                      <br />
+                      {ADMIN.phone2}
+                    </span>
+                  ),
                   action: () =>
                     openGate(
                       "I'd like to learn more about Altuvera."
@@ -3903,7 +3917,13 @@ const PaymentTerms = () => {
                 {
                   icon: <FiPhone size={20} />,
                   label: "Call",
-                  value: ADMIN.whatsappDisplay,
+                  value: (
+                    <span style={styles.contactText}>
+                      {ADMIN.phone1}
+                      <br />
+                      {ADMIN.phone2}
+                    </span>
+                  ),
                 },
                 {
                   icon: <FiMail size={20} />,
@@ -4038,7 +4058,11 @@ const PaymentTerms = () => {
             }}
           >
             Last updated: February 2025 • All bookings managed by{" "}
-            {ADMIN.name} ({ADMIN.whatsappDisplay})
+            {ADMIN.name} (
+            <span style={styles.contactText}>
+              {ADMIN.phone1} | {ADMIN.phone2}
+            </span>
+            )
           </p>
         </div>
       </section>

@@ -34,8 +34,10 @@ import {
 import { HiSparkles } from "react-icons/hi";
 import { BiSupport } from "react-icons/bi";
 import { RiSendPlaneFill } from "react-icons/ri";
+
 import herobg from "../assets/fabrice.jpg";
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
+import { sendMessage } from "../utils/sendMessage";
 
 /* ══════════════════════════════
    VALIDATION
@@ -152,7 +154,9 @@ const FieldInput = ({
           <EmailAutocompleteInput
             name={name}
             value={value}
-            onValueChange={(next) => onChange?.({ target: { name, value: next } })}
+            onValueChange={(next) =>
+              onChange?.({ target: { name, value: next } })
+            }
             placeholder={placeholder}
             onFocus={() => setFocused(true)}
             onBlur={(e) => {
@@ -428,21 +432,41 @@ const Contact = () => {
     setStep((s) => Math.max(s - 1, 0));
   };
 
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateStep(2)) return;
     setSubmitting(true);
     setProgress(0);
-    const iv = setInterval(
-      () => setProgress((p) => (p >= 90 ? 90 : p + 10)),
-      120,
-    );
-    await new Promise((r) => setTimeout(r, 2200));
+    let progressVal = 0;
+    const iv = setInterval(() => {
+      progressVal = Math.min(progressVal + 10, 90);
+      setProgress(progressVal);
+    }, 120);
+    // Send message to backend
+    const { name, email, phone, subject, message, tripType, travelDate, travelers } = form;
+    const res = await sendMessage({
+      type: "contact",
+      data: {
+        name,
+        email,
+        phone,
+        subject,
+        message,
+        tripType,
+        travelDate,
+        travelers,
+      },
+    });
     clearInterval(iv);
     setProgress(100);
     setTimeout(() => {
       setSubmitting(false);
-      setSubmitted(true);
+      if (!res.error) {
+        setSubmitted(true);
+      } else {
+        setErrors((prev) => ({ ...prev, submit: res.error }));
+      }
     }, 400);
   };
 
@@ -474,7 +498,7 @@ const Contact = () => {
     {
       icon: FiPhone,
       title: "Call Us",
-      lines: ["+254 700 123 456", "+254 733 987 654"],
+      lines: ["+250 780 702 773", "+250 792 352 409"],
     },
     {
       icon: FiMail,
@@ -539,15 +563,27 @@ const Contact = () => {
       icon: FaWhatsapp,
       title: "WhatsApp",
       sub: "Chat instantly",
-      detail: "+254 700 123 456",
-      href: "https://wa.me/254700123456",
+      detail: (
+        <span style={{ fontSize: "14px", lineHeight: "1.5" }}>
+          +250 780 702 773
+          <br />
+          +250 792 352 409
+        </span>
+      ),
+      href: "https://wa.me/250792352409",
     },
     {
       icon: FiPhone,
       title: "Call Us",
       sub: "Speak with an expert",
-      detail: "+254 700 123 456",
-      href: "tel:+254700123456",
+      detail: (
+        <span style={{ fontSize: "14px", lineHeight: "1.5" }}>
+          +250 780 702 773
+          <br />
+          +250 792 352 409
+        </span>
+      ),
+      href: "tel:+250780702773",
     },
     {
       icon: FiMail,
@@ -857,7 +893,7 @@ const Contact = () => {
             <a href="#contact-form" className="ct-btn ct-btn--white">
               <FiSend size={16} /> Send Message
             </a>
-            <a href="tel:+254700123456" className="ct-btn ct-btn--ghost">
+            <a href="tel:+250780702773" className="ct-btn ct-btn--ghost">
               <FiPhone size={16} /> Call Us Now
             </a>
           </motion.div>
@@ -948,372 +984,239 @@ const Contact = () => {
               </div>
             </ScrollReveal>
 
-            {/* ── RIGHT: Multi-Step Form ── */}
+            {/* â”€â”€ RIGHT: Form â”€â”€ */}
             <ScrollReveal direction="right" delay={0.15}>
-              <div className="ct-form-card" ref={formRef}>
-                <AnimatePresence mode="wait">
-                  {submitted ? (
-                    <motion.div
-                      key="done"
-                      className="ct-success"
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0 }}
-                      transition={{ duration: 0.5 }}
+              <div>
+                    <form
+                      className="ct-form-card"
+                      ref={formRef}
+                      onSubmit={handleSubmit}
+                      autoComplete="off"
                     >
-                      <motion.div
-                        className="ct-success-icon"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{
-                          type: "spring",
-                          stiffness: 180,
-                          delay: 0.2,
-                        }}
-                      >
-                        <motion.div
-                          initial={{ scale: 0, rotate: -180 }}
-                          animate={{ scale: 1, rotate: 0 }}
-                          transition={{ delay: 0.45, type: "spring" }}
-                        >
-                          <FiCheckCircle size={44} color="#fff" />
-                        </motion.div>
-                      </motion.div>
-                      <h3 className="ct-success-title">Message Sent! 🎉</h3>
-                      <p className="ct-success-text">
-                        Our travel experts will review your inquiry and respond
-                        within 24 hours.
-                      </p>
-                      <div className="ct-success-email">
-                        <small>📧 🍭 Message Conveyed to:
-                        </small>
-                        <strong>{form.email}</strong>
-                      </div>
-                      <div className="ct-success-btns">
-                        <button
-                          className="ct-btn ct-btn--green"
-                          onClick={resetForm}
-                        >
-                          <FiSend size={15} /> Send Another
-                        </button>
-                        <a href="/" className="ct-btn ct-btn--outline">
-                          <FiArrowRight size={15} /> Explore Safaris
-                        </a>
-                      </div>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="form"
-                      initial={{ opacity: 1 }}
-                      exit={{ opacity: 0, y: -16 }}
-                    >
-                      {/* Step Indicator */}
-                      <div style={{ marginBottom: 8 }}>
-                        <div className="ct-steps">
-                          {stepLabels.map((lbl, i) => {
-                            const Icon = stepIcons[i];
-                            const isActive = step === i;
-                            const isDone = step > i;
-                            return (
-                              <div className="ct-step-item" key={i}>
-                                {i > 0 && (
-                                  <div
-                                    className={`ct-step-line ${step >= i ? "filled" : ""}`}
-                                  />
-                                )}
-                                <motion.div
-                                  className={`ct-step-circle ${isActive ? "active" : isDone ? "done" : ""}`}
-                                  whileTap={{ scale: 0.92 }}
-                                  onClick={() => {
-                                    if (isDone) {
-                                      setDirection(i < step ? -1 : 1);
-                                      setStep(i);
-                                    }
-                                  }}
-                                  layout
-                                >
-                                  {isDone ? (
-                                    <FiCheckCircle size={16} />
-                                  ) : (
-                                    <Icon size={16} />
-                                  )}
-                                </motion.div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <div className="ct-step-labels">
-                          {stepLabels.map((lbl, i) => (
-                            <span
-                              key={i}
-                              className={
-                                step === i ? "active" : step > i ? "done" : ""
-                              }
+                      <div className="ct-steps">
+                        {stepLabels.map((label, i) => (
+                          <div className="ct-step-item" key={i}>
+                            <div
+                              className={`ct-step-circle${
+                                step === i
+                                  ? " active"
+                                  : step > i
+                                  ? " done"
+                                  : ""
+                              }`}
+                              onClick={() => setStep(i)}
                             >
-                              {lbl}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Step Content */}
-                      <form onSubmit={handleSubmit}>
-                        <div className="ct-form-body">
-                          <AnimatePresence mode="wait" custom={direction}>
-                            {step === 0 && (
-                              <motion.div
-                                key="s0"
-                                className="ct-form-step"
-                                initial={stepVariants[0].initial}
-                                animate={stepVariants[0].animate}
-                                exit={stepVariants[0].exit}
-                                transition={{
-                                  duration: 0.45,
-                                  ease: [0.4, 0, 0.2, 1],
-                                }}
-                              >
-                                <div className="ct-step-heading">
-                                  <h4>👤 Personal Information</h4>
-                                  <p>
-                                    Tell us who you are so we can personalize
-                                    your experience.
-                                  </p>
-                                </div>
-                                <div className="ct-form-row">
-                                  <FieldInput
-                                    name="name"
-                                    label="Full Name"
-                                    icon={FiUser}
-                                    placeholder="John Smith"
-                                    required
-                                    value={form.name}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    error={errors.name}
-                                    touched={touched.name}
-                                    full
-                                  />
-                                  <FieldInput
-                                    name="email"
-                                    label="Email Address"
-                                    icon={FiMail}
-                                    type="email"
-                                    placeholder="john@example.com"
-                                    required
-                                    value={form.email}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    error={errors.email}
-                                    touched={touched.email}
-                                  />
-                                  <FieldInput
-                                    name="phone"
-                                    label="Phone Number"
-                                    icon={FiPhone}
-                                    type="tel"
-                                    placeholder="+1 234 567 8900"
-                                    value={form.phone}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    error={errors.phone}
-                                    touched={touched.phone}
-                                  />
-                                </div>
-                              </motion.div>
-                            )}
-
-                            {step === 1 && (
-                              <motion.div
-                                key="s1"
-                                className="ct-form-step"
-                                initial={stepVariants[1].initial}
-                                animate={stepVariants[1].animate}
-                                exit={stepVariants[1].exit}
-                                transition={{
-                                  duration: 0.5,
-                                  ease: [0.4, 0, 0.2, 1],
-                                }}
-                              >
-                                <div className="ct-step-heading">
-                                  <h4>🌍 Trip Details</h4>
-                                  <p>
-                                    Help us understand your dream adventure.
-                                  </p>
-                                </div>
-                                <div className="ct-form-row">
-                                  <FieldSelect
-                                    name="tripType"
-                                    label="Trip Type"
-                                    icon={FiGlobe}
-                                    placeholder="Select your adventure"
-                                    options={tripTypes}
-                                    value={form.tripType}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                  />
-                                  <FieldInput
-                                    name="travelDate"
-                                    label="Preferred Date"
-                                    icon={FiCalendar}
-                                    type="date"
-                                    value={form.travelDate}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                  />
-                                  <FieldSelect
-                                    name="travelers"
-                                    label="Number of Travelers"
-                                    icon={FiUsers}
-                                    placeholder="Select group size"
-                                    options={travelerOpts}
-                                    value={form.travelers}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    full
-                                  />
-                                </div>
-                              </motion.div>
-                            )}
-
-                            {step === 2 && (
-                              <motion.div
-                                key="s2"
-                                className="ct-form-step"
-                                initial={stepVariants[2].initial}
-                                animate={stepVariants[2].animate}
-                                exit={stepVariants[2].exit}
-                                transition={{
-                                  duration: 0.5,
-                                  ease: [0.4, 0, 0.2, 1],
-                                }}
-                              >
-                                <div className="ct-step-heading">
-                                  <h4>💬 Your Message</h4>
-                                  <p>
-                                    Share the details of your dream safari with
-                                    us.
-                                  </p>
-                                </div>
-                                <div className="ct-form-row">
-                                  <FieldInput
-                                    name="subject"
-                                    label="Subject"
-                                    icon={FiMessageSquare}
-                                    placeholder="What would you like to know?"
-                                    required
-                                    value={form.subject}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    error={errors.subject}
-                                    touched={touched.subject}
-                                    full
-                                  />
-                                  <FieldTextarea
-                                    name="message"
-                                    label="Your Message"
-                                    placeholder="Tell us about your dream African adventure…"
-                                    required
-                                    maxLength={2000}
-                                    value={form.message}
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    error={errors.message}
-                                    touched={touched.message}
-                                    full
-                                  />
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
-
-                        {/* Navigation */}
-                        <div className="ct-form-nav">
-                          <div className="ct-form-nav-left">
-                            {step > 0 && (
-                              <motion.button
-                                type="button"
-                                className="ct-nav-btn ct-nav-btn--back"
-                                onClick={prevStep}
-                                initial={{ opacity: 0, x: -16 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ duration: 0.3 }}
-                              >
-                                <FiArrowLeft size={16} /> Back
-                              </motion.button>
+                              {React.createElement(stepIcons[i], {
+                                size: 18,
+                                color: step === i || step > i ? "#fff" : "#94a3b8",
+                              })}
+                            </div>
+                            {i < stepLabels.length - 1 && (
+                              <div
+                                className={`ct-step-line${step > i ? " filled" : ""}`}
+                              ></div>
                             )}
                           </div>
-                          <div className="ct-form-nav-right">
-                            {step < 2 ? (
-                              <motion.button
-                                type="button"
-                                className="ct-nav-btn ct-nav-btn--next"
-                                onClick={nextStep}
-                                whileTap={{ scale: 0.96 }}
-                              >
-                                Next Step <FiArrowRight size={16} />
-                              </motion.button>
-                            ) : (
-                              <button
-                                type="submit"
-                                className="ct-nav-btn ct-nav-btn--submit"
-                                disabled={submitting}
-                              >
-                                {submitting ? (
-                                  <>
-                                    <motion.svg
-                                      width="18"
-                                      height="18"
-                                      viewBox="0 0 24 24"
-                                      fill="none"
-                                      animate={{ rotate: 360 }}
-                                      transition={{
-                                        duration: 1,
-                                        repeat: Infinity,
-                                        ease: "linear",
-                                      }}
-                                    >
-                                      <circle
-                                        cx="12"
-                                        cy="12"
-                                        r="10"
-                                        stroke="#fff"
-                                        strokeWidth="3"
-                                        strokeDasharray="31.4 31.4"
-                                        strokeLinecap="round"
-                                      />
-                                    </motion.svg>
-                                    Sending…
-                                  </>
-                                ) : (
-                                  <>
-                                    <RiSendPlaneFill size={17} /> Send Safari
-                                    Inquiry
-                                  </>
-                                )}
-                                {submitting && (
-                                  <div
+                        ))}
+                      </div>
+                      <div className="ct-form-body">
+                        <AnimatePresence initial={false} custom={direction}>
+                          <motion.div
+                            key={step}
+                            className="ct-form-step"
+                            variants={stepVariants[step]}
+                            initial="initial"
+                            animate="animate"
+                            exit="exit"
+                            custom={direction}
+                            transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+                          >
+                            {step === 0 && (
+                              <div className="ct-form-row">
+                                <FieldInput
+                                  name="name"
+                                  label="Full Name"
+                                  icon={FiUser}
+                                  value={form.name}
+                                  onChange={handleChange}
+                                  onBlur={handleBlur}
+                                  error={errors.name}
+                                  touched={touched.name}
+                                  required
+                                />
+                                <FieldInput
+                                  name="email"
+                                  label="Email Address"
+                                  icon={FiMail}
+                                  type="email"
+                                  value={form.email}
+                                  onChange={handleChange}
+                                  onBlur={handleBlur}
+                                  error={errors.email}
+                                  touched={touched.email}
+                                  required
+                                />
+                                <FieldInput
+                                  name="phone"
+                                  label="Phone Number"
+                                  icon={FiPhone}
+                                  value={form.phone}
+                                  onChange={handleChange}
+                                  onBlur={handleBlur}
+                                  error={errors.phone}
+                                  touched={touched.phone}
+                                  full
+                                />
+                              </div>
+                            )}
+                            {step === 1 && (
+                              <div className="ct-form-row">
+                                <FieldSelect
+                                  name="tripType"
+                                  label="Trip Type"
+                                  icon={FiGlobe}
+                                  options={tripTypes}
+                                  value={form.tripType}
+                                  onChange={handleChange}
+                                  onBlur={handleBlur}
+                                  full
+                                />
+                                <FieldInput
+                                  name="travelDate"
+                                  label="Travel Date"
+                                  icon={FiCalendar}
+                                  type="date"
+                                  value={form.travelDate}
+                                  onChange={handleChange}
+                                  onBlur={handleBlur}
+                                  full
+                                />
+                                <FieldSelect
+                                  name="travelers"
+                                  label="Travelers"
+                                  icon={FiUsers}
+                                  options={travelerOpts}
+                                  value={form.travelers}
+                                  onChange={handleChange}
+                                  onBlur={handleBlur}
+                                  full
+                                />
+                              </div>
+                            )}
+                            {step === 2 && (
+                              <>
+                                <FieldInput
+                                  name="subject"
+                                  label="Subject"
+                                  icon={FiMessageCircle}
+                                  value={form.subject}
+                                  onChange={handleChange}
+                                  onBlur={handleBlur}
+                                  error={errors.subject}
+                                  touched={touched.subject}
+                                  required
+                                  full
+                                />
+                                <FieldTextarea
+                                  name="message"
+                                  label="Message"
+                                  value={form.message}
+                                  onChange={handleChange}
+                                  onBlur={handleBlur}
+                                  error={errors.message}
+                                  touched={touched.message}
+                                  required
+                                  full
+                                />
+                              </>
+                            )}
+                          </motion.div>
+                        </AnimatePresence>
+                      </div>
+                      {errors.submit && (
+                        <div style={{ color: "#ef4444", marginBottom: 12, textAlign: "center" }}>
+                          <FiAlertCircle size={16} style={{ marginRight: 6, verticalAlign: -2 }} />
+                          {errors.submit}
+                        </div>
+                      )}
+                      <div className="ct-form-nav">
+                        <div className="ct-form-nav-left">
+                          {step > 0 && (
+                            <button
+                              type="button"
+                              className="ct-nav-btn ct-nav-btn--back"
+                              onClick={prevStep}
+                              disabled={submitting}
+                            >
+                              <FiArrowLeft size={16} /> Back
+                            </button>
+                          )}
+                        </div>
+                        <div className="ct-form-nav-right">
+                          {step < 2 && (
+                            <button
+                              type="button"
+                              className="ct-nav-btn ct-nav-btn--next"
+                              onClick={nextStep}
+                              disabled={submitting}
+                            >
+                              Next <FiArrowRight size={16} />
+                            </button>
+                          )}
+                          {step === 2 && (
+                            <button
+                              type="submit"
+                              className="ct-nav-btn ct-nav-btn--submit"
+                              disabled={submitting}
+                            >
+                              {submitting ? (
+                                <>
+                                  <span>Sending...</span>
+                                  <span
                                     className="ct-progress"
                                     style={{ width: `${progress}%` }}
-                                  />
-                                )}
-                              </button>
-                            )}
-                          </div>
+                                  ></span>
+                                </>
+                              ) : (
+                                <>
+                                  <FiSend size={16} /> Send Message
+                                </>
+                              )}
+                            </button>
+                          )}
                         </div>
-
-                        {step === 2 && (
-                          <div className="ct-privacy">
-                            <FiShield size={12} /> Your information is secure
-                            and will never be shared.
-                          </div>
-                        )}
-                      </form>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                      </div>
+                      <div className="ct-privacy">
+                        <FiShield size={13} style={{ marginRight: 4 }} />
+                        Your information is encrypted and never shared.
+                      </div>
+                    </form>
+                    {submitted && (
+                      <div className="ct-success">
+                        <div className="ct-success-icon">
+                          <FiCheckCircle size={54} />
+                        </div>
+                        <div className="ct-success-title">Message Sent!</div>
+                        <div className="ct-success-text">
+                          Thank you for reaching out. Our team will respond to your inquiry within 24 hours.
+                        </div>
+                        <div className="ct-success-email">
+                          <small>Confirmation sent to</small>
+                          <strong>{form.email}</strong>
+                        </div>
+                        <div className="ct-success-btns">
+                          <button className="ct-btn ct-btn--green" onClick={resetForm}>
+                            Send Another Message
+                          </button>
+                          <a href="/" className="ct-btn ct-btn--outline">
+                            Back to Home
+                          </a>
+                        </div>
+                      </div>
+                    )}
               </div>
             </ScrollReveal>
+
           </div>
         </div>
       </section>
@@ -1451,9 +1354,8 @@ const Contact = () => {
               <a href="/services" className="ct-btn ct-btn--ghost">
                 View All Our Offerings <FiArrowRight size={16} />
               </a>
-            </div>
-          </div>
-        </ScrollReveal>
+</div>
+</ScrollReveal>
       </section>
 
       {/* ════════ CHAT ════════ */}
@@ -1538,3 +1440,4 @@ const Contact = () => {
 };
 
 export default Contact;
+

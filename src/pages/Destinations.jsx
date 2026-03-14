@@ -179,7 +179,7 @@ const Destinations = () => {
       <PageHeader 
         title="Destinations"
         subtitle="Explore extraordinary places across East Africa, from wildlife-rich savannas to ancient cultural sites."
-        backgroundImage="https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=1920"
+        backgroundImage="https://i.pinimg.com/1200x/ca/2b/b9/ca2bb955ebe6cde00add738468d44f30.jpg"
         breadcrumbs={[{ label: 'Destinations' }]}
       />
 

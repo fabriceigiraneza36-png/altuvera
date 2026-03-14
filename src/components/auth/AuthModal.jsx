@@ -55,7 +55,8 @@ const SIDE_MEDIA = [
     type: "video",
     // Public sample video (Google Cloud bucket) - reliable for autoplay tests
     src: "https://v1.pinimg.com/videos/mc/expMp4/aa/b8/fd/aab8fd3ea52cd2f120e0dc5fc6263d84_t1.mp4",
-    poster: "https://i.pinimg.com/736x/9a/56/27/9a5627c41868a6f8861341e82df30b84.jpg",
+    poster:
+      "https://i.pinimg.com/736x/9a/56/27/9a5627c41868a6f8861341e82df30b84.jpg",
     alt: "Savanna wildlife video",
   },
   {
@@ -71,7 +72,8 @@ const SIDE_MEDIA = [
   {
     type: "video",
     src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
-    poster: "https://i.pinimg.com/1200x/37/97/46/37974679b2a1c892e16ba2fda5aa9914.jpg",
+    poster:
+      "https://i.pinimg.com/1200x/37/97/46/37974679b2a1c892e16ba2fda5aa9914.jpg",
     alt: "Elephants Dream sample video",
   },
   {
@@ -82,7 +84,8 @@ const SIDE_MEDIA = [
   {
     type: "video",
     src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4",
-    poster: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=1200&auto=format&fit=crop&q=70",
+    poster:
+      "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=1200&auto=format&fit=crop&q=70",
     alt: "Sintel sample video",
   },
   {
@@ -93,7 +96,8 @@ const SIDE_MEDIA = [
   {
     type: "video",
     src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
-    poster: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&auto=format&fit=crop&q=70",
+    poster:
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200&auto=format&fit=crop&q=70",
     alt: "For Bigger Blazes sample video",
   },
   {
@@ -213,7 +217,10 @@ const SideMediaRotator = ({ items = SIDE_MEDIA, intervalMs = 6500 }) => {
       const d = Number(el.duration);
       if (!Number.isFinite(d) || d <= 0) return;
       clearTimer();
-      timerRef.current = setTimeout(next, Math.min(30000, Math.max(6000, d * 1000 + 400)));
+      timerRef.current = setTimeout(
+        next,
+        Math.min(30000, Math.max(6000, d * 1000 + 400)),
+      );
     };
 
     el.addEventListener("ended", onEnded);
@@ -306,10 +313,14 @@ const SideMediaRotator = ({ items = SIDE_MEDIA, intervalMs = 6500 }) => {
             crossOrigin="anonymous"
             onCanPlay={phase === "in" ? handleMediaReady : undefined}
             onLoadedData={phase === "in" ? handleMediaReady : undefined}
-            onError={phase === "in" ? () => {
-              handleVideoError();
-              handleMediaReady();
-            } : undefined}
+            onError={
+              phase === "in"
+                ? () => {
+                    handleVideoError();
+                    handleMediaReady();
+                  }
+                : undefined
+            }
             aria-label={item.alt || "Background video"}
           >
             <source src={item.src} type="video/mp4" />
@@ -336,7 +347,9 @@ const SideMediaRotator = ({ items = SIDE_MEDIA, intervalMs = 6500 }) => {
   );
 
   const effectiveCurrent =
-    current?.type === "video" && videoError ? toImageFallback(current) : current;
+    current?.type === "video" && videoError
+      ? toImageFallback(current)
+      : current;
 
   return (
     <div
@@ -344,12 +357,13 @@ const SideMediaRotator = ({ items = SIDE_MEDIA, intervalMs = 6500 }) => {
       data-dir={navDir}
       onDoubleClick={handleDoubleClick}
     >
-      {outgoing?.item && renderLayer({
-        item: outgoing.item,
-        idx: outgoing.idx,
-        phase: "out",
-        layerKey: outgoing.key,
-      })}
+      {outgoing?.item &&
+        renderLayer({
+          item: outgoing.item,
+          idx: outgoing.idx,
+          phase: "out",
+          layerKey: outgoing.key,
+        })}
 
       {renderLayer({
         item: effectiveCurrent,
@@ -445,8 +459,9 @@ const readFileAsDataUrl = (file) =>
   });
 
 const formatPhoneNumber = (value) => {
+  if (!value) return "";
   // Remove all non-numeric characters except +
-  const cleaned = value.replace(/[^\d+]/g, "");
+  const cleaned = String(value).replace(/[^\d+]/g, "");
   return cleaned;
 };
 
@@ -594,6 +609,16 @@ export default function AuthModal() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [closeModal, isModalOpen]);
+
+  // Pre-fill email from subscription if present
+  useEffect(() => {
+    if (isRegister && signUpStep === 1) {
+      const pendingEmail = sessionStorage.getItem("pending_subscription_email");
+      if (pendingEmail && !formData.email) {
+        setFormData((prev) => ({ ...prev, email: pendingEmail }));
+      }
+    }
+  }, [isRegister, signUpStep, formData.email]);
 
   // Sync Google user data
   useEffect(() => {
@@ -1170,7 +1195,10 @@ export default function AuthModal() {
           <div className="auth-side-overlay" />
           <div className="auth-side-content">
             <h3 className="auth-side-title">Discover East Africa</h3>
-            <p className="auth-side-text">Join thousands of travelers exploring the wild beauty and ancient culture of the Rift Valley.</p>
+            <p className="auth-side-text">
+              Join thousands of travelers exploring the wild beauty and ancient
+              culture of the Rift Valley.
+            </p>
           </div>
         </div>
 
@@ -1206,900 +1234,925 @@ export default function AuthModal() {
             </button>
           </header>
 
-        {/* ===== TABS ===== */}
-        {!isVerify && (
-          <div
-            className="auth-modal-tabs"
-            role="tablist"
-            aria-label="Authentication mode"
-          >
-            <button
-              type="button"
-              className={`auth-tab ${isLogin ? "auth-tab--active" : ""}`}
-              onClick={() => switchView("login")}
-              role="tab"
-              aria-selected={isLogin}
-              aria-controls="login-panel"
-            >
-              <HiLockClosed aria-hidden="true" />
-              <span>Sign In</span>
-            </button>
-            <button
-              type="button"
-              className={`auth-tab ${isRegister ? "auth-tab--active" : ""}`}
-              onClick={() => switchView("register")}
-              role="tab"
-              aria-selected={isRegister}
-              aria-controls="register-panel"
-            >
-              <HiSparkles aria-hidden="true" />
-              <span>Sign Up</span>
-            </button>
-          </div>
-        )}
-
-        {/* ===== CONTENT ===== */}
-        <main className="auth-modal-content">
-          {/* Messages */}
-          {error && (
-            <div className="auth-message auth-message--error" role="alert">
-              <HiExclamationCircle aria-hidden="true" />
-              <span>{error}</span>
-            </div>
-          )}
-
-          {success && (
-            <div className="auth-message auth-message--success" role="status">
-              <HiCheckCircle aria-hidden="true" />
-              <span>{success}</span>
-            </div>
-          )}
-
-          {/* ===== LOGIN VIEW ===== */}
-          {isLogin && (
+          {/* ===== TABS ===== */}
+          {!isVerify && (
             <div
-              className={`auth-view auth-view--login auth-view--step-${signInStep}`}
-              id="login-panel"
-              role="tabpanel"
-              aria-labelledby="login-tab"
+              className="auth-modal-tabs"
+              role="tablist"
+              aria-label="Authentication mode"
             >
-              <div className="auth-view-header">
-                <div className="auth-view-icon auth-view-icon--signin">
-                  <HiShieldCheck aria-hidden="true" />
-                </div>
-                <h2 id="auth-modal-title">Welcome Back</h2>
-                <p>Sign in to access your travel dashboard</p>
-              </div>
-
-              {/* Combined View: Email/Username First, Google Optional */}
-              <div
-                className="auth-form auth-form--animated"
-                key="signin-combined"
+              <button
+                type="button"
+                className={`auth-tab ${isLogin ? "auth-tab--active" : ""}`}
+                onClick={() => switchView("login")}
+                role="tab"
+                aria-selected={isLogin}
+                aria-controls="login-panel"
               >
-                <form className="auth-form" onSubmit={handleSignInSubmit}>
-                  <label className="auth-field">
-                    <span className="auth-field-label">Email Address</span>
-                    <div className="auth-input-wrap">
-                      <HiMail className="auth-input-icon" aria-hidden="true" />
-                      <EmailAutocompleteInput
-                        ref={firstInputRef}
-                        value={formData.email}
-                        onValueChange={(next) => updateField("email", next)}
-                        placeholder="you@example.com"
-                        autoComplete="email"
-                        required
-                        aria-invalid={
-                          !isEmailValid && formData.email.length > 0
-                        }
-                      />
-                    </div>
-                  </label>
-
-                  <label className="auth-field">
-                    <span className="auth-field-label">
-                      Full Name / Username
-                    </span>
-                    <div className="auth-input-wrap">
-                      <HiUser className="auth-input-icon" aria-hidden="true" />
-                      <input
-                        type="text"
-                        value={formData.fullName}
-                        onChange={(event) =>
-                          updateField("fullName", event.target.value)
-                        }
-                        placeholder="Your name or username"
-                        autoComplete="username"
-                        required
-                        minLength={2}
-                        aria-invalid={
-                          !isNameValid && formData.fullName.length > 0
-                        }
-                      />
-                    </div>
-                  </label>
-
-                  <label className="auth-checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={formData.keepSignedIn}
-                      onChange={(event) =>
-                        updateField("keepSignedIn", event.target.checked)
-                      }
-                    />
-                    <span>Keep me signed in on this device</span>
-                  </label>
-
-                  <button
-                    type="submit"
-                    className="auth-btn auth-btn--primary"
-                    disabled={loading || !isEmailValid || !isNameValid}
-                    aria-busy={loading}
-                  >
-                    {loading && (
-                      <InlineSpinner label="Sending verification code" />
-                    )}
-                    <span>
-                      {loading ? "Sending Code..." : "Continue with Email"}
-                    </span>
-                    <HiArrowRight aria-hidden="true" />
-                  </button>
-
-                  <div className="auth-divider" role="separator">
-                    <span>or sign in with</span>
-                  </div>
-
-                  {!githubLoading && (
-                    <button
-                      type="button"
-                      className="auth-btn auth-btn--google"
-                      onClick={() => handleGoogleAuth("signin")}
-                      disabled={!googleLoaded || googleLoading || loading}
-                      aria-busy={googleLoading}
-                    >
-                      {googleLoading && (
-                        <InlineSpinner label="Connecting to Google" />
-                      )}
-                      {!googleLoading && (
-                        <FcGoogle
-                          className="auth-google-icon"
-                          aria-hidden="true"
-                        />
-                      )}
-                      <span>
-                        {googleLoading
-                          ? "Authenticating Google..."
-                          : "Continue with Google"}
-                      </span>
-                    </button>
-                  )}
-
-                  {!googleLoading && (
-                    <button
-                      type="button"
-                      className="auth-btn auth-btn--github"
-                      onClick={() => handleGithubAuth("signin")}
-                      disabled={githubLoading || loading}
-                      aria-busy={githubLoading}
-                    >
-                      {githubLoading && (
-                        <InlineSpinner label="Connecting to GitHub" />
-                      )}
-                      {!githubLoading && (
-                        <FiGithub
-                          className="auth-github-icon"
-                          aria-hidden="true"
-                        />
-                      )}
-                      <span>
-                        {githubLoading
-                          ? "Authenticating GitHub..."
-                          : "Continue with GitHub"}
-                      </span>
-                    </button>
-                  )}
-                </form>
-
-                <div className="auth-google-fallback-wrap">
-                  <div ref={googleFallbackRef} />
-                </div>
-              </div>
-
-              <p className="auth-switch-hint">
-                <span>New to Altuvera?</span>
-                <button
-                  type="button"
-                  className="auth-switch-btn"
-                  onClick={() => switchView("register")}
-                >
-                  Create an account
-                </button>
-              </p>
+                <HiLockClosed aria-hidden="true" />
+                <span>Sign In</span>
+              </button>
+              <button
+                type="button"
+                className={`auth-tab ${isRegister ? "auth-tab--active" : ""}`}
+                onClick={() => switchView("register")}
+                role="tab"
+                aria-selected={isRegister}
+                aria-controls="register-panel"
+              >
+                <HiSparkles aria-hidden="true" />
+                <span>Sign Up</span>
+              </button>
             </div>
           )}
 
-          {/* ===== REGISTER VIEW ===== */}
-          {isRegister && (
-            <div
-              className={`auth-view auth-view--register auth-view--step-${signUpStep}`}
-              id="register-panel"
-              role="tabpanel"
-              aria-labelledby="register-tab"
-            >
-              <div className="auth-view-header">
-                <div className="auth-view-icon auth-view-icon--signup">
-                  <HiGlobe aria-hidden="true" />
-                </div>
-                <h2 id="auth-modal-title">
-                  {signUpStep === 1
-                    ? "Choose Sign-Up Method"
-                    : signUpStep === 2
-                      ? "Complete Your Profile"
-                      : "Final Confirmation"}
-                </h2>
-                <p>
-                  {signUpStep === 1
-                    ? "Join our community to start your journey"
-                    : signUpStep === 2
-                      ? "Tell us about yourself and your travel interests"
-                      : "Review your information and create your account"}
-                </p>
+          {/* ===== CONTENT ===== */}
+          <main className="auth-modal-content">
+            {/* Messages */}
+            {error && (
+              <div className="auth-message auth-message--error" role="alert">
+                <HiExclamationCircle aria-hidden="true" />
+                <span>{error}</span>
               </div>
+            )}
 
-              {/* Progress Indicator */}
+            {success && (
+              <div className="auth-message auth-message--success" role="status">
+                <HiCheckCircle aria-hidden="true" />
+                <span>{success}</span>
+              </div>
+            )}
+
+            {/* ===== LOGIN VIEW ===== */}
+            {isLogin && (
               <div
-                className="auth-progress"
-                role="progressbar"
-                aria-valuenow={signUpStep}
-                aria-valuemin="1"
-                aria-valuemax="3"
+                className={`auth-view auth-view--login auth-view--step-${signInStep}`}
+                id="login-panel"
+                role="tabpanel"
+                aria-labelledby="login-tab"
               >
-                {[
-                  { num: 1, label: "Method" },
-                  { num: 2, label: "Profile" },
-                  { num: 3, label: "Done" },
-                ].map((step) => (
-                  <div
-                    key={step.num}
-                    className={`auth-progress-step ${
-                      signUpStep >= step.num ? "auth-progress-step--active" : ""
-                    } ${signUpStep > step.num ? "auth-progress-step--completed" : ""}`}
-                  >
-                    <div className="auth-progress-circle">
-                      {signUpStep > step.num ? (
-                        <HiCheck aria-hidden="true" />
-                      ) : (
-                        step.num
-                      )}
-                    </div>
-                    <span className="auth-progress-label">{step.label}</span>
+                <div className="auth-view-header">
+                  <div className="auth-view-icon auth-view-icon--signin">
+                    <HiShieldCheck aria-hidden="true" />
                   </div>
-                ))}
-                <div className="auth-progress-line" aria-hidden="true">
-                  <div
-                    className="auth-progress-line-fill"
-                    style={{ width: `${((signUpStep - 1) / 2) * 100}%` }}
-                  />
+                  <h2 id="auth-modal-title">Welcome Back</h2>
+                  <p>Sign in to access your travel dashboard</p>
                 </div>
-              </div>
 
-              {signUpStep === 1 && (
+                {/* Combined View: Email/Username First, Google Optional */}
                 <div
                   className="auth-form auth-form--animated"
-                  key="signup-step-1"
+                  key="signin-combined"
                 >
-                  {!hasGooglePending ? (
-                    <>
-                      <div className="auth-form-group">
-                        <label className="auth-field">
-                          <span className="auth-field-label">
-                            Email Address
-                          </span>
-                          <div className="auth-input-wrap">
-                            <HiMail
-                              className="auth-input-icon"
-                              aria-hidden="true"
-                            />
-                            <EmailAutocompleteInput
-                              ref={firstInputRef}
-                              value={formData.email}
-                              onValueChange={(next) =>
-                                updateField("email", next)
-                              }
-                              placeholder="traveler@example.com"
-                              autoComplete="email"
-                              required
-                            />
-                          </div>
-                        </label>
-                        <label className="auth-field">
-                          <span className="auth-field-label">Full Name</span>
-                          <div className="auth-input-wrap">
-                            <HiUser
-                              className="auth-input-icon"
-                              aria-hidden="true"
-                            />
-                            <input
-                              type="text"
-                              value={formData.fullName}
-                              onChange={(event) =>
-                                updateField("fullName", event.target.value)
-                              }
-                              placeholder="Your full name"
-                              autoComplete="name"
-                              required
-                            />
-                          </div>
-                        </label>
-                      </div>
-
-                      <button
-                        type="button"
-                        className="auth-btn auth-btn--primary"
-                        onClick={() => {
-                          if (isEmailValid && isNameValid) {
-                            setSignUpStep(2);
-                            setAuthMethod("email");
-                          } else {
-                            setError(
-                              "Please enter a valid email and full name.",
-                            );
+                  <form className="auth-form" onSubmit={handleSignInSubmit}>
+                    <label className="auth-field">
+                      <span className="auth-field-label">Email Address</span>
+                      <div className="auth-input-wrap">
+                        <HiMail
+                          className="auth-input-icon"
+                          aria-hidden="true"
+                        />
+                        <EmailAutocompleteInput
+                          ref={firstInputRef}
+                          value={formData.email}
+                          onValueChange={(next) => updateField("email", next)}
+                          placeholder="you@example.com"
+                          autoComplete="email"
+                          required
+                          aria-invalid={
+                            !isEmailValid && formData.email.length > 0
                           }
-                        }}
-                        disabled={!isEmailValid || !isNameValid}
-                      >
-                        <span>Create Account with Email</span>
-                        <HiArrowRight aria-hidden="true" />
-                      </button>
-
-                      <div className="auth-divider" role="separator">
-                        <span>or sign up with</span>
-                      </div>
-
-                      {!githubLoading && (
-                        <button
-                          type="button"
-                          className="auth-btn auth-btn--google"
-                          onClick={() => handleGoogleAuth("signup")}
-                          disabled={!googleLoaded || googleLoading || loading}
-                          aria-busy={googleLoading}
-                        >
-                          {googleLoading && (
-                            <InlineSpinner label="Connecting to Google" />
-                          )}
-                          {!googleLoading && (
-                            <FcGoogle
-                              className="auth-google-icon"
-                              aria-hidden="true"
-                            />
-                          )}
-                          <span>
-                            {googleLoading
-                              ? "Authenticating Google..."
-                              : "Continue with Google"}
-                          </span>
-                        </button>
-                      )}
-
-                      {!googleLoading && (
-                        <button
-                          type="button"
-                          className="auth-btn auth-btn--github"
-                          onClick={() => handleGithubAuth("signup")}
-                          disabled={githubLoading || loading}
-                          aria-busy={githubLoading}
-                        >
-                          {githubLoading && (
-                            <InlineSpinner label="Connecting to GitHub" />
-                          )}
-                          {!githubLoading && (
-                            <FiGithub
-                              className="auth-github-icon"
-                              aria-hidden="true"
-                            />
-                          )}
-                          <span>
-                            {githubLoading
-                              ? "Authenticating GitHub..."
-                              : "Continue with GitHub"}
-                          </span>
-                        </button>
-                      )}
-                    </>
-                  ) : (
-                    <div className="auth-google-connected">
-                      <HiCheckCircle size={48} color="var(--auth-primary)" />
-                      <h3>Google Connected</h3>
-                      <p>Success! Click continue to finalize your profile.</p>
-                      <button
-                        className="auth-btn auth-btn--primary"
-                        onClick={() => setSignUpStep(2)}
-                      >
-                        <span>Continue Setup</span>
-                        <HiArrowRight />
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Step 2: Profile Details */}
-              {signUpStep === 2 && (
-                <div
-                  className="auth-form auth-form--animated"
-                  key="signup-step-2"
-                >
-                  {googleUser && (
-                    <div className="auth-google-badge">
-                      <div className="auth-image-shell auth-image-shell--sm">
-                        {googleBadgeImageLoading && (
-                          <span
-                            className="auth-image-loader"
-                            aria-label="Loading profile image"
-                          />
-                        )}
-                        <img
-                          src={
-                            googleUser.picture ||
-                            buildInitialAvatar(googleUser.name)
-                          }
-                          alt={`${googleUser.name}'s profile`}
-                          className="auth-google-badge-avatar"
-                          onLoad={() => setGoogleBadgeImageLoading(false)}
-                          onError={() => setGoogleBadgeImageLoading(false)}
                         />
                       </div>
-                      <div className="auth-google-badge-info">
-                        <span className="auth-google-badge-name">
-                          {googleUser.name}
-                        </span>
-                        <span className="auth-google-badge-email">
-                          {googleUser.email}
-                        </span>
+                    </label>
+
+                    <label className="auth-field">
+                      <span className="auth-field-label">
+                        Full Name / Username
+                      </span>
+                      <div className="auth-input-wrap">
+                        <HiUser
+                          className="auth-input-icon"
+                          aria-hidden="true"
+                        />
+                        <input
+                          type="text"
+                          value={formData.fullName}
+                          onChange={(event) =>
+                            updateField("fullName", event.target.value)
+                          }
+                          placeholder="Your name or username"
+                          autoComplete="username"
+                          required
+                          minLength={2}
+                          aria-invalid={
+                            !isNameValid && formData.fullName.length > 0
+                          }
+                        />
                       </div>
-                      <HiCheckCircle
-                        className="auth-google-badge-check"
-                        aria-label="Verified"
-                      />
-                    </div>
-                  )}
+                    </label>
 
-                  <label className="auth-field">
-                    <span className="auth-field-label">
-                      Phone Number{" "}
-                      <span className="auth-field-optional">(Optional)</span>
-                    </span>
-                    <div className="auth-input-wrap">
-                      <HiPhone className="auth-input-icon" aria-hidden="true" />
+                    <label className="auth-checkbox-label">
                       <input
-                        type="tel"
-                        value={formData.phone}
+                        type="checkbox"
+                        checked={formData.keepSignedIn}
                         onChange={(event) =>
-                          updateField(
-                            "phone",
-                            formatPhoneNumber(event.target.value),
-                          )
-                        }
-                        placeholder="+1 (555) 000-0000"
-                        autoComplete="tel"
-                        aria-invalid={
-                          !isPhoneValid && formData.phone.length > 0
+                          updateField("keepSignedIn", event.target.checked)
                         }
                       />
-                    </div>
-                    <span className="auth-field-hint">
-                      <HiInformationCircle aria-hidden="true" />
-                      Used for booking confirmations and updates
-                    </span>
-                  </label>
+                      <span>Keep me signed in on this device</span>
+                    </label>
 
-                  <label className="auth-field">
-                    <span className="auth-field-label">I am a...</span>
-                    <div
-                      className="auth-role-grid"
-                      role="radiogroup"
-                      aria-label="Select your role"
-                    >
-                      {ROLE_OPTIONS.map((option) => (
-                        (() => {
-                          const RoleIcon = option.icon;
-                          return (
-                        <button
-                          key={option.value}
-                          type="button"
-                          className={`auth-role-option ${
-                            formData.role === option.value
-                              ? "auth-role-option--active"
-                              : ""
-                          }`}
-                          onClick={() => updateField("role", option.value)}
-                          role="radio"
-                          aria-checked={formData.role === option.value}
-                        >
-                          <span className="auth-role-icon" aria-hidden="true">
-                            <RoleIcon aria-hidden="true" />
-                          </span>
-                          <span className="auth-role-label">
-                            {option.label}
-                          </span>
-                          <span className="auth-role-desc">
-                            {option.description}
-                          </span>
-                        </button>
-                          );
-                        })()
-                      ))}
-                    </div>
-                  </label>
-
-                  <label className="auth-field">
-                    <span className="auth-field-label">
-                      Bio{" "}
-                      <span className="auth-field-optional">(Optional)</span>
-                    </span>
-                    <div className="auth-input-wrap auth-input-wrap--textarea">
-                      <textarea
-                        rows={3}
-                        value={formData.bio}
-                        onChange={(event) =>
-                          updateField("bio", event.target.value)
-                        }
-                        placeholder="Tell us about your travel style and what you're looking for..."
-                        maxLength={MAX_BIO_LENGTH}
-                        aria-invalid={!isBioValid}
-                      />
-                    </div>
-                    <span
-                      className={`auth-field-counter ${
-                        formData.bio.length > MAX_BIO_LENGTH * 0.9
-                          ? "auth-field-counter--warning"
-                          : ""
-                      }`}
-                    >
-                      {formData.bio.length}/{MAX_BIO_LENGTH}
-                    </span>
-                  </label>
-
-                  <div className="auth-row">
                     <button
-                      type="button"
-                      className="auth-btn auth-btn--ghost"
-                      onClick={() => {
-                        setSignUpStep(1);
-                        clearGooglePending();
-                      }}
-                    >
-                      <HiArrowLeft aria-hidden="true" />
-                      <span>Back</span>
-                    </button>
-                    <button
-                      type="button"
+                      type="submit"
                       className="auth-btn auth-btn--primary"
-                      onClick={goToSignUpNextStep}
-                      disabled={!isPhoneValid || !isBioValid}
+                      disabled={loading || !isEmailValid || !isNameValid}
+                      aria-busy={loading}
                     >
-                      <span>Continue</span>
+                      {loading && (
+                        <InlineSpinner label="Sending verification code" />
+                      )}
+                      <span>
+                        {loading ? "Sending Code..." : "Continue with Email"}
+                      </span>
                       <HiArrowRight aria-hidden="true" />
                     </button>
+
+                    <div className="auth-divider" role="separator">
+                      <span>or sign in with</span>
+                    </div>
+
+                    {!githubLoading && (
+                      <button
+                        type="button"
+                        className="auth-btn auth-btn--google"
+                        onClick={() => handleGoogleAuth("signin")}
+                        disabled={!googleLoaded || googleLoading || loading}
+                        aria-busy={googleLoading}
+                      >
+                        {googleLoading && (
+                          <InlineSpinner label="Connecting to Google" />
+                        )}
+                        {!googleLoading && (
+                          <FcGoogle
+                            className="auth-google-icon"
+                            aria-hidden="true"
+                          />
+                        )}
+                        <span>
+                          {googleLoading
+                            ? "Authenticating Google..."
+                            : "Continue with Google"}
+                        </span>
+                      </button>
+                    )}
+
+                    {!googleLoading && (
+                      <button
+                        type="button"
+                        className="auth-btn auth-btn--github"
+                        onClick={() => handleGithubAuth("signin")}
+                        disabled={githubLoading || loading}
+                        aria-busy={githubLoading}
+                      >
+                        {githubLoading && (
+                          <InlineSpinner label="Connecting to GitHub" />
+                        )}
+                        {!githubLoading && (
+                          <FiGithub
+                            className="auth-github-icon"
+                            aria-hidden="true"
+                          />
+                        )}
+                        <span>
+                          {githubLoading
+                            ? "Authenticating GitHub..."
+                            : "Continue with GitHub"}
+                        </span>
+                      </button>
+                    )}
+                  </form>
+
+                  <div className="auth-google-fallback-wrap">
+                    <div ref={googleFallbackRef} />
                   </div>
                 </div>
-              )}
 
-              {/* Step 3: Avatar & Confirmation */}
-              {signUpStep === 3 && (
-                <form
-                  className="auth-form auth-form--animated"
-                  key="signup-step-3"
-                  onSubmit={handleSignUpSubmit}
+                <p className="auth-switch-hint">
+                  <span>New to Altuvera?</span>
+                  <button
+                    type="button"
+                    className="auth-switch-btn"
+                    onClick={() => switchView("register")}
+                  >
+                    Create an account
+                  </button>
+                </p>
+              </div>
+            )}
+
+            {/* ===== REGISTER VIEW ===== */}
+            {isRegister && (
+              <div
+                className={`auth-view auth-view--register auth-view--step-${signUpStep}`}
+                id="register-panel"
+                role="tabpanel"
+                aria-labelledby="register-tab"
+              >
+                <div className="auth-view-header">
+                  <div className="auth-view-icon auth-view-icon--signup">
+                    <HiGlobe aria-hidden="true" />
+                  </div>
+                  <h2 id="auth-modal-title">
+                    {signUpStep === 1
+                      ? "Choose Sign-Up Method"
+                      : signUpStep === 2
+                        ? "Complete Your Profile"
+                        : "Final Confirmation"}
+                  </h2>
+                  <p>
+                    {signUpStep === 1
+                      ? "Join our community to start your journey"
+                      : signUpStep === 2
+                        ? "Tell us about yourself and your travel interests"
+                        : "Review your information and create your account"}
+                  </p>
+                </div>
+
+                {/* Progress Indicator */}
+                <div
+                  className="auth-progress"
+                  role="progressbar"
+                  aria-valuenow={signUpStep}
+                  aria-valuemin="1"
+                  aria-valuemax="3"
                 >
-                  <div className="auth-avatar-section">
-                    <div className="auth-avatar-preview-wrap">
-                      {formData.avatarPreview ? (
-                        <div className="auth-image-shell auth-image-shell--lg">
-                          {profileAvatarImageLoading && (
+                  {[
+                    { num: 1, label: "Method" },
+                    { num: 2, label: "Profile" },
+                    { num: 3, label: "Done" },
+                  ].map((step) => (
+                    <div
+                      key={step.num}
+                      className={`auth-progress-step ${
+                        signUpStep >= step.num
+                          ? "auth-progress-step--active"
+                          : ""
+                      } ${signUpStep > step.num ? "auth-progress-step--completed" : ""}`}
+                    >
+                      <div className="auth-progress-circle">
+                        {signUpStep > step.num ? (
+                          <HiCheck aria-hidden="true" />
+                        ) : (
+                          step.num
+                        )}
+                      </div>
+                      <span className="auth-progress-label">{step.label}</span>
+                    </div>
+                  ))}
+                  <div className="auth-progress-line" aria-hidden="true">
+                    <div
+                      className="auth-progress-line-fill"
+                      style={{ width: `${((signUpStep - 1) / 2) * 100}%` }}
+                    />
+                  </div>
+                </div>
+
+                {signUpStep === 1 && (
+                  <div
+                    className="auth-form auth-form--animated"
+                    key="signup-step-1"
+                  >
+                    {!hasGooglePending ? (
+                      <>
+                        <div className="auth-form-group">
+                          <label className="auth-field">
+                            <span className="auth-field-label">
+                              Email Address
+                            </span>
+                            <div className="auth-input-wrap">
+                              <HiMail
+                                className="auth-input-icon"
+                                aria-hidden="true"
+                              />
+                              <EmailAutocompleteInput
+                                ref={firstInputRef}
+                                value={formData.email}
+                                onValueChange={(next) =>
+                                  updateField("email", next)
+                                }
+                                placeholder="traveler@example.com"
+                                autoComplete="email"
+                                required
+                              />
+                            </div>
+                          </label>
+                          <label className="auth-field">
+                            <span className="auth-field-label">Full Name</span>
+                            <div className="auth-input-wrap">
+                              <HiUser
+                                className="auth-input-icon"
+                                aria-hidden="true"
+                              />
+                              <input
+                                type="text"
+                                value={formData.fullName}
+                                onChange={(event) =>
+                                  updateField("fullName", event.target.value)
+                                }
+                                placeholder="Your full name"
+                                autoComplete="name"
+                                required
+                              />
+                            </div>
+                          </label>
+                        </div>
+
+                        <button
+                          type="button"
+                          className="auth-btn auth-btn--primary"
+                          onClick={() => {
+                            if (isEmailValid && isNameValid) {
+                              setSignUpStep(2);
+                              setAuthMethod("email");
+                            } else {
+                              setError(
+                                "Please enter a valid email and full name.",
+                              );
+                            }
+                          }}
+                          disabled={!isEmailValid || !isNameValid}
+                        >
+                          <span>Create Account with Email</span>
+                          <HiArrowRight aria-hidden="true" />
+                        </button>
+
+                        <div className="auth-divider" role="separator">
+                          <span>or sign up with</span>
+                        </div>
+
+                        {!githubLoading && (
+                          <button
+                            type="button"
+                            className="auth-btn auth-btn--google"
+                            onClick={() => handleGoogleAuth("signup")}
+                            disabled={!googleLoaded || googleLoading || loading}
+                            aria-busy={googleLoading}
+                          >
+                            {googleLoading && (
+                              <InlineSpinner label="Connecting to Google" />
+                            )}
+                            {!googleLoading && (
+                              <FcGoogle
+                                className="auth-google-icon"
+                                aria-hidden="true"
+                              />
+                            )}
+                            <span>
+                              {googleLoading
+                                ? "Authenticating Google..."
+                                : "Continue with Google"}
+                            </span>
+                          </button>
+                        )}
+
+                        {!googleLoading && (
+                          <button
+                            type="button"
+                            className="auth-btn auth-btn--github"
+                            onClick={() => handleGithubAuth("signup")}
+                            disabled={githubLoading || loading}
+                            aria-busy={githubLoading}
+                          >
+                            {githubLoading && (
+                              <InlineSpinner label="Connecting to GitHub" />
+                            )}
+                            {!githubLoading && (
+                              <FiGithub
+                                className="auth-github-icon"
+                                aria-hidden="true"
+                              />
+                            )}
+                            <span>
+                              {githubLoading
+                                ? "Authenticating GitHub..."
+                                : "Continue with GitHub"}
+                            </span>
+                          </button>
+                        )}
+                      </>
+                    ) : (
+                      <div className="auth-google-connected">
+                        <HiCheckCircle size={48} color="var(--auth-primary)" />
+                        <h3>Google Connected</h3>
+                        <p>Success! Click continue to finalize your profile.</p>
+                        <button
+                          className="auth-btn auth-btn--primary"
+                          onClick={() => setSignUpStep(2)}
+                        >
+                          <span>Continue Setup</span>
+                          <HiArrowRight />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Step 2: Profile Details */}
+                {signUpStep === 2 && (
+                  <div
+                    className="auth-form auth-form--animated"
+                    key="signup-step-2"
+                  >
+                    {googleUser && (
+                      <div className="auth-google-badge">
+                        <div className="auth-image-shell auth-image-shell--sm">
+                          {googleBadgeImageLoading && (
                             <span
                               className="auth-image-loader"
                               aria-label="Loading profile image"
                             />
                           )}
                           <img
-                            src={formData.avatarPreview}
-                            alt="Your profile avatar"
-                            className="auth-avatar-preview"
-                            onLoad={() => setProfileAvatarImageLoading(false)}
-                            onError={() => setProfileAvatarImageLoading(false)}
+                            src={
+                              googleUser.picture ||
+                              buildInitialAvatar(googleUser.name)
+                            }
+                            alt={`${googleUser.name}'s profile`}
+                            className="auth-google-badge-avatar"
+                            onLoad={() => setGoogleBadgeImageLoading(false)}
+                            onError={() => setGoogleBadgeImageLoading(false)}
                           />
                         </div>
-                      ) : (
-                        <div
-                          className="auth-avatar-preview auth-avatar-initials"
-                          style={{
-                            background: `linear-gradient(135deg, ${currentRole?.color}, ${currentRole?.color}dd)`,
-                          }}
-                        >
-                          {getInitials(formData.fullName || formData.email)}
+                        <div className="auth-google-badge-info">
+                          <span className="auth-google-badge-name">
+                            {googleUser.name}
+                          </span>
+                          <span className="auth-google-badge-email">
+                            {googleUser.email}
+                          </span>
                         </div>
-                      )}
-                      <label
-                        className={`auth-avatar-edit ${avatarUploading ? "auth-avatar-edit--uploading" : ""}`}
-                      >
-                        {avatarUploading ? (
-                          <HiRefresh className="auth-spin" aria-hidden="true" />
-                        ) : (
-                          <HiPhotograph aria-hidden="true" />
-                        )}
-                        <span className="sr-only">Upload profile picture</span>
-                        <input
-                          type="file"
-                          accept="image/jpeg,image/png,image/gif,image/webp,image/avif"
-                          onChange={handleAvatarFileChange}
-                          aria-label="Upload profile picture"
-                          disabled={avatarUploading}
+                        <HiCheckCircle
+                          className="auth-google-badge-check"
+                          aria-label="Verified"
                         />
-                        {avatarUploading && (
-                          <div className="auth-avatar-upload-progress" />
-                        )}
-                      </label>
-                    </div>
-                    <div className="auth-avatar-info">
-                      <h4>
-                        {formData.fullName || googleUser?.name || "Your Name"}
-                      </h4>
-                      <p>{formData.email || googleUser?.email}</p>
-                      <span
-                        className="auth-role-badge"
-                        style={{ borderColor: currentRole?.color }}
-                      >
-                        <span aria-hidden="true">{currentRole?.icon}</span>{" "}
-                        {currentRole?.label}
+                      </div>
+                    )}
+
+                    <label className="auth-field">
+                      <span className="auth-field-label">
+                        Phone Number{" "}
+                        <span className="auth-field-optional">(Optional)</span>
                       </span>
+                      <div className="auth-input-wrap">
+                        <HiPhone
+                          className="auth-input-icon"
+                          aria-hidden="true"
+                        />
+                        <input
+                          type="tel"
+                          value={formData.phone}
+                          onChange={(event) =>
+                            updateField(
+                              "phone",
+                              formatPhoneNumber(event.target.value),
+                            )
+                          }
+                          placeholder="+1 (555) 000-0000"
+                          autoComplete="tel"
+                          aria-invalid={
+                            !isPhoneValid && formData.phone.length > 0
+                          }
+                        />
+                      </div>
+                      <span className="auth-field-hint">
+                        <HiInformationCircle aria-hidden="true" />
+                        Used for booking confirmations and updates
+                      </span>
+                    </label>
+
+                    <label className="auth-field">
+                      <span className="auth-field-label">I am a...</span>
+                      <div
+                        className="auth-role-grid"
+                        role="radiogroup"
+                        aria-label="Select your role"
+                      >
+                        {ROLE_OPTIONS.map((option) =>
+                          (() => {
+                            const RoleIcon = option.icon;
+                            return (
+                              <button
+                                key={option.value}
+                                type="button"
+                                className={`auth-role-option ${
+                                  formData.role === option.value
+                                    ? "auth-role-option--active"
+                                    : ""
+                                }`}
+                                onClick={() =>
+                                  updateField("role", option.value)
+                                }
+                                role="radio"
+                                aria-checked={formData.role === option.value}
+                              >
+                                <span
+                                  className="auth-role-icon"
+                                  aria-hidden="true"
+                                >
+                                  <RoleIcon aria-hidden="true" />
+                                </span>
+                                <span className="auth-role-label">
+                                  {option.label}
+                                </span>
+                                <span className="auth-role-desc">
+                                  {option.description}
+                                </span>
+                              </button>
+                            );
+                          })(),
+                        )}
+                      </div>
+                    </label>
+
+                    <label className="auth-field">
+                      <span className="auth-field-label">
+                        Bio{" "}
+                        <span className="auth-field-optional">(Optional)</span>
+                      </span>
+                      <div className="auth-input-wrap auth-input-wrap--textarea">
+                        <textarea
+                          rows={3}
+                          value={formData.bio}
+                          onChange={(event) =>
+                            updateField("bio", event.target.value)
+                          }
+                          placeholder="Tell us about your travel style and what you're looking for..."
+                          maxLength={MAX_BIO_LENGTH}
+                          aria-invalid={!isBioValid}
+                        />
+                      </div>
+                      <span
+                        className={`auth-field-counter ${
+                          formData.bio.length > MAX_BIO_LENGTH * 0.9
+                            ? "auth-field-counter--warning"
+                            : ""
+                        }`}
+                      >
+                        {formData.bio.length}/{MAX_BIO_LENGTH}
+                      </span>
+                    </label>
+
+                    <div className="auth-row">
+                      <button
+                        type="button"
+                        className="auth-btn auth-btn--ghost"
+                        onClick={() => {
+                          setSignUpStep(1);
+                          clearGooglePending();
+                        }}
+                      >
+                        <HiArrowLeft aria-hidden="true" />
+                        <span>Back</span>
+                      </button>
+                      <button
+                        type="button"
+                        className="auth-btn auth-btn--primary"
+                        onClick={goToSignUpNextStep}
+                        disabled={!isPhoneValid || !isBioValid}
+                      >
+                        <span>Continue</span>
+                        <HiArrowRight aria-hidden="true" />
+                      </button>
                     </div>
                   </div>
+                )}
 
-                  <div className="auth-summary-card">
-                    <h4>Account Summary</h4>
-                    <dl className="auth-summary-list">
-                      <div className="auth-summary-row">
-                        <dt>Email</dt>
-                        <dd>{formData.email || googleUser?.email}</dd>
-                      </div>
-                      <div className="auth-summary-row">
-                        <dt>Phone</dt>
-                        <dd>{formData.phone || "Not provided"}</dd>
-                      </div>
-                      <div className="auth-summary-row">
-                        <dt>Role</dt>
-                        <dd>{currentRole?.label}</dd>
-                      </div>
-                      <div className="auth-summary-row">
-                        <dt>Authentication Way</dt>
-                        <dd
-                          className={
-                            authMethod === "google"
-                              ? "auth-summary-google"
-                              : "auth-summary-email"
-                          }
+                {/* Step 3: Avatar & Confirmation */}
+                {signUpStep === 3 && (
+                  <form
+                    className="auth-form auth-form--animated"
+                    key="signup-step-3"
+                    onSubmit={handleSignUpSubmit}
+                  >
+                    <div className="auth-avatar-section">
+                      <div className="auth-avatar-preview-wrap">
+                        {formData.avatarPreview ? (
+                          <div className="auth-image-shell auth-image-shell--lg">
+                            {profileAvatarImageLoading && (
+                              <span
+                                className="auth-image-loader"
+                                aria-label="Loading profile image"
+                              />
+                            )}
+                            <img
+                              src={formData.avatarPreview}
+                              alt="Your profile avatar"
+                              className="auth-avatar-preview"
+                              onLoad={() => setProfileAvatarImageLoading(false)}
+                              onError={() =>
+                                setProfileAvatarImageLoading(false)
+                              }
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            className="auth-avatar-preview auth-avatar-initials"
+                            style={{
+                              background: `linear-gradient(135deg, ${currentRole?.color}, ${currentRole?.color}dd)`,
+                            }}
+                          >
+                            {getInitials(formData.fullName || formData.email)}
+                          </div>
+                        )}
+                        <label
+                          className={`auth-avatar-edit ${avatarUploading ? "auth-avatar-edit--uploading" : ""}`}
                         >
-                          {authMethod === "google" ? (
-                            <>
-                              <FcGoogle aria-hidden="true" />
-                              <span>Google Account</span>
-                            </>
+                          {avatarUploading ? (
+                            <HiRefresh
+                              className="auth-spin"
+                              aria-hidden="true"
+                            />
                           ) : (
-                            <>
-                              <HiMail aria-hidden="true" />
-                              <span>Email Verification</span>
-                            </>
+                            <HiPhotograph aria-hidden="true" />
                           )}
-                        </dd>
+                          <span className="sr-only">
+                            Upload profile picture
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/gif,image/webp,image/avif"
+                            onChange={handleAvatarFileChange}
+                            aria-label="Upload profile picture"
+                            disabled={avatarUploading}
+                          />
+                          {avatarUploading && (
+                            <div className="auth-avatar-upload-progress" />
+                          )}
+                        </label>
                       </div>
-                    </dl>
+                      <div className="auth-avatar-info">
+                        <h4>
+                          {formData.fullName || googleUser?.name || "Your Name"}
+                        </h4>
+                        <p>{formData.email || googleUser?.email}</p>
+                        <span
+                          className="auth-role-badge"
+                          style={{ borderColor: currentRole?.color }}
+                        >
+                          <span aria-hidden="true">{currentRole?.icon}</span>{" "}
+                          {currentRole?.label}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="auth-summary-card">
+                      <h4>Account Summary</h4>
+                      <dl className="auth-summary-list">
+                        <div className="auth-summary-row">
+                          <dt>Email</dt>
+                          <dd>{formData.email || googleUser?.email}</dd>
+                        </div>
+                        <div className="auth-summary-row">
+                          <dt>Phone</dt>
+                          <dd>{formData.phone || "Not provided"}</dd>
+                        </div>
+                        <div className="auth-summary-row">
+                          <dt>Role</dt>
+                          <dd>{currentRole?.label}</dd>
+                        </div>
+                        <div className="auth-summary-row">
+                          <dt>Authentication Way</dt>
+                          <dd
+                            className={
+                              authMethod === "google"
+                                ? "auth-summary-google"
+                                : "auth-summary-email"
+                            }
+                          >
+                            {authMethod === "google" ? (
+                              <>
+                                <FcGoogle aria-hidden="true" />
+                                <span>Google Account</span>
+                              </>
+                            ) : (
+                              <>
+                                <HiMail aria-hidden="true" />
+                                <span>Email Verification</span>
+                              </>
+                            )}
+                          </dd>
+                        </div>
+                      </dl>
+                    </div>
+
+                    <label className="auth-checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={formData.keepSignedIn}
+                        onChange={(event) =>
+                          updateField("keepSignedIn", event.target.checked)
+                        }
+                      />
+                      <span>Keep me signed in on this device</span>
+                    </label>
+
+                    <label className="auth-checkbox-label auth-checkbox-label--terms">
+                      <input
+                        type="checkbox"
+                        checked={agreeTerms}
+                        onChange={(event) =>
+                          setAgreeTerms(event.target.checked)
+                        }
+                        required
+                      />
+                      <span>
+                        I agree to the{" "}
+                        <a
+                          href="/terms"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Terms of Service
+                        </a>{" "}
+                        and{" "}
+                        <a
+                          href="/privacy"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          Privacy Policy
+                        </a>
+                      </span>
+                    </label>
+
+                    <div className="auth-row">
+                      <button
+                        type="button"
+                        className="auth-btn auth-btn--ghost"
+                        onClick={() => setSignUpStep(2)}
+                      >
+                        <HiArrowLeft aria-hidden="true" />
+                        <span>Back</span>
+                      </button>
+                      <button
+                        type="submit"
+                        className="auth-btn auth-btn--primary auth-btn--success"
+                        disabled={loading || avatarUploading || !agreeTerms}
+                        aria-busy={loading || avatarUploading}
+                      >
+                        {(loading || avatarUploading) && (
+                          <InlineSpinner label="Creating account" />
+                        )}
+                        <span>
+                          {loading || avatarUploading
+                            ? "Creating Your Account..."
+                            : "Create Account"}
+                        </span>
+                        <HiCheck aria-hidden="true" />
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                <p className="auth-switch-hint">
+                  <span>Already have an account?</span>
+                  <button
+                    type="button"
+                    className="auth-switch-btn"
+                    onClick={() => switchView("login")}
+                  >
+                    Sign in instead
+                  </button>
+                </p>
+              </div>
+            )}
+
+            {/* ===== VERIFY VIEW ===== */}
+            {isVerify && (
+              <div className="auth-view auth-view--verify">
+                <div className="auth-view-header">
+                  <div className="auth-view-icon auth-view-icon--verify">
+                    <HiMail aria-hidden="true" />
+                  </div>
+                  <h2 id="auth-modal-title">Verify Your Email</h2>
+                  <p>We've sent a 6-digit verification code to:</p>
+                  <div className="auth-email-badge">
+                    {activeEmail || "No email found"}
+                  </div>
+                  <span className="auth-verify-note">
+                    Code expires in {CODE_VALIDITY_MINUTES} minutes
+                  </span>
+                </div>
+
+                <form
+                  className="auth-form auth-form--animated"
+                  onSubmit={handleVerifySubmit}
+                >
+                  <div
+                    className={`auth-code-row ${codeRowState ? `auth-code-row--${codeRowState}` : ""}`}
+                    onPaste={handleCodePaste}
+                    role="group"
+                    aria-label="Verification code input"
+                  >
+                    {code.map((digit, index) => {
+                      const allFilled = code.join("").length === 6;
+                      return (
+                        <input
+                          key={index}
+                          ref={(element) => {
+                            codeRefs.current[index] = element;
+                          }}
+                          type="text"
+                          inputMode="numeric"
+                          maxLength={1}
+                          value={digit}
+                          onChange={(event) =>
+                            handleCodeChange(index, event.target.value)
+                          }
+                          onKeyDown={(event) => handleCodeKeyDown(index, event)}
+                          className={`auth-code-input ${digit ? "auth-code-input--filled" : ""} ${allFilled && !codeRowState ? "auth-code-input--all-filled" : ""}`}
+                          aria-label={`Digit ${index + 1} of 6`}
+                          autoComplete="one-time-code"
+                          disabled={
+                            codeRowState === "verifying" ||
+                            codeRowState === "success"
+                          }
+                        />
+                      );
+                    })}
                   </div>
 
-                  <label className="auth-checkbox-label">
-                    <input
-                      type="checkbox"
-                      checked={formData.keepSignedIn}
-                      onChange={(event) =>
-                        updateField("keepSignedIn", event.target.checked)
-                      }
-                    />
-                    <span>Keep me signed in on this device</span>
-                  </label>
-
-                  <label className="auth-checkbox-label auth-checkbox-label--terms">
-                    <input
-                      type="checkbox"
-                      checked={agreeTerms}
-                      onChange={(event) => setAgreeTerms(event.target.checked)}
-                      required
-                    />
+                  <button
+                    type="submit"
+                    className="auth-btn auth-btn--primary"
+                    disabled={
+                      loading ||
+                      code.join("").length !== 6 ||
+                      codeRowState === "verifying"
+                    }
+                    aria-busy={loading || codeRowState === "verifying"}
+                  >
+                    {(loading || codeRowState === "verifying") && (
+                      <InlineSpinner label="Verifying code" />
+                    )}
                     <span>
-                      I agree to the{" "}
-                      <a
-                        href="/terms"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Terms of Service
-                      </a>{" "}
-                      and{" "}
-                      <a
-                        href="/privacy"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        Privacy Policy
-                      </a>
+                      {codeRowState === "verifying"
+                        ? "Verifying..."
+                        : codeRowState === "success"
+                          ? "Verified!"
+                          : loading
+                            ? "Verifying..."
+                            : "Verify & Continue"}
                     </span>
-                  </label>
+                    <HiArrowRight aria-hidden="true" />
+                  </button>
 
-                  <div className="auth-row">
+                  <div className="auth-row auth-row--verify">
                     <button
                       type="button"
                       className="auth-btn auth-btn--ghost"
-                      onClick={() => setSignUpStep(2)}
+                      onClick={handleBackFromVerify}
                     >
                       <HiArrowLeft aria-hidden="true" />
                       <span>Back</span>
                     </button>
+
                     <button
-                      type="submit"
-                      className="auth-btn auth-btn--primary auth-btn--success"
-                      disabled={loading || avatarUploading || !agreeTerms}
-                      aria-busy={loading || avatarUploading}
+                      type="button"
+                      className="auth-btn auth-btn--secondary"
+                      onClick={handleResend}
+                      disabled={resendTimer > 0 || loading}
+                      aria-busy={loading}
                     >
-                      {(loading || avatarUploading) && (
-                        <InlineSpinner label="Creating account" />
-                      )}
+                      <HiRefresh
+                        className={resendTimer > 0 ? "" : "auth-icon-spin"}
+                        aria-hidden="true"
+                      />
+                      {loading && <InlineSpinner label="Resending code" />}
                       <span>
-                        {loading || avatarUploading
-                          ? "Creating Your Account..."
-                          : "Create Account"}
+                        {resendTimer > 0
+                          ? `Resend in ${resendTimer}s`
+                          : "Resend Code"}
                       </span>
-                      <HiCheck aria-hidden="true" />
                     </button>
                   </div>
                 </form>
-              )}
-
-              <p className="auth-switch-hint">
-                <span>Already have an account?</span>
-                <button
-                  type="button"
-                  className="auth-switch-btn"
-                  onClick={() => switchView("login")}
-                >
-                  Sign in instead
-                </button>
-              </p>
-            </div>
-          )}
-
-          {/* ===== VERIFY VIEW ===== */}
-          {isVerify && (
-            <div className="auth-view auth-view--verify">
-              <div className="auth-view-header">
-                <div className="auth-view-icon auth-view-icon--verify">
-                  <HiMail aria-hidden="true" />
-                </div>
-                <h2 id="auth-modal-title">Verify Your Email</h2>
-                <p>We've sent a 6-digit verification code to:</p>
-                <div className="auth-email-badge">
-                  {activeEmail || "No email found"}
-                </div>
-                <span className="auth-verify-note">
-                  Code expires in {CODE_VALIDITY_MINUTES} minutes
-                </span>
               </div>
+            )}
+          </main>
 
-              <form
-                className="auth-form auth-form--animated"
-                onSubmit={handleVerifySubmit}
-              >
-                <div
-                  className={`auth-code-row ${codeRowState ? `auth-code-row--${codeRowState}` : ""}`}
-                  onPaste={handleCodePaste}
-                  role="group"
-                  aria-label="Verification code input"
-                >
-                  {code.map((digit, index) => {
-                    const allFilled = code.join("").length === 6;
-                    return (
-                      <input
-                        key={index}
-                        ref={(element) => {
-                          codeRefs.current[index] = element;
-                        }}
-                        type="text"
-                        inputMode="numeric"
-                        maxLength={1}
-                        value={digit}
-                        onChange={(event) =>
-                          handleCodeChange(index, event.target.value)
-                        }
-                        onKeyDown={(event) => handleCodeKeyDown(index, event)}
-                        className={`auth-code-input ${digit ? "auth-code-input--filled" : ""} ${allFilled && !codeRowState ? "auth-code-input--all-filled" : ""}`}
-                        aria-label={`Digit ${index + 1} of 6`}
-                        autoComplete="one-time-code"
-                        disabled={
-                          codeRowState === "verifying" ||
-                          codeRowState === "success"
-                        }
-                      />
-                    );
-                  })}
-                </div>
-
-                <button
-                  type="submit"
-                  className="auth-btn auth-btn--primary"
-                  disabled={
-                    loading ||
-                    code.join("").length !== 6 ||
-                    codeRowState === "verifying"
-                  }
-                  aria-busy={loading || codeRowState === "verifying"}
-                >
-                  {(loading || codeRowState === "verifying") && (
-                    <InlineSpinner label="Verifying code" />
-                  )}
-                  <span>
-                    {codeRowState === "verifying"
-                      ? "Verifying..."
-                      : codeRowState === "success"
-                        ? "Verified!"
-                        : loading
-                          ? "Verifying..."
-                          : "Verify & Continue"}
-                  </span>
-                  <HiArrowRight aria-hidden="true" />
-                </button>
-
-                <div className="auth-row auth-row--verify">
-                  <button
-                    type="button"
-                    className="auth-btn auth-btn--ghost"
-                    onClick={handleBackFromVerify}
-                  >
-                    <HiArrowLeft aria-hidden="true" />
-                    <span>Back</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    className="auth-btn auth-btn--secondary"
-                    onClick={handleResend}
-                    disabled={resendTimer > 0 || loading}
-                    aria-busy={loading}
-                  >
-                    <HiRefresh
-                      className={resendTimer > 0 ? "" : "auth-icon-spin"}
-                      aria-hidden="true"
-                    />
-                    {loading && <InlineSpinner label="Resending code" />}
-                    <span>
-                      {resendTimer > 0
-                        ? `Resend in ${resendTimer}s`
-                        : "Resend Code"}
-                    </span>
-                  </button>
-                </div>
-              </form>
+          {/* ===== FOOTER ===== */}
+          <footer className="auth-modal-footer">
+            <div className="auth-footer-security">
+              <HiShieldCheck aria-hidden="true" />
+              <span>Protected by industry-standard 256-bit encryption</span>
             </div>
-          )}
-        </main>
-
-        {/* ===== FOOTER ===== */}
-        <footer className="auth-modal-footer">
-          <div className="auth-footer-security">
-            <HiShieldCheck aria-hidden="true" />
-            <span>Protected by industry-standard 256-bit encryption</span>
-          </div>
-        </footer>
+          </footer>
+        </div>
       </div>
     </div>
-  </div>
   );
 }

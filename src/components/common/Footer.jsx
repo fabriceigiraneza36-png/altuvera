@@ -11,7 +11,7 @@ import {
   FiMapPin,
   FiArrowRight,
   FiCheck,
-  FiLinkedin
+  FiLinkedin,
 } from "react-icons/fi";
 import { FaXTwitter } from "react-icons/fa6";
 
@@ -151,32 +151,59 @@ const Footer = () => {
       marginBottom: isMobile ? "34px" : "60px",
     },
     column: {},
-    logo: {
+    logoContainer: {
       display: "flex",
       alignItems: "center",
-      gap: "12px",
-      marginBottom: "20px",
+      gap: isMobile ? "12px" : "16px",
+      marginBottom: isMobile ? "20px" : "28px",
+      textDecoration: "none",
+      transition: "transform 0.3s ease",
     },
-    logoIcon: {
-      width: isMobile ? "46px" : "52px",
-      height: isMobile ? "46px" : "52px",
-      background: `url(${logoimg})`,
-      backgroundSize: "100% 100%",
-      backgroundColor: "transparent",
-      borderRadius: "14px",
+    logoWrapper: {
+      position: "relative",
+      width: isMobile ? "52px" : "60px",
+      height: isMobile ? "52px" : "60px",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      color: "white",
-      fontSize: isMobile ? "20px" : "22px",
-      fontWeight: "700",
-      fontFamily: "'Playfair Display', serif",
+      background: "transparent",
+      padding: "0",
+      overflow: "visible",
+      border: "none",
+      outline: "none",
+      boxShadow: "none",
+    },
+    logoGlow: {
+      position: "absolute",
+      left: "50%",
+      top: "50%",
+      width: "70px",
+      height: "70px",
+      transform: "translate(-50%, -50%)",
+      background:
+        "radial-gradient(circle, rgba(16, 185, 129, 0.2) 0%, transparent 70%)",
+      borderRadius: "50%",
+      opacity: 0,
+      pointerEvents: "none",
+      transition: "opacity 0.3s ease",
+    },
+    logoImg: {
+      width: "100%",
+      height: "100%",
+      objectFit: "contain",
+      filter: "drop-shadow(0 8px 24px rgba(0,0,0,0.2))",
+      transition:
+        "transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.5s ease",
+      border: "none",
+      borderRadius: "0",
     },
     logoText: {
       fontFamily: "'Playfair Display', serif",
-      fontSize: isMobile ? "26px" : "30px",
-      fontWeight: "700",
+      fontSize: isMobile ? "24px" : "30px",
+      fontWeight: "800",
       color: "white",
+      letterSpacing: "-0.5px",
+      textShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
     },
     tagline: {
       fontSize: isMobile ? "14px" : "15px",
@@ -217,14 +244,34 @@ const Footer = () => {
       marginBottom: isMobile ? "10px" : "14px",
     },
     link: {
-      color: "rgba(255,255,255,0.7)",
+      color: "rgba(255,255,255,0.65)",
       textDecoration: "none",
       fontSize: isMobile ? "14px" : "15px",
-      transition: "all 0.3s ease",
+      transition: "all 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
       display: "inline-flex",
       alignItems: "center",
-      gap: "8px",
-      minHeight: isMobile ? "34px" : "auto",
+      gap: "0",
+      minHeight: isMobile ? "34px" : "32px",
+      position: "relative",
+      padding: "4px 0",
+    },
+    linkUnderline: {
+      position: "absolute",
+      bottom: 0,
+      left: 0,
+      width: "100%",
+      height: "2px",
+      background: "linear-gradient(90deg, #10B981, #34D399)",
+      transform: "scaleX(0)",
+      transformOrigin: "right",
+      transition: "transform 0.4s cubic-bezier(0.22, 1, 0.36, 1)",
+      borderRadius: "2px",
+    },
+    linkIcon: {
+      fontSize: "0px",
+      opacity: 0,
+      transition: "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)",
+      color: "#10B981",
     },
     contactItem: {
       display: "flex",
@@ -299,6 +346,7 @@ const Footer = () => {
     { name: "Uganda", path: "/country/uganda" },
     { name: "Rwanda", path: "/country/rwanda" },
     { name: "Ethiopia", path: "/country/ethiopia" },
+    { name: "Djibouti", path: "/country/djibouti" },
   ];
 
   const quickLinks = [
@@ -311,32 +359,32 @@ const Footer = () => {
   ];
 
   const socialIcons = [
-  {
-    icon: FiFacebook,
-    label: "Facebook",
-    url: "https://www.facebook.com/profile.php?id=61585299893450",
-  },
-  {
-    icon: FaXTwitter,
-    label: "X",
-    url: "https://x.com/altuverasafari",
-  },
-  {
-    icon: FiInstagram,
-    label: "Instagram",
-    url: "https://www.instagram.com/altu.vera1/",
-  },
-  {
-    icon: FiLinkedin,
-    label: "LinkedIn",
-    url: "https://www.linkedin.com/in/altuvera-safari-14b9033b5/",
-  },
-  {
-    icon: FiYoutube,
-    label: "YouTube",
-    url: "#",
-  },
-];
+    {
+      icon: FiFacebook,
+      label: "Facebook",
+      url: "https://www.facebook.com/profile.php?id=61585299893450",
+    },
+    {
+      icon: FaXTwitter,
+      label: "X",
+      url: "https://x.com/altuverasafari",
+    },
+    {
+      icon: FiInstagram,
+      label: "Instagram",
+      url: "https://www.instagram.com/altu.vera1/",
+    },
+    {
+      icon: FiLinkedin,
+      label: "LinkedIn",
+      url: "https://www.linkedin.com/in/altuvera-safari-14b9033b5/",
+    },
+    {
+      icon: FiYoutube,
+      label: "YouTube",
+      url: "#",
+    },
+  ];
 
   return (
     <footer style={styles.footer}>
@@ -344,12 +392,37 @@ const Footer = () => {
       <div style={styles.container}>
         <div style={styles.grid}>
           <div style={styles.column}>
-            <div style={styles.logo}>
-              <div style={styles.logoIcon}></div>
+            <Link
+              to="/"
+              style={styles.logoContainer}
+              onMouseOver={(e) => {
+                const img = e.currentTarget.querySelector("img");
+                const glow = e.currentTarget.querySelector(".footer-logo-glow");
+                if (img) {
+                  img.style.transform = "translateY(-2px) scale(1.05)";
+                  img.style.filter =
+                    "drop-shadow(0 10px 22px rgba(5,150,105,0.25))";
+                }
+                if (glow) glow.style.opacity = "1";
+              }}
+              onMouseOut={(e) => {
+                const img = e.currentTarget.querySelector("img");
+                const glow = e.currentTarget.querySelector(".footer-logo-glow");
+                if (img) {
+                  img.style.transform = "translateY(0) scale(1)";
+                  img.style.filter = "drop-shadow(0 8px 18px rgba(0,0,0,0.2))";
+                }
+                if (glow) glow.style.opacity = "0";
+              }}
+            >
+              <div style={styles.logoWrapper}>
+                <div className="footer-logo-glow" style={styles.logoGlow}></div>
+                <img src={logoimg} alt="Altuvera logo" style={styles.logoImg} />
+              </div>
               <span style={styles.logoText}>Altuvera</span>
-            </div>
+            </Link>
             <p style={styles.tagline}>
-              "True adventure in High & Deep Culture"
+              "True adventure in High Places & Deep Culture"
               <br />
               <br />
               Your gateway to extraordinary East African experiences. We craft
@@ -386,12 +459,48 @@ const Footer = () => {
                   <Link
                     to={country.path}
                     style={styles.link}
-                    onMouseOver={(e) => (e.target.style.color = "#10B981")}
-                    onMouseOut={(e) =>
-                      (e.target.style.color = "rgba(255,255,255,0.7)")
-                    }
+                    onMouseOver={(e) => {
+                      const link = e.currentTarget;
+                      link.style.color = "white";
+                      link.style.transform = "translateX(8px)";
+                      const underline = link.querySelector(".link-underline");
+                      const icon = link.querySelector(".link-icon");
+                      if (underline) {
+                        underline.style.transform = "scaleX(1)";
+                        underline.style.transformOrigin = "left";
+                      }
+                      if (icon) {
+                        icon.style.fontSize = "14px";
+                        icon.style.opacity = "1";
+                        icon.style.marginRight = "8px";
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      const link = e.currentTarget;
+                      link.style.color = "rgba(255,255,255,0.65)";
+                      link.style.transform = "translateX(0)";
+                      const underline = link.querySelector(".link-underline");
+                      const icon = link.querySelector(".link-icon");
+                      if (underline) {
+                        underline.style.transform = "scaleX(0)";
+                        underline.style.transformOrigin = "right";
+                      }
+                      if (icon) {
+                        icon.style.fontSize = "0px";
+                        icon.style.opacity = "0";
+                        icon.style.marginRight = "0";
+                      }
+                    }}
                   >
+                    <FiArrowRight
+                      className="link-icon"
+                      style={styles.linkIcon}
+                    />
                     {country.name}
+                    <div
+                      className="link-underline"
+                      style={styles.linkUnderline}
+                    ></div>
                   </Link>
                 </li>
               ))}
@@ -406,12 +515,48 @@ const Footer = () => {
                   <Link
                     to={link.path}
                     style={styles.link}
-                    onMouseOver={(e) => (e.target.style.color = "#10B981")}
-                    onMouseOut={(e) =>
-                      (e.target.style.color = "rgba(255,255,255,0.7)")
-                    }
+                    onMouseOver={(e) => {
+                      const el = e.currentTarget;
+                      el.style.color = "white";
+                      el.style.transform = "translateX(8px)";
+                      const underline = el.querySelector(".link-underline");
+                      const icon = el.querySelector(".link-icon");
+                      if (underline) {
+                        underline.style.transform = "scaleX(1)";
+                        underline.style.transformOrigin = "left";
+                      }
+                      if (icon) {
+                        icon.style.fontSize = "14px";
+                        icon.style.opacity = "1";
+                        icon.style.marginRight = "8px";
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      const el = e.currentTarget;
+                      el.style.color = "rgba(255,255,255,0.65)";
+                      el.style.transform = "translateX(0)";
+                      const underline = el.querySelector(".link-underline");
+                      const icon = el.querySelector(".link-icon");
+                      if (underline) {
+                        underline.style.transform = "scaleX(0)";
+                        underline.style.transformOrigin = "right";
+                      }
+                      if (icon) {
+                        icon.style.fontSize = "0px";
+                        icon.style.opacity = "0";
+                        icon.style.marginRight = "0";
+                      }
+                    }}
                   >
+                    <FiArrowRight
+                      className="link-icon"
+                      style={styles.linkIcon}
+                    />
                     {link.name}
+                    <div
+                      className="link-underline"
+                      style={styles.linkUnderline}
+                    ></div>
                   </Link>
                 </li>
               ))}
@@ -435,9 +580,9 @@ const Footer = () => {
                 <FiPhone size={18} />
               </div>
               <span style={styles.contactText}>
-                +254 700 123 456
+                +250 780 702 773
                 <br />
-                +254 733 987 654
+                +250 792 352 409
               </span>
             </div>
             <div style={styles.contactItem}>
@@ -445,7 +590,7 @@ const Footer = () => {
                 <FiMail size={18} />
               </div>
               <span style={styles.contactText}>
-                info@altuvera.com
+                altuverasafari@gmail.com
                 <br />
                 bookings@altuvera.com
               </span>

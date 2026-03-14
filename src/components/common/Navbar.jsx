@@ -55,16 +55,16 @@ const Navbar = () => {
   const latestSearchRef = useRef("");
 
   const localDestinations = useMemo(() => getAllDestinations(), []);
-  
+
   // Build destinations dropdown from backend with fallback to static
   const destinationsDropdown = useMemo(() => {
     const items = [{ name: "All Destinations", path: "/destinations" }];
-    
+
     if (backendCountries && backendCountries.length > 0) {
       backendCountries.forEach((country) => {
         items.push({
           name: country.name,
-          path: `/country/${country.slug || country.name.toLowerCase()}`
+          path: `/country/${country.slug || country.name.toLowerCase()}`,
         });
       });
     } else {
@@ -75,10 +75,12 @@ const Navbar = () => {
         { name: "Uganda", path: "/country/uganda" },
         { name: "Rwanda", path: "/country/rwanda" },
         { name: "Ethiopia", path: "/country/ethiopia" },
-        { name: "Djibouti", path: "/country/djibouti" }
+        { name: "Djibouti", path: "/country/djibouti" },
+        { name: "Somalia", path: "/country/somalia" },
+        { name: "South Africa", path: "/country/south-africa" },
       );
     }
-    
+
     return items;
   }, [backendCountries]);
 

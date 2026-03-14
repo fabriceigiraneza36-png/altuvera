@@ -13,6 +13,7 @@ import {
   FiThumbsUp,
 } from "react-icons/fi";
 import AnimatedSection from "../common/AnimatedSection";
+import { Link } from "react-router-dom";
 
 const DashboardLayout = ({ children, title, subtitle }) => {
   const { user, logout } = useUserAuth();
@@ -342,6 +343,12 @@ const DashboardLayout = ({ children, title, subtitle }) => {
       >
         {mobileMenuOpen ? <FiX size={24} /> : <FiMenu size={24} />}
       </button>
+
+      <div style={{ marginTop: "1rem" }}>
+        <Link to="/auth/user-account-control" style={{ color: "#10b981", fontWeight: "600" }}>
+          Manage Account
+        </Link>
+      </div>
     </div>
   );
 };

@@ -58,6 +58,7 @@ import {
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
+import { useGallery } from "../hooks/useGallery";
 
 /* ═══════════════════════════════════════════════════════
    CONSTANTS & CONFIGURATION
@@ -98,7 +99,11 @@ const BREAKPOINTS = {
 const SORT_OPTIONS = [
   { value: "default", label: "Default", icon: <FiLayers size={14} /> },
   { value: "title-asc", label: "Title A-Z", icon: <FiArrowUp size={14} /> },
-  { value: "title-desc", label: "Title Z-A", icon: <FiArrowUp size={14} style={{ transform: "rotate(180deg)" }} /> },
+  {
+    value: "title-desc",
+    label: "Title Z-A",
+    icon: <FiArrowUp size={14} style={{ transform: "rotate(180deg)" }} />,
+  },
   { value: "location", label: "Location", icon: <FiMapPin size={14} /> },
   { value: "featured", label: "Featured First", icon: <FiStar size={14} /> },
   { value: "recent", label: "Recently Viewed", icon: <FiClock size={14} /> },
@@ -1021,47 +1026,366 @@ const styles = `
    DATA
    ═══════════════════════════════════════════════════════ */
 const heroImages = [
-  { url: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1920", alt: "Safari landscape with acacia trees" },
-  { url: "https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=1920", alt: "Wildlife in African savanna" },
-  { url: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1920", alt: "Tropical beach paradise" },
-  { url: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=1920", alt: "Cultural heritage site" },
-  { url: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1920", alt: "Mountain adventure" },
+  {
+    url: "https://i.pinimg.com/736x/17/3a/c4/173ac4d9888d328b75ac60e588501223.jpg",
+    alt: "Safari landscape with acacia trees",
+  },
+  {
+    url: "https://i.pinimg.com/736x/68/e6/cd/68e6cd9f11e9fd00ea3fb928103b8f2b.jpg",
+    alt: "Wildlife in African savanna",
+  },
+  {
+    url: "https://i.pinimg.com/736x/a5/f9/7b/a5f97b55b11b4edea1d93523ebebec28.jpg",
+    alt: "Tropical beach paradise",
+  },
+  {
+    url: "https://i.pinimg.com/1200x/09/50/d1/0950d1603c5db63616bd4ba472417273.jpg",
+    alt: "Cultural heritage site",
+  },
+  {
+    url: "https://i.pinimg.com/736x/1f/8e/71/1f8e71660a3c9341025268f50b91e6bd.jpg",
+    alt: "Mountain adventure",
+  },
 ];
 
-const categories = ["all", "wildlife", "landscapes", "culture", "adventure", "beaches"];
+const categories = [
+  "all",
+  "wildlife",
+  "landscapes",
+  "culture",
+  "adventure",
+  "beaches",
+];
 
 const categoryMeta = {
-  all: { icon: <FiGrid size={14} />, color: "#059669", label: "All Photos", emoji: "🌍" },
-  wildlife: { icon: <FiCamera size={14} />, color: "#059669", label: "Wildlife", emoji: "🦁" },
-  landscapes: { icon: <FiImage size={14} />, color: "#0891B2", label: "Landscapes", emoji: "🏔️" },
-  culture: { icon: <FiCompass size={14} />, color: "#7C3AED", label: "Culture", emoji: "🎭" },
-  adventure: { icon: <FiStar size={14} />, color: "#EA580C", label: "Adventure", emoji: "🧗" },
-  beaches: { icon: <FiPlay size={14} />, color: "#DB2777", label: "Beaches", emoji: "🏖️" },
+  all: {
+    icon: <FiGrid size={14} />,
+    color: "#059669",
+    label: "All Photos",
+    emoji: "🌍",
+  },
+  wildlife: {
+    icon: <FiCamera size={14} />,
+    color: "#059669",
+    label: "Wildlife",
+    emoji: "🦁",
+  },
+  landscapes: {
+    icon: <FiImage size={14} />,
+    color: "#0891B2",
+    label: "Landscapes",
+    emoji: "🏔️",
+  },
+  culture: {
+    icon: <FiCompass size={14} />,
+    color: "#7C3AED",
+    label: "Culture",
+    emoji: "🎭",
+  },
+  adventure: {
+    icon: <FiStar size={14} />,
+    color: "#EA580C",
+    label: "Adventure",
+    emoji: "🧗",
+  },
+  beaches: {
+    icon: <FiPlay size={14} />,
+    color: "#DB2777",
+    label: "Beaches",
+    emoji: "🏖️",
+  },
 };
 
 const images = [
-  { id: 1, src: "https://images.unsplash.com/photo-1614027164847-1b28cfe1df60?w=1200", thumb: "https://images.unsplash.com/photo-1614027164847-1b28cfe1df60?w=200", category: "wildlife", title: "Lion at Dawn", location: "Maasai Mara, Kenya", description: "The king of the savannah wakes to the golden sunrise, surveying his domain with regal presence.", featured: true, tags: ["lion", "sunrise", "maasai mara", "predator", "big cat"], date: "2024-01-15", photographer: "Safari Pro" },
-  { id: 2, src: "https://images.unsplash.com/photo-1549366021-9f761d450615?w=1200", thumb: "https://images.unsplash.com/photo-1549366021-9f761d450615?w=200", category: "wildlife", title: "Zebra Crossing", location: "Serengeti, Tanzania", description: "Stripes blur as the herd moves across the plains in their eternal migration.", tags: ["zebra", "serengeti", "migration", "herd"], date: "2024-02-10", photographer: "Nature Lens" },
-  { id: 3, src: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=1200", thumb: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=200", category: "wildlife", title: "Mountain Gorilla", location: "Bwindi, Uganda", description: "A gentle giant in the misty rainforest, eyes full of ancient wisdom.", featured: true, tags: ["gorilla", "uganda", "rainforest", "primate"], date: "2024-01-20", photographer: "Wildlife Focus" },
-  { id: 4, src: "https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=1200", thumb: "https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=200", category: "wildlife", title: "Elephant Herd", location: "Amboseli, Kenya", description: "Matriarchs leading the way with Kilimanjaro watching over the ancient ritual.", tags: ["elephant", "amboseli", "kilimanjaro", "family"], date: "2024-03-05", photographer: "Safari Pro" },
-  { id: 5, src: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=1200", thumb: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=200", category: "wildlife", title: "Cheetah Speed", location: "Serengeti, Tanzania", description: "The fastest land animal on the hunt, muscles rippling with explosive power.", tags: ["cheetah", "speed", "predator", "hunt"], date: "2024-02-28", photographer: "Action Wildlife" },
-  { id: 6, src: "https://images.unsplash.com/photo-1564769625905-50e93615e769?w=1200", thumb: "https://images.unsplash.com/photo-1564769625905-50e93615e769?w=200", category: "wildlife", title: "Giraffe Sunset", location: "Nairobi, Kenya", description: "Towering silhouettes against the African dusk, nature's skyscrapers.", tags: ["giraffe", "sunset", "silhouette", "dusk"], date: "2024-01-30", photographer: "Golden Hour" },
-  { id: 7, src: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200", thumb: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=200", category: "landscapes", title: "Mount Kenya", location: "Kenya", description: "Snow-capped peaks nearly on the equator, Africa's second highest mountain.", tags: ["mountain", "snow", "peak", "equator"], date: "2024-02-15", photographer: "Peak Views" },
-  { id: 8, src: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1200", thumb: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=200", category: "landscapes", title: "Ngorongoro Crater", location: "Tanzania", description: "A natural amphitheater teeming with wildlife, the world's largest intact caldera.", featured: true, tags: ["crater", "landscape", "unesco", "caldera"], date: "2024-03-10", photographer: "Aerial Africa" },
-  { id: 9, src: "https://images.unsplash.com/photo-1564951434112-64d74cc2a2d6?w=1200", thumb: "https://images.unsplash.com/photo-1564951434112-64d74cc2a2d6?w=200", category: "landscapes", title: "Volcanoes Park", location: "Rwanda", description: "Lush volcanic slopes where the endangered mountain gorillas make their home.", tags: ["volcano", "rwanda", "forest", "mist"], date: "2024-01-25", photographer: "Green Vistas" },
-  { id: 10, src: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=1200", thumb: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=200", category: "landscapes", title: "Bamboo Forest", location: "Virunga, DRC", description: "Mystical bamboo groves hidden in the clouds, a world apart from time.", tags: ["bamboo", "forest", "mist", "green"], date: "2024-02-20", photographer: "Forest Dreams" },
-  { id: 11, src: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200", thumb: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=200", category: "landscapes", title: "Great Rift Valley", location: "Kenya", description: "Earth's ancient scar stretching to the horizon, a geological wonder.", tags: ["rift valley", "geology", "vista", "horizon"], date: "2024-03-01", photographer: "Geological Views" },
-  { id: 12, src: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=1200", thumb: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=200", category: "culture", title: "Lalibela Churches", location: "Ethiopia", description: "Rock-hewn wonders of faith and engineering, carved from living stone.", tags: ["church", "ethiopia", "heritage", "rock"], date: "2024-01-18", photographer: "Heritage Lens" },
-  { id: 13, src: "https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?w=1200", thumb: "https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?w=200", category: "culture", title: "Maasai Elders", location: "Kenya", description: "Keepers of tradition in vibrant shúkàs, guardians of ancient wisdom.", tags: ["maasai", "culture", "tradition", "elders"], date: "2024-02-05", photographer: "Cultural Stories" },
-  { id: 14, src: "https://images.unsplash.com/photo-1529078155055-5d1f45d98bc5?w=1200", thumb: "https://images.unsplash.com/photo-1529078155055-5d1f45d98bc5?w=200", category: "culture", title: "Ethiopian Coffee", location: "Addis Ababa", description: "The birthplace of coffee, brewed with ceremony and centuries of tradition.", tags: ["coffee", "ceremony", "ethiopia", "tradition"], date: "2024-02-12", photographer: "Coffee Culture" },
-  { id: 15, src: "https://images.unsplash.com/photo-1536856136534-bb679c52a9aa?w=1200", thumb: "https://images.unsplash.com/photo-1536856136534-bb679c52a9aa?w=200", category: "culture", title: "Swahili Coast", location: "Lamu, Kenya", description: "Ancient dhows and coral stone alleys, where African and Arabian cultures blend.", tags: ["swahili", "dhow", "coast", "lamu"], date: "2024-03-15", photographer: "Coastal Heritage" },
-  { id: 16, src: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1200", thumb: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=200", category: "adventure", title: "Kilimanjaro Summit", location: "Tanzania", description: "Standing at the roof of Africa, above the clouds, touching the sky.", tags: ["kilimanjaro", "summit", "mountain", "climb"], date: "2024-01-22", photographer: "Summit Stories" },
-  { id: 17, src: "https://images.unsplash.com/photo-1528543606781-2f6e6857f318?w=1200", thumb: "https://images.unsplash.com/photo-1528543606781-2f6e6857f318?w=200", category: "adventure", title: "Whitewater Rafting", location: "Jinja, Uganda", description: "Conquering the Nile's wild rapids, adrenaline meets ancient waters.", tags: ["rafting", "nile", "adventure", "rapids"], date: "2024-02-25", photographer: "Adventure Shots" },
-  { id: 18, src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200", thumb: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200", category: "adventure", title: "Hot Air Balloon", location: "Serengeti", description: "Silent drift over the endless plains at dawn, the ultimate safari view.", tags: ["balloon", "safari", "aerial", "sunrise"], date: "2024-03-08", photographer: "Sky Views" },
-  { id: 19, src: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200", thumb: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200", category: "beaches", title: "Diani Beach", location: "Kenya", description: "Powder-white sand and turquoise Indian Ocean, paradise found.", tags: ["beach", "ocean", "paradise", "sand"], date: "2024-01-28", photographer: "Beach Life" },
-  { id: 20, src: "https://images.unsplash.com/photo-1590523277543-a94c2e4ebc9b?w=1200", thumb: "https://images.unsplash.com/photo-1590523277543-a94c2e4ebc9b?w=200", category: "beaches", title: "Zanzibar Sunset", location: "Tanzania", description: "Spice island skies painted in orange and purple, a daily masterpiece.", tags: ["zanzibar", "sunset", "beach", "spice"], date: "2024-02-18", photographer: "Island Dreams" },
-  { id: 21, src: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=1200", thumb: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=200", category: "beaches", title: "Paje Beach", location: "Zanzibar", description: "Kite surfers glide over shallow turquoise lagoons, wind and water dance.", tags: ["kite surfing", "lagoon", "zanzibar", "sports"], date: "2024-03-02", photographer: "Water Sports" },
-  { id: 22, src: "https://images.unsplash.com/photo-1537956965359-7573183d1f57?w=1200", thumb: "https://images.unsplash.com/photo-1537956965359-7573183d1f57?w=200", category: "beaches", title: "Mnemba Island", location: "Tanzania", description: "An exclusive atoll surrounded by coral gardens, underwater paradise.", tags: ["island", "coral", "diving", "exclusive"], date: "2024-03-12", photographer: "Underwater World" },
+  {
+    id: 1,
+    src: "https://images.unsplash.com/photo-1614027164847-1b28cfe1df60?w=1200",
+    thumb: "https://images.unsplash.com/photo-1614027164847-1b28cfe1df60?w=200",
+    category: "wildlife",
+    title: "Lion at Dawn",
+    location: "Maasai Mara, Kenya",
+    description:
+      "The king of the savannah wakes to the golden sunrise, surveying his domain with regal presence.",
+    featured: true,
+    tags: ["lion", "sunrise", "maasai mara", "predator", "big cat"],
+    date: "2024-01-15",
+    photographer: "Safari Pro",
+  },
+  {
+    id: 2,
+    src: "https://images.unsplash.com/photo-1549366021-9f761d450615?w=1200",
+    thumb: "https://images.unsplash.com/photo-1549366021-9f761d450615?w=200",
+    category: "wildlife",
+    title: "Zebra Crossing",
+    location: "Serengeti, Tanzania",
+    description:
+      "Stripes blur as the herd moves across the plains in their eternal migration.",
+    tags: ["zebra", "serengeti", "migration", "herd"],
+    date: "2024-02-10",
+    photographer: "Nature Lens",
+  },
+  {
+    id: 3,
+    src: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=1200",
+    thumb: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=200",
+    category: "wildlife",
+    title: "Mountain Gorilla",
+    location: "Bwindi, Uganda",
+    description:
+      "A gentle giant in the misty rainforest, eyes full of ancient wisdom.",
+    featured: true,
+    tags: ["gorilla", "uganda", "rainforest", "primate"],
+    date: "2024-01-20",
+    photographer: "Wildlife Focus",
+  },
+  {
+    id: 4,
+    src: "https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=1200",
+    thumb: "https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=200",
+    category: "wildlife",
+    title: "Elephant Herd",
+    location: "Amboseli, Kenya",
+    description:
+      "Matriarchs leading the way with Kilimanjaro watching over the ancient ritual.",
+    tags: ["elephant", "amboseli", "kilimanjaro", "family"],
+    date: "2024-03-05",
+    photographer: "Safari Pro",
+  },
+  {
+    id: 5,
+    src: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=1200",
+    thumb: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=200",
+    category: "wildlife",
+    title: "Cheetah Speed",
+    location: "Serengeti, Tanzania",
+    description:
+      "The fastest land animal on the hunt, muscles rippling with explosive power.",
+    tags: ["cheetah", "speed", "predator", "hunt"],
+    date: "2024-02-28",
+    photographer: "Action Wildlife",
+  },
+  {
+    id: 6,
+    src: "https://images.unsplash.com/photo-1564769625905-50e93615e769?w=1200",
+    thumb: "https://images.unsplash.com/photo-1564769625905-50e93615e769?w=200",
+    category: "wildlife",
+    title: "Giraffe Sunset",
+    location: "Nairobi, Kenya",
+    description:
+      "Towering silhouettes against the African dusk, nature's skyscrapers.",
+    tags: ["giraffe", "sunset", "silhouette", "dusk"],
+    date: "2024-01-30",
+    photographer: "Golden Hour",
+  },
+  {
+    id: 7,
+    src: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200",
+    thumb: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=200",
+    category: "landscapes",
+    title: "Mount Kenya",
+    location: "Kenya",
+    description:
+      "Snow-capped peaks nearly on the equator, Africa's second highest mountain.",
+    tags: ["mountain", "snow", "peak", "equator"],
+    date: "2024-02-15",
+    photographer: "Peak Views",
+  },
+  {
+    id: 8,
+    src: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1200",
+    thumb: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=200",
+    category: "landscapes",
+    title: "Ngorongoro Crater",
+    location: "Tanzania",
+    description:
+      "A natural amphitheater teeming with wildlife, the world's largest intact caldera.",
+    featured: true,
+    tags: ["crater", "landscape", "unesco", "caldera"],
+    date: "2024-03-10",
+    photographer: "Aerial Africa",
+  },
+  {
+    id: 9,
+    src: "https://images.unsplash.com/photo-1564951434112-64d74cc2a2d6?w=1200",
+    thumb: "https://images.unsplash.com/photo-1564951434112-64d74cc2a2d6?w=200",
+    category: "landscapes",
+    title: "Volcanoes Park",
+    location: "Rwanda",
+    description:
+      "Lush volcanic slopes where the endangered mountain gorillas make their home.",
+    tags: ["volcano", "rwanda", "forest", "mist"],
+    date: "2024-01-25",
+    photographer: "Green Vistas",
+  },
+  {
+    id: 10,
+    src: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=1200",
+    thumb: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=200",
+    category: "landscapes",
+    title: "Bamboo Forest",
+    location: "Virunga, DRC",
+    description:
+      "Mystical bamboo groves hidden in the clouds, a world apart from time.",
+    tags: ["bamboo", "forest", "mist", "green"],
+    date: "2024-02-20",
+    photographer: "Forest Dreams",
+  },
+  {
+    id: 11,
+    src: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200",
+    thumb: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=200",
+    category: "landscapes",
+    title: "Great Rift Valley",
+    location: "Kenya",
+    description:
+      "Earth's ancient scar stretching to the horizon, a geological wonder.",
+    tags: ["rift valley", "geology", "vista", "horizon"],
+    date: "2024-03-01",
+    photographer: "Geological Views",
+  },
+  {
+    id: 12,
+    src: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=1200",
+    thumb: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=200",
+    category: "culture",
+    title: "Lalibela Churches",
+    location: "Ethiopia",
+    description:
+      "Rock-hewn wonders of faith and engineering, carved from living stone.",
+    tags: ["church", "ethiopia", "heritage", "rock"],
+    date: "2024-01-18",
+    photographer: "Heritage Lens",
+  },
+  {
+    id: 13,
+    src: "https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?w=1200",
+    thumb: "https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?w=200",
+    category: "culture",
+    title: "Maasai Elders",
+    location: "Kenya",
+    description:
+      "Keepers of tradition in vibrant shúkàs, guardians of ancient wisdom.",
+    tags: ["maasai", "culture", "tradition", "elders"],
+    date: "2024-02-05",
+    photographer: "Cultural Stories",
+  },
+  {
+    id: 14,
+    src: "https://images.unsplash.com/photo-1529078155055-5d1f45d98bc5?w=1200",
+    thumb: "https://images.unsplash.com/photo-1529078155055-5d1f45d98bc5?w=200",
+    category: "culture",
+    title: "Ethiopian Coffee",
+    location: "Addis Ababa",
+    description:
+      "The birthplace of coffee, brewed with ceremony and centuries of tradition.",
+    tags: ["coffee", "ceremony", "ethiopia", "tradition"],
+    date: "2024-02-12",
+    photographer: "Coffee Culture",
+  },
+  {
+    id: 15,
+    src: "https://images.unsplash.com/photo-1536856136534-bb679c52a9aa?w=1200",
+    thumb: "https://images.unsplash.com/photo-1536856136534-bb679c52a9aa?w=200",
+    category: "culture",
+    title: "Swahili Coast",
+    location: "Lamu, Kenya",
+    description:
+      "Ancient dhows and coral stone alleys, where African and Arabian cultures blend.",
+    tags: ["swahili", "dhow", "coast", "lamu"],
+    date: "2024-03-15",
+    photographer: "Coastal Heritage",
+  },
+  {
+    id: 16,
+    src: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1200",
+    thumb: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=200",
+    category: "adventure",
+    title: "Kilimanjaro Summit",
+    location: "Tanzania",
+    description:
+      "Standing at the roof of Africa, above the clouds, touching the sky.",
+    tags: ["kilimanjaro", "summit", "mountain", "climb"],
+    date: "2024-01-22",
+    photographer: "Summit Stories",
+  },
+  {
+    id: 17,
+    src: "https://images.unsplash.com/photo-1528543606781-2f6e6857f318?w=1200",
+    thumb: "https://images.unsplash.com/photo-1528543606781-2f6e6857f318?w=200",
+    category: "adventure",
+    title: "Whitewater Rafting",
+    location: "Jinja, Uganda",
+    description:
+      "Conquering the Nile's wild rapids, adrenaline meets ancient waters.",
+    tags: ["rafting", "nile", "adventure", "rapids"],
+    date: "2024-02-25",
+    photographer: "Adventure Shots",
+  },
+  {
+    id: 18,
+    src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200",
+    thumb: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200",
+    category: "adventure",
+    title: "Hot Air Balloon",
+    location: "Serengeti",
+    description:
+      "Silent drift over the endless plains at dawn, the ultimate safari view.",
+    tags: ["balloon", "safari", "aerial", "sunrise"],
+    date: "2024-03-08",
+    photographer: "Sky Views",
+  },
+  {
+    id: 19,
+    src: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200",
+    thumb: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200",
+    category: "beaches",
+    title: "Diani Beach",
+    location: "Kenya",
+    description:
+      "Powder-white sand and turquoise Indian Ocean, paradise found.",
+    tags: ["beach", "ocean", "paradise", "sand"],
+    date: "2024-01-28",
+    photographer: "Beach Life",
+  },
+  {
+    id: 20,
+    src: "https://images.unsplash.com/photo-1590523277543-a94c2e4ebc9b?w=1200",
+    thumb: "https://images.unsplash.com/photo-1590523277543-a94c2e4ebc9b?w=200",
+    category: "beaches",
+    title: "Zanzibar Sunset",
+    location: "Tanzania",
+    description:
+      "Spice island skies painted in orange and purple, a daily masterpiece.",
+    tags: ["zanzibar", "sunset", "beach", "spice"],
+    date: "2024-02-18",
+    photographer: "Island Dreams",
+  },
+  {
+    id: 21,
+    src: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=1200",
+    thumb: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=200",
+    category: "beaches",
+    title: "Paje Beach",
+    location: "Zanzibar",
+    description:
+      "Kite surfers glide over shallow turquoise lagoons, wind and water dance.",
+    tags: ["kite surfing", "lagoon", "zanzibar", "sports"],
+    date: "2024-03-02",
+    photographer: "Water Sports",
+  },
+  {
+    id: 22,
+    src: "https://images.unsplash.com/photo-1537956965359-7573183d1f57?w=1200",
+    thumb: "https://images.unsplash.com/photo-1537956965359-7573183d1f57?w=200",
+    category: "beaches",
+    title: "Mnemba Island",
+    location: "Tanzania",
+    description:
+      "An exclusive atoll surrounded by coral gardens, underwater paradise.",
+    tags: ["island", "coral", "diving", "exclusive"],
+    date: "2024-03-12",
+    photographer: "Underwater World",
+  },
 ];
 
 /* ═══════════════════════════════════════════════════════
@@ -1167,7 +1491,8 @@ const useLocalStorage = (key, initialValue) => {
   const setValue = useCallback(
     (value) => {
       try {
-        const valueToStore = value instanceof Function ? value(storedValue) : value;
+        const valueToStore =
+          value instanceof Function ? value(storedValue) : value;
         setStoredValue(valueToStore);
         if (typeof window !== "undefined") {
           window.localStorage.setItem(key, JSON.stringify(valueToStore));
@@ -1176,7 +1501,7 @@ const useLocalStorage = (key, initialValue) => {
         console.warn(`Error setting localStorage key "${key}":`, error);
       }
     },
-    [key, storedValue]
+    [key, storedValue],
   );
 
   return [storedValue, setValue];
@@ -1197,7 +1522,8 @@ const useKeyboardShortcuts = (shortcuts) => {
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Ignore if typing in input
-      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")
+        return;
 
       const key = e.key.toLowerCase();
       const ctrl = e.ctrlKey || e.metaKey;
@@ -1265,72 +1591,87 @@ const useImagePreloader = (imageUrls) => {
    ═══════════════════════════════════════════════════════ */
 
 // Pill Button Component
-const Pill = memo(({ children, icon, active, onClick, count, variant = "default", size = "md", className = "" }) => {
-  const sizes = {
-    sm: { padding: "5px 12px", fontSize: "11px" },
-    md: { padding: "10px 22px", fontSize: "13px" },
-    lg: { padding: "12px 26px", fontSize: "14px" },
-  };
+const Pill = memo(
+  ({
+    children,
+    icon,
+    active,
+    onClick,
+    count,
+    variant = "default",
+    size = "md",
+    className = "",
+  }) => {
+    const sizes = {
+      sm: { padding: "5px 12px", fontSize: "11px" },
+      md: { padding: "10px 22px", fontSize: "13px" },
+      lg: { padding: "12px 26px", fontSize: "14px" },
+    };
 
-  const variants = {
-    default: {
-      backgroundColor: active ? "#059669" : "white",
-      color: active ? "white" : "#374151",
-      border: active ? "2px solid #059669" : "2px solid #E5E7EB",
-      boxShadow: active ? "var(--gl-shadow-green)" : "var(--gl-shadow-sm)",
-    },
-    glass: {
-      backgroundColor: active ? "rgba(5,150,105,0.8)" : "rgba(255,255,255,0.12)",
-      backdropFilter: "blur(12px)",
-      color: "white",
-      border: active ? "1px solid rgba(5,150,105,0.9)" : "1px solid rgba(255,255,255,0.15)",
-    },
-    subtle: {
-      backgroundColor: active ? "#ECFDF5" : "#F9FAFB",
-      color: active ? "#059669" : "#6B7280",
-      border: active ? "1px solid #D1FAE5" : "1px solid transparent",
-    },
-  };
+    const variants = {
+      default: {
+        backgroundColor: active ? "#059669" : "white",
+        color: active ? "white" : "#374151",
+        border: active ? "2px solid #059669" : "2px solid #E5E7EB",
+        boxShadow: active ? "var(--gl-shadow-green)" : "var(--gl-shadow-sm)",
+      },
+      glass: {
+        backgroundColor: active
+          ? "rgba(5,150,105,0.8)"
+          : "rgba(255,255,255,0.12)",
+        backdropFilter: "blur(12px)",
+        color: "white",
+        border: active
+          ? "1px solid rgba(5,150,105,0.9)"
+          : "1px solid rgba(255,255,255,0.15)",
+      },
+      subtle: {
+        backgroundColor: active ? "#ECFDF5" : "#F9FAFB",
+        color: active ? "#059669" : "#6B7280",
+        border: active ? "1px solid #D1FAE5" : "1px solid transparent",
+      },
+    };
 
-  return (
-    <button
-      onClick={onClick}
-      className={`gl-focus-ring ${className}`}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: "6px",
-        borderRadius: "var(--gl-radius-full)",
-        fontWeight: "600",
-        cursor: "pointer",
-        transition: "all 0.3s var(--gl-transition)",
-        whiteSpace: "nowrap",
-        textTransform: "capitalize",
-        fontFamily: "'Inter', sans-serif",
-        letterSpacing: "0.2px",
-        ...sizes[size],
-        ...variants[variant],
-      }}
-    >
-      {icon}
-      <span>{children}</span>
-      {count !== undefined && (
-        <span
-          style={{
-            backgroundColor: active ? "rgba(255,255,255,0.2)" : "#E5E7EB",
-            padding: "2px 8px",
-            borderRadius: "var(--gl-radius-full)",
-            fontSize: "11px",
-            fontWeight: 700,
-            marginLeft: 2,
-          }}
-        >
-          {count}
-        </span>
-      )}
-    </button>
-  );
-});
+    return (
+      <button
+        onClick={onClick}
+        className={`gl-focus-ring ${className}`}
+        style={{
+          display: "inline-flex",
+          alignItems: "center",
+          gap: "6px",
+          borderRadius: "var(--gl-radius-full)",
+          fontWeight: "600",
+          cursor: "pointer",
+          transition: "all 0.3s var(--gl-transition)",
+          whiteSpace: "nowrap",
+          textTransform: "capitalize",
+          fontFamily: "'Inter', sans-serif",
+          letterSpacing: "0.2px",
+          ...sizes[size],
+          ...variants[variant],
+        }}
+      >
+        {icon}
+        <span>{children}</span>
+        {count !== undefined && (
+          <span
+            style={{
+              backgroundColor: active ? "rgba(255,255,255,0.2)" : "#E5E7EB",
+              padding: "2px 8px",
+              borderRadius: "var(--gl-radius-full)",
+              fontSize: "11px",
+              fontWeight: 700,
+              marginLeft: 2,
+            }}
+          >
+            {count}
+          </span>
+        )}
+      </button>
+    );
+  },
+);
 
 Pill.displayName = "Pill";
 
@@ -1351,7 +1692,9 @@ const Toast = memo(({ message, type = "success", onClose, action }) => {
   return (
     <div className={`gl-toast ${type}`} role="alert" aria-live="polite">
       {icons[type]}
-      <span style={{ fontSize: 14, fontWeight: 500, color: "#374151", flex: 1 }}>
+      <span
+        style={{ fontSize: 14, fontWeight: 500, color: "#374151", flex: 1 }}
+      >
         {message}
       </span>
       {action && (
@@ -1396,7 +1739,8 @@ const ImageSkeleton = memo(({ height = 280, style = {} }) => (
   <div
     style={{
       height,
-      background: "linear-gradient(110deg, #e8f5e9 8%, #f1f8f2 18%, #e8f5e9 33%)",
+      background:
+        "linear-gradient(110deg, #e8f5e9 8%, #f1f8f2 18%, #e8f5e9 33%)",
       backgroundSize: "200% 100%",
       animation: "shimmer 1.5s ease infinite",
       borderRadius: "var(--gl-radius-xl)",
@@ -1409,37 +1753,40 @@ const ImageSkeleton = memo(({ height = 280, style = {} }) => (
 ImageSkeleton.displayName = "ImageSkeleton";
 
 // Dropdown Component
-const Dropdown = memo(({ trigger, children, isOpen, onClose, align = "right" }) => {
-  const dropdownRef = useRef(null);
+const Dropdown = memo(
+  ({ trigger, children, isOpen, onClose, align = "right" }) => {
+    const dropdownRef = useRef(null);
 
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
-        onClose();
+    useEffect(() => {
+      const handleClickOutside = (e) => {
+        if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+          onClose();
+        }
+      };
+
+      if (isOpen) {
+        document.addEventListener("mousedown", handleClickOutside);
+        return () =>
+          document.removeEventListener("mousedown", handleClickOutside);
       }
-    };
+    }, [isOpen, onClose]);
 
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => document.removeEventListener("mousedown", handleClickOutside);
-    }
-  }, [isOpen, onClose]);
-
-  return (
-    <div className="gl-dropdown" ref={dropdownRef}>
-      {trigger}
-      {isOpen && (
-        <div
-          className="gl-dropdown-menu"
-          style={{ [align === "left" ? "left" : "right"]: 0 }}
-          role="menu"
-        >
-          {children}
-        </div>
-      )}
-    </div>
-  );
-});
+    return (
+      <div className="gl-dropdown" ref={dropdownRef}>
+        {trigger}
+        {isOpen && (
+          <div
+            className="gl-dropdown-menu"
+            style={{ [align === "left" ? "left" : "right"]: 0 }}
+            role="menu"
+          >
+            {children}
+          </div>
+        )}
+      </div>
+    );
+  },
+);
 
 Dropdown.displayName = "Dropdown";
 
@@ -1505,11 +1852,19 @@ const StatCard = memo(({ icon, value, label, trend, delay = 0 }) => (
               fontWeight: 600,
             }}
           >
-            {trend > 0 ? "+" : ""}{trend}%
+            {trend > 0 ? "+" : ""}
+            {trend}%
           </span>
         )}
       </div>
-      <div style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 500, marginTop: 2 }}>
+      <div
+        style={{
+          fontSize: 12,
+          color: "#9CA3AF",
+          fontWeight: 500,
+          marginTop: 2,
+        }}
+      >
         {label}
       </div>
     </div>
@@ -1539,87 +1894,293 @@ const HeroSlideshow = memo(({ images, activeIndex, onSlideChange }) => {
 HeroSlideshow.displayName = "HeroSlideshow";
 
 // Gallery Card Component
-const GalleryCard = memo(({
-  image,
-  index,
-  onClick,
-  isFavorited,
-  onFavorite,
-  layout,
-  isSelected,
-  onSelect,
-  selectionMode,
-  isViewed,
-}) => {
-  const [loaded, setLoaded] = useState(false);
-  const [error, setError] = useState(false);
-  const [hovered, setHovered] = useState(false);
+const GalleryCard = memo(
+  ({
+    image,
+    index,
+    onClick,
+    isFavorited,
+    onFavorite,
+    layout,
+    isSelected,
+    onSelect,
+    selectionMode,
+    isViewed,
+  }) => {
+    const [loaded, setLoaded] = useState(false);
+    const [error, setError] = useState(false);
+    const [hovered, setHovered] = useState(false);
 
-  const heights = layout === "masonry"
-    ? [260, 340, 300, 280, 320, 380, 280, 300]
-    : layout === "compact"
-    ? [140]
-    : [280];
+    const heights =
+      layout === "masonry"
+        ? [260, 340, 300, 280, 320, 380, 280, 300]
+        : layout === "compact"
+          ? [140]
+          : [280];
 
-  const cardHeight = layout === "masonry"
-    ? heights[index % heights.length]
-    : heights[0];
+    const cardHeight =
+      layout === "masonry" ? heights[index % heights.length] : heights[0];
 
-  const handleFavoriteClick = useCallback(
-    (e) => {
-      e.stopPropagation();
-      onFavorite?.(image.id);
-    },
-    [image.id, onFavorite]
-  );
+    const handleFavoriteClick = useCallback(
+      (e) => {
+        e.stopPropagation();
+        onFavorite?.(image.id);
+      },
+      [image.id, onFavorite],
+    );
 
-  const handleSelectClick = useCallback(
-    (e) => {
-      e.stopPropagation();
-      onSelect?.(image.id);
-    },
-    [image.id, onSelect]
-  );
+    const handleSelectClick = useCallback(
+      (e) => {
+        e.stopPropagation();
+        onSelect?.(image.id);
+      },
+      [image.id, onSelect],
+    );
 
-  const handleKeyDown = useCallback(
-    (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        if (selectionMode) {
-          onSelect?.(image.id);
-        } else {
-          onClick(index);
+    const handleKeyDown = useCallback(
+      (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          if (selectionMode) {
+            onSelect?.(image.id);
+          } else {
+            onClick(index);
+          }
         }
-      }
-    },
-    [index, onClick, selectionMode, onSelect, image.id]
-  );
+      },
+      [index, onClick, selectionMode, onSelect, image.id],
+    );
 
-  // List Layout
-  if (layout === "list") {
+    // List Layout
+    if (layout === "list") {
+      return (
+        <div
+          className={`gl-list-item ${isSelected ? "selected" : ""}`}
+          onClick={() =>
+            selectionMode ? onSelect?.(image.id) : onClick(index)
+          }
+          role="button"
+          tabIndex={0}
+          onKeyDown={handleKeyDown}
+          style={{ animation: `fadeUp 0.5s ease ${index * 0.04}s both` }}
+        >
+          <div style={{ width: 200, flexShrink: 0, position: "relative" }}>
+            {!loaded && !error && (
+              <ImageSkeleton height={140} style={{ borderRadius: 0 }} />
+            )}
+            {error ? (
+              <div
+                style={{
+                  height: 140,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  background: "#F3F4F6",
+                  color: "#9CA3AF",
+                }}
+              >
+                <FiImage size={32} />
+              </div>
+            ) : (
+              <img
+                src={image.src}
+                alt={image.title}
+                loading="lazy"
+                onLoad={() => setLoaded(true)}
+                onError={() => setError(true)}
+                style={{
+                  width: "100%",
+                  height: 140,
+                  objectFit: "cover",
+                  display: loaded ? "block" : "none",
+                }}
+              />
+            )}
+            {selectionMode && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 8,
+                  left: 8,
+                  width: 24,
+                  height: 24,
+                  borderRadius: "50%",
+                  background: isSelected ? "#059669" : "rgba(255,255,255,0.9)",
+                  border: isSelected
+                    ? "2px solid #059669"
+                    : "2px solid #D1D5DB",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                {isSelected && <FiCheck size={14} color="white" />}
+              </div>
+            )}
+          </div>
+          <div style={{ flex: 1, padding: "16px 20px 16px 0" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                justifyContent: "space-between",
+                marginBottom: 8,
+              }}
+            >
+              <div>
+                <h3
+                  style={{
+                    fontFamily: "'Playfair Display', serif",
+                    fontSize: "1.15rem",
+                    fontWeight: 700,
+                    color: "#111827",
+                    margin: 0,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  {image.title}
+                  {image.featured && (
+                    <FiStar size={14} color="#F59E0B" fill="#F59E0B" />
+                  )}
+                </h3>
+                <p
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    fontSize: "0.85rem",
+                    color: "#059669",
+                    margin: "4px 0 0 0",
+                  }}
+                >
+                  <FiMapPin size={12} /> {image.location}
+                </p>
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button
+                  onClick={handleFavoriteClick}
+                  className="gl-focus-ring"
+                  style={{
+                    background: isFavorited ? "#FEF2F2" : "#F9FAFB",
+                    border: "none",
+                    borderRadius: 8,
+                    padding: 8,
+                    cursor: "pointer",
+                    color: isFavorited ? "#EF4444" : "#9CA3AF",
+                    transition: "all 0.2s",
+                  }}
+                  aria-label={
+                    isFavorited ? "Remove from favorites" : "Add to favorites"
+                  }
+                >
+                  <FiHeart size={16} fill={isFavorited ? "#EF4444" : "none"} />
+                </button>
+              </div>
+            </div>
+            <p
+              style={{
+                fontSize: "0.88rem",
+                color: "#6B7280",
+                lineHeight: 1.5,
+                margin: "0 0 12px 0",
+                display: "-webkit-box",
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: "vertical",
+                overflow: "hidden",
+              }}
+            >
+              {image.description}
+            </p>
+            <div
+              style={{
+                display: "flex",
+                gap: 6,
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  padding: "4px 10px",
+                  background: "#ECFDF5",
+                  color: "#059669",
+                  borderRadius: "var(--gl-radius-sm)",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  textTransform: "capitalize",
+                }}
+              >
+                {categoryMeta[image.category]?.icon}
+                {image.category}
+              </span>
+              {image.photographer && (
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: "#9CA3AF",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <FiCamera size={10} /> {image.photographer}
+                </span>
+              )}
+              {isViewed && (
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: "#9CA3AF",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                  }}
+                >
+                  <FiEye size={10} /> Viewed
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // Grid/Masonry/Compact Layout
     return (
       <div
-        className={`gl-list-item ${isSelected ? "selected" : ""}`}
+        className={`gl-card ${isSelected ? "selected" : ""}`}
         onClick={() => (selectionMode ? onSelect?.(image.id) : onClick(index))}
         role="button"
         tabIndex={0}
+        aria-label={`${selectionMode ? "Select" : "View"} ${image.title}`}
         onKeyDown={handleKeyDown}
-        style={{ animation: `fadeUp 0.5s ease ${index * 0.04}s both` }}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+        style={{ animation: `fadeUp 0.5s ease ${index * 0.03}s both` }}
       >
-        <div style={{ width: 200, flexShrink: 0, position: "relative" }}>
-          {!loaded && !error && <ImageSkeleton height={140} style={{ borderRadius: 0 }} />}
+        <div style={{ overflow: "hidden", position: "relative" }}>
+          {!loaded && !error && <ImageSkeleton height={cardHeight} />}
+
           {error ? (
             <div
               style={{
-                height: 140,
+                height: cardHeight,
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                flexDirection: "column",
+                gap: 8,
                 background: "#F3F4F6",
                 color: "#9CA3AF",
               }}
             >
-              <FiImage size={32} />
+              <FiImage size={40} />
+              <span style={{ fontSize: 12 }}>Failed to load</span>
             </div>
           ) : (
             <img
@@ -1629,777 +2190,197 @@ const GalleryCard = memo(({
               onLoad={() => setLoaded(true)}
               onError={() => setError(true)}
               style={{
-                width: "100%",
-                height: 140,
-                objectFit: "cover",
+                height: cardHeight,
                 display: loaded ? "block" : "none",
               }}
             />
           )}
+
+          {/* Zoom icon */}
+          {!selectionMode && (
+            <div className="gl-card-zoom">
+              <FiZoomIn size={24} color="white" />
+            </div>
+          )}
+
+          {/* Selection checkbox */}
           {selectionMode && (
             <div
+              onClick={handleSelectClick}
               style={{
                 position: "absolute",
-                top: 8,
-                left: 8,
-                width: 24,
-                height: 24,
+                top: 14,
+                left: 14,
+                width: 28,
+                height: 28,
                 borderRadius: "50%",
                 background: isSelected ? "#059669" : "rgba(255,255,255,0.9)",
                 border: isSelected ? "2px solid #059669" : "2px solid #D1D5DB",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
+                cursor: "pointer",
+                zIndex: 10,
+                transition: "all 0.2s",
+                boxShadow: "var(--gl-shadow-sm)",
               }}
             >
-              {isSelected && <FiCheck size={14} color="white" />}
+              {isSelected && <FiCheck size={16} color="white" />}
             </div>
           )}
-        </div>
-        <div style={{ flex: 1, padding: "16px 20px 16px 0" }}>
-          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 8 }}>
-            <div>
-              <h3
+
+          {/* Featured badge */}
+          {image.featured && (
+            <div
+              style={{
+                position: "absolute",
+                top: 14,
+                left: selectionMode ? 50 : 14,
+                zIndex: 5,
+              }}
+            >
+              <span
                 style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: "1.15rem",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  padding: "5px 12px",
+                  background: "linear-gradient(135deg, #F59E0B, #D97706)",
+                  color: "white",
+                  borderRadius: "var(--gl-radius-full)",
+                  fontSize: 10,
                   fontWeight: 700,
-                  color: "#111827",
-                  margin: 0,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 8,
+                  letterSpacing: "0.5px",
+                  textTransform: "uppercase",
+                  boxShadow: "0 2px 8px rgba(245,158,11,0.4)",
                 }}
               >
-                {image.title}
-                {image.featured && <FiStar size={14} color="#F59E0B" fill="#F59E0B" />}
-              </h3>
-              <p
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 6,
-                  fontSize: "0.85rem",
-                  color: "#059669",
-                  margin: "4px 0 0 0",
-                }}
-              >
-                <FiMapPin size={12} /> {image.location}
-              </p>
+                <FiStar size={10} /> Featured
+              </span>
             </div>
-            <div style={{ display: "flex", gap: 8 }}>
+          )}
+
+          {/* Category badge */}
+          {layout !== "compact" && (
+            <div
+              style={{ position: "absolute", top: 14, right: 14, zIndex: 5 }}
+            >
+              <span
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 4,
+                  padding: "5px 12px",
+                  backgroundColor: "rgba(255,255,255,0.15)",
+                  backdropFilter: "blur(8px)",
+                  color: "white",
+                  borderRadius: "var(--gl-radius-full)",
+                  fontSize: 11,
+                  fontWeight: 600,
+                  textTransform: "capitalize",
+                  border: "1px solid rgba(255,255,255,0.1)",
+                }}
+              >
+                {categoryMeta[image.category]?.emoji}
+                {image.category}
+              </span>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          {!selectionMode && (
+            <div className="gl-card-actions">
               <button
                 onClick={handleFavoriteClick}
-                className="gl-focus-ring"
-                style={{
-                  background: isFavorited ? "#FEF2F2" : "#F9FAFB",
-                  border: "none",
-                  borderRadius: 8,
-                  padding: 8,
-                  cursor: "pointer",
-                  color: isFavorited ? "#EF4444" : "#9CA3AF",
-                  transition: "all 0.2s",
-                }}
-                aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
+                className={`gl-card-action-btn ${isFavorited ? "favorited" : ""} gl-focus-ring`}
+                aria-label={
+                  isFavorited ? "Remove from favorites" : "Add to favorites"
+                }
               >
-                <FiHeart size={16} fill={isFavorited ? "#EF4444" : "none"} />
+                <FiHeart size={14} fill={isFavorited ? "#EF4444" : "none"} />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Download handler would go here
+                }}
+                className="gl-card-action-btn gl-focus-ring"
+                aria-label="Download"
+              >
+                <FiDownload size={14} />
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  // Share handler would go here
+                }}
+                className="gl-card-action-btn gl-focus-ring"
+                aria-label="Share"
+              >
+                <FiShare2 size={14} />
               </button>
             </div>
-          </div>
-          <p
-            style={{
-              fontSize: "0.88rem",
-              color: "#6B7280",
-              lineHeight: 1.5,
-              margin: "0 0 12px 0",
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-            }}
-          >
-            {image.description}
-          </p>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-            <span
+          )}
+
+          {/* Viewed indicator */}
+          {isViewed && !hovered && (
+            <div
               style={{
-                display: "inline-flex",
+                position: "absolute",
+                bottom: 14,
+                left: 14,
+                display: "flex",
                 alignItems: "center",
                 gap: 4,
                 padding: "4px 10px",
-                background: "#ECFDF5",
-                color: "#059669",
-                borderRadius: "var(--gl-radius-sm)",
-                fontSize: 11,
-                fontWeight: 600,
-                textTransform: "capitalize",
-              }}
-            >
-              {categoryMeta[image.category]?.icon}
-              {image.category}
-            </span>
-            {image.photographer && (
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "#9CA3AF",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                }}
-              >
-                <FiCamera size={10} /> {image.photographer}
-              </span>
-            )}
-            {isViewed && (
-              <span
-                style={{
-                  fontSize: 11,
-                  color: "#9CA3AF",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 4,
-                }}
-              >
-                <FiEye size={10} /> Viewed
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Grid/Masonry/Compact Layout
-  return (
-    <div
-      className={`gl-card ${isSelected ? "selected" : ""}`}
-      onClick={() => (selectionMode ? onSelect?.(image.id) : onClick(index))}
-      role="button"
-      tabIndex={0}
-      aria-label={`${selectionMode ? "Select" : "View"} ${image.title}`}
-      onKeyDown={handleKeyDown}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{ animation: `fadeUp 0.5s ease ${index * 0.03}s both` }}
-    >
-      <div style={{ overflow: "hidden", position: "relative" }}>
-        {!loaded && !error && <ImageSkeleton height={cardHeight} />}
-
-        {error ? (
-          <div
-            style={{
-              height: cardHeight,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              flexDirection: "column",
-              gap: 8,
-              background: "#F3F4F6",
-              color: "#9CA3AF",
-            }}
-          >
-            <FiImage size={40} />
-            <span style={{ fontSize: 12 }}>Failed to load</span>
-          </div>
-        ) : (
-          <img
-            src={image.src}
-            alt={image.title}
-            loading="lazy"
-            onLoad={() => setLoaded(true)}
-            onError={() => setError(true)}
-            style={{
-              height: cardHeight,
-              display: loaded ? "block" : "none",
-            }}
-          />
-        )}
-
-        {/* Zoom icon */}
-        {!selectionMode && (
-          <div className="gl-card-zoom">
-            <FiZoomIn size={24} color="white" />
-          </div>
-        )}
-
-        {/* Selection checkbox */}
-        {selectionMode && (
-          <div
-            onClick={handleSelectClick}
-            style={{
-              position: "absolute",
-              top: 14,
-              left: 14,
-              width: 28,
-              height: 28,
-              borderRadius: "50%",
-              background: isSelected ? "#059669" : "rgba(255,255,255,0.9)",
-              border: isSelected ? "2px solid #059669" : "2px solid #D1D5DB",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              cursor: "pointer",
-              zIndex: 10,
-              transition: "all 0.2s",
-              boxShadow: "var(--gl-shadow-sm)",
-            }}
-          >
-            {isSelected && <FiCheck size={16} color="white" />}
-          </div>
-        )}
-
-        {/* Featured badge */}
-        {image.featured && (
-          <div
-            style={{
-              position: "absolute",
-              top: 14,
-              left: selectionMode ? 50 : 14,
-              zIndex: 5,
-            }}
-          >
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
-                padding: "5px 12px",
-                background: "linear-gradient(135deg, #F59E0B, #D97706)",
-                color: "white",
+                background: "rgba(0,0,0,0.6)",
+                backdropFilter: "blur(4px)",
                 borderRadius: "var(--gl-radius-full)",
+                color: "white",
                 fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: "0.5px",
-                textTransform: "uppercase",
-                boxShadow: "0 2px 8px rgba(245,158,11,0.4)",
+                fontWeight: 500,
               }}
             >
-              <FiStar size={10} /> Featured
-            </span>
-          </div>
-        )}
+              <FiEye size={10} /> Viewed
+            </div>
+          )}
+        </div>
 
-        {/* Category badge */}
-        {layout !== "compact" && (
-          <div style={{ position: "absolute", top: 14, right: 14, zIndex: 5 }}>
-            <span
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 4,
-                padding: "5px 12px",
-                backgroundColor: "rgba(255,255,255,0.15)",
-                backdropFilter: "blur(8px)",
-                color: "white",
-                borderRadius: "var(--gl-radius-full)",
-                fontSize: 11,
-                fontWeight: 600,
-                textTransform: "capitalize",
-                border: "1px solid rgba(255,255,255,0.1)",
-              }}
-            >
-              {categoryMeta[image.category]?.emoji}
-              {image.category}
-            </span>
-          </div>
-        )}
-
-        {/* Action buttons */}
-        {!selectionMode && (
-          <div className="gl-card-actions">
-            <button
-              onClick={handleFavoriteClick}
-              className={`gl-card-action-btn ${isFavorited ? "favorited" : ""} gl-focus-ring`}
-              aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
-            >
-              <FiHeart size={14} fill={isFavorited ? "#EF4444" : "none"} />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                // Download handler would go here
-              }}
-              className="gl-card-action-btn gl-focus-ring"
-              aria-label="Download"
-            >
-              <FiDownload size={14} />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                // Share handler would go here
-              }}
-              className="gl-card-action-btn gl-focus-ring"
-              aria-label="Share"
-            >
-              <FiShare2 size={14} />
-            </button>
-          </div>
-        )}
-
-        {/* Viewed indicator */}
-        {isViewed && !hovered && (
-          <div
+        {/* Overlay */}
+        <div className="gl-card-overlay">
+          <h3
             style={{
-              position: "absolute",
-              bottom: 14,
-              left: 14,
+              fontFamily: "'Playfair Display', serif",
+              fontSize: layout === "compact" ? "0.95rem" : "1.25rem",
+              fontWeight: 700,
+              marginBottom: 6,
+              letterSpacing: "-0.01em",
+            }}
+          >
+            {image.title}
+          </h3>
+          <span
+            style={{
               display: "flex",
               alignItems: "center",
-              gap: 4,
-              padding: "4px 10px",
-              background: "rgba(0,0,0,0.6)",
-              backdropFilter: "blur(4px)",
-              borderRadius: "var(--gl-radius-full)",
-              color: "white",
-              fontSize: 10,
+              gap: 6,
+              fontSize: layout === "compact" ? "0.8rem" : "0.9rem",
+              color: "#34D399",
               fontWeight: 500,
+              marginBottom: layout === "compact" ? 0 : 10,
             }}
           >
-            <FiEye size={10} /> Viewed
-          </div>
-        )}
-      </div>
-
-      {/* Overlay */}
-      <div className="gl-card-overlay">
-        <h3
-          style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: layout === "compact" ? "0.95rem" : "1.25rem",
-            fontWeight: 700,
-            marginBottom: 6,
-            letterSpacing: "-0.01em",
-          }}
-        >
-          {image.title}
-        </h3>
-        <span
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            fontSize: layout === "compact" ? "0.8rem" : "0.9rem",
-            color: "#34D399",
-            fontWeight: 500,
-            marginBottom: layout === "compact" ? 0 : 10,
-          }}
-        >
-          <FiMapPin size={12} /> {image.location}
-        </span>
-        {layout !== "compact" && (
-          <p
-            style={{
-              fontSize: "0.85rem",
-              lineHeight: 1.5,
-              color: "rgba(255,255,255,0.8)",
-              fontStyle: "italic",
-              borderTop: "1px solid rgba(255,255,255,0.15)",
-              paddingTop: 10,
-              margin: 0,
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-              overflow: "hidden",
-            }}
-          >
-            {image.description}
-          </p>
-        )}
-      </div>
-    </div>
-  );
-});
-
-GalleryCard.displayName = "GalleryCard";
-
-// Lightbox Component
-const Lightbox = memo(({
-  images,
-  activeIndex,
-  onClose,
-  onNext,
-  onPrev,
-  onFavorite,
-  isFavorited,
-  onShare,
-  onDownload,
-}) => {
-  const [loaded, setLoaded] = useState(false);
-  const [zoom, setZoom] = useState(1);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showInfo, setShowInfo] = useState(true);
-  const [showThumbnails, setShowThumbnails] = useState(true);
-  const [isSlideshow, setIsSlideshow] = useState(false);
-  const [slideshowProgress, setSlideshowProgress] = useState(0);
-
-  const imageRef = useRef(null);
-  const containerRef = useRef(null);
-  const dragStart = useRef({ x: 0, y: 0 });
-  const touchStart = useRef(null);
-  const slideshowRef = useRef(null);
-
-  const currentImage = images[activeIndex];
-  const { width: windowWidth } = useWindowSize();
-  const isMobile = windowWidth < BREAKPOINTS.md;
-
-  // Reset state when image changes
-  useEffect(() => {
-    setLoaded(false);
-    setZoom(1);
-    setPosition({ x: 0, y: 0 });
-    setSlideshowProgress(0);
-  }, [activeIndex]);
-
-  // Slideshow timer
-  useEffect(() => {
-    if (isSlideshow) {
-      const startTime = Date.now();
-      const duration = CONFIG.SLIDESHOW_INTERVAL;
-
-      slideshowRef.current = setInterval(() => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min((elapsed / duration) * 100, 100);
-        setSlideshowProgress(progress);
-
-        if (progress >= 100) {
-          onNext();
-        }
-      }, 50);
-
-      return () => {
-        if (slideshowRef.current) {
-          clearInterval(slideshowRef.current);
-        }
-      };
-    }
-  }, [isSlideshow, activeIndex, onNext]);
-
-  // Preload adjacent images
-  useImagePreloader([
-    images[activeIndex > 0 ? activeIndex - 1 : images.length - 1]?.src,
-    images[activeIndex < images.length - 1 ? activeIndex + 1 : 0]?.src,
-  ].filter(Boolean));
-
-  // Zoom handlers
-  const handleZoomIn = useCallback(() => {
-    setZoom((prev) => Math.min(prev + CONFIG.ZOOM_STEP, CONFIG.MAX_ZOOM));
-  }, []);
-
-  const handleZoomOut = useCallback(() => {
-    setZoom((prev) => {
-      const newZoom = Math.max(prev - CONFIG.ZOOM_STEP, CONFIG.MIN_ZOOM);
-      if (newZoom <= 1) setPosition({ x: 0, y: 0 });
-      return newZoom;
-    });
-  }, []);
-
-  const handleResetZoom = useCallback(() => {
-    setZoom(1);
-    setPosition({ x: 0, y: 0 });
-  }, []);
-
-  // Fullscreen handler
-  const handleFullscreen = useCallback(() => {
-    if (!document.fullscreenElement) {
-      containerRef.current?.requestFullscreen();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen();
-      setIsFullscreen(false);
-    }
-  }, []);
-
-  // Touch handlers
-  const handleTouchStart = useCallback((e) => {
-    touchStart.current = e.touches[0].clientX;
-  }, []);
-
-  const handleTouchEnd = useCallback(
-    (e) => {
-      if (!touchStart.current || zoom > 1) return;
-      const diff = touchStart.current - e.changedTouches[0].clientX;
-      if (Math.abs(diff) > CONFIG.TOUCH_THRESHOLD) {
-        if (diff > 0) onNext();
-        else onPrev();
-      }
-      touchStart.current = null;
-    },
-    [zoom, onNext, onPrev]
-  );
-
-  // Drag handlers for zoomed image
-  const handleMouseDown = useCallback(
-    (e) => {
-      if (zoom <= 1) return;
-      setIsDragging(true);
-      dragStart.current = {
-        x: e.clientX - position.x,
-        y: e.clientY - position.y,
-      };
-    },
-    [zoom, position]
-  );
-
-  const handleMouseMove = useCallback(
-    (e) => {
-      if (!isDragging) return;
-      setPosition({
-        x: e.clientX - dragStart.current.x,
-        y: e.clientY - dragStart.current.y,
-      });
-    },
-    [isDragging]
-  );
-
-  const handleMouseUp = useCallback(() => {
-    setIsDragging(false);
-  }, []);
-
-  // Keyboard shortcuts
-  useKeyboardShortcuts({
-    escape: onClose,
-    arrowright: onNext,
-    arrowleft: onPrev,
-    "+": handleZoomIn,
-    "-": handleZoomOut,
-    "0": handleResetZoom,
-    f: handleFullscreen,
-    i: () => setShowInfo((prev) => !prev),
-    t: () => setShowThumbnails((prev) => !prev),
-    " ": () => setIsSlideshow((prev) => !prev),
-  });
-
-  return (
-    <div
-      ref={containerRef}
-      className="gl-lightbox"
-      onClick={onClose}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
-      role="dialog"
-      aria-label="Image lightbox"
-      aria-modal="true"
-    >
-      {/* Close button */}
-      <button
-        className="gl-lightbox-btn gl-focus-ring"
-        onClick={onClose}
-        aria-label="Close lightbox (Escape)"
-        style={{ top: 24, right: 24 }}
-      >
-        <FiX size={22} />
-      </button>
-
-      {/* Top toolbar */}
-      <div
-        style={{
-          position: "absolute",
-          top: 24,
-          right: 90,
-          display: "flex",
-          gap: 8,
-          zIndex: 10,
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          className="gl-lightbox-btn gl-focus-ring gl-tooltip"
-          onClick={handleZoomOut}
-          data-tooltip="Zoom out (-)"
-          style={{ position: "static", width: 44, height: 44 }}
-          disabled={zoom <= CONFIG.MIN_ZOOM}
-        >
-          <FiZoomOut size={18} />
-        </button>
-        <button
-          className="gl-lightbox-btn gl-focus-ring gl-tooltip"
-          onClick={handleResetZoom}
-          data-tooltip="Reset zoom (0)"
-          style={{ position: "static", width: 44, height: 44, fontSize: 12, fontWeight: 600 }}
-        >
-          {Math.round(zoom * 100)}%
-        </button>
-        <button
-          className="gl-lightbox-btn gl-focus-ring gl-tooltip"
-          onClick={handleZoomIn}
-          data-tooltip="Zoom in (+)"
-          style={{ position: "static", width: 44, height: 44 }}
-          disabled={zoom >= CONFIG.MAX_ZOOM}
-        >
-          <FiZoomIn size={18} />
-        </button>
-        <button
-          className="gl-lightbox-btn gl-focus-ring gl-tooltip"
-          onClick={handleFullscreen}
-          data-tooltip="Fullscreen (F)"
-          style={{ position: "static", width: 44, height: 44 }}
-        >
-          {isFullscreen ? <FiMinimize2 size={18} /> : <FiMaximize2 size={18} />}
-        </button>
-        <button
-          className="gl-lightbox-btn gl-focus-ring gl-tooltip"
-          onClick={() => setIsSlideshow((prev) => !prev)}
-          data-tooltip="Slideshow (Space)"
-          style={{
-            position: "static",
-            width: 44,
-            height: 44,
-            background: isSlideshow ? "rgba(5,150,105,0.8)" : undefined,
-          }}
-        >
-          {isSlideshow ? <FiPause size={18} /> : <FiPlay size={18} />}
-        </button>
-      </div>
-
-      {/* Counter */}
-      <div className="gl-lightbox-counter" aria-live="polite">
-        {activeIndex + 1} / {images.length}
-        {isSlideshow && (
-          <div
-            className="gl-lightbox-progress"
-            style={{ width: `${slideshowProgress}%` }}
-          />
-        )}
-      </div>
-
-      {/* Previous button */}
-      <button
-        className="gl-lightbox-btn gl-focus-ring"
-        onClick={(e) => {
-          e.stopPropagation();
-          onPrev();
-        }}
-        aria-label="Previous image (←)"
-        style={{ left: isMobile ? 12 : 24, top: "50%", transform: "translateY(-50%)" }}
-      >
-        <FiChevronLeft size={24} />
-      </button>
-
-      {/* Image */}
-      <img
-        ref={imageRef}
-        src={currentImage?.src}
-        alt={currentImage?.title}
-        className={`gl-lightbox-image ${zoom > 1 ? "zoomed" : ""} ${isDragging ? "dragging" : ""}`}
-        onClick={(e) => e.stopPropagation()}
-        onLoad={() => setLoaded(true)}
-        onMouseDown={handleMouseDown}
-        onDoubleClick={handleZoomIn}
-        style={{
-          opacity: loaded ? 1 : 0,
-          transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
-        }}
-        draggable={false}
-      />
-
-      {/* Loading spinner */}
-      {!loaded && (
-        <div
-          style={{
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            transform: "translate(-50%, -50%)",
-          }}
-          aria-label="Loading image"
-        >
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              border: "3px solid rgba(255,255,255,0.1)",
-              borderTopColor: "#34D399",
-              borderRadius: "50%",
-              animation: "spin 0.8s linear infinite",
-            }}
-          />
-        </div>
-      )}
-
-      {/* Next button */}
-      <button
-        className="gl-lightbox-btn gl-focus-ring"
-        onClick={(e) => {
-          e.stopPropagation();
-          onNext();
-        }}
-        aria-label="Next image (→)"
-        style={{ right: isMobile ? 12 : 24, top: "50%", transform: "translateY(-50%)" }}
-      >
-        <FiChevronRight size={24} />
-      </button>
-
-      {/* Thumbnails */}
-      {showThumbnails && !isMobile && (
-        <div className="gl-lightbox-thumbnails" onClick={(e) => e.stopPropagation()}>
-          {images.map((img, idx) => (
-            <img
-              key={img.id}
-              src={img.thumb || img.src}
-              alt={img.title}
-              className={`gl-lightbox-thumb ${idx === activeIndex ? "active" : ""}`}
-              onClick={() => {
-                // Navigate to this image
-                const diff = idx - activeIndex;
-                if (diff > 0) {
-                  for (let i = 0; i < diff; i++) onNext();
-                } else {
-                  for (let i = 0; i < -diff; i++) onPrev();
-                }
-              }}
-              loading="lazy"
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Info bar */}
-      {showInfo && (
-        <div className="gl-lightbox-info" onClick={(e) => e.stopPropagation()}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <h3
-              style={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: isMobile ? "1rem" : "1.2rem",
-                fontWeight: 700,
-                margin: 0,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              {currentImage?.title}
-            </h3>
+            <FiMapPin size={12} /> {image.location}
+          </span>
+          {layout !== "compact" && (
             <p
               style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-                color: "#34D399",
-                fontWeight: 500,
-                fontSize: isMobile ? 12 : 13,
-                margin: "4px 0 0 0",
-              }}
-            >
-              <FiMapPin size={12} /> {currentImage?.location}
-            </p>
-          </div>
-
-          {!isMobile && (
-            <p
-              style={{
-                fontSize: 13,
-                color: "rgba(255,255,255,0.6)",
+                fontSize: "0.85rem",
+                lineHeight: 1.5,
+                color: "rgba(255,255,255,0.8)",
                 fontStyle: "italic",
-                maxWidth: 280,
-                lineHeight: 1.4,
+                borderTop: "1px solid rgba(255,255,255,0.15)",
+                paddingTop: 10,
                 margin: 0,
                 display: "-webkit-box",
                 WebkitLineClamp: 2,
@@ -2407,147 +2388,682 @@ const Lightbox = memo(({
                 overflow: "hidden",
               }}
             >
-              {currentImage?.description}
+              {image.description}
             </p>
           )}
-
-          {/* Action buttons */}
-          <div style={{ display: "flex", gap: 8 }}>
-            <button
-              onClick={() => onFavorite?.(currentImage?.id)}
-              className="gl-lightbox-btn gl-focus-ring"
-              style={{ position: "static", width: 44, height: 44 }}
-              aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
-            >
-              <FiHeart
-                size={18}
-                fill={isFavorited ? "#EF4444" : "none"}
-                color={isFavorited ? "#EF4444" : "white"}
-              />
-            </button>
-            <button
-              onClick={() => onShare?.(currentImage)}
-              className="gl-lightbox-btn gl-focus-ring"
-              style={{ position: "static", width: 44, height: 44 }}
-              aria-label="Share image"
-            >
-              <FiShare2 size={18} />
-            </button>
-            <button
-              onClick={() => onDownload?.(currentImage)}
-              className="gl-lightbox-btn gl-focus-ring"
-              style={{ position: "static", width: 44, height: 44 }}
-              aria-label="Download image"
-            >
-              <FiDownload size={18} />
-            </button>
-            <button
-              onClick={() => setShowInfo(false)}
-              className="gl-lightbox-btn gl-focus-ring"
-              style={{ position: "static", width: 44, height: 44 }}
-              aria-label="Hide info"
-            >
-              <FiEyeOff size={18} />
-            </button>
-          </div>
         </div>
-      )}
+      </div>
+    );
+  },
+);
 
-      {/* Show info button when hidden */}
-      {!showInfo && (
+GalleryCard.displayName = "GalleryCard";
+
+// Lightbox Component
+const Lightbox = memo(
+  ({
+    images,
+    activeIndex,
+    onClose,
+    onNext,
+    onPrev,
+    onFavorite,
+    isFavorited,
+    onShare,
+    onDownload,
+  }) => {
+    const [loaded, setLoaded] = useState(false);
+    const [zoom, setZoom] = useState(1);
+    const [position, setPosition] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const [showInfo, setShowInfo] = useState(true);
+    const [showThumbnails, setShowThumbnails] = useState(true);
+    const [isSlideshow, setIsSlideshow] = useState(false);
+    const [slideshowProgress, setSlideshowProgress] = useState(0);
+
+    const imageRef = useRef(null);
+    const containerRef = useRef(null);
+    const dragStart = useRef({ x: 0, y: 0 });
+    const touchStart = useRef(null);
+    const slideshowRef = useRef(null);
+
+    const currentImage = images[activeIndex];
+    const { width: windowWidth } = useWindowSize();
+    const isMobile = windowWidth < BREAKPOINTS.md;
+
+    // Reset state when image changes
+    useEffect(() => {
+      setLoaded(false);
+      setZoom(1);
+      setPosition({ x: 0, y: 0 });
+      setSlideshowProgress(0);
+    }, [activeIndex]);
+
+    // Slideshow timer
+    useEffect(() => {
+      if (isSlideshow) {
+        const startTime = Date.now();
+        const duration = CONFIG.SLIDESHOW_INTERVAL;
+
+        slideshowRef.current = setInterval(() => {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min((elapsed / duration) * 100, 100);
+          setSlideshowProgress(progress);
+
+          if (progress >= 100) {
+            onNext();
+          }
+        }, 50);
+
+        return () => {
+          if (slideshowRef.current) {
+            clearInterval(slideshowRef.current);
+          }
+        };
+      }
+    }, [isSlideshow, activeIndex, onNext]);
+
+    // Preload adjacent images
+    useImagePreloader(
+      [
+        images[activeIndex > 0 ? activeIndex - 1 : images.length - 1]?.src,
+        images[activeIndex < images.length - 1 ? activeIndex + 1 : 0]?.src,
+      ].filter(Boolean),
+    );
+
+    // Zoom handlers
+    const handleZoomIn = useCallback(() => {
+      setZoom((prev) => Math.min(prev + CONFIG.ZOOM_STEP, CONFIG.MAX_ZOOM));
+    }, []);
+
+    const handleZoomOut = useCallback(() => {
+      setZoom((prev) => {
+        const newZoom = Math.max(prev - CONFIG.ZOOM_STEP, CONFIG.MIN_ZOOM);
+        if (newZoom <= 1) setPosition({ x: 0, y: 0 });
+        return newZoom;
+      });
+    }, []);
+
+    const handleResetZoom = useCallback(() => {
+      setZoom(1);
+      setPosition({ x: 0, y: 0 });
+    }, []);
+
+    // Fullscreen handler
+    const handleFullscreen = useCallback(() => {
+      if (!document.fullscreenElement) {
+        containerRef.current?.requestFullscreen();
+        setIsFullscreen(true);
+      } else {
+        document.exitFullscreen();
+        setIsFullscreen(false);
+      }
+    }, []);
+
+    // Touch handlers
+    const handleTouchStart = useCallback((e) => {
+      touchStart.current = e.touches[0].clientX;
+    }, []);
+
+    const handleTouchEnd = useCallback(
+      (e) => {
+        if (!touchStart.current || zoom > 1) return;
+        const diff = touchStart.current - e.changedTouches[0].clientX;
+        if (Math.abs(diff) > CONFIG.TOUCH_THRESHOLD) {
+          if (diff > 0) onNext();
+          else onPrev();
+        }
+        touchStart.current = null;
+      },
+      [zoom, onNext, onPrev],
+    );
+
+    // Drag handlers for zoomed image
+    const handleMouseDown = useCallback(
+      (e) => {
+        if (zoom <= 1) return;
+        setIsDragging(true);
+        dragStart.current = {
+          x: e.clientX - position.x,
+          y: e.clientY - position.y,
+        };
+      },
+      [zoom, position],
+    );
+
+    const handleMouseMove = useCallback(
+      (e) => {
+        if (!isDragging) return;
+        setPosition({
+          x: e.clientX - dragStart.current.x,
+          y: e.clientY - dragStart.current.y,
+        });
+      },
+      [isDragging],
+    );
+
+    const handleMouseUp = useCallback(() => {
+      setIsDragging(false);
+    }, []);
+
+    // Keyboard shortcuts
+    useKeyboardShortcuts({
+      escape: onClose,
+      arrowright: onNext,
+      arrowleft: onPrev,
+      "+": handleZoomIn,
+      "-": handleZoomOut,
+      0: handleResetZoom,
+      f: handleFullscreen,
+      i: () => setShowInfo((prev) => !prev),
+      t: () => setShowThumbnails((prev) => !prev),
+      " ": () => setIsSlideshow((prev) => !prev),
+    });
+
+    return (
+      <div
+        ref={containerRef}
+        className="gl-lightbox"
+        onClick={onClose}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseUp}
+        role="dialog"
+        aria-label="Image lightbox"
+        aria-modal="true"
+      >
+        {/* Close button */}
         <button
-          onClick={() => setShowInfo(true)}
           className="gl-lightbox-btn gl-focus-ring"
-          style={{ bottom: 24, left: "50%", transform: "translateX(-50%)" }}
-          aria-label="Show info"
+          onClick={onClose}
+          aria-label="Close lightbox (Escape)"
+          style={{ top: 24, right: 24 }}
         >
-          <FiInfo size={20} />
+          <FiX size={22} />
         </button>
-      )}
-    </div>
-  );
-});
+
+        {/* Top toolbar */}
+        <div
+          style={{
+            position: "absolute",
+            top: 24,
+            right: 90,
+            display: "flex",
+            gap: 8,
+            zIndex: 10,
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className="gl-lightbox-btn gl-focus-ring gl-tooltip"
+            onClick={handleZoomOut}
+            data-tooltip="Zoom out (-)"
+            style={{ position: "static", width: 44, height: 44 }}
+            disabled={zoom <= CONFIG.MIN_ZOOM}
+          >
+            <FiZoomOut size={18} />
+          </button>
+          <button
+            className="gl-lightbox-btn gl-focus-ring gl-tooltip"
+            onClick={handleResetZoom}
+            data-tooltip="Reset zoom (0)"
+            style={{
+              position: "static",
+              width: 44,
+              height: 44,
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            {Math.round(zoom * 100)}%
+          </button>
+          <button
+            className="gl-lightbox-btn gl-focus-ring gl-tooltip"
+            onClick={handleZoomIn}
+            data-tooltip="Zoom in (+)"
+            style={{ position: "static", width: 44, height: 44 }}
+            disabled={zoom >= CONFIG.MAX_ZOOM}
+          >
+            <FiZoomIn size={18} />
+          </button>
+          <button
+            className="gl-lightbox-btn gl-focus-ring gl-tooltip"
+            onClick={handleFullscreen}
+            data-tooltip="Fullscreen (F)"
+            style={{ position: "static", width: 44, height: 44 }}
+          >
+            {isFullscreen ? (
+              <FiMinimize2 size={18} />
+            ) : (
+              <FiMaximize2 size={18} />
+            )}
+          </button>
+          <button
+            className="gl-lightbox-btn gl-focus-ring gl-tooltip"
+            onClick={() => setIsSlideshow((prev) => !prev)}
+            data-tooltip="Slideshow (Space)"
+            style={{
+              position: "static",
+              width: 44,
+              height: 44,
+              background: isSlideshow ? "rgba(5,150,105,0.8)" : undefined,
+            }}
+          >
+            {isSlideshow ? <FiPause size={18} /> : <FiPlay size={18} />}
+          </button>
+        </div>
+
+        {/* Counter */}
+        <div className="gl-lightbox-counter" aria-live="polite">
+          {activeIndex + 1} / {images.length}
+          {isSlideshow && (
+            <div
+              className="gl-lightbox-progress"
+              style={{ width: `${slideshowProgress}%` }}
+            />
+          )}
+        </div>
+
+        {/* Previous button */}
+        <button
+          className="gl-lightbox-btn gl-focus-ring"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPrev();
+          }}
+          aria-label="Previous image (←)"
+          style={{
+            left: isMobile ? 12 : 24,
+            top: "50%",
+            transform: "translateY(-50%)",
+          }}
+        >
+          <FiChevronLeft size={24} />
+        </button>
+
+        {/* Image */}
+        <img
+          ref={imageRef}
+          src={currentImage?.src}
+          alt={currentImage?.title}
+          className={`gl-lightbox-image ${zoom > 1 ? "zoomed" : ""} ${isDragging ? "dragging" : ""}`}
+          onClick={(e) => e.stopPropagation()}
+          onLoad={() => setLoaded(true)}
+          onMouseDown={handleMouseDown}
+          onDoubleClick={handleZoomIn}
+          style={{
+            opacity: loaded ? 1 : 0,
+            transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
+          }}
+          draggable={false}
+        />
+
+        {/* Loading spinner */}
+        {!loaded && (
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              left: "50%",
+              transform: "translate(-50%, -50%)",
+            }}
+            aria-label="Loading image"
+          >
+            <div
+              style={{
+                width: 48,
+                height: 48,
+                border: "3px solid rgba(255,255,255,0.1)",
+                borderTopColor: "#34D399",
+                borderRadius: "50%",
+                animation: "spin 0.8s linear infinite",
+              }}
+            />
+          </div>
+        )}
+
+        {/* Next button */}
+        <button
+          className="gl-lightbox-btn gl-focus-ring"
+          onClick={(e) => {
+            e.stopPropagation();
+            onNext();
+          }}
+          aria-label="Next image (→)"
+          style={{
+            right: isMobile ? 12 : 24,
+            top: "50%",
+            transform: "translateY(-50%)",
+          }}
+        >
+          <FiChevronRight size={24} />
+        </button>
+
+        {/* Thumbnails */}
+        {showThumbnails && !isMobile && (
+          <div
+            className="gl-lightbox-thumbnails"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {images.map((img, idx) => (
+              <img
+                key={img.id}
+                src={img.thumb || img.src}
+                alt={img.title}
+                className={`gl-lightbox-thumb ${idx === activeIndex ? "active" : ""}`}
+                onClick={() => {
+                  // Navigate to this image
+                  const diff = idx - activeIndex;
+                  if (diff > 0) {
+                    for (let i = 0; i < diff; i++) onNext();
+                  } else {
+                    for (let i = 0; i < -diff; i++) onPrev();
+                  }
+                }}
+                loading="lazy"
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Info bar */}
+        {showInfo && (
+          <div
+            className="gl-lightbox-info"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h3
+                style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontSize: isMobile ? "1rem" : "1.2rem",
+                  fontWeight: 700,
+                  margin: 0,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {currentImage?.title}
+              </h3>
+              <p
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6,
+                  color: "#34D399",
+                  fontWeight: 500,
+                  fontSize: isMobile ? 12 : 13,
+                  margin: "4px 0 0 0",
+                }}
+              >
+                <FiMapPin size={12} /> {currentImage?.location}
+              </p>
+            </div>
+
+            {!isMobile && (
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "rgba(255,255,255,0.6)",
+                  fontStyle: "italic",
+                  maxWidth: 280,
+                  lineHeight: 1.4,
+                  margin: 0,
+                  display: "-webkit-box",
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                }}
+              >
+                {currentImage?.description}
+              </p>
+            )}
+
+            {/* Action buttons */}
+            <div style={{ display: "flex", gap: 8 }}>
+              <button
+                onClick={() => onFavorite?.(currentImage?.id)}
+                className="gl-lightbox-btn gl-focus-ring"
+                style={{ position: "static", width: 44, height: 44 }}
+                aria-label={
+                  isFavorited ? "Remove from favorites" : "Add to favorites"
+                }
+              >
+                <FiHeart
+                  size={18}
+                  fill={isFavorited ? "#EF4444" : "none"}
+                  color={isFavorited ? "#EF4444" : "white"}
+                />
+              </button>
+              <button
+                onClick={() => onShare?.(currentImage)}
+                className="gl-lightbox-btn gl-focus-ring"
+                style={{ position: "static", width: 44, height: 44 }}
+                aria-label="Share image"
+              >
+                <FiShare2 size={18} />
+              </button>
+              <button
+                onClick={() => onDownload?.(currentImage)}
+                className="gl-lightbox-btn gl-focus-ring"
+                style={{ position: "static", width: 44, height: 44 }}
+                aria-label="Download image"
+              >
+                <FiDownload size={18} />
+              </button>
+              <button
+                onClick={() => setShowInfo(false)}
+                className="gl-lightbox-btn gl-focus-ring"
+                style={{ position: "static", width: 44, height: 44 }}
+                aria-label="Hide info"
+              >
+                <FiEyeOff size={18} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Show info button when hidden */}
+        {!showInfo && (
+          <button
+            onClick={() => setShowInfo(true)}
+            className="gl-lightbox-btn gl-focus-ring"
+            style={{ bottom: 24, left: "50%", transform: "translateX(-50%)" }}
+            aria-label="Show info"
+          >
+            <FiInfo size={20} />
+          </button>
+        )}
+      </div>
+    );
+  },
+);
 
 Lightbox.displayName = "Lightbox";
 
 // Filter Panel Component
-const FilterPanel = memo(({ isOpen, onClose, state, dispatch, categoryCounts }) => {
-  if (!isOpen) return null;
+const FilterPanel = memo(
+  ({ isOpen, onClose, state, dispatch, categoryCounts }) => {
+    if (!isOpen) return null;
 
-  return (
-    <>
-      <div className="gl-filter-overlay" onClick={onClose} aria-hidden="true" />
-      <div
-        className="gl-filter-panel gl-scrollbar-thin"
-        role="dialog"
-        aria-label="Filter options"
-      >
+    return (
+      <>
         <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "20px 24px",
-            borderBottom: "1px solid #E5E7EB",
-            position: "sticky",
-            top: 0,
-            background: "white",
-            zIndex: 10,
-          }}
+          className="gl-filter-overlay"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+        <div
+          className="gl-filter-panel gl-scrollbar-thin"
+          role="dialog"
+          aria-label="Filter options"
         >
-          <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
-            <FiSliders style={{ marginRight: 10, verticalAlign: "middle" }} />
-            Filters
-          </h2>
-          <button
-            onClick={onClose}
-            className="gl-btn-ghost gl-focus-ring"
-            style={{ borderRadius: 8, padding: 8 }}
-            aria-label="Close filters"
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "20px 24px",
+              borderBottom: "1px solid #E5E7EB",
+              position: "sticky",
+              top: 0,
+              background: "white",
+              zIndex: 10,
+            }}
           >
-            <FiX size={20} />
-          </button>
-        </div>
-
-        <div style={{ padding: 24 }}>
-          {/* Categories */}
-          <div style={{ marginBottom: 32 }}>
-            <h3
-              style={{
-                fontSize: 14,
-                fontWeight: 600,
-                color: "#374151",
-                marginBottom: 12,
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-              }}
+            <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0 }}>
+              <FiSliders style={{ marginRight: 10, verticalAlign: "middle" }} />
+              Filters
+            </h2>
+            <button
+              onClick={onClose}
+              className="gl-btn-ghost gl-focus-ring"
+              style={{ borderRadius: 8, padding: 8 }}
+              aria-label="Close filters"
             >
-              Category
-            </h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => dispatch({ type: "SET_CATEGORY", payload: cat })}
-                  className={`gl-dropdown-item ${state.selectedCategory === cat ? "active" : ""}`}
-                  style={{ borderRadius: 8 }}
-                >
-                  <span
-                    style={{
-                      width: 32,
-                      height: 32,
-                      borderRadius: 8,
-                      background: state.selectedCategory === cat ? "#ECFDF5" : "#F9FAFB",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
+              <FiX size={20} />
+            </button>
+          </div>
+
+          <div style={{ padding: 24 }}>
+            {/* Categories */}
+            <div style={{ marginBottom: 32 }}>
+              <h3
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "#374151",
+                  marginBottom: 12,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Category
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {categories.map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() =>
+                      dispatch({ type: "SET_CATEGORY", payload: cat })
+                    }
+                    className={`gl-dropdown-item ${state.selectedCategory === cat ? "active" : ""}`}
+                    style={{ borderRadius: 8 }}
                   >
-                    {categoryMeta[cat]?.emoji}
-                  </span>
-                  <span style={{ flex: 1 }}>{categoryMeta[cat]?.label}</span>
+                    <span
+                      style={{
+                        width: 32,
+                        height: 32,
+                        borderRadius: 8,
+                        background:
+                          state.selectedCategory === cat
+                            ? "#ECFDF5"
+                            : "#F9FAFB",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {categoryMeta[cat]?.emoji}
+                    </span>
+                    <span style={{ flex: 1 }}>{categoryMeta[cat]?.label}</span>
+                    <span
+                      style={{
+                        fontSize: 12,
+                        color: "#9CA3AF",
+                        background: "#F3F4F6",
+                        padding: "2px 8px",
+                        borderRadius: 12,
+                      }}
+                    >
+                      {categoryCounts[cat] || 0}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Sort By */}
+            <div style={{ marginBottom: 32 }}>
+              <h3
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "#374151",
+                  marginBottom: 12,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Sort By
+              </h3>
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {SORT_OPTIONS.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() =>
+                      dispatch({ type: "SET_SORT", payload: option.value })
+                    }
+                    className={`gl-dropdown-item ${state.sortBy === option.value ? "active" : ""}`}
+                    style={{ borderRadius: 8 }}
+                  >
+                    {option.icon}
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Quick Filters */}
+            <div style={{ marginBottom: 32 }}>
+              <h3
+                style={{
+                  fontSize: 14,
+                  fontWeight: 600,
+                  color: "#374151",
+                  marginBottom: 12,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                }}
+              >
+                Quick Filters
+              </h3>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 12 }}
+              >
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 12,
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={state.showFavoritesOnly}
+                    onChange={(e) =>
+                      dispatch({
+                        type: "SET_FAVORITES_ONLY",
+                        payload: e.target.checked,
+                      })
+                    }
+                    style={{
+                      width: 20,
+                      height: 20,
+                      accentColor: "#059669",
+                      cursor: "pointer",
+                    }}
+                  />
+                  <FiHeart size={18} color="#EF4444" />
+                  <span>Favorites only</span>
                   <span
                     style={{
+                      marginLeft: "auto",
                       fontSize: 12,
                       color: "#9CA3AF",
                       background: "#F3F4F6",
@@ -2555,203 +3071,119 @@ const FilterPanel = memo(({ isOpen, onClose, state, dispatch, categoryCounts }) 
                       borderRadius: 12,
                     }}
                   >
-                    {categoryCounts[cat] || 0}
+                    {state.favorites.length}
                   </span>
-                </button>
-              ))}
+                </label>
+              </div>
             </div>
-          </div>
 
-          {/* Sort By */}
-          <div style={{ marginBottom: 32 }}>
-            <h3
+            {/* Reset Button */}
+            <button
+              onClick={() => dispatch({ type: "RESET_FILTERS" })}
+              className="gl-btn-secondary gl-focus-ring"
               style={{
+                width: "100%",
+                padding: "14px 20px",
+                borderRadius: 12,
                 fontSize: 14,
-                fontWeight: 600,
-                color: "#374151",
-                marginBottom: 12,
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 8,
               }}
             >
-              Sort By
-            </h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-              {SORT_OPTIONS.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => dispatch({ type: "SET_SORT", payload: option.value })}
-                  className={`gl-dropdown-item ${state.sortBy === option.value ? "active" : ""}`}
-                  style={{ borderRadius: 8 }}
-                >
-                  {option.icon}
-                  {option.label}
-                </button>
-              ))}
-            </div>
+              <FiRefreshCw size={16} />
+              Reset All Filters
+            </button>
           </div>
-
-          {/* Quick Filters */}
-          <div style={{ marginBottom: 32 }}>
-            <h3
-              style={{
-                fontSize: 14,
-                fontWeight: 600,
-                color: "#374151",
-                marginBottom: 12,
-                textTransform: "uppercase",
-                letterSpacing: "0.5px",
-              }}
-            >
-              Quick Filters
-            </h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <label
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  cursor: "pointer",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={state.showFavoritesOnly}
-                  onChange={(e) =>
-                    dispatch({
-                      type: "SET_FAVORITES_ONLY",
-                      payload: e.target.checked,
-                    })
-                  }
-                  style={{
-                    width: 20,
-                    height: 20,
-                    accentColor: "#059669",
-                    cursor: "pointer",
-                  }}
-                />
-                <FiHeart size={18} color="#EF4444" />
-                <span>Favorites only</span>
-                <span
-                  style={{
-                    marginLeft: "auto",
-                    fontSize: 12,
-                    color: "#9CA3AF",
-                    background: "#F3F4F6",
-                    padding: "2px 8px",
-                    borderRadius: 12,
-                  }}
-                >
-                  {state.favorites.length}
-                </span>
-              </label>
-            </div>
-          </div>
-
-          {/* Reset Button */}
-          <button
-            onClick={() => dispatch({ type: "RESET_FILTERS" })}
-            className="gl-btn-secondary gl-focus-ring"
-            style={{
-              width: "100%",
-              padding: "14px 20px",
-              borderRadius: 12,
-              fontSize: 14,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 8,
-            }}
-          >
-            <FiRefreshCw size={16} />
-            Reset All Filters
-          </button>
         </div>
-      </div>
-    </>
-  );
-});
+      </>
+    );
+  },
+);
 
 FilterPanel.displayName = "FilterPanel";
 
 // Selection Bar Component
-const SelectionBar = memo(({
-  selectedCount,
-  onClearSelection,
-  onSelectAll,
-  onDownloadSelected,
-  onDeleteSelected,
-  totalCount,
-}) => {
-  if (selectedCount === 0) return null;
+const SelectionBar = memo(
+  ({
+    selectedCount,
+    onClearSelection,
+    onSelectAll,
+    onDownloadSelected,
+    onDeleteSelected,
+    totalCount,
+  }) => {
+    if (selectedCount === 0) return null;
 
-  return (
-    <div className="gl-selection-bar">
-      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-        <div
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: "50%",
-            background: "#ECFDF5",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "#059669",
-            fontWeight: 700,
-            fontSize: 14,
-          }}
-        >
-          {selectedCount}
+    return (
+      <div className="gl-selection-bar">
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              background: "#ECFDF5",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#059669",
+              fontWeight: 700,
+              fontSize: 14,
+            }}
+          >
+            {selectedCount}
+          </div>
+          <span style={{ fontWeight: 600, color: "#374151" }}>
+            {selectedCount} selected
+          </span>
         </div>
-        <span style={{ fontWeight: 600, color: "#374151" }}>
-          {selectedCount} selected
-        </span>
-      </div>
 
-      <div style={{ display: "flex", gap: 8 }}>
-        <button
-          onClick={onSelectAll}
-          className="gl-btn-ghost gl-focus-ring"
-          style={{
-            padding: "8px 16px",
-            borderRadius: 8,
-            fontSize: 13,
-            fontWeight: 500,
-          }}
-        >
-          {selectedCount === totalCount ? "Deselect All" : "Select All"}
-        </button>
-        <button
-          onClick={onDownloadSelected}
-          className="gl-btn-secondary gl-focus-ring"
-          style={{
-            padding: "8px 16px",
-            borderRadius: 8,
-            fontSize: 13,
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-          }}
-        >
-          <FiDownload size={14} /> Download
-        </button>
-        <button
-          onClick={onClearSelection}
-          className="gl-btn-ghost gl-focus-ring"
-          style={{
-            padding: "8px 16px",
-            borderRadius: 8,
-            fontSize: 13,
-            color: "#EF4444",
-          }}
-        >
-          <FiX size={14} /> Clear
-        </button>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button
+            onClick={onSelectAll}
+            className="gl-btn-ghost gl-focus-ring"
+            style={{
+              padding: "8px 16px",
+              borderRadius: 8,
+              fontSize: 13,
+              fontWeight: 500,
+            }}
+          >
+            {selectedCount === totalCount ? "Deselect All" : "Select All"}
+          </button>
+          <button
+            onClick={onDownloadSelected}
+            className="gl-btn-secondary gl-focus-ring"
+            style={{
+              padding: "8px 16px",
+              borderRadius: 8,
+              fontSize: 13,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            <FiDownload size={14} /> Download
+          </button>
+          <button
+            onClick={onClearSelection}
+            className="gl-btn-ghost gl-focus-ring"
+            style={{
+              padding: "8px 16px",
+              borderRadius: 8,
+              fontSize: 13,
+              color: "#EF4444",
+            }}
+          >
+            <FiX size={14} /> Clear
+          </button>
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  },
+);
 
 SelectionBar.displayName = "SelectionBar";
 
@@ -2793,14 +3225,23 @@ const Gallery = () => {
 
   // Custom hooks
   const { width: windowWidth } = useWindowSize();
+  const { fetchedImages, loading: galleryFetching } = useGallery();
   const debouncedSearch = useDebounce(state.searchQuery, CONFIG.DEBOUNCE_DELAY);
 
+  const allImages = useMemo(() => {
+    return [...images, ...fetchedImages];
+  }, [fetchedImages]);
+
   const isMobile = windowWidth < BREAKPOINTS.md;
-  const isTablet = windowWidth >= BREAKPOINTS.md && windowWidth < BREAKPOINTS.lg;
+  const isTablet =
+    windowWidth >= BREAKPOINTS.md && windowWidth < BREAKPOINTS.lg;
 
   // Persist state changes
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.FAVORITES, JSON.stringify(state.favorites));
+    localStorage.setItem(
+      STORAGE_KEYS.FAVORITES,
+      JSON.stringify(state.favorites),
+    );
   }, [state.favorites]);
 
   useEffect(() => {
@@ -2808,11 +3249,17 @@ const Gallery = () => {
   }, [state.layout]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.CATEGORY, JSON.stringify(state.selectedCategory));
+    localStorage.setItem(
+      STORAGE_KEYS.CATEGORY,
+      JSON.stringify(state.selectedCategory),
+    );
   }, [state.selectedCategory]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.VIEWED, JSON.stringify(state.recentlyViewed));
+    localStorage.setItem(
+      STORAGE_KEYS.VIEWED,
+      JSON.stringify(state.recentlyViewed),
+    );
   }, [state.recentlyViewed]);
 
   // Hero slideshow
@@ -2828,14 +3275,15 @@ const Gallery = () => {
 
   // Back to top visibility
   useEffect(() => {
-    const handleScroll = () => setShowBackToTop(window.scrollY > CONFIG.SCROLL_THRESHOLD);
+    const handleScroll = () =>
+      setShowBackToTop(window.scrollY > CONFIG.SCROLL_THRESHOLD);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   // Filtered and sorted images
   const filteredImages = useMemo(() => {
-    let result = [...images];
+    let result = [...allImages];
 
     // Category filter
     if (state.selectedCategory !== "all") {
@@ -2857,7 +3305,7 @@ const Gallery = () => {
           img.description.toLowerCase().includes(query) ||
           img.category.toLowerCase().includes(query) ||
           img.tags?.some((tag) => tag.toLowerCase().includes(query)) ||
-          img.photographer?.toLowerCase().includes(query)
+          img.photographer?.toLowerCase().includes(query),
       );
     }
 
@@ -2897,6 +3345,7 @@ const Gallery = () => {
     state.sortBy,
     state.recentlyViewed,
     debouncedSearch,
+    allImages,
   ]);
 
   // Paginated images
@@ -2924,7 +3373,7 @@ const Gallery = () => {
       favorites: state.favorites.length,
       viewed: state.recentlyViewed.length,
     }),
-    [state.favorites.length, state.recentlyViewed.length]
+    [state.favorites.length, state.recentlyViewed.length],
   );
 
   // Active filters count
@@ -2935,7 +3384,12 @@ const Gallery = () => {
     if (state.showFavoritesOnly) count++;
     if (state.searchQuery) count++;
     return count;
-  }, [state.selectedCategory, state.sortBy, state.showFavoritesOnly, state.searchQuery]);
+  }, [
+    state.selectedCategory,
+    state.sortBy,
+    state.showFavoritesOnly,
+    state.searchQuery,
+  ]);
 
   // Toast helper
   const showToast = useCallback((message, type = "success", action = null) => {
@@ -2956,7 +3410,7 @@ const Gallery = () => {
         dispatch({ type: "ADD_VIEWED", payload: imageId });
       }
     },
-    [paginatedImages]
+    [paginatedImages],
   );
 
   const closeLightbox = useCallback(() => {
@@ -3010,10 +3464,10 @@ const Gallery = () => {
               label: "Undo",
               onClick: () => dispatch({ type: "TOGGLE_FAVORITE", payload: id }),
             }
-          : null
+          : null,
       );
     },
-    [state.favorites, showToast]
+    [state.favorites, showToast],
   );
 
   // Share handler
@@ -3043,7 +3497,7 @@ const Gallery = () => {
         }
       }
     },
-    [showToast]
+    [showToast],
   );
 
   // Download handler
@@ -3056,7 +3510,7 @@ const Gallery = () => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `${image.title.replace(/\s+/g, "-").toLowerCase()}.jpg`;
+        link.download = `${(image.title || "altuvera-moment").replace(/\s+/g, "-").toLowerCase()}.jpg`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -3067,7 +3521,7 @@ const Gallery = () => {
         showToast("Failed to download image", "error");
       }
     },
-    [showToast]
+    [showToast],
   );
 
   // Selection handlers
@@ -3084,7 +3538,7 @@ const Gallery = () => {
 
   const handleDownloadSelected = useCallback(async () => {
     const selectedImages = paginatedImages.filter((img) =>
-      state.selectedImages.includes(img.id)
+      state.selectedImages.includes(img.id),
     );
     showToast(`Downloading ${selectedImages.length} images...`, "info");
 
@@ -3114,15 +3568,20 @@ const Gallery = () => {
           loadMore();
         }
       },
-      [hasMore, isLoading, loadMore]
+      [hasMore, isLoading, loadMore],
     ),
-    { threshold: 0.1 }
+    { threshold: 0.1 },
   );
 
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [state.selectedCategory, state.searchQuery, state.sortBy, state.showFavoritesOnly]);
+  }, [
+    state.selectedCategory,
+    state.searchQuery,
+    state.sortBy,
+    state.showFavoritesOnly,
+  ]);
 
   // Scroll to top
   const scrollToTop = useCallback(() => {
@@ -3434,7 +3893,9 @@ const Gallery = () => {
           >
             {/* Filter button */}
             <button
-              onClick={() => dispatch({ type: "SET_FILTER_PANEL", payload: true })}
+              onClick={() =>
+                dispatch({ type: "SET_FILTER_PANEL", payload: true })
+              }
               className="gl-btn-secondary gl-focus-ring"
               style={{
                 padding: "10px 16px",
@@ -3504,7 +3965,9 @@ const Gallery = () => {
               {LAYOUTS.map(({ value, icon, label }) => (
                 <button
                   key={value}
-                  onClick={() => dispatch({ type: "SET_LAYOUT", payload: value })}
+                  onClick={() =>
+                    dispatch({ type: "SET_LAYOUT", payload: value })
+                  }
                   className="gl-focus-ring gl-tooltip"
                   data-tooltip={label}
                   aria-label={`Switch to ${label} layout`}
@@ -3517,9 +3980,11 @@ const Gallery = () => {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    backgroundColor: state.layout === value ? "white" : "transparent",
+                    backgroundColor:
+                      state.layout === value ? "white" : "transparent",
                     color: state.layout === value ? "#059669" : "#9CA3AF",
-                    boxShadow: state.layout === value ? "var(--gl-shadow-sm)" : "none",
+                    boxShadow:
+                      state.layout === value ? "var(--gl-shadow-sm)" : "none",
                     transition: "all 0.2s",
                   }}
                 >
@@ -3612,7 +4077,8 @@ const Gallery = () => {
               borderRadius: "var(--gl-radius-full)",
             }}
           >
-            {filteredImages.length} photo{filteredImages.length !== 1 ? "s" : ""}
+            {filteredImages.length} photo
+            {filteredImages.length !== 1 ? "s" : ""}
           </span>
         </div>
 
@@ -3626,20 +4092,19 @@ const Gallery = () => {
               animation: "fadeUp 0.4s ease",
             }}
           >
-               <div
-    style={{
-      width: 120,
-      height: 120,
-      borderRadius: "50%",
-      background: "linear-gradient(135deg, #ECFDF5, #D1FAE5)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      margin: "0 auto 24px",
-      animation: "float 3s ease infinite",
-    }}
-  >
-            
+            <div
+              style={{
+                width: 120,
+                height: 120,
+                borderRadius: "50%",
+                background: "linear-gradient(135deg, #ECFDF5, #D1FAE5)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                margin: "0 auto 24px",
+                animation: "float 3s ease infinite",
+              }}
+            >
               <FiCamera size={48} color="#059669" />
             </div>
             <h3
@@ -3662,10 +4127,17 @@ const Gallery = () => {
                 lineHeight: 1.6,
               }}
             >
-              We couldn't find any photos matching your current filters.
-              Try adjusting your search or browse all categories.
+              We couldn't find any photos matching your current filters. Try
+              adjusting your search or browse all categories.
             </p>
-            <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+            <div
+              style={{
+                display: "flex",
+                gap: 12,
+                justifyContent: "center",
+                flexWrap: "wrap",
+              }}
+            >
               <button
                 onClick={resetFilters}
                 className="gl-btn-primary gl-focus-ring"
@@ -3682,7 +4154,9 @@ const Gallery = () => {
                 Clear Filters
               </button>
               <button
-                onClick={() => dispatch({ type: "SET_CATEGORY", payload: "all" })}
+                onClick={() =>
+                  dispatch({ type: "SET_CATEGORY", payload: "all" })
+                }
                 className="gl-btn-secondary gl-focus-ring"
                 style={{
                   padding: "14px 32px",
@@ -3713,7 +4187,9 @@ const Gallery = () => {
                     onFavorite={toggleFavorite}
                     layout="compact"
                     isSelected={state.selectedImages.includes(image.id)}
-                    onSelect={(id) => dispatch({ type: "TOGGLE_SELECTION", payload: id })}
+                    onSelect={(id) =>
+                      dispatch({ type: "TOGGLE_SELECTION", payload: id })
+                    }
                     selectionMode={selectionMode}
                     isViewed={state.recentlyViewed.includes(image.id)}
                   />
@@ -3723,7 +4199,9 @@ const Gallery = () => {
 
             {/* List Layout */}
             {state.layout === "list" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+              <div
+                style={{ display: "flex", flexDirection: "column", gap: 20 }}
+              >
                 {paginatedImages.map((image, index) => (
                   <GalleryCard
                     key={image.id}
@@ -3734,7 +4212,9 @@ const Gallery = () => {
                     onFavorite={toggleFavorite}
                     layout="list"
                     isSelected={state.selectedImages.includes(image.id)}
-                    onSelect={(id) => dispatch({ type: "TOGGLE_SELECTION", payload: id })}
+                    onSelect={(id) =>
+                      dispatch({ type: "TOGGLE_SELECTION", payload: id })
+                    }
                     selectionMode={selectionMode}
                     isViewed={state.recentlyViewed.includes(image.id)}
                   />
@@ -3755,7 +4235,9 @@ const Gallery = () => {
                       onFavorite={toggleFavorite}
                       layout="masonry"
                       isSelected={state.selectedImages.includes(image.id)}
-                      onSelect={(id) => dispatch({ type: "TOGGLE_SELECTION", payload: id })}
+                      onSelect={(id) =>
+                        dispatch({ type: "TOGGLE_SELECTION", payload: id })
+                      }
                       selectionMode={selectionMode}
                       isViewed={state.recentlyViewed.includes(image.id)}
                     />
@@ -3773,8 +4255,8 @@ const Gallery = () => {
                   gridTemplateColumns: isMobile
                     ? "1fr"
                     : isTablet
-                    ? "repeat(2, 1fr)"
-                    : "repeat(auto-fill, minmax(340px, 1fr))",
+                      ? "repeat(2, 1fr)"
+                      : "repeat(auto-fill, minmax(340px, 1fr))",
                   gap: "24px",
                 }}
               >
@@ -3788,7 +4270,9 @@ const Gallery = () => {
                     onFavorite={toggleFavorite}
                     layout="grid"
                     isSelected={state.selectedImages.includes(image.id)}
-                    onSelect={(id) => dispatch({ type: "TOGGLE_SELECTION", payload: id })}
+                    onSelect={(id) =>
+                      dispatch({ type: "TOGGLE_SELECTION", payload: id })
+                    }
                     selectionMode={selectionMode}
                     isViewed={state.recentlyViewed.includes(image.id)}
                   />
@@ -3839,7 +4323,9 @@ const Gallery = () => {
                   ) : (
                     <>
                       <FiRefreshCw size={18} />
-                      Load More ({filteredImages.length - paginatedImages.length} remaining)
+                      Load More (
+                      {filteredImages.length - paginatedImages.length}{" "}
+                      remaining)
                     </>
                   )}
                 </button>
@@ -3885,7 +4371,9 @@ const Gallery = () => {
           onNext={nextImage}
           onPrev={prevImage}
           onFavorite={toggleFavorite}
-          isFavorited={state.favorites.includes(paginatedImages[activeIndex]?.id)}
+          isFavorited={state.favorites.includes(
+            paginatedImages[activeIndex]?.id,
+          )}
           onShare={handleShare}
           onDownload={handleDownload}
         />
@@ -4072,7 +4560,29 @@ const KeyboardShortcutsModal = memo(() => {
             textAlign: "center",
           }}
         >
-          Press <kbd style={{ background: "#F3F4F6", padding: "2px 6px", borderRadius: 4, fontSize: 11 }}>Shift</kbd> + <kbd style={{ background: "#F3F4F6", padding: "2px 6px", borderRadius: 4, fontSize: 11 }}>?</kbd> to toggle this help
+          Press{" "}
+          <kbd
+            style={{
+              background: "#F3F4F6",
+              padding: "2px 6px",
+              borderRadius: 4,
+              fontSize: 11,
+            }}
+          >
+            Shift
+          </kbd>{" "}
+          +{" "}
+          <kbd
+            style={{
+              background: "#F3F4F6",
+              padding: "2px 6px",
+              borderRadius: 4,
+              fontSize: 11,
+            }}
+          >
+            ?
+          </kbd>{" "}
+          to toggle this help
         </p>
       </div>
     </>
