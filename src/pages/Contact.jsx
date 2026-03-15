@@ -1354,8 +1354,9 @@ const Contact = () => {
               <a href="/services" className="ct-btn ct-btn--ghost">
                 View All Our Offerings <FiArrowRight size={16} />
               </a>
-</div>
-</ScrollReveal>
+            </div>
+          </div>
+        </ScrollReveal>
       </section>
 
       {/* ════════ CHAT ════════ */}

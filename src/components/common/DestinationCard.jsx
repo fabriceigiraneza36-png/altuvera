@@ -468,6 +468,19 @@ const truncateText = (text, maxLength) => {
   return text.slice(0, maxLength).trim() + "...";
 };
 
+const isCountryLike = (item) =>
+  Boolean(
+    item?.capital &&
+      (item?.officialName || item?.continent || item?.region || item?.subRegion),
+  );
+
+const getDetailsHref = (item) => {
+  const rawId = item?._id || item?.id || item?.slug;
+  if (!rawId) return "/destinations";
+  if (isCountryLike(item)) return `/country/${item?.id || item?.slug || rawId}`;
+  return `/destination/${item?.slug || rawId}`;
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // ATOMIC COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1328,6 +1341,38 @@ const QuickInfoPills = memo(({ duration, groupSize, difficulty }) => (
   </div>
 ));
 
+const TrustPills = memo(({ items }) => (
+  <div
+    style={{
+      display: "flex",
+      flexWrap: "wrap",
+      gap: "8px",
+      marginTop: "10px",
+    }}
+  >
+    {items.map(({ icon: Icon, label }, idx) => (
+      <div
+        key={`${label}-${idx}`}
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "6px",
+          padding: "6px 10px",
+          background: "rgba(16, 185, 129, 0.08)",
+          border: "1px solid rgba(16, 185, 129, 0.16)",
+          borderRadius: theme.radius.full,
+          fontSize: "12px",
+          color: theme.colors.primary[800],
+          fontWeight: 600,
+        }}
+      >
+        <Icon size={14} />
+        <span>{label}</span>
+      </div>
+    ))}
+  </div>
+));
+
 // Share Modal
 const ShareModal = memo(({ isOpen, onClose, destination, url }) => {
   const [copied, setCopied] = useState(false);
@@ -1628,6 +1673,21 @@ const ModernDestinationCard = ({
 
   const destinationId = destination?._id || destination?.id || destination?.slug;
   const hasVideo = destination?.videoId || destination?.hasVideo;
+  const isCountry = isCountryLike(destination);
+  const detailsHref = useMemo(() => getDetailsHref(destination), [destination]);
+  const locationLabel =
+    destination?.location ||
+    destination?.country ||
+    destination?.capital ||
+    "East Africa";
+
+  const ratingValue = Number(destination?.rating);
+  const reviewCount = destination?.reviewCount || destination?.reviews;
+  const hasRating = Number.isFinite(ratingValue) && ratingValue > 0;
+
+  const numericPrice = Number(destination?.price ?? destination?.startingPrice);
+  const hasPrice = Number.isFinite(numericPrice) && numericPrice > 0;
+  const shouldShowPrice = showPrice && hasPrice && !isCountry;
 
   // Auto-advance images
   useEffect(() => {
@@ -1662,13 +1722,13 @@ const ModernDestinationCard = ({
       navigator.share({
         title: destination?.name,
         text: destination?.description,
-        url: `/destination/${destination?.slug}`,
+        url: detailsHref,
       });
     } else {
       setShowShareModal(true);
     }
     onShare?.(destinationId);
-  }, [destination, destinationId, isMobile, onShare]);
+  }, [destination?.description, destination?.name, destinationId, detailsHref, isMobile, onShare]);
 
   const handleQuickView = useCallback((e) => {
     e.preventDefault();
@@ -1780,7 +1840,11 @@ const ModernDestinationCard = ({
           {destination?.discount && (
             <Badge variant="limited">-{destination.discount}%</Badge>
           )}
-          <Badge>{destination?.type || destination?.category || "Adventure"}</Badge>
+          <Badge>
+            {isCountry
+              ? destination?.region || destination?.subRegion || "Country"
+              : destination?.type || destination?.category || "Adventure"}
+          </Badge>
         </div>
 
         {/* ═══════════ ACTION BUTTONS OVERLAY ═══════════ */}
@@ -1868,7 +1932,7 @@ const ModernDestinationCard = ({
               color: theme.colors.neutral[700],
             }}
           >
-            {destination?.location || destination?.country || "East Africa"}
+            {locationLabel}
           </span>
           {destination?.distance && (
             <span
@@ -1903,7 +1967,7 @@ const ModernDestinationCard = ({
             }}
           >
             <Link
-              to={`/destination/${destination?.slug || destinationId}`}
+              to={detailsHref}
               style={{ textDecoration: "none", flex: 1 }}
             >
               <h3
@@ -1927,11 +1991,29 @@ const ModernDestinationCard = ({
               </h3>
             </Link>
 
-            <StarRating
-              rating={destination?.rating || 4.8}
-              count={destination?.reviewCount || destination?.reviews}
-              size={14}
-            />
+            {hasRating ? (
+              <StarRating rating={ratingValue} count={reviewCount} size={14} />
+            ) : (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  padding: "6px 10px",
+                  background: theme.colors.neutral[100],
+                  borderRadius: theme.radius.full,
+                  fontSize: "12px",
+                  color: theme.colors.neutral[600],
+                  fontWeight: 600,
+                  whiteSpace: "nowrap",
+                }}
+                aria-label="New listing"
+                title="New listing"
+              >
+                <Zap size={14} />
+                New
+              </div>
+            )}
           </div>
 
           {/* Description */}
@@ -1960,6 +2042,16 @@ const ModernDestinationCard = ({
             groupSize={destination?.groupSize}
             difficulty={destination?.difficulty}
           />
+
+          {!compact && (
+            <TrustPills
+              items={[
+                { icon: Shield, label: "Secure booking" },
+                { icon: CheckCircle2, label: "Verified listings" },
+                { icon: MessageCircle, label: "24/7 support" },
+              ]}
+            />
+          )}
 
           {/* Features/Amenities */}
           {!compact && destination?.highlights && (
@@ -2020,9 +2112,9 @@ const ModernDestinationCard = ({
               gap: "16px",
             }}
           >
-            {showPrice && (
+            {shouldShowPrice && (
               <PriceDisplay
-                price={destination?.price || destination?.startingPrice || 299}
+                price={numericPrice}
                 originalPrice={destination?.originalPrice}
                 period={destination?.pricePeriod || "person"}
                 size={compact ? "sm" : "md"}
@@ -2040,11 +2132,11 @@ const ModernDestinationCard = ({
                 </CTAButton>
               )}
               <CTAButton
-                to={`/destination/${destination?.slug || destinationId}`}
+                to={detailsHref}
                 variant="primary"
                 size={compact ? "sm" : "md"}
               >
-                <span>Explore</span>
+                <span>{isCountry ? "Explore" : "View details"}</span>
                 <ArrowRight size={16} strokeWidth={2.5} />
               </CTAButton>
             </div>
@@ -2096,7 +2188,7 @@ const ModernDestinationCard = ({
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         destination={destination}
-        url={`/destination/${destination?.slug}`}
+        url={detailsHref}
       />
     </>
   );
@@ -2125,6 +2217,10 @@ export const ListDestinationCard = memo(({ destination, index = 0, onFavorite })
   const [isHovered, setIsHovered] = useState(false);
   const [isFavorite, setIsFavorite] = useState(destination?.isFavorite || false);
   const isMobile = useMediaQuery(`(max-width: ${theme.breakpoints.md})`);
+  const detailsHref = useMemo(() => getDetailsHref(destination), [destination]);
+  const ratingValue = Number(destination?.rating);
+  const reviewCount = destination?.reviewCount || destination?.reviews;
+  const hasRating = Number.isFinite(ratingValue) && ratingValue > 0;
 
   const handleFavoriteToggle = (e) => {
     e.preventDefault();
@@ -2207,11 +2303,11 @@ export const ListDestinationCard = memo(({ destination, index = 0, onFavorite })
               {destination?.location}
             </span>
           </div>
-          <StarRating rating={destination?.rating || 4.8} count={destination?.reviews} size={12} />
+          {hasRating && <StarRating rating={ratingValue} count={reviewCount} size={12} />}
         </div>
 
         <Link
-          to={`/destination/${destination?.slug}`}
+          to={detailsHref}
           style={{ textDecoration: "none" }}
         >
           <h3
@@ -2260,7 +2356,7 @@ export const ListDestinationCard = memo(({ destination, index = 0, onFavorite })
                   : theme.colors.neutral[100],
               }}
             />
-            <CTAButton to={`/destination/${destination?.slug}`}>
+            <CTAButton to={detailsHref}>
               <span>View Details</span>
               <ArrowRight size={16} />
             </CTAButton>

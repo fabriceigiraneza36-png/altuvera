@@ -43,26 +43,36 @@ const countries = [
     active: { ry: 20, sk: 2.6, rz: 2.4, z: 36 },
   },
   {
+    name: "South Sudan",
+    code: "ss",
+    delay: -9,
+    duration: 20,
+    idle: { ry: 4.8, sk: 0.6, rz: 0.55 },
+    active: { ry: 19, sk: 2.4, rz: 2.2, z: 34 },
+  },
+  {
     name: "Djibouti",
     code: "dj",
-    delay: -10,
+    delay: -12,
     duration: 17.5,
     idle: { ry: 3.4, sk: 0.38, rz: 0.36 },
     active: { ry: 13, sk: 1.4, rz: 1.5, z: 20 },
   },
 ];
-
 export default function EastAfricaFlags() {
   const containerRef = useRef(null);
   const [activeFlag, setActiveFlag] = useState(null);
 
   useEffect(() => {
     const container = containerRef.current;
-    let posX = 0, posY = 0;
-    let targetX = 0, targetY = 0;
+    let posX = 0,
+      posY = 0;
+    let targetX = 0,
+      targetY = 0;
     let rafId;
 
-    const ease = (current, target, factor) => current + (target - current) * factor;
+    const ease = (current, target, factor) =>
+      current + (target - current) * factor;
 
     const update = () => {
       posX = ease(posX, targetX, 0.03);
@@ -95,7 +105,13 @@ export default function EastAfricaFlags() {
         <defs>
           {countries.map((c, i) => (
             <React.Fragment key={c.code}>
-              <filter id={`f-idle-${c.code}`} x="-20%" y="-20%" width="140%" height="140%">
+              <filter
+                id={`f-idle-${c.code}`}
+                x="-20%"
+                y="-20%"
+                width="140%"
+                height="140%"
+              >
                 <feTurbulence
                   type="fractalNoise"
                   baseFrequency="0.004 0.001"
@@ -110,9 +126,21 @@ export default function EastAfricaFlags() {
                     repeatCount="indefinite"
                   />
                 </feTurbulence>
-                <feDisplacementMap in="SourceGraphic" in2="n" scale="2" xChannelSelector="R" yChannelSelector="G" />
+                <feDisplacementMap
+                  in="SourceGraphic"
+                  in2="n"
+                  scale="2"
+                  xChannelSelector="R"
+                  yChannelSelector="G"
+                />
               </filter>
-              <filter id={`f-hover-${c.code}`} x="-20%" y="-20%" width="140%" height="140%">
+              <filter
+                id={`f-hover-${c.code}`}
+                x="-20%"
+                y="-20%"
+                width="140%"
+                height="140%"
+              >
                 <feTurbulence
                   type="fractalNoise"
                   baseFrequency="0.008 0.003"
@@ -127,7 +155,13 @@ export default function EastAfricaFlags() {
                     repeatCount="indefinite"
                   />
                 </feTurbulence>
-                <feDisplacementMap in="SourceGraphic" in2="n" scale="5" xChannelSelector="R" yChannelSelector="G">
+                <feDisplacementMap
+                  in="SourceGraphic"
+                  in2="n"
+                  scale="5"
+                  xChannelSelector="R"
+                  yChannelSelector="G"
+                >
                   <animate
                     attributeName="scale"
                     dur="4s"
@@ -170,9 +204,14 @@ export default function EastAfricaFlags() {
               <div className="flag">
                 <div className="cloth">
                   <img
-                    src={`https://flagcdn.com/w640/${country.code}.png`}
-                    srcSet={`https://flagcdn.com/w1280/${country.code}.png 2x`}
-                    alt=""
+                    src={`https://flagcdn.com/w1280/${country.code}.png`}
+                    srcSet={`
+    https://flagcdn.com/w640/${country.code}.png 640w,
+    https://flagcdn.com/w1280/${country.code}.png 1280w,
+    https://flagcdn.com/w2560/${country.code}.png 2560w
+  `}
+                    sizes="(max-width:768px) 90vw, 360px"
+                    alt={`${country.name} flag`}
                     className="img"
                     draggable="false"
                   />

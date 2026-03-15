@@ -1846,7 +1846,7 @@ const CountryDestinations = () => {
           content={
             country.heroImage ||
             country.images?.[0] ||
-            toAbsoluteUrl("/green%20logo.ico")
+            toAbsoluteUrl("/favicon.ico")
           }
         />
       </Helmet>

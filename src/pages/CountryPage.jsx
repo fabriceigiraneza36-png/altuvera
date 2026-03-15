@@ -56,6 +56,7 @@ import {
   FiPackage,
   FiPocket,
   FiLink,
+  FiSearch,
 } from "react-icons/fi";
 import PageHeader from "../components/common/PageHeader";
 import Button from "../components/common/Button";
@@ -3236,6 +3237,170 @@ const getFB = (c) => {
 /* ═══════════════════════════════════════════════════════ */
 /*  MAIN COMPONENT                                         */
 /* ═══════════════════════════════════════════════════════ */
+const prettyKey = (key) =>
+  String(key)
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (m) => m.toUpperCase())
+    .trim();
+
+const isPlainObject = (v) =>
+  v !== null && typeof v === "object" && !Array.isArray(v);
+
+const ExplorerText = ({ text }) => {
+  const [expanded, setExpanded] = useState(false);
+  const t = String(text || "");
+  const isLong = t.length > 700;
+  const display = expanded || !isLong ? t : `${t.slice(0, 700).trim()}…`;
+  const paras = toP(display, expanded ? 12 : 4);
+
+  return (
+    <div className="cp-exp-text">
+      {paras.map((p) => (
+        <p key={p}>{clean(p)}</p>
+      ))}
+      {isLong && (
+        <button
+          type="button"
+          className="cp-exp-more"
+          onClick={() => setExpanded((s) => !s)}
+        >
+          {expanded ? "Show less" : "Show more"}
+        </button>
+      )}
+    </div>
+  );
+};
+
+const ExplorerValue = ({ value, depth = 0, path = "" }) => {
+  if (value === null || value === undefined) {
+    return <div className="cp-exp-empty">—</div>;
+  }
+
+  if (typeof value === "string") {
+    return <ExplorerText text={value} />;
+  }
+
+  if (typeof value === "number" || typeof value === "boolean") {
+    return <div className="cp-exp-primitive">{String(value)}</div>;
+  }
+
+  if (Array.isArray(value)) {
+    if (value.length === 0) return <div className="cp-exp-empty">—</div>;
+
+    const allPrimitive = value.every(
+      (v) => v === null || ["string", "number", "boolean"].includes(typeof v),
+    );
+
+    if (allPrimitive) {
+      return (
+        <div className="cp-exp-chips">
+          {value.slice(0, 80).map((v, idx) => (
+            <span
+              key={`${path}:${idx}`}
+              className="cp-exp-chip"
+              title={String(v ?? "")}
+            >
+              {clean(String(v ?? ""))}
+            </span>
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="cp-exp-list">
+        {value.slice(0, 60).map((item, idx) => (
+          <details className="cp-exp-item" key={`${path}:${idx}`}>
+            <summary className="cp-exp-summary">
+              {prettyKey(path || "Item")} #{idx + 1}
+            </summary>
+            <div className="cp-exp-body">
+              <ExplorerValue
+                value={item}
+                depth={depth + 1}
+                path={`${path}.${idx}`}
+              />
+            </div>
+          </details>
+        ))}
+      </div>
+    );
+  }
+
+  if (isPlainObject(value)) {
+    const entries = Object.entries(value);
+    return (
+      <div className="cp-exp-grid">
+        {entries.map(([k, v]) => (
+          <details className="cp-exp-item" key={`${path}.${k}`}>
+            <summary className="cp-exp-summary">{prettyKey(k)}</summary>
+            <div className="cp-exp-body">
+              <ExplorerValue
+                value={v}
+                depth={depth + 1}
+                path={`${path}.${k}`}
+              />
+            </div>
+          </details>
+        ))}
+      </div>
+    );
+  }
+
+  return <div className="cp-exp-primitive">{clean(String(value))}</div>;
+};
+
+const CountryDataExplorer = ({ country }) => {
+  const [query, setQuery] = useState("");
+  const q = clean(query).toLowerCase();
+
+  const entries = useMemo(() => {
+    if (!country) return [];
+    const all = Object.entries(country);
+    if (!q) return all;
+    return all.filter(([k, v]) => {
+      const keyMatch = String(k).toLowerCase().includes(q);
+      if (keyMatch) return true;
+      if (typeof v === "string") return v.toLowerCase().includes(q);
+      return false;
+    });
+  }, [country, q]);
+
+  return (
+    <div className="cp-exp-wrap">
+      <div className="cp-exp-top">
+        <div className="cp-exp-title">
+          <FiLayers size={14} /> Full Data Explorer
+        </div>
+        <div className="cp-exp-search">
+          <FiSearch size={14} />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search fields (e.g., currency, languages, history)"
+            aria-label="Search country data"
+          />
+        </div>
+      </div>
+
+      <div className="cp-exp-root">
+        {entries.map(([k, v]) => (
+          <details className="cp-exp-item" key={k}>
+            <summary className="cp-exp-summary">{prettyKey(k)}</summary>
+            <div className="cp-exp-body">
+              <ExplorerValue value={v} depth={0} path={k} />
+            </div>
+          </details>
+        ))}
+        {entries.length === 0 && (
+          <div className="cp-exp-empty">No matching fields.</div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 const CountryPage = () => {
   const { countryId } = useParams();
   const { openMap } = useApp();
@@ -3314,7 +3479,7 @@ const CountryPage = () => {
     return (
       country?.heroImage ||
       country?.images?.[0] ||
-      toAbsoluteUrl("/green%20logo.ico")
+      toAbsoluteUrl("/favicon.ico")
     );
   }, [country]);
   const seoTitle = useMemo(() => {
@@ -4307,6 +4472,28 @@ const CountryPage = () => {
       </section>
 
       {/* ═══ CTA ═══ */}
+      <section className="cp-section cp-section--explorer">
+        <div className="cp-container cp-container--article">
+          <R a="up">
+            <div className="cp-section-header">
+              <span className="cp-badge">
+                <FiLayers size={12} /> Complete Country Data
+              </span>
+              <h2 className="cp-section-title">
+                All {country.name} Information
+              </h2>
+              <p className="cp-section-subtitle">
+                Browse every field from our country dataset in a searchable,
+                expandable explorer.
+              </p>
+            </div>
+          </R>
+          <R a="up" d={0.1}>
+            <CountryDataExplorer country={country} />
+          </R>
+        </div>
+      </section>
+
       <section className="cp-section cp-section--cta">
         <div className="cp-container">
           <R a="up">
@@ -4498,6 +4685,147 @@ const CSS = `
 
 .cp-section--final {
   background: var(--cp-gray-50);
+}
+
+.cp-section--explorer {
+  background: var(--cp-white);
+}
+
+.cp-exp-wrap {
+  background: linear-gradient(180deg, var(--cp-white), var(--cp-gray-50));
+  border: 1px solid var(--cp-gray-200);
+  border-radius: var(--cp-radius-xl);
+  box-shadow: var(--cp-shadow-md);
+  overflow: hidden;
+}
+
+.cp-exp-top {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+  background: rgba(22, 163, 74, 0.06);
+  border-bottom: 1px solid rgba(22, 163, 74, 0.14);
+  flex-wrap: wrap;
+}
+
+.cp-exp-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 850;
+  color: var(--cp-gray-900);
+}
+
+.cp-exp-search {
+  flex: 1;
+  min-width: 240px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--cp-white);
+  border: 1px solid rgba(0,0,0,0.08);
+  border-radius: var(--cp-radius-full);
+  box-shadow: var(--cp-shadow-sm);
+}
+
+.cp-exp-search input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: var(--cp-font-body);
+  font-size: 14px;
+  color: var(--cp-gray-800);
+}
+
+.cp-exp-root {
+  padding: 10px 12px 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.cp-exp-item {
+  background: var(--cp-white);
+  border: 1px solid var(--cp-gray-200);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.cp-exp-summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 750;
+  color: var(--cp-gray-900);
+}
+
+.cp-exp-summary::-webkit-details-marker { display: none; }
+
+.cp-exp-item[open] .cp-exp-summary {
+  background: rgba(22, 163, 74, 0.06);
+}
+
+.cp-exp-body {
+  padding: 12px 14px 16px;
+  border-top: 1px solid var(--cp-gray-200);
+}
+
+.cp-exp-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.cp-exp-list { display: grid; gap: 10px; }
+
+.cp-exp-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.cp-exp-chip {
+  padding: 6px 10px;
+  border-radius: var(--cp-radius-full);
+  background: var(--cp-gray-100);
+  border: 1px solid var(--cp-gray-200);
+  font-size: 12px;
+  color: var(--cp-gray-700);
+}
+
+.cp-exp-text p {
+  margin: 0 0 10px;
+  color: var(--cp-gray-700);
+  line-height: 1.7;
+}
+
+.cp-exp-more {
+  border: none;
+  background: none;
+  color: var(--cp-green-700);
+  font-weight: 850;
+  cursor: pointer;
+  padding: 0;
+}
+
+.cp-exp-empty { color: var(--cp-gray-500); }
+.cp-exp-primitive { color: var(--cp-gray-700); font-weight: 650; }
+
+.cp-exp-text p:last-child { margin-bottom: 0; }
+
+.cp-exp-body .cp-exp-wrap { border-radius: 16px; }
+
+.cp-exp-root > .cp-exp-item { box-shadow: var(--cp-shadow-sm); }
+
+.cp-exp-item[open] { box-shadow: var(--cp-shadow-md); }
+
+.cp-exp-item:focus-within { outline: 2px solid rgba(34,197,94,0.25); outline-offset: 2px; }
+
+@media (max-width: 640px) {
+  .cp-exp-top { padding: 14px; }
+  .cp-exp-grid { grid-template-columns: 1fr; }
 }
 
 .cp-section--ai {
