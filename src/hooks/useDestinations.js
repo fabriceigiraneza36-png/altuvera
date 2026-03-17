@@ -3,7 +3,6 @@ import {
   adaptDestination,
   adaptDestinationList,
 } from "../utils/destinationAdapter";
-import { fetchWithCache } from "../utils/fetchCache";
 
 const API_BASE = import.meta.env.VITE_API_URL || "http://https://backend-1-ghrv.onrender.com//api";
 
@@ -27,10 +26,9 @@ export function useDestinations(params = {}) {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetchWithCache(
+        const res = await fetch(
           `${API_BASE}/destinations${toQueryString(params)}`,
-          { signal },
-          30_000,
+          { signal }
         );
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
