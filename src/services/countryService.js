@@ -2,11 +2,11 @@
 
 // Use proxy in dev (/api), full URL in production
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://https://backend-1-ghrv.onrender.com/";
 
 // Determine the correct base URL based on environment
 const getBaseUrl = () => {
-  // In development, use the proxy (/api -> localhost:5000/api)
+  // In development, use the proxy (/api -> https://backend-1-ghrv.onrender.com//api)
   // In production, use the full URL
   if (import.meta.env.DEV) {
     return API_BASE;

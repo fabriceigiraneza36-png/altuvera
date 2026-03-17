@@ -61,7 +61,10 @@ import {
 import PageHeader from "../components/common/PageHeader";
 import AnimatedSection from "../components/common/AnimatedSection";
 import Button from "../components/common/Button";
+import PackageChecklist from "../components/common/PackageChecklist";
+import { Helmet } from "react-helmet-async";
 import { useCountries } from "../hooks/useCountries";
+import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../utils/seo";
 import { toGoogleMapEmbedUrl } from "../utils/mediaEmbed";
 
 /* ═══════════════════════════════════════════════════════
@@ -475,7 +478,6 @@ const countryPositions = {
   "south-sudan": { top: "30%", left: "50%" },
   eritrea: { top: "18%", left: "70%" },
   djibouti: { top: "22%", left: "78%" },
-  somalia: { top: "35%", left: "80%" },
 };
 
 /* ═══════════════════════════════════════════════════════
@@ -1695,6 +1697,10 @@ const InteractiveMap = () => {
         backgroundImage="https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=1920"
         breadcrumbs={[{ label: "Interactive Map" }]}
       />
+
+      <AnimatedSection animation="fadeInUp">
+        <PackageChecklist tourData={{ tourName: 'Interactive Map' }} className="interactive-map-checklist" />
+      </AnimatedSection>
 
       <section
         style={{ padding: isMobile ? "32px 16px 80px" : "48px 24px 120px" }}

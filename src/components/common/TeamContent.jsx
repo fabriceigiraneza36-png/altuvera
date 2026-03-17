@@ -18,7 +18,7 @@ import Button from "./Button";
 // ----------------------------------------------------------------------
 const teamAPI = {
   // Vite exposes env variables with VITE_ prefix – update your .env file accordingly
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://https://backend-1-ghrv.onrender.com//api',
   
   async getAll() {
     const response = await fetch(`${this.baseURL}/team`);

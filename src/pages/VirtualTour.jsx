@@ -47,8 +47,11 @@ import {
 } from "react-icons/fi";
 import PageHeader from "../components/common/PageHeader";
 import AnimatedSection from "../components/common/AnimatedSection";
+import PackageChecklist from "../components/common/PackageChecklist";
+import { Helmet } from "react-helmet-async";
 import { useApp } from "../context/AppContext";
 import { useVirtualTours } from "../hooks/useVirtualTours";
+import { BRAND_LOGO_ALT, getBrandLogoUrl } from "../utils/seo";
 import virtualTourService from "../services/virtualTourService";
 
 /* ═══════════════════════════════════════════════════════
@@ -1348,7 +1351,7 @@ const VirtualTour = () => {
       title: "360° Panorama",
       desc: "Full immersive panoramic views of every destination with interactive controls",
       color: "#059669",
-      stats: "50+ Views",
+      stats: "5+ Views",
     },
     {
       icon: <FiHeadphones size={28} />,
@@ -1421,6 +1424,24 @@ const VirtualTour = () => {
   return (
     <div ref={containerRef} style={{ backgroundColor: "var(--vt-off-white)" }}>
       <style>{globalStyles}</style>
+
+      <Helmet>
+        <title>Virtual Tours | Altuvera Safaris</title>
+        <meta
+          name="description"
+          content="Experience East Africa through immersive 360° virtual tours. Explore wildlife, landscapes, and culture from anywhere."
+        />
+        <meta property="og:title" content="Virtual Tours | Altuvera Safaris" />
+        <meta
+          property="og:description"
+          content="Experience East Africa through immersive 360° virtual tours. Explore wildlife, landscapes, and culture from anywhere."
+        />
+        <meta property="og:image" content={getBrandLogoUrl()} />
+        <meta property="og:image:alt" content={BRAND_LOGO_ALT} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={getBrandLogoUrl()} />
+        <meta name="twitter:image:alt" content={BRAND_LOGO_ALT} />
+      </Helmet>
 
       <PageHeader
         title="Virtual Tours"
@@ -1536,23 +1557,29 @@ const VirtualTour = () => {
                     }}
                   />
                   {searchQuery && (
-                    <button
-                      onClick={() => setSearchQuery("")}
-                      style={{
-                        position: "absolute",
-                        right: "12px",
-                        top: "50%",
-                        transform: "translateY(-50%)",
-                        background: "none",
-                        border: "none",
-                        cursor: "pointer",
-                        color: "#9CA3AF",
-                        padding: "4px",
-                        display: "flex",
-                      }}
-                    >
-                      <FiX size={16} />
-                    </button>
+                    <>
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        style={{
+                          position: "absolute",
+                          right: "12px",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          background: "none",
+                          border: "none",
+                          cursor: "pointer",
+                          color: "#9CA3AF",
+                          padding: "4px",
+                          display: "flex",
+                        }}
+                      >
+                        <FiX size={16} />
+                      </button>
+
+                      <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: 12 }}>
+                        <PackageChecklist tourData={{ tourName: 'Virtual Tour' }} className="virtualtour-checklist" />
+                      </div>
+                    </>
                   )}
                 </div>
 
@@ -1681,7 +1708,7 @@ const VirtualTour = () => {
                     style={{
                       position: "absolute",
                       inset: "-20px",
-                      backgroundImage: `url(${currentTour.panorama_url || currentTour.thumbnail_url})`,
+                      backgroundImage: `url(${currentTour.panorama_url || currentTour.thumbnail_url || getBrandLogoUrl()})`,
                       backgroundSize: "cover",
                       backgroundPosition: "center",
                       transition:
@@ -2348,8 +2375,8 @@ const VirtualTour = () => {
                           }}
                         >
                           <img
-                            src={tour.thumbnail_url}
-                            alt={tour.title}
+                            src={tour.thumbnail_url || getBrandLogoUrl()}
+                            alt={tour.title || BRAND_LOGO_ALT}
                             loading="lazy"
                             style={{
                               width: "100%",
@@ -2357,6 +2384,10 @@ const VirtualTour = () => {
                               objectFit: "cover",
                               transition:
                                 "transform 0.6s var(--vt-transition)",
+                            }}
+                            onError={(e) => {
+                              e.currentTarget.src = getBrandLogoUrl();
+                              e.currentTarget.alt = BRAND_LOGO_ALT;
                             }}
                             onMouseOver={(e) =>
                               (e.currentTarget.style.transform =
@@ -2550,8 +2581,8 @@ const VirtualTour = () => {
                           }}
                         >
                           <img
-                            src={tour.thumbnail_url}
-                            alt={tour.title}
+                            src={tour.thumbnail_url || getBrandLogoUrl()}
+                            alt={tour.title || BRAND_LOGO_ALT}
                             loading="lazy"
                             style={{
                               width: "100%",
@@ -2559,6 +2590,10 @@ const VirtualTour = () => {
                               objectFit: "cover",
                               transition:
                                 "transform 0.6s var(--vt-transition)",
+                            }}
+                            onError={(e) => {
+                              e.currentTarget.src = getBrandLogoUrl();
+                              e.currentTarget.alt = BRAND_LOGO_ALT;
                             }}
                             onMouseOver={(e) =>
                               (e.currentTarget.style.transform = "scale(1.08)")

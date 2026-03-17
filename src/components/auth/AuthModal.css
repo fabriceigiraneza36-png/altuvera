@@ -426,42 +426,20 @@
 .auth-brand-icon {
   width: 48px;
   height: 48px;
-  border-radius: var(--auth-radius);
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(
-    135deg,
-    var(--auth-primary) 0%,
-    var(--auth-primary-light) 100%
-  );
-  color: var(--auth-white);
-  font-size: 1.5rem;
-  font-weight: 700;
-  font-family: "Playfair Display", Georgia, serif;
+  background: transparent;
   position: relative;
-  z-index: 1;
   overflow: hidden;
 }
 
 .auth-brand-icon-img {
-  width: 78%;
-  height: 78%;
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.18));
-}
-
-.auth-brand-glow {
-  position: absolute;
-  inset: -4px;
-  background: linear-gradient(
-    135deg,
-    var(--auth-primary) 0%,
-    var(--auth-primary-light) 100%
-  );
-  border-radius: calc(var(--auth-radius) + 4px);
-  opacity: 0.2;
-  filter: blur(8px);
+  filter: none;
 }
 
 .auth-brand-info {

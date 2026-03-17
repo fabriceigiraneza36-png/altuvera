@@ -1,0 +1,11 @@
+.cde-section{padding:20px 0}
+.cde-title{font-size:20px;margin-bottom:14px;color:#0f172a}
+.cde-layout{display:grid;grid-template-columns:1fr 320px;gap:18px;align-items:start}
+.cde-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px}
+.cde-card{background:white;border-radius:10px;padding:12px;border:1px solid #eef7f1;cursor:pointer;text-align:left}
+.cde-key{font-weight:700;color:#065F46;margin-bottom:6px}
+.cde-preview{color:#475569;font-size:13px}
+.cde-visual{background:linear-gradient(180deg,#ECFDF5,#F7FFFA);border-radius:10px;padding:12px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.cde-map{width:100%;height:180px;background-image:linear-gradient(135deg, rgba(5,150,105,0.06), rgba(16,185,129,0.04));border-radius:8px;border:1px dashed rgba(5,150,105,0.06)}
+.cde-legend{font-size:13px;color:#374151;margin-top:10px}
+@media(max-width:900px){.cde-layout{grid-template-columns:1fr;}.cde-visual{order:2}}

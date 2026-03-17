@@ -32,7 +32,7 @@ import {
 import { FiGithub } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { useUserAuth } from "../../context/UserAuthContext";
-import logoimg from "../../assets/altuvera.png";
+import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 import EmailAutocompleteInput from "../common/EmailAutocompleteInput";
 import "./AuthModal.css";
 
@@ -1209,11 +1209,15 @@ export default function AuthModal() {
               <div className="auth-brand-logo">
                 <div className="auth-brand-icon">
                   <img
-                    src={logoimg}
-                    alt="Altuvera"
+                    src={getBrandLogoUrl()}
+                    alt={BRAND_LOGO_ALT}
                     className="auth-brand-icon-img"
                     loading="eager"
                     decoding="async"
+                    onError={(e) => {
+                      e.currentTarget.src = getBrandLogoUrl();
+                      e.currentTarget.alt = BRAND_LOGO_ALT;
+                    }}
                   />
                 </div>
                 <div className="auth-brand-glow" aria-hidden="true" />

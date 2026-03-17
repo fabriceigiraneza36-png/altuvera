@@ -1,0 +1,110 @@
+.download-tips {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.download-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border: 2px solid var(--brand-primary, #2c5f2d);
+  background: linear-gradient(135deg, #2c5f2d 0%, #1e4620 100%);
+  color: white;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 4px 15px rgba(44, 95, 45, 0.2);
+  white-space: nowrap;
+}
+
+.download-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1e4620 0%, #1a3a1b 100%);
+  box-shadow: 0 6px 20px rgba(44, 95, 45, 0.3);
+  transform: translateY(-2px);
+}
+
+.download-btn:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 10px rgba(44, 95, 45, 0.2);
+}
+
+.download-btn:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+/* Status states */
+.download-btn--preparing {
+  background: linear-gradient(135deg, #3d7a40 0%, #2c5f2d 100%);
+}
+
+.download-btn--success {
+  background: linear-gradient(135deg, #4caf50 0%, #2c5f2d 100%);
+  border-color: #4caf50;
+}
+
+.download-btn--error {
+  background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+  border-color: #f44336;
+}
+
+/* Spinner animation for loading */
+.download-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error message */
+.download-error {
+  font-size: 12px;
+  color: #f44336;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .download-tips {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .download-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .download-error {
+    width: 100%;
+    justify-content: center;
+  }
+}

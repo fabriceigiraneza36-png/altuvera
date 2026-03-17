@@ -18,6 +18,7 @@ import {
 } from "react-icons/fi";
 import PageHeader from "../components/common/PageHeader";
 import AnimatedSection from "../components/common/AnimatedSection";
+import DownloadTips from "../components/common/DownloadTips";
 import { tips } from "../data/tips";
 
 // Background images mapped to common tip categories
@@ -1684,6 +1685,9 @@ const Tips = () => {
             </div>
           </div>
         )}
+
+        {/* Download Tips Section */}
+        <DownloadTips tips={filteredTips} tourName="East Africa Travel Tips" className="tips__download" />
       </section>
     </div>
   );

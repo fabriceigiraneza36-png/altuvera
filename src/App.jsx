@@ -1,342 +1,452 @@
-import React, { useEffect } from "react";
-import { Routes, Route, useLocation, Navigate } from "react-router-dom";
+// ─────────────────────────────────────────────────────────────
+// App.jsx — Supercharged Application Shell
+// Enterprise-grade routing, performance, and user experience
+// ─────────────────────────────────────────────────────────────
+
+import React, { useEffect, useCallback, useMemo, Suspense } from "react";
+import {
+  Routes,
+  Route,
+  useLocation,
+  Navigate,
+  Outlet,
+} from "react-router-dom";
 import { useApp } from "./context/AppContext";
 import { getRedirectUrl } from "./utils/routeUtils";
+import "leaflet/dist/leaflet.css";
+
+// ─── Layout & Shell Components (loaded eagerly — critical path) ────────
 import Navbar from "./components/common/Navbar";
 import Footer from "./components/common/Footer";
+import ChecklistFloating from "./components/common/ChecklistFloating";
 import ScrollToTop from "./components/common/ScrollToTop";
-import PersistentVideoPlayer from "./components/common/PersistentVideoPlayer";
-import PersistentMapViewer from "./components/common/PersistentMapViewer";
 import Loader from "./components/common/Loader";
 import CookieConsent from "./components/common/CookieConsent";
 import AuthModal from "./components/auth/AuthModal";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import PageWrapper from "./components/common/PageWrapper";
-import "leaflet/dist/leaflet.css";
-
-// Regular components
 import WhatsAppButton from "./components/common/WhatsAppButton";
 
-// Lazy load all pages
-const Home = React.lazy(() => import("./pages/Home"));
-const Destinations = React.lazy(() => import("./pages/Destinations"));
-const CountryPage = React.lazy(() => import("./pages/CountryPage"));
-const CountryDestinations = React.lazy(
-  () => import("./pages/CountryDestinations"),
+// ─── Deferred Shell Components (non-critical, loaded after paint) ──────
+const PersistentVideoPlayer = React.lazy(
+  () => import("./components/common/PersistentVideoPlayer")
 );
-const DestinationDetail = React.lazy(() => import("./pages/DestinationDetail"));
-const Tips = React.lazy(() => import("./pages/Tips"));
-const Explore = React.lazy(() => import("./pages/Explore"));
-const Posts = React.lazy(() => import("./pages/Posts"));
-const PostDetail = React.lazy(() => import("./pages/PostDetail"));
-const InteractiveMap = React.lazy(() => import("./pages/InteractiveMap"));
-const VirtualTour = React.lazy(() => import("./pages/VirtualTour"));
-const Services = React.lazy(() => import("./pages/Services"));
-const About = React.lazy(() => import("./pages/About"));
-const Contact = React.lazy(() => import("./pages/Contact"));
-const Gallery = React.lazy(() => import("./pages/Gallery"));
-const Booking = React.lazy(() => import("./pages/Booking"));
-const FAQ = React.lazy(() => import("./pages/FAQ"));
-const PaymentTerms = React.lazy(() => import("./pages/PaymentTerms"));
-const PrivacyPolicy = React.lazy(() => import("./pages/PrivacyPolicy"));
-const Team = React.lazy(() => import("./pages/Team"));
-const TermsOfService = React.lazy(() => import("./pages/TermsOfService"));
+const PersistentMapViewer = React.lazy(
+  () => import("./components/common/PersistentMapViewer")
+);
+
+// ═══════════════════════════════════════════════════════════════
+//  ROUTE CONFIGURATION — Single source of truth
+// ═══════════════════════════════════════════════════════════════
+
+const publicRoutes = [
+  {
+    path: "/",
+    component: React.lazy(() => import("./pages/Home")),
+    meta: {
+      title: "East Africa Safaris & Tours",
+      description:
+        "Book authentic East African safaris and cultural tours with Altuvera. Guided adventures in Kenya, Tanzania, Uganda, Rwanda, and Ethiopia.",
+    },
+  },
+  {
+    path: "/destinations",
+    component: React.lazy(() => import("./pages/Destinations")),
+    meta: {
+      title: "Destinations",
+      description:
+        "Explore handpicked destinations across East Africa, from iconic national parks to beaches and cultural highlights.",
+    },
+  },
+  {
+    path: "/country/:countryId",
+    component: React.lazy(() => import("./pages/CountryPage")),
+    meta: {
+      title: "Country Guides",
+      description:
+        "Country travel guides, top destinations, and planning tips for East African adventures with Altuvera.",
+    },
+  },
+  {
+    path: "/country/:countryId/destinations",
+    component: React.lazy(() => import("./pages/CountryDestinations")),
+    meta: {
+      title: "Country Destinations",
+      description:
+        "Browse top destinations, experiences, and must-see highlights by country.",
+    },
+  },
+  {
+    path: "/destination/:destinationId",
+    component: React.lazy(() => import("./pages/DestinationDetail")),
+    meta: {
+      title: "Destination",
+      description:
+        "Discover destination highlights, best time to visit, and travel tips. Plan your safari with Altuvera.",
+    },
+  },
+  {
+    path: "/tips",
+    component: React.lazy(() => import("./pages/Tips")),
+    meta: {
+      title: "Travel Tips",
+      description:
+        "Practical safari and travel tips to help you plan a smooth, memorable East African trip.",
+    },
+  },
+  {
+    path: "/explore",
+    component: React.lazy(() => import("./pages/Explore")),
+    meta: {
+      title: "Explore",
+      description:
+        "Explore experiences, culture, and inspiration for your next East African journey.",
+    },
+  },
+  {
+    path: "/posts",
+    component: React.lazy(() => import("./pages/Posts")),
+    meta: {
+      title: "Journal",
+      description:
+        "Travel guides, safari tips, and stories from East Africa and beyond.",
+    },
+  },
+  {
+    path: "/post/:slug",
+    component: React.lazy(() => import("./pages/PostDetail")),
+    meta: {
+      title: "Article",
+      description:
+        "Read Altuvera travel stories and guides to help you plan your safari and cultural experiences.",
+    },
+  },
+  {
+    path: "/interactive-map",
+    component: React.lazy(() => import("./pages/InteractiveMap")),
+    meta: {
+      title: "Interactive Map",
+      description:
+        "Explore destinations and plan routes with Altuvera's interactive map.",
+    },
+  },
+  {
+    path: "/virtual-tour",
+    component: React.lazy(() => import("./pages/VirtualTour")),
+    meta: {
+      title: "Virtual Tour",
+      description:
+        "Take a virtual tour and preview experiences before you travel with Altuvera.",
+    },
+  },
+  {
+    path: "/services",
+    component: React.lazy(() => import("./pages/Services")),
+    meta: {
+      title: "Services",
+      description:
+        "Safari planning, guided tours, and travel support services offered by Altuvera.",
+    },
+  },
+  {
+    path: "/about",
+    component: React.lazy(() => import("./pages/About")),
+    meta: {
+      title: "About Altuvera",
+      description:
+        "Learn about Altuvera and our mission to deliver authentic East African safari and cultural tours.",
+    },
+  },
+  {
+    path: "/contact",
+    component: React.lazy(() => import("./pages/Contact")),
+    meta: {
+      title: "Contact Altuvera",
+      description:
+        "Get in touch with Altuvera to plan your safari, ask questions, or request a custom itinerary.",
+    },
+  },
+  {
+    path: "/gallery",
+    component: React.lazy(() => import("./pages/Gallery")),
+    meta: {
+      title: "Gallery",
+      description:
+        "Browse photos from safaris, landscapes, wildlife, and cultural experiences.",
+    },
+  },
+  {
+    path: "/faq",
+    component: React.lazy(() => import("./pages/FAQ")),
+    meta: {
+      title: "FAQ",
+      description:
+        "Answers to common questions about booking, travel logistics, safety, and safari experiences.",
+    },
+  },
+  {
+    path: "/team",
+    component: React.lazy(() => import("./pages/Team")),
+    meta: {
+      title: "Our Team",
+      description:
+        "Meet the Altuvera team behind our safari and cultural experiences.",
+    },
+  },
+  {
+    path: "/payment-terms",
+    component: React.lazy(() => import("./pages/PaymentTerms")),
+    meta: {
+      title: "Payment Terms",
+      description: "Payment terms and booking information for Altuvera tours.",
+    },
+  },
+  {
+    path: "/privacy",
+    component: React.lazy(() => import("./pages/PrivacyPolicy")),
+    meta: {
+      title: "Privacy Policy",
+      description: "Read Altuvera's privacy policy.",
+    },
+  },
+  {
+    path: "/terms",
+    component: React.lazy(() => import("./pages/TermsOfService")),
+    meta: {
+      title: "Terms of Service",
+      description: "Read Altuvera's terms of service.",
+    },
+  },
+];
+
+const protectedRoutes = [
+  {
+    path: "/booking",
+    component: React.lazy(() => import("./pages/Booking")),
+    meta: { title: "Booking", noindex: true },
+  },
+  {
+    path: "/profile",
+    component: React.lazy(() => import("./pages/auth/UserProfile")),
+    meta: { title: "My Profile", noindex: true },
+  },
+  {
+    path: "/my-bookings",
+    component: React.lazy(() => import("./pages/auth/MyBookings")),
+    meta: { title: "My Bookings", noindex: true },
+  },
+  {
+    path: "/wishlist",
+    component: React.lazy(() => import("./pages/auth/Wishlist")),
+    meta: { title: "Wishlist", noindex: true },
+  },
+  {
+    path: "/settings",
+    component: React.lazy(() => import("./pages/auth/UserSettings")),
+    meta: { title: "Settings", noindex: true },
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════
+//  PERFORMANCE: Route Pre-loader
+//  Prefetches the next likely pages on idle
+// ═══════════════════════════════════════════════════════════════
+
+const HIGH_PRIORITY_PREFETCH = [
+  () => import("./pages/Home"),
+  () => import("./pages/Destinations"),
+  () => import("./pages/About"),
+  () => import("./pages/Contact"),
+];
+
+const prefetchRoutes = () => {
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(
+      () => {
+        HIGH_PRIORITY_PREFETCH.forEach((loader) => {
+          loader().catch(() => {
+            /* swallow — network glitch is fine here */
+          });
+        });
+      },
+      { timeout: 4000 }
+    );
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════
+//  SMART REDIRECT — Fuzzy-matched typo correction
+// ═══════════════════════════════════════════════════════════════
+
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 
-// Protected pages
-const UserProfile = React.lazy(() => import("./pages/auth/UserProfile"));
-const MyBookings = React.lazy(() => import("./pages/auth/MyBookings"));
-const Wishlist = React.lazy(() => import("./pages/auth/Wishlist"));
-const UserSettings = React.lazy(() => import("./pages/auth/UserSettings"));
+const SmartRedirect = React.memo(() => {
+  const { pathname } = useLocation();
+  const redirectUrl = useMemo(() => getRedirectUrl(pathname), [pathname]);
 
-// Smart Redirect Component - handles typos and incorrect URLs
-const SmartRedirect = () => {
-  const location = useLocation();
-  const redirectUrl = getRedirectUrl(location.pathname);
-  
   if (redirectUrl) {
-    // Use replace to avoid creating history entries for bad URLs
     return <Navigate to={redirectUrl} replace />;
   }
-  
-  // No redirect found, show 404
+
   return (
-    <PageWrapper title="Page Not Found">
+    <PageWrapper title="Page Not Found" noindex>
       <NotFound />
     </PageWrapper>
   );
-};
+});
+
+SmartRedirect.displayName = "SmartRedirect";
+
+// ═══════════════════════════════════════════════════════════════
+//  LAYOUT COMPONENT — Shared app shell
+// ═══════════════════════════════════════════════════════════════
+
+const AppLayout = React.memo(() => {
+  return (
+    <>
+      <Navbar />
+      <main style={styles.main}>
+        <Suspense fallback={<Loader />}>
+          <Outlet />
+        </Suspense>
+      </main>
+      <Footer />
+      <ChecklistFloating />
+    </>
+  );
+});
+
+AppLayout.displayName = "AppLayout";
+
+// ═══════════════════════════════════════════════════════════════
+//  OVERLAY LAYER — Persistent UI elements
+//  Separated from routing to prevent unnecessary re-renders
+// ═══════════════════════════════════════════════════════════════
+
+const OverlayLayer = React.memo(({ isLoading }) => (
+  <>
+    <ScrollToTop />
+    <Suspense fallback={null}>
+      <PersistentVideoPlayer />
+      <PersistentMapViewer />
+    </Suspense>
+    <CookieConsent />
+    <AuthModal />
+    <WhatsAppButton />
+    {isLoading && <Loader />}
+  </>
+));
+
+OverlayLayer.displayName = "OverlayLayer";
+
+// ═══════════════════════════════════════════════════════════════
+//  ROUTE RENDERERS — Clean element builders
+// ═══════════════════════════════════════════════════════════════
+
+const renderPublicRoute = ({ path, component: Component, meta }) => (
+  <Route
+    key={path}
+    path={path}
+    element={
+      <PageWrapper
+        title={meta.title}
+        description={meta.description}
+        noindex={meta.noindex}
+      >
+        <Component />
+      </PageWrapper>
+    }
+  />
+);
+
+const renderProtectedRoute = ({ path, component: Component, meta }) => (
+  <Route
+    key={path}
+    path={path}
+    element={
+      <ProtectedRoute>
+        <PageWrapper
+          title={meta.title}
+          description={meta.description}
+          noindex={meta.noindex}
+        >
+          <Component />
+        </PageWrapper>
+      </ProtectedRoute>
+    }
+  />
+);
+
+// ═══════════════════════════════════════════════════════════════
+//  APP COMPONENT
+// ═══════════════════════════════════════════════════════════════
 
 function App() {
   const location = useLocation();
   const { isLoading, setIsLoading } = useApp();
 
+  // ── Dismiss loader for non-home navigations ──
   useEffect(() => {
     if (location.pathname !== "/" && isLoading) {
       setIsLoading(false);
     }
   }, [isLoading, location.pathname, setIsLoading]);
 
+  // ── Prefetch high-priority routes after initial paint ──
+  useEffect(() => {
+    prefetchRoutes();
+  }, []);
+
+  // ── Track route changes for analytics / performance ──
+  useEffect(() => {
+    const navigationEntry = performance.getEntriesByType?.("navigation")?.[0];
+    if (process.env.NODE_ENV === "development" && navigationEntry) {
+      console.debug(
+        `[Router] ${location.pathname} — DOM interactive: ${Math.round(navigationEntry.domInteractive)}ms`
+      );
+    }
+  }, [location.pathname]);
+
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        position: "relative",
-      }}
-    >
-      <Navbar />
+    <div style={styles.appShell}>
+      <Routes>
+        {/* All routes share the same layout shell */}
+        <Route element={<AppLayout />}>
+          {/* ── Public Routes ── */}
+          {publicRoutes.map(renderPublicRoute)}
 
-      <main style={{ flex: 1 }}>
-        <React.Suspense fallback={<Loader />}>
-          <Routes>
-            {/* Public */}
-            <Route
-              path="/"
-              element={
-                <PageWrapper title="Home">
-                  <Home />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/destinations"
-              element={
-                <PageWrapper title="Destinations">
-                  <Destinations />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/country/:countryId"
-              element={
-                <PageWrapper title="Country">
-                  <CountryPage />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/country/:countryId/destinations"
-              element={
-                <PageWrapper title="Country Destinations">
-                  <CountryDestinations />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/destination/:destinationId"
-              element={
-                <PageWrapper title="Destination Details">
-                  <DestinationDetail />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/tips"
-              element={
-                <PageWrapper title="Travel Tips">
-                  <Tips />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/explore"
-              element={
-                <PageWrapper title="Explore">
-                  <Explore />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/posts"
-              element={
-                <PageWrapper title="Blog Posts">
-                  <Posts />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/post/:slug"
-              element={
-                <PageWrapper title="Post Details">
-                  <PostDetail />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/interactive-map"
-              element={
-                <PageWrapper title="Interactive Map">
-                  <InteractiveMap />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/virtual-tour"
-              element={
-                <PageWrapper title="Virtual Tour">
-                  <VirtualTour />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/services"
-              element={
-                <PageWrapper title="Services">
-                  <Services />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/about"
-              element={
-                <PageWrapper title="About Us">
-                  <About />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/payment-terms"
-              element={
-                <PageWrapper title="Payment Terms">
-                  <PaymentTerms />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/team"
-              element={
-                <PageWrapper title="Our Team">
-                  <Team />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/contact"
-              element={
-                <PageWrapper title="Contact Us">
-                  <Contact />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/gallery"
-              element={
-                <PageWrapper title="Gallery">
-                  <Gallery />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/faq"
-              element={
-                <PageWrapper title="FAQ">
-                  <FAQ />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/privacy"
-              element={
-                <PageWrapper title="Privacy Policy">
-                  <PrivacyPolicy />
-                </PageWrapper>
-              }
-            />
-            <Route
-              path="/terms"
-              element={
-                <PageWrapper title="Terms of Service">
-                  <TermsOfService />
-                </PageWrapper>
-              }
-            />
+          {/* ── Protected Routes ── */}
+          {protectedRoutes.map(renderProtectedRoute)}
 
-            {/* Protected */}
-            <Route
-              path="/booking"
-              element={
-                <ProtectedRoute>
-                  <PageWrapper title="Booking">
-                    <Booking />
-                  </PageWrapper>
-                </ProtectedRoute>
-              }
-            />
+          {/* ── Smart Redirect & 404 ── */}
+          <Route path="/:pathMatch(.*)/*" element={<SmartRedirect />} />
+          <Route path="*" element={<SmartRedirect />} />
+        </Route>
+      </Routes>
 
-            <Route
-              path="/profile"
-              element={
-                <ProtectedRoute>
-                  <PageWrapper title="My Profile">
-                    <UserProfile />
-                  </PageWrapper>
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/my-bookings"
-              element={
-                <ProtectedRoute>
-                  <PageWrapper title="My Bookings">
-                    <MyBookings />
-                  </PageWrapper>
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/wishlist"
-              element={
-                <ProtectedRoute>
-                  <PageWrapper title="Wishlist">
-                    <Wishlist />
-                  </PageWrapper>
-                </ProtectedRoute>
-              }
-            />
-
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <PageWrapper title="Settings">
-                    <UserSettings />
-                  </PageWrapper>
-                </ProtectedRoute>
-              }
-            />
-
-            {/* Smart Redirect - handles typos and incorrect URLs */}
-            <Route
-              path="/:pathMatch(.*)/*"
-              element={<SmartRedirect />}
-            />
-
-            <Route
-              path="*"
-              element={
-                <PageWrapper title="Page Not Found">
-                  <NotFound />
-                </PageWrapper>
-              }
-            />
-          </Routes>
-        </React.Suspense>
-      </main>
-
-      <Footer />
-      <ScrollToTop />
-      <PersistentVideoPlayer />
-      <PersistentMapViewer />
-      <CookieConsent />
-      <AuthModal />
-      <WhatsAppButton />
-      {isLoading && <Loader />}
+      {/* ── Persistent Overlay Layer ── */}
+      <OverlayLayer isLoading={isLoading} />
     </div>
   );
 }
+
+// ═══════════════════════════════════════════════════════════════
+//  STYLES
+// ═══════════════════════════════════════════════════════════════
+
+const styles = {
+  appShell: {
+    minHeight: "100vh",
+    display: "flex",
+    flexDirection: "column",
+    position: "relative",
+    isolation: "isolate", // Creates stacking context for overlays
+  },
+  main: {
+    flex: 1,
+    display: "flex",
+    flexDirection: "column",
+  },
+};
 
 export default App;

@@ -17,7 +17,7 @@ import {
 } from "react-icons/fi";
 import { useApp } from "../../context/AppContext";
 import { useUserAuth } from "../../context/UserAuthContext";
-import logoimg from "../../assets/altuvera.png";
+import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 import { getAllDestinations } from "../../data/destinations";
 import { preloadRoute } from "../../utils/routeUtils";
 import { useCountries } from "../../hooks/useCountries";
@@ -76,7 +76,6 @@ const Navbar = () => {
         { name: "Rwanda", path: "/country/rwanda" },
         { name: "Ethiopia", path: "/country/ethiopia" },
         { name: "Djibouti", path: "/country/djibouti" },
-        { name: "Somalia", path: "/country/somalia" },
         { name: "South Africa", path: "/country/south-africa" },
       );
     }
@@ -360,8 +359,8 @@ const Navbar = () => {
             <div className="nav__logo-glow" />
             <div className="nav__logo-img-wrapper">
               <img
-                src={logoimg}
-                alt="Altuvera"
+                src={getBrandLogoUrl()}
+                alt={BRAND_LOGO_ALT}
                 className="nav__logo-img"
                 draggable={false}
               />
@@ -657,7 +656,7 @@ const Navbar = () => {
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <div className="mm__logo-img-wrapper">
-              <img src={logoimg} alt="Altuvera" className="mm__logo-img" />
+              <img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT} className="mm__logo-img" />
             </div>
             <span className="mm__logo-text">Altuvera</span>
           </Link>

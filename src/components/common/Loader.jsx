@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import logoimg from "../../assets/altuvera.png";
+import { getBrandLogoUrl } from "../../utils/seo";
 
 const Loader = () => {
   const [progress, setProgress] = useState(0);
@@ -574,10 +574,14 @@ const Loader = () => {
           ></div>
 
           <img
-            src={logoimg}
+            src={getBrandLogoUrl()}
             alt="Altuvera"
             style={styles.logo}
             className="loader-logo"
+            onError={(e) => {
+              e.currentTarget.src = getBrandLogoUrl();
+              e.currentTarget.alt = 'Altuvera';
+            }}
           />
         </div>
 

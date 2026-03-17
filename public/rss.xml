@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Altuvera Journal</title>
+    <link>https://altuvera.vercel.app/posts</link>
+    <description>Travel guides, safari tips, and stories from East Africa and beyond.</description>
+    <language>en</language>
+    <lastBuildDate>Tue, 17 Mar 2026 17:48:29 GMT</lastBuildDate>
+    <item>
+      <title>The Great Migration: Nature&apos;s Greatest Show</title>
+      <link>https://altuvera.vercel.app/post/great-migration-guide</link>
+      <guid isPermaLink="true">https://altuvera.vercel.app/post/great-migration-guide</guid>
+      <pubDate>Mon, 15 Jan 2024 00:00:00 GMT</pubDate>
+      <description>Witness millions of wildebeest and zebras traverse the Serengeti-Mara ecosystem in one of nature&apos;s most spectacular events.</description>
+      <category>Wildlife</category>
+    </item>
+    <item>
+      <title>Gorilla Trekking: A Life-Changing Experience</title>
+      <link>https://altuvera.vercel.app/post/gorilla-trekking-guide</link>
+      <guid isPermaLink="true">https://altuvera.vercel.app/post/gorilla-trekking-guide</guid>
+      <pubDate>Wed, 10 Jan 2024 00:00:00 GMT</pubDate>
+      <description>Everything you need to know about tracking mountain gorillas in Rwanda, Uganda, and the Congo.</description>
+      <category>Adventure</category>
+    </item>
+    <item>
+      <title>Climbing Kilimanjaro: Route Comparison</title>
+      <link>https://altuvera.vercel.app/post/kilimanjaro-routes</link>
+      <guid isPermaLink="true">https://altuvera.vercel.app/post/kilimanjaro-routes</guid>
+      <pubDate>Fri, 05 Jan 2024 00:00:00 GMT</pubDate>
+      <description>A comprehensive comparison of Kilimanjaro&apos;s routes to help you choose your path to the Roof of Africa.</description>
+      <category>Trekking</category>
+    </item>
+    <item>
+      <title>Zanzibar: Beyond the Beach</title>
+      <link>https://altuvera.vercel.app/post/zanzibar-beyond-beach</link>
+      <guid isPermaLink="true">https://altuvera.vercel.app/post/zanzibar-beyond-beach</guid>
+      <pubDate>Tue, 02 Jan 2024 00:00:00 GMT</pubDate>
+      <description>Discover Zanzibar&apos;s rich history, spice heritage, and cultural traditions beyond its famous beaches.</description>
+      <category>Culture</category>
+    </item>
+    <item>
+      <title>Ethiopian Coffee: A Cultural Journey</title>
+      <link>https://altuvera.vercel.app/post/ethiopian-coffee-journey</link>
+      <guid isPermaLink="true">https://altuvera.vercel.app/post/ethiopian-coffee-journey</guid>
+      <pubDate>Thu, 28 Dec 2023 00:00:00 GMT</pubDate>
+      <description>Experience the birthplace of coffee and the ceremonial traditions that have been practiced for centuries.</description>
+      <category>Culture</category>
+    </item>
+    <item>
+      <title>Maasai Culture: Traditions and Modern Life</title>
+      <link>https://altuvera.vercel.app/post/maasai-culture-traditions</link>
+      <guid isPermaLink="true">https://altuvera.vercel.app/post/maasai-culture-traditions</guid>
+      <pubDate>Mon, 25 Dec 2023 00:00:00 GMT</pubDate>
+      <description>Understanding the Maasai people - their traditions, challenges, and how to engage respectfully.</description>
+      <category>Culture</category>
+    </item>
+    <item>
+      <title>Victoria Falls: The Smoke That Thunders</title>
+      <link>https://altuvera.vercel.app/post/victoria-falls-guide</link>
+      <guid isPermaLink="true">https://altuvera.vercel.app/post/victoria-falls-guide</guid>
+      <pubDate>Wed, 20 Dec 2023 00:00:00 GMT</pubDate>
+      <description>Explore one of the Seven Natural Wonders of the World and the adrenaline activities that surround it.</description>
+      <category>Adventure</category>
+    </item>
+    <item>
+      <title>Okavango Delta: Safari by Water</title>
+      <link>https://altuvera.vercel.app/post/okavango-delta-safari</link>
+      <guid isPermaLink="true">https://altuvera.vercel.app/post/okavango-delta-safari</guid>
+      <pubDate>Mon, 18 Dec 2023 00:00:00 GMT</pubDate>
+      <description>Navigate the world&apos;s largest inland delta in traditional mokoro canoes for an intimate wildlife experience.</description>
+      <category>Wildlife</category>
+    </item>
+    <item>
+      <title>Namibia&apos;s Desert Elephants: Desert Survivors</title>
+      <link>https://altuvera.vercel.app/post/namibia-desert-elephants</link>
+      <guid isPermaLink="true">https://altuvera.vercel.app/post/namibia-desert-elephants</guid>
+      <pubDate>Fri, 15 Dec 2023 00:00:00 GMT</pubDate>
+      <description>Discover the remarkable adaptations of elephants living in one of the world&apos;s harshest environments.</description>
+      <category>Wildlife</category>
+    </item>
+    <item>
+      <title>Lalibela: Ethiopia&apos;s Rock-Hewn Churches</title>
+      <link>https://altuvera.vercel.app/post/lalibela-churches-guide</link>
+      <guid isPermaLink="true">https://altuvera.vercel.app/post/lalibela-churches-guide</guid>
+      <pubDate>Tue, 12 Dec 2023 00:00:00 GMT</pubDate>
+      <description>Journey to the medieval marvel where churches were carved from solid rock 800 years ago.</description>
+      <category>Culture</category>
+    </item>
+    <item>
+      <title>Big Five Safari: The Ultimate Guide</title>
+      <link>https://altuvera.vercel.app/post/big-five-safari-guide</link>
+      <guid isPermaLink="true">https://altuvera.vercel.app/post/big-five-safari-guide</guid>
+      <pubDate>Fri, 08 Dec 2023 00:00:00 GMT</pubDate>
+      <description>Everything you need to know about spotting Africa&apos;s most iconic animals: lion, leopard, elephant, rhino, and buffalo.</description>
+      <category>Wildlife</category>
+    </item>
+    <item>
+      <title>Table Mountain: Hiking Cape Town&apos;s Icon</title>
+      <link>https://altuvera.vercel.app/post/table-mountain-hiking</link>
+      <guid isPermaLink="true">https://altuvera.vercel.app/post/table-mountain-hiking</guid>
+      <pubDate>Tue, 05 Dec 2023 00:00:00 GMT</pubDate>
+      <description>Conquer Cape Town&apos;s flat-topped mountain with our complete guide to routes, safety, and spectacular views.</description>
+      <category>Trekking</category>
+    </item>
+    <item>
+      <title>Kruger National Park: Self-Drive Safari Tips</title>
+      <link>https://altuvera.vercel.app/post/kruger-self-drive-safari</link>
+      <guid isPermaLink="true">https://altuvera.vercel.app/post/kruger-self-drive-safari</guid>
+      <pubDate>Fri, 01 Dec 2023 00:00:00 GMT</pubDate>
+      <description>Plan the perfect self-drive safari in South Africa&apos;s premier wildlife destination with insider tips and route suggestions.</description>
+      <category>Wildlife</category>
+    </item>
+    <item>
+      <title>Marrakech: A Sensory Journey</title>
+      <link>https://altuvera.vercel.app/post/marrakech-travel-guide</link>
+      <guid isPermaLink="true">https://altuvera.vercel.app/post/marrakech-travel-guide</guid>
+      <pubDate>Tue, 28 Nov 2023 00:00:00 GMT</pubDate>
+      <description>Navigate the bustling souks, historic palaces, and vibrant street life of Morocco&apos;s most captivating city.</description>
+      <category>Culture</category>
+    </item>
+    <item>
+      <title>Sahara Desert: Camel Trekking Adventure</title>
+      <link>https://altuvera.vercel.app/post/sahara-camel-trekking</link>
+      <guid isPermaLink="true">https://altuvera.vercel.app/post/sahara-camel-trekking</guid>
+      <pubDate>Sat, 25 Nov 2023 00:00:00 GMT</pubDate>
+      <description>Experience the magic of the world&apos;s largest hot desert with an unforgettable camel trek under star-filled skies.</description>
+      <category>Adventure</category>
+    </item>
+    <item>
+      <title>Rwanda: Land of a Thousand Hills</title>
+      <link>https://altuvera.vercel.app/post/rwanda-travel-guide</link>
+      <guid isPermaLink="true">https://altuvera.vercel.app/post/rwanda-travel-guide</guid>
+      <pubDate>Wed, 22 Nov 2023 00:00:00 GMT</pubDate>
+      <description>Explore Rwanda&apos;s remarkable transformation, stunning landscapes, and commitment to conservation.</description>
+      <category>Culture</category>
+    </item>
+    <item>
+      <title>Ngorongoro Crater: Africa&apos;s Garden of Eden</title>
+      <link>https://altuvera.vercel.app/post/ngorongoro-crater-safari</link>
+      <guid isPermaLink="true">https://altuvera.vercel.app/post/ngorongoro-crater-safari</guid>
+      <pubDate>Sat, 18 Nov 2023 00:00:00 GMT</pubDate>
+      <description>Descend into the world&apos;s largest intact volcanic caldera for exceptional wildlife viewing in a unique ecosystem.</description>
+      <category>Wildlife</category>
+    </item>
+    <item>
+      <title>Seychelles: Island Paradise Guide</title>
+      <link>https://altuvera.vercel.app/post/seychelles-island-guide</link>
+      <guid isPermaLink="true">https://altuvera.vercel.app/post/seychelles-island-guide</guid>
+      <pubDate>Wed, 15 Nov 2023 00:00:00 GMT</pubDate>
+      <description>Discover pristine beaches, unique wildlife, and world-class diving in this Indian Ocean archipelago.</description>
+      <category>Beach</category>
+    </item>
+  </channel>
+</rss>

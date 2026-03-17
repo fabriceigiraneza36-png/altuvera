@@ -55,6 +55,7 @@ import AnimatedSection from "../components/common/AnimatedSection";
 import Button from "../components/common/Button";
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 import { useApp } from "../context/AppContext";
+import { sendVerificationCode, verifyCode } from "../utils/verifyEmail";
 import { testimonials } from "../data/testimonials";
 import { services } from "../data/services";
 import { posts } from "../data/posts";
@@ -818,25 +819,46 @@ const Home = () => {
   }, []);
 
   const handleNewsletter = useCallback(
-    (e) => {
+    async (e) => {
       e.preventDefault();
-      if (email) {
-        setIsSubscribed(true);
-        setShowConfetti(true);
-        setEmail("");
+      if (!email) return;
 
-        // If not logged in, suggest login/register and pre-fill email
-        if (!isAuthenticated) {
-          sessionStorage.setItem("pending_subscription_email", email);
-          // We could redirect here or just show a message.
-          // The user said: "allow subscription for unlogged in users, we will send them confirmation to their email so they can login and then their credentails (username and email) will be autofilled in our auth system"
-          // This implies we should maybe show a success message first.
+      try {
+        // Send OTP to user email
+        const { verificationId } = await sendVerificationCode({
+          email,
+          purpose: "newsletter",
+        });
+
+        const code = window.prompt(
+          "A verification code has been sent to your email. Please enter it to confirm subscription."
+        );
+
+        if (!code) {
+          return;
         }
 
-        setTimeout(() => setShowConfetti(false), 5000);
+        await verifyCode({ email, verificationId, code });
+
+        // Subscribe after verification
+        const result = await sendMessage({
+          type: "newsletter",
+          data: { email },
+        });
+
+        if (result.success) {
+          setIsSubscribed(true);
+          setShowConfetti(true);
+          setEmail("");
+          setTimeout(() => setShowConfetti(false), 5000);
+        } else {
+          window.alert(result.error || "Subscription failed. Please try again.");
+        }
+      } catch (err) {
+        window.alert(err?.message || "Verification failed. Please try again.");
       }
     },
-    [email, isAuthenticated],
+    [email],
   );
 
   const getDestImg = useCallback(
@@ -928,7 +950,7 @@ const Home = () => {
         title: "Safari Adventures",
         description:
           "Witness Africa's incredible wildlife in their natural habitat across stunning national parks and vast golden savannahs stretching to the horizon.",
-        count: "50+ Safaris",
+        count: "5+ Safaris",
         color: "#F59E0B",
         image:
           services?.[0]?.image ||

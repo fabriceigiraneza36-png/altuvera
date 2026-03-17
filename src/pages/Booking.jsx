@@ -57,6 +57,7 @@ import {
 } from "framer-motion";
 import PageHeader from "../components/common/PageHeader";
 import AnimatedSection from "../components/common/AnimatedSection";
+import PackageChecklist from "../components/common/PackageChecklist";
 import Button from "../components/common/Button";
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 import { countries as countriesData } from "../data/countries";
@@ -3741,6 +3742,22 @@ Please provide a personalized quote and itinerary. Thank you!`;
                 </motion.div>
               </form>
             </GlassCard>
+          </AnimatedSection>
+
+          {/* Package checklist & expenses (AI-powered) */}
+          <AnimatedSection animation="fadeInUp" delay={0.15}>
+            <div style={{ maxWidth: 920, margin: '0 auto' }}>
+              <PackageChecklist
+                tourData={{
+                  tourName: formData.tripType || 'Custom Tour',
+                  destination: formData.destination || 'East Africa',
+                  duration: `${formData.startDate || ''} - ${formData.endDate || ''}`,
+                  startDate: formData.startDate,
+                  endDate: formData.endDate,
+                }}
+                userInfo={{ name: formData.name, email: formData.email, phone: formData.phone }}
+              />
+            </div>
           </AnimatedSection>
 
           {/* Trust badges */}

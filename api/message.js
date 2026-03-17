@@ -3,7 +3,39 @@ import nodemailer from 'nodemailer';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  const { type, name, email, subject, message, ...rest } = req.body || {};
+
+  let body = req.body;
+  if (typeof body === 'string') {
+    try {
+      body = JSON.parse(body);
+    } catch {
+      return res.status(400).json({ error: 'Invalid JSON body' });
+    }
+  }
+
+  const { type, name, email, subject, message, ...rest } = body || {};
+
+  const requiredEnv = [
+    'SMTP_HOST',
+    'SMTP_PORT',
+    'SMTP_USER',
+    'SMTP_PASS',
+    'EMAIL_FROM',
+    'ADMIN_EMAIL',
+  ];
+  const missingEnv = requiredEnv.filter((k) => !process.env[k]);
+  if (missingEnv.length) {
+    // In development, allow a graceful fallback so local testing works without SMTP.
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('SMTP config missing, falling back to console log for development:', missingEnv);
+      console.log('Simulated message payload:', { type, name, email, subject, message, rest });
+      return res.status(200).json({ ok: true, note: 'development-fallback' });
+    }
+
+    return res
+      .status(500)
+      .json({ error: `Server email is not configured (missing: ${missingEnv.join(', ')})` });
+  }
 
   // Compose admin email
   const adminHtml = `

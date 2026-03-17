@@ -513,6 +513,11 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
       "https://i.pinimg.com/736x/36/4d/98/364d98d68e705c5e2e4c7f97f21d07e4.jpg",
       "https://i.pinimg.com/1200x/be/14/aa/be14aa92f392ed009b4df8f607035770.jpg",
       "https://i.pinimg.com/736x/ab/27/44/ab27441b5068194670a5f2272c289225.jpg",
+      "https://images.unsplash.com/photo-1508609349937-5ec4ae374ebf?w=1200",
+      "https://images.unsplash.com/photo-1482192596544-9eb780fc7f66?w=1200",
+      "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1200",
+      "https://images.unsplash.com/photo-1526772662000-3f88f10405ff?w=1200",
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=1200"
     ],
 
     heroImage:
@@ -1119,6 +1124,11 @@ Julius Nyerere, Tanzania's founding president known as Mwalimu (Teacher), pursue
       "https://images.unsplash.com/photo-1473116763249-2faaef81ccda?w=800",
       "https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=800",
       "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=800",
+      "https://images.unsplash.com/photo-1508672019048-805c876b67e2?w=800",
+      "https://images.unsplash.com/photo-1505575967452-52b2e50c1f3b?w=800",
+      "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?w=800",
+      "https://images.unsplash.com/photo-1519681393784-d120267933ba?w=800",
+      "https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?w=800"
     ],
 
     heroImage:

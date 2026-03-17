@@ -8,6 +8,7 @@ import React, {
   useContext,
 } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import {
   FiMapPin,
   FiStar,
@@ -96,6 +97,7 @@ import {
   useDestination,
 } from "../hooks/useDestinations";
 import { useWishlist } from "../hooks/useWishlist";
+import { getBrandLogoUrl, toAbsoluteUrl, toMetaDescription } from "../utils/seo";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DESIGN SYSTEM & THEME
@@ -6036,72 +6038,134 @@ const DestinationDetailContent = () => {
   // Not found state
   if (!destination) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-          padding: THEME.spacing[8],
-          backgroundColor: THEME.colors.primary[50],
-          textAlign: "center",
-        }}
-      >
+      <>
+        <Helmet>
+          <title>Destination Not Found | Altuvera</title>
+          <meta name="robots" content="noindex, follow" />
+          <link rel="canonical" href={toAbsoluteUrl(`/destination/${destinationId}`)} />
+        </Helmet>
         <div
           style={{
-            width: 120,
-            height: 120,
-            borderRadius: THEME.borderRadius.full,
-            background: THEME.colors.gradient.primary,
+            minHeight: "100vh",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            marginBottom: THEME.spacing[8],
-            animation: "float 3s ease-in-out infinite",
-            boxShadow: THEME.shadows.glow,
+            flexDirection: "column",
+            padding: THEME.spacing[8],
+            backgroundColor: THEME.colors.primary[50],
+            textAlign: "center",
           }}
         >
-          <FiAlertTriangle size={48} color={THEME.colors.neutral[0]} />
+          <div
+            style={{
+              width: 120,
+              height: 120,
+              borderRadius: THEME.borderRadius.full,
+              background: THEME.colors.gradient.primary,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              marginBottom: THEME.spacing[8],
+              animation: "float 3s ease-in-out infinite",
+              boxShadow: THEME.shadows.glow,
+            }}
+          >
+            <FiAlertTriangle size={48} color={THEME.colors.neutral[0]} />
+          </div>
+          <h1
+            style={{
+              fontFamily: THEME.typography.fontFamily.heading,
+              fontSize: isMobile
+                ? THEME.typography.fontSize["3xl"]
+                : THEME.typography.fontSize["5xl"],
+              fontWeight: THEME.typography.fontWeight.bold,
+              color: THEME.colors.neutral[900],
+              marginBottom: THEME.spacing[4],
+              animation: "fadeInUp 0.6s ease forwards",
+            }}
+          >
+            Destination Not Found
+          </h1>
+          <p
+            style={{
+              fontSize: THEME.typography.fontSize.lg,
+              color: THEME.colors.neutral[600],
+              marginBottom: THEME.spacing[8],
+              maxWidth: 450,
+              lineHeight: THEME.typography.lineHeight.relaxed,
+              animation: "fadeInUp 0.6s ease 0.1s both",
+            }}
+          >
+            The destination you're looking for doesn't exist or may have been
+            moved.
+          </p>
+          <div style={{ animation: "fadeInUp 0.6s ease 0.2s both" }}>
+            <Button to="/destinations" size="lg" icon={<FiCompass size={20} />}>
+              Explore All Destinations
+            </Button>
+          </div>
         </div>
-        <h1
-          style={{
-            fontFamily: THEME.typography.fontFamily.heading,
-            fontSize: isMobile
-              ? THEME.typography.fontSize["3xl"]
-              : THEME.typography.fontSize["5xl"],
-            fontWeight: THEME.typography.fontWeight.bold,
-            color: THEME.colors.neutral[900],
-            marginBottom: THEME.spacing[4],
-            animation: "fadeInUp 0.6s ease forwards",
-          }}
-        >
-          Destination Not Found
-        </h1>
-        <p
-          style={{
-            fontSize: THEME.typography.fontSize.lg,
-            color: THEME.colors.neutral[600],
-            marginBottom: THEME.spacing[8],
-            maxWidth: 450,
-            lineHeight: THEME.typography.lineHeight.relaxed,
-            animation: "fadeInUp 0.6s ease 0.1s both",
-          }}
-        >
-          The destination you're looking for doesn't exist or may have been
-          moved.
-        </p>
-        <div style={{ animation: "fadeInUp 0.6s ease 0.2s both" }}>
-          <Button to="/destinations" size="lg" icon={<FiCompass size={20} />}>
-            Explore All Destinations
-          </Button>
-        </div>
-      </div>
+      </>
     );
   }
 
   return (
     <>
+      <Helmet>
+        <title>{`${destination.name} | Altuvera`}</title>
+        <meta
+          name="description"
+          content={toMetaDescription(destination.description || destination.fullDescription || "")}
+        />
+        <link rel="canonical" href={toAbsoluteUrl(`/destination/${destinationId}`)} />
+
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={`${destination.name} | Altuvera`} />
+        <meta
+          property="og:description"
+          content={toMetaDescription(destination.description || destination.fullDescription || "")}
+        />
+        <meta property="og:url" content={toAbsoluteUrl(`/destination/${destinationId}`)} />
+        <meta
+          property="og:image"
+          content={(destination.images && destination.images[0]) || getBrandLogoUrl()}
+        />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${destination.name} | Altuvera`} />
+        <meta
+          name="twitter:description"
+          content={toMetaDescription(destination.description || destination.fullDescription || "")}
+        />
+        <meta
+          name="twitter:image"
+          content={(destination.images && destination.images[0]) || getBrandLogoUrl()}
+        />
+
+        <script type="application/ld+json">
+          {JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "TouristAttraction",
+            name: destination.name,
+            description: destination.description,
+            url: toAbsoluteUrl(`/destination/${destinationId}`),
+            image: Array.isArray(destination.images)
+              ? destination.images.slice(0, 3)
+              : undefined,
+            geo: destination.coordinates
+              ? {
+                  "@type": "GeoCoordinates",
+                  latitude: destination.coordinates.lat,
+                  longitude: destination.coordinates.lng,
+                }
+              : undefined,
+            isLocatedIn: country?.name
+              ? { "@type": "Country", name: country.name }
+              : undefined,
+          })}
+        </script>
+      </Helmet>
+
       {/* Back Navigation */}
       <Link
         to="/destinations"

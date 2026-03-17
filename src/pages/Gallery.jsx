@@ -59,6 +59,8 @@ import {
 import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useGallery } from "../hooks/useGallery";
+import { BRAND_LOGO_ALT, getBrandLogoUrl } from "../utils/seo";
+import PackageChecklist from '../components/common/PackageChecklist';
 
 /* ═══════════════════════════════════════════════════════
    CONSTANTS & CONFIGURATION
@@ -1877,16 +1879,20 @@ StatCard.displayName = "StatCard";
 const HeroSlideshow = memo(({ images, activeIndex, onSlideChange }) => {
   return (
     <div style={{ position: "absolute", inset: 0 }}>
-      {images.map((img, idx) => (
-        <div
-          key={idx}
-          className={`gl-slide ${idx === activeIndex ? "active" : ""}`}
-          style={{ backgroundImage: `url(${img.url})` }}
-          role="img"
-          aria-label={img.alt}
-          aria-hidden={idx !== activeIndex}
-        />
-      ))}
+      {images.map((img, idx) => {
+        const url = img?.url || getBrandLogoUrl();
+        const alt = img?.alt || BRAND_LOGO_ALT;
+        return (
+          <div
+            key={idx}
+            className={`gl-slide ${idx === activeIndex ? "active" : ""}`}
+            style={{ backgroundImage: `url(${url})` }}
+            role="img"
+            aria-label={alt}
+            aria-hidden={idx !== activeIndex}
+          />
+        );
+      })}
     </div>
   );
 });
@@ -1983,11 +1989,15 @@ const GalleryCard = memo(
               </div>
             ) : (
               <img
-                src={image.src}
-                alt={image.title}
+                src={image.src || getBrandLogoUrl()}
+                alt={image.title || BRAND_LOGO_ALT}
                 loading="lazy"
                 onLoad={() => setLoaded(true)}
-                onError={() => setError(true)}
+                onError={(e) => {
+                  setError(true);
+                  e.currentTarget.src = getBrandLogoUrl();
+                  e.currentTarget.alt = BRAND_LOGO_ALT;
+                }}
                 style={{
                   width: "100%",
                   height: 140,
@@ -2687,11 +2697,15 @@ const Lightbox = memo(
         {/* Image */}
         <img
           ref={imageRef}
-          src={currentImage?.src}
-          alt={currentImage?.title}
+          src={currentImage?.src || getBrandLogoUrl()}
+          alt={currentImage?.title || BRAND_LOGO_ALT}
           className={`gl-lightbox-image ${zoom > 1 ? "zoomed" : ""} ${isDragging ? "dragging" : ""}`}
           onClick={(e) => e.stopPropagation()}
           onLoad={() => setLoaded(true)}
+          onError={(e) => {
+            e.currentTarget.src = getBrandLogoUrl();
+            e.currentTarget.alt = BRAND_LOGO_ALT;
+          }}
           onMouseDown={handleMouseDown}
           onDoubleClick={handleZoomIn}
           style={{
@@ -2751,8 +2765,8 @@ const Lightbox = memo(
             {images.map((img, idx) => (
               <img
                 key={img.id}
-                src={img.thumb || img.src}
-                alt={img.title}
+                src={img.thumb || img.src || getBrandLogoUrl()}
+                alt={img.title || BRAND_LOGO_ALT}
                 className={`gl-lightbox-thumb ${idx === activeIndex ? "active" : ""}`}
                 onClick={() => {
                   // Navigate to this image
@@ -2764,6 +2778,10 @@ const Lightbox = memo(
                   }
                 }}
                 loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.src = getBrandLogoUrl();
+                  e.currentTarget.alt = BRAND_LOGO_ALT;
+                }}
               />
             ))}
           </div>
@@ -3609,7 +3627,11 @@ const Gallery = () => {
           content="Explore breathtaking photos of East African wildlife, landscapes, and culture."
         />
         <meta property="og:type" content="website" />
+        <meta property="og:image" content={getBrandLogoUrl()} />
+        <meta property="og:image:alt" content={BRAND_LOGO_ALT} />
         <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={getBrandLogoUrl()} />
+        <meta name="twitter:image:alt" content={BRAND_LOGO_ALT} />
       </Helmet>
 
       <style>{styles}</style>
@@ -3718,6 +3740,10 @@ const Gallery = () => {
                 }}
               />
             ))}
+          </div>
+
+          <div style={{ marginTop: 20 }}>
+            <PackageChecklist tourData={{ tourName: 'Gallery Highlights' }} className="gallery-checklist" />
           </div>
         </div>
       </div>

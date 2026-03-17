@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import logoimg from "../../assets/altuvera.png";
+import { getBrandLogoUrl } from "../../utils/seo";
 import {
   FiFacebook,
   FiTwitter,
@@ -417,7 +417,7 @@ const Footer = () => {
             >
               <div style={styles.logoWrapper}>
                 <div className="footer-logo-glow" style={styles.logoGlow}></div>
-                <img src={logoimg} alt="Altuvera logo" style={styles.logoImg} />
+                <img src={getBrandLogoUrl()} alt="Altuvera logo" style={styles.logoImg} onError={(e) => { e.currentTarget.src = getBrandLogoUrl(); }} />
               </div>
               <span style={styles.logoText}>Altuvera</span>
             </Link>

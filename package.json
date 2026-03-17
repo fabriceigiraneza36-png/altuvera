@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "seo:generate": "node scripts/generate-seo.mjs",
+    "build": "npm run seo:generate && vite build",
     "lint": "eslint \"src/**/*.{js,jsx}\" --report-unused-disable-directives --max-warnings 1000",
     "preview": "vite preview"
   },
@@ -14,8 +15,11 @@
     "@tailwindcss/vite": "^4.2.1",
     "canvas-confetti": "^1.9.4",
     "framer-motion": "^10.18.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.575.0",
+    "nodemailer": "^6.10.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-helmet-async": "^2.0.5",

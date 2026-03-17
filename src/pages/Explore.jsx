@@ -1,3 +1,4 @@
+// pages/Explore.jsx
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -30,8 +31,8 @@ import PageHeader from '../components/common/PageHeader';
 import AnimatedSection from '../components/common/AnimatedSection';
 import Button from '../components/common/Button';
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
+import ExperienceCard from '../components/common/ExperienceCard';
 import { countries } from '../data/countries';
-import { useWishlist } from "../hooks/useWishlist";
 
 /* ===================================================================
    DESIGN TOKENS — GREEN & WHITE PALETTE
@@ -136,7 +137,6 @@ const FEATURED_EXPERIENCES = [
     description:
       "Witness millions of wildebeest cross the Mara River in nature's greatest spectacle. Traverse the vast Serengeti plains alongside predators and prey in an ecosystem unchanged for millennia.",
     category: 'safari',
-
     rating: 4.9,
     reviewCount: 124,
     highlights: ['Mara River Crossing', 'Luxury Camps', 'Hot Air Balloon'],
@@ -157,9 +157,7 @@ const FEATURED_EXPERIENCES = [
     description:
       'Face-to-face encounters with endangered mountain gorillas in their misty volcanic habitat. Trek through bamboo forests and sit among gentle giants.',
     category: 'wildlife',
-   
     rating: 5.0,
-
     reviewCount: 89,
     highlights: ['Gorilla Families', 'Volcano Hikes', 'Conservation'],
     groupSize: '2-6',
@@ -179,7 +177,6 @@ const FEATURED_EXPERIENCES = [
     description:
       "Conquer Africa's highest peak through five distinct climate zones. From lush rainforest to arctic summit, a truly unforgettable adventure.",
     category: 'adventure',
-
     rating: 4.8,
     reviewCount: 156,
     highlights: ['Uhuru Peak', '5 Climate Zones', 'Expert Guides'],
@@ -200,7 +197,6 @@ const FEATURED_EXPERIENCES = [
     description:
       "Turquoise waters, white-sand beaches, and the intoxicating aroma of spice gardens. Explore Stone Town's winding alleys and dive into pristine coral reefs.",
     category: 'beach',
-
     rating: 4.7,
     reviewCount: 203,
     highlights: ['Stone Town', 'Spice Tours', 'Snorkeling'],
@@ -221,7 +217,6 @@ const FEATURED_EXPERIENCES = [
     description:
       'Live among the legendary Masai warriors. Learn ancient traditions, participate in ceremonies, craft beadwork, and understand the bond between people and land.',
     category: 'cultural',
-
     rating: 4.9,
     reviewCount: 67,
     highlights: ['Village Stay', 'Traditional Dance', 'Beadwork'],
@@ -242,7 +237,6 @@ const FEATURED_EXPERIENCES = [
     description:
       'The ultimate luxury safari. Private game drives in custom 4x4s, five-star lodges with infinity pools, gourmet bush dinners under a canopy of stars.',
     category: 'safari',
-  
     rating: 5.0,
     reviewCount: 45,
     highlights: ['Private Drives', '5-Star Lodge', 'Bush Dinner'],
@@ -413,7 +407,6 @@ const MAX_COUNTRIES = 6;
 /* ===================================================================
    HELPERS
    =================================================================== */
-
 
 const renderStars = (rating) =>
   Array.from({ length: 5 }, (_, i) => (
@@ -934,276 +927,6 @@ function GalleryShowcase({ data }) {
         ))}
       </div>
     </div>
-  );
-}
-
-/* ---- Experience Card ---- */
-
-function ExperienceCard({ exp, index }) {
-  const [hovered, setHovered] = useState(false);
-  const { loadWishlist, toggleWishlist, isWishlisted } = useWishlist();
-  const expKey = exp?._id || exp?.id || exp?.slug;
-  const liked = isWishlisted(expKey);
-
-  useEffect(() => {
-    loadWishlist();
-  }, [loadWishlist]);
-
-
-  return (
-    <article
-      style={{
-        borderRadius: 24,
-        overflow: 'hidden',
-        backgroundColor: W.pure,
-        boxShadow: hovered
-          ? '0 24px 56px rgba(22,163,74,0.18)'
-          : '0 4px 24px rgba(0,0,0,0.06)',
-        transition: 'all 0.45s cubic-bezier(0.4,0,0.2,1)',
-        transform: hovered ? 'translateY(-10px)' : 'none',
-        border: '1px solid ' + (hovered ? G[200] : N[100]),
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div style={{ position: 'relative' }}>
-        <SlideshowCard
-          images={exp.images}
-          height={280}
-          borderRadius={0}
-          overlay={false}
-        >
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background:
-                'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.35) 100%)',
-            }}
-          />
-        </SlideshowCard>
-
-        <div
-          style={{
-            position: 'absolute',
-            top: 16,
-            left: 16,
-            right: 16,
-            display: 'flex',
-            justifyContent: 'space-between',
-            zIndex: 6,
-          }}
-        >
-          <div style={{ display: 'flex', gap: 6 }}>
-            {exp.featured && (
-              <span
-                style={{
-                  padding: '5px 14px',
-                  background: 'linear-gradient(135deg,' + G[600] + ',' + G[500] + ')',
-                  borderRadius: 30,
-                  fontSize: 11,
-                  fontWeight: 700,
-                  color: W.pure,
-                  textTransform: 'uppercase',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                }}
-              >
-                <FiAward size={11} /> Featured
-              </span>
-            )}
-
-          </div>
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              toggleWishlist(expKey);
-            }}
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: '50%',
-              border: 'none',
-              backgroundColor: liked
-                ? G[600]
-                : 'rgba(255,255,255,0.25)',
-              backdropFilter: 'blur(8px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              zIndex: 7,
-            }}
-            aria-label={
-              liked ? 'Remove from wishlist' : 'Add to wishlist'
-            }
-          >
-            <FiHeart
-              size={16}
-              style={{
-                color: W.pure,
-                fill: liked ? W.pure : 'transparent',
-              }}
-            />
-          </button>
-        </div>
-      </div>
-
-      <div style={{ padding: '24px 28px 28px' }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            marginBottom: 10,
-          }}
-        >
-          <FiMapPin size={13} color={G[600]} />
-          <span
-            style={{ fontSize: 13, color: G[700], fontWeight: 600 }}
-          >
-            {exp.location}
-          </span>
-        </div>
-
-        <h3
-          style={{
-            fontFamily: "'Playfair Display', Georgia, serif",
-            fontSize: 22,
-            fontWeight: 700,
-            color: N[900],
-            marginBottom: 10,
-            lineHeight: 1.3,
-          }}
-        >
-          {exp.title}
-        </h3>
-
-        <p
-          style={{
-            fontSize: 14,
-            color: N[500],
-            lineHeight: 1.7,
-            marginBottom: 16,
-            display: '-webkit-box',
-            WebkitLineClamp: 3,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}
-        >
-          {exp.description}
-        </p>
-
-        <div
-          style={{
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: 6,
-            marginBottom: 18,
-          }}
-        >
-          {exp.highlights.map((hl, i) => (
-            <span
-              key={i}
-              style={{
-                padding: '4px 12px',
-                borderRadius: 20,
-                backgroundColor: G[50],
-                color: G[800],
-                fontSize: 12,
-                fontWeight: 600,
-                border: '1px solid ' + G[200],
-              }}
-            >
-              {hl}
-            </span>
-          ))}
-        </div>
-
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8,
-            marginBottom: 18,
-          }}
-        >
-          <div style={{ display: 'flex', gap: 2 }}>
-            {renderStars(exp.rating)}
-          </div>
-          <span
-            style={{ fontSize: 14, fontWeight: 700, color: G[700] }}
-          >
-            {exp.rating}
-          </span>
-          <span style={{ fontSize: 13, color: N[400] }}>
-            ({exp.reviewCount} reviews)
-          </span>
-        </div>
-
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingTop: 18,
-            borderTop: '1px solid ' + N[100],
-          }}
-        >
-          <div style={{ display: 'flex', gap: 14 }}>
-            <span
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                fontSize: 13,
-                color: N[500],
-                fontWeight: 500,
-              }}
-            >
-              <FiClock size={13} color={G[600]} /> {exp.duration}
-            </span>
-            <span
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 5,
-                fontSize: 13,
-                color: N[500],
-                fontWeight: 500,
-              }}
-            >
-              <FiUsers size={13} color={G[600]} /> {exp.groupSize}
-            </span>
-          </div>
-
-        </div>
-
-        <Link
-          to={'/booking?experience=' + exp.id}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 8,
-            marginTop: 20,
-            padding: '14px 0',
-            borderRadius: 16,
-            backgroundColor: hovered ? G[700] : G[600],
-            color: W.pure,
-            textDecoration: 'none',
-            fontSize: 15,
-            fontWeight: 700,
-            transition: 'background-color 0.3s',
-          }}
-        >
-          View Details <FiArrowRight size={16} />
-        </Link>
-      </div>
-    </article>
   );
 }
 
@@ -2137,7 +1860,7 @@ function Explore() {
                 animation="fadeInUp"
                 delay={i * 0.08}
               >
-                <ExperienceCard exp={exp} index={i} />
+                <ExperienceCard experience={exp} />
               </AnimatedSection>
             ))}
           </div>
@@ -2355,7 +2078,6 @@ function Explore() {
           </div>
         </div>
       </section>
-
       {/* ============ EDITORIAL — RESPONSIBLE TRAVEL ============ */}
       <section style={{ padding: pad }}>
         <div style={{ ...box, maxWidth: 900, textAlign: 'center' }}>

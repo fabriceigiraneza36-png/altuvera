@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import {
   FiCalendar,
   FiClock,
@@ -42,6 +43,7 @@ import PageHeader from '../components/common/PageHeader';
 import AnimatedSection from '../components/common/AnimatedSection';
 import Button from '../components/common/Button';
 import { posts } from '../data/posts';
+import { getBrandLogoUrl, toAbsoluteUrl, toMetaDescription } from '../utils/seo';
 
 /* ═══════════════════════════════════════════════════════
    GLOBAL STYLES
@@ -1080,10 +1082,69 @@ const PostDetail = () => {
   const estimatedMin = post ? parseInt(post.readTime) || 5 : 5;
   const minutesLeft = Math.max(1, Math.round(estimatedMin * (1 - readingProgress / 100)));
 
-  if (!post) return <NotFound />;
+  if (!post) {
+    return (
+      <>
+        <Helmet>
+          <title>Article Not Found | Altuvera</title>
+          <meta name="robots" content="noindex, follow" />
+          <link rel="canonical" href={toAbsoluteUrl(`/post/${slug}`)} />
+        </Helmet>
+        <NotFound />
+      </>
+    );
+  }
 
   return (
     <div style={{ backgroundColor: 'var(--pd-off-white)' }}>
+      <Helmet>
+        <title>{`${post.title} | Altuvera`}</title>
+        <meta name="description" content={toMetaDescription(post.excerpt || '')} />
+        <link rel="canonical" href={toAbsoluteUrl(`/post/${slug}`)} />
+
+        <meta property="og:type" content="article" />
+        <meta property="og:title" content={`${post.title} | Altuvera`} />
+        <meta
+          property="og:description"
+          content={toMetaDescription(post.excerpt || '')}
+        />
+        <meta property="og:url" content={toAbsoluteUrl(`/post/${slug}`)} />
+        <meta property="og:image" content={post.image || getBrandLogoUrl()} />
+
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={`${post.title} | Altuvera`} />
+        <meta
+          name="twitter:description"
+          content={toMetaDescription(post.excerpt || '')}
+        />
+        <meta
+          name="twitter:image"
+          content={post.image || getBrandLogoUrl()}
+        />
+
+        <script type="application/ld+json">
+          {JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BlogPosting',
+            headline: post.title,
+            description: post.excerpt,
+            image: post.image ? [post.image] : undefined,
+            datePublished: post.date,
+            author: post.author
+              ? { '@type': 'Person', name: post.author }
+              : undefined,
+            mainEntityOfPage: {
+              '@type': 'WebPage',
+              '@id': toAbsoluteUrl(`/post/${slug}`),
+            },
+            publisher: {
+              '@type': 'Organization',
+              name: 'Altuvera',
+              logo: { '@type': 'ImageObject', url: getBrandLogoUrl() },
+            },
+          })}
+        </script>
+      </Helmet>
       <style>{globalStyles}</style>
 
       {/* ── Reading Progress Bar ── */}

@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FiChevronDown, FiSearch, FiMessageCircle, FiHelpCircle } from 'react-icons/fi';
+import { Helmet } from 'react-helmet-async';
 import PageHeader from '../components/common/PageHeader';
 import AnimatedSection from '../components/common/AnimatedSection';
 import Button from '../components/common/Button';
+import { toAbsoluteUrl } from '../utils/seo';
 
 const FAQ = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -139,8 +141,25 @@ const FAQ = () => {
     );
   };
 
+  const faqJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map((f) => ({
+      '@type': 'Question',
+      name: f.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: f.answer,
+      },
+    })),
+  };
+
   return (
     <div>
+      <Helmet>
+        <link rel="canonical" href={toAbsoluteUrl('/faq')} />
+        <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
+      </Helmet>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 

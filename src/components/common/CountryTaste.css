@@ -1,0 +1,6 @@
+.ct-section{padding:22px 0}
+.ct-title{font-size:20px;margin-bottom:12px;color:#0f172a}
+.ct-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px}
+.ct-card{background:white;border-radius:12px;padding:14px;border:1px solid #e6f4ee;box-shadow:0 6px 24px rgba(2,6,23,0.04)}
+.ct-card h4{margin:0 0 8px;font-size:16px}
+.ct-card p{margin:0;color:#475569;line-height:1.5}

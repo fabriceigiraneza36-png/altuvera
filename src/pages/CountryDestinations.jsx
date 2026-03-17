@@ -38,7 +38,12 @@ import Button from "../components/common/Button";
 import { useCountry } from "../hooks/useCountries";
 import { useCountryDestinations } from "../hooks/useDestinations";
 import { useWishlist } from "../hooks/useWishlist";
-import { toAbsoluteUrl, toMetaDescription } from "../utils/seo";
+import {
+  toAbsoluteUrl,
+  toMetaDescription,
+  getBrandLogoUrl,
+  BRAND_LOGO_ALT,
+} from "../utils/seo";
 
 // ============================================================
 // CONTACT INFO
@@ -640,8 +645,12 @@ const DestinationCard = ({
             {images.map((img, imgIndex) => (
               <img
                 key={imgIndex}
-                src={img}
-                alt={`${destination.name} - ${imgIndex + 1}`}
+                src={img || getBrandLogoUrl()}
+                alt={
+                  img
+                    ? `${destination.name} - ${imgIndex + 1}`
+                    : BRAND_LOGO_ALT
+                }
                 style={{
                   ...styles.image,
                   opacity: imgIndex === currentImageIndex ? 1 : 0,
@@ -649,6 +658,10 @@ const DestinationCard = ({
                     imgIndex === currentImageIndex ? "scale(1.08)" : "scale(1)",
                 }}
                 loading="lazy"
+                onError={(e) => {
+                  e.currentTarget.src = getBrandLogoUrl();
+                  e.currentTarget.alt = BRAND_LOGO_ALT;
+                }}
               />
             ))}
 

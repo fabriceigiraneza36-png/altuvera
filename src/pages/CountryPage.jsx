@@ -49,40 +49,35 @@ import {
   FiExternalLink,
   FiInfo,
   FiThumbsUp,
-  FiMessageCircle,
-  FiShare2,
-  FiChevronDown,
   FiLayers,
-  FiPackage,
-  FiPocket,
   FiLink,
-  FiSearch,
+  FiPackage,
 } from "react-icons/fi";
+import { FiShare2 } from "react-icons/fi";
+
+import {
+  clean,
+  toS,
+} from "../utils/routeUtils";
+import { getBrandLogoUrl, BRAND_LOGO_ALT, toAbsoluteUrl, toMetaDescription } from "../utils/seo";
+import { toGoogleMapEmbedUrl, toGoogleMapOpenUrl } from "../utils/mediaEmbed";
+
+import PageWrapper from "../components/common/PageWrapper";
 import PageHeader from "../components/common/PageHeader";
 import Button from "../components/common/Button";
+import CountrySlideshow from "../components/common/CountrySlideshow";
+import CountryTaste from "../components/common/CountryTaste";
+import CountryDataExplorer from "../components/common/CountryDataExplorer";
+import AnimatedSection from "../components/common/AnimatedSection";
+import PackageChecklist from "../components/common/PackageChecklist";
 import CookieSettingsButton from "../components/common/CookieSettingsButton";
+
 import { useApp } from "../context/AppContext";
-import { countries } from "../data/countries";
 import { useCountryDestinations } from "../hooks/useDestinations";
 import useCountryInsights from "../hooks/useCountryInsights";
-import { toGoogleMapEmbedUrl, toGoogleMapOpenUrl } from "../utils/mediaEmbed";
-import { toAbsoluteUrl, toMetaDescription } from "../utils/seo";
+import countries from "../data/countries";
 
-/* ═══════════════════════════════════════════════════════ */
-/*  HELPERS                                                */
-/* ═══════════════════════════════════════════════════════ */
-const clean = (v = "") =>
-  String(v)
-    .replace(/[*#`_]+/g, "")
-    .trim();
-
-const toS = (v = "", m = 4) =>
-  (clean(v).match(/[^.!?]+[.!?]?/g) || [])
-    .map(clean)
-    .filter(Boolean)
-    .slice(0, m);
-
-const flagAnimVariant = (key = "") => {
+const flagAnimVariant = (key) => {
   const s = clean(key);
   let hash = 0;
   for (let i = 0; i < s.length; i += 1) hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
@@ -311,10 +306,14 @@ function Gal({ imgs }) {
     <>
       <div className="cp-gal" onClick={() => slb(a)}>
         <img
-          src={imgs[a]?.url}
-          alt={imgs[a]?.cap}
+          src={imgs[a]?.url || getBrandLogoUrl()}
+          alt={imgs[a]?.cap || BRAND_LOGO_ALT}
           className="cp-gal__img"
           loading="lazy"
+          onError={(e) => {
+            e.currentTarget.src = getBrandLogoUrl();
+            e.currentTarget.alt = BRAND_LOGO_ALT;
+          }}
         />
         <div className="cp-gal__overlay">
           <FiMaximize2 size={22} />
@@ -366,7 +365,15 @@ function Gal({ imgs }) {
             }`}
             onClick={() => sa(i)}
           >
-            <img src={img.url} alt={img.cap} loading="lazy" />
+            <img
+              src={img.url || getBrandLogoUrl()}
+              alt={img.cap || BRAND_LOGO_ALT}
+              loading="lazy"
+              onError={(e) => {
+                e.currentTarget.src = getBrandLogoUrl();
+                e.currentTarget.alt = BRAND_LOGO_ALT;
+              }}
+            />
           </button>
         ))}
       </div>
@@ -390,10 +397,14 @@ function Gal({ imgs }) {
             <FiChevronLeft size={28} />
           </button>
           <img
-            src={imgs[lb]?.url}
-            alt={imgs[lb]?.cap}
+            src={imgs[lb]?.url || getBrandLogoUrl()}
+            alt={imgs[lb]?.cap || BRAND_LOGO_ALT}
             className="cp-lb__img"
             onClick={(e) => e.stopPropagation()}
+            onError={(e) => {
+              e.currentTarget.src = getBrandLogoUrl();
+              e.currentTarget.alt = BRAND_LOGO_ALT;
+            }}
           />
           <button
             className="cp-lb__arrow cp-lb__arrow--right"
@@ -577,10 +588,7 @@ const OFFICIAL_LINKS = {
     url: "https://www.ethiopia.travel/",
     label: "Ethiopia Travel — Official Tourism",
   },
-  somalia: {
-    url: "https://www.visit-somalia.com/",
-    label: "Visit Somalia — Official Portal",
-  },
+
 };
 const getOfficialLink = (id) => OFFICIAL_LINKS[id] || null;
 
@@ -2948,222 +2956,6 @@ const DATA = {
       },
     },
 
-    somalia: {
-      id: "somalia",
-      slug: "somalia",
-      name: "Somalia",
-      region: "Horn of Africa",
-      tagline:
-        "Pristine coastlines, ancient history, and a resilient, vibrant culture.",
-      theme: { accent: "#38BDF8", surface: "#0F172A", textOnAccent: "#FFFFFF" },
-
-      seo: {
-        title: "Visit Somalia | Mogadishu & Coastal Wonders",
-        description:
-          "Explore Somalia’s hidden gems, from the white sands of Liido Beach to historic coastal towns.",
-      },
-
-      essentials: {
-        capitals: [{ name: "Mogadishu", type: "capital" }],
-        languages: ["Somali", "Arabic"],
-        currency: { code: "SOS", name: "Somali Shilling" },
-        timeZone: "EAT (UTC+3)",
-        plugs: ["C", "G"],
-        drivingSide: "right",
-      },
-
-      page: {
-        blocks: [
-          {
-            type: "hero.split",
-            id: "hero",
-            title: "Somalia",
-            subtitle:
-              "Pristine coastlines, ancient history, and a resilient, vibrant culture. Discover a land of ancient shores and untouched beauty.",
-            badges: ["Mogadishu", "Liido Beach", "Berbera", "Laas Geel"],
-            media: {
-              kind: "image",
-              src: "https://images.unsplash.com/photo-1517960413843-0aee8e2b3285?auto=format&fit=crop&w=1920&q=80",
-              alt: "Aerial view of Mogadishu coast",
-              aspectRatio: "16/10",
-            },
-            ctas: [
-              { label: "Plan coastal route", href: "/plan/somalia" },
-              { label: "Best time to visit", href: "#when-to-go" },
-            ],
-          },
-          {
-            type: "kpi.strip",
-            id: "kpis",
-            items: [
-              { label: "Coastline", value: "3,300+ km" },
-              { label: "Oldest Art", value: "Laas Geel (5,000+ years)" },
-              { label: "Marine Life", value: "Turtles • Dolphins • Reefs" },
-              { label: "Culture", value: "Nation of Poets" },
-            ],
-          },
-          {
-            type: "editorial.grid",
-            id: "discovery-grid",
-            title: "Africa's longest coast and deep history",
-            columns: { xs: 1, md: 3 },
-            items: [
-              {
-                title: "Prehistoric art",
-                body: "Laas Geel contains some of the best-preserved rock art in Africa, depicting life from over 5,000 years ago.",
-                media: {
-                  src: "https://images.unsplash.com/photo-1517960413843-0aee8e2b3285?auto=format&fit=crop&w=1600&q=80",
-                  alt: "Cave art",
-                  aspectRatio: "4/3",
-                },
-              },
-              {
-                title: "Untouched beaches",
-                body: "From Liido Beach to the shores of Berbera, Somalia offers miles of white sand and turquoise waters.",
-                media: {
-                  src: "https://images.unsplash.com/photo-1504973960431-1c467e159aa4?auto=format&fit=crop&w=1600&q=80",
-                  alt: "Beach view",
-                  aspectRatio: "4/3",
-                },
-              },
-              {
-                title: "Maritime heritage",
-                body: "Ancient port cities like Zeila have linked Africa to the world for millennia through trade and seafaring.",
-                media: {
-                  src: "https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1600&q=80",
-                  alt: "Old harbor",
-                  aspectRatio: "4/3",
-                },
-              },
-            ],
-          },
-          {
-            type: "cards.media",
-            id: "top-places",
-            title: "Top places to visit",
-            columns: { xs: 1, sm: 2, lg: 3 },
-            cards: [
-              {
-                title: "Laas Geel",
-                text: "Vibrant ancient rock paintings in a cave complex near Hargeisa.",
-                media: {
-                  src: "https://images.unsplash.com/photo-1517960413843-0aee8e2b3285?auto=format&fit=crop&w=1600&q=80",
-                  alt: "Rock art",
-                },
-              },
-              {
-                title: "Liido Beach",
-                text: "Mogadishu's most popular social spot, perfect for swimming and seafood.",
-                media: {
-                  src: "https://images.unsplash.com/photo-1504973960431-1c467e159aa4?auto=format&fit=crop&w=1600&q=80",
-                  alt: "Liido beach",
-                },
-              },
-              {
-                title: "Berbera",
-                text: "Historical port town with Ottoman architecture and clear lagoons.",
-                media: {
-                  src: "https://images.unsplash.com/photo-1551632811-561732d1e306?auto=format&fit=crop&w=1600&q=80",
-                  alt: "Berbera coast",
-                },
-              },
-              {
-                title: "Zeila",
-                text: "Ruins of an ancient Islamic city that was once a major regional hub.",
-                media: {
-                  src: "https://images.unsplash.com/photo-1547970810-dc1eac37d174?auto=format&fit=crop&w=1600&q=80",
-                  alt: "Ancient ruins",
-                },
-              },
-              {
-                title: "Daallo Forest",
-                text: "High-altitude forest with waterfalls and unique botanical species.",
-                media: {
-                  src: "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=80",
-                  alt: "Green forest",
-                },
-              },
-              {
-                title: "Sheikh Mountains",
-                text: "Scenic mountain town with cooler temperatures and colonial history.",
-                media: {
-                  src: "https://images.unsplash.com/photo-1458442310124-dde6edb43d10?auto=format&fit=crop&w=1600&q=80",
-                  alt: "Mountain town",
-                },
-              },
-            ],
-          },
-          {
-            type: "carousel.experiences",
-            id: "experiences",
-            title: "Signature experiences",
-            items: [
-              {
-                title: "Discover Laas Geel Art",
-                text: "A guided tour of pre-historic paintings in a stunning natural setting.",
-                media: {
-                  src: "https://images.unsplash.com/photo-1517960413843-0aee8e2b3285?auto=format&fit=crop&w=1600&q=80",
-                  alt: "Cave painting",
-                },
-              },
-              {
-                title: "Coastal Excursions in Berbera",
-                text: "Boat trips to reefs and shipwrecks in the Gulf of Aden.",
-                media: {
-                  src: "https://images.unsplash.com/photo-1504973960431-1c467e159aa4?auto=format&fit=crop&w=1600&q=80",
-                  alt: "Coastal boat",
-                },
-              },
-              {
-                title: "Somali Cuisine Tasting",
-                text: "Enjoy traditional dishes like bariis (rice) and camel milk tea.",
-                media: {
-                  src: "https://images.unsplash.com/photo-1547970810-dc1eac37d174?auto=format&fit=crop&w=1600&q=80",
-                  alt: "Somali food",
-                },
-              },
-              {
-                title: "Hargeisa Market Walk",
-                text: "Bustling markets filled with color, gold, and local livestock trade.",
-                media: {
-                  src: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=1600&q=80",
-                  alt: "Market scene",
-                },
-              },
-            ],
-          },
-          {
-            type: "itineraries.cards",
-            id: "itineraries",
-            title: "Sample itineraries",
-            columns: { xs: 1, md: 3 },
-            items: [
-              {
-                title: "4 days: Somaliland Highlights",
-                days: 4,
-                pace: "Efficient",
-                route: ["Hargeisa", "Laas Geel", "Berbera"],
-                notes: "Most common and accessible route for first-timers.",
-              },
-              {
-                title: "6 days: North & Coastal",
-                days: 6,
-                pace: "Balanced",
-                route: ["Hargeisa", "Sheikh Mountains", "Berbera", "Zeila"],
-                notes: "Includes scenic mountains and deep ancient history.",
-              },
-              {
-                title: "10 days: Expedition Somalia",
-                days: 10,
-                pace: "Ambitious",
-                route: ["Mogadishu", "Hargeisa", "Berbera", "Daallo Forest"],
-                notes: "Requires careful logistics and security planning.",
-              },
-            ],
-          },
-        ],
-      },
-    },
   },
 };
 
@@ -3351,7 +3143,7 @@ const ExplorerValue = ({ value, depth = 0, path = "" }) => {
   return <div className="cp-exp-primitive">{clean(String(value))}</div>;
 };
 
-const CountryDataExplorer = ({ country }) => {
+const CountryDataExplorerWrapper = ({ country }) => {
   const [query, setQuery] = useState("");
   const q = clean(query).toLowerCase();
 
@@ -3419,6 +3211,37 @@ const CountryPage = () => {
     () => DATA?.countries?.[countryId] || getFB(country),
     [countryId, country],
   );
+  const [remoteCountry, setRemoteCountry] = React.useState(null);
+  const [remoteLoading, setRemoteLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!countryId) return;
+    const ac = new AbortController();
+    (async () => {
+      setRemoteLoading(true);
+      try {
+        const res = await fetch(`/api/countries/${countryId}?fields=page,images,essentials,signature,quickKpis`, { signal: ac.signal });
+        if (res.ok) {
+          const json = await res.json();
+          setRemoteCountry(json);
+        } else {
+          // no-op, keep local data
+        }
+      } catch (err) {
+        // network or aborted
+        // console.warn('country fetch failed', err);
+      } finally {
+        setRemoteLoading(false);
+      }
+    })();
+    return () => ac.abort();
+  }, [countryId]);
+
+  const countryData = React.useMemo(() => {
+    const base = country || td || {};
+    if (!remoteCountry) return base;
+    return { ...base, ...remoteCountry };
+  }, [country, td, remoteCountry]);
   const officialLink = useMemo(() => getOfficialLink(countryId), [countryId]);
 
   const info = useMemo(
@@ -3479,7 +3302,7 @@ const CountryPage = () => {
     return (
       country?.heroImage ||
       country?.images?.[0] ||
-      toAbsoluteUrl("/favicon.ico")
+      getBrandLogoUrl()
     );
   }, [country]);
   const seoTitle = useMemo(() => {
@@ -3546,7 +3369,15 @@ const CountryPage = () => {
           <div className={`cp-guide__row${ev ? "" : " cp-guide__row--flip"}`}>
             {img && (
               <div className="cp-guide__figure">
-                <img src={img.url} alt={img.cap} loading="lazy" />
+                <img
+                  src={img.url || getBrandLogoUrl()}
+                  alt={img.cap || BRAND_LOGO_ALT}
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.src = getBrandLogoUrl();
+                    e.currentTarget.alt = BRAND_LOGO_ALT;
+                  }}
+                />
                 <span className="cp-guide__figcap">
                   <FiCamera size={12} /> {img.cap}
                 </span>
@@ -3595,7 +3426,15 @@ const CountryPage = () => {
           <div className="cp-guide__strip">
             {remImgs.map((img, i) => (
               <div key={i} className="cp-guide__strip-item">
-                <img src={img.url} alt={img.cap} loading="lazy" />
+                <img
+                  src={img.url || getBrandLogoUrl()}
+                  alt={img.cap || BRAND_LOGO_ALT}
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.src = getBrandLogoUrl();
+                    e.currentTarget.alt = BRAND_LOGO_ALT;
+                  }}
+                />
                 <span>{img.cap}</span>
               </div>
             ))}
@@ -3709,6 +3548,34 @@ const CountryPage = () => {
           { label: country.name },
         ]}
       />
+
+      {/* Slideshow */}
+      <section className="cp-section">
+        <div className="cp-container">
+          <CountrySlideshow images={(country.page?.blocks?.[0]?.media?.images) || (country.images || [])} alt={country.name} />
+        </div>
+      </section>
+
+      {/* Taste & Traditions spread across the layout */}
+      <section className="cp-section">
+        <div className="cp-container">
+          <CountryTaste items={country.tasteAndTraditions || country.signature?.whatItsKnownFor?.map(s=>({ title: s })) || []} />
+        </div>
+      </section>
+
+      {/* Data Explorer - innovative interactive preview */}
+      <section className="cp-section">
+        <div className="cp-container">
+          <CountryDataExplorer data={country} />
+        </div>
+      </section>
+
+      <AnimatedSection animation="fadeInUp">
+        <PackageChecklist
+          tourData={{ tourName: country.name }}
+          className="countrypage-checklist"
+        />
+      </AnimatedSection>
 
       {/* Cookie Settings */}
       <section className="cp-section cp-section--cookie">
@@ -4434,10 +4301,14 @@ const CountryPage = () => {
                       className="cp-dest"
                     >
                       <img
-                        src={d.images[0]}
-                        alt={d.name}
+                        src={d.images?.[0] || getBrandLogoUrl()}
+                        alt={d.name || BRAND_LOGO_ALT}
                         className="cp-dest__img"
                         loading="lazy"
+                        onError={(e) => {
+                          e.currentTarget.src = getBrandLogoUrl();
+                          e.currentTarget.alt = BRAND_LOGO_ALT;
+                        }}
                       />
                       <div className="cp-dest__body">
                         <div className="cp-dest__type">{clean(d.type)}</div>

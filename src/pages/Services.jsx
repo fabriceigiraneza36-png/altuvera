@@ -161,7 +161,7 @@ const WHY_CHOOSE_US = [
   {
     icon: FiAward,
     title: "Expert Local Guides",
-    stat: "50+",
+    stat: "5+",
     statLabel: "Expert Guides",
     descriptions: [
       "Our guides bring decades of combined field experience across diverse African terrains and ecosystems.",
@@ -183,7 +183,7 @@ const WHY_CHOOSE_US = [
   {
     icon: FiHeart,
     title: "Personalized Care",
-    stat: "5000+",
+    stat: "5+",
     statLabel: "Happy Travelers",
     descriptions: [
       "Every itinerary is meticulously tailored to match your unique travel style, interests, and personal pace.",
@@ -257,7 +257,7 @@ const TESTIMONIALS = [
 ];
 
 const CTA_ROTATING_TEXTS = [
-  "🌍 Trusted by 5000+ travelers worldwide",
+  "🌍 Trusted by 5+ travelers worldwide",
   "⭐ Rated 4.9/5 across all platforms",
   "🏆 Award-winning East Africa specialists",
   "🛡️ 100% satisfaction guarantee",
