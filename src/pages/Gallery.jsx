@@ -1128,8 +1128,8 @@ const images = [
   },
   {
     id: 3,
-    src: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=1200",
-    thumb: "https://images.unsplash.com/photo-1543852786-1cf6624b9987?w=200",
+    src: "https://i.pinimg.com/736x/1f/23/6f/1f236fcbf71dfb2418310a3f348a282d.jpg",
+    thumb: "https://i.pinimg.com/736x/26/13/a4/2613a46cebebc11e9918a071ae731da8.jpg",
     category: "wildlife",
     title: "Mountain Gorilla",
     location: "Bwindi, Uganda",
@@ -1168,8 +1168,8 @@ const images = [
   },
   {
     id: 6,
-    src: "https://images.unsplash.com/photo-1564769625905-50e93615e769?w=1200",
-    thumb: "https://images.unsplash.com/photo-1564769625905-50e93615e769?w=200",
+    src: "https://i.pinimg.com/736x/dd/f4/9d/ddf49dfd5f7192060fa9a5854dd04677.jpg",
+    thumb: "https://i.pinimg.com/1200x/b8/9e/84/b89e845ed13c17320c2d3b4f05e28c9a.jpg",
     category: "wildlife",
     title: "Giraffe Sunset",
     location: "Nairobi, Kenya",
@@ -1181,8 +1181,8 @@ const images = [
   },
   {
     id: 7,
-    src: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1200",
-    thumb: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=200",
+    src: "https://i.pinimg.com/736x/36/f6/51/36f651f2a6456b18602a2a6a7ba4e976.jpg",
+    thumb: "https://i.pinimg.com/736x/9f/70/fa/9f70fa48cbc07c3401afa86369c999e6.jpg",
     category: "landscapes",
     title: "Mount Kenya",
     location: "Kenya",
@@ -1194,8 +1194,8 @@ const images = [
   },
   {
     id: 8,
-    src: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1200",
-    thumb: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=200",
+    src: "https://i.pinimg.com/736x/96/5a/c2/965ac2884e636cc9d2584b1257f04879.jpg",
+    thumb: "https://i.pinimg.com/736x/6b/68/4a/6b684aa6f5b793647eebd8adbcd973bf.jpg",
     category: "landscapes",
     title: "Ngorongoro Crater",
     location: "Tanzania",
@@ -1208,8 +1208,8 @@ const images = [
   },
   {
     id: 9,
-    src: "https://images.unsplash.com/photo-1564951434112-64d74cc2a2d6?w=1200",
-    thumb: "https://images.unsplash.com/photo-1564951434112-64d74cc2a2d6?w=200",
+    src: "https://i.pinimg.com/1200x/6d/44/df/6d44dfdbe9f06622d92a92ab3d574546.jpg",
+    thumb: "https://i.pinimg.com/1200x/55/a9/e2/55a9e2811aff4371a7472d3fa95f59b6.jpg",
     category: "landscapes",
     title: "Volcanoes Park",
     location: "Rwanda",
@@ -1219,21 +1219,9 @@ const images = [
     date: "2024-01-25",
     photographer: "Green Vistas",
   },
+ 
   {
     id: 10,
-    src: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=1200",
-    thumb: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=200",
-    category: "landscapes",
-    title: "Bamboo Forest",
-    location: "Virunga, DRC",
-    description:
-      "Mystical bamboo groves hidden in the clouds, a world apart from time.",
-    tags: ["bamboo", "forest", "mist", "green"],
-    date: "2024-02-20",
-    photographer: "Forest Dreams",
-  },
-  {
-    id: 11,
     src: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=1200",
     thumb: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=200",
     category: "landscapes",
@@ -1246,7 +1234,7 @@ const images = [
     photographer: "Geological Views",
   },
   {
-    id: 12,
+    id: 11,
     src: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=1200",
     thumb: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=200",
     category: "culture",
@@ -1259,7 +1247,7 @@ const images = [
     photographer: "Heritage Lens",
   },
   {
-    id: 13,
+    id: 12,
     src: "https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?w=1200",
     thumb: "https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?w=200",
     category: "culture",
@@ -1272,7 +1260,7 @@ const images = [
     photographer: "Cultural Stories",
   },
   {
-    id: 14,
+    id: 13,
     src: "https://images.unsplash.com/photo-1529078155055-5d1f45d98bc5?w=1200",
     thumb: "https://images.unsplash.com/photo-1529078155055-5d1f45d98bc5?w=200",
     category: "culture",
@@ -1285,7 +1273,7 @@ const images = [
     photographer: "Coffee Culture",
   },
   {
-    id: 15,
+    id: 14,
     src: "https://images.unsplash.com/photo-1536856136534-bb679c52a9aa?w=1200",
     thumb: "https://images.unsplash.com/photo-1536856136534-bb679c52a9aa?w=200",
     category: "culture",
@@ -1298,7 +1286,7 @@ const images = [
     photographer: "Coastal Heritage",
   },
   {
-    id: 16,
+    id: 15,
     src: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1200",
     thumb: "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=200",
     category: "adventure",
@@ -1311,7 +1299,7 @@ const images = [
     photographer: "Summit Stories",
   },
   {
-    id: 17,
+    id: 16,
     src: "https://images.unsplash.com/photo-1528543606781-2f6e6857f318?w=1200",
     thumb: "https://images.unsplash.com/photo-1528543606781-2f6e6857f318?w=200",
     category: "adventure",
@@ -1324,7 +1312,7 @@ const images = [
     photographer: "Adventure Shots",
   },
   {
-    id: 18,
+    id: 17,
     src: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1200",
     thumb: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=200",
     category: "adventure",
@@ -1337,7 +1325,7 @@ const images = [
     photographer: "Sky Views",
   },
   {
-    id: 19,
+    id: 18,
     src: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=1200",
     thumb: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200",
     category: "beaches",
@@ -1350,7 +1338,7 @@ const images = [
     photographer: "Beach Life",
   },
   {
-    id: 20,
+    id: 19,
     src: "https://images.unsplash.com/photo-1590523277543-a94c2e4ebc9b?w=1200",
     thumb: "https://images.unsplash.com/photo-1590523277543-a94c2e4ebc9b?w=200",
     category: "beaches",
@@ -1363,7 +1351,7 @@ const images = [
     photographer: "Island Dreams",
   },
   {
-    id: 21,
+    id: 20,
     src: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=1200",
     thumb: "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=200",
     category: "beaches",
@@ -1376,7 +1364,7 @@ const images = [
     photographer: "Water Sports",
   },
   {
-    id: 22,
+    id: 21,
     src: "https://images.unsplash.com/photo-1537956965359-7573183d1f57?w=1200",
     thumb: "https://images.unsplash.com/photo-1537956965359-7573183d1f57?w=200",
     category: "beaches",

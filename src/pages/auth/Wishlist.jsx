@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { useUserAuth } from "../../context/UserAuthContext";
-import DashboardLayout from "../../components/auth/DashboardLayout";
+import DashboardLayout from "../../components/users/DashboardLayout";
 import { HiHeart, HiTrash, HiLocationMarker } from "react-icons/hi";
 import Loader from "../../components/common/Loader";
 import "./AuthPages.css";
@@ -17,7 +17,7 @@ export default function Wishlist() {
   useEffect(() => {
     (async () => {
       try {
-        const data = await authFetch(`${API_URL}/auth/wishlist`);
+        const data = await authFetch(`${API_URL}/users/wishlist`);
         setItems(data.data || data || []);
       } catch {
         // endpoint may not exist yet
@@ -29,7 +29,7 @@ export default function Wishlist() {
 
   const removeItem = async (id) => {
     try {
-      await authFetch(`${API_URL}/auth/wishlist/${id}`, { method: "DELETE" });
+      await authFetch(`${API_URL}/users/wishlist/${id}`, { method: "DELETE" });
       setItems((prev) => prev.filter((i) => (i._id || i.id) !== id));
     } catch {
       /* ignore */

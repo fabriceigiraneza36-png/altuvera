@@ -38,6 +38,9 @@ import {
   FiInfo,
   FiPlus,
   FiMinus,
+  FiSettings,
+  FiDollarSign,
+  FiCreditCard,
   FiLoader,
   FiHeadphones,
   FiFeather,
@@ -63,6 +66,7 @@ import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput"
 import { countries as countriesData } from "../data/countries";
 import { services as servicesData } from "../data/services";
 import { useUserAuth } from "../context/UserAuthContext";
+import { apiFetch } from "../utils/apiBase";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONSTANTS & CONFIGURATION
@@ -2510,6 +2514,170 @@ const StepFour = memo(
           />
         </div>
 
+        <div style={{ marginTop: 26 }}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              marginBottom: 14,
+              fontSize: isMobile ? 15 : 17,
+              fontWeight: 700,
+              color: THEME.text,
+            }}
+          >
+            <div
+              style={{
+                width: 36,
+                height: 36,
+                borderRadius: 10,
+                backgroundColor: THEME.background,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <FiSettings size={18} color={THEME.primary} />
+            </div>
+            Travel Preferences (Optional)
+          </div>
+
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+              gap: isMobile ? 20 : 24,
+            }}
+          >
+            <FormSelect
+              name="preferredContactMethod"
+              label="Preferred Contact"
+              options={[
+                { value: "whatsapp", name: "WhatsApp" },
+                { value: "email", name: "Email" },
+                { value: "phone", name: "Phone Call" },
+              ]}
+              icon={FiMessageSquare}
+              value={formData.preferredContactMethod}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              touched={touched.preferredContactMethod}
+              error={errors.preferredContactMethod}
+              isMobile={isMobile}
+            />
+
+            <FormInput
+              name="preferredContactTime"
+              label="Best Time to Reach You"
+              placeholder="e.g. 9am–12pm (GMT+2)"
+              icon={FiClock}
+              value={formData.preferredContactTime}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              touched={touched.preferredContactTime}
+              error={errors.preferredContactTime}
+              isMobile={isMobile}
+              helpText="Add your timezone for faster replies."
+            />
+
+            <FormInput
+              name="budgetPerPerson"
+              label="Budget Per Person"
+              type="number"
+              placeholder="e.g. 2500"
+              icon={FiDollarSign}
+              value={formData.budgetPerPerson}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              touched={touched.budgetPerPerson}
+              error={errors.budgetPerPerson}
+              isMobile={isMobile}
+            />
+
+            <FormSelect
+              name="currency"
+              label="Currency"
+              options={[
+                { value: "USD", name: "USD" },
+                { value: "EUR", name: "EUR" },
+                { value: "GBP", name: "GBP" },
+                { value: "ZAR", name: "ZAR" },
+                { value: "KES", name: "KES" },
+                { value: "TZS", name: "TZS" },
+                { value: "UGX", name: "UGX" },
+                { value: "RWF", name: "RWF" },
+              ]}
+              icon={FiCreditCard}
+              value={formData.currency}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              touched={touched.currency}
+              error={errors.currency}
+              isMobile={isMobile}
+            />
+
+            <FormInput
+              name="pickupLocation"
+              label="Pickup Location (If Known)"
+              placeholder="Hotel / Airport / City"
+              icon={FiMapPin}
+              value={formData.pickupLocation}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              touched={touched.pickupLocation}
+              error={errors.pickupLocation}
+              isMobile={isMobile}
+            />
+
+            <FormSelect
+              name="marketingSource"
+              label="How Did You Find Us?"
+              options={[
+                { value: "google", name: "Google Search" },
+                { value: "instagram", name: "Instagram" },
+                { value: "tiktok", name: "TikTok" },
+                { value: "facebook", name: "Facebook" },
+                { value: "referral", name: "Friend/Referral" },
+                { value: "returning", name: "Returning Traveler" },
+                { value: "other", name: "Other" },
+              ]}
+              icon={FiCompass}
+              value={formData.marketingSource}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              touched={touched.marketingSource}
+              error={errors.marketingSource}
+              isMobile={isMobile}
+            />
+          </div>
+
+          <div style={{ marginTop: 18 }}>
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                fontSize: isMobile ? 13 : 14,
+                fontWeight: 600,
+                color: THEME.text,
+              }}
+            >
+              <input
+                type="checkbox"
+                checked={!!formData.newsletterOptIn}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    newsletterOptIn: e.target.checked,
+                  }))
+                }
+                style={{ transform: "translateY(1px)" }}
+              />
+              Email me destination updates and travel tips.
+            </label>
+          </div>
+        </div>
+
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -2828,6 +2996,17 @@ const Booking = () => {
       groupType: "couple",
       accommodation: "mid-range",
       interests: [],
+      budgetPerPerson: "",
+      currency: "USD",
+      preferredContactMethod: "whatsapp",
+      preferredContactTime: "",
+      pickupLocation: "",
+      flightArrival: "",
+      flightDeparture: "",
+      dietaryRequirements: "",
+      accessibilityNeeds: "",
+      marketingSource: "",
+      newsletterOptIn: false,
       userImage: user?.avatar || "",
       name: user?.fullName || user?.name || "",
       email: user?.email || "",
@@ -2888,15 +3067,11 @@ const Booking = () => {
     (async () => {
       try {
         const [cRes, catRes, destRes] = await Promise.all([
-          fetch(`${API_URL}/countries`)
+          apiFetch("/countries").then((r) => r.json()).catch(() => ({})),
+          apiFetch("/destinations/categories")
             .then((r) => r.json())
             .catch(() => ({})),
-          fetch(`${API_URL}/destinations/categories`)
-            .then((r) => r.json())
-            .catch(() => ({})),
-          fetch(`${API_URL}/destinations`)
-            .then((r) => r.json())
-            .catch(() => ({})),
+          apiFetch("/destinations").then((r) => r.json()).catch(() => ({})),
         ]);
 
         setCountriesList(cRes.data || cRes || countriesData || []);
@@ -2913,6 +3088,7 @@ const Booking = () => {
 
   // Inside the Booking component, after fetching data:
   useEffect(() => {
+    return;
     (async () => {
       try {
         const [cRes, catRes, destRes] = await Promise.all([
@@ -3229,6 +3405,11 @@ You have received a new booking inquiry:
 ━━━━━━━━━━━━━━━━━━━━━
 • *Accommodation Style:* ${accommodationType}
 • *Interests:* ${interestsList}
+• *Budget/Person:* ${formData.budgetPerPerson ? `${formData.currency} ${formData.budgetPerPerson}` : "Not specified"}
+• *Preferred Contact:* ${formData.preferredContactMethod || "Not specified"}
+• *Best Contact Time:* ${formData.preferredContactTime || "Not specified"}
+• *Pickup Location:* ${formData.pickupLocation || "Not specified"}
+• *Found Us Via:* ${formData.marketingSource || "Not specified"}
 
 💬 *SPECIAL REQUESTS*
 ━━━━━━━━━━━━━━━━━━━━━
@@ -3585,6 +3766,10 @@ Please provide a personalized quote and itinerary. Thank you!`;
                 opacity: isAnimating ? 0 : 1,
                 transform: isAnimating ? "translateY(16px)" : "translateY(0)",
                 transition: "all 0.25s ease",
+                position: "relative",
+                zIndex: 2,
+                boxShadow:
+                  "0 32px 80px rgba(2,44,34,.14), 0 12px 30px rgba(2,44,34,.08)",
               }}
             >
               <form onSubmit={handleSubmit}>

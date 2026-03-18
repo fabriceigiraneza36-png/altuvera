@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate } from "react-router-dom";
 import { useUserAuth } from "../../context/UserAuthContext";
-import DashboardLayout from "../../components/auth/DashboardLayout";
+import DashboardLayout from "../../components/users/DashboardLayout";
 import {
   HiLogout,
   HiShieldCheck,
@@ -34,7 +34,7 @@ export default function UserSettings() {
       language: user?.preferences?.language || "en",
       travelUpdates: user?.preferences?.travelUpdates ?? true,
     }),
-    [user]
+    [user],
   );
 
   const [preferences, setPreferences] = useState(initialPrefs);
@@ -74,7 +74,7 @@ export default function UserSettings() {
     if (timerRef.current) clearTimeout(timerRef.current);
     timerRef.current = setTimeout(
       () => persistPreferences(next, { silent: true }),
-      700
+      700,
     );
   };
 
@@ -142,8 +142,12 @@ export default function UserSettings() {
                 }}
               >
                 <div>
-                  <div style={{ fontWeight: 600, color: "#0f172a" }}>{label}</div>
-                  <div style={{ fontSize: "0.82rem", color: "#64748b" }}>{desc}</div>
+                  <div style={{ fontWeight: 600, color: "#0f172a" }}>
+                    {label}
+                  </div>
+                  <div style={{ fontSize: "0.82rem", color: "#64748b" }}>
+                    {desc}
+                  </div>
                 </div>
                 <input
                   type="checkbox"
@@ -190,7 +194,9 @@ export default function UserSettings() {
                 alignItems: "center",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <div
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+              >
                 <HiMoon />
                 <span style={{ fontWeight: 600 }}>Dark mode preference</span>
               </div>
@@ -208,18 +214,26 @@ export default function UserSettings() {
             <HiShieldCheck />
             <h2>Security</h2>
           </div>
-          <p style={{ color: "#666", fontSize: "0.9rem", margin: "0 0 0.5rem" }}>
+          <p
+            style={{ color: "#666", fontSize: "0.9rem", margin: "0 0 0.5rem" }}
+          >
             Your account uses passwordless authentication. Sign-in verification
             codes are sent securely to <strong>{user?.email}</strong>.
           </p>
           <p style={{ color: "#888", fontSize: "0.82rem" }}>
-            <HiDeviceMobile style={{ verticalAlign: "middle", marginRight: 4 }} />
+            <HiDeviceMobile
+              style={{ verticalAlign: "middle", marginRight: 4 }}
+            />
             Keep this email accessible while traveling.
           </p>
 
-          <div style={{ marginTop: "1rem", fontSize: "0.82rem", color: "#64748b" }}>
+          <div
+            style={{ marginTop: "1rem", fontSize: "0.82rem", color: "#64748b" }}
+          >
             Sync status:{" "}
-            <strong style={{ color: syncState === "error" ? "#dc2626" : "#0f172a" }}>
+            <strong
+              style={{ color: syncState === "error" ? "#dc2626" : "#0f172a" }}
+            >
               {saving
                 ? "Saving..."
                 : syncState === "saved"
@@ -230,7 +244,11 @@ export default function UserSettings() {
             </strong>
           </div>
 
-          <button className="settings-save-btn" disabled={saving} onClick={saveNow}>
+          <button
+            className="settings-save-btn"
+            disabled={saving}
+            onClick={saveNow}
+          >
             {saving ? "Saving..." : "Save Now"}
           </button>
         </div>
@@ -244,7 +262,10 @@ export default function UserSettings() {
         </div>
 
         <div style={{ marginTop: "1rem" }}>
-          <Link to="/auth/user-account-control" style={{ color: "#10b981", fontWeight: "600" }}>
+          <Link
+            to="/users/user-account-control"
+            style={{ color: "#10b981", fontWeight: "600" }}
+          >
             Go to User Account Control
           </Link>
         </div>

@@ -1,6 +1,6 @@
 // src/utils/api.js
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://https://backend-1-ghrv.onrender.com/';
+import { apiFetch } from "./apiBase";
 
 export const api = {
   /**
@@ -9,15 +9,13 @@ export const api = {
    * @param {object} options - fetch options
    */
   async fetch(endpoint, options = {}) {
-    const url = `${API_BASE}${endpoint}`;
-    
     const defaultOptions = {
       headers: {
         'Content-Type': 'application/json',
       },
     };
 
-    const response = await fetch(url, { ...defaultOptions, ...options });
+    const response = await apiFetch(endpoint, { ...defaultOptions, ...options });
     const data = await response.json();
 
     if (!response.ok) {

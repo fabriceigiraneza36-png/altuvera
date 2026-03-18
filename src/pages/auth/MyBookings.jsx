@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { useUserAuth } from "../../context/UserAuthContext";
-import DashboardLayout from "../../components/auth/DashboardLayout";
+import DashboardLayout from "../../components/users/DashboardLayout";
 import { HiCalendar, HiLocationMarker, HiUsers, HiClock } from "react-icons/hi";
 import Loader from "../../components/common/Loader";
 import "./AuthPages.css";

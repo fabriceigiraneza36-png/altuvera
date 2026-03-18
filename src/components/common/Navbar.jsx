@@ -58,26 +58,19 @@ const Navbar = () => {
 
   // Build destinations dropdown from backend with fallback to static
   const destinationsDropdown = useMemo(() => {
-    const items = [{ name: "All Destinations", path: "/destinations" }];
+    const items = [
+      { name: "All Destinations", path: "/destinations", isOverview: true },
+    ];
 
     if (backendCountries && backendCountries.length > 0) {
       backendCountries.forEach((country) => {
         items.push({
           name: country.name,
+          flag: country.flagUrl || country.flag_url || country.flag || "",
+          info: country.tagline || country.region || "",
           path: `/country/${country.slug || country.name.toLowerCase()}`,
         });
       });
-    } else {
-      // Fallback to static list
-      items.push(
-        { name: "Kenya", path: "/country/kenya" },
-        { name: "Tanzania", path: "/country/tanzania" },
-        { name: "Uganda", path: "/country/uganda" },
-        { name: "Rwanda", path: "/country/rwanda" },
-        { name: "Ethiopia", path: "/country/ethiopia" },
-        { name: "Djibouti", path: "/country/djibouti" },
-        { name: "South Africa", path: "/country/south-africa" },
-      );
     }
 
     return items;
@@ -109,15 +102,24 @@ const Navbar = () => {
     [destinationsDropdown],
   );
 
-  const userMenuItems = useMemo(
-    () => [
+  const userMenuItems = useMemo(() => {
+    const items = [
       { to: "/profile", icon: FiUser, label: "My Profile" },
       { to: "/my-bookings", icon: FiCalendar, label: "My Bookings" },
       { to: "/wishlist", icon: FiHeart, label: "Wishlist" },
       { to: "/settings", icon: FiSettings, label: "Settings" },
-    ],
-    [],
-  );
+    ];
+
+    if (user?.role === "admin" || user?.role === "manager") {
+      items.push({
+        to: "/admin/dashboard",
+        icon: FiSettings,
+        label: "Admin Dashboard",
+      });
+    }
+
+    return items;
+  }, [user?.role]);
 
   useEffect(() => {
     let ticking = false;
@@ -408,12 +410,32 @@ const Navbar = () => {
                         <Link
                           key={sub.name}
                           to={sub.path}
-                          className="nav__dropdown-link"
+                          className={`nav__dropdown-link ${sub.info ? "nav__dropdown-link--rich" : ""}`}
                           style={{ "--si": si }}
                           onClick={() => setActiveDropdown(null)}
                         >
-                          <span className="nav__dropdown-dot" />
-                          {sub.name}
+                          {sub.flag ? (
+                            <span className="nav__dropdown-flag">
+                              {sub.flag.startsWith("http") ||
+                              sub.flag.includes("/") ? (
+                                <img src={sub.flag} alt={`${sub.name} flag`} />
+                              ) : (
+                                sub.flag
+                              )}
+                            </span>
+                          ) : (
+                            <span className="nav__dropdown-dot" />
+                          )}
+                          <div className="nav__dropdown-text-wrap">
+                            <span className="nav__dropdown-name">
+                              {sub.name}
+                            </span>
+                            {sub.info && (
+                              <span className="nav__dropdown-info">
+                                {sub.info}
+                              </span>
+                            )}
+                          </div>
                         </Link>
                       ))}
                     </div>
@@ -656,7 +678,11 @@ const Navbar = () => {
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <div className="mm__logo-img-wrapper">
-              <img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT} className="mm__logo-img" />
+              <img
+                src={getBrandLogoUrl()}
+                alt={BRAND_LOGO_ALT}
+                className="mm__logo-img"
+              />
             </div>
             <span className="mm__logo-text">Altuvera</span>
           </Link>
@@ -692,12 +718,28 @@ const Navbar = () => {
                       <Link
                         key={sub.name}
                         to={sub.path}
-                        className="mm__sub-link"
+                        className={`mm__sub-link ${sub.info ? "mm__sub-link--rich" : ""}`}
                         style={{ "--si": si }}
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
-                        <span className="mm__sub-dot" />
-                        {sub.name}
+                        {sub.flag ? (
+                          <span className="mm__sub-flag">
+                            {sub.flag.startsWith("http") ||
+                            sub.flag.includes("/") ? (
+                              <img src={sub.flag} alt={`${sub.name} flag`} />
+                            ) : (
+                              sub.flag
+                            )}
+                          </span>
+                        ) : (
+                          <span className="mm__sub-dot" />
+                        )}
+                        <div className="mm__sub-text-wrap">
+                          <span className="mm__sub-name">{sub.name}</span>
+                          {sub.info && (
+                            <span className="mm__sub-info">{sub.info}</span>
+                          )}
+                        </div>
                       </Link>
                     ))}
                   </div>
@@ -1066,44 +1108,73 @@ const Navbar = () => {
   padding:10px;
   overflow:hidden;
 }
-.nav__dropdown-link{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:11px 14px;
-  font-size:14px;
-  font-weight:600;
-  color:#0f172a;
-  text-decoration:none;
-  border-radius:10px;
-  transition:all var(--fast) var(--smooth);
-  opacity:0;
-  transform:translateX(-8px);
-  animation:none;
+.nav__dropdown-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  color: var(--txt);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  font-size: 0.95rem;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateX(-10px);
 }
-.nav__dropdown--open .nav__dropdown-link{
-  animation:dropIn .35s var(--smooth) calc(var(--si) * .05s) forwards;
+.nav__dropdown--open .nav__dropdown-link {
+  opacity: 1;
+  transform: translateX(0);
+  transition: all 0.3s cubic-bezier(0.4,0,0.2,1) calc(var(--si) * 0.05s);
+}
+.nav__dropdown-link:hover {
+  background: var(--bg3);
+  color: var(--c);
+}
+.nav__dropdown-link--rich {
+  padding: 12px 16px;
+  align-items: flex-start;
+}
+.nav__dropdown-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.nav__dropdown-info {
+  font-size: 0.75rem;
+  color: var(--txt2);
+}
+.nav__dropdown-flag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.nav__dropdown-flag img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.nav__dropdown-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cg);
+  opacity: 0.4;
+  flex-shrink: 0;
+  transition: opacity var(--fast),transform var(--fast);
+}
+.nav__dropdown-link:hover .nav__dropdown-dot {
+  opacity: 1;
+  transform:scale(1.3);
 }
 @keyframes dropIn{
   to{opacity:1;transform:none}
-}
-.nav__dropdown-link:hover{
-  background:#f0fdf4;
-  color:var(--c);
-  padding-left:18px;
-}
-.nav__dropdown-dot{
-  width:6px;
-  height:6px;
-  border-radius:50%;
-  background:var(--cg);
-  opacity:.4;
-  flex-shrink:0;
-  transition:opacity var(--fast),transform var(--fast);
-}
-.nav__dropdown-link:hover .nav__dropdown-dot{
-  opacity:1;
-  transform:scale(1.3);
 }
 
 /* ACTIONS */
@@ -1849,18 +1920,61 @@ const Navbar = () => {
   background:#f8fffc;
   box-shadow:0 6px 24px rgba(5,150,105,.08);
 }
-.mm__sub-link{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:12px 12px;
-  font-size:16px;
-  color:var(--txt2);
-  text-decoration:none;
-  border-radius:10px;
-  opacity:0;
-  transform:translateX(-8px);
-  transition:all var(--fast) var(--smooth);
+.mm__sub-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  color: var(--txt2);
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+}
+.mm__sub-link:hover {
+  background: var(--bg2);
+  color: var(--c);
+}
+.mm__sub-link--active {
+  background: var(--cl);
+  color: var(--ch);
+}
+.mm__sub-link--rich {
+  align-items: flex-start;
+  padding: 12px 14px;
+}
+.mm__sub-text-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mm__sub-info {
+  font-size: 0.75rem;
+  color: var(--mute);
+}
+.mm__sub-flag {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.mm__sub-flag img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.mm__sub-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.4;
+  flex-shrink: 0;
 }
 .mm__sub--open .mm__sub-link{
   animation:subIn .35s var(--smooth) calc(var(--si) * .05s + .08s) forwards;

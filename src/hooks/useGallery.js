@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-
-const API_BASE = import.meta.env.VITE_API_URL || "http://https://backend-1-ghrv.onrender.com//api";
+import { apiFetch } from "../utils/apiBase";
 
 export function useGallery() {
   const [fetchedImages, setFetchedImages] = useState([]);
@@ -11,7 +10,7 @@ export function useGallery() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_BASE}/gallery`, { signal });
+      const response = await apiFetch("/gallery", { signal });
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }

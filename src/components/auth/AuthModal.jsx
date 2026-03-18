@@ -310,7 +310,6 @@ const SideMediaRotator = ({ items = SIDE_MEDIA, intervalMs = 6500 }) => {
             preload="auto"
             controls={false}
             disablePictureInPicture
-            crossOrigin="anonymous"
             onCanPlay={phase === "in" ? handleMediaReady : undefined}
             onLoadedData={phase === "in" ? handleMediaReady : undefined}
             onError={

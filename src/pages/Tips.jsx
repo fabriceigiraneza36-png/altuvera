@@ -1493,7 +1493,7 @@ const Tips = () => {
       <PageHeader
         title="Travel Tips"
         subtitle="Essential advice and insider knowledge for your East African adventure."
-        backgroundImage="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1920"
+        backgroundImage="https://i.pinimg.com/736x/4d/d7/b7/4dd7b788dfcaa0198254585156b94a9a.jpg"
         breadcrumbs={[{ label: "Travel Tips" }]}
       />
 

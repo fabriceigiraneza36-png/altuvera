@@ -36,6 +36,8 @@ import PageHeader from '../components/common/PageHeader';
 import AnimatedSection from '../components/common/AnimatedSection';
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 import { posts } from '../data/posts';
+import { apiFetch } from "../utils/apiBase";
+import { SkeletonCard, SkeletonKeyframes } from "../components/common/Skeleton";
 
 /* ═══════════════════════════════════════════════════════
    GLOBAL STYLES
@@ -867,6 +869,9 @@ const PostCard = ({ post, index, onBookmark, isBookmarked, viewMode = 'grid' }) 
    MAIN POSTS COMPONENT
    ═══════════════════════════════════════════════════════ */
 const Posts = () => {
+  const [remotePosts, setRemotePosts] = useState(null);
+  const [remoteLoading, setRemoteLoading] = useState(true);
+  const [remoteError, setRemoteError] = useState("");
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
@@ -883,12 +888,46 @@ const Posts = () => {
   const isMobile = windowWidth < 768;
   const isTablet = windowWidth < 1024;
 
-  const categories = useMemo(() => [...new Set(posts.map((p) => p.category))], []);
-  const featuredPosts = useMemo(() => posts.filter((p) => p.featured), []);
+  useEffect(() => {
+    const ac = new AbortController();
+    (async () => {
+      setRemoteLoading(true);
+      setRemoteError("");
+      try {
+        const res = await apiFetch("/posts", { signal: ac.signal });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const json = await res.json();
+        const list = json?.data || json?.posts || json || [];
+        setRemotePosts(Array.isArray(list) ? list : []);
+      } catch (err) {
+        if (err?.name !== "AbortError") {
+          setRemotePosts([]);
+          setRemoteError(err?.message || "Failed to load posts");
+        }
+      } finally {
+        setRemoteLoading(false);
+      }
+    })();
+    return () => ac.abort();
+  }, []);
+
+  const basePosts = useMemo(() => {
+    if (remoteLoading) return [];
+    if (Array.isArray(remotePosts) && remotePosts.length > 0) return remotePosts;
+    if (remoteError) return posts.slice(0, 1);
+    return posts.slice(0, 1);
+  }, [remoteLoading, remotePosts, remoteError]);
+
+  const categories = useMemo(
+    () =>
+      [...new Set((remotePosts?.length ? remotePosts : posts).map((p) => p.category))],
+    [remotePosts],
+  );
+  const featuredPosts = useMemo(() => basePosts.filter((p) => p.featured), [basePosts]);
 
   // Filtered and sorted
   const filteredPosts = useMemo(() => {
-    let result = posts.filter((post) => {
+    let result = basePosts.filter((post) => {
       const matchesSearch =
         !searchQuery ||
         post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -910,7 +949,7 @@ const Posts = () => {
     }
 
     return result;
-  }, [searchQuery, selectedCategory, sortBy]);
+  }, [basePosts, searchQuery, selectedCategory, sortBy]);
 
   // Pagination
   const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
@@ -953,17 +992,18 @@ const Posts = () => {
 
   // Stats
   const totalReadTime = useMemo(() => {
-    return posts.reduce((sum, p) => sum + (parseInt(p.readTime) || 5), 0);
-  }, []);
+    return (basePosts || []).reduce((sum, p) => sum + (parseInt(p.readTime) || 5), 0);
+  }, [basePosts]);
 
   return (
     <div style={{ backgroundColor: 'var(--ps-off-white)' }}>
+      <SkeletonKeyframes />
       <style>{globalStyles}</style>
 
       <PageHeader
         title="Travel Journal"
         subtitle="Stories, guides, and inspiration from East Africa's most experienced travelers"
-        backgroundImage="https://images.unsplash.com/photo-1504973960431-1c467e159aa4?w=1920"
+        backgroundImage="https://i.pinimg.com/1200x/01/4e/6b/014e6b237eb7a5b6f7c70cd9b8b5b253.jpg"
         breadcrumbs={[{ label: 'Posts' }]}
       />
 
@@ -1526,7 +1566,28 @@ const Posts = () => {
             </p>
           </div>
 
-          {filteredPosts.length === 0 ? (
+          {remoteLoading ? (
+            viewMode === "list" ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+                {Array.from({ length: Math.min(postsPerPage, 6) }).map((_, i) => (
+                  <SkeletonCard key={i} style={{ borderRadius: 22 }} />
+                ))}
+              </div>
+            ) : (
+              <div
+                className="ps-posts-grid"
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, 1fr)",
+                  gap: 28,
+                }}
+              >
+                {Array.from({ length: postsPerPage }).map((_, i) => (
+                  <SkeletonCard key={i} />
+                ))}
+              </div>
+            )
+          ) : filteredPosts.length === 0 ? (
             <div
               style={{
                 textAlign: 'center',

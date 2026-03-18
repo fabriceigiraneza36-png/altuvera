@@ -25,13 +25,6 @@ export default async function handler(req, res) {
   ];
   const missingEnv = requiredEnv.filter((k) => !process.env[k]);
   if (missingEnv.length) {
-    // In development, allow a graceful fallback so local testing works without SMTP.
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('SMTP config missing, falling back to console log for development:', missingEnv);
-      console.log('Simulated message payload:', { type, name, email, subject, message, rest });
-      return res.status(200).json({ ok: true, note: 'development-fallback' });
-    }
-
     return res
       .status(500)
       .json({ error: `Server email is not configured (missing: ${missingEnv.join(', ')})` });
@@ -52,7 +45,7 @@ export default async function handler(req, res) {
   const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT) || 587,
-    secure: false,
+    secure: String(process.env.SMTP_PORT) === '465',
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,

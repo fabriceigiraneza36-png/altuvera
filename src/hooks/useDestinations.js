@@ -3,8 +3,9 @@ import {
   adaptDestination,
   adaptDestinationList,
 } from "../utils/destinationAdapter";
+import { API_URL, apiFetch } from "../utils/apiBase";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://https://backend-1-ghrv.onrender.com//api";
+const API_BASE = API_URL;
 
 const toQueryString = (params = {}) => {
   const entries = Object.entries(params).filter(
@@ -26,10 +27,9 @@ export function useDestinations(params = {}) {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(
-          `${API_BASE}/destinations${toQueryString(params)}`,
-          { signal }
-        );
+        const res = await apiFetch(`/destinations${toQueryString(params)}`, {
+          signal,
+        });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const json = await res.json();
         setDestinations(adaptDestinationList(normalizePayload(json)));
@@ -68,7 +68,7 @@ export function useDestination(idOrSlug) {
     setLoading(true);
     setError(null);
 
-    fetch(`${API_BASE}/destinations/${idOrSlug}`, { signal: controller.signal })
+    apiFetch(`/destinations/${idOrSlug}`, { signal: controller.signal })
       .then(async (res) => {
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json();
@@ -106,7 +106,7 @@ export function useCountryDestinations(countryId) {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${API_BASE}/countries/${countryId}/destinations`, {
+        const res = await apiFetch(`/countries/${countryId}/destinations`, {
           signal,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -133,4 +133,3 @@ export function useCountryDestinations(countryId) {
 
   return { destinations, loading, error, refetch: fetchCountryDestinations };
 }
-

@@ -36,7 +36,7 @@ const EvolutionData = [
       "Core philosophy 'True Adventures In High Places & Deep Culture' established",
       "Initial operational framework and quality standards defined"
     ],
-    image: "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800"
+    image: "https://i.pinimg.com/736x/db/61/7b/db617bf94d8544430c4c16d6947ceba4.jpg"
   },
   {
     year: "November 2025",
@@ -50,7 +50,7 @@ const EvolutionData = [
       "Community support initiatives introduced in 2 rural areas",
       "Transparent fund allocation protocols implemented"
     ],
-    image: "https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=800"
+    image: "https://i.pinimg.com/736x/eb/65/b9/eb65b970731fafbc758103b0574e2461.jpg"
   },
   {
     year: "January 2026",
@@ -64,7 +64,7 @@ const EvolutionData = [
       "Rwanda: Gorilla trekking experiences established",
       "Uganda: Bwindi and Queen Elizabeth programs developed"
     ],
-    image: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=800"
+    image: "https://i.pinimg.com/1200x/5f/9e/9e/5f9e9e9600ea0cc0a24458fdc34f4607.jpg"
   },
   {
     year: "March 2026",
@@ -78,7 +78,7 @@ const EvolutionData = [
       "Digital booking and communication systems enhanced",
       "Conservation fund actively supporting wildlife protection"
     ],
-    image: "https://images.unsplash.com/photo-1534177616064-ef548ae5e58e?w=800"
+    image: "https://i.pinimg.com/1200x/f7/d8/79/f7d879d6a1486f026ba9ba9c30a3a125.jpg"
   },
   {
     year: "The Future",
@@ -92,7 +92,7 @@ const EvolutionData = [
       "AI-powered personalized itinerary matching planned",
       "Global expansion strategy under active preparation"
     ],
-    image: "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=800"
+    image: "https://i.pinimg.com/736x/ae/7e/b0/ae7eb0e3abf5ec6a35a65663ca13ee56.jpg"
   }
 ];
 
@@ -1450,7 +1450,7 @@ const About = () => {
   const [videoDurations, setVideoDurations] = useState({});
   const [isLoadingDurations, setIsLoadingDurations] = useState(true);
 
-  const heroImage = "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1920";
+  const heroImage = "https://i.pinimg.com/1200x/d6/fd/68/d6fd6828f6d716bf6786bdecef85e642.jpg";
 
   const team = [
     {
@@ -1726,7 +1726,7 @@ const About = () => {
               <motion.img
                 whileHover={{ scale: 1.02 }}
                 transition={{ duration: 0.6 }}
-                src="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1600"
+                src="https://i.pinimg.com/1200x/20/8c/d2/208cd22b7f83f51b13d81064f5a2b4f3.jpg"
                 alt="Featured Video"
                 style={{
                   width: '100%',

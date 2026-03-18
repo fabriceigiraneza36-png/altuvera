@@ -4,13 +4,7 @@
 // ─────────────────────────────────────────────────────────────
 
 import React, { useEffect, useCallback, useMemo, Suspense } from "react";
-import {
-  Routes,
-  Route,
-  useLocation,
-  Navigate,
-  Outlet,
-} from "react-router-dom";
+import { Routes, Route, useLocation, Navigate, Outlet } from "react-router-dom";
 import { useApp } from "./context/AppContext";
 import { getRedirectUrl } from "./utils/routeUtils";
 import "leaflet/dist/leaflet.css";
@@ -29,10 +23,10 @@ import WhatsAppButton from "./components/common/WhatsAppButton";
 
 // ─── Deferred Shell Components (non-critical, loaded after paint) ──────
 const PersistentVideoPlayer = React.lazy(
-  () => import("./components/common/PersistentVideoPlayer")
+  () => import("./components/common/PersistentVideoPlayer"),
 );
 const PersistentMapViewer = React.lazy(
-  () => import("./components/common/PersistentMapViewer")
+  () => import("./components/common/PersistentMapViewer"),
 );
 
 // ═══════════════════════════════════════════════════════════════
@@ -269,7 +263,7 @@ const prefetchRoutes = () => {
           });
         });
       },
-      { timeout: 4000 }
+      { timeout: 4000 },
     );
   }
 };
@@ -402,7 +396,7 @@ function App() {
     const navigationEntry = performance.getEntriesByType?.("navigation")?.[0];
     if (process.env.NODE_ENV === "development" && navigationEntry) {
       console.debug(
-        `[Router] ${location.pathname} — DOM interactive: ${Math.round(navigationEntry.domInteractive)}ms`
+        `[Router] ${location.pathname} — DOM interactive: ${Math.round(navigationEntry.domInteractive)}ms`,
       );
     }
   }, [location.pathname]);

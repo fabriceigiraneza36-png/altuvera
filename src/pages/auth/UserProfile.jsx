@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
 import { useUserAuth } from "../../context/UserAuthContext";
-import DashboardLayout from "../../components/auth/DashboardLayout";
+import DashboardLayout from "../../components/users/DashboardLayout";
 import {
   HiUser,
   HiMail,
@@ -138,14 +138,14 @@ export default function UserProfile() {
         setSyncState(SYNC_STATE.ERROR);
         showNotification(
           "error",
-          err.message || "Failed to update profile. Please try again."
+          err.message || "Failed to update profile. Please try again.",
         );
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [form, updateProfile, showNotification]
+    [form, updateProfile, showNotification],
   );
 
   // Handle form submission
@@ -154,7 +154,7 @@ export default function UserProfile() {
       if (e) e.preventDefault();
       await persistProfile({ silent: false });
     },
-    [persistProfile]
+    [persistProfile],
   );
 
   // Validate file before upload
@@ -204,14 +204,14 @@ export default function UserProfile() {
         console.error("Avatar upload error:", err);
         showNotification(
           "error",
-          err.message || "Failed to upload image. Please try again."
+          err.message || "Failed to upload image. Please try again.",
         );
       } finally {
         setUploading(false);
         if (fileInputRef.current) fileInputRef.current.value = "";
       }
     },
-    [uploadAvatar, validateFile, showNotification]
+    [uploadAvatar, validateFile, showNotification],
   );
 
   // Handle avatar click
@@ -568,8 +568,7 @@ function ProfileHeader({
             className="role-badge"
             style={{ background: "#f1f5f9", color: "#64748b" }}
           >
-            Member since{" "}
-            {new Date(user?.createdAt || Date.now()).getFullYear()}
+            Member since {new Date(user?.createdAt || Date.now()).getFullYear()}
           </span>
         </div>
       </div>
@@ -623,9 +622,7 @@ function ProfileCardHeader({
             borderRadius: "4px",
           }}
         />
-        <h2 style={{ fontSize: "1.25rem", margin: 0 }}>
-          Personal Information
-        </h2>
+        <h2 style={{ fontSize: "1.25rem", margin: 0 }}>Personal Information</h2>
       </div>
       {!editing ? (
         <button

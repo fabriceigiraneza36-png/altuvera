@@ -1,38 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import './CountrySlideshow.css';
+import React, { useMemo } from "react";
+import ImageCycle from "./ImageCycle";
+import "./CountrySlideshow.css";
 
-const CountrySlideshow = ({ images = [], alt = '' }) => {
-  const [idx, setIdx] = useState(0);
-  useEffect(() => {
-    if (!images?.length) return;
-    const t = setInterval(() => setIdx((i) => (i + 1) % images.length), 4500);
-    return () => clearInterval(t);
-  }, [images]);
+const CountrySlideshow = ({ images = [], alt = "" }) => {
+  const srcs = useMemo(
+    () =>
+      (Array.isArray(images) ? images : [])
+        .map((img) => img?.url || img?.src || img)
+        .filter(Boolean),
+    [images],
+  );
 
-  if (!images?.length) return null;
+  if (!srcs.length) return null;
 
   return (
     <div className="cs-slideshow">
-      {images.map((img, i) => (
-        <img
-          key={i}
-          src={img.url || img.src || img}
-          alt={img.alt || alt}
-          className={`cs-slide ${i === idx ? 'cs-active' : ''}`}
-          loading="lazy"
-          onError={(e) => { e.currentTarget.src = '/altuvera.png'; }}
-        />
-      ))}
-      <div className="cs-controls">
-        {images.map((_, i) => (
-          <button
-            key={i}
-            className={`cs-dot ${i === idx ? 'active' : ''}`}
-            onClick={() => setIdx(i)}
-            aria-label={`Go to slide ${i + 1}`}
-          />
-        ))}
-      </div>
+      <ImageCycle
+        images={srcs}
+        showControls
+        showDots
+        clickToNavigate
+        overlayGradient="linear-gradient(180deg,rgba(0,0,0,0.15) 0%,rgba(0,0,0,0.35) 60%,rgba(0,0,0,0.65) 100%)"
+        aspectRatio="16/9"
+      />
     </div>
   );
 };

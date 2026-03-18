@@ -21,19 +21,19 @@ import { useScrollAnimation } from "../../hooks/useScrollAnimation";
 
 const ANIMATIONS = {
   fadeInUp: {
-    initial: "opacity:0;transform:translateY(40px)",
+    initial: "opacity:0;transform:translateY(28px)",
     animate: "opacity:1;transform:translateY(0)",
   },
   fadeInDown: {
-    initial: "opacity:0;transform:translateY(-40px)",
+    initial: "opacity:0;transform:translateY(-28px)",
     animate: "opacity:1;transform:translateY(0)",
   },
   fadeInLeft: {
-    initial: "opacity:0;transform:translateX(-50px)",
+    initial: "opacity:0;transform:translateX(-34px)",
     animate: "opacity:1;transform:translateX(0)",
   },
   fadeInRight: {
-    initial: "opacity:0;transform:translateX(50px)",
+    initial: "opacity:0;transform:translateX(34px)",
     animate: "opacity:1;transform:translateX(0)",
   },
   scaleIn: {
@@ -45,7 +45,7 @@ const ANIMATIONS = {
     animate: "opacity:1",
   },
   slideUp: {
-    initial: "opacity:0;transform:translateY(60px)",
+    initial: "opacity:0;transform:translateY(42px)",
     animate: "opacity:1;transform:translateY(0)",
   },
   zoomIn: {
@@ -95,9 +95,9 @@ const AnimatedSection = ({
   children,
   animation = "fadeInUp",
   delay = 0,
-  duration = 0.65,
+  duration = 0.48,
   threshold = 0.1,
-  rootMargin = "-40px 0px -40px 0px",
+  rootMargin = "80px 0px -40px 0px",
   style = {},
   className = "",
   as: Component = "div",
@@ -115,12 +115,13 @@ const AnimatedSection = ({
       ? parseStyles(anim.animate)
       : parseStyles(anim.initial);
 
+  const easing = "cubic-bezier(0.16, 1, 0.3, 1)";
   const transitionValue = reduceMotion
     ? "none"
-    : `opacity ${duration}s cubic-bezier(0.22,1,0.36,1) ${delay}s, ` +
-      `transform ${duration}s cubic-bezier(0.22,1,0.36,1) ${delay}s, ` +
-      `filter ${duration}s cubic-bezier(0.22,1,0.36,1) ${delay}s, ` +
-      `clip-path ${duration}s cubic-bezier(0.22,1,0.36,1) ${delay}s`;
+    : `opacity ${duration}s ${easing} ${delay}s, ` +
+      `transform ${duration}s ${easing} ${delay}s, ` +
+      `filter ${duration}s ${easing} ${delay}s, ` +
+      `clip-path ${duration}s ${easing} ${delay}s`;
 
   const animatedStyle = {
     willChange: reduceMotion ? "auto" : "opacity, transform, filter, clip-path",

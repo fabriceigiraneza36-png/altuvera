@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Helmet } from "react-helmet-async";
-import DashboardLayout from "../../components/auth/DashboardLayout";
+import DashboardLayout from "../../components/users/DashboardLayout";
 import "./UserAccountControl.css";
 
 export default function UserAccountControl() {
@@ -70,7 +70,9 @@ function SecuritySettings() {
   return (
     <div>
       <h2>Security Settings</h2>
-      <p>Manage your password, two-factor authentication, and security questions.</p>
+      <p>
+        Manage your password, two-factor authentication, and security questions.
+      </p>
       {/* Add form for security updates */}
     </div>
   );

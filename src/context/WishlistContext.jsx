@@ -13,7 +13,8 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 const WishlistContext = createContext(null);
 
-const getId = (item) => item?._id || item?.id || item?.destinationId || item?.slug;
+const getId = (item) =>
+  item?._id || item?.id || item?.destinationId || item?.slug;
 
 export function WishlistProvider({ children }) {
   const { authFetch, isAuthenticated, openModal } = useUserAuth();
@@ -40,7 +41,7 @@ export function WishlistProvider({ children }) {
     const run = (async () => {
       setLoading(true);
       try {
-        const data = await authFetch(`${API_URL}/auth/wishlist`);
+        const data = await authFetch(`${API_URL}/users/wishlist`);
         const items = data?.data || data || [];
         setWishlistIds(new Set(items.map(getId).filter(Boolean)));
         setLoaded(true);
@@ -77,7 +78,7 @@ export function WishlistProvider({ children }) {
       const isWished = wishlistIds.has(destinationId);
       try {
         if (isWished) {
-          await authFetch(`${API_URL}/auth/wishlist/${destinationId}`, {
+          await authFetch(`${API_URL}/users/wishlist/${destinationId}`, {
             method: "DELETE",
           });
           setWishlistIds((prev) => {
@@ -86,7 +87,7 @@ export function WishlistProvider({ children }) {
             return next;
           });
         } else {
-          await authFetch(`${API_URL}/auth/wishlist`, {
+          await authFetch(`${API_URL}/users/wishlist`, {
             method: "POST",
             body: JSON.stringify({ destinationId }),
           });
@@ -136,4 +137,3 @@ export function useWishlist() {
 }
 
 export default WishlistContext;
-

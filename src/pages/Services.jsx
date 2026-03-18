@@ -50,9 +50,9 @@ const THEME = {
       100: "#DCFCE7",
       200: "#BBF7D0",
       300: "#86EFAC",
-      400: "#4ADE80",
-      500: "#22C55E",
-      600: "#16A34A",
+      400: "#177339",
+      500: "#257341",
+      600: "#169143",
       700: "#15803D",
       800: "#166534",
       900: "#14532D",
@@ -1990,7 +1990,7 @@ const Services = () => {
       <PageHeader
         title="Our Services"
         subtitle="Comprehensive travel experiences designed to create your perfect East African adventure"
-        backgroundImage="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1920&q=80"
+        backgroundImage="https://i.pinimg.com/1200x/1c/d9/96/1cd9962233acb19c410546340c0f8f39.jpg"
         breadcrumbs={[{ label: "Services", path: "/services" }]}
       />
 

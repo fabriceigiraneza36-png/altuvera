@@ -18,6 +18,7 @@ import herobg from "../assets/fabrice.jpg";
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 import { sendMessage } from "../utils/sendMessage";
 import { sendVerificationCode, verifyCode } from "../utils/verifyEmail";
+import VerificationModal from "../components/common/VerificationModal";
 
 /* ══════════════════════════════════════════════════════════════
    CONSTANTS & CONFIGURATION
@@ -594,6 +595,54 @@ const Contact = () => {
     setStep((s) => Math.max(s - 1, 0));
   }, []);
 
+  const [verificationModalOpen, setVerificationModalOpen] = useState(false);
+  const [verificationId, setVerificationId] = useState(null);
+  const [verificationError, setVerificationError] = useState("");
+  const [verificationLoading, setVerificationLoading] = useState(false);
+
+  const closeVerificationModal = useCallback(() => {
+    setVerificationModalOpen(false);
+    setVerificationError("");
+    setVerificationId(null);
+    setProgress(0);
+  }, []);
+
+  const handleVerifyCode = useCallback(
+    async (code) => {
+      if (!verificationId) return;
+      setVerificationLoading(true);
+      setVerificationError("");
+
+      try {
+        await verifyCode({
+          email: form.email,
+          verificationId,
+          code,
+        });
+
+        const result = await sendMessage({
+          type: "contact",
+          data: { ...form },
+        });
+
+        if (!result.error) {
+          setSubmitted(true);
+          setVerificationModalOpen(false);
+          setForm(INITIAL_FORM);
+          setTouched({});
+          setErrors({});
+        } else {
+          setVerificationError(result.error);
+        }
+      } catch (err) {
+        setVerificationError(err.message || "Invalid code");
+      } finally {
+        setVerificationLoading(false);
+      }
+    },
+    [form, verificationId],
+  );
+
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
@@ -609,47 +658,20 @@ const Contact = () => {
       }, 100);
 
       try {
-        // First, verify user's email using one-time code
-        const { verificationId } = await sendVerificationCode({
+        const { verificationId: id } = await sendVerificationCode({
           email: form.email,
           purpose: "contact",
         });
 
-        const code = window.prompt(
-          "A verification code has been sent to your email. Please enter it to confirm your message."
-        );
-
-        if (!code) {
-          throw new Error("Verification code is required.");
-        }
-
-        await verifyCode({
-          email: form.email,
-          verificationId,
-          code,
-        });
-
-        const result = await sendMessage({
-          type: "contact",
-          data: { ...form },
-        });
-
-        clearInterval(interval);
-        setProgress(100);
-
-        setTimeout(() => {
-          setSubmitting(false);
-          if (!result.error) {
-            setSubmitted(true);
-          } else {
-            setErrors((prev) => ({ ...prev, submit: result.error }));
-          }
-        }, 400);
+        setVerificationId(id);
+        setVerificationError("");
+        setVerificationModalOpen(true);
       } catch (err) {
+        setErrors((prev) => ({ ...prev, submit: err.message || "Failed to send verification code" }));
+      } finally {
         clearInterval(interval);
         setProgress(100);
         setSubmitting(false);
-        setErrors((prev) => ({ ...prev, submit: err.message || "Verification failed" }));
       }
     },
     [form, validateStep]
@@ -1505,6 +1527,15 @@ const Contact = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <VerificationModal
+        open={verificationModalOpen}
+        email={form.email}
+        loading={verificationLoading}
+        error={verificationError}
+        onClose={closeVerificationModal}
+        onSubmit={handleVerifyCode}
+      />
     </div>
   );
 };

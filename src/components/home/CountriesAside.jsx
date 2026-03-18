@@ -67,10 +67,12 @@ const countries = [
   },
 ];
 
-export default function EastAfricaFlags() {
+export default function EastAfricaFlags({ variant = "full" }) {
   const containerRef = useRef(null);
   const scrollRef = useRef(null);
   const [activeFlag, setActiveFlag] = useState(null);
+  const [isInView, setIsInView] = useState(false);
+  const dirRef = useRef(1);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -105,20 +107,89 @@ export default function EastAfricaFlags() {
     };
   }, []);
 
-  const scrollLeft = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: -320, behavior: "smooth" });
-    }
-  };
+  const reduceMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
-  const scrollRight = () => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollBy({ left: 320, behavior: "smooth" });
+  // Track visibility for auto slideshow
+  useEffect(() => {
+    const node = containerRef.current;
+    if (!node) return;
+
+    if (typeof IntersectionObserver === "undefined") {
+      setIsInView(true);
+      return;
     }
-  };
+
+    const obs = new IntersectionObserver(
+      ([entry]) => setIsInView(!!entry?.isIntersecting),
+      { threshold: 0.2, rootMargin: "120px 0px 120px 0px" },
+    );
+
+    obs.observe(node);
+    return () => obs.disconnect();
+  }, []);
+
+  // Auto scroll left->right then right->left when in view
+  useEffect(() => {
+    if (reduceMotion) return;
+    if (!isInView) return;
+
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+
+    let rafId = 0;
+    const speedPxPerSec = 70; // professional, noticeable but not distracting
+    let lastTs = 0;
+    let pauseUntil = 0;
+
+    // Start LTR then reverse, alternating each time it enters view
+    // (LTR motion for the flags means the viewport scrolls right->left => scrollLeft decreases)
+    dirRef.current = dirRef.current * -1;
+
+    const tick = (ts) => {
+      if (!lastTs) lastTs = ts;
+      const max = scroller.scrollWidth - scroller.clientWidth;
+      if (max <= 0) {
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
+
+      if (pauseUntil && ts < pauseUntil) {
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
+      pauseUntil = 0;
+
+      const dt = Math.min(40, ts - lastTs) / 1000;
+      lastTs = ts;
+      const delta = speedPxPerSec * dt * dirRef.current;
+      const next = scroller.scrollLeft + delta;
+
+      if (next <= 0) {
+        scroller.scrollLeft = 0;
+        dirRef.current = 1;
+        pauseUntil = ts + 550;
+      } else if (next >= max) {
+        scroller.scrollLeft = max;
+        dirRef.current = -1;
+        pauseUntil = ts + 550;
+      } else {
+        scroller.scrollLeft = next;
+      }
+
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [isInView, reduceMotion]);
 
   return (
-    <section ref={containerRef} className="flags-section">
+    <section
+      ref={containerRef}
+      className={`flags-section ${variant === "flush" ? "flush" : ""}`}
+    >
       <style>{styles}</style>
 
       {/* SVG Filters */}
@@ -196,32 +267,8 @@ export default function EastAfricaFlags() {
         </defs>
       </svg>
 
-      {/* Header */}
-      <header className="header">
-        <span className="header-tag">Explore</span>
-        <h1 className="header-title">African Nations</h1>
-        <p className="header-desc">
-          Discover the beauty and heritage of Africa
-        </p>
-      </header>
-
-      {/* Scroll Controls */}
-      <div className="scroll-controls">
-        <button className="scroll-btn" onClick={scrollLeft} aria-label="Scroll left">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M15 18l-6-6 6-6" />
-          </svg>
-        </button>
-        <button className="scroll-btn" onClick={scrollRight} aria-label="Scroll right">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M9 18l6-6-6-6" />
-          </svg>
-        </button>
-      </div>
-
       {/* Flags Row */}
-      <div className="scroll-wrapper">
-        <div ref={scrollRef} className="flags-row">
+      <div ref={scrollRef} className="flags-row" aria-label="Countries">
           {countries.map((country, idx) => (
             <Link
               key={country.code}
@@ -239,9 +286,6 @@ export default function EastAfricaFlags() {
               aria-label={`Flag of ${country.name}`}
             >
               <div className="card-content">
-                {/* Number */}
-                <span className="card-num">{String(idx + 1).padStart(2, "0")}</span>
-
                 {/* Flag */}
                 <div className="scene">
                   <div className="flag">
@@ -264,35 +308,11 @@ export default function EastAfricaFlags() {
                   </div>
                   <div className="flag-shadow"></div>
                 </div>
-
-                {/* Info */}
-                <div className="info">
-                  <h3 className="info-name">{country.name}</h3>
-                  <span className="info-capital">{country.capital}</span>
-                </div>
-
-                {/* Action */}
-                <div className="action">
-                  <span>View Details</span>
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M5 12h14M12 5l7 7-7 7" />
-                  </svg>
-                </div>
               </div>
 
-              {/* Border Glow */}
-              <div className="card-border"></div>
+              <div className="card-border" aria-hidden="true"></div>
             </Link>
           ))}
-        </div>
-      </div>
-
-      {/* Scroll Hint */}
-      <div className="scroll-hint">
-        <span>Scroll to explore</span>
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-          <path d="M5 12h14M12 5l7 7-7 7" />
-        </svg>
       </div>
     </section>
   );
@@ -324,17 +344,27 @@ const styles = `
   --my: 0deg;
   
   position: relative;
-  min-height: 100vh;
+  min-height: 1vh;
   width: 100%;
-  
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  background: transparent;
   justify-content: center;
   
-  padding: 2rem 0;
-  
-  background: transparent;
+  backdrop-filter: blur(20px);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  padding: 0;
+}
+
+/* Flush variant (for embedding inside dense layouts like Home) */
+.flags-section.flush {
+  min-height: auto;
+  justify-content: flex-start;
+  padding: 0;
+}
+
+.flags-section.flush .header {
+  padding: 0 2rem 1.25rem;
 }
 
 /* =============================================
@@ -427,8 +457,8 @@ const styles = `
 ============================================= */
 .flags-row {
   display: flex;
-  gap: 1.5rem;
-  padding: 2rem 3rem;
+  gap: 1.25rem;
+  padding: 0;
   
   overflow-x: auto;
   overflow-y: visible;
@@ -942,3 +972,4 @@ const styles = `
   }
 }
 `;
+  

@@ -1,6 +1,8 @@
 // src/services/virtualTourService.js
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://https://backend-1-ghrv.onrender.com//api";
+import { API_URL } from "../utils/apiBase";
+
+const API_BASE = import.meta.env.VITE_API_URL || API_URL;
 
 class VirtualTourService {
   constructor() {

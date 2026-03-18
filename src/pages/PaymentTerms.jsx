@@ -2062,6 +2062,14 @@ const PaymentTerms = () => {
   const [gateContext, setGateContext] = useState("");
   const trackRef = useRef(null);
 
+  // Styles for contact text
+  const styles = {
+    contactText: {
+      fontSize: "15px",
+      lineHeight: "1.6",
+    },
+  };
+
   // ── Scroll spy + scroll-to-top visibility ──
   useEffect(() => {
     const handler = () => {

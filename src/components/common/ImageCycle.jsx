@@ -618,6 +618,8 @@ const ImageCycle = ({
   overlayGradient = "linear-gradient(180deg,rgba(0,0,0,.003) 0%,rgba(0,0,0,.035) 40%,rgba(0,0,0,.28) 100%)",
   onSlideChange,
   aspectRatio,
+  currentIndex,
+  onIndexChange,
 }) => {
   const effectiveShowControls =
     typeof showControllers === "boolean" ? showControllers : showControls;
@@ -627,7 +629,7 @@ const ImageCycle = ({
     [images]
   );
 
-  const [idx, setIdx] = useState(0);
+  const [idx, setIdx] = useState(typeof currentIndex === "number" ? currentIndex : 0);
   const [playing, setPlaying] = useState(autoPlay);
   const [hovered, setHovered] = useState(false);
   const [loaded, setLoaded] = useState(() => new Set());

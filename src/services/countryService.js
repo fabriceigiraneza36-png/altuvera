@@ -1,8 +1,10 @@
 // src/services/countryService.js
 
+import { API_URL } from "../utils/apiBase";
+
 // Use proxy in dev (/api), full URL in production
 const API_BASE = import.meta.env.VITE_API_URL || "/api";
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://https://backend-1-ghrv.onrender.com/";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || API_URL;
 
 // Determine the correct base URL based on environment
 const getBaseUrl = () => {

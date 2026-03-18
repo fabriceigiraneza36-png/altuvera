@@ -17,9 +17,9 @@ export const HERO_SLIDES = [
   {
     // https://i.pinimg.com/1200x/cc/22/42/cc2242dbd24507eca2cd4313ffbd5c72.jpg
     image:
-      "https://drive.google.com/uc?export=view&id=15LlHLEX_dDLEqMVPX2C3M4Gz6FfsAkWY",
-    fallback:
       "https://i.pinimg.com/1200x/cc/22/42/cc2242dbd24507eca2cd4313ffbd5c72.jpg",
+    fallback:
+      "https://drive.google.com/uc?export=view&id=15LlHLEX_dDLEqMVPX2C3M4Gz6FfsAkWY",
     title: "Witness the Great Migration",
     subtitle:
       "Experience nature's greatest spectacle across the vast Serengeti and Maasai Mara plains",

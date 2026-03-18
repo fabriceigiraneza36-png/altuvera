@@ -12,7 +12,12 @@ import React, {
 // ============================================================================
 // Configuration
 // ============================================================================
-import { API_URL } from "../utils/apiBase";
+import {
+  API_URL,
+  API_URLS,
+  toAbsoluteApiUrl,
+  toApiPath,
+} from "../utils/apiBase";
 const AVATAR_UPLOAD_URL = import.meta.env.VITE_AVATAR_UPLOAD_URL || "";
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID || "";
@@ -28,7 +33,7 @@ const GOOGLE_PENDING_KEY = "altuvera_google_pending";
 const GITHUB_OAUTH_STATE_KEY = "altuvera_github_oauth_state";
 const GITHUB_OAUTH_INTENT_KEY = "altuvera_github_oauth_intent";
 
-const DEFAULT_AVATAR_UPLOAD_PATH = "/uploads";
+const DEFAULT_AVATAR_UPLOAD_PATH = "/uploads/image";
 const VERIFICATION_CODE_EXPIRY_MINUTES = 10;
 
 // ============================================================================
@@ -162,8 +167,30 @@ const normalizeUser = (
       payload.provider ||
       "email",
     emailVerified: Boolean(
-      payload.emailVerified || payload.email_verified || payload.verified,
+      payload.emailVerified ||
+      payload.email_verified ||
+      payload.isVerified ||
+      payload.is_verified ||
+      payload.verified,
     ),
+    isVerified: Boolean(
+      payload.isVerified ||
+      payload.is_verified ||
+      payload.emailVerified ||
+      payload.email_verified ||
+      payload.verified,
+    ),
+    isActive:
+      typeof payload.isActive === "boolean"
+        ? payload.isActive
+        : typeof payload.is_active === "boolean"
+          ? payload.is_active
+          : true,
+    preferences:
+      payload.preferences && typeof payload.preferences === "object"
+        ? payload.preferences
+        : {},
+    lastLogin: payload.lastLogin || payload.last_login || null,
     createdAt: payload.createdAt || payload.created_at,
     updatedAt: payload.updatedAt || payload.updated_at,
   };
@@ -270,6 +297,7 @@ export function UserAuthProvider({ children }) {
   const profileCacheRef = useRef(readProfileCache());
   const pendingProfileRef = useRef(null);
   const googleInitializedRef = useRef(false);
+  const refreshPromiseRef = useRef(null);
 
   // -------------------------------------------------------------------------
   // Computed Values
@@ -313,6 +341,14 @@ export function UserAuthProvider({ children }) {
     sessionStorage.removeItem(GITHUB_OAUTH_STATE_KEY);
     sessionStorage.removeItem(GITHUB_OAUTH_INTENT_KEY);
   }, []);
+
+  const applyLoggedOutState = useCallback(() => {
+    clearStoredAuth();
+    setToken(null);
+    setUser(null);
+    setGoogleUser(null);
+    pendingProfileRef.current = null;
+  }, [clearStoredAuth]);
 
   const storeToken = useCallback((authToken, persist) => {
     if (!authToken) return;
@@ -427,26 +463,121 @@ export function UserAuthProvider({ children }) {
   // -------------------------------------------------------------------------
   const authFetch = useCallback(
     async (url, options = {}) => {
+      const { skipAuthRefresh = false, ...requestOptions } = options;
       const currentToken = token || getStoredToken();
-      const isFormData = options.body instanceof FormData;
+      const isFormData = requestOptions.body instanceof FormData;
 
       const headers = {
         ...(isFormData ? {} : { "Content-Type": "application/json" }),
         ...(currentToken ? { Authorization: `Bearer ${currentToken}` } : {}),
-        ...options.headers,
+        ...requestOptions.headers,
       };
 
-      let response;
-      try {
-        response = await fetch(url, {
-          ...options,
-          credentials: "include",
-          headers,
-        });
-      } catch (networkError) {
-        throw new Error(
-          "Network error. Please check your connection and try again.",
-        );
+      const pathFromKnownBase = toApiPath(url);
+      const candidateUrls = pathFromKnownBase
+        ? API_URLS.map((base) => toAbsoluteApiUrl(pathFromKnownBase, base))
+        : [url];
+
+      const executeRequest = async (authTokenOverride = currentToken) => {
+        let response;
+        for (const candidateUrl of candidateUrls) {
+          const candidateHeaders = {
+            ...(isFormData ? {} : { "Content-Type": "application/json" }),
+            ...(authTokenOverride
+              ? { Authorization: `Bearer ${authTokenOverride}` }
+              : {}),
+            ...requestOptions.headers,
+          };
+
+          try {
+            response = await fetch(candidateUrl, {
+              ...requestOptions,
+              credentials: "include",
+              headers: candidateHeaders,
+            });
+
+            if (
+              response.status >= 500 &&
+              candidateUrl !== candidateUrls.at(-1)
+            ) {
+              continue;
+            }
+
+            break;
+          } catch (networkError) {
+            if (candidateUrl !== candidateUrls.at(-1)) continue;
+            throw new Error(
+              "Network error. Please check your connection and try again.",
+            );
+          }
+        }
+
+        return response;
+      };
+
+      let response = await executeRequest();
+
+      const shouldRefresh =
+        response?.status === 401 &&
+        !skipAuthRefresh &&
+        currentToken &&
+        getStoredRefreshToken() &&
+        pathFromKnownBase !== "/users/refresh-token" &&
+        pathFromKnownBase !== "/users/login" &&
+        pathFromKnownBase !== "/users/register" &&
+        pathFromKnownBase !== "/users/verify-code" &&
+        pathFromKnownBase !== "/users/resend-code" &&
+        pathFromKnownBase !== "/users/check-email" &&
+        pathFromKnownBase !== "/users/google" &&
+        pathFromKnownBase !== "/users/github";
+
+      if (shouldRefresh) {
+        try {
+          if (!refreshPromiseRef.current) {
+            const refreshToken = getStoredRefreshToken();
+            refreshPromiseRef.current = (async () => {
+              const refreshResponse = await fetch(
+                `${API_URL}/users/refresh-token`,
+                {
+                  method: "POST",
+                  credentials: "include",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ refreshToken }),
+                },
+              );
+
+              let refreshData = null;
+              try {
+                refreshData = await refreshResponse.json();
+              } catch {
+                refreshData = null;
+              }
+
+              if (!refreshResponse.ok) {
+                const refreshMessage =
+                  refreshData?.message ||
+                  refreshData?.error ||
+                  "Session expired. Please sign in again.";
+                const refreshError = new Error(refreshMessage);
+                refreshError.status = refreshResponse.status;
+                throw refreshError;
+              }
+
+              saveAuth(refreshData, { persist: persistSession });
+              return extractAuthPayload(refreshData).token;
+            })().finally(() => {
+              refreshPromiseRef.current = null;
+            });
+          }
+
+          const refreshedToken = await refreshPromiseRef.current;
+          response = await executeRequest(refreshedToken);
+        } catch (refreshError) {
+          applyLoggedOutState();
+          throw refreshError;
+        }
       }
 
       if (response.status === 204) {
@@ -473,9 +604,7 @@ export function UserAuthProvider({ children }) {
 
       if (!response.ok) {
         if (response.status === 401) {
-          clearStoredAuth();
-          setToken(null);
-          setUser(null);
+          applyLoggedOutState();
         }
 
         const errorMessage =
@@ -492,7 +621,7 @@ export function UserAuthProvider({ children }) {
 
       return data || {};
     },
-    [clearStoredAuth, token],
+    [API_URLS, applyLoggedOutState, persistSession, saveAuth, token],
   );
 
   // -------------------------------------------------------------------------
@@ -510,7 +639,7 @@ export function UserAuthProvider({ children }) {
     fetchingRef.current = true;
 
     try {
-      const data = await authFetch(`${API_URL}/auth/me`);
+      const data = await authFetch(`${API_URL}/users/me`);
       const payload = data?.data || data;
       const userData = payload?.user || payload;
 
@@ -824,6 +953,7 @@ export function UserAuthProvider({ children }) {
             cancel_on_tap_outside: true,
             context: options.mode === "signup" ? "signup" : "signin",
             ux_mode: options.uxMode || "popup",
+            use_fedcm_for_prompt: true,
           });
 
           if (options.fallbackElement) {
@@ -1038,7 +1168,7 @@ export function UserAuthProvider({ children }) {
         avatar: body.avatar,
       };
 
-      const data = await authFetch(`${API_URL}/auth/register`, {
+      const data = await authFetch(`${API_URL}/users/register`, {
         method: "POST",
         body: JSON.stringify(body),
       });
@@ -1095,7 +1225,7 @@ export function UserAuthProvider({ children }) {
         avatar: "",
       };
 
-      const data = await authFetch(`${API_URL}/auth/login`, {
+      const data = await authFetch(`${API_URL}/users/login`, {
         method: "POST",
         body: JSON.stringify(body),
       });
@@ -1122,7 +1252,7 @@ export function UserAuthProvider({ children }) {
         throw new Error("Please enter a valid 6-digit code.");
       }
 
-      const data = await authFetch(`${API_URL}/auth/verify-code`, {
+      const data = await authFetch(`${API_URL}/users/verify-code`, {
         method: "POST",
         body: JSON.stringify({
           email: normalizedEmail,
@@ -1146,13 +1276,30 @@ export function UserAuthProvider({ children }) {
         throw new Error("Email is required to resend code.");
       }
 
-      return authFetch(`${API_URL}/auth/resend-code`, {
+      return authFetch(`${API_URL}/users/resend-code`, {
         method: "POST",
         body: JSON.stringify({
           email: normalizedEmail,
-          ...buildVerificationCodeOptions(),
         }),
       });
+    },
+    [authFetch],
+  );
+
+  const checkEmail = useCallback(
+    async (email) => {
+      const normalizedEmail = safeTrim(email);
+
+      if (!normalizedEmail) {
+        throw new Error("Email is required.");
+      }
+
+      const data = await authFetch(`${API_URL}/users/check-email`, {
+        method: "POST",
+        body: JSON.stringify({ email: normalizedEmail }),
+      });
+
+      return data?.data || data || {};
     },
     [authFetch],
   );
@@ -1162,7 +1309,7 @@ export function UserAuthProvider({ children }) {
   // -------------------------------------------------------------------------
   const updateProfile = useCallback(
     async (updates) => {
-      const data = await authFetch(`${API_URL}/auth/profile`, {
+      const data = await authFetch(`${API_URL}/users/profile`, {
         method: "PUT",
         body: JSON.stringify(updates),
       });
@@ -1184,6 +1331,23 @@ export function UserAuthProvider({ children }) {
     },
     [authFetch, cacheProfile, user],
   );
+
+  const refreshAuthToken = useCallback(async () => {
+    const refreshToken = getStoredRefreshToken();
+
+    if (!refreshToken) {
+      throw new Error("Refresh token required.");
+    }
+
+    const data = await authFetch(`${API_URL}/users/refresh-token`, {
+      method: "POST",
+      body: JSON.stringify({ refreshToken }),
+      skipAuthRefresh: true,
+    });
+
+    saveAuth(data, { persist: persistSession });
+    return data;
+  }, [authFetch, persistSession, saveAuth]);
 
   const uploadAvatar = useCallback(
     async (file) => {
@@ -1262,19 +1426,37 @@ export function UserAuthProvider({ children }) {
   // -------------------------------------------------------------------------
   const logout = useCallback(async () => {
     try {
-      await authFetch(`${API_URL}/auth/logout`, { method: "POST" }).catch(
+      await authFetch(`${API_URL}/users/logout`, { method: "POST" }).catch(
         () => {},
       );
     } finally {
-      clearStoredAuth();
-      setToken(null);
-      setUser(null);
-      setGoogleUser(null);
-      pendingProfileRef.current = null;
+      applyLoggedOutState();
       setPendingEmail("");
       closeModal();
     }
-  }, [authFetch, clearStoredAuth, closeModal]);
+  }, [applyLoggedOutState, authFetch, closeModal]);
+
+  const deleteAccount = useCallback(async () => {
+    const data = await authFetch(`${API_URL}/users/me`, {
+      method: "DELETE",
+    });
+
+    applyLoggedOutState();
+    closeModal();
+    return data;
+  }, [applyLoggedOutState, authFetch, closeModal]);
+
+  const resetPassword = useCallback(async () => {
+    throw new Error(
+      "Password reset is not available. This account system uses email OTP and social login only.",
+    );
+  }, []);
+
+  const changePassword = useCallback(async () => {
+    throw new Error(
+      "Password changes are not available. This account system uses email OTP and social login only.",
+    );
+  }, []);
 
   // -------------------------------------------------------------------------
   // Effects
@@ -1327,9 +1509,14 @@ export function UserAuthProvider({ children }) {
       // Email Auth Methods
       register,
       login,
+      checkEmail,
       verifyCode,
       resendCode,
+      refreshAuthToken,
       logout,
+      deleteAccount,
+      resetPassword,
+      changePassword,
 
       // Google Auth Methods
       googleSignIn,
@@ -1374,9 +1561,14 @@ export function UserAuthProvider({ children }) {
       socialAuthError,
       register,
       login,
+      checkEmail,
       verifyCode,
       resendCode,
+      refreshAuthToken,
       logout,
+      deleteAccount,
+      resetPassword,
+      changePassword,
       googleSignIn,
       googleSignUp,
       completeGoogleSignUp,
