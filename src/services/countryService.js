@@ -1,24 +1,11 @@
 // src/services/countryService.js
 
-import { API_URL } from "../utils/apiBase";
+import { multiBackendFetch, getBackendInfo } from "../utils/multiBackendFetch";
 
-// Use proxy in dev (/api), full URL in production
-const API_BASE = import.meta.env.VITE_API_URL || "/api";
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || API_URL;
-
-// Determine the correct base URL based on environment
-const getBaseUrl = () => {
-  // In development, use the proxy (/api -> https://backend-1-ghrv.onrender.com//api)
-  // In production, use the full URL
-  if (import.meta.env.DEV) {
-    return API_BASE;
-  }
-  return API_BASE_URL;
-};
+const BASE_PATH = "/countries";
 
 class CountryService {
   constructor() {
-    this.base = `${getBaseUrl()}/countries`;
     this.abortControllers = new Map();
   }
 
@@ -31,30 +18,24 @@ class CountryService {
     return controller.signal;
   }
 
-  async _fetch(url, options = {}, abortKey = null) {
+  async _fetch(path, options = {}, abortKey = null) {
     const signal = abortKey ? this._abort(abortKey) : undefined;
-    const config = {
-      ...options,
-      signal,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
-    };
-
-    const token = localStorage.getItem("token");
-    if (token) config.headers.Authorization = `Bearer ${token}`;
-
+    
     try {
-      const response = await fetch(url, config);
-      if (!response.ok) {
-        const body = await response.json().catch(() => ({}));
-        const error = new Error(body.error || `HTTP ${response.status}`);
-        error.status = response.status;
-        error.code = body.code || "UNKNOWN";
-        throw error;
+      const result = await multiBackendFetch(`${BASE_PATH}${path}`, {
+        ...options,
+        signal,
+        headers: {
+          "Content-Type": "application/json",
+          ...options.headers,
+        },
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || "Request failed");
       }
-      return await response.json();
+
+      return result.data;
     } catch (err) {
       if (err.name === "AbortError") return null;
       throw err;
@@ -70,35 +51,47 @@ class CountryService {
       : "";
   }
 
-  getAll(params = {}) {
-    return this._fetch(`${this.base}${this._qs(params)}`, {}, "getAll");
+  async getAll(params = {}) {
+    const result = await this._fetch(`${this._qs(params)}`, {}, "getAll");
+    return result;
   }
 
-  getFeatured(limit = 6) {
-    return this._fetch(
-      `${this.base}/featured?limit=${limit}`,
-      {},
-      "featured"
-    );
+  async getFeatured(limit = 6) {
+    const result = await this._fetch(`/featured?limit=${limit}`, {}, "featured");
+    return result;
   }
 
-  getOne(idOrSlug) {
-    return this._fetch(`${this.base}/${idOrSlug}`, {}, `getOne-${idOrSlug}`);
+  async getOne(idOrSlug) {
+    const result = await this._fetch(`/${idOrSlug}`, {}, `getOne-${idOrSlug}`);
+    return result;
   }
 
-  getDestinations(countryId) {
-    return this._fetch(
-      `${this.base}/${countryId}/destinations`,
+  async getDestinations(countryId) {
+    const result = await this._fetch(
+      `/${countryId}/destinations`,
       {},
       `destinations-${countryId}`
     );
+    return result;
   }
 
   cancelAll() {
     this.abortControllers.forEach((c) => c.abort());
     this.abortControllers.clear();
   }
+
+  // Get current backend info
+  getBackendInfo() {
+    return getBackendInfo();
+  }
 }
 
-const countryService = new CountryService();
+// Store a single shared instance across HMR reloads to avoid "Identifier 'countryService' has already been declared" errors
+// (some HMR runtimes may re-execute modules without fully clearing the module scope).
+var countryService = globalThis.__altuvera_countryService;
+if (!countryService) {
+  countryService = new CountryService();
+  globalThis.__altuvera_countryService = countryService;
+}
+
 export default countryService;

@@ -1,1007 +1,1324 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { fetchCountryPageData } from "../data/countries";
 
-
-const API =
-  (process.env.REACT_APP_API_URL || "http://localhost:3001") + "/api";
-
 /* ═══════════════════════════════════════════════════
-   HOOKS
+   DESIGN SYSTEM - GREEN & WHITE THEME
    ═══════════════════════════════════════════════════ */
 
-const useWindowWidth = () => {
-  const [w, setW] = useState(window.innerWidth);
-  useEffect(() => {
-    const h = () => setW(window.innerWidth);
-    window.addEventListener("resize", h);
-    return () => window.removeEventListener("resize", h);
-  }, []);
-  return w;
+const theme = {
+  // Primary Colors
+  primary: "#059669",
+  primaryDark: "#047857",
+  primaryLight: "#D1FAE5",
+  primaryMuted: "#ECFDF5",
+  
+  // Accent Colors
+  accent: "#10B981",
+  accentLight: "#A7F3D0",
+  
+  // Neutral Colors
+  white: "#FFFFFF",
+  gray50: "#F9FAFB",
+  gray100: "#F3F4F6",
+  gray200: "#E5E7EB",
+  gray300: "#D1D5DB",
+  gray400: "#9CA3AF",
+  gray500: "#6B7280",
+  gray600: "#4B5563",
+  gray700: "#374151",
+  gray800: "#1F2937",
+  gray900: "#111827",
+  
+  // Semantic
+  success: "#10B981",
+  warning: "#F59E0B",
+  error: "#EF4444",
+  info: "#3B82F6",
+  
+  // Typography
+  fontSans: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  fontSerif: "'Playfair Display', Georgia, serif",
+  
+  // Spacing
+  containerMax: "1280px",
+  sectionPadding: "80px",
+  sectionPaddingMobile: "48px",
+  
+  // Borders & Shadows
+  radiusSm: "8px",
+  radiusMd: "12px",
+  radiusLg: "16px",
+  radiusXl: "24px",
+  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+  shadowMd: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+  shadowLg: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+  shadowXl: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+  
+  // Transitions
+  transitionFast: "150ms ease",
+  transitionBase: "200ms ease",
+  transitionSlow: "300ms ease",
 };
 
 /* ═══════════════════════════════════════════════════
-   THEME
+   GLOBAL STYLES
    ═══════════════════════════════════════════════════ */
 
-const T = {
-  primary: "#0c3b5e",
-  primaryLight: "#e3f0fb",
-  secondary: "#1a8a5c",
-  secondaryLight: "#e6f7ef",
-  accent: "#d4930a",
-  accentLight: "#fef7e4",
-  danger: "#c0392b",
-  text: "#1e293b",
-  textMd: "#475569",
-  textLt: "#94a3b8",
-  bg: "#f7f8fc",
-  white: "#ffffff",
-  border: "#e2e8f0",
-  shadow: "0 2px 8px rgba(0,0,0,.08)",
-  shadowLg: "0 8px 30px rgba(0,0,0,.12)",
-  radius: "14px",
-  radiusSm: "10px",
-  sans: "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif",
-  serif: "Georgia,'Times New Roman',serif",
-};
-
-/* ═══════════════════════════════════════════════════
-   HELPERS
-   ═══════════════════════════════════════════════════ */
-
-const fmt = (n) => {
-  if (n == null) return "—";
-  if (n >= 1e9) return (n / 1e9).toFixed(1) + "B";
-  if (n >= 1e6) return (n / 1e6).toFixed(1) + "M";
-  if (n >= 1e3) return (n / 1e3).toFixed(1) + "K";
-  return String(n);
-};
-
-const fallbackImg =
-  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='800' height='500' fill='%23e2e8f0'%3E%3Crect width='800' height='500'/%3E%3Ctext x='400' y='260' text-anchor='middle' fill='%2394a3b8' font-size='28' font-family='sans-serif'%3ENo Image%3C/text%3E%3C/svg%3E";
-
-const splitParagraphs = (text) => {
-  if (!text) return [];
-  return text
-    .split(/\n\n|\n/)
-    .map((p) => p.trim())
-    .filter(Boolean);
-};
-
-/* ═══════════════════════════════════════════════════
-   SHARED INLINE COMPONENT STYLES
-   ═══════════════════════════════════════════════════ */
-
-const sectionWrap = (mob) => ({
-  maxWidth: 1200,
-  margin: "0 auto",
-  padding: mob ? "40px 16px" : "70px 32px",
-});
-
-const sectionTitle = (mob) => ({
-  fontFamily: T.serif,
-  fontSize: mob ? 26 : 34,
-  fontWeight: 700,
-  color: T.primary,
-  marginBottom: 6,
-  letterSpacing: "-0.02em",
-});
-
-const sectionSub = () => ({
-  fontSize: 15,
-  color: T.textMd,
-  marginBottom: 36,
-  lineHeight: 1.6,
-});
-
-const cardBase = () => ({
-  background: T.white,
-  borderRadius: T.radiusSm,
-  boxShadow: T.shadow,
-  overflow: "hidden",
-  transition: "transform .25s, box-shadow .25s",
-});
-
-/* ═══════════════════════════════════════════════════
-   GLOBAL CSS (injected once)
-   ═══════════════════════════════════════════════════ */
-
-const GlobalStyle = () => (
+const GlobalStyles = () => (
   <style>{`
-    .cp-card:hover{transform:translateY(-5px);box-shadow:${T.shadowLg}!important}
-    .cp-nav-link{position:relative;padding:14px 0;color:${T.textMd};font-weight:500;font-size:14px;
-      text-decoration:none;white-space:nowrap;transition:color .2s;cursor:pointer;border:none;background:none}
-    .cp-nav-link:hover,.cp-nav-link.active{color:${T.primary}}
-    .cp-nav-link.active::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;
-      background:${T.primary};border-radius:3px 3px 0 0}
-    .cp-fade{animation:cpFade .6s ease-out}
-    @keyframes cpFade{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
-    .cp-img-zoom{transition:transform .45s ease}
-    .cp-img-zoom:hover{transform:scale(1.06)}
-    .cp-timeline-dot{width:14px;height:14px;border-radius:50%;border:3px solid ${T.primary};
-      background:${T.white};position:absolute;left:-7px;top:4px;z-index:2}
-    .cp-timeline-dot.major{background:${T.primary}}
-    .cp-tag{display:inline-block;padding:5px 14px;border-radius:20px;font-size:13px;
-      font-weight:500;margin:0 6px 8px 0}
-    .cp-gallery-item{cursor:pointer;border-radius:${T.radiusSm};overflow:hidden}
-    .cp-gallery-item:hover .cp-img-zoom{transform:scale(1.08)}
-    .cp-lightbox{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.92);
-      display:flex;align-items:center;justify-content:center;padding:20px;animation:cpFade .3s}
-    .cp-lightbox img{max-width:90vw;max-height:85vh;border-radius:8px;object-fit:contain}
-    .cp-lightbox-close{position:absolute;top:20px;right:28px;color:#fff;font-size:36px;
-      cursor:pointer;background:none;border:none;line-height:1}
-    @media(max-width:767px){
-      .cp-facts-grid{grid-template-columns:repeat(2,1fr)!important}
-      .cp-two-col{flex-direction:column!important}
-      .cp-three-grid{grid-template-columns:1fr!important}
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap');
+    
+    * {
+      box-sizing: border-box;
     }
-    @media(min-width:768px) and (max-width:1023px){
-      .cp-three-grid{grid-template-columns:repeat(2,1fr)!important}
+    
+    @keyframes skeleton-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    
+    .skeleton {
+      background: linear-gradient(
+        90deg,
+        ${theme.gray200} 25%,
+        ${theme.gray100} 50%,
+        ${theme.gray200} 75%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: ${theme.radiusSm};
+    }
+    
+    .fade-in {
+      animation: fade-in 0.6s ease forwards;
+    }
+    
+    .hover-lift {
+      transition: transform ${theme.transitionBase}, box-shadow ${theme.transitionBase};
+    }
+    
+    .hover-lift:hover {
+      transform: translateY(-4px);
+      box-shadow: ${theme.shadowXl};
+    }
+    
+    .hover-scale img {
+      transition: transform ${theme.transitionSlow};
+    }
+    
+    .hover-scale:hover img {
+      transform: scale(1.05);
+    }
+    
+    .nav-item {
+      position: relative;
+      transition: color ${theme.transitionFast};
+    }
+    
+    .nav-item::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 0;
+      height: 2px;
+      background: ${theme.primary};
+      transition: width ${theme.transitionBase};
+    }
+    
+    .nav-item:hover::after,
+    .nav-item.active::after {
+      width: 100%;
+    }
+    
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: ${theme.gray100};
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: ${theme.gray300};
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: ${theme.gray400};
     }
   `}</style>
 );
 
 /* ═══════════════════════════════════════════════════
-   SUB-COMPONENTS
+   HOOKS
    ═══════════════════════════════════════════════════ */
 
-/* ── HERO ───────────────────────────────────────── */
-const Hero = ({ c, mob }) => {
-  const bg = c.heroImage || c.coverImageUrl || c.imageUrl || fallbackImg;
+const useWindowSize = () => {
+  const [size, setSize] = useState({
+    width: typeof window !== 'undefined' ? window.innerWidth : 1200,
+    height: typeof window !== 'undefined' ? window.innerHeight : 800,
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return {
+    ...size,
+    isMobile: size.width < 768,
+    isTablet: size.width >= 768 && size.width < 1024,
+    isDesktop: size.width >= 1024,
+  };
+};
+
+/* ═══════════════════════════════════════════════════
+   SKELETON COMPONENTS
+   ═══════════════════════════════════════════════════ */
+
+const SkeletonBox = ({ width = "100%", height = "20px", radius = theme.radiusSm, style = {} }) => (
+  <div
+    className="skeleton"
+    style={{
+      width,
+      height,
+      borderRadius: radius,
+      ...style,
+    }}
+  />
+);
+
+const SkeletonHero = ({ isMobile }) => (
+  <div style={{ position: "relative", height: isMobile ? "70vh" : "80vh", background: theme.gray200 }}>
+    <div
+      style={{
+        position: "absolute",
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: isMobile ? "32px 20px" : "64px 48px",
+        background: "linear-gradient(to top, rgba(0,0,0,0.7), transparent)",
+      }}
+    >
+      <div style={{ maxWidth: theme.containerMax, margin: "0 auto" }}>
+        <SkeletonBox width="120px" height="32px" style={{ marginBottom: 16 }} />
+        <SkeletonBox width={isMobile ? "80%" : "400px"} height={isMobile ? "36px" : "56px"} style={{ marginBottom: 16 }} />
+        <SkeletonBox width={isMobile ? "100%" : "600px"} height="24px" style={{ marginBottom: 8 }} />
+        <SkeletonBox width={isMobile ? "70%" : "400px"} height="24px" style={{ marginBottom: 24 }} />
+        <div style={{ display: "flex", gap: 12 }}>
+          <SkeletonBox width="140px" height="48px" radius={theme.radiusMd} />
+          <SkeletonBox width="160px" height="48px" radius={theme.radiusMd} />
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+const SkeletonNav = () => (
+  <div
+    style={{
+      position: "sticky",
+      top: 0,
+      zIndex: 100,
+      background: theme.white,
+      borderBottom: `1px solid ${theme.gray200}`,
+      padding: "16px 24px",
+    }}
+  >
+    <div
+      style={{
+        maxWidth: theme.containerMax,
+        margin: "0 auto",
+        display: "flex",
+        gap: 24,
+      }}
+    >
+      {[80, 100, 90, 110, 85, 95].map((w, i) => (
+        <SkeletonBox key={i} width={`${w}px`} height="20px" />
+      ))}
+    </div>
+  </div>
+);
+
+const SkeletonQuickFacts = ({ isMobile }) => (
+  <div style={{ background: theme.white, padding: isMobile ? "32px 20px" : "48px", borderBottom: `1px solid ${theme.gray200}` }}>
+    <div style={{ maxWidth: theme.containerMax, margin: "0 auto" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
+          gap: isMobile ? 16 : 24,
+        }}
+      >
+        {[1, 2, 3, 4].map((i) => (
+          <div
+            key={i}
+            style={{
+              padding: 24,
+              background: theme.gray50,
+              borderRadius: theme.radiusMd,
+            }}
+          >
+            <SkeletonBox width="48px" height="48px" radius="50%" style={{ marginBottom: 16 }} />
+            <SkeletonBox width="60%" height="14px" style={{ marginBottom: 8 }} />
+            <SkeletonBox width="80%" height="20px" />
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const SkeletonSection = ({ isMobile, cardCount = 3 }) => (
+  <div style={{ padding: isMobile ? "48px 20px" : "80px 48px" }}>
+    <div style={{ maxWidth: theme.containerMax, margin: "0 auto" }}>
+      <SkeletonBox width="200px" height="32px" style={{ marginBottom: 12 }} />
+      <SkeletonBox width={isMobile ? "100%" : "500px"} height="20px" style={{ marginBottom: 40 }} />
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : `repeat(${cardCount}, 1fr)`,
+          gap: 24,
+        }}
+      >
+        {Array.from({ length: cardCount }).map((_, i) => (
+          <div
+            key={i}
+            style={{
+              background: theme.white,
+              borderRadius: theme.radiusMd,
+              overflow: "hidden",
+              border: `1px solid ${theme.gray200}`,
+            }}
+          >
+            <SkeletonBox width="100%" height="200px" radius="0" />
+            <div style={{ padding: 24 }}>
+              <SkeletonBox width="70%" height="20px" style={{ marginBottom: 12 }} />
+              <SkeletonBox width="100%" height="14px" style={{ marginBottom: 8 }} />
+              <SkeletonBox width="90%" height="14px" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
+const LoadingSkeleton = ({ isMobile }) => (
+  <div style={{ background: theme.gray50 }}>
+    <SkeletonHero isMobile={isMobile} />
+    <SkeletonNav />
+    <SkeletonQuickFacts isMobile={isMobile} />
+    <SkeletonSection isMobile={isMobile} />
+    <div style={{ background: theme.white }}>
+      <SkeletonSection isMobile={isMobile} cardCount={4} />
+    </div>
+    <SkeletonSection isMobile={isMobile} />
+  </div>
+);
+
+/* ═══════════════════════════════════════════════════
+   UTILITY COMPONENTS
+   ═══════════════════════════════════════════════════ */
+
+const Container = ({ children, style = {} }) => (
+  <div
+    style={{
+      maxWidth: theme.containerMax,
+      margin: "0 auto",
+      padding: "0 24px",
+      ...style,
+    }}
+  >
+    {children}
+  </div>
+);
+
+const SectionWrapper = ({ id, background = theme.gray50, children, isMobile }) => (
+  <section
+    id={id}
+    style={{
+      background,
+      padding: isMobile ? `${theme.sectionPaddingMobile} 0` : `${theme.sectionPadding} 0`,
+    }}
+  >
+    <Container>{children}</Container>
+  </section>
+);
+
+const SectionHeader = ({ title, subtitle, action, isMobile }) => (
+  <div style={{ marginBottom: isMobile ? 32 : 48 }}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+        flexWrap: "wrap",
+        gap: 16,
+        marginBottom: subtitle ? 12 : 0,
+      }}
+    >
+      <h2
+        style={{
+          fontFamily: theme.fontSerif,
+          fontSize: isMobile ? 28 : 36,
+          fontWeight: 700,
+          color: theme.gray900,
+          margin: 0,
+          lineHeight: 1.2,
+        }}
+      >
+        {title}
+      </h2>
+      {action}
+    </div>
+    {subtitle && (
+      <p
+        style={{
+          fontSize: isMobile ? 16 : 18,
+          color: theme.gray500,
+          margin: 0,
+          lineHeight: 1.6,
+          maxWidth: 600,
+        }}
+      >
+        {subtitle}
+      </p>
+    )}
+  </div>
+);
+
+const Badge = ({ children, variant = "primary", size = "md" }) => {
+  const variants = {
+    primary: { bg: theme.primaryLight, color: theme.primaryDark },
+    accent: { bg: theme.accentLight, color: theme.primaryDark },
+    white: { bg: "rgba(255,255,255,0.2)", color: theme.white },
+    gray: { bg: theme.gray100, color: theme.gray700 },
+    success: { bg: "#D1FAE5", color: "#065F46" },
+    warning: { bg: "#FEF3C7", color: "#92400E" },
+  };
+  
+  const sizes = {
+    sm: { padding: "4px 10px", fontSize: 11 },
+    md: { padding: "6px 14px", fontSize: 12 },
+    lg: { padding: "8px 18px", fontSize: 14 },
+  };
+
+  const v = variants[variant] || variants.primary;
+  const s = sizes[size] || sizes.md;
+
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 6,
+        background: v.bg,
+        color: v.color,
+        fontWeight: 600,
+        borderRadius: 50,
+        textTransform: "uppercase",
+        letterSpacing: "0.5px",
+        ...s,
+      }}
+    >
+      {children}
+    </span>
+  );
+};
+
+const Card = ({ children, hover = true, className = "", style = {} }) => (
+  <div
+    className={`${hover ? "hover-lift" : ""} ${className}`}
+    style={{
+      background: theme.white,
+      borderRadius: theme.radiusMd,
+      border: `1px solid ${theme.gray200}`,
+      overflow: "hidden",
+      ...style,
+    }}
+  >
+    {children}
+  </div>
+);
+
+const Button = ({ children, variant = "primary", size = "md", as: Component = "button", ...props }) => {
+  const variants = {
+    primary: {
+      background: theme.primary,
+      color: theme.white,
+      border: "none",
+    },
+    secondary: {
+      background: theme.white,
+      color: theme.primary,
+      border: `2px solid ${theme.primary}`,
+    },
+    ghost: {
+      background: "transparent",
+      color: theme.primary,
+      border: `1px solid ${theme.gray200}`,
+    },
+    white: {
+      background: theme.white,
+      color: theme.gray800,
+      border: "none",
+    },
+  };
+
+  const sizes = {
+    sm: { padding: "10px 20px", fontSize: 14 },
+    md: { padding: "14px 28px", fontSize: 15 },
+    lg: { padding: "18px 36px", fontSize: 16 },
+  };
+
+  const v = variants[variant] || variants.primary;
+  const s = sizes[size] || sizes.md;
+
+  return (
+    <Component
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: 8,
+        fontFamily: theme.fontSans,
+        fontWeight: 600,
+        borderRadius: theme.radiusMd,
+        cursor: "pointer",
+        textDecoration: "none",
+        transition: `all ${theme.transitionBase}`,
+        ...v,
+        ...s,
+      }}
+      {...props}
+    >
+      {children}
+    </Component>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   HERO SECTION
+   ═══════════════════════════════════════════════════ */
+
+const Hero = ({ country, isMobile }) => {
+  const c = country;
+  
   return (
     <div
       style={{
         position: "relative",
-        width: "100%",
-        height: mob ? "58vh" : "78vh",
-        minHeight: 380,
+        height: isMobile ? "70vh" : "85vh",
+        minHeight: 500,
         overflow: "hidden",
       }}
     >
+      {/* Background Image */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          backgroundImage: `url(${bg})`,
+          backgroundImage: `url(${c.heroImage || c.flagUrl})`,
           backgroundSize: "cover",
           backgroundPosition: "center",
-          filter: "brightness(.65)",
         }}
       />
+      
+      {/* Gradient Overlay */}
       <div
         style={{
           position: "absolute",
           inset: 0,
-          background:
-            "linear-gradient(to bottom, rgba(12,59,94,.35) 0%, rgba(12,59,94,.75) 100%)",
+          background: `linear-gradient(
+            to bottom,
+            rgba(0,0,0,0.2) 0%,
+            rgba(0,0,0,0.4) 50%,
+            rgba(0,0,0,0.8) 100%
+          )`,
         }}
       />
+      
+      {/* Green Accent Overlay */}
       <div
         style={{
+          position: "absolute",
+          inset: 0,
+          background: `linear-gradient(135deg, ${theme.primary}20, transparent 60%)`,
+        }}
+      />
+      
+      {/* Content */}
+      <Container
+        style={{
           position: "relative",
-          zIndex: 2,
           height: "100%",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",
-          padding: mob ? "24px 16px 36px" : "48px 48px 56px",
-          maxWidth: 1200,
-          margin: "0 auto",
-          color: "#fff",
+          paddingBottom: isMobile ? 48 : 80,
         }}
       >
-        {/* Breadcrumb */}
-        <div
-          style={{
-            position: "absolute",
-            top: mob ? 16 : 30,
-            left: mob ? 16 : 48,
-            display: "flex",
-            gap: 8,
-            alignItems: "center",
-            fontSize: 13,
-            opacity: 0.85,
-          }}
-        >
-          <Link
-            to="/"
-            style={{ color: "#fff", textDecoration: "none" }}
-          >
-            Home
-          </Link>
-          <span>›</span>
-          <Link
-            to="/countries"
-            style={{ color: "#fff", textDecoration: "none" }}
-          >
-            Countries
-          </Link>
-          <span>›</span>
-          <span style={{ opacity: 0.7 }}>{c.name}</span>
-        </div>
-
-        {/* Flag + Name */}
-        <div style={{ display: "flex", alignItems: "center", gap: mob ? 12 : 20, marginBottom: 8 }}>
-          {c.flag && (
-            <span style={{ fontSize: mob ? 44 : 64, lineHeight: 1 }}>{c.flag}</span>
+        <div style={{ maxWidth: 800 }} className="fade-in">
+          {/* Region Badge */}
+          {c.region && (
+            <Badge variant="white" size="lg" style={{ marginBottom: 20 }}>
+              {c.region}
+            </Badge>
           )}
-          <h1
+          
+          {/* Country Name with Flag */}
+          <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 20 }}>
+            {c.flagUrl && (
+              <img
+                src={c.flagUrl}
+                alt={`${c.name} flag`}
+                style={{
+                  width: isMobile ? 56 : 72,
+                  height: isMobile ? 40 : 52,
+                  borderRadius: 8,
+                  boxShadow: theme.shadowLg,
+                  objectFit: "cover",
+                }}
+              />
+            )}
+            <h1
+              style={{
+                fontFamily: theme.fontSerif,
+                fontSize: isMobile ? 36 : 64,
+                fontWeight: 700,
+                color: theme.white,
+                margin: 0,
+                lineHeight: 1.1,
+                textShadow: "0 2px 20px rgba(0,0,0,0.3)",
+              }}
+            >
+              {c.name}
+            </h1>
+          </div>
+          
+          {/* Description */}
+          {c.tagline && (
+            <p
+              style={{
+                fontSize: isMobile ? 18 : 22,
+                color: "rgba(255,255,255,0.9)",
+                margin: "0 0 32px",
+                lineHeight: 1.6,
+                maxWidth: 600,
+              }}
+            >
+              {c.tagline}
+            </p>
+          )}
+          
+          {/* Quick Stats */}
+          <div
             style={{
-              fontFamily: T.serif,
-              fontSize: mob ? 36 : 60,
-              fontWeight: 800,
-              margin: 0,
-              letterSpacing: "-0.03em",
-              textShadow: "0 2px 20px rgba(0,0,0,.3)",
+              display: "flex",
+              flexWrap: "wrap",
+              gap: isMobile ? 16 : 32,
+              marginBottom: 32,
             }}
           >
-            {c.name}
-          </h1>
+            {c.capital && (
+              <div style={{ color: "rgba(255,255,255,0.9)" }}>
+                <span style={{ fontSize: 13, opacity: 0.7, display: "block" }}>Capital</span>
+                <span style={{ fontSize: 18, fontWeight: 600 }}>{c.capital}</span>
+              </div>
+            )}
+            {c.population && (
+              <div style={{ color: "rgba(255,255,255,0.9)" }}>
+                <span style={{ fontSize: 13, opacity: 0.7, display: "block" }}>Population</span>
+                <span style={{ fontSize: 18, fontWeight: 600 }}>{formatNumber(c.population)}</span>
+              </div>
+            )}
+            {c.destinationCount > 0 && (
+              <div style={{ color: "rgba(255,255,255,0.9)" }}>
+                <span style={{ fontSize: 13, opacity: 0.7, display: "block" }}>Destinations</span>
+                <span style={{ fontSize: 18, fontWeight: 600 }}>{c.destinationCount}+ Places</span>
+              </div>
+            )}
+          </div>
+          
+          {/* CTA Buttons */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+            <Button as={Link} to={`/countries/${c.slug}/destinations`} size="lg">
+              Explore Destinations
+            </Button>
+            <Button
+              variant="secondary"
+              size="lg"
+              style={{ 
+                background: "rgba(255,255,255,0.1)", 
+                borderColor: "rgba(255,255,255,0.3)",
+                color: theme.white,
+              }}
+              onClick={() => document.getElementById("overview")?.scrollIntoView({ behavior: "smooth" })}
+            >
+              Learn More
+            </Button>
+          </div>
         </div>
-
-        {/* Official Name */}
-        {c.officialName && (
-          <p
-            style={{
-              margin: "0 0 6px",
-              fontSize: mob ? 14 : 17,
-              opacity: 0.85,
-              fontStyle: "italic",
-            }}
-          >
-            {c.officialName}
-          </p>
-        )}
-
-        {/* Tagline */}
-        {c.tagline && (
-          <p
-            style={{
-              margin: "0 0 18px",
-              fontSize: mob ? 16 : 22,
-              fontWeight: 300,
-              maxWidth: 600,
-              lineHeight: 1.5,
-            }}
-          >
-            "{c.tagline}"
-          </p>
-        )}
-
-        {/* Quick chips */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 10,
-            alignItems: "center",
-          }}
-        >
-          {c.capital && (
-            <span style={chipStyle}>🏛 {c.capital}</span>
-          )}
-          {c.continent && (
-            <span style={chipStyle}>🌍 {c.continent}</span>
-          )}
-          {c.population && (
-            <span style={chipStyle}>👥 {fmt(c.population)}</span>
-          )}
-          {c.destinationCount > 0 && (
-            <span style={{ ...chipStyle, background: "rgba(26,138,92,.85)" }}>
-              📍 {c.destinationCount} Destination{c.destinationCount > 1 ? "s" : ""}
-            </span>
-          )}
-        </div>
-      </div>
+      </Container>
     </div>
   );
 };
 
-const chipStyle = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: 5,
-  padding: "6px 16px",
-  borderRadius: 30,
-  background: "rgba(255,255,255,.18)",
-  backdropFilter: "blur(6px)",
-  fontSize: 13,
-  fontWeight: 500,
-  color: "#fff",
-};
+/* ═══════════════════════════════════════════════════
+   SECTION NAVIGATION
+   ═══════════════════════════════════════════════════ */
 
-/* ── SECTION NAV ────────────────────────────────── */
-const SectionNav = ({ sections, active, onClick, mob }) => {
-  const ref = useRef(null);
+const SectionNav = ({ sections, active, onClick, isMobile }) => {
+  const navRef = React.useRef(null);
+
+  useEffect(() => {
+    if (navRef.current && active) {
+      const activeEl = navRef.current.querySelector(`[data-section="${active}"]`);
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+      }
+    }
+  }, [active]);
+
   return (
     <nav
-      ref={ref}
       style={{
         position: "sticky",
         top: 0,
         zIndex: 100,
-        background: T.white,
-        borderBottom: `1px solid ${T.border}`,
-        boxShadow: "0 1px 4px rgba(0,0,0,.04)",
+        background: theme.white,
+        borderBottom: `1px solid ${theme.gray200}`,
+        boxShadow: theme.shadowSm,
       }}
     >
-      <div
-        style={{
-          maxWidth: 1200,
-          margin: "0 auto",
-          display: "flex",
-          gap: mob ? 18 : 28,
-          overflowX: "auto",
-          padding: mob ? "0 12px" : "0 32px",
-          scrollbarWidth: "none",
-        }}
-      >
-        {sections.map((s) => (
-          <button
-            key={s.id}
-            className={`cp-nav-link${active === s.id ? " active" : ""}`}
-            onClick={() => onClick(s.id)}
-          >
-            {mob ? s.short || s.label : s.label}
-          </button>
-        ))}
-      </div>
+      <Container>
+        <div
+          ref={navRef}
+          style={{
+            display: "flex",
+            gap: isMobile ? 8 : 4,
+            overflowX: "auto",
+            padding: "16px 0",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+          }}
+        >
+          {sections.map((section) => (
+            <button
+              key={section.id}
+              data-section={section.id}
+              onClick={() => onClick(section.id)}
+              className={`nav-item ${active === section.id ? "active" : ""}`}
+              style={{
+                padding: isMobile ? "10px 16px" : "10px 20px",
+                background: active === section.id ? theme.primaryMuted : "transparent",
+                color: active === section.id ? theme.primary : theme.gray600,
+                border: "none",
+                borderRadius: 50,
+                fontSize: 14,
+                fontWeight: 600,
+                fontFamily: theme.fontSans,
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+                transition: `all ${theme.transitionFast}`,
+              }}
+            >
+              {isMobile ? section.short : section.label}
+            </button>
+          ))}
+        </div>
+      </Container>
     </nav>
   );
 };
 
-/* ── QUICK FACTS ────────────────────────────────── */
-const QuickFacts = ({ c, mob }) => {
+/* ═══════════════════════════════════════════════════
+   QUICK FACTS
+   ═══════════════════════════════════════════════════ */
+
+const QuickFacts = ({ country, isMobile }) => {
+  const c = country;
+  
   const facts = [
-    { icon: "🏛", label: "Capital", value: c.capital },
-    { icon: "👥", label: "Population", value: fmt(c.population) },
-    { icon: "📐", label: "Area", value: c.area ? `${fmt(c.area)} km²` : null },
-    { icon: "🗣", label: "Language", value: (c.officialLanguages || c.languages || []).slice(0, 2).join(", ") || null },
-    { icon: "💰", label: "Currency", value: c.currency ? `${c.currency}${c.currencySymbol ? ` (${c.currencySymbol})` : ""}` : null },
-    { icon: "⏰", label: "Timezone", value: c.timezone },
+    { icon: "🏛️", label: "Capital", value: c.capital },
+    { icon: "👥", label: "Population", value: c.population ? formatNumber(c.population) : null },
+    { icon: "🌍", label: "Area", value: c.area ? `${formatNumber(c.area)} km²` : null },
+    { icon: "💰", label: "Currency", value: c.currency },
+    { icon: "🗣️", label: "Language", value: Array.isArray(c.languages) ? c.languages[0] : c.languages },
+    { icon: "🕐", label: "Timezone", value: c.timezone },
     { icon: "📞", label: "Calling Code", value: c.callingCode },
-    { icon: "🌐", label: "Internet", value: c.internetTLD },
-  ].filter((f) => f.value && f.value !== "—");
+    { icon: "🚗", label: "Driving Side", value: c.drivingSide },
+  ].filter(f => f.value);
 
-  if (!facts.length) return null;
-
-  return (
-    <div style={{ background: T.primaryLight, padding: mob ? "24px 16px" : "32px" }}>
-      <div
-        className="cp-facts-grid"
-        style={{
-          maxWidth: 1200,
-          margin: "0 auto",
-          display: "grid",
-          gridTemplateColumns: mob ? "repeat(2,1fr)" : `repeat(${Math.min(facts.length, 4)}, 1fr)`,
-          gap: mob ? 12 : 16,
-        }}
-      >
-        {facts.map((f, i) => (
-          <div
-            key={i}
-            style={{
-              background: T.white,
-              borderRadius: T.radiusSm,
-              padding: mob ? "14px 12px" : "18px 20px",
-              textAlign: "center",
-              boxShadow: "0 1px 4px rgba(0,0,0,.05)",
-            }}
-          >
-            <div style={{ fontSize: 24, marginBottom: 6 }}>{f.icon}</div>
-            <div style={{ fontSize: 11, color: T.textLt, textTransform: "uppercase", letterSpacing: 1, marginBottom: 4, fontWeight: 600 }}>
-              {f.label}
-            </div>
-            <div style={{ fontSize: mob ? 14 : 16, fontWeight: 600, color: T.text }}>
-              {f.value}
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-};
-
-/* ── OVERVIEW ───────────────────────────────────── */
-const Overview = ({ c, mob }) => {
-  const descParas = splitParagraphs(c.description);
-  const fullParas = splitParagraphs(c.fullDescription);
-  const addParas = splitParagraphs(c.additionalInfo);
-  const allParas = [...descParas, ...fullParas, ...addParas];
-  const sideImages = (c.images || []).slice(0, 3);
-
-  if (!allParas.length && !(c.highlights || []).length) return null;
+  if (facts.length === 0) return null;
 
   return (
-    <section id="overview" style={{ background: T.white }}>
-      <div style={sectionWrap(mob)}>
-        <h2 style={sectionTitle(mob)}>About {c.name}</h2>
-        {c.motto && (
-          <p style={{ ...sectionSub(), fontStyle: "italic", color: T.accent }}>
-            Motto: "{c.motto}"
-          </p>
-        )}
-
+    <section style={{ background: theme.white, borderBottom: `1px solid ${theme.gray200}` }}>
+      <Container style={{ padding: isMobile ? "32px 24px" : "48px 24px" }}>
         <div
-          className="cp-two-col"
-          style={{
-            display: "flex",
-            gap: 40,
-            alignItems: "flex-start",
-          }}
-        >
-          {/* Text Column */}
-          <div style={{ flex: "1 1 60%", minWidth: 0 }}>
-            {allParas.map((p, i) => (
-              <p
-                key={i}
-                style={{
-                  fontSize: mob ? 15 : 17,
-                  lineHeight: 1.85,
-                  color: T.text,
-                  marginBottom: 20,
-                  textAlign: "justify",
-                }}
-              >
-                {p}
-              </p>
-            ))}
-          </div>
-
-          {/* Image Sidebar */}
-          {sideImages.length > 0 && !mob && (
-            <div style={{ flex: "0 0 36%", display: "flex", flexDirection: "column", gap: 16 }}>
-              {sideImages.map((img, i) => (
-                <div
-                  key={i}
-                  style={{
-                    borderRadius: T.radiusSm,
-                    overflow: "hidden",
-                    boxShadow: T.shadow,
-                  }}
-                >
-                  <img
-                    src={img}
-                    alt={`${c.name} ${i + 1}`}
-                    className="cp-img-zoom"
-                    style={{
-                      width: "100%",
-                      height: i === 0 ? 260 : 200,
-                      objectFit: "cover",
-                      display: "block",
-                    }}
-                    onError={(e) => { e.target.src = fallbackImg; }}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Mobile images (horizontal scroll) */}
-        {sideImages.length > 0 && mob && (
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-              overflowX: "auto",
-              marginTop: 20,
-              paddingBottom: 8,
-              scrollbarWidth: "none",
-            }}
-          >
-            {sideImages.map((img, i) => (
-              <img
-                key={i}
-                src={img}
-                alt=""
-                style={{
-                  width: 260,
-                  height: 170,
-                  objectFit: "cover",
-                  borderRadius: T.radiusSm,
-                  flexShrink: 0,
-                }}
-                onError={(e) => { e.target.src = fallbackImg; }}
-              />
-            ))}
-          </div>
-        )}
-
-        {/* Highlights */}
-        {(c.highlights || []).length > 0 && (
-          <div style={{ marginTop: 36 }}>
-            <h3
-              style={{
-                fontFamily: T.serif,
-                fontSize: mob ? 20 : 24,
-                color: T.primary,
-                marginBottom: 20,
-              }}
-            >
-              ✦ Key Highlights
-            </h3>
-            <div
-              className="cp-three-grid"
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3,1fr)",
-                gap: 14,
-              }}
-            >
-              {c.highlights.map((h, i) => (
-                <div
-                  key={i}
-                  style={{
-                    padding: "14px 18px",
-                    borderRadius: T.radiusSm,
-                    background: T.bg,
-                    border: `1px solid ${T.border}`,
-                    fontSize: 14,
-                    color: T.text,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                  }}
-                >
-                  <span style={{ color: T.accent, fontSize: 18 }}>◆</span>
-                  {h}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Experiences */}
-        {(c.experiences || []).length > 0 && (
-          <div style={{ marginTop: 36 }}>
-            <h3
-              style={{
-                fontFamily: T.serif,
-                fontSize: mob ? 20 : 24,
-                color: T.primary,
-                marginBottom: 20,
-              }}
-            >
-              🌟 Must-Have Experiences
-            </h3>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-              {c.experiences.map((e, i) => (
-                <span
-                  key={i}
-                  className="cp-tag"
-                  style={{ background: T.accentLight, color: "#92610a" }}
-                >
-                  {e}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </section>
-  );
-};
-
-/* ── GEOGRAPHY & CLIMATE ─────────────────────────── */
-const GeographyClimate = ({ c, mob }) => {
-  const geo = c.geography || {};
-  const seasons = c.seasons || {};
-  const hasGeo = c.area || Object.keys(geo).length > 0;
-  const hasClimate = c.climate || c.bestTime || Object.keys(seasons).length > 0;
-
-  if (!hasGeo && !hasClimate) return null;
-
-  return (
-    <section id="geography" style={{ background: T.bg }}>
-      <div style={sectionWrap(mob)}>
-        <h2 style={sectionTitle(mob)}>Geography & Climate</h2>
-        <p style={sectionSub()}>
-          Explore the diverse landscapes, terrain, and weather patterns of {c.name}.
-        </p>
-
-        <div
-          className="cp-two-col"
-          style={{ display: "flex", gap: 32 }}
-        >
-          {/* Geography column */}
-          <div style={{ flex: 1 }}>
-            <div
-              style={{
-                ...cardBase(),
-                padding: mob ? 20 : 28,
-              }}
-            >
-              <h3 style={{ fontFamily: T.serif, fontSize: 20, color: T.primary, margin: "0 0 18px" }}>
-                🗺 Geography
-              </h3>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                {c.area && (
-                  <StatItem label="Total Area" value={`${Number(c.area).toLocaleString()} km²`} />
-                )}
-                {c.populationDensity && (
-                  <StatItem label="Pop. Density" value={`${c.populationDensity}/km²`} />
-                )}
-                {geo.terrain && (
-                  <StatItem label="Terrain" value={geo.terrain} span />
-                )}
-                {geo.highest_point && (
-                  <StatItem label="Highest Point" value={geo.highest_point} />
-                )}
-                {geo.lowest_point && (
-                  <StatItem label="Lowest Point" value={geo.lowest_point} />
-                )}
-                {geo.coastline && (
-                  <StatItem label="Coastline" value={geo.coastline} />
-                )}
-                {geo.natural_resources && (
-                  <StatItem label="Resources" value={
-                    Array.isArray(geo.natural_resources)
-                      ? geo.natural_resources.join(", ")
-                      : geo.natural_resources
-                  } span />
-                )}
-              </div>
-              {c.region && (
-                <p style={{ marginTop: 16, fontSize: 14, color: T.textMd }}>
-                  <strong>Region:</strong> {c.region}
-                  {c.subRegion ? ` — ${c.subRegion}` : ""}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* Climate column */}
-          <div style={{ flex: 1 }}>
-            <div
-              style={{
-                ...cardBase(),
-                padding: mob ? 20 : 28,
-              }}
-            >
-              <h3 style={{ fontFamily: T.serif, fontSize: 20, color: T.primary, margin: "0 0 18px" }}>
-                🌤 Climate & Weather
-              </h3>
-              {c.climate && (
-                <p style={{ fontSize: 15, lineHeight: 1.75, color: T.text, marginBottom: 16 }}>
-                  {c.climate}
-                </p>
-              )}
-              {c.bestTime && (
-                <div
-                  style={{
-                    background: T.accentLight,
-                    borderRadius: 8,
-                    padding: "12px 16px",
-                    marginBottom: 16,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                  }}
-                >
-                  <span style={{ fontSize: 22 }}>📅</span>
-                  <div>
-                    <div style={{ fontSize: 11, color: T.textLt, fontWeight: 600, textTransform: "uppercase", letterSpacing: .8 }}>
-                      Best Time to Visit
-                    </div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: T.text }}>
-                      {c.bestTime}
-                    </div>
-                  </div>
-                </div>
-              )}
-              {(seasons.dry || []).length > 0 && (
-                <div style={{ marginBottom: 10 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: T.textMd }}>Dry Season: </span>
-                  <span style={{ fontSize: 14, color: T.text }}>{seasons.dry.join(", ")}</span>
-                </div>
-              )}
-              {(seasons.wet || []).length > 0 && (
-                <div>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: T.textMd }}>Wet Season: </span>
-                  <span style={{ fontSize: 14, color: T.text }}>{seasons.wet.join(", ")}</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Neighboring Countries */}
-        {(c.neighboringCountries || []).length > 0 && (
-          <div style={{ marginTop: 28 }}>
-            <h4 style={{ fontSize: 16, color: T.primary, marginBottom: 12 }}>
-              🤝 Neighboring Countries
-            </h4>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {c.neighboringCountries.map((n, i) => (
-                <span
-                  key={i}
-                  className="cp-tag"
-                  style={{ background: T.primaryLight, color: T.primary }}
-                >
-                  {n}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    </section>
-  );
-};
-
-const StatItem = ({ label, value, span }) => (
-  <div style={{ gridColumn: span ? "1 / -1" : undefined }}>
-    <div style={{ fontSize: 11, color: T.textLt, fontWeight: 600, textTransform: "uppercase", letterSpacing: .8, marginBottom: 3 }}>
-      {label}
-    </div>
-    <div style={{ fontSize: 14, fontWeight: 500, color: T.text }}>{value}</div>
-  </div>
-);
-
-/* ── PEOPLE & CULTURE ────────────────────────────── */
-const PeopleCulture = ({ c, mob }) => {
-  const hasDemo = c.population || c.lifeExpectancy || c.medianAge || c.literacyRate || c.urbanPopulation;
-  const hasLang = (c.languages || []).length || (c.officialLanguages || []).length;
-  const hasEthnic = (c.ethnicGroups || []).length;
-  const hasRelig = (c.religions || []).length;
-
-  if (!hasDemo && !hasLang && !hasEthnic && !hasRelig) return null;
-
-  const demoCards = [
-    { icon: "👥", label: "Population", value: fmt(c.population) },
-    { icon: "🏙", label: "Urban Pop.", value: c.urbanPopulation ? `${c.urbanPopulation}%` : null },
-    { icon: "❤️", label: "Life Expectancy", value: c.lifeExpectancy ? `${c.lifeExpectancy} yrs` : null },
-    { icon: "📊", label: "Median Age", value: c.medianAge ? `${c.medianAge} yrs` : null },
-    { icon: "📚", label: "Literacy Rate", value: c.literacyRate ? `${c.literacyRate}%` : null },
-    { icon: "🏠", label: "Pop. Density", value: c.populationDensity ? `${c.populationDensity}/km²` : null },
-  ].filter((d) => d.value);
-
-  return (
-    <section id="people" style={{ background: T.white }}>
-      <div style={sectionWrap(mob)}>
-        <h2 style={sectionTitle(mob)}>People & Culture</h2>
-        <p style={sectionSub()}>
-          Discover the vibrant communities, languages, and cultural traditions that define {c.name}.
-        </p>
-
-        {/* Demographics grid */}
-        {demoCards.length > 0 && (
-          <div
-            className="cp-facts-grid"
-            style={{
-              display: "grid",
-              gridTemplateColumns: mob ? "repeat(2,1fr)" : `repeat(${Math.min(demoCards.length, 3)}, 1fr)`,
-              gap: 14,
-              marginBottom: 36,
-            }}
-          >
-            {demoCards.map((d, i) => (
-              <div
-                key={i}
-                style={{
-                  background: T.bg,
-                  borderRadius: T.radiusSm,
-                  padding: 20,
-                  textAlign: "center",
-                }}
-              >
-                <div style={{ fontSize: 28, marginBottom: 8 }}>{d.icon}</div>
-                <div style={{ fontSize: mob ? 22 : 26, fontWeight: 700, color: T.primary }}>{d.value}</div>
-                <div style={{ fontSize: 12, color: T.textLt, textTransform: "uppercase", letterSpacing: 1, marginTop: 4 }}>
-                  {d.label}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Languages / Ethnic / Religions */}
-        <div
-          className="cp-three-grid"
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(3,1fr)",
-            gap: 20,
+            gridTemplateColumns: isMobile 
+              ? "repeat(2, 1fr)" 
+              : `repeat(${Math.min(facts.length, 4)}, 1fr)`,
+            gap: isMobile ? 16 : 24,
           }}
         >
-          {hasLang && (
-            <ListCard
-              title="🗣 Languages"
-              items={[
-                ...(c.officialLanguages || []).map((l) => `${l} (Official)`),
-                ...(c.nationalLanguages || []).map((l) => `${l} (National)`),
-                ...(c.languages || []).filter(
-                  (l) =>
-                    !(c.officialLanguages || []).includes(l) &&
-                    !(c.nationalLanguages || []).includes(l)
-                ),
-              ]}
-              color={T.primary}
-              bg={T.primaryLight}
-            />
-          )}
-          {hasEthnic && (
-            <ListCard
-              title="🧑‍🤝‍🧑 Ethnic Groups"
-              items={c.ethnicGroups}
-              color={T.secondary}
-              bg={T.secondaryLight}
-            />
-          )}
-          {hasRelig && (
-            <ListCard
-              title="🕌 Religions"
-              items={c.religions}
-              color="#7c3aed"
-              bg="#f3eeff"
-            />
-          )}
+          {facts.slice(0, 8).map((fact, i) => (
+            <div
+              key={i}
+              style={{
+                padding: isMobile ? 20 : 28,
+                background: theme.gray50,
+                borderRadius: theme.radiusMd,
+                borderLeft: `4px solid ${theme.primary}`,
+                transition: `all ${theme.transitionBase}`,
+              }}
+            >
+              <div style={{ fontSize: 28, marginBottom: 12 }}>{fact.icon}</div>
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 600,
+                  color: theme.gray500,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                  marginBottom: 4,
+                }}
+              >
+                {fact.label}
+              </div>
+              <div
+                style={{
+                  fontSize: isMobile ? 16 : 18,
+                  fontWeight: 700,
+                  color: theme.gray800,
+                }}
+              >
+                {fact.value}
+              </div>
+            </div>
+          ))}
         </div>
-
-        {/* Government */}
-        {(c.governmentType || c.headOfState || c.independence) && (
-          <div
-            style={{
-              marginTop: 32,
-              ...cardBase(),
-              padding: 24,
-              background: T.bg,
-              display: "flex",
-              flexWrap: "wrap",
-              gap: 28,
-            }}
-          >
-            <h4 style={{ width: "100%", margin: "0 0 4px", fontFamily: T.serif, fontSize: 18, color: T.primary }}>
-              🏛 Government & Independence
-            </h4>
-            {c.governmentType && (
-              <div>
-                <div style={{ fontSize: 11, color: T.textLt, textTransform: "uppercase", letterSpacing: .8 }}>Government</div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: T.text }}>{c.governmentType}</div>
-              </div>
-            )}
-            {c.headOfState && (
-              <div>
-                <div style={{ fontSize: 11, color: T.textLt, textTransform: "uppercase", letterSpacing: .8 }}>Head of State</div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: T.text }}>{c.headOfState}</div>
-              </div>
-            )}
-            {c.independence && (
-              <div>
-                <div style={{ fontSize: 11, color: T.textLt, textTransform: "uppercase", letterSpacing: .8 }}>Independence</div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: T.text }}>{c.independence}</div>
-              </div>
-            )}
-            {c.demonym && (
-              <div>
-                <div style={{ fontSize: 11, color: T.textLt, textTransform: "uppercase", letterSpacing: .8 }}>Demonym</div>
-                <div style={{ fontSize: 15, fontWeight: 600, color: T.text }}>{c.demonym}</div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      </Container>
     </section>
   );
 };
 
-const ListCard = ({ title, items, color, bg }) => (
-  <div
-    style={{
-      ...cardBase(),
-      padding: 22,
-    }}
-  >
-    <h4 style={{ margin: "0 0 14px", fontSize: 16, color }}>{title}</h4>
-    <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-      {items.slice(0, 12).map((item, i) => (
-        <div
-          key={i}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            fontSize: 14,
-            color: T.text,
-          }}
-        >
-          <span
-            style={{
-              width: 8,
-              height: 8,
-              borderRadius: "50%",
-              background: color,
-              flexShrink: 0,
-              opacity: 0.6,
-            }}
-          />
-          {item}
-        </div>
-      ))}
-      {items.length > 12 && (
-        <div style={{ fontSize: 13, color: T.textLt, marginTop: 4 }}>
-          +{items.length - 12} more
-        </div>
-      )}
-    </div>
-  </div>
-);
+/* ═══════════════════════════════════════════════════
+   OVERVIEW SECTION
+   ═══════════════════════════════════════════════════ */
 
-/* ── HISTORY & HERITAGE ──────────────────────────── */
-const HistoryHeritage = ({ c, mob }) => {
-  const timeline = c.historicalTimeline || [];
-  const unesco = c.unescoSites || [];
-
-  if (!timeline.length && !unesco.length) return null;
+const Overview = ({ country, isMobile }) => {
+  const c = country;
+  const hasContent = c.description || c.fullDescription || (c.highlights?.length > 0);
+  
+  if (!hasContent) return null;
 
   return (
-    <section id="history" style={{ background: T.bg }}>
-      <div style={sectionWrap(mob)}>
-        <h2 style={sectionTitle(mob)}>History & Heritage</h2>
-        <p style={sectionSub()}>
-          Journey through the defining moments and treasured heritage sites of {c.name}.
-        </p>
+    <SectionWrapper id="overview" background={theme.gray50} isMobile={isMobile}>
+      <SectionHeader
+        title="Overview"
+        subtitle={`Discover what makes ${c.name} a remarkable destination`}
+        isMobile={isMobile}
+      />
+      
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+          gap: isMobile ? 32 : 48,
+          alignItems: "start",
+        }}
+      >
+        {/* Description */}
+        <div>
+          {(c.fullDescription || c.description) && (
+            <div
+              style={{
+                fontSize: 16,
+                lineHeight: 1.8,
+                color: theme.gray600,
+              }}
+            >
+              {splitParagraphs(c.fullDescription || c.description).map((p, i) => (
+                <p key={i} style={{ margin: i > 0 ? "20px 0 0" : 0 }}>
+                  {p}
+                </p>
+              ))}
+            </div>
+          )}
+        </div>
+        
+        {/* Highlights */}
+        {c.highlights?.length > 0 && (
+          <Card hover={false} style={{ padding: isMobile ? 24 : 32 }}>
+            <h3
+              style={{
+                fontFamily: theme.fontSerif,
+                fontSize: 22,
+                fontWeight: 600,
+                color: theme.gray800,
+                margin: "0 0 24px",
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <span
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  background: theme.primaryLight,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 20,
+                }}
+              >
+                ✨
+              </span>
+              Highlights
+            </h3>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+              {c.highlights.map((h, i) => (
+                <li
+                  key={i}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 14,
+                    padding: "14px 0",
+                    borderBottom: i < c.highlights.length - 1 ? `1px solid ${theme.gray100}` : "none",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 24,
+                      height: 24,
+                      borderRadius: "50%",
+                      background: theme.primary,
+                      color: theme.white,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: 12,
+                      fontWeight: 700,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {i + 1}
+                  </span>
+                  <span style={{ fontSize: 15, color: theme.gray700, lineHeight: 1.5 }}>
+                    {h}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
+      </div>
+    </SectionWrapper>
+  );
+};
 
+/* ═══════════════════════════════════════════════════
+   GEOGRAPHY & CLIMATE
+   ═══════════════════════════════════════════════════ */
+
+const GeographyClimate = ({ country, isMobile }) => {
+  const c = country;
+  const geo = c.geography || {};
+  const hasContent = c.area || Object.keys(geo).length > 0 || c.climate;
+
+  if (!hasContent) return null;
+
+  const geoFacts = [
+    { label: "Terrain", value: geo.terrain },
+    { label: "Highest Point", value: geo.highestPoint },
+    { label: "Major Rivers", value: Array.isArray(geo.majorRivers) ? geo.majorRivers.join(", ") : geo.majorRivers },
+    { label: "Natural Resources", value: Array.isArray(geo.naturalResources) ? geo.naturalResources.slice(0, 4).join(", ") : geo.naturalResources },
+  ].filter(f => f.value);
+
+  return (
+    <SectionWrapper id="geography" background={theme.white} isMobile={isMobile}>
+      <SectionHeader
+        title="Geography & Climate"
+        subtitle={`Explore the natural landscapes and weather patterns of ${c.name}`}
+        isMobile={isMobile}
+      />
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+          gap: 24,
+        }}
+      >
+        {/* Geography Card */}
+        {geoFacts.length > 0 && (
+          <Card hover={false}>
+            <div
+              style={{
+                padding: "20px 24px",
+                background: theme.primaryMuted,
+                borderBottom: `1px solid ${theme.primaryLight}`,
+              }}
+            >
+              <h3
+                style={{
+                  margin: 0,
+                  fontSize: 18,
+                  fontWeight: 600,
+                  color: theme.primaryDark,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                <span>🏔️</span> Geography
+              </h3>
+            </div>
+            <div style={{ padding: 24 }}>
+              {geoFacts.map((fact, i) => (
+                <div
+                  key={i}
+                  style={{
+                    padding: "16px 0",
+                    borderBottom: i < geoFacts.length - 1 ? `1px solid ${theme.gray100}` : "none",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: theme.gray500,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      marginBottom: 4,
+                    }}
+                  >
+                    {fact.label}
+                  </div>
+                  <div style={{ fontSize: 15, color: theme.gray800, lineHeight: 1.5 }}>
+                    {fact.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Climate Card */}
+        {c.climate && (
+          <Card hover={false}>
+            <div
+              style={{
+                padding: "20px 24px",
+                background: theme.accentLight,
+                borderBottom: `1px solid ${theme.accent}20`,
+              }}
+            >
+              <h3
+                style={{
+                  margin: 0,
+                  fontSize: 18,
+                  fontWeight: 600,
+                  color: theme.primaryDark,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 10,
+                }}
+              >
+                <span>🌤️</span> Climate
+              </h3>
+            </div>
+            <div style={{ padding: 24 }}>
+              {typeof c.climate === "string" ? (
+                <p style={{ margin: 0, fontSize: 15, color: theme.gray700, lineHeight: 1.7 }}>
+                  {c.climate}
+                </p>
+              ) : (
+                <div>
+                  {c.climate.overview && (
+                    <p style={{ margin: "0 0 16px", fontSize: 15, color: theme.gray700, lineHeight: 1.7 }}>
+                      {c.climate.overview}
+                    </p>
+                  )}
+                  {c.climate.bestTime && (
+                    <div
+                      style={{
+                        padding: 16,
+                        background: theme.gray50,
+                        borderRadius: theme.radiusSm,
+                        marginTop: 16,
+                      }}
+                    >
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 600,
+                          color: theme.primary,
+                          textTransform: "uppercase",
+                          marginBottom: 4,
+                        }}
+                      >
+                        Best Time to Visit
+                      </div>
+                      <div style={{ fontSize: 15, color: theme.gray800 }}>
+                        {c.climate.bestTime}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
+      </div>
+    </SectionWrapper>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   PEOPLE & CULTURE
+   ═══════════════════════════════════════════════════ */
+
+const PeopleCulture = ({ country, isMobile }) => {
+  const c = country;
+  const hasContent = c.population || c.languages?.length > 0 || c.ethnicGroups?.length > 0 || c.religions?.length > 0;
+
+  if (!hasContent) return null;
+
+  return (
+    <SectionWrapper id="people" background={theme.gray50} isMobile={isMobile}>
+      <SectionHeader
+        title="People & Culture"
+        subtitle={`Learn about the diverse communities and traditions of ${c.name}`}
+        isMobile={isMobile}
+      />
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+          gap: 24,
+        }}
+      >
+        {/* Languages */}
+        {c.languages?.length > 0 && (
+          <Card hover={false} style={{ padding: 28 }}>
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: "50%",
+                background: theme.primaryLight,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 28,
+                marginBottom: 20,
+              }}
+            >
+              🗣️
+            </div>
+            <h4 style={{ margin: "0 0 16px", fontSize: 18, fontWeight: 600, color: theme.gray800 }}>
+              Languages
+            </h4>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {c.languages.map((lang, i) => (
+                <Badge key={i} variant="gray" size="sm">
+                  {typeof lang === "string" ? lang : lang.name}
+                </Badge>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Ethnic Groups */}
+        {c.ethnicGroups?.length > 0 && (
+          <Card hover={false} style={{ padding: 28 }}>
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: "50%",
+                background: theme.accentLight,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 28,
+                marginBottom: 20,
+              }}
+            >
+              👥
+            </div>
+            <h4 style={{ margin: "0 0 16px", fontSize: 18, fontWeight: 600, color: theme.gray800 }}>
+              Ethnic Groups
+            </h4>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {c.ethnicGroups.slice(0, 6).map((group, i) => (
+                <Badge key={i} variant="accent" size="sm">
+                  {typeof group === "string" ? group : group.name}
+                </Badge>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Religions */}
+        {c.religions?.length > 0 && (
+          <Card hover={false} style={{ padding: 28 }}>
+            <div
+              style={{
+                width: 56,
+                height: 56,
+                borderRadius: "50%",
+                background: theme.primaryMuted,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 28,
+                marginBottom: 20,
+              }}
+            >
+              🛕
+            </div>
+            <h4 style={{ margin: "0 0 16px", fontSize: 18, fontWeight: 600, color: theme.gray800 }}>
+              Religions
+            </h4>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {c.religions.slice(0, 6).map((religion, i) => (
+                <Badge key={i} variant="primary" size="sm">
+                  {typeof religion === "string" ? religion : religion.name}
+                </Badge>
+              ))}
+            </div>
+          </Card>
+        )}
+      </div>
+    </SectionWrapper>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   HISTORY & HERITAGE
+   ═══════════════════════════════════════════════════ */
+
+const HistoryHeritage = ({ country, isMobile }) => {
+  const c = country;
+  const timeline = c.historicalTimeline || [];
+  const unesco = c.unescoSites || [];
+  const hasContent = timeline.length > 0 || unesco.length > 0;
+
+  if (!hasContent) return null;
+
+  return (
+    <SectionWrapper id="history" background={theme.white} isMobile={isMobile}>
+      <SectionHeader
+        title="History & Heritage"
+        subtitle={`Discover the rich history and cultural heritage of ${c.name}`}
+        isMobile={isMobile}
+      />
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+          gap: 32,
+        }}
+      >
         {/* Timeline */}
         {timeline.length > 0 && (
-          <div style={{ marginBottom: 48 }}>
-            <h3 style={{ fontFamily: T.serif, fontSize: mob ? 20 : 24, color: T.primary, marginBottom: 24 }}>
-              📜 Historical Timeline
+          <div>
+            <h3
+              style={{
+                fontSize: 20,
+                fontWeight: 600,
+                color: theme.gray800,
+                marginBottom: 24,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+              }}
+            >
+              <span>📜</span> Historical Timeline
             </h3>
-            <div style={{ position: "relative", paddingLeft: 28 }}>
-              {/* Vertical line */}
+            <div style={{ position: "relative", paddingLeft: 24 }}>
+              {/* Timeline Line */}
               <div
                 style={{
                   position: "absolute",
-                  left: 0,
-                  top: 0,
-                  bottom: 0,
+                  left: 4,
+                  top: 8,
+                  bottom: 8,
                   width: 2,
-                  background: T.border,
+                  background: theme.primaryLight,
                 }}
               />
-              {timeline.map((ev, i) => (
+              {timeline.slice(0, 6).map((event, i) => (
                 <div
                   key={i}
                   style={{
                     position: "relative",
-                    marginBottom: i < timeline.length - 1 ? 28 : 0,
-                    paddingLeft: 16,
+                    paddingBottom: 28,
                   }}
                 >
-                  <div className={`cp-timeline-dot${ev.isMajor ? " major" : ""}`} />
+                  {/* Timeline Dot */}
                   <div
                     style={{
-                      ...cardBase(),
-                      padding: "14px 18px",
-                      background: ev.isMajor ? T.primaryLight : T.white,
+                      position: "absolute",
+                      left: -24,
+                      top: 4,
+                      width: 12,
+                      height: 12,
+                      borderRadius: "50%",
+                      background: theme.primary,
+                      border: `3px solid ${theme.white}`,
+                      boxShadow: `0 0 0 3px ${theme.primaryLight}`,
+                    }}
+                  />
+                  <div
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: theme.primary,
+                      marginBottom: 4,
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                      <span
-                        style={{
-                          fontSize: 13,
-                          fontWeight: 700,
-                          color: T.primary,
-                          background: T.primaryLight,
-                          padding: "2px 10px",
-                          borderRadius: 4,
-                        }}
-                      >
-                        {ev.year}
-                      </span>
-                      {ev.type && (
-                        <span style={{ fontSize: 11, color: T.textLt, textTransform: "uppercase", letterSpacing: .5 }}>
-                          {ev.type}
-                        </span>
-                      )}
-                    </div>
-                    <p style={{ margin: 0, fontSize: 14, lineHeight: 1.6, color: T.text }}>
-                      {ev.event}
-                    </p>
+                    {event.year || event.period}
                   </div>
+                  <h4 style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 600, color: theme.gray800 }}>
+                    {event.title || event.event}
+                  </h4>
+                  {event.description && (
+                    <p style={{ margin: 0, fontSize: 14, color: theme.gray600, lineHeight: 1.6 }}>
+                      {event.description}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
@@ -1011,848 +1328,1023 @@ const HistoryHeritage = ({ c, mob }) => {
         {/* UNESCO Sites */}
         {unesco.length > 0 && (
           <div>
-            <h3 style={{ fontFamily: T.serif, fontSize: mob ? 20 : 24, color: T.primary, marginBottom: 24 }}>
-              🏛 UNESCO World Heritage Sites
-            </h3>
-            <div
-              className="cp-three-grid"
+            <h3
               style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(3,1fr)",
-                gap: 16,
+                fontSize: 20,
+                fontWeight: 600,
+                color: theme.gray800,
+                marginBottom: 24,
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
               }}
             >
-              {unesco.map((site, i) => (
-                <div
-                  key={i}
-                  className="cp-card"
-                  style={{
-                    ...cardBase(),
-                    padding: 22,
-                  }}
-                >
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 10 }}>
-                    <h4 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: T.text, flex: 1 }}>
-                      {site.name}
-                    </h4>
-                    {site.year && (
-                      <span
+              <span>🏛️</span> UNESCO World Heritage Sites
+            </h3>
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {unesco.slice(0, 5).map((site, i) => (
+                <Card key={i} style={{ padding: 20 }}>
+                  <div style={{ display: "flex", gap: 16 }}>
+                    {site.imageUrl && (
+                      <img
+                        src={site.imageUrl}
+                        alt={site.name}
                         style={{
-                          fontSize: 12,
-                          fontWeight: 600,
-                          color: T.accent,
-                          background: T.accentLight,
-                          padding: "2px 8px",
-                          borderRadius: 4,
-                          marginLeft: 8,
-                          whiteSpace: "nowrap",
+                          width: 80,
+                          height: 80,
+                          borderRadius: theme.radiusSm,
+                          objectFit: "cover",
+                          flexShrink: 0,
                         }}
-                      >
-                        {site.year}
-                      </span>
+                      />
                     )}
+                    <div>
+                      <h4 style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 600, color: theme.gray800 }}>
+                        {site.name}
+                      </h4>
+                      {site.yearInscribed && (
+                        <Badge variant="primary" size="sm" style={{ marginBottom: 8 }}>
+                          Inscribed {site.yearInscribed}
+                        </Badge>
+                      )}
+                      {site.description && (
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: 13,
+                            color: theme.gray600,
+                            lineHeight: 1.5,
+                            display: "-webkit-box",
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                          }}
+                        >
+                          {site.description}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  {site.type && (
-                    <span
-                      className="cp-tag"
-                      style={{
-                        background:
-                          site.type === "Natural"
-                            ? T.secondaryLight
-                            : site.type === "Mixed"
-                            ? T.accentLight
-                            : T.primaryLight,
-                        color:
-                          site.type === "Natural"
-                            ? T.secondary
-                            : site.type === "Mixed"
-                            ? "#92610a"
-                            : T.primary,
-                        fontSize: 11,
-                        margin: "0 0 10px",
-                      }}
-                    >
-                      {site.type}
-                    </span>
-                  )}
-                  {site.description && (
-                    <p style={{ margin: 0, fontSize: 13, lineHeight: 1.65, color: T.textMd }}>
-                      {site.description}
-                    </p>
-                  )}
-                </div>
+                </Card>
               ))}
             </div>
           </div>
         )}
       </div>
-    </section>
+    </SectionWrapper>
   );
 };
 
-/* ── WILDLIFE & NATURE ───────────────────────────── */
-const WildlifeNature = ({ c, mob }) => {
-  const w = c.wildlife || {};
-  const cats = [
-    { icon: "🦁", title: "Mammals", items: w.mammals || [] },
-    { icon: "🦅", title: "Birds", items: w.birds || [] },
-    { icon: "🐠", title: "Marine Life", items: w.marine || [] },
-    { icon: "🦎", title: "Reptiles", items: w.reptiles || [] },
-  ].filter((cat) => cat.items.length > 0);
+/* ═══════════════════════════════════════════════════
+   WILDLIFE & NATURE
+   ═══════════════════════════════════════════════════ */
 
-  if (!cats.length) return null;
+const WildlifeNature = ({ country, isMobile }) => {
+  const c = country;
+  const wildlife = c.wildlife || {};
+  const hasContent = Object.values(wildlife).some(v => Array.isArray(v) && v.length > 0);
+
+  if (!hasContent) return null;
+
+  const categories = [
+    { key: "mammals", label: "Mammals", icon: "🦁" },
+    { key: "birds", label: "Birds", icon: "🦅" },
+    { key: "reptiles", label: "Reptiles", icon: "🐊" },
+    { key: "marineLife", label: "Marine Life", icon: "🐋" },
+    { key: "endangered", label: "Endangered Species", icon: "⚠️" },
+  ].filter(cat => wildlife[cat.key]?.length > 0);
 
   return (
-    <section id="wildlife" style={{ background: T.white }}>
-      <div style={sectionWrap(mob)}>
-        <h2 style={sectionTitle(mob)}>Wildlife & Nature</h2>
-        <p style={sectionSub()}>
-          {c.name} is home to an extraordinary array of wildlife and natural wonders.
-        </p>
+    <SectionWrapper id="wildlife" background={theme.gray50} isMobile={isMobile}>
+      <SectionHeader
+        title="Wildlife & Nature"
+        subtitle={`Explore the incredible biodiversity and natural wonders of ${c.name}`}
+        isMobile={isMobile}
+      />
 
-        <div
-          className="cp-three-grid"
-          style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(${Math.min(cats.length, 3)}, 1fr)`,
-            gap: 20,
-          }}
-        >
-          {cats.map((cat, i) => (
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
+          gap: 24,
+        }}
+      >
+        {categories.map((cat, i) => (
+          <Card key={i} hover={false}>
             <div
-              key={i}
               style={{
-                ...cardBase(),
-                padding: 24,
-                background: T.secondaryLight,
-                border: "1px solid rgba(26,138,92,.15)",
+                padding: "18px 24px",
+                background: theme.primaryMuted,
+                borderBottom: `1px solid ${theme.primaryLight}`,
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
               }}
             >
-              <h4 style={{ margin: "0 0 16px", fontSize: 18, color: T.secondary }}>
-                {cat.icon} {cat.title}
+              <span style={{ fontSize: 24 }}>{cat.icon}</span>
+              <h4 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: theme.primaryDark }}>
+                {cat.label}
               </h4>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {cat.items.map((item, j) => (
-                  <span
-                    key={j}
-                    className="cp-tag"
-                    style={{
-                      background: T.white,
-                      color: T.text,
-                      border: `1px solid ${T.border}`,
-                      fontSize: 13,
-                    }}
-                  >
-                    {item}
-                  </span>
+            </div>
+            <div style={{ padding: 20 }}>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                {wildlife[cat.key].slice(0, 8).map((animal, j) => (
+                  <Badge key={j} variant="gray" size="sm">
+                    {typeof animal === "string" ? animal : animal.name}
+                  </Badge>
                 ))}
               </div>
             </div>
-          ))}
-        </div>
+          </Card>
+        ))}
       </div>
-    </section>
+    </SectionWrapper>
   );
 };
 
-/* ── CUISINE ─────────────────────────────────────── */
-const Cuisine = ({ c, mob }) => {
-  const cu = c.cuisine || {};
-  const cats = [
-    { icon: "🍚", title: "Staple Foods", items: cu.staples || [] },
-    { icon: "🍖", title: "Specialties", items: cu.specialties || [] },
-    { icon: "🥤", title: "Beverages", items: cu.beverages || [] },
-    { icon: "🍰", title: "Desserts", items: cu.desserts || [] },
-  ].filter((cat) => cat.items.length > 0);
+/* ═══════════════════════════════════════════════════
+   CUISINE
+   ═══════════════════════════════════════════════════ */
 
-  if (!cats.length) return null;
+const Cuisine = ({ country, isMobile }) => {
+  const c = country;
+  const cuisine = c.cuisine || {};
+  const dishes = cuisine.dishes || cuisine.traditionalDishes || [];
+  const beverages = cuisine.beverages || [];
+  const hasContent = dishes.length > 0 || beverages.length > 0;
+
+  if (!hasContent) return null;
 
   return (
-    <section id="cuisine" style={{ background: T.bg }}>
-      <div style={sectionWrap(mob)}>
-        <h2 style={sectionTitle(mob)}>Cuisine & Food Culture</h2>
-        <p style={sectionSub()}>
-          Savor the authentic flavors and culinary traditions of {c.name}.
-        </p>
+    <SectionWrapper id="cuisine" background={theme.white} isMobile={isMobile}>
+      <SectionHeader
+        title="Local Cuisine"
+        subtitle={`Taste the authentic flavors and culinary traditions of ${c.name}`}
+        isMobile={isMobile}
+      />
 
-        <div
-          className="cp-two-col"
-          style={{ display: "flex", gap: 20, flexWrap: "wrap" }}
-        >
-          {cats.map((cat, i) => (
-            <div
-              key={i}
-              className="cp-card"
-              style={{
-                ...cardBase(),
-                padding: 24,
-                flex: mob ? "1 1 100%" : "1 1 calc(50% - 10px)",
-                minWidth: mob ? undefined : 280,
-              }}
-            >
-              <h4 style={{ margin: "0 0 14px", fontSize: 18, color: T.accent }}>
-                {cat.icon} {cat.title}
-              </h4>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {cat.items.map((item, j) => (
-                  <div
-                    key={j}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 10,
-                      padding: "8px 12px",
-                      background: T.bg,
-                      borderRadius: 8,
-                      fontSize: 14,
-                      color: T.text,
-                    }}
-                  >
-                    <span style={{ color: T.accent }}>•</span>
-                    {item}
-                  </div>
-                ))}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+          gap: 24,
+        }}
+      >
+        {dishes.slice(0, 6).map((dish, i) => (
+          <Card key={i} className="hover-scale" style={{ overflow: "hidden" }}>
+            {dish.imageUrl && (
+              <div style={{ height: 180, overflow: "hidden" }}>
+                <img
+                  src={dish.imageUrl}
+                  alt={dish.name}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                />
               </div>
+            )}
+            <div style={{ padding: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                <span style={{ fontSize: 20 }}>🍽️</span>
+                <h4 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: theme.gray800 }}>
+                  {dish.name}
+                </h4>
+              </div>
+              {dish.description && (
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 14,
+                    color: theme.gray600,
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {dish.description}
+                </p>
+              )}
+              {dish.isVegetarian && (
+                <Badge variant="success" size="sm" style={{ marginTop: 12 }}>
+                  🌱 Vegetarian
+                </Badge>
+              )}
             </div>
-          ))}
-        </div>
+          </Card>
+        ))}
       </div>
-    </section>
-  );
-};
 
-/* ── TRAVEL ESSENTIALS ───────────────────────────── */
-const TravelEssentials = ({ c, mob }) => {
-  const practicals = [
-    { icon: "🚗", label: "Driving Side", value: c.drivingSide },
-    { icon: "🔌", label: "Electrical Plug", value: c.electricalPlug },
-    { icon: "⚡", label: "Voltage", value: c.voltage },
-    { icon: "💧", label: "Water Safety", value: c.waterSafety },
-    { icon: "📞", label: "Calling Code", value: c.callingCode },
-    { icon: "🌐", label: "Internet TLD", value: c.internetTLD },
-    { icon: "💰", label: "Currency", value: c.currency },
-    { icon: "⏰", label: "Timezone", value: c.timezone },
-  ].filter((p) => p.value);
-
-  const hasVisa = c.visaInfo;
-  const hasHealth = c.healthInfo;
-
-  if (!practicals.length && !hasVisa && !hasHealth) return null;
-
-  return (
-    <section id="travel" style={{ background: T.white }}>
-      <div style={sectionWrap(mob)}>
-        <h2 style={sectionTitle(mob)}>Travel Essentials</h2>
-        <p style={sectionSub()}>
-          Everything you need to know before planning your trip to {c.name}.
-        </p>
-
-        {/* Practical info grid */}
-        {practicals.length > 0 && (
-          <div
-            className="cp-facts-grid"
+      {/* Beverages */}
+      {beverages.length > 0 && (
+        <div style={{ marginTop: 48 }}>
+          <h3
             style={{
-              display: "grid",
-              gridTemplateColumns: mob ? "repeat(2,1fr)" : "repeat(4,1fr)",
-              gap: 14,
-              marginBottom: 32,
+              fontSize: 22,
+              fontWeight: 600,
+              color: theme.gray800,
+              marginBottom: 24,
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
             }}
           >
-            {practicals.map((p, i) => (
-              <div
-                key={i}
-                style={{
-                  background: T.bg,
-                  borderRadius: T.radiusSm,
-                  padding: "16px 14px",
-                  textAlign: "center",
-                }}
-              >
-                <div style={{ fontSize: 22, marginBottom: 6 }}>{p.icon}</div>
-                <div style={{ fontSize: 11, color: T.textLt, textTransform: "uppercase", letterSpacing: .8, marginBottom: 4 }}>
-                  {p.label}
-                </div>
-                <div style={{ fontSize: 14, fontWeight: 600, color: T.text }}>{p.value}</div>
-              </div>
+            <span>🍹</span> Traditional Beverages
+          </h3>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+            {beverages.map((bev, i) => (
+              <Card key={i} style={{ padding: "16px 20px" }}>
+                <span style={{ fontWeight: 600, color: theme.gray800 }}>
+                  {typeof bev === "string" ? bev : bev.name}
+                </span>
+              </Card>
             ))}
           </div>
-        )}
+        </div>
+      )}
+    </SectionWrapper>
+  );
+};
 
-        {/* Visa & Health */}
+/* ═══════════════════════════════════════════════════
+   TRAVEL ESSENTIALS
+   ═══════════════════════════════════════════════════ */
+
+const TravelEssentials = ({ country, isMobile }) => {
+  const c = country;
+  const hasContent = c.visaInfo || c.healthInfo || c.safety || c.currency || c.electricityInfo;
+
+  if (!hasContent) return null;
+
+  const essentials = [
+    {
+      icon: "📋",
+      title: "Visa Information",
+      content: c.visaInfo,
+      color: theme.primary,
+      bg: theme.primaryMuted,
+    },
+    {
+      icon: "💊",
+      title: "Health & Vaccinations",
+      content: c.healthInfo,
+      color: "#DC2626",
+      bg: "#FEF2F2",
+    },
+    {
+      icon: "🛡️",
+      title: "Safety & Security",
+      content: c.safety,
+      color: "#2563EB",
+      bg: "#EFF6FF",
+    },
+    {
+      icon: "🔌",
+      title: "Electricity",
+      content: c.electricityInfo,
+      color: "#7C3AED",
+      bg: "#F5F3FF",
+    },
+  ].filter(e => e.content);
+
+  return (
+    <SectionWrapper id="travel" background={theme.gray50} isMobile={isMobile}>
+      <SectionHeader
+        title="Travel Essentials"
+        subtitle={`Important information for planning your trip to ${c.name}`}
+        isMobile={isMobile}
+      />
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
+          gap: 24,
+        }}
+      >
+        {essentials.map((item, i) => (
+          <Card key={i} hover={false}>
+            <div
+              style={{
+                padding: "18px 24px",
+                background: item.bg,
+                borderBottom: `1px solid ${item.color}20`,
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+              }}
+            >
+              <span style={{ fontSize: 24 }}>{item.icon}</span>
+              <h4 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: item.color }}>
+                {item.title}
+              </h4>
+            </div>
+            <div style={{ padding: 24 }}>
+              {typeof item.content === "string" ? (
+                <p style={{ margin: 0, fontSize: 15, color: theme.gray700, lineHeight: 1.7 }}>
+                  {item.content}
+                </p>
+              ) : (
+                <div style={{ fontSize: 15, color: theme.gray700, lineHeight: 1.7 }}>
+                  {item.content.description || JSON.stringify(item.content)}
+                </div>
+              )}
+            </div>
+          </Card>
+        ))}
+      </div>
+    </SectionWrapper>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   FESTIVALS & EVENTS
+   ═══════════════════════════════════════════════════ */
+
+const Festivals = ({ country, isMobile }) => {
+  const c = country;
+  const festivals = c.festivals || [];
+
+  if (festivals.length === 0) return null;
+
+  return (
+    <SectionWrapper id="festivals" background={theme.white} isMobile={isMobile}>
+      <SectionHeader
+        title="Festivals & Events"
+        subtitle={`Experience the vibrant celebrations and cultural events of ${c.name}`}
+        isMobile={isMobile}
+      />
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+          gap: 24,
+        }}
+      >
+        {festivals.slice(0, 6).map((fest, i) => (
+          <Card key={i} className="hover-scale" style={{ overflow: "hidden" }}>
+            {fest.imageUrl && (
+              <div style={{ height: 180, overflow: "hidden" }}>
+                <img
+                  src={fest.imageUrl}
+                  alt={fest.name}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                />
+              </div>
+            )}
+            <div style={{ padding: 20 }}>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  marginBottom: 10,
+                }}
+              >
+                <h4 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: theme.gray800 }}>
+                  {fest.name}
+                </h4>
+                {fest.isMajorEvent && (
+                  <Badge variant="warning" size="sm">Major</Badge>
+                )}
+              </div>
+              {(fest.period || fest.month) && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 6,
+                    marginBottom: 10,
+                    color: theme.primary,
+                    fontSize: 14,
+                    fontWeight: 500,
+                  }}
+                >
+                  <span>📅</span> {fest.period || fest.month}
+                </div>
+              )}
+              {fest.description && (
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 14,
+                    color: theme.gray600,
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {fest.description}
+                </p>
+              )}
+            </div>
+          </Card>
+        ))}
+      </div>
+    </SectionWrapper>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   AIRPORTS / GETTING THERE
+   ═══════════════════════════════════════════════════ */
+
+const Airports = ({ country, isMobile }) => {
+  const c = country;
+  const airports = c.airports || [];
+
+  if (airports.length === 0) return null;
+
+  return (
+    <SectionWrapper id="airports" background={theme.gray50} isMobile={isMobile}>
+      <SectionHeader
+        title="Getting There"
+        subtitle={`Key airports and entry points for traveling to ${c.name}`}
+        isMobile={isMobile}
+      />
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+          gap: 20,
+        }}
+      >
+        {airports.slice(0, 6).map((airport, i) => (
+          <Card
+            key={i}
+            style={{
+              padding: 24,
+              borderLeft: airport.isMainInternational
+                ? `4px solid ${theme.primary}`
+                : `4px solid ${theme.gray300}`,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 12 }}>
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: "50%",
+                  background: airport.isMainInternational ? theme.primaryMuted : theme.gray100,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 24,
+                  flexShrink: 0,
+                }}
+              >
+                ✈️
+              </div>
+              <div>
+                <h4 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 600, color: theme.gray800 }}>
+                  {airport.name}
+                </h4>
+                {airport.code && (
+                  <span
+                    style={{
+                      fontSize: 13,
+                      fontWeight: 700,
+                      color: theme.primary,
+                      background: theme.primaryLight,
+                      padding: "2px 8px",
+                      borderRadius: 4,
+                    }}
+                  >
+                    {airport.code}
+                  </span>
+                )}
+              </div>
+            </div>
+            {airport.location && (
+              <p style={{ margin: "0 0 8px", fontSize: 14, color: theme.gray600 }}>
+                📍 {airport.location}
+              </p>
+            )}
+            {airport.type && (
+              <Badge variant="gray" size="sm">
+                {airport.type}
+              </Badge>
+            )}
+            {airport.description && (
+              <p style={{ margin: "12px 0 0", fontSize: 14, color: theme.gray600, lineHeight: 1.6 }}>
+                {airport.description}
+              </p>
+            )}
+          </Card>
+        ))}
+      </div>
+    </SectionWrapper>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   DESTINATIONS
+   ═══════════════════════════════════════════════════ */
+
+const Destinations = ({ destinations, countryName, countrySlug, isMobile }) => {
+  if (!destinations || destinations.length === 0) return null;
+
+  return (
+    <SectionWrapper id="destinations" background={theme.white} isMobile={isMobile}>
+      <SectionHeader
+        title="Explore Destinations"
+        subtitle={`Discover the most stunning places to visit in ${countryName}`}
+        action={
+          countrySlug && (
+            <Link
+              to={`/countries/${countrySlug}/destinations`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                fontSize: 15,
+                fontWeight: 600,
+                color: theme.primary,
+                textDecoration: "none",
+              }}
+            >
+              View All <span>→</span>
+            </Link>
+          )
+        }
+        isMobile={isMobile}
+      />
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+          gap: 24,
+        }}
+      >
+        {destinations.slice(0, 9).map((dest, i) => (
+          <Link
+            key={dest.id || i}
+            to={`/destinations/${dest.slug || dest.id}`}
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
+            <Card className="hover-scale" style={{ height: "100%", overflow: "hidden" }}>
+              <div style={{ position: "relative", height: 200, overflow: "hidden" }}>
+                <img
+                  src={dest.image_url || (dest.images || [])[0]}
+                  alt={dest.name}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                  }}
+                />
+                {/* Gradient Overlay */}
+                <div
+                  style={{
+                    position: "absolute",
+                    inset: 0,
+                    background: "linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 50%)",
+                  }}
+                />
+                {/* Featured Badge */}
+                {dest.is_featured && (
+                  <Badge
+                    variant="primary"
+                    size="sm"
+                    style={{
+                      position: "absolute",
+                      top: 12,
+                      left: 12,
+                    }}
+                  >
+                    Featured
+                  </Badge>
+                )}
+                {/* Rating */}
+                {dest.rating && (
+                  <div
+                    style={{
+                      position: "absolute",
+                      top: 12,
+                      right: 12,
+                      background: "rgba(0,0,0,0.7)",
+                      color: "#FBBF24",
+                      padding: "4px 10px",
+                      borderRadius: 6,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    ★ {dest.rating}
+                  </div>
+                )}
+              </div>
+              <div style={{ padding: 20 }}>
+                <h4
+                  style={{
+                    margin: "0 0 8px",
+                    fontSize: 18,
+                    fontWeight: 600,
+                    color: theme.gray800,
+                  }}
+                >
+                  {dest.name}
+                </h4>
+                {dest.category && (
+                  <Badge variant="accent" size="sm" style={{ marginBottom: 10 }}>
+                    {dest.category}
+                  </Badge>
+                )}
+                {dest.description && (
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: 14,
+                      color: theme.gray600,
+                      lineHeight: 1.6,
+                      display: "-webkit-box",
+                      WebkitLineClamp: 3,
+                      WebkitBoxOrient: "vertical",
+                      overflow: "hidden",
+                    }}
+                  >
+                    {dest.description}
+                  </p>
+                )}
+              </div>
+            </Card>
+          </Link>
+        ))}
+      </div>
+    </SectionWrapper>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   IMAGE GALLERY
+   ═══════════════════════════════════════════════════ */
+
+const Gallery = ({ images, name, isMobile }) => {
+  const [lightbox, setLightbox] = useState({ open: false, index: 0 });
+
+  if (!images || images.length === 0) return null;
+
+  return (
+    <SectionWrapper id="gallery" background={theme.gray50} isMobile={isMobile}>
+      <SectionHeader
+        title="Photo Gallery"
+        subtitle={`Stunning images from ${name}`}
+        isMobile={isMobile}
+      />
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
+          gap: 12,
+        }}
+      >
+        {images.slice(0, 8).map((img, i) => {
+          const url = typeof img === "string" ? img : img.url;
+          const caption = typeof img === "object" ? img.caption : null;
+
+          return (
+            <div
+              key={i}
+              onClick={() => setLightbox({ open: true, index: i })}
+              style={{
+                position: "relative",
+                paddingBottom: "75%",
+                borderRadius: theme.radiusMd,
+                overflow: "hidden",
+                cursor: "pointer",
+              }}
+              className="hover-scale"
+            >
+              <img
+                src={url}
+                alt={caption || `${name} photo ${i + 1}`}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "rgba(0,0,0,0)",
+                  transition: `background ${theme.transitionBase}`,
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = "rgba(0,0,0,0.3)"}
+                onMouseLeave={(e) => e.currentTarget.style.background = "rgba(0,0,0,0)"}
+              />
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Lightbox */}
+      {lightbox.open && (
         <div
-          className="cp-two-col"
-          style={{ display: "flex", gap: 20 }}
+          onClick={() => setLightbox({ ...lightbox, open: false })}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.95)",
+            zIndex: 1000,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 32,
+          }}
         >
-          {hasVisa && (
-            <InfoCard
-              icon="🛂"
-              title="Visa Information"
-              text={c.visaInfo}
-              color={T.primary}
-              bg={T.primaryLight}
-            />
-          )}
-          {hasHealth && (
-            <InfoCard
-              icon="🏥"
-              title="Health Information"
-              text={c.healthInfo}
-              color={T.danger}
-              bg="#fef2f2"
-            />
+          <button
+            onClick={() => setLightbox({ ...lightbox, open: false })}
+            style={{
+              position: "absolute",
+              top: 24,
+              right: 24,
+              background: "none",
+              border: "none",
+              color: theme.white,
+              fontSize: 32,
+              cursor: "pointer",
+            }}
+          >
+            ✕
+          </button>
+          <img
+            src={typeof images[lightbox.index] === "string" ? images[lightbox.index] : images[lightbox.index].url}
+            alt=""
+            style={{
+              maxWidth: "90vw",
+              maxHeight: "85vh",
+              objectFit: "contain",
+              borderRadius: theme.radiusMd,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          />
+          {/* Navigation */}
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightbox({ ...lightbox, index: (lightbox.index - 1 + images.length) % images.length });
+                }}
+                style={{
+                  position: "absolute",
+                  left: 24,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "rgba(255,255,255,0.2)",
+                  border: "none",
+                  color: theme.white,
+                  width: 48,
+                  height: 48,
+                  borderRadius: "50%",
+                  fontSize: 24,
+                  cursor: "pointer",
+                }}
+              >
+                ←
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setLightbox({ ...lightbox, index: (lightbox.index + 1) % images.length });
+                }}
+                style={{
+                  position: "absolute",
+                  right: 24,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  background: "rgba(255,255,255,0.2)",
+                  border: "none",
+                  color: theme.white,
+                  width: 48,
+                  height: 48,
+                  borderRadius: "50%",
+                  fontSize: 24,
+                  cursor: "pointer",
+                }}
+              >
+                →
+              </button>
+            </>
           )}
         </div>
+      )}
+    </SectionWrapper>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   TRAVEL TIPS
+   ═══════════════════════════════════════════════════ */
+
+const TravelTips = ({ country, isMobile }) => {
+  const c = country;
+  const tips = c.travelTips || [];
+
+  if (tips.length === 0) return null;
+
+  return (
+    <SectionWrapper id="tips" background={theme.white} isMobile={isMobile}>
+      <SectionHeader
+        title="Travel Tips"
+        subtitle={`Helpful advice for your trip to ${c.name}`}
+        isMobile={isMobile}
+      />
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
+          gap: 20,
+        }}
+      >
+        {tips.map((tip, i) => (
+          <Card key={i} style={{ padding: 24, display: "flex", gap: 16 }}>
+            <div
+              style={{
+                width: 48,
+                height: 48,
+                borderRadius: "50%",
+                background: theme.primaryLight,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: 20,
+                fontWeight: 700,
+                color: theme.primary,
+                flexShrink: 0,
+              }}
+            >
+              {i + 1}
+            </div>
+            <div>
+              {tip.title && (
+                <h4 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 600, color: theme.gray800 }}>
+                  {tip.title}
+                </h4>
+              )}
+              <p style={{ margin: 0, fontSize: 14, color: theme.gray600, lineHeight: 1.6 }}>
+                {typeof tip === "string" ? tip : tip.content || tip.description}
+              </p>
+            </div>
+          </Card>
+        ))}
       </div>
+    </SectionWrapper>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   FOOTER CTA
+   ═══════════════════════════════════════════════════ */
+
+const FooterCTA = ({ country, isMobile }) => {
+  const c = country;
+
+  return (
+    <section
+      style={{
+        background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%)`,
+        padding: isMobile ? "64px 24px" : "96px 48px",
+        textAlign: "center",
+      }}
+    >
+      <Container>
+        <h2
+          style={{
+            fontFamily: theme.fontSerif,
+            fontSize: isMobile ? 28 : 42,
+            fontWeight: 700,
+            color: theme.white,
+            margin: "0 0 16px",
+          }}
+        >
+          Ready to Explore {c.name}?
+        </h2>
+        <p
+          style={{
+            fontSize: isMobile ? 16 : 20,
+            color: "rgba(255,255,255,0.85)",
+            maxWidth: 560,
+            margin: "0 auto 36px",
+            lineHeight: 1.6,
+          }}
+        >
+          Start planning your adventure today. Discover stunning destinations, rich culture, and unforgettable experiences.
+        </p>
+        <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+          {c.destinationCount > 0 && (
+            <Button as={Link} to={`/countries/${c.slug}/destinations`} variant="white" size="lg">
+              View All Destinations
+            </Button>
+          )}
+          <Button
+            as={Link}
+            to="/countries"
+            variant="secondary"
+            size="lg"
+            style={{
+              background: "transparent",
+              borderColor: "rgba(255,255,255,0.4)",
+              color: theme.white,
+            }}
+          >
+            Explore More Countries
+          </Button>
+        </div>
+      </Container>
     </section>
   );
 };
 
-const InfoCard = ({ icon, title, text, color, bg }) => (
+/* ═══════════════════════════════════════════════════
+   ERROR STATE
+   ═══════════════════════════════════════════════════ */
+
+const ErrorState = ({ error, navigate }) => (
   <div
     style={{
-      flex: 1,
-      borderRadius: T.radiusSm,
-      border: `1px solid ${color}22`,
-      overflow: "hidden",
+      minHeight: "80vh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      fontFamily: theme.fontSans,
+      padding: 48,
+      textAlign: "center",
+      background: theme.gray50,
     }}
   >
     <div
       style={{
-        background: bg,
-        padding: "14px 20px",
+        width: 120,
+        height: 120,
+        borderRadius: "50%",
+        background: theme.primaryMuted,
         display: "flex",
         alignItems: "center",
-        gap: 10,
+        justifyContent: "center",
+        fontSize: 56,
+        marginBottom: 32,
       }}
     >
-      <span style={{ fontSize: 22 }}>{icon}</span>
-      <h4 style={{ margin: 0, fontSize: 16, fontWeight: 600, color }}>{title}</h4>
+      🌍
     </div>
-    <div style={{ padding: "16px 20px", background: T.white }}>
-      {splitParagraphs(text).map((p, i) => (
-        <p key={i} style={{ margin: i > 0 ? "10px 0 0" : 0, fontSize: 14, lineHeight: 1.7, color: T.text }}>
-          {p}
-        </p>
-      ))}
-    </div>
+    <h2
+      style={{
+        fontFamily: theme.fontSerif,
+        fontSize: 32,
+        fontWeight: 700,
+        color: theme.gray800,
+        margin: "0 0 16px",
+      }}
+    >
+      Country Not Found
+    </h2>
+    <p
+      style={{
+        fontSize: 18,
+        color: theme.gray500,
+        maxWidth: 480,
+        margin: "0 0 32px",
+        lineHeight: 1.6,
+      }}
+    >
+      {error || "The country you're looking for doesn't exist or has been removed."}
+    </p>
+    <Button onClick={() => navigate("/countries")} size="lg">
+      Browse Countries
+    </Button>
   </div>
 );
 
-/* ── FESTIVALS ───────────────────────────────────── */
-const Festivals = ({ c, mob }) => {
-  const fests = c.festivals || [];
-  if (!fests.length) return null;
+/* ═══════════════════════════════════════════════════
+   UTILITY FUNCTIONS
+   ═══════════════════════════════════════════════════ */
 
-  return (
-    <section id="festivals" style={{ background: T.bg }}>
-      <div style={sectionWrap(mob)}>
-        <h2 style={sectionTitle(mob)}>Festivals & Events</h2>
-        <p style={sectionSub()}>
-          Experience the colorful celebrations and cultural events of {c.name}.
-        </p>
-
-        <div
-          className="cp-three-grid"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3,1fr)",
-            gap: 20,
-          }}
-        >
-          {fests.map((f, i) => (
-            <div
-              key={i}
-              className="cp-card"
-              style={{ ...cardBase(), overflow: "hidden" }}
-            >
-              {f.imageUrl && (
-                <div style={{ height: 170, overflow: "hidden" }}>
-                  <img
-                    src={f.imageUrl}
-                    alt={f.name}
-                    className="cp-img-zoom"
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                    onError={(e) => { e.target.style.display = "none"; }}
-                  />
-                </div>
-              )}
-              <div style={{ padding: 20 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 8 }}>
-                  <h4 style={{ margin: 0, fontSize: 16, fontWeight: 600, color: T.text }}>{f.name}</h4>
-                  {f.isMajorEvent && (
-                    <span style={{ fontSize: 10, fontWeight: 700, color: T.accent, background: T.accentLight, padding: "2px 8px", borderRadius: 4 }}>
-                      MAJOR
-                    </span>
-                  )}
-                </div>
-                {(f.period || f.month) && (
-                  <p style={{ margin: "0 0 8px", fontSize: 13, color: T.primary, fontWeight: 500 }}>
-                    📅 {f.period || f.month}
-                  </p>
-                )}
-                {f.description && (
-                  <p style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: T.textMd }}>
-                    {f.description}
-                  </p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
+const formatNumber = (num) => {
+  if (typeof num !== "number") return num;
+  if (num >= 1000000000) return `${(num / 1000000000).toFixed(1)}B`;
+  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
+  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+  return num.toLocaleString();
 };
 
-/* ── AIRPORTS ────────────────────────────────────── */
-const Airports = ({ c, mob }) => {
-  const airports = c.airports || [];
-  if (!airports.length) return null;
-
-  return (
-    <section id="airports" style={{ background: T.white }}>
-      <div style={sectionWrap(mob)}>
-        <h2 style={sectionTitle(mob)}>Getting There</h2>
-        <p style={sectionSub()}>
-          Key airports and entry points for traveling to {c.name}.
-        </p>
-
-        <div
-          className="cp-three-grid"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3,1fr)",
-            gap: 16,
-          }}
-        >
-          {airports.map((a, i) => (
-            <div
-              key={i}
-              className="cp-card"
-              style={{
-                ...cardBase(),
-                padding: 22,
-                borderLeft: a.isMainInternational
-                  ? `4px solid ${T.primary}`
-                  : `4px solid ${T.border}`,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                <span style={{ fontSize: 24 }}>✈️</span>
-                <div>
-                  <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: T.text }}>{a.name}</h4>
-                  {a.code && (
-                    <span style={{ fontSize: 12, fontWeight: 700, color: T.primary }}>
-                      ({a.code})
-                    </span>
-                  )}
-                </div>
-              </div>
-              {a.location && (
-                <p style={{ margin: "0 0 4px", fontSize: 13, color: T.textMd }}>📍 {a.location}</p>
-              )}
-              {a.type && (
-                <span
-                  className="cp-tag"
-                  style={{
-                    background: T.primaryLight,
-                    color: T.primary,
-                    fontSize: 11,
-                  }}
-                >
-                  {a.type}
-                </span>
-              )}
-              {a.description && (
-                <p style={{ margin: "8px 0 0", fontSize: 13, lineHeight: 1.55, color: T.textMd }}>
-                  {a.description}
-                </p>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-/* ── DESTINATIONS ────────────────────────────────── */
-const Destinations = ({ destinations, countryName, countrySlug, mob }) => {
-  if (!destinations || !destinations.length) return null;
-
-  return (
-    <section id="destinations" style={{ background: T.bg }}>
-      <div style={sectionWrap(mob)}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-          <h2 style={{ ...sectionTitle(mob), marginBottom: 0 }}>
-            Explore Destinations
-          </h2>
-          {countrySlug && (
-            <Link
-              to={`/countries/${countrySlug}/destinations`}
-              style={{
-                fontSize: 14,
-                fontWeight: 600,
-                color: T.primary,
-                textDecoration: "none",
-              }}
-            >
-              View All →
-            </Link>
-          )}
-        </div>
-        <p style={sectionSub()}>
-          Discover the most stunning places to visit in {countryName}.
-        </p>
-
-        <div
-          className="cp-three-grid"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(3,1fr)",
-            gap: 20,
-          }}
-        >
-          {destinations.slice(0, 9).map((d, i) => (
-            <Link
-              key={d.id || i}
-              to={`/destinations/${d.slug || d.id}`}
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
-              <div
-                className="cp-card"
-                style={{ ...cardBase(), overflow: "hidden", height: "100%" }}
-              >
-                <div style={{ position: "relative", height: 190, overflow: "hidden" }}>
-                  <img
-                    src={d.image_url || (d.images || [])[0] || fallbackImg}
-                    alt={d.name}
-                    className="cp-img-zoom"
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                    onError={(e) => { e.target.src = fallbackImg; }}
-                  />
-                  {d.is_featured && (
-                    <span
-                      style={{
-                        position: "absolute",
-                        top: 10,
-                        left: 10,
-                        background: T.accent,
-                        color: "#fff",
-                        fontSize: 10,
-                        fontWeight: 700,
-                        padding: "3px 10px",
-                        borderRadius: 4,
-                        textTransform: "uppercase",
-                        letterSpacing: .5,
-                      }}
-                    >
-                      Featured
-                    </span>
-                  )}
-                  {d.rating && (
-                    <span
-                      style={{
-                        position: "absolute",
-                        top: 10,
-                        right: 10,
-                        background: "rgba(0,0,0,.65)",
-                        color: "#fbbf24",
-                        fontSize: 12,
-                        fontWeight: 600,
-                        padding: "3px 9px",
-                        borderRadius: 4,
-                      }}
-                    >
-                      ★ {d.rating}
-                    </span>
-                  )}
-                </div>
-                <div style={{ padding: 18 }}>
-                  <h4
-                    style={{
-                      margin: "0 0 6px",
-                      fontSize: 16,
-                      fontWeight: 600,
-                      color: T.text,
-                    }}
-                  >
-                    {d.name}
-                  </h4>
-                  {d.category && (
-                    <span
-                      className="cp-tag"
-                      style={{
-                        background: T.secondaryLight,
-                        color: T.secondary,
-                        fontSize: 11,
-                        margin: "0 0 8px",
-                      }}
-                    >
-                      {d.category}
-                    </span>
-                  )}
-                  {d.description && (
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: 13,
-                        lineHeight: 1.55,
-                        color: T.textMd,
-                        display: "-webkit-box",
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                      }}
-                    >
-                      {d.description}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-/* ── IMAGE GALLERY ───────────────────────────────── */
-const Gallery = ({ images, name, mob }) => {
-  const [lightbox, setLightbox] = useState(null);
-
-  if (!images || !images.length) return null;
-
-  return (
-    <section id="gallery" style={{ background: T.white }}>
-      <div style={sectionWrap(mob)}>
-        <h2 style={sectionTitle(mob)}>Photo Gallery</h2>
-        <p style={sectionSub()}>
-          A visual journey through the beauty of {name}.
-        </p>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: mob
-              ? "repeat(2,1fr)"
-              : "repeat(4,1fr)",
-            gap: 12,
-          }}
-        >
-          {images.map((img, i) => (
-            <div
-              key={i}
-              className="cp-gallery-item"
-              style={{
-                gridRow:
-                  !mob && (i === 0 || i === 5) ? "span 2" : undefined,
-                height: !mob && (i === 0 || i === 5) ? undefined : mob ? 160 : 200,
-                overflow: "hidden",
-                borderRadius: T.radiusSm,
-                cursor: "pointer",
-              }}
-              onClick={() => setLightbox(i)}
-            >
-              <img
-                src={img}
-                alt={`${name} ${i + 1}`}
-                className="cp-img-zoom"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  display: "block",
-                }}
-                onError={(e) => { e.target.src = fallbackImg; }}
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Lightbox */}
-        {lightbox !== null && (
-          <div className="cp-lightbox" onClick={() => setLightbox(null)}>
-            <button className="cp-lightbox-close" onClick={() => setLightbox(null)}>
-              ×
-            </button>
-            <img
-              src={images[lightbox]}
-              alt=""
-              onClick={(e) => e.stopPropagation()}
-            />
-            {/* Navigation */}
-            {images.length > 1 && (
-              <>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLightbox((lightbox - 1 + images.length) % images.length);
-                  }}
-                  style={{
-                    position: "absolute",
-                    left: 16,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "rgba(255,255,255,.15)",
-                    border: "none",
-                    color: "#fff",
-                    fontSize: 32,
-                    padding: "8px 14px",
-                    borderRadius: 8,
-                    cursor: "pointer",
-                  }}
-                >
-                  ‹
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLightbox((lightbox + 1) % images.length);
-                  }}
-                  style={{
-                    position: "absolute",
-                    right: 16,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "rgba(255,255,255,.15)",
-                    border: "none",
-                    color: "#fff",
-                    fontSize: 32,
-                    padding: "8px 14px",
-                    borderRadius: 8,
-                    cursor: "pointer",
-                  }}
-                >
-                  ›
-                </button>
-              </>
-            )}
-            <div
-              style={{
-                position: "absolute",
-                bottom: 20,
-                left: "50%",
-                transform: "translateX(-50%)",
-                color: "rgba(255,255,255,.7)",
-                fontSize: 14,
-              }}
-            >
-              {lightbox + 1} / {images.length}
-            </div>
-          </div>
-        )}
-      </div>
-    </section>
-  );
-};
-
-/* ── TRAVEL TIPS ─────────────────────────────────── */
-const TravelTips = ({ c, mob }) => {
-  const tips = c.travelTips || [];
-  if (!tips.length) return null;
-
-  return (
-    <section id="tips" style={{ background: T.bg }}>
-      <div style={sectionWrap(mob)}>
-        <h2 style={sectionTitle(mob)}>Travel Tips</h2>
-        <p style={sectionSub()}>
-          Insider advice and practical tips for your journey to {c.name}.
-        </p>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: mob ? "1fr" : "1fr 1fr",
-            gap: 14,
-          }}
-        >
-          {tips.map((tip, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 14,
-                background: T.white,
-                borderRadius: T.radiusSm,
-                padding: "16px 20px",
-                boxShadow: "0 1px 3px rgba(0,0,0,.04)",
-              }}
-            >
-              <div
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  background: T.primaryLight,
-                  color: T.primary,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontWeight: 700,
-                  fontSize: 14,
-                  flexShrink: 0,
-                }}
-              >
-                {i + 1}
-              </div>
-              <p style={{ margin: 0, fontSize: 14, lineHeight: 1.65, color: T.text }}>
-                {tip}
-              </p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-/* ── ECONOMIC INFO ───────────────────────────────── */
-const EconomicInfo = ({ c, mob }) => {
-  const eco = c.economicInfo || {};
-  const keys = Object.keys(eco);
-  if (!keys.length) return null;
-
-  return (
-    <section style={{ background: T.white }}>
-      <div style={sectionWrap(mob)}>
-        <h2 style={sectionTitle(mob)}>Economy</h2>
-        <p style={sectionSub()}>
-          An overview of the economic landscape of {c.name}.
-        </p>
-
-        <div
-          className="cp-facts-grid"
-          style={{
-            display: "grid",
-            gridTemplateColumns: mob ? "repeat(2,1fr)" : "repeat(4,1fr)",
-            gap: 14,
-          }}
-        >
-          {keys.map((k) => (
-            <div
-              key={k}
-              style={{
-                background: T.bg,
-                borderRadius: T.radiusSm,
-                padding: 18,
-                textAlign: "center",
-              }}
-            >
-              <div style={{ fontSize: 11, color: T.textLt, textTransform: "uppercase", letterSpacing: .8, marginBottom: 6 }}>
-                {k.replace(/_/g, " ")}
-              </div>
-              <div style={{ fontSize: 16, fontWeight: 600, color: T.text }}>
-                {typeof eco[k] === "object" ? JSON.stringify(eco[k]) : String(eco[k])}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
+const splitParagraphs = (text) => {
+  if (!text) return [];
+  return text.split(/\n\n|\n/).filter(Boolean);
 };
 
 /* ═══════════════════════════════════════════════════
@@ -1863,8 +2355,7 @@ const CountryPage = () => {
   const { idOrSlug, id } = useParams();
   const slug = idOrSlug || id;
   const navigate = useNavigate();
-  const width = useWindowWidth();
-  const mob = width < 768;
+  const { isMobile } = useWindowSize();
 
   const [country, setCountry] = useState(null);
   const [destinations, setDestinations] = useState([]);
@@ -1872,308 +2363,153 @@ const CountryPage = () => {
   const [error, setError] = useState(null);
   const [activeSection, setActiveSection] = useState("overview");
 
+  // Fetch data from backend
   useEffect(() => {
-  if (!slug) return;
-  setLoading(true);
-  setError(null);
+    if (!slug) return;
+    
+    setLoading(true);
+    setError(null);
 
-  fetchCountryPageData(slug)
-    .then(({ country, destinations }) => {
-      setCountry(country);
-      setDestinations(destinations);
-    })
-    .catch((e) => setError(e.message))
-    .finally(() => setLoading(false));
-}, [slug]);
+    fetchCountryPageData(slug)
+      .then(({ country, destinations }) => {
+        setCountry(country);
+        setDestinations(destinations);
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [slug]);
 
-  /* ── scroll spy ─────────────────────────────────── */
+  // Scroll to section
   const scrollTo = useCallback((sectionId) => {
     setActiveSection(sectionId);
     const el = document.getElementById(sectionId);
     if (el) {
-      const top = el.getBoundingClientRect().top + window.scrollY - 56;
+      const top = el.getBoundingClientRect().top + window.scrollY - 70;
       window.scrollTo({ top, behavior: "smooth" });
     }
   }, []);
 
+  // Scroll spy
   useEffect(() => {
+    if (!country) return;
+
     const handler = () => {
-      const ids = sections.map((s) => s.id);
-      for (let i = ids.length - 1; i >= 0; i--) {
-        const el = document.getElementById(ids[i]);
-        if (el && el.getBoundingClientRect().top <= 120) {
-          setActiveSection(ids[i]);
+      const sectionIds = sections.map((s) => s.id);
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        const el = document.getElementById(sectionIds[i]);
+        if (el && el.getBoundingClientRect().top <= 150) {
+          setActiveSection(sectionIds[i]);
           break;
         }
       }
     };
+
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
-  }, []);
+  }, [country]);
 
-  /* ── build visible sections list ────────────────── */
+  // Build visible sections
   const sections = [];
   if (country) {
     const c = country;
-    const hasOverview =
-      c.description || c.fullDescription || (c.highlights || []).length;
-    const hasGeo =
-      c.area || Object.keys(c.geography || {}).length || c.climate;
-    const hasPeople =
-      c.population ||
-      (c.languages || []).length ||
-      (c.ethnicGroups || []).length;
-    const hasHistory =
-      (c.historicalTimeline || []).length || (c.unescoSites || []).length;
-    const hasWildlife =
-      Object.values(c.wildlife || {}).some(
-        (v) => Array.isArray(v) && v.length
-      );
-    const hasCuisine =
-      Object.values(c.cuisine || {}).some(
-        (v) => Array.isArray(v) && v.length
-      );
-    const hasTravel =
-      c.visaInfo || c.healthInfo || c.drivingSide || c.callingCode;
-    const hasFests = (c.festivals || []).length > 0;
-    const hasAirports = (c.airports || []).length > 0;
-    const hasDest = destinations.length > 0;
-    const hasGallery = (c.images || []).length > 0;
-    const hasTips = (c.travelTips || []).length > 0;
-
-    if (hasOverview)
+    
+    if (c.description || c.fullDescription || c.highlights?.length) {
       sections.push({ id: "overview", label: "Overview", short: "Overview" });
-    if (hasGeo)
-      sections.push({
-        id: "geography",
-        label: "Geography & Climate",
-        short: "Geography",
-      });
-    if (hasPeople)
-      sections.push({
-        id: "people",
-        label: "People & Culture",
-        short: "People",
-      });
-    if (hasHistory)
-      sections.push({
-        id: "history",
-        label: "History & Heritage",
-        short: "History",
-      });
-    if (hasWildlife)
+    }
+    if (c.area || Object.keys(c.geography || {}).length || c.climate) {
+      sections.push({ id: "geography", label: "Geography & Climate", short: "Geography" });
+    }
+    if (c.population || c.languages?.length || c.ethnicGroups?.length) {
+      sections.push({ id: "people", label: "People & Culture", short: "People" });
+    }
+    if ((c.historicalTimeline || []).length || (c.unescoSites || []).length) {
+      sections.push({ id: "history", label: "History & Heritage", short: "History" });
+    }
+    if (Object.values(c.wildlife || {}).some(v => Array.isArray(v) && v.length)) {
       sections.push({ id: "wildlife", label: "Wildlife", short: "Wildlife" });
-    if (hasCuisine)
+    }
+    if (Object.values(c.cuisine || {}).some(v => Array.isArray(v) && v.length)) {
       sections.push({ id: "cuisine", label: "Cuisine", short: "Food" });
-    if (hasTravel)
-      sections.push({
-        id: "travel",
-        label: "Travel Essentials",
-        short: "Travel",
-      });
-    if (hasFests)
-      sections.push({
-        id: "festivals",
-        label: "Festivals",
-        short: "Festivals",
-      });
-    if (hasAirports)
-      sections.push({
-        id: "airports",
-        label: "Getting There",
-        short: "Airports",
-      });
-    if (hasDest)
-      sections.push({
-        id: "destinations",
-        label: "Destinations",
-        short: "Places",
-      });
-    if (hasGallery)
+    }
+    if (c.visaInfo || c.healthInfo || c.drivingSide || c.callingCode) {
+      sections.push({ id: "travel", label: "Travel Essentials", short: "Travel" });
+    }
+    if ((c.festivals || []).length > 0) {
+      sections.push({ id: "festivals", label: "Festivals", short: "Festivals" });
+    }
+    if ((c.airports || []).length > 0) {
+      sections.push({ id: "airports", label: "Getting There", short: "Airports" });
+    }
+    if (destinations.length > 0) {
+      sections.push({ id: "destinations", label: "Destinations", short: "Places" });
+    }
+    if ((c.images || []).length > 0) {
       sections.push({ id: "gallery", label: "Gallery", short: "Photos" });
-    if (hasTips)
+    }
+    if ((c.travelTips || []).length > 0) {
       sections.push({ id: "tips", label: "Travel Tips", short: "Tips" });
+    }
   }
 
-  /* ── LOADING STATE ──────────────────────────────── */
+  // Loading state with skeleton
   if (loading) {
     return (
-      <div
-        style={{
-          minHeight: "80vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: T.sans,
-          color: T.textMd,
-          gap: 16,
-        }}
-      >
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            border: `4px solid ${T.border}`,
-            borderTopColor: T.primary,
-            borderRadius: "50%",
-            animation: "cpSpin 1s linear infinite",
-          }}
-        />
-        <style>{`@keyframes cpSpin{to{transform:rotate(360deg)}}`}</style>
-        <p style={{ fontSize: 16, margin: 0 }}>Loading country information…</p>
+      <div style={{ fontFamily: theme.fontSans }}>
+        <GlobalStyles />
+        <LoadingSkeleton isMobile={isMobile} />
       </div>
     );
   }
 
-  /* ── ERROR STATE ────────────────────────────────── */
+  // Error state
   if (error || !country) {
     return (
-      <div
-        style={{
-          minHeight: "70vh",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          fontFamily: T.sans,
-          padding: 32,
-          textAlign: "center",
-        }}
-      >
-        <div style={{ fontSize: 64, marginBottom: 16 }}>🌍</div>
-        <h2 style={{ fontFamily: T.serif, fontSize: 28, color: T.primary, margin: "0 0 12px" }}>
-          Country Not Found
-        </h2>
-        <p style={{ fontSize: 16, color: T.textMd, maxWidth: 400, margin: "0 0 24px", lineHeight: 1.6 }}>
-          {error || "The country you're looking for doesn't exist or has been removed."}
-        </p>
-        <button
-          onClick={() => navigate("/countries")}
-          style={{
-            padding: "12px 32px",
-            background: T.primary,
-            color: "#fff",
-            border: "none",
-            borderRadius: 8,
-            fontSize: 15,
-            fontWeight: 600,
-            cursor: "pointer",
-          }}
-        >
-          Browse Countries
-        </button>
+      <div style={{ fontFamily: theme.fontSans }}>
+        <GlobalStyles />
+        <ErrorState error={error} navigate={navigate} />
       </div>
     );
   }
 
-  /* ── RENDER ─────────────────────────────────────── */
-  const c = country;
-
+  // Render
   return (
-    <div style={{ fontFamily: T.sans, color: T.text, background: T.bg }}>
-      <GlobalStyle />
+    <div style={{ fontFamily: theme.fontSans, color: theme.gray800, background: theme.gray50 }}>
+      <GlobalStyles />
 
-      <Hero c={c} mob={mob} />
+      <Hero country={country} isMobile={isMobile} />
 
       {sections.length > 0 && (
         <SectionNav
           sections={sections}
           active={activeSection}
           onClick={scrollTo}
-          mob={mob}
+          isMobile={isMobile}
         />
       )}
 
-      <QuickFacts c={c} mob={mob} />
+      <QuickFacts country={country} isMobile={isMobile} />
 
-      <div className="cp-fade">
-        <Overview c={c} mob={mob} />
-        <GeographyClimate c={c} mob={mob} />
-        <PeopleCulture c={c} mob={mob} />
-        <HistoryHeritage c={c} mob={mob} />
-        <WildlifeNature c={c} mob={mob} />
-        <Cuisine c={c} mob={mob} />
-        <EconomicInfo c={c} mob={mob} />
-        <TravelEssentials c={c} mob={mob} />
-        <Festivals c={c} mob={mob} />
-        <Airports c={c} mob={mob} />
+      <div className="fade-in">
+        <Overview country={country} isMobile={isMobile} />
+        <GeographyClimate country={country} isMobile={isMobile} />
+        <PeopleCulture country={country} isMobile={isMobile} />
+        <HistoryHeritage country={country} isMobile={isMobile} />
+        <WildlifeNature country={country} isMobile={isMobile} />
+        <Cuisine country={country} isMobile={isMobile} />
+        <TravelEssentials country={country} isMobile={isMobile} />
+        <Festivals country={country} isMobile={isMobile} />
+        <Airports country={country} isMobile={isMobile} />
         <Destinations
           destinations={destinations}
-          countryName={c.name}
-          countrySlug={c.slug}
-          mob={mob}
+          countryName={country.name}
+          countrySlug={country.slug}
+          isMobile={isMobile}
         />
-        <Gallery images={c.images} name={c.name} mob={mob} />
-        <TravelTips c={c} mob={mob} />
+        <Gallery images={country.images} name={country.name} isMobile={isMobile} />
+        <TravelTips country={country} isMobile={isMobile} />
       </div>
 
-      {/* ── FOOTER CTA ─────────────────────────────── */}
-      <section
-        style={{
-          background: `linear-gradient(135deg, ${T.primary} 0%, #164e78 100%)`,
-          padding: mob ? "48px 16px" : "72px 32px",
-          textAlign: "center",
-          color: "#fff",
-        }}
-      >
-        <h2
-          style={{
-            fontFamily: T.serif,
-            fontSize: mob ? 26 : 36,
-            fontWeight: 700,
-            margin: "0 0 12px",
-          }}
-        >
-          Ready to Explore {c.name}?
-        </h2>
-        <p
-          style={{
-            fontSize: mob ? 15 : 18,
-            opacity: 0.85,
-            maxWidth: 520,
-            margin: "0 auto 28px",
-            lineHeight: 1.6,
-          }}
-        >
-          Start planning your adventure today. Discover stunning destinations,
-          rich culture, and unforgettable experiences.
-        </p>
-        <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-          {c.destinationCount > 0 && (
-            <Link
-              to={`/countries/${c.slug}/destinations`}
-              style={{
-                padding: "14px 36px",
-                background: T.accent,
-                color: "#fff",
-                borderRadius: 8,
-                textDecoration: "none",
-                fontWeight: 600,
-                fontSize: 15,
-                transition: "transform .2s",
-              }}
-            >
-              View All Destinations
-            </Link>
-          )}
-          <Link
-            to="/countries"
-            style={{
-              padding: "14px 36px",
-              background: "rgba(255,255,255,.15)",
-              color: "#fff",
-              borderRadius: 8,
-              textDecoration: "none",
-              fontWeight: 600,
-              fontSize: 15,
-              border: "1px solid rgba(255,255,255,.3)",
-            }}
-          >
-            Explore More Countries
-          </Link>
-        </div>
-      </section>
+      <FooterCTA country={country} isMobile={isMobile} />
     </div>
   );
 };

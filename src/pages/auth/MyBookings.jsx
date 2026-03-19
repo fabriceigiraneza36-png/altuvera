@@ -7,26 +7,33 @@ import { HiCalendar, HiLocationMarker, HiUsers, HiClock } from "react-icons/hi";
 import Loader from "../../components/common/Loader";
 import "./AuthPages.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-
 export default function MyBookings() {
-  const { authFetch } = useUserAuth();
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    (async () => {
+    let cancelled = false;
+
+    const loadBookings = () => {
+      setLoading(true);
       try {
-        const data = await authFetch(`${API_URL}/bookings/my`);
-        setBookings(data.data || data || []);
-      } catch (err) {
-        setError(err.message);
+        const raw = localStorage.getItem("altuvera_bookings");
+        const parsed = raw ? JSON.parse(raw) : [];
+        if (!cancelled) {
+          setBookings(Array.isArray(parsed) ? parsed : []);
+        }
+      } catch {
+        if (!cancelled) setBookings([]);
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
-    })();
-  }, [authFetch]);
+    };
+
+    loadBookings();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   if (loading) return <Loader />;
 
@@ -46,7 +53,6 @@ export default function MyBookings() {
               border: 1px solid #f1f5f9;
             }
           `}</style>
-          {error && <div className="auth-page-message error">{error}</div>}
           {bookings.length === 0 ? (
             <div className="empty-state">
               <HiCalendar className="empty-icon" />

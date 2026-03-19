@@ -2,38 +2,43 @@ import React, { useEffect, useState } from 'react';
 import PackageChecklist from './PackageChecklist';
 import './ChecklistFloating.css';
 
-const ChecklistFloating = () => {
-  const [footerVisible, setFooterVisible] = useState(false);
+const ChecklistFloating = ({
+  triggerSelector = '[data-download-trigger]',
+  threshold = 0.1,
+} = {}) => {
+  const [triggerVisible, setTriggerVisible] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    let obs;
-    const tryObserve = () => {
-      const footer = document.querySelector('footer');
-      if (!footer) return false;
-      obs = new IntersectionObserver(
-        ([entry]) => setFooterVisible(entry.isIntersecting),
-        { threshold: 0 }
+    let observer;
+
+    const observeTrigger = () => {
+      const trigger = document.querySelector(triggerSelector);
+      if (!trigger) return false;
+
+      observer = new IntersectionObserver(
+        ([entry]) => setTriggerVisible(entry.isIntersecting),
+        { threshold },
       );
-      obs.observe(footer);
+
+      observer.observe(trigger);
       return true;
     };
 
-    // attempt immediately, otherwise poll until footer mounts
-    if (!tryObserve()) {
+    if (!observeTrigger()) {
       const id = setInterval(() => {
-        if (tryObserve()) clearInterval(id);
+        if (observeTrigger()) clearInterval(id);
       }, 250);
       return () => clearInterval(id);
     }
 
-    return () => obs && obs.disconnect();
-  }, []);
+    return () => observer?.disconnect();
+  }, [triggerSelector, threshold]);
 
   return (
     <>
       <button
-        className={`cf-button ${footerVisible ? 'cf-visible' : ''}`}
+        className={`cf-button ${triggerVisible ? 'cf-visible' : ''}`}
         onClick={() => setOpen(true)}
         aria-label="Open checklist"
         title="Open packing checklist"

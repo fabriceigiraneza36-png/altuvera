@@ -336,7 +336,7 @@ const Card = ({
   }, []);
 
   const Wrapper = to ? Link : "div";
-  const fallbackImage = "https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=800&q=80";
+  const fallbackImage = "https://drive.google.com/uc?export=view&id=1BfTgabjQR1J8gj-HEHZ-68WxTvnZrDD1";
 
   /* ── Styles ── */
   const cardStyle = useMemo(

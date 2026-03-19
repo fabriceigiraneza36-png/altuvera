@@ -1,12 +1,10 @@
 // src/services/virtualTourService.js
 
-import { API_URL } from "../utils/apiBase";
-
-const API_BASE = import.meta.env.VITE_API_URL || API_URL;
+import { toAbsoluteApiUrl } from "../utils/apiBase";
 
 class VirtualTourService {
   constructor() {
-    this.base = `${API_BASE}/virtual-tours`;
+    this.base = toAbsoluteApiUrl("/virtual-tours");
     this.abortControllers = new Map();
   }
 

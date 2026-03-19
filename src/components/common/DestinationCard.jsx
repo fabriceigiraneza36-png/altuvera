@@ -1,6 +1,6 @@
 // components/DestinationCard.jsx
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   FiMapPin,
   FiClock,
@@ -17,6 +17,7 @@ import {
   FiCamera,
 } from 'react-icons/fi';
 import { useWishlist } from '../../hooks/useWishlist';
+import { FALLBACK_IMAGE } from '../../utils/destinationAdapter';
 
 /* ===================================================================
    DESIGN TOKENS
@@ -148,9 +149,9 @@ function ImageSlideshow({ images, height = 280 }) {
   const { idx, goNext, goPrev } = useSlideshow(images, 5000);
   const [hovered, setHovered] = useState(false);
 
-  const safeImages = images?.filter(Boolean) || [
-    'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800&q=80',
-  ];
+  const safeImages = images?.filter(Boolean)?.length > 0 
+    ? images.filter(Boolean) 
+    : [FALLBACK_IMAGE];
 
   return (
     <div
@@ -599,8 +600,9 @@ function DestinationCard({
           </button>
         </div>
 
-        {/* Location pill */}
-        <div
+        {/* Location pill with country info */}
+        <Link
+          to={`/country/${destination.countrySlug}`}
           style={{
             position: 'absolute',
             bottom: 16,
@@ -614,6 +616,16 @@ function DestinationCard({
             borderRadius: 30,
             zIndex: 6,
             boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+            textDecoration: 'none',
+            transition: 'all 0.3s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.05)';
+            e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.15)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
           }}
         >
           <FiMapPin size={14} color={COLORS.green[600]} />
@@ -624,9 +636,9 @@ function DestinationCard({
               color: COLORS.neutral[700],
             }}
           >
-            {locationLabel}
+            {destination.countryFlag && `${destination.countryFlag} `}{locationLabel}
           </span>
-        </div>
+        </Link>
       </div>
 
       {/* Content Section */}
@@ -899,7 +911,7 @@ export const DestinationCardGrid = memo(({ destinations = [], columns = 3, gap =
     style={{
       display: 'grid',
       gridTemplateColumns: `repeat(auto-fill, minmax(${100 / columns}%, 1fr))`,
-      gap,
+    gap,
     }}
   >
     {destinations.map((destination, index) => (

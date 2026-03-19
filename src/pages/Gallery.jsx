@@ -60,7 +60,6 @@ import { Link } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { useGallery } from "../hooks/useGallery";
 import { BRAND_LOGO_ALT, getBrandLogoUrl } from "../utils/seo";
-import PackageChecklist from '../components/common/PackageChecklist';
 
 /* ═══════════════════════════════════════════════════════
    CONSTANTS & CONFIGURATION
@@ -3731,7 +3730,6 @@ const Gallery = () => {
           </div>
 
           <div style={{ marginTop: 20 }}>
-            <PackageChecklist tourData={{ tourName: 'Gallery Highlights' }} className="gallery-checklist" />
           </div>
         </div>
       </div>

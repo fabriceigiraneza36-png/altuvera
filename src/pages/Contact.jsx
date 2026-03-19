@@ -704,7 +704,7 @@ const Contact = () => {
       <section className="ct-hero" ref={heroRef}>
         <motion.div
           className="ct-hero-bg"
-          style={{ backgroundImage: `url(${herobg})`, y: heroY }}
+          style={{ backgroundImage: `url(https://i.pinimg.com/736x/bb/ca/d1/bbcad1c07136f38bfc47257f8b38cf2a.jpg)`, y: heroY }}
           initial={{ scale: 1.15 }}
           animate={{ scale: 1 }}
           transition={{ duration: 14, ease: "easeOut" }}

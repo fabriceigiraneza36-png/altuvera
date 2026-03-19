@@ -1,40 +1,54 @@
 import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import { useUserAuth } from "../../context/UserAuthContext";
 import DashboardLayout from "../../components/users/DashboardLayout";
 import { HiHeart, HiTrash, HiLocationMarker } from "react-icons/hi";
 import Loader from "../../components/common/Loader";
+import { useWishlist } from "../../hooks/useWishlist";
+import { apiFetch } from "../../utils/apiBase";
 import "./AuthPages.css";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-
 export default function Wishlist() {
-  const { authFetch } = useUserAuth();
+  const { wishlistIds, toggleWishlist } = useWishlist();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const data = await authFetch(`${API_URL}/users/wishlist`);
-        setItems(data.data || data || []);
-      } catch {
-        // endpoint may not exist yet
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [authFetch]);
+    let cancelled = false;
 
-  const removeItem = async (id) => {
-    try {
-      await authFetch(`${API_URL}/users/wishlist/${id}`, { method: "DELETE" });
-      setItems((prev) => prev.filter((i) => (i._id || i.id) !== id));
-    } catch {
-      /* ignore */
-    }
-  };
+    const loadItems = async () => {
+      setLoading(true);
+      try {
+        const ids = Array.from(wishlistIds);
+        if (ids.length === 0) {
+          setItems([]);
+          return;
+        }
+
+        const results = await Promise.all(
+          ids.map(async (id) => {
+            try {
+              const res = await apiFetch(`/destinations/${id}`);
+              if (!res.ok) return null;
+              const json = await res.json();
+              return json.data || json;
+            } catch {
+              return null;
+            }
+          }),
+        );
+
+        if (!cancelled) setItems(results.filter(Boolean));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    loadItems();
+    return () => {
+      cancelled = true;
+    };
+  }, [wishlistIds]);
 
   if (loading) return <Loader />;
 
@@ -84,7 +98,7 @@ export default function Wishlist() {
                   </div>
                   <button
                     className="wishlist-remove"
-                    onClick={() => removeItem(item._id || item.id)}
+                    onClick={() => toggleWishlist(item._id || item.id)}
                     title="Remove"
                   >
                     <HiTrash />

@@ -345,10 +345,7 @@ const DashboardLayout = ({ children, title, subtitle }) => {
       </button>
 
       <div style={{ marginTop: "1rem" }}>
-        <Link
-          to="/users/user-account-control"
-          style={{ color: "#10b981", fontWeight: "600" }}
-        >
+        <Link to="/auth/user-account-control" style={{ color: "#10b981", fontWeight: "600" }}>
           Manage Account
         </Link>
       </div>

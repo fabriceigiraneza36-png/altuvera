@@ -1,473 +1,223 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  useMemo,
-  createContext,
-  useContext,
-} from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
-import {
-  FiMapPin,
-  FiStar,
-  FiClock,
-  FiCheck,
-  FiCalendar,
-  FiUsers,
-  FiCamera,
-  FiHeart,
-  FiShare2,
-  FiChevronLeft,
-  FiChevronRight,
-  FiArrowRight,
-  FiArrowLeft,
-  FiX,
-  FiMaximize2,
-  FiDownload,
-  FiMessageCircle,
-  FiPhone,
-  FiMail,
-  FiSun,
-  FiDroplet,
-  FiWind,
-  FiThermometer,
-  FiGrid,
-  FiChevronDown,
-  FiChevronUp,
-  FiInfo,
-  FiShield,
-  FiGlobe,
-  FiNavigation,
-  FiBookmark,
-  FiPrinter,
-  FiMap,
-  FiCompass,
-  FiSunrise,
-  FiSunset,
-  FiPackage,
-  FiHelpCircle,
-  FiThumbsUp,
-  FiCoffee,
-  FiZap,
-  FiEye,
-  FiLoader,
-  FiAlertTriangle,
-  FiHome,
-  FiExternalLink,
-  FiCopy,
-  FiCheckCircle,
-  FiAlertCircle,
-  FiXCircle,
-  FiPlay,
-  FiPause,
-  FiVolume2,
-  FiVolumeX,
-  FiRefreshCw,
-  FiLink,
-  FiFilter,
-  FiSearch,
-  FiMoreHorizontal,
-  FiEdit,
-  FiTrash2,
-  FiPlus,
-  FiMinus,
-  FiSettings,
-  FiLogIn,
-  FiUserPlus,
-  FiAward,
-  FiTrendingUp,
-  FiActivity,
-  FiBell,
-  FiLock,
-  FiUnlock,
-} from "react-icons/fi";
-import {
-  FaWhatsapp,
-  FaFacebookF,
-  FaLinkedinIn,
-  FaPinterestP,
-  FaTelegramPlane,
-  FaTwitter,
-} from "react-icons/fa";
-import { useCountry } from "../hooks/useCountries";
-import {
-  useCountryDestinations,
-  useDestination,
-} from "../hooks/useDestinations";
-import { useWishlist } from "../hooks/useWishlist";
-import { getBrandLogoUrl, toAbsoluteUrl, toMetaDescription } from "../utils/seo";
+import React, { useState, useEffect, useCallback } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
 
-// ═══════════════════════════════════════════════════════════════════════════
-// DESIGN SYSTEM & THEME
-// ═══════════════════════════════════════════════════════════════════════════
-const THEME = {
-  colors: {
-    primary: {
-      50: "#ECFDF5",
-      100: "#D1FAE5",
-      200: "#A7F3D0",
-      300: "#6EE7B7",
-      400: "#34D399",
-      500: "#10B981",
-      600: "#059669",
-      700: "#047857",
-      800: "#065F46",
-      900: "#064E3B",
-    },
-    neutral: {
-      0: "#FFFFFF",
-      50: "#FAFAFA",
-      100: "#F5F5F5",
-      200: "#E5E5E5",
-      300: "#D4D4D4",
-      400: "#A3A3A3",
-      500: "#737373",
-      600: "#525252",
-      700: "#404040",
-      800: "#262626",
-      900: "#171717",
-    },
-    semantic: {
-      success: "#059669",
-      warning: "#F59E0B",
-      error: "#DC2626",
-      info: "#3B82F6",
-    },
-    gradient: {
-      primary: "linear-gradient(135deg, #059669 0%, #10B981 100%)",
-      hero: "linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.1) 40%, rgba(0,0,0,0.75) 100%)",
-      card: "linear-gradient(145deg, #FFFFFF 0%, #F9FAFB 100%)",
-    },
-  },
-  typography: {
-    fontFamily: {
-      heading: "'Playfair Display', Georgia, 'Times New Roman', serif",
-      body: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      mono: "'JetBrains Mono', 'Fira Code', Consolas, monospace",
-    },
-    fontSize: {
-      xs: "0.75rem",
-      sm: "0.875rem",
-      base: "1rem",
-      lg: "1.125rem",
-      xl: "1.25rem",
-      "2xl": "1.5rem",
-      "3xl": "1.875rem",
-      "4xl": "2.25rem",
-      "5xl": "3rem",
-      "6xl": "3.75rem",
-    },
-    fontWeight: {
-      normal: 400,
-      medium: 500,
-      semibold: 600,
-      bold: 700,
-      extrabold: 800,
-    },
-    lineHeight: {
-      tight: 1.25,
-      snug: 1.375,
-      normal: 1.5,
-      relaxed: 1.625,
-      loose: 2,
-    },
-  },
-  spacing: {
-    px: "1px",
-    0: "0",
-    1: "0.25rem",
-    2: "0.5rem",
-    3: "0.75rem",
-    4: "1rem",
-    5: "1.25rem",
-    6: "1.5rem",
-    8: "2rem",
-    10: "2.5rem",
-    12: "3rem",
-    16: "4rem",
-    20: "5rem",
-    24: "6rem",
-    32: "8rem",
-    40: "10rem",
-  },
-  borderRadius: {
-    none: "0",
-    sm: "0.25rem",
-    DEFAULT: "0.5rem",
-    md: "0.75rem",
-    lg: "1rem",
-    xl: "1.25rem",
-    "2xl": "1.5rem",
-    "3xl": "2rem",
-    full: "9999px",
-  },
-  shadows: {
-    sm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-    DEFAULT:
-      "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1)",
-    md: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)",
-    lg: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1)",
-    xl: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
-    "2xl": "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-    glow: "0 0 40px rgba(5, 150, 105, 0.35)",
-    inner: "inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)",
-  },
-  transitions: {
-    fast: "150ms cubic-bezier(0.4, 0, 0.2, 1)",
-    DEFAULT: "300ms cubic-bezier(0.4, 0, 0.2, 1)",
-    slow: "500ms cubic-bezier(0.4, 0, 0.2, 1)",
-    spring: "500ms cubic-bezier(0.34, 1.56, 0.64, 1)",
-    bounce: "600ms cubic-bezier(0.68, -0.55, 0.265, 1.55)",
-  },
-  breakpoints: {
-    xs: 480,
-    sm: 640,
-    md: 768,
-    lg: 1024,
-    xl: 1280,
-    "2xl": 1536,
-  },
-  zIndex: {
-    dropdown: 1000,
-    sticky: 1020,
-    fixed: 1030,
-    modal: 1040,
-    popover: 1050,
-    tooltip: 1060,
-    toast: 1070,
-  },
+/* ═══════════════════════════════════════════════════
+   DESIGN SYSTEM - GREEN & WHITE THEME
+   ═══════════════════════════════════════════════════ */
+
+const theme = {
+  // Primary Colors (Green)
+  primary: "#059669",
+  primaryDark: "#047857",
+  primaryDarker: "#065F46",
+  primaryLight: "#D1FAE5",
+  primaryMuted: "#ECFDF5",
+  
+  // Accent Colors
+  accent: "#10B981",
+  accentLight: "#A7F3D0",
+  
+  // Neutral Colors
+  white: "#FFFFFF",
+  gray50: "#F9FAFB",
+  gray100: "#F3F4F6",
+  gray200: "#E5E7EB",
+  gray300: "#D1D5DB",
+  gray400: "#9CA3AF",
+  gray500: "#6B7280",
+  gray600: "#4B5563",
+  gray700: "#374151",
+  gray800: "#1F2937",
+  gray900: "#111827",
+  
+  // Semantic Colors
+  success: "#10B981",
+  warning: "#F59E0B",
+  warningLight: "#FEF3C7",
+  error: "#EF4444",
+  info: "#3B82F6",
+  infoLight: "#DBEAFE",
+  star: "#FBBF24",
+  
+  // Typography
+  fontSans: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+  fontSerif: "'Playfair Display', Georgia, serif",
+  
+  // Layout
+  containerMax: "1280px",
+  containerNarrow: "960px",
+  
+  // Spacing
+  sectionPy: "96px",
+  sectionPyMobile: "64px",
+  
+  // Borders & Shadows
+  radiusXs: "4px",
+  radiusSm: "8px",
+  radiusMd: "12px",
+  radiusLg: "16px",
+  radiusXl: "24px",
+  radiusFull: "9999px",
+  
+  shadowXs: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+  shadowSm: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
+  shadowMd: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+  shadowLg: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+  shadowXl: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+  shadow2xl: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
+  
+  // Transitions
+  transitionFast: "150ms cubic-bezier(0.4, 0, 0.2, 1)",
+  transitionBase: "200ms cubic-bezier(0.4, 0, 0.2, 1)",
+  transitionSlow: "300ms cubic-bezier(0.4, 0, 0.2, 1)",
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// GLOBAL STYLES & KEYFRAMES
-// ═══════════════════════════════════════════════════════════════════════════
-const globalStyles = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700;800&display=swap');
+/* ═══════════════════════════════════════════════════
+   GLOBAL STYLES
+   ═══════════════════════════════════════════════════ */
 
-  *, *::before, *::after {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-  }
-
-  html {
-    scroll-behavior: smooth;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-
-  body {
-    font-family: ${THEME.typography.fontFamily.body};
-    color: ${THEME.colors.neutral[800]};
-    background-color: ${THEME.colors.neutral[50]};
-    line-height: ${THEME.typography.lineHeight.normal};
-  }
-
-  /* Animations */
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(80px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes fadeInDown {
-    from { opacity: 0; transform: translateY(-80px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes fadeInLeft {
-    from { opacity: 0; transform: translateX(-80px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  @keyframes fadeInRight {
-    from { opacity: 0; transform: translateX(80px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.92); }
-    to { opacity: 1; transform: scale(1); }
-  }
-
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(100%); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes slideDown {
-    from { opacity: 0; transform: translateY(-100%); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
-
-  @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-8px); }
-  }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-12px); }
-  }
-
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }
-
-  @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-  }
-
-  @keyframes heartbeat {
-    0%, 100% { transform: scale(1); }
-    14% { transform: scale(1.3); }
-    28% { transform: scale(1); }
-    42% { transform: scale(1.3); }
-    70% { transform: scale(1); }
-  }
-
-  @keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
-  }
-
-  @keyframes glow {
-    0%, 100% { box-shadow: 0 0 20px rgba(5, 150, 105, 0.3); }
-    50% { box-shadow: 0 0 40px rgba(5, 150, 105, 0.6); }
-  }
-
-  @keyframes progressBar {
-    from { width: 0; }
-    to { width: var(--progress, 100%); }
-  }
-
-  @keyframes ripple {
-    0% { transform: scale(0); opacity: 1; }
-    100% { transform: scale(4); opacity: 0; }
-  }
-
-  @keyframes toastIn {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-  }
-
-  @keyframes toastOut {
-    from { transform: translateX(0); opacity: 1; }
-    to { transform: translateX(100%); opacity: 0; }
-  }
-
-  /* Reduced Motion */
-  @media (prefers-reduced-motion: reduce) {
+const GlobalStyles = () => (
+  <style>{`
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700;800&display=swap');
+    
     *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
-  }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: ${THEME.colors.neutral[100]};
-    border-radius: 4px;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: ${THEME.colors.primary[400]};
-    border-radius: 4px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: ${THEME.colors.primary[500]};
-  }
-
-  /* Selection */
-  ::selection {
-    background: ${THEME.colors.primary[200]};
-    color: ${THEME.colors.primary[900]};
-  }
-
-  /* Focus */
-  :focus-visible {
-    outline: 2px solid ${THEME.colors.primary[500]};
-    outline-offset: 2px;
-  }
-
-  /* Print */
-  @media print {
-    .no-print { display: none !important; }
-    .print-break { page-break-before: always; }
-    body { background: white; }
-  }
-`;
-
-// ═══════════════════════════════════════════════════════════════════════════
-// CONTEXT PROVIDERS
-// ═══════════════════════════════════════════════════════════════════════════
-const ToastContext = createContext(null);
-
-const ToastProvider = ({ children }) => {
-  const [toasts, setToasts] = useState([]);
-
-  const addToast = useCallback((message, type = "info", duration = 4000) => {
-    const id = Date.now() + Math.random();
-    setToasts((prev) => [...prev, { id, message, type, duration }]);
-    if (duration > 0) {
-      setTimeout(() => removeToast(id), duration);
+    
+    html {
+      scroll-behavior: smooth;
     }
-    return id;
-  }, []);
+    
+    body {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
+    /* Animations */
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(24px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    
+    @keyframes scaleIn {
+      from {
+        opacity: 0;
+        transform: scale(0.95);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    
+    .skeleton {
+      background: linear-gradient(
+        90deg,
+        ${theme.gray200} 25%,
+        ${theme.gray100} 50%,
+        ${theme.gray200} 75%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 1.5s ease-in-out infinite;
+    }
+    
+    .fade-in-up {
+      animation: fadeInUp 0.6s ease forwards;
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.4s ease forwards;
+    }
+    
+    .scale-in {
+      animation: scaleIn 0.3s ease forwards;
+    }
+    
+    .hover-lift {
+      transition: transform ${theme.transitionBase}, box-shadow ${theme.transitionBase};
+    }
+    
+    .hover-lift:hover {
+      transform: translateY(-6px);
+      box-shadow: ${theme.shadowXl};
+    }
+    
+    .hover-scale {
+      transition: transform ${theme.transitionSlow};
+    }
+    
+    .hover-scale:hover {
+      transform: scale(1.02);
+    }
+    
+    .img-zoom {
+      transition: transform ${theme.transitionSlow};
+    }
+    
+    .img-zoom:hover {
+      transform: scale(1.08);
+    }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: ${theme.gray100};
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: ${theme.gray300};
+      border-radius: 5px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: ${theme.gray400};
+    }
+    
+    /* Focus Styles */
+    *:focus-visible {
+      outline: 2px solid ${theme.primary};
+      outline-offset: 2px;
+    }
+    
+    /* Selection */
+    ::selection {
+      background: ${theme.primaryLight};
+      color: ${theme.primaryDarker};
+    }
+  `}</style>
+);
 
-  const removeToast = useCallback((id) => {
-    setToasts((prev) => prev.filter((t) => t.id !== id));
-  }, []);
+/* ═══════════════════════════════════════════════════
+   HOOKS
+   ═══════════════════════════════════════════════════ */
 
-  const toast = useMemo(
-    () => ({
-      success: (msg, dur) => addToast(msg, "success", dur),
-      error: (msg, dur) => addToast(msg, "error", dur),
-      warning: (msg, dur) => addToast(msg, "warning", dur),
-      info: (msg, dur) => addToast(msg, "info", dur),
-      remove: removeToast,
-    }),
-    [addToast, removeToast],
-  );
-
-  return (
-    <ToastContext.Provider value={toast}>
-      {children}
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
-    </ToastContext.Provider>
-  );
-};
-
-const useToast = () => {
-  const context = useContext(ToastContext);
-  if (!context) throw new Error("useToast must be used within ToastProvider");
-  return context;
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// CUSTOM HOOKS
-// ═══════════════════════════════════════════════════════════════════════════
 const useWindowSize = () => {
   const [size, setSize] = useState({
     width: typeof window !== "undefined" ? window.innerWidth : 1200,
@@ -475,1067 +225,233 @@ const useWindowSize = () => {
   });
 
   useEffect(() => {
-    let timeoutId;
     const handleResize = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(() => {
-        setSize({ width: window.innerWidth, height: window.innerHeight });
-      }, 100);
+      setSize({ width: window.innerWidth, height: window.innerHeight });
     };
+    
     window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      clearTimeout(timeoutId);
-    };
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   return {
     ...size,
-    isMobile: size.width < THEME.breakpoints.md,
-    isTablet:
-      size.width >= THEME.breakpoints.md && size.width < THEME.breakpoints.lg,
-    isDesktop: size.width >= THEME.breakpoints.lg,
-    isLargeDesktop: size.width >= THEME.breakpoints.xl,
+    isMobile: size.width < 768,
+    isTablet: size.width >= 768 && size.width < 1024,
+    isDesktop: size.width >= 1024,
   };
 };
 
-const useScrollPosition = (threshold = 80) => {
-  const [state, setState] = useState({
-    scrollY: 0,
-    isScrolled: false,
-    direction: null,
-  });
-  const prevScrollY = useRef(0);
+/* ═══════════════════════════════════════════════════
+   SKELETON COMPONENTS
+   ═══════════════════════════════════════════════════ */
 
-  useEffect(() => {
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          const currentScrollY = window.scrollY;
-          setState({
-            scrollY: currentScrollY,
-            isScrolled: currentScrollY > threshold,
-            direction: currentScrollY > prevScrollY.current ? "down" : "up",
-          });
-          prevScrollY.current = currentScrollY;
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [threshold]);
-
-  return state;
-};
-
-const useLocalStorage = (key, initialValue) => {
-  const [storedValue, setStoredValue] = useState(() => {
-    if (typeof window === "undefined") return initialValue;
-    try {
-      const item = window.localStorage.getItem(key);
-      return item ? JSON.parse(item) : initialValue;
-    } catch (error) {
-      console.warn(`Error reading localStorage key "${key}":`, error);
-      return initialValue;
-    }
-  });
-
-  const setValue = useCallback(
-    (value) => {
-      try {
-        const valueToStore =
-          value instanceof Function ? value(storedValue) : value;
-        setStoredValue(valueToStore);
-        if (typeof window !== "undefined") {
-          window.localStorage.setItem(key, JSON.stringify(valueToStore));
-        }
-      } catch (error) {
-        console.warn(`Error setting localStorage key "${key}":`, error);
-      }
-    },
-    [key, storedValue],
-  );
-
-  return [storedValue, setValue];
-};
-
-const useKeyPress = (targetKey, handler, options = {}) => {
-  const {
-    ctrl = false,
-    shift = false,
-    alt = false,
-    preventDefault = true,
-  } = options;
-
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      const matchesKey = event.key === targetKey || event.code === targetKey;
-      const matchesModifiers =
-        (!ctrl || event.ctrlKey || event.metaKey) &&
-        (!shift || event.shiftKey) &&
-        (!alt || event.altKey);
-
-      if (matchesKey && matchesModifiers) {
-        if (preventDefault) event.preventDefault();
-        handler(event);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [targetKey, handler, ctrl, shift, alt, preventDefault]);
-};
-
-const useIntersectionObserver = (options = {}) => {
-  const [entry, setEntry] = useState(null);
-  const [node, setNode] = useState(null);
-
-  const observer = useRef(null);
-
-  useEffect(() => {
-    if (observer.current) observer.current.disconnect();
-
-    observer.current = new IntersectionObserver(([entry]) => setEntry(entry), {
-      threshold: 0.1,
-      rootMargin: "0px",
-      ...options,
-    });
-
-    if (node) observer.current.observe(node);
-
-    return () => {
-      if (observer.current) observer.current.disconnect();
-    };
-  }, [node, options.threshold, options.rootMargin]);
-
-  return [setNode, entry];
-};
-
-const useClipboard = (timeout = 2000) => {
-  const [copied, setCopied] = useState(false);
-
-  const copy = useCallback(
-    async (text) => {
-      try {
-        await navigator.clipboard.writeText(text);
-        setCopied(true);
-        setTimeout(() => setCopied(false), timeout);
-        return true;
-      } catch (error) {
-        console.error("Failed to copy:", error);
-        return false;
-      }
-    },
-    [timeout],
-  );
-
-  return { copied, copy };
-};
-
-const useDebounce = (value, delay = 300) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedValue(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-
-  return debouncedValue;
-};
-
-const useClickOutside = (handler) => {
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const handleClick = (event) => {
-      if (ref.current && !ref.current.contains(event.target)) {
-        handler(event);
-      }
-    };
-    document.addEventListener("mousedown", handleClick);
-    document.addEventListener("touchstart", handleClick);
-    return () => {
-      document.removeEventListener("mousedown", handleClick);
-      document.removeEventListener("touchstart", handleClick);
-    };
-  }, [handler]);
-
-  return ref;
-};
-
-const useLockBodyScroll = (lock = true) => {
-  useEffect(() => {
-    if (!lock) return;
-    const originalStyle = window.getComputedStyle(document.body).overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = originalStyle;
-    };
-  }, [lock]);
-};
-
-const useSwipe = (onSwipeLeft, onSwipeRight, threshold = 50) => {
-  const touchStart = useRef(null);
-
-  const handleTouchStart = useCallback((e) => {
-    touchStart.current = e.touches[0].clientX;
-  }, []);
-
-  const handleTouchEnd = useCallback(
-    (e) => {
-      if (touchStart.current === null) return;
-      const touchEnd = e.changedTouches[0].clientX;
-      const diff = touchStart.current - touchEnd;
-
-      if (Math.abs(diff) > threshold) {
-        if (diff > 0 && onSwipeLeft) onSwipeLeft();
-        else if (diff < 0 && onSwipeRight) onSwipeRight();
-      }
-      touchStart.current = null;
-    },
-    [onSwipeLeft, onSwipeRight, threshold],
-  );
-
-  return { onTouchStart: handleTouchStart, onTouchEnd: handleTouchEnd };
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// MOCK DATA
-// ═══════════════════════════════════════════════════════════════════════════
-const MOCK_DATA = {
-  weather: {
-    current: {
-      temp: 24,
-      feelsLike: 26,
-      condition: "Sunny",
-      humidity: 65,
-      wind: 12,
-      uv: 6,
-      visibility: 10,
-      pressure: 1015,
-    },
-    forecast: [
-      {
-        day: "Mon",
-        high: 25,
-        low: 18,
-        condition: "sunny",
-        icon: "☀️",
-        precipitation: 0,
-      },
-      {
-        day: "Tue",
-        high: 23,
-        low: 17,
-        condition: "partly-cloudy",
-        icon: "⛅",
-        precipitation: 10,
-      },
-      {
-        day: "Wed",
-        high: 22,
-        low: 16,
-        condition: "rainy",
-        icon: "🌧️",
-        precipitation: 60,
-      },
-      {
-        day: "Thu",
-        high: 24,
-        low: 17,
-        condition: "sunny",
-        icon: "☀️",
-        precipitation: 5,
-      },
-      {
-        day: "Fri",
-        high: 26,
-        low: 19,
-        condition: "sunny",
-        icon: "☀️",
-        precipitation: 0,
-      },
-      {
-        day: "Sat",
-        high: 27,
-        low: 20,
-        condition: "sunny",
-        icon: "☀️",
-        precipitation: 0,
-      },
-      {
-        day: "Sun",
-        high: 25,
-        low: 18,
-        condition: "partly-cloudy",
-        icon: "⛅",
-        precipitation: 15,
-      },
-    ],
-  },
-  packingList: [
-    {
-      category: "Essentials",
-      icon: "🎒",
-      color: THEME.colors.primary[500],
-      items: [
-        { name: "Passport & ID", essential: true, checked: false },
-        { name: "Travel Insurance Docs", essential: true, checked: false },
-        { name: "Cash & Credit Cards", essential: true, checked: false },
-        { name: "Phone & Charger", essential: true, checked: false },
-        { name: "Travel Adapter", essential: false, checked: false },
-      ],
-    },
-    {
-      category: "Clothing",
-      icon: "👕",
-      color: THEME.colors.semantic.info,
-      items: [
-        { name: "Comfortable Walking Shoes", essential: true, checked: false },
-        { name: "Light Layers", essential: false, checked: false },
-        { name: "Rain Jacket", essential: false, checked: false },
-        { name: "Sun Hat", essential: false, checked: false },
-        { name: "Swimwear", essential: false, checked: false },
-      ],
-    },
-    {
-      category: "Health & Safety",
-      icon: "💊",
-      color: THEME.colors.semantic.error,
-      items: [
-        { name: "First Aid Kit", essential: true, checked: false },
-        { name: "Sunscreen SPF50+", essential: true, checked: false },
-        { name: "Insect Repellent", essential: false, checked: false },
-        { name: "Personal Medications", essential: true, checked: false },
-        { name: "Hand Sanitizer", essential: false, checked: false },
-      ],
-    },
-    {
-      category: "Electronics & Gear",
-      icon: "📷",
-      color: THEME.colors.semantic.warning,
-      items: [
-        { name: "Camera", essential: false, checked: false },
-        { name: "Power Bank", essential: true, checked: false },
-        { name: "Reusable Water Bottle", essential: true, checked: false },
-        { name: "Day Backpack", essential: true, checked: false },
-        { name: "Headphones", essential: false, checked: false },
-      ],
-    },
-  ],
-  travelTips: [
-    {
-      id: 1,
-      icon: "🌅",
-      title: "Best Time to Visit",
-      content:
-        "Early morning (6-8 AM) offers the best lighting for photography and significantly fewer crowds. Consider arriving before sunrise for the most magical experience.",
-      category: "timing",
-    },
-    {
-      id: 2,
-      icon: "📸",
-      title: "Photography Spots",
-      content:
-        "The eastern viewpoint offers stunning sunrise shots. Bring a tripod for long exposures. The golden hour before sunset is equally impressive from the western terrace.",
-      category: "photography",
-    },
-    {
-      id: 3,
-      icon: "👟",
-      title: "What to Wear",
-      content:
-        "Comfortable walking shoes are essential as the terrain can be uneven in some areas. Dress in layers as temperatures can vary throughout the day.",
-      category: "preparation",
-    },
-    {
-      id: 4,
-      icon: "🍽️",
-      title: "Local Food",
-      content:
-        "Don't miss the local street food markets for authentic cuisine at great value. Try the regional specialties early in the day when ingredients are freshest.",
-      category: "food",
-    },
-    {
-      id: 5,
-      icon: "💬",
-      title: "Language Tips",
-      content:
-        'Learn basic greetings in the local language - locals greatly appreciate the effort! A simple "hello" and "thank you" go a long way.',
-      category: "culture",
-    },
-    {
-      id: 6,
-      icon: "🚗",
-      title: "Getting Around",
-      content:
-        "Book transportation in advance during peak season for better rates. Local ride-sharing apps often offer the best value for short distances.",
-      category: "transport",
-    },
-  ],
-  safetyInfo: [
-    {
-      label: "Overall Safety",
-      rating: 4.5,
-      description: "Generally very safe for tourists with low crime rates",
-      color: THEME.colors.primary[500],
-    },
-    {
-      label: "Health Services",
-      rating: 4.0,
-      description: "Good medical facilities and pharmacies nearby",
-      color: THEME.colors.semantic.info,
-    },
-    {
-      label: "Infrastructure",
-      rating: 4.2,
-      description: "Well-maintained paths, signage, and facilities",
-      color: THEME.colors.primary[400],
-    },
-    {
-      label: "Communication",
-      rating: 4.8,
-      description: "Excellent mobile coverage and WiFi availability",
-      color: THEME.colors.primary[600],
-    },
-    {
-      label: "Emergency Services",
-      rating: 4.3,
-      description: "Quick response times, multilingual operators",
-      color: THEME.colors.semantic.warning,
-    },
-  ],
-  accessibility: [
-    {
-      feature: "Wheelchair Access",
-      available: true,
-      details: "Main areas fully accessible with ramps and elevators",
-      icon: "♿",
-    },
-    {
-      feature: "Audio Guides",
-      available: true,
-      details: "Available in 12 languages including sign language",
-      icon: "🎧",
-    },
-    {
-      feature: "Rest Areas",
-      available: true,
-      details: "Shaded seating every 300-500 meters",
-      icon: "🪑",
-    },
-    {
-      feature: "Service Animals",
-      available: true,
-      details: "Welcome in all public areas",
-      icon: "🐕",
-    },
-    {
-      feature: "Braille Signage",
-      available: true,
-      details: "Available at major points of interest",
-      icon: "⠿",
-    },
-    {
-      feature: "Accessible Restrooms",
-      available: true,
-      details: "Located throughout the venue",
-      icon: "🚻",
-    },
-  ],
-  faqs: [
-    {
-      id: 1,
-      question: "What is the best time of year to visit?",
-      answer:
-        "The ideal time is during spring (March-May) and autumn (September-November) when weather is mild, crowds are smaller, and prices are more reasonable. Summer offers longer days but expect more tourists.",
-      category: "planning",
-    },
-    {
-      id: 2,
-      question: "How long should I plan for this destination?",
-      answer:
-        "We recommend 2-3 full days to fully experience all the highlights without rushing. If you want to explore nearby attractions, consider extending to 4-5 days.",
-      category: "planning",
-    },
-    {
-      id: 3,
-      question: "Is this suitable for families with children?",
-      answer:
-        "Absolutely! This destination offers activities suitable for all ages. Children under 12 have special guided tours available, and there are dedicated play areas and family-friendly dining options.",
-      category: "family",
-    },
-    {
-      id: 4,
-      question: "What languages are spoken here?",
-      answer:
-        "The primary language is local, but English is widely understood in tourist areas. Guides are available in multiple languages including Spanish, French, German, Chinese, and Japanese.",
-      category: "practical",
-    },
-    {
-      id: 5,
-      question: "Are there food options for dietary restrictions?",
-      answer:
-        "Yes! Vegetarian, vegan, gluten-free, and halal options are available at most restaurants. We recommend informing restaurants of allergies in advance.",
-      category: "food",
-    },
-    {
-      id: 6,
-      question: "What payment methods are accepted?",
-      answer:
-        "Major credit cards (Visa, Mastercard, Amex) are widely accepted. ATMs are available, but carrying some cash is recommended for small vendors and tips.",
-      category: "practical",
-    },
-  ],
-  reviews: [
-    {
-      id: 1,
-      author: {
-        name: "Sarah Mitchell",
-        avatar: "👩",
-        location: "New York, USA",
-        trips: 24,
-      },
-      rating: 5,
-      date: "2024-01-15",
-      title: "Absolutely breathtaking experience!",
-      content:
-        "One of the most beautiful places I've ever visited. The local guides were incredibly knowledgeable and friendly. The sunrise view alone is worth the trip. Highly recommend the early morning tour!",
-      helpful: 47,
-      photos: 5,
-      verified: true,
-      response: {
-        author: "Destination Team",
-        content:
-          "Thank you for your wonderful review, Sarah! We're thrilled you enjoyed your experience.",
-      },
-    },
-    {
-      id: 2,
-      author: {
-        name: "James Chen",
-        avatar: "👨",
-        location: "Singapore",
-        trips: 18,
-      },
-      rating: 4,
-      date: "2024-01-08",
-      title: "Great experience with minor crowds",
-      content:
-        "Beautiful scenery and well-organized facilities. Would recommend going early morning to avoid the afternoon crowds. The facilities are clean and staff are helpful.",
-      helpful: 32,
-      photos: 3,
-      verified: true,
-      response: null,
-    },
-    {
-      id: 3,
-      author: {
-        name: "Emily Rodriguez",
-        avatar: "👩‍🦰",
-        location: "Barcelona, Spain",
-        trips: 31,
-      },
-      rating: 5,
-      date: "2023-12-22",
-      title: "A must-visit destination!",
-      content:
-        "Exceeded all my expectations. The sunset views are absolutely magical - truly unforgettable. The local food scene is amazing too. Don't miss the night market nearby!",
-      helpful: 58,
-      photos: 8,
-      verified: true,
-      response: null,
-    },
-    {
-      id: 4,
-      author: {
-        name: "Michael Thompson",
-        avatar: "🧔",
-        location: "London, UK",
-        trips: 12,
-      },
-      rating: 4,
-      date: "2023-12-10",
-      title: "Beautiful but plan ahead",
-      content:
-        "Stunning location with excellent photo opportunities. Visit during weekdays if possible to avoid weekend crowds. Book your tickets online in advance - saves a lot of time.",
-      helpful: 21,
-      photos: 2,
-      verified: false,
-      response: null,
-    },
-  ],
-  itinerary: [
-    {
-      time: "05:30",
-      activity: "Early Morning Departure",
-      description: "Beat the crowds for the best experience",
-      icon: <FiSunrise />,
-      duration: "30 min",
-    },
-    {
-      time: "06:00",
-      activity: "Sunrise Viewing",
-      description: "Witness the magical golden hour",
-      icon: <FiSun />,
-      duration: "1.5 hr",
-    },
-    {
-      time: "07:30",
-      activity: "Photography Session",
-      description: "Capture stunning morning light",
-      icon: <FiCamera />,
-      duration: "1 hr",
-    },
-    {
-      time: "08:30",
-      activity: "Local Breakfast",
-      description: "Traditional cuisine experience",
-      icon: <FiCoffee />,
-      duration: "1 hr",
-    },
-    {
-      time: "09:30",
-      activity: "Guided Walking Tour",
-      description: "Explore main attractions with expert guide",
-      icon: <FiMap />,
-      duration: "2.5 hr",
-    },
-    {
-      time: "12:00",
-      activity: "Lunch Break",
-      description: "Rest and try local specialties",
-      icon: <FiCoffee />,
-      duration: "1.5 hr",
-    },
-    {
-      time: "13:30",
-      activity: "Free Exploration",
-      description: "Discover hidden gems at your pace",
-      icon: <FiCompass />,
-      duration: "3 hr",
-    },
-    {
-      time: "16:30",
-      activity: "Afternoon Tea",
-      description: "Relax with scenic views",
-      icon: <FiCoffee />,
-      duration: "1 hr",
-    },
-    {
-      time: "17:30",
-      activity: "Sunset Spot",
-      description: "Golden hour from western viewpoint",
-      icon: <FiSunset />,
-      duration: "1.5 hr",
-    },
-    {
-      time: "19:00",
-      activity: "Dinner & Evening",
-      description: "Local restaurant recommendations",
-      icon: <FiStar />,
-      duration: "2 hr",
-    },
-  ],
-  nearbyAttractions: [
-    {
-      id: 1,
-      name: "Mountain Viewpoint",
-      distance: 2.5,
-      time: "15 min drive",
-      type: "Nature",
-      rating: 4.7,
-      image:
-        "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=400",
-    },
-    {
-      id: 2,
-      name: "Historic Temple",
-      distance: 4.0,
-      time: "25 min drive",
-      type: "Culture",
-      rating: 4.8,
-      image: "https://images.unsplash.com/photo-1545569341-9eb8b30979d9?w=400",
-    },
-    {
-      id: 3,
-      name: "Local Market",
-      distance: 1.2,
-      time: "5 min walk",
-      type: "Shopping",
-      rating: 4.5,
-      image: "https://images.unsplash.com/photo-1555529669-e69e7aa0ba9a?w=400",
-    },
-    {
-      id: 4,
-      name: "Waterfall Trail",
-      distance: 6.0,
-      time: "30 min drive",
-      type: "Adventure",
-      rating: 4.6,
-      image:
-        "https://images.unsplash.com/photo-1432405972618-c60b0225b8f9?w=400",
-    },
-    {
-      id: 5,
-      name: "Botanical Garden",
-      distance: 3.5,
-      time: "20 min drive",
-      type: "Nature",
-      rating: 4.4,
-      image:
-        "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=400",
-    },
-  ],
-  transportOptions: [
-    {
-      mode: "By Air",
-      icon: "✈️",
-      details: "International Airport (XYZ) - 45 km away",
-      duration: "45 min - 1 hr",
-      price: "$$",
-      tips: "Book airport transfer in advance",
-    },
-    {
-      mode: "By Train",
-      icon: "🚂",
-      details: "Direct high-speed trains from major cities",
-      duration: "2-4 hours",
-      price: "$",
-      tips: "First class offers more comfort",
-    },
-    {
-      mode: "By Bus",
-      icon: "🚌",
-      details: "Regular services from regional bus stations",
-      duration: "3-5 hours",
-      price: "$",
-      tips: "Book VIP buses for comfort",
-    },
-    {
-      mode: "By Car",
-      icon: "🚗",
-      details: "Well-connected highways, parking available",
-      duration: "Varies",
-      price: "$$",
-      tips: "GPS navigation recommended",
-    },
-    {
-      mode: "By Ferry",
-      icon: "⛴️",
-      details: "Scenic coastal route available",
-      duration: "2-3 hours",
-      price: "$$",
-      tips: "Book deck seats for views",
-    },
-  ],
-  localPhrases: [
-    {
-      english: "Hello",
-      local: "Merhaba",
-      pronunciation: "mer-HA-ba",
-      audio: true,
-    },
-    {
-      english: "Thank you",
-      local: "Teşekkürler",
-      pronunciation: "teh-shek-KOOR-ler",
-      audio: true,
-    },
-    {
-      english: "Please",
-      local: "Lütfen",
-      pronunciation: "LOOT-fen",
-      audio: true,
-    },
-    {
-      english: "Excuse me",
-      local: "Pardon",
-      pronunciation: "par-DON",
-      audio: true,
-    },
-    {
-      english: "Goodbye",
-      local: "Hoşça kal",
-      pronunciation: "HOSH-cha kal",
-      audio: true,
-    },
-    {
-      english: "How much?",
-      local: "Ne kadar?",
-      pronunciation: "neh ka-DAR",
-      audio: true,
-    },
-    {
-      english: "Yes / No",
-      local: "Evet / Hayır",
-      pronunciation: "eh-VET / ha-YIR",
-      audio: true,
-    },
-    { english: "Help!", local: "İmdat!", pronunciation: "im-DAT", audio: true },
-  ],
-  culturalTips: [
-    {
-      title: "Greetings",
-      description:
-        "A slight bow or nod is customary when greeting locals. Handshakes are common in business settings.",
-      icon: "🙏",
-    },
-    {
-      title: "Dress Code",
-      description:
-        "Modest clothing is appreciated, especially at religious or cultural sites. Cover shoulders and knees.",
-      icon: "👔",
-    },
-    {
-      title: "Photography",
-      description:
-        "Always ask permission before photographing people. Some sacred sites may prohibit photography.",
-      icon: "📷",
-    },
-    {
-      title: "Tipping",
-      description:
-        "Tipping 10-15% is customary at restaurants. Round up taxi fares. Hotel porters appreciate small tips.",
-      icon: "💰",
-    },
-    {
-      title: "Bargaining",
-      description:
-        "Expected at markets and street vendors. Start at 50-60% of asking price and negotiate respectfully.",
-      icon: "🤝",
-    },
-    {
-      title: "Punctuality",
-      description:
-        "Being on time is appreciated for tours and reservations. Social events may be more relaxed.",
-      icon: "⏰",
-    },
-  ],
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// UTILITY FUNCTIONS
-// ═══════════════════════════════════════════════════════════════════════════
-const formatDate = (date, format = "short") => {
-  const d = new Date(date);
-  const options =
-    format === "short"
-      ? { month: "short", day: "numeric" }
-      : { year: "numeric", month: "long", day: "numeric" };
-  return d.toLocaleDateString("en-US", options);
-};
-
-const formatRelativeTime = (date) => {
-  const now = new Date();
-  const then = new Date(date);
-  const diff = Math.floor((now - then) / 1000);
-
-  if (diff < 60) return "just now";
-  if (diff < 3600) return `${Math.floor(diff / 60)} minutes ago`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
-  if (diff < 604800) return `${Math.floor(diff / 86400)} days ago`;
-  if (diff < 2592000) return `${Math.floor(diff / 604800)} weeks ago`;
-  return formatDate(date);
-};
-
-const cn = (...classes) => classes.filter(Boolean).join(" ");
-
-const generateId = () =>
-  `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-
-// ═══════════════════════════════════════════════════════════════════════════
-// UTILITY COMPONENTS
-// ═══════════════════════════════════════════════════════════════════════════
-
-// Toast Container
-const ToastContainer = ({ toasts, onRemove }) => {
-  const icons = {
-    success: <FiCheckCircle size={20} />,
-    error: <FiXCircle size={20} />,
-    warning: <FiAlertCircle size={20} />,
-    info: <FiInfo size={20} />,
-  };
-
-  const colors = {
-    success: {
-      bg: THEME.colors.primary[50],
-      border: THEME.colors.primary[500],
-      text: THEME.colors.primary[700],
-    },
-    error: {
-      bg: "#FEF2F2",
-      border: THEME.colors.semantic.error,
-      text: "#991B1B",
-    },
-    warning: {
-      bg: "#FFFBEB",
-      border: THEME.colors.semantic.warning,
-      text: "#92400E",
-    },
-    info: {
-      bg: "#EFF6FF",
-      border: THEME.colors.semantic.info,
-      text: "#1E40AF",
-    },
-  };
-
-  return (
-    <div
-      style={{
-        position: "fixed",
-        top: THEME.spacing[4],
-        right: THEME.spacing[4],
-        zIndex: THEME.zIndex.toast,
-        display: "flex",
-        flexDirection: "column",
-        gap: THEME.spacing[3],
-        maxWidth: "400px",
-        width: "100%",
-        pointerEvents: "none",
-      }}
-    >
-      {toasts.map((toast) => {
-        const c = colors[toast.type] || colors.info;
-        return (
-          <div
-            key={toast.id}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: THEME.spacing[3],
-              padding: THEME.spacing[4],
-              backgroundColor: c.bg,
-              borderLeft: `4px solid ${c.border}`,
-              borderRadius: THEME.borderRadius.lg,
-              boxShadow: THEME.shadows.lg,
-              animation: "toastIn 0.3s ease",
-              pointerEvents: "auto",
-            }}
-          >
-            <span style={{ color: c.border, flexShrink: 0 }}>
-              {icons[toast.type]}
-            </span>
-            <p
-              style={{
-                flex: 1,
-                fontSize: THEME.typography.fontSize.sm,
-                color: c.text,
-                fontWeight: THEME.typography.fontWeight.medium,
-              }}
-            >
-              {toast.message}
-            </p>
-            <button
-              onClick={() => onRemove(toast.id)}
-              style={{
-                background: "none",
-                border: "none",
-                color: c.text,
-                cursor: "pointer",
-                padding: THEME.spacing[1],
-                borderRadius: THEME.borderRadius.sm,
-                opacity: 0.7,
-                transition: `opacity ${THEME.transitions.fast}`,
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
-              onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.7")}
-            >
-              <FiX size={16} />
-            </button>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-// Skeleton Loader
-const Skeleton = ({
-  width = "100%",
-  height = "20px",
-  borderRadius = THEME.borderRadius.md,
-  className = "",
+const Skeleton = ({ 
+  width = "100%", 
+  height = "20px", 
+  radius = theme.radiusSm,
+  style = {},
+  className = ""
 }) => (
   <div
-    className={className}
+    className={`skeleton ${className}`}
     style={{
       width,
       height,
-      borderRadius,
-      background: `linear-gradient(90deg, ${THEME.colors.neutral[200]} 25%, ${THEME.colors.neutral[100]} 50%, ${THEME.colors.neutral[200]} 75%)`,
-      backgroundSize: "200% 100%",
-      animation: "shimmer 1.5s infinite",
+      borderRadius: radius,
+      ...style,
     }}
   />
 );
 
-// Loading Spinner
-const Spinner = ({ size = 24, color = THEME.colors.primary[500] }) => (
+const SkeletonText = ({ lines = 3, lastWidth = "60%" }) => (
+  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+    {Array.from({ length: lines }).map((_, i) => (
+      <Skeleton 
+        key={i} 
+        height="16px" 
+        width={i === lines - 1 ? lastWidth : "100%"} 
+      />
+    ))}
+  </div>
+);
+
+const LoadingSkeleton = ({ isMobile }) => (
+  <div style={{ background: theme.white, minHeight: "100vh" }}>
+    {/* Hero Skeleton */}
+    <div style={{ position: "relative", height: isMobile ? "60vh" : "75vh" }}>
+      <Skeleton width="100%" height="100%" radius="0" />
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          padding: isMobile ? "32px 20px" : "64px 48px",
+          background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)",
+        }}
+      >
+        <div style={{ maxWidth: theme.containerMax, margin: "0 auto" }}>
+          <Skeleton width="120px" height="28px" style={{ marginBottom: 16 }} />
+          <Skeleton 
+            width={isMobile ? "90%" : "500px"} 
+            height={isMobile ? "36px" : "52px"} 
+            style={{ marginBottom: 16 }} 
+          />
+          <Skeleton 
+            width={isMobile ? "100%" : "400px"} 
+            height="24px" 
+            style={{ marginBottom: 32 }} 
+          />
+          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+            {[100, 80, 120, 90].map((w, i) => (
+              <Skeleton key={i} width={`${w}px`} height="36px" radius={theme.radiusFull} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Quick Info Bar Skeleton */}
+    <div
+      style={{
+        background: theme.white,
+        borderBottom: `1px solid ${theme.gray200}`,
+        padding: "24px",
+      }}
+    >
+      <div
+        style={{
+          maxWidth: theme.containerMax,
+          margin: "0 auto",
+          display: "grid",
+          gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(5, 1fr)",
+          gap: 24,
+        }}
+      >
+        {Array.from({ length: isMobile ? 4 : 5 }).map((_, i) => (
+          <div key={i} style={{ textAlign: "center" }}>
+            <Skeleton width="40px" height="40px" radius="50%" style={{ margin: "0 auto 12px" }} />
+            <Skeleton width="60%" height="12px" style={{ margin: "0 auto 8px" }} />
+            <Skeleton width="80%" height="18px" style={{ margin: "0 auto" }} />
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Content Skeleton */}
+    <div style={{ maxWidth: theme.containerMax, margin: "0 auto", padding: isMobile ? "48px 20px" : "80px 48px" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr",
+          gap: 48,
+        }}
+      >
+        {/* Main Content */}
+        <div>
+          <Skeleton width="180px" height="32px" style={{ marginBottom: 24 }} />
+          <SkeletonText lines={6} />
+          
+          <div style={{ marginTop: 48 }}>
+            <Skeleton width="150px" height="28px" style={{ marginBottom: 24 }} />
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} style={{ display: "flex", gap: 12, alignItems: "center" }}>
+                  <Skeleton width="24px" height="24px" radius="50%" />
+                  <Skeleton width="70%" height="18px" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div>
+          <div
+            style={{
+              background: theme.gray50,
+              borderRadius: theme.radiusLg,
+              padding: 24,
+            }}
+          >
+            <Skeleton width="100%" height="48px" radius={theme.radiusMd} style={{ marginBottom: 20 }} />
+            <Skeleton width="60%" height="20px" style={{ marginBottom: 24 }} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
+                  <Skeleton width="40%" height="16px" />
+                  <Skeleton width="50%" height="16px" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Gallery Skeleton */}
+      <div style={{ marginTop: 80 }}>
+        <Skeleton width="140px" height="32px" style={{ marginBottom: 32 }} />
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
+            gap: 16,
+          }}
+        >
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} width="100%" style={{ paddingBottom: "75%" }} radius={theme.radiusMd} />
+          ))}
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+/* ═══════════════════════════════════════════════════
+   UTILITY COMPONENTS
+   ═══════════════════════════════════════════════════ */
+
+const Container = ({ children, narrow = false, style = {} }) => (
   <div
     style={{
-      width: size,
-      height: size,
-      border: `3px solid ${THEME.colors.neutral[200]}`,
-      borderTopColor: color,
-      borderRadius: "50%",
-      animation: "spin 0.8s linear infinite",
+      maxWidth: narrow ? theme.containerNarrow : theme.containerMax,
+      margin: "0 auto",
+      padding: "0 24px",
+      width: "100%",
+      ...style,
     }}
-  />
+  >
+    {children}
+  </div>
 );
 
-// Badge Component
-const Badge = ({
-  children,
-  variant = "default",
-  size = "md",
+const Badge = ({ 
+  children, 
+  variant = "primary", 
+  size = "md", 
   icon,
-  dot = false,
+  style = {} 
 }) => {
   const variants = {
-    default: {
-      bg: THEME.colors.primary[100],
-      color: THEME.colors.primary[700],
-      border: THEME.colors.primary[200],
-    },
-    success: {
-      bg: THEME.colors.primary[100],
-      color: THEME.colors.primary[700],
-      border: THEME.colors.primary[200],
-    },
-    warning: { bg: "#FEF3C7", color: "#92400E", border: "#FDE68A" },
-    error: { bg: "#FEE2E2", color: "#991B1B", border: "#FECACA" },
-    info: { bg: "#DBEAFE", color: "#1E40AF", border: "#BFDBFE" },
-    neutral: {
-      bg: THEME.colors.neutral[100],
-      color: THEME.colors.neutral[700],
-      border: THEME.colors.neutral[200],
-    },
-    outline: {
-      bg: "transparent",
-      color: THEME.colors.primary[600],
-      border: THEME.colors.primary[300],
-    },
+    primary: { bg: theme.primaryLight, color: theme.primaryDark },
+    accent: { bg: theme.accentLight, color: theme.primaryDarker },
+    white: { bg: "rgba(255,255,255,0.2)", color: theme.white, border: "1px solid rgba(255,255,255,0.3)" },
+    whiteSolid: { bg: theme.white, color: theme.gray800 },
+    gray: { bg: theme.gray100, color: theme.gray700 },
+    success: { bg: "#D1FAE5", color: "#065F46" },
+    warning: { bg: "#FEF3C7", color: "#92400E" },
+    info: { bg: "#DBEAFE", color: "#1E40AF" },
+    dark: { bg: "rgba(0,0,0,0.6)", color: theme.white },
   };
 
   const sizes = {
-    sm: {
-      padding: `${THEME.spacing[1]} ${THEME.spacing[2]}`,
-      fontSize: "10px",
-    },
-    md: {
-      padding: `${THEME.spacing[1]} ${THEME.spacing[3]}`,
-      fontSize: "11px",
-    },
-    lg: {
-      padding: `${THEME.spacing[2]} ${THEME.spacing[4]}`,
-      fontSize: "12px",
-    },
+    xs: { padding: "4px 8px", fontSize: 10, gap: 4 },
+    sm: { padding: "5px 12px", fontSize: 11, gap: 5 },
+    md: { padding: "6px 14px", fontSize: 12, gap: 6 },
+    lg: { padding: "8px 18px", fontSize: 14, gap: 8 },
   };
 
-  const v = variants[variant] || variants.default;
+  const v = variants[variant] || variants.primary;
   const s = sizes[size] || sizes.md;
 
   return (
@@ -1543,1351 +459,235 @@ const Badge = ({
       style={{
         display: "inline-flex",
         alignItems: "center",
-        gap: THEME.spacing[1],
-        padding: s.padding,
-        backgroundColor: v.bg,
+        gap: s.gap,
+        background: v.bg,
         color: v.color,
-        border: `1px solid ${v.border}`,
-        borderRadius: THEME.borderRadius.full,
-        fontSize: s.fontSize,
-        fontWeight: THEME.typography.fontWeight.semibold,
+        border: v.border || "none",
+        fontWeight: 600,
+        fontFamily: theme.fontSans,
+        borderRadius: theme.radiusFull,
         textTransform: "uppercase",
         letterSpacing: "0.5px",
-        lineHeight: 1,
         whiteSpace: "nowrap",
+        ...s,
+        ...style,
       }}
     >
-      {dot && (
-        <span
-          style={{
-            width: 6,
-            height: 6,
-            borderRadius: "50%",
-            backgroundColor: v.color,
-          }}
-        />
-      )}
-      {icon && <span style={{ display: "flex" }}>{icon}</span>}
+      {icon && <span style={{ fontSize: s.fontSize + 2 }}>{icon}</span>}
       {children}
     </span>
   );
 };
 
-// Button Component
-const Button = ({
-  children,
-  variant = "primary",
-  size = "md",
+const Button = ({ 
+  children, 
+  variant = "primary", 
+  size = "md", 
   icon,
-  iconPosition = "left",
+  iconRight,
   fullWidth = false,
-  disabled = false,
-  loading = false,
   as: Component = "button",
-  to,
-  href,
-  onClick,
-  type = "button",
-  className = "",
-  style: customStyle = {},
-  ...props
+  style = {},
+  ...props 
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const [isPressed, setIsPressed] = useState(false);
-  const [ripples, setRipples] = useState([]);
-
   const variants = {
     primary: {
-      bg: THEME.colors.gradient.primary,
-      bgHover: THEME.colors.primary[700],
-      color: THEME.colors.neutral[0],
+      background: theme.primary,
+      color: theme.white,
       border: "none",
-      shadow: "0 4px 14px rgba(5, 150, 105, 0.35)",
-      shadowHover: "0 6px 20px rgba(5, 150, 105, 0.45)",
+      hoverBg: theme.primaryDark,
     },
     secondary: {
-      bg: THEME.colors.neutral[0],
-      bgHover: THEME.colors.primary[50],
-      color: THEME.colors.primary[600],
-      border: `2px solid ${THEME.colors.primary[500]}`,
-      shadow: "none",
-      shadowHover: "0 4px 12px rgba(5, 150, 105, 0.15)",
+      background: theme.white,
+      color: theme.primary,
+      border: `2px solid ${theme.primary}`,
+      hoverBg: theme.primaryMuted,
     },
     outline: {
-      bg: THEME.colors.neutral[0],
-      bgHover: THEME.colors.neutral[50],
-      color: THEME.colors.neutral[700],
-      border: `2px solid ${THEME.colors.neutral[300]}`,
-      shadow: "none",
-      shadowHover: THEME.shadows.sm,
+      background: "transparent",
+      color: theme.gray700,
+      border: `2px solid ${theme.gray300}`,
+      hoverBg: theme.gray50,
     },
     ghost: {
-      bg: "transparent",
-      bgHover: THEME.colors.primary[50],
-      color: THEME.colors.primary[600],
+      background: "transparent",
+      color: theme.primary,
       border: "none",
-      shadow: "none",
-      shadowHover: "none",
+      hoverBg: theme.primaryMuted,
     },
-    danger: {
-      bg: THEME.colors.semantic.error,
-      bgHover: "#B91C1C",
-      color: THEME.colors.neutral[0],
+    white: {
+      background: theme.white,
+      color: theme.gray800,
       border: "none",
-      shadow: "0 4px 14px rgba(220, 38, 38, 0.35)",
-      shadowHover: "0 6px 20px rgba(220, 38, 38, 0.45)",
+      hoverBg: theme.gray100,
+    },
+    dark: {
+      background: theme.gray900,
+      color: theme.white,
+      border: "none",
+      hoverBg: theme.gray800,
     },
   };
 
   const sizes = {
-    xs: {
-      padding: `${THEME.spacing[1]} ${THEME.spacing[2]}`,
-      fontSize: THEME.typography.fontSize.xs,
-      height: "28px",
-    },
-    sm: {
-      padding: `${THEME.spacing[2]} ${THEME.spacing[3]}`,
-      fontSize: THEME.typography.fontSize.sm,
-      height: "36px",
-    },
-    md: {
-      padding: `${THEME.spacing[2]} ${THEME.spacing[5]}`,
-      fontSize: THEME.typography.fontSize.sm,
-      height: "44px",
-    },
-    lg: {
-      padding: `${THEME.spacing[3]} ${THEME.spacing[6]}`,
-      fontSize: THEME.typography.fontSize.base,
-      height: "52px",
-    },
-    xl: {
-      padding: `${THEME.spacing[4]} ${THEME.spacing[8]}`,
-      fontSize: THEME.typography.fontSize.lg,
-      height: "60px",
-    },
+    sm: { padding: "10px 18px", fontSize: 13, gap: 6 },
+    md: { padding: "14px 28px", fontSize: 15, gap: 8 },
+    lg: { padding: "18px 36px", fontSize: 16, gap: 10 },
+    xl: { padding: "20px 44px", fontSize: 17, gap: 12 },
   };
 
   const v = variants[variant] || variants.primary;
   const s = sizes[size] || sizes.md;
 
-  const handleClick = (e) => {
-    if (disabled || loading) return;
-
-    // Ripple effect
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    const id = generateId();
-    setRipples((prev) => [...prev, { id, x, y }]);
-    setTimeout(
-      () => setRipples((prev) => prev.filter((r) => r.id !== id)),
-      600,
-    );
-
-    onClick?.(e);
-  };
-
-  const buttonStyle = {
-    position: "relative",
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: THEME.spacing[2],
-    padding: s.padding,
-    minHeight: s.height,
-    fontSize: s.fontSize,
-    fontWeight: THEME.typography.fontWeight.semibold,
-    fontFamily: THEME.typography.fontFamily.body,
-    color: v.color,
-    background: variant === "primary" && isHovered ? v.bgHover : v.bg,
-    border: v.border,
-    borderRadius: THEME.borderRadius.lg,
-    cursor: disabled || loading ? "not-allowed" : "pointer",
-    opacity: disabled ? 0.5 : 1,
-    width: fullWidth ? "100%" : "auto",
-    textDecoration: "none",
-    overflow: "hidden",
-    transition: `all ${THEME.transitions.DEFAULT}`,
-    boxShadow: isHovered && !disabled ? v.shadowHover : v.shadow,
-    transform:
-      isPressed && !disabled
-        ? "scale(0.98)"
-        : isHovered && !disabled
-          ? "translateY(-2px)"
-          : "none",
-    ...customStyle,
-  };
-
-  const content = (
-    <>
-      {ripples.map((ripple) => (
-        <span
-          key={ripple.id}
-          style={{
-            position: "absolute",
-            left: ripple.x,
-            top: ripple.y,
-            width: 10,
-            height: 10,
-            marginLeft: -5,
-            marginTop: -5,
-            borderRadius: "50%",
-            backgroundColor: "rgba(255, 255, 255, 0.4)",
-            animation: "ripple 0.6s ease-out",
-            pointerEvents: "none",
-          }}
-        />
-      ))}
-      {loading && <Spinner size={16} color={v.color} />}
-      {!loading && icon && iconPosition === "left" && (
-        <span style={{ display: "flex" }}>{icon}</span>
-      )}
-      <span>{children}</span>
-      {!loading && icon && iconPosition === "right" && (
-        <span style={{ display: "flex" }}>{icon}</span>
-      )}
-    </>
-  );
-
-  const commonProps = {
-    style: buttonStyle,
-    className,
-    onMouseEnter: () => setIsHovered(true),
-    onMouseLeave: () => {
-      setIsHovered(false);
-      setIsPressed(false);
-    },
-    onMouseDown: () => setIsPressed(true),
-    onMouseUp: () => setIsPressed(false),
-    ...props,
-  };
-
-  if (to) {
-    return (
-      <Link to={to} onClick={handleClick} {...commonProps}>
-        {content}
-      </Link>
-    );
-  }
-
-  if (href) {
-    return (
-      <a href={href} onClick={handleClick} {...commonProps}>
-        {content}
-      </a>
-    );
-  }
-
   return (
-    <button
-      type={type}
-      onClick={handleClick}
-      disabled={disabled || loading}
-      {...commonProps}
-    >
-      {content}
-    </button>
-  );
-};
-
-// IconButton Component
-const IconButton = ({
-  icon,
-  onClick,
-  variant = "default",
-  size = "md",
-  active = false,
-  disabled = false,
-  tooltip,
-  badge,
-  ...props
-}) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
-
-  const variants = {
-    default: {
-      bg: active ? THEME.colors.primary[600] : "rgba(255, 255, 255, 0.15)",
-      bgHover: active ? THEME.colors.primary[700] : "rgba(255, 255, 255, 0.25)",
-      color: THEME.colors.neutral[0],
-      border: "1px solid rgba(255, 255, 255, 0.2)",
-    },
-    solid: {
-      bg: active ? THEME.colors.primary[600] : THEME.colors.neutral[0],
-      bgHover: active ? THEME.colors.primary[700] : THEME.colors.neutral[100],
-      color: active ? THEME.colors.neutral[0] : THEME.colors.neutral[600],
-      border: `1px solid ${THEME.colors.neutral[200]}`,
-    },
-    ghost: {
-      bg: active ? THEME.colors.primary[100] : "transparent",
-      bgHover: THEME.colors.primary[100],
-      color: active ? THEME.colors.primary[600] : THEME.colors.neutral[600],
-      border: "none",
-    },
-    outline: {
-      bg: "transparent",
-      bgHover: THEME.colors.primary[50],
-      color: active ? THEME.colors.primary[600] : THEME.colors.neutral[600],
-      border: `2px solid ${active ? THEME.colors.primary[500] : THEME.colors.neutral[300]}`,
-    },
-  };
-
-  const sizes = {
-    sm: 32,
-    md: 40,
-    lg: 48,
-    xl: 56,
-  };
-
-  const v = variants[variant] || variants.default;
-  const s = sizes[size] || sizes.md;
-
-  return (
-    <div style={{ position: "relative", display: "inline-flex" }}>
-      <button
-        onClick={onClick}
-        disabled={disabled}
-        onMouseEnter={() => {
-          setIsHovered(true);
-          if (tooltip) setTimeout(() => setShowTooltip(true), 500);
-        }}
-        onMouseLeave={() => {
-          setIsHovered(false);
-          setShowTooltip(false);
-        }}
-        style={{
-          width: s,
-          height: s,
-          borderRadius: THEME.borderRadius.full,
-          backgroundColor: isHovered ? v.bgHover : v.bg,
-          border: v.border,
-          color: v.color,
-          cursor: disabled ? "not-allowed" : "pointer",
-          opacity: disabled ? 0.5 : 1,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          transition: `all ${THEME.transitions.DEFAULT}`,
-          backdropFilter: "blur(10px)",
-          transform: isHovered && !disabled ? "scale(1.08)" : "scale(1)",
-        }}
-        {...props}
-      >
-        {icon}
-      </button>
-      {badge !== undefined && (
-        <span
-          style={{
-            position: "absolute",
-            top: -4,
-            right: -4,
-            minWidth: 18,
-            height: 18,
-            padding: "0 5px",
-            backgroundColor: THEME.colors.semantic.error,
-            color: THEME.colors.neutral[0],
-            fontSize: "10px",
-            fontWeight: THEME.typography.fontWeight.bold,
-            borderRadius: THEME.borderRadius.full,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            border: `2px solid ${THEME.colors.neutral[0]}`,
-          }}
-        >
-          {badge}
-        </span>
-      )}
-      {showTooltip && tooltip && (
-        <div
-          style={{
-            position: "absolute",
-            bottom: "100%",
-            left: "50%",
-            transform: "translateX(-50%)",
-            marginBottom: THEME.spacing[2],
-            padding: `${THEME.spacing[1]} ${THEME.spacing[2]}`,
-            backgroundColor: THEME.colors.neutral[900],
-            color: THEME.colors.neutral[0],
-            fontSize: THEME.typography.fontSize.xs,
-            fontWeight: THEME.typography.fontWeight.medium,
-            borderRadius: THEME.borderRadius.sm,
-            whiteSpace: "nowrap",
-            animation: "fadeIn 0.15s ease",
-            zIndex: THEME.zIndex.tooltip,
-          }}
-        >
-          {tooltip}
-          <div
-            style={{
-              position: "absolute",
-              bottom: -4,
-              left: "50%",
-              transform: "translateX(-50%)",
-              width: 0,
-              height: 0,
-              borderLeft: "4px solid transparent",
-              borderRight: "4px solid transparent",
-              borderTop: `4px solid ${THEME.colors.neutral[900]}`,
-            }}
-          />
-        </div>
-      )}
-    </div>
-  );
-};
-
-// Card Component
-const Card = ({
-  children,
-  padding = THEME.spacing[6],
-  hover = false,
-  animate = true,
-  delay = 0,
-  onClick,
-  className = "",
-  style: customStyle = {},
-  ...props
-}) => {
-  const [ref, entry] = useIntersectionObserver({ threshold: 0.1 });
-  const [isHovered, setIsHovered] = useState(false);
-  const isVisible = !animate || entry?.isIntersecting;
-
-  return (
-    <div
-      ref={ref}
-      onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className={className}
+    <Component
       style={{
-        backgroundColor: THEME.colors.neutral[0],
-        borderRadius: THEME.borderRadius["2xl"],
-        padding,
-        boxShadow: isHovered && hover ? THEME.shadows.xl : THEME.shadows.md,
-        border: `1px solid ${THEME.colors.neutral[200]}`,
-        cursor: onClick ? "pointer" : "default",
-        transition: `all ${THEME.transitions.DEFAULT}`,
-        opacity: isVisible ? 1 : 0,
-        transform: isVisible
-          ? isHovered && hover
-            ? "translateY(-4px)"
-            : "translateY(0)"
-          : "translateY(20px)",
-        transitionDelay: `${delay}ms`,
-        ...customStyle,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: s.gap,
+        fontFamily: theme.fontSans,
+        fontWeight: 600,
+        borderRadius: theme.radiusMd,
+        cursor: "pointer",
+        textDecoration: "none",
+        transition: `all ${theme.transitionBase}`,
+        width: fullWidth ? "100%" : "auto",
+        background: v.background,
+        color: v.color,
+        border: v.border,
+        ...s,
+        ...style,
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = v.hoverBg || v.background;
+        e.currentTarget.style.transform = "translateY(-2px)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = v.background;
+        e.currentTarget.style.transform = "translateY(0)";
       }}
       {...props}
     >
+      {icon && <span>{icon}</span>}
       {children}
-    </div>
+      {iconRight && <span>{iconRight}</span>}
+    </Component>
   );
 };
 
-// Section Header Component
-const SectionHeader = ({ icon, title, subtitle, action, badge }) => (
+const Card = ({ 
+  children, 
+  hover = true, 
+  padding,
+  style = {},
+  className = "",
+  ...props 
+}) => (
   <div
+    className={`${hover ? "hover-lift" : ""} ${className}`}
     style={{
-      display: "flex",
-      alignItems: "flex-start",
-      justifyContent: "space-between",
-      marginBottom: THEME.spacing[6],
-      gap: THEME.spacing[4],
-      flexWrap: "wrap",
+      background: theme.white,
+      borderRadius: theme.radiusLg,
+      border: `1px solid ${theme.gray200}`,
+      overflow: "hidden",
+      padding: padding,
+      ...style,
     }}
+    {...props}
   >
-    <div
-      style={{ display: "flex", alignItems: "center", gap: THEME.spacing[4] }}
-    >
-      {icon && (
-        <div
-          style={{
-            width: 52,
-            height: 52,
-            borderRadius: THEME.borderRadius.xl,
-            background: THEME.colors.gradient.primary,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: THEME.colors.neutral[0],
-            flexShrink: 0,
-            boxShadow: "0 4px 14px rgba(5, 150, 105, 0.25)",
-          }}
-        >
-          {icon}
-        </div>
-      )}
-      <div>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: THEME.spacing[2],
-          }}
-        >
-          <h3
-            style={{
-              fontFamily: THEME.typography.fontFamily.heading,
-              fontSize: THEME.typography.fontSize["2xl"],
-              fontWeight: THEME.typography.fontWeight.bold,
-              color: THEME.colors.neutral[900],
-              margin: 0,
-              lineHeight: THEME.typography.lineHeight.tight,
-            }}
-          >
-            {title}
-          </h3>
-          {badge}
-        </div>
-        {subtitle && (
-          <p
-            style={{
-              fontSize: THEME.typography.fontSize.sm,
-              color: THEME.colors.neutral[500],
-              margin: `${THEME.spacing[1]} 0 0`,
-              lineHeight: THEME.typography.lineHeight.normal,
-            }}
-          >
-            {subtitle}
-          </p>
-        )}
-      </div>
-    </div>
-    {action}
+    {children}
   </div>
 );
 
-// Star Rating Component
-const StarRating = ({
-  rating,
-  size = 16,
-  showValue = false,
-  interactive = false,
-  onChange,
-}) => {
-  const [hoverRating, setHoverRating] = useState(0);
-
-  return (
-    <div
-      style={{ display: "flex", alignItems: "center", gap: THEME.spacing[1] }}
-    >
-      {[1, 2, 3, 4, 5].map((star) => {
-        const filled = (interactive ? hoverRating || rating : rating) >= star;
-        const halfFilled =
-          !filled &&
-          (interactive ? hoverRating || rating : rating) >= star - 0.5;
-
-        return (
-          <button
-            key={star}
-            type="button"
-            onClick={() => interactive && onChange?.(star)}
-            onMouseEnter={() => interactive && setHoverRating(star)}
-            onMouseLeave={() => interactive && setHoverRating(0)}
-            style={{
-              background: "none",
-              border: "none",
-              padding: 0,
-              cursor: interactive ? "pointer" : "default",
-              display: "flex",
-              transition: `transform ${THEME.transitions.fast}`,
-              transform:
-                interactive && hoverRating >= star ? "scale(1.2)" : "scale(1)",
-            }}
-          >
-            <FiStar
-              size={size}
-              style={{
-                fill: filled
-                  ? THEME.colors.semantic.warning
-                  : halfFilled
-                    ? `url(#half-${star})`
-                    : "none",
-                color: THEME.colors.semantic.warning,
-                transition: `all ${THEME.transitions.fast}`,
-              }}
-            />
-          </button>
-        );
-      })}
-      {showValue && (
-        <span
-          style={{
-            marginLeft: THEME.spacing[2],
-            fontSize: size * 0.875,
-            fontWeight: THEME.typography.fontWeight.semibold,
-            color: THEME.colors.neutral[700],
-          }}
-        >
-          {rating.toFixed(1)}
-        </span>
-      )}
-    </div>
-  );
-};
-
-// Progress Bar Component
-const ProgressBar = ({
-  value,
-  max = 100,
-  label,
-  showValue = true,
-  size = "md",
-  color = THEME.colors.primary[500],
-  animated = true,
-}) => {
-  const percentage = Math.min(100, Math.max(0, (value / max) * 100));
-  const heights = { sm: 4, md: 8, lg: 12 };
-  const h = heights[size] || heights.md;
-
-  return (
-    <div style={{ marginBottom: THEME.spacing[4] }}>
-      {(label || showValue) && (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: THEME.spacing[2],
-          }}
-        >
-          {label && (
-            <span
-              style={{
-                fontSize: THEME.typography.fontSize.sm,
-                fontWeight: THEME.typography.fontWeight.medium,
-                color: THEME.colors.neutral[700],
-              }}
-            >
-              {label}
-            </span>
-          )}
-          {showValue && (
-            <span
-              style={{
-                fontSize: THEME.typography.fontSize.sm,
-                fontWeight: THEME.typography.fontWeight.semibold,
-                color,
-              }}
-            >
-              {value}/{max}
-            </span>
-          )}
-        </div>
-      )}
-      <div
-        style={{
-          height: h,
-          backgroundColor: THEME.colors.neutral[200],
-          borderRadius: THEME.borderRadius.full,
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            height: "100%",
-            width: `${percentage}%`,
-            background: `linear-gradient(90deg, ${color} 0%, ${THEME.colors.primary[400]} 100%)`,
-            borderRadius: THEME.borderRadius.full,
-            transition: animated
-              ? `width 1s ${THEME.transitions.spring}`
-              : "none",
-          }}
-        />
-      </div>
-    </div>
-  );
-};
-
-// Tab Component
-const Tab = ({ children, active, onClick, icon, count }) => {
-  const [isHovered, setIsHovered] = useState(false);
-
-  return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+const SectionTitle = ({ children, subtitle, align = "left", isMobile }) => (
+  <div style={{ textAlign: align, marginBottom: isMobile ? 32 : 48 }}>
+    <h2
       style={{
-        display: "flex",
-        alignItems: "center",
-        gap: THEME.spacing[2],
-        padding: `${THEME.spacing[4]} ${THEME.spacing[5]}`,
-        fontSize: THEME.typography.fontSize.sm,
-        fontWeight: THEME.typography.fontWeight.semibold,
-        fontFamily: THEME.typography.fontFamily.body,
-        color: active ? THEME.colors.primary[600] : THEME.colors.neutral[500],
-        backgroundColor: active
-          ? THEME.colors.primary[50]
-          : isHovered
-            ? THEME.colors.neutral[50]
-            : "transparent",
-        border: "none",
-        borderBottom: `3px solid ${active ? THEME.colors.primary[500] : "transparent"}`,
-        borderRadius: `${THEME.borderRadius.lg} ${THEME.borderRadius.lg} 0 0`,
-        cursor: "pointer",
-        transition: `all ${THEME.transitions.DEFAULT}`,
-        whiteSpace: "nowrap",
-        marginBottom: "-1px",
+        fontFamily: theme.fontSerif,
+        fontSize: isMobile ? 28 : 40,
+        fontWeight: 700,
+        color: theme.gray900,
+        margin: 0,
+        lineHeight: 1.2,
       }}
     >
-      {icon && <span style={{ display: "flex" }}>{icon}</span>}
-      <span>{children}</span>
-      {count !== undefined && (
-        <span
-          style={{
-            minWidth: 20,
-            height: 20,
-            padding: "0 6px",
-            backgroundColor: active
-              ? THEME.colors.primary[500]
-              : THEME.colors.neutral[300],
-            color: THEME.colors.neutral[0],
-            fontSize: "10px",
-            fontWeight: THEME.typography.fontWeight.bold,
-            borderRadius: THEME.borderRadius.full,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {count}
-        </span>
-      )}
-    </button>
-  );
-};
-
-// Accordion Component
-const Accordion = ({ items, allowMultiple = false }) => {
-  const [openItems, setOpenItems] = useState([]);
-
-  const toggle = (index) => {
-    if (allowMultiple) {
-      setOpenItems((prev) =>
-        prev.includes(index)
-          ? prev.filter((i) => i !== index)
-          : [...prev, index],
-      );
-    } else {
-      setOpenItems((prev) => (prev.includes(index) ? [] : [index]));
-    }
-  };
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: THEME.spacing[3],
-      }}
-    >
-      {items.map((item, index) => {
-        const isOpen = openItems.includes(index);
-        return (
-          <div
-            key={item.id || index}
-            style={{
-              borderRadius: THEME.borderRadius.xl,
-              border: `1px solid ${THEME.colors.neutral[200]}`,
-              overflow: "hidden",
-              backgroundColor: THEME.colors.neutral[0],
-            }}
-          >
-            <button
-              onClick={() => toggle(index)}
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: THEME.spacing[5],
-                backgroundColor: isOpen
-                  ? THEME.colors.primary[50]
-                  : THEME.colors.neutral[0],
-                border: "none",
-                cursor: "pointer",
-                textAlign: "left",
-                transition: `background-color ${THEME.transitions.DEFAULT}`,
-              }}
-            >
-              <span
-                style={{
-                  fontSize: THEME.typography.fontSize.base,
-                  fontWeight: THEME.typography.fontWeight.semibold,
-                  color: THEME.colors.neutral[900],
-                  paddingRight: THEME.spacing[4],
-                }}
-              >
-                {item.question}
-              </span>
-              <span
-                style={{
-                  color: THEME.colors.primary[500],
-                  transition: `transform ${THEME.transitions.DEFAULT}`,
-                  transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-                  flexShrink: 0,
-                }}
-              >
-                <FiChevronDown size={20} />
-              </span>
-            </button>
-            <div
-              style={{
-                maxHeight: isOpen ? "500px" : "0",
-                overflow: "hidden",
-                transition: `max-height ${THEME.transitions.slow}`,
-              }}
-            >
-              <div
-                style={{
-                  padding: `0 ${THEME.spacing[5]} ${THEME.spacing[5]}`,
-                  fontSize: THEME.typography.fontSize.sm,
-                  color: THEME.colors.neutral[600],
-                  lineHeight: THEME.typography.lineHeight.relaxed,
-                }}
-              >
-                {item.answer}
-              </div>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-};
-
-// Modal Component
-const Modal = ({
-  isOpen,
-  onClose,
-  title,
-  children,
-  size = "md",
-  showClose = true,
-}) => {
-  const modalRef = useClickOutside(onClose);
-  useLockBodyScroll(isOpen);
-  useKeyPress("Escape", onClose);
-
-  if (!isOpen) return null;
-
-  const sizes = {
-    sm: "400px",
-    md: "500px",
-    lg: "700px",
-    xl: "900px",
-    full: "95vw",
-  };
-
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.6)",
-        backdropFilter: "blur(4px)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: THEME.zIndex.modal,
-        padding: THEME.spacing[4],
-        animation: "fadeIn 0.2s ease",
-      }}
-    >
-      <div
-        ref={modalRef}
-        style={{
-          backgroundColor: THEME.colors.neutral[0],
-          borderRadius: THEME.borderRadius["2xl"],
-          maxWidth: sizes[size] || sizes.md,
-          width: "100%",
-          maxHeight: "90vh",
-          overflow: "hidden",
-          display: "flex",
-          flexDirection: "column",
-          animation: "scaleIn 0.3s ease",
-          boxShadow: THEME.shadows["2xl"],
-        }}
-      >
-        {(title || showClose) && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: THEME.spacing[6],
-              borderBottom: `1px solid ${THEME.colors.neutral[200]}`,
-            }}
-          >
-            {title && (
-              <h2
-                style={{
-                  fontFamily: THEME.typography.fontFamily.heading,
-                  fontSize: THEME.typography.fontSize["xl"],
-                  fontWeight: THEME.typography.fontWeight.bold,
-                  color: THEME.colors.neutral[900],
-                  margin: 0,
-                }}
-              >
-                {title}
-              </h2>
-            )}
-            {showClose && (
-              <IconButton
-                icon={<FiX size={20} />}
-                onClick={onClose}
-                variant="ghost"
-                size="sm"
-              />
-            )}
-          </div>
-        )}
-        <div style={{ flex: 1, overflow: "auto", padding: THEME.spacing[6] }}>
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// Empty State Component
-const EmptyState = ({ icon, title, description, action }) => (
-  <div
-    style={{
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: THEME.spacing[12],
-      textAlign: "center",
-    }}
-  >
-    {icon && (
-      <div
-        style={{
-          width: 80,
-          height: 80,
-          borderRadius: THEME.borderRadius.full,
-          backgroundColor: THEME.colors.primary[100],
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          marginBottom: THEME.spacing[6],
-          color: THEME.colors.primary[500],
-        }}
-      >
-        {icon}
-      </div>
-    )}
-    <h3
-      style={{
-        fontFamily: THEME.typography.fontFamily.heading,
-        fontSize: THEME.typography.fontSize["xl"],
-        fontWeight: THEME.typography.fontWeight.semibold,
-        color: THEME.colors.neutral[900],
-        marginBottom: THEME.spacing[2],
-      }}
-    >
-      {title}
-    </h3>
-    {description && (
+      {children}
+    </h2>
+    {subtitle && (
       <p
         style={{
-          fontSize: THEME.typography.fontSize.base,
-          color: THEME.colors.neutral[500],
-          marginBottom: THEME.spacing[6],
-          maxWidth: "400px",
+          fontSize: isMobile ? 16 : 18,
+          color: theme.gray500,
+          margin: "12px 0 0",
+          lineHeight: 1.6,
+          maxWidth: align === "center" ? 600 : "none",
+          marginLeft: align === "center" ? "auto" : 0,
+          marginRight: align === "center" ? "auto" : 0,
         }}
       >
-        {description}
+        {subtitle}
       </p>
     )}
-    {action}
   </div>
 );
 
-// Image Gallery Component
-const ImageGallery = ({
-  images,
-  currentIndex,
-  setCurrentIndex,
-  autoPlay = true,
-  autoPlayInterval = 5000,
-  showThumbnails = true,
-  showControls = true,
-  onImageClick,
-}) => {
-  const [isPaused, setIsPaused] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
+const IconBox = ({ icon, size = 48, bg = theme.primaryMuted, color = theme.primary }) => (
+  <div
+    style={{
+      width: size,
+      height: size,
+      borderRadius: "50%",
+      background: bg,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      fontSize: size * 0.5,
+      color,
+      flexShrink: 0,
+    }}
+  >
+    {icon}
+  </div>
+);
 
-  const swipeHandlers = useSwipe(
-    () => setCurrentIndex((prev) => (prev + 1) % images.length),
-    () => setCurrentIndex((prev) => (prev - 1 + images.length) % images.length),
-  );
+const Divider = ({ style = {} }) => (
+  <hr
+    style={{
+      border: "none",
+      height: 1,
+      background: theme.gray200,
+      margin: "32px 0",
+      ...style,
+    }}
+  />
+);
 
-  useEffect(() => {
-    if (!autoPlay || isPaused) return;
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % images.length);
-    }, autoPlayInterval);
-    return () => clearInterval(interval);
-  }, [autoPlay, isPaused, autoPlayInterval, images.length, setCurrentIndex]);
+/* ═══════════════════════════════════════════════════
+   HERO SECTION
+   ═══════════════════════════════════════════════════ */
 
-  useEffect(() => {
-    setImageLoaded(false);
-  }, [currentIndex]);
-
-  return (
-    <div
-      style={{ position: "relative", width: "100%", height: "100%" }}
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-      {...swipeHandlers}
-    >
-      {/* Main Image */}
-      <div
-        style={{
-          position: "relative",
-          width: "100%",
-          height: "100%",
-          overflow: "hidden",
-          cursor: onImageClick ? "pointer" : "default",
-        }}
-        onClick={onImageClick}
-      >
-        <img
-          src={images[currentIndex]}
-          alt={`Slide ${currentIndex + 1}`}
-          onLoad={() => setImageLoaded(true)}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            transition: `all ${THEME.transitions.slow}`,
-            transform: imageLoaded ? "scale(1)" : "scale(1.05)",
-            opacity: imageLoaded ? 1 : 0,
-          }}
-        />
-        {!imageLoaded && (
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              backgroundColor: THEME.colors.neutral[200],
-            }}
-          >
-            <Spinner size={32} />
-          </div>
-        )}
-      </div>
-
-      {/* Controls */}
-      {showControls && images.length > 1 && (
-        <>
-          <IconButton
-            icon={<FiChevronLeft size={24} />}
-            onClick={() =>
-              setCurrentIndex(
-                (prev) => (prev - 1 + images.length) % images.length,
-              )
-            }
-            variant="default"
-            size="lg"
-            style={{
-              position: "absolute",
-              left: THEME.spacing[4],
-              top: "50%",
-              transform: "translateY(-50%)",
-            }}
-          />
-          <IconButton
-            icon={<FiChevronRight size={24} />}
-            onClick={() =>
-              setCurrentIndex((prev) => (prev + 1) % images.length)
-            }
-            variant="default"
-            size="lg"
-            style={{
-              position: "absolute",
-              right: THEME.spacing[4],
-              top: "50%",
-              transform: "translateY(-50%)",
-            }}
-          />
-        </>
-      )}
-
-      {/* Indicators */}
-      {showThumbnails && images.length > 1 && (
-        <div
-          style={{
-            position: "absolute",
-            bottom: THEME.spacing[4],
-            left: "50%",
-            transform: "translateX(-50%)",
-            display: "flex",
-            gap: THEME.spacing[2],
-          }}
-        >
-          {images.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentIndex(i)}
-              style={{
-                width: currentIndex === i ? 24 : 10,
-                height: 10,
-                borderRadius: THEME.borderRadius.full,
-                backgroundColor:
-                  currentIndex === i
-                    ? THEME.colors.neutral[0]
-                    : "rgba(255,255,255,0.4)",
-                border: "none",
-                cursor: "pointer",
-                transition: `all ${THEME.transitions.DEFAULT}`,
-              }}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Counter */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: THEME.spacing[4],
-          right: THEME.spacing[4],
-          display: "flex",
-          alignItems: "center",
-          gap: THEME.spacing[2],
-          padding: `${THEME.spacing[2]} ${THEME.spacing[3]}`,
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
-          backdropFilter: "blur(10px)",
-          borderRadius: THEME.borderRadius.full,
-          color: THEME.colors.neutral[0],
-          fontSize: THEME.typography.fontSize.sm,
-          fontWeight: THEME.typography.fontWeight.medium,
-        }}
-      >
-        <FiCamera size={14} />
-        <span>
-          {currentIndex + 1} / {images.length}
-        </span>
-      </div>
-    </div>
-  );
-};
-
-// Lightbox Component
-const Lightbox = ({ images, currentIndex, setCurrentIndex, onClose }) => {
-  useLockBodyScroll(true);
-  useKeyPress("Escape", onClose);
-  useKeyPress("ArrowLeft", () =>
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length),
-  );
-  useKeyPress("ArrowRight", () =>
-    setCurrentIndex((prev) => (prev + 1) % images.length),
-  );
-
-  return (
-    <div
-      style={{
-        position: "fixed",
-        inset: 0,
-        backgroundColor: "rgba(0, 0, 0, 0.95)",
-        zIndex: THEME.zIndex.modal + 10,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        animation: "fadeIn 0.2s ease",
-      }}
-      onClick={onClose}
-    >
-      {/* Close Button */}
-      <IconButton
-        icon={<FiX size={24} />}
-        onClick={onClose}
-        variant="default"
-        size="lg"
-        style={{
-          position: "absolute",
-          top: THEME.spacing[4],
-          right: THEME.spacing[4],
-          zIndex: 10,
-        }}
-      />
-
-      {/* Navigation */}
-      <IconButton
-        icon={<FiChevronLeft size={28} />}
-        onClick={(e) => {
-          e.stopPropagation();
-          setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
-        }}
-        variant="default"
-        size="xl"
-        style={{
-          position: "absolute",
-          left: THEME.spacing[4],
-          top: "50%",
-          transform: "translateY(-50%)",
-        }}
-      />
-      <IconButton
-        icon={<FiChevronRight size={28} />}
-        onClick={(e) => {
-          e.stopPropagation();
-          setCurrentIndex((prev) => (prev + 1) % images.length);
-        }}
-        variant="default"
-        size="xl"
-        style={{
-          position: "absolute",
-          right: THEME.spacing[4],
-          top: "50%",
-          transform: "translateY(-50%)",
-        }}
-      />
-
-      {/* Image */}
-      <img
-        src={images[currentIndex]}
-        alt=""
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          maxWidth: "90vw",
-          maxHeight: "85vh",
-          objectFit: "contain",
-          borderRadius: THEME.borderRadius.lg,
-          animation: "scaleIn 0.3s ease",
-        }}
-      />
-
-      {/* Thumbnails */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: THEME.spacing[6],
-          left: "50%",
-          transform: "translateX(-50%)",
-          display: "flex",
-          gap: THEME.spacing[2],
-          padding: THEME.spacing[2],
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
-          backdropFilter: "blur(10px)",
-          borderRadius: THEME.borderRadius.lg,
-        }}
-      >
-        {images.map((img, i) => (
-          <button
-            key={i}
-            onClick={(e) => {
-              e.stopPropagation();
-              setCurrentIndex(i);
-            }}
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: THEME.borderRadius.md,
-              overflow: "hidden",
-              border:
-                currentIndex === i
-                  ? `2px solid ${THEME.colors.primary[500]}`
-                  : "2px solid transparent",
-              opacity: currentIndex === i ? 1 : 0.6,
-              cursor: "pointer",
-              transition: `all ${THEME.transitions.DEFAULT}`,
-              padding: 0,
-              background: "none",
-            }}
-          >
-            <img
-              src={img}
-              alt=""
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          </button>
-        ))}
-      </div>
-
-      {/* Counter */}
-      <div
-        style={{
-          position: "absolute",
-          top: THEME.spacing[4],
-          left: "50%",
-          transform: "translateX(-50%)",
-          padding: `${THEME.spacing[2]} ${THEME.spacing[4]}`,
-          backgroundColor: "rgba(0, 0, 0, 0.5)",
-          backdropFilter: "blur(10px)",
-          borderRadius: THEME.borderRadius.full,
-          color: THEME.colors.neutral[0],
-          fontSize: THEME.typography.fontSize.sm,
-          fontWeight: THEME.typography.fontWeight.semibold,
-        }}
-      >
-        {currentIndex + 1} of {images.length}
-      </div>
-    </div>
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
-// SECTION COMPONENTS
-// ═══════════════════════════════════════════════════════════════════════════
-
-// Hero Section
-const HeroSection = ({
-  destination,
-  country,
-  currentImageIndex,
-  setCurrentImageIndex,
-  isFavorite,
-  onToggleFavorite,
-  isBookmarked,
-  setIsBookmarked,
-  onShare,
-  onOpenLightbox,
-  onScrollToContent,
-  isMobile,
-  toast,
-}) => {
-  const handleFavoriteClick = () => {
-    onToggleFavorite?.();
-    toast[isFavorite ? "info" : "success"](
-      isFavorite ? "Removed from favorites" : "Added to favorites!",
-    );
-  };
-
-  const handleBookmarkClick = () => {
-    setIsBookmarked(!isBookmarked);
-    toast[isBookmarked ? "info" : "success"](
-      isBookmarked ? "Removed from saved" : "Saved for later!",
-    );
-  };
+const Hero = ({ destination, isMobile }) => {
+  const d = destination;
 
   return (
     <section
       style={{
         position: "relative",
-        height: isMobile ? "75vh" : "92vh",
-        minHeight: isMobile ? "500px" : "650px",
+        height: isMobile ? "75vh" : "85vh",
+        minHeight: 550,
         overflow: "hidden",
       }}
     >
-      {/* Image Gallery */}
-      <ImageGallery
-        images={destination.images}
-        currentIndex={currentImageIndex}
-        setCurrentIndex={setCurrentImageIndex}
-        autoPlay={true}
-        autoPlayInterval={6000}
-        showThumbnails={true}
-        showControls={!isMobile}
-        onImageClick={onOpenLightbox}
+      {/* Background Image */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage: `url(${d.heroImage || d.imageUrl})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }}
       />
 
       {/* Gradient Overlay */}
@@ -2895,3481 +695,1520 @@ const HeroSection = ({
         style={{
           position: "absolute",
           inset: 0,
-          background: THEME.colors.gradient.hero,
-          pointerEvents: "none",
+          background: `linear-gradient(
+            to bottom,
+            rgba(0,0,0,0.1) 0%,
+            rgba(0,0,0,0.3) 40%,
+            rgba(0,0,0,0.75) 100%
+          )`,
         }}
       />
 
-      {/* Top Actions */}
-      <div
-        className="no-print"
-        style={{
-          position: "absolute",
-          top: THEME.spacing[4],
-          right: isMobile ? THEME.spacing[4] : THEME.spacing[8],
-          display: "flex",
-          gap: THEME.spacing[3],
-          zIndex: 20,
-          animation: "fadeInDown 0.6s ease forwards",
-        }}
-      >
-        <IconButton
-          icon={
-            <FiHeart
-              size={20}
-              style={{ fill: isFavorite ? "currentColor" : "none" }}
-            />
-          }
-          onClick={handleFavoriteClick}
-          active={isFavorite}
-          tooltip="Add to favorites"
-        />
-        <IconButton
-          icon={
-            <FiBookmark
-              size={20}
-              style={{ fill: isBookmarked ? "currentColor" : "none" }}
-            />
-          }
-          onClick={handleBookmarkClick}
-          active={isBookmarked}
-          tooltip="Save for later"
-        />
-        <IconButton
-          icon={<FiShare2 size={20} />}
-          onClick={onShare}
-          tooltip="Share"
-        />
-        <IconButton
-          icon={<FiMaximize2 size={20} />}
-          onClick={onOpenLightbox}
-          tooltip="View gallery"
-        />
-      </div>
-
-      {/* Hero Content */}
+      {/* Green Accent Line */}
       <div
         style={{
           position: "absolute",
           bottom: 0,
           left: 0,
           right: 0,
-          padding: isMobile
-            ? `${THEME.spacing[6]} ${THEME.spacing[4]} ${THEME.spacing[24]}`
-            : `${THEME.spacing[10]} ${THEME.spacing[12]} ${THEME.spacing[32]}`,
-          color: THEME.colors.neutral[0],
-          zIndex: 10,
+          height: 4,
+          background: theme.primary,
+        }}
+      />
+
+      {/* Content */}
+      <Container
+        style={{
+          position: "relative",
+          height: "100%",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "flex-end",
+          paddingBottom: isMobile ? 48 : 72,
         }}
       >
-        {/* Breadcrumbs */}
-        <nav
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: THEME.spacing[2],
-            marginBottom: THEME.spacing[4],
-            fontSize: THEME.typography.fontSize.sm,
-            opacity: 0.9,
-            flexWrap: "wrap",
-            animation: "fadeInUp 0.6s ease forwards",
-          }}
-        >
-          {[
-            { to: "/", label: "Home", icon: <FiHome size={14} /> },
-            { to: "/destinations", label: "Destinations" },
-            {
-              to: `/country/${destination.countryId || destination.country_id}`,
-              label: country?.name || "Country",
-            },
-            { label: destination.name, current: true },
-          ].map((item, i, arr) => (
-            <React.Fragment key={i}>
-              {item.to ? (
-                <Link
-                  to={item.to}
-                  style={{
-                    color: "inherit",
-                    textDecoration: "none",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: THEME.spacing[1],
-                    transition: `opacity ${THEME.transitions.fast}`,
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.opacity = "0.7")}
-                  onMouseLeave={(e) => (e.currentTarget.style.opacity = "1")}
-                >
-                  {item.icon}
-                  {item.label}
-                </Link>
-              ) : (
-                <span
-                  style={{ fontWeight: THEME.typography.fontWeight.semibold }}
-                >
-                  {item.label}
-                </span>
-              )}
-              {i < arr.length - 1 && (
-                <FiChevronRight size={14} style={{ opacity: 0.6 }} />
-              )}
-            </React.Fragment>
-          ))}
-        </nav>
-
-        {/* Title */}
-        <h1
-          style={{
-            fontFamily: THEME.typography.fontFamily.heading,
-            fontSize: isMobile
-              ? THEME.typography.fontSize["4xl"]
-              : THEME.typography.fontSize["6xl"],
-            fontWeight: THEME.typography.fontWeight.bold,
-            margin: `0 0 ${THEME.spacing[3]}`,
-            textShadow: "0 4px 30px rgba(0,0,0,0.4)",
-            lineHeight: THEME.typography.lineHeight.tight,
-            animation: "fadeInUp 0.6s ease 0.1s both",
-          }}
-        >
-          {destination.name}
-        </h1>
-
-        {/* Description */}
-        <p
-          style={{
-            fontSize: isMobile
-              ? THEME.typography.fontSize.base
-              : THEME.typography.fontSize.lg,
-            maxWidth: "700px",
-            lineHeight: THEME.typography.lineHeight.relaxed,
-            marginBottom: THEME.spacing[5],
-            opacity: 0.95,
-            animation: "fadeInUp 0.6s ease 0.2s both",
-          }}
-        >
-          {destination.description}
-        </p>
-
-        {/* Stats */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: THEME.spacing[3],
-            animation: "fadeInUp 0.6s ease 0.3s both",
-          }}
-        >
-          {[
-            {
-              icon: (
-                <FiStar
-                  size={14}
-                  style={{
-                    fill: THEME.colors.semantic.warning,
-                    color: THEME.colors.semantic.warning,
-                  }}
-                />
-              ),
-              label: `${destination.rating} Rating`,
-            },
-            { icon: <FiClock size={14} />, label: destination.duration },
-            { icon: <FiUsers size={14} />, label: destination.difficulty },
-            {
-              icon: <FiMessageCircle size={14} />,
-              label: `${destination.reviews}+ Reviews`,
-            },
-          ].map((stat, i) => (
-            <div
-              key={i}
+        <div className="fade-in-up" style={{ maxWidth: 800 }}>
+          {/* Breadcrumb / Country */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
+            <Link
+              to={`/countries/${d.countrySlug}`}
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: THEME.spacing[2],
-                padding: `${THEME.spacing[2]} ${THEME.spacing[4]}`,
-                backgroundColor: "rgba(255,255,255,0.15)",
-                backdropFilter: "blur(10px)",
-                borderRadius: THEME.borderRadius.full,
-                fontSize: THEME.typography.fontSize.sm,
-                fontWeight: THEME.typography.fontWeight.medium,
+                gap: 8,
+                color: "rgba(255,255,255,0.9)",
+                textDecoration: "none",
+                fontSize: 15,
+                fontWeight: 500,
               }}
             >
-              {stat.icon}
-              <span>{stat.label}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+              {d.country?.flag && <span style={{ fontSize: 20 }}>{d.country.flag}</span>}
+              <span>{d.countryName || d.country?.name}</span>
+            </Link>
+            <span style={{ color: "rgba(255,255,255,0.5)" }}>→</span>
+            <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 15 }}>{d.region}</span>
+          </div>
 
-      {/* Scroll Indicator */}
-      {!isMobile && (
-        <button
-          onClick={onScrollToContent}
-          style={{
-            position: "absolute",
-            bottom: THEME.spacing[8],
-            left: "50%",
-            transform: "translateX(-50%)",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: THEME.spacing[2],
-            color: THEME.colors.neutral[0],
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            zIndex: 20,
-            animation:
-              "fadeInUp 0.6s ease 0.5s both, bounce 2s ease-in-out 1.5s infinite",
-          }}
-        >
-          <span
+          {/* Badges */}
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
+            {d.isFeatured && <Badge variant="primary" size="md" icon="⭐">Featured</Badge>}
+            {d.isPopular && <Badge variant="warning" size="md" icon="🔥">Popular</Badge>}
+            {d.isNew && <Badge variant="info" size="md" icon="✨">New</Badge>}
+            {d.isEcoFriendly && <Badge variant="success" size="md" icon="🌿">Eco-Friendly</Badge>}
+            {d.destinationType && <Badge variant="white" size="md">{d.destinationType}</Badge>}
+          </div>
+
+          {/* Title */}
+          <h1
             style={{
-              fontSize: THEME.typography.fontSize.xs,
-              fontWeight: THEME.typography.fontWeight.semibold,
-              letterSpacing: "2px",
-              textTransform: "uppercase",
+              fontFamily: theme.fontSerif,
+              fontSize: isMobile ? 36 : 56,
+              fontWeight: 800,
+              color: theme.white,
+              margin: "0 0 16px",
+              lineHeight: 1.1,
+              textShadow: "0 4px 24px rgba(0,0,0,0.4)",
             }}
           >
-            Explore
-          </span>
-          <FiChevronDown size={24} />
-        </button>
-      )}
+            {d.name}
+          </h1>
+
+          {/* Tagline */}
+          {d.tagline && (
+            <p
+              style={{
+                fontSize: isMobile ? 18 : 24,
+                color: "rgba(255,255,255,0.9)",
+                margin: "0 0 28px",
+                lineHeight: 1.5,
+                fontWeight: 500,
+              }}
+            >
+              {d.tagline}
+            </p>
+          )}
+
+          {/* Rating & Meta */}
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: isMobile ? 16 : 24 }}>
+            {d.rating && (
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    background: "rgba(251, 191, 36, 0.2)",
+                    padding: "8px 14px",
+                    borderRadius: theme.radiusFull,
+                  }}
+                >
+                  <span style={{ color: theme.star, fontSize: 18 }}>★</span>
+                  <span style={{ color: theme.white, fontWeight: 700, fontSize: 16 }}>
+                    {d.rating}
+                  </span>
+                </div>
+                {d.reviewCount > 0 && (
+                  <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 14 }}>
+                    ({d.reviewCount} reviews)
+                  </span>
+                )}
+              </div>
+            )}
+            
+            {d.duration && (
+              <Badge variant="dark" size="lg" icon="🕐">
+                {d.duration}
+              </Badge>
+            )}
+            
+            {d.category && (
+              <Badge variant="dark" size="lg">
+                {d.category}
+              </Badge>
+            )}
+          </div>
+        </div>
+      </Container>
     </section>
   );
 };
 
-// Quick Actions Bar
-const QuickActionsBar = ({
-  destination,
-  onDownload,
-  onPrint,
-  onShare,
-  isMobile,
-  isScrolled,
-  viewCount = 2847,
-}) => (
-  <div
-    className="no-print"
-    style={{
-      backgroundColor: THEME.colors.neutral[0],
-      borderBottom: `1px solid ${THEME.colors.neutral[200]}`,
-      padding: `${THEME.spacing[3]} ${isMobile ? THEME.spacing[4] : THEME.spacing[8]}`,
-      position: "sticky",
-      top: 0,
-      zIndex: THEME.zIndex.sticky,
-      boxShadow: isScrolled ? THEME.shadows.md : "none",
-      transition: `box-shadow ${THEME.transitions.DEFAULT}`,
-    }}
-  >
-    <div
-      style={{
-        maxWidth: "1400px",
-        margin: "0 auto",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        gap: THEME.spacing[4],
-        flexWrap: "wrap",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: THEME.spacing[3],
-          flexWrap: "wrap",
-        }}
-      >
-        <span
-          style={{
-            fontSize: THEME.typography.fontSize.sm,
-            color: THEME.colors.neutral[500],
-            fontWeight: THEME.typography.fontWeight.medium,
-          }}
-        >
-          Quick Actions:
-        </span>
-        <Button
-          variant="outline"
-          size="sm"
-          icon={<FiDownload size={14} />}
-          onClick={onDownload}
-        >
-          {!isMobile && "Download"}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          icon={<FiPrinter size={14} />}
-          onClick={onPrint}
-        >
-          {!isMobile && "Print"}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          icon={<FiShare2 size={14} />}
-          onClick={onShare}
-        >
-          {!isMobile && "Share"}
-        </Button>
-      </div>
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: THEME.spacing[2],
-          padding: `${THEME.spacing[2]} ${THEME.spacing[4]}`,
-          backgroundColor: THEME.colors.primary[50],
-          borderRadius: THEME.borderRadius.lg,
-        }}
-      >
-        <FiEye size={16} style={{ color: THEME.colors.primary[600] }} />
-        <span
-          style={{
-            fontSize: THEME.typography.fontSize.sm,
-            fontWeight: THEME.typography.fontWeight.semibold,
-            color: THEME.colors.primary[700],
-          }}
-        >
-          {viewCount.toLocaleString()} views today
-        </span>
-      </div>
-    </div>
-  </div>
-);
+/* ═══════════════════════════════════════════════════
+   QUICK INFO BAR
+   ═══════════════════════════════════════════════════ */
 
-// Overview Section
-const OverviewSection = ({ destination, country }) => {
-  const weather = MOCK_DATA.weather;
+const QuickInfoBar = ({ destination, isMobile }) => {
+  const d = destination;
 
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: THEME.spacing[6],
-      }}
-    >
-      {/* About Card */}
-      <Card delay={0}>
-        <SectionHeader
-          icon={<FiInfo size={24} />}
-          title="About This Destination"
-          subtitle="Everything you need to know"
-          badge={
-            <Badge variant="success" dot>
-              Popular
-            </Badge>
-          }
-        />
-        <div style={{ marginBottom: THEME.spacing[5] }}>
-          <Badge icon={<FiMapPin size={10} />}>{destination.type}</Badge>
-        </div>
-        <p
-          style={{
-            fontSize: THEME.typography.fontSize.base,
-            color: THEME.colors.neutral[600],
-            lineHeight: THEME.typography.lineHeight.relaxed,
-            marginBottom: THEME.spacing[6],
-          }}
-        >
-          {destination.fullDescription || destination.description}
-        </p>
+  const infoItems = [
+    {
+      icon: "🕐",
+      label: "Duration",
+      value: d.duration || `${d.durationDays} Days`,
+      show: d.duration || d.durationDays,
+    },
+    {
+      icon: "📊",
+      label: "Difficulty",
+      value: d.difficulty || d.fitnessLevel,
+      show: d.difficulty || d.fitnessLevel,
+      badge: true,
+    },
+    {
+      icon: "👥",
+      label: "Group Size",
+      value: d.minGroupSize && d.maxGroupSize 
+        ? `${d.minGroupSize} - ${d.maxGroupSize}` 
+        : d.maxGroupSize ? `Up to ${d.maxGroupSize}` : null,
+      show: d.minGroupSize || d.maxGroupSize,
+    },
+    {
+      icon: "⭐",
+      label: "Rating",
+      value: d.rating ? `${d.rating} / 5` : null,
+      show: d.rating,
+      highlight: true,
+    },
+    {
+      icon: "🎫",
+      label: "Entry Fee",
+      value: d.entranceFee,
+      show: d.entranceFee,
+    },
+  ].filter(item => item.show);
 
-        {/* Quick Info Grid */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-            gap: THEME.spacing[4],
-          }}
-        >
-          {[
-            {
-              icon: <FiMapPin size={20} />,
-              label: "Location",
-              value: country?.name || "Unknown",
-            },
-            {
-              icon: <FiClock size={20} />,
-              label: "Duration",
-              value: destination.duration,
-            },
-            {
-              icon: <FiUsers size={20} />,
-              label: "Difficulty",
-              value: destination.difficulty,
-            },
-            {
-              icon: <FiCalendar size={20} />,
-              label: "Best Time",
-              value: destination.bestTime || "Spring-Fall",
-            },
-          ].map((item, i) => (
-            <div
-              key={i}
-              style={{
-                padding: THEME.spacing[4],
-                backgroundColor: THEME.colors.neutral[50],
-                borderRadius: THEME.borderRadius.xl,
-                textAlign: "center",
-                border: `1px solid ${THEME.colors.neutral[200]}`,
-                transition: `all ${THEME.transitions.DEFAULT}`,
-              }}
-            >
-              <div
-                style={{
-                  width: 44,
-                  height: 44,
-                  borderRadius: THEME.borderRadius.lg,
-                  backgroundColor: THEME.colors.primary[100],
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  margin: `0 auto ${THEME.spacing[3]}`,
-                  color: THEME.colors.primary[600],
-                }}
-              >
-                {item.icon}
-              </div>
-              <div
-                style={{
-                  fontSize: THEME.typography.fontSize.xs,
-                  color: THEME.colors.neutral[500],
-                  marginBottom: THEME.spacing[1],
-                }}
-              >
-                {item.label}
-              </div>
-              <div
-                style={{
-                  fontSize: THEME.typography.fontSize.base,
-                  fontWeight: THEME.typography.fontWeight.semibold,
-                  color: THEME.colors.neutral[900],
-                }}
-              >
-                {item.value}
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* Weather Card */}
-      <Card delay={100}>
-        <SectionHeader
-          icon={<FiSun size={24} />}
-          title="Current Weather"
-          subtitle="Live conditions & 7-day forecast"
-          action={
-            <Button variant="ghost" size="sm" icon={<FiRefreshCw size={14} />}>
-              Refresh
-            </Button>
-          }
-        />
-
-        {/* Current Weather */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))",
-            gap: THEME.spacing[3],
-            marginBottom: THEME.spacing[6],
-          }}
-        >
-          {[
-            {
-              icon: <FiThermometer size={24} />,
-              value: `${weather.current.temp}°C`,
-              label: "Temperature",
-              color: THEME.colors.semantic.error,
-            },
-            {
-              icon: <FiSun size={24} />,
-              value: weather.current.condition,
-              label: "Condition",
-              color: THEME.colors.semantic.warning,
-            },
-            {
-              icon: <FiDroplet size={24} />,
-              value: `${weather.current.humidity}%`,
-              label: "Humidity",
-              color: THEME.colors.semantic.info,
-            },
-            {
-              icon: <FiWind size={24} />,
-              value: `${weather.current.wind} km/h`,
-              label: "Wind",
-              color: THEME.colors.neutral[500],
-            },
-          ].map((item, i) => (
-            <div
-              key={i}
-              style={{
-                padding: THEME.spacing[4],
-                backgroundColor: THEME.colors.primary[50],
-                borderRadius: THEME.borderRadius.xl,
-                textAlign: "center",
-              }}
-            >
-              <div
-                style={{ color: item.color, marginBottom: THEME.spacing[2] }}
-              >
-                {item.icon}
-              </div>
-              <div
-                style={{
-                  fontSize: THEME.typography.fontSize.lg,
-                  fontWeight: THEME.typography.fontWeight.bold,
-                  color: THEME.colors.neutral[900],
-                }}
-              >
-                {item.value}
-              </div>
-              <div
-                style={{
-                  fontSize: THEME.typography.fontSize.xs,
-                  color: THEME.colors.neutral[500],
-                }}
-              >
-                {item.label}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Forecast */}
-        <div
-          style={{
-            display: "flex",
-            gap: THEME.spacing[2],
-            overflowX: "auto",
-            paddingBottom: THEME.spacing[2],
-            margin: `0 -${THEME.spacing[2]}`,
-            padding: `0 ${THEME.spacing[2]}`,
-          }}
-        >
-          {weather.forecast.map((day, i) => (
-            <div
-              key={i}
-              style={{
-                flex: "0 0 auto",
-                minWidth: 85,
-                padding: THEME.spacing[3],
-                backgroundColor:
-                  i === 0
-                    ? THEME.colors.primary[100]
-                    : THEME.colors.neutral[50],
-                borderRadius: THEME.borderRadius.xl,
-                textAlign: "center",
-                border:
-                  i === 0
-                    ? `2px solid ${THEME.colors.primary[300]}`
-                    : `1px solid ${THEME.colors.neutral[200]}`,
-              }}
-            >
-              <div
-                style={{
-                  fontSize: THEME.typography.fontSize.xs,
-                  fontWeight: THEME.typography.fontWeight.semibold,
-                  color: THEME.colors.neutral[500],
-                  marginBottom: THEME.spacing[2],
-                }}
-              >
-                {day.day}
-              </div>
-              <div style={{ fontSize: "28px", marginBottom: THEME.spacing[2] }}>
-                {day.icon}
-              </div>
-              <div
-                style={{
-                  fontSize: THEME.typography.fontSize.sm,
-                  fontWeight: THEME.typography.fontWeight.bold,
-                  color: THEME.colors.neutral[900],
-                }}
-              >
-                {day.high}°
-              </div>
-              <div
-                style={{
-                  fontSize: THEME.typography.fontSize.xs,
-                  color: THEME.colors.neutral[400],
-                }}
-              >
-                {day.low}°
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* Itinerary Card */}
-      <Card delay={200}>
-        <SectionHeader
-          icon={<FiCalendar size={24} />}
-          title="Suggested Itinerary"
-          subtitle="Make the most of your day"
-          action={
-            <Button variant="ghost" size="sm" icon={<FiDownload size={14} />}>
-              Export
-            </Button>
-          }
-        />
-
-        <div style={{ position: "relative", paddingLeft: THEME.spacing[8] }}>
-          {/* Timeline Line */}
-          <div
-            style={{
-              position: "absolute",
-              left: 15,
-              top: 16,
-              bottom: 16,
-              width: 2,
-              backgroundColor: THEME.colors.primary[200],
-              borderRadius: THEME.borderRadius.full,
-            }}
-          />
-
-          {MOCK_DATA.itinerary.map((item, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                gap: THEME.spacing[4],
-                marginBottom:
-                  i < MOCK_DATA.itinerary.length - 1 ? THEME.spacing[5] : 0,
-                position: "relative",
-              }}
-            >
-              {/* Timeline Dot */}
-              <div
-                style={{
-                  position: "absolute",
-                  left: -THEME.spacing[8],
-                  top: 2,
-                  width: 32,
-                  height: 32,
-                  borderRadius: THEME.borderRadius.full,
-                  backgroundColor: THEME.colors.primary[500],
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: THEME.colors.neutral[0],
-                  fontSize: THEME.typography.fontSize.xs,
-                  zIndex: 1,
-                  boxShadow: `0 0 0 4px ${THEME.colors.neutral[0]}, 0 0 0 6px ${THEME.colors.primary[200]}`,
-                }}
-              >
-                {item.icon}
-              </div>
-
-              {/* Content */}
-              <div style={{ flex: 1 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: THEME.spacing[3],
-                    marginBottom: THEME.spacing[1],
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: THEME.typography.fontSize.sm,
-                      fontWeight: THEME.typography.fontWeight.bold,
-                      color: THEME.colors.primary[600],
-                    }}
-                  >
-                    {item.time}
-                  </span>
-                  <Badge variant="neutral" size="sm">
-                    {item.duration}
-                  </Badge>
-                </div>
-                <div
-                  style={{
-                    fontSize: THEME.typography.fontSize.base,
-                    fontWeight: THEME.typography.fontWeight.semibold,
-                    color: THEME.colors.neutral[900],
-                    marginBottom: THEME.spacing[1],
-                  }}
-                >
-                  {item.activity}
-                </div>
-                <div
-                  style={{
-                    fontSize: THEME.typography.fontSize.sm,
-                    color: THEME.colors.neutral[500],
-                  }}
-                >
-                  {item.description}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-    </div>
-  );
-};
-
-// Highlights Section
-const HighlightsSection = ({ destination }) => (
-  <div
-    style={{ display: "flex", flexDirection: "column", gap: THEME.spacing[6] }}
-  >
-    {/* Main Highlights */}
-    <Card delay={0}>
-      <SectionHeader
-        icon={<FiStar size={24} />}
-        title="Experience Highlights"
-        subtitle="What makes this place special"
-      />
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: THEME.spacing[4],
-        }}
-      >
-        {(destination.highlights || []).map((highlight, i) => (
-          <div
-            key={i}
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              gap: THEME.spacing[3],
-              padding: THEME.spacing[4],
-              backgroundColor: THEME.colors.neutral[50],
-              borderRadius: THEME.borderRadius.xl,
-              border: `1px solid ${THEME.colors.neutral[200]}`,
-              transition: `all ${THEME.transitions.DEFAULT}`,
-            }}
-          >
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: THEME.borderRadius.lg,
-                background: THEME.colors.gradient.primary,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: THEME.colors.neutral[0],
-                flexShrink: 0,
-              }}
-            >
-              <FiCheck size={18} />
-            </div>
-            <span
-              style={{
-                fontSize: THEME.typography.fontSize.sm,
-                color: THEME.colors.neutral[700],
-                lineHeight: THEME.typography.lineHeight.relaxed,
-              }}
-            >
-              {highlight}
-            </span>
-          </div>
-        ))}
-      </div>
-    </Card>
-
-    {/* Nearby Attractions */}
-    <Card delay={100}>
-      <SectionHeader
-        icon={<FiMapPin size={24} />}
-        title="Nearby Attractions"
-        subtitle="Explore the surrounding area"
-        action={
-          <Button variant="ghost" size="sm" icon={<FiMap size={14} />}>
-            View Map
-          </Button>
-        }
-      />
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-          gap: THEME.spacing[4],
-        }}
-      >
-        {MOCK_DATA.nearbyAttractions.map((attraction, i) => (
-          <div
-            key={i}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: THEME.spacing[4],
-              padding: THEME.spacing[4],
-              backgroundColor: THEME.colors.neutral[50],
-              borderRadius: THEME.borderRadius.xl,
-              border: `1px solid ${THEME.colors.neutral[200]}`,
-              cursor: "pointer",
-              transition: `all ${THEME.transitions.DEFAULT}`,
-            }}
-          >
-            <div
-              style={{
-                width: 60,
-                height: 60,
-                borderRadius: THEME.borderRadius.lg,
-                overflow: "hidden",
-                flexShrink: 0,
-              }}
-            >
-              <img
-                src={attraction.image}
-                alt={attraction.name}
-                style={{ width: "100%", height: "100%", objectFit: "cover" }}
-              />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div
-                style={{
-                  fontSize: THEME.typography.fontSize.base,
-                  fontWeight: THEME.typography.fontWeight.semibold,
-                  color: THEME.colors.neutral[900],
-                  marginBottom: THEME.spacing[1],
-                }}
-              >
-                {attraction.name}
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: THEME.spacing[3],
-                  fontSize: THEME.typography.fontSize.xs,
-                  color: THEME.colors.neutral[500],
-                }}
-              >
-                <span>{attraction.distance} km</span>
-                <span>•</span>
-                <span>{attraction.time}</span>
-                <span>•</span>
-                <StarRating rating={attraction.rating} size={12} />
-              </div>
-            </div>
-            <Badge variant="neutral" size="sm">
-              {attraction.type}
-            </Badge>
-          </div>
-        ))}
-      </div>
-    </Card>
-
-    {/* Photo Gallery */}
-    <Card delay={200}>
-      <SectionHeader
-        icon={<FiCamera size={24} />}
-        title="Photo Gallery"
-        subtitle={`${destination.images?.length || 0} photos from travelers`}
-      />
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-          gap: THEME.spacing[3],
-        }}
-      >
-        {(destination.images || []).slice(0, 8).map((img, i) => (
-          <div
-            key={i}
-            style={{
-              position: "relative",
-              aspectRatio: "1",
-              borderRadius: THEME.borderRadius.xl,
-              overflow: "hidden",
-              cursor: "pointer",
-            }}
-          >
-            <img
-              src={img}
-              alt=""
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                transition: `transform ${THEME.transitions.DEFAULT}`,
-              }}
-            />
-            {i === 7 && (destination.images?.length || 0) > 8 && (
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  backgroundColor: "rgba(0,0,0,0.65)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: THEME.colors.neutral[0],
-                  fontSize: THEME.typography.fontSize.xl,
-                  fontWeight: THEME.typography.fontWeight.bold,
-                }}
-              >
-                +{(destination.images?.length || 0) - 8}
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </Card>
-  </div>
-);
-
-// Planning Section
-const PlanningSection = ({ toast }) => {
-  const [checkedItems, setCheckedItems] = useState({});
-
-  const toggleItem = (category, item) => {
-    const key = `${category}-${item}`;
-    setCheckedItems((prev) => {
-      const newState = { ...prev, [key]: !prev[key] };
-      if (newState[key]) {
-        toast.success(`"${item}" checked off!`);
-      }
-      return newState;
-    });
-  };
-
-  const totalItems = MOCK_DATA.packingList.reduce(
-    (acc, cat) => acc + cat.items.length,
-    0,
-  );
-  const checkedCount = Object.values(checkedItems).filter(Boolean).length;
-  const progress = Math.round((checkedCount / totalItems) * 100);
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: THEME.spacing[6],
-      }}
-    >
-      {/* Packing List */}
-      <Card delay={0}>
-        <SectionHeader
-          icon={<FiPackage size={24} />}
-          title="Packing Checklist"
-          subtitle={`${checkedCount} of ${totalItems} items packed`}
-          action={
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: THEME.spacing[3],
-              }}
-            >
-              <div style={{ width: 120 }}>
-                <ProgressBar
-                  value={progress}
-                  max={100}
-                  showValue={false}
-                  size="sm"
-                />
-              </div>
-              <Badge variant={progress === 100 ? "success" : "neutral"}>
-                {progress}%
-              </Badge>
-            </div>
-          }
-        />
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: THEME.spacing[5],
-          }}
-        >
-          {MOCK_DATA.packingList.map((category, i) => (
-            <div
-              key={i}
-              style={{
-                padding: THEME.spacing[5],
-                backgroundColor: THEME.colors.neutral[50],
-                borderRadius: THEME.borderRadius.xl,
-                border: `1px solid ${THEME.colors.neutral[200]}`,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: THEME.spacing[2],
-                  marginBottom: THEME.spacing[4],
-                }}
-              >
-                <span style={{ fontSize: "24px" }}>{category.icon}</span>
-                <span
-                  style={{
-                    fontSize: THEME.typography.fontSize.base,
-                    fontWeight: THEME.typography.fontWeight.bold,
-                    color: THEME.colors.neutral[900],
-                  }}
-                >
-                  {category.category}
-                </span>
-              </div>
-              {category.items.map((item, j) => {
-                const key = `${category.category}-${item.name}`;
-                const isChecked = checkedItems[key];
-                return (
-                  <div
-                    key={j}
-                    onClick={() => toggleItem(category.category, item.name)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: THEME.spacing[3],
-                      padding: `${THEME.spacing[3]} 0`,
-                      borderBottom:
-                        j < category.items.length - 1
-                          ? `1px solid ${THEME.colors.neutral[200]}`
-                          : "none",
-                      cursor: "pointer",
-                      transition: `opacity ${THEME.transitions.fast}`,
-                      opacity: isChecked ? 0.6 : 1,
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 22,
-                        height: 22,
-                        borderRadius: THEME.borderRadius.sm,
-                        border: `2px solid ${isChecked ? THEME.colors.primary[500] : THEME.colors.neutral[300]}`,
-                        backgroundColor: isChecked
-                          ? THEME.colors.primary[500]
-                          : "transparent",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: THEME.colors.neutral[0],
-                        transition: `all ${THEME.transitions.DEFAULT}`,
-                        flexShrink: 0,
-                      }}
-                    >
-                      {isChecked && <FiCheck size={14} />}
-                    </div>
-                    <span
-                      style={{
-                        flex: 1,
-                        fontSize: THEME.typography.fontSize.sm,
-                        color: THEME.colors.neutral[700],
-                        textDecoration: isChecked ? "line-through" : "none",
-                      }}
-                    >
-                      {item.name}
-                    </span>
-                    {item.essential && (
-                      <Badge variant="warning" size="sm">
-                        Essential
-                      </Badge>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* Transport Options */}
-      <Card delay={100}>
-        <SectionHeader
-          icon={<FiNavigation size={24} />}
-          title="Getting There"
-          subtitle="Transportation options"
-        />
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: THEME.spacing[4],
-          }}
-        >
-          {MOCK_DATA.transportOptions.map((option, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: THEME.spacing[4],
-                padding: THEME.spacing[4],
-                backgroundColor: THEME.colors.neutral[50],
-                borderRadius: THEME.borderRadius.xl,
-                border: `1px solid ${THEME.colors.neutral[200]}`,
-              }}
-            >
-              <span style={{ fontSize: "32px", flexShrink: 0 }}>
-                {option.icon}
-              </span>
-              <div style={{ flex: 1 }}>
-                <div
-                  style={{
-                    fontSize: THEME.typography.fontSize.base,
-                    fontWeight: THEME.typography.fontWeight.bold,
-                    color: THEME.colors.neutral[900],
-                    marginBottom: THEME.spacing[1],
-                  }}
-                >
-                  {option.mode}
-                </div>
-                <div
-                  style={{
-                    fontSize: THEME.typography.fontSize.sm,
-                    color: THEME.colors.neutral[500],
-                    marginBottom: THEME.spacing[2],
-                  }}
-                >
-                  {option.details}
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: THEME.spacing[2],
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <Badge>{option.duration}</Badge>
-                  <Badge variant="neutral">{option.price}</Badge>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* Local Phrases */}
-      <Card delay={200}>
-        <SectionHeader
-          icon={<FiGlobe size={24} />}
-          title="Useful Phrases"
-          subtitle="Learn basic local language"
-        />
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-            gap: THEME.spacing[3],
-          }}
-        >
-          {MOCK_DATA.localPhrases.map((phrase, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                padding: THEME.spacing[4],
-                backgroundColor: THEME.colors.neutral[50],
-                borderRadius: THEME.borderRadius.xl,
-                border: `1px solid ${THEME.colors.neutral[200]}`,
-                gap: THEME.spacing[4],
-              }}
-            >
-              <span
-                style={{
-                  fontSize: THEME.typography.fontSize.sm,
-                  color: THEME.colors.neutral[500],
-                  minWidth: 80,
-                }}
-              >
-                {phrase.english}
-              </span>
-              <div style={{ textAlign: "right", flex: 1 }}>
-                <div
-                  style={{
-                    fontSize: THEME.typography.fontSize.base,
-                    fontWeight: THEME.typography.fontWeight.bold,
-                    color: THEME.colors.neutral[900],
-                  }}
-                >
-                  {phrase.local}
-                </div>
-                <div
-                  style={{
-                    fontSize: THEME.typography.fontSize.xs,
-                    color: THEME.colors.primary[600],
-                    fontStyle: "italic",
-                  }}
-                >
-                  {phrase.pronunciation}
-                </div>
-              </div>
-              {phrase.audio && (
-                <IconButton
-                  icon={<FiVolume2 size={16} />}
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => console.log("Playing audio...")}
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      </Card>
-    </div>
-  );
-};
-
-// Tips Section
-const TipsSection = ({ selectedTip, setSelectedTip }) => {
-  const [expandedFaq, setExpandedFaq] = useState(null);
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: THEME.spacing[6],
-      }}
-    >
-      {/* Travel Tips Carousel */}
-      <Card delay={0}>
-        <SectionHeader
-          icon={<FiZap size={24} />}
-          title="Insider Tips"
-          subtitle="Pro tips from experienced travelers"
-        />
-        <div
-          style={{
-            padding: THEME.spacing[8],
-            background: `linear-gradient(135deg, ${THEME.colors.primary[50]} 0%, ${THEME.colors.primary[100]} 100%)`,
-            borderRadius: THEME.borderRadius["2xl"],
-            textAlign: "center",
-            border: `2px solid ${THEME.colors.primary[200]}`,
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-          <div style={{ fontSize: "56px", marginBottom: THEME.spacing[4] }}>
-            {MOCK_DATA.travelTips[selectedTip].icon}
-          </div>
-          <h4
-            style={{
-              fontFamily: THEME.typography.fontFamily.heading,
-              fontSize: THEME.typography.fontSize.xl,
-              fontWeight: THEME.typography.fontWeight.bold,
-              color: THEME.colors.neutral[900],
-              marginBottom: THEME.spacing[3],
-            }}
-          >
-            {MOCK_DATA.travelTips[selectedTip].title}
-          </h4>
-          <p
-            style={{
-              fontSize: THEME.typography.fontSize.base,
-              color: THEME.colors.neutral[600],
-              lineHeight: THEME.typography.lineHeight.relaxed,
-              maxWidth: "500px",
-              margin: "0 auto",
-            }}
-          >
-            {MOCK_DATA.travelTips[selectedTip].content}
-          </p>
-
-          {/* Navigation Arrows */}
-          <IconButton
-            icon={<FiChevronLeft size={20} />}
-            onClick={() =>
-              setSelectedTip(
-                (prev) =>
-                  (prev - 1 + MOCK_DATA.travelTips.length) %
-                  MOCK_DATA.travelTips.length,
-              )
-            }
-            variant="solid"
-            style={{
-              position: "absolute",
-              left: THEME.spacing[4],
-              top: "50%",
-              transform: "translateY(-50%)",
-            }}
-          />
-          <IconButton
-            icon={<FiChevronRight size={20} />}
-            onClick={() =>
-              setSelectedTip((prev) => (prev + 1) % MOCK_DATA.travelTips.length)
-            }
-            variant="solid"
-            style={{
-              position: "absolute",
-              right: THEME.spacing[4],
-              top: "50%",
-              transform: "translateY(-50%)",
-            }}
-          />
-        </div>
-
-        {/* Dots */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: THEME.spacing[2],
-            marginTop: THEME.spacing[5],
-          }}
-        >
-          {MOCK_DATA.travelTips.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setSelectedTip(i)}
-              style={{
-                width: selectedTip === i ? 28 : 10,
-                height: 10,
-                borderRadius: THEME.borderRadius.full,
-                backgroundColor:
-                  selectedTip === i
-                    ? THEME.colors.primary[500]
-                    : THEME.colors.neutral[300],
-                border: "none",
-                cursor: "pointer",
-                transition: `all ${THEME.transitions.DEFAULT}`,
-              }}
-            />
-          ))}
-        </div>
-      </Card>
-
-      {/* Safety Information */}
-      <Card delay={100}>
-        <SectionHeader
-          icon={<FiShield size={24} />}
-          title="Safety Information"
-          subtitle="Know before you go"
-        />
-        {MOCK_DATA.safetyInfo.map((item, i) => (
-          <div
-            key={i}
-            style={{
-              marginBottom:
-                i < MOCK_DATA.safetyInfo.length - 1 ? THEME.spacing[5] : 0,
-            }}
-          >
-            <ProgressBar
-              value={item.rating}
-              max={5}
-              label={item.label}
-              color={item.color}
-            />
-            <p
-              style={{
-                fontSize: THEME.typography.fontSize.xs,
-                color: THEME.colors.neutral[500],
-                marginTop: `-${THEME.spacing[2]}`,
-              }}
-            >
-              {item.description}
-            </p>
-          </div>
-        ))}
-      </Card>
-
-      {/* Accessibility */}
-      <Card delay={150}>
-        <SectionHeader
-          icon={<FiUsers size={24} />}
-          title="Accessibility"
-          subtitle="Facilities & services available"
-        />
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: THEME.spacing[4],
-          }}
-        >
-          {MOCK_DATA.accessibility.map((item, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: THEME.spacing[4],
-                padding: THEME.spacing[4],
-                backgroundColor: item.available
-                  ? THEME.colors.primary[50]
-                  : THEME.colors.neutral[50],
-                borderRadius: THEME.borderRadius.xl,
-                border: `1px solid ${item.available ? THEME.colors.primary[200] : THEME.colors.neutral[200]}`,
-              }}
-            >
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: THEME.borderRadius.lg,
-                  backgroundColor: item.available
-                    ? THEME.colors.primary[100]
-                    : THEME.colors.neutral[200],
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "20px",
-                  flexShrink: 0,
-                }}
-              >
-                {item.icon}
-              </div>
-              <div style={{ flex: 1 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: THEME.spacing[2],
-                    marginBottom: THEME.spacing[1],
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: THEME.typography.fontSize.sm,
-                      fontWeight: THEME.typography.fontWeight.semibold,
-                      color: THEME.colors.neutral[900],
-                    }}
-                  >
-                    {item.feature}
-                  </span>
-                  {item.available ? (
-                    <FiCheckCircle
-                      size={14}
-                      style={{ color: THEME.colors.primary[500] }}
-                    />
-                  ) : (
-                    <FiXCircle
-                      size={14}
-                      style={{ color: THEME.colors.neutral[400] }}
-                    />
-                  )}
-                </div>
-                <div
-                  style={{
-                    fontSize: THEME.typography.fontSize.xs,
-                    color: THEME.colors.neutral[500],
-                  }}
-                >
-                  {item.details}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* Cultural Tips */}
-      <Card delay={180}>
-        <SectionHeader
-          icon={<FiGlobe size={24} />}
-          title="Local Culture & Etiquette"
-          subtitle="Respect local customs"
-        />
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
-            gap: THEME.spacing[4],
-          }}
-        >
-          {MOCK_DATA.culturalTips.map((tip, i) => (
-            <div
-              key={i}
-              style={{
-                padding: THEME.spacing[5],
-                backgroundColor: THEME.colors.neutral[50],
-                borderRadius: THEME.borderRadius.xl,
-                borderLeft: `4px solid ${THEME.colors.primary[500]}`,
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: THEME.spacing[2],
-                  marginBottom: THEME.spacing[3],
-                }}
-              >
-                <span style={{ fontSize: "20px" }}>{tip.icon}</span>
-                <span
-                  style={{
-                    fontSize: THEME.typography.fontSize.base,
-                    fontWeight: THEME.typography.fontWeight.bold,
-                    color: THEME.colors.neutral[900],
-                  }}
-                >
-                  {tip.title}
-                </span>
-              </div>
-              <p
-                style={{
-                  fontSize: THEME.typography.fontSize.sm,
-                  color: THEME.colors.neutral[600],
-                  lineHeight: THEME.typography.lineHeight.relaxed,
-                }}
-              >
-                {tip.description}
-              </p>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* FAQ */}
-      <Card delay={200}>
-        <SectionHeader
-          icon={<FiHelpCircle size={24} />}
-          title="Frequently Asked Questions"
-          subtitle="Common questions answered"
-        />
-        <Accordion items={MOCK_DATA.faqs} allowMultiple={false} />
-      </Card>
-    </div>
-  );
-};
-
-// Continuing from ReviewsSection...
-
-const ReviewsSection = ({
-  destination,
-  helpfulReviews,
-  toggleHelpful,
-  showAllReviews,
-  setShowAllReviews,
-  toast,
-}) => {
-  const [filterRating, setFilterRating] = useState(0);
-  const [sortBy, setSortBy] = useState("recent");
-
-  const filteredReviews = useMemo(() => {
-    let reviews = [...MOCK_DATA.reviews];
-
-    // Filter by rating
-    if (filterRating > 0) {
-      reviews = reviews.filter((r) => r.rating >= filterRating);
-    }
-
-    // Sort
-    switch (sortBy) {
-      case "recent":
-        reviews.sort((a, b) => new Date(b.date) - new Date(a.date));
-        break;
-      case "helpful":
-        reviews.sort((a, b) => b.helpful - a.helpful);
-        break;
-      case "highest":
-        reviews.sort((a, b) => b.rating - a.rating);
-        break;
-      case "lowest":
-        reviews.sort((a, b) => a.rating - b.rating);
-        break;
-      default:
-        break;
-    }
-
-    return reviews;
-  }, [filterRating, sortBy]);
-
-  const displayedReviews = showAllReviews
-    ? filteredReviews
-    : filteredReviews.slice(0, 3);
-
-  const ratingDistribution = useMemo(() => {
-    const dist = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-    MOCK_DATA.reviews.forEach((r) => {
-      dist[r.rating] = (dist[r.rating] || 0) + 1;
-    });
-    return dist;
-  }, []);
-
-  const averageRating = useMemo(() => {
-    const total = MOCK_DATA.reviews.reduce((acc, r) => acc + r.rating, 0);
-    return (total / MOCK_DATA.reviews.length).toFixed(1);
-  }, []);
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: THEME.spacing[6],
-      }}
-    >
-      <Card delay={0}>
-        <SectionHeader
-          icon={<FiMessageCircle size={24} />}
-          title="Traveler Reviews"
-          subtitle={`${destination.reviews}+ verified reviews`}
-          action={
-            <Button variant="secondary" size="sm" icon={<FiEdit size={14} />}>
-              Write Review
-            </Button>
-          }
-        />
-
-        {/* Rating Summary */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "stretch",
-            gap: THEME.spacing[6],
-            padding: THEME.spacing[6],
-            backgroundColor: "#FEF3C7",
-            borderRadius: THEME.borderRadius["2xl"],
-            marginBottom: THEME.spacing[6],
-            flexWrap: "wrap",
-          }}
-        >
-          {/* Overall Rating */}
-          <div style={{ textAlign: "center", minWidth: 120 }}>
-            <div
-              style={{
-                fontFamily: THEME.typography.fontFamily.heading,
-                fontSize: THEME.typography.fontSize["5xl"],
-                fontWeight: THEME.typography.fontWeight.bold,
-                color: "#92400E",
-                lineHeight: 1,
-              }}
-            >
-              {averageRating}
-            </div>
-            <div style={{ margin: `${THEME.spacing[2]} 0` }}>
-              <StarRating rating={parseFloat(averageRating)} size={18} />
-            </div>
-            <div
-              style={{
-                fontSize: THEME.typography.fontSize.sm,
-                color: "#92400E",
-                fontWeight: THEME.typography.fontWeight.medium,
-              }}
-            >
-              {destination.reviews}+ reviews
-            </div>
-          </div>
-
-          {/* Rating Distribution */}
-          <div style={{ flex: 1, minWidth: 200 }}>
-            {[5, 4, 3, 2, 1].map((star) => {
-              const count = ratingDistribution[star] || 0;
-              const percentage = Math.round(
-                (count / MOCK_DATA.reviews.length) * 100,
-              );
-              return (
-                <div
-                  key={star}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: THEME.spacing[3],
-                    marginBottom: THEME.spacing[2],
-                    cursor: "pointer",
-                    opacity:
-                      filterRating === 0 || filterRating === star ? 1 : 0.4,
-                    transition: `opacity ${THEME.transitions.fast}`,
-                  }}
-                  onClick={() =>
-                    setFilterRating(filterRating === star ? 0 : star)
-                  }
-                >
-                  <span
-                    style={{
-                      fontSize: THEME.typography.fontSize.sm,
-                      color: "#92400E",
-                      minWidth: 50,
-                    }}
-                  >
-                    {star} star
-                  </span>
-                  <div
-                    style={{
-                      flex: 1,
-                      height: 8,
-                      backgroundColor: "#FDE68A",
-                      borderRadius: THEME.borderRadius.full,
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: "100%",
-                        width: `${percentage}%`,
-                        backgroundColor: "#F59E0B",
-                        borderRadius: THEME.borderRadius.full,
-                        transition: `width ${THEME.transitions.DEFAULT}`,
-                      }}
-                    />
-                  </div>
-                  <span
-                    style={{
-                      fontSize: THEME.typography.fontSize.sm,
-                      color: "#92400E",
-                      minWidth: 40,
-                      textAlign: "right",
-                    }}
-                  >
-                    {percentage}%
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Quick Stats */}
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: THEME.spacing[3],
-              minWidth: 150,
-            }}
-          >
-            {[
-              {
-                label: "Would Recommend",
-                value: "96%",
-                icon: <FiThumbsUp size={16} />,
-              },
-              {
-                label: "Return Visitors",
-                value: "42%",
-                icon: <FiRefreshCw size={16} />,
-              },
-              {
-                label: "With Photos",
-                value: "78%",
-                icon: <FiCamera size={16} />,
-              },
-            ].map((stat, i) => (
-              <div
-                key={i}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: THEME.spacing[2],
-                  padding: THEME.spacing[2],
-                  backgroundColor: "rgba(255,255,255,0.5)",
-                  borderRadius: THEME.borderRadius.lg,
-                }}
-              >
-                <span style={{ color: "#92400E" }}>{stat.icon}</span>
-                <div>
-                  <div
-                    style={{
-                      fontSize: THEME.typography.fontSize.sm,
-                      fontWeight: THEME.typography.fontWeight.bold,
-                      color: "#92400E",
-                    }}
-                  >
-                    {stat.value}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: THEME.typography.fontSize.xs,
-                      color: "#B45309",
-                    }}
-                  >
-                    {stat.label}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Filters & Sort */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: THEME.spacing[4],
-            marginBottom: THEME.spacing[5],
-            flexWrap: "wrap",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: THEME.spacing[2],
-            }}
-          >
-            <span
-              style={{
-                fontSize: THEME.typography.fontSize.sm,
-                color: THEME.colors.neutral[500],
-              }}
-            >
-              Filter:
-            </span>
-            {[0, 5, 4, 3].map((rating) => (
-              <button
-                key={rating}
-                onClick={() =>
-                  setFilterRating(filterRating === rating ? 0 : rating)
-                }
-                style={{
-                  padding: `${THEME.spacing[1]} ${THEME.spacing[3]}`,
-                  borderRadius: THEME.borderRadius.full,
-                  border: `1px solid ${filterRating === rating ? THEME.colors.primary[500] : THEME.colors.neutral[300]}`,
-                  backgroundColor:
-                    filterRating === rating
-                      ? THEME.colors.primary[50]
-                      : THEME.colors.neutral[0],
-                  color:
-                    filterRating === rating
-                      ? THEME.colors.primary[600]
-                      : THEME.colors.neutral[600],
-                  fontSize: THEME.typography.fontSize.sm,
-                  fontWeight: THEME.typography.fontWeight.medium,
-                  cursor: "pointer",
-                  transition: `all ${THEME.transitions.fast}`,
-                }}
-              >
-                {rating === 0 ? "All" : `${rating}+ ★`}
-              </button>
-            ))}
-          </div>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: THEME.spacing[2],
-            }}
-          >
-            <span
-              style={{
-                fontSize: THEME.typography.fontSize.sm,
-                color: THEME.colors.neutral[500],
-              }}
-            >
-              Sort by:
-            </span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              style={{
-                padding: `${THEME.spacing[2]} ${THEME.spacing[3]}`,
-                borderRadius: THEME.borderRadius.lg,
-                border: `1px solid ${THEME.colors.neutral[300]}`,
-                backgroundColor: THEME.colors.neutral[0],
-                fontSize: THEME.typography.fontSize.sm,
-                fontWeight: THEME.typography.fontWeight.medium,
-                color: THEME.colors.neutral[700],
-                cursor: "pointer",
-                outline: "none",
-              }}
-            >
-              <option value="recent">Most Recent</option>
-              <option value="helpful">Most Helpful</option>
-              <option value="highest">Highest Rated</option>
-              <option value="lowest">Lowest Rated</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Reviews List */}
-        {displayedReviews.length === 0 ? (
-          <EmptyState
-            icon={<FiMessageCircle size={32} />}
-            title="No reviews match your filter"
-            description="Try adjusting your filters to see more reviews"
-            action={
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => setFilterRating(0)}
-              >
-                Clear Filters
-              </Button>
-            }
-          />
-        ) : (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: THEME.spacing[4],
-            }}
-          >
-            {displayedReviews.map((review) => (
-              <div
-                key={review.id}
-                style={{
-                  padding: THEME.spacing[5],
-                  backgroundColor: THEME.colors.neutral[50],
-                  borderRadius: THEME.borderRadius["2xl"],
-                  border: `1px solid ${THEME.colors.neutral[200]}`,
-                }}
-              >
-                {/* Review Header */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    justifyContent: "space-between",
-                    marginBottom: THEME.spacing[4],
-                    gap: THEME.spacing[4],
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: THEME.spacing[3],
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: 52,
-                        height: 52,
-                        borderRadius: THEME.borderRadius.full,
-                        backgroundColor: THEME.colors.primary[100],
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "24px",
-                      }}
-                    >
-                      {review.author.avatar}
-                    </div>
-                    <div>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: THEME.spacing[2],
-                          marginBottom: THEME.spacing[1],
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: THEME.typography.fontSize.base,
-                            fontWeight: THEME.typography.fontWeight.bold,
-                            color: THEME.colors.neutral[900],
-                          }}
-                        >
-                          {review.author.name}
-                        </span>
-                        {review.verified && (
-                          <Badge
-                            variant="success"
-                            size="sm"
-                            icon={<FiCheckCircle size={10} />}
-                          >
-                            Verified
-                          </Badge>
-                        )}
-                      </div>
-                      <div
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: THEME.spacing[2],
-                          fontSize: THEME.typography.fontSize.xs,
-                          color: THEME.colors.neutral[500],
-                        }}
-                      >
-                        <span>{review.author.location}</span>
-                        <span>•</span>
-                        <span>{review.author.trips} trips</span>
-                        <span>•</span>
-                        <span>{formatRelativeTime(review.date)}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <StarRating rating={review.rating} size={16} />
-                </div>
-
-                {/* Review Content */}
-                <h4
-                  style={{
-                    fontSize: THEME.typography.fontSize.lg,
-                    fontWeight: THEME.typography.fontWeight.bold,
-                    color: THEME.colors.neutral[900],
-                    marginBottom: THEME.spacing[2],
-                  }}
-                >
-                  {review.title}
-                </h4>
-                <p
-                  style={{
-                    fontSize: THEME.typography.fontSize.sm,
-                    color: THEME.colors.neutral[600],
-                    lineHeight: THEME.typography.lineHeight.relaxed,
-                    marginBottom: THEME.spacing[4],
-                  }}
-                >
-                  {review.content}
-                </p>
-
-                {/* Photos */}
-                {review.photos > 0 && (
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: THEME.spacing[2],
-                      marginBottom: THEME.spacing[4],
-                      padding: THEME.spacing[3],
-                      backgroundColor: THEME.colors.neutral[100],
-                      borderRadius: THEME.borderRadius.lg,
-                      width: "fit-content",
-                    }}
-                  >
-                    <FiCamera
-                      size={16}
-                      style={{ color: THEME.colors.neutral[500] }}
-                    />
-                    <span
-                      style={{
-                        fontSize: THEME.typography.fontSize.sm,
-                        color: THEME.colors.neutral[600],
-                      }}
-                    >
-                      {review.photos} photos attached
-                    </span>
-                    <Button variant="ghost" size="xs">
-                      View
-                    </Button>
-                  </div>
-                )}
-
-                {/* Response */}
-                {review.response && (
-                  <div
-                    style={{
-                      padding: THEME.spacing[4],
-                      backgroundColor: THEME.colors.primary[50],
-                      borderRadius: THEME.borderRadius.xl,
-                      borderLeft: `4px solid ${THEME.colors.primary[500]}`,
-                      marginBottom: THEME.spacing[4],
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: THEME.spacing[2],
-                        marginBottom: THEME.spacing[2],
-                      }}
-                    >
-                      <FiMessageCircle
-                        size={14}
-                        style={{ color: THEME.colors.primary[600] }}
-                      />
-                      <span
-                        style={{
-                          fontSize: THEME.typography.fontSize.sm,
-                          fontWeight: THEME.typography.fontWeight.semibold,
-                          color: THEME.colors.primary[700],
-                        }}
-                      >
-                        Response from {review.response.author}
-                      </span>
-                    </div>
-                    <p
-                      style={{
-                        fontSize: THEME.typography.fontSize.sm,
-                        color: THEME.colors.neutral[600],
-                        lineHeight: THEME.typography.lineHeight.relaxed,
-                      }}
-                    >
-                      {review.response.content}
-                    </p>
-                  </div>
-                )}
-
-                {/* Actions */}
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: THEME.spacing[4],
-                  }}
-                >
-                  <button
-                    onClick={() => {
-                      toggleHelpful(review.id);
-                      toast.success(
-                        helpfulReviews[review.id]
-                          ? "Removed helpful vote"
-                          : "Marked as helpful!",
-                      );
-                    }}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: THEME.spacing[2],
-                      padding: `${THEME.spacing[2]} ${THEME.spacing[3]}`,
-                      borderRadius: THEME.borderRadius.lg,
-                      border: `1px solid ${helpfulReviews[review.id] ? THEME.colors.primary[300] : THEME.colors.neutral[300]}`,
-                      backgroundColor: helpfulReviews[review.id]
-                        ? THEME.colors.primary[50]
-                        : THEME.colors.neutral[0],
-                      color: helpfulReviews[review.id]
-                        ? THEME.colors.primary[600]
-                        : THEME.colors.neutral[600],
-                      fontSize: THEME.typography.fontSize.sm,
-                      fontWeight: THEME.typography.fontWeight.medium,
-                      cursor: "pointer",
-                      transition: `all ${THEME.transitions.fast}`,
-                    }}
-                  >
-                    <FiThumbsUp
-                      size={14}
-                      style={{
-                        fill: helpfulReviews[review.id]
-                          ? "currentColor"
-                          : "none",
-                      }}
-                    />
-                    Helpful (
-                    {review.helpful + (helpfulReviews[review.id] ? 1 : 0)})
-                  </button>
-                  <button
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: THEME.spacing[2],
-                      padding: `${THEME.spacing[2]} ${THEME.spacing[3]}`,
-                      borderRadius: THEME.borderRadius.lg,
-                      border: `1px solid ${THEME.colors.neutral[300]}`,
-                      backgroundColor: THEME.colors.neutral[0],
-                      color: THEME.colors.neutral[600],
-                      fontSize: THEME.typography.fontSize.sm,
-                      fontWeight: THEME.typography.fontWeight.medium,
-                      cursor: "pointer",
-                      transition: `all ${THEME.transitions.fast}`,
-                    }}
-                  >
-                    <FiShare2 size={14} />
-                    Share
-                  </button>
-                  <button
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: THEME.spacing[2],
-                      padding: `${THEME.spacing[2]} ${THEME.spacing[3]}`,
-                      borderRadius: THEME.borderRadius.lg,
-                      border: "none",
-                      backgroundColor: "transparent",
-                      color: THEME.colors.neutral[500],
-                      fontSize: THEME.typography.fontSize.sm,
-                      fontWeight: THEME.typography.fontWeight.medium,
-                      cursor: "pointer",
-                    }}
-                  >
-                    <FiAlertCircle size={14} />
-                    Report
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Show More Button */}
-        {filteredReviews.length > 3 && (
-          <Button
-            variant="secondary"
-            fullWidth
-            onClick={() => setShowAllReviews(!showAllReviews)}
-            icon={
-              showAllReviews ? (
-                <FiChevronUp size={18} />
-              ) : (
-                <FiChevronDown size={18} />
-              )
-            }
-            style={{ marginTop: THEME.spacing[5] }}
-          >
-            {showAllReviews
-              ? "Show Less"
-              : `Show All ${filteredReviews.length} Reviews`}
-          </Button>
-        )}
-      </Card>
-    </div>
-  );
-};
-
-// Sidebar Component
-const Sidebar = ({ destination, country, isMobile, onShare, toast }) => {
-  const { copied, copy } = useClipboard();
-
-  if (isMobile) return null;
-
-  const handleCopyLink = () => {
-    copy(window.location.href);
-    toast.success("Link copied to clipboard!");
-  };
-
-  return (
-    <aside
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: THEME.spacing[5],
-      }}
-    >
-      {/* Main Booking Card */}
-      <div
-        style={{
-          backgroundColor: THEME.colors.neutral[0],
-          borderRadius: THEME.borderRadius["2xl"],
-          padding: THEME.spacing[6],
-          boxShadow: THEME.shadows.xl,
-          border: `1px solid ${THEME.colors.neutral[200]}`,
-          position: "sticky",
-          top: 80,
-        }}
-      >
-        {/* Rating */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: THEME.spacing[4],
-            padding: THEME.spacing[4],
-            backgroundColor: "#FEF3C7",
-            borderRadius: THEME.borderRadius.xl,
-            marginBottom: THEME.spacing[5],
-          }}
-        >
-          <div
-            style={{
-              fontFamily: THEME.typography.fontFamily.heading,
-              fontSize: THEME.typography.fontSize["4xl"],
-              fontWeight: THEME.typography.fontWeight.bold,
-              color: "#92400E",
-            }}
-          >
-            {destination.rating}
-          </div>
-          <div>
-            <StarRating rating={destination.rating} size={16} />
-            <div
-              style={{
-                fontSize: THEME.typography.fontSize.sm,
-                color: "#92400E",
-                marginTop: THEME.spacing[1],
-              }}
-            >
-              {destination.reviews}+ reviews
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Info Grid */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: THEME.spacing[3],
-            marginBottom: THEME.spacing[5],
-          }}
-        >
-          {[
-            {
-              icon: <FiClock size={18} />,
-              value: destination.duration,
-              label: "Duration",
-            },
-            {
-              icon: <FiUsers size={18} />,
-              value: destination.difficulty,
-              label: "Difficulty",
-            },
-            {
-              icon: <FiMapPin size={18} />,
-              value: destination.type,
-              label: "Type",
-            },
-            {
-              icon: <FiCalendar size={18} />,
-              value: "Spring",
-              label: "Best Time",
-            },
-          ].map((item, i) => (
-            <div
-              key={i}
-              style={{
-                padding: THEME.spacing[4],
-                backgroundColor: THEME.colors.neutral[50],
-                borderRadius: THEME.borderRadius.xl,
-                textAlign: "center",
-                border: `1px solid ${THEME.colors.neutral[200]}`,
-              }}
-            >
-              <div
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: THEME.borderRadius.lg,
-                  backgroundColor: THEME.colors.primary[100],
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  margin: `0 auto ${THEME.spacing[2]}`,
-                  color: THEME.colors.primary[600],
-                }}
-              >
-                {item.icon}
-              </div>
-              <div
-                style={{
-                  fontSize: THEME.typography.fontSize.sm,
-                  fontWeight: THEME.typography.fontWeight.bold,
-                  color: THEME.colors.neutral[900],
-                }}
-              >
-                {item.value}
-              </div>
-              <div
-                style={{
-                  fontSize: THEME.typography.fontSize.xs,
-                  color: THEME.colors.neutral[500],
-                }}
-              >
-                {item.label}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* CTA Buttons */}
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: THEME.spacing[3],
-            marginBottom: THEME.spacing[5],
-          }}
-        >
-          <Button to="/contact" icon={<FiMail size={18} />} fullWidth size="lg">
-            Request Information
-          </Button>
-          <Button
-            to="/booking"
-            variant="secondary"
-            icon={<FiCalendar size={18} />}
-            fullWidth
-          >
-            Plan My Trip
-          </Button>
-          <Button
-            variant="outline"
-            icon={<FiDownload size={18} />}
-            fullWidth
-            onClick={() => toast.info("Download starting...")}
-          >
-            Download Guide (PDF)
-          </Button>
-        </div>
-
-        {/* Features */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: THEME.spacing[2],
-            marginBottom: THEME.spacing[5],
-          }}
-        >
-          {[
-            "Free Cancellation",
-            "Expert Guides",
-            "Small Groups",
-            "24/7 Support",
-          ].map((feature, i) => (
-            <Badge
-              key={i}
-              variant="success"
-              size="sm"
-              icon={<FiCheck size={10} />}
-            >
-              {feature}
-            </Badge>
-          ))}
-        </div>
-
-        {/* Contact Info */}
-        <div
-          style={{
-            padding: THEME.spacing[5],
-            backgroundColor: THEME.colors.primary[50],
-            borderRadius: THEME.borderRadius.xl,
-            border: `2px solid ${THEME.colors.primary[200]}`,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: THEME.spacing[2],
-              marginBottom: THEME.spacing[4],
-              fontSize: THEME.typography.fontSize.base,
-              fontWeight: THEME.typography.fontWeight.bold,
-              color: THEME.colors.neutral[900],
-            }}
-          >
-            <FiPhone size={18} style={{ color: THEME.colors.primary[600] }} />
-            Need Help Planning?
-          </div>
-          {[
-            {
-              icon: <FiPhone size={16} />,
-              text: (
-                <span>
-                  +250 780 702 773
-                  <br />
-                  +250 792 352 409
-                </span>
-              ),
-              action: "tel:+250780702773",
-            },
-            {
-              icon: <FiMail size={16} />,
-              text: "altuverasafari@gmail.com",
-              action: "mailto:altuverasafari@gmail.com",
-            },
-            {
-              icon: <FiMessageCircle size={16} />,
-              text: "Live Chat Available",
-              action: null,
-            },
-          ].map((contact, i) => (
-            <a
-              key={i}
-              href={contact.action || "#"}
-              onClick={
-                contact.action
-                  ? undefined
-                  : (e) => {
-                      e.preventDefault();
-                      toast.info("Opening chat...");
-                    }
-              }
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: THEME.spacing[3],
-                padding: `${THEME.spacing[3]} 0`,
-                fontSize: THEME.typography.fontSize.sm,
-                color: THEME.colors.neutral[700],
-                textDecoration: "none",
-                borderBottom:
-                  i < 2 ? `1px solid ${THEME.colors.primary[200]}` : "none",
-                transition: `color ${THEME.transitions.fast}`,
-              }}
-            >
-              <span style={{ color: THEME.colors.primary[600] }}>
-                {contact.icon}
-              </span>
-              {contact.text}
-            </a>
-          ))}
-        </div>
-      </div>
-
-      {/* Map Card */}
-      <div
-        style={{
-          backgroundColor: THEME.colors.neutral[0],
-          borderRadius: THEME.borderRadius["2xl"],
-          overflow: "hidden",
-          boxShadow: THEME.shadows.lg,
-          border: `1px solid ${THEME.colors.neutral[200]}`,
-        }}
-      >
-        <div
-          style={{
-            height: 200,
-            backgroundColor: THEME.colors.neutral[200],
-            backgroundImage:
-              'url("https://images.unsplash.com/photo-1524661135-423995f22d0b?w=600")',
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            position: "relative",
-          }}
-        >
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              backgroundColor: "rgba(0,0,0,0.3)",
-            }}
-          />
-          <Button
-            variant="primary"
-            size="sm"
-            icon={<FiMap size={16} />}
-            onClick={() => toast.info("Opening map...")}
-            style={{ position: "relative", zIndex: 1 }}
-          >
-            View on Map
-          </Button>
-        </div>
-        <div style={{ padding: THEME.spacing[4] }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: THEME.spacing[2],
-              marginBottom: THEME.spacing[2],
-            }}
-          >
-            <FiMapPin size={16} style={{ color: THEME.colors.primary[600] }} />
-            <span
-              style={{
-                fontSize: THEME.typography.fontSize.sm,
-                fontWeight: THEME.typography.fontWeight.semibold,
-                color: THEME.colors.neutral[900],
-              }}
-            >
-              {destination.name}
-            </span>
-          </div>
-          <p
-            style={{
-              fontSize: THEME.typography.fontSize.xs,
-              color: THEME.colors.neutral[500],
-            }}
-          >
-            {country?.name || "Location"} • Click to view interactive map
-          </p>
-        </div>
-      </div>
-
-      {/* Share Card */}
-      <div
-        style={{
-          backgroundColor: THEME.colors.neutral[0],
-          borderRadius: THEME.borderRadius["2xl"],
-          padding: THEME.spacing[5],
-          boxShadow: THEME.shadows.lg,
-          border: `1px solid ${THEME.colors.neutral[200]}`,
-        }}
-      >
-        <div
-          style={{
-            fontSize: THEME.typography.fontSize.base,
-            fontWeight: THEME.typography.fontWeight.bold,
-            color: THEME.colors.neutral[900],
-            marginBottom: THEME.spacing[4],
-          }}
-        >
-          Share This Destination
-        </div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: THEME.spacing[3],
-          }}
-        >
-          {[
-            { icon: "📋", label: "Copy", action: handleCopyLink },
-            {
-              icon: "✉️",
-              label: "Email",
-              action: () =>
-                window.open(
-                  `mailto:?subject=${encodeURIComponent(destination.name)}&body=${encodeURIComponent(window.location.href)}`,
-                ),
-            },
-            {
-              icon: "💬",
-              label: "WhatsApp",
-              action: () =>
-                window.open(
-                  `https://wa.me/?text=${encodeURIComponent(destination.name + " " + window.location.href)}`,
-                ),
-            },
-            {
-              icon: "🐦",
-              label: "Twitter",
-              action: () =>
-                window.open(
-                  `https://twitter.com/intent/tweet?text=${encodeURIComponent(destination.name)}&url=${encodeURIComponent(window.location.href)}`,
-                ),
-            },
-          ].map((option, i) => (
-            <button
-              key={i}
-              onClick={option.action}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                gap: THEME.spacing[2],
-                padding: THEME.spacing[3],
-                backgroundColor: THEME.colors.neutral[50],
-                border: `1px solid ${THEME.colors.neutral[200]}`,
-                borderRadius: THEME.borderRadius.xl,
-                cursor: "pointer",
-                transition: `all ${THEME.transitions.fast}`,
-              }}
-            >
-              <span style={{ fontSize: "22px" }}>{option.icon}</span>
-              <span
-                style={{
-                  fontSize: THEME.typography.fontSize.xs,
-                  fontWeight: THEME.typography.fontWeight.semibold,
-                  color: THEME.colors.neutral[600],
-                }}
-              >
-                {option.label}
-              </span>
-            </button>
-          ))}
-        </div>
-      </div>
-    </aside>
-  );
-};
-
-// Related Destinations Component
-const RelatedDestinations = ({ destinations, country, isMobile, isTablet }) => {
-  if (!destinations || destinations.length === 0) return null;
+  if (infoItems.length === 0) return null;
 
   return (
     <section
       style={{
-        marginTop: THEME.spacing[16],
-        paddingTop: THEME.spacing[12],
-        borderTop: `2px solid ${THEME.colors.neutral[200]}`,
+        background: theme.white,
+        borderBottom: `1px solid ${theme.gray200}`,
+        position: "sticky",
+        top: 0,
+        zIndex: 50,
+        boxShadow: theme.shadowSm,
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          justifyContent: "space-between",
-          marginBottom: THEME.spacing[8],
-          gap: THEME.spacing[4],
-          flexWrap: "wrap",
-        }}
-      >
-        <SectionHeader
-          icon={<FiCompass size={24} />}
-          title={`More in ${country?.name || "This Region"}`}
-          subtitle="Discover similar destinations"
-        />
-        <Button
-          to={`/country/${destinations[0]?.countryId || destinations[0]?.country_id}`}
-          variant="ghost"
-          icon={<FiArrowRight size={18} />}
-          iconPosition="right"
+      <Container>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile 
+              ? `repeat(${Math.min(infoItems.length, 2)}, 1fr)` 
+              : `repeat(${Math.min(infoItems.length, 5)}, 1fr)`,
+            gap: isMobile ? 16 : 0,
+            padding: isMobile ? "20px 0" : "24px 0",
+          }}
         >
-          View All
-        </Button>
-      </div>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile
-            ? "1fr"
-            : isTablet
-              ? "repeat(2, 1fr)"
-              : "repeat(3, 1fr)",
-          gap: THEME.spacing[6],
-        }}
-      >
-        {destinations.map((dest, i) => (
-          <Link
-            key={dest.id}
-            to={`/destination/${dest.id}`}
-            style={{
-              backgroundColor: THEME.colors.neutral[0],
-              borderRadius: THEME.borderRadius["2xl"],
-              overflow: "hidden",
-              boxShadow: THEME.shadows.lg,
-              border: `1px solid ${THEME.colors.neutral[200]}`,
-              textDecoration: "none",
-              transition: `all ${THEME.transitions.DEFAULT}`,
-              animation: `fadeInUp 0.5s ease ${i * 0.1}s both`,
-            }}
-          >
+          {infoItems.map((item, i) => (
             <div
-              style={{ position: "relative", height: 200, overflow: "hidden" }}
+              key={i}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                textAlign: "center",
+                padding: isMobile ? "12px" : "16px 24px",
+                borderRight: !isMobile && i < infoItems.length - 1 
+                  ? `1px solid ${theme.gray200}` 
+                  : "none",
+              }}
             >
-              <img
-                src={dest.images?.[0]}
-                alt={dest.name}
+              <span style={{ fontSize: 28, marginBottom: 8 }}>{item.icon}</span>
+              <span
                 style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                  transition: `transform ${THEME.transitions.slow}`,
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  top: THEME.spacing[3],
-                  right: THEME.spacing[3],
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: theme.gray500,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.5px",
+                  marginBottom: 4,
                 }}
               >
-                <Badge>{dest.type}</Badge>
-              </div>
+                {item.label}
+              </span>
+              {item.badge ? (
+                <Badge 
+                  variant={item.value === "easy" ? "success" : item.value === "moderate" ? "warning" : "info"} 
+                  size="sm"
+                >
+                  {item.value}
+                </Badge>
+              ) : (
+                <span
+                  style={{
+                    fontSize: 15,
+                    fontWeight: 700,
+                    color: item.highlight ? theme.primary : theme.gray800,
+                  }}
+                >
+                  {item.value}
+                </span>
+              )}
             </div>
-            <div style={{ padding: THEME.spacing[5] }}>
-              <h4
-                style={{
-                  fontFamily: THEME.typography.fontFamily.heading,
-                  fontSize: THEME.typography.fontSize.xl,
-                  fontWeight: THEME.typography.fontWeight.bold,
-                  color: THEME.colors.neutral[900],
-                  marginBottom: THEME.spacing[3],
-                }}
-              >
-                {dest.name}
-              </h4>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: THEME.spacing[4],
-                  fontSize: THEME.typography.fontSize.sm,
-                  color: THEME.colors.neutral[500],
-                }}
-              >
-                <span
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: THEME.spacing[1],
-                  }}
-                >
-                  <FiStar
-                    size={14}
-                    style={{
-                      fill: THEME.colors.semantic.warning,
-                      color: THEME.colors.semantic.warning,
-                    }}
-                  />
-                  {dest.rating}
-                </span>
-                <span
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: THEME.spacing[1],
-                  }}
-                >
-                  <FiClock size={14} />
-                  {dest.duration}
-                </span>
-                <span
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: THEME.spacing[1],
-                  }}
-                >
-                  <FiUsers size={14} />
-                  {dest.difficulty}
-                </span>
-              </div>
-            </div>
-          </Link>
-        ))}
-      </div>
+          ))}
+        </div>
+      </Container>
     </section>
   );
 };
 
-// Mobile CTA Component
-const MobileCTA = ({ destination, isFavorite, onToggleFavorite, toast }) => (
+/* ═══════════════════════════════════════════════════
+   OVERVIEW SECTION
+   ═══════════════════════════════════════════════════ */
+
+const Overview = ({ destination, isMobile }) => {
+  const d = destination;
+  const description = d.description || d.shortDescription;
+
+  if (!description && !d.overview) return null;
+
+  return (
+    <section
+      style={{
+        background: theme.white,
+        padding: isMobile ? "64px 0" : "96px 0",
+      }}
+    >
+      <Container>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr",
+            gap: isMobile ? 48 : 64,
+            alignItems: "start",
+          }}
+        >
+          {/* Main Content */}
+          <div>
+            <SectionTitle isMobile={isMobile}>
+              About This Destination
+            </SectionTitle>
+
+            {/* Overview Box */}
+            {d.overview && (
+              <div
+                style={{
+                  background: theme.primaryMuted,
+                  borderLeft: `4px solid ${theme.primary}`,
+                  borderRadius: `0 ${theme.radiusMd} ${theme.radiusMd} 0`,
+                  padding: isMobile ? 20 : 28,
+                  marginBottom: 32,
+                }}
+              >
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 17,
+                    fontWeight: 500,
+                    color: theme.primaryDarker,
+                    lineHeight: 1.7,
+                    fontStyle: "italic",
+                  }}
+                >
+                  {d.overview}
+                </p>
+              </div>
+            )}
+
+            {/* Description */}
+            {description && (
+              <div style={{ fontSize: 16, lineHeight: 1.85, color: theme.gray600 }}>
+                {description.split("\n\n").map((paragraph, i) => (
+                  <p key={i} style={{ margin: i > 0 ? "24px 0 0" : 0 }}>
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            )}
+
+            {/* Key Info Tags */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 32 }}>
+              {d.isFamilyFriendly && (
+                <Badge variant="success" size="lg" icon="👨‍👩‍👧‍👦">
+                  Family Friendly
+                </Badge>
+              )}
+              {d.isEcoFriendly && (
+                <Badge variant="primary" size="lg" icon="🌿">
+                  Eco-Friendly
+                </Badge>
+              )}
+              {d.minAge && (
+                <Badge variant="info" size="lg" icon="📋">
+                  Min Age: {d.minAge}+
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          {/* Sidebar - Booking Card */}
+          <div style={{ position: "sticky", top: 100 }}>
+            <Card hover={false} style={{ border: `2px solid ${theme.primary}` }}>
+              {/* Price / CTA Header */}
+              <div
+                style={{
+                  background: theme.primary,
+                  padding: "24px",
+                  textAlign: "center",
+                }}
+              >
+                <p
+                  style={{
+                    margin: "0 0 4px",
+                    fontSize: 14,
+                    color: "rgba(255,255,255,0.8)",
+                    fontWeight: 500,
+                  }}
+                >
+                  Starting from
+                </p>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 32,
+                    fontWeight: 800,
+                    color: theme.white,
+                    fontFamily: theme.fontSans,
+                  }}
+                >
+                  {d.entranceFee || "Contact for Price"}
+                </p>
+              </div>
+
+              <div style={{ padding: 24 }}>
+                <Button fullWidth size="lg" style={{ marginBottom: 16 }}>
+                  Book Now
+                </Button>
+                <Button variant="outline" fullWidth size="md">
+                  Contact Us
+                </Button>
+
+                <Divider />
+
+                {/* Quick Facts */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                  {d.operatingHours && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <IconBox icon="🕐" size={40} />
+                      <div>
+                        <p style={{ margin: 0, fontSize: 12, color: theme.gray500, fontWeight: 500 }}>
+                          Operating Hours
+                        </p>
+                        <p style={{ margin: 0, fontSize: 14, color: theme.gray800, fontWeight: 600 }}>
+                          {d.operatingHours}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {d.nearestCity && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <IconBox icon="🏙️" size={40} />
+                      <div>
+                        <p style={{ margin: 0, fontSize: 12, color: theme.gray500, fontWeight: 500 }}>
+                          Nearest City
+                        </p>
+                        <p style={{ margin: 0, fontSize: 14, color: theme.gray800, fontWeight: 600 }}>
+                          {d.nearestCity}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {d.nearestAirport && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <IconBox icon="✈️" size={40} />
+                      <div>
+                        <p style={{ margin: 0, fontSize: 12, color: theme.gray500, fontWeight: 500 }}>
+                          Nearest Airport
+                        </p>
+                        <p style={{ margin: 0, fontSize: 14, color: theme.gray800, fontWeight: 600 }}>
+                          {d.nearestAirport}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {d.altitudeMeters && (
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <IconBox icon="⛰️" size={40} />
+                      <div>
+                        <p style={{ margin: 0, fontSize: 12, color: theme.gray500, fontWeight: 500 }}>
+                          Altitude
+                        </p>
+                        <p style={{ margin: 0, fontSize: 14, color: theme.gray800, fontWeight: 600 }}>
+                          {d.altitudeMeters.toLocaleString()}m
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </Container>
+    </section>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   HIGHLIGHTS SECTION
+   ═══════════════════════════════════════════════════ */
+
+const Highlights = ({ destination, isMobile }) => {
+  const highlights = destination.highlights || [];
+
+  if (highlights.length === 0) return null;
+
+  return (
+    <section
+      style={{
+        background: theme.gray50,
+        padding: isMobile ? "64px 0" : "96px 0",
+      }}
+    >
+      <Container>
+        <SectionTitle
+          subtitle={`What makes ${destination.name} special`}
+          isMobile={isMobile}
+        >
+          Highlights
+        </SectionTitle>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+            gap: 24,
+          }}
+        >
+          {highlights.map((highlight, i) => (
+            <Card
+              key={i}
+              padding={isMobile ? 24 : 32}
+              style={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 16,
+              }}
+            >
+              <div
+                style={{
+                  width: 48,
+                  height: 48,
+                  borderRadius: "50%",
+                  background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  color: theme.white,
+                  fontWeight: 800,
+                  fontSize: 18,
+                  flexShrink: 0,
+                }}
+              >
+                {i + 1}
+              </div>
+              <p
+                style={{
+                  margin: 0,
+                  fontSize: 16,
+                  color: theme.gray700,
+                  lineHeight: 1.6,
+                  fontWeight: 500,
+                }}
+              >
+                {highlight}
+              </p>
+            </Card>
+          ))}
+        </div>
+      </Container>
+    </section>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   ACTIVITIES SECTION
+   ═══════════════════════════════════════════════════ */
+
+const Activities = ({ destination, isMobile }) => {
+  const activities = destination.activities || [];
+
+  if (activities.length === 0) return null;
+
+  const activityIcons = {
+    "Game drives": "🚙",
+    "Hot air balloon safari": "🎈",
+    "Bush walks": "🚶",
+    "Cultural village visits": "🏘️",
+    "Bird watching": "🦅",
+    "Photography safaris": "📷",
+    "Night game drives": "🌙",
+    "Bush breakfast": "🍳",
+    "default": "✨",
+  };
+
+  return (
+    <section
+      style={{
+        background: theme.white,
+        padding: isMobile ? "64px 0" : "96px 0",
+      }}
+    >
+      <Container>
+        <SectionTitle
+          subtitle="Experiences awaiting you"
+          isMobile={isMobile}
+        >
+          Things To Do
+        </SectionTitle>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
+            gap: 20,
+          }}
+        >
+          {activities.map((activity, i) => (
+            <Card
+              key={i}
+              padding={24}
+              style={{ textAlign: "center" }}
+            >
+              <div
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: "50%",
+                  background: theme.primaryMuted,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 32,
+                  margin: "0 auto 16px",
+                }}
+              >
+                {activityIcons[activity] || activityIcons.default}
+              </div>
+              <h4
+                style={{
+                  margin: 0,
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: theme.gray800,
+                }}
+              >
+                {activity}
+              </h4>
+            </Card>
+          ))}
+        </div>
+      </Container>
+    </section>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   WILDLIFE SECTION
+   ═══════════════════════════════════════════════════ */
+
+const Wildlife = ({ destination, isMobile }) => {
+  const wildlife = destination.wildlife || [];
+
+  if (wildlife.length === 0) return null;
+
+  const animalIcons = {
+    "Lion": "🦁",
+    "Leopard": "🐆",
+    "Cheetah": "🐆",
+    "African Elephant": "🐘",
+    "Elephant": "🐘",
+    "Cape Buffalo": "🐃",
+    "Buffalo": "🐃",
+    "Wildebeest": "🦬",
+    "Zebra": "🦓",
+    "Hippopotamus": "🦛",
+    "Nile Crocodile": "🐊",
+    "Crocodile": "🐊",
+    "Giraffe": "🦒",
+    "Hyena": "🐺",
+    "African Wild Dog": "🐕",
+    "Rhinoceros": "🦏",
+    "Rhino": "🦏",
+    "default": "🦌",
+  };
+
+  return (
+    <section
+      style={{
+        background: theme.gray50,
+        padding: isMobile ? "64px 0" : "96px 0",
+      }}
+    >
+      <Container>
+        <SectionTitle
+          subtitle={`Incredible species you may encounter at ${destination.name}`}
+          isMobile={isMobile}
+        >
+          Wildlife
+        </SectionTitle>
+
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 16,
+            justifyContent: "center",
+          }}
+        >
+          {wildlife.map((animal, i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                background: theme.white,
+                padding: "14px 22px",
+                borderRadius: theme.radiusFull,
+                border: `1px solid ${theme.gray200}`,
+                boxShadow: theme.shadowSm,
+                transition: `all ${theme.transitionBase}`,
+              }}
+              className="hover-lift"
+            >
+              <span style={{ fontSize: 24 }}>
+                {animalIcons[animal] || animalIcons.default}
+              </span>
+              <span
+                style={{
+                  fontSize: 15,
+                  fontWeight: 600,
+                  color: theme.gray700,
+                }}
+              >
+                {animal}
+              </span>
+            </div>
+          ))}
+        </div>
+      </Container>
+    </section>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   GALLERY SECTION
+   ═══════════════════════════════════════════════════ */
+
+const Gallery = ({ destination, isMobile }) => {
+  const [lightbox, setLightbox] = useState({ open: false, index: 0 });
+  
+  const gallery = destination.gallery || [];
+  const images = gallery.length > 0 
+    ? gallery.map(g => g.imageUrl) 
+    : destination.images || [];
+
+  if (images.length === 0) return null;
+
+  return (
+    <section
+      style={{
+        background: theme.white,
+        padding: isMobile ? "64px 0" : "96px 0",
+      }}
+    >
+      <Container>
+        <SectionTitle
+          subtitle="Stunning visuals from this destination"
+          isMobile={isMobile}
+        >
+          Photo Gallery
+        </SectionTitle>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile 
+              ? "repeat(2, 1fr)" 
+              : images.length <= 4 
+                ? "repeat(4, 1fr)" 
+                : "repeat(4, 1fr)",
+            gap: 16,
+          }}
+        >
+          {images.slice(0, 8).map((img, i) => (
+            <div
+              key={i}
+              onClick={() => setLightbox({ open: true, index: i })}
+              style={{
+                position: "relative",
+                paddingBottom: i === 0 && !isMobile ? "100%" : "75%",
+                gridColumn: i === 0 && !isMobile && images.length > 4 ? "span 2" : "span 1",
+                gridRow: i === 0 && !isMobile && images.length > 4 ? "span 2" : "span 1",
+                borderRadius: theme.radiusMd,
+                overflow: "hidden",
+                cursor: "pointer",
+              }}
+              className="hover-scale"
+            >
+              <img
+                src={img}
+                alt={`${destination.name} - Photo ${i + 1}`}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+                className="img-zoom"
+              />
+              {/* Hover Overlay */}
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  background: "rgba(0,0,0,0)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  transition: `all ${theme.transitionBase}`,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "rgba(0,0,0,0.4)";
+                  e.currentTarget.querySelector("span").style.opacity = 1;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "rgba(0,0,0,0)";
+                  e.currentTarget.querySelector("span").style.opacity = 0;
+                }}
+              >
+                <span
+                  style={{
+                    color: theme.white,
+                    fontSize: 32,
+                    opacity: 0,
+                    transition: `opacity ${theme.transitionBase}`,
+                  }}
+                >
+                  🔍
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Lightbox */}
+        {lightbox.open && (
+          <div
+            onClick={() => setLightbox({ ...lightbox, open: false })}
+            style={{
+              position: "fixed",
+              inset: 0,
+              background: "rgba(0,0,0,0.95)",
+              zIndex: 1000,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: 24,
+            }}
+            className="fade-in"
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setLightbox({ ...lightbox, open: false })}
+              style={{
+                position: "absolute",
+                top: 24,
+                right: 24,
+                background: "rgba(255,255,255,0.1)",
+                border: "none",
+                color: theme.white,
+                width: 48,
+                height: 48,
+                borderRadius: "50%",
+                fontSize: 24,
+                cursor: "pointer",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              ✕
+            </button>
+
+            {/* Main Image */}
+            <img
+              src={images[lightbox.index]}
+              alt=""
+              style={{
+                maxWidth: "90vw",
+                maxHeight: "85vh",
+                objectFit: "contain",
+                borderRadius: theme.radiusMd,
+              }}
+              onClick={(e) => e.stopPropagation()}
+              className="scale-in"
+            />
+
+            {/* Navigation */}
+            {images.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLightbox({
+                      ...lightbox,
+                      index: (lightbox.index - 1 + images.length) % images.length,
+                    });
+                  }}
+                  style={{
+                    position: "absolute",
+                    left: 24,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "rgba(255,255,255,0.15)",
+                    border: "none",
+                    color: theme.white,
+                    width: 56,
+                    height: 56,
+                    borderRadius: "50%",
+                    fontSize: 24,
+                    cursor: "pointer",
+                  }}
+                >
+                  ←
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setLightbox({
+                      ...lightbox,
+                      index: (lightbox.index + 1) % images.length,
+                    });
+                  }}
+                  style={{
+                    position: "absolute",
+                    right: 24,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "rgba(255,255,255,0.15)",
+                    border: "none",
+                    color: theme.white,
+                    width: 56,
+                    height: 56,
+                    borderRadius: "50%",
+                    fontSize: 24,
+                    cursor: "pointer",
+                  }}
+                >
+                  →
+                </button>
+              </>
+            )}
+
+            {/* Counter */}
+            <div
+              style={{
+                position: "absolute",
+                bottom: 24,
+                left: "50%",
+                transform: "translateX(-50%)",
+                color: "rgba(255,255,255,0.7)",
+                fontSize: 14,
+              }}
+            >
+              {lightbox.index + 1} / {images.length}
+            </div>
+          </div>
+        )}
+      </Container>
+    </section>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   LOCATION & MAP SECTION
+   ═══════════════════════════════════════════════════ */
+
+const Location = ({ destination, isMobile }) => {
+  const d = destination;
+  const hasLocation = d.latitude && d.longitude;
+  const hasInfo = d.region || d.nearestCity || d.nearestAirport || d.gettingThere;
+
+  if (!hasLocation && !hasInfo) return null;
+
+  return (
+    <section
+      style={{
+        background: theme.gray50,
+        padding: isMobile ? "64px 0" : "96px 0",
+      }}
+    >
+      <Container>
+        <SectionTitle
+          subtitle="How to get there and where it's located"
+          isMobile={isMobile}
+        >
+          Location & Access
+        </SectionTitle>
+
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+            gap: 32,
+          }}
+        >
+          {/* Map */}
+          {hasLocation && (
+            <Card hover={false} style={{ overflow: "hidden", height: 400 }}>
+              <iframe
+                title="Location Map"
+                src={`https://www.google.com/maps?q=${d.latitude},${d.longitude}&z=12&output=embed`}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  border: "none",
+                }}
+                loading="lazy"
+                allowFullScreen
+              />
+            </Card>
+          )}
+
+          {/* Info Cards */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {d.region && (
+              <Card padding={24} style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                <IconBox icon="📍" size={56} />
+                <div>
+                  <p style={{ margin: "0 0 4px", fontSize: 13, color: theme.gray500, fontWeight: 500 }}>
+                    Region
+                  </p>
+                  <p style={{ margin: 0, fontSize: 18, color: theme.gray800, fontWeight: 700 }}>
+                    {d.region}
+                  </p>
+                </div>
+              </Card>
+            )}
+
+            {d.nearestCity && (
+              <Card padding={24} style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                <IconBox icon="🏙️" size={56} bg={theme.accentLight} />
+                <div>
+                  <p style={{ margin: "0 0 4px", fontSize: 13, color: theme.gray500, fontWeight: 500 }}>
+                    Nearest City
+                  </p>
+                  <p style={{ margin: 0, fontSize: 18, color: theme.gray800, fontWeight: 700 }}>
+                    {d.nearestCity}
+                  </p>
+                </div>
+              </Card>
+            )}
+
+            {d.nearestAirport && (
+              <Card padding={24} style={{ display: "flex", alignItems: "center", gap: 20 }}>
+                <IconBox icon="✈️" size={56} bg={theme.infoLight} color={theme.info} />
+                <div>
+                  <p style={{ margin: "0 0 4px", fontSize: 13, color: theme.gray500, fontWeight: 500 }}>
+                    Nearest Airport
+                  </p>
+                  <p style={{ margin: 0, fontSize: 18, color: theme.gray800, fontWeight: 700 }}>
+                    {d.nearestAirport}
+                  </p>
+                  {d.distanceFromAirportKm && (
+                    <p style={{ margin: "4px 0 0", fontSize: 14, color: theme.gray500 }}>
+                      {d.distanceFromAirportKm} km away
+                    </p>
+                  )}
+                </div>
+              </Card>
+            )}
+
+            {d.gettingThere && (
+              <Card padding={24}>
+                <h4 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 600, color: theme.gray800 }}>
+                  Getting There
+                </h4>
+                <p style={{ margin: 0, fontSize: 15, color: theme.gray600, lineHeight: 1.7 }}>
+                  {d.gettingThere}
+                </p>
+              </Card>
+            )}
+          </div>
+        </div>
+      </Container>
+    </section>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   PRACTICAL INFO SECTION
+   ═══════════════════════════════════════════════════ */
+
+const PracticalInfo = ({ destination, isMobile }) => {
+  const d = destination;
+  
+  const infoItems = [
+    { icon: "🎫", label: "Entrance Fee", value: d.entranceFee },
+    { icon: "🕐", label: "Operating Hours", value: d.operatingHours },
+    { icon: "📅", label: "Best Time to Visit", value: d.bestTimeToVisit },
+    { icon: "👥", label: "Group Size", value: d.minGroupSize && d.maxGroupSize ? `${d.minGroupSize} - ${d.maxGroupSize} people` : null },
+    { icon: "👶", label: "Minimum Age", value: d.minAge ? `${d.minAge} years` : null },
+    { icon: "💪", label: "Fitness Level", value: d.fitnessLevel },
+  ].filter(item => item.value);
+
+  const hasInfo = infoItems.length > 0 || d.whatToExpect || d.localTips || d.safetyInfo;
+
+  if (!hasInfo) return null;
+
+  return (
+    <section
+      style={{
+        background: theme.white,
+        padding: isMobile ? "64px 0" : "96px 0",
+      }}
+    >
+      <Container>
+        <SectionTitle
+          subtitle="Everything you need to plan your visit"
+          isMobile={isMobile}
+        >
+          Practical Information
+        </SectionTitle>
+
+        {/* Info Grid */}
+        {infoItems.length > 0 && (
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+              gap: 20,
+              marginBottom: 48,
+            }}
+          >
+            {infoItems.map((item, i) => (
+              <Card key={i} padding={24}>
+                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+                  <span style={{ fontSize: 32 }}>{item.icon}</span>
+                  <div>
+                    <p
+                      style={{
+                        margin: "0 0 4px",
+                        fontSize: 12,
+                        color: theme.gray500,
+                        fontWeight: 600,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.5px",
+                      }}
+                    >
+                      {item.label}
+                    </p>
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: 16,
+                        color: theme.gray800,
+                        fontWeight: 600,
+                      }}
+                    >
+                      {item.value}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+
+        {/* Additional Info Cards */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
+            gap: 24,
+          }}
+        >
+          {d.whatToExpect && (
+            <Card hover={false}>
+              <div
+                style={{
+                  padding: "20px 24px",
+                  background: theme.primaryMuted,
+                  borderBottom: `1px solid ${theme.primaryLight}`,
+                }}
+              >
+                <h4
+                  style={{
+                    margin: 0,
+                    fontSize: 18,
+                    fontWeight: 600,
+                    color: theme.primaryDark,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                  }}
+                >
+                  <span>📋</span> What to Expect
+                </h4>
+              </div>
+              <div style={{ padding: 24 }}>
+                <p style={{ margin: 0, fontSize: 15, color: theme.gray600, lineHeight: 1.7 }}>
+                  {d.whatToExpect}
+                </p>
+              </div>
+            </Card>
+          )}
+
+          {d.localTips && (
+            <Card hover={false}>
+              <div
+                style={{
+                  padding: "20px 24px",
+                  background: theme.warningLight,
+                  borderBottom: `1px solid ${theme.warning}30`,
+                }}
+              >
+                <h4
+                  style={{
+                    margin: 0,
+                    fontSize: 18,
+                    fontWeight: 600,
+                    color: "#92400E",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                  }}
+                >
+                  <span>💡</span> Local Tips
+                </h4>
+              </div>
+              <div style={{ padding: 24 }}>
+                <p style={{ margin: 0, fontSize: 15, color: theme.gray600, lineHeight: 1.7 }}>
+                  {d.localTips}
+                </p>
+              </div>
+            </Card>
+          )}
+
+          {d.safetyInfo && (
+            <Card hover={false} style={{ gridColumn: isMobile ? "span 1" : "span 2" }}>
+              <div
+                style={{
+                  padding: "20px 24px",
+                  background: "#FEF2F2",
+                  borderBottom: "1px solid #FECACA",
+                }}
+              >
+                <h4
+                  style={{
+                    margin: 0,
+                    fontSize: 18,
+                    fontWeight: 600,
+                    color: "#991B1B",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 10,
+                  }}
+                >
+                  <span>⚠️</span> Safety Information
+                </h4>
+              </div>
+              <div style={{ padding: 24 }}>
+                <p style={{ margin: 0, fontSize: 15, color: theme.gray600, lineHeight: 1.7 }}>
+                  {d.safetyInfo}
+                </p>
+              </div>
+            </Card>
+          )}
+        </div>
+      </Container>
+    </section>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   CTA FOOTER SECTION
+   ═══════════════════════════════════════════════════ */
+
+const CTAFooter = ({ destination, isMobile }) => {
+  const d = destination;
+
+  return (
+    <section
+      style={{
+        background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDarker} 100%)`,
+        padding: isMobile ? "72px 24px" : "120px 48px",
+        textAlign: "center",
+        position: "relative",
+        overflow: "hidden",
+      }}
+    >
+      {/* Decorative Pattern */}
+      <div
+        style={{
+          position: "absolute",
+          inset: 0,
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+        }}
+      />
+
+      <Container style={{ position: "relative" }}>
+        <h2
+          style={{
+            fontFamily: theme.fontSerif,
+            fontSize: isMobile ? 32 : 48,
+            fontWeight: 800,
+            color: theme.white,
+            margin: "0 0 20px",
+            lineHeight: 1.2,
+          }}
+        >
+          Ready to Experience {d.name}?
+        </h2>
+        <p
+          style={{
+            fontSize: isMobile ? 17 : 20,
+            color: "rgba(255,255,255,0.9)",
+            maxWidth: 600,
+            margin: "0 auto 40px",
+            lineHeight: 1.6,
+          }}
+        >
+          Start planning your unforgettable adventure today. Book now and create memories that will last a lifetime.
+        </p>
+
+        <div
+          style={{
+            display: "flex",
+            gap: 16,
+            justifyContent: "center",
+            flexWrap: "wrap",
+          }}
+        >
+          <Button variant="white" size="lg" icon="📅">
+            Book This Experience
+          </Button>
+          <Button
+            variant="secondary"
+            size="lg"
+            style={{
+              background: "transparent",
+              borderColor: "rgba(255,255,255,0.4)",
+              color: theme.white,
+            }}
+            as={Link}
+            to={`/countries/${d.countrySlug}`}
+          >
+            Explore More in {d.countryName}
+          </Button>
+        </div>
+
+        {/* Trust Badges */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            gap: isMobile ? 24 : 48,
+            marginTop: 48,
+            flexWrap: "wrap",
+          }}
+        >
+          <div style={{ color: "rgba(255,255,255,0.8)", textAlign: "center" }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>🏆</div>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Top Rated</div>
+          </div>
+          <div style={{ color: "rgba(255,255,255,0.8)", textAlign: "center" }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>✅</div>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Verified</div>
+          </div>
+          <div style={{ color: "rgba(255,255,255,0.8)", textAlign: "center" }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>🔒</div>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Secure Booking</div>
+          </div>
+          <div style={{ color: "rgba(255,255,255,0.8)", textAlign: "center" }}>
+            <div style={{ fontSize: 28, marginBottom: 8 }}>💬</div>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>24/7 Support</div>
+          </div>
+        </div>
+      </Container>
+    </section>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   ERROR STATE
+   ═══════════════════════════════════════════════════ */
+
+const ErrorState = ({ error, navigate }) => (
   <div
-    className="no-print"
     style={{
-      position: "fixed",
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: THEME.spacing[4],
-      backgroundColor: THEME.colors.neutral[0],
-      boxShadow: "0 -4px 30px rgba(0,0,0,0.12)",
+      minHeight: "80vh",
       display: "flex",
+      flexDirection: "column",
       alignItems: "center",
-      justifyContent: "space-between",
-      gap: THEME.spacing[3],
-      zIndex: THEME.zIndex.fixed,
-      animation: "slideUp 0.4s ease",
+      justifyContent: "center",
+      fontFamily: theme.fontSans,
+      padding: 48,
+      textAlign: "center",
+      background: theme.gray50,
     }}
   >
     <div
-      style={{ display: "flex", alignItems: "center", gap: THEME.spacing[2] }}
+      style={{
+        width: 140,
+        height: 140,
+        borderRadius: "50%",
+        background: theme.primaryMuted,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 64,
+        marginBottom: 32,
+      }}
     >
-      <StarRating rating={destination.rating} size={14} />
-      <span
-        style={{
-          fontSize: THEME.typography.fontSize.xs,
-          color: THEME.colors.neutral[500],
-        }}
-      >
-        {destination.reviews}+ reviews
-      </span>
+      🗺️
     </div>
-    <div style={{ display: "flex", gap: THEME.spacing[2] }}>
-      <IconButton
-        icon={
-          <FiHeart
-            size={20}
-            style={{ fill: isFavorite ? "currentColor" : "none" }}
-          />
-        }
-        onClick={() => {
-          onToggleFavorite?.();
-          toast[isFavorite ? "info" : "success"](
-            isFavorite ? "Removed from favorites" : "Added to favorites!",
-          );
-        }}
-        active={isFavorite}
-        variant="solid"
-      />
-      <Button to="/contact" size="sm" icon={<FiMail size={16} />}>
-        Inquire Now
+    <h2
+      style={{
+        fontFamily: theme.fontSerif,
+        fontSize: 36,
+        fontWeight: 700,
+        color: theme.gray800,
+        margin: "0 0 16px",
+      }}
+    >
+      Destination Not Found
+    </h2>
+    <p
+      style={{
+        fontSize: 18,
+        color: theme.gray500,
+        maxWidth: 500,
+        margin: "0 0 36px",
+        lineHeight: 1.6,
+      }}
+    >
+      {error || "The destination you're looking for doesn't exist or may have been removed."}
+    </p>
+    <div style={{ display: "flex", gap: 16 }}>
+      <Button onClick={() => navigate(-1)} variant="outline" size="lg">
+        Go Back
+      </Button>
+      <Button onClick={() => navigate("/destinations")} size="lg">
+        Browse Destinations
       </Button>
     </div>
   </div>
 );
 
-// Share Modal Component
-const ShareModal = ({ isOpen, onClose, destination, toast }) => {
-  const { copy } = useClipboard();
+/* ═══════════════════════════════════════════════════
+   API FUNCTION
+   ═══════════════════════════════════════════════════ */
 
-  const shareOptions = [
-    {
-      icon: "📋",
-      label: "Copy Link",
-      action: async () => {
-        await copy(window.location.href);
-        toast.success("Link copied to clipboard!");
-        onClose();
-      },
-    },
-    {
-      icon: "✉️",
-      label: "Email",
-      action: () => {
-        window.open(
-          `mailto:?subject=${encodeURIComponent(destination.name)}&body=${encodeURIComponent(`Check out this amazing destination: ${window.location.href}`)}`,
-        );
-        onClose();
-      },
-    },
-    {
-      icon: "💬",
-      label: "WhatsApp",
-      action: () => {
-        window.open(
-          `https://wa.me/?text=${encodeURIComponent(`${destination.name} - ${window.location.href}`)}`,
-        );
-        onClose();
-      },
-    },
-    {
-      icon: "🐦",
-      label: "Twitter",
-      action: () => {
-        window.open(
-          `https://twitter.com/intent/tweet?text=${encodeURIComponent(`Discover ${destination.name}`)}&url=${encodeURIComponent(window.location.href)}`,
-        );
-        onClose();
-      },
-    },
-    {
-      icon: "📘",
-      label: "Facebook",
-      action: () => {
-        window.open(
-          `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`,
-        );
-        onClose();
-      },
-    },
-    {
-      icon: "💼",
-      label: "LinkedIn",
-      action: () => {
-        window.open(
-          `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`,
-        );
-        onClose();
-      },
-    },
-    {
-      icon: "📌",
-      label: "Pinterest",
-      action: () => {
-        window.open(
-          `https://pinterest.com/pin/create/button/?url=${encodeURIComponent(window.location.href)}&description=${encodeURIComponent(destination.name)}`,
-        );
-        onClose();
-      },
-    },
-    {
-      icon: "💬",
-      label: "Telegram",
-      action: () => {
-        window.open(
-          `https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(destination.name)}`,
-        );
-        onClose();
-      },
-    },
-  ];
-
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      title="Share This Destination"
-      size="md"
-    >
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(4, 1fr)",
-          gap: THEME.spacing[4],
-          marginBottom: THEME.spacing[6],
-        }}
-      >
-        {shareOptions.map((option, i) => (
-          <button
-            key={i}
-            onClick={option.action}
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: THEME.spacing[2],
-              padding: THEME.spacing[4],
-              backgroundColor: THEME.colors.neutral[50],
-              border: `2px solid ${THEME.colors.neutral[200]}`,
-              borderRadius: THEME.borderRadius.xl,
-              cursor: "pointer",
-              transition: `all ${THEME.transitions.DEFAULT}`,
-            }}
-          >
-            <span style={{ fontSize: "28px" }}>{option.icon}</span>
-            <span
-              style={{
-                fontSize: THEME.typography.fontSize.xs,
-                fontWeight: THEME.typography.fontWeight.semibold,
-                color: THEME.colors.neutral[700],
-              }}
-            >
-              {option.label}
-            </span>
-          </button>
-        ))}
-      </div>
-      <Button variant="outline" fullWidth onClick={onClose}>
-        Cancel
-      </Button>
-    </Modal>
-  );
+const fetchDestinationData = async (slug) => {
+  const response = await fetch(`/api/destinations/${slug}`);
+  const data = await response.json();
+  
+  if (!data.success) {
+    throw new Error(data.message || "Failed to fetch destination");
+  }
+  
+  return data.data;
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════════════════════
-const DestinationDetailContent = () => {
-  const { destinationId } = useParams();
+/* ═══════════════════════════════════════════════════
+   MAIN COMPONENT
+   ═══════════════════════════════════════════════════ */
+
+const DestinationDetails = () => {
+  const { slug, id } = useParams();
+  const destinationSlug = slug || id;
   const navigate = useNavigate();
-  const toast = useToast();
-  const { isMobile, isTablet, isDesktop } = useWindowSize();
-  const { isScrolled, direction } = useScrollPosition(80);
-  const contentRef = useRef(null);
+  const { isMobile } = useWindowSize();
 
-  // Data fetching
-  const { destination, loading: destinationLoading } =
-    useDestination(destinationId);
-  const { country } = useCountry(
-    destination?.countryId || destination?.country_id,
-  );
-  const { destinations: countryDestinations } = useCountryDestinations(
-    destination?.countryId || destination?.country_id,
-  );
+  const [destination, setDestination] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // State
-  const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [isBookmarked, setIsBookmarked] = useLocalStorage(
-    `bookmark_${destinationId}`,
-    false,
-  );
-  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [showShareModal, setShowShareModal] = useState(false);
-  const [activeTab, setActiveTab] = useState("overview");
-  const [selectedTip, setSelectedTip] = useState(0);
-  const [showAllReviews, setShowAllReviews] = useState(false);
-  const [helpfulReviews, setHelpfulReviews] = useLocalStorage(
-    `helpful_reviews_${destinationId}`,
-    {},
-  );
-
-  const { loadWishlist, toggleWishlist, isWishlisted } = useWishlist();
-  const destinationKey = useMemo(
-    () => destination?._id || destination?.id || destinationId,
-    [destination, destinationId],
-  );
-  const isFavorite = isWishlisted(destinationKey);
-
+  // Fetch destination data
   useEffect(() => {
-    loadWishlist();
-  }, [loadWishlist]);
+    if (!destinationSlug) return;
 
-  const handleToggleFavorite = useCallback(() => {
-    toggleWishlist(destinationKey);
-  }, [destinationKey, toggleWishlist]);
+    setLoading(true);
+    setError(null);
 
-  // Keyboard shortcuts
-  useKeyPress("Escape", () => {
-    if (isLightboxOpen) setIsLightboxOpen(false);
-    if (showShareModal) setShowShareModal(false);
-  });
+    fetchDestinationData(destinationSlug)
+      .then((data) => {
+        setDestination(data);
+      })
+      .catch((e) => {
+        setError(e.message);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [destinationSlug]);
 
-  // Related destinations
-  const relatedDestinations = useMemo(
-    () =>
-      (countryDestinations || [])
-        .filter((d) => d.id !== destination?.id)
-        .slice(0, 3),
-    [countryDestinations, destination],
-  );
-
-  // Handlers
-  const handleShare = async () => {
-    if (navigator.share && isMobile) {
-      try {
-        await navigator.share({
-          title: destination.name,
-          text: destination.description,
-          url: window.location.href,
-        });
-        toast.success("Shared successfully!");
-      } catch (err) {
-        if (err.name !== "AbortError") {
-          setShowShareModal(true);
-        }
-      }
-    } else {
-      setShowShareModal(true);
-    }
-  };
-
-  const handleDownload = () => {
-    toast.info("Preparing your travel guide PDF...");
-    setTimeout(() => toast.success("Download started!"), 1500);
-  };
-
-  const handlePrint = () => {
-    toast.info("Opening print dialog...");
-    setTimeout(() => window.print(), 500);
-  };
-
-  const scrollToContent = () => {
-    contentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
-
-  const toggleHelpful = (reviewId) => {
-    setHelpfulReviews((prev) => ({
-      ...prev,
-      [reviewId]: !prev[reviewId],
-    }));
-  };
-
-  // Tab configuration
-  const tabs = useMemo(
-    () => [
-      { id: "overview", label: "Overview", icon: <FiGrid size={16} /> },
-      { id: "highlights", label: "Highlights", icon: <FiStar size={16} /> },
-      { id: "planning", label: "Planning", icon: <FiCalendar size={16} /> },
-      { id: "tips", label: "Tips & Info", icon: <FiInfo size={16} /> },
-      {
-        id: "reviews",
-        label: "Reviews",
-        icon: <FiMessageCircle size={16} />,
-        count: MOCK_DATA.reviews.length,
-      },
-    ],
-    [],
-  );
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [destinationSlug]);
 
   // Loading state
-  if (destinationLoading) {
+  if (loading) {
     return (
-      <div
-        style={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexDirection: "column",
-          gap: THEME.spacing[5],
-          backgroundColor: THEME.colors.neutral[50],
-        }}
-      >
-        <Spinner size={48} color={THEME.colors.primary[500]} />
-        <p
-          style={{
-            fontSize: THEME.typography.fontSize.lg,
-            color: THEME.colors.neutral[500],
-            fontWeight: THEME.typography.fontWeight.medium,
-          }}
-        >
-          Loading destination...
-        </p>
+      <div style={{ fontFamily: theme.fontSans }}>
+        <GlobalStyles />
+        <LoadingSkeleton isMobile={isMobile} />
       </div>
     );
   }
 
-  // Not found state
-  if (!destination) {
+  // Error state
+  if (error || !destination) {
     return (
-      <>
-        <Helmet>
-          <title>Destination Not Found | Altuvera</title>
-          <meta name="robots" content="noindex, follow" />
-          <link rel="canonical" href={toAbsoluteUrl(`/destination/${destinationId}`)} />
-        </Helmet>
-        <div
-          style={{
-            minHeight: "100vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexDirection: "column",
-            padding: THEME.spacing[8],
-            backgroundColor: THEME.colors.primary[50],
-            textAlign: "center",
-          }}
-        >
-          <div
-            style={{
-              width: 120,
-              height: 120,
-              borderRadius: THEME.borderRadius.full,
-              background: THEME.colors.gradient.primary,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              marginBottom: THEME.spacing[8],
-              animation: "float 3s ease-in-out infinite",
-              boxShadow: THEME.shadows.glow,
-            }}
-          >
-            <FiAlertTriangle size={48} color={THEME.colors.neutral[0]} />
-          </div>
-          <h1
-            style={{
-              fontFamily: THEME.typography.fontFamily.heading,
-              fontSize: isMobile
-                ? THEME.typography.fontSize["3xl"]
-                : THEME.typography.fontSize["5xl"],
-              fontWeight: THEME.typography.fontWeight.bold,
-              color: THEME.colors.neutral[900],
-              marginBottom: THEME.spacing[4],
-              animation: "fadeInUp 0.6s ease forwards",
-            }}
-          >
-            Destination Not Found
-          </h1>
-          <p
-            style={{
-              fontSize: THEME.typography.fontSize.lg,
-              color: THEME.colors.neutral[600],
-              marginBottom: THEME.spacing[8],
-              maxWidth: 450,
-              lineHeight: THEME.typography.lineHeight.relaxed,
-              animation: "fadeInUp 0.6s ease 0.1s both",
-            }}
-          >
-            The destination you're looking for doesn't exist or may have been
-            moved.
-          </p>
-          <div style={{ animation: "fadeInUp 0.6s ease 0.2s both" }}>
-            <Button to="/destinations" size="lg" icon={<FiCompass size={20} />}>
-              Explore All Destinations
-            </Button>
-          </div>
-        </div>
-      </>
+      <div style={{ fontFamily: theme.fontSans }}>
+        <GlobalStyles />
+        <ErrorState error={error} navigate={navigate} />
+      </div>
     );
   }
 
+  // Success - Render destination
   return (
-    <>
-      <Helmet>
-        <title>{`${destination.name} | Altuvera`}</title>
-        <meta
-          name="description"
-          content={toMetaDescription(destination.description || destination.fullDescription || "")}
-        />
-        <link rel="canonical" href={toAbsoluteUrl(`/destination/${destinationId}`)} />
+    <div
+      style={{
+        fontFamily: theme.fontSans,
+        color: theme.gray800,
+        background: theme.white,
+      }}
+    >
+      <GlobalStyles />
 
-        <meta property="og:type" content="website" />
-        <meta property="og:title" content={`${destination.name} | Altuvera`} />
-        <meta
-          property="og:description"
-          content={toMetaDescription(destination.description || destination.fullDescription || "")}
-        />
-        <meta property="og:url" content={toAbsoluteUrl(`/destination/${destinationId}`)} />
-        <meta
-          property="og:image"
-          content={(destination.images && destination.images[0]) || getBrandLogoUrl()}
-        />
+      <Hero destination={destination} isMobile={isMobile} />
+      <QuickInfoBar destination={destination} isMobile={isMobile} />
+      
+      <div className="fade-in-up">
+        <Overview destination={destination} isMobile={isMobile} />
+        <Highlights destination={destination} isMobile={isMobile} />
+        <Activities destination={destination} isMobile={isMobile} />
+        <Wildlife destination={destination} isMobile={isMobile} />
+        <Gallery destination={destination} isMobile={isMobile} />
+        <Location destination={destination} isMobile={isMobile} />
+        <PracticalInfo destination={destination} isMobile={isMobile} />
+      </div>
 
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={`${destination.name} | Altuvera`} />
-        <meta
-          name="twitter:description"
-          content={toMetaDescription(destination.description || destination.fullDescription || "")}
-        />
-        <meta
-          name="twitter:image"
-          content={(destination.images && destination.images[0]) || getBrandLogoUrl()}
-        />
-
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "TouristAttraction",
-            name: destination.name,
-            description: destination.description,
-            url: toAbsoluteUrl(`/destination/${destinationId}`),
-            image: Array.isArray(destination.images)
-              ? destination.images.slice(0, 3)
-              : undefined,
-            geo: destination.coordinates
-              ? {
-                  "@type": "GeoCoordinates",
-                  latitude: destination.coordinates.lat,
-                  longitude: destination.coordinates.lng,
-                }
-              : undefined,
-            isLocatedIn: country?.name
-              ? { "@type": "Country", name: country.name }
-              : undefined,
-          })}
-        </script>
-      </Helmet>
-
-      {/* Back Navigation */}
-      <Link
-        to="/destinations"
-        className="no-print"
-        style={{
-          position: "fixed",
-          top: isScrolled ? THEME.spacing[4] : THEME.spacing[24],
-          left: isMobile ? THEME.spacing[4] : THEME.spacing[8],
-          zIndex: THEME.zIndex.fixed,
-          display: "flex",
-          alignItems: "center",
-          gap: THEME.spacing[2],
-          color: isScrolled
-            ? THEME.colors.primary[600]
-            : THEME.colors.neutral[0],
-          textDecoration: "none",
-          fontSize: THEME.typography.fontSize.sm,
-          fontWeight: THEME.typography.fontWeight.semibold,
-          padding: `${THEME.spacing[2]} ${THEME.spacing[4]}`,
-          backgroundColor: isScrolled
-            ? THEME.colors.neutral[0]
-            : "rgba(255,255,255,0.15)",
-          backdropFilter: "blur(10px)",
-          borderRadius: THEME.borderRadius.full,
-          border: isScrolled
-            ? `1px solid ${THEME.colors.neutral[200]}`
-            : "1px solid rgba(255,255,255,0.2)",
-          boxShadow: isScrolled ? THEME.shadows.lg : "none",
-          transition: `all ${THEME.transitions.DEFAULT}`,
-          transform:
-            direction === "down" && isScrolled
-              ? "translateY(-100px)"
-              : "translateY(0)",
-        }}
-      >
-        <FiArrowLeft size={18} />
-        {!isMobile && "Back to Destinations"}
-      </Link>
-
-      {/* Hero Section */}
-      <HeroSection
-        destination={destination}
-        country={country}
-        currentImageIndex={currentImageIndex}
-        setCurrentImageIndex={setCurrentImageIndex}
-        isFavorite={isFavorite}
-        onToggleFavorite={handleToggleFavorite}
-        isBookmarked={isBookmarked}
-        setIsBookmarked={setIsBookmarked}
-        onShare={handleShare}
-        onOpenLightbox={() => setIsLightboxOpen(true)}
-        onScrollToContent={scrollToContent}
-        isMobile={isMobile}
-        toast={toast}
-      />
-
-      {/* Quick Actions Bar */}
-      <QuickActionsBar
-        destination={destination}
-        onDownload={handleDownload}
-        onPrint={handlePrint}
-        onShare={handleShare}
-        isMobile={isMobile}
-        isScrolled={isScrolled}
-      />
-
-      {/* Main Content */}
-      <main
-        ref={contentRef}
-        style={{
-          backgroundColor: THEME.colors.neutral[50],
-          padding: isMobile
-            ? `${THEME.spacing[8]} ${THEME.spacing[4]} ${THEME.spacing[32]}`
-            : `${THEME.spacing[12]} ${THEME.spacing[8]} ${THEME.spacing[24]}`,
-        }}
-      >
-        <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
-          {/* Tabs Navigation */}
-          <div
-            style={{
-              marginBottom: THEME.spacing[8],
-              overflowX: "auto",
-              borderBottom: `1px solid ${THEME.colors.neutral[200]}`,
-              WebkitOverflowScrolling: "touch",
-            }}
-          >
-            <div
-              style={{
-                display: "flex",
-                gap: THEME.spacing[1],
-                minWidth: "max-content",
-              }}
-            >
-              {tabs.map((tab) => (
-                <Tab
-                  key={tab.id}
-                  active={activeTab === tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  icon={tab.icon}
-                  count={tab.count}
-                >
-                  {tab.label}
-                </Tab>
-              ))}
-            </div>
-          </div>
-
-          {/* Content Grid */}
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: isMobile || isTablet ? "1fr" : "1fr 400px",
-              gap: THEME.spacing[10],
-              alignItems: "start",
-            }}
-          >
-            {/* Main Content Area */}
-            <div>
-              {activeTab === "overview" && (
-                <OverviewSection destination={destination} country={country} />
-              )}
-              {activeTab === "highlights" && (
-                <HighlightsSection destination={destination} />
-              )}
-              {activeTab === "planning" && <PlanningSection toast={toast} />}
-              {activeTab === "tips" && (
-                <TipsSection
-                  selectedTip={selectedTip}
-                  setSelectedTip={setSelectedTip}
-                />
-              )}
-              {activeTab === "reviews" && (
-                <ReviewsSection
-                  destination={destination}
-                  helpfulReviews={helpfulReviews}
-                  toggleHelpful={toggleHelpful}
-                  showAllReviews={showAllReviews}
-                  setShowAllReviews={setShowAllReviews}
-                  toast={toast}
-                />
-              )}
-            </div>
-
-            {/* Sidebar */}
-            <Sidebar
-              destination={destination}
-              country={country}
-              isMobile={isMobile || isTablet}
-              onShare={handleShare}
-              toast={toast}
-            />
-          </div>
-
-          {/* Related Destinations */}
-          <RelatedDestinations
-            destinations={relatedDestinations}
-            country={country}
-            isMobile={isMobile}
-            isTablet={isTablet}
-          />
-        </div>
-      </main>
-
-      {/* Mobile CTA */}
-      {isMobile && (
-        <MobileCTA
-          destination={destination}
-          isFavorite={isFavorite}
-          onToggleFavorite={handleToggleFavorite}
-          toast={toast}
-        />
-      )}
-
-      {/* Lightbox */}
-      {isLightboxOpen && destination.images && (
-        <Lightbox
-          images={destination.images}
-          currentIndex={currentImageIndex}
-          setCurrentIndex={setCurrentImageIndex}
-          onClose={() => setIsLightboxOpen(false)}
-        />
-      )}
-
-      {/* Share Modal */}
-      <ShareModal
-        isOpen={showShareModal}
-        onClose={() => setShowShareModal(false)}
-        destination={destination}
-        toast={toast}
-      />
-    </>
+      <CTAFooter destination={destination} isMobile={isMobile} />
+    </div>
   );
 };
 
-// Main Export with Providers
-const DestinationDetail = () => {
-  return (
-    <>
-      <style>{globalStyles}</style>
-      <ToastProvider>
-        <DestinationDetailContent />
-      </ToastProvider>
-    </>
-  );
-};
-
-export default DestinationDetail;
+export default DestinationDetails;

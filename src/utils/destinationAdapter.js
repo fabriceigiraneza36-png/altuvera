@@ -1,5 +1,9 @@
-const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800";
+export const FALLBACK_IMAGE =
+  "https://drive.google.com/uc?export=view&id=1BfTgabjQR1J8gj-HEHZ-68WxTvnZrDD1";
+
+export const FALLBACK_IMAGES = [
+  "https://drive.google.com/uc?export=view&id=1BfTgabjQR1J8gj-HEHZ-68WxTvnZrDD1",
+];
 
 const toNumber = (value, fallback = 0) => {
   const n = Number(value);
@@ -13,6 +17,7 @@ export const adaptDestination = (raw) => {
     ? raw.images.filter(Boolean)
     : [];
 
+  // Ensure we always have at least the fallback image
   const primaryImage =
     raw.image ||
     raw.image_url ||
@@ -21,19 +26,52 @@ export const adaptDestination = (raw) => {
     explicitImages[0] ||
     FALLBACK_IMAGE;
 
-  const images = [...new Set([primaryImage, ...explicitImages].filter(Boolean))];
+  // Always include fallback as a guaranteed image option
+  const images = [FALLBACK_IMAGE, primaryImage, ...explicitImages].filter(
+    (img, index, self) => img && self.indexOf(img) === index
+  );
 
+  // Extract country information from nested country object or direct fields
+  const countryData = raw.country || {};
+  
+  // Use slug for frontend URLs - this is the key for linking to country pages
+  const countrySlug =
+    raw.countrySlug ||           // Direct field (e.g., "kenya")
+    countryData.slug ||          // From nested country object
+    raw.country_slug ||          // Snake case variant
+    (typeof countryData.id === 'string' ? countryData.id : null); // String ID from country
+  
   const countryName =
-    raw.country_name || raw.country?.name || raw.country || "East Africa";
+    raw.countryName ||           // Direct field
+    countryData.name ||         // From nested country object
+    raw.country_name ||          // Snake case variant
+    raw.country ||              // Fallback to string
+    "East Africa";
+  
   const countryId =
-    raw.country_id || raw.countryId || raw.country?.id || raw.country?.slug || "";
+    raw.countryId ||            // Direct field
+    countryData.id ||           // From nested country object
+    raw.country_id ||           // Snake case variant
+    "";
+  
+  const countryFlag = countryData.flag || "";
 
+  // Primary identifier for frontend URL (use slug)
+  const slug = raw.slug || String(raw.id || "");
+  
   return {
     ...raw,
-    id: raw.slug || raw.id,
-    slug: raw.slug || String(raw.id || ""),
+    // Frontend uses slug as the primary ID for URLs
+    id: slug, // This is used for React keys and URL params
+    slug: slug,
+    // Keep numeric ID for internal use
+    numericId: raw.id,
+    // Country information for linking
     countryId: countryId ? String(countryId) : "",
-    country: countryName,
+    countrySlug: countrySlug || "",
+    countryName: countryName,
+    country: countryName, // Alias for compatibility
+    countryFlag: countryFlag,
     location: raw.location || countryName,
     type: raw.type || raw.category || "Destination",
     description: raw.short_description || raw.description || "",

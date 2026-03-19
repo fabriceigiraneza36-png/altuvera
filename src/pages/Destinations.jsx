@@ -7,7 +7,6 @@ import Button from '../components/common/Button';
 import { countries } from '../data/countries';
 import DestinationCard from '../components/common/DestinationCard';
 import { useCountryDestinations, useDestinations } from "../hooks/useDestinations";
-import PackageChecklist from '../components/common/PackageChecklist';
 
 const Destinations = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -233,13 +232,6 @@ const Destinations = () => {
                 </span>
               </div>
             </div>
-          </AnimatedSection>
-
-          <AnimatedSection animation="fadeInUp">
-            <PackageChecklist
-              tourData={{ tourName: 'Destinations Overview' }}
-              className="destinations-checklist-cta"
-            />
           </AnimatedSection>
 
           {loading ? (

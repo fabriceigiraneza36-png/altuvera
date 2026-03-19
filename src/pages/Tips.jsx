@@ -1495,7 +1495,20 @@ const Tips = () => {
         subtitle="Essential advice and insider knowledge for your East African adventure."
         backgroundImage="https://i.pinimg.com/736x/4d/d7/b7/4dd7b788dfcaa0198254585156b94a9a.jpg"
         breadcrumbs={[{ label: "Travel Tips" }]}
-      />
+      >
+        <div
+          data-download-trigger
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: 1,
+            height: 1,
+            opacity: 0,
+            pointerEvents: "none",
+          }}
+        />
+      </PageHeader>
 
       <section className="tp__shell">
         <AnimatedSection animation="fadeInUp">

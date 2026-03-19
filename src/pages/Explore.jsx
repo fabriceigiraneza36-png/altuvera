@@ -306,12 +306,7 @@ const EXPERIENCE_CATEGORIES = [
   },
 ];
 
-const STATS = [
-  { icon: <FiGlobe />, value: '12+', label: 'Countries' },
-  { icon: <FiUsers />, value: '50K+', label: 'Happy Travelers' },
-  { icon: <FiAward />, value: '98%', label: 'Satisfaction' },
-  { icon: <FiStar />, value: '4.9', label: 'Average Rating' },
-];
+
 
 const TESTIMONIALS = [
   {
@@ -446,7 +441,6 @@ const injectStyles = () => {
       .e-exp-grid{grid-template-columns:1fr!important}
       .e-cat-grid{grid-template-columns:1fr!important}
       .e-country-grid{grid-template-columns:1fr 1fr!important}
-      .e-stats-grid{grid-template-columns:1fr 1fr!important}
       .e-mosaic{grid-template-columns:1fr!important}
       .e-trust-grid{grid-template-columns:1fr!important}
     }
@@ -1606,36 +1600,6 @@ function Explore() {
               triumph of a mountain summit — your story begins here.
             </p>
           </AnimatedSection>
-        </div>
-      </section>
-
-      {/* ============ STATS ============ */}
-      <section
-        style={{
-          padding: 'clamp(60px,10vw,100px) clamp(16px,5vw,48px)',
-          background:
-            'linear-gradient(160deg,' + G[900] + ' 0%,' + G[800] + ' 100%)',
-        }}
-      >
-        <div style={box}>
-          <div
-            className="e-stats-grid"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4,1fr)',
-              gap: 20,
-            }}
-          >
-            {STATS.map((s, i) => (
-              <AnimatedSection
-                key={i}
-                animation="fadeInUp"
-                delay={i * 0.1}
-              >
-                <StatItem stat={s} />
-              </AnimatedSection>
-            ))}
-          </div>
         </div>
       </section>
 

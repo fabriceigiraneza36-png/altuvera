@@ -47,7 +47,6 @@ import {
 } from "react-icons/fi";
 import PageHeader from "../components/common/PageHeader";
 import AnimatedSection from "../components/common/AnimatedSection";
-import PackageChecklist from "../components/common/PackageChecklist";
 import { Helmet } from "react-helmet-async";
 import { useApp } from "../context/AppContext";
 import { useVirtualTours } from "../hooks/useVirtualTours";
@@ -1577,7 +1576,6 @@ const VirtualTour = () => {
                       </button>
 
                       <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: 12 }}>
-                        <PackageChecklist tourData={{ tourName: 'Virtual Tour' }} className="virtualtour-checklist" />
                       </div>
                     </>
                   )}

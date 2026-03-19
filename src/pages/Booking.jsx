@@ -8,6 +8,7 @@ import React, {
   createContext,
   useContext,
 } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   FiCalendar,
   FiUsers,
@@ -60,19 +61,19 @@ import {
 } from "framer-motion";
 import PageHeader from "../components/common/PageHeader";
 import AnimatedSection from "../components/common/AnimatedSection";
-import PackageChecklist from "../components/common/PackageChecklist";
 import Button from "../components/common/Button";
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 import { countries as countriesData } from "../data/countries";
 import { services as servicesData } from "../data/services";
 import { useUserAuth } from "../context/UserAuthContext";
 import { apiFetch } from "../utils/apiBase";
+import { sendMessage } from "../utils/sendMessage";
+import { applyBookingPrefill, getBookingPrefill } from "../utils/bookingPrefill";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONSTANTS & CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════════════
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 const ADMIN_CONTACT = {
   name: "IGIRANEZA Fabrice",
@@ -3086,38 +3087,40 @@ const Booking = () => {
     })();
   }, []);
 
-  // Inside the Booking component, after fetching data:
+  // Apply booking prefill from query params or storage
   useEffect(() => {
-    return;
-    (async () => {
-      try {
-        const [cRes, catRes, destRes] = await Promise.all([
-          fetch(`${API_URL}/countries`)
-            .then((r) => r.json())
-            .catch(() => ({})),
-          fetch(`${API_URL}/destinations/categories`)
-            .then((r) => r.json())
-            .catch(() => ({})),
-          fetch(`${API_URL}/destinations`)
-            .then((r) => r.json())
-            .catch(() => ({})),
-        ]);
+    // Get query params
+    const searchParams = new URLSearchParams(window.location.search);
+    const queryDestination = searchParams.get("destination");
+    const queryDestinationId = searchParams.get("destinationId");
+    const queryTripType = searchParams.get("tripType");
+    const queryCountry = searchParams.get("country");
 
-        // ✅ ADD THIS TO SEE THE ACTUAL DATA
-        console.log("Categories Response:", catRes);
-        console.log("Categories Data:", catRes.data);
+    // If we have query params, apply them
+    if (queryDestination) {
+      setFormData((prev) => ({
+        ...prev,
+        destination: queryDestinationId || queryDestination,
+        tripType: queryTripType || prev.tripType,
+      }));
+      return;
+    }
 
-        setCountriesList(cRes.data || cRes || countriesData || []);
-        setCategoriesList(catRes.data || catRes || []);
-        setDestinationsList(destRes.data || destRes || []);
-      } catch (err) {
-        console.error("Failed to fetch booking data", err);
-        setCountriesList(countriesData || []);
-      } finally {
-        setLoadingData(false);
-      }
-    })();
+    // Otherwise check storage prefill
+    const storagePrefill = getBookingPrefill();
+    if (storagePrefill) {
+      // Only apply if destination field is empty
+      setFormData((prev) => {
+        if (prev.destination) return prev;
+        return {
+          ...prev,
+          destination: storagePrefill.destinationId || storagePrefill.destination,
+          tripType: storagePrefill.destinationType || prev.tripType,
+        };
+      });
+    }
   }, []);
+
 
   // Handle resize
   useEffect(() => {
@@ -3431,29 +3434,48 @@ Please provide a personalized quote and itinerary. Thank you!`;
   ]);
 
   // Handle form submit
+  const saveBookingLocally = (booking) => {
+    try {
+      const raw = localStorage.getItem("altuvera_bookings");
+      const existing = raw ? JSON.parse(raw) : [];
+      const list = Array.isArray(existing) ? existing : [];
+      localStorage.setItem(
+        "altuvera_bookings",
+        JSON.stringify([booking, ...list].slice(0, 50)),
+      );
+    } catch {
+      // ignore
+    }
+  };
+
   const handleSubmit = useCallback(
     async (e) => {
       e.preventDefault();
       if (!validateStep(4)) return;
 
       setIsSubmitting(true);
+
+      const bookingPayload = {
+        ...formData,
+        tripDuration: getTripDuration(),
+        totalTravelers: getTotalVisitors(),
+        destinationName: getDestinationName(),
+        status: "Pending",
+        createdAt: new Date().toISOString(),
+      };
+
       try {
-        await authFetch(`${API_URL}/bookings`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...formData,
-            tripDuration: getTripDuration(),
-            totalTravelers: getTotalVisitors(),
-            destinationName: getDestinationName(),
-            status: "Pending",
-          }),
+        await sendMessage({
+          type: "booking",
+          data: bookingPayload,
         });
 
+        saveBookingLocally(bookingPayload);
         sendWhatsAppMessage();
         setIsSubmitted(true);
       } catch (err) {
         console.error("Booking submission error:", err);
+        saveBookingLocally(bookingPayload);
         sendWhatsAppMessage();
         setIsSubmitted(true);
       } finally {
@@ -3462,7 +3484,6 @@ Please provide a personalized quote and itinerary. Thank you!`;
     },
     [
       validateStep,
-      authFetch,
       formData,
       getTripDuration,
       getTotalVisitors,
@@ -3927,22 +3948,6 @@ Please provide a personalized quote and itinerary. Thank you!`;
                 </motion.div>
               </form>
             </GlassCard>
-          </AnimatedSection>
-
-          {/* Package checklist & expenses (AI-powered) */}
-          <AnimatedSection animation="fadeInUp" delay={0.15}>
-            <div style={{ maxWidth: 920, margin: '0 auto' }}>
-              <PackageChecklist
-                tourData={{
-                  tourName: formData.tripType || 'Custom Tour',
-                  destination: formData.destination || 'East Africa',
-                  duration: `${formData.startDate || ''} - ${formData.endDate || ''}`,
-                  startDate: formData.startDate,
-                  endDate: formData.endDate,
-                }}
-                userInfo={{ name: formData.name, email: formData.email, phone: formData.phone }}
-              />
-            </div>
           </AnimatedSection>
 
           {/* Trust badges */}

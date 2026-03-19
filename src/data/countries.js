@@ -1,3 +1,6 @@
+import { multiBackendFetch } from "../utils/multiBackendFetch";
+import { adaptDestinationList } from "../utils/destinationAdapter";
+
 export const countries = [
   {
     id: "kenya",
@@ -3805,5 +3808,31 @@ South Africa is obsessed with sport — rugby (the Springboks, whose 1995 Rugby 
     ],
   },
 ];
+
+export async function fetchCountryPageData(slug) {
+  const slugKey = String(slug || "").trim().toLowerCase();
+
+  const country = countries.find((c) => {
+    if (!c) return false;
+    const id = String(c.id || "").trim().toLowerCase();
+    const name = String(c.name || "").trim().toLowerCase();
+    const slugField = String(c.slug || "").trim().toLowerCase();
+    return id === slugKey || name === slugKey || slugField === slugKey;
+  });
+
+  let destinations = [];
+  if (slugKey) {
+    try {
+      const result = await multiBackendFetch(`/countries/${slugKey}/destinations`);
+      if (result.success) {
+        destinations = adaptDestinationList(result.data);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return { country, destinations };
+}
 
 export default countries;

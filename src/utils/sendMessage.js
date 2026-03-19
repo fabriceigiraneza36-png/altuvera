@@ -1,5 +1,5 @@
 // utils/sendMessage.js
-const API_URL = import.meta.env.VITE_API_URL || 'https://backend-1-ghrv.onrender.com/api';
+import { toAbsoluteApiUrl } from "./apiBase";
 
 export const sendMessage = async ({ type, data }) => {
   try {
@@ -8,7 +8,7 @@ export const sendMessage = async ({ type, data }) => {
 
     switch (type) {
       case 'contact':
-        endpoint = `${API_URL}/contact`;
+        endpoint = toAbsoluteApiUrl('/contact');
         // Map frontend field names to backend expected names
         payload = {
           full_name: data.name || data.full_name,
@@ -24,12 +24,18 @@ export const sendMessage = async ({ type, data }) => {
         break;
 
       case 'booking':
-        endpoint = `${API_URL}/bookings`;
-        payload = data;
+        // The backend does not expose a dedicated /bookings route.
+        // Send booking inquiries via the contact endpoint instead (avoids 404).
+        endpoint = toAbsoluteApiUrl('/contact');
+        payload = {
+          ...data,
+          type: 'booking',
+        };
         break;
 
       case 'newsletter':
-        endpoint = `${API_URL}/newsletter/subscribe`;
+        // Backend route for newsletters is /api/subscribers
+        endpoint = toAbsoluteApiUrl('/subscribers');
         payload = { email: data.email };
         break;
 
@@ -81,7 +87,7 @@ export const sendMessage = async ({ type, data }) => {
 // Helper for checking if API is available
 export const checkApiHealth = async () => {
   try {
-    const response = await fetch(`${API_URL}/health`, {
+    const response = await fetch(toAbsoluteApiUrl('/countries'), {
       method: 'GET',
       headers: { 'Accept': 'application/json' },
     });

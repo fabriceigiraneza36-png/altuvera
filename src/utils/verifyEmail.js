@@ -1,10 +1,10 @@
 // utils/verifyEmail.js
-// Provides a small wrapper around the /api/verify-email server endpoint.
+// Provides a small wrapper around the backend auth verification routes.
 
-const API_URL = import.meta.env.VITE_API_URL || "https://backend-1-ghrv.onrender.com/api";
+import { toAbsoluteApiUrl } from "./apiBase";
 
-const callApi = async (payload) => {
-  const response = await fetch(`${API_URL}/verify-email`, {
+const callVerifyEndpoint = async (payload) => {
+  const response = await fetch(toAbsoluteApiUrl("/users/verify-code"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -22,9 +22,9 @@ const callApi = async (payload) => {
 };
 
 export const sendVerificationCode = async ({ email, purpose = "verification" }) => {
-  return callApi({ action: "send", email, purpose });
+  return callVerifyEndpoint({ action: "send", email, purpose });
 };
 
 export const verifyCode = async ({ email, verificationId, code }) => {
-  return callApi({ action: "verify", email, verificationId, code });
+  return callVerifyEndpoint({ action: "verify", email, verificationId, code });
 };
