@@ -474,7 +474,7 @@ const Navbar = () => {
             ) : isAuthenticated ? (
               <div className="nav__user" ref={userMenuRef}>
                 <button
-                  className="nav__user-trigger"
+                  className="nav__user-trigger nav__user-trigger--card"
                   onClick={() => setUserMenuOpen((p) => !p)}
                   aria-expanded={userMenuOpen}
                   aria-haspopup="true"
@@ -496,8 +496,8 @@ const Navbar = () => {
                     </span>
                   )}
                   <span className="nav__user-info">
-                    {displayName}
-                    <small>{providerLabel}</small>
+                    <span className="nav__user-name">{displayName}</span>
+                    <small className="nav__user-role">{user?.role === 'admin' ? 'Administrator' : user?.role === 'manager' ? 'Manager' : 'Traveler'}</small>
                   </span>
                   <FiChevronDown
                     className={`nav__user-chev ${userMenuOpen ? "nav__user-chev--open" : ""}`}
@@ -508,9 +508,20 @@ const Navbar = () => {
                   className={`nav__user-drop ${userMenuOpen ? "nav__user-drop--open" : ""}`}
                 >
                   <div className="nav__user-drop-head">
-                    <p className="nav__user-drop-name">{displayName}</p>
-                    <p className="nav__user-drop-email">{user?.email}</p>
-                    <span className="nav__pill">{providerLabel} account</span>
+                    <div className="nav__user-drop-profile">
+                      {user?.avatar ? (
+                        <img src={user.avatar} alt="" className="nav__user-drop-avatar" />
+                      ) : (
+                        <span className="nav__user-drop-avatar-initials">{getInitials()}</span>
+                      )}
+                      <div className="nav__user-drop-info">
+                        <p className="nav__user-drop-name">{displayName}</p>
+                        <p className="nav__user-drop-email">{user?.email}</p>
+                        <span className="nav__pill">
+                          {user?.isVerified ? '✓ Verified' : providerLabel} account
+                        </span>
+                      </div>
+                    </div>
                   </div>
                   {userMenuItems.map((m, mi) => (
                     <Link

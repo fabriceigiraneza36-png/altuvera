@@ -2970,6 +2970,12 @@ const Booking = () => {
   const [destinationsList, setDestinationsList] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
 
+  // Booking statistics from live backend
+  const [mostBookedDestinations, setMostBookedDestinations] = useState([]);
+  const [countriesStats, setCountriesStats] = useState([]);
+  const [destinationsStats, setDestinationsStats] = useState([]);
+  const [loadingStats, setLoadingStats] = useState(true);
+
   // Form states
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -3063,29 +3069,54 @@ const Booking = () => {
     }
   }, [user]);
 
-  // Fetch data
+  // Fetch live booking statistics from backend
+  const fetchBookingStats = useCallback(async () => {
+    setLoadingStats(true);
+    try {
+      const [mostBookedRes, countriesStatsRes, destinationsStatsRes] = await Promise.all([
+        authFetch("/bookings/most-booked").catch(() => ({ data: [] })),
+        authFetch("/bookings/countries-stats").catch(() => ({ data: [] })),
+        authFetch("/bookings/destinations-stats").catch(() => ({ data: [] })),
+      ]);
+
+      setMostBookedDestinations(mostBookedRes?.data || []);
+      setCountriesStats(countriesStatsRes?.data || []);
+      setDestinationsStats(destinationsStatsRes?.data || []);
+    } catch (err) {
+      console.error("Failed to fetch booking statistics:", err);
+    } finally {
+      setLoadingStats(false);
+    }
+  }, [authFetch]);
+
+  // Fetch main data (countries, categories, destinations)
   useEffect(() => {
     (async () => {
+      setLoadingData(true);
       try {
         const [cRes, catRes, destRes] = await Promise.all([
-          apiFetch("/countries").then((r) => r.json()).catch(() => ({})),
-          apiFetch("/destinations/categories")
-            .then((r) => r.json())
-            .catch(() => ({})),
-          apiFetch("/destinations").then((r) => r.json()).catch(() => ({})),
+          authFetch("/countries").catch(() => ({ data: [] })),
+          authFetch("/destinations/categories").catch(() => ({ data: [] })),
+          authFetch("/destinations").catch(() => ({ data: [] })),
         ]);
 
-        setCountriesList(cRes.data || cRes || countriesData || []);
-        setCategoriesList(catRes.data || catRes || []);
-        setDestinationsList(destRes.data || destRes || []);
+        const countries = cRes?.data || cRes || [];
+        const categories = catRes?.data || catRes || [];
+        const destinations = destRes?.data || destRes || [];
+
+        setCountriesList(countries);
+        setCategoriesList(categories);
+        setDestinationsList(destinations);
+
+        // Fetch booking stats after destinations are loaded
+        await fetchBookingStats();
       } catch (err) {
         console.error("Failed to fetch booking data", err);
-        setCountriesList(countriesData || []);
       } finally {
         setLoadingData(false);
       }
     })();
-  }, []);
+  }, [authFetch, fetchBookingStats]);
 
   // Apply booking prefill from query params or storage
   useEffect(() => {

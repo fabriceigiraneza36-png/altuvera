@@ -1,23 +1,21 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 
 /* ═══════════════════════════════════════════════════
-   DESIGN SYSTEM - GREEN & WHITE THEME
+   DESIGN TOKENS
    ═══════════════════════════════════════════════════ */
+const T = {
+  green50: "#ECFDF5",
+  green100: "#D1FAE5",
+  green200: "#A7F3D0",
+  green300: "#6EE7B7",
+  green400: "#34D399",
+  green500: "#10B981",
+  green600: "#059669",
+  green700: "#047857",
+  green800: "#065F46",
+  green900: "#064E3B",
 
-const theme = {
-  // Primary Colors (Green)
-  primary: "#059669",
-  primaryDark: "#047857",
-  primaryDarker: "#065F46",
-  primaryLight: "#D1FAE5",
-  primaryMuted: "#ECFDF5",
-  
-  // Accent Colors
-  accent: "#10B981",
-  accentLight: "#A7F3D0",
-  
-  // Neutral Colors
   white: "#FFFFFF",
   gray50: "#F9FAFB",
   gray100: "#F3F4F6",
@@ -29,378 +27,247 @@ const theme = {
   gray700: "#374151",
   gray800: "#1F2937",
   gray900: "#111827",
-  
-  // Semantic Colors
-  success: "#10B981",
-  warning: "#F59E0B",
-  warningLight: "#FEF3C7",
-  error: "#EF4444",
-  info: "#3B82F6",
-  infoLight: "#DBEAFE",
-  star: "#FBBF24",
-  
-  // Typography
-  fontSans: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-  fontSerif: "'Playfair Display', Georgia, serif",
-  
-  // Layout
-  containerMax: "1280px",
-  containerNarrow: "960px",
-  
-  // Spacing
-  sectionPy: "96px",
-  sectionPyMobile: "64px",
-  
-  // Borders & Shadows
-  radiusXs: "4px",
-  radiusSm: "8px",
-  radiusMd: "12px",
-  radiusLg: "16px",
-  radiusXl: "24px",
-  radiusFull: "9999px",
-  
-  shadowXs: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-  shadowSm: "0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)",
-  shadowMd: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-  shadowLg: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-  shadowXl: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-  shadow2xl: "0 25px 50px -12px rgba(0, 0, 0, 0.25)",
-  
-  // Transitions
-  transitionFast: "150ms cubic-bezier(0.4, 0, 0.2, 1)",
-  transitionBase: "200ms cubic-bezier(0.4, 0, 0.2, 1)",
-  transitionSlow: "300ms cubic-bezier(0.4, 0, 0.2, 1)",
+
+  amber: "#F59E0B",
+  amberLight: "#FEF3C7",
+  red: "#EF4444",
+  redLight: "#FEF2F2",
+  blue: "#3B82F6",
+  blueLight: "#DBEAFE",
+
+  sans: "'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
+  serif: "'Playfair Display',Georgia,serif",
+
+  max: "1280px",
+  narrow: "960px",
+
+  r: { xs: "6px", sm: "10px", md: "14px", lg: "20px", xl: "28px", full: "9999px" },
+
+  shadow: {
+    xs: "0 1px 2px rgba(0,0,0,.05)",
+    sm: "0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06)",
+    md: "0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1)",
+    lg: "0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)",
+    xl: "0 20px 25px -5px rgba(0,0,0,.1),0 8px 10px -6px rgba(0,0,0,.1)",
+    xxl: "0 25px 50px -12px rgba(0,0,0,.25)",
+  },
 };
 
 /* ═══════════════════════════════════════════════════
-   GLOBAL STYLES
+   GLOBAL ANIMATION STYLES
    ═══════════════════════════════════════════════════ */
-
-const GlobalStyles = () => (
+const AnimationStyles = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700;800&display=swap');
-    
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-    
-    html {
-      scroll-behavior: smooth;
-    }
-    
-    body {
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-    
-    /* Animations */
-    @keyframes shimmer {
-      0% { background-position: -200% 0; }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@500;600;700;800&display=swap');
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    ::selection { background: ${T.green100}; color: ${T.green900}; }
+
+    /* ── keyframes ──────────────────────────── */
+    @keyframes dd-shimmer {
+      0%   { background-position: -200% 0; }
       100% { background-position: 200% 0; }
     }
-    
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(24px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+    @keyframes dd-fadeUp {
+      from { opacity: 0; transform: translateY(32px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
-    
-    @keyframes fadeIn {
+    @keyframes dd-fadeIn {
       from { opacity: 0; }
-      to { opacity: 1; }
+      to   { opacity: 1; }
     }
-    
-    @keyframes pulse {
+    @keyframes dd-scaleIn {
+      from { opacity: 0; transform: scale(.92); }
+      to   { opacity: 1; transform: scale(1); }
+    }
+    @keyframes dd-slideRight {
+      from { opacity: 0; transform: translateX(-24px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes dd-slideLeft {
+      from { opacity: 0; transform: translateX(24px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+    @keyframes dd-float {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+    @keyframes dd-pulse {
       0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+      50%      { opacity: .6; }
     }
-    
-    @keyframes scaleIn {
-      from {
-        opacity: 0;
-        transform: scale(0.95);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1);
-      }
+    @keyframes dd-glow {
+      0%, 100% { box-shadow: 0 0 8px ${T.green400}44; }
+      50%      { box-shadow: 0 0 24px ${T.green400}66; }
     }
-    
-    .skeleton {
-      background: linear-gradient(
-        90deg,
-        ${theme.gray200} 25%,
-        ${theme.gray100} 50%,
-        ${theme.gray200} 75%
-      );
+    @keyframes dd-heroZoom {
+      from { transform: scale(1.05); }
+      to   { transform: scale(1); }
+    }
+    @keyframes dd-countUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes dd-borderFlow {
+      0%   { background-position: 0% 50%; }
+      50%  { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    @keyframes dd-wiggle {
+      0%, 100% { transform: rotate(0deg); }
+      25%      { transform: rotate(3deg); }
+      75%      { transform: rotate(-3deg); }
+    }
+
+    /* ── utility classes ────────────────────── */
+    .dd-skel {
+      background: linear-gradient(90deg, ${T.gray200} 25%, ${T.gray100} 50%, ${T.gray200} 75%);
       background-size: 200% 100%;
-      animation: shimmer 1.5s ease-in-out infinite;
+      animation: dd-shimmer 1.4s ease-in-out infinite;
+      border-radius: ${T.r.sm};
     }
-    
-    .fade-in-up {
-      animation: fadeInUp 0.6s ease forwards;
+    .dd-fadeUp   { animation: dd-fadeUp .7s cubic-bezier(.22,1,.36,1) forwards; }
+    .dd-fadeIn   { animation: dd-fadeIn .5s ease forwards; }
+    .dd-scaleIn  { animation: dd-scaleIn .4s ease forwards; }
+    .dd-slideR   { animation: dd-slideRight .6s ease forwards; }
+    .dd-slideL   { animation: dd-slideLeft .6s ease forwards; }
+    .dd-float    { animation: dd-float 3s ease-in-out infinite; }
+    .dd-wiggle:hover { animation: dd-wiggle .4s ease; }
+
+    .dd-lift {
+      transition: transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s ease;
     }
-    
-    .fade-in {
-      animation: fadeIn 0.4s ease forwards;
-    }
-    
-    .scale-in {
-      animation: scaleIn 0.3s ease forwards;
-    }
-    
-    .hover-lift {
-      transition: transform ${theme.transitionBase}, box-shadow ${theme.transitionBase};
-    }
-    
-    .hover-lift:hover {
+    .dd-lift:hover {
       transform: translateY(-6px);
-      box-shadow: ${theme.shadowXl};
+      box-shadow: ${T.shadow.xl};
     }
-    
-    .hover-scale {
-      transition: transform ${theme.transitionSlow};
+
+    .dd-imgZoom {
+      overflow: hidden;
     }
-    
-    .hover-scale:hover {
-      transform: scale(1.02);
+    .dd-imgZoom img {
+      transition: transform .5s cubic-bezier(.22,1,.36,1);
     }
-    
-    .img-zoom {
-      transition: transform ${theme.transitionSlow};
-    }
-    
-    .img-zoom:hover {
+    .dd-imgZoom:hover img {
       transform: scale(1.08);
     }
-    
-    /* Custom Scrollbar */
-    ::-webkit-scrollbar {
-      width: 10px;
-      height: 10px;
+
+    .dd-stagger > * {
+      opacity: 0;
+      animation: dd-fadeUp .6s cubic-bezier(.22,1,.36,1) forwards;
     }
-    
-    ::-webkit-scrollbar-track {
-      background: ${theme.gray100};
-    }
-    
-    ::-webkit-scrollbar-thumb {
-      background: ${theme.gray300};
-      border-radius: 5px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-      background: ${theme.gray400};
-    }
-    
-    /* Focus Styles */
-    *:focus-visible {
-      outline: 2px solid ${theme.primary};
-      outline-offset: 2px;
-    }
-    
-    /* Selection */
-    ::selection {
-      background: ${theme.primaryLight};
-      color: ${theme.primaryDarker};
-    }
+    ${Array.from({ length: 12 }, (_, i) => `.dd-stagger > *:nth-child(${i + 1}) { animation-delay: ${i * 80}ms; }`).join("\n")}
+
+    /* ── scrollbar ──────────────────────────── */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: ${T.gray100}; }
+    ::-webkit-scrollbar-thumb { background: ${T.green300}; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: ${T.green400}; }
   `}</style>
 );
 
 /* ═══════════════════════════════════════════════════
    HOOKS
    ═══════════════════════════════════════════════════ */
-
 const useWindowSize = () => {
-  const [size, setSize] = useState({
-    width: typeof window !== "undefined" ? window.innerWidth : 1200,
-    height: typeof window !== "undefined" ? window.innerHeight : 800,
-  });
-
+  const [s, setS] = useState({ w: window.innerWidth, h: window.innerHeight });
   useEffect(() => {
-    const handleResize = () => {
-      setSize({ width: window.innerWidth, height: window.innerHeight });
-    };
-    
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const fn = () => setS({ w: window.innerWidth, h: window.innerHeight });
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
   }, []);
+  return { ...s, mob: s.w < 768, tab: s.w >= 768 && s.w < 1024, desk: s.w >= 1024 };
+};
 
-  return {
-    ...size,
-    isMobile: size.width < 768,
-    isTablet: size.width >= 768 && size.width < 1024,
-    isDesktop: size.width >= 1024,
-  };
+const useInView = (opts = {}) => {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } }, { threshold: opts.threshold || 0.15 });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return [ref, visible];
 };
 
 /* ═══════════════════════════════════════════════════
-   SKELETON COMPONENTS
+   SKELETON LOADER (FULL PAGE)
    ═══════════════════════════════════════════════════ */
-
-const Skeleton = ({ 
-  width = "100%", 
-  height = "20px", 
-  radius = theme.radiusSm,
-  style = {},
-  className = ""
-}) => (
-  <div
-    className={`skeleton ${className}`}
-    style={{
-      width,
-      height,
-      borderRadius: radius,
-      ...style,
-    }}
-  />
+const Skel = ({ w = "100%", h = "20px", r = T.r.sm, style = {} }) => (
+  <div className="dd-skel" style={{ width: w, height: h, borderRadius: r, ...style }} />
 );
 
-const SkeletonText = ({ lines = 3, lastWidth = "60%" }) => (
-  <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-    {Array.from({ length: lines }).map((_, i) => (
-      <Skeleton 
-        key={i} 
-        height="16px" 
-        width={i === lines - 1 ? lastWidth : "100%"} 
-      />
-    ))}
-  </div>
-);
-
-const LoadingSkeleton = ({ isMobile }) => (
-  <div style={{ background: theme.white, minHeight: "100vh" }}>
-    {/* Hero Skeleton */}
-    <div style={{ position: "relative", height: isMobile ? "60vh" : "75vh" }}>
-      <Skeleton width="100%" height="100%" radius="0" />
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          padding: isMobile ? "32px 20px" : "64px 48px",
-          background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)",
-        }}
-      >
-        <div style={{ maxWidth: theme.containerMax, margin: "0 auto" }}>
-          <Skeleton width="120px" height="28px" style={{ marginBottom: 16 }} />
-          <Skeleton 
-            width={isMobile ? "90%" : "500px"} 
-            height={isMobile ? "36px" : "52px"} 
-            style={{ marginBottom: 16 }} 
-          />
-          <Skeleton 
-            width={isMobile ? "100%" : "400px"} 
-            height="24px" 
-            style={{ marginBottom: 32 }} 
-          />
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            {[100, 80, 120, 90].map((w, i) => (
-              <Skeleton key={i} width={`${w}px`} height="36px" radius={theme.radiusFull} />
-            ))}
+const FullPageSkeleton = ({ mob }) => (
+  <div style={{ background: T.white, minHeight: "100vh", fontFamily: T.sans }}>
+    {/* Hero */}
+    <div style={{ position: "relative", height: mob ? "60vh" : "80vh" }}>
+      <Skel w="100%" h="100%" r="0" />
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: mob ? "32px 20px" : "64px 48px", background: "linear-gradient(to top,rgba(0,0,0,.7),transparent)" }}>
+        <div style={{ maxWidth: T.max, margin: "0 auto" }}>
+          <Skel w="100px" h="28px" style={{ marginBottom: 16, opacity: .6 }} />
+          <Skel w={mob ? "85%" : "420px"} h={mob ? "32px" : "52px"} style={{ marginBottom: 14, opacity: .6 }} />
+          <Skel w={mob ? "60%" : "300px"} h="22px" style={{ marginBottom: 28, opacity: .6 }} />
+          <div style={{ display: "flex", gap: 10 }}>
+            {[100, 80, 110].map((x, i) => <Skel key={i} w={`${x}px`} h="34px" r={T.r.full} style={{ opacity: .5 }} />)}
           </div>
         </div>
       </div>
     </div>
 
-    {/* Quick Info Bar Skeleton */}
-    <div
-      style={{
-        background: theme.white,
-        borderBottom: `1px solid ${theme.gray200}`,
-        padding: "24px",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: theme.containerMax,
-          margin: "0 auto",
-          display: "grid",
-          gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(5, 1fr)",
-          gap: 24,
-        }}
-      >
-        {Array.from({ length: isMobile ? 4 : 5 }).map((_, i) => (
+    {/* Quick bar */}
+    <div style={{ borderBottom: `1px solid ${T.gray200}`, padding: "20px 24px" }}>
+      <div style={{ maxWidth: T.max, margin: "0 auto", display: "grid", gridTemplateColumns: mob ? "repeat(2,1fr)" : "repeat(5,1fr)", gap: 20 }}>
+        {Array.from({ length: mob ? 4 : 5 }).map((_, i) => (
           <div key={i} style={{ textAlign: "center" }}>
-            <Skeleton width="40px" height="40px" radius="50%" style={{ margin: "0 auto 12px" }} />
-            <Skeleton width="60%" height="12px" style={{ margin: "0 auto 8px" }} />
-            <Skeleton width="80%" height="18px" style={{ margin: "0 auto" }} />
+            <Skel w="44px" h="44px" r="50%" style={{ margin: "0 auto 10px" }} />
+            <Skel w="50%" h="12px" style={{ margin: "0 auto 6px" }} />
+            <Skel w="70%" h="16px" style={{ margin: "0 auto" }} />
           </div>
         ))}
       </div>
     </div>
 
-    {/* Content Skeleton */}
-    <div style={{ maxWidth: theme.containerMax, margin: "0 auto", padding: isMobile ? "48px 20px" : "80px 48px" }}>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr",
-          gap: 48,
-        }}
-      >
-        {/* Main Content */}
+    {/* Content */}
+    <div style={{ maxWidth: T.max, margin: "0 auto", padding: mob ? "48px 20px" : "80px 48px" }}>
+      <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "5fr 3fr", gap: 48 }}>
         <div>
-          <Skeleton width="180px" height="32px" style={{ marginBottom: 24 }} />
-          <SkeletonText lines={6} />
-          
-          <div style={{ marginTop: 48 }}>
-            <Skeleton width="150px" height="28px" style={{ marginBottom: 24 }} />
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 16 }}>
-              {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} style={{ display: "flex", gap: 12, alignItems: "center" }}>
-                  <Skeleton width="24px" height="24px" radius="50%" />
-                  <Skeleton width="70%" height="18px" />
+          <Skel w="200px" h="32px" style={{ marginBottom: 24 }} />
+          {[1, 2, 3, 4, 5].map(i => <Skel key={i} w={i === 5 ? "55%" : "100%"} h="16px" style={{ marginBottom: 14 }} />)}
+          <div style={{ marginTop: 40 }}>
+            <Skel w="160px" h="28px" style={{ marginBottom: 20 }} />
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <div key={i} style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                  <Skel w="28px" h="28px" r="50%" />
+                  <Skel w="65%" h="16px" />
                 </div>
               ))}
             </div>
           </div>
         </div>
-
-        {/* Sidebar */}
         <div>
-          <div
-            style={{
-              background: theme.gray50,
-              borderRadius: theme.radiusLg,
-              padding: 24,
-            }}
-          >
-            <Skeleton width="100%" height="48px" radius={theme.radiusMd} style={{ marginBottom: 20 }} />
-            <Skeleton width="60%" height="20px" style={{ marginBottom: 24 }} />
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-              {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} style={{ display: "flex", justifyContent: "space-between" }}>
-                  <Skeleton width="40%" height="16px" />
-                  <Skeleton width="50%" height="16px" />
-                </div>
-              ))}
-            </div>
+          <div style={{ background: T.gray50, borderRadius: T.r.lg, padding: 24 }}>
+            <Skel w="100%" h="52px" r={T.r.md} style={{ marginBottom: 18 }} />
+            <Skel w="55%" h="18px" style={{ marginBottom: 22 }} />
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
+                <Skel w="38%" h="14px" />
+                <Skel w="48%" h="14px" />
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Gallery Skeleton */}
+      {/* Gallery skeleton */}
       <div style={{ marginTop: 80 }}>
-        <Skeleton width="140px" height="32px" style={{ marginBottom: 32 }} />
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
-            gap: 16,
-          }}
-        >
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} width="100%" style={{ paddingBottom: "75%" }} radius={theme.radiusMd} />
-          ))}
+        <Skel w="140px" h="30px" style={{ marginBottom: 28 }} />
+        <div style={{ display: "grid", gridTemplateColumns: mob ? "repeat(2,1fr)" : "repeat(4,1fr)", gap: 14 }}>
+          {[1, 2, 3, 4].map(i => <div key={i} style={{ position: "relative", paddingBottom: "75%" }}><Skel w="100%" h="100%" style={{ position: "absolute", inset: 0 }} r={T.r.md} /></div>)}
         </div>
       </div>
     </div>
@@ -408,1805 +275,671 @@ const LoadingSkeleton = ({ isMobile }) => (
 );
 
 /* ═══════════════════════════════════════════════════
-   UTILITY COMPONENTS
+   PRIMITIVES
    ═══════════════════════════════════════════════════ */
-
-const Container = ({ children, narrow = false, style = {} }) => (
-  <div
-    style={{
-      maxWidth: narrow ? theme.containerNarrow : theme.containerMax,
-      margin: "0 auto",
-      padding: "0 24px",
-      width: "100%",
-      ...style,
-    }}
-  >
-    {children}
-  </div>
+const Container = ({ children, narrow, style = {} }) => (
+  <div style={{ maxWidth: narrow ? T.narrow : T.max, margin: "0 auto", padding: "0 24px", width: "100%", ...style }}>{children}</div>
 );
 
-const Badge = ({ 
-  children, 
-  variant = "primary", 
-  size = "md", 
-  icon,
-  style = {} 
-}) => {
-  const variants = {
-    primary: { bg: theme.primaryLight, color: theme.primaryDark },
-    accent: { bg: theme.accentLight, color: theme.primaryDarker },
-    white: { bg: "rgba(255,255,255,0.2)", color: theme.white, border: "1px solid rgba(255,255,255,0.3)" },
-    whiteSolid: { bg: theme.white, color: theme.gray800 },
-    gray: { bg: theme.gray100, color: theme.gray700 },
-    success: { bg: "#D1FAE5", color: "#065F46" },
-    warning: { bg: "#FEF3C7", color: "#92400E" },
-    info: { bg: "#DBEAFE", color: "#1E40AF" },
-    dark: { bg: "rgba(0,0,0,0.6)", color: theme.white },
-  };
-
-  const sizes = {
-    xs: { padding: "4px 8px", fontSize: 10, gap: 4 },
-    sm: { padding: "5px 12px", fontSize: 11, gap: 5 },
-    md: { padding: "6px 14px", fontSize: 12, gap: 6 },
-    lg: { padding: "8px 18px", fontSize: 14, gap: 8 },
-  };
-
-  const v = variants[variant] || variants.primary;
-  const s = sizes[size] || sizes.md;
-
+const Badge = ({ children, variant = "primary", size = "md", icon, style = {} }) => {
+  const v = {
+    primary: { bg: T.green100, c: T.green800 },
+    accent: { bg: T.green200, c: T.green900 },
+    white: { bg: "rgba(255,255,255,.18)", c: T.white, border: "1px solid rgba(255,255,255,.35)" },
+    dark: { bg: "rgba(0,0,0,.55)", c: T.white },
+    gray: { bg: T.gray100, c: T.gray700 },
+    success: { bg: "#D1FAE5", c: "#065F46" },
+    warning: { bg: "#FEF3C7", c: "#92400E" },
+    info: { bg: "#DBEAFE", c: "#1E40AF" },
+    star: { bg: "rgba(251,191,36,.2)", c: "#FBBF24" },
+  }[variant] || { bg: T.green100, c: T.green800 };
+  const s = { xs: { p: "3px 8px", f: 10 }, sm: { p: "5px 12px", f: 11 }, md: { p: "6px 16px", f: 12 }, lg: { p: "8px 20px", f: 14 } }[size] || { p: "6px 16px", f: 12 };
   return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: s.gap,
-        background: v.bg,
-        color: v.color,
-        border: v.border || "none",
-        fontWeight: 600,
-        fontFamily: theme.fontSans,
-        borderRadius: theme.radiusFull,
-        textTransform: "uppercase",
-        letterSpacing: "0.5px",
-        whiteSpace: "nowrap",
-        ...s,
-        ...style,
-      }}
-    >
-      {icon && <span style={{ fontSize: s.fontSize + 2 }}>{icon}</span>}
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: v.bg, color: v.c, border: v.border || "none", fontWeight: 700, fontFamily: T.sans, borderRadius: T.r.full, textTransform: "uppercase", letterSpacing: ".6px", padding: s.p, fontSize: s.f, whiteSpace: "nowrap", ...style }}>
+      {icon && <span style={{ fontSize: s.f + 3 }}>{icon}</span>}
       {children}
     </span>
   );
 };
 
-const Button = ({ 
-  children, 
-  variant = "primary", 
-  size = "md", 
-  icon,
-  iconRight,
-  fullWidth = false,
-  as: Component = "button",
-  style = {},
-  ...props 
-}) => {
-  const variants = {
-    primary: {
-      background: theme.primary,
-      color: theme.white,
-      border: "none",
-      hoverBg: theme.primaryDark,
-    },
-    secondary: {
-      background: theme.white,
-      color: theme.primary,
-      border: `2px solid ${theme.primary}`,
-      hoverBg: theme.primaryMuted,
-    },
-    outline: {
-      background: "transparent",
-      color: theme.gray700,
-      border: `2px solid ${theme.gray300}`,
-      hoverBg: theme.gray50,
-    },
-    ghost: {
-      background: "transparent",
-      color: theme.primary,
-      border: "none",
-      hoverBg: theme.primaryMuted,
-    },
-    white: {
-      background: theme.white,
-      color: theme.gray800,
-      border: "none",
-      hoverBg: theme.gray100,
-    },
-    dark: {
-      background: theme.gray900,
-      color: theme.white,
-      border: "none",
-      hoverBg: theme.gray800,
-    },
-  };
-
-  const sizes = {
-    sm: { padding: "10px 18px", fontSize: 13, gap: 6 },
-    md: { padding: "14px 28px", fontSize: 15, gap: 8 },
-    lg: { padding: "18px 36px", fontSize: 16, gap: 10 },
-    xl: { padding: "20px 44px", fontSize: 17, gap: 12 },
-  };
-
-  const v = variants[variant] || variants.primary;
-  const s = sizes[size] || sizes.md;
-
-  return (
-    <Component
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: s.gap,
-        fontFamily: theme.fontSans,
-        fontWeight: 600,
-        borderRadius: theme.radiusMd,
-        cursor: "pointer",
-        textDecoration: "none",
-        transition: `all ${theme.transitionBase}`,
-        width: fullWidth ? "100%" : "auto",
-        background: v.background,
-        color: v.color,
-        border: v.border,
-        ...s,
-        ...style,
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.background = v.hoverBg || v.background;
-        e.currentTarget.style.transform = "translateY(-2px)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.background = v.background;
-        e.currentTarget.style.transform = "translateY(0)";
-      }}
-      {...props}
-    >
-      {icon && <span>{icon}</span>}
-      {children}
-      {iconRight && <span>{iconRight}</span>}
-    </Component>
-  );
-};
-
-const Card = ({ 
-  children, 
-  hover = true, 
-  padding,
-  style = {},
-  className = "",
-  ...props 
-}) => (
-  <div
-    className={`${hover ? "hover-lift" : ""} ${className}`}
-    style={{
-      background: theme.white,
-      borderRadius: theme.radiusLg,
-      border: `1px solid ${theme.gray200}`,
-      overflow: "hidden",
-      padding: padding,
-      ...style,
-    }}
-    {...props}
-  >
-    {children}
-  </div>
-);
-
-const SectionTitle = ({ children, subtitle, align = "left", isMobile }) => (
-  <div style={{ textAlign: align, marginBottom: isMobile ? 32 : 48 }}>
-    <h2
-      style={{
-        fontFamily: theme.fontSerif,
-        fontSize: isMobile ? 28 : 40,
-        fontWeight: 700,
-        color: theme.gray900,
-        margin: 0,
-        lineHeight: 1.2,
-      }}
-    >
-      {children}
-    </h2>
-    {subtitle && (
-      <p
-        style={{
-          fontSize: isMobile ? 16 : 18,
-          color: theme.gray500,
-          margin: "12px 0 0",
-          lineHeight: 1.6,
-          maxWidth: align === "center" ? 600 : "none",
-          marginLeft: align === "center" ? "auto" : 0,
-          marginRight: align === "center" ? "auto" : 0,
-        }}
-      >
-        {subtitle}
-      </p>
-    )}
-  </div>
-);
-
-const IconBox = ({ icon, size = 48, bg = theme.primaryMuted, color = theme.primary }) => (
-  <div
-    style={{
-      width: size,
-      height: size,
-      borderRadius: "50%",
-      background: bg,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      fontSize: size * 0.5,
-      color,
-      flexShrink: 0,
-    }}
-  >
+const IconCircle = ({ icon, size = 48, bg = T.green50, color = T.green600, style = {} }) => (
+  <div style={{ width: size, height: size, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * .48, color, flexShrink: 0, ...style }}>
     {icon}
   </div>
 );
 
-const Divider = ({ style = {} }) => (
-  <hr
-    style={{
-      border: "none",
-      height: 1,
-      background: theme.gray200,
-      margin: "32px 0",
-      ...style,
-    }}
-  />
-);
-
-/* ═══════════════════════════════════════════════════
-   HERO SECTION
-   ═══════════════════════════════════════════════════ */
-
-const Hero = ({ destination, isMobile }) => {
-  const d = destination;
-
+const AnimatedSection = ({ children, id, bg = T.white, py, mob }) => {
+  const [ref, visible] = useInView();
   return (
-    <section
-      style={{
-        position: "relative",
-        height: isMobile ? "75vh" : "85vh",
-        minHeight: 550,
-        overflow: "hidden",
-      }}
-    >
-      {/* Background Image */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage: `url(${d.heroImage || d.imageUrl})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      />
-
-      {/* Gradient Overlay */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: `linear-gradient(
-            to bottom,
-            rgba(0,0,0,0.1) 0%,
-            rgba(0,0,0,0.3) 40%,
-            rgba(0,0,0,0.75) 100%
-          )`,
-        }}
-      />
-
-      {/* Green Accent Line */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 4,
-          background: theme.primary,
-        }}
-      />
-
-      {/* Content */}
-      <Container
-        style={{
-          position: "relative",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "flex-end",
-          paddingBottom: isMobile ? 48 : 72,
-        }}
-      >
-        <div className="fade-in-up" style={{ maxWidth: 800 }}>
-          {/* Breadcrumb / Country */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-            <Link
-              to={`/countries/${d.countrySlug}`}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-                color: "rgba(255,255,255,0.9)",
-                textDecoration: "none",
-                fontSize: 15,
-                fontWeight: 500,
-              }}
-            >
-              {d.country?.flag && <span style={{ fontSize: 20 }}>{d.country.flag}</span>}
-              <span>{d.countryName || d.country?.name}</span>
-            </Link>
-            <span style={{ color: "rgba(255,255,255,0.5)" }}>→</span>
-            <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 15 }}>{d.region}</span>
-          </div>
-
-          {/* Badges */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 20 }}>
-            {d.isFeatured && <Badge variant="primary" size="md" icon="⭐">Featured</Badge>}
-            {d.isPopular && <Badge variant="warning" size="md" icon="🔥">Popular</Badge>}
-            {d.isNew && <Badge variant="info" size="md" icon="✨">New</Badge>}
-            {d.isEcoFriendly && <Badge variant="success" size="md" icon="🌿">Eco-Friendly</Badge>}
-            {d.destinationType && <Badge variant="white" size="md">{d.destinationType}</Badge>}
-          </div>
-
-          {/* Title */}
-          <h1
-            style={{
-              fontFamily: theme.fontSerif,
-              fontSize: isMobile ? 36 : 56,
-              fontWeight: 800,
-              color: theme.white,
-              margin: "0 0 16px",
-              lineHeight: 1.1,
-              textShadow: "0 4px 24px rgba(0,0,0,0.4)",
-            }}
-          >
-            {d.name}
-          </h1>
-
-          {/* Tagline */}
-          {d.tagline && (
-            <p
-              style={{
-                fontSize: isMobile ? 18 : 24,
-                color: "rgba(255,255,255,0.9)",
-                margin: "0 0 28px",
-                lineHeight: 1.5,
-                fontWeight: 500,
-              }}
-            >
-              {d.tagline}
-            </p>
-          )}
-
-          {/* Rating & Meta */}
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: isMobile ? 16 : 24 }}>
-            {d.rating && (
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 4,
-                    background: "rgba(251, 191, 36, 0.2)",
-                    padding: "8px 14px",
-                    borderRadius: theme.radiusFull,
-                  }}
-                >
-                  <span style={{ color: theme.star, fontSize: 18 }}>★</span>
-                  <span style={{ color: theme.white, fontWeight: 700, fontSize: 16 }}>
-                    {d.rating}
-                  </span>
-                </div>
-                {d.reviewCount > 0 && (
-                  <span style={{ color: "rgba(255,255,255,0.7)", fontSize: 14 }}>
-                    ({d.reviewCount} reviews)
-                  </span>
-                )}
-              </div>
-            )}
-            
-            {d.duration && (
-              <Badge variant="dark" size="lg" icon="🕐">
-                {d.duration}
-              </Badge>
-            )}
-            
-            {d.category && (
-              <Badge variant="dark" size="lg">
-                {d.category}
-              </Badge>
-            )}
-          </div>
-        </div>
-      </Container>
+    <section ref={ref} id={id} style={{ background: bg, padding: py || (mob ? "64px 0" : "100px 0"), opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(40px)", transition: "opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1)" }}>
+      {children}
     </section>
   );
 };
 
 /* ═══════════════════════════════════════════════════
-   QUICK INFO BAR
+   HERO
    ═══════════════════════════════════════════════════ */
+const Hero = ({ d, mob }) => (
+  <section style={{ position: "relative", height: mob ? "75vh" : "88vh", minHeight: 520, overflow: "hidden" }}>
+    {/* BG Image with zoom animation */}
+    <div style={{ position: "absolute", inset: 0, animation: "dd-heroZoom 8s ease forwards" }}>
+      <img src={d.heroImage || d.imageUrl} alt={d.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+    </div>
 
-const QuickInfoBar = ({ destination, isMobile }) => {
-  const d = destination;
+    {/* Overlays */}
+    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,.15) 0%, rgba(0,0,0,.35) 50%, rgba(0,0,0,.82) 100%)" }} />
+    <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${T.green900}30, transparent 70%)` }} />
 
-  const infoItems = [
-    {
-      icon: "🕐",
-      label: "Duration",
-      value: d.duration || `${d.durationDays} Days`,
-      show: d.duration || d.durationDays,
-    },
-    {
-      icon: "📊",
-      label: "Difficulty",
-      value: d.difficulty || d.fitnessLevel,
-      show: d.difficulty || d.fitnessLevel,
-      badge: true,
-    },
-    {
-      icon: "👥",
-      label: "Group Size",
-      value: d.minGroupSize && d.maxGroupSize 
-        ? `${d.minGroupSize} - ${d.maxGroupSize}` 
-        : d.maxGroupSize ? `Up to ${d.maxGroupSize}` : null,
-      show: d.minGroupSize || d.maxGroupSize,
-    },
-    {
-      icon: "⭐",
-      label: "Rating",
-      value: d.rating ? `${d.rating} / 5` : null,
-      show: d.rating,
-      highlight: true,
-    },
-    {
-      icon: "🎫",
-      label: "Entry Fee",
-      value: d.entranceFee,
-      show: d.entranceFee,
-    },
-  ].filter(item => item.show);
+    {/* Bottom green accent */}
+    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 5, background: `linear-gradient(90deg, ${T.green400}, ${T.green600}, ${T.green400})`, backgroundSize: "200% 100%", animation: "dd-borderFlow 3s ease infinite" }} />
 
-  if (infoItems.length === 0) return null;
+    {/* Content */}
+    <Container style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", paddingBottom: mob ? 44 : 72 }}>
+      <div style={{ maxWidth: 820 }}>
+        {/* Breadcrumb */}
+        <div className="dd-fadeUp" style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, animationDelay: ".1s", opacity: 0 }}>
+          {d.countrySlug && (
+            <Link to={`/countries/${d.countrySlug}`} style={{ display: "flex", alignItems: "center", gap: 8, color: "rgba(255,255,255,.9)", textDecoration: "none", fontSize: 15, fontWeight: 500, transition: "color .2s" }}>
+              {d.country?.flag && <span style={{ fontSize: 22 }}>{d.country.flag}</span>}
+              <span>{d.countryName || d.country?.name}</span>
+            </Link>
+          )}
+          {d.region && (
+            <>
+              <span style={{ color: "rgba(255,255,255,.45)", fontSize: 13 }}>›</span>
+              <span style={{ color: "rgba(255,255,255,.7)", fontSize: 14 }}>{d.region}</span>
+            </>
+          )}
+        </div>
+
+        {/* Badges */}
+        <div className="dd-fadeUp" style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 18, animationDelay: ".2s", opacity: 0 }}>
+          {d.isFeatured && <Badge variant="star" size="md" icon="⭐">Featured</Badge>}
+          {d.isPopular && <Badge variant="warning" size="md" icon="🔥">Popular</Badge>}
+          {d.isEcoFriendly && <Badge variant="success" size="md" icon="🌿">Eco-Friendly</Badge>}
+          {d.destinationType && <Badge variant="white" size="md">{d.destinationType}</Badge>}
+        </div>
+
+        {/* Title */}
+        <h1 className="dd-fadeUp" style={{ fontFamily: T.serif, fontSize: mob ? 36 : 60, fontWeight: 800, color: T.white, margin: "0 0 14px", lineHeight: 1.08, textShadow: "0 4px 32px rgba(0,0,0,.5)", animationDelay: ".3s", opacity: 0 }}>
+          {d.name}
+        </h1>
+
+        {/* Tagline */}
+        {d.tagline && (
+          <p className="dd-fadeUp" style={{ fontSize: mob ? 18 : 24, color: "rgba(255,255,255,.88)", margin: "0 0 28px", lineHeight: 1.5, fontWeight: 500, maxWidth: 600, animationDelay: ".4s", opacity: 0 }}>
+            {d.tagline}
+          </p>
+        )}
+
+        {/* Rating + Duration */}
+        <div className="dd-fadeUp" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: mob ? 14 : 24, animationDelay: ".5s", opacity: 0 }}>
+          {d.rating && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(251,191,36,.2)", padding: "8px 16px", borderRadius: T.r.full, backdropFilter: "blur(8px)" }}>
+                <span style={{ color: "#FBBF24", fontSize: 20 }}>★</span>
+                <span style={{ color: T.white, fontWeight: 800, fontSize: 17 }}>{d.rating}</span>
+              </div>
+              {d.reviewCount > 0 && <span style={{ color: "rgba(255,255,255,.65)", fontSize: 14 }}>({d.reviewCount} reviews)</span>}
+            </div>
+          )}
+          {d.duration && <Badge variant="dark" size="lg" icon="🕐">{d.duration}</Badge>}
+          {d.category && <Badge variant="dark" size="lg">{d.category}</Badge>}
+        </div>
+      </div>
+    </Container>
+  </section>
+);
+
+/* ═══════════════════════════════════════════════════
+   QUICK INFO BAR (sticky)
+   ═══════════════════════════════════════════════════ */
+const QuickInfoBar = ({ d, mob }) => {
+  const items = [
+    { icon: "🕐", label: "Duration", value: d.duration || (d.durationDays ? `${d.durationDays} Days` : null) },
+    { icon: "📊", label: "Difficulty", value: d.difficulty || d.fitnessLevel, badge: true },
+    { icon: "👥", label: "Group Size", value: d.minGroupSize && d.maxGroupSize ? `${d.minGroupSize} – ${d.maxGroupSize}` : null },
+    { icon: "⭐", label: "Rating", value: d.rating ? `${d.rating} / 5` : null, highlight: true },
+    { icon: "🎫", label: "Entry Fee", value: d.entranceFee },
+  ].filter(i => i.value);
+
+  if (!items.length) return null;
 
   return (
-    <section
-      style={{
-        background: theme.white,
-        borderBottom: `1px solid ${theme.gray200}`,
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
-        boxShadow: theme.shadowSm,
-      }}
-    >
+    <div style={{ background: T.white, borderBottom: `1px solid ${T.gray200}`, position: "sticky", top: 0, zIndex: 90, boxShadow: T.shadow.sm }}>
       <Container>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile 
-              ? `repeat(${Math.min(infoItems.length, 2)}, 1fr)` 
-              : `repeat(${Math.min(infoItems.length, 5)}, 1fr)`,
-            gap: isMobile ? 16 : 0,
-            padding: isMobile ? "20px 0" : "24px 0",
-          }}
-        >
-          {infoItems.map((item, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                textAlign: "center",
-                padding: isMobile ? "12px" : "16px 24px",
-                borderRight: !isMobile && i < infoItems.length - 1 
-                  ? `1px solid ${theme.gray200}` 
-                  : "none",
-              }}
-            >
-              <span style={{ fontSize: 28, marginBottom: 8 }}>{item.icon}</span>
-              <span
-                style={{
-                  fontSize: 11,
-                  fontWeight: 600,
-                  color: theme.gray500,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  marginBottom: 4,
-                }}
-              >
-                {item.label}
-              </span>
-              {item.badge ? (
-                <Badge 
-                  variant={item.value === "easy" ? "success" : item.value === "moderate" ? "warning" : "info"} 
-                  size="sm"
-                >
-                  {item.value}
-                </Badge>
+        <div style={{ display: "grid", gridTemplateColumns: mob ? `repeat(${Math.min(items.length, 2)},1fr)` : `repeat(${items.length},1fr)`, gap: 0, padding: mob ? "16px 0" : "0" }}>
+          {items.map((it, i) => (
+            <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: mob ? "10px" : "22px 16px", borderRight: !mob && i < items.length - 1 ? `1px solid ${T.gray200}` : "none" }}>
+              <span className="dd-wiggle" style={{ fontSize: 26, marginBottom: 6, cursor: "default" }}>{it.icon}</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: T.gray400, textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 3 }}>{it.label}</span>
+              {it.badge ? (
+                <Badge variant={it.value === "easy" ? "success" : it.value === "moderate" ? "warning" : "info"} size="sm">{it.value}</Badge>
               ) : (
-                <span
-                  style={{
-                    fontSize: 15,
-                    fontWeight: 700,
-                    color: item.highlight ? theme.primary : theme.gray800,
-                  }}
-                >
-                  {item.value}
-                </span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: it.highlight ? T.green600 : T.gray800 }}>{it.value}</span>
               )}
             </div>
           ))}
         </div>
       </Container>
-    </section>
+    </div>
   );
 };
 
 /* ═══════════════════════════════════════════════════
-   OVERVIEW SECTION
+   OVERVIEW + SIDEBAR
    ═══════════════════════════════════════════════════ */
-
-const Overview = ({ destination, isMobile }) => {
-  const d = destination;
-  const description = d.description || d.shortDescription;
-
-  if (!description && !d.overview) return null;
+const OverviewSection = ({ d, mob }) => {
+  const desc = d.description || d.shortDescription;
+  if (!desc && !d.overview) return null;
 
   return (
-    <section
-      style={{
-        background: theme.white,
-        padding: isMobile ? "64px 0" : "96px 0",
-      }}
-    >
+    <AnimatedSection id="overview" bg={T.white} mob={mob}>
       <Container>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "2fr 1fr",
-            gap: isMobile ? 48 : 64,
-            alignItems: "start",
-          }}
-        >
-          {/* Main Content */}
+        <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "5fr 3fr", gap: mob ? 48 : 64, alignItems: "start" }}>
+          {/* Left */}
           <div>
-            <SectionTitle isMobile={isMobile}>
+            <h2 style={{ fontFamily: T.serif, fontSize: mob ? 28 : 40, fontWeight: 700, color: T.gray900, margin: "0 0 12px", lineHeight: 1.15 }}>
               About This Destination
-            </SectionTitle>
+            </h2>
+            <div style={{ width: 60, height: 4, borderRadius: 2, background: `linear-gradient(90deg, ${T.green400}, ${T.green600})`, marginBottom: 32 }} />
 
-            {/* Overview Box */}
             {d.overview && (
-              <div
-                style={{
-                  background: theme.primaryMuted,
-                  borderLeft: `4px solid ${theme.primary}`,
-                  borderRadius: `0 ${theme.radiusMd} ${theme.radiusMd} 0`,
-                  padding: isMobile ? 20 : 28,
-                  marginBottom: 32,
-                }}
-              >
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 17,
-                    fontWeight: 500,
-                    color: theme.primaryDarker,
-                    lineHeight: 1.7,
-                    fontStyle: "italic",
-                  }}
-                >
-                  {d.overview}
-                </p>
+              <div style={{ background: T.green50, borderLeft: `4px solid ${T.green500}`, borderRadius: `0 ${T.r.md} ${T.r.md} 0`, padding: mob ? 20 : 28, marginBottom: 32 }}>
+                <p style={{ margin: 0, fontSize: 17, fontWeight: 500, color: T.green800, lineHeight: 1.75, fontStyle: "italic" }}>{d.overview}</p>
               </div>
             )}
 
-            {/* Description */}
-            {description && (
-              <div style={{ fontSize: 16, lineHeight: 1.85, color: theme.gray600 }}>
-                {description.split("\n\n").map((paragraph, i) => (
-                  <p key={i} style={{ margin: i > 0 ? "24px 0 0" : 0 }}>
-                    {paragraph}
-                  </p>
+            {desc && (
+              <div style={{ fontSize: 16, lineHeight: 1.9, color: T.gray600 }}>
+                {desc.split("\n\n").filter(Boolean).map((p, i) => (
+                  <p key={i} style={{ margin: i > 0 ? "22px 0 0" : 0 }}>{p}</p>
                 ))}
               </div>
             )}
 
-            {/* Key Info Tags */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 12, marginTop: 32 }}>
-              {d.isFamilyFriendly && (
-                <Badge variant="success" size="lg" icon="👨‍👩‍👧‍👦">
-                  Family Friendly
-                </Badge>
-              )}
-              {d.isEcoFriendly && (
-                <Badge variant="primary" size="lg" icon="🌿">
-                  Eco-Friendly
-                </Badge>
-              )}
-              {d.minAge && (
-                <Badge variant="info" size="lg" icon="📋">
-                  Min Age: {d.minAge}+
-                </Badge>
-              )}
+            {/* Tags */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 32 }}>
+              {d.isFamilyFriendly && <Badge variant="success" size="lg" icon="👨‍👩‍👧‍👦">Family Friendly</Badge>}
+              {d.isEcoFriendly && <Badge variant="primary" size="lg" icon="🌿">Eco-Friendly</Badge>}
+              {d.minAge && <Badge variant="info" size="lg" icon="📋">Min Age: {d.minAge}+</Badge>}
             </div>
           </div>
 
-          {/* Sidebar - Booking Card */}
-          <div style={{ position: "sticky", top: 100 }}>
-            <Card hover={false} style={{ border: `2px solid ${theme.primary}` }}>
-              {/* Price / CTA Header */}
-              <div
-                style={{
-                  background: theme.primary,
-                  padding: "24px",
-                  textAlign: "center",
-                }}
-              >
-                <p
-                  style={{
-                    margin: "0 0 4px",
-                    fontSize: 14,
-                    color: "rgba(255,255,255,0.8)",
-                    fontWeight: 500,
-                  }}
-                >
-                  Starting from
-                </p>
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 32,
-                    fontWeight: 800,
-                    color: theme.white,
-                    fontFamily: theme.fontSans,
-                  }}
-                >
-                  {d.entranceFee || "Contact for Price"}
-                </p>
-              </div>
-
-              <div style={{ padding: 24 }}>
-                <Button fullWidth size="lg" style={{ marginBottom: 16 }}>
-                  Book Now
-                </Button>
-                <Button variant="outline" fullWidth size="md">
-                  Contact Us
-                </Button>
-
-                <Divider />
-
-                {/* Quick Facts */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                  {d.operatingHours && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <IconBox icon="🕐" size={40} />
-                      <div>
-                        <p style={{ margin: 0, fontSize: 12, color: theme.gray500, fontWeight: 500 }}>
-                          Operating Hours
-                        </p>
-                        <p style={{ margin: 0, fontSize: 14, color: theme.gray800, fontWeight: 600 }}>
-                          {d.operatingHours}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {d.nearestCity && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <IconBox icon="🏙️" size={40} />
-                      <div>
-                        <p style={{ margin: 0, fontSize: 12, color: theme.gray500, fontWeight: 500 }}>
-                          Nearest City
-                        </p>
-                        <p style={{ margin: 0, fontSize: 14, color: theme.gray800, fontWeight: 600 }}>
-                          {d.nearestCity}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {d.nearestAirport && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <IconBox icon="✈️" size={40} />
-                      <div>
-                        <p style={{ margin: 0, fontSize: 12, color: theme.gray500, fontWeight: 500 }}>
-                          Nearest Airport
-                        </p>
-                        <p style={{ margin: 0, fontSize: 14, color: theme.gray800, fontWeight: 600 }}>
-                          {d.nearestAirport}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {d.altitudeMeters && (
-                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                      <IconBox icon="⛰️" size={40} />
-                      <div>
-                        <p style={{ margin: 0, fontSize: 12, color: theme.gray500, fontWeight: 500 }}>
-                          Altitude
-                        </p>
-                        <p style={{ margin: 0, fontSize: 14, color: theme.gray800, fontWeight: 600 }}>
-                          {d.altitudeMeters.toLocaleString()}m
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Card>
-          </div>
+          {/* Right — Sidebar */}
+          {!mob && <SidebarCard d={d} />}
         </div>
+        {mob && <div style={{ marginTop: 40 }}><SidebarCard d={d} /></div>}
       </Container>
-    </section>
+    </AnimatedSection>
   );
 };
 
+const SidebarCard = ({ d }) => (
+  <div style={{ position: "sticky", top: 100, borderRadius: T.r.lg, overflow: "hidden", border: `2px solid ${T.green500}`, boxShadow: T.shadow.lg }}>
+    {/* Header */}
+    <div style={{ background: `linear-gradient(135deg, ${T.green600}, ${T.green700})`, padding: "28px 24px", textAlign: "center" }}>
+      <p style={{ margin: "0 0 4px", fontSize: 14, color: "rgba(255,255,255,.75)", fontWeight: 500 }}>Starting from</p>
+      <p style={{ margin: 0, fontSize: 28, fontWeight: 800, color: T.white, fontFamily: T.sans }}>{d.entranceFee || "Contact for Price"}</p>
+    </div>
+
+    <div style={{ padding: 24, background: T.white }}>
+      {/* Buttons */}
+      <button style={{ width: "100%", padding: "16px", background: T.green600, color: T.white, border: "none", borderRadius: T.r.md, fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: T.sans, marginBottom: 12, transition: "background .2s" }}
+        onMouseEnter={e => e.currentTarget.style.background = T.green700}
+        onMouseLeave={e => e.currentTarget.style.background = T.green600}
+      >
+        Book Now
+      </button>
+      <button style={{ width: "100%", padding: "14px", background: T.white, color: T.green700, border: `2px solid ${T.green500}`, borderRadius: T.r.md, fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: T.sans, transition: "background .2s" }}
+        onMouseEnter={e => e.currentTarget.style.background = T.green50}
+        onMouseLeave={e => e.currentTarget.style.background = T.white}
+      >
+        Contact Us
+      </button>
+
+      <hr style={{ border: "none", height: 1, background: T.gray200, margin: "24px 0" }} />
+
+      {/* Details */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+        {[
+          { icon: "🕐", label: "Operating Hours", value: d.operatingHours },
+          { icon: "🏙️", label: "Nearest City", value: d.nearestCity },
+          { icon: "✈️", label: "Nearest Airport", value: d.nearestAirport },
+          { icon: "⛰️", label: "Altitude", value: d.altitudeMeters ? `${d.altitudeMeters.toLocaleString()}m` : null },
+        ].filter(x => x.value).map((x, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <IconCircle icon={x.icon} size={42} bg={T.green50} />
+            <div>
+              <p style={{ margin: 0, fontSize: 12, color: T.gray400, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".4px" }}>{x.label}</p>
+              <p style={{ margin: "2px 0 0", fontSize: 14, color: T.gray800, fontWeight: 600 }}>{x.value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+);
+
 /* ═══════════════════════════════════════════════════
-   HIGHLIGHTS SECTION
+   HIGHLIGHTS
    ═══════════════════════════════════════════════════ */
-
-const Highlights = ({ destination, isMobile }) => {
-  const highlights = destination.highlights || [];
-
-  if (highlights.length === 0) return null;
+const Highlights = ({ d, mob }) => {
+  const list = d.highlights || [];
+  if (!list.length) return null;
 
   return (
-    <section
-      style={{
-        background: theme.gray50,
-        padding: isMobile ? "64px 0" : "96px 0",
-      }}
-    >
+    <AnimatedSection id="highlights" bg={T.gray50} mob={mob}>
       <Container>
-        <SectionTitle
-          subtitle={`What makes ${destination.name} special`}
-          isMobile={isMobile}
-        >
-          Highlights
-        </SectionTitle>
+        <h2 style={{ fontFamily: T.serif, fontSize: mob ? 28 : 40, fontWeight: 700, color: T.gray900, margin: "0 0 12px" }}>Highlights</h2>
+        <p style={{ fontSize: mob ? 16 : 18, color: T.gray500, margin: "0 0 8px", lineHeight: 1.6, maxWidth: 560 }}>What makes {d.name} extraordinary</p>
+        <div style={{ width: 60, height: 4, borderRadius: 2, background: `linear-gradient(90deg, ${T.green400}, ${T.green600})`, marginBottom: 40 }} />
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
-            gap: 24,
-          }}
-        >
-          {highlights.map((highlight, i) => (
-            <Card
-              key={i}
-              padding={isMobile ? 24 : 32}
-              style={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 16,
-              }}
-            >
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: "50%",
-                  background: `linear-gradient(135deg, ${theme.primary}, ${theme.accent})`,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: theme.white,
-                  fontWeight: 800,
-                  fontSize: 18,
-                  flexShrink: 0,
-                }}
-              >
+        <div className="dd-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "repeat(3,1fr)", gap: 24 }}>
+          {list.map((h, i) => (
+            <div key={i} className="dd-lift" style={{ background: T.white, borderRadius: T.r.lg, padding: mob ? 24 : 32, border: `1px solid ${T.gray200}`, display: "flex", alignItems: "flex-start", gap: 18 }}>
+              <div style={{ width: 52, height: 52, borderRadius: "50%", background: `linear-gradient(135deg, ${T.green500}, ${T.green600})`, display: "flex", alignItems: "center", justifyContent: "center", color: T.white, fontWeight: 800, fontSize: 20, flexShrink: 0, boxShadow: `0 4px 14px ${T.green500}44` }}>
                 {i + 1}
               </div>
-              <p
-                style={{
-                  margin: 0,
-                  fontSize: 16,
-                  color: theme.gray700,
-                  lineHeight: 1.6,
-                  fontWeight: 500,
-                }}
-              >
-                {highlight}
-              </p>
-            </Card>
-          ))}
-        </div>
-      </Container>
-    </section>
-  );
-};
-
-/* ═══════════════════════════════════════════════════
-   ACTIVITIES SECTION
-   ═══════════════════════════════════════════════════ */
-
-const Activities = ({ destination, isMobile }) => {
-  const activities = destination.activities || [];
-
-  if (activities.length === 0) return null;
-
-  const activityIcons = {
-    "Game drives": "🚙",
-    "Hot air balloon safari": "🎈",
-    "Bush walks": "🚶",
-    "Cultural village visits": "🏘️",
-    "Bird watching": "🦅",
-    "Photography safaris": "📷",
-    "Night game drives": "🌙",
-    "Bush breakfast": "🍳",
-    "default": "✨",
-  };
-
-  return (
-    <section
-      style={{
-        background: theme.white,
-        padding: isMobile ? "64px 0" : "96px 0",
-      }}
-    >
-      <Container>
-        <SectionTitle
-          subtitle="Experiences awaiting you"
-          isMobile={isMobile}
-        >
-          Things To Do
-        </SectionTitle>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
-            gap: 20,
-          }}
-        >
-          {activities.map((activity, i) => (
-            <Card
-              key={i}
-              padding={24}
-              style={{ textAlign: "center" }}
-            >
-              <div
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: "50%",
-                  background: theme.primaryMuted,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 32,
-                  margin: "0 auto 16px",
-                }}
-              >
-                {activityIcons[activity] || activityIcons.default}
-              </div>
-              <h4
-                style={{
-                  margin: 0,
-                  fontSize: 15,
-                  fontWeight: 600,
-                  color: theme.gray800,
-                }}
-              >
-                {activity}
-              </h4>
-            </Card>
-          ))}
-        </div>
-      </Container>
-    </section>
-  );
-};
-
-/* ═══════════════════════════════════════════════════
-   WILDLIFE SECTION
-   ═══════════════════════════════════════════════════ */
-
-const Wildlife = ({ destination, isMobile }) => {
-  const wildlife = destination.wildlife || [];
-
-  if (wildlife.length === 0) return null;
-
-  const animalIcons = {
-    "Lion": "🦁",
-    "Leopard": "🐆",
-    "Cheetah": "🐆",
-    "African Elephant": "🐘",
-    "Elephant": "🐘",
-    "Cape Buffalo": "🐃",
-    "Buffalo": "🐃",
-    "Wildebeest": "🦬",
-    "Zebra": "🦓",
-    "Hippopotamus": "🦛",
-    "Nile Crocodile": "🐊",
-    "Crocodile": "🐊",
-    "Giraffe": "🦒",
-    "Hyena": "🐺",
-    "African Wild Dog": "🐕",
-    "Rhinoceros": "🦏",
-    "Rhino": "🦏",
-    "default": "🦌",
-  };
-
-  return (
-    <section
-      style={{
-        background: theme.gray50,
-        padding: isMobile ? "64px 0" : "96px 0",
-      }}
-    >
-      <Container>
-        <SectionTitle
-          subtitle={`Incredible species you may encounter at ${destination.name}`}
-          isMobile={isMobile}
-        >
-          Wildlife
-        </SectionTitle>
-
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: 16,
-            justifyContent: "center",
-          }}
-        >
-          {wildlife.map((animal, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                background: theme.white,
-                padding: "14px 22px",
-                borderRadius: theme.radiusFull,
-                border: `1px solid ${theme.gray200}`,
-                boxShadow: theme.shadowSm,
-                transition: `all ${theme.transitionBase}`,
-              }}
-              className="hover-lift"
-            >
-              <span style={{ fontSize: 24 }}>
-                {animalIcons[animal] || animalIcons.default}
-              </span>
-              <span
-                style={{
-                  fontSize: 15,
-                  fontWeight: 600,
-                  color: theme.gray700,
-                }}
-              >
-                {animal}
-              </span>
+              <p style={{ margin: 0, fontSize: 16, color: T.gray700, lineHeight: 1.65, fontWeight: 500 }}>{h}</p>
             </div>
           ))}
         </div>
       </Container>
-    </section>
+    </AnimatedSection>
   );
 };
 
 /* ═══════════════════════════════════════════════════
-   GALLERY SECTION
+   ACTIVITIES
    ═══════════════════════════════════════════════════ */
+const Activities = ({ d, mob }) => {
+  const list = d.activities || [];
+  if (!list.length) return null;
 
-const Gallery = ({ destination, isMobile }) => {
-  const [lightbox, setLightbox] = useState({ open: false, index: 0 });
-  
-  const gallery = destination.gallery || [];
-  const images = gallery.length > 0 
-    ? gallery.map(g => g.imageUrl) 
-    : destination.images || [];
-
-  if (images.length === 0) return null;
+  const icons = { "Game drives": "🚙", "Hot air balloon safari": "🎈", "Bush walks": "🚶", "Cultural village visits": "🏘️", "Bird watching": "🦅", "Photography safaris": "📷", "Night game drives": "🌙", "Bush breakfast": "🍳" };
 
   return (
-    <section
-      style={{
-        background: theme.white,
-        padding: isMobile ? "64px 0" : "96px 0",
-      }}
-    >
+    <AnimatedSection id="activities" bg={T.white} mob={mob}>
       <Container>
-        <SectionTitle
-          subtitle="Stunning visuals from this destination"
-          isMobile={isMobile}
-        >
-          Photo Gallery
-        </SectionTitle>
+        <h2 style={{ fontFamily: T.serif, fontSize: mob ? 28 : 40, fontWeight: 700, color: T.gray900, margin: "0 0 12px" }}>Things To Do</h2>
+        <p style={{ fontSize: mob ? 16 : 18, color: T.gray500, margin: "0 0 8px", lineHeight: 1.6 }}>Experiences awaiting you</p>
+        <div style={{ width: 60, height: 4, borderRadius: 2, background: `linear-gradient(90deg, ${T.green400}, ${T.green600})`, marginBottom: 40 }} />
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile 
-              ? "repeat(2, 1fr)" 
-              : images.length <= 4 
-                ? "repeat(4, 1fr)" 
-                : "repeat(4, 1fr)",
-            gap: 16,
-          }}
-        >
-          {images.slice(0, 8).map((img, i) => (
-            <div
-              key={i}
-              onClick={() => setLightbox({ open: true, index: i })}
-              style={{
-                position: "relative",
-                paddingBottom: i === 0 && !isMobile ? "100%" : "75%",
-                gridColumn: i === 0 && !isMobile && images.length > 4 ? "span 2" : "span 1",
-                gridRow: i === 0 && !isMobile && images.length > 4 ? "span 2" : "span 1",
-                borderRadius: theme.radiusMd,
-                overflow: "hidden",
-                cursor: "pointer",
-              }}
-              className="hover-scale"
-            >
-              <img
-                src={img}
-                alt={`${destination.name} - Photo ${i + 1}`}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                }}
-                className="img-zoom"
-              />
-              {/* Hover Overlay */}
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: "rgba(0,0,0,0)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  transition: `all ${theme.transitionBase}`,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "rgba(0,0,0,0.4)";
-                  e.currentTarget.querySelector("span").style.opacity = 1;
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "rgba(0,0,0,0)";
-                  e.currentTarget.querySelector("span").style.opacity = 0;
-                }}
+        <div className="dd-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "repeat(2,1fr)" : "repeat(4,1fr)", gap: 20 }}>
+          {list.map((act, i) => (
+            <div key={i} className="dd-lift dd-wiggle" style={{ background: T.gray50, borderRadius: T.r.lg, padding: 28, textAlign: "center", border: `1px solid ${T.gray200}`, cursor: "default" }}>
+              <div className="dd-float" style={{ width: 72, height: 72, borderRadius: "50%", background: T.green50, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, margin: "0 auto 18px", border: `2px solid ${T.green200}` }}>
+                {icons[act] || "✨"}
+              </div>
+              <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: T.gray800, lineHeight: 1.35 }}>{act}</h4>
+            </div>
+          ))}
+        </div>
+      </Container>
+    </AnimatedSection>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   WILDLIFE
+   ═══════════════════════════════════════════════════ */
+const WildlifeSection = ({ d, mob }) => {
+  const list = d.wildlife || [];
+  if (!list.length) return null;
+
+  const ico = { Lion: "🦁", Leopard: "🐆", Cheetah: "🐆", "African Elephant": "🐘", Elephant: "🐘", "Cape Buffalo": "🐃", Wildebeest: "🦬", Zebra: "🦓", Hippopotamus: "🦛", "Nile Crocodile": "🐊", Giraffe: "🦒", Hyena: "🐺", "African Wild Dog": "🐕", Rhinoceros: "🦏" };
+
+  return (
+    <AnimatedSection id="wildlife" bg={T.gray50} mob={mob}>
+      <Container>
+        <div style={{ textAlign: "center", marginBottom: 48 }}>
+          <h2 style={{ fontFamily: T.serif, fontSize: mob ? 28 : 40, fontWeight: 700, color: T.gray900, margin: "0 0 12px" }}>Wildlife</h2>
+          <p style={{ fontSize: mob ? 16 : 18, color: T.gray500, margin: "0 auto", lineHeight: 1.6, maxWidth: 520 }}>Incredible species you may encounter at {d.name}</p>
+          <div style={{ width: 60, height: 4, borderRadius: 2, background: `linear-gradient(90deg, ${T.green400}, ${T.green600})`, margin: "16px auto 0" }} />
+        </div>
+
+        <div className="dd-stagger" style={{ display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "center" }}>
+          {list.map((a, i) => (
+            <div key={i} className="dd-lift" style={{ display: "flex", alignItems: "center", gap: 12, background: T.white, padding: "16px 24px", borderRadius: T.r.full, border: `1px solid ${T.gray200}`, cursor: "default" }}>
+              <span style={{ fontSize: 28 }}>{ico[a] || "🦌"}</span>
+              <span style={{ fontSize: 15, fontWeight: 600, color: T.gray700 }}>{a}</span>
+            </div>
+          ))}
+        </div>
+      </Container>
+    </AnimatedSection>
+  );
+};
+
+/* ═══════════════════════════════════════════════════
+   GALLERY
+   ═══════════════════════════════════════════════════ */
+const GallerySection = ({ d, mob }) => {
+  const [lb, setLb] = useState({ open: false, idx: 0 });
+
+  const gallery = d.gallery || [];
+  const imgs = gallery.length ? gallery.map(g => g.imageUrl) : d.images || [];
+  if (!imgs.length) return null;
+
+  const closeLb = () => setLb({ ...lb, open: false });
+  const prev = (e) => { e.stopPropagation(); setLb(p => ({ ...p, idx: (p.idx - 1 + imgs.length) % imgs.length })); };
+  const next = (e) => { e.stopPropagation(); setLb(p => ({ ...p, idx: (p.idx + 1) % imgs.length })); };
+
+  return (
+    <AnimatedSection id="gallery" bg={T.white} mob={mob}>
+      <Container>
+        <h2 style={{ fontFamily: T.serif, fontSize: mob ? 28 : 40, fontWeight: 700, color: T.gray900, margin: "0 0 12px" }}>Photo Gallery</h2>
+        <p style={{ fontSize: mob ? 16 : 18, color: T.gray500, margin: "0 0 8px", lineHeight: 1.6 }}>Stunning visuals from {d.name}</p>
+        <div style={{ width: 60, height: 4, borderRadius: 2, background: `linear-gradient(90deg, ${T.green400}, ${T.green600})`, marginBottom: 40 }} />
+
+        <div className="dd-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "repeat(2,1fr)" : imgs.length <= 4 ? "repeat(4,1fr)" : "repeat(4,1fr)", gap: 16 }}>
+          {imgs.slice(0, 8).map((img, i) => (
+            <div key={i} className="dd-imgZoom dd-lift" onClick={() => setLb({ open: true, idx: i })} style={{ position: "relative", paddingBottom: i === 0 && !mob && imgs.length > 4 ? "100%" : "75%", gridColumn: i === 0 && !mob && imgs.length > 4 ? "span 2" : "span 1", gridRow: i === 0 && !mob && imgs.length > 4 ? "span 2" : "span 1", borderRadius: T.r.md, overflow: "hidden", cursor: "pointer" }}>
+              <img src={img} alt={`${d.name} ${i + 1}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,.25), transparent 50%)", opacity: 0, transition: "opacity .3s" }}
+                onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                onMouseLeave={e => e.currentTarget.style.opacity = 0}
               >
-                <span
-                  style={{
-                    color: theme.white,
-                    fontSize: 32,
-                    opacity: 0,
-                    transition: `opacity ${theme.transitionBase}`,
-                  }}
-                >
-                  🔍
-                </span>
+                <div style={{ position: "absolute", bottom: 12, right: 12, background: "rgba(255,255,255,.9)", borderRadius: T.r.full, padding: "6px 14px", fontSize: 12, fontWeight: 600, color: T.gray700 }}>
+                  View ↗
+                </div>
               </div>
             </div>
           ))}
         </div>
 
         {/* Lightbox */}
-        {lightbox.open && (
-          <div
-            onClick={() => setLightbox({ ...lightbox, open: false })}
-            style={{
-              position: "fixed",
-              inset: 0,
-              background: "rgba(0,0,0,0.95)",
-              zIndex: 1000,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              padding: 24,
-            }}
-            className="fade-in"
-          >
-            {/* Close Button */}
-            <button
-              onClick={() => setLightbox({ ...lightbox, open: false })}
-              style={{
-                position: "absolute",
-                top: 24,
-                right: 24,
-                background: "rgba(255,255,255,0.1)",
-                border: "none",
-                color: theme.white,
-                width: 48,
-                height: 48,
-                borderRadius: "50%",
-                fontSize: 24,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
-            >
-              ✕
-            </button>
+        {lb.open && (
+          <div onClick={closeLb} className="dd-fadeIn" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.96)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+            <button onClick={closeLb} style={{ position: "absolute", top: 20, right: 20, background: "rgba(255,255,255,.1)", border: "none", color: T.white, width: 52, height: 52, borderRadius: "50%", fontSize: 26, cursor: "pointer", transition: "background .2s" }}
+              onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.2)"}
+              onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,.1)"}
+            >✕</button>
 
-            {/* Main Image */}
-            <img
-              src={images[lightbox.index]}
-              alt=""
-              style={{
-                maxWidth: "90vw",
-                maxHeight: "85vh",
-                objectFit: "contain",
-                borderRadius: theme.radiusMd,
-              }}
-              onClick={(e) => e.stopPropagation()}
-              className="scale-in"
-            />
+            <img src={imgs[lb.idx]} alt="" className="dd-scaleIn" onClick={e => e.stopPropagation()} style={{ maxWidth: "90vw", maxHeight: "85vh", objectFit: "contain", borderRadius: T.r.md }} />
 
-            {/* Navigation */}
-            {images.length > 1 && (
+            {imgs.length > 1 && (
               <>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLightbox({
-                      ...lightbox,
-                      index: (lightbox.index - 1 + images.length) % images.length,
-                    });
-                  }}
-                  style={{
-                    position: "absolute",
-                    left: 24,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "rgba(255,255,255,0.15)",
-                    border: "none",
-                    color: theme.white,
-                    width: 56,
-                    height: 56,
-                    borderRadius: "50%",
-                    fontSize: 24,
-                    cursor: "pointer",
-                  }}
-                >
-                  ←
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setLightbox({
-                      ...lightbox,
-                      index: (lightbox.index + 1) % images.length,
-                    });
-                  }}
-                  style={{
-                    position: "absolute",
-                    right: 24,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    background: "rgba(255,255,255,0.15)",
-                    border: "none",
-                    color: theme.white,
-                    width: 56,
-                    height: 56,
-                    borderRadius: "50%",
-                    fontSize: 24,
-                    cursor: "pointer",
-                  }}
-                >
-                  →
-                </button>
+                <button onClick={prev} style={{ position: "absolute", left: 20, top: "50%", transform: "translateY(-50%)", background: "rgba(255,255,255,.12)", border: "none", color: T.white, width: 56, height: 56, borderRadius: "50%", fontSize: 24, cursor: "pointer", transition: "background .2s", backdropFilter: "blur(4px)" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.25)"}
+                  onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,.12)"}
+                >←</button>
+                <button onClick={next} style={{ position: "absolute", right: 20, top: "50%", transform: "translateY(-50%)", background: "rgba(255,255,255,.12)", border: "none", color: T.white, width: 56, height: 56, borderRadius: "50%", fontSize: 24, cursor: "pointer", transition: "background .2s", backdropFilter: "blur(4px)" }}
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.25)"}
+                  onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,.12)"}
+                >→</button>
               </>
             )}
 
-            {/* Counter */}
-            <div
-              style={{
-                position: "absolute",
-                bottom: 24,
-                left: "50%",
-                transform: "translateX(-50%)",
-                color: "rgba(255,255,255,0.7)",
-                fontSize: 14,
-              }}
-            >
-              {lightbox.index + 1} / {images.length}
+            <div style={{ position: "absolute", bottom: 24, left: "50%", transform: "translateX(-50%)", color: "rgba(255,255,255,.6)", fontSize: 14, fontWeight: 500 }}>
+              {lb.idx + 1} / {imgs.length}
             </div>
           </div>
         )}
       </Container>
-    </section>
+    </AnimatedSection>
   );
 };
 
 /* ═══════════════════════════════════════════════════
-   LOCATION & MAP SECTION
+   LOCATION & MAP
    ═══════════════════════════════════════════════════ */
-
-const Location = ({ destination, isMobile }) => {
-  const d = destination;
-  const hasLocation = d.latitude && d.longitude;
+const LocationSection = ({ d, mob }) => {
+  const hasMap = d.latitude && d.longitude;
   const hasInfo = d.region || d.nearestCity || d.nearestAirport || d.gettingThere;
-
-  if (!hasLocation && !hasInfo) return null;
+  if (!hasMap && !hasInfo) return null;
 
   return (
-    <section
-      style={{
-        background: theme.gray50,
-        padding: isMobile ? "64px 0" : "96px 0",
-      }}
-    >
+    <AnimatedSection id="location" bg={T.gray50} mob={mob}>
       <Container>
-        <SectionTitle
-          subtitle="How to get there and where it's located"
-          isMobile={isMobile}
-        >
-          Location & Access
-        </SectionTitle>
+        <h2 style={{ fontFamily: T.serif, fontSize: mob ? 28 : 40, fontWeight: 700, color: T.gray900, margin: "0 0 12px" }}>Location & Access</h2>
+        <p style={{ fontSize: mob ? 16 : 18, color: T.gray500, margin: "0 0 8px", lineHeight: 1.6 }}>How to get there</p>
+        <div style={{ width: 60, height: 4, borderRadius: 2, background: `linear-gradient(90deg, ${T.green400}, ${T.green600})`, marginBottom: 40 }} />
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-            gap: 32,
-          }}
-        >
-          {/* Map */}
-          {hasLocation && (
-            <Card hover={false} style={{ overflow: "hidden", height: 400 }}>
-              <iframe
-                title="Location Map"
-                src={`https://www.google.com/maps?q=${d.latitude},${d.longitude}&z=12&output=embed`}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  border: "none",
-                }}
-                loading="lazy"
-                allowFullScreen
-              />
-            </Card>
+        <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 32 }}>
+          {hasMap && (
+            <div style={{ borderRadius: T.r.lg, overflow: "hidden", border: `1px solid ${T.gray200}`, height: mob ? 300 : 420, boxShadow: T.shadow.md }}>
+              <iframe title="Map" src={`https://www.google.com/maps?q=${d.latitude},${d.longitude}&z=12&output=embed`} style={{ width: "100%", height: "100%", border: "none" }} loading="lazy" allowFullScreen />
+            </div>
           )}
 
-          {/* Info Cards */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            {d.region && (
-              <Card padding={24} style={{ display: "flex", alignItems: "center", gap: 20 }}>
-                <IconBox icon="📍" size={56} />
+          <div className="dd-stagger" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            {[
+              { icon: "📍", label: "Region", value: d.region, bg: T.green50 },
+              { icon: "🏙️", label: "Nearest City", value: d.nearestCity, bg: T.green50 },
+              { icon: "✈️", label: "Nearest Airport", value: d.nearestAirport, sub: d.distanceFromAirportKm ? `${d.distanceFromAirportKm} km away` : null, bg: T.blueLight },
+              { icon: "⛰️", label: "Altitude", value: d.altitudeMeters ? `${d.altitudeMeters.toLocaleString()}m above sea level` : null, bg: T.amberLight },
+            ].filter(x => x.value).map((x, i) => (
+              <div key={i} className="dd-lift" style={{ background: T.white, borderRadius: T.r.lg, padding: 24, border: `1px solid ${T.gray200}`, display: "flex", alignItems: "center", gap: 20 }}>
+                <IconCircle icon={x.icon} size={56} bg={x.bg} />
                 <div>
-                  <p style={{ margin: "0 0 4px", fontSize: 13, color: theme.gray500, fontWeight: 500 }}>
-                    Region
-                  </p>
-                  <p style={{ margin: 0, fontSize: 18, color: theme.gray800, fontWeight: 700 }}>
-                    {d.region}
-                  </p>
+                  <p style={{ margin: 0, fontSize: 12, color: T.gray400, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".5px" }}>{x.label}</p>
+                  <p style={{ margin: "3px 0 0", fontSize: 18, color: T.gray800, fontWeight: 700 }}>{x.value}</p>
+                  {x.sub && <p style={{ margin: "2px 0 0", fontSize: 13, color: T.gray500 }}>{x.sub}</p>}
                 </div>
-              </Card>
-            )}
-
-            {d.nearestCity && (
-              <Card padding={24} style={{ display: "flex", alignItems: "center", gap: 20 }}>
-                <IconBox icon="🏙️" size={56} bg={theme.accentLight} />
-                <div>
-                  <p style={{ margin: "0 0 4px", fontSize: 13, color: theme.gray500, fontWeight: 500 }}>
-                    Nearest City
-                  </p>
-                  <p style={{ margin: 0, fontSize: 18, color: theme.gray800, fontWeight: 700 }}>
-                    {d.nearestCity}
-                  </p>
-                </div>
-              </Card>
-            )}
-
-            {d.nearestAirport && (
-              <Card padding={24} style={{ display: "flex", alignItems: "center", gap: 20 }}>
-                <IconBox icon="✈️" size={56} bg={theme.infoLight} color={theme.info} />
-                <div>
-                  <p style={{ margin: "0 0 4px", fontSize: 13, color: theme.gray500, fontWeight: 500 }}>
-                    Nearest Airport
-                  </p>
-                  <p style={{ margin: 0, fontSize: 18, color: theme.gray800, fontWeight: 700 }}>
-                    {d.nearestAirport}
-                  </p>
-                  {d.distanceFromAirportKm && (
-                    <p style={{ margin: "4px 0 0", fontSize: 14, color: theme.gray500 }}>
-                      {d.distanceFromAirportKm} km away
-                    </p>
-                  )}
-                </div>
-              </Card>
-            )}
-
-            {d.gettingThere && (
-              <Card padding={24}>
-                <h4 style={{ margin: "0 0 12px", fontSize: 16, fontWeight: 600, color: theme.gray800 }}>
-                  Getting There
-                </h4>
-                <p style={{ margin: 0, fontSize: 15, color: theme.gray600, lineHeight: 1.7 }}>
-                  {d.gettingThere}
-                </p>
-              </Card>
-            )}
+              </div>
+            ))}
           </div>
         </div>
       </Container>
-    </section>
+    </AnimatedSection>
   );
 };
 
 /* ═══════════════════════════════════════════════════
-   PRACTICAL INFO SECTION
+   PRACTICAL INFO
    ═══════════════════════════════════════════════════ */
-
-const PracticalInfo = ({ destination, isMobile }) => {
-  const d = destination;
-  
-  const infoItems = [
+const PracticalInfo = ({ d, mob }) => {
+  const items = [
     { icon: "🎫", label: "Entrance Fee", value: d.entranceFee },
     { icon: "🕐", label: "Operating Hours", value: d.operatingHours },
     { icon: "📅", label: "Best Time to Visit", value: d.bestTimeToVisit },
-    { icon: "👥", label: "Group Size", value: d.minGroupSize && d.maxGroupSize ? `${d.minGroupSize} - ${d.maxGroupSize} people` : null },
+    { icon: "👥", label: "Group Size", value: d.minGroupSize && d.maxGroupSize ? `${d.minGroupSize} – ${d.maxGroupSize} people` : null },
     { icon: "👶", label: "Minimum Age", value: d.minAge ? `${d.minAge} years` : null },
     { icon: "💪", label: "Fitness Level", value: d.fitnessLevel },
-  ].filter(item => item.value);
+  ].filter(x => x.value);
 
-  const hasInfo = infoItems.length > 0 || d.whatToExpect || d.localTips || d.safetyInfo;
+  const cards = [
+    { icon: "📋", title: "What to Expect", text: d.whatToExpect, bg: T.green50, accent: T.green600 },
+    { icon: "💡", title: "Local Tips", text: d.localTips, bg: T.amberLight, accent: "#B45309" },
+    { icon: "⚠️", title: "Safety Information", text: d.safetyInfo, bg: T.redLight, accent: T.red, span: true },
+  ].filter(x => x.text);
 
-  if (!hasInfo) return null;
+  if (!items.length && !cards.length) return null;
 
   return (
-    <section
-      style={{
-        background: theme.white,
-        padding: isMobile ? "64px 0" : "96px 0",
-      }}
-    >
+    <AnimatedSection id="practical" bg={T.white} mob={mob}>
       <Container>
-        <SectionTitle
-          subtitle="Everything you need to plan your visit"
-          isMobile={isMobile}
-        >
-          Practical Information
-        </SectionTitle>
+        <h2 style={{ fontFamily: T.serif, fontSize: mob ? 28 : 40, fontWeight: 700, color: T.gray900, margin: "0 0 12px" }}>Practical Information</h2>
+        <p style={{ fontSize: mob ? 16 : 18, color: T.gray500, margin: "0 0 8px", lineHeight: 1.6 }}>Everything you need to plan your visit</p>
+        <div style={{ width: 60, height: 4, borderRadius: 2, background: `linear-gradient(90deg, ${T.green400}, ${T.green600})`, marginBottom: 40 }} />
 
-        {/* Info Grid */}
-        {infoItems.length > 0 && (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
-              gap: 20,
-              marginBottom: 48,
-            }}
-          >
-            {infoItems.map((item, i) => (
-              <Card key={i} padding={24}>
-                <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                  <span style={{ fontSize: 32 }}>{item.icon}</span>
-                  <div>
-                    <p
-                      style={{
-                        margin: "0 0 4px",
-                        fontSize: 12,
-                        color: theme.gray500,
-                        fontWeight: 600,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.5px",
-                      }}
-                    >
-                      {item.label}
-                    </p>
-                    <p
-                      style={{
-                        margin: 0,
-                        fontSize: 16,
-                        color: theme.gray800,
-                        fontWeight: 600,
-                      }}
-                    >
-                      {item.value}
-                    </p>
-                  </div>
+        {items.length > 0 && (
+          <div className="dd-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "repeat(3,1fr)", gap: 20, marginBottom: cards.length ? 40 : 0 }}>
+            {items.map((it, i) => (
+              <div key={i} className="dd-lift" style={{ background: T.gray50, borderRadius: T.r.lg, padding: 24, border: `1px solid ${T.gray200}`, display: "flex", alignItems: "center", gap: 18 }}>
+                <span style={{ fontSize: 34 }}>{it.icon}</span>
+                <div>
+                  <p style={{ margin: 0, fontSize: 12, color: T.gray400, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".4px" }}>{it.label}</p>
+                  <p style={{ margin: "3px 0 0", fontSize: 16, color: T.gray800, fontWeight: 600 }}>{it.value}</p>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         )}
 
-        {/* Additional Info Cards */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
-            gap: 24,
-          }}
-        >
-          {d.whatToExpect && (
-            <Card hover={false}>
-              <div
-                style={{
-                  padding: "20px 24px",
-                  background: theme.primaryMuted,
-                  borderBottom: `1px solid ${theme.primaryLight}`,
-                }}
-              >
-                <h4
-                  style={{
-                    margin: 0,
-                    fontSize: 18,
-                    fontWeight: 600,
-                    color: theme.primaryDark,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                  }}
-                >
-                  <span>📋</span> What to Expect
-                </h4>
+        {cards.length > 0 && (
+          <div className="dd-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "repeat(2,1fr)", gap: 24 }}>
+            {cards.map((c, i) => (
+              <div key={i} style={{ borderRadius: T.r.lg, overflow: "hidden", border: `1px solid ${T.gray200}`, gridColumn: c.span && !mob ? "span 2" : "span 1", boxShadow: T.shadow.sm }}>
+                <div style={{ padding: "18px 24px", background: c.bg, display: "flex", alignItems: "center", gap: 12, borderBottom: `1px solid ${c.accent}22` }}>
+                  <span style={{ fontSize: 22 }}>{c.icon}</span>
+                  <h4 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: c.accent }}>{c.title}</h4>
+                </div>
+                <div style={{ padding: 24, background: T.white }}>
+                  <p style={{ margin: 0, fontSize: 15, color: T.gray600, lineHeight: 1.75 }}>{c.text}</p>
+                </div>
               </div>
-              <div style={{ padding: 24 }}>
-                <p style={{ margin: 0, fontSize: 15, color: theme.gray600, lineHeight: 1.7 }}>
-                  {d.whatToExpect}
-                </p>
-              </div>
-            </Card>
-          )}
-
-          {d.localTips && (
-            <Card hover={false}>
-              <div
-                style={{
-                  padding: "20px 24px",
-                  background: theme.warningLight,
-                  borderBottom: `1px solid ${theme.warning}30`,
-                }}
-              >
-                <h4
-                  style={{
-                    margin: 0,
-                    fontSize: 18,
-                    fontWeight: 600,
-                    color: "#92400E",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                  }}
-                >
-                  <span>💡</span> Local Tips
-                </h4>
-              </div>
-              <div style={{ padding: 24 }}>
-                <p style={{ margin: 0, fontSize: 15, color: theme.gray600, lineHeight: 1.7 }}>
-                  {d.localTips}
-                </p>
-              </div>
-            </Card>
-          )}
-
-          {d.safetyInfo && (
-            <Card hover={false} style={{ gridColumn: isMobile ? "span 1" : "span 2" }}>
-              <div
-                style={{
-                  padding: "20px 24px",
-                  background: "#FEF2F2",
-                  borderBottom: "1px solid #FECACA",
-                }}
-              >
-                <h4
-                  style={{
-                    margin: 0,
-                    fontSize: 18,
-                    fontWeight: 600,
-                    color: "#991B1B",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                  }}
-                >
-                  <span>⚠️</span> Safety Information
-                </h4>
-              </div>
-              <div style={{ padding: 24 }}>
-                <p style={{ margin: 0, fontSize: 15, color: theme.gray600, lineHeight: 1.7 }}>
-                  {d.safetyInfo}
-                </p>
-              </div>
-            </Card>
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </Container>
-    </section>
+    </AnimatedSection>
   );
 };
 
 /* ═══════════════════════════════════════════════════
-   CTA FOOTER SECTION
+   CTA FOOTER
    ═══════════════════════════════════════════════════ */
+const CTAFooter = ({ d, mob }) => (
+  <section style={{ background: `linear-gradient(135deg, ${T.green700} 0%, ${T.green900} 100%)`, padding: mob ? "80px 0" : "120px 0", textAlign: "center", position: "relative", overflow: "hidden" }}>
+    {/* Pattern */}
+    <div style={{ position: "absolute", inset: 0, opacity: .06, backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23fff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }} />
 
-const CTAFooter = ({ destination, isMobile }) => {
-  const d = destination;
+    {/* Floating decorative circles */}
+    <div className="dd-float" style={{ position: "absolute", top: "15%", left: "8%", width: 120, height: 120, borderRadius: "50%", border: `2px solid rgba(255,255,255,.08)`, animationDelay: "0s" }} />
+    <div className="dd-float" style={{ position: "absolute", bottom: "20%", right: "10%", width: 80, height: 80, borderRadius: "50%", border: `2px solid rgba(255,255,255,.06)`, animationDelay: "1.5s" }} />
 
-  return (
-    <section
-      style={{
-        background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDarker} 100%)`,
-        padding: isMobile ? "72px 24px" : "120px 48px",
-        textAlign: "center",
-        position: "relative",
-        overflow: "hidden",
-      }}
-    >
-      {/* Decorative Pattern */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-        }}
-      />
+    <Container style={{ position: "relative" }}>
+      <div className="dd-float" style={{ display: "inline-block", marginBottom: 24 }}>
+        <span style={{ fontSize: 56 }}>🌍</span>
+      </div>
+      <h2 style={{ fontFamily: T.serif, fontSize: mob ? 32 : 52, fontWeight: 800, color: T.white, margin: "0 0 20px", lineHeight: 1.15 }}>
+        Ready to Experience<br />{d.name}?
+      </h2>
+      <p style={{ fontSize: mob ? 17 : 20, color: "rgba(255,255,255,.85)", maxWidth: 580, margin: "0 auto 44px", lineHeight: 1.65 }}>
+        Start planning your unforgettable adventure today. Create memories that will last a lifetime.
+      </p>
 
-      <Container style={{ position: "relative" }}>
-        <h2
-          style={{
-            fontFamily: theme.fontSerif,
-            fontSize: isMobile ? 32 : 48,
-            fontWeight: 800,
-            color: theme.white,
-            margin: "0 0 20px",
-            lineHeight: 1.2,
-          }}
+      <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", marginBottom: 56 }}>
+        <button style={{ padding: "18px 40px", background: T.white, color: T.green800, border: "none", borderRadius: T.r.md, fontSize: 17, fontWeight: 700, cursor: "pointer", fontFamily: T.sans, transition: "transform .2s, box-shadow .2s", boxShadow: T.shadow.lg }}
+          onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = T.shadow.xxl; }}
+          onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = T.shadow.lg; }}
         >
-          Ready to Experience {d.name}?
-        </h2>
-        <p
-          style={{
-            fontSize: isMobile ? 17 : 20,
-            color: "rgba(255,255,255,0.9)",
-            maxWidth: 600,
-            margin: "0 auto 40px",
-            lineHeight: 1.6,
-          }}
-        >
-          Start planning your unforgettable adventure today. Book now and create memories that will last a lifetime.
-        </p>
-
-        <div
-          style={{
-            display: "flex",
-            gap: 16,
-            justifyContent: "center",
-            flexWrap: "wrap",
-          }}
-        >
-          <Button variant="white" size="lg" icon="📅">
-            Book This Experience
-          </Button>
-          <Button
-            variant="secondary"
-            size="lg"
-            style={{
-              background: "transparent",
-              borderColor: "rgba(255,255,255,0.4)",
-              color: theme.white,
-            }}
-            as={Link}
-            to={`/countries/${d.countrySlug}`}
+          📅 Book This Experience
+        </button>
+        {d.countrySlug && (
+          <Link to={`/countries/${d.countrySlug}`} style={{ padding: "18px 40px", background: "transparent", color: T.white, border: "2px solid rgba(255,255,255,.35)", borderRadius: T.r.md, fontSize: 17, fontWeight: 600, cursor: "pointer", fontFamily: T.sans, textDecoration: "none", transition: "background .2s, border-color .2s", display: "inline-flex", alignItems: "center" }}
+            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,.1)"; e.currentTarget.style.borderColor = "rgba(255,255,255,.55)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(255,255,255,.35)"; }}
           >
-            Explore More in {d.countryName}
-          </Button>
-        </div>
+            Explore {d.countryName}
+          </Link>
+        )}
+      </div>
 
-        {/* Trust Badges */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            gap: isMobile ? 24 : 48,
-            marginTop: 48,
-            flexWrap: "wrap",
-          }}
-        >
-          <div style={{ color: "rgba(255,255,255,0.8)", textAlign: "center" }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>🏆</div>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>Top Rated</div>
+      {/* Trust Row */}
+      <div style={{ display: "flex", justifyContent: "center", gap: mob ? 28 : 56, flexWrap: "wrap" }}>
+        {[
+          { icon: "🏆", text: "Top Rated" },
+          { icon: "✅", text: "Verified" },
+          { icon: "🔒", text: "Secure" },
+          { icon: "💬", text: "24 / 7 Support" },
+        ].map((t, i) => (
+          <div key={i} style={{ color: "rgba(255,255,255,.75)", textAlign: "center" }}>
+            <div className="dd-wiggle" style={{ fontSize: 30, marginBottom: 8, cursor: "default" }}>{t.icon}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: ".3px" }}>{t.text}</div>
           </div>
-          <div style={{ color: "rgba(255,255,255,0.8)", textAlign: "center" }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>✅</div>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>Verified</div>
-          </div>
-          <div style={{ color: "rgba(255,255,255,0.8)", textAlign: "center" }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>🔒</div>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>Secure Booking</div>
-          </div>
-          <div style={{ color: "rgba(255,255,255,0.8)", textAlign: "center" }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>💬</div>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>24/7 Support</div>
-          </div>
-        </div>
-      </Container>
-    </section>
-  );
-};
+        ))}
+      </div>
+    </Container>
+  </section>
+);
 
 /* ═══════════════════════════════════════════════════
    ERROR STATE
    ═══════════════════════════════════════════════════ */
-
 const ErrorState = ({ error, navigate }) => (
-  <div
-    style={{
-      minHeight: "80vh",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      fontFamily: theme.fontSans,
-      padding: 48,
-      textAlign: "center",
-      background: theme.gray50,
-    }}
-  >
-    <div
-      style={{
-        width: 140,
-        height: 140,
-        borderRadius: "50%",
-        background: theme.primaryMuted,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: 64,
-        marginBottom: 32,
-      }}
-    >
+  <div style={{ minHeight: "85vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: T.sans, padding: 48, textAlign: "center", background: T.gray50 }}>
+    <div className="dd-float" style={{ width: 150, height: 150, borderRadius: "50%", background: T.green50, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 72, marginBottom: 36, border: `3px solid ${T.green200}` }}>
       🗺️
     </div>
-    <h2
-      style={{
-        fontFamily: theme.fontSerif,
-        fontSize: 36,
-        fontWeight: 700,
-        color: theme.gray800,
-        margin: "0 0 16px",
-      }}
-    >
-      Destination Not Found
-    </h2>
-    <p
-      style={{
-        fontSize: 18,
-        color: theme.gray500,
-        maxWidth: 500,
-        margin: "0 0 36px",
-        lineHeight: 1.6,
-      }}
-    >
+    <h2 style={{ fontFamily: T.serif, fontSize: 38, fontWeight: 700, color: T.gray800, margin: "0 0 16px" }}>Destination Not Found</h2>
+    <p style={{ fontSize: 18, color: T.gray500, maxWidth: 480, margin: "0 0 36px", lineHeight: 1.65 }}>
       {error || "The destination you're looking for doesn't exist or may have been removed."}
     </p>
-    <div style={{ display: "flex", gap: 16 }}>
-      <Button onClick={() => navigate(-1)} variant="outline" size="lg">
-        Go Back
-      </Button>
-      <Button onClick={() => navigate("/destinations")} size="lg">
-        Browse Destinations
-      </Button>
+    <div style={{ display: "flex", gap: 14 }}>
+      <button onClick={() => navigate(-1)} style={{ padding: "14px 32px", background: T.white, color: T.gray700, border: `2px solid ${T.gray300}`, borderRadius: T.r.md, fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: T.sans }}>Go Back</button>
+      <button onClick={() => navigate("/destinations")} style={{ padding: "14px 32px", background: T.green600, color: T.white, border: "none", borderRadius: T.r.md, fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: T.sans }}>Browse Destinations</button>
     </div>
   </div>
 );
 
 /* ═══════════════════════════════════════════════════
-   API FUNCTION
+   API FETCH
    ═══════════════════════════════════════════════════ */
-
-const fetchDestinationData = async (slug) => {
-  const response = await fetch(`/api/destinations/${slug}`);
-  const data = await response.json();
-  
-  if (!data.success) {
-    throw new Error(data.message || "Failed to fetch destination");
-  }
-  
-  return data.data;
+const fetchDestination = async (slug) => {
+  const res = await fetch(`/api/destinations/${slug}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const json = await res.json();
+  if (!json.success) throw new Error(json.message || "Failed to fetch destination");
+  return json.data;
 };
 
 /* ═══════════════════════════════════════════════════
-   MAIN COMPONENT
+   MAIN — DestinationDetails
    ═══════════════════════════════════════════════════ */
-
 const DestinationDetails = () => {
   const { slug, id } = useParams();
-  const destinationSlug = slug || id;
+  const identifier = slug || id;
   const navigate = useNavigate();
-  const { isMobile } = useWindowSize();
+  const { mob } = useWindowSize();
 
   const [destination, setDestination] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch destination data
   useEffect(() => {
-    if (!destinationSlug) return;
-
+    if (!identifier) return;
     setLoading(true);
     setError(null);
+    fetchDestination(identifier)
+      .then(setDestination)
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [identifier]);
 
-    fetchDestinationData(destinationSlug)
-      .then((data) => {
-        setDestination(data);
-      })
-      .catch((e) => {
-        setError(e.message);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [destinationSlug]);
+  useEffect(() => { window.scrollTo(0, 0); }, [identifier]);
 
-  // Scroll to top on mount
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [destinationSlug]);
-
-  // Loading state
+  /* Loading */
   if (loading) {
     return (
-      <div style={{ fontFamily: theme.fontSans }}>
-        <GlobalStyles />
-        <LoadingSkeleton isMobile={isMobile} />
+      <div style={{ fontFamily: T.sans }}>
+        <AnimationStyles />
+        <FullPageSkeleton mob={mob} />
       </div>
     );
   }
 
-  // Error state
+  /* Error */
   if (error || !destination) {
     return (
-      <div style={{ fontFamily: theme.fontSans }}>
-        <GlobalStyles />
+      <div style={{ fontFamily: T.sans }}>
+        <AnimationStyles />
         <ErrorState error={error} navigate={navigate} />
       </div>
     );
   }
 
-  // Success - Render destination
+  /* Success */
+  const d = destination;
+
   return (
-    <div
-      style={{
-        fontFamily: theme.fontSans,
-        color: theme.gray800,
-        background: theme.white,
-      }}
-    >
-      <GlobalStyles />
+    <div style={{ fontFamily: T.sans, color: T.gray800, background: T.white }}>
+      <AnimationStyles />
 
-      <Hero destination={destination} isMobile={isMobile} />
-      <QuickInfoBar destination={destination} isMobile={isMobile} />
-      
-      <div className="fade-in-up">
-        <Overview destination={destination} isMobile={isMobile} />
-        <Highlights destination={destination} isMobile={isMobile} />
-        <Activities destination={destination} isMobile={isMobile} />
-        <Wildlife destination={destination} isMobile={isMobile} />
-        <Gallery destination={destination} isMobile={isMobile} />
-        <Location destination={destination} isMobile={isMobile} />
-        <PracticalInfo destination={destination} isMobile={isMobile} />
-      </div>
-
-      <CTAFooter destination={destination} isMobile={isMobile} />
+      <Hero d={d} mob={mob} />
+      <QuickInfoBar d={d} mob={mob} />
+      <OverviewSection d={d} mob={mob} />
+      <Highlights d={d} mob={mob} />
+      <Activities d={d} mob={mob} />
+      <WildlifeSection d={d} mob={mob} />
+      <GallerySection d={d} mob={mob} />
+      <LocationSection d={d} mob={mob} />
+      <PracticalInfo d={d} mob={mob} />
+      <CTAFooter d={d} mob={mob} />
     </div>
   );
 };

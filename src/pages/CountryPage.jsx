@@ -1,754 +1,380 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { fetchCountryPageData } from "../data/countries";
 
 /* ═══════════════════════════════════════════════════
-   DESIGN SYSTEM - GREEN & WHITE THEME
+   DESIGN TOKENS
    ═══════════════════════════════════════════════════ */
+const T = {
+  green50: "#ECFDF5",
+  green100: "#D1FAE5",
+  green200: "#A7F3D0",
+  green300: "#6EE7B7",
+  green400: "#34D399",
+  green500: "#10B981",
+  green600: "#059669",
+  green700: "#047857",
+  green800: "#065F46",
+  green900: "#064E3B",
 
-const theme = {
-  // Primary Colors
-  primary: "#059669",
-  primaryDark: "#047857",
-  primaryLight: "#D1FAE5",
-  primaryMuted: "#ECFDF5",
-  
-  // Accent Colors
-  accent: "#10B981",
-  accentLight: "#A7F3D0",
-  
-  // Neutral Colors
   white: "#FFFFFF",
-  gray50: "#F9FAFB",
-  gray100: "#F3F4F6",
-  gray200: "#E5E7EB",
-  gray300: "#D1D5DB",
-  gray400: "#9CA3AF",
-  gray500: "#6B7280",
-  gray600: "#4B5563",
-  gray700: "#374151",
-  gray800: "#1F2937",
-  gray900: "#111827",
-  
-  // Semantic
-  success: "#10B981",
-  warning: "#F59E0B",
-  error: "#EF4444",
-  info: "#3B82F6",
-  
-  // Typography
-  fontSans: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-  fontSerif: "'Playfair Display', Georgia, serif",
-  
-  // Spacing
-  containerMax: "1280px",
-  sectionPadding: "80px",
-  sectionPaddingMobile: "48px",
-  
-  // Borders & Shadows
-  radiusSm: "8px",
-  radiusMd: "12px",
-  radiusLg: "16px",
-  radiusXl: "24px",
-  shadowSm: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
-  shadowMd: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
-  shadowLg: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-  shadowXl: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
-  
-  // Transitions
-  transitionFast: "150ms ease",
-  transitionBase: "200ms ease",
-  transitionSlow: "300ms ease",
+  g50: "#F9FAFB",
+  g100: "#F3F4F6",
+  g200: "#E5E7EB",
+  g300: "#D1D5DB",
+  g400: "#9CA3AF",
+  g500: "#6B7280",
+  g600: "#4B5563",
+  g700: "#374151",
+  g800: "#1F2937",
+  g900: "#111827",
+
+  amber: "#F59E0B",
+  amberLt: "#FEF3C7",
+  red: "#EF4444",
+  redLt: "#FEF2F2",
+  blue: "#3B82F6",
+  blueLt: "#DBEAFE",
+  purple: "#7C3AED",
+  purpleLt: "#F5F3FF",
+
+  sans: "'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
+  serif: "'Playfair Display',Georgia,serif",
+  max: "1280px",
+
+  r: {
+    xs: "6px", sm: "10px", md: "14px", lg: "20px", xl: "28px", full: "9999px",
+  },
+  sh: {
+    xs: "0 1px 2px rgba(0,0,0,.05)",
+    sm: "0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06)",
+    md: "0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1)",
+    lg: "0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)",
+    xl: "0 20px 25px -5px rgba(0,0,0,.1),0 8px 10px -6px rgba(0,0,0,.1)",
+    xxl: "0 25px 50px -12px rgba(0,0,0,.25)",
+  },
 };
 
 /* ═══════════════════════════════════════════════════
-   GLOBAL STYLES
+   GLOBAL STYLES + ANIMATIONS
    ═══════════════════════════════════════════════════ */
-
-const GlobalStyles = () => (
+const Styles = () => (
   <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@500;600;700&display=swap');
-    
-    * {
-      box-sizing: border-box;
-    }
-    
-    @keyframes skeleton-pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-    
-    @keyframes fade-in {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
-    }
-    
-    .skeleton {
-      background: linear-gradient(
-        90deg,
-        ${theme.gray200} 25%,
-        ${theme.gray100} 50%,
-        ${theme.gray200} 75%
-      );
-      background-size: 200% 100%;
-      animation: shimmer 1.5s infinite;
-      border-radius: ${theme.radiusSm};
-    }
-    
-    .fade-in {
-      animation: fade-in 0.6s ease forwards;
-    }
-    
-    .hover-lift {
-      transition: transform ${theme.transitionBase}, box-shadow ${theme.transitionBase};
-    }
-    
-    .hover-lift:hover {
-      transform: translateY(-4px);
-      box-shadow: ${theme.shadowXl};
-    }
-    
-    .hover-scale img {
-      transition: transform ${theme.transitionSlow};
-    }
-    
-    .hover-scale:hover img {
-      transform: scale(1.05);
-    }
-    
-    .nav-item {
-      position: relative;
-      transition: color ${theme.transitionFast};
-    }
-    
-    .nav-item::after {
-      content: '';
-      position: absolute;
-      bottom: -2px;
-      left: 0;
-      width: 0;
-      height: 2px;
-      background: ${theme.primary};
-      transition: width ${theme.transitionBase};
-    }
-    
-    .nav-item:hover::after,
-    .nav-item.active::after {
-      width: 100%;
-    }
-    
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    
-    ::-webkit-scrollbar-track {
-      background: ${theme.gray100};
-    }
-    
-    ::-webkit-scrollbar-thumb {
-      background: ${theme.gray300};
-      border-radius: 4px;
-    }
-    
-    ::-webkit-scrollbar-thumb:hover {
-      background: ${theme.gray400};
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@500;600;700;800&display=swap');
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+    ::selection{background:${T.green100};color:${T.green900}}
+
+    @keyframes cp-shimmer{0%{background-position:-200% 0}100%{background-position:200% 0}}
+    @keyframes cp-fadeUp{from{opacity:0;transform:translateY(36px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes cp-fadeIn{from{opacity:0}to{opacity:1}}
+    @keyframes cp-scaleIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+    @keyframes cp-slideR{from{opacity:0;transform:translateX(-28px)}to{opacity:1;transform:translateX(0)}}
+    @keyframes cp-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    @keyframes cp-heroZoom{from{transform:scale(1.06)}to{transform:scale(1)}}
+    @keyframes cp-borderFlow{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    @keyframes cp-wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(3deg)}75%{transform:rotate(-3deg)}}
+    @keyframes cp-glow{0%,100%{box-shadow:0 0 6px ${T.green400}33}50%{box-shadow:0 0 20px ${T.green400}55}}
+
+    .cp-skel{background:linear-gradient(90deg,${T.g200} 25%,${T.g100} 50%,${T.g200} 75%);background-size:200% 100%;animation:cp-shimmer 1.4s ease-in-out infinite;border-radius:${T.r.sm}}
+    .cp-fadeUp{animation:cp-fadeUp .7s cubic-bezier(.22,1,.36,1) forwards}
+    .cp-fadeIn{animation:cp-fadeIn .5s ease forwards}
+    .cp-scaleIn{animation:cp-scaleIn .4s ease forwards}
+    .cp-float{animation:cp-float 3s ease-in-out infinite}
+    .cp-wiggle:hover{animation:cp-wiggle .4s ease}
+
+    .cp-lift{transition:transform .25s cubic-bezier(.22,1,.36,1),box-shadow .25s ease}
+    .cp-lift:hover{transform:translateY(-6px);box-shadow:${T.sh.xl}}
+
+    .cp-imgZoom{overflow:hidden}
+    .cp-imgZoom img{transition:transform .5s cubic-bezier(.22,1,.36,1)}
+    .cp-imgZoom:hover img{transform:scale(1.08)}
+
+    .cp-stagger>*{opacity:0;animation:cp-fadeUp .6s cubic-bezier(.22,1,.36,1) forwards}
+    ${Array.from({length:12},(_,i)=>`.cp-stagger>*:nth-child(${i+1}){animation-delay:${i*80}ms}`).join("\n")}
+
+    .cp-nav-scroll{overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
+    .cp-nav-scroll::-webkit-scrollbar{display:none}
+
+    ::-webkit-scrollbar{width:8px;height:8px}
+    ::-webkit-scrollbar-track{background:${T.g100}}
+    ::-webkit-scrollbar-thumb{background:${T.green300};border-radius:4px}
+    ::-webkit-scrollbar-thumb:hover{background:${T.green400}}
   `}</style>
 );
 
 /* ═══════════════════════════════════════════════════
    HOOKS
    ═══════════════════════════════════════════════════ */
-
-const useWindowSize = () => {
-  const [size, setSize] = useState({
-    width: typeof window !== 'undefined' ? window.innerWidth : 1200,
-    height: typeof window !== 'undefined' ? window.innerHeight : 800,
-  });
-
+const useScreen = () => {
+  const [s, set] = useState({ w: window.innerWidth });
   useEffect(() => {
-    const handleResize = () => {
-      setSize({ width: window.innerWidth, height: window.innerHeight });
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const fn = () => set({ w: window.innerWidth });
+    window.addEventListener("resize", fn);
+    return () => window.removeEventListener("resize", fn);
   }, []);
+  return { mob: s.w < 768, tab: s.w >= 768 && s.w < 1024 };
+};
 
-  return {
-    ...size,
-    isMobile: size.width < 768,
-    isTablet: size.width >= 768 && size.width < 1024,
-    isDesktop: size.width >= 1024,
-  };
+const useInView = (threshold = 0.12) => {
+  const ref = useRef(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+  return [ref, visible];
 };
 
 /* ═══════════════════════════════════════════════════
-   SKELETON COMPONENTS
+   HELPERS
    ═══════════════════════════════════════════════════ */
+const fmt = (n) => {
+  if (typeof n !== "number") return n;
+  if (n >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
+  if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+  if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+  return n.toLocaleString();
+};
 
-const SkeletonBox = ({ width = "100%", height = "20px", radius = theme.radiusSm, style = {} }) => (
-  <div
-    className="skeleton"
-    style={{
-      width,
-      height,
-      borderRadius: radius,
-      ...style,
-    }}
-  />
+const splitP = (text) => (text ? text.split(/\n\n|\n/).filter(Boolean) : []);
+
+/* ═══════════════════════════════════════════════════
+   SKELETON LOADER
+   ═══════════════════════════════════════════════════ */
+const Sk = ({ w = "100%", h = "20px", r = T.r.sm, style = {} }) => (
+  <div className="cp-skel" style={{ width: w, height: h, borderRadius: r, ...style }} />
 );
 
-const SkeletonHero = ({ isMobile }) => (
-  <div style={{ position: "relative", height: isMobile ? "70vh" : "80vh", background: theme.gray200 }}>
-    <div
-      style={{
-        position: "absolute",
-        bottom: 0,
-        left: 0,
-        right: 0,
-        padding: isMobile ? "32px 20px" : "64px 48px",
-        background: "linear-gradient(to top, rgba(0,0,0,0.7), transparent)",
-      }}
-    >
-      <div style={{ maxWidth: theme.containerMax, margin: "0 auto" }}>
-        <SkeletonBox width="120px" height="32px" style={{ marginBottom: 16 }} />
-        <SkeletonBox width={isMobile ? "80%" : "400px"} height={isMobile ? "36px" : "56px"} style={{ marginBottom: 16 }} />
-        <SkeletonBox width={isMobile ? "100%" : "600px"} height="24px" style={{ marginBottom: 8 }} />
-        <SkeletonBox width={isMobile ? "70%" : "400px"} height="24px" style={{ marginBottom: 24 }} />
-        <div style={{ display: "flex", gap: 12 }}>
-          <SkeletonBox width="140px" height="48px" radius={theme.radiusMd} />
-          <SkeletonBox width="160px" height="48px" radius={theme.radiusMd} />
+const SkeletonPage = ({ mob }) => (
+  <div style={{ background: T.white, minHeight: "100vh", fontFamily: T.sans }}>
+    {/* Hero skeleton */}
+    <div style={{ position: "relative", height: mob ? "65vh" : "82vh" }}>
+      <Sk w="100%" h="100%" r="0" />
+      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: mob ? "32px 20px" : "64px 48px", background: "linear-gradient(to top,rgba(0,0,0,.7),transparent)" }}>
+        <div style={{ maxWidth: T.max, margin: "0 auto" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 16 }}>
+            <Sk w="56px" h="40px" r={T.r.sm} style={{ opacity: .5 }} />
+            <Sk w={mob ? "70%" : "380px"} h={mob ? "36px" : "56px"} style={{ opacity: .5 }} />
+          </div>
+          <Sk w={mob ? "90%" : "450px"} h="22px" style={{ marginBottom: 28, opacity: .5 }} />
+          <div style={{ display: "flex", gap: 24, flexWrap: "wrap", marginBottom: 28 }}>
+            {[100, 110, 120].map((x, i) => (
+              <div key={i}>
+                <Sk w="60px" h="12px" style={{ marginBottom: 6, opacity: .4 }} />
+                <Sk w={`${x}px`} h="20px" style={{ opacity: .5 }} />
+              </div>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: 12 }}>
+            <Sk w="180px" h="52px" r={T.r.md} style={{ opacity: .4 }} />
+            <Sk w="140px" h="52px" r={T.r.md} style={{ opacity: .4 }} />
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
 
-const SkeletonNav = () => (
-  <div
-    style={{
-      position: "sticky",
-      top: 0,
-      zIndex: 100,
-      background: theme.white,
-      borderBottom: `1px solid ${theme.gray200}`,
-      padding: "16px 24px",
-    }}
-  >
-    <div
-      style={{
-        maxWidth: theme.containerMax,
-        margin: "0 auto",
-        display: "flex",
-        gap: 24,
-      }}
-    >
-      {[80, 100, 90, 110, 85, 95].map((w, i) => (
-        <SkeletonBox key={i} width={`${w}px`} height="20px" />
-      ))}
+    {/* Nav skeleton */}
+    <div style={{ borderBottom: `1px solid ${T.g200}`, padding: "16px 24px" }}>
+      <div style={{ maxWidth: T.max, margin: "0 auto", display: "flex", gap: 12 }}>
+        {[80, 110, 90, 100, 85, 95, 70].map((w, i) => <Sk key={i} w={`${w}px`} h="36px" r={T.r.full} />)}
+      </div>
     </div>
-  </div>
-);
 
-const SkeletonQuickFacts = ({ isMobile }) => (
-  <div style={{ background: theme.white, padding: isMobile ? "32px 20px" : "48px", borderBottom: `1px solid ${theme.gray200}` }}>
-    <div style={{ maxWidth: theme.containerMax, margin: "0 auto" }}>
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
-          gap: isMobile ? 16 : 24,
-        }}
-      >
-        {[1, 2, 3, 4].map((i) => (
-          <div
-            key={i}
-            style={{
-              padding: 24,
-              background: theme.gray50,
-              borderRadius: theme.radiusMd,
-            }}
-          >
-            <SkeletonBox width="48px" height="48px" radius="50%" style={{ marginBottom: 16 }} />
-            <SkeletonBox width="60%" height="14px" style={{ marginBottom: 8 }} />
-            <SkeletonBox width="80%" height="20px" />
+    {/* Quick Facts skeleton */}
+    <div style={{ borderBottom: `1px solid ${T.g200}`, padding: mob ? "28px 20px" : "44px 24px" }}>
+      <div style={{ maxWidth: T.max, margin: "0 auto", display: "grid", gridTemplateColumns: mob ? "repeat(2,1fr)" : "repeat(4,1fr)", gap: mob ? 14 : 24 }}>
+        {Array.from({ length: mob ? 4 : 8 }).map((_, i) => (
+          <div key={i} style={{ padding: mob ? 16 : 24, background: T.g50, borderRadius: T.r.md, borderLeft: `4px solid ${T.g200}` }}>
+            <Sk w="36px" h="36px" style={{ marginBottom: 12 }} />
+            <Sk w="50%" h="11px" style={{ marginBottom: 6 }} />
+            <Sk w="75%" h="18px" />
           </div>
         ))}
       </div>
     </div>
-  </div>
-);
 
-const SkeletonSection = ({ isMobile, cardCount = 3 }) => (
-  <div style={{ padding: isMobile ? "48px 20px" : "80px 48px" }}>
-    <div style={{ maxWidth: theme.containerMax, margin: "0 auto" }}>
-      <SkeletonBox width="200px" height="32px" style={{ marginBottom: 12 }} />
-      <SkeletonBox width={isMobile ? "100%" : "500px"} height="20px" style={{ marginBottom: 40 }} />
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : `repeat(${cardCount}, 1fr)`,
-          gap: 24,
-        }}
-      >
-        {Array.from({ length: cardCount }).map((_, i) => (
-          <div
-            key={i}
-            style={{
-              background: theme.white,
-              borderRadius: theme.radiusMd,
-              overflow: "hidden",
-              border: `1px solid ${theme.gray200}`,
-            }}
-          >
-            <SkeletonBox width="100%" height="200px" radius="0" />
-            <div style={{ padding: 24 }}>
-              <SkeletonBox width="70%" height="20px" style={{ marginBottom: 12 }} />
-              <SkeletonBox width="100%" height="14px" style={{ marginBottom: 8 }} />
-              <SkeletonBox width="90%" height="14px" />
-            </div>
+    {/* Section skeletons */}
+    {[T.g50, T.white, T.g50].map((bg, idx) => (
+      <div key={idx} style={{ background: bg, padding: mob ? "48px 20px" : "80px 24px" }}>
+        <div style={{ maxWidth: T.max, margin: "0 auto" }}>
+          <Sk w="220px" h="34px" style={{ marginBottom: 12 }} />
+          <Sk w={mob ? "100%" : "440px"} h="18px" style={{ marginBottom: 8 }} />
+          <div style={{ width: 60, height: 4, borderRadius: 2, background: T.g200, marginBottom: 40 }} />
+          <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : idx === 1 ? "repeat(3,1fr)" : "1fr 1fr", gap: 24 }}>
+            {Array.from({ length: idx === 1 ? 3 : 2 }).map((_, i) => (
+              <div key={i} style={{ background: idx === 0 ? T.white : T.g50, borderRadius: T.r.lg, border: `1px solid ${T.g200}`, overflow: "hidden" }}>
+                <Sk w="100%" h="180px" r="0" />
+                <div style={{ padding: 24 }}>
+                  <Sk w="65%" h="20px" style={{ marginBottom: 12 }} />
+                  <Sk w="100%" h="14px" style={{ marginBottom: 8 }} />
+                  <Sk w="85%" h="14px" />
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
+        </div>
       </div>
-    </div>
-  </div>
-);
-
-const LoadingSkeleton = ({ isMobile }) => (
-  <div style={{ background: theme.gray50 }}>
-    <SkeletonHero isMobile={isMobile} />
-    <SkeletonNav />
-    <SkeletonQuickFacts isMobile={isMobile} />
-    <SkeletonSection isMobile={isMobile} />
-    <div style={{ background: theme.white }}>
-      <SkeletonSection isMobile={isMobile} cardCount={4} />
-    </div>
-    <SkeletonSection isMobile={isMobile} />
+    ))}
   </div>
 );
 
 /* ═══════════════════════════════════════════════════
-   UTILITY COMPONENTS
+   PRIMITIVES
    ═══════════════════════════════════════════════════ */
-
-const Container = ({ children, style = {} }) => (
-  <div
-    style={{
-      maxWidth: theme.containerMax,
-      margin: "0 auto",
-      padding: "0 24px",
-      ...style,
-    }}
-  >
-    {children}
-  </div>
+const Box = ({ children, narrow, style = {} }) => (
+  <div style={{ maxWidth: narrow || T.max, margin: "0 auto", padding: "0 24px", width: "100%", ...style }}>{children}</div>
 );
 
-const SectionWrapper = ({ id, background = theme.gray50, children, isMobile }) => (
-  <section
-    id={id}
-    style={{
-      background,
-      padding: isMobile ? `${theme.sectionPaddingMobile} 0` : `${theme.sectionPadding} 0`,
-    }}
-  >
-    <Container>{children}</Container>
-  </section>
-);
-
-const SectionHeader = ({ title, subtitle, action, isMobile }) => (
-  <div style={{ marginBottom: isMobile ? 32 : 48 }}>
-    <div
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "flex-start",
-        flexWrap: "wrap",
-        gap: 16,
-        marginBottom: subtitle ? 12 : 0,
-      }}
-    >
-      <h2
-        style={{
-          fontFamily: theme.fontSerif,
-          fontSize: isMobile ? 28 : 36,
-          fontWeight: 700,
-          color: theme.gray900,
-          margin: 0,
-          lineHeight: 1.2,
-        }}
-      >
-        {title}
-      </h2>
-      {action}
-    </div>
-    {subtitle && (
-      <p
-        style={{
-          fontSize: isMobile ? 16 : 18,
-          color: theme.gray500,
-          margin: 0,
-          lineHeight: 1.6,
-          maxWidth: 600,
-        }}
-      >
-        {subtitle}
-      </p>
-    )}
-  </div>
-);
-
-const Badge = ({ children, variant = "primary", size = "md" }) => {
-  const variants = {
-    primary: { bg: theme.primaryLight, color: theme.primaryDark },
-    accent: { bg: theme.accentLight, color: theme.primaryDark },
-    white: { bg: "rgba(255,255,255,0.2)", color: theme.white },
-    gray: { bg: theme.gray100, color: theme.gray700 },
-    success: { bg: "#D1FAE5", color: "#065F46" },
-    warning: { bg: "#FEF3C7", color: "#92400E" },
-  };
-  
-  const sizes = {
-    sm: { padding: "4px 10px", fontSize: 11 },
-    md: { padding: "6px 14px", fontSize: 12 },
-    lg: { padding: "8px 18px", fontSize: 14 },
-  };
-
-  const v = variants[variant] || variants.primary;
-  const s = sizes[size] || sizes.md;
-
+const Badge = ({ children, variant = "primary", size = "md", icon, style = {} }) => {
+  const v = {
+    primary: { bg: T.green100, c: T.green800 },
+    accent: { bg: T.green200, c: T.green900 },
+    white: { bg: "rgba(255,255,255,.18)", c: T.white, border: "1px solid rgba(255,255,255,.35)" },
+    dark: { bg: "rgba(0,0,0,.55)", c: T.white },
+    gray: { bg: T.g100, c: T.g700 },
+    success: { bg: "#D1FAE5", c: "#065F46" },
+    warning: { bg: "#FEF3C7", c: "#92400E" },
+    info: { bg: "#DBEAFE", c: "#1E40AF" },
+    star: { bg: "rgba(251,191,36,.2)", c: "#FBBF24" },
+  }[variant] || { bg: T.green100, c: T.green800 };
+  const s = { xs: { p: "3px 8px", f: 10 }, sm: { p: "5px 12px", f: 11 }, md: { p: "6px 16px", f: 12 }, lg: { p: "8px 20px", f: 14 } }[size] || { p: "6px 16px", f: 12 };
   return (
-    <span
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        gap: 6,
-        background: v.bg,
-        color: v.color,
-        fontWeight: 600,
-        borderRadius: 50,
-        textTransform: "uppercase",
-        letterSpacing: "0.5px",
-        ...s,
-      }}
-    >
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: v.bg, color: v.c, border: v.border || "none", fontWeight: 700, fontFamily: T.sans, borderRadius: T.r.full, textTransform: "uppercase", letterSpacing: ".6px", padding: s.p, fontSize: s.f, whiteSpace: "nowrap", ...style }}>
+      {icon && <span style={{ fontSize: s.f + 3 }}>{icon}</span>}
       {children}
     </span>
   );
 };
 
-const Card = ({ children, hover = true, className = "", style = {} }) => (
-  <div
-    className={`${hover ? "hover-lift" : ""} ${className}`}
-    style={{
-      background: theme.white,
-      borderRadius: theme.radiusMd,
-      border: `1px solid ${theme.gray200}`,
-      overflow: "hidden",
-      ...style,
-    }}
-  >
+const IconCircle = ({ icon, size = 48, bg = T.green50, style = {} }) => (
+  <div style={{ width: size, height: size, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * .48, flexShrink: 0, ...style }}>
+    {icon}
+  </div>
+);
+
+const GreenBar = ({ style = {} }) => (
+  <div style={{ width: 60, height: 4, borderRadius: 2, background: `linear-gradient(90deg,${T.green400},${T.green600})`, ...style }} />
+);
+
+const Section = ({ children, id, bg = T.white, mob }) => {
+  const [ref, vis] = useInView();
+  return (
+    <section ref={ref} id={id} style={{ background: bg, padding: mob ? "64px 0" : "100px 0", opacity: vis ? 1 : 0, transform: vis ? "translateY(0)" : "translateY(40px)", transition: "opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1)" }}>
+      <Box>{children}</Box>
+    </section>
+  );
+};
+
+const Heading = ({ children, sub, mob }) => (
+  <div style={{ marginBottom: mob ? 28 : 44 }}>
+    <h2 style={{ fontFamily: T.serif, fontSize: mob ? 28 : 40, fontWeight: 700, color: T.g900, margin: "0 0 10px", lineHeight: 1.15 }}>{children}</h2>
+    {sub && <p style={{ fontSize: mob ? 16 : 18, color: T.g500, margin: "0 0 8px", lineHeight: 1.6, maxWidth: 600 }}>{sub}</p>}
+    <GreenBar style={{ marginTop: 12 }} />
+  </div>
+);
+
+const Card = ({ children, hover = true, style = {}, className = "" }) => (
+  <div className={`${hover ? "cp-lift" : ""} ${className}`} style={{ background: T.white, borderRadius: T.r.lg, border: `1px solid ${T.g200}`, overflow: "hidden", ...style }}>
     {children}
   </div>
 );
 
-const Button = ({ children, variant = "primary", size = "md", as: Component = "button", ...props }) => {
-  const variants = {
-    primary: {
-      background: theme.primary,
-      color: theme.white,
-      border: "none",
-    },
-    secondary: {
-      background: theme.white,
-      color: theme.primary,
-      border: `2px solid ${theme.primary}`,
-    },
-    ghost: {
-      background: "transparent",
-      color: theme.primary,
-      border: `1px solid ${theme.gray200}`,
-    },
-    white: {
-      background: theme.white,
-      color: theme.gray800,
-      border: "none",
-    },
-  };
-
-  const sizes = {
-    sm: { padding: "10px 20px", fontSize: 14 },
-    md: { padding: "14px 28px", fontSize: 15 },
-    lg: { padding: "18px 36px", fontSize: 16 },
-  };
-
-  const v = variants[variant] || variants.primary;
-  const s = sizes[size] || sizes.md;
-
-  return (
-    <Component
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
-        fontFamily: theme.fontSans,
-        fontWeight: 600,
-        borderRadius: theme.radiusMd,
-        cursor: "pointer",
-        textDecoration: "none",
-        transition: `all ${theme.transitionBase}`,
-        ...v,
-        ...s,
-      }}
-      {...props}
-    >
-      {children}
-    </Component>
-  );
-};
-
 /* ═══════════════════════════════════════════════════
-   HERO SECTION
+   HERO
    ═══════════════════════════════════════════════════ */
-
-const Hero = ({ country, isMobile }) => {
-  const c = country;
-  
-  return (
-    <div
-      style={{
-        position: "relative",
-        height: isMobile ? "70vh" : "85vh",
-        minHeight: 500,
-        overflow: "hidden",
-      }}
-    >
-      {/* Background Image */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          backgroundImage: `url(${c.heroImage || c.flagUrl})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      />
-      
-      {/* Gradient Overlay */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: `linear-gradient(
-            to bottom,
-            rgba(0,0,0,0.2) 0%,
-            rgba(0,0,0,0.4) 50%,
-            rgba(0,0,0,0.8) 100%
-          )`,
-        }}
-      />
-      
-      {/* Green Accent Overlay */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: `linear-gradient(135deg, ${theme.primary}20, transparent 60%)`,
-        }}
-      />
-      
-      {/* Content */}
-      <Container
-        style={{
-          position: "relative",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "flex-end",
-          paddingBottom: isMobile ? 48 : 80,
-        }}
-      >
-        <div style={{ maxWidth: 800 }} className="fade-in">
-          {/* Region Badge */}
-          {c.region && (
-            <Badge variant="white" size="lg" style={{ marginBottom: 20 }}>
-              {c.region}
-            </Badge>
-          )}
-          
-          {/* Country Name with Flag */}
-          <div style={{ display: "flex", alignItems: "center", gap: 20, marginBottom: 20 }}>
-            {c.flagUrl && (
-              <img
-                src={c.flagUrl}
-                alt={`${c.name} flag`}
-                style={{
-                  width: isMobile ? 56 : 72,
-                  height: isMobile ? 40 : 52,
-                  borderRadius: 8,
-                  boxShadow: theme.shadowLg,
-                  objectFit: "cover",
-                }}
-              />
-            )}
-            <h1
-              style={{
-                fontFamily: theme.fontSerif,
-                fontSize: isMobile ? 36 : 64,
-                fontWeight: 700,
-                color: theme.white,
-                margin: 0,
-                lineHeight: 1.1,
-                textShadow: "0 2px 20px rgba(0,0,0,0.3)",
-              }}
-            >
-              {c.name}
-            </h1>
-          </div>
-          
-          {/* Description */}
-          {c.tagline && (
-            <p
-              style={{
-                fontSize: isMobile ? 18 : 22,
-                color: "rgba(255,255,255,0.9)",
-                margin: "0 0 32px",
-                lineHeight: 1.6,
-                maxWidth: 600,
-              }}
-            >
-              {c.tagline}
-            </p>
-          )}
-          
-          {/* Quick Stats */}
-          <div
-            style={{
-              display: "flex",
-              flexWrap: "wrap",
-              gap: isMobile ? 16 : 32,
-              marginBottom: 32,
-            }}
-          >
-            {c.capital && (
-              <div style={{ color: "rgba(255,255,255,0.9)" }}>
-                <span style={{ fontSize: 13, opacity: 0.7, display: "block" }}>Capital</span>
-                <span style={{ fontSize: 18, fontWeight: 600 }}>{c.capital}</span>
-              </div>
-            )}
-            {c.population && (
-              <div style={{ color: "rgba(255,255,255,0.9)" }}>
-                <span style={{ fontSize: 13, opacity: 0.7, display: "block" }}>Population</span>
-                <span style={{ fontSize: 18, fontWeight: 600 }}>{formatNumber(c.population)}</span>
-              </div>
-            )}
-            {c.destinationCount > 0 && (
-              <div style={{ color: "rgba(255,255,255,0.9)" }}>
-                <span style={{ fontSize: 13, opacity: 0.7, display: "block" }}>Destinations</span>
-                <span style={{ fontSize: 18, fontWeight: 600 }}>{c.destinationCount}+ Places</span>
-              </div>
-            )}
-          </div>
-          
-          {/* CTA Buttons */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-            <Button as={Link} to={`/countries/${c.slug}/destinations`} size="lg">
-              Explore Destinations
-            </Button>
-            <Button
-              variant="secondary"
-              size="lg"
-              style={{ 
-                background: "rgba(255,255,255,0.1)", 
-                borderColor: "rgba(255,255,255,0.3)",
-                color: theme.white,
-              }}
-              onClick={() => document.getElementById("overview")?.scrollIntoView({ behavior: "smooth" })}
-            >
-              Learn More
-            </Button>
-          </div>
-        </div>
-      </Container>
+const Hero = ({ c, mob }) => (
+  <section style={{ position: "relative", height: mob ? "75vh" : "88vh", minHeight: 520, overflow: "hidden" }}>
+    <div style={{ position: "absolute", inset: 0, animation: "cp-heroZoom 8s ease forwards" }}>
+      <img src={c.heroImage || c.flagUrl} alt={c.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
     </div>
-  );
-};
+    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg,rgba(0,0,0,.12) 0%,rgba(0,0,0,.35) 50%,rgba(0,0,0,.82) 100%)" }} />
+    <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg,${T.green900}30,transparent 70%)` }} />
+    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 5, background: `linear-gradient(90deg,${T.green400},${T.green600},${T.green400})`, backgroundSize: "200% 100%", animation: "cp-borderFlow 3s ease infinite" }} />
+
+    <Box style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", paddingBottom: mob ? 44 : 72 }}>
+      <div style={{ maxWidth: 820 }}>
+        {c.region && (
+          <div className="cp-fadeUp" style={{ animationDelay: ".1s", opacity: 0, marginBottom: 16 }}>
+            <Badge variant="white" size="lg">{c.region}</Badge>
+          </div>
+        )}
+        <div className="cp-fadeUp" style={{ display: "flex", alignItems: "center", gap: mob ? 14 : 20, marginBottom: 18, animationDelay: ".2s", opacity: 0 }}>
+          {c.flagUrl && <img src={c.flagUrl} alt="" style={{ width: mob ? 52 : 72, height: mob ? 37 : 52, borderRadius: T.r.sm, boxShadow: T.sh.lg, objectFit: "cover" }} />}
+          <h1 style={{ fontFamily: T.serif, fontSize: mob ? 36 : 62, fontWeight: 800, color: T.white, margin: 0, lineHeight: 1.08, textShadow: "0 4px 32px rgba(0,0,0,.5)" }}>{c.name}</h1>
+        </div>
+        {c.tagline && (
+          <p className="cp-fadeUp" style={{ fontSize: mob ? 17 : 23, color: "rgba(255,255,255,.88)", margin: "0 0 28px", lineHeight: 1.55, fontWeight: 500, maxWidth: 600, animationDelay: ".3s", opacity: 0 }}>{c.tagline}</p>
+        )}
+        <div className="cp-fadeUp" style={{ display: "flex", flexWrap: "wrap", gap: mob ? 16 : 32, marginBottom: 32, animationDelay: ".4s", opacity: 0 }}>
+          {c.capital && <HeroStat label="Capital" value={c.capital} />}
+          {c.population && <HeroStat label="Population" value={fmt(c.population)} />}
+          {c.destinationCount > 0 && <HeroStat label="Destinations" value={`${c.destinationCount}+ Places`} />}
+        </div>
+        <div className="cp-fadeUp" style={{ display: "flex", flexWrap: "wrap", gap: 12, animationDelay: ".5s", opacity: 0 }}>
+          <Link to={`/countries/${c.slug}/destinations`} style={{ padding: "16px 36px", background: T.green600, color: T.white, border: "none", borderRadius: T.r.md, fontSize: 16, fontWeight: 700, textDecoration: "none", fontFamily: T.sans, transition: "background .2s,transform .2s", display: "inline-flex", alignItems: "center", gap: 8 }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.green700; e.currentTarget.style.transform = "translateY(-2px)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background = T.green600; e.currentTarget.style.transform = "translateY(0)"; }}
+          >
+            Explore Destinations
+          </Link>
+          <button style={{ padding: "16px 36px", background: "rgba(255,255,255,.1)", color: T.white, border: "2px solid rgba(255,255,255,.3)", borderRadius: T.r.md, fontSize: 16, fontWeight: 600, cursor: "pointer", fontFamily: T.sans, backdropFilter: "blur(6px)", transition: "background .2s" }}
+            onClick={() => document.getElementById("overview")?.scrollIntoView({ behavior: "smooth" })}
+            onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.2)"}
+            onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,.1)"}
+          >
+            Learn More
+          </button>
+        </div>
+      </div>
+    </Box>
+  </section>
+);
+
+const HeroStat = ({ label, value }) => (
+  <div style={{ color: "rgba(255,255,255,.9)" }}>
+    <span style={{ fontSize: 12, opacity: .7, display: "block", textTransform: "uppercase", letterSpacing: ".5px", fontWeight: 600 }}>{label}</span>
+    <span style={{ fontSize: 19, fontWeight: 700 }}>{value}</span>
+  </div>
+);
 
 /* ═══════════════════════════════════════════════════
-   SECTION NAVIGATION
+   SECTION NAV (sticky)
    ═══════════════════════════════════════════════════ */
-
-const SectionNav = ({ sections, active, onClick, isMobile }) => {
-  const navRef = React.useRef(null);
-
+const SectionNav = ({ sections, active, onClick, mob }) => {
+  const ref = useRef(null);
   useEffect(() => {
-    if (navRef.current && active) {
-      const activeEl = navRef.current.querySelector(`[data-section="${active}"]`);
-      if (activeEl) {
-        activeEl.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
-      }
+    if (ref.current && active) {
+      const el = ref.current.querySelector(`[data-s="${active}"]`);
+      if (el) el.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
     }
   }, [active]);
 
   return (
-    <nav
-      style={{
-        position: "sticky",
-        top: 0,
-        zIndex: 100,
-        background: theme.white,
-        borderBottom: `1px solid ${theme.gray200}`,
-        boxShadow: theme.shadowSm,
-      }}
-    >
-      <Container>
-        <div
-          ref={navRef}
-          style={{
-            display: "flex",
-            gap: isMobile ? 8 : 4,
-            overflowX: "auto",
-            padding: "16px 0",
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-          }}
-        >
-          {sections.map((section) => (
-            <button
-              key={section.id}
-              data-section={section.id}
-              onClick={() => onClick(section.id)}
-              className={`nav-item ${active === section.id ? "active" : ""}`}
-              style={{
-                padding: isMobile ? "10px 16px" : "10px 20px",
-                background: active === section.id ? theme.primaryMuted : "transparent",
-                color: active === section.id ? theme.primary : theme.gray600,
-                border: "none",
-                borderRadius: 50,
-                fontSize: 14,
-                fontWeight: 600,
-                fontFamily: theme.fontSans,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                transition: `all ${theme.transitionFast}`,
-              }}
-            >
-              {isMobile ? section.short : section.label}
-            </button>
-          ))}
+    <nav style={{ position: "sticky", top: 0, zIndex: 100, background: T.white, borderBottom: `1px solid ${T.g200}`, boxShadow: T.sh.sm }}>
+      <Box>
+        <div ref={ref} className="cp-nav-scroll" style={{ display: "flex", gap: mob ? 6 : 4, padding: "14px 0" }}>
+          {sections.map(s => {
+            const isActive = active === s.id;
+            return (
+              <button key={s.id} data-s={s.id} onClick={() => onClick(s.id)}
+                style={{ padding: mob ? "10px 16px" : "10px 22px", background: isActive ? T.green50 : "transparent", color: isActive ? T.green700 : T.g500, border: isActive ? `1.5px solid ${T.green200}` : "1.5px solid transparent", borderRadius: T.r.full, fontSize: 14, fontWeight: 600, fontFamily: T.sans, cursor: "pointer", whiteSpace: "nowrap", transition: "all .2s" }}
+                onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = T.g50; e.currentTarget.style.color = T.g700; } }}
+                onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = T.g500; } }}
+              >
+                {mob ? s.short : s.label}
+              </button>
+            );
+          })}
         </div>
-      </Container>
+      </Box>
     </nav>
   );
 };
@@ -756,203 +382,89 @@ const SectionNav = ({ sections, active, onClick, isMobile }) => {
 /* ═══════════════════════════════════════════════════
    QUICK FACTS
    ═══════════════════════════════════════════════════ */
-
-const QuickFacts = ({ country, isMobile }) => {
-  const c = country;
-  
+const QuickFacts = ({ c, mob }) => {
   const facts = [
     { icon: "🏛️", label: "Capital", value: c.capital },
-    { icon: "👥", label: "Population", value: c.population ? formatNumber(c.population) : null },
-    { icon: "🌍", label: "Area", value: c.area ? `${formatNumber(c.area)} km²` : null },
+    { icon: "👥", label: "Population", value: c.population ? fmt(c.population) : null },
+    { icon: "🌍", label: "Area", value: c.area ? `${fmt(c.area)} km²` : null },
     { icon: "💰", label: "Currency", value: c.currency },
-    { icon: "🗣️", label: "Language", value: Array.isArray(c.languages) ? c.languages[0] : c.languages },
+    { icon: "🗣️", label: "Language", value: Array.isArray(c.languages) ? (typeof c.languages[0] === "string" ? c.languages[0] : c.languages[0]?.name) : c.languages },
     { icon: "🕐", label: "Timezone", value: c.timezone },
     { icon: "📞", label: "Calling Code", value: c.callingCode },
     { icon: "🚗", label: "Driving Side", value: c.drivingSide },
   ].filter(f => f.value);
 
-  if (facts.length === 0) return null;
+  if (!facts.length) return null;
 
   return (
-    <section style={{ background: theme.white, borderBottom: `1px solid ${theme.gray200}` }}>
-      <Container style={{ padding: isMobile ? "32px 24px" : "48px 24px" }}>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile 
-              ? "repeat(2, 1fr)" 
-              : `repeat(${Math.min(facts.length, 4)}, 1fr)`,
-            gap: isMobile ? 16 : 24,
-          }}
-        >
-          {facts.slice(0, 8).map((fact, i) => (
-            <div
-              key={i}
-              style={{
-                padding: isMobile ? 20 : 28,
-                background: theme.gray50,
-                borderRadius: theme.radiusMd,
-                borderLeft: `4px solid ${theme.primary}`,
-                transition: `all ${theme.transitionBase}`,
-              }}
+    <section style={{ background: T.white, borderBottom: `1px solid ${T.g200}` }}>
+      <Box style={{ padding: mob ? "28px 24px" : "44px 24px" }}>
+        <div className="cp-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "repeat(2,1fr)" : `repeat(${Math.min(facts.length, 4)},1fr)`, gap: mob ? 14 : 20 }}>
+          {facts.slice(0, 8).map((f, i) => (
+            <div key={i} style={{ padding: mob ? 18 : 24, background: T.g50, borderRadius: T.r.md, borderLeft: `4px solid ${T.green500}`, transition: "box-shadow .2s" }}
+              onMouseEnter={e => e.currentTarget.style.boxShadow = T.sh.md}
+              onMouseLeave={e => e.currentTarget.style.boxShadow = "none"}
             >
-              <div style={{ fontSize: 28, marginBottom: 12 }}>{fact.icon}</div>
-              <div
-                style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: theme.gray500,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.5px",
-                  marginBottom: 4,
-                }}
-              >
-                {fact.label}
-              </div>
-              <div
-                style={{
-                  fontSize: isMobile ? 16 : 18,
-                  fontWeight: 700,
-                  color: theme.gray800,
-                }}
-              >
-                {fact.value}
-              </div>
+              <span className="cp-wiggle" style={{ fontSize: 28, display: "block", marginBottom: 10, cursor: "default" }}>{f.icon}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: T.g400, textTransform: "uppercase", letterSpacing: ".7px", display: "block", marginBottom: 4 }}>{f.label}</span>
+              <span style={{ fontSize: mob ? 16 : 18, fontWeight: 700, color: T.g800 }}>{f.value}</span>
             </div>
           ))}
         </div>
-      </Container>
+      </Box>
     </section>
   );
 };
 
 /* ═══════════════════════════════════════════════════
-   OVERVIEW SECTION
+   OVERVIEW
    ═══════════════════════════════════════════════════ */
-
-const Overview = ({ country, isMobile }) => {
-  const c = country;
-  const hasContent = c.description || c.fullDescription || (c.highlights?.length > 0);
-  
+const Overview = ({ c, mob }) => {
+  const hasContent = c.description || c.fullDescription || c.highlights?.length;
   if (!hasContent) return null;
 
   return (
-    <SectionWrapper id="overview" background={theme.gray50} isMobile={isMobile}>
-      <SectionHeader
-        title="Overview"
-        subtitle={`Discover what makes ${c.name} a remarkable destination`}
-        isMobile={isMobile}
-      />
-      
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-          gap: isMobile ? 32 : 48,
-          alignItems: "start",
-        }}
-      >
-        {/* Description */}
+    <Section id="overview" bg={T.g50} mob={mob}>
+      <Heading sub={`Discover what makes ${c.name} a remarkable destination`} mob={mob}>Overview</Heading>
+      <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: mob ? 32 : 48, alignItems: "start" }}>
         <div>
           {(c.fullDescription || c.description) && (
-            <div
-              style={{
-                fontSize: 16,
-                lineHeight: 1.8,
-                color: theme.gray600,
-              }}
-            >
-              {splitParagraphs(c.fullDescription || c.description).map((p, i) => (
-                <p key={i} style={{ margin: i > 0 ? "20px 0 0" : 0 }}>
-                  {p}
-                </p>
+            <div style={{ fontSize: 16, lineHeight: 1.85, color: T.g600 }}>
+              {splitP(c.fullDescription || c.description).map((p, i) => (
+                <p key={i} style={{ margin: i > 0 ? "22px 0 0" : 0 }}>{p}</p>
               ))}
             </div>
           )}
         </div>
-        
-        {/* Highlights */}
         {c.highlights?.length > 0 && (
-          <Card hover={false} style={{ padding: isMobile ? 24 : 32 }}>
-            <h3
-              style={{
-                fontFamily: theme.fontSerif,
-                fontSize: 22,
-                fontWeight: 600,
-                color: theme.gray800,
-                margin: "0 0 24px",
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-              }}
-            >
-              <span
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  background: theme.primaryLight,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 20,
-                }}
-              >
-                ✨
-              </span>
+          <Card hover={false} style={{ padding: mob ? 24 : 32 }}>
+            <h3 style={{ fontFamily: T.serif, fontSize: 22, fontWeight: 600, color: T.g800, margin: "0 0 24px", display: "flex", alignItems: "center", gap: 12 }}>
+              <IconCircle icon="✨" size={42} bg={T.green100} />
               Highlights
             </h3>
-            <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+            <ul style={{ margin: 0, padding: 0, listStyle: "none" }} className="cp-stagger">
               {c.highlights.map((h, i) => (
-                <li
-                  key={i}
-                  style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    gap: 14,
-                    padding: "14px 0",
-                    borderBottom: i < c.highlights.length - 1 ? `1px solid ${theme.gray100}` : "none",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: "50%",
-                      background: theme.primary,
-                      color: theme.white,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 12,
-                      fontWeight: 700,
-                      flexShrink: 0,
-                    }}
-                  >
+                <li key={i} style={{ display: "flex", alignItems: "flex-start", gap: 14, padding: "14px 0", borderBottom: i < c.highlights.length - 1 ? `1px solid ${T.g100}` : "none" }}>
+                  <span style={{ width: 28, height: 28, borderRadius: "50%", background: `linear-gradient(135deg,${T.green500},${T.green600})`, color: T.white, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, flexShrink: 0, boxShadow: `0 2px 8px ${T.green500}44` }}>
                     {i + 1}
                   </span>
-                  <span style={{ fontSize: 15, color: theme.gray700, lineHeight: 1.5 }}>
-                    {h}
-                  </span>
+                  <span style={{ fontSize: 15, color: T.g700, lineHeight: 1.55 }}>{h}</span>
                 </li>
               ))}
             </ul>
           </Card>
         )}
       </div>
-    </SectionWrapper>
+    </Section>
   );
 };
 
 /* ═══════════════════════════════════════════════════
    GEOGRAPHY & CLIMATE
    ═══════════════════════════════════════════════════ */
-
-const GeographyClimate = ({ country, isMobile }) => {
-  const c = country;
+const Geography = ({ c, mob }) => {
   const geo = c.geography || {};
-  const hasContent = c.area || Object.keys(geo).length > 0 || c.climate;
-
+  const hasContent = c.area || Object.keys(geo).length || c.climate;
   if (!hasContent) return null;
 
   const geoFacts = [
@@ -963,426 +475,132 @@ const GeographyClimate = ({ country, isMobile }) => {
   ].filter(f => f.value);
 
   return (
-    <SectionWrapper id="geography" background={theme.white} isMobile={isMobile}>
-      <SectionHeader
-        title="Geography & Climate"
-        subtitle={`Explore the natural landscapes and weather patterns of ${c.name}`}
-        isMobile={isMobile}
-      />
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-          gap: 24,
-        }}
-      >
-        {/* Geography Card */}
+    <Section id="geography" bg={T.white} mob={mob}>
+      <Heading sub={`Explore the natural landscapes and weather of ${c.name}`} mob={mob}>Geography & Climate</Heading>
+      <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 24 }}>
         {geoFacts.length > 0 && (
           <Card hover={false}>
-            <div
-              style={{
-                padding: "20px 24px",
-                background: theme.primaryMuted,
-                borderBottom: `1px solid ${theme.primaryLight}`,
-              }}
-            >
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: 18,
-                  fontWeight: 600,
-                  color: theme.primaryDark,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                }}
-              >
-                <span>🏔️</span> Geography
-              </h3>
+            <div style={{ padding: "18px 24px", background: T.green50, borderBottom: `1px solid ${T.green100}`, display: "flex", alignItems: "center", gap: 12 }}>
+              <span style={{ fontSize: 24 }}>🏔️</span>
+              <h4 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.green800 }}>Geography</h4>
             </div>
             <div style={{ padding: 24 }}>
-              {geoFacts.map((fact, i) => (
-                <div
-                  key={i}
-                  style={{
-                    padding: "16px 0",
-                    borderBottom: i < geoFacts.length - 1 ? `1px solid ${theme.gray100}` : "none",
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 600,
-                      color: theme.gray500,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.5px",
-                      marginBottom: 4,
-                    }}
-                  >
-                    {fact.label}
-                  </div>
-                  <div style={{ fontSize: 15, color: theme.gray800, lineHeight: 1.5 }}>
-                    {fact.value}
-                  </div>
+              {geoFacts.map((f, i) => (
+                <div key={i} style={{ padding: "16px 0", borderBottom: i < geoFacts.length - 1 ? `1px solid ${T.g100}` : "none" }}>
+                  <span style={{ fontSize: 11, fontWeight: 700, color: T.g400, textTransform: "uppercase", letterSpacing: ".5px", display: "block", marginBottom: 4 }}>{f.label}</span>
+                  <span style={{ fontSize: 15, color: T.g800, lineHeight: 1.5 }}>{f.value}</span>
                 </div>
               ))}
             </div>
           </Card>
         )}
-
-        {/* Climate Card */}
         {c.climate && (
           <Card hover={false}>
-            <div
-              style={{
-                padding: "20px 24px",
-                background: theme.accentLight,
-                borderBottom: `1px solid ${theme.accent}20`,
-              }}
-            >
-              <h3
-                style={{
-                  margin: 0,
-                  fontSize: 18,
-                  fontWeight: 600,
-                  color: theme.primaryDark,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                }}
-              >
-                <span>🌤️</span> Climate
-              </h3>
+            <div style={{ padding: "18px 24px", background: T.green200 + "55", borderBottom: `1px solid ${T.green200}33`, display: "flex", alignItems: "center", gap: 12 }}>
+              <span style={{ fontSize: 24 }}>🌤️</span>
+              <h4 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: T.green800 }}>Climate</h4>
             </div>
             <div style={{ padding: 24 }}>
               {typeof c.climate === "string" ? (
-                <p style={{ margin: 0, fontSize: 15, color: theme.gray700, lineHeight: 1.7 }}>
-                  {c.climate}
-                </p>
+                <p style={{ margin: 0, fontSize: 15, color: T.g700, lineHeight: 1.75 }}>{c.climate}</p>
               ) : (
-                <div>
-                  {c.climate.overview && (
-                    <p style={{ margin: "0 0 16px", fontSize: 15, color: theme.gray700, lineHeight: 1.7 }}>
-                      {c.climate.overview}
-                    </p>
-                  )}
+                <>
+                  {c.climate.overview && <p style={{ margin: "0 0 16px", fontSize: 15, color: T.g700, lineHeight: 1.75 }}>{c.climate.overview}</p>}
                   {c.climate.bestTime && (
-                    <div
-                      style={{
-                        padding: 16,
-                        background: theme.gray50,
-                        borderRadius: theme.radiusSm,
-                        marginTop: 16,
-                      }}
-                    >
-                      <div
-                        style={{
-                          fontSize: 12,
-                          fontWeight: 600,
-                          color: theme.primary,
-                          textTransform: "uppercase",
-                          marginBottom: 4,
-                        }}
-                      >
-                        Best Time to Visit
-                      </div>
-                      <div style={{ fontSize: 15, color: theme.gray800 }}>
-                        {c.climate.bestTime}
-                      </div>
+                    <div style={{ padding: 16, background: T.g50, borderRadius: T.r.sm, borderLeft: `3px solid ${T.green500}` }}>
+                      <span style={{ fontSize: 11, fontWeight: 700, color: T.green600, textTransform: "uppercase", display: "block", marginBottom: 4 }}>Best Time to Visit</span>
+                      <span style={{ fontSize: 15, color: T.g800 }}>{c.climate.bestTime}</span>
                     </div>
                   )}
-                </div>
+                </>
               )}
             </div>
           </Card>
         )}
       </div>
-    </SectionWrapper>
+    </Section>
   );
 };
 
 /* ═══════════════════════════════════════════════════
    PEOPLE & CULTURE
    ═══════════════════════════════════════════════════ */
-
-const PeopleCulture = ({ country, isMobile }) => {
-  const c = country;
-  const hasContent = c.population || c.languages?.length > 0 || c.ethnicGroups?.length > 0 || c.religions?.length > 0;
-
+const People = ({ c, mob }) => {
+  const hasContent = c.languages?.length || c.ethnicGroups?.length || c.religions?.length;
   if (!hasContent) return null;
 
+  const groups = [
+    { key: "languages", label: "Languages", icon: "🗣️", bg: T.green100, variant: "gray" },
+    { key: "ethnicGroups", label: "Ethnic Groups", icon: "👥", bg: T.green200 + "55", variant: "accent" },
+    { key: "religions", label: "Religions", icon: "🛕", bg: T.green50, variant: "primary" },
+  ].filter(g => c[g.key]?.length > 0);
+
   return (
-    <SectionWrapper id="people" background={theme.gray50} isMobile={isMobile}>
-      <SectionHeader
-        title="People & Culture"
-        subtitle={`Learn about the diverse communities and traditions of ${c.name}`}
-        isMobile={isMobile}
-      />
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
-          gap: 24,
-        }}
-      >
-        {/* Languages */}
-        {c.languages?.length > 0 && (
-          <Card hover={false} style={{ padding: 28 }}>
-            <div
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: "50%",
-                background: theme.primaryLight,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 28,
-                marginBottom: 20,
-              }}
-            >
-              🗣️
-            </div>
-            <h4 style={{ margin: "0 0 16px", fontSize: 18, fontWeight: 600, color: theme.gray800 }}>
-              Languages
-            </h4>
+    <Section id="people" bg={T.g50} mob={mob}>
+      <Heading sub={`Learn about the diverse communities of ${c.name}`} mob={mob}>People & Culture</Heading>
+      <div className="cp-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : `repeat(${Math.min(groups.length, 3)},1fr)`, gap: 24 }}>
+        {groups.map((g, i) => (
+          <Card key={i} hover={false} style={{ padding: mob ? 24 : 28 }}>
+            <IconCircle icon={g.icon} size={56} bg={g.bg} style={{ marginBottom: 20 }} />
+            <h4 style={{ margin: "0 0 16px", fontSize: 18, fontWeight: 700, color: T.g800 }}>{g.label}</h4>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {c.languages.map((lang, i) => (
-                <Badge key={i} variant="gray" size="sm">
-                  {typeof lang === "string" ? lang : lang.name}
+              {c[g.key].slice(0, 8).map((item, j) => (
+                <Badge key={j} variant={g.variant} size="sm">
+                  {typeof item === "string" ? item : item.name}
                 </Badge>
               ))}
             </div>
           </Card>
-        )}
-
-        {/* Ethnic Groups */}
-        {c.ethnicGroups?.length > 0 && (
-          <Card hover={false} style={{ padding: 28 }}>
-            <div
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: "50%",
-                background: theme.accentLight,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 28,
-                marginBottom: 20,
-              }}
-            >
-              👥
-            </div>
-            <h4 style={{ margin: "0 0 16px", fontSize: 18, fontWeight: 600, color: theme.gray800 }}>
-              Ethnic Groups
-            </h4>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {c.ethnicGroups.slice(0, 6).map((group, i) => (
-                <Badge key={i} variant="accent" size="sm">
-                  {typeof group === "string" ? group : group.name}
-                </Badge>
-              ))}
-            </div>
-          </Card>
-        )}
-
-        {/* Religions */}
-        {c.religions?.length > 0 && (
-          <Card hover={false} style={{ padding: 28 }}>
-            <div
-              style={{
-                width: 56,
-                height: 56,
-                borderRadius: "50%",
-                background: theme.primaryMuted,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 28,
-                marginBottom: 20,
-              }}
-            >
-              🛕
-            </div>
-            <h4 style={{ margin: "0 0 16px", fontSize: 18, fontWeight: 600, color: theme.gray800 }}>
-              Religions
-            </h4>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-              {c.religions.slice(0, 6).map((religion, i) => (
-                <Badge key={i} variant="primary" size="sm">
-                  {typeof religion === "string" ? religion : religion.name}
-                </Badge>
-              ))}
-            </div>
-          </Card>
-        )}
+        ))}
       </div>
-    </SectionWrapper>
+    </Section>
   );
 };
 
 /* ═══════════════════════════════════════════════════
    HISTORY & HERITAGE
    ═══════════════════════════════════════════════════ */
-
-const HistoryHeritage = ({ country, isMobile }) => {
-  const c = country;
+const History = ({ c, mob }) => {
   const timeline = c.historicalTimeline || [];
   const unesco = c.unescoSites || [];
-  const hasContent = timeline.length > 0 || unesco.length > 0;
-
-  if (!hasContent) return null;
+  if (!timeline.length && !unesco.length) return null;
 
   return (
-    <SectionWrapper id="history" background={theme.white} isMobile={isMobile}>
-      <SectionHeader
-        title="History & Heritage"
-        subtitle={`Discover the rich history and cultural heritage of ${c.name}`}
-        isMobile={isMobile}
-      />
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-          gap: 32,
-        }}
-      >
-        {/* Timeline */}
+    <Section id="history" bg={T.white} mob={mob}>
+      <Heading sub={`Rich history and cultural heritage of ${c.name}`} mob={mob}>History & Heritage</Heading>
+      <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 32 }}>
         {timeline.length > 0 && (
           <div>
-            <h3
-              style={{
-                fontSize: 20,
-                fontWeight: 600,
-                color: theme.gray800,
-                marginBottom: 24,
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-              }}
-            >
-              <span>📜</span> Historical Timeline
+            <h3 style={{ fontSize: 20, fontWeight: 700, color: T.g800, marginBottom: 24, display: "flex", alignItems: "center", gap: 10 }}>
+              <span>📜</span> Timeline
             </h3>
-            <div style={{ position: "relative", paddingLeft: 24 }}>
-              {/* Timeline Line */}
-              <div
-                style={{
-                  position: "absolute",
-                  left: 4,
-                  top: 8,
-                  bottom: 8,
-                  width: 2,
-                  background: theme.primaryLight,
-                }}
-              />
-              {timeline.slice(0, 6).map((event, i) => (
-                <div
-                  key={i}
-                  style={{
-                    position: "relative",
-                    paddingBottom: 28,
-                  }}
-                >
-                  {/* Timeline Dot */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      left: -24,
-                      top: 4,
-                      width: 12,
-                      height: 12,
-                      borderRadius: "50%",
-                      background: theme.primary,
-                      border: `3px solid ${theme.white}`,
-                      boxShadow: `0 0 0 3px ${theme.primaryLight}`,
-                    }}
-                  />
-                  <div
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: theme.primary,
-                      marginBottom: 4,
-                    }}
-                  >
-                    {event.year || event.period}
-                  </div>
-                  <h4 style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 600, color: theme.gray800 }}>
-                    {event.title || event.event}
-                  </h4>
-                  {event.description && (
-                    <p style={{ margin: 0, fontSize: 14, color: theme.gray600, lineHeight: 1.6 }}>
-                      {event.description}
-                    </p>
-                  )}
+            <div style={{ position: "relative", paddingLeft: 28 }}>
+              <div style={{ position: "absolute", left: 5, top: 8, bottom: 8, width: 2, background: `linear-gradient(to bottom,${T.green300},${T.green100})` }} />
+              {timeline.slice(0, 6).map((ev, i) => (
+                <div key={i} className="cp-fadeUp" style={{ position: "relative", paddingBottom: 28, animationDelay: `${i * 100}ms`, opacity: 0 }}>
+                  <div style={{ position: "absolute", left: -28, top: 4, width: 14, height: 14, borderRadius: "50%", background: T.green500, border: `3px solid ${T.white}`, boxShadow: `0 0 0 3px ${T.green100}` }} />
+                  <span style={{ fontSize: 13, fontWeight: 800, color: T.green600, display: "block", marginBottom: 4 }}>{ev.year || ev.period}</span>
+                  <h4 style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 600, color: T.g800 }}>{ev.title || ev.event}</h4>
+                  {ev.description && <p style={{ margin: 0, fontSize: 14, color: T.g600, lineHeight: 1.6 }}>{ev.description}</p>}
                 </div>
               ))}
             </div>
           </div>
         )}
-
-        {/* UNESCO Sites */}
         {unesco.length > 0 && (
           <div>
-            <h3
-              style={{
-                fontSize: 20,
-                fontWeight: 600,
-                color: theme.gray800,
-                marginBottom: 24,
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-              }}
-            >
-              <span>🏛️</span> UNESCO World Heritage Sites
+            <h3 style={{ fontSize: 20, fontWeight: 700, color: T.g800, marginBottom: 24, display: "flex", alignItems: "center", gap: 10 }}>
+              <span>🏛️</span> UNESCO Heritage Sites
             </h3>
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+            <div className="cp-stagger" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
               {unesco.slice(0, 5).map((site, i) => (
                 <Card key={i} style={{ padding: 20 }}>
                   <div style={{ display: "flex", gap: 16 }}>
-                    {site.imageUrl && (
-                      <img
-                        src={site.imageUrl}
-                        alt={site.name}
-                        style={{
-                          width: 80,
-                          height: 80,
-                          borderRadius: theme.radiusSm,
-                          objectFit: "cover",
-                          flexShrink: 0,
-                        }}
-                      />
-                    )}
-                    <div>
-                      <h4 style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 600, color: theme.gray800 }}>
-                        {site.name}
-                      </h4>
-                      {site.yearInscribed && (
-                        <Badge variant="primary" size="sm" style={{ marginBottom: 8 }}>
-                          Inscribed {site.yearInscribed}
-                        </Badge>
-                      )}
-                      {site.description && (
-                        <p
-                          style={{
-                            margin: 0,
-                            fontSize: 13,
-                            color: theme.gray600,
-                            lineHeight: 1.5,
-                            display: "-webkit-box",
-                            WebkitLineClamp: 2,
-                            WebkitBoxOrient: "vertical",
-                            overflow: "hidden",
-                          }}
-                        >
-                          {site.description}
-                        </p>
-                      )}
+                    {site.imageUrl && <img src={site.imageUrl} alt={site.name} style={{ width: 80, height: 80, borderRadius: T.r.sm, objectFit: "cover", flexShrink: 0 }} />}
+                    <div style={{ minWidth: 0 }}>
+                      <h4 style={{ margin: "0 0 6px", fontSize: 16, fontWeight: 600, color: T.g800 }}>{site.name}</h4>
+                      {site.yearInscribed && <Badge variant="primary" size="xs" style={{ marginBottom: 8 }}>Inscribed {site.yearInscribed}</Badge>}
+                      {site.description && <p style={{ margin: 0, fontSize: 13, color: T.g600, lineHeight: 1.5, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{site.description}</p>}
                     </div>
                   </div>
                 </Card>
@@ -1391,971 +609,406 @@ const HistoryHeritage = ({ country, isMobile }) => {
           </div>
         )}
       </div>
-    </SectionWrapper>
+    </Section>
   );
 };
 
 /* ═══════════════════════════════════════════════════
    WILDLIFE & NATURE
    ═══════════════════════════════════════════════════ */
-
-const WildlifeNature = ({ country, isMobile }) => {
-  const c = country;
-  const wildlife = c.wildlife || {};
-  const hasContent = Object.values(wildlife).some(v => Array.isArray(v) && v.length > 0);
-
+const Wildlife = ({ c, mob }) => {
+  const w = c.wildlife || {};
+  const hasContent = Object.values(w).some(v => Array.isArray(v) && v.length > 0);
   if (!hasContent) return null;
 
-  const categories = [
+  const cats = [
     { key: "mammals", label: "Mammals", icon: "🦁" },
     { key: "birds", label: "Birds", icon: "🦅" },
     { key: "reptiles", label: "Reptiles", icon: "🐊" },
     { key: "marineLife", label: "Marine Life", icon: "🐋" },
-    { key: "endangered", label: "Endangered Species", icon: "⚠️" },
-  ].filter(cat => wildlife[cat.key]?.length > 0);
+    { key: "endangered", label: "Endangered", icon: "⚠️" },
+  ].filter(cat => w[cat.key]?.length > 0);
 
   return (
-    <SectionWrapper id="wildlife" background={theme.gray50} isMobile={isMobile}>
-      <SectionHeader
-        title="Wildlife & Nature"
-        subtitle={`Explore the incredible biodiversity and natural wonders of ${c.name}`}
-        isMobile={isMobile}
-      />
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
-          gap: 24,
-        }}
-      >
-        {categories.map((cat, i) => (
+    <Section id="wildlife" bg={T.g50} mob={mob}>
+      <Heading sub={`Incredible biodiversity of ${c.name}`} mob={mob}>Wildlife & Nature</Heading>
+      <div className="cp-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "repeat(2,1fr)", gap: 24 }}>
+        {cats.map((cat, i) => (
           <Card key={i} hover={false}>
-            <div
-              style={{
-                padding: "18px 24px",
-                background: theme.primaryMuted,
-                borderBottom: `1px solid ${theme.primaryLight}`,
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-              }}
-            >
+            <div style={{ padding: "16px 24px", background: T.green50, borderBottom: `1px solid ${T.green100}`, display: "flex", alignItems: "center", gap: 12 }}>
               <span style={{ fontSize: 24 }}>{cat.icon}</span>
-              <h4 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: theme.primaryDark }}>
-                {cat.label}
-              </h4>
+              <h4 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: T.green800 }}>{cat.label}</h4>
             </div>
-            <div style={{ padding: 20 }}>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                {wildlife[cat.key].slice(0, 8).map((animal, j) => (
-                  <Badge key={j} variant="gray" size="sm">
-                    {typeof animal === "string" ? animal : animal.name}
-                  </Badge>
-                ))}
-              </div>
+            <div style={{ padding: 20, display: "flex", flexWrap: "wrap", gap: 8 }}>
+              {w[cat.key].slice(0, 10).map((a, j) => (
+                <Badge key={j} variant="gray" size="sm">{typeof a === "string" ? a : a.name}</Badge>
+              ))}
             </div>
           </Card>
         ))}
       </div>
-    </SectionWrapper>
+    </Section>
   );
 };
 
 /* ═══════════════════════════════════════════════════
    CUISINE
    ═══════════════════════════════════════════════════ */
-
-const Cuisine = ({ country, isMobile }) => {
-  const c = country;
+const Cuisine = ({ c, mob }) => {
   const cuisine = c.cuisine || {};
   const dishes = cuisine.dishes || cuisine.traditionalDishes || [];
   const beverages = cuisine.beverages || [];
-  const hasContent = dishes.length > 0 || beverages.length > 0;
-
-  if (!hasContent) return null;
+  if (!dishes.length && !beverages.length) return null;
 
   return (
-    <SectionWrapper id="cuisine" background={theme.white} isMobile={isMobile}>
-      <SectionHeader
-        title="Local Cuisine"
-        subtitle={`Taste the authentic flavors and culinary traditions of ${c.name}`}
-        isMobile={isMobile}
-      />
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
-          gap: 24,
-        }}
-      >
+    <Section id="cuisine" bg={T.white} mob={mob}>
+      <Heading sub={`Authentic flavors of ${c.name}`} mob={mob}>Local Cuisine</Heading>
+      <div className="cp-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "repeat(3,1fr)", gap: 24 }}>
         {dishes.slice(0, 6).map((dish, i) => (
-          <Card key={i} className="hover-scale" style={{ overflow: "hidden" }}>
+          <Card key={i} className="cp-imgZoom">
             {dish.imageUrl && (
               <div style={{ height: 180, overflow: "hidden" }}>
-                <img
-                  src={dish.imageUrl}
-                  alt={dish.name}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                />
+                <img src={dish.imageUrl} alt={dish.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               </div>
             )}
             <div style={{ padding: 20 }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                 <span style={{ fontSize: 20 }}>🍽️</span>
-                <h4 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: theme.gray800 }}>
-                  {dish.name}
-                </h4>
+                <h4 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: T.g800 }}>{dish.name}</h4>
               </div>
-              {dish.description && (
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 14,
-                    color: theme.gray600,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  {dish.description}
-                </p>
-              )}
-              {dish.isVegetarian && (
-                <Badge variant="success" size="sm" style={{ marginTop: 12 }}>
-                  🌱 Vegetarian
-                </Badge>
-              )}
+              {dish.description && <p style={{ margin: 0, fontSize: 14, color: T.g600, lineHeight: 1.6 }}>{dish.description}</p>}
+              {dish.isVegetarian && <Badge variant="success" size="xs" icon="🌱" style={{ marginTop: 12 }}>Vegetarian</Badge>}
             </div>
           </Card>
         ))}
       </div>
-
-      {/* Beverages */}
       {beverages.length > 0 && (
         <div style={{ marginTop: 48 }}>
-          <h3
-            style={{
-              fontSize: 22,
-              fontWeight: 600,
-              color: theme.gray800,
-              marginBottom: 24,
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-            }}
-          >
+          <h3 style={{ fontSize: 20, fontWeight: 700, color: T.g800, marginBottom: 20, display: "flex", alignItems: "center", gap: 10 }}>
             <span>🍹</span> Traditional Beverages
           </h3>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
-            {beverages.map((bev, i) => (
-              <Card key={i} style={{ padding: "16px 20px" }}>
-                <span style={{ fontWeight: 600, color: theme.gray800 }}>
-                  {typeof bev === "string" ? bev : bev.name}
-                </span>
+            {beverages.map((b, i) => (
+              <Card key={i} style={{ padding: "14px 22px" }}>
+                <span style={{ fontWeight: 600, color: T.g800 }}>{typeof b === "string" ? b : b.name}</span>
               </Card>
             ))}
           </div>
         </div>
       )}
-    </SectionWrapper>
+    </Section>
   );
 };
 
 /* ═══════════════════════════════════════════════════
    TRAVEL ESSENTIALS
    ═══════════════════════════════════════════════════ */
-
-const TravelEssentials = ({ country, isMobile }) => {
-  const c = country;
-  const hasContent = c.visaInfo || c.healthInfo || c.safety || c.currency || c.electricityInfo;
-
-  if (!hasContent) return null;
-
+const TravelEssentials = ({ c, mob }) => {
   const essentials = [
-    {
-      icon: "📋",
-      title: "Visa Information",
-      content: c.visaInfo,
-      color: theme.primary,
-      bg: theme.primaryMuted,
-    },
-    {
-      icon: "💊",
-      title: "Health & Vaccinations",
-      content: c.healthInfo,
-      color: "#DC2626",
-      bg: "#FEF2F2",
-    },
-    {
-      icon: "🛡️",
-      title: "Safety & Security",
-      content: c.safety,
-      color: "#2563EB",
-      bg: "#EFF6FF",
-    },
-    {
-      icon: "🔌",
-      title: "Electricity",
-      content: c.electricityInfo,
-      color: "#7C3AED",
-      bg: "#F5F3FF",
-    },
+    { icon: "📋", title: "Visa Information", content: c.visaInfo, color: T.green700, bg: T.green50 },
+    { icon: "💊", title: "Health & Vaccinations", content: c.healthInfo, color: T.red, bg: T.redLt },
+    { icon: "🛡️", title: "Safety & Security", content: c.safety, color: T.blue, bg: T.blueLt },
+    { icon: "🔌", title: "Electricity", content: c.electricityInfo, color: T.purple, bg: T.purpleLt },
   ].filter(e => e.content);
 
-  return (
-    <SectionWrapper id="travel" background={theme.gray50} isMobile={isMobile}>
-      <SectionHeader
-        title="Travel Essentials"
-        subtitle={`Important information for planning your trip to ${c.name}`}
-        isMobile={isMobile}
-      />
+  if (!essentials.length) return null;
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
-          gap: 24,
-        }}
-      >
+  return (
+    <Section id="travel" bg={T.g50} mob={mob}>
+      <Heading sub={`Important info for your trip to ${c.name}`} mob={mob}>Travel Essentials</Heading>
+      <div className="cp-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "repeat(2,1fr)", gap: 24 }}>
         {essentials.map((item, i) => (
           <Card key={i} hover={false}>
-            <div
-              style={{
-                padding: "18px 24px",
-                background: item.bg,
-                borderBottom: `1px solid ${item.color}20`,
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-              }}
-            >
+            <div style={{ padding: "18px 24px", background: item.bg, borderBottom: `1px solid ${item.color}20`, display: "flex", alignItems: "center", gap: 12 }}>
               <span style={{ fontSize: 24 }}>{item.icon}</span>
-              <h4 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: item.color }}>
-                {item.title}
-              </h4>
+              <h4 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: item.color }}>{item.title}</h4>
             </div>
             <div style={{ padding: 24 }}>
-              {typeof item.content === "string" ? (
-                <p style={{ margin: 0, fontSize: 15, color: theme.gray700, lineHeight: 1.7 }}>
-                  {item.content}
-                </p>
-              ) : (
-                <div style={{ fontSize: 15, color: theme.gray700, lineHeight: 1.7 }}>
-                  {item.content.description || JSON.stringify(item.content)}
-                </div>
-              )}
+              <p style={{ margin: 0, fontSize: 15, color: T.g700, lineHeight: 1.75 }}>
+                {typeof item.content === "string" ? item.content : item.content?.description || JSON.stringify(item.content)}
+              </p>
             </div>
           </Card>
         ))}
       </div>
-    </SectionWrapper>
+    </Section>
   );
 };
 
 /* ═══════════════════════════════════════════════════
-   FESTIVALS & EVENTS
+   FESTIVALS
    ═══════════════════════════════════════════════════ */
-
-const Festivals = ({ country, isMobile }) => {
-  const c = country;
-  const festivals = c.festivals || [];
-
-  if (festivals.length === 0) return null;
+const Festivals = ({ c, mob }) => {
+  const fests = c.festivals || [];
+  if (!fests.length) return null;
 
   return (
-    <SectionWrapper id="festivals" background={theme.white} isMobile={isMobile}>
-      <SectionHeader
-        title="Festivals & Events"
-        subtitle={`Experience the vibrant celebrations and cultural events of ${c.name}`}
-        isMobile={isMobile}
-      />
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
-          gap: 24,
-        }}
-      >
-        {festivals.slice(0, 6).map((fest, i) => (
-          <Card key={i} className="hover-scale" style={{ overflow: "hidden" }}>
-            {fest.imageUrl && (
+    <Section id="festivals" bg={T.white} mob={mob}>
+      <Heading sub={`Vibrant celebrations in ${c.name}`} mob={mob}>Festivals & Events</Heading>
+      <div className="cp-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "repeat(3,1fr)", gap: 24 }}>
+        {fests.slice(0, 6).map((f, i) => (
+          <Card key={i} className="cp-imgZoom">
+            {f.imageUrl && (
               <div style={{ height: 180, overflow: "hidden" }}>
-                <img
-                  src={fest.imageUrl}
-                  alt={fest.name}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                />
+                <img src={f.imageUrl} alt={f.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               </div>
             )}
             <div style={{ padding: 20 }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  marginBottom: 10,
-                }}
-              >
-                <h4 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: theme.gray800 }}>
-                  {fest.name}
-                </h4>
-                {fest.isMajorEvent && (
-                  <Badge variant="warning" size="sm">Major</Badge>
-                )}
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                <h4 style={{ margin: 0, fontSize: 17, fontWeight: 600, color: T.g800 }}>{f.name}</h4>
+                {f.isMajorEvent && <Badge variant="warning" size="xs">Major</Badge>}
               </div>
-              {(fest.period || fest.month) && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 6,
-                    marginBottom: 10,
-                    color: theme.primary,
-                    fontSize: 14,
-                    fontWeight: 500,
-                  }}
-                >
-                  <span>📅</span> {fest.period || fest.month}
+              {(f.period || f.month) && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10, color: T.green600, fontSize: 14, fontWeight: 600 }}>
+                  <span>📅</span> {f.period || f.month}
                 </div>
               )}
-              {fest.description && (
-                <p
-                  style={{
-                    margin: 0,
-                    fontSize: 14,
-                    color: theme.gray600,
-                    lineHeight: 1.6,
-                  }}
-                >
-                  {fest.description}
-                </p>
-              )}
+              {f.description && <p style={{ margin: 0, fontSize: 14, color: T.g600, lineHeight: 1.6 }}>{f.description}</p>}
             </div>
           </Card>
         ))}
       </div>
-    </SectionWrapper>
+    </Section>
   );
 };
 
 /* ═══════════════════════════════════════════════════
-   AIRPORTS / GETTING THERE
+   AIRPORTS
    ═══════════════════════════════════════════════════ */
-
-const Airports = ({ country, isMobile }) => {
-  const c = country;
+const Airports = ({ c, mob }) => {
   const airports = c.airports || [];
-
-  if (airports.length === 0) return null;
+  if (!airports.length) return null;
 
   return (
-    <SectionWrapper id="airports" background={theme.gray50} isMobile={isMobile}>
-      <SectionHeader
-        title="Getting There"
-        subtitle={`Key airports and entry points for traveling to ${c.name}`}
-        isMobile={isMobile}
-      />
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
-          gap: 20,
-        }}
-      >
-        {airports.slice(0, 6).map((airport, i) => (
-          <Card
-            key={i}
-            style={{
-              padding: 24,
-              borderLeft: airport.isMainInternational
-                ? `4px solid ${theme.primary}`
-                : `4px solid ${theme.gray300}`,
-            }}
-          >
+    <Section id="airports" bg={T.g50} mob={mob}>
+      <Heading sub={`Key entry points for ${c.name}`} mob={mob}>Getting There</Heading>
+      <div className="cp-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "repeat(3,1fr)", gap: 20 }}>
+        {airports.slice(0, 6).map((a, i) => (
+          <Card key={i} style={{ padding: 24, borderLeft: a.isMainInternational ? `4px solid ${T.green500}` : `4px solid ${T.g300}` }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: 14, marginBottom: 12 }}>
-              <div
-                style={{
-                  width: 48,
-                  height: 48,
-                  borderRadius: "50%",
-                  background: airport.isMainInternational ? theme.primaryMuted : theme.gray100,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 24,
-                  flexShrink: 0,
-                }}
-              >
-                ✈️
-              </div>
-              <div>
-                <h4 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 600, color: theme.gray800 }}>
-                  {airport.name}
-                </h4>
-                {airport.code && (
-                  <span
-                    style={{
-                      fontSize: 13,
-                      fontWeight: 700,
-                      color: theme.primary,
-                      background: theme.primaryLight,
-                      padding: "2px 8px",
-                      borderRadius: 4,
-                    }}
-                  >
-                    {airport.code}
-                  </span>
-                )}
+              <IconCircle icon="✈️" size={48} bg={a.isMainInternational ? T.green50 : T.g100} />
+              <div style={{ minWidth: 0 }}>
+                <h4 style={{ margin: "0 0 4px", fontSize: 16, fontWeight: 600, color: T.g800 }}>{a.name}</h4>
+                {a.code && <span style={{ fontSize: 13, fontWeight: 800, color: T.green600, background: T.green100, padding: "2px 10px", borderRadius: T.r.xs }}>{a.code}</span>}
               </div>
             </div>
-            {airport.location && (
-              <p style={{ margin: "0 0 8px", fontSize: 14, color: theme.gray600 }}>
-                📍 {airport.location}
-              </p>
-            )}
-            {airport.type && (
-              <Badge variant="gray" size="sm">
-                {airport.type}
-              </Badge>
-            )}
-            {airport.description && (
-              <p style={{ margin: "12px 0 0", fontSize: 14, color: theme.gray600, lineHeight: 1.6 }}>
-                {airport.description}
-              </p>
-            )}
+            {a.location && <p style={{ margin: "0 0 6px", fontSize: 14, color: T.g500 }}>📍 {a.location}</p>}
+            {a.type && <Badge variant="gray" size="xs">{a.type}</Badge>}
+            {a.description && <p style={{ margin: "10px 0 0", fontSize: 14, color: T.g600, lineHeight: 1.6 }}>{a.description}</p>}
           </Card>
         ))}
       </div>
-    </SectionWrapper>
+    </Section>
   );
 };
 
 /* ═══════════════════════════════════════════════════
    DESTINATIONS
    ═══════════════════════════════════════════════════ */
-
-const Destinations = ({ destinations, countryName, countrySlug, isMobile }) => {
-  if (!destinations || destinations.length === 0) return null;
+const Destinations = ({ destinations, countryName, countrySlug, mob }) => {
+  if (!destinations?.length) return null;
 
   return (
-    <SectionWrapper id="destinations" background={theme.white} isMobile={isMobile}>
-      <SectionHeader
-        title="Explore Destinations"
-        subtitle={`Discover the most stunning places to visit in ${countryName}`}
-        action={
-          countrySlug && (
-            <Link
-              to={`/countries/${countrySlug}/destinations`}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-                fontSize: 15,
-                fontWeight: 600,
-                color: theme.primary,
-                textDecoration: "none",
-              }}
-            >
-              View All <span>→</span>
-            </Link>
-          )
-        }
-        isMobile={isMobile}
-      />
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
-          gap: 24,
-        }}
-      >
-        {destinations.slice(0, 9).map((dest, i) => (
-          <Link
-            key={dest.id || i}
-            to={`/destinations/${dest.slug || dest.id}`}
-            style={{ textDecoration: "none", color: "inherit" }}
+    <Section id="destinations" bg={T.white} mob={mob}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: 16, marginBottom: 12 }}>
+        <div>
+          <h2 style={{ fontFamily: T.serif, fontSize: mob ? 28 : 40, fontWeight: 700, color: T.g900, margin: "0 0 10px" }}>Explore Destinations</h2>
+          <p style={{ fontSize: mob ? 16 : 18, color: T.g500, margin: "0 0 8px", lineHeight: 1.6, maxWidth: 600 }}>Discover stunning places in {countryName}</p>
+          <GreenBar />
+        </div>
+        {countrySlug && (
+          <Link to={`/countries/${countrySlug}/destinations`} style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 15, fontWeight: 700, color: T.green600, textDecoration: "none", padding: "10px 20px", borderRadius: T.r.full, border: `2px solid ${T.green200}`, transition: "all .2s" }}
+            onMouseEnter={e => { e.currentTarget.style.background = T.green50; e.currentTarget.style.borderColor = T.green400; }}
+            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = T.green200; }}
           >
-            <Card className="hover-scale" style={{ height: "100%", overflow: "hidden" }}>
+            View All →
+          </Link>
+        )}
+      </div>
+
+      <div className="cp-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "repeat(3,1fr)", gap: 24, marginTop: 32 }}>
+        {destinations.slice(0, 9).map((d, i) => (
+          <Link key={d.id || i} to={`/destinations/${d.slug || d.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+            <Card className="cp-imgZoom" style={{ height: "100%" }}>
               <div style={{ position: "relative", height: 200, overflow: "hidden" }}>
-                <img
-                  src={dest.image_url || (dest.images || [])[0]}
-                  alt={dest.name}
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    objectFit: "cover",
-                  }}
-                />
-                {/* Gradient Overlay */}
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background: "linear-gradient(to top, rgba(0,0,0,0.4) 0%, transparent 50%)",
-                  }}
-                />
-                {/* Featured Badge */}
-                {dest.is_featured && (
-                  <Badge
-                    variant="primary"
-                    size="sm"
-                    style={{
-                      position: "absolute",
-                      top: 12,
-                      left: 12,
-                    }}
-                  >
-                    Featured
-                  </Badge>
-                )}
-                {/* Rating */}
-                {dest.rating && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: 12,
-                      right: 12,
-                      background: "rgba(0,0,0,0.7)",
-                      color: "#FBBF24",
-                      padding: "4px 10px",
-                      borderRadius: 6,
-                      fontSize: 13,
-                      fontWeight: 600,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 4,
-                    }}
-                  >
-                    ★ {dest.rating}
+                <img src={d.imageUrl || d.image_url || (d.images || [])[0]} alt={d.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top,rgba(0,0,0,.35) 0%,transparent 50%)" }} />
+                {d.isFeatured && <Badge variant="primary" size="xs" style={{ position: "absolute", top: 12, left: 12 }}>Featured</Badge>}
+                {d.rating && (
+                  <div style={{ position: "absolute", top: 12, right: 12, background: "rgba(0,0,0,.65)", color: "#FBBF24", padding: "4px 10px", borderRadius: T.r.xs, fontSize: 13, fontWeight: 700, display: "flex", alignItems: "center", gap: 4 }}>
+                    ★ {d.rating}
                   </div>
                 )}
               </div>
               <div style={{ padding: 20 }}>
-                <h4
-                  style={{
-                    margin: "0 0 8px",
-                    fontSize: 18,
-                    fontWeight: 600,
-                    color: theme.gray800,
-                  }}
-                >
-                  {dest.name}
-                </h4>
-                {dest.category && (
-                  <Badge variant="accent" size="sm" style={{ marginBottom: 10 }}>
-                    {dest.category}
-                  </Badge>
-                )}
-                {dest.description && (
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: 14,
-                      color: theme.gray600,
-                      lineHeight: 1.6,
-                      display: "-webkit-box",
-                      WebkitLineClamp: 3,
-                      WebkitBoxOrient: "vertical",
-                      overflow: "hidden",
-                    }}
-                  >
-                    {dest.description}
-                  </p>
+                <h4 style={{ margin: "0 0 8px", fontSize: 18, fontWeight: 600, color: T.g800 }}>{d.name}</h4>
+                {d.category && <Badge variant="accent" size="xs" style={{ marginBottom: 10 }}>{d.category}</Badge>}
+                {d.shortDescription && (
+                  <p style={{ margin: 0, fontSize: 14, color: T.g600, lineHeight: 1.6, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{d.shortDescription}</p>
                 )}
               </div>
             </Card>
           </Link>
         ))}
       </div>
-    </SectionWrapper>
+    </Section>
   );
 };
 
 /* ═══════════════════════════════════════════════════
-   IMAGE GALLERY
+   GALLERY
    ═══════════════════════════════════════════════════ */
-
-const Gallery = ({ images, name, isMobile }) => {
-  const [lightbox, setLightbox] = useState({ open: false, index: 0 });
-
-  if (!images || images.length === 0) return null;
+const Gallery = ({ images, name, mob }) => {
+  const [lb, setLb] = useState({ open: false, idx: 0 });
+  if (!images?.length) return null;
 
   return (
-    <SectionWrapper id="gallery" background={theme.gray50} isMobile={isMobile}>
-      <SectionHeader
-        title="Photo Gallery"
-        subtitle={`Stunning images from ${name}`}
-        isMobile={isMobile}
-      />
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)",
-          gap: 12,
-        }}
-      >
+    <Section id="gallery" bg={T.g50} mob={mob}>
+      <Heading sub={`Stunning images from ${name}`} mob={mob}>Photo Gallery</Heading>
+      <div className="cp-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "repeat(2,1fr)" : "repeat(4,1fr)", gap: 14 }}>
         {images.slice(0, 8).map((img, i) => {
-          const url = typeof img === "string" ? img : img.url;
-          const caption = typeof img === "object" ? img.caption : null;
-
+          const url = typeof img === "string" ? img : img.url || img.imageUrl;
           return (
-            <div
-              key={i}
-              onClick={() => setLightbox({ open: true, index: i })}
-              style={{
-                position: "relative",
-                paddingBottom: "75%",
-                borderRadius: theme.radiusMd,
-                overflow: "hidden",
-                cursor: "pointer",
-              }}
-              className="hover-scale"
-            >
-              <img
-                src={url}
-                alt={caption || `${name} photo ${i + 1}`}
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                }}
-              />
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: "rgba(0,0,0,0)",
-                  transition: `background ${theme.transitionBase}`,
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.background = "rgba(0,0,0,0.3)"}
-                onMouseLeave={(e) => e.currentTarget.style.background = "rgba(0,0,0,0)"}
-              />
+            <div key={i} className="cp-imgZoom cp-lift" onClick={() => setLb({ open: true, idx: i })} style={{ position: "relative", paddingBottom: i === 0 && !mob && images.length > 4 ? "100%" : "75%", gridColumn: i === 0 && !mob && images.length > 4 ? "span 2" : "span 1", gridRow: i === 0 && !mob && images.length > 4 ? "span 2" : "span 1", borderRadius: T.r.md, overflow: "hidden", cursor: "pointer" }}>
+              <img src={url} alt={`${name} ${i + 1}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+              <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,0)", transition: "background .3s" }}
+                onMouseEnter={e => e.currentTarget.style.background = "rgba(0,0,0,.35)"}
+                onMouseLeave={e => e.currentTarget.style.background = "rgba(0,0,0,0)"}
+              >
+                <div style={{ position: "absolute", bottom: 12, right: 12, background: "rgba(255,255,255,.9)", borderRadius: T.r.full, padding: "6px 14px", fontSize: 12, fontWeight: 700, color: T.g700, opacity: 0, transition: "opacity .3s" }}
+                  onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                >View ↗</div>
+              </div>
             </div>
           );
         })}
       </div>
 
-      {/* Lightbox */}
-      {lightbox.open && (
-        <div
-          onClick={() => setLightbox({ ...lightbox, open: false })}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.95)",
-            zIndex: 1000,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 32,
-          }}
-        >
-          <button
-            onClick={() => setLightbox({ ...lightbox, open: false })}
-            style={{
-              position: "absolute",
-              top: 24,
-              right: 24,
-              background: "none",
-              border: "none",
-              color: theme.white,
-              fontSize: 32,
-              cursor: "pointer",
-            }}
-          >
-            ✕
-          </button>
-          <img
-            src={typeof images[lightbox.index] === "string" ? images[lightbox.index] : images[lightbox.index].url}
-            alt=""
-            style={{
-              maxWidth: "90vw",
-              maxHeight: "85vh",
-              objectFit: "contain",
-              borderRadius: theme.radiusMd,
-            }}
-            onClick={(e) => e.stopPropagation()}
-          />
-          {/* Navigation */}
+      {lb.open && (
+        <div onClick={() => setLb({ ...lb, open: false })} className="cp-fadeIn" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.96)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+          <button onClick={() => setLb({ ...lb, open: false })} style={{ position: "absolute", top: 20, right: 20, background: "rgba(255,255,255,.1)", border: "none", color: T.white, width: 52, height: 52, borderRadius: "50%", fontSize: 26, cursor: "pointer" }}>✕</button>
+          <img src={typeof images[lb.idx] === "string" ? images[lb.idx] : images[lb.idx].url || images[lb.idx].imageUrl} alt="" className="cp-scaleIn" onClick={e => e.stopPropagation()} style={{ maxWidth: "90vw", maxHeight: "85vh", objectFit: "contain", borderRadius: T.r.md }} />
           {images.length > 1 && (
             <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLightbox({ ...lightbox, index: (lightbox.index - 1 + images.length) % images.length });
-                }}
-                style={{
-                  position: "absolute",
-                  left: 24,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  background: "rgba(255,255,255,0.2)",
-                  border: "none",
-                  color: theme.white,
-                  width: 48,
-                  height: 48,
-                  borderRadius: "50%",
-                  fontSize: 24,
-                  cursor: "pointer",
-                }}
-              >
-                ←
-              </button>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLightbox({ ...lightbox, index: (lightbox.index + 1) % images.length });
-                }}
-                style={{
-                  position: "absolute",
-                  right: 24,
-                  top: "50%",
-                  transform: "translateY(-50%)",
-                  background: "rgba(255,255,255,0.2)",
-                  border: "none",
-                  color: theme.white,
-                  width: 48,
-                  height: 48,
-                  borderRadius: "50%",
-                  fontSize: 24,
-                  cursor: "pointer",
-                }}
-              >
-                →
-              </button>
+              <button onClick={e => { e.stopPropagation(); setLb(p => ({ ...p, idx: (p.idx - 1 + images.length) % images.length })); }} style={{ position: "absolute", left: 20, top: "50%", transform: "translateY(-50%)", background: "rgba(255,255,255,.12)", border: "none", color: T.white, width: 56, height: 56, borderRadius: "50%", fontSize: 24, cursor: "pointer", backdropFilter: "blur(4px)" }}>←</button>
+              <button onClick={e => { e.stopPropagation(); setLb(p => ({ ...p, idx: (p.idx + 1) % images.length })); }} style={{ position: "absolute", right: 20, top: "50%", transform: "translateY(-50%)", background: "rgba(255,255,255,.12)", border: "none", color: T.white, width: 56, height: 56, borderRadius: "50%", fontSize: 24, cursor: "pointer", backdropFilter: "blur(4px)" }}>→</button>
             </>
           )}
+          <div style={{ position: "absolute", bottom: 24, left: "50%", transform: "translateX(-50%)", color: "rgba(255,255,255,.6)", fontSize: 14, fontWeight: 500 }}>{lb.idx + 1} / {images.length}</div>
         </div>
       )}
-    </SectionWrapper>
+    </Section>
   );
 };
 
 /* ═══════════════════════════════════════════════════
    TRAVEL TIPS
    ═══════════════════════════════════════════════════ */
-
-const TravelTips = ({ country, isMobile }) => {
-  const c = country;
+const TravelTips = ({ c, mob }) => {
   const tips = c.travelTips || [];
-
-  if (tips.length === 0) return null;
+  if (!tips.length) return null;
 
   return (
-    <SectionWrapper id="tips" background={theme.white} isMobile={isMobile}>
-      <SectionHeader
-        title="Travel Tips"
-        subtitle={`Helpful advice for your trip to ${c.name}`}
-        isMobile={isMobile}
-      />
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
-          gap: 20,
-        }}
-      >
+    <Section id="tips" bg={T.white} mob={mob}>
+      <Heading sub={`Helpful advice for visiting ${c.name}`} mob={mob}>Travel Tips</Heading>
+      <div className="cp-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "repeat(2,1fr)", gap: 20 }}>
         {tips.map((tip, i) => (
-          <Card key={i} style={{ padding: 24, display: "flex", gap: 16 }}>
-            <div
-              style={{
-                width: 48,
-                height: 48,
-                borderRadius: "50%",
-                background: theme.primaryLight,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: 20,
-                fontWeight: 700,
-                color: theme.primary,
-                flexShrink: 0,
-              }}
-            >
+          <Card key={i} style={{ padding: 24, display: "flex", gap: 18 }}>
+            <div style={{ width: 48, height: 48, borderRadius: "50%", background: `linear-gradient(135deg,${T.green500},${T.green600})`, display: "flex", alignItems: "center", justifyContent: "center", color: T.white, fontWeight: 800, fontSize: 18, flexShrink: 0, boxShadow: `0 4px 12px ${T.green500}33` }}>
               {i + 1}
             </div>
-            <div>
-              {tip.title && (
-                <h4 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 600, color: theme.gray800 }}>
-                  {tip.title}
-                </h4>
-              )}
-              <p style={{ margin: 0, fontSize: 14, color: theme.gray600, lineHeight: 1.6 }}>
+            <div style={{ minWidth: 0 }}>
+              {tip.title && <h4 style={{ margin: "0 0 8px", fontSize: 16, fontWeight: 600, color: T.g800 }}>{tip.title}</h4>}
+              <p style={{ margin: 0, fontSize: 14, color: T.g600, lineHeight: 1.65 }}>
                 {typeof tip === "string" ? tip : tip.content || tip.description}
               </p>
             </div>
           </Card>
         ))}
       </div>
-    </SectionWrapper>
+    </Section>
   );
 };
 
 /* ═══════════════════════════════════════════════════
    FOOTER CTA
    ═══════════════════════════════════════════════════ */
+const FooterCTA = ({ c, mob }) => (
+  <section style={{ background: `linear-gradient(135deg,${T.green700} 0%,${T.green900} 100%)`, padding: mob ? "80px 0" : "120px 0", textAlign: "center", position: "relative", overflow: "hidden" }}>
+    <div style={{ position: "absolute", inset: 0, opacity: .06, backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23fff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }} />
+    <div className="cp-float" style={{ position: "absolute", top: "12%", left: "6%", width: 130, height: 130, borderRadius: "50%", border: "2px solid rgba(255,255,255,.08)" }} />
+    <div className="cp-float" style={{ position: "absolute", bottom: "15%", right: "8%", width: 90, height: 90, borderRadius: "50%", border: "2px solid rgba(255,255,255,.06)", animationDelay: "1.5s" }} />
 
-const FooterCTA = ({ country, isMobile }) => {
-  const c = country;
-
-  return (
-    <section
-      style={{
-        background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%)`,
-        padding: isMobile ? "64px 24px" : "96px 48px",
-        textAlign: "center",
-      }}
-    >
-      <Container>
-        <h2
-          style={{
-            fontFamily: theme.fontSerif,
-            fontSize: isMobile ? 28 : 42,
-            fontWeight: 700,
-            color: theme.white,
-            margin: "0 0 16px",
-          }}
-        >
-          Ready to Explore {c.name}?
-        </h2>
-        <p
-          style={{
-            fontSize: isMobile ? 16 : 20,
-            color: "rgba(255,255,255,0.85)",
-            maxWidth: 560,
-            margin: "0 auto 36px",
-            lineHeight: 1.6,
-          }}
-        >
-          Start planning your adventure today. Discover stunning destinations, rich culture, and unforgettable experiences.
-        </p>
-        <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-          {c.destinationCount > 0 && (
-            <Button as={Link} to={`/countries/${c.slug}/destinations`} variant="white" size="lg">
-              View All Destinations
-            </Button>
-          )}
-          <Button
-            as={Link}
-            to="/countries"
-            variant="secondary"
-            size="lg"
-            style={{
-              background: "transparent",
-              borderColor: "rgba(255,255,255,0.4)",
-              color: theme.white,
-            }}
+    <Box style={{ position: "relative" }}>
+      <div className="cp-float" style={{ display: "inline-block", marginBottom: 24 }}>
+        <span style={{ fontSize: 56 }}>🌍</span>
+      </div>
+      <h2 style={{ fontFamily: T.serif, fontSize: mob ? 32 : 52, fontWeight: 800, color: T.white, margin: "0 0 20px", lineHeight: 1.15 }}>
+        Ready to Explore<br />{c.name}?
+      </h2>
+      <p style={{ fontSize: mob ? 17 : 20, color: "rgba(255,255,255,.85)", maxWidth: 580, margin: "0 auto 44px", lineHeight: 1.65 }}>
+        Start planning your adventure. Discover stunning destinations, rich culture, and unforgettable experiences.
+      </p>
+      <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", marginBottom: 56 }}>
+        {c.destinationCount > 0 && (
+          <Link to={`/countries/${c.slug}/destinations`} style={{ padding: "18px 40px", background: T.white, color: T.green800, border: "none", borderRadius: T.r.md, fontSize: 17, fontWeight: 700, textDecoration: "none", fontFamily: T.sans, transition: "transform .2s,box-shadow .2s", boxShadow: T.sh.lg, display: "inline-flex", alignItems: "center", gap: 8 }}
+            onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = T.sh.xxl; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = T.sh.lg; }}
           >
-            Explore More Countries
-          </Button>
-        </div>
-      </Container>
-    </section>
-  );
-};
+            View All Destinations
+          </Link>
+        )}
+        <Link to="/countries" style={{ padding: "18px 40px", background: "transparent", color: T.white, border: "2px solid rgba(255,255,255,.35)", borderRadius: T.r.md, fontSize: 17, fontWeight: 600, textDecoration: "none", fontFamily: T.sans, transition: "background .2s,border-color .2s", display: "inline-flex", alignItems: "center" }}
+          onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,.1)"; e.currentTarget.style.borderColor = "rgba(255,255,255,.55)"; }}
+          onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(255,255,255,.35)"; }}
+        >
+          Explore More Countries
+        </Link>
+      </div>
+      <div style={{ display: "flex", justifyContent: "center", gap: mob ? 28 : 56, flexWrap: "wrap" }}>
+        {[
+          { icon: "🏆", text: "Top Rated" },
+          { icon: "✅", text: "Verified" },
+          { icon: "🔒", text: "Secure" },
+          { icon: "💬", text: "24/7 Support" },
+        ].map((t, i) => (
+          <div key={i} style={{ color: "rgba(255,255,255,.75)", textAlign: "center" }}>
+            <div className="cp-wiggle" style={{ fontSize: 30, marginBottom: 8, cursor: "default" }}>{t.icon}</div>
+            <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: ".3px" }}>{t.text}</div>
+          </div>
+        ))}
+      </div>
+    </Box>
+  </section>
+);
 
 /* ═══════════════════════════════════════════════════
    ERROR STATE
    ═══════════════════════════════════════════════════ */
-
 const ErrorState = ({ error, navigate }) => (
-  <div
-    style={{
-      minHeight: "80vh",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      fontFamily: theme.fontSans,
-      padding: 48,
-      textAlign: "center",
-      background: theme.gray50,
-    }}
-  >
-    <div
-      style={{
-        width: 120,
-        height: 120,
-        borderRadius: "50%",
-        background: theme.primaryMuted,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: 56,
-        marginBottom: 32,
-      }}
-    >
+  <div style={{ minHeight: "85vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: T.sans, padding: 48, textAlign: "center", background: T.g50 }}>
+    <div className="cp-float" style={{ width: 150, height: 150, borderRadius: "50%", background: T.green50, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 72, marginBottom: 36, border: `3px solid ${T.green200}` }}>
       🌍
     </div>
-    <h2
-      style={{
-        fontFamily: theme.fontSerif,
-        fontSize: 32,
-        fontWeight: 700,
-        color: theme.gray800,
-        margin: "0 0 16px",
-      }}
-    >
-      Country Not Found
-    </h2>
-    <p
-      style={{
-        fontSize: 18,
-        color: theme.gray500,
-        maxWidth: 480,
-        margin: "0 0 32px",
-        lineHeight: 1.6,
-      }}
-    >
+    <h2 style={{ fontFamily: T.serif, fontSize: 38, fontWeight: 700, color: T.g800, margin: "0 0 16px" }}>Country Not Found</h2>
+    <p style={{ fontSize: 18, color: T.g500, maxWidth: 480, margin: "0 0 36px", lineHeight: 1.65 }}>
       {error || "The country you're looking for doesn't exist or has been removed."}
     </p>
-    <Button onClick={() => navigate("/countries")} size="lg">
-      Browse Countries
-    </Button>
+    <div style={{ display: "flex", gap: 14 }}>
+      <button onClick={() => navigate(-1)} style={{ padding: "14px 32px", background: T.white, color: T.g700, border: `2px solid ${T.g300}`, borderRadius: T.r.md, fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: T.sans }}>Go Back</button>
+      <button onClick={() => navigate("/countries")} style={{ padding: "14px 32px", background: T.green600, color: T.white, border: "none", borderRadius: T.r.md, fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: T.sans }}>Browse Countries</button>
+    </div>
   </div>
 );
 
 /* ═══════════════════════════════════════════════════
-   UTILITY FUNCTIONS
-   ═══════════════════════════════════════════════════ */
-
-const formatNumber = (num) => {
-  if (typeof num !== "number") return num;
-  if (num >= 1000000000) return `${(num / 1000000000).toFixed(1)}B`;
-  if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M`;
-  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
-  return num.toLocaleString();
-};
-
-const splitParagraphs = (text) => {
-  if (!text) return [];
-  return text.split(/\n\n|\n/).filter(Boolean);
-};
-
-/* ═══════════════════════════════════════════════════
    MAIN COMPONENT
    ═══════════════════════════════════════════════════ */
-
 const CountryPage = () => {
   const { idOrSlug, id } = useParams();
   const slug = idOrSlug || id;
   const navigate = useNavigate();
-  const { isMobile } = useWindowSize();
+  const { mob } = useScreen();
 
   const [country, setCountry] = useState(null);
   const [destinations, setDestinations] = useState([]);
@@ -2363,23 +1016,21 @@ const CountryPage = () => {
   const [error, setError] = useState(null);
   const [activeSection, setActiveSection] = useState("overview");
 
-  // Fetch data from backend
   useEffect(() => {
     if (!slug) return;
-    
     setLoading(true);
     setError(null);
-
     fetchCountryPageData(slug)
       .then(({ country, destinations }) => {
         setCountry(country);
         setDestinations(destinations);
       })
-      .catch((e) => setError(e.message))
+      .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   }, [slug]);
 
-  // Scroll to section
+  useEffect(() => { window.scrollTo(0, 0); }, [slug]);
+
   const scrollTo = useCallback((sectionId) => {
     setActiveSection(sectionId);
     const el = document.getElementById(sectionId);
@@ -2389,127 +1040,80 @@ const CountryPage = () => {
     }
   }, []);
 
+  // Build sections list
+  const sections = [];
+  if (country) {
+    const c = country;
+    if (c.description || c.fullDescription || c.highlights?.length) sections.push({ id: "overview", label: "Overview", short: "Overview" });
+    if (c.area || Object.keys(c.geography || {}).length || c.climate) sections.push({ id: "geography", label: "Geography & Climate", short: "Geography" });
+    if (c.languages?.length || c.ethnicGroups?.length || c.religions?.length) sections.push({ id: "people", label: "People & Culture", short: "People" });
+    if ((c.historicalTimeline || []).length || (c.unescoSites || []).length) sections.push({ id: "history", label: "History & Heritage", short: "History" });
+    if (Object.values(c.wildlife || {}).some(v => Array.isArray(v) && v.length)) sections.push({ id: "wildlife", label: "Wildlife", short: "Wildlife" });
+    if (Object.values(c.cuisine || {}).some(v => Array.isArray(v) && v.length)) sections.push({ id: "cuisine", label: "Cuisine", short: "Food" });
+    if (c.visaInfo || c.healthInfo || c.safety || c.electricityInfo) sections.push({ id: "travel", label: "Travel Essentials", short: "Travel" });
+    if ((c.festivals || []).length) sections.push({ id: "festivals", label: "Festivals", short: "Festivals" });
+    if ((c.airports || []).length) sections.push({ id: "airports", label: "Getting There", short: "Airports" });
+    if (destinations.length) sections.push({ id: "destinations", label: "Destinations", short: "Places" });
+    if ((c.images || []).length) sections.push({ id: "gallery", label: "Gallery", short: "Photos" });
+    if ((c.travelTips || []).length) sections.push({ id: "tips", label: "Travel Tips", short: "Tips" });
+  }
+
   // Scroll spy
   useEffect(() => {
-    if (!country) return;
-
+    if (!sections.length) return;
     const handler = () => {
-      const sectionIds = sections.map((s) => s.id);
-      for (let i = sectionIds.length - 1; i >= 0; i--) {
-        const el = document.getElementById(sectionIds[i]);
+      const ids = sections.map(s => s.id);
+      for (let i = ids.length - 1; i >= 0; i--) {
+        const el = document.getElementById(ids[i]);
         if (el && el.getBoundingClientRect().top <= 150) {
-          setActiveSection(sectionIds[i]);
+          setActiveSection(ids[i]);
           break;
         }
       }
     };
-
     window.addEventListener("scroll", handler, { passive: true });
     return () => window.removeEventListener("scroll", handler);
-  }, [country]);
+  }, [sections.length]);
 
-  // Build visible sections
-  const sections = [];
-  if (country) {
-    const c = country;
-    
-    if (c.description || c.fullDescription || c.highlights?.length) {
-      sections.push({ id: "overview", label: "Overview", short: "Overview" });
-    }
-    if (c.area || Object.keys(c.geography || {}).length || c.climate) {
-      sections.push({ id: "geography", label: "Geography & Climate", short: "Geography" });
-    }
-    if (c.population || c.languages?.length || c.ethnicGroups?.length) {
-      sections.push({ id: "people", label: "People & Culture", short: "People" });
-    }
-    if ((c.historicalTimeline || []).length || (c.unescoSites || []).length) {
-      sections.push({ id: "history", label: "History & Heritage", short: "History" });
-    }
-    if (Object.values(c.wildlife || {}).some(v => Array.isArray(v) && v.length)) {
-      sections.push({ id: "wildlife", label: "Wildlife", short: "Wildlife" });
-    }
-    if (Object.values(c.cuisine || {}).some(v => Array.isArray(v) && v.length)) {
-      sections.push({ id: "cuisine", label: "Cuisine", short: "Food" });
-    }
-    if (c.visaInfo || c.healthInfo || c.drivingSide || c.callingCode) {
-      sections.push({ id: "travel", label: "Travel Essentials", short: "Travel" });
-    }
-    if ((c.festivals || []).length > 0) {
-      sections.push({ id: "festivals", label: "Festivals", short: "Festivals" });
-    }
-    if ((c.airports || []).length > 0) {
-      sections.push({ id: "airports", label: "Getting There", short: "Airports" });
-    }
-    if (destinations.length > 0) {
-      sections.push({ id: "destinations", label: "Destinations", short: "Places" });
-    }
-    if ((c.images || []).length > 0) {
-      sections.push({ id: "gallery", label: "Gallery", short: "Photos" });
-    }
-    if ((c.travelTips || []).length > 0) {
-      sections.push({ id: "tips", label: "Travel Tips", short: "Tips" });
-    }
-  }
-
-  // Loading state with skeleton
   if (loading) {
     return (
-      <div style={{ fontFamily: theme.fontSans }}>
-        <GlobalStyles />
-        <LoadingSkeleton isMobile={isMobile} />
+      <div style={{ fontFamily: T.sans }}>
+        <Styles />
+        <SkeletonPage mob={mob} />
       </div>
     );
   }
 
-  // Error state
   if (error || !country) {
     return (
-      <div style={{ fontFamily: theme.fontSans }}>
-        <GlobalStyles />
+      <div style={{ fontFamily: T.sans }}>
+        <Styles />
         <ErrorState error={error} navigate={navigate} />
       </div>
     );
   }
 
-  // Render
+  const c = country;
+
   return (
-    <div style={{ fontFamily: theme.fontSans, color: theme.gray800, background: theme.gray50 }}>
-      <GlobalStyles />
-
-      <Hero country={country} isMobile={isMobile} />
-
-      {sections.length > 0 && (
-        <SectionNav
-          sections={sections}
-          active={activeSection}
-          onClick={scrollTo}
-          isMobile={isMobile}
-        />
-      )}
-
-      <QuickFacts country={country} isMobile={isMobile} />
-
-      <div className="fade-in">
-        <Overview country={country} isMobile={isMobile} />
-        <GeographyClimate country={country} isMobile={isMobile} />
-        <PeopleCulture country={country} isMobile={isMobile} />
-        <HistoryHeritage country={country} isMobile={isMobile} />
-        <WildlifeNature country={country} isMobile={isMobile} />
-        <Cuisine country={country} isMobile={isMobile} />
-        <TravelEssentials country={country} isMobile={isMobile} />
-        <Festivals country={country} isMobile={isMobile} />
-        <Airports country={country} isMobile={isMobile} />
-        <Destinations
-          destinations={destinations}
-          countryName={country.name}
-          countrySlug={country.slug}
-          isMobile={isMobile}
-        />
-        <Gallery images={country.images} name={country.name} isMobile={isMobile} />
-        <TravelTips country={country} isMobile={isMobile} />
-      </div>
-
-      <FooterCTA country={country} isMobile={isMobile} />
+    <div style={{ fontFamily: T.sans, color: T.g800, background: T.white }}>
+      <Styles />
+      <Hero c={c} mob={mob} />
+      {sections.length > 0 && <SectionNav sections={sections} active={activeSection} onClick={scrollTo} mob={mob} />}
+      <QuickFacts c={c} mob={mob} />
+      <Overview c={c} mob={mob} />
+      <Geography c={c} mob={mob} />
+      <People c={c} mob={mob} />
+      <History c={c} mob={mob} />
+      <Wildlife c={c} mob={mob} />
+      <Cuisine c={c} mob={mob} />
+      <TravelEssentials c={c} mob={mob} />
+      <Festivals c={c} mob={mob} />
+      <Airports c={c} mob={mob} />
+      <Destinations destinations={destinations} countryName={c.name} countrySlug={c.slug} mob={mob} />
+      <Gallery images={c.images} name={c.name} mob={mob} />
+      <TravelTips c={c} mob={mob} />
+      <FooterCTA c={c} mob={mob} />
     </div>
   );
 };

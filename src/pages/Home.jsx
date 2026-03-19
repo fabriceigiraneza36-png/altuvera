@@ -61,7 +61,6 @@ import { posts } from "../data/posts";
 import { useDestinations } from "../hooks/useDestinations";
 import { useWishlist } from "../hooks/useWishlist";
 import ImageCycle from "../components/common/ImageCycle";
-import DestinationNameSlideshow from "../components/home/DestinationNameSlideshow";
 import Confetti from "../components/common/Confetti";
 import { useScrollTriggeredSlide } from "../hooks/useScrollTriggeredSlide";
 import { useUserAuth } from "../context/UserAuthContext";
@@ -554,6 +553,212 @@ const LazyImage = memo(({ src, alt, style, className }) => {
    COMPONENT: Gallery Lightbox
    ═══════════════════════════════════════════ */
 // Gallery removed from Home (kept in /gallery route).
+
+/* ═══════════════════════════════════════════
+   COMPONENT: Signature Experience Card
+   ═══════════════════════════════════════════ */
+const SignatureExperienceCard = memo(({ experience, index }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
+  const reduced = usePrefersReducedMotion();
+  const [hovered, setHovered] = useState(false);
+  
+  if (!experience) return null;
+  
+  const { title, subtitle, description, image, stats } = experience;
+  const ratingNum = parseFloat(stats?.Rating) || 4.9;
+  
+  return (
+    <motion.article
+      ref={ref}
+      initial={{ opacity: 0, y: 60 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.7, delay: index * 0.15, ease: [0.25, 1, 0.5, 1] }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        position: "relative",
+        borderRadius: 28,
+        overflow: "hidden",
+        background: "#ffffff",
+        boxShadow: hovered 
+          ? "0 28px 70px rgba(5,150,105,0.2)" 
+          : "0 8px 32px rgba(0,0,0,0.08)",
+        transform: hovered ? "translateY(-12px)" : "translateY(0)",
+        transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+        border: `1px solid ${hovered ? "rgba(16,185,129,0.25)" : "rgba(5,150,105,0.08)"}`,
+        cursor: "pointer",
+      }}
+    >
+      {/* Image Section */}
+      <div style={{ position: "relative", height: 260, overflow: "hidden" }}>
+        <motion.img
+          src={image}
+          alt={title}
+          loading="lazy"
+          animate={hovered && !reduced ? { scale: 1.08 } : { scale: 1 }}
+          transition={{ duration: 0.9, ease: "easeOut" }}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
+        />
+        {/* Gradient Overlay */}
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.5) 100%)",
+        }} />
+        
+        {/* Rating Badge */}
+        <motion.div
+          animate={hovered ? { scale: 1.05 } : { scale: 1 }}
+          style={{
+            position: "absolute",
+            top: 20,
+            left: 20,
+            padding: "8px 16px",
+            background: "rgba(255,255,255,0.95)",
+            backdropFilter: "blur(10px)",
+            borderRadius: 30,
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
+          }}
+        >
+          <FiStar size={14} style={{ fill: "#F59E0B", color: "#F59E0B" }} />
+          <span style={{ fontSize: 14, fontWeight: 700, color: "#0F172A" }}>{stats?.Rating}</span>
+        </motion.div>
+        
+        {/* Location Tag */}
+        <div style={{
+          position: "absolute",
+          bottom: 16,
+          left: 20,
+          display: "flex",
+          alignItems: "center",
+          gap: 6,
+        }}>
+          <span style={{
+            padding: "6px 14px",
+            background: "rgba(5,150,105,0.9)",
+            backdropFilter: "blur(8px)",
+            borderRadius: 20,
+            fontSize: 12,
+            fontWeight: 600,
+            color: "#fff",
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+          }}>
+            {subtitle}
+          </span>
+        </div>
+      </div>
+
+      {/* Content Section */}
+      <div style={{ padding: "28px 28px 32px" }}>
+        <h3 style={{
+          fontFamily: "'Playfair Display', serif",
+          fontSize: 24,
+          fontWeight: 800,
+          color: "#0F172A",
+          marginBottom: 14,
+          lineHeight: 1.2,
+        }}>
+          {title}
+        </h3>
+        
+        <p style={{
+          fontSize: 15,
+          color: "#64748B",
+          lineHeight: 1.75,
+          marginBottom: 24,
+          display: "-webkit-box",
+          WebkitLineClamp: 3,
+          WebkitBoxOrient: "vertical",
+          overflow: "hidden",
+        }}>
+          {description}
+        </p>
+        
+        {/* Stats Grid */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: 16,
+          paddingTop: 20,
+          borderTop: "1px solid #E5E7EB",
+          marginBottom: 24,
+        }}>
+          {Object.entries(stats || {}).filter(([k]) => k !== "Rating").map(([key, value]) => (
+            <div key={key} style={{ textAlign: "center" }}>
+              <div style={{
+                fontSize: 11,
+                color: "#94A3B8",
+                textTransform: "uppercase",
+                letterSpacing: 0.5,
+                fontWeight: 600,
+                marginBottom: 4,
+              }}>
+                {key}
+              </div>
+              <div style={{
+                fontSize: 15,
+                fontWeight: 700,
+                color: "#0F172A",
+              }}>
+                {value}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        {/* CTA Button */}
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => window.location.href = '/booking'}
+          style={{
+            width: "100%",
+            padding: "14px 24px",
+            background: hovered 
+              ? "linear-gradient(135deg, #059669, #10B981)" 
+              : "linear-gradient(135deg, #10B981, #34D399)",
+            color: "#fff",
+            border: "none",
+            borderRadius: 14,
+            fontSize: 15,
+            fontWeight: 700,
+            cursor: "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            boxShadow: hovered 
+              ? "0 8px 24px rgba(5,150,105,0.35)" 
+              : "0 4px 16px rgba(5,150,105,0.2)",
+            transition: "all 0.3s ease",
+          }}
+        >
+          Book This Experience <FiArrowRight size={16} />
+        </motion.button>
+      </div>
+      
+      {/* Decorative corner accent */}
+      <div style={{
+        position: "absolute",
+        top: 0,
+        right: 0,
+        width: 100,
+        height: 100,
+        background: "radial-gradient(circle at top right, rgba(16,185,129,0.08) 0%, transparent 70%)",
+        pointerEvents: "none",
+      }} />
+    </motion.article>
+  );
+});
 
 /* ═══════════════════════════════════════════
    MAIN HOME COMPONENT
@@ -1990,11 +2195,15 @@ const Home = () => {
       {/* Countries Aside Component */}
       {!isMobile && <CountryGrid variant="flush" />}
 
-      {/* ═══════ SIGNATURE EXPERIENCES ═══════ */}
+      {/* ═══════ SIGNATURE EXPERIENCES - REDESIGNED ═══════ */}
       <section
         className="sp"
-        style={{ background: "linear-gradient(180deg, #F8FAFC 0%, #fff 100%)" }}
+        style={{ background: "linear-gradient(180deg, #F8FAFC 0%, #ECFDF5 50%, #fff 100%)", position: "relative", overflow: "hidden" }}
       >
+        {/* Decorative elements */}
+        <div style={{ position: "absolute", top: "10%", right: "-5%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
+        <div style={{ position: "absolute", bottom: "15%", left: "-3%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(16,185,129,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
+        
         <div className="ctr">
           <AnimatedSection animation="skewIn">
             <div className="sh">
@@ -2011,140 +2220,117 @@ const Home = () => {
               </p>
             </div>
           </AnimatedSection>
-          <div style={{ display: "flex", flexDirection: "column", gap: 64 }}>
+          
+          {/* Redesigned Interactive Cards Grid */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
+            gap: 28,
+            maxWidth: 1200,
+            margin: "0 auto"
+          }}>
             {signatureExperiences.map((exp, i) => (
-              <AnimatedSection
-                key={exp.title}
-                animation={i % 2 === 0 ? "fadeInLeft" : "fadeInRight"}
-              >
-                <div className={`sc ${i % 2 !== 0 ? "rev" : ""}`}>
-                  <div className="siw">
-                    <LazyImage
-                      src={exp.image}
-                      alt={exp.title}
-                      style={{ width: "100%", height: "100%" }}
-                    />
-                    <div
-                      style={{
-                        position: "absolute",
-                        inset: 0,
-                        background:
-                          "linear-gradient(180deg, transparent 60%, rgba(0,0,0,.3) 100%)",
-                      }}
-                    />
-                    {/* Badge */}
-                    <motion.div
-                      whileHover={{ scale: 1.05 }}
-                      style={{
-                        position: "absolute",
-                        top: 24,
-                        left: 24,
-                        padding: "8px 18px",
-                        background: "rgba(255,255,255,.15)",
-                        backdropFilter: "blur(10px)",
-                        borderRadius: 30,
-                        color: "white",
-                        fontSize: 13,
-                        fontWeight: 600,
-                        border: "1px solid rgba(255,255,255,.2)",
-                      }}
-                    >
-                      ⭐ {exp.stats.Rating}
-                    </motion.div>
-                  </div>
-                  <div
-                    style={{
-                      padding: "clamp(28px, 4vw, 56px)",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontSize: 12,
-                        color: "#059669",
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        letterSpacing: 2,
-                        marginBottom: 14,
-                      }}
-                    >
-                      {exp.subtitle}
-                    </span>
-                    <h3
-                      style={{
-                        fontFamily: "'Playfair Display', serif",
-                        fontSize: "clamp(26px, 3vw, 38px)",
-                        fontWeight: 800,
-                        color: "#0F172A",
-                        marginBottom: 20,
-                        lineHeight: 1.18,
-                      }}
-                    >
-                      {exp.title}
-                    </h3>
-                    <p
-                      style={{
-                        fontSize: 16,
-                        color: "#475569",
-                        lineHeight: 1.85,
-                        marginBottom: 28,
-                      }}
-                    >
-                      {exp.description}
-                    </p>
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(3, 1fr)",
-                        gap: 16,
-                        marginBottom: 32,
-                        padding: "20px 0",
-                        borderTop: "1px solid #ff9d009a",
-                        borderBottom: "1px solid #17ff02",
-                      }}
-                    >
-                      {Object.entries(exp.stats).map(([k, v]) => (
-                        <div key={k} style={{ textAlign: "center" }}>
-                          <div
-                            style={{
-                              fontSize: 11,
-                              color: "#94A3B8",
-                              textTransform: "uppercase",
-                              letterSpacing: 1,
-                              marginBottom: 6,
-                              fontWeight: 600,
-                            }}
-                          >
-                            {k}
-                          </div>
-                          <div
-                            style={{
-                              fontSize: 18,
-                              fontWeight: 700,
-                              color: "#0F172A",
-                            }}
-                          >
-                            {v}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <MagneticWrap>
-                      <Button
-                        to="/booking"
-                        variant="primary"
-                        icon={<FiArrowRight size={16} />}
-                      >
-                        Book This Experience
-                      </Button>
-                    </MagneticWrap>
-                  </div>
-                </div>
-              </AnimatedSection>
+              <SignatureExperienceCard key={exp.title} experience={exp} index={i} />
             ))}
           </div>
+          
+          {/* Featured CTA */}
+          <AnimatedSection animation="fadeInUp" delay={0.3}>
+            <div style={{
+              marginTop: 64,
+              padding: "clamp(32px, 5vw, 56px)",
+              background: "linear-gradient(135deg, #022C22 0%, #065F46 100%)",
+              borderRadius: 32,
+              textAlign: "center",
+              position: "relative",
+              overflow: "hidden"
+            }}>
+              {/* Animated background pattern */}
+              <div style={{
+                position: "absolute",
+                inset: 0,
+                backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='50' cy='50' r='1' fill='%23ffffff' fill-opacity='0.1'/%3E%3C/svg%3E")`,
+                backgroundSize: "50px 50px",
+                opacity: 0.5
+              }} />
+              
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                style={{ position: "relative", zIndex: 1 }}
+              >
+                <h3 style={{
+                  fontFamily: "'Playfair Display', serif",
+                  fontSize: "clamp(24px, 3vw, 36px)",
+                  fontWeight: 800,
+                  color: "#fff",
+                  marginBottom: 16,
+                  lineHeight: 1.2
+                }}>
+                  Ready for Your Own Adventure?
+                </h3>
+                <p style={{
+                  fontSize: 17,
+                  color: "rgba(255,255,255,0.85)",
+                  maxWidth: 600,
+                  margin: "0 auto 32px",
+                  lineHeight: 1.7
+                }}>
+                  Let our travel architects craft a bespoke journey combining your favorite experiences. 
+                  Every detail, perfectly orchestrated.
+                </p>
+                <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
+                  <MagneticWrap>
+                    <motion.button
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      style={{
+                        padding: "16px 32px",
+                        background: "linear-gradient(135deg, #059669, #10B981)",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 16,
+                        fontSize: 16,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 10,
+                        boxShadow: "0 10px 30px rgba(5,150,105,0.4)",
+                        transition: "all 0.3s ease"
+                      }}
+                      onClick={() => window.location.href = '/booking'}
+                    >
+                      Start Planning <FiArrowRight size={18} />
+                    </motion.button>
+                  </MagneticWrap>
+                  <MagneticWrap>
+                    <motion.button
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      whileTap={{ scale: 0.98 }}
+                      style={{
+                        padding: "16px 32px",
+                        background: "rgba(255,255,255,0.1)",
+                        color: "#fff",
+                        border: "2px solid rgba(255,255,255,0.3)",
+                        borderRadius: 16,
+                        fontSize: 16,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                        backdropFilter: "blur(10px)",
+                        transition: "all 0.3s ease"
+                      }}
+                      onClick={() => window.location.href = '/contact'}
+                    >
+                      Talk to an Expert
+                    </motion.button>
+                  </MagneticWrap>
+                </div>
+              </motion.div>
+            </div>
+          </AnimatedSection>
         </div>
       </section>
 
@@ -2453,26 +2639,81 @@ const Home = () => {
             opacity: 0.04,
           }}
         />
-        <div
-          style={{
-            maxWidth: 1000,
-            margin: "0 auto",
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
+        <div className="ctr">
           <AnimatedSection animation="fadeInUp">
-            <div
-              style={{
-                padding: "clamp(34px, 4vw, 48px) 0",
-              }}
-            >
-              <DestinationNameSlideshow
-                destinations={allDestinations}
-                loading={destinationsLoading}
-              />
+            <div className="sh">
+              <span className="sl sl-d">★★★★★</span>
+              <h2 className="st" style={{ color: "#fff" }}>
+                What Our Travelers <span className="tg">Say</span>
+              </h2>
+              <p className="ss" style={{ color: "rgba(255,255,255,0.8)" }}>
+                Real stories from adventurers who've experienced the magic of East Africa with Altuvera.
+              </p>
             </div>
           </AnimatedSection>
+          
+          {/* Testimonial Cards */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            gap: 24,
+            maxWidth: 1000,
+            margin: "0 auto"
+          }}>
+            {(testimonials || []).slice(0, 3).map((t, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1, duration: 0.6 }}
+                style={{
+                  background: "rgba(255,255,255,0.08)",
+                  backdropFilter: "blur(12px)",
+                  borderRadius: 20,
+                  padding: 28,
+                  border: "1px solid rgba(255,255,255,0.1)",
+                }}
+              >
+                <div style={{ color: "#F59E0B", fontSize: 18, marginBottom: 12 }}>
+                  {"★".repeat(5)}
+                </div>
+                <p style={{
+                  color: "rgba(255,255,255,0.9)",
+                  fontSize: 15,
+                  lineHeight: 1.7,
+                  marginBottom: 20,
+                  fontStyle: "italic"
+                }}>
+                  "{t?.quote || t?.content || t?.text || "An unforgettable experience that exceeded all expectations."}"
+                </p>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: "50%",
+                    background: "linear-gradient(135deg, #059669, #10B981)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#fff",
+                    fontWeight: 700,
+                    fontSize: 18
+                  }}>
+                    {(t?.name || "Guest").charAt(0)}
+                  </div>
+                  <div>
+                    <div style={{ color: "#fff", fontWeight: 600, fontSize: 14 }}>
+                      {t?.name || "Happy Traveler"}
+                    </div>
+                    <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}>
+                      {t?.location || t?.country || "East Africa"}
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -2703,98 +2944,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ═══════ PARTNERS ═══════ */}
-      <section
-        style={{
-          padding: "72px 24px",
-          background: "linear-gradient(180deg, #fff 0%, #F0FDF4 100%)",
-        }}
-      >
-        <div className="ctr">
-          <AnimatedSection animation="fadeInUp">
-            <div style={{ textAlign: "center", marginBottom: 44 }}>
-              <h3
-                style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: 22,
-                  fontWeight: 700,
-                  color: "#64748B",
-                  marginBottom: 6,
-                }}
-              >
-                Trusted Locally, Admired Globally
-              </h3>
-              <p style={{ fontSize: 14, color: "#94A3B8" }}>
-                A boutique team with verified partners, clear standards, and a
-                reputation built one journey at a time.
-              </p>
-            </div>
-          </AnimatedSection>
-          <StaggerWrap
-            className="pf"
-            stagger={0.08}
-            style={{
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              gap: 52,
-              flexWrap: "wrap",
-            }}
-          >
-            {partners.map((p) => (
-              <StaggerChild key={p.name}>
-                <MagneticWrap strength={0.15}>
-                  <div
-                    style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      gap: 5,
-                      opacity: 0.55,
-                      transition: "all .45s",
-                      cursor: "pointer",
-                      padding: "16px 24px",
-                      borderRadius: 18,
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.opacity = "1";
-                      e.currentTarget.style.transform = "translateY(-6px)";
-                      e.currentTarget.style.background = "rgba(5,150,105,.05)";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.opacity = "0.55";
-                      e.currentTarget.style.transform = "";
-                      e.currentTarget.style.background = "transparent";
-                    }}
-                  >
-                    <span style={{ fontSize: 28 }}>
-                      {p.badge.split(" ")[0]}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 15,
-                        fontWeight: 700,
-                        color: "#1E293B",
-                      }}
-                    >
-                      {p.name}
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 11,
-                        color: "#059669",
-                        fontWeight: 600,
-                      }}
-                    >
-                      {p.badge.split(" ").slice(1).join(" ")}
-                    </span>
-                  </div>
-                </MagneticWrap>
-              </StaggerChild>
-            ))}
-          </StaggerWrap>
-        </div>
-      </section>
 
       {/* ═══════ NEWSLETTER ═══════ */}
       <section
