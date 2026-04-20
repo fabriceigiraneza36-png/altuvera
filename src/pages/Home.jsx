@@ -2303,28 +2303,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ═══════ ADVENTURE TYPES ═══════ */}
-      <section
-        className="sp"
-        style={{
-          background: "linear-gradient(180deg, #fff 0%, #F0FDF4 70%, #fff 100%)",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          className="blob"
-          style={{
-            top: -140,
-            left: -160,
-            width: 520,
-            height: 520,
-            background: "#10B981",
-            opacity: 0.06,
-          }}
-        />
-      </section>
-
       {/* ═══════ GALLERY ═══════ */}
       <section
           className="sp"
