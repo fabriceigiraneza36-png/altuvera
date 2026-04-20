@@ -64,6 +64,7 @@ import Confetti from "../components/common/Confetti";
 import { useScrollTriggeredSlide } from "../hooks/useScrollTriggeredSlide";
 import { useUserAuth } from "../context/UserAuthContext";
 import chatgpt from "../assets/chatgpt.png";
+import SEO from "../components/common/SEO";
 
 /* ═══════════════════════════════════════════
    UTILITY: Reduced Motion Hook
@@ -1183,6 +1184,13 @@ const Home = () => {
   /* ═════════════════ RENDER ═════════════════ */
   return (
     <div ref={homeRootRef} style={{ overflowX: "hidden" }}>
+      <SEO
+        title="Home"
+        description="Discover extraordinary destinations and create unforgettable travel experiences with Altuvеrа. Expert travel planning, virtual tours, and personalized itineraries for your dream adventures."
+        url="/"
+        image="/og-home.jpg"
+        keywords={['travel', 'destinations', 'virtual tours', 'itineraries', 'adventure', 'explore']}
+      />
       <ScrollProgress />
       <Confetti active={showConfetti} duration={5000} />
 
@@ -1200,9 +1208,9 @@ const Home = () => {
         @keyframes morphBlob{0%{border-radius:60% 40% 30% 70%/60% 30% 70% 40%}25%{border-radius:30% 60% 70% 40%/50% 60% 30% 60%}50%{border-radius:50% 60% 30% 60%/30% 70% 40% 60%}75%{border-radius:60% 40% 60% 40%/70% 30% 50% 60%}100%{border-radius:60% 40% 30% 70%/60% 30% 70% 40%}}
 
         .tg{background:linear-gradient(135deg,#059669 0%,#10B981 50%,#34D399 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-        .sp{padding:clamp(80px,10vw,140px) 24px}
+        .sp{padding:clamp(16px,2vw,24px) 24px}
         .ctr{max-width:1400px;margin:0 auto;position:relative;z-index:1}
-        .sh{text-align:center;margin-bottom:clamp(48px,6vw,72px)}
+        .sh{text-align:center;margin-bottom:clamp(8px,1vw,12px)}
         .sl{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:rgba(5,150,105,.08);border-radius:50px;color:#059669;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:20px}
         .sl-d{background:rgba(255,255,255,.08);color:#34D399}
         .st{font-family:'Playfair Display',serif;font-size:clamp(30px,4vw,50px);font-weight:800;color:#0F172A;margin-bottom:16px;line-height:1.16}
@@ -1354,7 +1362,7 @@ const Home = () => {
             style={{
               display: "grid",
               gridTemplateColumns: "1.1fr 1fr",
-              gap: 80,
+              gap: 12,
               alignItems: "center",
             }}
           >
@@ -1917,7 +1925,7 @@ const Home = () => {
             ))}
           </StaggerWrap>
           <AnimatedSection animation="fadeInUp">
-            <div style={{ textAlign: "center", marginTop: 56 }}>
+            <div style={{ textAlign: "center", marginTop: 16 }}>
               <MagneticWrap>
                 <Button
                   to="/destinations"
@@ -2202,104 +2210,7 @@ const Home = () => {
               <SignatureExperienceCard key={exp.title} experience={exp} index={i} />
             ))}
           </div>
-          
-          {/* Featured CTA */}
-          <AnimatedSection animation="fadeInUp" delay={0.3}>
-            <div style={{
-              marginTop: 64,
-              padding: "clamp(32px, 5vw, 56px)",
-              background: "linear-gradient(135deg, #022C22 0%, #065F46 100%)",
-              borderRadius: 32,
-              textAlign: "center",
-              position: "relative",
-              overflow: "hidden"
-            }}>
-              {/* Animated background pattern */}
-              <div style={{
-                position: "absolute",
-                inset: 0,
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='50' cy='50' r='1' fill='%23ffffff' fill-opacity='0.1'/%3E%3C/svg%3E")`,
-                backgroundSize: "50px 50px",
-                opacity: 0.5
-              }} />
-              
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2 }}
-                style={{ position: "relative", zIndex: 1 }}
-              >
-                <h3 style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: "clamp(24px, 3vw, 36px)",
-                  fontWeight: 800,
-                  color: "#fff",
-                  marginBottom: 16,
-                  lineHeight: 1.2
-                }}>
-                  Ready for Your Own Adventure?
-                </h3>
-                <p style={{
-                  fontSize: 17,
-                  color: "rgba(255,255,255,0.85)",
-                  maxWidth: 600,
-                  margin: "0 auto 32px",
-                  lineHeight: 1.7
-                }}>
-                  Let our travel architects craft a bespoke journey combining your favorite experiences. 
-                  Every detail, perfectly orchestrated.
-                </p>
-                <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap" }}>
-                  <MagneticWrap>
-                    <motion.button
-                      whileHover={{ scale: 1.05, y: -2 }}
-                      whileTap={{ scale: 0.98 }}
-                      style={{
-                        padding: "16px 32px",
-                        background: "linear-gradient(135deg, #059669, #10B981)",
-                        color: "#fff",
-                        border: "none",
-                        borderRadius: 16,
-                        fontSize: 16,
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        boxShadow: "0 10px 30px rgba(5,150,105,0.4)",
-                        transition: "all 0.3s ease"
-                      }}
-                      onClick={() => window.location.href = '/booking'}
-                    >
-                      Start Planning <FiArrowRight size={18} />
-                    </motion.button>
-                  </MagneticWrap>
-                  <MagneticWrap>
-                    <motion.button
-                      whileHover={{ scale: 1.05, y: -2 }}
-                      whileTap={{ scale: 0.98 }}
-                      style={{
-                        padding: "16px 32px",
-                        background: "rgba(255,255,255,0.1)",
-                        color: "#fff",
-                        border: "2px solid rgba(255,255,255,0.3)",
-                        borderRadius: 16,
-                        fontSize: 16,
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        backdropFilter: "blur(10px)",
-                        transition: "all 0.3s ease"
-                      }}
-                      onClick={() => window.location.href = '/contact'}
-                    >
-                      Talk to an Expert
-                    </motion.button>
-                  </MagneticWrap>
-                </div>
-              </motion.div>
-            </div>
-          </AnimatedSection>
+
         </div>
       </section>
 
@@ -2534,7 +2445,7 @@ const Home = () => {
       {/* ═══════ NEWSLETTER ═══════ */}
       <section
         style={{
-          padding: "clamp(72px, 8vw, 115px) 24px",
+          padding: "clamp(16px, 2vw, 24px) 24px",
           background: "linear-gradient(135deg, #059669, #10B981)",
           position: "relative",
           overflow: "hidden",

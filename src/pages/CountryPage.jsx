@@ -267,7 +267,7 @@ const GreenBar = ({ style = {} }) => (
 const Section = ({ children, id, bg = T.white, mob }) => {
   const [ref, vis] = useInView();
   return (
-    <section ref={ref} id={id} style={{ background: bg, padding: mob ? "64px 0" : "100px 0", opacity: vis ? 1 : 0, transform: vis ? "translateY(0)" : "translateY(40px)", transition: "opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1)" }}>
+    <section ref={ref} id={id} style={{ background: bg, padding: mob ? "48px 0" : "70px 0", opacity: vis ? 1 : 0, transform: vis ? "translateY(0)" : "translateY(40px)", transition: "opacity .7s cubic-bezier(.22,1,.36,1),transform .7s cubic-bezier(.22,1,.36,1)" }}>
       <Box>{children}</Box>
     </section>
   );

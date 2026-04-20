@@ -6,7 +6,7 @@ import React, {
   useRef,
 } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import SEO from "../components/common/SEO";
 import {
   FiMapPin,
   FiStar,
@@ -1663,7 +1663,7 @@ const CountryDestinations = () => {
       fontFamily: "'Poppins', sans-serif",
     },
     section: {
-      padding: isMobile ? "48px 16px 100px" : "72px 24px 140px",
+      padding: isMobile ? "36px 16px 75px" : "52px 24px 100px",
       background: "radial-gradient(ellipse at top left, #e8f5e9, #ffffff 60%)",
       minHeight: "100vh",
     },
@@ -1825,44 +1825,19 @@ const CountryDestinations = () => {
 
   return (
     <div style={styles.page}>
-      <Helmet>
-        <title>{`${country.name} Destinations | Altuvera`}</title>
-        <meta
-          name="description"
-          content={toMetaDescription(
-            `Explore ${country.name}'s best destinations, highlights, and bookable experiences. Browse ${allDestinations.length} places and plan your trip with Altuvera.`,
-            160,
-          )}
-        />
-        <link
-          rel="canonical"
-          href={toAbsoluteUrl(`/country/${country.id}/destinations`)}
-        />
-        <meta property="og:type" content="website" />
-        <meta
-          property="og:url"
-          content={toAbsoluteUrl(`/country/${country.id}/destinations`)}
-        />
-        <meta
-          property="og:title"
-          content={`${country.name} Destinations | Altuvera`}
-        />
-        <meta
-          property="og:description"
-          content={toMetaDescription(
-            `Explore ${country.name}'s best destinations, highlights, and bookable experiences.`,
-            155,
-          )}
-        />
-        <meta
-          property="og:image"
-          content={
-            country.heroImage ||
-            country.images?.[0] ||
-            toAbsoluteUrl("/favicon.ico")
-          }
-        />
-      </Helmet>
+      <SEO
+        title={`${country.name} Destinations`}
+        description={`Explore ${country.name}'s best destinations, highlights, and bookable experiences. Browse ${allDestinations.length} places and plan your trip with Altuvera.`}
+        url={`/country/${country.id}/destinations`}
+        image={country.heroImage || country.images?.[0]}
+        keywords={[country.name, "destinations", "travel", "experiences", "safari"]}
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "Destinations", url: "/destinations" },
+          { name: country.name, url: `/country/${country.id}` },
+          { name: "All Destinations", url: `/country/${country.id}/destinations` }
+        ]}
+      />
       <GlobalStyles />
 
       {/* Page Header */}

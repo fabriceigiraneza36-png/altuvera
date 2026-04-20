@@ -3629,7 +3629,7 @@ Please provide a personalized quote and itinerary. Thank you!`;
         />
         <section
           style={{
-            padding: isMobile ? "60px 20px" : "100px 24px",
+            padding: isMobile ? "40px 20px" : "70px 24px",
             backgroundColor: THEME.background,
             minHeight: "60vh",
             display: "flex",
@@ -3667,7 +3667,7 @@ Please provide a personalized quote and itinerary. Thank you!`;
         />
         <section
           style={{
-            padding: isMobile ? "40px 16px 100px" : "80px 24px 140px",
+            padding: isMobile ? "30px 16px 75px" : "60px 24px 100px",
             backgroundColor: THEME.background,
             minHeight: "70vh",
             position: "relative",
@@ -3684,7 +3684,7 @@ Please provide a personalized quote and itinerary. Thank you!`;
           >
             <GlassCard
               glow
-              style={{ padding: isMobile ? "30px 20px" : "50px 60px" }}
+              style={{ padding: isMobile ? "20px 20px" : "35px 40px" }}
             >
               <SuccessScreen isMobile={isMobile} />
             </GlassCard>

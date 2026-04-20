@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FiChevronDown, FiSearch, FiMessageCircle, FiHelpCircle } from 'react-icons/fi';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../components/common/SEO';
 import PageHeader from '../components/common/PageHeader';
 import AnimatedSection from '../components/common/AnimatedSection';
 import Button from '../components/common/Button';
@@ -156,15 +156,23 @@ const FAQ = () => {
 
   return (
     <div>
-      <Helmet>
-        <link rel="canonical" href={toAbsoluteUrl('/faq')} />
-        <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
-      </Helmet>
+      <SEO
+        title="Frequently Asked Questions"
+        description="Find answers to common questions about Altuvera safaris: booking, payment, travel logistics, health & safety, and more."
+        keywords={["FAQ", "travel questions", "safari booking", "travel advice", "East Africa"]}
+        url="/faq"
+        type="website"
+        structuredData={faqJsonLd}
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "FAQ", url: "/faq" }
+        ]}
+      />
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
         .faq-section {
-          padding: 80px 24px 140px;
+          padding: 60px 24px 100px;
           background: linear-gradient(180deg, #f0fdf4 0%, #ecfdf5 30%, #f8fffe 60%, #f0fdf4 100%);
           min-height: 100vh;
           position: relative;

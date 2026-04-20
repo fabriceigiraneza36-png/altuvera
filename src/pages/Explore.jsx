@@ -1,7 +1,7 @@
 // pages/Explore.jsx
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../components/common/SEO';
 import {
   FiArrowRight,
   FiMapPin,
@@ -784,7 +784,7 @@ function GalleryShowcase({ data }) {
           bottom: 0,
           left: 0,
           right: 0,
-          padding: 'clamp(28px,5vw,48px)',
+          padding: 'clamp(20px,4vw,36px)',
           zIndex: 3,
         }}
       >
@@ -1373,7 +1373,7 @@ function NewsletterBlock() {
         background:
           'linear-gradient(135deg,' + G[700] + ' 0%,' + G[900] + ' 100%)',
         borderRadius: 32,
-        padding: 'clamp(40px,6vw,72px)',
+        padding: 'clamp(28px,5vw,52px)',
         textAlign: 'center',
         position: 'relative',
         overflow: 'hidden',
@@ -1520,20 +1520,22 @@ function Explore() {
     []
   );
 
-  const pad = 'clamp(80px,12vw,120px) clamp(16px,5vw,48px)';
+  const pad = 'clamp(56px,10vw,90px) clamp(16px,5vw,36px)';
   const box = { maxWidth: 1400, margin: '0 auto' };
 
   return (
     <>
-      <Helmet>
-        <title>
-          Explore East Africa | Premium Safari &amp; Adventure Experiences
-        </title>
-        <meta
-          name="description"
-          content="Discover incredible safari experiences, wildlife encounters, mountain treks, beach holidays, and cultural tours across East Africa."
-        />
-      </Helmet>
+      <SEO
+        title="Explore Experiences"
+        description="Explore curated travel experiences across East Africa. From safari adventures to mountain climbing and cultural immersion, find your perfect journey."
+        keywords={["travel experiences", "safari adventures", "East Africa tours", "mountain climbing", "cultural experiences"]}
+        url="/explore"
+        type="website"
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "Explore", url: "/explore" }
+        ]}
+      />
 
       <PageHeader
         title="Explore East Africa"
@@ -1545,7 +1547,7 @@ function Explore() {
       {/* ============ INTRO EDITORIAL ============ */}
       <section
         style={{
-          padding: 'clamp(60px,10vw,100px) clamp(16px,5vw,48px)',
+          padding: 'clamp(42px,8vw,70px) clamp(16px,5vw,36px)',
           backgroundColor: W.off,
         }}
       >
@@ -2191,7 +2193,7 @@ function Explore() {
       {/* ============ TRUST BADGES ============ */}
       <section
         style={{
-          padding: 'clamp(60px,8vw,80px) clamp(16px,5vw,48px)',
+          padding: 'clamp(42px,6vw,60px) clamp(16px,5vw,36px)',
         }}
       >
         <div style={box}>
@@ -2270,7 +2272,7 @@ function Explore() {
       {/* ============ NEWSLETTER ============ */}
       <section
         style={{
-          padding: 'clamp(60px,8vw,80px) clamp(16px,5vw,48px)',
+          padding: 'clamp(42px,6vw,60px) clamp(16px,5vw,36px)',
           backgroundColor: G[50],
         }}
       >
@@ -2284,7 +2286,7 @@ function Explore() {
       {/* ============ FINAL CTA ============ */}
       <section
         style={{
-          padding: 'clamp(100px,15vw,160px) clamp(16px,5vw,48px)',
+          padding: 'clamp(70px,12vw,120px) clamp(16px,5vw,36px)',
           background:
             'linear-gradient(160deg,' +
             N[900] +

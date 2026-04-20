@@ -1,4 +1,4 @@
-const DEFAULT_REMOTE_API_URL = "https://backend-1-ghrv.onrender.com/api";
+const DEFAULT_REMOTE_API_URL = "https://backend-jd8f.onrender.com/api";
 const DEFAULT_LOCAL_API_URL = "http://localhost:3000/api";
 
 const safeTrim = (value) => (typeof value === "string" ? value.trim() : "");

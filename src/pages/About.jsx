@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  FiAward, FiUsers, FiGlobe, FiHeart, FiTarget, FiStar, 
-  FiArrowRight, FiLinkedin, FiTwitter, FiInstagram, 
+import {
+  FiAward, FiUsers, FiGlobe, FiHeart, FiTarget, FiStar,
+  FiArrowRight, FiLinkedin, FiTwitter, FiInstagram,
   FiChevronLeft, FiChevronRight, FiZap, FiShield, FiCompass,
   FiMapPin, FiCheck, FiBookOpen, FiFeather, FiSun,
   FiTrendingUp, FiEye, FiClock, FiThumbsUp, FiMessageCircle,
   FiPlay, FiX, FiMaximize2, FiCamera, FiVideo, FiYoutube
 } from 'react-icons/fi';
-import { 
-  Sprout, Globe, Trees, Award, Smartphone, Plane, Leaf, 
+import {
+  Sprout, Globe, Trees, Award, Smartphone, Plane, Leaf,
   ChevronRight, ChevronLeft, Rocket, Heart, Users, Shield
 } from 'lucide-react';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
+import SEO from '../components/common/SEO';
 import PageHeader from '../components/common/PageHeader';
 import image from '../assets/image.jpg';
 import Button from '../components/common/Button';
@@ -416,7 +417,7 @@ const EvolutionTimeline = () => {
 
   return (
     <section style={{
-      padding: 'clamp(60px, 10vw, 140px) 24px',
+      padding: 'clamp(42px, 8vw, 100px) 24px',
       background: '#FAFFFE',
       position: 'relative',
       overflow: 'hidden'
@@ -1611,6 +1612,17 @@ const About = () => {
 
   return (
     <div className="about-page" style={{ backgroundColor: '#fff', color: '#0f172a', overflowX: 'hidden' }}>
+      <SEO
+        title="About Us"
+        description="Learn about Altuvera's mission to create transformative travel experiences through our 'High & Deep Culture' philosophy. Meet our expert team and discover our commitment to sustainable, authentic East African safaris."
+        keywords={["about Altuvera", "travel company", "safari experts", "East Africa", "sustainable tourism", "travel philosophy"]}
+        url="/about"
+        image="/og-about.jpg"
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "About", url: "/about" }
+        ]}
+      />
       {/* Modals */}
       <VideoModal 
         isOpen={videoModal.isOpen} 

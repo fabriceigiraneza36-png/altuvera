@@ -7,17 +7,7 @@ import {
   FiArrowRight,
   FiCompass 
 } from 'react-icons/fi';
-import { Helmet } from 'react-helmet-async';
-import Button from '../components/common/Button';
-
-/**
- * Navigation suggestion configuration
- * @typedef {Object} NavigationSuggestion
- * @property {React.ComponentType} icon - Icon component
- * @property {string} text - Display text
- * @property {string} path - Navigation path
- * @property {string} ariaLabel - Accessibility label
- */
+import SEO from '../components/common/SEO';
 
 /** @type {NavigationSuggestion[]} */
 const NAVIGATION_SUGGESTIONS = [
@@ -267,14 +257,12 @@ const NotFound = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Page Not Found | Safari Adventures</title>
-        <meta 
-          name="description" 
-          content="The page you're looking for cannot be found. Explore our destinations or return home." 
-        />
-        <meta name="robots" content="noindex, follow" />
-      </Helmet>
+      <SEO
+        title="Page Not Found"
+        description="The page you're looking for cannot be found. Explore our destinations or return home."
+        url="/404"
+        keywords={["404", "page not found", "safari adventures"]}
+      />
 
       <main style={styles.container} role="main">
         <div style={styles.pattern} aria-hidden="true" />

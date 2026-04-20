@@ -67,7 +67,7 @@ const Destinations = () => {
 
   const styles = {
     section: {
-      padding: '56px 24px 110px',
+      padding: '40px 24px 80px',
       backgroundColor: '#F0FDF4',
       minHeight: '100vh',
     },

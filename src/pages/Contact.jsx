@@ -13,6 +13,7 @@ import {
 import { HiSparkles } from "react-icons/hi";
 import { BiSupport } from "react-icons/bi";
 import { RiSendPlaneFill } from "react-icons/ri";
+import SEO from "../components/common/SEO";
 
 import herobg from "../assets/fabrice.jpg";
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
@@ -698,6 +699,17 @@ const Contact = () => {
      ═══════════════════════════════════════════════ */
   return (
     <div className="ct">
+      <SEO
+        title="Contact Us"
+        description="Get in touch with Altuvera for personalized safari planning, booking assistance, and expert travel advice. We're here to help you create your perfect East African adventure."
+        keywords={["contact Altuvera", "safari booking", "travel inquiry", "East Africa travel", "customer support"]}
+        url="/contact"
+        image="/og-contact.jpg"
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "Contact", url: "/contact" }
+        ]}
+      />
       <style>{contactStyles}</style>
 
       {/* ════════════════ HERO ════════════════ */}
@@ -1765,7 +1777,7 @@ const contactStyles = `
 
 /* ═══════════════ SECTIONS ═══════════════ */
 .ct-section {
-  padding: 100px 24px;
+  padding: 70px 24px;
   position: relative;
   overflow: hidden;
 }

@@ -16,7 +16,7 @@ export default defineConfig({
     strictPort: true,
     proxy: {
       "/api": {
-        target: "https://backend-1-ghrv.onrender.com",
+        target: "https://backend-jd8f.onrender.com",
         changeOrigin: true,
         secure: false,
       },

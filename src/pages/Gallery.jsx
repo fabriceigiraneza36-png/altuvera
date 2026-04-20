@@ -57,7 +57,7 @@ import {
   FiBookmark,
 } from "react-icons/fi";
 import { Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import SEO from "../components/common/SEO";
 import { useGallery } from "../hooks/useGallery";
 import { BRAND_LOGO_ALT, getBrandLogoUrl } from "../utils/seo";
 
@@ -3602,24 +3602,17 @@ const Gallery = () => {
   // Render
   return (
     <>
-      <Helmet>
-        <title>Photo Gallery | Altuvera Safaris</title>
-        <meta
-          name="description"
-          content="Explore breathtaking photos of East African wildlife, landscapes, and culture. Browse our curated collection of safari moments captured by expert photographers."
-        />
-        <meta property="og:title" content="Photo Gallery | Altuvera Safaris" />
-        <meta
-          property="og:description"
-          content="Explore breathtaking photos of East African wildlife, landscapes, and culture."
-        />
-        <meta property="og:type" content="website" />
-        <meta property="og:image" content={getBrandLogoUrl()} />
-        <meta property="og:image:alt" content={BRAND_LOGO_ALT} />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:image" content={getBrandLogoUrl()} />
-        <meta name="twitter:image:alt" content={BRAND_LOGO_ALT} />
-      </Helmet>
+      <SEO
+        title="Photo Gallery"
+        description="Explore breathtaking photos of East African wildlife, landscapes, and culture. Browse our curated collection of safari moments captured by expert photographers."
+        keywords={["photo gallery", "East Africa wildlife", "safari photos", "travel photography", "landscapes"]}
+        url="/gallery"
+        image={getBrandLogoUrl()}
+        breadcrumbs={[
+          { name: "Home", url: "/" },
+          { name: "Gallery", url: "/gallery" }
+        ]}
+      />
 
       <style>{styles}</style>
 
@@ -3738,7 +3731,7 @@ const Gallery = () => {
       <section
         ref={galleryRef}
         style={{
-          padding: isMobile ? "32px 16px 80px" : "60px 24px 120px",
+          padding: isMobile ? "24px 16px 60px" : "45px 24px 90px",
           maxWidth: "1440px",
           margin: "0 auto",
           backgroundColor: "var(--gl-off-white)",

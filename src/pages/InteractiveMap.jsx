@@ -73,7 +73,8 @@ import { toGoogleMapEmbedUrl } from "../utils/mediaEmbed";
 const flagAnimVariant = (key = "") => {
   const s = String(key);
   let hash = 0;
-  for (let i = 0; i < s.length; i += 1) hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
+  for (let i = 0; i < s.length; i += 1)
+    hash = (hash * 31 + s.charCodeAt(i)) >>> 0;
   return String((hash % 5) + 1);
 };
 
@@ -1153,7 +1154,9 @@ const MapMarker = React.memo(
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <span
                 className="av-flag"
-                data-av-flag-anim={flagAnimVariant(country?.code || country?.name)}
+                data-av-flag-anim={flagAnimVariant(
+                  country?.code || country?.name,
+                )}
                 style={{
                   "--av-flag-size": "22px",
                   filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.08))",
@@ -1327,7 +1330,9 @@ const CountryQuickCard = ({
     >
       <span
         className="av-flag"
-        data-av-flag-anim={flagAnimVariant((country?.code || country?.name) + ":hero")}
+        data-av-flag-anim={flagAnimVariant(
+          (country?.code || country?.name) + ":hero",
+        )}
         style={{
           "--av-flag-size": "24px",
           filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.3))",
@@ -1699,11 +1704,14 @@ const InteractiveMap = () => {
       />
 
       <AnimatedSection animation="fadeInUp">
-        <PackageChecklist tourData={{ tourName: 'Interactive Map' }} className="interactive-map-checklist" />
+        <PackageChecklist
+          tourData={{ tourName: "Interactive Map" }}
+          className="interactive-map-checklist"
+        />
       </AnimatedSection>
 
       <section
-        style={{ padding: isMobile ? "32px 16px 80px" : "48px 24px 120px" }}
+        style={{ padding: isMobile ? "24px 16px 56px" : "36px 24px 72px" }}
       >
         <div style={{ maxWidth: "1480px", margin: "0 auto" }}>
           {/* ── ERROR ── */}
@@ -1741,7 +1749,7 @@ const InteractiveMap = () => {
                   display: "grid",
                   gridTemplateColumns: isDesktop ? "1fr 380px" : "1fr",
                   gap: 28,
-                  marginBottom: 36,
+                  marginBottom: 24,
                   alignItems: "start",
                 }}
               >
@@ -2950,7 +2958,7 @@ const InteractiveMap = () => {
                             <div
                               style={{
                                 textAlign: "center",
-                                padding: "60px 20px",
+                                padding: "40px 20px",
                                 animation: "fadeUp 0.4s ease",
                               }}
                             >
@@ -3060,7 +3068,7 @@ const InteractiveMap = () => {
                       display: "flex",
                       justifyContent: "space-between",
                       alignItems: "center",
-                      marginBottom: 20,
+                      marginBottom: 16,
                     }}
                   >
                     <div>
@@ -3150,7 +3158,7 @@ const InteractiveMap = () => {
                 <div
                   className="im-stats-grid"
                   style={{
-                    marginTop: 56,
+                    marginTop: 32,
                     display: "grid",
                     gridTemplateColumns: "repeat(4, 1fr)",
                     gap: 20,
@@ -3189,8 +3197,8 @@ const InteractiveMap = () => {
 
               {/* ═══════ FEATURES SECTION ═══════ */}
               <AnimatedSection animation="fadeInUp">
-                <div style={{ marginTop: 80 }}>
-                  <div style={{ textAlign: "center", marginBottom: 56 }}>
+                <div style={{ marginTop: 48 }}>
+                  <div style={{ textAlign: "center", marginBottom: 32 }}>
                     <Pill variant="solid" size="md" icon={<FiZap size={12} />}>
                       Map Features
                     </Pill>

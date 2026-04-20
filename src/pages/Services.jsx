@@ -7,7 +7,7 @@ import React, {
   useRef,
 } from "react";
 import { Link } from "react-router-dom";
-import { Helmet } from "react-helmet-async";
+import SEO from "../components/common/SEO";
 import {
   FiCheck,
   FiArrowRight,
@@ -28,6 +28,7 @@ import {
   FiCompass,
   FiGlobe,
   FiSun,
+  FiPlay,
 } from "react-icons/fi";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import PageHeader from "../components/common/PageHeader";
@@ -40,73 +41,67 @@ import { services } from "../data/services";
 import ServiceIcon from "../components/icons/ServiceIconSimple";
 
 // ============================================================================
-// GREEN-WHITE ONLY THEME
+// THEME — Deep Forest Green + Pure White
 // ============================================================================
-
-const THEME = {
-  colors: {
-    primary: {
-      50: "#F0FDF4",
-      100: "#DCFCE7",
-      200: "#BBF7D0",
-      300: "#86EFAC",
-      400: "#177339",
-      500: "#257341",
-      600: "#169143",
-      700: "#15803D",
-      800: "#166534",
-      900: "#14532D",
-      950: "#052E16",
-    },
-    white: "#FFFFFF",
-    offWhite: "#FAFFFE",
-    lightGreen: "#F0FDF4",
-    paleGreen: "#E8F8ED",
-    textDark: "#14532D",
-    textMedium: "#166534",
-    textBody: "#1C6E3A",
-    textMuted: "#4A9B6B",
-    textLight: "#6BBF8A",
-    border: "#D1FAE5",
-    borderLight: "#E8F8ED",
-    overlay: "rgba(5, 46, 22, 0.85)",
-  },
-  fonts: {
-    heading: "'Playfair Display', Georgia, 'Times New Roman', serif",
-    body: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-  },
-  radii: {
-    sm: "8px",
-    md: "12px",
-    lg: "16px",
-    xl: "20px",
-    "2xl": "24px",
-    "3xl": "32px",
-    full: "9999px",
-  },
-  shadows: {
-    sm: "0 1px 3px rgba(22,163,74,0.06), 0 1px 2px rgba(22,163,74,0.04)",
-    md: "0 4px 12px rgba(22,163,74,0.08), 0 2px 4px rgba(22,163,74,0.04)",
-    lg: "0 12px 24px rgba(22,163,74,0.1), 0 4px 8px rgba(22,163,74,0.04)",
-    xl: "0 20px 40px rgba(22,163,74,0.12), 0 8px 16px rgba(22,163,74,0.06)",
-    "2xl": "0 28px 56px rgba(22,163,74,0.15)",
-    glow: "0 0 40px rgba(22,163,74,0.12)",
-    cardHover:
-      "0 24px 48px rgba(22,163,74,0.14), 0 0 0 1px rgba(22,163,74,0.08)",
-  },
-  transitions: {
-    fast: "150ms cubic-bezier(0.4, 0, 0.2, 1)",
-    base: "250ms cubic-bezier(0.4, 0, 0.2, 1)",
-    smooth: "400ms cubic-bezier(0.22, 1, 0.36, 1)",
-    spring: "500ms cubic-bezier(0.34, 1.56, 0.64, 1)",
-  },
+const T = {
+  // greens
+  g950: "#052e16",
+  g900: "#14532d",
+  g800: "#166534",
+  g700: "#15803d",
+  g600: "#16a34a",
+  g500: "#22c55e",
+  g400: "#4ade80",
+  g300: "#86efac",
+  g200: "#bbf7d0",
+  g100: "#dcfce7",
+  g50:  "#f0fdf4",
+  // whites / off-whites
+  white:    "#ffffff",
+  offWhite: "#f8fffe",
+  // text
+  tDark:   "#052e16",
+  tMed:    "#14532d",
+  tBody:   "#166534",
+  tMuted:  "#15803d",
+  tLight:  "#22c55e",
+  // surfaces
+  surfaceLight: "#f0fdf4",
+  surfaceMid:   "#e8f8ed",
+  border:       "#bbf7d0",
+  borderMid:    "#86efac",
+  // overlays
+  overlay: "rgba(5,46,22,0.88)",
+  // fonts
+  serif: "'Playfair Display', Georgia, serif",
+  sans:  "'Inter', system-ui, sans-serif",
+  // radii
+  rSm:   "8px",
+  rMd:   "12px",
+  rLg:   "16px",
+  rXl:   "20px",
+  r2Xl:  "24px",
+  r3Xl:  "32px",
+  rFull: "9999px",
+  // shadows
+  shadowSm:   "0 1px 4px rgba(5,46,22,0.07)",
+  shadowMd:   "0 4px 16px rgba(5,46,22,0.10)",
+  shadowLg:   "0 12px 32px rgba(5,46,22,0.13)",
+  shadowXl:   "0 24px 48px rgba(5,46,22,0.16)",
+  shadow2Xl:  "0 32px 64px rgba(5,46,22,0.20)",
+  shadowHover:"0 28px 56px rgba(5,46,22,0.18), 0 0 0 1px rgba(22,163,74,0.10)",
+  shadowGlow: "0 0 48px rgba(34,197,94,0.18)",
+  // transitions
+  tFast:   "140ms cubic-bezier(0.4,0,0.2,1)",
+  tBase:   "240ms cubic-bezier(0.4,0,0.2,1)",
+  tSmooth: "400ms cubic-bezier(0.22,1,0.36,1)",
+  tSpring: "480ms cubic-bezier(0.34,1.56,0.64,1)",
 };
 
 // ============================================================================
 // DATA
 // ============================================================================
-
-const ROTATING_HERO_TEXTS = [
+const HERO_TEXTS = [
   "Unforgettable journeys crafted with precision",
   "Expert-guided adventures across East Africa",
   "Luxury meets authentic wilderness experience",
@@ -116,9 +111,7 @@ const ROTATING_HERO_TEXTS = [
 
 const PROCESS_STEPS = [
   {
-    step: "01",
-    title: "Discovery Call",
-    icon: FiMessageCircle,
+    step: "01", title: "Discovery Call", icon: FiMessageCircle,
     descriptions: [
       "Share your travel dreams and preferences",
       "Discuss budget, dates, and group size",
@@ -126,9 +119,7 @@ const PROCESS_STEPS = [
     ],
   },
   {
-    step: "02",
-    title: "Custom Itinerary",
-    icon: FiCalendar,
+    step: "02", title: "Custom Itinerary", icon: FiCalendar,
     descriptions: [
       "Receive a tailored travel blueprint",
       "Every detail designed around you",
@@ -136,9 +127,7 @@ const PROCESS_STEPS = [
     ],
   },
   {
-    step: "03",
-    title: "Fine-Tuning",
-    icon: FiCompass,
+    step: "03", title: "Fine-Tuning", icon: FiCompass,
     descriptions: [
       "Refine every detail to perfection",
       "Add special requests and surprises",
@@ -146,9 +135,7 @@ const PROCESS_STEPS = [
     ],
   },
   {
-    step: "04",
-    title: "Adventure Time",
-    icon: FiMapPin,
+    step: "04", title: "Adventure Time", icon: FiMapPin,
     descriptions: [
       "Embark with 24/7 ground support",
       "Expert guides at every destination",
@@ -157,107 +144,83 @@ const PROCESS_STEPS = [
   },
 ];
 
-const WHY_CHOOSE_US = [
+const WHY_US = [
   {
-    icon: FiAward,
-    title: "Expert Local Guides",
-    stat: "5+",
-    statLabel: "Expert Guides",
-    descriptions: [
-      "Our guides bring decades of combined field experience across diverse African terrains and ecosystems.",
-      "Each team member is a certified wildlife and safety expert committed to providing a secure and educational journey.",
-      "They share deep regional cultural knowledge and hidden stories that provide an authentic perspective of every destination.",
+    icon: FiAward, title: "Expert Local Guides",
+    stat: "15+", statLabel: "Years Experience",
+    desc: [
+      "Our guides bring decades of combined field experience across diverse African terrains.",
+      "Each team member is a certified wildlife and safety expert.",
+      "Deep regional cultural knowledge provides an authentic perspective.",
     ],
   },
   {
-    icon: FiShield,
-    title: "Safety Guaranteed",
-    stat: "100%",
-    statLabel: "Safety Record",
-    descriptions: [
-      "We implement rigorous comprehensive safety protocols that strictly adhere to the highest international travel standards.",
-      "Full premium insurance coverage is included in every booking to ensure you can explore with absolute peace of mind.",
-      "Our emergency support systems are active 24/7 with a dedicated response team ready to assist you at any moment.",
+    icon: FiShield, title: "Safety Guaranteed",
+    stat: "100%", statLabel: "Safety Record",
+    desc: [
+      "Rigorous safety protocols adhering to highest international standards.",
+      "Full premium insurance included in every booking.",
+      "Emergency support systems active 24/7 with dedicated response team.",
     ],
   },
   {
-    icon: FiHeart,
-    title: "Personalized Care",
-    stat: "5+",
-    statLabel: "Happy Travelers",
-    descriptions: [
-      "Every itinerary is meticulously tailored to match your unique travel style, interests, and personal pace.",
-      "We specialize in designing unique experiences that go beyond the ordinary to create life-changing memories.",
-      "Our dedicated planners pay close attention to every small detail to ensure your journey is seamless and stress-free.",
+    icon: FiHeart, title: "Personalized Care",
+    stat: "5,000+", statLabel: "Happy Travelers",
+    desc: [
+      "Every itinerary tailored to your unique travel style and interests.",
+      "Unique experiences that go beyond the ordinary.",
+      "Close attention to every detail for a seamless journey.",
     ],
   },
   {
-    icon: FiClock,
-    title: "24/7 Support",
-    stat: "24/7",
-    statLabel: "Available",
-    descriptions: [
-      "Our round-the-clock live assistance ensures that expert help is always available whenever you might need it.",
-      "We provide continuous support from the initial booking phase until the very moment you return home safely.",
-      "Professional travel consultants are always just a call away to handle requests or provide immediate ground assistance.",
+    icon: FiClock, title: "24/7 Support",
+    stat: "24/7", statLabel: "Available",
+    desc: [
+      "Round-the-clock live assistance whenever you need it.",
+      "Continuous support from booking until you return home.",
+      "Professional consultants always a call away.",
     ],
   },
   {
-    icon: FiUsers,
-    title: "Small Groups",
-    stat: "8-12",
-    statLabel: "Max Group Size",
-    descriptions: [
-      "We focus on intimate and authentic experiences that allow for meaningful connections with nature and local communities.",
-      "Small group sizes ensure you receive maximum personal attention and expert guidance throughout your entire expedition.",
-      "We guarantee no overcrowded tours ever, preserving the exclusivity and quiet majesty of the wilderness for our guests.",
+    icon: FiUsers, title: "Small Groups",
+    stat: "8–12", statLabel: "Max Group Size",
+    desc: [
+      "Intimate experiences allowing meaningful connections with nature.",
+      "Maximum personal attention throughout your expedition.",
+      "No overcrowded tours — exclusivity guaranteed.",
     ],
   },
   {
-    icon: FiStar,
-    title: "Best Value",
-    stat: "4.9★",
-    statLabel: "Average Rating",
-    descriptions: [
-      "We deliver premium quality and luxury experiences at fair and competitive pricing reflecting true artisanal value.",
-      "Our transparent all-inclusive rates mean you can enjoy your adventure without worrying about hidden extras or fees.",
-      "We believe in providing the best possible value by combining comfort, adventure, and world-class service in one package.",
+    icon: FiStar, title: "Best Value",
+    stat: "4.9★", statLabel: "Average Rating",
+    desc: [
+      "Premium quality at fair, competitive pricing.",
+      "Transparent all-inclusive rates — no hidden extras.",
+      "Comfort, adventure, and world-class service in one package.",
     ],
   },
 ];
 
 const TESTIMONIALS = [
   {
-    quote:
-      "The safari exceeded all our expectations. Every detail was perfectly planned and the guides were incredibly knowledgeable.",
-    author: "Sarah Mitchell",
-    role: "Wildlife Photographer",
-    avatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
-    rating: 5,
+    quote: "The safari exceeded all our expectations. Every detail was perfectly planned and the guides were incredibly knowledgeable.",
+    author: "Sarah Mitchell", role: "Wildlife Photographer", rating: 5,
+    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop",
   },
   {
-    quote:
-      "Altuvera made our honeymoon absolutely magical. From the Serengeti to Zanzibar, every moment was perfect.",
-    author: "James & Emily",
-    role: "Honeymoon Trip",
-    avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
-    rating: 5,
+    quote: "Altuvera made our honeymoon absolutely magical. From the Serengeti to Zanzibar, every moment was perfect.",
+    author: "James & Emily", role: "Honeymoon Trip", rating: 5,
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop",
   },
   {
-    quote:
-      "Professional, responsive, and truly passionate about African travel. I've booked three trips with them now.",
-    author: "Michael Chen",
-    role: "Adventure Traveler",
-    avatar:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
-    rating: 5,
+    quote: "Professional, responsive, and truly passionate about African travel. I've booked three trips with them now.",
+    author: "Michael Chen", role: "Adventure Traveler", rating: 5,
+    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop",
   },
 ];
 
-const CTA_ROTATING_TEXTS = [
-  "🌍 Trusted by 5+ travelers worldwide",
+const CTA_TEXTS = [
+  "🌍 Trusted by 5,000+ travelers worldwide",
   "⭐ Rated 4.9/5 across all platforms",
   "🏆 Award-winning East Africa specialists",
   "🛡️ 100% satisfaction guarantee",
@@ -266,1539 +229,908 @@ const CTA_ROTATING_TEXTS = [
 // ============================================================================
 // HOOKS
 // ============================================================================
-
-const useKeyboardClose = (onClose) => {
+const useKeyboardClose = (fn) => {
   useEffect(() => {
-    const handler = (e) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
+    const h = (e) => e.key === "Escape" && fn();
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [fn]);
 };
 
-const useRotatingIndex = (length, interval = 3000) => {
-  const [index, setIndex] = useState(0);
-
+const useRotating = (len, ms = 3000) => {
+  const [i, setI] = useState(0);
   useEffect(() => {
-    if (length <= 1) return undefined;
-    const timer = setInterval(() => {
-      setIndex((prev) => (prev + 1) % length);
-    }, interval);
-    return () => clearInterval(timer);
-  }, [length, interval]);
-
-  return index;
+    if (len <= 1) return;
+    const t = setInterval(() => setI((p) => (p + 1) % len), ms);
+    return () => clearInterval(t);
+  }, [len, ms]);
+  return i;
 };
 
 // ============================================================================
-// ANIMATION VARIANTS
+// MOTION VARIANTS
 // ============================================================================
-
-const staggerContainer = {
+const fadeUp = {
+  hidden: { opacity: 0, y: 28 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] } },
+};
+const stagger = {
   hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
-  },
+  visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
 };
-
-const staggerItem = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
-  },
-};
-
-const textSwap = {
-  enter: { opacity: 0, y: 14, filter: "blur(4px)" },
-  center: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-    transition: { duration: 0.4, ease: [0.22, 1, 0.36, 1] },
-  },
-  exit: {
-    opacity: 0,
-    y: -14,
-    filter: "blur(4px)",
-    transition: { duration: 0.3, ease: [0.4, 0, 1, 1] },
-  },
+const swap = {
+  enter:  { opacity: 0, y: 12, filter: "blur(3px)" },
+  center: { opacity: 1, y: 0,  filter: "blur(0px)", transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] } },
+  exit:   { opacity: 0, y: -12, filter: "blur(3px)", transition: { duration: 0.28 } },
 };
 
 // ============================================================================
 // GLOBAL STYLES
 // ============================================================================
-
 const GlobalStyles = () => (
   <style>{`
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
     @keyframes shimmer {
-      0% { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
+      0%   { background-position: -200% 0; }
+      100% { background-position:  200% 0; }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0px);  }
+      50%       { transform: translateY(-8px); }
+    }
+    @keyframes pulse-ring {
+      0%   { transform: scale(1);    opacity: 0.6; }
+      100% { transform: scale(1.5);  opacity: 0;   }
     }
 
-    .svc-focus:focus-visible {
-      outline: 3px solid ${THEME.colors.primary[500]};
+    .svc-card:focus-visible {
+      outline: 3px solid ${T.g500};
       outline-offset: 4px;
-      border-radius: ${THEME.radii["2xl"]};
+      border-radius: ${T.r2Xl};
     }
+    .modal-scroll::-webkit-scrollbar { width: 4px; }
+    .modal-scroll::-webkit-scrollbar-track { background: ${T.g50}; }
+    .modal-scroll::-webkit-scrollbar-thumb {
+      background: ${T.g300};
+      border-radius: 2px;
+    }
+    .modal-scroll::-webkit-scrollbar-thumb:hover { background: ${T.g500}; }
 
-    .modal-scroll::-webkit-scrollbar { width: 5px; }
-    .modal-scroll::-webkit-scrollbar-track { background: ${THEME.colors.primary[50]}; }
-    .modal-scroll::-webkit-scrollbar-thumb { background: ${THEME.colors.primary[300]}; border-radius: 3px; }
-    .modal-scroll::-webkit-scrollbar-thumb:hover { background: ${THEME.colors.primary[500]}; }
-
-    .contact-link {
-      text-decoration: none;
-      transition: all ${THEME.transitions.base};
-    }
-    .contact-link:hover {
-      background-color: ${THEME.colors.primary[50]} !important;
-      border-color: ${THEME.colors.primary[300]} !important;
-      transform: translateX(4px);
-    }
-    .contact-link:focus-visible {
-      outline: 2px solid ${THEME.colors.primary[500]};
-      outline-offset: 2px;
+    .cl:hover {
+      background-color: ${T.g50} !important;
+      border-color: ${T.g300} !important;
+      transform: translateX(4px) !important;
     }
 
     @media (max-width: 480px) {
-      .grid-services { grid-template-columns: 1fr !important; gap: 16px !important; }
-      .grid-process { grid-template-columns: 1fr !important; gap: 40px !important; }
-      .grid-why { grid-template-columns: 1fr !important; gap: 16px !important; }
-      .grid-testimonials { grid-template-columns: 1fr !important; gap: 16px !important; }
+      .gs { grid-template-columns: 1fr !important; gap: 16px !important; }
+      .gp { grid-template-columns: 1fr !important; gap: 36px !important; }
+      .gw { grid-template-columns: 1fr !important; gap: 16px !important; }
+      .gt { grid-template-columns: 1fr !important; gap: 16px !important; }
     }
     @media (min-width: 481px) and (max-width: 768px) {
-      .grid-services { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
-      .grid-process { grid-template-columns: repeat(2, 1fr) !important; gap: 32px !important; }
-      .grid-why { grid-template-columns: repeat(2, 1fr) !important; gap: 16px !important; }
-      .grid-testimonials { grid-template-columns: 1fr !important; gap: 16px !important; }
+      .gs { grid-template-columns: repeat(2,1fr) !important; gap: 16px !important; }
+      .gp { grid-template-columns: repeat(2,1fr) !important; gap: 24px !important; }
+      .gw { grid-template-columns: repeat(2,1fr) !important; gap: 16px !important; }
+      .gt { grid-template-columns: 1fr !important; gap: 16px !important; }
     }
     @media (min-width: 769px) and (max-width: 1024px) {
-      .grid-services { grid-template-columns: repeat(2, 1fr) !important; gap: 24px !important; }
-      .grid-process { grid-template-columns: repeat(2, 1fr) !important; gap: 24px !important; }
-      .grid-why { grid-template-columns: repeat(2, 1fr) !important; gap: 20px !important; }
-      .grid-testimonials { grid-template-columns: repeat(2, 1fr) !important; gap: 20px !important; }
+      .gs { grid-template-columns: repeat(2,1fr) !important; gap: 22px !important; }
+      .gp { grid-template-columns: repeat(2,1fr) !important; gap: 22px !important; }
+      .gw { grid-template-columns: repeat(2,1fr) !important; gap: 20px !important; }
+      .gt { grid-template-columns: repeat(2,1fr) !important; gap: 20px !important; }
     }
     @media (min-width: 1025px) {
-      .grid-services { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)) !important; gap: 28px !important; }
-      .grid-process { grid-template-columns: repeat(4, 1fr) !important; gap: 28px !important; }
-      .grid-why { grid-template-columns: repeat(3, 1fr) !important; gap: 24px !important; }
-      .grid-testimonials { grid-template-columns: repeat(3, 1fr) !important; gap: 24px !important; }
+      .gs { grid-template-columns: repeat(auto-fill,minmax(330px,1fr)) !important; gap: 28px !important; }
+      .gp { grid-template-columns: repeat(4,1fr) !important; gap: 24px !important; }
+      .gw { grid-template-columns: repeat(3,1fr) !important; gap: 24px !important; }
+      .gt { grid-template-columns: repeat(3,1fr) !important; gap: 24px !important; }
     }
   `}</style>
 );
 
 // ============================================================================
-// SHARED TINY COMPONENTS
+// ATOMS
 // ============================================================================
-
-const ImageSkeleton = () => (
-  <div
-    aria-hidden="true"
-    style={{
-      position: "absolute",
-      inset: 0,
-      backgroundColor: THEME.colors.primary[100],
-      backgroundImage: `linear-gradient(90deg, transparent 0%, ${THEME.colors.primary[50]} 50%, transparent 100%)`,
-      backgroundSize: "200% 100%",
-      animation: "shimmer 1.5s infinite linear",
-      zIndex: 1,
-    }}
-  />
+const Skeleton = () => (
+  <div style={{
+    position: "absolute", inset: 0, zIndex: 1,
+    background: `linear-gradient(90deg, ${T.g100} 0%, ${T.g50} 50%, ${T.g100} 100%)`,
+    backgroundSize: "200% 100%",
+    animation: "shimmer 1.6s infinite linear",
+  }} />
 );
 
-/**
- * Animated text that cycles through an array of strings
- */
-const RotatingText = React.memo(({ texts, interval = 3000, style = {} }) => {
-  const idx = useRotatingIndex(texts.length, interval);
+const Pip = ({ active, total, vertical = false }) => (
+  <div style={{ display: "flex", flexDirection: vertical ? "column" : "row", gap: "4px", alignItems: "center" }}>
+    {Array.from({ length: total }).map((_, i) => (
+      <span key={i} style={{
+        width:  vertical ? "4px" : (i === active ? "18px" : "4px"),
+        height: vertical ? (i === active ? "18px" : "4px") : "4px",
+        borderRadius: T.rFull,
+        backgroundColor: i === active ? T.g600 : T.g200,
+        transition: `all ${T.tSmooth}`,
+        flexShrink: 0,
+      }} />
+    ))}
+  </div>
+);
 
+const Badge = ({ children, light = false, style = {} }) => (
+  <span style={{
+    display: "inline-flex", alignItems: "center", gap: "6px",
+    padding: "7px 18px",
+    borderRadius: T.rFull,
+    fontSize: "10px", fontWeight: "700", fontFamily: T.sans,
+    textTransform: "uppercase", letterSpacing: "2.5px",
+    backgroundColor: light ? "rgba(255,255,255,0.08)" : T.g50,
+    color:           light ? T.g300 : T.g700,
+    border:          light ? "1px solid rgba(255,255,255,0.12)" : `1px solid ${T.g200}`,
+    backdropFilter:  light ? "blur(12px)" : "none",
+    ...style,
+  }}>
+    {children}
+  </span>
+);
+
+const Rotating = ({ texts, ms = 3200, style = {} }) => {
+  const i = useRotating(texts.length, ms);
   return (
-    <div
-      style={{
-        position: "relative",
-        height: "24px",
-        overflow: "hidden",
-        ...style,
-      }}
-    >
+    <div style={{ position: "relative", height: "24px", overflow: "hidden", ...style }}>
       <AnimatePresence mode="wait">
-        <motion.span
-          key={idx}
-          variants={textSwap}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          style={{
-            position: "absolute",
-            left: 0,
-            right: 0,
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {texts[idx]}
+        <motion.span key={i} variants={swap} initial="enter" animate="center" exit="exit"
+          style={{ position: "absolute", inset: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {texts[i]}
         </motion.span>
       </AnimatePresence>
     </div>
   );
-});
-RotatingText.displayName = "RotatingText";
-
-/**
- * Dot progress bar for rotating content
- */
-const DotProgress = React.memo(({ total, active, vertical = false }) => (
-  <div
-    style={{
-      display: "flex",
-      flexDirection: vertical ? "column" : "row",
-      gap: vertical ? "3px" : "5px",
-      alignItems: "center",
-    }}
-  >
-    {Array.from({ length: total }).map((_, i) => (
-      <div
-        key={i}
-        style={{
-          width: !vertical && i === active ? "16px" : "5px",
-          height: vertical ? (i === active ? "16px" : "5px") : "4px",
-          borderRadius: THEME.radii.full,
-          backgroundColor:
-            i === active
-              ? THEME.colors.primary[500]
-              : THEME.colors.primary[200],
-          transition: `all ${THEME.transitions.smooth}`,
-        }}
-      />
-    ))}
-  </div>
-));
-DotProgress.displayName = "DotProgress";
+};
 
 // ============================================================================
 // SECTION HEADER
 // ============================================================================
+const SectionHeader = ({ label, title, subtitle, center = true, light = false }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
 
-const SplitText = React.memo(({ children }) => <>{children}</>);
-SplitText.displayName = "SplitText";
-
-const SectionHeader = React.memo(
-  ({
-    label,
-    title,
-    subtitle,
-    alignment = "center",
-    light = false,
-    rotatingTexts = null,
-  }) => {
-    const ref = useRef(null);
-    const isInView = useInView(ref, { once: true, margin: "-60px" });
-
-    return (
-      <motion.div
-        ref={ref}
-        initial="hidden"
-        animate={isInView ? "visible" : "hidden"}
-        variants={staggerContainer}
-        style={{
-          textAlign: alignment,
-          marginBottom: "clamp(40px, 7vw, 72px)",
-          maxWidth: alignment === "center" ? "760px" : "none",
-          marginLeft: alignment === "center" ? "auto" : undefined,
-          marginRight: alignment === "center" ? "auto" : undefined,
-        }}
-      >
-        <motion.span
-          variants={staggerItem}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "8px",
-            padding: "8px 20px",
-            backgroundColor: light
-              ? "rgba(255,255,255,0.08)"
-              : THEME.colors.primary[50],
-            borderRadius: THEME.radii.full,
-            color: light
-              ? THEME.colors.primary[300]
-              : THEME.colors.primary[700],
-            fontSize: "11px",
-            fontWeight: "700",
-            fontFamily: THEME.fonts.body,
-            marginBottom: "20px",
-            textTransform: "uppercase",
-            letterSpacing: "2.5px",
-            backdropFilter: light ? "blur(12px)" : "none",
-            border: light
-              ? "1px solid rgba(255,255,255,0.1)"
-              : `1px solid ${THEME.colors.primary[200]}`,
-          }}
-        >
-          {label}
-        </motion.span>
-
-        <motion.h2
-          variants={staggerItem}
-          style={{
-            fontFamily: THEME.fonts.heading,
-            fontSize: "clamp(28px, 5.5vw, 52px)",
-            fontWeight: "800",
-            color: light ? THEME.colors.white : THEME.colors.textDark,
-            marginBottom: subtitle || rotatingTexts ? "20px" : 0,
-            lineHeight: "1.1",
-            letterSpacing: "-0.03em",
-          }}
-        >
-          {typeof title === "string" ? <SplitText>{title}</SplitText> : title}
-        </motion.h2>
-
-        {subtitle && (
-          <motion.p
-            variants={staggerItem}
-            style={{
-              fontSize: "clamp(14px, 2vw, 17px)",
-              color: light ? "rgba(255,255,255,0.7)" : THEME.colors.textMuted,
-              lineHeight: "1.75",
-              maxWidth: alignment === "center" ? "600px" : "none",
-              margin: alignment === "center" ? "0 auto" : 0,
-              fontFamily: THEME.fonts.body,
-            }}
-          >
-            {subtitle}
-          </motion.p>
-        )}
-
-        {rotatingTexts && (
-          <motion.div variants={staggerItem}>
-            <RotatingText
-              texts={rotatingTexts}
-              interval={3500}
-              style={{
-                fontSize: "clamp(14px, 2vw, 17px)",
-                color: light ? "rgba(255,255,255,0.7)" : THEME.colors.textMuted,
-                fontFamily: THEME.fonts.body,
-                fontStyle: "italic",
-                height: "28px",
-                display: "flex",
-                justifyContent:
-                  alignment === "center" ? "center" : "flex-start",
-              }}
-            />
-          </motion.div>
-        )}
+  return (
+    <motion.div ref={ref} variants={stagger} initial="hidden" animate={inView ? "visible" : "hidden"}
+      style={{
+        textAlign: center ? "center" : "left",
+        marginBottom: "clamp(40px,6vw,68px)",
+        maxWidth: center ? "760px" : "none",
+        marginLeft: center ? "auto" : undefined,
+        marginRight: center ? "auto" : undefined,
+      }}>
+      <motion.div variants={fadeUp} style={{ marginBottom: "18px" }}>
+        <Badge light={light}>{label}</Badge>
       </motion.div>
-    );
-  },
-);
-SectionHeader.displayName = "SectionHeader";
+
+      <motion.h2 variants={fadeUp} style={{
+        fontFamily: T.serif,
+        fontSize: "clamp(26px,5vw,50px)",
+        fontWeight: "800",
+        color: light ? T.white : T.tDark,
+        lineHeight: "1.1",
+        letterSpacing: "-0.03em",
+        marginBottom: subtitle ? "18px" : 0,
+      }}>
+        {title}
+      </motion.h2>
+
+      {subtitle && (
+        <motion.p variants={fadeUp} style={{
+          fontFamily: T.sans,
+          fontSize: "clamp(14px,1.8vw,17px)",
+          color: light ? "rgba(255,255,255,0.68)" : T.tMuted,
+          lineHeight: "1.78",
+          maxWidth: center ? "580px" : "none",
+          margin: center ? "0 auto" : 0,
+        }}>
+          {subtitle}
+        </motion.p>
+      )}
+    </motion.div>
+  );
+};
 
 // ============================================================================
 // SERVICE CARD
 // ============================================================================
-
-const ServiceCard = React.memo(({ service, index, onClick, isMobile }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const images = useMemo(() => {
-    const gallery =
-      Array.isArray(service.gallery) && service.gallery.length > 0
-        ? service.gallery
-        : null;
-    const fallback =
-      Array.isArray(service.images) && service.images.length > 0
-        ? service.images
-        : null;
-    return gallery || fallback || [service.image];
-  }, [service.gallery, service.images, service.image]);
-
-  const [activeImageIndex, setActiveImageIndex] = useState(0);
-  const [imageLoaded, setImageLoaded] = useState(false);
+const ServiceCard = ({ service, index, onClick, isMobile }) => {
+  const [hov, setHov] = useState(false);
+  const [imgIdx, setImgIdx] = useState(0);
+  const [imgOk, setImgOk] = useState(false);
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-60px" });
+  const inView = useInView(ref, { once: true, margin: "-60px" });
 
-  const rotatingFeatures = useMemo(
-    () =>
-      service.features && service.features.length > 0
-        ? service.features.slice(0, 4)
-        : [service.description],
-    [service.features, service.description],
+  const imgs = useMemo(() => {
+    const g = Array.isArray(service.gallery) && service.gallery.length ? service.gallery : null;
+    const f = Array.isArray(service.images) && service.images.length ? service.images : null;
+    return g || f || [service.image];
+  }, [service]);
+
+  const feats = useMemo(
+    () => (service.features?.length ? service.features.slice(0, 4) : [service.description]),
+    [service],
   );
 
-  const activeIdx = useRotatingIndex(rotatingFeatures.length, 3500);
-  const slideIdx = useRotatingIndex(images.length, 4200);
+  const slideI  = useRotating(imgs.length, 4000);
+  const featI   = useRotating(feats.length, 3400);
 
   useEffect(() => {
-    if (images.length <= 1) return;
-    setImageLoaded(false);
-    setActiveImageIndex(slideIdx);
-  }, [images.length, slideIdx]);
+    if (imgs.length <= 1) return;
+    setImgOk(false);
+    setImgIdx(slideI);
+  }, [imgs.length, slideI]);
 
-  const handleKeyDown = useCallback(
-    (e) => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        onClick(service);
-      }
-    },
-    [onClick, service],
-  );
+  const handleKey = useCallback((e) => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onClick(service); }
+  }, [onClick, service]);
 
   return (
     <motion.article
       ref={ref}
-      className="svc-focus"
-      variants={staggerItem}
+      className="svc-card"
+      variants={fadeUp}
       initial="hidden"
-      animate={isInView ? "visible" : "hidden"}
-      style={{
-        position: "relative",
-        backgroundColor: THEME.colors.white,
-        borderRadius: THEME.radii["2xl"],
-        overflow: "hidden",
-        boxShadow: isHovered ? THEME.shadows.cardHover : THEME.shadows.md,
-        transition: `all ${THEME.transitions.smooth}`,
-        cursor: "pointer",
-        border: `1px solid ${isHovered ? THEME.colors.primary[300] : THEME.colors.border}`,
-        transform:
-          isHovered && !isMobile ? "translateY(-10px)" : "translateY(0)",
-        willChange: "transform, box-shadow",
-      }}
-      onMouseEnter={() => !isMobile && setIsHovered(true)}
-      onMouseLeave={() => !isMobile && setIsHovered(false)}
-      onClick={() => onClick(service)}
-      onKeyDown={handleKeyDown}
+      animate={inView ? "visible" : "hidden"}
       role="button"
       tabIndex={0}
       aria-label={`Learn more about ${service.title}`}
+      onClick={() => onClick(service)}
+      onKeyDown={handleKey}
+      onMouseEnter={() => !isMobile && setHov(true)}
+      onMouseLeave={() => !isMobile && setHov(false)}
+      style={{
+        position: "relative",
+        backgroundColor: T.white,
+        borderRadius: T.r2Xl,
+        overflow: "hidden",
+        cursor: "pointer",
+        border: `1px solid ${hov ? T.borderMid : T.border}`,
+        boxShadow: hov ? T.shadowHover : T.shadowMd,
+        transform: hov && !isMobile ? "translateY(-10px)" : "translateY(0)",
+        transition: `all ${T.tSmooth}`,
+        willChange: "transform, box-shadow",
+        display: "flex",
+        flexDirection: "column",
+      }}
     >
-      {/* Image */}
-      <div
-        style={{
-          position: "relative",
-          height: isMobile ? "180px" : "220px",
-          overflow: "hidden",
-        }}
-      >
-        {!imageLoaded && <ImageSkeleton />}
+      {/* ── Image ── */}
+      <div style={{ position: "relative", height: isMobile ? "190px" : "230px", overflow: "hidden", flexShrink: 0 }}>
+        {!imgOk && <Skeleton />}
+
         <AnimatePresence mode="wait">
           <motion.img
-            key={`${service.id}-${activeImageIndex}`}
-            src={images[activeImageIndex]}
-            alt=""
-            role="presentation"
+            key={`${service.id}-${imgIdx}`}
+            src={imgs[imgIdx]} alt="" role="presentation"
             loading={index > 2 ? "lazy" : "eager"}
-            onLoad={() => setImageLoaded(true)}
+            onLoad={() => setImgOk(true)}
             initial={{ opacity: 0, scale: 1.06 }}
-            animate={{ opacity: imageLoaded ? 1 : 0, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.01 }}
-            transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+            animate={{ opacity: imgOk ? 1 : 0, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             style={{
-              position: "absolute",
-              inset: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              transform: isHovered ? "scale(1.04)" : "scale(1)",
-              transition: `transform 800ms ${THEME.transitions.smooth}`,
-              opacity: imageLoaded ? 1 : 0,
+              position: "absolute", inset: 0,
+              width: "100%", height: "100%", objectFit: "cover",
+              transform: hov ? "scale(1.05)" : "scale(1)",
+              transition: `transform 700ms ${T.tSmooth}`,
             }}
           />
         </AnimatePresence>
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background: `linear-gradient(180deg, transparent 40%, ${THEME.colors.primary[950]}80 100%)`,
-          }}
-        />
 
-        {/* Slideshow controls */}
-        {images.length > 1 && (
-          <>
-            <button
-              type="button"
-              aria-label="Previous image"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setImageLoaded(false);
-                setActiveImageIndex(
-                  (prev) => (prev - 1 + images.length) % images.length,
-                );
-              }}
-              style={{
-                position: "absolute",
-                top: "50%",
-                left: "12px",
-                transform: "translateY(-50%)",
-                width: "40px",
-                height: "40px",
-                borderRadius: "50%",
-                border: "1px solid rgba(255,255,255,0.22)",
-                background: "rgba(255,255,255,0.14)",
-                backdropFilter: "blur(10px)",
-                WebkitBackdropFilter: "blur(10px)",
-                color: THEME.colors.white,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                opacity: isHovered && !isMobile ? 1 : 0,
-                pointerEvents: isHovered && !isMobile ? "auto" : "none",
-                transition: `opacity ${THEME.transitions.base}`,
-                zIndex: 4,
-              }}
-            >
-              <FiChevronLeft size={18} />
-            </button>
-            <button
-              type="button"
-              aria-label="Next image"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setImageLoaded(false);
-                setActiveImageIndex((prev) => (prev + 1) % images.length);
-              }}
-              style={{
-                position: "absolute",
-                top: "50%",
-                right: "12px",
-                transform: "translateY(-50%)",
-                width: "40px",
-                height: "40px",
-                borderRadius: "50%",
-                border: "1px solid rgba(255,255,255,0.22)",
-                background: "rgba(255,255,255,0.14)",
-                backdropFilter: "blur(10px)",
-                WebkitBackdropFilter: "blur(10px)",
-                color: THEME.colors.white,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                cursor: "pointer",
-                opacity: isHovered && !isMobile ? 1 : 0,
-                pointerEvents: isHovered && !isMobile ? "auto" : "none",
-                transition: `opacity ${THEME.transitions.base}`,
-                zIndex: 4,
-              }}
-            >
-              <FiChevronRight size={18} />
-            </button>
+        {/* gradient overlay */}
+        <div style={{
+          position: "absolute", inset: 0,
+          background: `linear-gradient(175deg, transparent 30%, ${T.g950}85 100%)`,
+        }} />
 
-            <div
-              aria-label="Image position"
-              style={{
-                position: "absolute",
-                left: "14px",
-                bottom: "14px",
-                display: "flex",
-                gap: "6px",
-                zIndex: 4,
-              }}
-            >
-              {images.slice(0, 6).map((_, i) => {
-                const isActive = i === activeImageIndex;
-                return (
-                  <span
-                    key={i}
-                    style={{
-                      width: isActive ? "22px" : "8px",
-                      height: "8px",
-                      borderRadius: "999px",
-                      background: isActive
-                        ? "rgba(255,255,255,0.92)"
-                        : "rgba(255,255,255,0.44)",
-                      transition: `all ${THEME.transitions.base}`,
-                    }}
-                  />
-                );
-              })}
-            </div>
-          </>
+        {/* left/right controls */}
+        {imgs.length > 1 && [
+          { side: "left",  Icon: FiChevronLeft,  fn: () => { setImgOk(false); setImgIdx((p) => (p - 1 + imgs.length) % imgs.length); } },
+          { side: "right", Icon: FiChevronRight, fn: () => { setImgOk(false); setImgIdx((p) => (p + 1) % imgs.length); } },
+        ].map(({ side, Icon, fn }) => (
+          <button key={side} type="button" aria-label={`${side} image`}
+            onClick={(e) => { e.stopPropagation(); fn(); }}
+            style={{
+              position: "absolute", top: "50%", [side]: "10px",
+              transform: "translateY(-50%)",
+              width: "36px", height: "36px", borderRadius: "50%",
+              background: "rgba(255,255,255,0.15)",
+              backdropFilter: "blur(8px)",
+              border: "1px solid rgba(255,255,255,0.2)",
+              color: T.white,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              cursor: "pointer",
+              opacity: hov ? 1 : 0,
+              pointerEvents: hov ? "auto" : "none",
+              transition: `opacity ${T.tBase}`,
+              zIndex: 4,
+            }}>
+            <Icon size={16} />
+          </button>
+        ))}
+
+        {/* slide dots */}
+        {imgs.length > 1 && (
+          <div style={{ position: "absolute", bottom: "12px", left: "14px", display: "flex", gap: "5px", zIndex: 4 }}>
+            {imgs.slice(0, 6).map((_, i) => (
+              <span key={i} style={{
+                width: i === imgIdx ? "20px" : "6px", height: "6px",
+                borderRadius: T.rFull,
+                background: i === imgIdx ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.4)",
+                transition: `all ${T.tBase}`,
+              }} />
+            ))}
+          </div>
         )}
-        <span
-          style={{
-            position: "absolute",
-            top: "14px",
-            left: "14px",
-            padding: "6px 14px",
-            backgroundColor: "rgba(255,255,255,0.92)",
-            backdropFilter: "blur(8px)",
-            borderRadius: THEME.radii.full,
-            fontSize: "10px",
-            fontWeight: "700",
-            fontFamily: THEME.fonts.body,
-            color: THEME.colors.primary[700],
-            textTransform: "uppercase",
-            letterSpacing: "1px",
-            border: `1px solid ${THEME.colors.primary[100]}`,
-          }}
-        >
+
+        {/* "Premium" tag */}
+        <span style={{
+          position: "absolute", top: "13px", left: "13px",
+          padding: "5px 13px",
+          background: "rgba(255,255,255,0.93)",
+          backdropFilter: "blur(8px)",
+          borderRadius: T.rFull,
+          fontSize: "9px", fontWeight: "700", fontFamily: T.sans,
+          color: T.g700, textTransform: "uppercase", letterSpacing: "1.2px",
+          border: `1px solid ${T.g100}`,
+        }}>
           Premium
         </span>
-        <div
-          style={{
-            position: "absolute",
-            bottom: "-26px",
-            right: "20px",
-            width: "52px",
-            height: "52px",
-            borderRadius: THEME.radii.lg,
-            background: `linear-gradient(135deg, ${THEME.colors.primary[600]}, ${THEME.colors.primary[500]})`,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            boxShadow: `0 8px 24px rgba(22,163,74,0.2)`,
-            zIndex: 2,
-            transition: `transform ${THEME.transitions.spring}`,
-            transform: isHovered
-              ? "scale(1.12) rotate(-5deg)"
-              : "scale(1) rotate(0deg)",
-            border: `3px solid ${THEME.colors.white}`,
-          }}
-        >
-          <ServiceIcon name={service.iconName} size={22} color="white" />
+
+        {/* Icon badge */}
+        <div style={{
+          position: "absolute", bottom: "-24px", right: "18px",
+          width: "50px", height: "50px",
+          borderRadius: T.rLg,
+          background: `linear-gradient(135deg, ${T.g700}, ${T.g500})`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          border: `3px solid ${T.white}`,
+          boxShadow: T.shadowMd,
+          zIndex: 3,
+          transform: hov ? "scale(1.12) rotate(-5deg)" : "scale(1) rotate(0)",
+          transition: `transform ${T.tSpring}`,
+        }}>
+          <ServiceIcon name={service.iconName} size={20} color="white" />
         </div>
       </div>
 
-      {/* Content */}
-      <div style={{ padding: isMobile ? "22px 18px 18px" : "26px 24px 22px" }}>
-        <h3
-          style={{
-            fontFamily: THEME.fonts.heading,
-            fontSize: isMobile ? "18px" : "20px",
-            fontWeight: "700",
-            color: THEME.colors.textDark,
-            marginBottom: "8px",
-            lineHeight: "1.3",
-          }}
-        >
+      {/* ── Body ── */}
+      <div style={{ padding: isMobile ? "28px 16px 18px" : "32px 22px 22px", flex: 1, display: "flex", flexDirection: "column" }}>
+        <h3 style={{
+          fontFamily: T.serif,
+          fontSize: isMobile ? "18px" : "21px",
+          fontWeight: "700", color: T.tDark,
+          marginBottom: "8px", lineHeight: "1.25",
+        }}>
           {service.title}
         </h3>
 
-        <p
-          style={{
-            fontSize: "13px",
-            fontFamily: THEME.fonts.body,
-            color: THEME.colors.textMuted,
-            lineHeight: "1.65",
-            marginBottom: "14px",
-            display: "-webkit-box",
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: "vertical",
-            overflow: "hidden",
-          }}
-        >
+        <p style={{
+          fontFamily: T.sans, fontSize: "13px",
+          color: T.tMuted, lineHeight: "1.68",
+          marginBottom: "14px",
+          display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
+        }}>
           {service.description}
         </p>
 
-        {/* Dynamic rotating highlight */}
-        <div
-          style={{
-            padding: "12px 14px",
-            backgroundColor: THEME.colors.primary[50],
-            borderRadius: THEME.radii.md,
-            border: `1px solid ${THEME.colors.primary[100]}`,
-            marginBottom: "16px",
-            minHeight: "48px",
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-          }}
-        >
-          <DotProgress
-            total={Math.min(rotatingFeatures.length, 4)}
-            active={activeIdx}
-            vertical
-          />
-          <div
-            style={{
-              flex: 1,
-              position: "relative",
-              height: "20px",
-              overflow: "hidden",
-            }}
-          >
+        {/* rotating highlight */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: "10px",
+          padding: "11px 13px",
+          backgroundColor: T.g50, borderRadius: T.rMd,
+          border: `1px solid ${T.g100}`, marginBottom: "14px",
+          minHeight: "46px",
+        }}>
+          <Pip total={Math.min(feats.length, 4)} active={featI} vertical />
+          <div style={{ flex: 1, position: "relative", height: "18px", overflow: "hidden" }}>
             <AnimatePresence mode="wait">
-              <motion.span
-                key={activeIdx}
-                variants={textSwap}
-                initial="enter"
-                animate="center"
-                exit="exit"
+              <motion.span key={featI} variants={swap} initial="enter" animate="center" exit="exit"
                 style={{
-                  position: "absolute",
-                  left: 0,
-                  right: 0,
-                  fontSize: "12px",
-                  fontFamily: THEME.fonts.body,
-                  fontWeight: "600",
-                  color: THEME.colors.primary[700],
-                  whiteSpace: "nowrap",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  lineHeight: "20px",
-                }}
-              >
-                {rotatingFeatures[activeIdx]}
+                  position: "absolute", inset: 0,
+                  fontSize: "12px", fontFamily: T.sans, fontWeight: "600",
+                  color: T.g700, lineHeight: "18px",
+                  whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+                }}>
+                {feats[featI]}
               </motion.span>
             </AnimatePresence>
           </div>
         </div>
 
-        {/* Feature chips */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            gap: "6px",
-            marginBottom: "18px",
-          }}
-        >
-          {service.features.slice(0, 3).map((feature, idx) => (
-            <span
-              key={idx}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "5px",
-                padding: "4px 10px",
-                backgroundColor: THEME.colors.lightGreen,
-                borderRadius: THEME.radii.full,
-                fontSize: "11px",
-                fontFamily: THEME.fonts.body,
-                color: THEME.colors.primary[700],
-                fontWeight: "500",
-                border: `1px solid ${THEME.colors.primary[100]}`,
-                maxWidth: "160px",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              <FiCheck size={10} strokeWidth={3} style={{ flexShrink: 0 }} />
-              {feature}
+        {/* chips */}
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "16px" }}>
+          {service.features.slice(0, 3).map((f, i) => (
+            <span key={i} style={{
+              display: "inline-flex", alignItems: "center", gap: "4px",
+              padding: "4px 10px",
+              backgroundColor: T.surfaceLight, borderRadius: T.rFull,
+              fontSize: "11px", fontFamily: T.sans, fontWeight: "500",
+              color: T.g700, border: `1px solid ${T.g100}`,
+              maxWidth: "160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+            }}>
+              <FiCheck size={10} strokeWidth={3} style={{ flexShrink: 0 }} />{f}
             </span>
           ))}
         </div>
 
-        {/* CTA */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "11px 16px",
-            backgroundColor: isHovered
-              ? THEME.colors.primary[600]
-              : THEME.colors.primary[50],
-            borderRadius: THEME.radii.lg,
-            transition: `all ${THEME.transitions.smooth}`,
-            border: `1px solid ${isHovered ? THEME.colors.primary[600] : THEME.colors.primary[200]}`,
-          }}
-        >
-          <span
-            style={{
-              fontSize: "13px",
-              fontWeight: "600",
-              fontFamily: THEME.fonts.body,
-              color: isHovered ? THEME.colors.white : THEME.colors.primary[700],
-              transition: `color ${THEME.transitions.base}`,
-            }}
-          >
+        {/* CTA bar */}
+        <div style={{
+          marginTop: "auto",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "11px 15px",
+          backgroundColor: hov ? T.g700 : T.g50,
+          borderRadius: T.rLg,
+          border: `1px solid ${hov ? T.g700 : T.g200}`,
+          transition: `all ${T.tSmooth}`,
+        }}>
+          <span style={{
+            fontSize: "13px", fontWeight: "600", fontFamily: T.sans,
+            color: hov ? T.white : T.g700,
+            transition: `color ${T.tBase}`,
+          }}>
             Explore Service
           </span>
-          <span
-            style={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "50%",
-              backgroundColor: isHovered
-                ? "rgba(255,255,255,0.2)"
-                : THEME.colors.primary[100],
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: isHovered ? THEME.colors.white : THEME.colors.primary[600],
-              transition: `all ${THEME.transitions.smooth}`,
-              transform: isHovered ? "translateX(3px)" : "translateX(0)",
-            }}
-          >
+          <span style={{
+            width: "28px", height: "28px", borderRadius: "50%",
+            backgroundColor: hov ? "rgba(255,255,255,0.18)" : T.g100,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: hov ? T.white : T.g600,
+            transform: hov ? "translateX(3px)" : "none",
+            transition: `all ${T.tSmooth}`,
+          }}>
             <FiArrowRight size={13} />
           </span>
         </div>
       </div>
 
-      {/* Bottom accent */}
-      <div
-        style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          height: "3px",
-          background: `linear-gradient(90deg, ${THEME.colors.primary[400]}, ${THEME.colors.primary[600]})`,
-          width: isHovered ? "100%" : "0%",
-          transition: "width 0.5s cubic-bezier(0.22, 1, 0.36, 1)",
-        }}
-      />
+      {/* bottom accent bar */}
+      <div style={{
+        position: "absolute", bottom: 0, left: 0,
+        height: "3px",
+        background: `linear-gradient(90deg, ${T.g500}, ${T.g700})`,
+        width: hov ? "100%" : "0%",
+        transition: "width 0.5s cubic-bezier(0.22,1,0.36,1)",
+      }} />
     </motion.article>
   );
-});
-ServiceCard.displayName = "ServiceCard";
+};
 
 // ============================================================================
-// PROCESS STEP CARD
+// PROCESS CARD
 // ============================================================================
-
-const ProcessStepCard = React.memo(({ step, index, total, isMobile }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-40px" });
-  const StepIcon = step.icon;
-  const descIdx = useRotatingIndex(step.descriptions.length, 2800);
+const ProcessCard = ({ step, index, total, isMobile }) => {
+  const [hov, setHov] = useState(false);
+  const ref  = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-40px" });
+  const Icon = step.icon;
+  const di   = useRotating(step.descriptions.length, 2800);
 
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 40 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 40 }}
-      transition={{
-        duration: 0.6,
-        delay: index * 0.12,
-        ease: [0.22, 1, 0.36, 1],
-      }}
+    <motion.div ref={ref}
+      initial={{ opacity: 0, y: 36 }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 36 }}
+      transition={{ duration: 0.55, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
       style={{
-        position: "relative",
-        textAlign: "center",
-        padding: isMobile ? "40px 20px 28px" : "52px 28px 36px",
-        backgroundColor: isHovered
-          ? "rgba(255,255,255,0.1)"
-          : "rgba(255,255,255,0.04)",
+        position: "relative", textAlign: "center",
+        padding: isMobile ? "40px 18px 28px" : "52px 24px 36px",
+        borderRadius: T.r2Xl,
+        backgroundColor: hov ? "rgba(255,255,255,0.10)" : "rgba(255,255,255,0.04)",
         backdropFilter: "blur(20px)",
-        borderRadius: THEME.radii["2xl"],
-        border: `1px solid ${isHovered ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.06)"}`,
-        transition: `all ${THEME.transitions.smooth}`,
-        transform: isHovered ? "translateY(-6px)" : "translateY(0)",
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Step badge */}
-      <div
-        style={{
-          position: "absolute",
-          top: "-20px",
-          left: "50%",
-          transform: "translateX(-50%)",
-          width: "40px",
-          height: "40px",
-          borderRadius: "50%",
-          background: `linear-gradient(135deg, ${THEME.colors.primary[500]}, ${THEME.colors.primary[400]})`,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "13px",
-          fontWeight: "800",
-          fontFamily: THEME.fonts.body,
-          color: THEME.colors.white,
-          boxShadow: `0 6px 20px rgba(22,163,74,0.2)`,
-          border: "3px solid rgba(255,255,255,0.15)",
-        }}
-      >
+        border: `1px solid ${hov ? "rgba(255,255,255,0.16)" : "rgba(255,255,255,0.06)"}`,
+        transform: hov ? "translateY(-6px)" : "none",
+        transition: `all ${T.tSmooth}`,
+      }}>
+
+      {/* step badge */}
+      <div style={{
+        position: "absolute", top: "-20px", left: "50%", transform: "translateX(-50%)",
+        width: "40px", height: "40px", borderRadius: "50%",
+        background: `linear-gradient(135deg, ${T.g500}, ${T.g400})`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: "13px", fontWeight: "800", fontFamily: T.sans,
+        color: T.g950,
+        boxShadow: `0 6px 20px rgba(34,197,94,0.3)`,
+        border: "3px solid rgba(255,255,255,0.15)",
+      }}>
         {step.step}
       </div>
 
-      {/* Icon */}
-      <div
-        style={{
-          width: "64px",
-          height: "64px",
-          borderRadius: THEME.radii.xl,
-          backgroundColor: "rgba(255,255,255,0.06)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          margin: "0 auto 18px",
-          transition: `all ${THEME.transitions.smooth}`,
-          transform: isHovered ? "scale(1.08)" : "scale(1)",
-          color: THEME.colors.primary[300],
-          border: "1px solid rgba(255,255,255,0.08)",
-        }}
-      >
-        <StepIcon size={isMobile ? 24 : 28} />
+      {/* icon */}
+      <div style={{
+        width: "64px", height: "64px", borderRadius: T.rXl,
+        backgroundColor: "rgba(255,255,255,0.07)",
+        border: "1px solid rgba(255,255,255,0.1)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        margin: "0 auto 16px",
+        color: T.g400,
+        transform: hov ? "scale(1.08)" : "scale(1)",
+        transition: `transform ${T.tSpring}`,
+      }}>
+        <Icon size={isMobile ? 22 : 26} />
       </div>
 
-      <h3
-        style={{
-          fontFamily: THEME.fonts.heading,
-          fontSize: isMobile ? "18px" : "20px",
-          fontWeight: "700",
-          color: THEME.colors.white,
-          marginBottom: "12px",
-          lineHeight: "1.3",
-        }}
-      >
+      <h3 style={{
+        fontFamily: T.serif, fontSize: isMobile ? "17px" : "20px",
+        fontWeight: "700", color: T.white,
+        marginBottom: "12px",
+      }}>
         {step.title}
       </h3>
 
-      {/* Dynamic rotating description */}
-      <div style={{ height: "44px", overflow: "hidden", position: "relative" }}>
+      <div style={{ height: "42px", overflow: "hidden", position: "relative" }}>
         <AnimatePresence mode="wait">
-          <motion.p
-            key={descIdx}
-            variants={textSwap}
-            initial="enter"
-            animate="center"
-            exit="exit"
+          <motion.p key={di} variants={swap} initial="enter" animate="center" exit="exit"
             style={{
-              position: "absolute",
-              inset: 0,
+              position: "absolute", inset: 0,
               fontSize: isMobile ? "12px" : "13px",
-              fontFamily: THEME.fonts.body,
-              color: "rgba(255,255,255,0.6)",
-              lineHeight: "1.65",
-              margin: 0,
-            }}
-          >
-            {step.descriptions[descIdx]}
+              fontFamily: T.sans, color: "rgba(255,255,255,0.58)", lineHeight: "1.65",
+            }}>
+            {step.descriptions[di]}
           </motion.p>
         </AnimatePresence>
       </div>
 
-      <div
-        style={{ marginTop: "12px", display: "flex", justifyContent: "center" }}
-      >
-        <DotProgress total={step.descriptions.length} active={descIdx} />
+      <div style={{ marginTop: "12px", display: "flex", justifyContent: "center" }}>
+        <Pip total={step.descriptions.length} active={di} />
       </div>
 
-      {/* Connector */}
+      {/* connector arrow */}
       {!isMobile && index < total - 1 && (
-        <div
-          aria-hidden="true"
-          style={{
-            position: "absolute",
-            top: "50%",
-            right: "-14px",
-            transform: "translateY(-50%)",
-            zIndex: 3,
-          }}
-        >
-          <FiChevronRight
-            size={18}
-            style={{ color: "rgba(255,255,255,0.2)" }}
-          />
+        <div style={{
+          position: "absolute", top: "50%", right: "-14px",
+          transform: "translateY(-50%)", zIndex: 3,
+        }}>
+          <FiChevronRight size={18} style={{ color: "rgba(255,255,255,0.18)" }} />
         </div>
       )}
     </motion.div>
   );
-});
-ProcessStepCard.displayName = "ProcessStepCard";
+};
 
 // ============================================================================
-// WHY CHOOSE CARD
+// WHY-US CARD
 // ============================================================================
-
-const WhyChooseCard = React.memo(({ item, index, isMobile }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-40px" });
-  const IconComponent = item.icon;
-  const descIdx = useRotatingIndex(item.descriptions.length, 3200);
+const WhyCard = ({ item, index, isMobile }) => {
+  const [hov, setHov] = useState(false);
+  const ref   = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-40px" });
+  const Icon  = item.icon;
+  const di    = useRotating(item.desc.length, 3200);
 
   return (
-    <motion.div
-      ref={ref}
+    <motion.div ref={ref}
       initial={{ opacity: 0, y: 30 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
-      transition={{
-        duration: 0.5,
-        delay: index * 0.08,
-        ease: [0.22, 1, 0.36, 1],
-      }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+      transition={{ duration: 0.5, delay: index * 0.08, ease: [0.22, 1, 0.36, 1] }}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
       style={{
         position: "relative",
-        backgroundColor: THEME.colors.white,
-        borderRadius: THEME.radii["2xl"],
-        padding: isMobile ? "24px 20px" : "32px 28px",
-        boxShadow: isHovered ? THEME.shadows.cardHover : THEME.shadows.sm,
-        transition: `all ${THEME.transitions.smooth}`,
-        transform: isHovered ? "translateY(-6px)" : "translateY(0)",
-        border: `1px solid ${isHovered ? THEME.colors.primary[300] : THEME.colors.border}`,
+        backgroundColor: T.white,
+        borderRadius: T.r2Xl,
+        padding: isMobile ? "24px 20px" : "32px 26px",
+        border: `1px solid ${hov ? T.borderMid : T.border}`,
+        boxShadow: hov ? T.shadowHover : T.shadowSm,
+        transform: hov ? "translateY(-6px)" : "none",
+        transition: `all ${T.tSmooth}`,
         overflow: "hidden",
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-      {/* Top accent */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "3px",
-          background: `linear-gradient(90deg, ${THEME.colors.primary[400]}, ${THEME.colors.primary[600]})`,
-          transform: isHovered ? "scaleX(1)" : "scaleX(0)",
-          transformOrigin: "left",
-          transition: `transform ${THEME.transitions.smooth}`,
-        }}
-      />
+      }}>
 
-      {/* Header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "14px",
-          marginBottom: "14px",
-        }}
-      >
-        <div
-          style={{
-            width: "48px",
-            height: "48px",
-            borderRadius: THEME.radii.lg,
-            backgroundColor: THEME.colors.primary[50],
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: THEME.colors.primary[600],
-            flexShrink: 0,
-            transition: `transform ${THEME.transitions.spring}`,
-            transform: isHovered ? "scale(1.08) rotate(-3deg)" : "scale(1)",
-            border: `1px solid ${THEME.colors.primary[100]}`,
-          }}
-        >
-          <IconComponent size={22} />
+      {/* top accent */}
+      <div style={{
+        position: "absolute", top: 0, left: 0, right: 0, height: "3px",
+        background: `linear-gradient(90deg, ${T.g500}, ${T.g700})`,
+        transform: hov ? "scaleX(1)" : "scaleX(0)",
+        transformOrigin: "left",
+        transition: `transform ${T.tSmooth}`,
+      }} />
+
+      {/* icon + title */}
+      <div style={{ display: "flex", alignItems: "center", gap: "14px", marginBottom: "14px" }}>
+        <div style={{
+          width: "50px", height: "50px", borderRadius: T.rLg,
+          backgroundColor: T.g50, border: `1px solid ${T.g100}`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: T.g600, flexShrink: 0,
+          transform: hov ? "scale(1.08) rotate(-3deg)" : "none",
+          transition: `transform ${T.tSpring}`,
+        }}>
+          <Icon size={22} />
         </div>
-        <h3
-          style={{
-            fontFamily: THEME.fonts.heading,
-            fontSize: isMobile ? "17px" : "19px",
-            fontWeight: "700",
-            color: THEME.colors.textDark,
-            margin: 0,
-            lineHeight: "1.3",
-          }}
-        >
+        <h3 style={{
+          fontFamily: T.serif, fontSize: isMobile ? "16px" : "19px",
+          fontWeight: "700", color: T.tDark, lineHeight: "1.3",
+        }}>
           {item.title}
         </h3>
       </div>
 
-      {/* Dynamic description */}
-      <div
-        style={{
-          height: "68px",
-          overflow: "hidden",
-          position: "relative",
-          marginBottom: "14px",
-        }}
-      >
+      {/* rotating description */}
+      <div style={{ height: "64px", overflow: "hidden", position: "relative", marginBottom: "12px" }}>
         <AnimatePresence mode="wait">
-          <motion.p
-            key={descIdx}
-            variants={textSwap}
-            initial="enter"
-            animate="center"
-            exit="exit"
+          <motion.p key={di} variants={swap} initial="enter" animate="center" exit="exit"
             style={{
-              position: "absolute",
-              inset: 0,
-              fontSize: "13px",
-              fontFamily: THEME.fonts.body,
-              color: THEME.colors.textMuted,
-              lineHeight: "1.65",
-              margin: 0,
-            }}
-          >
-            {item.descriptions[descIdx]}
+              position: "absolute", inset: 0,
+              fontSize: "13px", fontFamily: T.sans, color: T.tMuted, lineHeight: "1.68",
+            }}>
+            {item.desc[di]}
           </motion.p>
         </AnimatePresence>
       </div>
 
-      <div style={{ marginBottom: "18px" }}>
-        <DotProgress total={item.descriptions.length} active={descIdx} />
+      <div style={{ marginBottom: "16px" }}>
+        <Pip total={item.desc.length} active={di} />
       </div>
 
-      {/* Stat */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "baseline",
-          gap: "8px",
-          padding: "12px 16px",
-          backgroundColor: THEME.colors.primary[50],
-          borderRadius: THEME.radii.lg,
-          border: `1px solid ${THEME.colors.primary[100]}`,
-        }}
-      >
-        <span
-          style={{
-            fontSize: "24px",
-            fontWeight: "800",
-            fontFamily: THEME.fonts.body,
-            color: THEME.colors.primary[600],
-            lineHeight: "1",
-          }}
-        >
+      {/* stat */}
+      <div style={{
+        display: "flex", alignItems: "baseline", gap: "8px",
+        padding: "11px 14px",
+        backgroundColor: T.g50, borderRadius: T.rLg,
+        border: `1px solid ${T.g100}`,
+      }}>
+        <span style={{
+          fontSize: "22px", fontWeight: "800", fontFamily: T.sans,
+          color: T.g600, lineHeight: 1,
+        }}>
           {item.stat}
         </span>
-        <span
-          style={{
-            fontSize: "11px",
-            fontFamily: THEME.fonts.body,
-            color: THEME.colors.textMuted,
-            fontWeight: "500",
-            textTransform: "uppercase",
-            letterSpacing: "0.5px",
-          }}
-        >
+        <span style={{
+          fontSize: "11px", fontFamily: T.sans, fontWeight: "500",
+          color: T.tMuted, textTransform: "uppercase", letterSpacing: "0.5px",
+        }}>
           {item.statLabel}
         </span>
       </div>
     </motion.div>
   );
-});
-WhyChooseCard.displayName = "WhyChooseCard";
+};
 
 // ============================================================================
-// TESTIMONIAL CARD — **FIXED: no isMobile reference**
+// TESTIMONIAL CARD
 // ============================================================================
-
-const TestimonialCard = React.memo(({ testimonial, index }) => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: "-40px" });
-  const [imgLoaded, setImgLoaded] = useState(false);
+const TestiCard = ({ testimonial, index }) => {
+  const ref   = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-40px" });
+  const [imgOk, setImgOk] = useState(false);
 
   return (
-    <motion.div
-      ref={ref}
-      initial={{ opacity: 0, y: 30 }}
-      animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
+    <motion.div ref={ref}
+      initial={{ opacity: 0, y: 28 }}
+      animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 28 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
       style={{
-        backgroundColor: THEME.colors.white,
-        borderRadius: THEME.radii["2xl"],
-        padding: "clamp(22px, 4vw, 28px)",
-        boxShadow: THEME.shadows.md,
-        border: `1px solid ${THEME.colors.border}`,
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-      }}
-    >
-      {/* Stars — green only */}
-      <div style={{ display: "flex", gap: "3px", marginBottom: "18px" }}>
+        backgroundColor: T.white,
+        borderRadius: T.r2Xl,
+        padding: "clamp(22px,4vw,28px)",
+        boxShadow: T.shadowMd,
+        border: `1px solid ${T.border}`,
+        display: "flex", flexDirection: "column", height: "100%",
+      }}>
+
+      {/* stars */}
+      <div style={{ display: "flex", gap: "3px", marginBottom: "16px" }}>
         {Array.from({ length: testimonial.rating }).map((_, i) => (
-          <FiStar
-            key={i}
-            size={15}
-            fill={THEME.colors.primary[500]}
-            color={THEME.colors.primary[500]}
-          />
+          <FiStar key={i} size={14} fill={T.g500} color={T.g500} />
         ))}
       </div>
 
-      {/* Quote */}
-      <p
-        style={{
-          fontSize: "clamp(14px, 2vw, 15px)",
-          fontFamily: THEME.fonts.body,
-          color: THEME.colors.textBody,
-          lineHeight: "1.75",
-          marginBottom: "22px",
-          fontStyle: "italic",
-          flex: 1,
-        }}
-      >
+      <p style={{
+        fontFamily: T.sans, fontSize: "clamp(13px,1.8vw,15px)",
+        color: T.tBody, lineHeight: "1.78",
+        fontStyle: "italic", flex: 1, marginBottom: "20px",
+      }}>
         &ldquo;{testimonial.quote}&rdquo;
       </p>
 
-      {/* Author */}
       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-        <div
-          style={{
-            width: "44px",
-            height: "44px",
-            borderRadius: "50%",
-            overflow: "hidden",
-            border: `2px solid ${THEME.colors.primary[200]}`,
-            backgroundColor: THEME.colors.primary[50],
-            flexShrink: 0,
-          }}
-        >
-          <img
-            src={testimonial.avatar}
-            alt={testimonial.author}
-            loading="lazy"
-            onLoad={() => setImgLoaded(true)}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              opacity: imgLoaded ? 1 : 0,
-              transition: `opacity ${THEME.transitions.base}`,
-            }}
-          />
+        <div style={{
+          width: "44px", height: "44px", borderRadius: "50%",
+          overflow: "hidden",
+          border: `2px solid ${T.g200}`,
+          backgroundColor: T.g50, flexShrink: 0,
+        }}>
+          <img src={testimonial.avatar} alt={testimonial.author} loading="lazy"
+            onLoad={() => setImgOk(true)}
+            style={{ width: "100%", height: "100%", objectFit: "cover", opacity: imgOk ? 1 : 0, transition: `opacity ${T.tBase}` }} />
         </div>
         <div>
-          <div
-            style={{
-              fontSize: "14px",
-              fontWeight: "700",
-              fontFamily: THEME.fonts.body,
-              color: THEME.colors.textDark,
-              marginBottom: "2px",
-            }}
-          >
+          <div style={{ fontSize: "14px", fontWeight: "700", fontFamily: T.sans, color: T.tDark, marginBottom: "2px" }}>
             {testimonial.author}
           </div>
-          <div
-            style={{
-              fontSize: "12px",
-              fontFamily: THEME.fonts.body,
-              color: THEME.colors.textMuted,
-            }}
-          >
+          <div style={{ fontSize: "12px", fontFamily: T.sans, color: T.tMuted }}>
             {testimonial.role}
           </div>
         </div>
       </div>
     </motion.div>
   );
-});
-TestimonialCard.displayName = "TestimonialCard";
+};
 
 // ============================================================================
 // SERVICE MODAL
 // ============================================================================
-
-const ServiceModal = React.memo(({ service, onClose }) => {
+const ServiceModal = ({ service, onClose }) => {
   const isMobile = useMediaQuery("(max-width: 768px)");
-  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgOk, setImgOk] = useState(false);
   const modalRef = useRef(null);
-  const activeFeatureIdx = useRotatingIndex(
-    service.features ? service.features.length : 0,
-    2500,
-  );
+  const featI = useRotating(service.features?.length ?? 0, 2400);
 
   useKeyboardClose(onClose);
 
   useEffect(() => {
-    const scrollY = window.scrollY;
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = "100%";
-    document.body.style.overflow = "hidden";
+    const sy = window.scrollY;
+    Object.assign(document.body.style, {
+      position: "fixed", top: `-${sy}px`, width: "100%", overflow: "hidden",
+    });
     return () => {
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.width = "";
-      document.body.style.overflow = "";
-      window.scrollTo(0, scrollY);
+      Object.assign(document.body.style, { position: "", top: "", width: "", overflow: "" });
+      window.scrollTo(0, sy);
     };
   }, []);
 
-  useEffect(() => {
-    if (modalRef.current) modalRef.current.focus();
-  }, []);
+  useEffect(() => { modalRef.current?.focus(); }, []);
 
-  const contactOptions = useMemo(
-    () => [
-      {
-        href: "tel:+250780702773",
-        icon: FiPhone,
-        label: (
-          <span>
-            +250 780 702 773
-            <br />
-            +250 792 352 409
-          </span>
-        ),
-        isExternal: true,
-      },
-      {
-        href: "mailto:altuverasafari@gmail.com",
-        icon: FiMail,
-        label: "Email Us",
-        isExternal: true,
-      },
-      {
-        href: "/contact",
-        icon: FiMessageCircle,
-        label: "Live Chat",
-        isExternal: false,
-      },
-    ],
-    [],
-  );
+  const contacts = useMemo(() => [
+    { href: "tel:+250780702773",          Icon: FiPhone,        label: "+250 780 702 773", ext: true },
+    { href: "mailto:altuverasafari@gmail.com", Icon: FiMail,    label: "Email Us",          ext: true },
+    { href: "/contact",                   Icon: FiMessageCircle,label: "Live Chat",          ext: false },
+  ], []);
 
   return (
     <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.25 }}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      transition={{ duration: 0.22 }}
       onClick={onClose}
-      role="dialog"
-      aria-modal="true"
-      aria-label={`${service.title} details`}
+      role="dialog" aria-modal="true" aria-label={`${service.title} details`}
       style={{
-        position: "fixed",
-        inset: 0,
-        backgroundColor: THEME.colors.overlay,
-        backdropFilter: "blur(10px)",
-        zIndex: 10000,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: isMobile ? "10px" : "28px",
-      }}
-    >
-      <motion.div
-        ref={modalRef}
-        tabIndex={-1}
-        className="modal-scroll"
+        position: "fixed", inset: 0, zIndex: 10000,
+        backgroundColor: T.overlay, backdropFilter: "blur(10px)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        padding: isMobile ? "10px" : "24px",
+      }}>
+
+      <motion.div ref={modalRef} tabIndex={-1} className="modal-scroll"
         initial={{ scale: 0.92, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.92, opacity: 0, y: 20 }}
         transition={{ type: "spring", damping: 28, stiffness: 340 }}
         onClick={(e) => e.stopPropagation()}
         style={{
-          backgroundColor: THEME.colors.white,
-          borderRadius: isMobile ? THEME.radii.xl : THEME.radii["3xl"],
-          maxWidth: "860px",
-          width: "100%",
-          maxHeight: "92vh",
-          overflowY: "auto",
+          backgroundColor: T.white,
+          borderRadius: isMobile ? T.rXl : T.r3Xl,
+          maxWidth: "860px", width: "100%",
+          maxHeight: "92vh", overflowY: "auto",
           position: "relative",
-          boxShadow: THEME.shadows["2xl"],
+          boxShadow: T.shadow2Xl,
           outline: "none",
-        }}
-      >
-        {/* Close */}
-        <motion.button
-          onClick={onClose}
-          whileHover={{
-            scale: 1.05,
-            backgroundColor: THEME.colors.primary[600],
-          }}
+        }}>
+
+        {/* close */}
+        <motion.button onClick={onClose}
+          whileHover={{ scale: 1.06, backgroundColor: T.g700 }}
           whileTap={{ scale: 0.95 }}
-          aria-label="Close dialog"
+          aria-label="Close"
           style={{
-            position: "absolute",
-            top: "14px",
-            right: "14px",
-            width: "40px",
-            height: "40px",
-            borderRadius: "50%",
-            backgroundColor: "rgba(0,0,0,0.45)",
-            color: THEME.colors.white,
-            border: "none",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            zIndex: 10,
-            transition: `background-color ${THEME.transitions.base}`,
-          }}
-        >
+            position: "absolute", top: "14px", right: "14px",
+            width: "40px", height: "40px", borderRadius: "50%",
+            backgroundColor: "rgba(0,0,0,0.45)", color: T.white,
+            border: "none", display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", zIndex: 10,
+            transition: `background-color ${T.tBase}`,
+          }}>
           <FiX size={18} />
         </motion.button>
 
-        {/* Hero */}
-        <div
-          style={{
-            position: "relative",
-            height: isMobile ? "200px" : "300px",
-            overflow: "hidden",
-            borderRadius: `${isMobile ? THEME.radii.xl : THEME.radii["3xl"]} ${isMobile ? THEME.radii.xl : THEME.radii["3xl"]} 0 0`,
-          }}
-        >
-          {!imgLoaded && <ImageSkeleton />}
-          <img
-            src={service.image}
-            alt={`${service.title} experience`}
-            onLoad={() => setImgLoaded(true)}
+        {/* hero image */}
+        <div style={{
+          position: "relative", height: isMobile ? "200px" : "300px", overflow: "hidden",
+          borderRadius: `${isMobile ? T.rXl : T.r3Xl} ${isMobile ? T.rXl : T.r3Xl} 0 0`,
+        }}>
+          {!imgOk && <Skeleton />}
+          <img src={service.image} alt={service.title} onLoad={() => setImgOk(true)}
             style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              opacity: imgLoaded ? 1 : 0,
-              transition: `opacity ${THEME.transitions.base}`,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              background: `linear-gradient(to top, ${THEME.colors.primary[950]}DD 0%, ${THEME.colors.primary[950]}40 50%, transparent 100%)`,
-            }}
-          />
-          <div
-            style={{
-              position: "absolute",
-              bottom: 0,
-              left: 0,
-              right: 0,
-              padding: isMobile ? "18px" : "32px",
-              color: THEME.colors.white,
-            }}
-          >
-            <span
-              style={{
-                display: "inline-block",
-                padding: "6px 16px",
-                backgroundColor: THEME.colors.primary[500],
-                borderRadius: THEME.radii.full,
-                fontSize: "10px",
-                fontWeight: "700",
-                fontFamily: THEME.fonts.body,
-                marginBottom: "12px",
-                textTransform: "uppercase",
-                letterSpacing: "1.2px",
-              }}
-            >
-              Signature Experience
-            </span>
-            <h2
-              style={{
-                fontFamily: THEME.fonts.heading,
-                fontSize: isMobile ? "24px" : "34px",
-                fontWeight: "700",
-                margin: 0,
-                lineHeight: "1.2",
-              }}
-            >
+              width: "100%", height: "100%", objectFit: "cover",
+              opacity: imgOk ? 1 : 0, transition: `opacity ${T.tBase}`,
+            }} />
+          <div style={{
+            position: "absolute", inset: 0,
+            background: `linear-gradient(to top, ${T.g950}E0 0%, ${T.g950}40 55%, transparent 100%)`,
+          }} />
+          <div style={{
+            position: "absolute", bottom: 0, left: 0, right: 0,
+            padding: isMobile ? "18px" : "32px", color: T.white,
+          }}>
+            <Badge style={{ marginBottom: "12px" }}>Signature Experience</Badge>
+            <h2 style={{
+              fontFamily: T.serif, fontSize: isMobile ? "24px" : "34px",
+              fontWeight: "700", margin: 0, lineHeight: "1.2",
+            }}>
               {service.title}
             </h2>
           </div>
         </div>
 
-        {/* Body */}
+        {/* body */}
         <div style={{ padding: isMobile ? "22px 18px" : "36px" }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : "1.4fr 1fr",
-              gap: isMobile ? "28px" : "36px",
-            }}
-          >
-            {/* Left column */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "1.4fr 1fr",
+            gap: isMobile ? "28px" : "36px",
+          }}>
+
+            {/* left */}
             <div>
-              <div style={{ marginBottom: "28px" }}>
-                <h3
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: "700",
-                    fontFamily: THEME.fonts.body,
-                    color: THEME.colors.textDark,
-                    marginBottom: "12px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.8px",
-                  }}
-                >
-                  <FiCompass size={16} color={THEME.colors.primary[600]} />
-                  About This Experience
+              {/* description */}
+              <div style={{ marginBottom: "26px" }}>
+                <h3 style={{
+                  fontSize: "12px", fontWeight: "700", fontFamily: T.sans,
+                  color: T.tDark, marginBottom: "10px",
+                  display: "flex", alignItems: "center", gap: "6px",
+                  textTransform: "uppercase", letterSpacing: "1px",
+                }}>
+                  <FiCompass size={14} color={T.g600} /> About This Experience
                 </h3>
-                <p
-                  style={{
-                    fontSize: "14px",
-                    fontFamily: THEME.fonts.body,
-                    color: THEME.colors.textMuted,
-                    lineHeight: "1.75",
-                    margin: 0,
-                  }}
-                >
-                  {service.description} Our expert team ensures every aspect of
-                  your {service.title.toLowerCase()} experience is meticulously
-                  curated to exceed world-class standards and create lasting
-                  memories.
+                <p style={{
+                  fontSize: "14px", fontFamily: T.sans, color: T.tMuted,
+                  lineHeight: "1.78",
+                }}>
+                  {service.description} Our expert team ensures every aspect of your{" "}
+                  {service.title.toLowerCase()} is meticulously curated to exceed
+                  world-class standards and create lasting memories.
                 </p>
               </div>
 
-              {/* Features with auto-highlight */}
+              {/* features */}
               <div>
-                <h3
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: "700",
-                    fontFamily: THEME.fonts.body,
-                    color: THEME.colors.textDark,
-                    marginBottom: "14px",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "8px",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.8px",
-                  }}
-                >
-                  <FiCheck size={16} color={THEME.colors.primary[600]} />
-                  What&apos;s Included
+                <h3 style={{
+                  fontSize: "12px", fontWeight: "700", fontFamily: T.sans,
+                  color: T.tDark, marginBottom: "12px",
+                  display: "flex", alignItems: "center", gap: "6px",
+                  textTransform: "uppercase", letterSpacing: "1px",
+                }}>
+                  <FiCheck size={14} color={T.g600} /> What&apos;s Included
                 </h3>
-                <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                  {service.features.map((feature, idx) => {
-                    const isActive = idx === activeFeatureIdx;
+                <ul style={{ listStyle: "none", padding: 0 }}>
+                  {service.features.map((feat, idx) => {
+                    const active = idx === featI;
                     return (
-                      <motion.li
-                        key={idx}
-                        initial={{ opacity: 0, x: -16 }}
+                      <motion.li key={idx}
+                        initial={{ opacity: 0, x: -14 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{
-                          delay: 0.1 + idx * 0.04,
-                          ease: [0.22, 1, 0.36, 1],
-                        }}
+                        transition={{ delay: 0.08 + idx * 0.04 }}
                         style={{
-                          display: "flex",
-                          alignItems: "flex-start",
-                          gap: "10px",
-                          marginBottom: "8px",
-                          fontSize: "13px",
-                          fontFamily: THEME.fonts.body,
-                          color: isActive
-                            ? THEME.colors.primary[700]
-                            : THEME.colors.textMuted,
-                          lineHeight: "1.6",
-                          padding: "8px 12px",
-                          borderRadius: THEME.radii.md,
-                          backgroundColor: isActive
-                            ? THEME.colors.primary[50]
-                            : "transparent",
-                          border: `1px solid ${isActive ? THEME.colors.primary[200] : "transparent"}`,
-                          transition: `all ${THEME.transitions.smooth}`,
-                          fontWeight: isActive ? "600" : "400",
-                        }}
-                      >
-                        <span
-                          style={{
-                            width: "22px",
-                            height: "22px",
-                            borderRadius: "50%",
-                            backgroundColor: isActive
-                              ? THEME.colors.primary[500]
-                              : THEME.colors.primary[100],
-                            color: isActive
-                              ? THEME.colors.white
-                              : THEME.colors.primary[600],
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            flexShrink: 0,
-                            marginTop: "1px",
-                            transition: `all ${THEME.transitions.base}`,
-                          }}
-                        >
-                          <FiCheck size={11} strokeWidth={3} />
+                          display: "flex", alignItems: "flex-start", gap: "10px",
+                          marginBottom: "7px", padding: "8px 12px",
+                          borderRadius: T.rMd,
+                          backgroundColor: active ? T.g50 : "transparent",
+                          border: `1px solid ${active ? T.g200 : "transparent"}`,
+                          color: active ? T.g700 : T.tMuted,
+                          fontWeight: active ? "600" : "400",
+                          fontSize: "13px", fontFamily: T.sans, lineHeight: "1.6",
+                          transition: `all ${T.tSmooth}`,
+                        }}>
+                        <span style={{
+                          width: "20px", height: "20px", borderRadius: "50%", flexShrink: 0,
+                          backgroundColor: active ? T.g600 : T.g100,
+                          color: active ? T.white : T.g600,
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          marginTop: "1px",
+                          transition: `all ${T.tBase}`,
+                        }}>
+                          <FiCheck size={10} strokeWidth={3} />
                         </span>
-                        <span>{feature}</span>
+                        {feat}
                       </motion.li>
                     );
                   })}
@@ -1806,101 +1138,52 @@ const ServiceModal = React.memo(({ service, onClose }) => {
               </div>
             </div>
 
-            {/* Right column — CTA */}
+            {/* right — booking CTA */}
             <div>
-              <div
-                style={{
-                  backgroundColor: THEME.colors.primary[50],
-                  padding: isMobile ? "22px" : "28px",
-                  borderRadius: THEME.radii.xl,
-                  border: `1px solid ${THEME.colors.primary[100]}`,
-                  position: isMobile ? "static" : "sticky",
-                  top: "24px",
-                }}
-              >
-                <h4
-                  style={{
-                    fontSize: "13px",
-                    fontWeight: "700",
-                    fontFamily: THEME.fonts.body,
-                    color: THEME.colors.primary[800],
-                    marginBottom: "8px",
-                    textTransform: "uppercase",
-                    letterSpacing: "1px",
-                  }}
-                >
+              <div style={{
+                backgroundColor: T.g50,
+                padding: isMobile ? "22px" : "28px",
+                borderRadius: T.rXl,
+                border: `1px solid ${T.g100}`,
+                position: isMobile ? "static" : "sticky",
+                top: "24px",
+              }}>
+                <h4 style={{
+                  fontSize: "12px", fontWeight: "700", fontFamily: T.sans,
+                  color: T.g800, marginBottom: "8px",
+                  textTransform: "uppercase", letterSpacing: "1px",
+                }}>
                   Ready to Book?
                 </h4>
-                <p
-                  style={{
-                    fontSize: "13px",
-                    fontFamily: THEME.fonts.body,
-                    color: THEME.colors.textMuted,
-                    marginBottom: "20px",
-                    lineHeight: "1.65",
-                  }}
-                >
-                  Let our expert team craft your perfect{" "}
-                  {service.title.toLowerCase()} experience, tailored just for
-                  you.
+                <p style={{
+                  fontSize: "13px", fontFamily: T.sans, color: T.tMuted,
+                  marginBottom: "20px", lineHeight: "1.65",
+                }}>
+                  Let our expert team craft your perfect {service.title.toLowerCase()} experience, tailored just for you.
                 </p>
 
-                <Button
-                  to="/booking"
-                  variant="primary"
-                  fullWidth
-                  size="large"
-                  icon={<FiArrowRight size={15} />}
-                >
+                <Button to="/booking" variant="primary" fullWidth size="large" icon={<FiArrowRight size={15} />}>
                   Start Planning
                 </Button>
 
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "8px",
-                    marginTop: "18px",
-                  }}
-                >
-                  {contactOptions.map((opt) => {
-                    const IconComp = opt.icon;
-                    const linkStyle = {
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
+                <div style={{ display: "flex", flexDirection: "column", gap: "8px", marginTop: "16px" }}>
+                  {contacts.map(({ href, Icon, label, ext }) => {
+                    const s = {
+                      display: "flex", alignItems: "center", gap: "10px",
                       padding: "10px 14px",
-                      backgroundColor: THEME.colors.white,
-                      borderRadius: THEME.radii.md,
-                      fontSize: "12px",
-                      fontFamily: THEME.fonts.body,
-                      fontWeight: "500",
-                      color: THEME.colors.textBody,
-                      border: `1px solid ${THEME.colors.border}`,
-                      textDecoration: "none",
-                      cursor: "pointer",
+                      backgroundColor: T.white, borderRadius: T.rMd,
+                      fontSize: "12px", fontFamily: T.sans, fontWeight: "500",
+                      color: T.tBody, border: `1px solid ${T.border}`,
+                      textDecoration: "none", cursor: "pointer",
+                      transition: `all ${T.tBase}`,
                     };
-
-                    return opt.isExternal ? (
-                      <a
-                        key={opt.label}
-                        href={opt.href}
-                        className="contact-link"
-                        style={linkStyle}
-                      >
-                        <IconComp size={14} color={THEME.colors.primary[600]} />
-                        <span>{opt.label}</span>
+                    return ext ? (
+                      <a key={label} href={href} className="cl" style={s}>
+                        <Icon size={14} color={T.g600} />{label}
                       </a>
                     ) : (
-                      <Link
-                        key={opt.label}
-                        to={opt.href}
-                        className="contact-link"
-                        style={linkStyle}
-                        onClick={onClose}
-                      >
-                        <IconComp size={14} color={THEME.colors.primary[600]} />
-                        <span>{opt.label}</span>
+                      <Link key={label} to={href} className="cl" style={s} onClick={onClose}>
+                        <Icon size={14} color={T.g600} />{label}
                       </Link>
                     );
                   })}
@@ -1912,81 +1195,104 @@ const ServiceModal = React.memo(({ service, onClose }) => {
       </motion.div>
     </motion.div>
   );
-});
-ServiceModal.displayName = "ServiceModal";
+};
+
+// ============================================================================
+// SCROLL PROGRESS BAR
+// ============================================================================
+const ScrollBar = ({ progress }) => (
+  <div
+    role="progressbar"
+    aria-valuenow={Math.round(progress)}
+    aria-valuemin={0} aria-valuemax={100}
+    aria-label="Page scroll progress"
+    style={{
+      position: "fixed", top: 0, left: 0, zIndex: 10001,
+      height: "3px", width: `${progress}%`,
+      background: `linear-gradient(90deg, ${T.g400}, ${T.g600}, ${T.g700})`,
+      transition: "width 80ms linear",
+      boxShadow: progress > 0 ? `0 0 12px ${T.g500}60` : "none",
+    }}
+  />
+);
+
+// ============================================================================
+// STAT STRIP
+// ============================================================================
+const StatStrip = ({ isMobile }) => {
+  const stats = [
+    { value: "5,000+", label: "Happy Travelers" },
+    { value: "15+",    label: "Years Experience" },
+    { value: "4.9★",   label: "Average Rating" },
+    { value: "24/7",   label: "Support" },
+  ];
+
+  return (
+    <div style={{
+      background: `linear-gradient(90deg, ${T.g800}, ${T.g700})`,
+      padding: isMobile ? "20px 16px" : "24px 40px",
+    }}>
+      <div style={{
+        maxWidth: "1320px", margin: "0 auto",
+        display: "flex", flexWrap: "wrap",
+        justifyContent: "center", gap: isMobile ? "24px 40px" : "0",
+      }}>
+        {stats.map((s, i) => (
+          <div key={i} style={{
+            flex: isMobile ? "1 1 40%" : "1",
+            textAlign: "center",
+            padding: isMobile ? "0" : "0 32px",
+            borderRight: !isMobile && i < stats.length - 1 ? "1px solid rgba(255,255,255,0.12)" : "none",
+          }}>
+            <div style={{
+              fontFamily: T.serif, fontSize: isMobile ? "26px" : "32px",
+              fontWeight: "800", color: T.white, lineHeight: 1,
+              marginBottom: "4px",
+            }}>
+              {s.value}
+            </div>
+            <div style={{
+              fontFamily: T.sans, fontSize: "11px", fontWeight: "600",
+              color: T.g300, textTransform: "uppercase", letterSpacing: "1.5px",
+            }}>
+              {s.label}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 
 // ============================================================================
 // MAIN PAGE
 // ============================================================================
-
 const Services = () => {
-  const [selectedService, setSelectedService] = useState(null);
-  const isMobile = useMediaQuery("(max-width: 768px)");
-  const isSmallMobile = useMediaQuery("(max-width: 480px)");
+  const [selected, setSelected] = useState(null);
+  const isMobile      = useMediaQuery("(max-width: 768px)");
+  const isSmall       = useMediaQuery("(max-width: 480px)");
   const scrollProgress = useScrollProgress();
 
-  const handleServiceClick = useCallback((service) => {
-    setSelectedService(service);
-  }, []);
+  const open  = useCallback((svc) => setSelected(svc), []);
+  const close = useCallback(() => setSelected(null), []);
 
-  const handleCloseModal = useCallback(() => {
-    setSelectedService(null);
-  }, []);
-
-  const sectionPadding = isSmallMobile
-    ? "48px 14px"
-    : isMobile
-      ? "56px 18px"
-      : "100px 40px";
+  const pad = isSmall ? "32px 14px" : isMobile ? "44px 18px" : "76px 32px";
 
   return (
     <>
-      <Helmet>
-        <title>
-          Our Services | Altuvera — Premium East Africa Travel Experiences
-        </title>
-        <meta
-          name="description"
-          content="Discover Altuvera's premium safari services: wildlife expeditions, mountain climbing, gorilla trekking, beach holidays, and bespoke cultural experiences across East Africa."
-        />
-        <meta
-          property="og:title"
-          content="Our Services | Altuvera — Premium East Africa Travel"
-        />
-        <meta property="og:type" content="website" />
-        <link
-          rel="preconnect"
-          href="https://images.unsplash.com"
-          crossOrigin="anonymous"
-        />
-      </Helmet>
-
-      <GlobalStyles />
-
-      {/* Scroll Progress */}
-      <div
-        role="progressbar"
-        aria-valuenow={Math.round(scrollProgress)}
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-label="Page scroll progress"
-        style={{
-          position: "fixed",
-          top: 0,
-          left: 0,
-          height: "3px",
-          background: `linear-gradient(90deg, ${THEME.colors.primary[400]}, ${THEME.colors.primary[600]})`,
-          width: `${scrollProgress}%`,
-          zIndex: 10001,
-          transition: "width 80ms linear",
-          boxShadow:
-            scrollProgress > 0
-              ? `0 0 10px ${THEME.colors.primary[400]}60`
-              : "none",
-        }}
+      <SEO
+        title="Our Services"
+        description="Discover Altuvera's premium safari services: wildlife expeditions, mountain climbing, gorilla trekking, beach holidays, and bespoke cultural experiences across East Africa."
+        keywords={["safari services", "East Africa travel", "guided tours", "wildlife expeditions", "adventure travel"]}
+        url="/services"
+        type="website"
+        breadcrumbs={[{ name: "Home", url: "/" }, { name: "Services", url: "/services" }]}
       />
 
-      {/* Page Header */}
+      <GlobalStyles />
+      <ScrollBar progress={scrollProgress} />
+
+      {/* ── Page Header ── */}
       <PageHeader
         title="Our Services"
         subtitle="Comprehensive travel experiences designed to create your perfect East African adventure"
@@ -1994,57 +1300,39 @@ const Services = () => {
         breadcrumbs={[{ label: "Services", path: "/services" }]}
       />
 
-      {/* Cookie Settings */}
-      <div
-        style={{
-          padding: isMobile ? "8px 18px 0" : "12px 28px 0",
-          backgroundColor: THEME.colors.white,
-        }}
-      >
+      {/* ── Cookie bar ── */}
+      <div style={{ padding: isMobile ? "8px 18px 0" : "12px 32px 0", backgroundColor: T.white }}>
         <div style={{ maxWidth: "1320px", margin: "0 auto" }}>
           <CookieSettingsButton />
         </div>
       </div>
 
-      {/* Rotating Hero Tagline */}
-      <section
-        style={{
-          padding: isSmallMobile
-            ? "36px 14px 12px"
-            : isMobile
-              ? "40px 18px 16px"
-              : "56px 40px 24px",
-          backgroundColor: THEME.colors.white,
-        }}
-      >
-        <div
-          style={{ maxWidth: "1320px", margin: "0 auto", textAlign: "center" }}
-        >
+      {/* ── Hero tagline strip ── */}
+      <section style={{
+        padding: isSmall ? "32px 14px 10px" : isMobile ? "36px 18px 14px" : "52px 40px 20px",
+        backgroundColor: T.white,
+      }}>
+        <div style={{ maxWidth: "1320px", margin: "0 auto", textAlign: "center" }}>
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
+            initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.55, delay: 0.15 }}
             style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "12px",
-              padding: "14px 28px",
-              backgroundColor: THEME.colors.primary[50],
-              borderRadius: THEME.radii.full,
-              border: `1px solid ${THEME.colors.primary[200]}`,
-            }}
-          >
-            <FiGlobe size={16} color={THEME.colors.primary[600]} />
-            <RotatingText
-              texts={ROTATING_HERO_TEXTS}
-              interval={4000}
+              display: "inline-flex", alignItems: "center", gap: "12px",
+              padding: "13px 28px",
+              background: `linear-gradient(135deg, ${T.g50}, ${T.surfaceMid})`,
+              borderRadius: T.rFull,
+              border: `1px solid ${T.g200}`,
+              boxShadow: T.shadowSm,
+            }}>
+            <FiGlobe size={15} color={T.g600} />
+            <Rotating
+              texts={HERO_TEXTS}
+              ms={4000}
               style={{
                 fontSize: isMobile ? "13px" : "15px",
-                fontFamily: THEME.fonts.body,
-                fontWeight: "600",
-                color: THEME.colors.primary[700],
-                width: isMobile ? "240px" : "340px",
-                textAlign: "center",
+                fontFamily: T.sans, fontWeight: "600",
+                color: T.g700,
+                width: isMobile ? "230px" : "340px",
                 height: "22px",
               }}
             />
@@ -2052,73 +1340,55 @@ const Services = () => {
         </div>
       </section>
 
-      {/* ============================== SERVICES ============================== */}
-      <section
-        style={{
-          padding: sectionPadding,
-          backgroundColor: THEME.colors.lightGreen,
-        }}
-      >
+      {/* ── Stats ── */}
+      <StatStrip isMobile={isMobile} />
+
+      {/* ════════════════════════ SERVICES GRID ════════════════════════ */}
+      <section style={{ padding: pad, backgroundColor: T.surfaceLight }}>
         <div style={{ maxWidth: "1320px", margin: "0 auto" }}>
           <AnimatedSection animation="perspectiveIn">
             <SectionHeader
               label="✦ What We Offer"
               title="Tailored Travel Experiences"
-              subtitle="From thrilling safaris to cultural immersions, discover our complete range of services crafted to make your East African journey extraordinary."
+              subtitle="From thrilling safaris to cultural immersions — discover our complete range of services crafted to make your East African journey extraordinary."
             />
           </AnimatedSection>
-          <div
-            className="grid-services"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
-              gap: "28px",
-            }}
-          >
-            {services.map((service, index) => (
-              <AnimatedSection
-                key={service.id}
-                animation="flipIn"
-                delay={index * 0.1}
-              >
-                <ServiceCard
-                  service={service}
-                  index={index}
-                  onClick={handleServiceClick}
-                  isMobile={isMobile}
-                />
+
+          <div className="gs" style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(330px, 1fr))",
+            gap: "28px",
+          }}>
+            {services.map((svc, i) => (
+              <AnimatedSection key={svc.id} animation="flipIn" delay={i * 0.08}>
+                <ServiceCard service={svc} index={i} onClick={open} isMobile={isMobile} />
               </AnimatedSection>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ============================== PROCESS ============================== */}
-      <section
-        style={{
-          padding: sectionPadding,
-          background: `linear-gradient(135deg, ${THEME.colors.primary[950]} 0%, ${THEME.colors.primary[900]} 40%, ${THEME.colors.primary[800]} 100%)`,
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          aria-hidden="true"
-          style={{
+      {/* ════════════════════════ PROCESS ════════════════════════ */}
+      <section style={{
+        padding: pad,
+        background: `linear-gradient(150deg, ${T.g950} 0%, ${T.g900} 45%, ${T.g800} 100%)`,
+        position: "relative", overflow: "hidden",
+      }}>
+        {/* decorative orbs */}
+        {[
+          { top: "-20%", left: "-10%",  size: "500px", color: `${T.g700}18` },
+          { top: "60%",  right: "-10%", size: "400px", color: `${T.g600}12` },
+        ].map((orb, i) => (
+          <div key={i} aria-hidden="true" style={{
             position: "absolute",
-            inset: 0,
-            backgroundImage: `radial-gradient(circle at 10% 90%, ${THEME.colors.primary[600]}15 0%, transparent 50%), radial-gradient(circle at 90% 10%, ${THEME.colors.primary[500]}10 0%, transparent 50%)`,
+            top: orb.top, left: orb.left, right: orb.right,
+            width: orb.size, height: orb.size, borderRadius: "50%",
+            background: `radial-gradient(circle, ${orb.color} 0%, transparent 70%)`,
             pointerEvents: "none",
-          }}
-        />
-        <div
-          style={{
-            maxWidth: "1320px",
-            margin: "0 auto",
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
+          }} />
+        ))}
+
+        <div style={{ maxWidth: "1320px", margin: "0 auto", position: "relative", zIndex: 1 }}>
           <AnimatedSection animation="slideReveal">
             <SectionHeader
               label="✦ Our Process"
@@ -2127,39 +1397,24 @@ const Services = () => {
               light
             />
           </AnimatedSection>
-          <div
-            className="grid-process"
-            style={{
-              display: "grid",
-              gridTemplateColumns: isMobile
-                ? "repeat(2, 1fr)"
-                : "repeat(4, 1fr)",
-              gap: "28px",
-            }}
-          >
-            {PROCESS_STEPS.map((step, index) => (
-              <AnimatedSection
-                key={step.step}
-                animation="slideReveal"
-                delay={index * 0.15}
-                direction={index % 2 === 0 ? "left" : "right"}
-              >
-                <ProcessStepCard
-                  step={step}
-                  index={index}
-                  total={PROCESS_STEPS.length}
-                  isMobile={isMobile}
-                />
+
+          <div className="gp" style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)",
+            gap: "24px",
+          }}>
+            {PROCESS_STEPS.map((step, i) => (
+              <AnimatedSection key={step.step} animation="slideReveal"
+                delay={i * 0.12} direction={i % 2 === 0 ? "left" : "right"}>
+                <ProcessCard step={step} index={i} total={PROCESS_STEPS.length} isMobile={isMobile} />
               </AnimatedSection>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ============================== WHY US ============================== */}
-      <section
-        style={{ padding: sectionPadding, backgroundColor: THEME.colors.white }}
-      >
+      {/* ════════════════════════ WHY US ════════════════════════ */}
+      <section style={{ padding: pad, backgroundColor: T.white }}>
         <div style={{ maxWidth: "1320px", margin: "0 auto" }}>
           <AnimatedSection animation="zoomIn">
             <SectionHeader
@@ -2168,34 +1423,23 @@ const Services = () => {
               subtitle="Experience the difference that comes with expertise, passion, and an unwavering commitment to excellence."
             />
           </AnimatedSection>
-          <div
-            className="grid-why"
-            style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
-              gap: "24px",
-            }}
-          >
-            {WHY_CHOOSE_US.map((item, index) => (
-              <AnimatedSection
-                key={item.title}
-                animation="zoomIn"
-                delay={index * 0.1}
-              >
-                <WhyChooseCard item={item} index={index} isMobile={isMobile} />
+
+          <div className="gw" style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)",
+            gap: "24px",
+          }}>
+            {WHY_US.map((item, i) => (
+              <AnimatedSection key={item.title} animation="zoomIn" delay={i * 0.09}>
+                <WhyCard item={item} index={i} isMobile={isMobile} />
               </AnimatedSection>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ============================== TESTIMONIALS ============================== */}
-      <section
-        style={{
-          padding: sectionPadding,
-          backgroundColor: THEME.colors.lightGreen,
-        }}
-      >
+      {/* ════════════════════════ TESTIMONIALS ════════════════════════ */}
+      <section style={{ padding: pad, backgroundColor: T.surfaceLight }}>
         <div style={{ maxWidth: "1320px", margin: "0 auto" }}>
           <AnimatedSection animation="blurIn">
             <SectionHeader
@@ -2204,185 +1448,122 @@ const Services = () => {
               subtitle="Don't just take our word for it — hear from adventurers who've experienced the Altuvera difference."
             />
           </AnimatedSection>
-          <div
-            className="grid-testimonials"
-            style={{
-              display: "grid",
-              gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
-              gap: "24px",
-            }}
-          >
-            {TESTIMONIALS.map((testimonial, index) => (
-              <AnimatedSection
-                key={testimonial.author}
-                animation="blurIn"
-                delay={index * 0.2}
-              >
-                <TestimonialCard testimonial={testimonial} index={index} />
+
+          <div className="gt" style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "repeat(3,1fr)",
+            gap: "24px",
+          }}>
+            {TESTIMONIALS.map((t, i) => (
+              <AnimatedSection key={t.author} animation="blurIn" delay={i * 0.15}>
+                <TestiCard testimonial={t} index={i} />
               </AnimatedSection>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ============================== CTA ============================== */}
-      <section
-        style={{ padding: sectionPadding, backgroundColor: THEME.colors.white }}
-      >
+      {/* ════════════════════════ CTA ════════════════════════ */}
+      <section style={{ padding: pad, backgroundColor: T.white }}>
         <div style={{ maxWidth: "1320px", margin: "0 auto" }}>
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
             style={{
-              maxWidth: "920px",
-              margin: "0 auto",
-              padding: isSmallMobile
-                ? "40px 22px"
-                : isMobile
-                  ? "48px 28px"
-                  : "72px 56px",
-              background: `linear-gradient(135deg, ${THEME.colors.primary[700]} 0%, ${THEME.colors.primary[600]} 50%, ${THEME.colors.primary[500]} 100%)`,
-              borderRadius: isMobile ? THEME.radii.xl : THEME.radii["3xl"],
-              boxShadow: `${THEME.shadows["2xl"]}, 0 0 80px ${THEME.colors.primary[500]}20`,
-              position: "relative",
-              overflow: "hidden",
+              maxWidth: "920px", margin: "0 auto",
+              padding: isSmall ? "40px 22px" : isMobile ? "48px 28px" : "76px 60px",
+              background: `linear-gradient(135deg, ${T.g900} 0%, ${T.g800} 50%, ${T.g700} 100%)`,
+              borderRadius: isMobile ? T.rXl : T.r3Xl,
+              boxShadow: `${T.shadow2Xl}, ${T.shadowGlow}`,
+              position: "relative", overflow: "hidden",
               textAlign: "center",
-            }}
-          >
-            <div
-              aria-hidden="true"
-              style={{
-                position: "absolute",
-                top: "-40%",
-                left: "-30%",
-                width: "160%",
-                height: "160%",
-                background:
-                  "radial-gradient(ellipse, rgba(255,255,255,0.06) 0%, transparent 60%)",
+            }}>
+
+            {/* decorative orbs */}
+            {[
+              { top: "-50%", left: "-20%",  size: "360px" },
+              { bottom: "-50%", right: "-20%", size: "320px" },
+            ].map((o, i) => (
+              <div key={i} aria-hidden="true" style={{
+                position: "absolute", ...o, borderRadius: "50%",
+                background: "radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 65%)",
                 pointerEvents: "none",
-              }}
-            />
+              }} />
+            ))}
+
+            {/* thin top border */}
+            <div style={{
+              position: "absolute", top: 0, left: "10%", right: "10%", height: "1px",
+              background: `linear-gradient(90deg, transparent, ${T.g400}60, transparent)`,
+            }} />
 
             <div style={{ position: "relative", zIndex: 2 }}>
               <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.1, duration: 0.5 }}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "8px 20px",
-                  backgroundColor: "rgba(255,255,255,0.12)",
-                  borderRadius: THEME.radii.full,
-                  color: THEME.colors.primary[100],
-                  fontSize: "11px",
-                  fontWeight: "700",
-                  fontFamily: THEME.fonts.body,
-                  marginBottom: "20px",
-                  textTransform: "uppercase",
-                  letterSpacing: "2px",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                }}
-              >
-                <FiSun size={13} />
-                Start Your Adventure
+                initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }} transition={{ delay: 0.1 }}
+                style={{ marginBottom: "18px" }}>
+                <Badge light style={{ color: T.g300 }}>
+                  <FiSun size={12} /> Start Your Adventure
+                </Badge>
               </motion.div>
 
               <motion.h2
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.2, duration: 0.5 }}
+                initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }} transition={{ delay: 0.18 }}
                 style={{
-                  fontFamily: THEME.fonts.heading,
-                  fontSize: isSmallMobile ? "24px" : isMobile ? "26px" : "38px",
-                  fontWeight: "700",
-                  color: THEME.colors.white,
-                  marginBottom: "16px",
-                  lineHeight: "1.2",
+                  fontFamily: T.serif,
+                  fontSize: isSmall ? "24px" : isMobile ? "28px" : "40px",
+                  fontWeight: "800", color: T.white,
+                  marginBottom: "14px", lineHeight: "1.15",
                   letterSpacing: "-0.02em",
-                }}
-              >
+                }}>
                 Ready to Start Your Journey?
               </motion.h2>
 
               <motion.p
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.3, duration: 0.5 }}
+                initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }} transition={{ delay: 0.25 }}
                 style={{
-                  fontSize: isMobile ? "14px" : "16px",
-                  fontFamily: THEME.fonts.body,
-                  color: "rgba(255,255,255,0.85)",
-                  marginBottom: "28px",
-                  maxWidth: "520px",
-                  marginLeft: "auto",
-                  marginRight: "auto",
-                  lineHeight: "1.75",
-                }}
-              >
-                Contact our expert team today and let us help you plan the
-                adventure of a lifetime across the breathtaking landscapes of
-                East Africa.
+                  fontFamily: T.sans, fontSize: isMobile ? "14px" : "16px",
+                  color: "rgba(255,255,255,0.76)",
+                  maxWidth: "520px", margin: "0 auto 24px",
+                  lineHeight: "1.78",
+                }}>
+                Contact our expert team today and let us help you plan the adventure of a lifetime
+                across the breathtaking landscapes of East Africa.
               </motion.p>
 
-              {/* Rotating trust badges */}
+              {/* rotating trust badge */}
               <motion.div
-                initial={{ opacity: 0 }}
-                whileInView={{ opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.35, duration: 0.5 }}
-                style={{ marginBottom: "28px" }}
-              >
-                <RotatingText
-                  texts={CTA_ROTATING_TEXTS}
-                  interval={3000}
+                initial={{ opacity: 0 }} whileInView={{ opacity: 1 }}
+                viewport={{ once: true }} transition={{ delay: 0.3 }}
+                style={{ marginBottom: "28px", display: "flex", justifyContent: "center" }}>
+                <Rotating
+                  texts={CTA_TEXTS}
+                  ms={3000}
                   style={{
-                    fontSize: "13px",
-                    fontFamily: THEME.fonts.body,
-                    color: "rgba(255,255,255,0.7)",
-                    height: "22px",
-                    display: "flex",
-                    justifyContent: "center",
+                    fontSize: "13px", fontFamily: T.sans,
+                    color: "rgba(255,255,255,0.62)",
+                    width: isMobile ? "260px" : "320px",
+                    height: "20px",
                   }}
                 />
               </motion.div>
 
               <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.4, duration: 0.5 }}
-                style={{
-                  display: "flex",
-                  gap: "12px",
-                  justifyContent: "center",
-                  flexWrap: "wrap",
-                }}
-              >
-                <Button
-                  to="/booking"
-                  variant="white"
-                  size="large"
-                  icon={<FiArrowRight size={15} />}
-                >
+                initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }} transition={{ delay: 0.36 }}
+                style={{ display: "flex", gap: "12px", justifyContent: "center", flexWrap: "wrap" }}>
+                <Button to="/booking" variant="white" size="large" icon={<FiArrowRight size={15} />}>
                   Start Planning
                 </Button>
-                <Button
-                  to="/contact"
-                  variant="outline"
-                  size="large"
-                  style={{
-                    borderColor: "rgba(255,255,255,0.35)",
-                    color: THEME.colors.white,
-                    backgroundColor: "transparent",
-                  }}
-                >
+                <Button to="/contact" variant="outline" size="large" style={{
+                  borderColor: "rgba(255,255,255,0.3)",
+                  color: T.white,
+                  backgroundColor: "transparent",
+                }}>
                   Contact Us
                 </Button>
               </motion.div>
@@ -2391,14 +1572,10 @@ const Services = () => {
         </div>
       </section>
 
-      {/* Modal */}
+      {/* ── Modal ── */}
       <AnimatePresence mode="wait">
-        {selectedService && (
-          <ServiceModal
-            key={selectedService.id}
-            service={selectedService}
-            onClose={handleCloseModal}
-          />
+        {selected && (
+          <ServiceModal key={selected.id} service={selected} onClose={close} />
         )}
       </AnimatePresence>
     </>
