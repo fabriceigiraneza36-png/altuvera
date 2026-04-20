@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Helmet } from "react-helmet-async";
 import { useUserAuth } from "../../context/UserAuthContext";
-import DashboardLayout from "../../components/users/DashboardLayout";
+import DashboardLayout from "../../components/auth/DashboardLayout";
 import {
   HiUser,
   HiMail,

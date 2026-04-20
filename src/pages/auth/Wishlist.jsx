@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import DashboardLayout from "../../components/users/DashboardLayout";
+import DashboardLayout from "../../components/auth/DashboardLayout";
 import { HiHeart, HiTrash, HiLocationMarker } from "react-icons/hi";
 import Loader from "../../components/common/Loader";
 import { useWishlist } from "../../hooks/useWishlist";
