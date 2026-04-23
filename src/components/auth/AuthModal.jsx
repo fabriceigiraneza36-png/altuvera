@@ -898,7 +898,6 @@ export default function AuthModal() {
         setLoading(true);
         setError("");
         setSuccess("");
-        setVerifySource("login");
         setAuthMethod("email");
         setSessionPreference(formData.keepSignedIn);
 
@@ -908,10 +907,7 @@ export default function AuthModal() {
           persistSession: formData.keepSignedIn,
         });
 
-        setSuccess(
-          `✓ Verification code sent to ${formData.email}. Valid for ${CODE_VALIDITY_MINUTES} minutes.`,
-        );
-        setCode(emptyCode());
+        setSuccess("✓ Passkey sign-in successful.");
       } catch (submitError) {
         setError(submitError.message || "Sign in failed. Please try again.");
       } finally {
@@ -926,7 +922,6 @@ export default function AuthModal() {
       isNameValid,
       login,
       setSessionPreference,
-      authMethod,
     ],
   );
 
@@ -973,7 +968,6 @@ export default function AuthModal() {
         setLoading(true);
         setError("");
         setSuccess("");
-        setVerifySource("register");
         setSessionPreference(formData.keepSignedIn);
 
         const avatar = await resolveAvatarValue();
@@ -1001,7 +995,7 @@ export default function AuthModal() {
         setSuccess(
           authMethod === "google"
             ? "✓ Account created successfully! Welcome to Altuvera."
-            : `✓ Almost there! Verification code sent to ${formData.email}.`,
+            : "✓ Passkey account created successfully.",
         );
       } catch (submitError) {
         setError(submitError.message || "Sign up failed. Please try again.");
@@ -1376,7 +1370,9 @@ export default function AuthModal() {
                         <InlineSpinner label="Sending verification code" />
                       )}
                       <span>
-                        {loading ? "Sending Code..." : "Continue with Email"}
+                        {loading
+                          ? "Waiting for passkey approval..."
+                          : "Login with Passkey"}
                       </span>
                       <HiArrowRight aria-hidden="true" />
                     </button>
@@ -1586,7 +1582,7 @@ export default function AuthModal() {
                           }}
                           disabled={!isEmailValid || !isNameValid}
                         >
-                          <span>Create Account with Email</span>
+                          <span>Create Passkey Account</span>
                           <HiArrowRight aria-hidden="true" />
                         </button>
 

@@ -1520,7 +1520,7 @@ function Explore() {
     []
   );
 
-  const pad = 'clamp(56px,10vw,90px) clamp(16px,5vw,36px)';
+  const pad = 'clamp(32px,5vw,56px) clamp(16px,5vw,36px)';
   const box = { maxWidth: 1400, margin: '0 auto' };
 
   return (
@@ -1547,7 +1547,7 @@ function Explore() {
       {/* ============ INTRO EDITORIAL ============ */}
       <section
         style={{
-          padding: 'clamp(42px,8vw,70px) clamp(16px,5vw,36px)',
+          padding: 'clamp(24px,4vw,42px) clamp(16px,5vw,36px)',
           backgroundColor: W.off,
         }}
       >
@@ -2193,7 +2193,7 @@ function Explore() {
       {/* ============ TRUST BADGES ============ */}
       <section
         style={{
-          padding: 'clamp(42px,6vw,60px) clamp(16px,5vw,36px)',
+          padding: 'clamp(28px,4vw,48px) clamp(16px,5vw,36px)',
         }}
       >
         <div style={box}>
@@ -2272,7 +2272,7 @@ function Explore() {
       {/* ============ NEWSLETTER ============ */}
       <section
         style={{
-          padding: 'clamp(42px,6vw,60px) clamp(16px,5vw,36px)',
+          padding: 'clamp(28px,4vw,48px) clamp(16px,5vw,36px)',
           backgroundColor: G[50],
         }}
       >
@@ -2286,7 +2286,7 @@ function Explore() {
       {/* ============ FINAL CTA ============ */}
       <section
         style={{
-          padding: 'clamp(70px,12vw,120px) clamp(16px,5vw,36px)',
+          padding: 'clamp(48px,8vw,80px) clamp(16px,5vw,36px)',
           background:
             'linear-gradient(160deg,' +
             N[900] +

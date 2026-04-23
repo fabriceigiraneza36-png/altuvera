@@ -8,6 +8,7 @@ import React, {
   useRef,
   useMemo,
 } from "react";
+import { startAuthentication, startRegistration } from "@simplewebauthn/browser";
 
 // ============================================================================
 // Configuration
@@ -517,19 +518,7 @@ export function UserAuthProvider({ children }) {
 
       let response = await executeRequest();
 
-      const shouldRefresh =
-        response?.status === 401 &&
-        !skipAuthRefresh &&
-        currentToken &&
-        getStoredRefreshToken() &&
-        pathFromKnownBase !== "/users/refresh-token" &&
-        pathFromKnownBase !== "/users/login" &&
-        pathFromKnownBase !== "/users/register" &&
-        pathFromKnownBase !== "/users/verify-code" &&
-        pathFromKnownBase !== "/users/resend-code" &&
-        pathFromKnownBase !== "/users/check-email" &&
-        pathFromKnownBase !== "/users/google" &&
-        pathFromKnownBase !== "/users/github";
+      const shouldRefresh = false;
 
       if (shouldRefresh) {
         try {
@@ -639,7 +628,7 @@ export function UserAuthProvider({ children }) {
     fetchingRef.current = true;
 
     try {
-      const data = await authFetch(`${API_URL}/users/me`);
+      const data = await authFetch(`${API_URL}/auth/webauthn/me`);
       const payload = data?.data || data;
       const userData = payload?.user || payload;
 
@@ -1118,86 +1107,6 @@ export function UserAuthProvider({ children }) {
           ? emailOrPayload
           : { email: emailOrPayload, fullName: fullNameArg };
 
-      // Check if this is a Google-authenticated registration
-      const currentGoogleUser = payload.googleToken ? googleUser : null;
-
-      const email = safeTrim(payload?.email || currentGoogleUser?.email || "");
-      const fullName = safeTrim(
-        payload?.fullName ||
-          payload?.full_name ||
-          currentGoogleUser?.name ||
-          "",
-      );
-
-      const persistOverride =
-        typeof payload?.persistSession === "boolean"
-          ? payload.persistSession
-          : persistSession;
-
-      if (typeof payload?.persistSession === "boolean") {
-        setSessionPreference(payload.persistSession);
-      }
-
-      // If Google token is provided, use Google complete flow
-      if (payload.googleToken || payload.authProvider === "google") {
-        return completeGoogleSignUp({
-          fullName,
-          phone: payload?.phone,
-          bio: payload?.bio,
-          role: payload?.role,
-          avatar: payload?.avatar,
-        });
-      }
-
-      const body = {
-        email,
-        fullName,
-        full_name: fullName,
-        phone: safeTrim(payload?.phone || ""),
-        bio: safeTrim(payload?.bio || ""),
-        avatar: safeTrim(payload?.avatar || ""),
-        role: safeTrim(payload?.role || "user"),
-        persistSession: persistOverride,
-        rememberSession: persistOverride,
-        ...buildVerificationCodeOptions(),
-      };
-
-      pendingProfileRef.current = {
-        email,
-        fullName,
-        avatar: body.avatar,
-      };
-
-      const data = await authFetch(`${API_URL}/users/register`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
-
-      setPendingEmail(email);
-      setModalView("verify");
-      return data;
-    },
-    [
-      authFetch,
-      completeGoogleSignUp,
-      googleUser,
-      persistSession,
-      setSessionPreference,
-    ],
-  );
-
-  const login = useCallback(
-    async (emailOrPayload, fullNameArg) => {
-      const payload =
-        typeof emailOrPayload === "object"
-          ? emailOrPayload
-          : { email: emailOrPayload, fullName: fullNameArg };
-
-      // If Google token provided, use Google sign in
-      if (payload.googleToken || payload.authProvider === "google") {
-        return googleSignIn(payload.googleToken);
-      }
-
       const email = safeTrim(payload?.email || "");
       const fullName = safeTrim(payload?.fullName || payload?.full_name || "");
 
@@ -1210,98 +1119,117 @@ export function UserAuthProvider({ children }) {
         setSessionPreference(payload.persistSession);
       }
 
-      const body = {
-        email,
-        fullName,
-        full_name: fullName,
-        persistSession: persistOverride,
-        rememberSession: persistOverride,
-        ...buildVerificationCodeOptions(),
-      };
+      const registerOptions = await authFetch(
+        `${API_URL}/auth/webauthn/register-options`,
+        {
+          method: "POST",
+          body: JSON.stringify({
+            email,
+            name: fullName,
+          }),
+        },
+      );
 
-      pendingProfileRef.current = {
-        email,
-        fullName,
-        avatar: "",
-      };
+      const optionsPayload = registerOptions?.data || registerOptions;
+      const options = optionsPayload?.options || registerOptions?.options;
+      const sessionData =
+        optionsPayload?.sessionData || registerOptions?.sessionData || {};
 
-      const data = await authFetch(`${API_URL}/users/login`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
+      const attestationResponse = await startRegistration(options);
 
-      setPendingEmail(email);
-      setModalView("verify");
-      return data;
-    },
-    [authFetch, googleSignIn, persistSession, setSessionPreference],
-  );
-
-  const verifyCode = useCallback(
-    async (email, code) => {
-      const normalizedEmail = safeTrim(email);
-      const normalizedCode = String(code || "")
-        .replace(/\D/g, "")
-        .slice(0, 6);
-
-      if (!normalizedEmail) {
-        throw new Error("Email is required for verification.");
-      }
-
-      if (normalizedCode.length !== 6) {
-        throw new Error("Please enter a valid 6-digit code.");
-      }
-
-      const data = await authFetch(`${API_URL}/users/verify-code`, {
+      const data = await authFetch(`${API_URL}/auth/webauthn/register-verify`, {
         method: "POST",
         body: JSON.stringify({
-          email: normalizedEmail,
-          code: normalizedCode,
+          email,
+          name: fullName,
+          webauthnUserIdB64: sessionData?.webauthnUserIdB64,
+          response: attestationResponse,
         }),
       });
 
-      saveAuth(data, { persist: persistSession });
+      saveAuth(data, { persist: persistOverride });
       setPendingEmail("");
       closeModal();
       return data;
     },
-    [authFetch, closeModal, persistSession, saveAuth],
+    [
+      authFetch,
+      closeModal,
+      persistSession,
+      saveAuth,
+      setSessionPreference,
+    ],
+  );
+
+  const login = useCallback(
+    async (emailOrPayload, fullNameArg) => {
+      const payload =
+        typeof emailOrPayload === "object"
+          ? emailOrPayload
+          : { email: emailOrPayload, fullName: fullNameArg };
+
+      const email = safeTrim(payload?.email || "");
+
+      const persistOverride =
+        typeof payload?.persistSession === "boolean"
+          ? payload.persistSession
+          : persistSession;
+
+      if (typeof payload?.persistSession === "boolean") {
+        setSessionPreference(payload.persistSession);
+      }
+
+      const loginOptions = await authFetch(
+        `${API_URL}/auth/webauthn/login-options`,
+        {
+          method: "POST",
+          body: JSON.stringify({ email }),
+        },
+      );
+
+      const optionsPayload = loginOptions?.data || loginOptions;
+      const options = optionsPayload?.options || loginOptions?.options;
+      const authenticationResponse = await startAuthentication(options);
+
+      const data = await authFetch(`${API_URL}/auth/webauthn/login-verify`, {
+        method: "POST",
+        body: JSON.stringify({
+          email,
+          response: authenticationResponse,
+        }),
+      });
+
+      saveAuth(data, { persist: persistOverride });
+      setPendingEmail("");
+      closeModal();
+      return data;
+    },
+    [authFetch, closeModal, persistSession, saveAuth, setSessionPreference],
+  );
+
+  const verifyCode = useCallback(
+    async (email, code) => {
+      void email;
+      void code;
+      throw new Error("Verification codes are disabled. Use passkey authentication.");
+    },
+    [],
   );
 
   const resendCode = useCallback(
     async (email) => {
-      const normalizedEmail = safeTrim(email);
-
-      if (!normalizedEmail) {
-        throw new Error("Email is required to resend code.");
-      }
-
-      return authFetch(`${API_URL}/users/resend-code`, {
-        method: "POST",
-        body: JSON.stringify({
-          email: normalizedEmail,
-        }),
-      });
+      void email;
+      throw new Error("Verification codes are disabled. Use passkey authentication.");
     },
-    [authFetch],
+    [],
   );
 
   const checkEmail = useCallback(
     async (email) => {
-      const normalizedEmail = safeTrim(email);
-
-      if (!normalizedEmail) {
-        throw new Error("Email is required.");
-      }
-
-      const data = await authFetch(`${API_URL}/users/check-email`, {
-        method: "POST",
-        body: JSON.stringify({ email: normalizedEmail }),
-      });
-
-      return data?.data || data || {};
+      void email;
+      return {};
     },
-    [authFetch],
+    [],
   );
 
   // -------------------------------------------------------------------------
@@ -1309,8 +1237,8 @@ export function UserAuthProvider({ children }) {
   // -------------------------------------------------------------------------
   const updateProfile = useCallback(
     async (updates) => {
-      const data = await authFetch(`${API_URL}/users/profile`, {
-        method: "PUT",
+      const data = await authFetch(`${API_URL}/auth/webauthn/profile`, {
+        method: "PATCH",
         body: JSON.stringify(updates),
       });
 
@@ -1333,21 +1261,8 @@ export function UserAuthProvider({ children }) {
   );
 
   const refreshAuthToken = useCallback(async () => {
-    const refreshToken = getStoredRefreshToken();
-
-    if (!refreshToken) {
-      throw new Error("Refresh token required.");
-    }
-
-    const data = await authFetch(`${API_URL}/users/refresh-token`, {
-      method: "POST",
-      body: JSON.stringify({ refreshToken }),
-      skipAuthRefresh: true,
-    });
-
-    saveAuth(data, { persist: persistSession });
-    return data;
-  }, [authFetch, persistSession, saveAuth]);
+    throw new Error("Refresh token flow is disabled for passkey auth.");
+  }, []);
 
   const uploadAvatar = useCallback(
     async (file) => {
@@ -1426,7 +1341,7 @@ export function UserAuthProvider({ children }) {
   // -------------------------------------------------------------------------
   const logout = useCallback(async () => {
     try {
-      await authFetch(`${API_URL}/users/logout`, { method: "POST" }).catch(
+      await authFetch(`${API_URL}/auth/webauthn/logout`, { method: "POST" }).catch(
         () => {},
       );
     } finally {
@@ -1435,9 +1350,8 @@ export function UserAuthProvider({ children }) {
       closeModal();
     }
   }, [applyLoggedOutState, authFetch, closeModal]);
-
   const deleteAccount = useCallback(async () => {
-    const data = await authFetch(`${API_URL}/users/me`, {
+    const data = await authFetch(`${API_URL}/auth/webauthn/me`, {
       method: "DELETE",
     });
 

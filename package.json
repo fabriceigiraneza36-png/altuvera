@@ -11,6 +11,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@simplewebauthn/browser": "^13.2.2",
     "@react-google-maps/api": "^2.20.8",
     "@tailwindcss/vite": "^4.2.1",
     "canvas-confetti": "^1.9.4",
