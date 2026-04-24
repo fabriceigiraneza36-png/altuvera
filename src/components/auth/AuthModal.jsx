@@ -525,7 +525,7 @@ export default function AuthModal() {
   const [success, setSuccess] = useState("");
   const [code, setCode] = useState(emptyCode());
   const [resendTimer, setResendTimer] = useState(0);
-  const [verifySource, setVerifySource] = useState("login");
+  const [verifySource] = useState("login");
   const [authMethod, setAuthMethod] = useState("email");
   const [codeRowState, setCodeRowState] = useState(""); // "" | "verifying" | "success" | "error"
   const [googleBadgeImageLoading, setGoogleBadgeImageLoading] = useState(false);
@@ -876,15 +876,6 @@ export default function AuthModal() {
   // Email Sign-In Handlers
   // ---------------------------------------------------------------------------
 
-  const handleSignInNext = useCallback(() => {
-    if (!isEmailValid) {
-      setError("Please enter a valid email address.");
-      return;
-    }
-    setError("");
-    setSignInStep(2);
-  }, [isEmailValid]);
-
   const handleSignInSubmit = useCallback(
     async (event) => {
       event.preventDefault();
@@ -922,7 +913,7 @@ export default function AuthModal() {
       isNameValid,
       login,
       setSessionPreference,
-    ],
+    ]
   );
 
   // ---------------------------------------------------------------------------
@@ -1269,7 +1260,7 @@ export default function AuthModal() {
             {error && (
               <div className="auth-message auth-message--error" role="alert">
                 <HiExclamationCircle aria-hidden="true" />
-                <span>{error}</span>
+              <p>{typeof error === 'string' ? error : error?.message || 'An error occurred'}</p>
               </div>
             )}
 
@@ -1609,32 +1600,32 @@ export default function AuthModal() {
                                 : "Continue with Google"}
                             </span>
                           </button>
-                        )}
 
-                        {!googleLoading && (
-                          <button
-                            type="button"
-                            className="auth-btn auth-btn--github"
-                            onClick={() => handleGithubAuth("signup")}
-                            disabled={githubLoading || loading}
-                            aria-busy={githubLoading}
-                          >
-                            {githubLoading && (
-                              <InlineSpinner label="Connecting to GitHub" />
-                            )}
-                            {!githubLoading && (
-                              <FiGithub
-                                className="auth-github-icon"
-                                aria-hidden="true"
-                              />
-                            )}
-                            <span>
-                              {githubLoading
-                                ? "Authenticating GitHub..."
-                                : "Continue with GitHub"}
-                            </span>
-                          </button>
-                        )}
+                          {!googleLoading && (
+                            <button
+                              type="button"
+                              className="auth-btn auth-btn--github"
+                              onClick={() => handleGithubAuth("signup")}
+                              disabled={githubLoading || loading}
+                              aria-busy={githubLoading}
+                            >
+                              {githubLoading && (
+                                <InlineSpinner label="Connecting to GitHub" />
+                              )}
+                              {!githubLoading && (
+                                <FiGithub
+                                  className="auth-github-icon"
+                                  aria-hidden="true"
+                                />
+                              )}
+                              <span>
+                                {githubLoading
+                                  ? "Authenticating GitHub..."
+                                  : "GitHub"}
+                              </span>
+                            </button>
+                          )}
+                        </div>
                       </>
                     ) : (
                       <div className="auth-google-connected">
@@ -2135,9 +2126,8 @@ export default function AuthModal() {
                     </button>
                   </div>
                 </form>
-              </div>
-            )}
-          </main>
+              </div> )}
+         </main>
 
           {/* ===== FOOTER ===== */}
           <footer className="auth-modal-footer">
