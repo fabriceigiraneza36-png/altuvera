@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { useUserAuth } from "../../context/UserAuthContext";
 import { getBrandLogoUrl } from "../../utils/seo";
 import {
   FiFacebook,
@@ -16,6 +17,8 @@ import {
 import { FaXTwitter } from "react-icons/fa6";
 
 const Footer = () => {
+  const { user } = useUserAuth();
+  const displayName = user?.fullName || user?.name || user?.email?.split("@")[0] || "";
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -602,8 +605,7 @@ const Footer = () => {
 
         <div style={styles.bottom}>
           <p style={styles.copyright}>
-            © {currentYear} Altuvera. All rights reserved. Crafted with passion
-            for East Africa.
+            © {currentYear} Altuvera. All rights reserved. {displayName ? `Made for you, ${displayName}.` : "Made for you."}
           </p>
           <div style={styles.certifications}>
             <span style={styles.certBadge}>🌱 Eco-Certified</span>

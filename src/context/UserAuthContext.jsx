@@ -620,7 +620,7 @@ export function UserAuthProvider({ children }) {
       });
 
       setPendingEmail(email);
-      setModalView("otp");
+      setModalView("verify");
 
       return data;
     },
@@ -656,7 +656,7 @@ export function UserAuthProvider({ children }) {
       });
 
       setPendingEmail(email);
-      setModalView("otp");
+      setModalView("verify");
 
       return data;
     },
@@ -720,134 +720,293 @@ export function UserAuthProvider({ children }) {
   // Google Auth
   // ============================================================================
 
-  const initGoogleSdk = useCallback(() => {
-    if (!GOOGLE_CLIENT_ID || googleInitRef.current) return;
+  // ─── Replace initGoogleSdk in UserAuthContext.jsx ─────────────────────────────
 
-    if (window.google?.accounts) {
-      setGoogleLoaded(true);
-      googleInitRef.current = true;
-      return;
-    }
+const initGoogleSdk = useCallback(() => {
+  if (!GOOGLE_CLIENT_ID || googleInitRef.current) return;
 
-    const existing = document.querySelector(
-      'script[src="https://accounts.google.com/gsi/client"]'
-    );
+  const setup = () => {
+    if (!window.google?.accounts?.id) return;
 
-    if (existing) {
-      existing.addEventListener("load", () => {
-        setGoogleLoaded(true);
-        googleInitRef.current = true;
+    try {
+      // ✅ Initialize ONCE with FedCM disabled
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredentialResponse,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+        // ✅ CRITICAL: Disable FedCM - prevents 403 errors
+        use_fedcm_for_prompt: false,
+        // ✅ Disable One Tap prompt - use button only
+        itp_support: false,
       });
-      return;
-    }
 
-    const script = document.createElement("script");
-    script.src = "https://accounts.google.com/gsi/client";
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
       setGoogleLoaded(true);
       googleInitRef.current = true;
-    };
-    script.onerror = () => {
-      console.warn("[Auth] Failed to load Google SDK");
-      setGoogleLoaded(false);
-    };
-    document.head.appendChild(script);
-  }, []);
+    } catch (err) {
+      console.warn("[Auth] Google SDK init error:", err.message);
+    }
+  };
 
-  const googleSignIn = useCallback(
-    async (credentialOrResponse, profileData = {}) => {
-      const credential =
-        typeof credentialOrResponse === "string"
-          ? credentialOrResponse
-          : credentialOrResponse?.credential;
+  if (window.google?.accounts) {
+    setup();
+    return;
+  }
 
-      if (!credential) {
-        throw new Error("Google sign-in was cancelled.");
-      }
-
-      setGoogleLoading(true);
-      setSocialAuthError("");
-
-      try {
-        // ✅ Correct endpoint: /users/google
-        const data = await authFetch("/users/google", {
-          method: "POST",
-          body: JSON.stringify({
-            credential,
-            phone: safeTrim(profileData?.phone || ""),
-            bio: safeTrim(profileData?.bio || ""),
-            avatar: safeTrim(profileData?.avatar || ""),
-          }),
-        });
-
-        const { isNewUser, requiresProfile } = extractAuthPayload(data);
-
-        if (isNewUser || requiresProfile) {
-          const decoded = decodeGoogleCredential(credential);
-          const pending = {
-            credential,
-            email: decoded?.email || "",
-            name: decoded?.name || "",
-            picture: decoded?.picture || "",
-            sub: decoded?.sub || "",
-          };
-          setGoogleUser(pending);
-          storage.setGooglePending(pending);
-          setModalView("register");
-          return { ...data, requiresProfile: true, googleUser: pending };
-        }
-
-        saveAuth(data, { persist: persistSession });
-        closeModal();
-        return data;
-      } catch (error) {
-        // ✅ Set string message - prevents [object Object]
-        const message = error?.message || "Google sign-in failed.";
-        setSocialAuthError(message);
-        throw new Error(message);
-      } finally {
-        setGoogleLoading(false);
-      }
-    },
-    [authFetch, closeModal, persistSession, saveAuth]
+  const existing = document.querySelector(
+    'script[src="https://accounts.google.com/gsi/client"]'
   );
 
-  const googleSignUp = useCallback(
-    async (credentialOrResponse) => {
-      const credential =
-        typeof credentialOrResponse === "string"
-          ? credentialOrResponse
-          : credentialOrResponse?.credential;
+  if (existing) {
+    if (existing.dataset.loaded === "true") {
+      setup();
+    } else {
+      existing.addEventListener("load", setup, { once: true });
+    }
+    return;
+  }
 
-      if (!credential) throw new Error("Google credential is required.");
+  const script = document.createElement("script");
+  script.src = "https://accounts.google.com/gsi/client";
+  script.async = true;
+  script.defer = true;
+  script.dataset.loaded = "false";
+  script.onload = () => {
+    script.dataset.loaded = "true";
+    setup();
+  };
+  script.onerror = () => {
+    console.warn("[Auth] Failed to load Google SDK");
+    setGoogleLoaded(false);
+  };
+  document.head.appendChild(script);
+}, []); // ✅ No deps - runs once
 
-      setGoogleLoading(true);
 
-      try {
+// ─── Add this handler (used by initialize callback above) ────────────────────
+
+const googleCredentialCallbackRef = useRef(null);
+
+const googleSignIn = useCallback(
+  async (credentialOrResponse, profileData = {}) => {
+    const credential =
+      typeof credentialOrResponse === "string"
+        ? credentialOrResponse
+        : credentialOrResponse?.credential;
+
+    if (!credential) {
+      throw new Error("Google sign-in was cancelled.");
+    }
+
+    setGoogleLoading(true);
+    setSocialAuthError("");
+
+    try {
+      // ✅ Correct endpoint: /users/google
+      const data = await authFetch("/users/google", {
+        method: "POST",
+        body: JSON.stringify({
+          credential,
+          phone: safeTrim(profileData?.phone || ""),
+          bio: safeTrim(profileData?.bio || ""),
+          avatar: safeTrim(profileData?.avatar || ""),
+        }),
+      });
+
+      const { isNewUser, requiresProfile } = extractAuthPayload(data);
+
+      if (isNewUser || requiresProfile) {
         const decoded = decodeGoogleCredential(credential);
-        if (!decoded?.email)
-          throw new Error("Could not decode Google account information.");
-
         const pending = {
           credential,
-          email: decoded.email,
-          name: decoded.name || "",
-          picture: decoded.picture || "",
-          sub: decoded.sub || "",
-          emailVerified: decoded.email_verified || false,
+          email: decoded?.email || "",
+          name: decoded?.name || "",
+          picture: decoded?.picture || "",
+          sub: decoded?.sub || "",
         };
-
         setGoogleUser(pending);
         storage.setGooglePending(pending);
-        return pending;
-      } finally {
-        setGoogleLoading(false);
+        setModalView("register");
+        return { ...data, requiresProfile: true, googleUser: pending };
       }
-    },
-    []
-  );
+
+      saveAuth(data, { persist: persistSession });
+      closeModal();
+      return data;
+    } catch (error) {
+      const message = error?.message || "Google sign-in failed.";
+      setSocialAuthError(message);
+      throw new Error(message);
+    } finally {
+      setGoogleLoading(false);
+    }
+  },
+  [authFetch, closeModal, persistSession, saveAuth]
+);
+
+const googleSignUp = useCallback(
+  async (credentialOrResponse) => {
+    const credential =
+      typeof credentialOrResponse === "string"
+        ? credentialOrResponse
+        : credentialOrResponse?.credential;
+
+    if (!credential) throw new Error("Google credential is required.");
+
+    setGoogleLoading(true);
+
+    try {
+      const decoded = decodeGoogleCredential(credential);
+      if (!decoded?.email)
+        throw new Error("Could not decode Google account information.");
+
+      const pending = {
+        credential,
+        email: decoded.email,
+        name: decoded.name || "",
+        picture: decoded.picture || "",
+        sub: decoded.sub || "",
+        emailVerified: decoded.email_verified || false,
+      };
+
+      setGoogleUser(pending);
+      storage.setGooglePending(pending);
+      return pending;
+    } finally {
+      setGoogleLoading(false);
+    }
+  },
+  []
+);
+
+const handleGoogleCredentialResponse = useCallback(
+  async (response) => {
+    if (!response?.credential) {
+      setSocialAuthError("Google sign-in was cancelled.");
+      setGoogleLoading(false);
+      return;
+    }
+
+    // Call the pending callback if one exists (from promptGoogleAuth)
+    if (googleCredentialCallbackRef.current) {
+      const cb = googleCredentialCallbackRef.current;
+      googleCredentialCallbackRef.current = null;
+      cb(response.credential);
+      return;
+    }
+
+    // Otherwise handle directly
+    try {
+      setGoogleLoading(true);
+      await googleSignIn(response.credential);
+    } catch (err) {
+      setSocialAuthError(err?.message || "Google sign-in failed.");
+    } finally {
+      setGoogleLoading(false);
+    }
+  },
+  [googleSignIn]
+);
+
+
+// ─── Replace promptGoogleAuth in UserAuthContext.jsx ──────────────────────────
+
+const promptGoogleAuth = useCallback(
+  (options = {}) => {
+    return new Promise((resolve, reject) => {
+      if (!GOOGLE_CLIENT_ID) {
+        reject(new Error("Google Sign-In is not configured."));
+        return;
+      }
+
+      if (!googleLoaded || !window.google?.accounts?.id) {
+        reject(
+          new Error("Google Sign-In is loading. Please try again in a moment.")
+        );
+        return;
+      }
+
+      setSocialAuthError("");
+      setGoogleLoading(true);
+
+      let settled = false;
+
+      const settle = (fn, val) => {
+        if (settled) return;
+        settled = true;
+        setGoogleLoading(false);
+        googleCredentialCallbackRef.current = null;
+        fn(val);
+      };
+
+      // ✅ Set credential callback
+      googleCredentialCallbackRef.current = async (credential) => {
+        try {
+          const result =
+            options.mode === "signup"
+              ? await googleSignUp(credential)
+              : await googleSignIn(credential);
+          settle(resolve, result);
+        } catch (err) {
+          settle(reject, err);
+        }
+      };
+
+      // ✅ Always render button - most reliable approach
+      if (options.container) {
+        try {
+          options.container.innerHTML = "";
+
+          window.google.accounts.id.renderButton(options.container, {
+            theme: "outline",
+            size: "large",
+            shape: "pill",
+            width: options.buttonWidth || 320,
+            text: options.mode === "signup" ? "signup_with" : "signin_with",
+            logo_alignment: "left",
+          });
+
+          // Button handles its own flow via the initialize callback
+          setGoogleLoading(false);
+          settled = true; // Don't timeout
+          resolve({ buttonRendered: true });
+        } catch (err) {
+          settle(reject, err);
+        }
+        return;
+      }
+
+      // ✅ Fallback: timeout after 30s
+      const timeout = setTimeout(() => {
+        settle(
+          reject,
+          new Error(
+            "Google sign-in timed out. Please use the Google button."
+          )
+        );
+      }, 30000);
+
+      const clearAndSettle = (fn, val) => {
+        clearTimeout(timeout);
+        settle(fn, val);
+      };
+
+      // Update callback to clear timeout
+      googleCredentialCallbackRef.current = async (credential) => {
+        try {
+          const result =
+            options.mode === "signup"
+              ? await googleSignUp(credential)
+              : await googleSignIn(credential);
+          clearAndSettle(resolve, result);
+        } catch (err) {
+          clearAndSettle(reject, err);
+        }
+      };
+    });
+  },
+  [googleLoaded, googleSignIn, googleSignUp]
+);
 
   const completeGoogleSignUp = useCallback(
     async (profileData = {}) => {
@@ -880,110 +1039,7 @@ export function UserAuthProvider({ children }) {
     [googleSignIn, googleUser]
   );
 
-  const promptGoogleAuth = useCallback(
-    (options = {}) => {
-      return new Promise((resolve, reject) => {
-        if (!googleLoaded || !window.google?.accounts) {
-          reject(new Error("Google Sign-In is not available. Please try again."));
-          return;
-        }
 
-        if (!GOOGLE_CLIENT_ID) {
-          reject(new Error("Google Sign-In is not configured."));
-          return;
-        }
-
-        setSocialAuthError("");
-        setGoogleLoading(true);
-
-        let settled = false;
-
-        const settle = (fn, val) => {
-          if (settled) return;
-          settled = true;
-          setGoogleLoading(false);
-          fn(val instanceof Error ? val : val);
-        };
-
-        const timeout = setTimeout(() => {
-          settle(
-            reject,
-            new Error(
-              "Google sign-in timed out. Please use the Google button below."
-            )
-          );
-        }, 12000);
-
-        try {
-          window.google.accounts.id.initialize({
-            client_id: GOOGLE_CLIENT_ID,
-            callback: async (response) => {
-              clearTimeout(timeout);
-              setGoogleLoading(false);
-
-              if (!response?.credential) {
-                settle(reject, new Error("Google sign-in was cancelled."));
-                return;
-              }
-
-              try {
-                const result =
-                  options.mode === "signup"
-                    ? await googleSignUp(response.credential)
-                    : await googleSignIn(response.credential);
-                settle(resolve, result);
-              } catch (err) {
-                settle(reject, err);
-              }
-            },
-            auto_select: false,
-            cancel_on_tap_outside: true,
-            context: options.mode === "signup" ? "signup" : "signin",
-            ux_mode: "popup",
-            use_fedcm_for_prompt: true,
-          });
-
-          // Render fallback button if container provided
-          if (options.container) {
-            options.container.innerHTML = "";
-            window.google.accounts.id.renderButton(options.container, {
-              theme: "outline",
-              size: "large",
-              shape: "pill",
-              width: options.buttonWidth || 320,
-              text: options.mode === "signup" ? "signup_with" : "signin_with",
-            });
-          }
-
-          window.google.accounts.id.prompt((notification) => {
-            if (
-              notification.isNotDisplayed() ||
-              notification.isSkippedMoment()
-            ) {
-              settle(
-                reject,
-                new Error(
-                  "Google popup was blocked. Please use the Google button below."
-                )
-              );
-              return;
-            }
-
-            if (
-              notification.isDismissedMoment() &&
-              notification.getDismissedReason() !== "credential_returned"
-            ) {
-              settle(reject, new Error("Google sign-in was cancelled."));
-            }
-          });
-        } catch (err) {
-          clearTimeout(timeout);
-          settle(reject, err);
-        }
-      });
-    },
-    [googleLoaded, googleSignIn, googleSignUp]
-  );
 
   const clearGooglePending = useCallback(() => {
     setGoogleUser(null);
@@ -1023,26 +1079,43 @@ export function UserAuthProvider({ children }) {
     [authFetch, closeModal, persistSession, saveAuth]
   );
 
-  const startGithubAuth = useCallback((mode = "signin") => {
-    if (!GITHUB_CLIENT_ID) throw new Error("GitHub Sign-In is not configured.");
+// ─── Replace startGithubAuth in UserAuthContext.jsx ──────────────────────────
 
-    const redirectUrl = new URL(GITHUB_REDIRECT_PATH, window.location.origin);
-    redirectUrl.searchParams.set("auth_provider", "github");
+const startGithubAuth = useCallback((mode = "signin") => {
+  if (!GITHUB_CLIENT_ID) {
+    throw new Error("GitHub Sign-In is not configured.");
+  }
 
-    const state = generateOAuthState();
-    sessionStorage.setItem(KEYS.GITHUB_STATE, state);
-    sessionStorage.setItem(KEYS.GITHUB_INTENT, mode);
-    setSocialAuthError("");
+  setSocialAuthError("");
 
-    const authorizeUrl = new URL("https://github.com/login/oauth/authorize");
-    authorizeUrl.searchParams.set("client_id", GITHUB_CLIENT_ID);
-    authorizeUrl.searchParams.set("redirect_uri", redirectUrl.toString());
-    authorizeUrl.searchParams.set("scope", GITHUB_SCOPE);
-    authorizeUrl.searchParams.set("state", state);
-    authorizeUrl.searchParams.set("allow_signup", "true");
+  // ✅ Build redirect URI — must EXACTLY match GitHub OAuth app settings
+  const redirectUri = new URL(
+    GITHUB_REDIRECT_PATH || "/auth/github/callback",
+    window.location.origin
+  );
 
-    window.location.assign(authorizeUrl.toString());
-  }, []);
+  // ✅ Add auth_provider param so callback page knows what to do
+  redirectUri.searchParams.set("auth_provider", "github");
+
+  const state = generateOAuthState();
+  sessionStorage.setItem(KEYS.GITHUB_STATE, state);
+  sessionStorage.setItem(KEYS.GITHUB_INTENT, mode);
+
+  // ✅ Log for debugging
+  console.log("[GitHub Auth] Redirect URI:", redirectUri.toString());
+  console.log("[GitHub Auth] Client ID:", GITHUB_CLIENT_ID);
+
+  const authorizeUrl = new URL("https://github.com/login/oauth/authorize");
+  authorizeUrl.searchParams.set("client_id", GITHUB_CLIENT_ID);
+  authorizeUrl.searchParams.set("redirect_uri", redirectUri.toString());
+  authorizeUrl.searchParams.set("scope", GITHUB_SCOPE);
+  authorizeUrl.searchParams.set("state", state);
+  authorizeUrl.searchParams.set("allow_signup", "true");
+
+  console.log("[GitHub Auth] Full authorize URL:", authorizeUrl.toString());
+
+  window.location.assign(authorizeUrl.toString());
+}, []);
 
   const cleanGithubParams = useCallback(() => {
     const url = new URL(window.location.href);

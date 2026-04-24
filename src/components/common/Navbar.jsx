@@ -635,7 +635,7 @@ const Navbar = () => {
                       src={
                         r.heroImage ||
                         r.images?.[0] ||
-                        "https://via.placeholder.com/80"
+                        "https://placehold.co/80x80/059669/ffffff?text=Altuvera"
                       }
                       alt=""
                       className="srch__thumb"

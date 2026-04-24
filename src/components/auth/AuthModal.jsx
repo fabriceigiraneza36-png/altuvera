@@ -525,7 +525,7 @@ export default function AuthModal() {
   const [success, setSuccess] = useState("");
   const [code, setCode] = useState(emptyCode());
   const [resendTimer, setResendTimer] = useState(0);
-  const [verifySource] = useState("login");
+  const [verifySource, setVerifySource] = useState("login");
   const [authMethod, setAuthMethod] = useState("email");
   const [codeRowState, setCodeRowState] = useState(""); // "" | "verifying" | "success" | "error"
   const [googleBadgeImageLoading, setGoogleBadgeImageLoading] = useState(false);
@@ -889,6 +889,7 @@ export default function AuthModal() {
         setLoading(true);
         setError("");
         setSuccess("");
+        setVerifySource("login");
         setAuthMethod("email");
         setSessionPreference(formData.keepSignedIn);
 
@@ -898,7 +899,9 @@ export default function AuthModal() {
           persistSession: formData.keepSignedIn,
         });
 
-        setSuccess("✓ Passkey sign-in successful.");
+        setSuccess(
+          "A verification code has been sent to your email. Enter it below to continue."
+        );
       } catch (submitError) {
         setError(submitError.message || "Sign in failed. Please try again.");
       } finally {
@@ -959,6 +962,7 @@ export default function AuthModal() {
         setLoading(true);
         setError("");
         setSuccess("");
+        setVerifySource("register");
         setSessionPreference(formData.keepSignedIn);
 
         const avatar = await resolveAvatarValue();
@@ -986,7 +990,7 @@ export default function AuthModal() {
         setSuccess(
           authMethod === "google"
             ? "✓ Account created successfully! Welcome to Altuvera."
-            : "✓ Passkey account created successfully.",
+            : "A verification code has been sent to your email. Enter it below to activate your account.",
         );
       } catch (submitError) {
         setError(submitError.message || "Sign up failed. Please try again.");

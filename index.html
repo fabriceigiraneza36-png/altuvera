@@ -1,79 +1,57 @@
 ﻿<!doctype html>
 <html lang="en" dir="ltr" prefix="og: https://ogp.me/ns#">
   <head>
-    <!-- ========== CRITICAL META TAGS (Order Matters) ========== -->
+    <!-- ═══════════════════════════════════════════════════════════
+         CRITICAL META (order matters for browser parsing)
+    ═══════════════════════════════════════════════════════════ -->
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=5.0"
     />
+    <meta name="theme-color" content="#059669" />
 
-    <!-- google analytics -->
-    <!-- Google tag (gtag.js) -->
-    <script
-      async
-      src="https://www.googletagmanager.com/gtag/js?id=G-MSC0TNWXBC"
-    ></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag() {
-        dataLayer.push(arguments);
-      }
-      gtag("js", new Date());
-
-      gtag("config", "G-MSC0TNWXBC");
-    </script>
-
-    <!-- PRIMARY SEO TITLE (50-60 chars ideal, front-load keywords) -->
+    <!-- ═══════════════════════════════════════════════════════════
+         PRIMARY SEO
+    ═══════════════════════════════════════════════════════════ -->
     <title>East Africa Safaris & Tours | Altuvera</title>
-
-    <!-- PRIMARY META DESCRIPTION (150-160 chars, include CTA) -->
     <meta
       name="description"
-      content="Book authentic East African safaris & cultural tours with Altuvera. Guided adventures in Kenya, Tanzania, Uganda, Rwanda & Ethiopia. Plan your trip."
+      content="Book authentic East African safaris & cultural tours with Altuvera. Expert-guided adventures in Kenya, Tanzania, Uganda, Rwanda & Ethiopia. Plan your trip today."
     />
-
-    <!-- CANONICAL URL (Prevents duplicate content - CRITICAL) -->
     <link rel="canonical" href="https://altuvera.vercel.app/" />
-
-    <!-- ========== ADDITIONAL SEO META TAGS ========== -->
     <meta
       name="keywords"
-      content="East Africa safari, Kenya safari tours, Tanzania wildlife safari, Uganda gorilla trekking, Rwanda gorilla tours, Ethiopia cultural tours, Maasai Mara safari, Serengeti migration, Zanzibar beach holiday, luxury African safari, budget safari East Africa, Amboseli elephant safari, Bwindi gorilla trekking, Ngorongoro crater tour, Mount Kilimanjaro"
+      content="East Africa safari, Kenya safari tours, Tanzania wildlife, Uganda gorilla trekking, Rwanda tours, Ethiopia cultural tours, Maasai Mara, Serengeti, Zanzibar"
     />
     <meta name="author" content="Altuvera East African Safaris" />
     <meta
       name="robots"
       content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
     />
-    <meta
-      name="googlebot"
-      content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
-    />
-    <meta name="bingbot" content="index, follow" />
-    <meta name="revisit-after" content="3 days" />
-    <meta name="rating" content="general" />
-    <meta name="distribution" content="global" />
-    <meta name="language" content="English" />
+
+    <!-- Geo -->
     <meta name="geo.region" content="KE" />
     <meta name="geo.placename" content="Nairobi, Kenya" />
     <meta name="geo.position" content="-1.2921;36.8219" />
     <meta name="ICBM" content="-1.2921, 36.8219" />
-    <meta name="theme-color" content="#2C5F2D" />
-    <meta name="msapplication-TileColor" content="#2C5F2D" />
-    <meta name="msapplication-navbutton-color" content="#2C5F2D" />
+
+    <!-- App / PWA -->
+    <meta name="application-name" content="Altuvera" />
+    <meta name="apple-mobile-web-app-title" content="Altuvera" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
     />
-    <meta name="apple-mobile-web-app-title" content="Altuvera Safaris" />
-    <meta name="application-name" content="Altuvera" />
+    <meta name="msapplication-TileColor" content="#059669" />
     <meta name="format-detection" content="telephone=yes" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
 
-    <!-- ========== HREFLANG TAGS (International SEO) ========== -->
+    <!-- ═══════════════════════════════════════════════════════════
+         HREFLANG
+    ═══════════════════════════════════════════════════════════ -->
     <link rel="alternate" hreflang="en" href="https://altuvera.vercel.app/" />
     <link
       rel="alternate"
@@ -81,7 +59,9 @@
       href="https://altuvera.vercel.app/"
     />
 
-    <!-- ========== OPEN GRAPH / FACEBOOK (Complete) ========== -->
+    <!-- ═══════════════════════════════════════════════════════════
+         OPEN GRAPH
+    ═══════════════════════════════════════════════════════════ -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://altuvera.vercel.app/" />
     <meta
@@ -90,50 +70,24 @@
     />
     <meta
       property="og:description"
-      content="True adventure in High & Deep Culture. Expert-guided safaris, gorilla trekking, and authentic cultural immersions across Kenya, Tanzania, Uganda, Rwanda & Ethiopia."
+      content="True adventure in High Places & Deep Culture. Expert-guided safaris, gorilla trekking, and cultural immersions across Kenya, Tanzania, Uganda, Rwanda & Ethiopia."
     />
     <meta
       property="og:image"
       content="https://altuvera.vercel.app/altuvera.png"
     />
-    <meta
-      property="og:image:secure_url"
-      content="https://altuvera.vercel.app/altuvera.png"
-    />
-    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta
       property="og:image:alt"
-      content="Elephants walking in Amboseli National Park with Mount Kilimanjaro in background - Altuvera Safari Tours"
+      content="Elephants in Amboseli National Park with Mount Kilimanjaro — Altuvera Safari Tours"
     />
-    <meta
-      property="og:site_name"
-      content="Altuvera â€“ East African Safari & Cultural Tours"
-    />
+    <meta property="og:site_name" content="Altuvera" />
     <meta property="og:locale" content="en_US" />
-    <meta property="og:locale:alternate" content="fr_FR" />
-    <meta property="og:locale:alternate" content="de_DE" />
-    <!-- Additional OG images for carousel -->
-    <meta
-      property="og:image"
-      content="https://altuvera.vercel.app/altuvera.png"
-    />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta
-      property="og:image:alt"
-      content="Mountain gorilla in Bwindi Forest - Altuvera Gorilla Trekking"
-    />
 
-    <!-- Facebook specific -->
-    <meta property="fb:app_id" content="YOUR_FACEBOOK_APP_ID" />
-    <meta
-      property="article:publisher"
-      content="https://www.facebook.com/altuvera"
-    />
-
-    <!-- ========== TWITTER CARD (Complete) ========== -->
+    <!-- ═══════════════════════════════════════════════════════════
+         TWITTER CARD
+    ═══════════════════════════════════════════════════════════ -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@altuvera" />
     <meta name="twitter:creator" content="@altuvera" />
@@ -143,7 +97,7 @@
     />
     <meta
       name="twitter:description"
-      content="True adventure in High & Deep Culture. Book authentic safaris, gorilla trekking & cultural tours across East Africa. Expert guides, unforgettable experiences."
+      content="Expert-guided safaris, gorilla trekking & cultural tours across East Africa. Book with Altuvera today."
     />
     <meta
       name="twitter:image"
@@ -151,40 +105,36 @@
     />
     <meta
       name="twitter:image:alt"
-      content="Safari jeep surrounded by giraffes in Maasai Mara savanna at golden hour"
+      content="Safari jeep in Maasai Mara savanna at golden hour — Altuvera"
     />
-    <meta name="twitter:domain" content="altuvera.vercel.app" />
 
-    <!-- ========== FAVICONS & APP ICONS (Complete Set) ========== -->
+    <!-- ═══════════════════════════════════════════════════════════
+         FAVICONS & MANIFEST
+    ═══════════════════════════════════════════════════════════ -->
     <link rel="icon" type="image/png" href="/altuvera.png" />
     <link rel="shortcut icon" href="/altuvera.png" />
     <link rel="apple-touch-icon" href="/altuvera.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="msapplication-config" content="/browserconfig.xml" />
-    <meta name="msvalidate.01" content="CC2F176F9067C3678ED74AF2A6A43C78" />
 
-    <!-- ========== PRECONNECT & DNS PREFETCH (Performance = SEO) ========== -->
+    <!-- ═══════════════════════════════════════════════════════════
+         PRECONNECT & DNS PREFETCH (performance = better SEO)
+    ═══════════════════════════════════════════════════════════ -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://www.google-analytics.com" />
     <link rel="preconnect" href="https://www.googletagmanager.com" />
-    <link rel="dns-prefetch" href="https://accounts.google.com" />
+    <link rel="preconnect" href="https://accounts.google.com" />
     <link rel="dns-prefetch" href="https://res.cloudinary.com" />
-    <link rel="dns-prefetch" href="https://i.pinimg.com" />
     <link rel="dns-prefetch" href="https://images.unsplash.com" />
+    <link rel="dns-prefetch" href="https://backend-jd8f.onrender.com" />
 
-    <!-- ========== FONTS (async â€“ non-blocking load) ========== -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <!-- Async font load via preload trick â€“ eliminates render-blocking -->
+    <!-- ═══════════════════════════════════════════════════════════
+         FONTS (non-blocking async load)
+    ═══════════════════════════════════════════════════════════ -->
     <link
       rel="preload"
       as="style"
       href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Poppins:wght@300;400;500;600;700&family=Dancing+Script:wght@700&display=swap"
-      onload="
-        this.onload = null;
-        this.rel = 'stylesheet';
-      "
+      onload="this.onload=null;this.rel='stylesheet'"
     />
     <noscript>
       <link
@@ -193,28 +143,26 @@
       />
     </noscript>
 
-    <!-- ========== SITEMAP & RSS ========== -->
+    <!-- ═══════════════════════════════════════════════════════════
+         SITEMAP
+    ═══════════════════════════════════════════════════════════ -->
     <link
       rel="sitemap"
       type="application/xml"
       title="Sitemap"
       href="/sitemap.xml"
     />
-    <link
-      rel="alternate"
-      type="application/rss+xml"
-      title="Altuvera Safari Blog"
-      href="/rss.xml"
-    />
 
-    <!-- ========== STRUCTURED DATA: Organization ========== -->
+    <!-- ═══════════════════════════════════════════════════════════
+         STRUCTURED DATA — Organization / TravelAgency
+    ═══════════════════════════════════════════════════════════ -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
         "@type": "TravelAgency",
         "@id": "https://altuvera.vercel.app/#organization",
         "name": "Altuvera",
-        "alternateName": ["Altuvera East African Safaris", "Altuvera Tours"],
+        "alternateName": "Altuvera East African Safaris",
         "url": "https://altuvera.vercel.app/",
         "logo": {
           "@type": "ImageObject",
@@ -222,18 +170,9 @@
           "width": 512,
           "height": 512
         },
-        "image": [
-          "https://altuvera.vercel.app/altuvera.png",
-          "https://altuvera.vercel.app/altuvera.png",
-          "https://altuvera.vercel.app/altuvera.png"
-        ],
         "description": "Premier East African tour operator specializing in authentic safari and cultural experiences across Kenya, Tanzania, Uganda, Rwanda, and Ethiopia.",
-        "slogan": "True Adventure In High & Deep Culture",
+        "slogan": "True Adventure In High Places & Deep Culture",
         "foundingDate": "2020",
-        "founder": {
-          "@type": "Person",
-          "name": "Altuvera Founder"
-        },
         "address": {
           "@type": "PostalAddress",
           "streetAddress": "Karen Plains",
@@ -247,65 +186,41 @@
           "latitude": -1.2921,
           "longitude": 36.8219
         },
-        "contactPoint": [
-          {
-            "@type": "ContactPoint",
-            "telephone": "+254-700-123456",
-            "contactType": "customer service",
-            "areaServed": [
-              "KE",
-              "TZ",
-              "UG",
-              "RW",
-              "ET",
-              "US",
-              "GB",
-              "DE",
-              "FR"
-            ],
-            "availableLanguage": ["English", "Swahili", "French", "German"],
-            "hoursAvailable": {
-              "@type": "OpeningHoursSpecification",
-              "dayOfWeek": [
-                "Monday",
-                "Tuesday",
-                "Wednesday",
-                "Thursday",
-                "Friday"
-              ],
-              "opens": "08:00",
-              "closes": "18:00"
-            }
-          },
-          {
-            "@type": "ContactPoint",
-            "telephone": "+254-700-123456",
-            "contactType": "reservations",
-            "areaServed": "Worldwide",
-            "availableLanguage": ["English", "Swahili"]
-          }
-        ],
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "telephone": "+254-700-123456",
+          "email": "altuverasafari@gmail.com",
+          "contactType": "customer service",
+          "availableLanguage": ["English", "Swahili", "French"],
+          "areaServed": "Worldwide"
+        },
         "sameAs": [
           "https://www.facebook.com/altuvera",
           "https://www.instagram.com/altu.vera1/",
           "https://twitter.com/altuvera",
           "https://www.linkedin.com/company/altuvera",
           "https://www.youtube.com/@altuvera",
-          "https://www.pinterest.com/altuvera",
-          "https://www.tiktok.com/@altuvera",
-          "https://www.tripadvisor.com/Attraction_Review-altuvera"
+          "https://www.tiktok.com/@altuvera"
         ],
-        "hasMap": "https://maps.google.com/?cid=YOUR_GOOGLE_MAPS_CID",
+        "aggregateRating": {
+          "@type": "AggregateRating",
+          "ratingValue": "4.9",
+          "reviewCount": "347",
+          "bestRating": "5"
+        },
+        "areaServed": [
+          { "@type": "Country", "name": "Kenya" },
+          { "@type": "Country", "name": "Tanzania" },
+          { "@type": "Country", "name": "Uganda" },
+          { "@type": "Country", "name": "Rwanda" },
+          { "@type": "Country", "name": "Ethiopia" }
+        ],
+        "currenciesAccepted": "USD, EUR, GBP, KES",
+        "paymentAccepted": "Cash, Credit Card, Wire Transfer",
         "openingHoursSpecification": [
           {
             "@type": "OpeningHoursSpecification",
-            "dayOfWeek": [
-              "Monday",
-              "Tuesday",
-              "Wednesday",
-              "Thursday",
-              "Friday"
-            ],
+            "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
             "opens": "08:00",
             "closes": "18:00"
           },
@@ -315,42 +230,13 @@
             "opens": "09:00",
             "closes": "14:00"
           }
-        ],
-        "currenciesAccepted": "USD, EUR, GBP, KES",
-        "paymentAccepted": "Cash, Credit Card, Wire Transfer",
-        "aggregateRating": {
-          "@type": "AggregateRating",
-          "ratingValue": "4.9",
-          "reviewCount": "347",
-          "bestRating": "5",
-          "worstRating": "1"
-        },
-        "areaServed": [
-          {
-            "@type": "Country",
-            "name": "Kenya"
-          },
-          {
-            "@type": "Country",
-            "name": "Tanzania"
-          },
-          {
-            "@type": "Country",
-            "name": "Uganda"
-          },
-          {
-            "@type": "Country",
-            "name": "Rwanda"
-          },
-          {
-            "@type": "Country",
-            "name": "Ethiopia"
-          }
         ]
       }
     </script>
 
-    <!-- ========== STRUCTURED DATA: Website (Sitelinks Search) ========== -->
+    <!-- ═══════════════════════════════════════════════════════════
+         STRUCTURED DATA — WebSite (enables Sitelinks Search Box)
+    ═══════════════════════════════════════════════════════════ -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -373,52 +259,10 @@
         "inLanguage": ["en", "fr", "de"]
       }
     </script>
-    <!-- ========== STRUCTURED DATA: BreadcrumbList ========== -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          {
-            "@type": "ListItem",
-            "position": 1,
-            "name": "Home",
-            "item": "https://altuvera.vercel.app/"
-          },
-          {
-            "@type": "ListItem",
-            "position": 2,
-            "name": "Destinations",
-            "item": "https://altuvera.vercel.app/destinations"
-          },
-          {
-            "@type": "ListItem",
-            "position": 3,
-            "name": "Explore",
-            "item": "https://altuvera.vercel.app/explore"
-          },
-          {
-            "@type": "ListItem",
-            "position": 4,
-            "name": "Services",
-            "item": "https://altuvera.vercel.app/services"
-          },
-          {
-            "@type": "ListItem",
-            "position": 5,
-            "name": "About",
-            "item": "https://altuvera.vercel.app/about"
-          },
-          {
-            "@type": "ListItem",
-            "position": 6,
-            "name": "Contact",
-            "item": "https://altuvera.vercel.app/contact"
-          }
-        ]
-      }
-    </script>
-    <!-- ========== STRUCTURED DATA: FAQPage (Rich Results) ========== -->
+
+    <!-- ═══════════════════════════════════════════════════════════
+         STRUCTURED DATA — FAQ (Rich Results)
+    ═══════════════════════════════════════════════════════════ -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -437,15 +281,15 @@
             "name": "How much does an East African safari cost?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "East African safari costs vary from $150-$300 per day for budget safaris to $500-$1500+ per day for luxury experiences. Altuvera offers customized packages to fit every budget, including accommodation, transport, park fees, and expert guides."
+              "text": "East African safari costs range from $150–$300/day for budget safaris to $500–$1,500+/day for luxury experiences. Altuvera offers customized packages including accommodation, transport, park fees, and expert guides."
             }
           },
           {
             "@type": "Question",
-            "name": "Do I need a visa to visit Kenya and Tanzania?",
+            "name": "Do I need a visa to visit Kenya or Tanzania?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Most visitors need a visa for Kenya and Tanzania. The East Africa Tourist Visa ($100) allows travel between Kenya, Uganda, and Rwanda. Tanzania offers visa on arrival or e-visa. Altuvera assists all clients with visa guidance."
+              "text": "Most visitors need a visa. The East Africa Tourist Visa ($100) covers Kenya, Uganda, and Rwanda. Tanzania offers e-visa and visa on arrival. Altuvera provides full visa guidance to all clients."
             }
           },
           {
@@ -453,119 +297,59 @@
             "name": "Is gorilla trekking safe?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "Yes, gorilla trekking in Uganda and Rwanda is very safe when done with licensed operators like Altuvera. Groups are limited to 8 people, guided by experienced rangers. Mountain gorillas are habituated to human presence."
+              "text": "Yes. Gorilla trekking in Uganda and Rwanda is very safe with licensed operators like Altuvera. Groups are limited to 8 people and guided by experienced rangers through habituated gorilla families."
             }
           }
         ]
       }
     </script>
-    <!-- ========== STRUCTURED DATA: Featured Tours (Product/Service) ========== -->
+
+    <!-- ═══════════════════════════════════════════════════════════
+         STRUCTURED DATA — BreadcrumbList
+    ═══════════════════════════════════════════════════════════ -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
-        "@type": "ItemList",
-        "name": "Featured East African Destinations",
-        "description": "Popular destinations and experiences across East Africa",
-        "numberOfItems": 3,
+        "@type": "BreadcrumbList",
         "itemListElement": [
-          {
-            "@type": "ListItem",
-            "position": 1,
-            "item": {
-              "@type": "TouristDestination",
-              "name": "Maasai Mara National Reserve",
-              "url": "https://altuvera.vercel.app/destination/maasai-mara",
-              "image": "https://i.pinimg.com/1200x/1a/19/cf/1a19cfa92b23af4c8f883e4bad203533.jpg"
-            }
-          },
-          {
-            "@type": "ListItem",
-            "position": 2,
-            "item": {
-              "@type": "TouristDestination",
-              "name": "Bwindi Impenetrable Forest",
-              "url": "https://altuvera.vercel.app/destination/bwindi",
-              "image": "https://i.pinimg.com/1200x/81/42/97/81429785ce16b0f6ff2e1a65c701a53f.jpg"
-            }
-          },
-          {
-            "@type": "ListItem",
-            "position": 3,
-            "item": {
-              "@type": "TouristDestination",
-              "name": "Serengeti National Park",
-              "url": "https://altuvera.vercel.app/destination/serengeti",
-              "image": "https://i.pinimg.com/736x/1c/1d/24/1c1d241de1433f22d6159328a4632a18.jpg"
-            }
-          }
-        ]
-      }
-    </script>
-    <!-- ========== STRUCTURED DATA: Local Business (for Google Maps) ========== -->
-    <script type="application/ld+json">
-      {
-        "@context": "https://schema.org",
-        "@type": "LocalBusiness",
-        "@id": "https://altuvera.vercel.app/#localbusiness",
-        "name": "Altuvera Safari Tours",
-        "image": "https://altuvera.vercel.app/altuvera.png",
-        "telephone": "+254-700-123456",
-        "email": "altuverasafari@gmail.com",
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "Karen Plains",
-          "addressLocality": "Nairobi",
-          "addressRegion": "Nairobi County",
-          "postalCode": "00100",
-          "addressCountry": "KE"
-        },
-        "geo": {
-          "@type": "GeoCoordinates",
-          "latitude": -1.2921,
-          "longitude": 36.8219
-        },
-        "url": "https://altuvera.vercel.app/",
-        "openingHoursSpecification": [
-          {
-            "@type": "OpeningHoursSpecification",
-            "dayOfWeek": [
-              "Monday",
-              "Tuesday",
-              "Wednesday",
-              "Thursday",
-              "Friday"
-            ],
-            "opens": "08:00",
-            "closes": "18:00"
-          }
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://altuvera.vercel.app/" },
+          { "@type": "ListItem", "position": 2, "name": "Destinations", "item": "https://altuvera.vercel.app/destinations" },
+          { "@type": "ListItem", "position": 3, "name": "Explore", "item": "https://altuvera.vercel.app/explore" },
+          { "@type": "ListItem", "position": 4, "name": "Services", "item": "https://altuvera.vercel.app/services" },
+          { "@type": "ListItem", "position": 5, "name": "About", "item": "https://altuvera.vercel.app/about" },
+          { "@type": "ListItem", "position": 6, "name": "Contact", "item": "https://altuvera.vercel.app/contact" }
         ]
       }
     </script>
 
-    <!-- ========== GOOGLE TAG MANAGER (Place in head) ========== -->
-    <!-- Replace GTM-XXXXXXX with your actual GTM container ID -->
+    <!-- ═══════════════════════════════════════════════════════════
+         GOOGLE ANALYTICS 4
+    ═══════════════════════════════════════════════════════════ -->
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-MSC0TNWXBC"
+    ></script>
     <script>
-      (function (w, d, s, l, i) {
-        w[l] = w[l] || [];
-        w[l].push({ "gtm.start": new Date().getTime(), event: "gtm.js" });
-        var f = d.getElementsByTagName(s)[0],
-          j = d.createElement(s),
-          dl = l != "dataLayer" ? "&l=" + l : "";
-        j.async = true;
-        j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
-        f.parentNode.insertBefore(j, f);
-      })(window, document, "script", "dataLayer", "GTM-XXXXXXX");
+      window.dataLayer = window.dataLayer || [];
+      function gtag() { dataLayer.push(arguments); }
+      gtag("js", new Date());
+      gtag("config", "G-MSC0TNWXBC", {
+        send_page_view: true,
+        anonymize_ip: true
+      });
     </script>
 
-    <!-- ========== GOOGLE SIGN-IN ========== -->
+    <!-- ═══════════════════════════════════════════════════════════
+         GOOGLE SIGN-IN SDK (async — non-blocking)
+    ═══════════════════════════════════════════════════════════ -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
 
-    <!-- ========== CRITICAL CSS (Inline for FCP) ========== -->
+    <!-- ═══════════════════════════════════════════════════════════
+         CRITICAL CSS (inline — eliminates render-blocking)
+    ═══════════════════════════════════════════════════════════ -->
     <style>
-      /* Critical above-the-fold CSS to prevent layout shift */
-      *,
-      *::before,
-      *::after {
+      /* Reset & Base */
+      *, *::before, *::after {
         box-sizing: border-box;
         margin: 0;
         padding: 0;
@@ -573,54 +357,52 @@
       html {
         scroll-behavior: smooth;
         -webkit-text-size-adjust: 100%;
+        font-size: 16px;
       }
       body {
-        font-family:
-          "Poppins",
-          system-ui,
-          -apple-system,
-          sans-serif;
+        font-family: "Poppins", system-ui, -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, sans-serif;
         line-height: 1.6;
         color: #1a1a2e;
-        background: #fff;
+        background: #ffffff;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
       }
       #root {
         min-height: 100vh;
         display: flex;
         flex-direction: column;
       }
-      img,
-      video {
+      img, video, svg {
         max-width: 100%;
         height: auto;
         display: block;
       }
-      /* Skeleton loader to reduce CLS */
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      /* Skeleton loader — prevents CLS on initial paint */
       .skeleton-hero {
         width: 100%;
         height: 100vh;
         background: linear-gradient(
           110deg,
           #f0f0f0 8%,
-          #e0e0e0 18%,
+          #e4e4e4 18%,
           #f0f0f0 33%
         );
         background-size: 200% 100%;
-        animation: shimmer 1.5s linear infinite;
+        animation: skeleton-shimmer 1.4s linear infinite;
       }
-      @keyframes shimmer {
-        to {
-          background-position-x: -200%;
-        }
+      @keyframes skeleton-shimmer {
+        to { background-position-x: -200%; }
       }
-    </style>
-  </head>
 
-  <body>
-    <h1
-      style="
+      /* Visually hidden (accessibility) */
+      .sr-only {
         position: absolute;
         width: 1px;
         height: 1px;
@@ -630,107 +412,83 @@
         clip: rect(0, 0, 0, 0);
         white-space: nowrap;
         border: 0;
-      "
-    >
-      East Africa Safaris & Tours by Altuvera
-    </h1>
-    <!-- ========== GTM NOSCRIPT FALLBACK ========== -->
-    <noscript>
-      <iframe
-        src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX"
-        height="0"
-        width="0"
-        style="display: none; visibility: hidden"
-        title="Google Tag Manager"
-      ></iframe>
-    </noscript>
+      }
+    </style>
+  </head>
 
-    <!-- ========== ROOT APP ========== -->
+  <body>
+    <!-- Accessibility: visually hidden H1 for screen readers & SEO -->
+    <h1 class="sr-only">East Africa Safaris &amp; Tours by Altuvera</h1>
+
+    <!-- ═══════════════════════════════════════════════════════════
+         REACT ROOT
+    ═══════════════════════════════════════════════════════════ -->
     <div id="root">
-      <!-- Pre-render skeleton for better FCP/LCP scores -->
+      <!-- Skeleton shown until React hydrates (improves FCP/LCP) -->
       <div class="skeleton-hero" aria-hidden="true"></div>
     </div>
 
-    <!-- ========== NOSCRIPT FALLBACK (SEO-Rich) ========== -->
+    <!-- ═══════════════════════════════════════════════════════════
+         NOSCRIPT FALLBACK (SEO + accessibility)
+    ═══════════════════════════════════════════════════════════ -->
     <noscript>
       <div
         style="
           text-align: center;
-          padding: 2rem;
-          font-family: &quot;Poppins&quot;, sans-serif;
-          max-width: 800px;
+          padding: 2rem 1rem;
+          font-family: 'Poppins', sans-serif;
+          max-width: 720px;
           margin: 0 auto;
+          color: #1a1a2e;
         "
       >
-        <h1>Altuvera â€“ Premier East African Safari & Cultural Tours</h1>
-        <h2>True Adventure In High & Deep Culture</h2>
-        <p>
-          Experience the best of East Africa with Altuvera. We offer
-          expert-guided safaris, gorilla trekking, and cultural immersion tours
-          across Kenya, Tanzania, Uganda, Rwanda, and Ethiopia.
+        <h1 style="font-size: 1.8rem; margin-bottom: 0.5rem;">
+          Altuvera — East African Safari &amp; Cultural Tours
+        </h1>
+        <p style="color: #4b5563; margin-bottom: 2rem;">
+          True Adventure In High Places &amp; Deep Culture
         </p>
 
-        <h3>Our Popular Tours</h3>
-        <ul
-          style="
-            list-style: none;
-            padding: 0;
-            text-align: left;
-            display: inline-block;
-          "
-        >
-          <li>
-            <a href="/destination/maasai-mara"
-              >Maasai Mara Great Migration Safari</a
-            >
-          </li>
-          <li>
-            <a href="/destination/bwindi">Uganda Gorilla Trekking Adventure</a>
-          </li>
-          <li>
-            <a href="/destination/serengeti">Serengeti Safari Experience</a>
-          </li>
-          <li>
-            <a href="/destination/kilimanjaro">Mount Kilimanjaro Climbing</a>
-          </li>
-          <li><a href="/explore">Cultural Tours & Experiences</a></li>
+        <h2 style="font-size: 1.2rem; margin-bottom: 1rem;">
+          Popular Experiences
+        </h2>
+        <ul style="list-style: none; padding: 0; margin-bottom: 2rem;">
+          <li><a href="/destination/maasai-mara" style="color: #059669;">Maasai Mara Great Migration Safari</a></li>
+          <li><a href="/destination/bwindi" style="color: #059669;">Uganda Gorilla Trekking Adventure</a></li>
+          <li><a href="/destination/serengeti" style="color: #059669;">Serengeti Safari Experience</a></li>
+          <li><a href="/destination/kilimanjaro" style="color: #059669;">Mount Kilimanjaro Climbing</a></li>
+          <li><a href="/explore" style="color: #059669;">Cultural Tours &amp; Experiences</a></li>
         </ul>
 
-        <h3>Destinations</h3>
-        <ul
-          style="
-            list-style: none;
-            padding: 0;
-            text-align: left;
-            display: inline-block;
-          "
-        >
-          <li><a href="/country/kenya">Kenya Safaris</a></li>
-          <li><a href="/country/tanzania">Tanzania Tours</a></li>
-          <li><a href="/country/uganda">Uganda Adventures</a></li>
-          <li><a href="/country/rwanda">Rwanda Experiences</a></li>
-          <li>
-            <a href="/country/ethiopia">Ethiopia Cultural Tours</a>
-          </li>
+        <h2 style="font-size: 1.2rem; margin-bottom: 1rem;">Destinations</h2>
+        <ul style="list-style: none; padding: 0; margin-bottom: 2rem;">
+          <li><a href="/country/kenya" style="color: #059669;">Kenya Safaris</a></li>
+          <li><a href="/country/tanzania" style="color: #059669;">Tanzania Tours</a></li>
+          <li><a href="/country/uganda" style="color: #059669;">Uganda Adventures</a></li>
+          <li><a href="/country/rwanda" style="color: #059669;">Rwanda Experiences</a></li>
+          <li><a href="/country/ethiopia" style="color: #059669;">Ethiopia Cultural Tours</a></li>
         </ul>
 
-        <h3>Contact Us</h3>
+        <h2 style="font-size: 1.2rem; margin-bottom: 1rem;">Contact Us</h2>
         <p>
-          Email:
-          <a href="mailto:altuverasafari@gmail.com">altuverasafari@gmail.com</a
-          ><br />
-          Phone: <a href="tel:+254700123456">+254-700-123456</a><br />
-          Location: Karen Plains, Nairobi, Kenya
+          <a href="mailto:altuverasafari@gmail.com" style="color: #059669;">
+            altuverasafari@gmail.com
+          </a><br />
+          <a href="tel:+254700123456" style="color: #059669;">
+            +254-700-123456
+          </a><br />
+          Karen Plains, Nairobi, Kenya
         </p>
 
-        <p style="margin-top: 1.5rem; font-size: 0.9rem; color: #666">
-          Please enable JavaScript for the full interactive experience,
-          including booking, live chat, and virtual tours.
+        <p style="margin-top: 2rem; font-size: 0.85rem; color: #9ca3af;">
+          Please enable JavaScript for the full interactive experience.
         </p>
       </div>
     </noscript>
 
-    <!-- ========== MAIN APP SCRIPT ========== -->
+    <!-- ═══════════════════════════════════════════════════════════
+         APP ENTRY POINT
+    ═══════════════════════════════════════════════════════════ -->
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

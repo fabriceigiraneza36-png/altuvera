@@ -2793,7 +2793,7 @@ const StepFour = memo(
 // SUCCESS SCREEN
 // ═══════════════════════════════════════════════════════════════════════════
 
-const SuccessScreen = memo(({ isMobile }) => {
+const SuccessScreen = memo(({ isMobile, displayName }) => {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -2841,7 +2841,7 @@ const SuccessScreen = memo(({ isMobile }) => {
           marginBottom: 16,
         }}
       >
-        Request Sent! 🎉
+        {displayName ? `Request Sent, ${displayName}! 🎉` : "Request Sent! 🎉"}
       </motion.h2>
 
       <motion.div
@@ -2880,7 +2880,7 @@ const SuccessScreen = memo(({ isMobile }) => {
           lineHeight: 1.7,
         }}
       >
-        Thank you for your interest in traveling with Altuvera!{" "}
+        {displayName ? `${displayName}, thank you for your interest in traveling with Altuvera! ` : "Thank you for your interest in traveling with Altuvera! "}
         <strong>{ADMIN_CONTACT.name}</strong> will reach out within 24 hours
         with a personalized itinerary and quote.
       </motion.p>
@@ -2981,6 +2981,14 @@ const Booking = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState("");
+  const [feedbackType, setFeedbackType] = useState("info");
+
+  const displayName = useMemo(
+    () => user?.fullName || user?.name || user?.email?.split("@")[0] || "",
+    [user],
+  );
+  const isAuthenticated = Boolean(user?.email);
 
   // Window size
   const [windowWidth, setWindowWidth] = useState(
@@ -3485,6 +3493,7 @@ Please provide a personalized quote and itinerary. Thank you!`;
       if (!validateStep(4)) return;
 
       setIsSubmitting(true);
+      setFeedbackMessage("");
 
       const bookingPayload = {
         ...formData,
@@ -3496,19 +3505,36 @@ Please provide a personalized quote and itinerary. Thank you!`;
       };
 
       try {
-        await sendMessage({
+        const result = await sendMessage({
           type: "booking",
           data: bookingPayload,
         });
 
         saveBookingLocally(bookingPayload);
-        sendWhatsAppMessage();
-        setIsSubmitted(true);
+
+        if (result?.success) {
+          setFeedbackType("success");
+          setFeedbackMessage(
+            "Your booking request has been received. A travel specialist will contact you shortly."
+          );
+          sendWhatsAppMessage();
+          setIsSubmitted(true);
+        } else {
+          setFeedbackType("warning");
+          setFeedbackMessage(
+            "We could not submit your booking to the server right now. Your request is saved locally and WhatsApp is opening so we can keep the conversation moving."
+          );
+          sendWhatsAppMessage();
+        }
       } catch (err) {
         console.error("Booking submission error:", err);
         saveBookingLocally(bookingPayload);
+        setFeedbackType("error");
+        setFeedbackMessage(
+          err?.message ||
+            "We were unable to submit your booking. Your request is saved locally. Please try again or contact us on WhatsApp."
+        );
         sendWhatsAppMessage();
-        setIsSubmitted(true);
       } finally {
         setIsSubmitting(false);
       }
@@ -3686,7 +3712,7 @@ Please provide a personalized quote and itinerary. Thank you!`;
               glow
               style={{ padding: isMobile ? "20px 20px" : "35px 40px" }}
             >
-              <SuccessScreen isMobile={isMobile} />
+              <SuccessScreen isMobile={isMobile} displayName={displayName} />
             </GlassCard>
           </div>
         </section>
