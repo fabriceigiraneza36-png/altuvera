@@ -15,6 +15,10 @@ import {
   FiGlobe,
   FiCalendar,
   FiCamera,
+  FiEye,
+  FiBookmark,
+  FiShare2,
+  FiThumbsUp,
 } from 'react-icons/fi';
 import { useWishlist } from '../../hooks/useWishlist';
 import { FALLBACK_IMAGE } from '../../utils/destinationAdapter';
@@ -61,11 +65,64 @@ const COLORS = {
     main: '#F43F5E',
     dark: '#E11D48',
   },
+  blue: {
+    light: '#DBEAFE',
+    main: '#3B82F6',
+    dark: '#1D4ED8',
+  },
+  purple: {
+    light: '#EDE9FE',
+    main: '#8B5CF6',
+    dark: '#5B21B6',
+  },
 };
 
 /* ===================================================================
-   HELPER FUNCTIONS
+   STYLES
    =================================================================== */
+
+const styles = `
+  .destination-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .destination-card:hover {
+    transform: translateY(-8px) scale(1.02);
+  }
+
+  .destination-card.priority {
+    border: 2px solid #8B5CF6;
+    box-shadow: 0 8px 32px rgba(139, 92, 246, 0.2);
+  }
+
+  .shine {
+    left: 100% !important;
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes pulse-ring {
+    0% { transform: scale(0.8); opacity: 0.8; }
+    50% { transform: scale(1.2); opacity: 0; }
+    100% { transform: scale(0.8); opacity: 0; }
+  }
+
+  @media (max-width: 768px) {
+    .destination-card:hover {
+      transform: translateY(-4px) scale(1.01);
+    }
+  }
+`;
+
+// Inject styles
+if (typeof document !== 'undefined') {
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = styles;
+  document.head.appendChild(styleSheet);
+}
 
 const renderStars = (rating) =>
   Array.from({ length: 5 }, (_, i) => (
@@ -449,12 +506,23 @@ function DestinationCard({
   onWishlistToggle,
   showBookButton = true,
   compact = false,
+  user,
+  isMobile = false,
+  priority = false,
 }) {
   const [hovered, setHovered] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const cardRef = useRef(null);
   const { loadWishlist, toggleWishlist, isWishlisted } = useWishlist();
 
   const destKey = destination?._id || destination?.id || destination?.slug;
   const liked = isWishlisted(destKey);
+
+  // User personalization
+  const isRecommended = user && destination?.recommendedFor?.includes(user?.id);
+  const hasUserRating = user && destination?.userRatings?.[user?.id];
+  const userRating = hasUserRating ? destination.userRatings[user.id] : 0;
 
   useEffect(() => {
     loadWishlist();
@@ -465,6 +533,38 @@ function DestinationCard({
     e.stopPropagation();
     toggleWishlist(destKey);
     onWishlistToggle?.(destKey, !liked);
+  };
+
+  const handleShareClick = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setShowShareMenu(!showShareMenu);
+  };
+
+  const handleShareOption = (platform) => {
+    const url = window.location.origin + getDetailsHref(destination);
+    const text = `Check out ${destination?.name} - ${destination?.description?.slice(0, 100)}...`;
+
+    let shareUrl = '';
+    switch (platform) {
+      case 'whatsapp':
+        shareUrl = `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`;
+        break;
+      case 'facebook':
+        shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`;
+        break;
+      case 'twitter':
+        shareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+        break;
+      case 'copy':
+        navigator.clipboard.writeText(url);
+        return;
+    }
+
+    if (shareUrl) {
+      window.open(shareUrl, '_blank', 'width=600,height=400');
+    }
+    setShowShareMenu(false);
   };
 
   if (!destination) {
@@ -497,6 +597,8 @@ function DestinationCard({
     type,
     category,
     difficulty,
+    views = 0,
+    likes = 0,
   } = destination;
 
   // Determine values
@@ -512,23 +614,81 @@ function DestinationCard({
 
   return (
     <article
+      ref={cardRef}
+      className={`destination-card ${compact ? 'compact' : ''} ${priority ? 'priority' : ''}`}
       style={{
-        borderRadius: 24,
+        position: 'relative',
+        borderRadius: compact ? 20 : 24,
         overflow: 'hidden',
         backgroundColor: COLORS.white.pure,
         boxShadow: hovered
-          ? '0 24px 56px rgba(22,163,74,0.18)'
-          : '0 4px 24px rgba(0,0,0,0.06)',
-        transition: 'all 0.45s cubic-bezier(0.4,0,0.2,1)',
-        transform: hovered ? 'translateY(-10px)' : 'none',
-        border: `1px solid ${hovered ? COLORS.green[200] : COLORS.neutral[100]}`,
+          ? `0 20px 40px -12px rgba(0,0,0,0.15), 0 0 0 1px rgba(34, 197, 94, 0.1)`
+          : `0 8px 24px -8px rgba(0,0,0,0.08)`,
+        transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+        transform: hovered ? 'translateY(-8px) scale(1.02)' : 'translateY(0) scale(1)',
+        cursor: 'pointer',
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
+        border: hovered ? `2px solid ${COLORS.green[200]}` : `1px solid ${COLORS.neutral[100]}`,
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >
+      {/* Priority/Recommendation Badge */}
+      {isRecommended && (
+        <div
+          style={{
+            position: 'absolute',
+            top: 12,
+            left: 12,
+            zIndex: 10,
+            background: `linear-gradient(135deg, ${COLORS.purple.main}, ${COLORS.purple.dark})`,
+            color: COLORS.white.pure,
+            padding: '6px 12px',
+            borderRadius: 20,
+            fontSize: 11,
+            fontWeight: 700,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            boxShadow: '0 4px 12px rgba(139, 92, 246, 0.3)',
+            animation: 'float 3s ease-in-out infinite',
+          }}
+        >
+          <FiThumbsUp size={12} />
+          Recommended for You
+        </div>
+      )}
+
+      {/* Status Badges */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 12,
+          right: 12,
+          zIndex: 10,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6,
+        }}
+      >
+        {isNew && (
+          <Badge variant="new" size="small">
+            NEW
+          </Badge>
+        )}
+        {isPopular && (
+          <Badge variant="popular" size="small">
+            POPULAR
+          </Badge>
+        )}
+        {isFeatured && (
+          <Badge variant="featured" size="small">
+            FEATURED
+          </Badge>
+        )}
+      </div>
       {/* Image Section */}
       <div style={{ position: 'relative' }}>
         <ImageSlideshow images={safeImages} height={compact ? 200 : 280} />
@@ -570,34 +730,117 @@ function DestinationCard({
             )}
           </div>
 
-          <button
-            onClick={handleWishlistClick}
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: '50%',
-              border: 'none',
-              backgroundColor: liked
-                ? COLORS.green[600]
-                : 'rgba(255,255,255,0.25)',
-              backdropFilter: 'blur(8px)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              zIndex: 7,
-            }}
-            aria-label={liked ? 'Remove from wishlist' : 'Add to wishlist'}
-          >
-            <FiHeart
-              size={16}
+          <div style={{ display: 'flex', gap: 8 }}>
+            {/* Share Button */}
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={handleShareClick}
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  border: 'none',
+                  backgroundColor: 'rgba(255,255,255,0.25)',
+                  backdropFilter: 'blur(8px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s',
+                  zIndex: 7,
+                }}
+                aria-label="Share destination"
+              >
+                <FiShare2 size={14} color={COLORS.white.pure} />
+              </button>
+
+              {/* Share Menu */}
+              {showShareMenu && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    marginTop: 8,
+                    backgroundColor: COLORS.white.pure,
+                    borderRadius: 12,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                    padding: 8,
+                    minWidth: 140,
+                    zIndex: 20,
+                  }}
+                >
+                  {[
+                    { icon: '📱', label: 'WhatsApp', action: 'whatsapp' },
+                    { icon: '📘', label: 'Facebook', action: 'facebook' },
+                    { icon: '🐦', label: 'Twitter', action: 'twitter' },
+                    { icon: '📋', label: 'Copy Link', action: 'copy' },
+                  ].map((option) => (
+                    <button
+                      key={option.action}
+                      onClick={() => handleShareOption(option.action)}
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        border: 'none',
+                        backgroundColor: 'transparent',
+                        borderRadius: 8,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        fontSize: 14,
+                        color: COLORS.neutral[700],
+                        transition: 'background-color 0.2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.backgroundColor = COLORS.neutral[50];
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.backgroundColor = 'transparent';
+                      }}
+                    >
+                      <span>{option.icon}</span>
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Enhanced Wishlist Button */}
+            <button
+              onClick={handleWishlistClick}
               style={{
-                color: COLORS.white.pure,
-                fill: liked ? COLORS.white.pure : 'transparent',
+                width: 38,
+                height: 38,
+                borderRadius: '50%',
+                border: 'none',
+                backgroundColor: liked
+                  ? COLORS.rose.main
+                  : 'rgba(255,255,255,0.25)',
+                backdropFilter: 'blur(8px)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                zIndex: 7,
+                transform: liked ? 'scale(1.1)' : 'scale(1)',
+                boxShadow: liked ? `0 0 0 4px rgba(244, 63, 94, 0.2)` : 'none',
               }}
-            />
-          </button>
+              aria-label={liked ? 'Remove from wishlist' : 'Add to wishlist'}
+            >
+              <FiHeart
+                size={16}
+                style={{
+                  color: COLORS.white.pure,
+                  fill: liked ? COLORS.white.pure : 'transparent',
+                  transition: 'all 0.3s',
+                }}
+              />
+            </button>
+          </div>
         </div>
 
         {/* Location pill with country info */}
@@ -657,7 +900,7 @@ function DestinationCard({
             <h3
               style={{
                 fontFamily: "'Playfair Display', Georgia, serif",
-                fontSize: compact ? 20 : 22,
+                fontSize: compact ? 20 : isMobile ? 20 : 22,
                 fontWeight: 700,
                 color: hovered ? COLORS.green[700] : COLORS.neutral[900],
                 marginBottom: 0,
@@ -673,29 +916,75 @@ function DestinationCard({
             </h3>
           </Link>
 
-          {hasRating && (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+            {hasRating && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  flexShrink: 0,
+                }}
+              >
+                <div style={{ display: 'flex', gap: 2 }}>
+                  {renderStars(ratingValue)}
+                </div>
+                <span
+                  style={{
+                    fontSize: 13,
+                    fontWeight: 700,
+                    color: COLORS.green[700],
+                  }}
+                >
+                  {ratingValue.toFixed(1)}
+                </span>
+              </div>
+            )}
+
+            {/* User Personal Rating */}
+            {hasUserRating && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  backgroundColor: COLORS.blue[50],
+                  padding: '2px 6px',
+                  borderRadius: 8,
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: COLORS.blue[700],
+                }}
+              >
+                <FiStar size={10} style={{ fill: COLORS.blue[500], color: COLORS.blue[500] }} />
+                Your rating: {userRating}
+              </div>
+            )}
+
+            {/* Views and Likes */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 6,
-                flexShrink: 0,
+                gap: 8,
+                fontSize: 11,
+                color: COLORS.neutral[500],
               }}
             >
-              <div style={{ display: 'flex', gap: 2 }}>
-                {renderStars(ratingValue)}
-              </div>
-              <span
-                style={{
-                  fontSize: 13,
-                  fontWeight: 700,
-                  color: COLORS.green[700],
-                }}
-              >
-                {ratingValue.toFixed(1)}
-              </span>
+              {views > 0 && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <FiEye size={10} />
+                  {formatNumber(views)}
+                </span>
+              )}
+              {likes > 0 && (
+                <span style={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <FiHeart size={10} style={{ fill: COLORS.rose[400], color: COLORS.rose[400] }} />
+                  {formatNumber(likes)}
+                </span>
+              )}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Review Count */}
@@ -844,32 +1133,131 @@ function DestinationCard({
           </div>
         )}
 
-        {/* CTA Button */}
+        {/* Enhanced CTA Button */}
         {showBookButton && (
-          <Link
-            to={detailsHref}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 8,
-              marginTop: 20,
-              padding: '14px 0',
-              borderRadius: 16,
-              backgroundColor: hovered ? COLORS.green[700] : COLORS.green[600],
-              color: COLORS.white.pure,
-              textDecoration: 'none',
-              fontSize: 15,
-              fontWeight: 700,
-              transition: 'background-color 0.3s',
-            }}
-          >
-            {isCountry ? 'Explore Country' : 'View Details'} <FiArrowRight size={16} />
-          </Link>
+          <div style={{ marginTop: 20 }}>
+            <Link
+              to={detailsHref}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 8,
+                padding: '16px 24px',
+                borderRadius: 16,
+                background: hovered
+                  ? `linear-gradient(135deg, ${COLORS.green[700]}, ${COLORS.green[600]})`
+                  : `linear-gradient(135deg, ${COLORS.green[600]}, ${COLORS.green[500]})`,
+                color: COLORS.white.pure,
+                textDecoration: 'none',
+                fontSize: 15,
+                fontWeight: 700,
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                boxShadow: hovered
+                  ? `0 8px 24px rgba(34, 197, 94, 0.4), 0 0 0 1px rgba(34, 197, 94, 0.2)`
+                  : `0 4px 16px rgba(34, 197, 94, 0.2)`,
+                transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              {/* Button shine effect */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: '-100%',
+                  width: '100%',
+                  height: '100%',
+                  background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+                  transition: 'left 0.5s',
+                }}
+                className={hovered ? 'shine' : ''}
+              />
+
+              <span style={{ position: 'relative', zIndex: 1 }}>
+                {isCountry ? 'Explore Country' : 'View Details'}
+              </span>
+              <FiArrowRight
+                size={16}
+                style={{
+                  position: 'relative',
+                  zIndex: 1,
+                  transition: 'transform 0.3s',
+                  transform: hovered ? 'translateX(4px)' : 'translateX(0)',
+                }}
+              />
+            </Link>
+
+            {/* Quick Actions */}
+            {hovered && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                style={{
+                  display: 'flex',
+                  gap: 8,
+                  marginTop: 12,
+                  justifyContent: 'center',
+                }}
+              >
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleWishlistClick(e);
+                  }}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: 12,
+                    border: `1px solid ${liked ? COLORS.rose[300] : COLORS.neutral[300]}`,
+                    backgroundColor: liked ? COLORS.rose[50] : COLORS.white.pure,
+                    color: liked ? COLORS.rose[700] : COLORS.neutral[700],
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <FiHeart size={14} style={{ fill: liked ? COLORS.rose[500] : 'transparent', color: liked ? COLORS.rose[500] : COLORS.neutral[500] }} />
+                  {liked ? 'Saved' : 'Save'}
+                </button>
+
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleShareClick(e);
+                  }}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: 12,
+                    border: `1px solid ${COLORS.neutral[300]}`,
+                    backgroundColor: COLORS.white.pure,
+                    color: COLORS.neutral[700],
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  <FiShare2 size={14} />
+                  Share
+                </button>
+              </motion.div>
+            )}
+          </div>
         )}
       </div>
 
-      {/* Hover accent line */}
+      {/* Enhanced Hover Effects */}
       <div
         style={{
           position: 'absolute',
@@ -877,12 +1265,28 @@ function DestinationCard({
           left: 0,
           right: 0,
           height: 4,
-          background: `linear-gradient(90deg, ${COLORS.green[500]}, ${COLORS.green[400]})`,
+          background: `linear-gradient(90deg, ${COLORS.green[500]}, ${COLORS.green[400]}, ${COLORS.blue[500]})`,
           transform: hovered ? 'scaleX(1)' : 'scaleX(0)',
           transformOrigin: 'left',
-          transition: 'transform 0.3s ease',
+          transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+          borderRadius: '0 0 24px 24px',
         }}
       />
+
+      {/* Subtle glow effect */}
+      {hovered && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: -2,
+            borderRadius: 26,
+            background: `linear-gradient(135deg, ${COLORS.green[200]}, ${COLORS.blue[200]}, ${COLORS.purple[200]})`,
+            opacity: 0.1,
+            zIndex: -1,
+            animation: 'pulse-ring 2s infinite',
+          }}
+        />
+      )}
     </article>
   );
 }

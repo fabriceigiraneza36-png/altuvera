@@ -1694,7 +1694,27 @@ const StepOne = memo(
     servicesData,
     getTripDuration,
     isMobile,
+    user,
+    displayName,
   }) => {
+    // Personalized recommendations based on user data
+    const getPersonalizedGreeting = () => {
+      const hour = new Date().getHours();
+      const timeGreeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
+      if (displayName) {
+        return `${timeGreeting}, ${displayName}!`;
+      }
+      return `${timeGreeting}!`;
+    };
+
+    const getPersonalizedSubtitle = () => {
+      if (user?.email) {
+        return "Let's create your perfect African adventure. Based on your preferences, here are some tailored recommendations.";
+      }
+      return "Let's start planning your perfect African adventure. Choose from our most popular destinations.";
+    };
+
     return (
       <motion.div
         initial={{ opacity: 0, x: 40 }}
@@ -1731,17 +1751,19 @@ const StepOne = memo(
               lineHeight: 1.2,
             }}
           >
-            Where's Your Dream{" "}
-            <span style={{ color: THEME.primary }}>Destination?</span>
+            {getPersonalizedGreeting()}{" "}
+            <span style={{ color: THEME.primary }}>Where's Your Dream Destination?</span>
           </h2>
           <p
             style={{
               fontSize: isMobile ? 14 : 16,
               color: THEME.textLight,
               lineHeight: 1.6,
+              maxWidth: 600,
+              margin: "0 auto",
             }}
           >
-            Let's start planning your perfect African adventure
+            {getPersonalizedSubtitle()}
           </p>
         </div>
 
@@ -1836,6 +1858,96 @@ const StepOne = memo(
           />
         </div>
 
+        {/* Personalized Recommendations */}
+        {user && destinationsList.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            style={{
+              marginTop: 32,
+              padding: isMobile ? 20 : 24,
+              background: `linear-gradient(135deg, ${THEME.backgroundAlt} 0%, ${THEME.background} 100%)`,
+              borderRadius: 18,
+              border: `2px solid ${THEME.primaryLighter}`,
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                marginBottom: 16,
+                fontSize: isMobile ? 15 : 17,
+                fontWeight: 700,
+                color: THEME.primaryDark,
+              }}
+            >
+              <div
+                style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  backgroundColor: THEME.primary,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <FiStar size={18} color="white" />
+              </div>
+              Recommended for You, {displayName}
+            </div>
+
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
+                gap: 16,
+              }}
+            >
+              {destinationsList.slice(0, 3).map((dest, i) => (
+                <motion.div
+                  key={dest.id || dest._id || i}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.4 + i * 0.1 }}
+                  onClick={() => setFormData(prev => ({ ...prev, destination: dest.id || dest._id || dest.name }))}
+                  style={{
+                    padding: 16,
+                    borderRadius: 12,
+                    backgroundColor: formData.destination === (dest.id || dest._id || dest.name) ? THEME.primary : THEME.white,
+                    border: `2px solid ${formData.destination === (dest.id || dest._id || dest.name) ? THEME.primary : THEME.gray200}`,
+                    cursor: "pointer",
+                    textAlign: "center",
+                    transition: "all 0.3s ease",
+                    boxShadow: formData.destination === (dest.id || dest._id || dest.name) ? `0 4px 16px ${THEME.shadow}` : "none",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: isMobile ? 14 : 16,
+                      fontWeight: 700,
+                      color: formData.destination === (dest.id || dest._id || dest.name) ? THEME.white : THEME.text,
+                      marginBottom: 4,
+                    }}
+                  >
+                    {dest.name || dest.title}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: formData.destination === (dest.id || dest._id || dest.name) ? "rgba(255,255,255,0.8)" : THEME.textLight,
+                    }}
+                  >
+                    {dest.location || dest.country}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         <AnimatePresence>
           {getTripDuration() && (
             <motion.div
@@ -1903,7 +2015,16 @@ const StepTwo = memo(
     accommodationTypes,
     getTotalVisitors,
     isMobile,
+    user,
+    displayName,
   }) => {
+    const getPersonalizedGroupMessage = () => {
+      if (displayName) {
+        return `Perfect, ${displayName}! Now let's customize your group and accommodation preferences.`;
+      }
+      return "Great choice! Now let's customize your group and accommodation preferences.";
+    };
+
     return (
       <motion.div
         initial={{ opacity: 0, x: 40 }}
@@ -1942,8 +2063,14 @@ const StepTwo = memo(
             Who's Joining the{" "}
             <span style={{ color: THEME.primary }}>Adventure?</span>
           </h2>
-          <p style={{ fontSize: isMobile ? 14 : 16, color: THEME.textLight }}>
-            Tell us about your travel group
+          <p style={{
+            fontSize: isMobile ? 14 : 16,
+            color: THEME.textLight,
+            lineHeight: 1.6,
+            maxWidth: 600,
+            margin: "0 auto",
+          }}>
+            {getPersonalizedGroupMessage()}
           </p>
         </div>
 
@@ -2016,7 +2143,7 @@ const StepTwo = memo(
                     color: THEME.text,
                   }}
                 >
-                  {isMobile ? type.name : type.fullName}
+                  {isMobile ? type.name : type.full_name}
                 </div>
               </motion.div>
             ))}
@@ -2188,7 +2315,21 @@ const StepTwo = memo(
 );
 
 const StepThree = memo(
-  ({ formData, setFormData, interests, handleInterestToggle, isMobile }) => {
+  ({ formData, setFormData, interests, handleInterestToggle, isMobile, user, displayName }) => {
+    const getPersonalizedInterestsMessage = () => {
+      if (displayName) {
+        return `Excellent choices so far, ${displayName}! Now let's discover what activities will make your trip unforgettable.`;
+      }
+      return "Excellent choices so far! Now let's discover what activities will make your trip unforgettable.";
+    };
+
+    const selectedCount = formData.interests.length;
+    const getProgressMessage = () => {
+      if (selectedCount === 0) return "Select your interests to personalize your experience";
+      if (selectedCount < 3) return "Great start! Feel free to add more interests";
+      return `Perfect! ${selectedCount} interests selected for your customized itinerary`;
+    };
+
     return (
       <motion.div
         initial={{ opacity: 0, x: 40 }}
@@ -2226,8 +2367,14 @@ const StepThree = memo(
           >
             What Excites You <span style={{ color: THEME.primary }}>Most?</span>
           </h2>
-          <p style={{ fontSize: isMobile ? 14 : 16, color: THEME.textLight }}>
-            Select your interests to personalize your experience
+          <p style={{
+            fontSize: isMobile ? 14 : 16,
+            color: THEME.textLight,
+            lineHeight: 1.6,
+            maxWidth: 600,
+            margin: "0 auto",
+          }}>
+            {getPersonalizedInterestsMessage()}
           </p>
         </div>
 
@@ -2291,29 +2438,63 @@ const StepThree = memo(
             ))}
           </div>
 
-          {formData.interests.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              style={{
-                marginTop: 24,
-                padding: "16px 20px",
-                backgroundColor: THEME.background,
-                borderRadius: 14,
-                border: `2px solid ${THEME.primaryLighter}`,
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-              }}
-            >
-              <FiCheckCircle size={20} color={THEME.primary} />
-              <span style={{ fontSize: 14, color: THEME.primaryDark }}>
-                <strong>{formData.interests.length}</strong>{" "}
-                {formData.interests.length === 1 ? "interest" : "interests"}{" "}
-                selected
-              </span>
-            </motion.div>
-          )}
+          {/* Personalized Progress Message */}
+          <AnimatePresence>
+            {selectedCount > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: "auto" }}
+                exit={{ opacity: 0, y: 10, height: 0 }}
+                style={{
+                  marginTop: 24,
+                  padding: "16px 20px",
+                  backgroundColor: selectedCount >= 3 ? THEME.background : THEME.gray50,
+                  borderRadius: 14,
+                  border: `2px solid ${selectedCount >= 3 ? THEME.primaryLighter : THEME.gray200}`,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                }}
+              >
+                <div
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: 12,
+                    backgroundColor: selectedCount >= 3 ? THEME.primary : THEME.gray400,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <FiCheckCircle size={20} color="white" />
+                </div>
+                <div>
+                  <div
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: selectedCount >= 3 ? THEME.primaryDark : THEME.text,
+                      marginBottom: 2,
+                    }}
+                  >
+                    {getProgressMessage()}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      color: THEME.textLight,
+                    }}
+                  >
+                    {selectedCount >= 3
+                      ? "Your selections will help us create the perfect itinerary for you!"
+                      : "The more interests you select, the better we can customize your experience."
+                    }
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Special Preferences Note */}
@@ -2390,7 +2571,15 @@ const StepFour = memo(
     accommodationTypes,
     user,
     isMobile,
+    displayName,
   }) => {
+    const getPersonalizedContactMessage = () => {
+      if (displayName) {
+        return `Almost there, ${displayName}! Let's finalize your booking details and get you ready for an unforgettable adventure.`;
+      }
+      return "Almost there! Let's finalize your booking details and get you ready for an unforgettable adventure.";
+    };
+
     return (
       <motion.div
         initial={{ opacity: 0, x: 40 }}
@@ -2428,8 +2617,14 @@ const StepFour = memo(
           >
             Almost <span style={{ color: THEME.primary }}>There!</span>
           </h2>
-          <p style={{ fontSize: isMobile ? 14 : 16, color: THEME.textLight }}>
-            Confirm your profile and contact details
+          <p style={{
+            fontSize: isMobile ? 14 : 16,
+            color: THEME.textLight,
+            lineHeight: 1.6,
+            maxWidth: 600,
+            margin: "0 auto",
+          }}>
+            {getPersonalizedContactMessage()}
           </p>
         </div>
 
@@ -2985,7 +3180,7 @@ const Booking = () => {
   const [feedbackType, setFeedbackType] = useState("info");
 
   const displayName = useMemo(
-    () => user?.fullName || user?.name || user?.email?.split("@")[0] || "",
+    () => user?.full_name || user?.name || user?.email?.split("@")[0] || "",
     [user],
   );
   const isAuthenticated = Boolean(user?.email);
@@ -3023,7 +3218,7 @@ const Booking = () => {
       marketingSource: "",
       newsletterOptIn: false,
       userImage: user?.avatar || "",
-      name: user?.fullName || user?.name || "",
+      name: user?.full_name || user?.name || "",
       email: user?.email || "",
       phone: user?.phone || "",
       country: "",
@@ -3070,7 +3265,7 @@ const Booking = () => {
     if (user) {
       setFormData((prev) => ({
         ...prev,
-        name: user.fullName || user.name || prev.name,
+        name: user.full_name || user.name || prev.name,
         email: user.email || prev.email,
         phone: user.phone || prev.phone,
       }));
@@ -3217,11 +3412,11 @@ const Booking = () => {
   // Group types
   const groupTypes = useMemo(
     () => [
-      { id: "solo", name: "Solo", fullName: "Solo Traveler", icon: "🧑" },
-      { id: "couple", name: "Couple", fullName: "Couple", icon: "💑" },
-      { id: "family", name: "Family", fullName: "Family", icon: "👨‍👩‍👧‍👦" },
-      { id: "friends", name: "Friends", fullName: "Friends", icon: "👥" },
-      { id: "business", name: "Business", fullName: "Business", icon: "💼" },
+      { id: "solo", name: "Solo", full_name: "Solo Traveler", icon: "🧑" },
+      { id: "couple", name: "Couple", full_name: "Couple", icon: "💑" },
+      { id: "family", name: "Family", full_name: "Family", icon: "👨‍👩‍👧‍👦" },
+      { id: "friends", name: "Friends", full_name: "Friends", icon: "👥" },
+      { id: "business", name: "Business", full_name: "Business", icon: "💼" },
     ],
     [],
   );
@@ -3409,7 +3604,7 @@ const Booking = () => {
       accommodationTypes.find((a) => a.id === formData.accommodation)?.name ||
       "Not specified";
     const groupTypeName =
-      groupTypes.find((g) => g.id === formData.groupType)?.fullName ||
+      groupTypes.find((g) => g.id === formData.groupType)?.full_name ||
       "Not specified";
     const interestsList =
       formData.interests.length > 0
@@ -3607,6 +3802,8 @@ Please provide a personalized quote and itinerary. Thank you!`;
             countriesList={countriesList}
             servicesData={servicesData}
             getTripDuration={getTripDuration}
+            user={user}
+            displayName={displayName}
           />
         );
       case 2:
@@ -3616,6 +3813,8 @@ Please provide a personalized quote and itinerary. Thank you!`;
             groupTypes={groupTypes}
             accommodationTypes={accommodationTypes}
             getTotalVisitors={getTotalVisitors}
+            user={user}
+            displayName={displayName}
           />
         );
       case 3:
@@ -3624,6 +3823,8 @@ Please provide a personalized quote and itinerary. Thank you!`;
             {...commonProps}
             interests={interests}
             handleInterestToggle={handleInterestToggle}
+            user={user}
+            displayName={displayName}
           />
         );
       case 4:
@@ -3635,6 +3836,7 @@ Please provide a personalized quote and itinerary. Thank you!`;
             getDestinationName={getDestinationName}
             accommodationTypes={accommodationTypes}
             user={user}
+            displayName={displayName}
           />
         );
       default:

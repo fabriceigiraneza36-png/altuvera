@@ -1,98 +1,147 @@
-// utils/sendMessage.js
-import { toAbsoluteApiUrl } from "./apiBase";
+// src/utils/sendMessage.js  (or src/services/contactService.js)
+// ─────────────────────────────────────────────────────────────────────────────
+// Sends booking/contact form data to backend
+// Backend expects: name OR full_name, email, message (required)
+// ─────────────────────────────────────────────────────────────────────────────
 
-export const sendMessage = async ({ type, data }) => {
-  try {
-    let endpoint;
-    let payload;
+const API_BASE =
+  import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
 
-    switch (type) {
-      case 'contact':
-        endpoint = toAbsoluteApiUrl('/contact');
-        // Map frontend field names to backend expected names
-        payload = {
-          full_name: data.name || data.full_name,
-          email: data.email,
-          phone: data.phone || null,
-          subject: data.subject || null,
-          message: data.message,
-          trip_type: data.tripType || data.trip_type || null,
-          travel_date: data.travelDate || data.travel_date || null,
-          number_of_travelers: data.travelers || data.number_of_travelers || null,
-          source: 'website',
-        };
-        break;
+/**
+ * Send a contact/booking message to the backend
+ * Handles all field name variations automatically
+ */
+export const sendMessage = async (formData) => {
+  // ✅ Normalize ALL possible field name variations
+  const payload = {
+    // ── Required fields ──────────────────────────────────────────────────────
+    // Backend accepts: name OR full_name
+    name:
+      formData.name ||
+      formData.fullName ||
+      formData.full_name ||
+      formData.contactName ||
+      formData.contact_name ||
+      (formData.firstName || formData.first_name
+        ? `${formData.firstName || formData.first_name} ${
+            formData.lastName || formData.last_name || ""
+          }`.trim()
+        : "") ||
+      "",
 
-      case 'booking':
-        // The backend does not expose a dedicated /bookings route.
-        // Send booking inquiries via the contact endpoint instead (avoids 404).
-        endpoint = toAbsoluteApiUrl('/contact');
-        payload = {
-          ...data,
-          type: 'booking',
-        };
-        break;
+    email:
+      formData.email ||
+      formData.userEmail ||
+      formData.user_email ||
+      formData.contactEmail ||
+      "",
 
-      case 'newsletter':
-        // Backend route for newsletters is /api/subscribers
-        endpoint = toAbsoluteApiUrl('/subscribers');
-        payload = { email: data.email };
-        break;
+    message:
+      formData.message ||
+      formData.body ||
+      formData.content ||
+      formData.description ||
+      formData.notes ||
+      formData.details ||
+      formData.specialRequests ||
+      formData.special_requests ||
+      "",
 
-      default:
-        throw new Error(`Unknown message type: ${type}`);
-    }
+    // ── Optional fields ───────────────────────────────────────────────────────
+    subject:
+      formData.subject ||
+      formData.topic ||
+      formData.title ||
+      (formData.destination
+        ? `Booking Inquiry - ${formData.destination}`
+        : null) ||
+      (formData.destinationName
+        ? `Booking Inquiry - ${formData.destinationName}`
+        : null) ||
+      "Booking Inquiry",
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
+    phone:
+      formData.phone ||
+      formData.phoneNumber ||
+      formData.phone_number ||
+      formData.telephone ||
+      null,
 
-    const result = await response.json();
+    // ── Booking-specific ──────────────────────────────────────────────────────
+    trip_type:
+      formData.trip_type ||
+      formData.tripType ||
+      formData.tourType ||
+      formData.tour_type ||
+      formData.bookingType ||
+      formData.booking_type ||
+      formData.packageType ||
+      null,
 
-    if (!response.ok) {
-      return {
-        success: false,
-        error: result.error || result.message || 'Something went wrong. Please try again.',
-      };
-    }
+    travel_date:
+      formData.travel_date ||
+      formData.travelDate ||
+      formData.departureDate ||
+      formData.departure_date ||
+      formData.startDate ||
+      formData.start_date ||
+      null,
 
-    return {
-      success: true,
-      data: result.data,
-      message: result.message || 'Message sent successfully!',
-    };
-  } catch (error) {
-    console.error('sendMessage error:', error);
-    
-    // Handle network errors
-    if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      return {
-        success: false,
-        error: 'Unable to connect to the server. Please check your internet connection.',
-      };
-    }
+    number_of_travelers:
+      formData.number_of_travelers ||
+      formData.numberOfTravelers ||
+      formData.travelers ||
+      formData.groupSize ||
+      formData.group_size ||
+      formData.adults ||
+      null,
 
-    return {
-      success: false,
-      error: error.message || 'An unexpected error occurred. Please try again.',
-    };
+    source: formData.source || "website",
+  };
+
+  // ✅ Debug log in development
+  if (import.meta.env.DEV) {
+    console.log("[Contact] Sending payload:", payload);
+    console.log("[Contact] Original form data:", formData);
   }
+
+  // ✅ Client-side validation before sending
+  const errors = [];
+  if (!payload.name?.trim()) errors.push("Name is required");
+  if (!payload.email?.trim()) errors.push("Email is required");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email?.trim() || "")) {
+    errors.push("Valid email is required");
+  }
+  if (!payload.message?.trim()) errors.push("Message is required");
+  if (payload.message?.trim().length < 20) {
+    errors.push("Message must be at least 20 characters");
+  }
+
+  if (errors.length > 0) {
+    throw new Error(errors[0]);
+  }
+
+  // ✅ Send to backend
+  const response = await fetch(`${API_BASE}/contact`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+
+  const data = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    // ✅ Always extract string error - prevents [object Object]
+    const errorMessage =
+      data?.error ||
+      data?.message ||
+      data?.errors?.[0] ||
+      `Request failed (${response.status})`;
+
+    throw new Error(errorMessage);
+  }
+
+  return data;
 };
 
-// Helper for checking if API is available
-export const checkApiHealth = async () => {
-  try {
-    const response = await fetch(toAbsoluteApiUrl('/countries'), {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' },
-    });
-    return response.ok;
-  } catch {
-    return false;
-  }
-};
+export default sendMessage;
