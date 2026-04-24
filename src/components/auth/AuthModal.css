@@ -762,10 +762,16 @@
 }
 
 .auth-form-group {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 16px;
   margin-bottom: 4px;
+}
+
+@media (min-width: 720px) {
+  .auth-form-group {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @keyframes authFieldSlide {
@@ -1024,6 +1030,12 @@
 }
 
 /* Google Button */
+.auth-btn--google,
+.auth-btn--github {
+  width: 100%;
+  min-width: 0;
+}
+
 .auth-btn--google {
   background: linear-gradient(180deg, #ffffff, #f8fafc);
   color: var(--auth-gray-700);
@@ -1055,6 +1067,10 @@
   background: linear-gradient(135deg, #1f2937, #111827);
   border-color: #111827;
   box-shadow: var(--auth-shadow);
+}
+
+.auth-input-wrap input[aria-invalid="true"] {
+  border-color: var(--auth-error);
 }
 
 .auth-github-icon {

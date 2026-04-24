@@ -539,7 +539,7 @@ function SectionHeader({ icon, label, title, subtitle, align, dark }) {
   const a = align || 'center';
   const d = dark || false;
   return (
-    <header style={{ textAlign: a, marginBottom: 60 }}>
+    <header style={{ textAlign: a, marginBottom: 44 }}>
       {d ? (
         <SectionLabelDark icon={icon} text={label} />
       ) : (
@@ -1881,7 +1881,7 @@ function Explore() {
           )}
 
           <AnimatedSection animation="fadeInUp">
-            <div style={{ textAlign: 'center', marginTop: 56 }}>
+        <div style={{ textAlign: 'center', marginTop: 40 }}>
               <Button
                 to="/destinations"
                 variant="primary"
@@ -1996,7 +1996,7 @@ function Explore() {
           </div>
 
           <AnimatedSection animation="fadeInUp">
-            <div style={{ textAlign: 'center', marginTop: 48 }}>
+            <div style={{ textAlign: 'center', marginTop: 36 }}>
               <Button
                 to="/destinations"
                 variant="primary"

@@ -1367,21 +1367,19 @@ export default function AuthModal() {
                       aria-busy={loading}
                     >
                       {loading && (
-                        <InlineSpinner label="Sending verification code" />
+                        <InlineSpinner label="Submitting sign-in request" />
                       )}
                       <span>
-                        {loading
-                          ? "Waiting for passkey approval..."
-                          : "Login with Passkey"}
+                        {loading ? "Signing in..." : "Continue with Email"}
                       </span>
                       <HiArrowRight aria-hidden="true" />
                     </button>
 
                     <div className="auth-divider" role="separator">
-                      <span>or sign in with</span>
+                      <span>or continue with</span>
                     </div>
 
-                    {!githubLoading && (
+                    <div className="auth-row">
                       <button
                         type="button"
                         className="auth-btn auth-btn--google"
@@ -1389,10 +1387,9 @@ export default function AuthModal() {
                         disabled={!googleLoaded || googleLoading || loading}
                         aria-busy={googleLoading}
                       >
-                        {googleLoading && (
+                        {googleLoading ? (
                           <InlineSpinner label="Connecting to Google" />
-                        )}
-                        {!googleLoading && (
+                        ) : (
                           <FcGoogle
                             className="auth-google-icon"
                             aria-hidden="true"
@@ -1401,12 +1398,10 @@ export default function AuthModal() {
                         <span>
                           {googleLoading
                             ? "Authenticating Google..."
-                            : "Continue with Google"}
+                            : "Google"}
                         </span>
                       </button>
-                    )}
 
-                    {!googleLoading && (
                       <button
                         type="button"
                         className="auth-btn auth-btn--github"
@@ -1414,10 +1409,9 @@ export default function AuthModal() {
                         disabled={githubLoading || loading}
                         aria-busy={githubLoading}
                       >
-                        {githubLoading && (
+                        {githubLoading ? (
                           <InlineSpinner label="Connecting to GitHub" />
-                        )}
-                        {!githubLoading && (
+                        ) : (
                           <FiGithub
                             className="auth-github-icon"
                             aria-hidden="true"
@@ -1426,10 +1420,10 @@ export default function AuthModal() {
                         <span>
                           {githubLoading
                             ? "Authenticating GitHub..."
-                            : "Continue with GitHub"}
+                            : "GitHub"}
                         </span>
                       </button>
-                    )}
+                    </div>
                   </form>
 
                   <div className="auth-google-fallback-wrap">
@@ -1547,7 +1541,9 @@ export default function AuthModal() {
                             </div>
                           </label>
                           <label className="auth-field">
-                            <span className="auth-field-label">Full Name</span>
+                            <span className="auth-field-label">
+                              Full Name / Username
+                            </span>
                             <div className="auth-input-wrap">
                               <HiUser
                                 className="auth-input-icon"
@@ -1559,7 +1555,7 @@ export default function AuthModal() {
                                 onChange={(event) =>
                                   updateField("fullName", event.target.value)
                                 }
-                                placeholder="Your full name"
+                                placeholder="Your name or username"
                                 autoComplete="name"
                                 required
                               />
@@ -1582,15 +1578,15 @@ export default function AuthModal() {
                           }}
                           disabled={!isEmailValid || !isNameValid}
                         >
-                          <span>Create Passkey Account</span>
+                          <span>Create account with email</span>
                           <HiArrowRight aria-hidden="true" />
                         </button>
 
                         <div className="auth-divider" role="separator">
-                          <span>or sign up with</span>
+                          <span>or continue with</span>
                         </div>
 
-                        {!githubLoading && (
+                        <div className="auth-row">
                           <button
                             type="button"
                             className="auth-btn auth-btn--google"
