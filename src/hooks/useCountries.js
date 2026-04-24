@@ -8,30 +8,60 @@ export function useCountries(params = {}) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const paramsRef = useRef(params);
-  const paramsKey = JSON.stringify(params);
-
-  const fetchCountries = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await countryService.getAll(paramsRef.current);
-      if (result) {
-        setCountries(result.data || []);
-      }
-    } catch (err) {
-      setError(err.message || "Failed to load countries");
-    } finally {
-      setLoading(false);
-    }
-  }, [paramsKey]);
+  const paramsKeyRef = useRef(JSON.stringify(params));
 
   useEffect(() => {
-    paramsRef.current = params;
-    fetchCountries();
+    const newParamsKey = JSON.stringify(params);
+    
+    // Only fetch if params actually changed
+    if (newParamsKey !== paramsKeyRef.current) {
+      paramsKeyRef.current = newParamsKey;
+      paramsRef.current = params;
+      
+      setLoading(true);
+      setError(null);
+      
+      countryService
+        .getAll(params)
+        .then((result) => {
+          if (result) {
+            setCountries(result.data || []);
+          }
+        })
+        .catch((err) => {
+          if (err.name !== "AbortError") {
+            setError(err.message || "Failed to load countries");
+          }
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+    
     return () => countryService.cancelAll();
-  }, [fetchCountries]);
+  }, [params]);
 
-  return { countries, loading, error, refetch: fetchCountries };
+  const refetch = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    countryService
+      .getAll(paramsRef.current)
+      .then((result) => {
+        if (result) {
+          setCountries(result.data || []);
+        }
+      })
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          setError(err.message || "Failed to load countries");
+        }
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
+
+  return { countries, loading, error, refetch };
 }
 
 export function useCountry(idOrSlug) {
