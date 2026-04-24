@@ -633,7 +633,7 @@ const WhatsAppButton = () => {
             {/* Tooltip */}
             <motion.div
               style={{
-                backgroundColor: "#fff",
+                backdropFilter: "blur(12px)",
                 color: "#128C7E",
                 padding: "7px 14px",
                 borderRadius: "20px",
