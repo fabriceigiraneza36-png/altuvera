@@ -1,7 +1,5 @@
 // ============================================================================
 // UserAuthContext.jsx
-// Complete Auth Context — OTP Email + Google OAuth + GitHub OAuth
-// NO WebAuthn (uses standard OTP + Social Auth flow)
 // ============================================================================
 
 import React, {
@@ -15,17 +13,41 @@ import React, {
 } from "react";
 
 // ============================================================================
-// Constants & Configuration
+// Configuration
 // ============================================================================
 
 const API_BASE =
   import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
-
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID || "";
-const GITHUB_REDIRECT_PATH = import.meta.env.VITE_GITHUB_REDIRECT_PATH || "/";
 const GITHUB_SCOPE =
   import.meta.env.VITE_GITHUB_SCOPE || "read:user user:email";
+
+// Resolve redirect URI — never access window at module top level
+const resolveGithubRedirectUri = () => {
+  if (import.meta.env.VITE_GITHUB_REDIRECT_URI) {
+    return import.meta.env.VITE_GITHUB_REDIRECT_URI;
+  }
+  const path =
+    import.meta.env.VITE_GITHUB_REDIRECT_PATH || "/auth/github/callback";
+  return `${window.location.origin}${path}`;
+};
+
+if (import.meta.env.DEV) {
+  const required = {
+    VITE_API_URL: import.meta.env.VITE_API_URL,
+    VITE_GOOGLE_CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+    VITE_GITHUB_CLIENT_ID: import.meta.env.VITE_GITHUB_CLIENT_ID,
+    VITE_GITHUB_REDIRECT_URI: import.meta.env.VITE_GITHUB_REDIRECT_URI,
+  };
+  Object.entries(required).forEach(([k, v]) => {
+    if (!v) console.warn(`[Auth] Missing env var: ${k}`);
+  });
+}
+
+// ============================================================================
+// Storage Keys
+// ============================================================================
 
 const KEYS = {
   TOKEN: "altuvera_auth_token",
@@ -33,8 +55,8 @@ const KEYS = {
   SESSION_PREF: "altuvera_persist_session",
   PROFILE_CACHE: "altuvera_profile_cache",
   GOOGLE_PENDING: "altuvera_google_pending",
-  GITHUB_STATE: "altuvera_github_oauth_state",
-  GITHUB_INTENT: "altuvera_github_oauth_intent",
+  GITHUB_STATE: "altuvera_github_state",
+  GITHUB_INTENT: "altuvera_github_intent",
 };
 
 // ============================================================================
@@ -47,234 +69,189 @@ const UserAuthContext = createContext(null);
 // Storage Utilities
 // ============================================================================
 
-const storage = {
-  getToken: () =>
-    localStorage.getItem(KEYS.TOKEN) || sessionStorage.getItem(KEYS.TOKEN),
-
-  getRefreshToken: () =>
-    localStorage.getItem(KEYS.REFRESH) ||
-    sessionStorage.getItem(KEYS.REFRESH),
-
-  setToken: (token, persist) => {
-    if (!token) return;
-    if (persist) {
-      localStorage.setItem(KEYS.TOKEN, token);
-      sessionStorage.removeItem(KEYS.TOKEN);
-    } else {
-      sessionStorage.setItem(KEYS.TOKEN, token);
-      localStorage.removeItem(KEYS.TOKEN);
-    }
-  },
-
-  setRefreshToken: (token, persist) => {
-    if (!token) return;
-    if (persist) {
-      localStorage.setItem(KEYS.REFRESH, token);
-      sessionStorage.removeItem(KEYS.REFRESH);
-    } else {
-      sessionStorage.setItem(KEYS.REFRESH, token);
-      localStorage.removeItem(KEYS.REFRESH);
-    }
-  },
-
-  getSessionPref: () => {
-    const val = localStorage.getItem(KEYS.SESSION_PREF);
-    return val === null ? true : val === "true";
-  },
-
-  setSessionPref: (persist) => {
-    localStorage.setItem(KEYS.SESSION_PREF, String(Boolean(persist)));
-  },
-
-  getProfileCache: () => {
+const store = {
+  get: (key) => {
     try {
-      const raw = localStorage.getItem(KEYS.PROFILE_CACHE);
-      const parsed = raw ? JSON.parse(raw) : {};
-      return parsed && typeof parsed === "object" ? parsed : {};
+      return localStorage.getItem(key) || sessionStorage.getItem(key);
     } catch {
-      return {};
+      return null;
     }
   },
-
-  setProfileCache: (cache) => {
+  set: (key, val, persist) => {
     try {
-      localStorage.setItem(KEYS.PROFILE_CACHE, JSON.stringify(cache));
+      if (persist) {
+        localStorage.setItem(key, val);
+        sessionStorage.removeItem(key);
+      } else {
+        sessionStorage.setItem(key, val);
+        localStorage.removeItem(key);
+      }
     } catch {
-      // Storage full or unavailable
+      /* storage unavailable */
     }
   },
-
-  getGooglePending: () => {
+  remove: (key) => {
     try {
-      const raw = sessionStorage.getItem(KEYS.GOOGLE_PENDING);
+      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
+    } catch {
+      /* ignore */
+    }
+  },
+  getJSON: (key) => {
+    try {
+      const raw = sessionStorage.getItem(key) || localStorage.getItem(key);
       return raw ? JSON.parse(raw) : null;
     } catch {
       return null;
     }
   },
-
-  setGooglePending: (data) => {
-    if (data) {
-      sessionStorage.setItem(KEYS.GOOGLE_PENDING, JSON.stringify(data));
-    } else {
-      sessionStorage.removeItem(KEYS.GOOGLE_PENDING);
+  setJSON: (key, val, useSession = true) => {
+    try {
+      (useSession ? sessionStorage : localStorage).setItem(
+        key,
+        JSON.stringify(val),
+      );
+    } catch {
+      /* storage full */
     }
   },
-
-  clearAll: () => {
-    [KEYS.TOKEN, KEYS.REFRESH].forEach((key) => {
-      localStorage.removeItem(key);
-      sessionStorage.removeItem(key);
+  getPersist: () => {
+    try {
+      const v = localStorage.getItem(KEYS.SESSION_PREF);
+      return v === null ? true : v === "true";
+    } catch {
+      return true;
+    }
+  },
+  clearAuth: () => {
+    [KEYS.TOKEN, KEYS.REFRESH].forEach((k) => {
+      try {
+        localStorage.removeItem(k);
+        sessionStorage.removeItem(k);
+      } catch {
+        /* ignore */
+      }
     });
     [KEYS.GOOGLE_PENDING, KEYS.GITHUB_STATE, KEYS.GITHUB_INTENT].forEach(
-      (key) => sessionStorage.removeItem(key)
+      (k) => {
+        try {
+          sessionStorage.removeItem(k);
+        } catch {
+          /* ignore */
+        }
+      },
     );
   },
 };
 
 // ============================================================================
-// Data Utilities
+// Pure Utilities
 // ============================================================================
 
-const safeTrim = (val) => (typeof val === "string" ? val.trim() : "");
+const trim = (v) => (typeof v === "string" ? v.trim() : "");
 
-const extractString = (...values) => {
-  for (const val of values) {
-    const trimmed = safeTrim(val);
-    if (trimmed) return trimmed;
+const pick = (...vals) => {
+  for (const v of vals) {
+    const t = trim(v);
+    if (t) return t;
   }
   return "";
 };
 
-const normalizeUser = (payload, { fallbackEmail = "", fallbackName = "", fallbackAvatar = "", profileCache = {} } = {}) => {
-  if (!payload || typeof payload !== "object") return null;
+const normalizeUser = (
+  raw,
+  {
+    fallbackEmail = "",
+    fallbackName = "",
+    fallbackAvatar = "",
+    cache = {},
+  } = {},
+) => {
+  if (!raw || typeof raw !== "object") return null;
 
-  const email = extractString(
-    payload.email,
-    payload.userEmail,
-    payload.user_email,
-    fallbackEmail
-  );
-
-  const cachedProfile = email
-    ? profileCache[email.toLowerCase()] || null
-    : null;
-
-  const fullName = extractString(
-    payload.fullName,
-    payload.full_name,
-    payload.name,
-    payload.displayName,
-    payload.display_name,
-    payload.username,
-    cachedProfile?.fullName,
+  const email = pick(raw.email, raw.userEmail, raw.user_email, fallbackEmail);
+  const cached = email ? (cache[email.toLowerCase()] ?? null) : null;
+  const fullName = pick(
+    raw.fullName,
+    raw.full_name,
+    raw.name,
+    raw.displayName,
+    raw.username,
+    cached?.fullName,
     fallbackName,
     email ? email.split("@")[0] : "",
-    "Traveler"
+    "Traveler",
   );
-
-  const avatar = extractString(
-    payload.avatar,
-    payload.avatarUrl,
-    payload.avatar_url,
-    payload.picture,
-    payload.photoURL,
-    payload.photo,
-    payload.image,
-    cachedProfile?.avatar,
-    fallbackAvatar
+  const avatar = pick(
+    raw.avatar,
+    raw.avatarUrl,
+    raw.avatar_url,
+    raw.picture,
+    raw.photoURL,
+    cached?.avatar,
+    fallbackAvatar,
   );
 
   return {
-    id: payload.id || payload._id || payload.userId || payload.user_id || null,
+    id: raw.id || raw._id || raw.userId || null,
     email,
     fullName,
     name: fullName,
     avatar: avatar || null,
-    phone: extractString(
-      payload.phone,
-      payload.phoneNumber,
-      payload.phone_number
-    ),
-    bio: extractString(payload.bio, payload.biography, payload.about),
-    role: extractString(
-      payload.role,
-      payload.userRole,
-      payload.user_role,
-      "user"
-    ),
-    authProvider: extractString(
-      payload.authProvider,
-      payload.auth_provider,
-      payload.provider,
-      "email"
+    phone: pick(raw.phone, raw.phoneNumber, raw.phone_number),
+    bio: pick(raw.bio, raw.biography, raw.about),
+    role: pick(raw.role, raw.userRole, "user"),
+    authProvider: pick(
+      raw.authProvider,
+      raw.auth_provider,
+      raw.provider,
+      "email",
     ),
     isVerified: Boolean(
-      payload.isVerified ||
-        payload.is_verified ||
-        payload.emailVerified ||
-        payload.email_verified ||
-        payload.verified
+      raw.isVerified || raw.is_verified || raw.emailVerified || raw.verified,
     ),
     emailVerified: Boolean(
-      payload.emailVerified ||
-        payload.email_verified ||
-        payload.isVerified ||
-        payload.is_verified
+      raw.emailVerified || raw.email_verified || raw.isVerified,
     ),
     isActive:
-      typeof payload.isActive === "boolean"
-        ? payload.isActive
-        : typeof payload.is_active === "boolean"
-          ? payload.is_active
+      typeof raw.isActive === "boolean"
+        ? raw.isActive
+        : typeof raw.is_active === "boolean"
+          ? raw.is_active
           : true,
     preferences:
-      payload.preferences && typeof payload.preferences === "object"
-        ? payload.preferences
+      raw.preferences && typeof raw.preferences === "object"
+        ? raw.preferences
         : {},
-    lastLogin: payload.lastLogin || payload.last_login || null,
-    createdAt: payload.createdAt || payload.created_at || null,
-    updatedAt: payload.updatedAt || payload.updated_at || null,
+    lastLogin: raw.lastLogin || raw.last_login || null,
+    createdAt: raw.createdAt || raw.created_at || null,
   };
 };
 
-const extractAuthPayload = (data) => {
-  const inner = data?.data || data || {};
+const extractPayload = (data) => {
+  const d = data?.data || data || {};
   return {
-    token:
-      inner.token ||
-      inner.accessToken ||
-      inner.access_token ||
-      data?.token ||
-      null,
+    token: d.token || d.accessToken || d.access_token || data?.token || null,
     refreshToken:
-      inner.refreshToken ||
-      inner.refresh_token ||
-      inner.refresh ||
-      data?.refreshToken ||
-      null,
-    user: inner.user || data?.user || inner || null,
-    isNewUser: Boolean(
-      inner.isNewUser || inner.is_new_user || data?.isNewUser
-    ),
+      d.refreshToken || d.refresh_token || data?.refreshToken || null,
+    user: d.user || data?.user || d || null,
+    isNewUser: Boolean(d.isNewUser || d.is_new_user || data?.isNewUser),
     requiresProfile: Boolean(
-      inner.requiresProfile ||
-        inner.requires_profile ||
-        data?.requiresProfile
+      d.requiresProfile || d.requires_profile || data?.requiresProfile,
     ),
   };
 };
 
-const decodeGoogleCredential = (credential) => {
+const decodeJWT = (credential) => {
   if (!credential) return null;
   try {
-    const base64Url = credential.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const b64 = credential.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
     const json = decodeURIComponent(
-      atob(base64)
+      atob(b64)
         .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
+        .map((c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0"))
+        .join(""),
     );
     return JSON.parse(json);
   } catch {
@@ -282,13 +259,23 @@ const decodeGoogleCredential = (credential) => {
   }
 };
 
-const generateOAuthState = () => {
-  if (window?.crypto?.getRandomValues) {
-    const bytes = new Uint8Array(16);
-    window.crypto.getRandomValues(bytes);
-    return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+const randomState = () => {
+  try {
+    const b = new Uint8Array(16);
+    crypto.getRandomValues(b);
+    return Array.from(b, (x) => x.toString(16).padStart(2, "0")).join("");
+  } catch {
+    return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
   }
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+};
+
+const readProfileCache = () => {
+  try {
+    const raw = localStorage.getItem(KEYS.PROFILE_CACHE);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
 };
 
 // ============================================================================
@@ -296,118 +283,130 @@ const generateOAuthState = () => {
 // ============================================================================
 
 export function UserAuthProvider({ children }) {
-  // ── Core State ─────────────────────────────────────────────────────────────
+  // ── Core state ──────────────────────────────────────────────────────────────
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(() => storage.getToken());
+  const [token, setToken] = useState(() => store.get(KEYS.TOKEN));
   const [authLoading, setAuthLoading] = useState(true);
   const [persistSession, setPersistSession] = useState(() =>
-    storage.getSessionPref()
+    store.getPersist(),
   );
 
-  // ── Modal State ─────────────────────────────────────────────────────────────
+  // ── Modal state ─────────────────────────────────────────────────────────────
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalView, setModalView] = useState("login");
   const [pendingEmail, setPendingEmail] = useState("");
 
-  // ── Social Auth State ───────────────────────────────────────────────────────
-  const [googleUser, setGoogleUser] = useState(() => storage.getGooglePending());
+  // ── Social auth state ───────────────────────────────────────────────────────
+  const [googleUser, setGoogleUser] = useState(() =>
+    store.getJSON(KEYS.GOOGLE_PENDING),
+  );
   const [googleLoaded, setGoogleLoaded] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);
   const [socialAuthError, setSocialAuthError] = useState("");
 
-  // ── Refs ───────────────────────────────────────────────────────────────────
+  // ── Refs ────────────────────────────────────────────────────────────────────
   const fetchingRef = useRef(false);
-  const profileCacheRef = useRef(storage.getProfileCache());
-  const pendingProfileRef = useRef(null);
+  const pendingRef = useRef(null);
   const googleInitRef = useRef(false);
-  const refreshPromiseRef = useRef(null);
+  const refreshRef = useRef(null);
+  const googleCbRef = useRef(null);
+  const profileCacheRef = useRef(null); // lazy-init in effect below
 
-  // ── Computed ───────────────────────────────────────────────────────────────
+  // ── Computed ────────────────────────────────────────────────────────────────
   const isAuthenticated = useMemo(() => !!user && !!token, [user, token]);
   const hasGooglePending = useMemo(
     () => !!googleUser?.email && !!googleUser?.credential,
-    [googleUser]
+    [googleUser],
   );
+
+  // ── Init profile cache (safe: runs after mount) ─────────────────────────────
+  useEffect(() => {
+    if (profileCacheRef.current === null) {
+      profileCacheRef.current = readProfileCache();
+    }
+  }, []);
+
+  const getCache = useCallback(() => profileCacheRef.current ?? {}, []);
 
   // ============================================================================
   // Profile Cache
   // ============================================================================
 
-  const cacheProfile = useCallback((profile) => {
-    const email = safeTrim(profile?.email);
-    if (!email) return;
-    const updated = {
-      ...profileCacheRef.current,
-      [email.toLowerCase()]: {
-        email,
-        fullName: safeTrim(profile?.fullName || profile?.name || ""),
-        avatar: safeTrim(profile?.avatar || ""),
-      },
-    };
-    profileCacheRef.current = updated;
-    storage.setProfileCache(updated);
-  }, []);
+  const cacheProfile = useCallback(
+    (profile) => {
+      const email = trim(profile?.email);
+      if (!email) return;
+      const next = {
+        ...getCache(),
+        [email.toLowerCase()]: {
+          email,
+          fullName: trim(profile?.fullName || profile?.name),
+          avatar: trim(profile?.avatar),
+        },
+      };
+      profileCacheRef.current = next;
+      try {
+        localStorage.setItem(KEYS.PROFILE_CACHE, JSON.stringify(next));
+      } catch {
+        /* storage full */
+      }
+    },
+    [getCache],
+  );
 
   // ============================================================================
   // Session Management
   // ============================================================================
 
   const clearAuth = useCallback(() => {
-    storage.clearAll();
+    store.clearAuth();
     setToken(null);
     setUser(null);
     setGoogleUser(null);
-    pendingProfileRef.current = null;
+    pendingRef.current = null;
   }, []);
 
   const setSessionPreference = useCallback(
     (persist) => {
       const next = Boolean(persist);
       setPersistSession(next);
-      storage.setSessionPref(next);
-
-      const currentToken = token || storage.getToken();
-      if (currentToken) storage.setToken(currentToken, next);
-
-      const currentRefresh = storage.getRefreshToken();
-      if (currentRefresh) storage.setRefreshToken(currentRefresh, next);
+      try {
+        localStorage.setItem(KEYS.SESSION_PREF, String(next));
+      } catch {
+        /* ignore */
+      }
+      const t = token || store.get(KEYS.TOKEN);
+      if (t) store.set(KEYS.TOKEN, t, next);
+      const r = store.get(KEYS.REFRESH);
+      if (r) store.set(KEYS.REFRESH, r, next);
     },
-    [token]
+    [token],
   );
 
   const saveAuth = useCallback(
-    (data, options = {}) => {
-      const {
-        token: newToken,
-        refreshToken: newRefresh,
-        user: rawUser,
-      } = extractAuthPayload(data);
-
+    (data, opts = {}) => {
+      const { token: tok, refreshToken: ref, user: raw } = extractPayload(data);
       const persist =
-        typeof options.persist === "boolean" ? options.persist : persistSession;
+        typeof opts.persist === "boolean" ? opts.persist : persistSession;
 
-      if (newToken) {
-        storage.setToken(newToken, persist);
-        setToken(newToken);
+      if (tok) {
+        store.set(KEYS.TOKEN, tok, persist);
+        setToken(tok);
       }
+      if (ref) store.set(KEYS.REFRESH, ref, persist);
 
-      if (newRefresh) {
-        storage.setRefreshToken(newRefresh, persist);
-      }
+      const fallback = {
+        email: pendingRef.current?.email || googleUser?.email || "",
+        name: pendingRef.current?.fullName || googleUser?.name || "",
+        avatar: pendingRef.current?.avatar || googleUser?.picture || "",
+      };
 
-      const fallbackEmail =
-        pendingProfileRef.current?.email || googleUser?.email || "";
-      const fallbackName =
-        pendingProfileRef.current?.fullName || googleUser?.name || "";
-      const fallbackAvatar =
-        pendingProfileRef.current?.avatar || googleUser?.picture || "";
-
-      const normalized = normalizeUser(rawUser, {
-        fallbackEmail,
-        fallbackName,
-        fallbackAvatar,
-        profileCache: profileCacheRef.current,
+      const normalized = normalizeUser(raw, {
+        fallbackEmail: fallback.email,
+        fallbackName: fallback.name,
+        fallbackAvatar: fallback.avatar,
+        cache: getCache(),
       });
 
       if (normalized) {
@@ -415,17 +414,17 @@ export function UserAuthProvider({ children }) {
         cacheProfile(normalized);
       }
 
-      pendingProfileRef.current = null;
+      pendingRef.current = null;
       setGoogleUser(null);
-      storage.setGooglePending(null);
+      store.remove(KEYS.GOOGLE_PENDING);
 
       return data;
     },
-    [cacheProfile, googleUser, persistSession]
+    [cacheProfile, getCache, googleUser, persistSession],
   );
 
   // ============================================================================
-  // Modal Management
+  // Modal
   // ============================================================================
 
   const openModal = useCallback((view = "login") => {
@@ -440,7 +439,7 @@ export function UserAuthProvider({ children }) {
     setPendingEmail("");
     setSocialAuthError("");
     setGoogleUser(null);
-    storage.setGooglePending(null);
+    store.remove(KEYS.GOOGLE_PENDING);
     document.body.style.overflow = "";
   }, []);
 
@@ -449,64 +448,53 @@ export function UserAuthProvider({ children }) {
   // ============================================================================
 
   const authFetch = useCallback(
-    async (endpoint, options = {}) => {
-      // Build absolute URL - always use production backend
+    async (endpoint, opts = {}) => {
       const url = endpoint.startsWith("http")
         ? endpoint
         : `${API_BASE}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
 
-      const currentToken = token || storage.getToken();
-      const isFormData = options.body instanceof FormData;
+      const tok = token || store.get(KEYS.TOKEN);
+      const isForm = opts.body instanceof FormData;
 
-      const buildHeaders = (authToken) => ({
-        ...(isFormData ? {} : { "Content-Type": "application/json" }),
-        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-        ...options.headers,
+      const makeHeaders = (t) => ({
+        ...(isForm ? {} : { "Content-Type": "application/json" }),
+        ...(t ? { Authorization: `Bearer ${t}` } : {}),
+        ...opts.headers,
       });
 
-      let response;
-
+      let res;
       try {
-        response = await fetch(url, {
-          ...options,
-          headers: buildHeaders(currentToken),
-        });
+        res = await fetch(url, { ...opts, headers: makeHeaders(tok) });
       } catch {
-        throw new Error(
-          "Network error. Please check your connection and try again."
-        );
+        throw new Error("Network error. Please check your connection.");
       }
 
-      // ── Handle Token Refresh (401) ─────────────────────────────────────────
-      if (response.status === 401 && !options._retry) {
-        const refreshToken = storage.getRefreshToken();
-
-        if (refreshToken) {
+      // Token refresh on 401
+      if (res.status === 401 && !opts._retry) {
+        const rt = store.get(KEYS.REFRESH);
+        if (rt) {
           try {
-            if (!refreshPromiseRef.current) {
-              refreshPromiseRef.current = fetch(`${API_BASE}/users/refresh-token`, {
+            if (!refreshRef.current) {
+              refreshRef.current = fetch(`${API_BASE}/users/refresh-token`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ refreshToken }),
+                body: JSON.stringify({ refreshToken: rt }),
               })
                 .then(async (r) => {
                   const d = await r.json().catch(() => ({}));
                   if (!r.ok) throw new Error(d?.message || "Session expired");
                   saveAuth(d, { persist: persistSession });
-                  return extractAuthPayload(d).token;
+                  return extractPayload(d).token;
                 })
                 .finally(() => {
-                  refreshPromiseRef.current = null;
+                  refreshRef.current = null;
                 });
             }
-
-            const newToken = await refreshPromiseRef.current;
-
-            // Retry original request with new token
-            response = await fetch(url, {
-              ...options,
+            const newTok = await refreshRef.current;
+            res = await fetch(url, {
+              ...opts,
               _retry: true,
-              headers: buildHeaders(newToken),
+              headers: makeHeaders(newTok),
             });
           } catch {
             clearAuth();
@@ -518,537 +506,417 @@ export function UserAuthProvider({ children }) {
         }
       }
 
-      // ── Parse Response ─────────────────────────────────────────────────────
-      if (response.status === 204) return {};
+      if (res.status === 204) return {};
 
       let data = null;
-      const contentType = response.headers.get("content-type") || "";
-
       try {
-        if (contentType.includes("application/json")) {
-          data = await response.json();
-        } else {
-          const text = await response.text();
-          data = text ? { message: text } : {};
-        }
+        const ct = res.headers.get("content-type") || "";
+        data = ct.includes("application/json")
+          ? await res.json()
+          : { message: await res.text() };
       } catch {
         data = {};
       }
 
-      // ── Handle Errors ──────────────────────────────────────────────────────
-      if (!response.ok) {
-        if (response.status === 401) clearAuth();
-
-        // ✅ Always extract string message - prevents [object Object]
-        const message =
+      if (!res.ok) {
+        if (res.status === 401) clearAuth();
+        const msg =
           data?.message ||
           data?.error ||
           data?.data?.message ||
-          data?.data?.error ||
-          `Request failed (${response.status})`;
-
-        const error = new Error(message);
-        error.status = response.status;
-        error.data = data;
-        throw error;
+          `Request failed (${res.status})`;
+        const err = new Error(msg);
+        err.status = res.status;
+        err.data = data;
+        throw err;
       }
 
       return data || {};
     },
-    [clearAuth, persistSession, saveAuth, token]
+    [clearAuth, persistSession, saveAuth, token],
   );
 
   // ============================================================================
-  // Fetch Current User
+  // Session Restore
   // ============================================================================
 
   const fetchUser = useCallback(async () => {
     if (fetchingRef.current) return;
-
-    const currentToken = token || storage.getToken();
-    if (!currentToken) {
+    const tok = token || store.get(KEYS.TOKEN);
+    if (!tok) {
       setAuthLoading(false);
       return;
     }
 
     fetchingRef.current = true;
-
     try {
-      // ✅ Correct endpoint: /users/me (not /auth/webauthn/me)
       const data = await authFetch("/users/me");
-      const payload = data?.data || data;
-      const rawUser = payload?.user || payload;
-
-      const normalized = normalizeUser(rawUser, {
-        profileCache: profileCacheRef.current,
-      });
-
+      const raw = data?.data?.user || data?.data || data?.user || data;
+      const normalized = normalizeUser(raw, { cache: getCache() });
       if (normalized) {
         setUser(normalized);
         cacheProfile(normalized);
       }
-    } catch (error) {
-      console.warn("[Auth] Session restore failed:", error.message);
+    } catch (err) {
+      console.warn("[Auth] Session restore failed:", err.message);
       clearAuth();
     } finally {
       setAuthLoading(false);
       fetchingRef.current = false;
     }
-  }, [authFetch, cacheProfile, clearAuth, token]);
+  }, [authFetch, cacheProfile, clearAuth, getCache, token]);
 
   // ============================================================================
   // Email OTP Auth
   // ============================================================================
 
   const login = useCallback(
-    async (emailOrPayload, fullNameArg) => {
-      const payload =
-        typeof emailOrPayload === "object"
-          ? emailOrPayload
-          : { email: emailOrPayload, fullName: fullNameArg };
-
-      const email = safeTrim(payload?.email || "");
+    async (payload) => {
+      const p = typeof payload === "object" ? payload : { email: payload };
+      const email = trim(p.email);
       if (!email) throw new Error("Email is required.");
-
-      if (typeof payload?.persistSession === "boolean") {
-        setSessionPreference(payload.persistSession);
-      }
+      if (typeof p.persistSession === "boolean")
+        setSessionPreference(p.persistSession);
 
       const data = await authFetch("/users/login", {
         method: "POST",
         body: JSON.stringify({ email }),
       });
-
       setPendingEmail(email);
       setModalView("verify");
-
       return data;
     },
-    [authFetch, setSessionPreference]
+    [authFetch, setSessionPreference],
   );
 
   const register = useCallback(
-    async (emailOrPayload, fullNameArg) => {
-      const payload =
-        typeof emailOrPayload === "object"
-          ? emailOrPayload
-          : { email: emailOrPayload, fullName: fullNameArg };
-
-      const email = safeTrim(payload?.email || "");
-      const fullName = safeTrim(
-        payload?.fullName || payload?.full_name || ""
-      );
-
+    async (payload) => {
+      const p = typeof payload === "object" ? payload : { email: payload };
+      const email = trim(p.email);
       if (!email) throw new Error("Email is required.");
-
-      if (typeof payload?.persistSession === "boolean") {
-        setSessionPreference(payload.persistSession);
-      }
+      if (typeof p.persistSession === "boolean")
+        setSessionPreference(p.persistSession);
 
       const data = await authFetch("/users/register", {
         method: "POST",
         body: JSON.stringify({
           email,
-          fullName: fullName || undefined,
-          phone: safeTrim(payload?.phone || "") || undefined,
-          bio: safeTrim(payload?.bio || "") || undefined,
+          fullName: trim(p.fullName) || undefined,
+          phone: trim(p.phone) || undefined,
+          bio: trim(p.bio) || undefined,
         }),
       });
-
       setPendingEmail(email);
       setModalView("verify");
-
       return data;
     },
-    [authFetch, setSessionPreference]
+    [authFetch, setSessionPreference],
   );
 
   const verifyCode = useCallback(
     async (email, code) => {
-      const resolvedEmail = safeTrim(email || pendingEmail);
-      const resolvedCode = safeTrim(String(code || ""));
-
-      if (!resolvedEmail) throw new Error("Email is required.");
-      if (!resolvedCode) throw new Error("Verification code is required.");
+      const e = trim(email || pendingEmail);
+      const c = trim(String(code || ""));
+      if (!e) throw new Error("Email is required.");
+      if (!c) throw new Error("Verification code is required.");
 
       const data = await authFetch("/users/verify-code", {
         method: "POST",
-        body: JSON.stringify({ email: resolvedEmail, code: resolvedCode }),
+        body: JSON.stringify({ email: e, code: c }),
       });
-
       saveAuth(data, { persist: persistSession });
       setPendingEmail("");
       closeModal();
-
       return data;
     },
-    [authFetch, closeModal, pendingEmail, persistSession, saveAuth]
+    [authFetch, closeModal, pendingEmail, persistSession, saveAuth],
   );
 
   const resendCode = useCallback(
     async (email) => {
-      const resolvedEmail = safeTrim(email || pendingEmail);
-      if (!resolvedEmail) throw new Error("Email is required.");
-
+      const e = trim(email || pendingEmail);
+      if (!e) throw new Error("Email is required.");
       return authFetch("/users/resend-code", {
         method: "POST",
-        body: JSON.stringify({ email: resolvedEmail }),
+        body: JSON.stringify({ email: e }),
       });
     },
-    [authFetch, pendingEmail]
+    [authFetch, pendingEmail],
   );
 
   const checkEmail = useCallback(
     async (email) => {
-      const resolvedEmail = safeTrim(email || "");
-      if (!resolvedEmail) return { exists: false };
-
+      const e = trim(email);
+      if (!e) return { exists: false };
       try {
-        const data = await authFetch("/users/check-email", {
+        const d = await authFetch("/users/check-email", {
           method: "POST",
-          body: JSON.stringify({ email: resolvedEmail }),
+          body: JSON.stringify({ email: e }),
         });
-        return data?.data || { exists: false };
+        return d?.data || { exists: false };
       } catch {
         return { exists: false };
       }
     },
-    [authFetch]
+    [authFetch],
   );
 
   // ============================================================================
   // Google Auth
   // ============================================================================
 
-  // ─── Replace initGoogleSdk in UserAuthContext.jsx ─────────────────────────────
+  const googleSignIn = useCallback(
+    async (credential, extra = {}) => {
+      if (!credential) throw new Error("Google sign-in was cancelled.");
+      setGoogleLoading(true);
+      setSocialAuthError("");
 
-const initGoogleSdk = useCallback(() => {
-  if (!GOOGLE_CLIENT_ID || googleInitRef.current) return;
+      try {
+        const data = await authFetch("/users/google", {
+          method: "POST",
+          body: JSON.stringify({
+            credential,
+            phone: trim(extra.phone),
+            bio: trim(extra.bio),
+            avatar: trim(extra.avatar),
+          }),
+        });
 
-  const setup = () => {
-    if (!window.google?.accounts?.id) return;
+        const { isNewUser, requiresProfile } = extractPayload(data);
 
-    try {
-      // ✅ Initialize ONCE with FedCM disabled
-      window.google.accounts.id.initialize({
-        client_id: GOOGLE_CLIENT_ID,
-        callback: handleGoogleCredentialResponse,
-        auto_select: false,
-        cancel_on_tap_outside: true,
-        // ✅ CRITICAL: Disable FedCM - prevents 403 errors
-        use_fedcm_for_prompt: false,
-        // ✅ Disable One Tap prompt - use button only
-        itp_support: false,
-      });
+        if (isNewUser || requiresProfile) {
+          const decoded = decodeJWT(credential);
+          const pending = {
+            credential,
+            email: decoded?.email || "",
+            name: decoded?.name || "",
+            picture: decoded?.picture || "",
+            sub: decoded?.sub || "",
+          };
+          setGoogleUser(pending);
+          store.setJSON(KEYS.GOOGLE_PENDING, pending);
+          setModalView("register");
+          return { ...data, requiresProfile: true, googleUser: pending };
+        }
 
-      setGoogleLoaded(true);
-      googleInitRef.current = true;
-    } catch (err) {
-      console.warn("[Auth] Google SDK init error:", err.message);
-    }
-  };
-
-  if (window.google?.accounts) {
-    setup();
-    return;
-  }
-
-  const existing = document.querySelector(
-    'script[src="https://accounts.google.com/gsi/client"]'
+        saveAuth(data, { persist: persistSession });
+        closeModal();
+        return data;
+      } catch (err) {
+        const msg = err?.message || "Google sign-in failed.";
+        setSocialAuthError(msg);
+        throw new Error(msg);
+      } finally {
+        setGoogleLoading(false);
+      }
+    },
+    [authFetch, closeModal, persistSession, saveAuth],
   );
 
-  if (existing) {
-    if (existing.dataset.loaded === "true") {
-      setup();
-    } else {
-      existing.addEventListener("load", setup, { once: true });
-    }
-    return;
-  }
-
-  const script = document.createElement("script");
-  script.src = "https://accounts.google.com/gsi/client";
-  script.async = true;
-  script.defer = true;
-  script.dataset.loaded = "false";
-  script.onload = () => {
-    script.dataset.loaded = "true";
-    setup();
-  };
-  script.onerror = () => {
-    console.warn("[Auth] Failed to load Google SDK");
-    setGoogleLoaded(false);
-  };
-  document.head.appendChild(script);
-}, []); // ✅ No deps - runs once
-
-
-// ─── Add this handler (used by initialize callback above) ────────────────────
-
-const googleCredentialCallbackRef = useRef(null);
-
-const googleSignIn = useCallback(
-  async (credentialOrResponse, profileData = {}) => {
-    const credential =
-      typeof credentialOrResponse === "string"
-        ? credentialOrResponse
-        : credentialOrResponse?.credential;
-
-    if (!credential) {
-      throw new Error("Google sign-in was cancelled.");
-    }
-
-    setGoogleLoading(true);
-    setSocialAuthError("");
-
-    try {
-      // ✅ Correct endpoint: /users/google
-      const data = await authFetch("/users/google", {
-        method: "POST",
-        body: JSON.stringify({
-          credential,
-          phone: safeTrim(profileData?.phone || ""),
-          bio: safeTrim(profileData?.bio || ""),
-          avatar: safeTrim(profileData?.avatar || ""),
-        }),
-      });
-
-      const { isNewUser, requiresProfile } = extractAuthPayload(data);
-
-      if (isNewUser || requiresProfile) {
-        const decoded = decodeGoogleCredential(credential);
-        const pending = {
-          credential,
-          email: decoded?.email || "",
-          name: decoded?.name || "",
-          picture: decoded?.picture || "",
-          sub: decoded?.sub || "",
-        };
-        setGoogleUser(pending);
-        storage.setGooglePending(pending);
-        setModalView("register");
-        return { ...data, requiresProfile: true, googleUser: pending };
-      }
-
-      saveAuth(data, { persist: persistSession });
-      closeModal();
-      return data;
-    } catch (error) {
-      const message = error?.message || "Google sign-in failed.";
-      setSocialAuthError(message);
-      throw new Error(message);
-    } finally {
-      setGoogleLoading(false);
-    }
-  },
-  [authFetch, closeModal, persistSession, saveAuth]
-);
-
-const googleSignUp = useCallback(
-  async (credentialOrResponse) => {
-    const credential =
-      typeof credentialOrResponse === "string"
-        ? credentialOrResponse
-        : credentialOrResponse?.credential;
-
-    if (!credential) throw new Error("Google credential is required.");
-
-    setGoogleLoading(true);
-
-    try {
-      const decoded = decodeGoogleCredential(credential);
-      if (!decoded?.email)
-        throw new Error("Could not decode Google account information.");
-
-      const pending = {
-        credential,
-        email: decoded.email,
-        name: decoded.name || "",
-        picture: decoded.picture || "",
-        sub: decoded.sub || "",
-        emailVerified: decoded.email_verified || false,
-      };
-
-      setGoogleUser(pending);
-      storage.setGooglePending(pending);
-      return pending;
-    } finally {
-      setGoogleLoading(false);
-    }
-  },
-  []
-);
-
-const handleGoogleCredentialResponse = useCallback(
-  async (response) => {
-    if (!response?.credential) {
-      setSocialAuthError("Google sign-in was cancelled.");
-      setGoogleLoading(false);
-      return;
-    }
-
-    // Call the pending callback if one exists (from promptGoogleAuth)
-    if (googleCredentialCallbackRef.current) {
-      const cb = googleCredentialCallbackRef.current;
-      googleCredentialCallbackRef.current = null;
-      cb(response.credential);
-      return;
-    }
-
-    // Otherwise handle directly
-    try {
-      setGoogleLoading(true);
-      await googleSignIn(response.credential);
-    } catch (err) {
-      setSocialAuthError(err?.message || "Google sign-in failed.");
-    } finally {
-      setGoogleLoading(false);
-    }
-  },
-  [googleSignIn]
-);
-
-
-// ─── Replace promptGoogleAuth in UserAuthContext.jsx ──────────────────────────
-
-const promptGoogleAuth = useCallback(
-  (options = {}) => {
-    return new Promise((resolve, reject) => {
-      if (!GOOGLE_CLIENT_ID) {
-        reject(new Error("Google Sign-In is not configured."));
-        return;
-      }
-
-      if (!googleLoaded || !window.google?.accounts?.id) {
-        reject(
-          new Error("Google Sign-In is loading. Please try again in a moment.")
-        );
-        return;
-      }
-
-      setSocialAuthError("");
-      setGoogleLoading(true);
-
-      let settled = false;
-
-      const settle = (fn, val) => {
-        if (settled) return;
-        settled = true;
+  const handleGoogleResponse = useCallback(
+    async (response) => {
+      if (!response?.credential) {
+        setSocialAuthError("Google sign-in was cancelled.");
         setGoogleLoading(false);
-        googleCredentialCallbackRef.current = null;
-        fn(val);
-      };
-
-      // ✅ Set credential callback
-      googleCredentialCallbackRef.current = async (credential) => {
-        try {
-          const result =
-            options.mode === "signup"
-              ? await googleSignUp(credential)
-              : await googleSignIn(credential);
-          settle(resolve, result);
-        } catch (err) {
-          settle(reject, err);
-        }
-      };
-
-      // ✅ Always render button - most reliable approach
-      if (options.container) {
-        try {
-          options.container.innerHTML = "";
-
-          window.google.accounts.id.renderButton(options.container, {
-            theme: "outline",
-            size: "large",
-            shape: "pill",
-            width: options.buttonWidth || 320,
-            text: options.mode === "signup" ? "signup_with" : "signin_with",
-            logo_alignment: "left",
-          });
-
-          // Button handles its own flow via the initialize callback
-          setGoogleLoading(false);
-          settled = true; // Don't timeout
-          resolve({ buttonRendered: true });
-        } catch (err) {
-          settle(reject, err);
-        }
         return;
       }
+      if (googleCbRef.current) {
+        const cb = googleCbRef.current;
+        googleCbRef.current = null;
+        cb(response.credential);
+        return;
+      }
+      try {
+        setGoogleLoading(true);
+        await googleSignIn(response.credential);
+      } catch (err) {
+        setSocialAuthError(err?.message || "Google sign-in failed.");
+      } finally {
+        setGoogleLoading(false);
+      }
+    },
+    [googleSignIn],
+  );
 
-      // ✅ Fallback: timeout after 30s
-      const timeout = setTimeout(() => {
-        settle(
-          reject,
-          new Error(
-            "Google sign-in timed out. Please use the Google button."
-          )
-        );
-      }, 30000);
+  const initGoogleSdk = useCallback(() => {
+    if (!GOOGLE_CLIENT_ID || googleInitRef.current) return;
 
-      const clearAndSettle = (fn, val) => {
-        clearTimeout(timeout);
-        settle(fn, val);
-      };
+    const setup = () => {
+      if (!window.google?.accounts?.id) return;
+      try {
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleResponse,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+          use_fedcm_for_prompt: false,
+          itp_support: false,
+        });
+        setGoogleLoaded(true);
+        googleInitRef.current = true;
+      } catch (err) {
+        console.warn("[Auth] Google SDK init error:", err.message);
+      }
+    };
 
-      // Update callback to clear timeout
-      googleCredentialCallbackRef.current = async (credential) => {
-        try {
-          const result =
-            options.mode === "signup"
-              ? await googleSignUp(credential)
-              : await googleSignIn(credential);
-          clearAndSettle(resolve, result);
-        } catch (err) {
-          clearAndSettle(reject, err);
+    if (window.google?.accounts) {
+      setup();
+      return;
+    }
+
+    const existing = document.querySelector(
+      'script[src="https://accounts.google.com/gsi/client"]',
+    );
+    if (existing) {
+      existing.dataset.loaded === "true"
+        ? setup()
+        : existing.addEventListener("load", setup, { once: true });
+      return;
+    }
+
+    const s = document.createElement("script");
+    s.src = "https://accounts.google.com/gsi/client";
+    s.async = true;
+    s.defer = true;
+    s.onload = () => {
+      s.dataset.loaded = "true";
+      setup();
+    };
+    s.onerror = () => setGoogleLoaded(false);
+    document.head.appendChild(s);
+  }, [handleGoogleResponse]);
+
+  const promptGoogleAuth = useCallback(
+    (opts = {}) =>
+      new Promise((resolve, reject) => {
+        if (!GOOGLE_CLIENT_ID) {
+          return reject(new Error("Google Sign-In is not configured."));
         }
-      };
-    });
-  },
-  [googleLoaded, googleSignIn, googleSignUp]
-);
+        if (!googleLoaded || !window.google?.accounts?.id) {
+          return reject(
+            new Error(
+              "Google Sign-In is loading. Please try again in a moment.",
+            ),
+          );
+        }
+
+        setSocialAuthError("");
+        setGoogleLoading(true);
+
+        let settled = false;
+        const settle = (fn, val) => {
+          if (settled) return;
+          settled = true;
+          setGoogleLoading(false);
+          googleCbRef.current = null;
+          fn(val);
+        };
+
+        if (opts.container) {
+          try {
+            opts.container.innerHTML = "";
+            window.google.accounts.id.renderButton(opts.container, {
+              theme: "outline",
+              size: "large",
+              shape: "pill",
+              width: opts.buttonWidth || 320,
+              text: opts.mode === "signup" ? "signup_with" : "signin_with",
+              logo_alignment: "left",
+            });
+            setGoogleLoading(false);
+            settled = true;
+            return resolve({ buttonRendered: true });
+          } catch (err) {
+            return settle(reject, err);
+          }
+        }
+
+        const timeout = setTimeout(
+          () =>
+            settle(
+              reject,
+              new Error("Google sign-in timed out. Please try again."),
+            ),
+          30_000,
+        );
+
+        googleCbRef.current = async (credential) => {
+          clearTimeout(timeout);
+          try {
+            let result;
+            if (opts.mode === "signup") {
+              const decoded = decodeJWT(credential);
+              result = {
+                credential,
+                email: decoded?.email || "",
+                name: decoded?.name || "",
+                picture: decoded?.picture || "",
+                sub: decoded?.sub || "",
+              };
+              setGoogleUser(result);
+              store.setJSON(KEYS.GOOGLE_PENDING, result);
+            } else {
+              result = await googleSignIn(credential);
+            }
+            settle(resolve, result);
+          } catch (err) {
+            settle(reject, err);
+          }
+        };
+
+        try {
+          window.google.accounts.id.prompt((n) => {
+            if (n.isNotDisplayed() || n.isSkippedMoment()) {
+              clearTimeout(timeout);
+              settle(
+                reject,
+                new Error(
+                  "Google prompt was dismissed. Please use the Google button.",
+                ),
+              );
+            }
+          });
+        } catch {
+          /* One Tap unavailable — button fallback handles it */
+        }
+      }),
+    [googleLoaded, googleSignIn],
+  );
 
   const completeGoogleSignUp = useCallback(
     async (profileData = {}) => {
-      const pending = googleUser || storage.getGooglePending();
-
+      const pending = googleUser || store.getJSON(KEYS.GOOGLE_PENDING);
       if (!pending?.credential) {
         throw new Error(
-          "Google authentication required. Please sign in with Google first."
+          "Google authentication required. Please sign in with Google first.",
         );
       }
-
-      const fullName = safeTrim(profileData?.fullName || pending.name || "");
-      const avatar = safeTrim(profileData?.avatar || pending.picture || "");
-
-      pendingProfileRef.current = { email: pending.email, fullName, avatar };
+      const fullName = trim(profileData?.fullName || pending.name);
+      const avatar = trim(profileData?.avatar || pending.picture);
+      pendingRef.current = { email: pending.email, fullName, avatar };
 
       const data = await googleSignIn(pending.credential, {
-        phone: safeTrim(profileData?.phone || ""),
-        bio: safeTrim(profileData?.bio || ""),
+        phone: trim(profileData?.phone),
+        bio: trim(profileData?.bio),
         avatar,
       });
-
-      const { token: authToken, requiresProfile } = extractAuthPayload(data);
-      if (!authToken || requiresProfile) {
-        throw new Error("Account setup incomplete. Please complete all required fields.");
+      const { token: tok, requiresProfile } = extractPayload(data);
+      if (!tok || requiresProfile) {
+        throw new Error(
+          "Account setup incomplete. Please complete all required fields.",
+        );
       }
-
       return data;
     },
-    [googleSignIn, googleUser]
+    [googleSignIn, googleUser],
   );
-
-
 
   const clearGooglePending = useCallback(() => {
     setGoogleUser(null);
-    storage.setGooglePending(null);
+    store.remove(KEYS.GOOGLE_PENDING);
   }, []);
 
-  const clearSocialAuthError = useCallback(() => {
-    setSocialAuthError("");
-  }, []);
+  const clearSocialAuthError = useCallback(() => setSocialAuthError(""), []);
 
   // ============================================================================
   // GitHub Auth
@@ -1062,112 +930,116 @@ const promptGoogleAuth = useCallback(
         method: "POST",
         body: JSON.stringify({
           code,
-          phone: safeTrim(profileData?.phone || ""),
-          bio: safeTrim(profileData?.bio || ""),
+          phone: trim(profileData?.phone),
+          bio: trim(profileData?.bio),
         }),
       });
-
-      const { token: authToken } = extractAuthPayload(data);
-      if (!authToken) {
-        throw new Error("GitHub authentication did not return a valid session.");
-      }
+      const { token: tok } = extractPayload(data);
+      if (!tok)
+        throw new Error(
+          "GitHub authentication did not return a valid session.",
+        );
 
       saveAuth(data, { persist: persistSession });
       closeModal();
       return data;
     },
-    [authFetch, closeModal, persistSession, saveAuth]
+    [authFetch, closeModal, persistSession, saveAuth],
   );
 
-// ─── Replace startGithubAuth in UserAuthContext.jsx ──────────────────────────
+  const startGithubAuth = useCallback((mode = "signin") => {
+    if (!GITHUB_CLIENT_ID) {
+      const msg = import.meta.env.DEV
+        ? "GitHub Sign-In is not configured. Add VITE_GITHUB_CLIENT_ID to your .env.local file and restart the dev server."
+        : "GitHub Sign-In is temporarily unavailable. Please use Google or email sign-in.";
+      console.error("[GitHub Auth] VITE_GITHUB_CLIENT_ID is not set.", {
+        MODE: import.meta.env.MODE,
+        VITE_GITHUB_CLIENT_ID: import.meta.env.VITE_GITHUB_CLIENT_ID,
+      });
+      setSocialAuthError(msg);
+      throw new Error(msg);
+    }
 
-const startGithubAuth = useCallback((mode = "signin") => {
-  if (!GITHUB_CLIENT_ID) {
-    throw new Error("GitHub Sign-In is not configured.");
-  }
+    setSocialAuthError("");
 
-  setSocialAuthError("");
+    // Resolve redirect URI at call time (safe — inside event handler)
+    const redirectUri = resolveGithubRedirectUri();
+    const state = randomState();
 
-  // ✅ Build redirect URI — must EXACTLY match GitHub OAuth app settings
-  const redirectUri = new URL(
-    GITHUB_REDIRECT_PATH || "/auth/github/callback",
-    window.location.origin
-  );
+    sessionStorage.setItem(KEYS.GITHUB_STATE, state);
+    sessionStorage.setItem(KEYS.GITHUB_INTENT, mode);
 
-  // ✅ Add auth_provider param so callback page knows what to do
-  redirectUri.searchParams.set("auth_provider", "github");
+    const url = new URL("https://github.com/login/oauth/authorize");
+    url.searchParams.set("client_id", GITHUB_CLIENT_ID);
+    url.searchParams.set("redirect_uri", redirectUri);
+    url.searchParams.set("scope", GITHUB_SCOPE);
+    url.searchParams.set("state", state);
+    url.searchParams.set("allow_signup", "true");
 
-  const state = generateOAuthState();
-  sessionStorage.setItem(KEYS.GITHUB_STATE, state);
-  sessionStorage.setItem(KEYS.GITHUB_INTENT, mode);
+    if (import.meta.env.DEV) {
+      console.log("[GitHub Auth]", {
+        client_id: GITHUB_CLIENT_ID,
+        redirect_uri: redirectUri,
+        scope: GITHUB_SCOPE,
+        url: url.toString(),
+      });
+    }
 
-  // ✅ Log for debugging
-  console.log("[GitHub Auth] Redirect URI:", redirectUri.toString());
-  console.log("[GitHub Auth] Client ID:", GITHUB_CLIENT_ID);
-
-  const authorizeUrl = new URL("https://github.com/login/oauth/authorize");
-  authorizeUrl.searchParams.set("client_id", GITHUB_CLIENT_ID);
-  authorizeUrl.searchParams.set("redirect_uri", redirectUri.toString());
-  authorizeUrl.searchParams.set("scope", GITHUB_SCOPE);
-  authorizeUrl.searchParams.set("state", state);
-  authorizeUrl.searchParams.set("allow_signup", "true");
-
-  console.log("[GitHub Auth] Full authorize URL:", authorizeUrl.toString());
-
-  window.location.assign(authorizeUrl.toString());
-}, []);
-
-  const cleanGithubParams = useCallback(() => {
-    const url = new URL(window.location.href);
-    ["auth_provider", "code", "state", "error", "error_description"].forEach(
-      (p) => url.searchParams.delete(p)
-    );
-    window.history.replaceState(
-      {},
-      document.title,
-      `${url.pathname}${url.search}${url.hash}`
-    );
+    window.location.assign(url.toString());
   }, []);
 
   const consumeGithubCallback = useCallback(async () => {
     const url = new URL(window.location.href);
-    const provider = url.searchParams.get("auth_provider");
     const code = url.searchParams.get("code");
     const state = url.searchParams.get("state");
-    const oauthError = url.searchParams.get("error");
-    const oauthErrorDesc = url.searchParams.get("error_description");
+    const oauthErr = url.searchParams.get("error");
+    const errDesc = url.searchParams.get("error_description");
+    const provider = url.searchParams.get("auth_provider");
 
-    if (provider !== "github" && !oauthError && (!code || !state)) return;
+    // Only process when URL contains OAuth params
+    if (!code && !oauthErr) return;
+    if (provider && provider !== "github") return;
+
+    const expectedState = sessionStorage.getItem(KEYS.GITHUB_STATE);
+
+    // Clean URL immediately
+    const clean = new URL(window.location.href);
+    ["code", "state", "error", "error_description", "auth_provider"].forEach(
+      (p) => clean.searchParams.delete(p),
+    );
+    window.history.replaceState(
+      {},
+      document.title,
+      `${clean.pathname}${clean.search}${clean.hash}`,
+    );
 
     setGithubLoading(true);
     setSocialAuthError("");
 
     try {
-      if (oauthError) {
+      if (oauthErr) {
         throw new Error(
-          oauthErrorDesc
-            ? decodeURIComponent(oauthErrorDesc)
-            : "GitHub sign-in was cancelled."
+          errDesc
+            ? decodeURIComponent(errDesc)
+            : "GitHub sign-in was cancelled.",
         );
       }
-
-      const expectedState = sessionStorage.getItem(KEYS.GITHUB_STATE);
       if (!code || !state || !expectedState || expectedState !== state) {
-        throw new Error("GitHub sign-in could not be verified. Please try again.");
+        throw new Error(
+          "GitHub sign-in could not be verified. Please try again.",
+        );
       }
-
       await githubSignIn(code);
-    } catch (error) {
-      const message = error?.message || "GitHub sign-in failed.";
-      setSocialAuthError(message);
+    } catch (err) {
+      const msg = err?.message || "GitHub sign-in failed.";
+      setSocialAuthError(msg);
       openModal("login");
     } finally {
       sessionStorage.removeItem(KEYS.GITHUB_STATE);
       sessionStorage.removeItem(KEYS.GITHUB_INTENT);
-      cleanGithubParams();
       setGithubLoading(false);
     }
-  }, [cleanGithubParams, githubSignIn, openModal]);
+  }, [githubSignIn, openModal]);
 
   // ============================================================================
   // Profile Management
@@ -1179,89 +1051,80 @@ const startGithubAuth = useCallback((mode = "signin") => {
         method: "PUT",
         body: JSON.stringify(updates),
       });
-
-      const payload = data?.data || data;
-      const rawUser = payload?.user || payload;
-
+      const raw = data?.data?.user || data?.data || data?.user || data;
       const normalized = normalizeUser(
-        { ...(user || {}), ...(rawUser || {}) },
-        { profileCache: profileCacheRef.current }
+        { ...(user || {}), ...(raw || {}) },
+        { cache: getCache() },
       );
-
       if (normalized) {
         setUser(normalized);
         cacheProfile(normalized);
       }
-
       return data;
     },
-    [authFetch, cacheProfile, user]
+    [authFetch, cacheProfile, getCache, user],
   );
 
   const uploadAvatar = useCallback(
     async (file) => {
-      if (!(file instanceof File)) throw new Error("Please select a valid image file.");
+      if (!(file instanceof File))
+        throw new Error("Please select a valid image file.");
+      if (file.size > 10 * 1024 * 1024)
+        throw new Error("Image must be 10MB or less.");
 
-      const MAX_SIZE = 10 * 1024 * 1024; // 10MB
-      if (file.size > MAX_SIZE) throw new Error("Image must be 10MB or less.");
-
-      const ALLOWED = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/avif"];
-      if (!ALLOWED.includes(file.type)) {
+      const allowed = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+        "image/avif",
+      ];
+      if (!allowed.includes(file.type)) {
         throw new Error("Please upload a JPEG, PNG, GIF, WebP, or AVIF image.");
       }
 
-      const formData = new FormData();
-      formData.append("image", file);
-      formData.append("type", "avatar");
+      const form = new FormData();
+      form.append("image", file);
+      form.append("type", "avatar");
 
       const data = await authFetch("/uploads/image", {
         method: "POST",
-        body: formData,
+        body: form,
       });
-
-      const payload = data?.data || data || {};
-      const avatarUrl =
-        payload.url ||
-        payload.imageUrl ||
-        payload.avatar ||
-        payload.avatarUrl ||
-        null;
-
-      if (!avatarUrl) {
+      const p = data?.data || data || {};
+      const avatarUrl = p.url || p.imageUrl || p.avatar || p.avatarUrl;
+      if (!avatarUrl)
         throw new Error("Upload succeeded but no image URL was returned.");
-      }
 
-      // Optimistic update
       const normalized = normalizeUser(
         { ...(user || {}), avatar: avatarUrl },
-        { profileCache: profileCacheRef.current }
+        { cache: getCache() },
       );
       if (normalized) {
         setUser(normalized);
         cacheProfile(normalized);
       }
 
-      // Persist to backend
       try {
         await updateProfile({ avatar: avatarUrl });
       } catch (err) {
-        console.warn("[Auth] Failed to sync avatar:", err.message);
+        console.warn("[Auth] Avatar sync failed:", err.message);
       }
 
       return avatarUrl;
     },
-    [authFetch, cacheProfile, updateProfile, user]
+    [authFetch, cacheProfile, getCache, updateProfile, user],
   );
 
   // ============================================================================
-  // Logout & Account Deletion
+  // Logout & Account
   // ============================================================================
 
   const logout = useCallback(async () => {
     try {
       await authFetch("/users/logout", { method: "POST" });
     } catch {
-      // Always logout even if request fails
+      /* always clear locally */
     } finally {
       clearAuth();
       setPendingEmail("");
@@ -1276,47 +1139,52 @@ const startGithubAuth = useCallback((mode = "signin") => {
     return data;
   }, [authFetch, clearAuth, closeModal]);
 
-  // Stubs for unsupported flows
-  const resetPassword = useCallback(async () => {
-    throw new Error("Password reset is unavailable. Please use email OTP or social login.");
-  }, []);
-
-  const changePassword = useCallback(async () => {
-    throw new Error("Password changes are unavailable. Please use email OTP or social login.");
-  }, []);
-
   const refreshAuthToken = useCallback(async () => {
-    const refreshToken = storage.getRefreshToken();
-    if (!refreshToken) return false;
-
+    const rt = store.get(KEYS.REFRESH);
+    if (!rt) return false;
     try {
       const data = await authFetch("/users/refresh-token", {
         method: "POST",
-        body: JSON.stringify({ refreshToken }),
+        body: JSON.stringify({ refreshToken: rt }),
       });
-
-      const { token: newToken, refreshToken: newRefresh } = extractAuthPayload(data);
-      if (newToken) {
-        storage.setToken(newToken, persistSession);
-        setToken(newToken);
+      const { token: tok, refreshToken: ref } = extractPayload(data);
+      if (tok) {
+        store.set(KEYS.TOKEN, tok, persistSession);
+        setToken(tok);
       }
-      if (newRefresh) {
-        storage.setRefreshToken(newRefresh, persistSession);
-      }
+      if (ref) store.set(KEYS.REFRESH, ref, persistSession);
       return true;
     } catch {
       return false;
     }
   }, [authFetch, persistSession]);
 
+  const resetPassword = useCallback(async () => {
+    throw new Error("Please use email OTP or social login.");
+  }, []);
+  const changePassword = useCallback(async () => {
+    throw new Error("Please use email OTP or social login.");
+  }, []);
+
   // ============================================================================
   // Effects
   // ============================================================================
 
-  useEffect(() => { fetchUser(); }, [fetchUser]);
-  useEffect(() => { initGoogleSdk(); }, [initGoogleSdk]);
-  useEffect(() => { consumeGithubCallback(); }, [consumeGithubCallback]);
-  useEffect(() => { return () => { document.body.style.overflow = ""; }; }, []);
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
+  useEffect(() => {
+    initGoogleSdk();
+  }, [initGoogleSdk]);
+  useEffect(() => {
+    consumeGithubCallback();
+  }, [consumeGithubCallback]);
+  useEffect(
+    () => () => {
+      document.body.style.overflow = "";
+    },
+    [],
+  );
 
   // ============================================================================
   // Context Value
@@ -1324,7 +1192,6 @@ const startGithubAuth = useCallback((mode = "signin") => {
 
   const value = useMemo(
     () => ({
-      // ── State ──────────────────────────────────────────────────────────────
       user,
       token,
       isAuthenticated,
@@ -1339,65 +1206,74 @@ const startGithubAuth = useCallback((mode = "signin") => {
       hasGooglePending,
       socialAuthError,
       persistSession,
-
-      // ── Modal ──────────────────────────────────────────────────────────────
       openModal,
       closeModal,
       setModalView,
-
-      // ── Email OTP ──────────────────────────────────────────────────────────
       login,
       register,
       verifyCode,
       resendCode,
       checkEmail,
-
-      // ── Google ─────────────────────────────────────────────────────────────
       googleSignIn,
-      googleSignUp,
       completeGoogleSignUp,
       promptGoogleAuth,
       clearGooglePending,
       clearSocialAuthError,
-
-      // ── GitHub ─────────────────────────────────────────────────────────────
       githubSignIn,
       startGithubAuth,
-
-      // ── Profile ────────────────────────────────────────────────────────────
       updateProfile,
       uploadAvatar,
-
-      // ── Session ────────────────────────────────────────────────────────────
       setSessionPreference,
       refreshAuthToken,
-
-      // ── Account ────────────────────────────────────────────────────────────
       logout,
       deleteAccount,
       resetPassword,
       changePassword,
-
-      // ── Utilities ──────────────────────────────────────────────────────────
       fetchUser,
       authFetch,
       saveAuth,
     }),
     [
-      user, token, isAuthenticated, authLoading,
-      isModalOpen, modalView, pendingEmail,
-      googleUser, googleLoaded, googleLoading, githubLoading,
-      hasGooglePending, socialAuthError, persistSession,
-      openModal, closeModal, setModalView,
-      login, register, verifyCode, resendCode, checkEmail,
-      googleSignIn, googleSignUp, completeGoogleSignUp,
-      promptGoogleAuth, clearGooglePending, clearSocialAuthError,
-      githubSignIn, startGithubAuth,
-      updateProfile, uploadAvatar,
-      setSessionPreference, refreshAuthToken,
-      logout, deleteAccount, resetPassword, changePassword,
-      fetchUser, authFetch, saveAuth,
-    ]
+      user,
+      token,
+      isAuthenticated,
+      authLoading,
+      isModalOpen,
+      modalView,
+      pendingEmail,
+      googleUser,
+      googleLoaded,
+      googleLoading,
+      githubLoading,
+      hasGooglePending,
+      socialAuthError,
+      persistSession,
+      openModal,
+      closeModal,
+      login,
+      register,
+      verifyCode,
+      resendCode,
+      checkEmail,
+      googleSignIn,
+      completeGoogleSignUp,
+      promptGoogleAuth,
+      clearGooglePending,
+      clearSocialAuthError,
+      githubSignIn,
+      startGithubAuth,
+      updateProfile,
+      uploadAvatar,
+      setSessionPreference,
+      refreshAuthToken,
+      logout,
+      deleteAccount,
+      resetPassword,
+      changePassword,
+      fetchUser,
+      authFetch,
+      saveAuth,
+    ],
   );
 
   return (
@@ -1412,11 +1288,10 @@ const startGithubAuth = useCallback((mode = "signin") => {
 // ============================================================================
 
 export function useUserAuth() {
-  const context = useContext(UserAuthContext);
-  if (!context) {
+  const ctx = useContext(UserAuthContext);
+  if (!ctx)
     throw new Error("useUserAuth must be used within a UserAuthProvider");
-  }
-  return context;
+  return ctx;
 }
 
 export default UserAuthContext;

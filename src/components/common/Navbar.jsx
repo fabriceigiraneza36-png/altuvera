@@ -183,6 +183,17 @@ const Navbar = () => {
       return;
     }
 
+    const normalizeString = (value) => {
+      if (typeof value === "string") return value;
+      if (!value) return "";
+      if (typeof value === "object") {
+        return (
+          value.name || value.countryName || value.location || value.slug || ""
+        );
+      }
+      return String(value);
+    };
+
     const normalizeKey = (item) =>
       item?._id || item?.id || item?.slug || item?.name;
 
@@ -190,8 +201,8 @@ const Navbar = () => {
       id: item?._id || item?.id || item?.slug,
       slug: item?.slug || item?.id,
       name: item?.name || item?.title || "Destination",
-      country: item?.country || item?.countryName || item?.location || "",
-      category: item?.category || item?.type || "Destination",
+      country: normalizeString(item?.country || item?.countryName || item?.location),
+      category: normalizeString(item?.category || item?.type || "Destination"),
       heroImage: item?.heroImage || item?.image || item?.images?.[0] || "",
     });
 
@@ -200,7 +211,7 @@ const Navbar = () => {
       .filter((d) => {
         const name = (d?.name || "").toLowerCase();
         const desc = (d?.description || "").toLowerCase();
-        const country = (d?.country || "").toLowerCase();
+        const country = normalizeString(d?.country).toLowerCase();
         const loc = (d?.location || "").toLowerCase();
         return (
           name.includes(qLower) ||
@@ -2321,6 +2332,66 @@ const Navbar = () => {
   }
   .mm__logo-text{
     font-size:20px;
+  }
+}
+
+@media(max-width:320px){
+  .nav__inner{
+    padding:0 10px;
+  }
+  .nav__logo-img-wrapper{
+    width:36px;
+    height:36px;
+  }
+  .nav__hamburger{
+    width:38px;
+    height:38px;
+    border-radius:8px;
+  }
+  .nav__hline{
+    width:16px;
+    height:2px;
+  }
+  .nav__hline--1{transform:translateY(-3px)}
+  .nav__hline--3{transform:translateY(3px)}
+  .nav__hamburger--open .nav__hline--1{transform:translateY(1.5px) rotate(45deg)}
+  .nav__hamburger--open .nav__hline--3{transform:translateY(-1.5px) rotate(-45deg)}
+  .srch__box{
+    padding:0 10px;
+  }
+  .srch__input{
+    font-size:15px;
+    padding:16px 48px 16px 44px;
+  }
+  .mm{
+    width:100vw;
+  }
+  .mm__body{
+    padding-left:12px;
+    padding-right:12px;
+  }
+  .mm__logo-img-wrapper{
+    width:36px;
+    height:36px;
+  }
+  .mm__logo-text{
+    font-size:18px;
+  }
+  .mm__link,
+  .mm__toggle{
+    font-size:16px;
+    padding:12px 4px;
+  }
+  .mm__sub-link{
+    font-size:14px;
+  }
+  .mm__auth-link,
+  .mm__out{
+    font-size:14px;
+  }
+  .mm__cta{
+    font-size:14px;
+    padding:12px 16px;
   }
 }
 

@@ -1,6 +1,7 @@
 // components/DestinationCard.jsx
 import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
   FiMapPin,
   FiClock,
@@ -114,6 +115,24 @@ const styles = `
     .destination-card:hover {
       transform: translateY(-4px) scale(1.01);
     }
+
+    .destination-card {
+      border-radius: 16px;
+    }
+
+    .destination-card:hover {
+      border-radius: 16px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .destination-card {
+      border-radius: 12px;
+    }
+
+    .destination-card:hover {
+      border-radius: 12px;
+    }
   }
 `;
 
@@ -210,11 +229,14 @@ function ImageSlideshow({ images, height = 280 }) {
     ? images.filter(Boolean) 
     : [FALLBACK_IMAGE];
 
+  // Responsive height
+  const responsiveHeight = typeof window !== 'undefined' && window.innerWidth < 768 ? Math.min(height * 0.8, 200) : height;
+
   return (
     <div
       style={{
         position: 'relative',
-        height,
+        height: responsiveHeight,
         overflow: 'hidden',
         backgroundColor: COLORS.green[900],
       }}
@@ -885,7 +907,7 @@ function DestinationCard({
       </div>
 
       {/* Content Section */}
-      <div style={{ padding: compact ? '20px' : '24px 28px 28px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ padding: compact ? (isMobile ? '16px' : '20px') : (isMobile ? '20px 24px 24px' : '24px 28px 28px'), flex: 1, display: 'flex', flexDirection: 'column' }}>
         {/* Title and Rating */}
         <div
           style={{
@@ -900,7 +922,7 @@ function DestinationCard({
             <h3
               style={{
                 fontFamily: "'Playfair Display', Georgia, serif",
-                fontSize: compact ? 20 : isMobile ? 20 : 22,
+                fontSize: compact ? (isMobile ? 18 : 20) : isMobile ? 18 : 22,
                 fontWeight: 700,
                 color: hovered ? COLORS.green[700] : COLORS.neutral[900],
                 marginBottom: 0,
@@ -1067,7 +1089,7 @@ function DestinationCard({
             marginBottom: hasPrice ? 18 : 0,
           }}
         >
-          <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: isMobile ? 10 : 14, flexWrap: 'wrap' }}>
             {duration && (
               <span
                 style={{
@@ -1143,7 +1165,7 @@ function DestinationCard({
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: 8,
-                padding: '16px 24px',
+                padding: isMobile ? '14px 20px' : '16px 24px',
                 borderRadius: 16,
                 background: hovered
                   ? `linear-gradient(135deg, ${COLORS.green[700]}, ${COLORS.green[600]})`

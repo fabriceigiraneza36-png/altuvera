@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useSearchParams } from "react-router-dom";
 import { FiSearch } from 'react-icons/fi';
 import PageHeader from '../components/common/PageHeader';
@@ -11,26 +11,54 @@ import { useCountryDestinations, useDestinations } from "../hooks/useDestination
 const Destinations = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(() => searchParams.get("search") || "");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
   const [selectedCountry, setSelectedCountry] = useState('all');
   const [selectedType, setSelectedType] = useState('all');
+  const [isSearching, setIsSearching] = useState(false);
+  const searchTimeoutRef = useRef(null);
+
+  // Debounce search query to prevent excessive URL updates and re-renders
+  useEffect(() => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+      setIsSearching(false);
+    }, 300);
+
+    if (searchQuery !== debouncedSearchQuery) {
+      setIsSearching(true);
+    }
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery, debouncedSearchQuery]);
 
   // Sync URL -> input (handles direct links and back/forward navigation)
   useEffect(() => {
     const urlValue = searchParams.get("search") || "";
-    if (urlValue !== searchQuery) setSearchQuery(urlValue);
+    if (urlValue !== searchQuery) {
+      setSearchQuery(urlValue);
+      setDebouncedSearchQuery(urlValue);
+    }
   }, [searchParams, searchQuery]);
 
-  // Sync input -> URL (replace to avoid a history entry per keystroke)
+  // Sync debounced search -> URL (replace to avoid a history entry per keystroke)
   useEffect(() => {
     const urlValue = searchParams.get("search") || "";
-    if (urlValue === searchQuery) return;
+    if (urlValue === debouncedSearchQuery) return;
 
     const next = new URLSearchParams(searchParams);
-    if (searchQuery) next.set("search", searchQuery);
+    if (debouncedSearchQuery) next.set("search", debouncedSearchQuery);
     else next.delete("search");
 
     setSearchParams(next, { replace: true });
-  }, [searchParams, searchQuery, setSearchParams]);
+  }, [searchParams, debouncedSearchQuery, setSearchParams]);
 
   const {
     destinations: allDestinations,
@@ -52,15 +80,30 @@ const Destinations = () => {
   );
 
   const filteredDestinations = useMemo(() => {
-    const query = searchQuery.toLowerCase();
+    const query = debouncedSearchQuery.toLowerCase().trim();
+    if (!query) return activeDestinations;
+    
     return activeDestinations.filter((dest) => {
-      const name = (dest.name || "").toLowerCase();
-      const description = (dest.description || "").toLowerCase();
-      const matchesSearch = name.includes(query) || description.includes(query);
+      const searchableFields = [
+        dest.name,
+        dest.description,
+        dest.shortDescription,
+        dest.location,
+        dest.country,
+        dest.capital,
+        dest.region,
+        dest.subRegion,
+        dest.type,
+        dest.category,
+        dest.highlights?.join(' '),
+        dest.tags?.join(' '),
+      ].filter(Boolean).join(' ').toLowerCase();
+      
+      const matchesSearch = searchableFields.includes(query);
       const matchesType = selectedType === "all" || dest.type === selectedType;
       return matchesSearch && matchesType;
     });
-  }, [activeDestinations, searchQuery, selectedType]);
+  }, [activeDestinations, debouncedSearchQuery, selectedType]);
 
   const loading = selectedCountry === "all" ? allLoading : countryLoading;
   const error = selectedCountry === "all" ? allError : countryError;
@@ -107,7 +150,7 @@ const Destinations = () => {
       border: '2px solid #E5E7EB',
       borderRadius: '14px',
       outline: 'none',
-      transition: 'border-color 0.3s ease',
+      transition: 'border-color 0.3s ease, box-shadow 0.3s ease',
       boxSizing: 'border-box',
     },
     filterGroup: {
@@ -148,8 +191,10 @@ const Destinations = () => {
     },
     grid: {
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
       gap: '28px',
+      minHeight: '400px', // Prevent layout shift
+      alignItems: 'start', // Ensure cards align to top
     },
     noResults: {
       textAlign: 'center',
@@ -174,6 +219,25 @@ const Destinations = () => {
     },
   };
 
+  // Add spin animation keyframes
+  const spinKeyframes = `
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  `;
+
+  // Inject keyframes if not already present
+  useEffect(() => {
+    const styleSheet = document.getElementById('destinations-animations');
+    if (!styleSheet) {
+      const style = document.createElement('style');
+      style.id = 'destinations-animations';
+      style.textContent = spinKeyframes;
+      document.head.appendChild(style);
+    }
+  }, []);
+
   return (
     <div>
       <PageHeader 
@@ -185,7 +249,7 @@ const Destinations = () => {
 
       <section style={styles.section}>
         <div style={styles.container} className="destinations-page-container">
-          <AnimatedSection animation="fadeInUp">
+          <div style={{ animation: 'fadeInUp 0.6s ease-out' }}>
             <div style={styles.filters} className="destinations-filters">
               <div style={styles.filtersTop} className="destinations-filters-top">
                 <div style={styles.searchBox} className="destinations-search-box">
@@ -195,9 +259,54 @@ const Destinations = () => {
                     placeholder="Search destinations..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    style={styles.searchInput}
+                    style={{
+                      ...styles.searchInput,
+                      borderColor: isSearching ? '#3B82F6' : '#E5E7EB',
+                      boxShadow: isSearching ? '0 0 0 3px rgba(59, 130, 246, 0.1)' : 'none',
+                      paddingRight: searchQuery ? '50px' : '16px',
+                    }}
                     className="destinations-search-input"
                   />
+                  {isSearching && (
+                    <div style={{
+                      position: 'absolute',
+                      right: '16px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '16px',
+                      height: '16px',
+                      border: '2px solid #E5E7EB',
+                      borderTop: '2px solid #3B82F6',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite',
+                    }} />
+                  )}
+                  {searchQuery && !isSearching && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      style={{
+                        position: 'absolute',
+                        right: '16px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '4px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#6B7280',
+                        transition: 'color 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => e.target.style.color = '#374151'}
+                      onMouseLeave={(e) => e.target.style.color = '#6B7280'}
+                      aria-label="Clear search"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
                 <div style={styles.filterGroup} className="destinations-filter-group">
                   <select
@@ -228,11 +337,15 @@ const Destinations = () => {
               </div>
               <div style={styles.resultsInfo} className="destinations-results-info">
                 <span style={styles.resultsCount}>
-                  Showing <span style={styles.resultsCountNumber}>{filteredDestinations.length}</span> destinations
+                  {isSearching ? (
+                    'Searching destinations...'
+                  ) : (
+                    `Showing ${filteredDestinations.length} destinations${debouncedSearchQuery ? ` for "${debouncedSearchQuery}"` : ''}`
+                  )}
                 </span>
               </div>
             </div>
-          </AnimatedSection>
+          </div>
 
           {loading ? (
             <AnimatedSection animation="fadeInUp">
@@ -257,33 +370,63 @@ const Destinations = () => {
               </div>
             </AnimatedSection>
           ) : filteredDestinations.length > 0 ? (
-            <div style={styles.grid} className="destinations-grid">
-              {filteredDestinations.map((destination, index) => (
-                <DestinationCard 
-                  key={destination.id} 
-                  destination={destination} 
-                  index={index} 
-                />
-              ))}
-            </div>
+            <AnimatedSection animation="fadeInUp">
+              <div style={styles.grid} className="destinations-grid">
+                {filteredDestinations.map((destination, index) => (
+                  <div 
+                    key={destination.id || destination._id || `dest-${index}`}
+                    style={{ 
+                      animationDelay: `${index * 0.1}s`,
+                      opacity: isSearching ? 0.7 : 1,
+                      transform: isSearching ? 'scale(0.98)' : 'scale(1)',
+                      transition: 'opacity 0.3s ease, transform 0.3s ease',
+                    }}
+                  >
+                    <DestinationCard 
+                      destination={destination} 
+                      index={index} 
+                    />
+                  </div>
+                ))}
+              </div>
+            </AnimatedSection>
           ) : (
             <AnimatedSection animation="fadeInUp">
               <div style={styles.noResults} className="destinations-no-results">
                 <span style={styles.noResultsIcon}>🔍</span>
-                <h3 style={styles.noResultsTitle}>No Destinations Found</h3>
+                <h3 style={styles.noResultsTitle}>
+                  {debouncedSearchQuery ? 'No destinations found' : 'No destinations available'}
+                </h3>
                 <p style={styles.noResultsText}>
-                  Try adjusting your search or filter criteria.
+                  {debouncedSearchQuery 
+                    ? `We couldn't find any destinations matching "${debouncedSearchQuery}". Try adjusting your search or filters.`
+                    : 'There are currently no destinations available. Please check back later.'
+                  }
                 </p>
-                <Button 
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSelectedCountry('all');
-                    setSelectedType('all');
-                  }}
-                  variant="primary"
-                >
-                  Clear Filters
-                </Button>
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  {debouncedSearchQuery && (
+                    <Button
+                      onClick={() => {
+                        setSearchQuery('');
+                        setDebouncedSearchQuery('');
+                      }}
+                      variant="outline"
+                    >
+                      Clear Search
+                    </Button>
+                  )}
+                  <Button 
+                    onClick={() => {
+                      setSearchQuery('');
+                      setSelectedCountry('all');
+                      setSelectedType('all');
+                      setDebouncedSearchQuery('');
+                    }}
+                    variant="primary"
+                  >
+                    Clear All Filters
+                  </Button>
+                </div>
               </div>
             </AnimatedSection>
           )}
