@@ -12,9 +12,10 @@ import {
   HiDeviceMobile,
   HiCheckCircle,
   HiExclamationCircle,
+  HiSparkles,
+  HiRefresh,
 } from "react-icons/hi";
-import "./AuthPages.css";
-import { Link } from "react-router-dom";
+import { FiSave, FiX, FiLayout } from "react-icons/fi";
 
 export default function UserSettings() {
   const { user, logout, updateProfile } = useUserAuth();
@@ -162,7 +163,7 @@ export default function UserSettings() {
           </div>
         </div>
 
-        <div className="settings-section">
+         <div className="settings-section">
           <div className="settings-section-header">
             <HiGlobeAlt />
             <h2>Experience</h2>
@@ -207,6 +208,164 @@ export default function UserSettings() {
                 onChange={(e) => updatePreference("darkMode", e.target.checked)}
               />
             </label>
+
+            <label
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                padding: "0.85rem 1rem",
+                border: "1px solid #e2e8f0",
+                borderRadius: "12px",
+                alignItems: "center",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <HiRefresh />
+                <span style={{ fontWeight: 600 }}>Auto-fill forms (when logged in)</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={Boolean(preferences.autoFillForms)}
+                onChange={(e) => updatePreference("autoFillForms", e.target.checked)}
+              />
+            </label>
+
+            <label
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                padding: "0.85rem 1rem",
+                border: "1px solid #e2e8f0",
+                borderRadius: "12px",
+                alignItems: "center",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <FiLayout />
+                <span style={{ fontWeight: 600 }}>Default destination view</span>
+              </div>
+              <select
+                value={preferences.defaultView}
+                onChange={(e) => updatePreference("defaultView", e.target.value)}
+                style={{
+                  width: "auto",
+                  padding: "0.4rem 0.8rem",
+                  borderRadius: "8px",
+                  border: "1.5px solid #e5e7eb",
+                  background: "#fff",
+                  fontSize: "0.9rem",
+                }}
+              >
+                <option value="grid">Grid</option>
+                <option value="list">List</option>
+                <option value="map">Map</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div className="settings-section">
+          <div className="settings-section-header">
+            <HiSparkles />
+            <h2>Personalization</h2>
+          </div>
+          <div className="settings-fields">
+            <label className="settings-field">
+              <span>Default destination category</span>
+              <select
+                value={preferences.defaultCategory}
+                onChange={(e) => updatePreference("defaultCategory", e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "0.65rem 0.8rem",
+                  borderRadius: "10px",
+                  border: "1.5px solid #e5e7eb",
+                  background: "#fff",
+                }}
+              >
+                <option value="all">All Categories</option>
+                <option value="safari">Safari Adventures</option>
+                <option value="beach">Beach Escapes</option>
+                <option value="cultural">Cultural Immersion</option>
+                <option value="trekking">Mountain Trekking</option>
+                <option value="photography">Photography Tours</option>
+              </select>
+            </label>
+
+            <label className="settings-field">
+              <span>Loading screen preference</span>
+              <select
+                value={preferences.loaderPreference}
+                onChange={(e) => updatePreference("loaderPreference", e.target.value)}
+                style={{
+                  width: "100%",
+                  padding: "0.65rem 0.8rem",
+                  borderRadius: "10px",
+                  border: "1.5px solid #e5e7eb",
+                  background: "#fff",
+                }}
+              >
+                <option value="default">Default Altuvera</option>
+                <option value="personalized">Personalized (with name)</option>
+                <option value="minimal">Minimal</option>
+              </select>
+            </label>
+
+            {preferences.loaderPreference === "personalized" && (
+              <div className="settings-field" style={{ marginTop: "12px" }}>
+                <label style={{ fontSize: "0.9rem", fontWeight: 600, marginBottom: "8px", display: "block" }}>
+                  Custom loader text (optional)
+                </label>
+                <input
+                  type="text"
+                  value={preferences.customLoaderText || ""}
+                  onChange={(e) => updatePreference("customLoaderText", e.target.value.slice(0, 100))}
+                  placeholder={`e.g., "Ready for adventure, ${user?.fullName?.split(' ')[0] || 'Traveler'}?"`}
+                  style={{
+                    width: "100%",
+                    padding: "0.65rem 0.8rem",
+                    borderRadius: "10px",
+                    border: "1.5px solid #e5e7eb",
+                    background: "#fff",
+                    fontSize: "0.95rem",
+                  }}
+                />
+                <p style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "6px" }}>
+                  This text will appear on the loading screen when you're logged in.
+                </p>
+              </div>
+            )}
+
+            <label
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                padding: "0.85rem 1rem",
+                border: "1px solid #e2e8f0",
+                borderRadius: "12px",
+                alignItems: "center",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <HiDeviceMobile />
+                <span style={{ fontWeight: 600 }}>Reduced animations</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={Boolean(preferences.reducedAnimations)}
+                onChange={(e) => updatePreference("reducedAnimations", e.target.checked)}
+              />
+            </label>
+
+            <p style={{
+              fontSize: "0.8rem",
+              color: "#64748b",
+              marginTop: "-8px",
+              marginBottom: "12px",
+              padding: "0 1rem",
+            }}>
+              Disabling animations can improve performance on slower devices.
+            </p>
           </div>
         </div>
 
