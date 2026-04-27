@@ -344,7 +344,7 @@ const Footer = () => {
   };
 
   const countries = [
-    { name: "Kenya", path: "/country/kenya" },
+    { name: "Rwanda", path: "/country/Rwanda" },
     { name: "Tanzania", path: "/country/tanzania" },
     { name: "Uganda", path: "/country/uganda" },
     { name: "Rwanda", path: "/country/rwanda" },
@@ -425,7 +425,7 @@ const Footer = () => {
               <span style={styles.logoText}>Altuvera</span>
             </Link>
             <p style={styles.tagline}>
-              "True adventure in High Places & Deep Culture"
+              " True adventure in High Places & Deep Culture "
               <br />
               <br />
               Your gateway to extraordinary East African experiences. We craft
@@ -575,7 +575,7 @@ const Footer = () => {
               <span style={styles.contactText}>
                 Altuvera House, Safari Way
                 <br />
-                Nairobi, Kenya
+                Musanze, Rwanda
               </span>
             </div>
             <div style={styles.contactItem}>
@@ -595,7 +595,7 @@ const Footer = () => {
               <span style={styles.contactText}>
                 altuverasafari@gmail.com
                 <br />
-                bookings@altuvera.com
+                fabriceigiraneza36@gmail.com
               </span>
             </div>
           </div>

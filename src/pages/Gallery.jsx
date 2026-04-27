@@ -1104,7 +1104,7 @@ const images = [
     thumb: "https://images.unsplash.com/photo-1614027164847-1b28cfe1df60?w=200",
     category: "wildlife",
     title: "Lion at Dawn",
-    location: "Maasai Mara, Kenya",
+    location: "Maasai Mara, Rwanda",
     description:
       "The king of the savannah wakes to the golden sunrise, surveying his domain with regal presence.",
     featured: true,
@@ -1145,7 +1145,7 @@ const images = [
     thumb: "https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=200",
     category: "wildlife",
     title: "Elephant Herd",
-    location: "Amboseli, Kenya",
+    location: "Amboseli, Rwanda",
     description:
       "Matriarchs leading the way with Kilimanjaro watching over the ancient ritual.",
     tags: ["elephant", "amboseli", "kilimanjaro", "family"],
@@ -1171,7 +1171,7 @@ const images = [
     thumb: "https://i.pinimg.com/1200x/b8/9e/84/b89e845ed13c17320c2d3b4f05e28c9a.jpg",
     category: "wildlife",
     title: "Giraffe Sunset",
-    location: "Nairobi, Kenya",
+    location: "Musanze, Rwanda",
     description:
       "Towering silhouettes against the African dusk, nature's skyscrapers.",
     tags: ["giraffe", "sunset", "silhouette", "dusk"],
@@ -1183,8 +1183,8 @@ const images = [
     src: "https://i.pinimg.com/736x/36/f6/51/36f651f2a6456b18602a2a6a7ba4e976.jpg",
     thumb: "https://i.pinimg.com/736x/9f/70/fa/9f70fa48cbc07c3401afa86369c999e6.jpg",
     category: "landscapes",
-    title: "Mount Kenya",
-    location: "Kenya",
+    title: "Mount Rwanda",
+    location: "Rwanda",
     description:
       "Snow-capped peaks nearly on the equator, Africa's second highest mountain.",
     tags: ["mountain", "snow", "peak", "equator"],
@@ -1225,7 +1225,7 @@ const images = [
     thumb: "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=200",
     category: "landscapes",
     title: "Great Rift Valley",
-    location: "Kenya",
+    location: "Rwanda",
     description:
       "Earth's ancient scar stretching to the horizon, a geological wonder.",
     tags: ["rift valley", "geology", "vista", "horizon"],
@@ -1251,7 +1251,7 @@ const images = [
     thumb: "https://images.unsplash.com/photo-1504208434309-cb69f4fe52b0?w=200",
     category: "culture",
     title: "Maasai Elders",
-    location: "Kenya",
+    location: "Rwanda",
     description:
       "Keepers of tradition in vibrant shúkàs, guardians of ancient wisdom.",
     tags: ["maasai", "culture", "tradition", "elders"],
@@ -1277,7 +1277,7 @@ const images = [
     thumb: "https://images.unsplash.com/photo-1536856136534-bb679c52a9aa?w=200",
     category: "culture",
     title: "Swahili Coast",
-    location: "Lamu, Kenya",
+    location: "Lamu, Rwanda",
     description:
       "Ancient dhows and coral stone alleys, where African and Arabian cultures blend.",
     tags: ["swahili", "dhow", "coast", "lamu"],
@@ -1329,7 +1329,7 @@ const images = [
     thumb: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=200",
     category: "beaches",
     title: "Diani Beach",
-    location: "Kenya",
+    location: "Rwanda",
     description:
       "Powder-white sand and turquoise Indian Ocean, paradise found.",
     tags: ["beach", "ocean", "paradise", "sand"],

@@ -147,8 +147,8 @@ const FALLBACK_MEMBERS = [
     languages: ["English", "Swahili"],
     certifications: [],
     years_experience: 8,
-    location: "Nairobi, Kenya",
-    country: "Kenya",
+    location: "Musanze, Rwanda",
+    country: "Rwanda",
     linkedin_url: "https://linkedin.com",
     twitter_url: null,
     instagram_url: null,
@@ -526,10 +526,10 @@ const StatsSection = ({ styles }) => {
   const data = stats || FALLBACK_STATS;
 
   const items = [
-    { icon: <FiUsers size={28} />, value: `${data.total_members || 15}+`, label: "Team Members" },
-    { icon: <FiGlobe size={28} />, value: `${data.countries_covered || 4}`, label: "Countries Covered" },
-    { icon: <FiAward size={28} />, value: `${data.combined_experience || 50}+`, label: "Years Combined Experience" },
-    { icon: <FiHeart size={28} />, value: `${data.happy_travelers || "2000"}+`, label: "Happy Travelers" },
+    { icon: <FiUsers size={28} />, value: `${data.total_members || 3}+`, label: "Team Members" },
+    { icon: <FiGlobe size={28} />, value: `${data.countries_covered || 2}`, label: "Countries Covered" },
+    { icon: <FiAward size={28} />, value: `${data.combined_experience || 5}+`, label: "Years Combined Experience" },
+    { icon: <FiHeart size={28} />, value: `${data.happy_travelers || "2"}+`, label: "Happy Travelers" },
   ];
 
   return (
@@ -1192,7 +1192,7 @@ const TeamContent = () => {
     cta: {
       textAlign: "center",
       padding: "50px 30px",
-      backgroundColor: "rgba(5,150,105,0.03)",
+      backgroundColor: "#059669",
       borderRadius: "24px",
       border: "1px solid rgba(209,250,229,0.5)",
     },
@@ -1204,7 +1204,7 @@ const TeamContent = () => {
     },
     ctaText: {
       fontSize: "16px",
-      color: "#6B7280",
+      color: "#9fa7b5",
       marginBottom: "24px",
       maxWidth: "500px",
       margin: "0 auto 24px",

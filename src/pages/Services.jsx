@@ -725,22 +725,6 @@ const ServiceCard = ({ service, index, onClick, isMobile }) => {
           </div>
         </div>
 
-        {/* Floating icon badge */}
-        <div
-          className="card-icon-badge"
-          style={{
-            position: "absolute", bottom: "-20px", right: "16px",
-            width: "44px", height: "44px",
-            borderRadius: "14px",
-            background: `linear-gradient(135deg, ${T.g600}, ${T.g800})`,
-            display: "flex", alignItems: "center", justifyContent: "center",
-            border: `3px solid ${T.white}`,
-            boxShadow: `0 6px 20px rgba(5,46,22,0.30)`,
-            zIndex: 5,
-          }}
-        >
-          <ServiceIcon name={service.iconName} size={18} color="white" />
-        </div>
       </div>
 
       {/* ── BODY ── */}
@@ -1134,7 +1118,7 @@ const ServiceModal = ({ service, onClose }) => {
   useEffect(() => { modalRef.current?.focus(); }, []);
 
   const contacts = useMemo(() => [
-    { href: "tel:+250780702773",           Icon: FiPhone,         label: "+250 780 702 773", ext: true },
+    { href: "tel:+250 792 352 4090702773",           Icon: FiPhone,         label: "+250 780 702 773", ext: true },
     { href: "mailto:altuverasafari@gmail.com", Icon: FiMail,      label: "Email Us",          ext: true },
     { href: "/contact",                    Icon: FiMessageCircle, label: "Live Chat",          ext: false },
   ], []);

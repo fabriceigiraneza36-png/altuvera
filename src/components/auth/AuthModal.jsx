@@ -94,7 +94,7 @@ const SIDE_MEDIA = [
   {
     type: "image",
     src: "https://images.unsplash.com/photo-1565126322818-4905187e0766?auto=format&fit=crop&w=1200&q=80",
-    alt: "Massive flock of pink flamingos at Lake Nakuru, Kenya",
+    alt: "Massive flock of pink flamingos at Lake Nakuru, Rwanda",
   },
   // 11. VIDEO: Kilimanjaro Expedition
   {
@@ -134,12 +134,12 @@ const SIDE_MEDIA = [
     src: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80",
     alt: "Cheetah scanning the horizon for prey in the grass",
   },
-  // 17. VIDEO: Kenya's Untamed Beauty
+  // 17. VIDEO: Rwanda's Untamed Beauty
   {
     type: "video",
     src: "https://www.youtube.com/watch?v=HJPeBTk-0NA",
     poster: "https://images.unsplash.com/photo-1523805009345-7448845a9e53?auto=format&fit=crop&w=1200&q=80",
-    alt: "The untouched wilderness of Kenya in 4K",
+    alt: "The untouched wilderness of Rwanda in 4K",
   },
   // 18. IMAGE: Maasai Warrior
   {
@@ -327,7 +327,6 @@ export default function AuthModal() {
 
   // Refs
   const codeRefs = useRef([]);
-  const googleContainerRef = useRef(null);
   const firstInputRef = useRef(null);
   const prevTitleRef = useRef(document.title);
   const wasOpenRef = useRef(false);
@@ -471,11 +470,7 @@ export default function AuthModal() {
       setError("");
       setSuccess("");
       try {
-        const result = await promptGoogleAuth({
-          mode,
-          container: googleContainerRef.current,
-        });
-        if (result?.buttonRendered) return; // Button rendered, user will click
+        const result = await promptGoogleAuth({ mode });
         if (mode === "signup" && result)
           setSuccess("✓ Google account connected! Complete your profile.");
       } catch (err) {
@@ -555,8 +550,8 @@ export default function AuthModal() {
   const handleSignIn = useCallback(
     async (e) => {
       e.preventDefault();
-      if (!emailOk || !nameOk) {
-        setError("Please complete your email and full name.");
+      if (!emailOk) {
+        setError("Please enter a valid email address.");
         return;
       }
       try {
@@ -568,7 +563,7 @@ export default function AuthModal() {
         setSessionPreference(form.keepSignedIn);
         await login({
           email: form.email.trim(),
-          fullName: form.fullName.trim(),
+          fullName: form.fullName.trim() || undefined,
           persistSession: form.keepSignedIn,
         });
         setSuccess("Verification code sent to your email.");
@@ -584,7 +579,6 @@ export default function AuthModal() {
       form.fullName,
       form.keepSignedIn,
       login,
-      nameOk,
       setSessionPreference,
     ],
   );
@@ -960,8 +954,6 @@ export default function AuthModal() {
                   </div>
                   <SocialButtons mode="signin" />
                 </form>
-                {/* Hidden Google button container */}
-                <div ref={googleContainerRef} style={{ display: "none" }} />
                 <p className="auth-switch-hint">
                   <span>New to Altuvera?</span>
                   <button
@@ -1157,22 +1149,25 @@ export default function AuthModal() {
                     <label className="auth-field">
                       <span className="auth-field-label">I am a...</span>
                       <div className="auth-role-grid" role="radiogroup">
-                        {ROLES.map(({ value, label, icon: Icon, desc }) => (
-                          <button
-                            key={value}
-                            type="button"
-                            className={`auth-role-option ${form.role === value ? "auth-role-option--active" : ""}`}
-                            onClick={() => set("role", value)}
-                            role="radio"
-                            aria-checked={form.role === value}
-                          >
-                            <span className="auth-role-icon">
-                              <Icon />
-                            </span>
-                            <span className="auth-role-label">{label}</span>
-                            <span className="auth-role-desc">{desc}</span>
-                          </button>
-                        ))}
+                        {ROLES.map(({ value, label, icon, desc }) => {
+                          const RoleIcon = icon;
+                          return (
+                            <button
+                              key={value}
+                              type="button"
+                              className={`auth-role-option ${form.role === value ? "auth-role-option--active" : ""}`}
+                              onClick={() => set("role", value)}
+                              role="radio"
+                              aria-checked={form.role === value}
+                            >
+                              <span className="auth-role-icon">
+                                <RoleIcon />
+                              </span>
+                              <span className="auth-role-label">{label}</span>
+                              <span className="auth-role-desc">{desc}</span>
+                            </button>
+                          );
+                        })}
                       </div>
                     </label>
                     <label className="auth-field">

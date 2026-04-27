@@ -155,10 +155,10 @@ const AltuveraPaymentTermsContent = () => {
   const legalTermsContent = (
     <>
       <p style={styles.paragraph}>
-        Altuvera is an EastAfrican Adventure Tourism Company which is offering tours to the democratic republic of congo, Uganda, Rwanda, Kenya & Tanzania with the option of multi-country safaris.
+        Altuvera is an EastAfrican Adventure Tourism Company which is offering tours to the democratic republic of congo, Uganda, Rwanda, Rwanda & Tanzania with the option of multi-country safaris.
       </p>
       <p style={styles.paragraph}>
-        Altuvera undertakes to provide all services offered subject to the terms and conditions stipulated below. These terms and conditions are accepted by the client when the deposit is paid. Please note these terms and conditions apply to Congo safaris, Rwanda Safaris, Uganda Safaris, Tanzania Safaris, and Kenya-based tours.
+        Altuvera undertakes to provide all services offered subject to the terms and conditions stipulated below. These terms and conditions are accepted by the client when the deposit is paid. Please note these terms and conditions apply to Congo safaris, Rwanda Safaris, Uganda Safaris, Tanzania Safaris, and Rwanda-based tours.
       </p>
 
       <h4 style={{ ...styles.cardTitle, fontSize: "20px", marginTop: "28px", marginBottom: "12px" }}>1. Contract</h4>

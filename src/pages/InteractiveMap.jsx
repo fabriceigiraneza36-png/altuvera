@@ -470,7 +470,7 @@ const mapViews = {
    PREDEFINED MARKER POSITIONS
    ═══════════════════════════════════════════════════════ */
 const countryPositions = {
-  kenya: { top: "45%", left: "65%" },
+  Rwanda: { top: "45%", left: "65%" },
   tanzania: { top: "60%", left: "60%" },
   uganda: { top: "40%", left: "50%" },
   rwanda: { top: "52%", left: "45%" },
@@ -3173,7 +3173,7 @@ const InteractiveMap = () => {
                   />
                   <StatCard
                     icon={<FiMapPin size={24} />}
-                    value="50+"
+                    value="5+"
                     label="Destinations"
                     color="#0891B2"
                     bg="#ECFEFF"
@@ -3486,7 +3486,7 @@ const InteractiveMap = () => {
                         lineHeight: 1.7,
                       }}
                     >
-                      From the savannahs of Kenya to the gorilla forests of
+                      From the savannahs of Rwanda to the gorilla forests of
                       Rwanda — your East African adventure begins here.
                     </p>
 

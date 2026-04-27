@@ -60,7 +60,7 @@ export const testimonials = [
     location: 'United Kingdom',
     avatar: 'https://randomuser.me/api/portraits/men/70.jpg',
     rating: 5,
-    trip: 'Kenya Luxury Safari',
+    trip: 'Rwanda Luxury Safari',
     date: 'October 2025',
     text: 'From booking to the final day of our safari, Altuvera maintained outstanding service standards. Their guides were knowledgeable, courteous, and highly experienced. This was one of the finest travel experiences we have had.',
     featured: false
@@ -134,7 +134,7 @@ export const testimonials = [
   {
     id: 13,
     name: 'Amina Hassan',
-    location: 'Kenya',
+    location: 'Rwanda',
     avatar: 'https://randomuser.me/api/portraits/women/37.jpg',
     rating: 5,
     trip: 'Safari ya Serengeti',

@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import { getBrandLogoUrl, toAbsoluteUrl } from "../../utils/seo";
 
 const DEFAULT_DESCRIPTION =
-  "Book authentic East African safaris and cultural tours with Altuvera. Expert-guided adventures across Kenya, Tanzania, Uganda, Rwanda, and Ethiopia.";
+  "Book authentic East African safaris and cultural tours with Altuvera. Expert-guided adventures across Rwanda, Tanzania, Uganda, Rwanda, and Ethiopia.";
 
 const withBrand = (title) => {
   const t = String(title || "").trim();

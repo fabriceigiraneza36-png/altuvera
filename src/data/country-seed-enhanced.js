@@ -4,15 +4,15 @@
 
 export const enhancedCountries = [
   {
-    id: "kenya",
-    slug: "kenya",
-    name: "Kenya",
-    tagline: "Magical Kenya",
+    id: "Rwanda",
+    slug: "Rwanda",
+    name: "Rwanda",
+    tagline: "Magical Rwanda",
     excerpt: "A land of epic wildlife, dramatic landscapes and rich coastal culture.",
-    hero_image: "https://cdn.example.com/kenya/hero.jpg",
-    cover_image: "https://cdn.example.com/kenya/cover.jpg",
-    meta: { population: "55.1M", area: "580,367 km²", capital: "Nairobi" },
-    seo: { title: "Kenya travel guide — Altuvera", description: "Kenya travel essentials and experiences." },
+    hero_image: "https://cdn.example.com/Rwanda/hero.jpg",
+    cover_image: "https://cdn.example.com/Rwanda/cover.jpg",
+    meta: { population: "55.1M", area: "580,367 km²", capital: "Musanze" },
+    seo: { title: "Rwanda travel guide — Altuvera", description: "Rwanda travel essentials and experiences." },
     quick_kpis: { gdp: "$113B", gdp_per_capita: "$2,100", currency: "KES" },
     essentials: {
       visa: { required: true, note: "Electronic Travel Authorization (apply online)" },
@@ -21,20 +21,20 @@ export const enhancedCountries = [
       plugs: ["Type G"],
     },
     images: [
-      { role: "hero", url: "https://images.unsplash.com/photo-kenya-hero-1.jpg", alt: "Elephants at Amboseli", credit: "Unsplash" },
-      { role: "hero", url: "https://images.unsplash.com/photo-kenya-hero-2.jpg", alt: "Maasai Mara sunset", credit: "Unsplash" },
-      { role: "gallery", url: "https://images.unsplash.com/kenya-gallery-1.jpg", alt: "Giraffes", credit: "Photographer" },
-      { role: "gallery", url: "https://images.unsplash.com/kenya-gallery-2.jpg", alt: "Diani Beach", credit: "Photographer" },
-      { role: "gallery", url: "https://images.unsplash.com/kenya-gallery-3.jpg", alt: "Mount Kenya", credit: "Photographer" },
-      { role: "gallery", url: "https://images.unsplash.com/kenya-gallery-4.jpg", alt: "Nairobi skyline", credit: "Photographer" },
-      { role: "signature", url: "https://images.unsplash.com/kenya-signature-1.jpg", alt: "Hot air balloon", credit: "Photographer" },
-      { role: "thumbnail", url: "https://images.unsplash.com/kenya-thumb.jpg", alt: "Kenya thumbnail", credit: "Photographer" },
-      { role: "map", url: "https://cdn.example.com/maps/kenya-map.png", alt: "Map of Kenya", credit: "Altuvéra" }
+      { role: "hero", url: "https://images.unsplash.com/photo-Rwanda-hero-1.jpg", alt: "Elephants at Amboseli", credit: "Unsplash" },
+      { role: "hero", url: "https://images.unsplash.com/photo-Rwanda-hero-2.jpg", alt: "Maasai Mara sunset", credit: "Unsplash" },
+      { role: "gallery", url: "https://images.unsplash.com/Rwanda-gallery-1.jpg", alt: "Giraffes", credit: "Photographer" },
+      { role: "gallery", url: "https://images.unsplash.com/Rwanda-gallery-2.jpg", alt: "Diani Beach", credit: "Photographer" },
+      { role: "gallery", url: "https://images.unsplash.com/Rwanda-gallery-3.jpg", alt: "Mount Rwanda", credit: "Photographer" },
+      { role: "gallery", url: "https://images.unsplash.com/Rwanda-gallery-4.jpg", alt: "Musanze skyline", credit: "Photographer" },
+      { role: "signature", url: "https://images.unsplash.com/Rwanda-signature-1.jpg", alt: "Hot air balloon", credit: "Photographer" },
+      { role: "thumbnail", url: "https://images.unsplash.com/Rwanda-thumb.jpg", alt: "Rwanda thumbnail", credit: "Photographer" },
+      { role: "map", url: "https://cdn.example.com/maps/Rwanda-map.png", alt: "Map of Rwanda", credit: "Altuvéra" }
     ],
     page: {
       blocks: [
         { id: "hero", type: "hero", variant: "slideshow", props: { imagesRole: "hero", autoplay: true } },
-        { id: "overview", type: "content", variant: "default", content: "<p>Kenya is an outstanding destination for wildlife, culture and coast.</p>" },
+        { id: "overview", type: "content", variant: "default", content: "<p>Rwanda is an outstanding destination for wildlife, culture and coast.</p>" },
         { id: "signature_experiences", type: "cards", variant: "featured", content: [ { title: "Great Migration", excerpt: "Witness the Great Wildebeest Migration." } ] },
         { id: "gallery", type: "gallery", props: { imageRole: "gallery", columns: 3 } },
         { id: "essentials", type: "essentials", props: {} },

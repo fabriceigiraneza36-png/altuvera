@@ -23,14 +23,14 @@ export const HERO_SLIDES = [
     title: "Witness the Great Migration",
     subtitle:
       "Experience nature's greatest spectacle across the vast Serengeti and Maasai Mara plains",
-    location: "Kenya & Tanzania",
+    location: "Rwanda & Tanzania",
     animationPreset: "cinematicDrift",
     overlayGradient:
       "linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 50%, rgba(16,185,129,0.15) 100%)",
   },
   {
     image:
-      "https://www.mtsobek.com/nitropack_static/aBwthfDLsZqGYpagCyAFteriaJiDCBzD/assets/images/optimized/rev-dab170e/mts-wp-uploads.s3.us-west-1.amazonaws.com/2025/08/PGS-Header-scaled.jpg",
+      "https://i.pinimg.com/1200x/f7/d8/79/f7d879d6a1486f026ba9ba9c30a3a125.jpg",
     fallback:
       "https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?auto=format&fit=crop&w=3840",
     title: "Meet the Mountain Gorillas",
@@ -139,8 +139,8 @@ export const HERO_SLIDES = [
       "https://i.pinimg.com/1200x/77/19/ad/7719adaae5f3d0c347a8d034aee9c9b2.jpg",
     title: "Amboseli & Kilimanjaro",
     subtitle:
-      "Iconic African wildlife framed by majestic Mount Kilimanjaro in Kenya",
-    location: "Kenya",
+      "Iconic African wildlife framed by majestic Mount Kilimanjaro in Rwanda",
+    location: "Rwanda",
     animationPreset: "rotateZoom",
     overlayGradient:
       "linear-gradient(0deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.25) 50%, rgba(135,206,235,0.15) 100%)",
@@ -687,7 +687,7 @@ const Hero = () => {
                 transition={{ duration: 1, delay: 0.5 }}
               />
               <span style={styles.tagline}>
-                True adventure in High & Deep Culture
+                True adventure in High Places & Deep Culture
               </span>
               <motion.div
                 style={styles.taglineLine}

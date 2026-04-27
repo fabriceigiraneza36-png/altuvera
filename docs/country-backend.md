@@ -10,7 +10,7 @@ Relational Schema (Postgres recommended)
 -- Table: countries
 -- Columns:
   - id: UUID PRIMARY KEY DEFAULT gen_random_uuid()
-  - slug: TEXT UNIQUE NOT NULL -- e.g. "kenya"
+  - slug: TEXT UNIQUE NOT NULL -- e.g. "Rwanda"
   - name: TEXT NOT NULL
   - region: TEXT
   - tagline: TEXT
@@ -71,19 +71,19 @@ Payload design notes
 - For page-level rendering, return `page.blocks` where each block has: `{ id, type, variant, content, props }` so the frontend can map blocks to components.
 - Images may be returned separately as `images: [{ role, url, alt, credit, width, height }]` to allow lazy loading of specific roles (hero, gallery-page-1, thumbnail).
 
-Example JSON structure (GET /api/countries/kenya)
+Example JSON structure (GET /api/countries/Rwanda)
 
 ```json
 {
   "id": "uuid",
-  "slug": "kenya",
-  "name": "Kenya",
-  "tagline": "Magical Kenya",
+  "slug": "Rwanda",
+  "name": "Rwanda",
+  "tagline": "Magical Rwanda",
   "excerpt": "Land of wildlife, coastlines and culture.",
-  "hero_image": "https://cdn.example.com/kenya/hero.jpg",
-  "cover_image": "https://cdn.example.com/kenya/cover.jpg",
-  "meta": { "population": "55.1M", "area": "580k km2", "capital": "Nairobi" },
-  "seo": { "title": "Kenya travel guide", "description": "Kenya travel info", "ogImage": "..." },
+  "hero_image": "https://cdn.example.com/Rwanda/hero.jpg",
+  "cover_image": "https://cdn.example.com/Rwanda/cover.jpg",
+  "meta": { "population": "55.1M", "area": "580k km2", "capital": "Musanze" },
+  "seo": { "title": "Rwanda travel guide", "description": "Rwanda travel info", "ogImage": "..." },
   "images": [ { "role":"hero", "url":"...", "alt":"..." }, { "role":"gallery", "url":"..." } ],
   "quick_kpis": { "gdp": "$113B", "gdp_per_capita": "$2,100" },
   "essentials": { "visa": { "required": true, "note": "Apply online" }, "health": { "yellow_fever": true } },

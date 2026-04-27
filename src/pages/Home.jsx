@@ -1225,25 +1225,7 @@ const Home = () => {
         .blob{position:absolute;border-radius:60% 40% 30% 70%/60% 30% 70% 40%;animation:morphBlob 12s ease-in-out infinite;pointer-events:none;filter:blur(60px);opacity:.06}
 
         /* Destination */
-        /* Destination Grid - Responsive */
-        .dg{display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:28px}
-        @media(max-width: 1400px) { .dg { grid-template-columns:repeat(auto-fill, minmax(300px, 1fr)); } }
-        @media(max-width: 480px) { .dg { grid-template-columns: 1fr; } }
-        .dc{border-radius:24px;overflow:hidden;position:relative;background:#fff;box-shadow:0 2px 20px rgba(0,0,0,.05);transition:all .6s cubic-bezier(.4,0,.2,1);text-decoration:none;display:flex;flex-direction:column}
-        .dc:hover{box-shadow:0 30px 70px rgba(5,150,105,.16)}
-        .dc .db{position:absolute;inset:-3px;border-radius:27px;padding:3px;background:conic-gradient(from 0deg,#059669,#10B981,#34D399,#059669);opacity:0;transition:opacity .6s;z-index:-1}
-        .dc:hover .db{opacity:1}
-        .diw{position:relative;height:250px;overflow:hidden}
-        .dog{position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.6) 100%);opacity:0;transition:opacity .5s}
-        .dc:hover .dog{opacity:1}
-        .deb{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.15);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;color:#fff;transition:transform .5s cubic-bezier(.34,1.56,.64,1);border:2px solid rgba(255,255,255,.3)}
-        .dc:hover .deb{transform:translate(-50%,-50%) scale(1)}
-        .dcc{padding:24px 26px 28px;flex:1;display:flex;flex-direction:column}
-        .drt{display:inline-flex;align-items:center;gap:4px;padding:5px 14px;background:rgba(245,158,11,.12);border-radius:20px;font-size:12px;font-weight:700;color:#92400E;position:absolute;top:16px;right:16px;z-index:3;backdrop-filter:blur(6px)}
-        .dct{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:#059669;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:8px}
-        .dtt{font-family:'Playfair Display',serif;font-size:21px;font-weight:700;color:#0F172A;margin-bottom:8px;line-height:1.3}
-        .dds{font-size:14px;color:#64748B;line-height:1.65;flex:1;margin-bottom:12px}
-        .dm{display:flex;align-items:center;gap:14px;font-size:13px;color:#94A3B8}
+
 
         /* Gallery */
         .gf{display:flex;justify-content:center;gap:8px;margin-bottom:44px;flex-wrap:wrap}
@@ -1466,33 +1448,69 @@ const Home = () => {
                     width: "100%",
                   }}
                 >
-                  <ImageCycle
-                    images={[
-                      "https://i.pinimg.com/736x/c2/26/91/c22691ef2c1f5a1e9544ec1e62774740.jpg",
-                      "https://i.pinimg.com/736x/77/d2/9c/77d29c30fa04d28e1b657c5669401f92.jpg",
-                      "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
-                      "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
-                      "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg",
-                      "https://i.pinimg.com/1200x/d0/af/e3/d0afe34b5ae890a0aa78264647847ba6.jpg",
-                      "https://i.pinimg.com/1200x/84/e4/85/84e48535118942a4a468aa686841d974.jpg",
-                      "https://i.pinimg.com/736x/55/e3/3e/55e33e50985ece6ae1b4256b880bc1d1.jpg",
-                      "https://i.pinimg.com/1200x/bb/eb/a8/bbeba83d5cd3a6f8cef52d503aeb99a8.jpg",
-                      "https://i.pinimg.com/736x/a6/fa/e8/a6fae858bd1ecf633229b5dade79c68a.jpg",
-                      "https://i.pinimg.com/474x/b5/c6/13/b5c6134e42151a981a41eaf34166e27f.jpg",
-                    ]}
-                    style={{
-                      width: "100%",
-                      height: "clamp(360px, 52vw, 520px)",
-                      borderRadius: 28,
-                      objectFit: "cover",
-                      boxShadow: "0 30px 80px rgba(0,0,0,.15)",
-                    }}
-                    showControllers={false}
-                    clickToNavigate
-                    hintStorageKey="altuvera_intro_media_hint_v1"
-                    hintText="Tip: Click/tap left or right side to change media"
-                    interval={12000}
-                  />
+                 
+
+                 <ImageCycle
+  images={[
+    "https://i.pinimg.com/736x/c2/26/91/c22691ef2c1f5a1e9544ec1e62774740.jpg",
+    "https://i.pinimg.com/736x/77/d2/9c/77d29c30fa04d28e1b657c5669401f92.jpg",
+    "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
+    "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
+    "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg",
+    "https://i.pinimg.com/1200x/d0/af/e3/d0afe34b5ae890a0aa78264647847ba6.jpg",
+    "https://i.pinimg.com/1200x/84/e4/85/84e48535118942a4a468aa686841d974.jpg",
+    "https://i.pinimg.com/736x/55/e3/3e/55e33e50985ece6ae1b4256b880bc1d1.jpg",
+    "https://i.pinimg.com/1200x/bb/eb/a8/bbeba83d5cd3a6f8cef52d503aeb99a8.jpg",
+    "https://i.pinimg.com/736x/a6/fa/e8/a6fae858bd1ecf633229b5dade79c68a.jpg",
+    "https://i.pinimg.com/474x/b5/c6/13/b5c6134e42151a981a41eaf34166e27f.jpg",
+
+    // Added upgraded East Africa tourism images (30 total)
+    "https://images.unsplash.com/photo-1549366021-9f761d450615",
+    "https://images.unsplash.com/photo-1516426122078-c23e76319801",
+    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
+    "https://images.unsplash.com/photo-1472396961693-142e6e269027",
+    "https://images.unsplash.com/photo-1466721591366-2d5fba72006d",
+    "https://images.unsplash.com/photo-1508672019048-805c876b67e2",
+    "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5",
+    "https://images.unsplash.com/photo-1516939884455-1445c8652f83",
+    "https://images.unsplash.com/photo-1504593811423-6dd665756598",
+    "https://images.unsplash.com/photo-1511216113906-8f57bb83e776",
+    "https://images.unsplash.com/photo-1501594907352-04cda38ebc29",
+    "https://images.unsplash.com/photo-1489392191049-fc10c97e64b6",
+    "https://images.unsplash.com/photo-1523805009345-7448845a9e53",
+    "https://images.unsplash.com/photo-1508766206392-8bd5cf550d1c",
+    "https://images.unsplash.com/photo-1493962853295-0fd70327578a",
+    "https://images.unsplash.com/photo-1474511320723-9a56873867b5",
+    "https://images.unsplash.com/photo-1502082553048-f009c37129b9",
+    "https://images.unsplash.com/photo-1546182990-dffeafbe841d",
+    "https://images.unsplash.com/photo-1501004318641-b39e6451bec6",
+    "https://images.unsplash.com/photo-1500534623283-312aade485b7",
+    "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429",
+    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
+    "https://images.unsplash.com/photo-1473773508845-188df298d2d1",
+    "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07",
+    "https://images.unsplash.com/photo-1473116763249-2faaef81ccda",
+    "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
+    "https://images.unsplash.com/photo-1433086966358-54859d0ed716",
+    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
+    "https://images.unsplash.com/photo-1473448912268-2022ce9509d8",
+    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
+  ]}
+  style={{
+    width: "100%",
+    height: "clamp(360px, 52vw, 520px)",
+    borderRadius: 28,
+    objectFit: "cover",
+    boxShadow: "0 30px 80px rgba(0,0,0,.15)",
+  }}
+  showControllers={false}
+  clickToNavigate
+  hintStorageKey="altuvera_intro_media_hint_v1"
+  hintText="Tip: Click/tap left or right side to change media"
+  interval={12000}
+/>
+
+
                   {/* Child cards container for row layout */}
                   <div
                     style={{
@@ -1508,7 +1526,7 @@ const Home = () => {
                       pointerEvents: "none",
                     }}
                   >
-                    <ImageCycle
+                     <ImageCycle
                       images={[
                         "https://www.vjv.com/media/hyegmdk3/giraffe-walking-savanna-queen-elizabeth-national-park-uganda-shutterstock_58932448.jpg?height=1080&quality=60&width=1920",
                         "https://www.travelandleisure.com/thmb/4rmCDPTq85-wHGIak69y6Uv1WWo%3D/1500x0/filters%3Ano_upscale%28%29%3Amax_bytes%28150000%29%3Astrip_icc%28%29/TAL-ol-jogi-aerial-view-full-ALISTLIZ1125-fde5875b5cbf433b862221dbaccddf92.jpg",
@@ -1565,17 +1583,17 @@ const Home = () => {
                       tabIndex={0}
                       showControllers={false}
                       clickToNavigate
-                      hintStorageKey="altuvera_intro_media_hint_v1"
+                      hintStorageKey="altuvera_intro_media_hint_v1_card1"
                       hintText="Tip: Click/tap left or right side to change media"
-                      interval={0}
+                      interval={9000}
                     />
                     <ImageCycle
                       images={[
+                        "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg",
                         "https://www.vjv.com/media/hyegmdk3/giraffe-walking-savanna-queen-elizabeth-national-park-uganda-shutterstock_58932448.jpg?height=1080&quality=60&width=1920",
                         "https://www.travelandleisure.com/thmb/4rmCDPTq85-wHGIak69y6Uv1WWo%3D/1500x0/filters%3Ano_upscale%28%29%3Amax_bytes%28150000%29%3Astrip_icc%28%29/TAL-ol-jogi-aerial-view-full-ALISTLIZ1125-fde5875b5cbf433b862221dbaccddf92.jpg",
-                        "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
                         "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
-                        "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg",
+                        "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
                       ]}
                       style={{
                         width: "clamp(140px, 28%, 220px)",
@@ -1626,17 +1644,17 @@ const Home = () => {
                       tabIndex={0}
                       showControllers={false}
                       clickToNavigate
-                      hintStorageKey="altuvera_intro_media_hint_v1"
+                      hintStorageKey="altuvera_intro_media_hint_v1_card2"
                       hintText="Tip: Click/tap left or right side to change media"
-                      interval={0}
+                      interval={12000}
                     />
                     <ImageCycle
                       images={[
+                        "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
+                        "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg",
                         "https://www.vjv.com/media/hyegmdk3/giraffe-walking-savanna-queen-elizabeth-national-park-uganda-shutterstock_58932448.jpg?height=1080&quality=60&width=1920",
                         "https://www.travelandleisure.com/thmb/4rmCDPTq85-wHGIak69y6Uv1WWo%3D/1500x0/filters%3Ano_upscale%28%29%3Amax_bytes%28150000%29%3Astrip_icc%28%29/TAL-ol-jogi-aerial-view-full-ALISTLIZ1125-fde5875b5cbf433b862221dbaccddf92.jpg",
                         "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
-                        "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
-                        "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg",
                       ]}
                       style={{
                         width: "clamp(140px, 28%, 220px)",
@@ -1687,9 +1705,9 @@ const Home = () => {
                       tabIndex={0}
                       showControllers={false}
                       clickToNavigate
-                      hintStorageKey="altuvera_intro_media_hint_v1"
+                      hintStorageKey="altuvera_intro_media_hint_v1_card3"
                       hintText="Tip: Click/tap left or right side to change media"
-                      interval={0}
+                      interval={15000}
                     />
                   </div>
                   <motion.div

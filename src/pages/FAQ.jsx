@@ -55,7 +55,7 @@ const FAQ = () => {
       category: 'travel',
       question: 'Do I need a visa to visit East African countries?',
       answer:
-        'Most visitors require visas, which can often be obtained on arrival or through e-visa systems. The East Africa Tourist Visa covers Kenya, Uganda, and Rwanda. We provide detailed visa guidance for each destination and can assist with the application process.',
+        'Most visitors require visas, which can often be obtained on arrival or through e-visa systems. The East Africa Tourist Visa covers Rwanda, Uganda, and Rwanda. We provide detailed visa guidance for each destination and can assist with the application process.',
     },
     {
       id: 6,

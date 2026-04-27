@@ -19,6 +19,7 @@ import herobg from "../assets/fabrice.jpg";
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 import { sendMessage } from "../utils/sendMessage";
 import { sendVerificationCode, verifyCode } from "../utils/verifyEmail";
+import { useChatSocket } from "../hooks/useChatSocket";
 import VerificationModal from "../components/common/VerificationModal";
 
 /* ══════════════════════════════════════════════════════════════
@@ -407,20 +408,20 @@ const CONTACT_CARDS = [
   {
     icon: FiMapPin,
     title: "Visit Our Office",
-    lines: ["Altuvera House, Safari Way", "Westlands, Nairobi, Kenya"],
-    href: "https://maps.google.com/?q=Westlands+Nairobi",
+    lines: ["Altuvera House, Safari Way", "Kinigi, Musanze, Rwanda"],
+    href: "https://maps.google.com/?q=Kinigi+Musanze",
   },
   {
     icon: FiPhone,
     title: "Call Us",
     lines: ["+250 780 702 773", "+250 792 352 409"],
-    href: "tel:+250780702773",
+    href: "tel:+250 792 352 4090702773",
   },
   {
     icon: FiMail,
     title: "Email Us",
-    lines: ["hello@altuvera.com", "bookings@altuvera.com"],
-    href: "mailto:hello@altuvera.com",
+    lines: ["altuverasafari@gmail.com", "fabriceigiraneza36@gmail.com"],
+    href: "mailto:altuverasafari@gmail.com",
   },
   {
     icon: FiClock,
@@ -494,15 +495,15 @@ const QUICK_CHANNELS = [
     title: "Call Us",
     subtitle: "Speak with an expert",
     detail: "+250 780 702 773",
-    href: "tel:+250780702773",
+    href: "tel:+250 792 352 4090702773",
     color: BRAND.green700,
   },
   {
     icon: FiMail,
     title: "Email",
     subtitle: "Detailed inquiries",
-    detail: "hello@altuvera.com",
-    href: "mailto:hello@altuvera.com",
+    detail: "altuverasafari@gmail.com",
+    href: "mailto:altuverasafari@gmail.com",
     color: "#3B82F6",
   },
 ];
@@ -530,11 +531,92 @@ const Contact = () => {
   const [openFaq, setOpenFaq] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMinimized, setChatMinimized] = useState(false);
+  const [chatInput, setChatInput] = useState("");
+  const [chatSending, setChatSending] = useState(false);
+  const [chatError, setChatError] = useState("");
+
+  const {
+    connected: chatConnected,
+    connect: connectChat,
+    registerChat,
+    sendMessage: sendChatMessage,
+    messages: chatMessages,
+    error: chatSocketError,
+    loading: chatLoading,
+  } = useChatSocket();
+
+  const { user, isAuthenticated } = useUserAuth();
+
+  // Auto-fill form when user is authenticated
+  useEffect(() => {
+    if (user && isAuthenticated && !form.name && !form.email) {
+      setForm((prev) => ({
+        ...prev,
+        name: user.fullName || user.name || prev.name,
+        email: user.email || prev.email,
+        phone: user.phone || prev.phone,
+      }));
+    }
+  }, [user, isAuthenticated]);
 
   // ── Refs ──
   const formRef = useRef(null);
   const faqRefs = useRef({});
   const heroRef = useRef(null);
+
+  const chatRef = useRef(null);
+
+  // ── Effects for chat socket ──
+  useEffect(() => {
+    if (chatOpen && !chatConnected) {
+      connectChat();
+    }
+  }, [chatOpen, chatConnected, connectChat]);
+
+  useEffect(() => {
+    if (!chatOpen || !chatConnected) return;
+    registerChat({
+      name: form.name || "Guest",
+      email: form.email || "",
+    }).catch(() => {
+      // Chat registration failed silently until user sends a message
+    });
+  }, [chatOpen, chatConnected, registerChat, form.name, form.email]);
+
+  useEffect(() => {
+    if (!chatRef.current) return;
+    chatRef.current.scrollTop = chatRef.current.scrollHeight;
+  }, [chatMessages, chatOpen]);
+
+  const handleChatSend = useCallback(async () => {
+    const trimmed = chatInput.trim();
+    if (!trimmed) return;
+
+    setChatError("");
+    setChatSending(true);
+
+    try {
+      await registerChat({
+        name: form.name || "Guest",
+        email: form.email || "",
+      });
+      await sendChatMessage({
+        body: trimmed,
+        name: form.name || "Guest",
+        email: form.email || "",
+        metadata: { source: "frontend-chat" },
+      });
+      setChatInput("");
+    } catch (err) {
+      setChatError(err?.message || "Unable to send message");
+    } finally {
+      setChatSending(false);
+    }
+  }, [chatInput, form.email, form.name, registerChat, sendChatMessage]);
+
+  const handleQuickReply = useCallback((text) => {
+    setChatInput(text);
+  }, []);
 
   // ── Parallax for hero ──
   const { scrollYProgress } = useScroll({
@@ -764,7 +846,7 @@ const Contact = () => {
             <a href="#contact-form" className="ct-btn ct-btn--white">
               <FiSend size={16} /> Send Message
             </a>
-            <a href="tel:+250780702773" className="ct-btn ct-btn--ghost">
+            <a href="tel:+250 792 352 4090702773" className="ct-btn ct-btn--ghost">
               <FiPhone size={16} /> Call Us Now
             </a>
           </motion.div>
@@ -1487,52 +1569,82 @@ const Contact = () => {
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.3 }}
                 >
-                  <div className="ct-chat-body">
-                    <motion.div
-                      className="ct-chat-bubble"
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.15 }}
-                    >
-                      <p>👋 Hello! Welcome to Altuvera Safaris!</p>
-                      <p>How can we help you plan your adventure today?</p>
-                    </motion.div>
-                    <div className="ct-chat-chips">
-                      {[
-                        "Safari packages",
-                        "Best time to visit",
-                        "Group bookings",
-                        "Custom itinerary",
-                      ].map((text, i) => (
-                        <motion.button
-                          key={i}
-                          className="ct-chat-chip"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.3 + i * 0.07 }}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
+                  <div className="ct-chat-body" ref={chatRef}>
+                      {chatMessages.length === 0 ? (
+                        <motion.div
+                          className="ct-chat-bubble"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.15 }}
                         >
-                          {text}
-                        </motion.button>
-                      ))}
+                          <p>👋 Hello! Welcome to Altuvera Safaris!</p>
+                          <p>How can we help you plan your adventure today?</p>
+                        </motion.div>
+                      ) : (
+                        chatMessages.map((message, index) => (
+                          <motion.div
+                            key={`${message.id || index}-${message.createdAt}`}
+                            className={`ct-chat-bubble ${message.senderType === 'admin' ? 'ct-chat-bubble--admin' : 'ct-chat-bubble--user'}`}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.05 * index }}
+                          >
+                            <p>{message.senderType === 'admin' ? 'Support' : message.senderName || 'You'}:</p>
+                            <p>{message.body}</p>
+                          </motion.div>
+                        ))
+                      )}
+                      <div className="ct-chat-chips">
+                        {[
+                          "Safari packages",
+                          "Best time to visit",
+                          "Group bookings",
+                          "Custom itinerary",
+                        ].map((text, i) => (
+                          <motion.button
+                            key={i}
+                            className="ct-chat-chip"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.3 + i * 0.07 }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleQuickReply(text)}
+                          >
+                            {text}
+                          </motion.button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
                   <div className="ct-chat-footer">
                     <input
+                      value={chatInput}
+                      onChange={(e) => setChatInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !e.shiftKey) {
+                          e.preventDefault();
+                          handleChatSend();
+                        }
+                      }}
                       className="ct-chat-input"
                       placeholder="Type your message…"
                       aria-label="Chat message input"
                     />
                     <motion.button
+                      type="button"
+                      disabled={chatSending}
+                      onClick={handleChatSend}
                       className="ct-chat-send"
-                      whileHover={{ scale: 1.08 }}
-                      whileTap={{ scale: 0.92 }}
+                      whileHover={{ scale: chatSending ? 1 : 1.08 }}
+                      whileTap={{ scale: chatSending ? 1 : 0.92 }}
                       aria-label="Send message"
                     >
                       <RiSendPlaneFill size={16} color="#fff" />
                     </motion.button>
                   </div>
+                  {(chatSocketError || chatError) && (
+                    <div className="ct-chat-error">{chatSocketError || chatError}</div>
+                  )}
                 </motion.div>
               )}
             </AnimatePresence>
@@ -2679,6 +2791,15 @@ const contactStyles = `
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
   margin-bottom: 14px;
 }
+.ct-chat-bubble--admin {
+  background: #dbeafe;
+  margin-left: auto;
+  border-radius: 16px 16px 4px 16px;
+}
+.ct-chat-bubble--user {
+  background: #fff;
+  margin-right: auto;
+}
 .ct-chat-bubble p {
   font-size: 13.5px;
   color: #1e293b;
@@ -2686,6 +2807,14 @@ const contactStyles = `
   margin: 0 0 5px;
 }
 .ct-chat-bubble p:last-child { margin-bottom: 0; }
+.ct-chat-error {
+  padding: 8px 12px;
+  margin: 10px 18px 0;
+  border-radius: 14px;
+  background: rgba(248, 113, 113, 0.12);
+  color: #b91c1c;
+  font-size: 12.8px;
+}
 .ct-chat-chips {
   display: flex;
   flex-wrap: wrap;

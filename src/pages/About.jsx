@@ -56,11 +56,11 @@ const EvolutionData = [
   {
     year: "January 2026",
     title: "Operational Expansion Across East Africa",
-    description: "Altuvera strategically expanded operations across four East African nations: Kenya, Tanzania, Rwanda, and Uganda. Each market entry was executed with precision, maintaining the company's commitment to authenticity, quality, and ethical practices. This expansion transformed Altuvera into a comprehensive regional provider offering diverse, interconnected African experiences tailored to discerning travelers.",
+    description: "Altuvera strategically expanded operations across four East African nations: Rwanda, Tanzania, Rwanda, and Uganda. Each market entry was executed with precision, maintaining the company's commitment to authenticity, quality, and ethical practices. This expansion transformed Altuvera into a comprehensive regional provider offering diverse, interconnected African experiences tailored to discerning travelers.",
     icon: <Globe className="w-6 h-6" />,
     tag: "Regional Growth",
     details: [
-      "Kenya: Masai Mara and Amboseli circuits launched",
+      "Rwanda: Masai Mara and Amboseli circuits launched",
       "Tanzania: Serengeti and Ngorongoro itineraries introduced",
       "Rwanda: Gorilla trekking experiences established",
       "Uganda: Bwindi and Queen Elizabeth programs developed"
@@ -1458,7 +1458,7 @@ const About = () => {
       name: 'IGIRANEZA Fabrice',
       role: 'Co-Founder & Visionary',
       image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
-      bio: 'IGIRANEZA Fabrice is the creative genius and visionary behind Altuvera. In 2026, he transformed his dream of creating transformative travel experiences into reality. With an unwavering belief that travel can change lives, Fabrice designed Altuvera\'s revolutionary "High & Deep Culture" philosophy that now defines modern safari experiences worldwide.',
+      bio: 'IGIRANEZA Fabrice is the creative genius and visionary behind Altuvera. In 2026, he transformed his dream of creating transformative travel experiences into reality. With an unwavering belief that travel can change lives, Fabrice designed Altuvera\'s revolutionary "High Places & Deep Culture" philosophy that now defines modern safari experiences worldwide.',
       expertise: ['Visionary Leadership', 'Product Design', 'Travel & Ventures'],
       quote: 'I designed Altuvera to prove that travel can transform both the traveler and the world they visit.',
       isFounder: true
@@ -1476,7 +1476,7 @@ const About = () => {
       name: 'MUTUZO Enos',
       role: 'Chief Operations Officer',
       image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop',
-      bio: 'Enos brings over 17 years of experience in sustainable tourism management. He previously led operations for three major conservation projects across Kenya and Tanzania. His expertise ensures every Altuvera journey operates seamlessly while maximizing positive impact.',
+      bio: 'Enos brings over 17 years of experience in sustainable tourism management. He previously led operations for three major conservation projects across Rwanda and Tanzania. His expertise ensures every Altuvera journey operates seamlessly while maximizing positive impact.',
       expertise: ['Operations', 'Sustainability', 'Marketing'],
       quote: 'Sustainability isn\'t a feature—it\'s the foundation of everything we do.',
       isFounder: false
@@ -1533,7 +1533,7 @@ const About = () => {
 
   const stats = [
     { 
-      value: 15000, 
+      value: 6, 
       suffix: '+', 
       label: 'Happy Explorers', 
       description: 'Travelers transformed by authentic African journeys.',
@@ -1547,14 +1547,14 @@ const About = () => {
       icon: FiThumbsUp
     },
     { 
-      value: 52, 
+      value: 5, 
       suffix: '+', 
       label: 'Destinations', 
-      description: 'Across Kenya, Tanzania, Rwanda, and Uganda.',
+      description: 'Across Rwanda, Tanzania, Rwanda, and Uganda.',
       icon: FiMapPin
     },
     { 
-      value: 100, 
+      value: 2, 
       suffix: '+', 
       label: 'Expert Guides', 
       description: 'Local experts with deep cultural knowledge.',
@@ -1595,13 +1595,13 @@ const About = () => {
   }));
 
   const galleryImages = [
-    { url: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1200', caption: 'Majestic Elephant Herd', location: 'Amboseli, Kenya', size: 'tall' },
+    { url: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1200', caption: 'Majestic Elephant Herd', location: 'Amboseli, Rwanda', size: 'tall' },
     { url: 'https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=1200', caption: 'The Great Migration', location: 'Serengeti, Tanzania', size: 'normal' },
-    { url: 'https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=1200', caption: 'Sunset on the Savanna', location: 'Maasai Mara, Kenya', size: 'normal' },
+    { url: 'https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=1200', caption: 'Sunset on the Savanna', location: 'Maasai Mara, Rwanda', size: 'normal' },
     { url: 'https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=1200', caption: 'Maasai Cultural Experience', location: 'Ngorongoro, Tanzania', size: 'wide' },
     { url: 'https://images.unsplash.com/photo-1534177616064-ef548ae5e58e?w=1200', caption: 'Mountain Gorilla Encounter', location: 'Volcanoes NP, Rwanda', size: 'normal' },
-    { url: 'https://images.unsplash.com/photo-1549366021-9f761d450615?w=1200', caption: 'Cheetah at Dawn', location: 'Samburu, Kenya', size: 'tall' },
-    { url: 'https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=1200', caption: 'Hot Air Balloon Safari', location: 'Maasai Mara, Kenya', size: 'normal' },
+    { url: 'https://images.unsplash.com/photo-1549366021-9f761d450615?w=1200', caption: 'Cheetah at Dawn', location: 'Samburu, Rwanda', size: 'tall' },
+    { url: 'https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=1200', caption: 'Hot Air Balloon Safari', location: 'Maasai Mara, Rwanda', size: 'normal' },
     { url: 'https://images.unsplash.com/photo-1516298773066-c48f8e9bd92b?w=1200', caption: 'Lion Pride Resting', location: 'Serengeti, Tanzania', size: 'normal' },
   ];
 
@@ -1614,7 +1614,7 @@ const About = () => {
     <div className="about-page" style={{ backgroundColor: '#fff', color: '#0f172a', overflowX: 'hidden' }}>
       <SEO
         title="About Us"
-        description="Learn about Altuvera's mission to create transformative travel experiences through our 'High & Deep Culture' philosophy. Meet our expert team and discover our commitment to sustainable, authentic East African safaris."
+        description="Learn about Altuvera's mission to create transformative travel experiences through our 'High Places & Deep Culture' philosophy. Meet our expert team and discover our commitment to sustainable, authentic East African safaris."
         keywords={["about Altuvera", "travel company", "safari experts", "East Africa", "sustainable tourism", "travel philosophy"]}
         url="/about"
         image="/og-about.jpg"
@@ -1693,7 +1693,7 @@ const About = () => {
               maxWidth: '800px',
               margin: '0 auto'
             }}>
-              From the visionary mind of IGIRANEZA Fabrice emerged the "High & Deep Culture" 
+              From the visionary mind of IGIRANEZA Fabrice emerged the "High Places & Deep Culture" 
               philosophy—a revolutionary approach that has redefined what experiential travel 
               means for the modern explorer. We've guided scientists, artists, families, 
               honeymooners, and everyone in between, united by a shared desire for something 

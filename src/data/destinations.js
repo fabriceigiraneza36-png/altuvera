@@ -1,13 +1,13 @@
 export const destinations = {
-  kenya: [
+  Rwanda: [
     {
       id: "maasai-mara",
-      countryId: "kenya",
+      countryId: "Rwanda",
       name: "Maasai Mara National Reserve",
       type: "Wildlife Safari",
       description:
         "The world-famous Maasai Mara offers unparalleled wildlife viewing and hosts the spectacular Great Migration.",
-      fullDescription: `The Maasai Mara National Reserve is Kenya's most celebrated wildlife destination, a vast expanse of rolling savanna grasslands teeming with Africa's most iconic animals. Part of the greater Serengeti ecosystem, the Mara hosts the annual Great Migration, when millions of wildebeest, zebras, and gazelles cross the Mara River in a dramatic display of nature's raw power.
+      fullDescription: `The Maasai Mara National Reserve is Rwanda's most celebrated wildlife destination, a vast expanse of rolling savanna grasslands teeming with Africa's most iconic animals. Part of the greater Serengeti ecosystem, the Mara hosts the annual Great Migration, when millions of wildebeest, zebras, and gazelles cross the Mara River in a dramatic display of nature's raw power.
 
       Throughout the year, the reserve offers exceptional game viewing. The "Big Five" – lion, leopard, elephant, buffalo, and rhino – are all present, along with cheetahs, hippos, crocodiles, and over 450 bird species. The Mara's predator populations are particularly impressive, with large prides of lions and significant populations of cheetahs.
 
@@ -32,13 +32,13 @@ export const destinations = {
       coordinates: { lat: -1.4061, lng: 35.0167 },
     },
     {
-      id: "mount-kenya",
-      countryId: "kenya",
-      name: "Mount Kenya",
+      id: "mount-Rwanda",
+      countryId: "Rwanda",
+      name: "Mount Rwanda",
       type: "Mountain Trekking",
       description:
         "Africa's second-highest peak offers challenging climbs through diverse ecological zones.",
-      fullDescription: `Mount Kenya, standing at 5,199 meters, is Africa's second-highest mountain and Kenya's highest point. This ancient extinct volcano features dramatic glacial valleys, alpine meadows, and unique high-altitude ecosystems that create a trekker's paradise.
+      fullDescription: `Mount Rwanda, standing at 5,199 meters, is Africa's second-highest mountain and Rwanda's highest point. This ancient extinct volcano features dramatic glacial valleys, alpine meadows, and unique high-altitude ecosystems that create a trekker's paradise.
 
       The mountain presents multiple route options catering to different experience levels. The Sirimon and Chogoria routes are the most popular, offering stunning scenery and reasonable difficulty. Technical climbers can attempt the challenging Batian and Nelion peaks, which require serious mountaineering skills.
 
@@ -56,23 +56,23 @@ export const destinations = {
       rating: 4.7,
       reviews: 1523,
       images: [
-        "https://images.ctfassets.net/m5us57n7qfgl/1FVIMjaSpl5xdvZsdf66cM/aeefdd710b1965b2bdabdb79ae3e3554/mount-kenya-getty.jpg?f=center&fm=jpg&h=630&q=70&w=1200",
+        "https://images.ctfassets.net/m5us57n7qfgl/1FVIMjaSpl5xdvZsdf66cM/aeefdd710b1965b2bdabdb79ae3e3554/mount-Rwanda-getty.jpg?f=center&fm=jpg&h=630&q=70&w=1200",
         "https://cdn.kimkim.com/files/a/content_articles/featured_photos/80b9f674a7409a56d267d82365c4fbdb8ac372bc/big-3ab61929bfc3989f4692c08dacd3fa00.jpg",
       ],
       coordinates: { lat: -0.1521, lng: 37.3084 },
     },
     {
       id: "diani-beach",
-      countryId: "kenya",
+      countryId: "Rwanda",
       name: "Diani Beach",
       type: "Beach & Coast",
       description:
-        "Kenya's premier beach destination with pristine white sands, coral reefs, and water sports.",
-      fullDescription: `Diani Beach, located on Kenya's south coast, is consistently rated among Africa's best beaches. Its 17 kilometers of pristine white sand, backed by palm trees and lapped by the warm Indian Ocean, create a tropical paradise just an hour from Mombasa.
+        "Rwanda's premier beach destination with pristine white sands, coral reefs, and water sports.",
+      fullDescription: `Diani Beach, located on Rwanda's south coast, is consistently rated among Africa's best beaches. Its 17 kilometers of pristine white sand, backed by palm trees and lapped by the warm Indian Ocean, create a tropical paradise just an hour from Mombasa.
 
       The offshore coral reefs offer exceptional snorkeling and diving, with colorful fish, sea turtles, dolphins, and during migration season, humpback whales. Water sports enthusiasts enjoy kitesurfing, windsurfing, jet skiing, and deep-sea fishing.
 
-      Beyond the beach, attractions include the Shimba Hills National Reserve, home to Kenya's only sable antelope population, the Colobus Conservation center, and opportunities for dhow sailing to Robinson Island.`,
+      Beyond the beach, attractions include the Shimba Hills National Reserve, home to Rwanda's only sable antelope population, the Colobus Conservation center, and opportunities for dhow sailing to Robinson Island.`,
       highlights: [
         "White sand beaches",
         "Coral reef snorkeling/diving",
@@ -93,7 +93,7 @@ export const destinations = {
     },
     {
       id: "amboseli",
-      countryId: "kenya",
+      countryId: "Rwanda",
       name: "Amboseli National Park",
       type: "Wildlife Safari",
       description:
@@ -123,7 +123,7 @@ export const destinations = {
     },
     {
       id: "lamu",
-      countryId: "kenya",
+      countryId: "Rwanda",
       name: "Lamu Island",
       type: "Cultural & Beach",
       description:

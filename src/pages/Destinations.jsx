@@ -79,31 +79,31 @@ const Destinations = () => {
     [activeDestinations]
   );
 
-  const filteredDestinations = useMemo(() => {
-    const query = debouncedSearchQuery.toLowerCase().trim();
-    if (!query) return activeDestinations;
-    
-    return activeDestinations.filter((dest) => {
-      const searchableFields = [
-        dest.name,
-        dest.description,
-        dest.shortDescription,
-        dest.location,
-        dest.country,
-        dest.capital,
-        dest.region,
-        dest.subRegion,
-        dest.type,
-        dest.category,
-        dest.highlights?.join(' '),
-        dest.tags?.join(' '),
-      ].filter(Boolean).join(' ').toLowerCase();
+    const filteredDestinations = useMemo(() => {
+      const query = debouncedSearchQuery.toLowerCase().trim();
+      if (!query) return activeDestinations;
       
-      const matchesSearch = searchableFields.includes(query);
-      const matchesType = selectedType === "all" || dest.type === selectedType;
-      return matchesSearch && matchesType;
-    });
-  }, [activeDestinations, debouncedSearchQuery, selectedType]);
+      return activeDestinations.filter((dest) => {
+        const searchableFields = [
+          dest.name,
+          dest.description,
+          dest.shortDescription,
+          dest.location,
+          dest.country,
+          dest.capital,
+          dest.region,
+          dest.subRegion,
+          dest.type,
+          dest.category,
+          Array.isArray(dest.highlights) ? dest.highlights.join(' ') : '',
+          Array.isArray(dest.tags) ? dest.tags.join(' ') : '',
+        ].filter(Boolean).join(' ').toLowerCase();
+        
+        const matchesSearch = searchableFields.includes(query);
+        const matchesType = selectedType === "all" || dest.type === selectedType;
+        return matchesSearch && matchesType;
+      });
+    }, [activeDestinations, debouncedSearchQuery, selectedType]);
 
   const loading = selectedCountry === "all" ? allLoading : countryLoading;
   const error = selectedCountry === "all" ? allError : countryError;

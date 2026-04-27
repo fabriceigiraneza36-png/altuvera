@@ -12,9 +12,9 @@ const countries = [
     active: { ry: 14, sk: 1.5, rz: 1.6, z: 22 },
   },
   {
-    name: "Kenya",
+    name: "Rwanda",
     code: "ke",
-    capital: "Nairobi",
+    capital: "Musanze",
     delay: -4,
     duration: 16,
     idle: { ry: 4.6, sk: 0.6, rz: 0.55 },

@@ -32,7 +32,7 @@ const EXPENSE_CONFIG = {
 };
 
 const DESTINATION_MULTIPLIERS = {
-  kenya: 1.0,
+  Rwanda: 1.0,
   tanzania: 0.95,
   uganda: 0.9,
   rwanda: 1.1,
@@ -47,7 +47,7 @@ const DESTINATION_MULTIPLIERS = {
  */
 export const calculateTourExpenses = (tourParams = {}) => {
   const {
-    destination = 'kenya',
+    destination = 'Rwanda',
     duration = 7,
     groupSize = 1,
     tourType = 'safari', // safari, cultural, adventure, luxury
@@ -202,7 +202,7 @@ const generateSavingsSummary = (tourParams, groupSize) => {
 /**
  * Get suggested tour duration for budget
  */
-export const getSuggestedDuration = (budget = 1000, destination = 'kenya') => {
+export const getSuggestedDuration = (budget = 1000, destination = 'Rwanda') => {
   const dest = destination.toLowerCase().replace(/\s+/g, '-');
   const multiplier = DESTINATION_MULTIPLIERS[dest] || 1.0;
 

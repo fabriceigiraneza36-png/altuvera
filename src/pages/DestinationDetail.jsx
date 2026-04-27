@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 
 /* ═══════════════════════════════════════════════════
@@ -882,8 +882,8 @@ const fetchDestination = async (slug) => {
    MAIN — DestinationDetails
    ═══════════════════════════════════════════════════ */
 const DestinationDetails = () => {
-  const { slug, id } = useParams();
-  const identifier = slug || id;
+  const { slug, id, destinationId } = useParams();
+  const identifier = slug || id || destinationId;
   const navigate = useNavigate();
   const { mob } = useWindowSize();
 

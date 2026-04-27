@@ -69,7 +69,7 @@ const SECTIONS = [
     color: BRAND.green700,
     important: true,
     body: [
-      "By accessing or using any Altuvera services — including our website, mobile applications, booking platform, or customer support channels — you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.",
+      "By accessing or using any Altuvera services — including our website, booking gateWay, or customer support channels — you acknowledge that you have read, understood, and agree to be bound by these Terms of Service.",
       "If you do not agree with any part of these terms, you must discontinue use of our platform immediately. Your continued use constitutes acceptance of any updates or modifications to these terms.",
     ],
   },
@@ -79,7 +79,7 @@ const SECTIONS = [
     title: "Services and Eligibility",
     color: "#3B82F6",
     body: [
-      "Altuvera provides travel-related information, destination content, safari planning tools, booking facilitation, and customer support services across Kenya, Tanzania, Uganda, Rwanda, and Ethiopia.",
+      "Altuvera provides travel-related information, destination content, safari planning tools, booking facilitation, and customer support services across East africa.",
       "To create an account or submit a booking request, you must be at least 18 years of age or have the consent of a parent or legal guardian. You represent that all information you provide is accurate, current, and complete.",
     ],
   },
@@ -90,7 +90,7 @@ const SECTIONS = [
     color: "#8B5CF6",
     body: [
       "When you create an account with Altuvera, you are responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account.",
-      "You agree to notify us immediately at security@altuvera.com if you suspect any unauthorized access to your account or any other security breach.",
+      "You agree to notify us immediately at altuverasafari@gmail.com if you suspect any unauthorized access to your account or any other security breach.",
     ],
   },
   {
@@ -101,8 +101,8 @@ const SECTIONS = [
     important: true,
     body: [
       "All safari bookings, tour reservations, and travel arrangements made through Altuvera are subject to the specific booking terms, deposit requirements, payment timelines, and cancellation policies presented at checkout.",
-      "You agree to provide accurate traveler information (including passport details where required), valid payment details, and any special requirements at the time of booking.",
-      "Refund eligibility and amounts are determined by the cancellation policy applicable to your specific booking.",
+      "You agree to provide accurate traveler information (including Personal details), valid payment details (where required), and any Your Desired Destination to embark on!",
+      "Refund eligibility and amounts are determined by the cancellation policy applicable through your negotiations with Admin.",
     ],
   },
   {
@@ -171,7 +171,7 @@ const SECTIONS = [
     title: "Governing Law",
     color: BRAND.green700,
     body: [
-      "These Terms of Service shall be governed by the laws of the Republic of Kenya. Any disputes shall first be attempted to be resolved through good-faith negotiation.",
+      "These Terms of Service shall be governed by the laws of the Republic of Rwanda. Any disputes shall first be attempted to be resolved through good-faith negotiation.",
       "For users in the EU or UK, mandatory consumer protection laws of your country of residence may apply.",
     ],
   },
@@ -181,7 +181,7 @@ const SECTIONS = [
     title: "Contact Us",
     color: BRAND.green700,
     body: [
-      "If you have any questions about these Terms of Service, please contact us at legal@altuvera.com or hello@altuvera.com.",
+      "If you have any questions about these Terms of Service, please contact us at altuverasafari@gmail.com or altuverasafari@gmail.com.",
     ],
     isContact: true,
   },
@@ -279,8 +279,8 @@ export default function TermsOfService() {
               { icon: FiUser, title: "Age Requirement", desc: "You must be 18+ or have guardian consent" },
               { icon: FiCreditCard, title: "Payment Terms", desc: "Deposits and cancellation policies apply" },
               { icon: FiShield, title: "Limited Liability", desc: "We're not liable for third-party issues" },
-              { icon: FiGlobe, title: "Kenyan Law", desc: "These terms are governed by Kenyan law" },
-              { icon: FiMail, title: "Questions?", desc: "Contact legal@altuvera.com" },
+              { icon: FiGlobe, title: "Rwandan Law", desc: "These terms are governed by Rwandan law" },
+              { icon: FiMail, title: "Questions?", desc: "Contact altuverasafari@gmail.com" },
             ].map((point, i) => (
               <ScrollReveal key={i} delay={i * 0.05}>
                 <div style={styles.keyPoint}>
@@ -458,8 +458,8 @@ export default function TermsOfService() {
                             <FiMail size={18} color={BRAND.green700} />
                             <div>
                               <span style={styles.contactLabel}>Legal Inquiries</span>
-                              <a href="mailto:legal@altuvera.com" style={styles.contactLink}>
-                                legal@altuvera.com
+                              <a href="mailto:altuverasafari@gmail.com" style={styles.contactLink}>
+                                altuverasafari@gmail.com
                               </a>
                             </div>
                           </div>
@@ -467,8 +467,8 @@ export default function TermsOfService() {
                             <FiMail size={18} color={BRAND.green700} />
                             <div>
                               <span style={styles.contactLabel}>General Questions</span>
-                              <a href="mailto:hello@altuvera.com" style={styles.contactLink}>
-                                hello@altuvera.com
+                              <a href="mailto:fabriceigiraneza36@gmail.com" style={styles.contactLink}>
+                                altuverasafari@gmail.com
                               </a>
                             </div>
                           </div>

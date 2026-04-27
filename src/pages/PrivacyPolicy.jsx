@@ -109,7 +109,7 @@ const SECTIONS = [
     body: [
       "We use your information to deliver and continuously improve our services — including processing travel inquiries and bookings, sending essential trip confirmations and updates, providing responsive customer support, and personalizing destination recommendations.",
       "With your consent, we may send marketing communications about new destinations, special safari packages, and seasonal offers across East Africa. You can opt out at any time through your account settings or the unsubscribe link in any email.",
-      "We also use aggregated, anonymized data for analytics purposes to understand travel trends across Kenya, Tanzania, Uganda, Rwanda, and Ethiopia — helping us curate better experiences for all travelers.",
+      "We also use aggregated, anonymized data for analytics purposes to understand travel trends across Rwanda, Tanzania, Uganda, Rwanda, and Ethiopia — helping us curate better experiences for all travelers.",
     ],
   },
   {
@@ -206,7 +206,7 @@ const SECTIONS = [
     title: "International Transfers",
     color: "#14B8A6",
     body: [
-      "Your information may be processed in countries other than your country of residence — including Kenya, Rwanda, Tanzania, Uganda, and Ethiopia — as well as cloud infrastructure regions required for reliable service delivery.",
+      "Your information may be processed in countries other than your country of residence — including Rwanda, Rwanda, Tanzania, Uganda, and Ethiopia — as well as cloud infrastructure regions required for reliable service delivery.",
       "Where required by law, we apply appropriate safeguards for international data transfers, such as Standard Contractual Clauses or equivalent mechanisms recognized under applicable data protection regulations.",
     ],
   },
@@ -220,7 +220,7 @@ const SECTIONS = [
     ],
     contact: {
       email: "altuverasafari@gmail.com",
-      address: "Altuvera House, Safari Way, Westlands, Nairobi, Kenya",
+      address: "Altuvera House, Safari Way, Kinigi, Musanze, Rwanda",
       response: "We aim to respond within 48 hours on business days.",
     },
   },

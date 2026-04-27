@@ -71,16 +71,11 @@ const protectedRoutes = [
 // ============================================================================
 
 const prefetchRoutes = () => {
-  const loaders = [
-    () => import("./pages/Home"),
-    () => import("./pages/Destinations"),
-    () => import("./pages/About"),
-    () => import("./pages/Contact"),
-  ];
+  const loaders = publicRoutes.map(r => r.component);
   const run = () => loaders.forEach((l) => l().catch(() => {}));
   "requestIdleCallback" in window
     ? window.requestIdleCallback(run, { timeout: 4000 })
-    : setTimeout(run, 2000);
+    : setTimeout(run, 100);
 };
 
 // ============================================================================
@@ -178,43 +173,217 @@ const callbackStyles = {
 // Layout Components
 // ============================================================================
 
-const CelebrationOverlay = () => (
-  <div
-    style={{
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: "rgba(5, 150, 105, 0.9)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      zIndex: 9999,
-      animation: "fadeIn 0.5s ease-out",
-    }}
-  >
+const CelebrationOverlay = ({ userName }) => {
+  const [step, setStep] = useState(0);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setStep(1), 300);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const displayName = userName ? userName.split(' ').map(n => n[0]?.toUpperCase() + n.slice(1)).join(' ') : 'Traveler';
+
+  return (
     <div
       style={{
-        backgroundColor: "#fff",
-        borderRadius: "20px",
-        padding: "40px",
-        textAlign: "center",
-        boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
-        maxWidth: "400px",
-        width: "90%",
+        position: "fixed",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: "rgba(5, 150, 105, 0.95)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        zIndex: 99999,
+        animation: "celebrationFadeIn 0.6s ease-out forwards",
       }}
     >
-      <HiSparkles size={48} color="#059669" style={{ marginBottom: "20px" }} />
-      <h2 style={{ margin: "0 0 10px", fontSize: "24px", color: "#111827" }}>
-        Welcome to Altuvera!
-      </h2>
-      <p style={{ margin: 0, fontSize: "16px", color: "#6b7280" }}>
-        Your account is ready. Let's start exploring East Africa!
-      </p>
+      <style>{`
+        @keyframes celebrationFadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes celebrationBounce {
+          0%, 100% { transform: translateY(0) scale(1); }
+          50% { transform: translateY(-10px) scale(1.05); }
+        }
+        @keyframes celebrationPulse {
+          0%, 100% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        @keyframes celebrationSlideUp {
+          from { opacity: 0; transform: translateY(30px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes celebrationCheckmark {
+          0% { stroke-dashoffset: 100; }
+          100% { stroke-dashoffset: 0; }
+        }
+        .celebration-card {
+          animation: celebrationSlideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+          transform-origin: center;
+        }
+        .celebration-icon {
+          animation: celebrationPulse 2s ease-in-out infinite;
+        }
+        .celebration-name {
+          animation: celebrationBounce 3s ease-in-out infinite;
+        }
+      `}</style>
+
+      <div className="celebration-card" style={{
+        background: "linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%)",
+        borderRadius: "32px",
+        padding: "60px 40px",
+        textAlign: "center",
+        boxShadow: "0 32px 64px -16px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(5, 150, 105, 0.1)",
+        maxWidth: "480px",
+        width: "90%",
+        position: "relative",
+        overflow: "hidden",
+      }}>
+        {/* Decorative elements */}
+        <div style={{
+          position: "absolute",
+          top: -20,
+          right: -20,
+          width: 120,
+          height: 120,
+          background: "radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, transparent 70%)",
+          borderRadius: "50%",
+        }} />
+        <div style={{
+          position: "absolute",
+          bottom: -30,
+          left: -30,
+          width: 150,
+          height: 150,
+          background: "radial-gradient(circle, rgba(5, 150, 105, 0.12) 0%, transparent 70%)",
+          borderRadius: "50%",
+        }} />
+
+        {/* Main content */}
+        <div style={{ position: "relative", zIndex: 1 }}>
+          {/* Checkmark circle */}
+          <div className="celebration-icon" style={{
+            width: "100px",
+            height: "100px",
+            margin: "0 auto 32px",
+            borderRadius: "50%",
+            background: "linear-gradient(135deg, #10b981, #059669)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            boxShadow: "0 16px 32px rgba(5, 150, 105, 0.4)",
+          }}>
+            <svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M20 6L9 17l-5-5" style={{ strokeDasharray: 100, strokeDashoffset: 0, animation: "celebrationCheckmark 0.8s ease-out 0.5s forwards" }} />
+            </svg>
+          </div>
+
+          {/* Welcome text */}
+          <h1 style={{
+            fontSize: "clamp(28px, 5vw, 42px)",
+            fontWeight: 800,
+            color: "#111827",
+            margin: "0 0 12px",
+            fontFamily: "'Playfair Display', Georgia, serif",
+            letterSpacing: "-0.02em",
+          }}>
+            Congratulations, {displayName}!
+          </h1>
+
+          <p style={{
+            fontSize: "clamp(16px, 2vw, 20px)",
+            color: "#059669",
+            margin: "0 0 24px",
+            fontWeight: 600,
+            fontStyle: "italic",
+          }}>
+            Your account is ready to explore
+          </p>
+
+          <p style={{
+            fontSize: "15px",
+            color: "#475569",
+            lineHeight: 1.7,
+            margin: "0 0 32px",
+            maxWidth: "400px",
+            marginLeft: "auto",
+            marginRight: "auto",
+          }}>
+            You now have full access to plan your dream safari, track bookings, and discover the magic of East Africa.
+          </p>
+
+          {/* Feature highlights */}
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: "16px",
+            marginBottom: "32px",
+          }}>
+            {[
+              { icon: "🗺️", label: "Explore" },
+              { icon: "📅", label: "Book" },
+              { icon: "❤️", label: "Save" },
+            ].map((item, i) => (
+              <div key={i} style={{
+                padding: "12px",
+                background: "rgba(5, 150, 105, 0.08)",
+                borderRadius: "12px",
+                border: "1px solid rgba(5, 150, 105, 0.15)",
+              }}>
+                <div style={{ fontSize: "24px", marginBottom: "4px" }}>{item.icon}</div>
+                <div style={{
+                  fontSize: "12px",
+                  color: "#059669",
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}>
+                  {item.label}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* CTA Button */}
+          <a
+            href="/destinations"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "10px",
+              padding: "16px 32px",
+              background: "linear-gradient(135deg, #059669, #10b981)",
+              color: "white",
+              textDecoration: "none",
+              borderRadius: "16px",
+              fontWeight: 700,
+              fontSize: "16px",
+              boxShadow: "0 12px 24px rgba(5, 150, 105, 0.3)",
+              transition: "transform 0.3s ease, box-shadow 0.3s ease",
+              animation: "celebrationSlideUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.3s forwards",
+              opacity: 0,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "translateY(-2px)";
+              e.currentTarget.style.boxShadow = "0 16px 32px rgba(5, 150, 105, 0.4)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "0 12px 24px rgba(5, 150, 105, 0.3)";
+            }}
+          >
+            Start Exploring
+            <span style={{ fontSize: "18px" }}>→</span>
+          </a>
+        </div>
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 const AppLayout = React.memo(() => (
   <>
@@ -230,7 +399,7 @@ const AppLayout = React.memo(() => (
 ));
 AppLayout.displayName = "AppLayout";
 
-const OverlayLayer = React.memo(({ isLoading, showCelebration }) => (
+const OverlayLayer = React.memo(({ isLoading, showCelebration, userName }) => (
   <>
     <ScrollToTop />
     <Suspense fallback={null}>
@@ -240,7 +409,7 @@ const OverlayLayer = React.memo(({ isLoading, showCelebration }) => (
     <CookieConsent />
     <AuthModal />
     <WhatsAppButton />
-    {showCelebration && <CelebrationOverlay />}
+    {showCelebration && <CelebrationOverlay userName={userName} />}
     {isLoading && <Loader fullScreen />}
   </>
 ));
@@ -349,7 +518,7 @@ function App() {
         </Route>
       </Routes>
 
-      <OverlayLayer isLoading={isLoading} showCelebration={showCelebration} />
+      <OverlayLayer isLoading={isLoading} showCelebration={showCelebration} userName={user?.fullName || user?.name} />
     </div>
   );
 }

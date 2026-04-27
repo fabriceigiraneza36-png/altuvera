@@ -11,7 +11,7 @@ export const BRAND_TAGLINE = "Your Gateway to African Adventures";
 export const BRAND_LOGO_ALT =
   "Altuvera Safaris - Premium African Safari Experiences";
 export const BRAND_DESCRIPTION =
-  "Experience the magic of Africa with Altuvera Safaris. We offer premium safari experiences across Kenya, Tanzania, Uganda, Rwanda, and beyond.";
+  "Experience the magic of Africa with Altuvera Safaris. We offer premium safari experiences across Rwanda, Tanzania, Uganda, Rwanda, and beyond.";
 
 export const BRAND_COLORS = {
   primary: "#064e3b",
@@ -29,9 +29,9 @@ export const BRAND_COLORS = {
 export const BRAND_CONTACT = {
   phone: "+250 780 702 773",
   phoneAlt: "+250 792 352 409",
-  email: "hello@altuvera.com",
-  emailBookings: "bookings@altuvera.com",
-  address: "Altuvera House, Safari Way, Westlands, Nairobi, Kenya",
+  email: "altuverasafari@gmail.com",
+  emailBookings: "fabriceigiraneza36@gmail.com",
+  address: "Altuvera House, Safari Way, Kinigi, Musanze, Rwanda",
   whatsapp: "https://wa.me/250792352409",
 };
 
@@ -185,7 +185,7 @@ const URL_CORRECTIONS = {
 // ============================================
 
 const COUNTRY_ALIASES = {
-  "/kenya": "/country/kenya",
+  "/Rwanda": "/country/Rwanda",
   "/tanzania": "/country/tanzania",
   "/uganda": "/country/uganda",
   "/rwanda": "/country/rwanda",
@@ -309,7 +309,7 @@ export const getRedirectUrl = (pathname) => {
     "/my-bookings",
     "/wishlist",
     "/settings",
-    "/country/kenya",
+    "/country/Rwanda",
     "/country/tanzania",
     "/country/uganda",
     "/country/rwanda",
@@ -352,7 +352,7 @@ export const getAllKnownRoutes = () => [
 ];
 
 export const getAllCountryRoutes = () => [
-  "/country/kenya",
+  "/country/Rwanda",
   "/country/tanzania",
   "/country/uganda",
   "/country/rwanda",

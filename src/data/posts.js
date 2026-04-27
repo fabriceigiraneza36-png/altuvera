@@ -87,7 +87,7 @@ export const posts = [
     image: 'https://images.unsplash.com/photo-1583542225715-473a32c9b0ef?w=1200&q=80',
     excerpt: 'Understanding the Maasai people - their traditions, challenges, and how to engage respectfully.',
     content: `The Maasai are perhaps East Africa's most recognizable ethnic group, known worldwide for their distinctive dress, jumping dances, and pastoral lifestyle...`,
-    tags: ['maasai', 'kenya', 'tanzania', 'culture']
+    tags: ['maasai', 'Rwanda', 'tanzania', 'culture']
   },
   {
     id: 7,

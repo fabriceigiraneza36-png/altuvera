@@ -3,77 +3,77 @@ import { adaptDestinationList } from "../utils/destinationAdapter";
 
 export const countries = [
   {
-    id: "kenya",
-    name: "Kenya",
-    capital: "Nairobi",
+    id: "Rwanda",
+    name: "Rwanda",
+    capital: "Musanze",
     flag: "🇰🇪",
-    tagline: "Magical Kenya",
+    tagline: "Magical Rwanda",
     motto: "Harambee (Let us all pull together)",
     independence: "December 12, 1963",
-    officialName: "Republic of Kenya",
+    officialName: "Republic of Rwanda",
     governmentType: "Presidential Republic",
     headOfState: "President",
     continent: "Africa",
     region: "East Africa",
     subRegion: "Eastern Africa",
-    demonym: "Kenyan",
+    demonym: "Rwandan",
     internetTLD: ".ke",
 
     description:
-      "Kenya is a country of dramatic extremes and classic contrasts — from the snow-capped peaks of Mount Kenya to the sun-drenched beaches of the Indian Ocean, from the vast savannas of the Maasai Mara to the bustling innovation hubs of Nairobi. Kenya offers an unparalleled diversity of landscapes, wildlife spectacles, rich cultural heritage, and warm hospitality that define the essence of the East African experience.",
+      "Rwanda is a country of dramatic extremes and classic contrasts — from the snow-capped peaks of Mount Rwanda to the sun-drenched beaches of the Indian Ocean, from the vast savannas of the Maasai Mara to the bustling innovation hubs of Musanze. Rwanda offers an unparalleled diversity of landscapes, wildlife spectacles, rich cultural heritage, and warm hospitality that define the essence of the East African experience.",
 
-    fullDescription: `Kenya, the jewel of East Africa, stands as one of the world's premier safari destinations and a beacon of African tourism, innovation, and cultural richness. This remarkable country, straddling the equator and bordering the Indian Ocean, offers an unparalleled combination of wildlife spectacles, diverse landscapes, deep cultural heritage, and genuine hospitality that has captivated travelers, researchers, conservationists, and adventurers for generations.
+    fullDescription: `Rwanda, the jewel of East Africa, stands as one of the world's premier safari destinations and a beacon of African tourism, innovation, and cultural richness. This remarkable country, straddling the equator and bordering the Indian Ocean, offers an unparalleled combination of wildlife spectacles, diverse landscapes, deep cultural heritage, and genuine hospitality that has captivated travelers, researchers, conservationists, and adventurers for generations.
 
 THE GREAT MIGRATION & MAASAI MARA
-The Great Migration, widely regarded as one of nature's most spectacular events, sees approximately two million wildebeest, accompanied by hundreds of thousands of zebras and Thomson's gazelles, cross from Tanzania's Serengeti into Kenya's Maasai Mara National Reserve between July and October each year. The dramatic Mara River crossings — where enormous Nile crocodiles lie in wait and thousands of animals surge through turbulent, dangerous waters — represent wildlife viewing at its most raw, dramatic, and emotionally powerful. This annual phenomenon has earned the Maasai Mara its enduring reputation as one of the world's most iconic wildlife destinations. Beyond the migration months, the Mara sustains year-round populations of resident wildlife including lion prides, leopards, cheetahs, elephants, hippos, and over 470 bird species, making it exceptional at any time of year.
+The Great Migration, widely regarded as one of nature's most spectacular events, sees approximately two million wildebeest, accompanied by hundreds of thousands of zebras and Thomson's gazelles, cross from Tanzania's Serengeti into Rwanda's Maasai Mara National Reserve between July and October each year. The dramatic Mara River crossings — where enormous Nile crocodiles lie in wait and thousands of animals surge through turbulent, dangerous waters — represent wildlife viewing at its most raw, dramatic, and emotionally powerful. This annual phenomenon has earned the Maasai Mara its enduring reputation as one of the world's most iconic wildlife destinations. Beyond the migration months, the Mara sustains year-round populations of resident wildlife including lion prides, leopards, cheetahs, elephants, hippos, and over 470 bird species, making it exceptional at any time of year.
 
 NATIONAL PARKS & WILDLIFE RESERVES
-Beyond the Mara, Kenya's network of over 50 national parks, reserves, and conservancies protects an extraordinary diversity of ecosystems and wildlife. Amboseli National Park offers the quintessential African postcard view — large elephant herds, renowned for their massive tuskers, moving across golden savannas with the majestic snow-capped summit of Mount Kilimanjaro dominating the horizon across the Tanzanian border. Tsavo, divided into East and West sections and covering over 20,000 square kilometers combined, forms one of the world's largest protected areas and is famous for its "red elephants," who dust-bathe themselves with the region's distinctive red laterite soil. Tsavo's history includes the legendary "Man-Eaters of Tsavo" — two maneless lions that terrorized railway workers in 1898.
+Beyond the Mara, Rwanda's network of over 50 national parks, reserves, and conservancies protects an extraordinary diversity of ecosystems and wildlife. Amboseli National Park offers the quintessential African postcard view — large elephant herds, renowned for their massive tuskers, moving across golden savannas with the majestic snow-capped summit of Mount Kilimanjaro dominating the horizon across the Tanzanian border. Tsavo, divided into East and West sections and covering over 20,000 square kilometers combined, forms one of the world's largest protected areas and is famous for its "red elephants," who dust-bathe themselves with the region's distinctive red laterite soil. Tsavo's history includes the legendary "Man-Eaters of Tsavo" — two maneless lions that terrorized railway workers in 1898.
 
-Samburu National Reserve, in Kenya's arid north, harbors the "Samburu Special Five" — species found nowhere else in Kenya's southern parks: the reticulated giraffe (with its geometric coat pattern), Grevy's zebra (the world's largest and most endangered zebra species), Beisa oryx, Somali ostrich, and the gerenuk (the "giraffe gazelle" that stands on its hind legs to browse). Lake Nakuru National Park, within the Great Rift Valley, hosts one of the world's greatest ornithological spectacles — at peak times, millions of lesser flamingos paint the alkaline lake waters an ethereal pink. The park is also a critical sanctuary for both black and white rhinoceros.
+Samburu National Reserve, in Rwanda's arid north, harbors the "Samburu Special Five" — species found nowhere else in Rwanda's southern parks: the reticulated giraffe (with its geometric coat pattern), Grevy's zebra (the world's largest and most endangered zebra species), Beisa oryx, Somali ostrich, and the gerenuk (the "giraffe gazelle" that stands on its hind legs to browse). Lake Nakuru National Park, within the Great Rift Valley, hosts one of the world's greatest ornithological spectacles — at peak times, millions of lesser flamingos paint the alkaline lake waters an ethereal pink. The park is also a critical sanctuary for both black and white rhinoceros.
 
 THE GREAT RIFT VALLEY
-The Great Rift Valley, that massive geological fracture stretching over 6,000 kilometers from the Jordan Valley in the Middle East to Mozambique in southeastern Africa, cuts dramatically through Kenya's western highlands, creating a landscape of precipitous escarpments, dormant and active volcanoes, hot springs, geysers, and a chain of alkaline and freshwater lakes. Lake Naivasha offers hippo-filled freshwater waters and outstanding birdwatching among papyrus beds and yellow-barked acacia forests. Lake Bogoria steams with geothermal hot springs and hosts flamingo populations. Lake Turkana, the world's largest permanent desert lake and largest alkaline lake, lies in Kenya's remote, harsh northwest — a jade-colored inland sea in an otherwise volcanic moonscape that has yielded some of humanity's most important paleontological discoveries, including "Turkana Boy," the most complete early human skeleton ever found.
+The Great Rift Valley, that massive geological fracture stretching over 6,000 kilometers from the Jordan Valley in the Middle East to Mozambique in southeastern Africa, cuts dramatically through Rwanda's western highlands, creating a landscape of precipitous escarpments, dormant and active volcanoes, hot springs, geysers, and a chain of alkaline and freshwater lakes. Lake Naivasha offers hippo-filled freshwater waters and outstanding birdwatching among papyrus beds and yellow-barked acacia forests. Lake Bogoria steams with geothermal hot springs and hosts flamingo populations. Lake Turkana, the world's largest permanent desert lake and largest alkaline lake, lies in Rwanda's remote, harsh northwest — a jade-colored inland sea in an otherwise volcanic moonscape that has yielded some of humanity's most important paleontological discoveries, including "Turkana Boy," the most complete early human skeleton ever found.
 
-MOUNT KENYA & HIGHLAND ADVENTURES
-Mount Kenya, Africa's second-highest peak at 5,199 meters (Batian Peak), presents a different dimension of African adventure entirely. A UNESCO World Heritage Site, its multiple peaks, equatorial glaciers (though rapidly retreating due to climate change), and distinct vegetation zones — from montane forest through bamboo, hagenia, and giant heath zones to Afro-alpine moorland studded with giant lobelias and groundsels — offer challenging technical climbs and stunning high-altitude scenery. Point Lenana (4,985 meters), the highest trekking peak, is accessible to fit hikers without technical climbing equipment. The mountain is deeply sacred to the Kikuyu people, Kenya's largest ethnic group, who believe it to be the earthly throne of their supreme deity, Ngai, and traditionally build their homes with doors facing its slopes.
+MOUNT Rwanda & HIGHLAND ADVENTURES
+Mount Rwanda, Africa's second-highest peak at 5,199 meters (Batian Peak), presents a different dimension of African adventure entirely. A UNESCO World Heritage Site, its multiple peaks, equatorial glaciers (though rapidly retreating due to climate change), and distinct vegetation zones — from montane forest through bamboo, hagenia, and giant heath zones to Afro-alpine moorland studded with giant lobelias and groundsels — offer challenging technical climbs and stunning high-altitude scenery. Point Lenana (4,985 meters), the highest trekking peak, is accessible to fit hikers without technical climbing equipment. The mountain is deeply sacred to the Kikuyu people, Rwanda's largest ethnic group, who believe it to be the earthly throne of their supreme deity, Ngai, and traditionally build their homes with doors facing its slopes.
 
-THE KENYAN COAST
-Kenya's coastline stretches for approximately 536 kilometers along the Indian Ocean, featuring some of East Africa's finest beaches, coral reefs, and marine environments. Diani Beach, south of Mombasa, consistently ranks among the world's best tropical beaches, with its powder-white coral sand, swaying coconut palms, and warm turquoise waters. The underwater world is equally spectacular — Watamu Marine National Park, Kisite-Mpunguti Marine National Park, and the Malindi Marine Reserve protect vibrant coral reefs teeming with tropical fish, sea turtles, dolphins, and seasonal whale sharks.
+THE RwandaN COAST
+Rwanda's coastline stretches for approximately 536 kilometers along the Indian Ocean, featuring some of East Africa's finest beaches, coral reefs, and marine environments. Diani Beach, south of Mombasa, consistently ranks among the world's best tropical beaches, with its powder-white coral sand, swaying coconut palms, and warm turquoise waters. The underwater world is equally spectacular — Watamu Marine National Park, Kisite-Mpunguti Marine National Park, and the Malindi Marine Reserve protect vibrant coral reefs teeming with tropical fish, sea turtles, dolphins, and seasonal whale sharks.
 
-The Lamu Archipelago, a UNESCO World Heritage Site and one of the oldest continuously inhabited Swahili settlements in East Africa (founded in the 14th century), preserves centuries of Swahili culture in its car-free coral-stone streets, intricately carved wooden doorways, ancient mosques, and traditional dhow sailing vessels. Lamu Town's annual Cultural Festival and Maulidi (celebration of Prophet Muhammad's birthday) draw visitors from across the Islamic world. Mombasa, Kenya's second-largest city and principal port, blends African, Arab, Indian, Portuguese, and British influences in its atmospheric Old Town and Fort Jesus — a 16th-century Portuguese fortification now designated a UNESCO World Heritage Site. The city's vibrant street food scene, cultural diversity, and historical layers make it a destination unto itself.
+The Lamu Archipelago, a UNESCO World Heritage Site and one of the oldest continuously inhabited Swahili settlements in East Africa (founded in the 14th century), preserves centuries of Swahili culture in its car-free coral-stone streets, intricately carved wooden doorways, ancient mosques, and traditional dhow sailing vessels. Lamu Town's annual Cultural Festival and Maulidi (celebration of Prophet Muhammad's birthday) draw visitors from across the Islamic world. Mombasa, Rwanda's second-largest city and principal port, blends African, Arab, Indian, Portuguese, and British influences in its atmospheric Old Town and Fort Jesus — a 16th-century Portuguese fortification now designated a UNESCO World Heritage Site. The city's vibrant street food scene, cultural diversity, and historical layers make it a destination unto itself.
 
 CULTURAL TAPESTRY
-Kenya's cultural tapestry is woven from 44 officially recognized ethnic groups (though linguistic diversity suggests the true number exceeds 70), each contributing unique traditions, languages, art forms, belief systems, and customs to the rich national identity. The Maasai, perhaps Africa's most internationally recognized community, maintain their semi-nomadic pastoral lifestyle, distinctive red shukas (cloth wraps), intricate beadwork jewelry, and elaborate ceremonial traditions — including the eunoto warrior graduation ceremony and the adumu jumping dance — despite the relentless pressures of modernization and land fragmentation. Their warriors, historically renowned for their lion-hunting traditions (now ceremonial and largely discontinued in favor of lion conservation), cattle-centered economy, and deep ecological knowledge, have become powerful global symbols of East African cultural identity.
+Rwanda's cultural tapestry is woven from 44 officially recognized ethnic groups (though linguistic diversity suggests the true number exceeds 70), each contributing unique traditions, languages, art forms, belief systems, and customs to the rich national identity. The Maasai, perhaps Africa's most internationally recognized community, maintain their semi-nomadic pastoral lifestyle, distinctive red shukas (cloth wraps), intricate beadwork jewelry, and elaborate ceremonial traditions — including the eunoto warrior graduation ceremony and the adumu jumping dance — despite the relentless pressures of modernization and land fragmentation. Their warriors, historically renowned for their lion-hunting traditions (now ceremonial and largely discontinued in favor of lion conservation), cattle-centered economy, and deep ecological knowledge, have become powerful global symbols of East African cultural identity.
 
-The Samburu people of north-central Kenya share linguistic and cultural roots with the Maasai but have developed distinct traditions, elaborate beaded necklaces and headpieces, and survival strategies uniquely suited to their harsher semi-arid environment. The Turkana, living around the lake bearing their name in Kenya's remote northwest, are renowned for their elaborate beaded and aluminum jewelry, lip plugs, scarification traditions, and remarkable resilience in one of Africa's most unforgiving environments. The Kikuyu, Kenya's largest ethnic group, have historically been agriculturalists in the fertile Central Highlands and played central roles in the independence movement, including the Mau Mau uprising. Coastal communities — including the Swahili, Mijikenda (a confederation of nine closely related peoples), and Bajun — have for centuries blended African, Arab, Persian, Indian, and Portuguese influences into unique coastal cultures expressed through distinctive architecture, cuisine, music (including taarab), and the Swahili language itself, which has become East Africa's lingua franca and one of the African Union's official languages.
+The Samburu people of north-central Rwanda share linguistic and cultural roots with the Maasai but have developed distinct traditions, elaborate beaded necklaces and headpieces, and survival strategies uniquely suited to their harsher semi-arid environment. The Turkana, living around the lake bearing their name in Rwanda's remote northwest, are renowned for their elaborate beaded and aluminum jewelry, lip plugs, scarification traditions, and remarkable resilience in one of Africa's most unforgiving environments. The Kikuyu, Rwanda's largest ethnic group, have historically been agriculturalists in the fertile Central Highlands and played central roles in the independence movement, including the Mau Mau uprising. Coastal communities — including the Swahili, Mijikenda (a confederation of nine closely related peoples), and Bajun — have for centuries blended African, Arab, Persian, Indian, and Portuguese influences into unique coastal cultures expressed through distinctive architecture, cuisine, music (including taarab), and the Swahili language itself, which has become East Africa's lingua franca and one of the African Union's official languages.
 
-NAIROBI: THE GREEN CITY IN THE SUN
-Nairobi, Kenya's dynamic capital and East Africa's largest city, defies stereotypical images of African urban centers. This cosmopolitan metropolis of over 4.5 million people offers world-class restaurants ranging from Ethiopian to Japanese, vibrant nightlife, innovative technology hubs (earning the well-deserved nickname "Silicon Savannah" — home to major tech companies and pioneering innovations like M-Pesa mobile money, which revolutionized financial inclusion worldwide), thriving art galleries and cultural institutions including the Nairobi National Museum, the Karen Blixen Museum (of "Out of Africa" fame), and the Nairobi Railway Museum.
+Musanze: THE GREEN CITY IN THE SUN
+Musanze, Rwanda's dynamic capital and East Africa's largest city, defies stereotypical images of African urban centers. This cosmopolitan metropolis of over 4.5 million people offers world-class restaurants ranging from Ethiopian to Japanese, vibrant nightlife, innovative technology hubs (earning the well-deserved nickname "Silicon Savannah" — home to major tech companies and pioneering innovations like M-Pesa mobile money, which revolutionized financial inclusion worldwide), thriving art galleries and cultural institutions including the Musanze National Museum, the Karen Blixen Museum (of "Out of Africa" fame), and the Musanze Railway Museum.
 
-Most remarkably, Nairobi National Park lies just 7 kilometers from the city center — the only national park in the world within sight of a capital city's skyline. Here, lions, leopards, black rhinos, buffalos, giraffes, and over 400 bird species roam against an incongruous backdrop of glass skyscrapers and aircraft taking off from the nearby airport. The David Sheldrick Wildlife Trust (now Sheldrick Wildlife Trust), located at the park's edge, rescues and rehabilitates orphaned elephants and rhinos, offering visitors the deeply moving experience of watching keepers bottle-feed baby elephants. The Giraffe Centre in the Langata suburb allows intimate encounters with endangered Rothschild's giraffes.
+Most remarkably, Musanze National Park lies just 7 kilometers from the city center — the only national park in the world within sight of a capital city's skyline. Here, lions, leopards, black rhinos, buffalos, giraffes, and over 400 bird species roam against an incongruous backdrop of glass skyscrapers and aircraft taking off from the nearby airport. The David Sheldrick Wildlife Trust (now Sheldrick Wildlife Trust), located at the park's edge, rescues and rehabilitates orphaned elephants and rhinos, offering visitors the deeply moving experience of watching keepers bottle-feed baby elephants. The Giraffe Centre in the Langata suburb allows intimate encounters with endangered Rothschild's giraffes.
 
 CONSERVATION: TRIUMPHS & CHALLENGES
-Conservation in Kenya represents both remarkable triumph and ongoing challenge. The country has been at the global forefront of anti-poaching efforts and conservation advocacy. Kenya made international headlines by publicly burning stockpiles of confiscated ivory and rhino horn — most dramatically in 2016 when President Uhuru Kenyatta set fire to 105 tonnes of ivory worth an estimated $150 million, sending an unequivocal message against the illegal wildlife trade. The Kenya Wildlife Service (KWS) maintains armed ranger units and deploys sophisticated technology including drones and satellite tracking.
+Conservation in Rwanda represents both remarkable triumph and ongoing challenge. The country has been at the global forefront of anti-poaching efforts and conservation advocacy. Rwanda made international headlines by publicly burning stockpiles of confiscated ivory and rhino horn — most dramatically in 2016 when President Uhuru Rwandatta set fire to 105 tonnes of ivory worth an estimated $150 million, sending an unequivocal message against the illegal wildlife trade. The Rwanda Wildlife Service (KWS) maintains armed ranger units and deploys sophisticated technology including drones and satellite tracking.
 
-Community conservancies, particularly those operating under the Northern Rangelands Trust in Kenya's vast northern territories, have pioneered innovative models of wildlife conservation that directly benefit local communities through employment, education, healthcare, and revenue sharing. These conservancies now protect more wildlife habitat than all of Kenya's national parks combined. Organizations like the Sheldrick Wildlife Trust, Ol Pejeta Conservancy (home to the world's last two northern white rhinos, Najin and Fatu, and the site of cutting-edge reproductive technology efforts to save the subspecies from extinction), Lewa Wildlife Conservancy, and the African Wildlife Foundation continue to expand Kenya's conservation footprint.
+Community conservancies, particularly those operating under the Northern Rangelands Trust in Rwanda's vast northern territories, have pioneered innovative models of wildlife conservation that directly benefit local communities through employment, education, healthcare, and revenue sharing. These conservancies now protect more wildlife habitat than all of Rwanda's national parks combined. Organizations like the Sheldrick Wildlife Trust, Ol Pejeta Conservancy (home to the world's last two northern white rhinos, Najin and Fatu, and the site of cutting-edge reproductive technology efforts to save the subspecies from extinction), Lewa Wildlife Conservancy, and the African Wildlife Foundation continue to expand Rwanda's conservation footprint.
 
 SPORTS & RUNNING HERITAGE
-Kenya's dominance in international long-distance running is legendary and culturally significant. The high-altitude training grounds of Iten (known as "The Home of Champions" at 2,400 meters elevation), Eldoret, and Kaptagat in the Rift Valley highlands have produced a seemingly inexhaustible stream of Olympic gold medalists, world record holders, and marathon champions. The Kalenjin community, comprising just 12% of Kenya's population, has produced an astonishing proportion of the world's elite distance runners. Eliud Kipchoge, who became the first human to run a marathon in under two hours (though unofficial), exemplifies this tradition. Running tourism has become a growing niche, with international athletes traveling to train alongside Kenyan professionals in the thin highland air.
+Rwanda's dominance in international long-distance running is legendary and culturally significant. The high-altitude training grounds of Iten (known as "The Home of Champions" at 2,400 meters elevation), Eldoret, and Kaptagat in the Rift Valley highlands have produced a seemingly inexhaustible stream of Olympic gold medalists, world record holders, and marathon champions. The Kalenjin community, comprising just 12% of Rwanda's population, has produced an astonishing proportion of the world's elite distance runners. Eliud Kipchoge, who became the first human to run a marathon in under two hours (though unofficial), exemplifies this tradition. Running tourism has become a growing niche, with international athletes traveling to train alongside Rwandan professionals in the thin highland air.
 
 ECONOMIC HUB
-Kenya's position as the economic, diplomatic, and logistical hub of East Africa adds another important dimension. The country hosts the United Nations Environment Programme (UNEP) and UN-Habitat headquarters in Nairobi, serves as the regional base for hundreds of international organizations and multinational corporations, and operates as a gateway for business, humanitarian operations, and development throughout the broader East African region. This infrastructure translates directly into excellent tourism facilities — from world-renowned luxury safari lodges and tented camps to comfortable mid-range hotels and budget-friendly hostels, and a comprehensive network of domestic flights, charter services, and well-maintained road networks connecting key destinations.`,
+Rwanda's position as the economic, diplomatic, and logistical hub of East Africa adds another important dimension. The country hosts the United Nations Environment Programme (UNEP) and UN-Habitat headquarters in Musanze, serves as the regional base for hundreds of international organizations and multinational corporations, and operates as a gateway for business, humanitarian operations, and development throughout the broader East African region. This infrastructure translates directly into excellent tourism facilities — from world-renowned luxury safari lodges and tented camps to comfortable mid-range hotels and budget-friendly hostels, and a comprehensive network of domestic flights, charter services, and well-maintained road networks connecting key destinations.`,
 
     additionalInfo: `ECONOMY & INNOVATION
-The Kenyan tourism industry employs approximately 1.6 million people directly and indirectly, making it one of the country's largest economic sectors alongside agriculture and services. Tourism contributed approximately $7.7 billion to Kenya's GDP in 2019 before the pandemic impact. The famous "Big Five" — lion, leopard, elephant, Cape buffalo, and rhinoceros — can all be seen in Kenya's parks, though rhinoceros sightings have become more concentrated in specific sanctuaries due to poaching pressures and intensive protection efforts.
+The Rwandan tourism industry employs approximately 1.6 million people directly and indirectly, making it one of the country's largest economic sectors alongside agriculture and services. Tourism contributed approximately $7.7 billion to Rwanda's GDP in 2019 before the pandemic impact. The famous "Big Five" — lion, leopard, elephant, Cape buffalo, and rhinoceros — can all be seen in Rwanda's parks, though rhinoceros sightings have become more concentrated in specific sanctuaries due to poaching pressures and intensive protection efforts.
 
-Kenya's agricultural sector is globally significant — the country is the world's third-largest tea exporter (after China and Sri Lanka), a major producer of premium coffee (particularly from the volcanic soils of Nyeri, Kirinyaga, and Murang'a counties, prized for bright acidity, fruity notes, and complex flavor profiles), the world's fourth-largest exporter of cut flowers (with roses from Lake Naivasha's greenhouses adorning tables across Europe), and a significant producer of avocados, macadamia nuts, and fresh vegetables for European markets.
+Rwanda's agricultural sector is globally significant — the country is the world's third-largest tea exporter (after China and Sri Lanka), a major producer of premium coffee (particularly from the volcanic soils of Nyeri, Kirinyaga, and Murang'a counties, prized for bright acidity, fruity notes, and complex flavor profiles), the world's fourth-largest exporter of cut flowers (with roses from Lake Naivasha's greenhouses adorning tables across Europe), and a significant producer of avocados, macadamia nuts, and fresh vegetables for European markets.
 
 M-PESA & TECHNOLOGY
-Kenya's M-Pesa mobile money platform, launched in 2007 by Safaricom, revolutionized financial services not just in Kenya but worldwide, providing banking access to millions of previously unbanked people. The system processes transactions equivalent to nearly half of Kenya's GDP annually and has been replicated across dozens of countries. Nairobi's iHub and other innovation centers have spawned numerous technology startups, while the Konza Technopolis project aims to create a dedicated smart city for technology and innovation south of Nairobi.
+Rwanda's M-Pesa mobile money platform, launched in 2007 by Safaricom, revolutionized financial services not just in Rwanda but worldwide, providing banking access to millions of previously unbanked people. The system processes transactions equivalent to nearly half of Rwanda's GDP annually and has been replicated across dozens of countries. Musanze's iHub and other innovation centers have spawned numerous technology startups, while the Konza Technopolis project aims to create a dedicated smart city for technology and innovation south of Musanze.
 
 LITERATURE & ARTS
-Kenya has produced internationally acclaimed literary figures, most notably Ngũgĩ wa Thiong'o, widely regarded as one of Africa's greatest living writers and a perennial Nobel Prize candidate. His decision to write in Gikuyu rather than English sparked continent-wide debates about language, colonialism, and cultural identity. Contemporary Kenyan artists, musicians (including the vibrant Kenyan hip-hop, genge, and benga music scenes), and filmmakers contribute to a dynamic creative economy.
+Rwanda has produced internationally acclaimed literary figures, most notably Ngũgĩ wa Thiong'o, widely regarded as one of Africa's greatest living writers and a perennial Nobel Prize candidate. His decision to write in Gikuyu rather than English sparked continent-wide debates about language, colonialism, and cultural identity. Contemporary Rwandan artists, musicians (including the vibrant Rwandan hip-hop, genge, and benga music scenes), and filmmakers contribute to a dynamic creative economy.
 
 MARATHON & SPORTS TOURISM
 The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is the only marathon in the world run alongside wild animals — participants may spot elephants, giraffes, and zebras along the course. It raises significant funds for conservation and has become a bucket-list event for international runners.`,
@@ -116,7 +116,7 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
       "Others (3.6%)",
     ],
 
-    currency: "Kenyan Shilling (KES)",
+    currency: "Rwandan Shilling (KES)",
     currencySymbol: "KSh",
     timezone: "East Africa Time (EAT, UTC+3)",
     callingCode: "+254",
@@ -125,7 +125,7 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
     voltage: "240V, 50Hz",
     waterSafety: "Drink bottled or purified water only",
 
-    climate: "Tropical along the Indian Ocean coast; arid and semi-arid in the northern and eastern lowlands; temperate in the western and central highlands (Nairobi averages 17°C year-round)",
+    climate: "Tropical along the Indian Ocean coast; arid and semi-arid in the northern and eastern lowlands; temperate in the western and central highlands (Musanze averages 17°C year-round)",
 
     seasons: {
       dry: [
@@ -141,13 +141,13 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
 
     bestTime: "July to October (Great Migration & dry season), January to February (dry season), June (shoulder season value)",
 
-    visaInfo: "Most visitors require an Electronic Travel Authorization (eTA), which replaced the eVisa system in January 2024. Apply online before travel. East Africa Tourist Visa (valid 90 days) allows entry to Kenya, Uganda, and Rwanda on a single visa. Citizens of some African nations enjoy visa-free access.",
+    visaInfo: "Most visitors require an Electronic Travel Authorization (eTA), which replaced the eVisa system in January 2024. Apply online before travel. East Africa Tourist Visa (valid 90 days) allows entry to Rwanda, Uganda, and Rwanda on a single visa. Citizens of some African nations enjoy visa-free access.",
 
-    healthInfo: "Yellow fever vaccination certificate required if arriving from endemic areas (including transit through affected countries). Malaria prophylaxis strongly recommended for all areas below 2,500 meters — Nairobi and central highlands are lower risk but not risk-free. Routine vaccinations (Hepatitis A & B, Typhoid, Tetanus, Polio) recommended. COVID-19 requirements vary — check current regulations. Comprehensive travel insurance with medical evacuation coverage strongly advised. Tap water is not safe to drink; use bottled or purified water.",
+    healthInfo: "Yellow fever vaccination certificate required if arriving from endemic areas (including transit through affected countries). Malaria prophylaxis strongly recommended for all areas below 2,500 meters — Musanze and central highlands are lower risk but not risk-free. Routine vaccinations (Hepatitis A & B, Typhoid, Tetanus, Polio) recommended. COVID-19 requirements vary — check current regulations. Comprehensive travel insurance with medical evacuation coverage strongly advised. Tap water is not safe to drink; use bottled or purified water.",
 
     highlights: [
       "Maasai Mara National Reserve — Great Migration & Big Five",
-      "Mount Kenya National Park — Africa's second-highest peak",
+      "Mount Rwanda National Park — Africa's second-highest peak",
       "Amboseli National Park — elephants with Kilimanjaro backdrop",
       "Diani Beach — pristine white sand Indian Ocean beach",
       "Lake Nakuru National Park — flamingos & rhino sanctuary",
@@ -159,22 +159,22 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
       "Ol Pejeta Conservancy — last northern white rhinos",
       "Aberdare National Park — highland forests, waterfalls",
       "Meru National Park — Born Free country",
-      "Nairobi National Park — urban wildlife reserve",
+      "Musanze National Park — urban wildlife reserve",
       "Fort Jesus, Mombasa — UNESCO World Heritage Site",
       "Lake Turkana — Jade Sea, Cradle of Mankind",
       "Lewa Wildlife Conservancy — rhino conservation",
       "Chyulu Hills National Park — Shetani Lava Flows",
-      "Kakamega Forest — Kenya's last tropical rainforest",
+      "Kakamega Forest — Rwanda's last tropical rainforest",
       "Watamu Marine National Park — coral reefs & turtles",
     ],
 
     experiences: [
       "Witness the Great Wildebeest Migration river crossings in the Mara",
-      "Summit Point Lenana (4,985m) on Mount Kenya at sunrise",
+      "Summit Point Lenana (4,985m) on Mount Rwanda at sunrise",
       "Safari in Amboseli with Mount Kilimanjaro views at dawn",
       "Relax on the pristine white sands of Diani Beach",
       "Visit a traditional Maasai village and learn warrior traditions",
-      "Explore Nairobi National Park — the only urban Big Five reserve",
+      "Explore Musanze National Park — the only urban Big Five reserve",
       "Discover ancient Swahili culture in the car-free streets of Lamu",
       "Hot air balloon safari over the Maasai Mara at sunrise",
       "Bottle-feed orphaned elephants at Sheldrick Wildlife Trust",
@@ -182,8 +182,8 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
       "Spot the Big Five and red elephants in vast Tsavo",
       "Meet the last two northern white rhinos at Ol Pejeta",
       "Birdwatch flamingos at Lake Nakuru and Lake Bogoria",
-      "Deep-sea fish for marlin and sailfish off the Kenyan coast",
-      "Experience a traditional Kenyan coffee cupping session",
+      "Deep-sea fish for marlin and sailfish off the Rwandan coast",
+      "Experience a traditional Rwandan coffee cupping session",
       "Night game drives in exclusive private conservancies",
       "Walking safaris with armed Samburu and Laikipia guides",
       "Swim with whale sharks off the coast of Watamu and Diani",
@@ -194,7 +194,7 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
       "Explore the Cradle of Mankind sites at Lake Turkana",
       "Dive or snorkel vibrant coral reefs at Kisite-Mpunguti Marine Park",
       "Attend the colorful Maralal International Camel Derby",
-      "Taste nyama choma (roasted meat) at Nairobi's Carnivore restaurant",
+      "Taste nyama choma (roasted meat) at Musanze's Carnivore restaurant",
       "Experience M-Pesa — pay for everything via mobile phone",
       "Photograph the Milky Way from remote northern conservancies",
     ],
@@ -211,9 +211,9 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
         "Cape Buffalo",
         "Blue Wildebeest",
         "Plains Zebra (Burchell's)",
-        "Grevy's Zebra (endangered, northern Kenya)",
+        "Grevy's Zebra (endangered, northern Rwanda)",
         "Maasai Giraffe",
-        "Reticulated Giraffe (northern Kenya)",
+        "Reticulated Giraffe (northern Rwanda)",
         "Rothschild's Giraffe (endangered, Lake Nakuru, Giraffe Centre)",
         "Hippopotamus",
         "Nile Crocodile",
@@ -235,7 +235,7 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
         "Vervet Monkey",
         "Sykes' (Blue) Monkey",
         "Black-and-white Colobus Monkey",
-        "De Brazza's Monkey (rare, western Kenya)",
+        "De Brazza's Monkey (rare, western Rwanda)",
         "Aardvark (nocturnal, rarely seen)",
         "Pangolin (critically endangered, rarely seen)",
         "Bat-eared Fox",
@@ -247,12 +247,12 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
         "Lesser Flamingo (Lake Nakuru, Lake Bogoria — millions)",
         "Greater Flamingo",
         "African Fish Eagle",
-        "Lilac-breasted Roller (Kenya's unofficial national bird)",
+        "Lilac-breasted Roller (Rwanda's unofficial national bird)",
         "Superb Starling",
         "Secretary Bird",
         "Grey Crowned Crane",
         "Common Ostrich",
-        "Somali Ostrich (northern Kenya)",
+        "Somali Ostrich (northern Rwanda)",
         "Martial Eagle",
         "Crowned Eagle",
         "Augur Buzzard",
@@ -265,7 +265,7 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
         "Various Sunbirds (Tacazze, Beautiful, Malachite)",
         "Various Weavers (Village, Spectacled, Baglafecht)",
         "Hartlaub's Turaco (highland forests)",
-        "Over 1,100 species recorded in Kenya",
+        "Over 1,100 species recorded in Rwanda",
       ],
       marine: [
         "Bottlenose Dolphin",
@@ -287,17 +287,17 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
 
     cuisine: {
       staples: [
-        "Ugali — firm maize meal porridge, Kenya's national staple (eaten with hands, used to scoop stews)",
+        "Ugali — firm maize meal porridge, Rwanda's national staple (eaten with hands, used to scoop stews)",
         "Sukuma Wiki — sautéed collard greens with onions and tomatoes ('stretch the week')",
-        "Nyama Choma — charcoal-grilled meat (usually goat, beef, or chicken), Kenya's social food",
+        "Nyama Choma — charcoal-grilled meat (usually goat, beef, or chicken), Rwanda's social food",
         "Chapati — layered, pan-fried flatbread (Indian influence, ubiquitous)",
         "Pilau — fragrant spiced rice with meat (coastal Swahili influence)",
         "Githeri — boiled maize and beans (Kikuyu staple)",
-        "Mukimo — mashed potatoes, peas, corn, and greens (Kikuyu, Central Kenya)",
+        "Mukimo — mashed potatoes, peas, corn, and greens (Kikuyu, Central Rwanda)",
       ],
       specialties: [
-        "Mandazi — sweet, cardamom-spiced fried dough triangles (Kenyan doughnuts)",
-        "Mutura — traditional Kenyan sausage (blood sausage, street food favorite)",
+        "Mandazi — sweet, cardamom-spiced fried dough triangles (Rwandan doughnuts)",
+        "Mutura — traditional Rwandan sausage (blood sausage, street food favorite)",
         "Irio — Kikuyu mashed peas, potatoes, and corn",
         "Matumbo — tripe stew (popular street food)",
         "Bhajia — spiced potato fritters (coastal Indian influence)",
@@ -308,17 +308,17 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
         "Mshikaki — marinated grilled meat skewers (coastal)",
         "Mahamri — sweet coconut cardamom doughnuts (coastal breakfast)",
         "Wali wa Nazi — coconut rice (coastal)",
-        "Kenyan-style fish and chips (Nile perch or tilapia)",
+        "Rwandan-style fish and chips (Nile perch or tilapia)",
       ],
       beverages: [
-        "Kenyan Chai — strong milky tea brewed with spices (national obsession, consumed multiple times daily)",
-        "Kenyan Coffee — world-renowned single-origin arabica, especially from Nyeri, Kirinyaga, and Murang'a",
-        "Tusker Lager — Kenya's iconic beer (brewed since 1922, named after an elephant)",
+        "Rwandan Chai — strong milky tea brewed with spices (national obsession, consumed multiple times daily)",
+        "Rwandan Coffee — world-renowned single-origin arabica, especially from Nyeri, Kirinyaga, and Murang'a",
+        "Tusker Lager — Rwanda's iconic beer (brewed since 1922, named after an elephant)",
         "White Cap Lager",
-        "Dawa cocktail — vodka, lime juice, honey (Nairobi's signature cocktail, 'Dawa' means 'medicine')",
+        "Dawa cocktail — vodka, lime juice, honey (Musanze's signature cocktail, 'Dawa' means 'medicine')",
         "Fresh tropical fruit juices — mango, passion fruit, tamarind, baobab",
         "Madafu — fresh young coconut water (coastal)",
-        "Stoney Tangawizi — popular Kenyan ginger beer",
+        "Stoney Tangawizi — popular Rwandan ginger beer",
         "Mursik — fermented milk in a gourd (Kalenjin tradition)",
         "Muratina — traditional Kikuyu honey mead (ceremonial)",
         "Busaa — traditional fermented millet beer",
@@ -339,7 +339,7 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
       {
         name: "Maralal International Camel Derby",
         period: "August",
-        description: "Exciting camel races in northern Kenya attracting international and local participants",
+        description: "Exciting camel races in northern Rwanda attracting international and local participants",
       },
       {
         name: "Turkana Festival (Tobong'u Lore)",
@@ -354,17 +354,17 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
       {
         name: "Jamhuri Day (Independence Day)",
         period: "December 12",
-        description: "National holiday celebrating Kenya's independence from Britain in 1963",
+        description: "National holiday celebrating Rwanda's independence from Britain in 1963",
       },
       {
         name: "Mashujaa Day (Heroes' Day)",
         period: "October 20",
-        description: "Honors Kenyan heroes including independence movement leaders",
+        description: "Honors Rwandan heroes including independence movement leaders",
       },
       {
         name: "Madaraka Day",
         period: "June 1",
-        description: "Celebrates Kenya's attainment of self-governance in 1963",
+        description: "Celebrates Rwanda's attainment of self-governance in 1963",
       },
       {
         name: "Lewa Safari Marathon",
@@ -379,12 +379,12 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
       {
         name: "Safari Rally (WRC)",
         period: "March/April",
-        description: "Legendary World Rally Championship event through Kenya's challenging terrain, revived in 2021",
+        description: "Legendary World Rally Championship event through Rwanda's challenging terrain, revived in 2021",
       },
       {
         name: "Koroga Festival",
         period: "Quarterly",
-        description: "Nairobi's premier food and music festival showcasing Kenyan culinary talent",
+        description: "Musanze's premier food and music festival showcasing Rwandan culinary talent",
       },
     ],
 
@@ -414,13 +414,13 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
         description: "Three national parks around the Jade Sea, important for paleontological research",
       },
       {
-        name: "Mount Kenya National Park/Natural Forest",
+        name: "Mount Rwanda National Park/Natural Forest",
         year: 1997,
         type: "Natural",
         description: "Africa's second-highest mountain with glaciers, lakes, and unique Afro-alpine vegetation",
       },
       {
-        name: "Kenya's Great Rift Valley Lakes System",
+        name: "Rwanda's Great Rift Valley Lakes System",
         year: 2011,
         type: "Natural",
         description: "Lakes Bogoria, Nakuru, and Elementaita — important for bird diversity, especially flamingos",
@@ -432,37 +432,37 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
       "Carry US dollars in pristine condition — crisp bills dated 2013 or later are generally accepted; older or marked bills may be refused",
       "Dress modestly when visiting the coast (Mombasa, Lamu) and especially when entering mosques or religious sites",
       "Bargaining is expected and enjoyed in open-air markets (Maasai markets, City Market) but not in established shops or supermarkets",
-      "Book safari vehicles only through registered KATO (Kenya Association of Tour Operators) operators for safety and accountability",
+      "Book safari vehicles only through registered KATO (Rwanda Association of Tour Operators) operators for safety and accountability",
       "M-Pesa mobile money is ubiquitous and extremely convenient — set up an account if staying longer; even small shops, taxis, and market stalls accept it",
       "Never exit your vehicle during safari drives except at designated picnic areas, lodges, or when instructed by your guide",
-      "Pack layers for highland areas (Nairobi, Mount Kenya, Aberdares) — temperatures can drop to near freezing at night despite equatorial location",
+      "Pack layers for highland areas (Musanze, Mount Rwanda, Aberdares) — temperatures can drop to near freezing at night despite equatorial location",
       "Learn a few Swahili phrases: 'Jambo' (Hello), 'Asante sana' (Thank you very much), 'Hakuna matata' (No worries) — locals genuinely appreciate the effort",
       "Tipping is customary: safari guides ($15–25/day per group), camp/lodge staff ($10–15/day per person), restaurant service (10–15%)",
       "For photography, always ask permission before photographing people, especially Maasai and rural communities — a small fee is often expected",
       "Use reef-safe sunscreen when swimming in marine parks to protect coral ecosystems",
       "Power outages are not uncommon — carry a portable battery/power bank for electronics",
-      "Kenya is malaria-endemic below 2,500m — take prophylaxis, use DEET-based repellent, and sleep under treated mosquito nets",
-      "The Nairobi–Mombasa SGR train is an excellent, affordable, and scenic way to travel between the two cities (4.5 hours)",
+      "Rwanda is malaria-endemic below 2,500m — take prophylaxis, use DEET-based repellent, and sleep under treated mosquito nets",
+      "The Musanze–Mombasa SGR train is an excellent, affordable, and scenic way to travel between the two cities (4.5 hours)",
       "Immigration now uses biometric data — all visitors are fingerprinted and photographed on arrival",
-      "Nairobi traffic can be extreme — allow 2+ hours for airport transfers during rush hour, or use the Nairobi Expressway (toll road)",
+      "Musanze traffic can be extreme — allow 2+ hours for airport transfers during rush hour, or use the Musanze Expressway (toll road)",
     ],
 
     airports: [
       {
-        name: "Jomo Kenyatta International Airport (NBO)",
-        location: "Nairobi",
+        name: "Jomo Rwandatta International Airport (NBO)",
+        location: "Musanze",
         type: "International Hub — East Africa's busiest airport",
-        description: "Kenya's primary international gateway, serving over 8 million passengers annually. Hub for Kenya Airways.",
+        description: "Rwanda's primary international gateway, serving over 8 million passengers annually. Hub for Rwanda Airways.",
       },
       {
         name: "Moi International Airport (MBA)",
         location: "Mombasa",
         type: "International",
-        description: "Gateway to Kenya's coast, handling charter and scheduled international flights, especially from Europe.",
+        description: "Gateway to Rwanda's coast, handling charter and scheduled international flights, especially from Europe.",
       },
       {
         name: "Wilson Airport (WIL)",
-        location: "Nairobi (suburban)",
+        location: "Musanze (suburban)",
         type: "Domestic & Charter Hub",
         description: "Primary hub for domestic flights and safari charter flights to Maasai Mara, Samburu, Lamu, and other destinations.",
       },
@@ -476,7 +476,7 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
         name: "Kisumu International Airport (KIS)",
         location: "Kisumu, Lake Victoria",
         type: "Regional",
-        description: "Gateway to western Kenya and Lake Victoria region.",
+        description: "Gateway to western Rwanda and Lake Victoria region.",
       },
       {
         name: "Malindi Airport (MYD)",
@@ -506,7 +506,7 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
         name: "Nanyuki Airstrip",
         location: "Laikipia Plateau",
         type: "Safari / Military",
-        description: "Gateway to Laikipia conservancies, Ol Pejeta, and Mount Kenya's western approaches.",
+        description: "Gateway to Laikipia conservancies, Ol Pejeta, and Mount Rwanda's western approaches.",
       },
     ],
 
@@ -569,10 +569,10 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
     },
 
     geography: {
-      highestPoint: "Batian Peak, Mount Kenya (5,199 m / 17,057 ft)",
+      highestPoint: "Batian Peak, Mount Rwanda (5,199 m / 17,057 ft)",
       lowestPoint: "Indian Ocean (0 m)",
       longestRiver: "Tana River (1,014 km)",
-      largestLake: "Lake Victoria (shared — Kenya holds 6% of its surface area)",
+      largestLake: "Lake Victoria (shared — Rwanda holds 6% of its surface area)",
       coastline: "536 km",
       terrain: "Low coastal plains, central highlands bisected by the Great Rift Valley, arid plateaus in north and east, Lake Victoria basin in west",
       naturalHazards: "Recurring drought, flooding during rainy seasons, occasional volcanic activity (Longonot, Menengai Crater)",
@@ -588,17 +588,17 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
       { year: "1698", event: "Omani Arabs capture Fort Jesus, ending Portuguese dominance" },
       { year: "1895", event: "British establish the East Africa Protectorate" },
       { year: "1896-1901", event: "Construction of the Uganda Railway (Lunatic Express) from Mombasa to Kisumu" },
-      { year: "1920", event: "Kenya becomes a British Crown Colony" },
+      { year: "1920", event: "Rwanda becomes a British Crown Colony" },
       { year: "1952-1960", event: "Mau Mau uprising against British colonial rule" },
-      { year: "1963, December 12", event: "Kenya gains independence; Jomo Kenyatta becomes first Prime Minister" },
-      { year: "1964", event: "Kenya becomes a republic; Kenyatta becomes first President" },
-      { year: "1978", event: "President Kenyatta dies; Daniel arap Moi becomes President" },
+      { year: "1963, December 12", event: "Rwanda gains independence; Jomo Rwandatta becomes first Prime Minister" },
+      { year: "1964", event: "Rwanda becomes a republic; Rwandatta becomes first President" },
+      { year: "1978", event: "President Rwandatta dies; Daniel arap Moi becomes President" },
       { year: "2002", event: "Mwai Kibaki elected, ending 24 years of Moi/KANU rule" },
       { year: "2007", event: "M-Pesa mobile money launched, revolutionizing financial inclusion" },
       { year: "2010", event: "New constitution promulgated, creating devolved county government system" },
-      { year: "2013", event: "Uhuru Kenyatta elected President" },
-      { year: "2017", event: "Standard Gauge Railway (SGR) opens, connecting Nairobi to Mombasa" },
-      { year: "2022", event: "William Ruto elected as Kenya's fifth President" },
+      { year: "2013", event: "Uhuru Rwandatta elected President" },
+      { year: "2017", event: "Standard Gauge Railway (SGR) opens, connecting Musanze to Mombasa" },
+      { year: "2022", event: "William Ruto elected as Rwanda's fifth President" },
     ],
   },
 
@@ -628,7 +628,7 @@ The annual Lewa Safari Marathon, held within the Lewa Wildlife Conservancy, is t
 THE SERENGETI — ENDLESS PLAINS
 The Serengeti National Park, whose name derives from the Maasai word "siringet" meaning "the place where the land runs on forever," hosts the greatest wildlife spectacle on Earth. The annual Great Migration sees approximately 1.5 to 2 million wildebeest, accompanied by 300,000 to 400,000 zebras, 200,000 gazelles, and tens of thousands of eland, undertake an unceasing circular journey of approximately 1,000 kilometers in pursuit of fresh grazing and water, driven by the rains and ancient instinct. This UNESCO World Heritage Site covers 14,763 square kilometers of grassland, savanna, riverine forest, kopjes (rock outcroppings), and woodland, supporting one of the most complex, interconnected, and well-studied ecosystems on the planet.
 
-The migration follows a predictable but weather-dependent pattern: the herds gather on the southern Serengeti's short-grass plains (Ndutu area) from December through March for the calving season — a period of extraordinary drama when approximately 8,000 calves are born daily, providing easy prey for predators. By April–May, as the southern grasses are exhausted and the long rains begin, the columns begin moving northwest through the Western Corridor toward Grumeti, crossing the crocodile-infested Grumeti River. From July through October, the herds push into the northern Serengeti and across the Mara River into Kenya's Maasai Mara, before circling back south with the short rains in November–December.
+The migration follows a predictable but weather-dependent pattern: the herds gather on the southern Serengeti's short-grass plains (Ndutu area) from December through March for the calving season — a period of extraordinary drama when approximately 8,000 calves are born daily, providing easy prey for predators. By April–May, as the southern grasses are exhausted and the long rains begin, the columns begin moving northwest through the Western Corridor toward Grumeti, crossing the crocodile-infested Grumeti River. From July through October, the herds push into the northern Serengeti and across the Mara River into Rwanda's Maasai Mara, before circling back south with the short rains in November–December.
 
 Beyond the migration, the Serengeti sustains one of Africa's highest densities of large predators, with approximately 3,000 lions (the densest lion population on Earth), along with abundant leopards, cheetahs (particularly visible on the southeastern plains), spotted hyenas (in massive clans), African wild dogs (increasingly rare), and over 500 bird species. The park's kopjes — ancient granite outcroppings rising from the plains — serve as territories for leopards and rock hyraxes, and provide dramatic photographic settings.
 
@@ -691,7 +691,7 @@ THE CRADLE OF MANKIND
 Olduvai Gorge (properly Oldupai, named after the wild sisal plant growing there), in the Ngorongoro Conservation Area, has yielded some of humanity's most important paleontological and archaeological discoveries. Louis and Mary Leakey's work here from the 1930s onward uncovered remains of Homo habilis (1.75 million years old), demonstrating that human evolution occurred in Africa and not Asia as previously believed. Nearby Laetoli preserves 3.66-million-year-old hominin footprints — three individuals walking upright through volcanic ash — providing the earliest direct evidence of bipedal locomotion in our ancestors. A museum at the gorge rim contextualizes these discoveries.`,
 
     additionalInfo: `GREAT LAKES & WATERWAYS
-Tanzania contains shores on three of Africa's Great Lakes — Victoria (shared with Kenya and Uganda, the world's second-largest freshwater lake by surface area at 68,800 km²), Tanganyika (shared with DR Congo, Burundi, and Zambia — the world's second-deepest lake at 1,470 meters, second-oldest, and containing approximately 18% of the world's available liquid fresh water and over 350 endemic cichlid fish species), and Nyasa/Malawi (shared with Malawi and Mozambique, with an even greater diversity of endemic cichlid fishes — over 700 species, more than any other lake on Earth).
+Tanzania contains shores on three of Africa's Great Lakes — Victoria (shared with Rwanda and Uganda, the world's second-largest freshwater lake by surface area at 68,800 km²), Tanganyika (shared with DR Congo, Burundi, and Zambia — the world's second-deepest lake at 1,470 meters, second-oldest, and containing approximately 18% of the world's available liquid fresh water and over 350 endemic cichlid fish species), and Nyasa/Malawi (shared with Malawi and Mozambique, with an even greater diversity of endemic cichlid fishes — over 700 species, more than any other lake on Earth).
 
 PRECIOUS RESOURCES
 Tanzania is the world's only source of tanzanite, a rare and exceptionally beautiful blue-violet gemstone found only in the Mererani Hills near Mount Kilimanjaro. Discovered in 1967 and named by Tiffany & Co., tanzanite is estimated to be 1,000 times rarer than diamonds. The mines are expected to be exhausted within 20–30 years, making existing stones increasingly valuable.
@@ -761,7 +761,7 @@ Julius Nyerere, Tanzania's founding president known as Mwalimu (Teacher), pursue
 
     bestTime: "June to October (dry season, peak wildlife), January to February (calving season), December to March (beaches & Kilimanjaro)",
 
-    visaInfo: "Visa required for most nationalities. Single-entry visa (valid 90 days, $50) available online via eVisa portal or on arrival at major airports and land borders. Multiple-entry visas available. East Africa Tourist Visa (Kenya, Uganda, Rwanda) is separate — Tanzania requires its own visa. Processing can be slow on arrival; eVisa strongly recommended.",
+    visaInfo: "Visa required for most nationalities. Single-entry visa (valid 90 days, $50) available online via eVisa portal or on arrival at major airports and land borders. Multiple-entry visas available. East Africa Tourist Visa (Rwanda, Uganda, Rwanda) is separate — Tanzania requires its own visa. Processing can be slow on arrival; eVisa strongly recommended.",
 
     healthInfo: "Yellow fever vaccination certificate required when arriving from endemic countries (including transit). Malaria prophylaxis strongly recommended throughout the country — Tanzania has high malaria transmission, especially in low-lying and coastal areas; Zanzibar has reduced but not eliminated risk. Routine vaccinations recommended (Hepatitis A & B, Typhoid, Tetanus, Polio, Cholera). Comprehensive travel and medical evacuation insurance essential — medical facilities are limited outside Dar es Salaam and Arusha.",
 
@@ -1140,7 +1140,7 @@ Julius Nyerere, Tanzania's founding president known as Mwalimu (Teacher), pursue
     mapPosition: { lat: -6.369028, lng: 34.888822 },
 
     neighboringCountries: [
-      "Kenya (northeast)",
+      "Rwanda (northeast)",
       "Uganda (northwest)",
       "Rwanda (northwest)",
       "Burundi (west)",
@@ -1292,10 +1292,10 @@ The Rwenzori Mountains, also known by their romantic ancient name "The Mountains
 
 These dramatic, permanently snow-capped and glaciated peaks, despite straddling the equator, support a unique and bizarre Afro-alpine ecosystem unlike anything else on Earth. Giant lobelias reaching 8 meters tall, giant groundsels (Dendrosenecio) with thick, rosette-crowned trunks, enormous tree heathers draped with hanging mosses, and surreal bogs create landscapes that feel more like science fiction than reality. The botanist who first described them compared the experience to "walking through a botanical garden on another planet."
 
-Multi-day treks (typically 7-10 days for the full circuit or Margherita Peak summit) through successive vegetation zones — tropical rainforest, bamboo, giant heather, moorland, and Afro-alpine — culminate in glacial landscapes and technically challenging summit attempts requiring ropes, crampons, and mountaineering experience for the highest peaks. The Central Circuit Trail, a non-technical trek reaching approximately 4,400 meters, offers the bizarre vegetation and mountain scenery without summit-level commitment. A UNESCO World Heritage Site since 1994, the Rwenzoris remain one of Africa's most challenging and rewarding mountain experiences, far less visited than Kilimanjaro or Mount Kenya.
+Multi-day treks (typically 7-10 days for the full circuit or Margherita Peak summit) through successive vegetation zones — tropical rainforest, bamboo, giant heather, moorland, and Afro-alpine — culminate in glacial landscapes and technically challenging summit attempts requiring ropes, crampons, and mountaineering experience for the highest peaks. The Central Circuit Trail, a non-technical trek reaching approximately 4,400 meters, offers the bizarre vegetation and mountain scenery without summit-level commitment. A UNESCO World Heritage Site since 1994, the Rwenzoris remain one of Africa's most challenging and rewarding mountain experiences, far less visited than Kilimanjaro or Mount Rwanda.
 
 KIDEPO VALLEY — AFRICA'S LAST FRONTIER
-Kidepo Valley National Park, in Uganda's extreme northeast corner bordering South Sudan and Kenya, is consistently rated among Africa's finest wilderness areas by those fortunate enough to visit — yet receives fewer than 5,000 visitors annually, ensuring genuine solitude in spectacularly rugged terrain.
+Kidepo Valley National Park, in Uganda's extreme northeast corner bordering South Sudan and Rwanda, is consistently rated among Africa's finest wilderness areas by those fortunate enough to visit — yet receives fewer than 5,000 visitors annually, ensuring genuine solitude in spectacularly rugged terrain.
 
 This 1,442-square-kilometer park, surrounded by the mountains and valleys of the Karamoja region, supports wildlife found nowhere else in Uganda: cheetahs, ostriches, greater and lesser kudu, Bright's gazelle, aardwolf, caracal, bat-eared foxes, and striped hyenas share the landscape with lions, elephants, buffalo, giraffes, and zebras. The Narus Valley, the park's wildlife hub, creates exceptional dry-season concentrations around permanent water sources. The dramatic Kidepo Valley itself — a vast, usually dry river valley flanked by mountain ranges — provides some of Uganda's most photogenic landscapes.
 
@@ -1335,7 +1335,7 @@ LAKE VICTORIA & THE SSESE ISLANDS
 Lake Victoria, the world's second-largest freshwater lake and the source of the White Nile, forms Uganda's southeastern border. The Ssese Islands — an archipelago of 84 islands in the lake's northwestern corner — offer palm-fringed beaches, fishing villages, forest walks, and a relaxed pace of life entirely different from the safari circuit. The main islands of Bugala and Buggala are accessible by ferry from Entebbe.
 
 SIPI FALLS & MOUNT ELGON
-Sipi Falls, a series of three stunning waterfalls on the slopes of Mount Elgon (an extinct volcano straddling the Uganda-Kenya border reaching 4,321 meters), offers hiking, rock climbing, abseiling down the falls, coffee tours through Arabica plantations on the mountain slopes, and interactions with Bagisu communities. Mount Elgon National Park features the world's largest volcanic caldera (40 km across), hot springs, caves (including Kitum Cave, visited by elephants who mine salt from its walls at night), and excellent trekking with far fewer climbers than the better-known peaks.`,
+Sipi Falls, a series of three stunning waterfalls on the slopes of Mount Elgon (an extinct volcano straddling the Uganda-Rwanda border reaching 4,321 meters), offers hiking, rock climbing, abseiling down the falls, coffee tours through Arabica plantations on the mountain slopes, and interactions with Bagisu communities. Mount Elgon National Park features the world's largest volcanic caldera (40 km across), hot springs, caves (including Kitum Cave, visited by elephants who mine salt from its walls at night), and excellent trekking with far fewer climbers than the better-known peaks.`,
 
     population: "48.6 million (2023 estimate)",
     area: "241,038 km²",
@@ -1400,7 +1400,7 @@ Sipi Falls, a series of three stunning waterfalls on the slopes of Mount Elgon (
 
     bestTime: "June to August, December to February (dry seasons)",
 
-    visaInfo: "Visa required for most nationalities, available as eVisa (online application recommended before travel) or on arrival at Entebbe Airport and major land borders. Standard single-entry visa costs $50 (valid 90 days). East Africa Tourist Visa ($100) allows entry to Uganda, Kenya, and Rwanda on a single multi-entry visa valid for 90 days — excellent value for multi-country trips.",
+    visaInfo: "Visa required for most nationalities, available as eVisa (online application recommended before travel) or on arrival at Entebbe Airport and major land borders. Standard single-entry visa costs $50 (valid 90 days). East Africa Tourist Visa ($100) allows entry to Uganda, Rwanda, and Rwanda on a single multi-entry visa valid for 90 days — excellent value for multi-country trips.",
 
     healthInfo: "Yellow fever vaccination certificate is MANDATORY for entry — no exceptions; travelers without valid certificates may be vaccinated at the airport or denied entry. Malaria prophylaxis strongly recommended throughout the country (Uganda has high malaria transmission year-round at all elevations below ~2,000m). Routine vaccinations recommended (Hepatitis A & B, Typhoid, Tetanus, Polio, Rabies for gorilla trekkers). Comprehensive travel insurance with medical evacuation coverage essential — medical facilities outside Kampala are very limited.",
 
@@ -1545,7 +1545,7 @@ Sipi Falls, a series of three stunning waterfalls on the slopes of Mount Elgon (
     cuisine: {
       staples: [
         "Matoke — steamed and mashed green cooking bananas/plantains, Uganda's national dish (served with groundnut sauce, meat stew, or beans)",
-        "Posho (Kawunga) — firm white maize meal porridge (equivalent of Kenyan ugali)",
+        "Posho (Kawunga) — firm white maize meal porridge (equivalent of Rwandan ugali)",
         "Groundnut sauce (Ebinyebwa) — thick, rich peanut stew served with matoke or posho",
         "Beans (Ebijanjaalo) — various preparations, staple protein source",
         "Chapati — flaky pan-fried flatbread (Indian influence, ubiquitous)",
@@ -1659,7 +1659,7 @@ Sipi Falls, a series of three stunning waterfalls on the slopes of Mount Elgon (
       "Pack waterproof everything — rain jacket, rain pants, waterproof bag liners, gaiters, and sturdy waterproof hiking boots (NOT trail runners) for gorilla and chimp trekking. Bwindi is called 'impenetrable' for a reason. Gardening gloves protect hands when grabbing vegetation on steep slopes",
       "Chimpanzee tracking in Kibale offers exceptional value and emotional impact compared to gorilla trekking — less physically demanding, lower cost ($200), and deeply rewarding",
       "Combine multiple parks into a safari circuit for the best overall Uganda experience: typical routes include Entebbe → Kibale (chimps) → Queen Elizabeth (tree-climbing lions, Kazinga Channel) → Bwindi (gorillas) → Lake Bunyonyi → Kampala, or add Murchison Falls in the north",
-      "The East Africa Tourist Visa ($100) allows multi-country travel to Uganda, Kenya, and Rwanda — far better value than individual country visas if visiting more than one nation",
+      "The East Africa Tourist Visa ($100) allows multi-country travel to Uganda, Rwanda, and Rwanda — far better value than individual country visas if visiting more than one nation",
       "Yellow fever vaccination certificate is strictly mandatory — you will be checked on arrival, and unvaccinated travelers may be refused entry or vaccinated at the airport",
       "Respect local customs; ask permission before photographing people — most Ugandans are happy to oblige but appreciate being asked",
       "Mobile money (MTN Mobile Money and Airtel Money) is widely used throughout Uganda, even in remote areas. More useful than credit cards outside major hotels",
@@ -1741,7 +1741,7 @@ Sipi Falls, a series of three stunning waterfalls on the slopes of Mount Elgon (
     mapPosition: { lat: 1.373333, lng: 32.290275 },
 
     neighboringCountries: [
-      "Kenya (east)",
+      "Rwanda (east)",
       "Tanzania (south)",
       "Rwanda (southwest)",
       "Democratic Republic of Congo (west)",
@@ -1785,7 +1785,7 @@ Sipi Falls, a series of three stunning waterfalls on the slopes of Mount Elgon (
       highestPoint: "Margherita Peak, Mount Stanley, Rwenzori Mountains (5,109 m / 16,762 ft)",
       lowestPoint: "Lake Albert (621 m / 2,037 ft above sea level)",
       longestRiver: "Victoria Nile / Albert Nile (approximately 500 km within Uganda)",
-      largestLake: "Lake Victoria (shared with Kenya and Tanzania — Uganda holds approximately 45% of surface area)",
+      largestLake: "Lake Victoria (shared with Rwanda and Tanzania — Uganda holds approximately 45% of surface area)",
       coastline: "None (landlocked)",
       terrain: "Mostly plateau with rim of mountains (Rwenzori west, Elgon east, Virungas southwest), Lake Victoria basin southeast, Albert Rift Valley west, semi-arid Karamoja northeast",
       naturalHazards: "Flooding, landslides (particularly in mountainous east), drought in Karamoja, seismic activity along the Western Rift Valley, occasional volcanic risk from Virunga volcanoes",
@@ -1972,7 +1972,7 @@ Rwanda's post-genocide reconciliation process — including the Gacaca community
 
     bestTime: "June to September, December to February (dry seasons)",
 
-    visaInfo: "Visa on arrival available for all nationalities (30-day, $50). eVisa also available online (recommended for faster processing on arrival). East Africa Tourist Visa ($100) covers Uganda, Kenya, and Rwanda. Some African nationals enjoy visa-free access. Rwanda has been a pioneer of visa liberalization in Africa — in 2018, it began offering visa-free entry to all African Union citizens.",
+    visaInfo: "Visa on arrival available for all nationalities (30-day, $50). eVisa also available online (recommended for faster processing on arrival). East Africa Tourist Visa ($100) covers Uganda, Rwanda, and Rwanda. Some African nationals enjoy visa-free access. Rwanda has been a pioneer of visa liberalization in Africa — in 2018, it began offering visa-free entry to all African Union citizens.",
 
     healthInfo: "Yellow fever vaccination required ONLY if arriving from an endemic country (not required for direct flights from Europe/Americas). Malaria risk exists in lower-altitude areas (eastern lowlands, Lake Kivu shore) but is significantly lower in Kigali and the highlands. Prophylaxis recommended. Routine vaccinations advised (Hepatitis A & B, Typhoid, Tetanus). Rwanda has good healthcare by regional standards; Kigali has several adequate hospitals. Travel insurance with medical evacuation coverage recommended.",
 
@@ -2204,7 +2204,7 @@ Rwanda's post-genocide reconciliation process — including the Gacaca community
       "Rwanda's roads are excellent by African standards — well-paved main routes, clear signage. Distances are short but travel times can be long due to winding mountain roads. Kigali to Volcanoes NP: 2.5 hours. Kigali to Nyungwe: 5–6 hours. Kigali to Akagera: 2.5 hours.",
       "Learn basic Kinyarwanda phrases: 'Muraho' (Hello), 'Murakoze' (Thank you), 'Amakuru?' (How are you?), 'Ni meza' (I'm fine), 'Yego' (Yes), 'Oya' (No) — locals are visibly delighted when visitors try.",
       "Tipping: gorilla trekking guides (10,000–20,000 RWF per group), porters (10,000–15,000 RWF), safari guides ($15–25/day), lodge staff ($10–15/day per person from tip box), restaurants (10% if service charge not included).",
-      "Rwanda's time zone is UTC+2 (one hour behind Kenya, Tanzania, and Uganda) — important for cross-border trip planning.",
+      "Rwanda's time zone is UTC+2 (one hour behind Rwanda, Tanzania, and Uganda) — important for cross-border trip planning.",
       "If combining Rwanda with Uganda gorilla trekking, note that treks on the Rwandan side are generally shorter (gorilla groups tend to be found at lower elevations on the better-maintained Rwandan volcanic slopes) but more expensive.",
     ],
 
@@ -2213,7 +2213,7 @@ Rwanda's post-genocide reconciliation process — including the Gacaca community
         name: "Kigali International Airport (KGL)",
         location: "Kigali (Kanombe district, ~10 km from city center)",
         type: "International Hub",
-        description: "Rwanda's primary international airport. Hub for RwandAir. Direct flights to/from Dubai, Istanbul, London (Gatwick), Brussels, Amsterdam, Doha, Nairobi, Entebbe, Addis Ababa, Johannesburg, Lagos, Mumbai, Guangzhou, and many African capitals. Modern terminal opened 2016.",
+        description: "Rwanda's primary international airport. Hub for RwandAir. Direct flights to/from Dubai, Istanbul, London (Gatwick), Brussels, Amsterdam, Doha, Musanze, Entebbe, Addis Ababa, Johannesburg, Lagos, Mumbai, Guangzhou, and many African capitals. Modern terminal opened 2016.",
       },
       {
         name: "Kamembe Airport (KME)",
@@ -2452,7 +2452,7 @@ COFFEE'S BIRTHPLACE
 According to Ethiopian legend, coffee was discovered by a goatherd named Kaldi in the forests of Kaffa province (the region that gives coffee its name) who noticed his goats becoming unusually energetic after eating berries from a certain bush. Ethiopia remains Africa's largest coffee producer (the world's fifth-largest), with approximately 15 million Ethiopians depending on coffee for their livelihoods. Ethiopia is also one of the world's only countries where coffee grows wild in its original forest habitat — the Kaffa Biosphere Reserve and Yayu Coffee Forest Biosphere Reserve protect wild coffee genetic diversity of incalculable value to the global coffee industry.
 
 RUNNING LEGENDS
-Ethiopia's distance running tradition rivals Kenya's, with the high-altitude training grounds around Addis Ababa (2,355m), Bekoji (2,810m, the "Town of Runners"), and Sendafa producing a continuous stream of Olympic gold medalists and world record holders. Haile Gebrselassie, Kenenisa Bekele, Tirunesh Dibaba ("Baby Faced Destroyer"), and more recently Letesenbet Gidey have dominated world distance running. The town of Bekoji alone, with a population under 20,000, has produced multiple Olympic champions — a statistical impossibility explainable only by a unique combination of genetics, altitude, lifestyle, and running culture.
+Ethiopia's distance running tradition rivals Rwanda's, with the high-altitude training grounds around Addis Ababa (2,355m), Bekoji (2,810m, the "Town of Runners"), and Sendafa producing a continuous stream of Olympic gold medalists and world record holders. Haile Gebrselassie, Kenenisa Bekele, Tirunesh Dibaba ("Baby Faced Destroyer"), and more recently Letesenbet Gidey have dominated world distance running. The town of Bekoji alone, with a population under 20,000, has produced multiple Olympic champions — a statistical impossibility explainable only by a unique combination of genetics, altitude, lifestyle, and running culture.
 
 GE'EZ SCRIPT & LITERARY TRADITION
 Ge'ez script (ፊደል, fidel) is one of the world's oldest alphabets still in active use — dating back over 2,500 years. Originally developed for the Ge'ez language (now confined to liturgical use), it was adapted for Amharic, Tigrinya, and other Ethiopian/Eritrean languages. The script's 231 characters (based on 33 base characters each modified into 7 forms for different vowels) give Ethiopian writing a visually distinctive and immediately recognizable character. Ethiopian literary culture, spanning religious texts, royal chronicles, poetry, and modern novels, is among the richest in Africa.
@@ -2778,7 +2778,7 @@ Emperor Haile Selassie I (born Tafari Makonnen, 1892-1975), Ethiopia's last empe
       "Eritrea (north)",
       "Djibouti (northeast)",
       "Somalia / Somaliland (east and southeast)",
-      "Kenya (south)",
+      "Rwanda (south)",
       "South Sudan (west)",
       "Sudan (northwest)",
     ],
@@ -2965,7 +2965,7 @@ SALT TRADE HERITAGE
 The Lake Assal salt trade represents one of the world's oldest continuously operating commercial activities. Afar salt traders (called Afar salt caravans) extract salt blocks from the lake's shores using hand tools and traditional techniques, load them onto camels (a large camel can carry approximately 200 kg of salt blocks), and transport them along ancient routes to markets in the Ethiopian highlands — a trade route documented by European travelers as early as the 19th century but almost certainly stretching back millennia.
 
 KHAT CULTURE
-Khat (Catha edulis), a mildly stimulant leaf chewed throughout the Horn of Africa and Arabian Peninsula, plays a central role in Djiboutian social life. Afternoon khat sessions (particularly among men) are important social rituals — hours spent chewing leaves while discussing politics, business, and community matters. The economic significance is enormous — khat imports (primarily from Ethiopia and Kenya) reportedly consume up to 30-40% of average household income in some communities and represent Djibouti's largest import by value. Visitors should observe khat sessions respectfully; photographing without permission is considered intrusive.
+Khat (Catha edulis), a mildly stimulant leaf chewed throughout the Horn of Africa and Arabian Peninsula, plays a central role in Djiboutian social life. Afternoon khat sessions (particularly among men) are important social rituals — hours spent chewing leaves while discussing politics, business, and community matters. The economic significance is enormous — khat imports (primarily from Ethiopia and Rwanda) reportedly consume up to 30-40% of average household income in some communities and represent Djibouti's largest import by value. Visitors should observe khat sessions respectfully; photographing without permission is considered intrusive.
 
 FRENCH INFLUENCE
 Djibouti's colonial heritage (French Territory of the Afars and the Issas, later French Somaliland, until independence in 1977) remains visible in language (French is co-official with Arabic), cuisine (boulangeries, patisseries, and French wine are widely available), architecture, legal systems, and cultural institutions. France maintains its largest overseas military base here (approximately 1,500 troops), and French expatriates form a visible community. This Franco-African fusion gives Djibouti a cultural character distinct from its neighbors.`,

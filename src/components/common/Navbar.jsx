@@ -19,6 +19,7 @@ import { useApp } from "../../context/AppContext";
 import { useUserAuth } from "../../context/UserAuthContext";
 import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 import { getAllDestinations } from "../../data/destinations";
+import { countries as staticCountries } from "../../data/countries";
 import { preloadRoute } from "../../utils/routeUtils";
 import { useCountries } from "../../hooks/useCountries";
 
@@ -62,16 +63,26 @@ const Navbar = () => {
       { name: "All Destinations", path: "/destinations", isOverview: true },
     ];
 
-    if (backendCountries && backendCountries.length > 0) {
-      backendCountries.forEach((country) => {
-        items.push({
-          name: country.name,
-          flag: country.flagUrl || country.flag_url || country.flag || "",
-          info: country.tagline || country.region || "",
-          path: `/country/${country.slug || country.name.toLowerCase()}`,
-        });
+    const sourceCountries =
+      backendCountries && backendCountries.length > 0
+        ? backendCountries
+        : staticCountries.slice(0, 8);
+
+    sourceCountries.forEach((country) => {
+      items.push({
+        name: country.name,
+        flag: country.flagUrl || country.flag_url || country.flag || "",
+        info:
+          country.tagline ||
+          country.region ||
+          country.capital ||
+          country.continent ||
+          country.subRegion ||
+          country.shortDescription ||
+          (country.description ? `${country.description.slice(0, 60)}…` : ""),
+        path: `/country/${country.slug || country.id || country.name.toLowerCase()}`,
       });
-    }
+    });
 
     return items;
   }, [backendCountries]);
@@ -168,99 +179,103 @@ const Navbar = () => {
     if (searchOpen) setTimeout(() => searchInputRef.current?.focus(), 100);
   }, [searchOpen]);
 
-  useEffect(() => {
-    const q = searchValue.trim();
-    latestSearchRef.current = q;
+   useEffect(() => {
+     const q = searchValue.trim();
+     latestSearchRef.current = q;
 
-    if (searchAbortRef.current) {
-      searchAbortRef.current.abort();
-      searchAbortRef.current = null;
-    }
+     if (searchAbortRef.current) {
+       searchAbortRef.current.abort();
+       searchAbortRef.current = null;
+     }
 
-    if (q.length < 2) {
-      setSearchResults([]);
-      setIsSearching(false);
-      return;
-    }
+     if (q.length < 2) {
+       setSearchResults([]);
+       setIsSearching(false);
+       return;
+     }
 
-    const normalizeString = (value) => {
-      if (typeof value === "string") return value;
-      if (!value) return "";
-      if (typeof value === "object") {
-        return (
-          value.name || value.countryName || value.location || value.slug || ""
-        );
-      }
-      return String(value);
-    };
+     const normalizeString = (value) => {
+       if (typeof value === "string") return value;
+       if (!value) return "";
+       if (typeof value === "object") {
+         return (
+           value.name || value.countryName || value.location || value.slug || ""
+         );
+       }
+       return String(value);
+     };
 
-    const normalizeKey = (item) =>
-      item?._id || item?.id || item?.slug || item?.name;
+     const normalizeKey = (item) =>
+       item?._id || item?.id || item?.slug || item?.name;
 
-    const toResult = (item) => ({
-      id: item?._id || item?.id || item?.slug,
-      slug: item?.slug || item?.id,
-      name: item?.name || item?.title || "Destination",
-      country: normalizeString(item?.country || item?.countryName || item?.location),
-      category: normalizeString(item?.category || item?.type || "Destination"),
-      heroImage: item?.heroImage || item?.image || item?.images?.[0] || "",
-    });
+     const toResult = (item) => ({
+       id: item?.id || item?._id || item?.slug,
+       slug: item?.slug || item?.id,
+       name: item?.title || item?.name || item?.category || "Result",
+       country: normalizeString(item?.country || item?.countryName || item?.location),
+       category: normalizeString(item?.category || item?.type || "Destination"),
+       heroImage: item?.image || item?.heroImage || item?.images?.[0] || "",
+       description: item?.description,
+       price: item?.price,
+       duration: item?.duration,
+     });
 
-    const qLower = q.toLowerCase();
-    const localMatches = localDestinations
-      .filter((d) => {
-        const name = (d?.name || "").toLowerCase();
-        const desc = (d?.description || "").toLowerCase();
-        const country = normalizeString(d?.country).toLowerCase();
-        const loc = (d?.location || "").toLowerCase();
-        return (
-          name.includes(qLower) ||
-          desc.includes(qLower) ||
-          country.includes(qLower) ||
-          loc.includes(qLower)
-        );
-      })
-      .sort((a, b) => {
-        const an = (a?.name || "").toLowerCase();
-        const bn = (b?.name || "").toLowerCase();
-        const aStarts = an.startsWith(qLower) ? 1 : 0;
-        const bStarts = bn.startsWith(qLower) ? 1 : 0;
-        if (aStarts !== bStarts) return bStarts - aStarts;
-        return an.localeCompare(bn);
-      })
-      .slice(0, 6)
-      .map(toResult);
+     const qLower = q.toLowerCase();
+     const localMatches = localDestinations
+       .filter((d) => {
+         const name = (d?.name || "").toLowerCase();
+         const desc = (d?.description || "").toLowerCase();
+         const country = normalizeString(d?.country).toLowerCase();
+         const loc = (d?.location || "").toLowerCase();
+         return (
+           name.includes(qLower) ||
+           desc.includes(qLower) ||
+           country.includes(qLower) ||
+           loc.includes(qLower)
+         );
+       })
+       .sort((a, b) => {
+         const an = (a?.name || "").toLowerCase();
+         const bn = (b?.name || "").toLowerCase();
+         const aStarts = an.startsWith(qLower) ? 1 : 0;
+         const bStarts = bn.startsWith(qLower) ? 1 : 0;
+         if (aStarts !== bStarts) return bStarts - aStarts;
+         return an.localeCompare(bn);
+       })
+       .slice(0, 6)
+       .map(toResult);
 
-    setSearchResults(localMatches);
+     setSearchResults(localMatches);
 
-    const id = setTimeout(async () => {
-      setIsSearching(true);
-      const controller = new AbortController();
-      searchAbortRef.current = controller;
+     const id = setTimeout(async () => {
+       setIsSearching(true);
+       const controller = new AbortController();
+       searchAbortRef.current = controller;
 
-      try {
-        const res = await fetch(
-          `${API_URL}/destinations?search=${encodeURIComponent(q)}&limit=5`,
-          { signal: controller.signal },
-        );
-        const data = await res.json();
-        if (latestSearchRef.current !== q) return;
+       try {
+         const res = await fetch(
+           `${API_URL}/search?q=${encodeURIComponent(q)}&limit=10`,
+           { signal: controller.signal }
+         );
+         const data = await res.json();
+         if (latestSearchRef.current !== q) return;
 
-        const remoteItems = (data?.data || data || []).map(toResult);
+         const remoteItems = (data?.data || []).map(toResult);
 
-        const merged = new Map();
-        for (const item of localMatches) merged.set(normalizeKey(item), item);
-        for (const item of remoteItems) merged.set(normalizeKey(item), item);
+         const merged = new Map();
+         for (const item of localMatches) merged.set(normalizeKey(item), item);
+         for (const item of remoteItems) merged.set(normalizeKey(item), item);
 
-        setSearchResults(Array.from(merged.values()).slice(0, 8));
-      } catch {
-      } finally {
-        if (latestSearchRef.current === q) setIsSearching(false);
-      }
-    }, 300);
+         setSearchResults(Array.from(merged.values()).slice(0, 10));
+       } catch {
+         // Ignore abort errors
+       } finally {
+         if (latestSearchRef.current === q) setIsSearching(false);
+       }
+     }, 300);
 
-    return () => clearTimeout(id);
-  }, [searchValue, API_URL, localDestinations]);
+     return () => clearTimeout(id);
+   }, [searchValue, API_URL, localDestinations]);
 
   useEffect(() => {
     const fn = (e) => e.key === "Escape" && closeAll();
@@ -634,31 +649,33 @@ const Navbar = () => {
             )}
             {searchResults.length > 0 && (
               <div className="srch__list">
-                {searchResults.map((r, ri) => (
-                  <Link
-                    key={r.id || r._id}
-                    to={`/destination/${r.slug || r.id}`}
-                    className="srch__item"
-                    style={{ "--ri": ri }}
-                    onClick={() => setSearchOpen(false)}
-                  >
-                    <img
-                      src={
-                        r.heroImage ||
-                        r.images?.[0] ||
-                        "https://placehold.co/80x80/059669/ffffff?text=Altuvera"
-                      }
-                      alt=""
-                      className="srch__thumb"
-                    />
-                    <div>
-                      <p className="srch__name">{r.name}</p>
-                      <p className="srch__meta">
-                        {r.country} · {r.category || "Destination"}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
+                 {searchResults.map((r, ri) => (
+                   <Link
+                     key={r.id || r._id}
+                     to={`/destination/${r.slug || r.id}`}
+                     className="srch__item"
+                     style={{ "--ri": ri }}
+                     onClick={() => setSearchOpen(false)}
+                   >
+                     <img
+                       src={
+                         r.heroImage ||
+                         r.images?.[0] ||
+                         "https://placehold.co/80x80/059669/ffffff?text=Altuvera"
+                       }
+                       alt=""
+                       className="srch__thumb"
+                     />
+                     <div>
+                       <p className="srch__name">{r.name}</p>
+                       <p className="srch__meta">
+                         {r.country} · {r.category || "Destination"}
+                         {r.duration && <span> · {r.duration}</span>}
+                         {r.price && <span> · From ${r.price}</span>}
+                       </p>
+                     </div>
+                   </Link>
+                 ))}
                 <Link
                   to={`/destinations?search=${encodeURIComponent(searchValue)}`}
                   className="srch__all"

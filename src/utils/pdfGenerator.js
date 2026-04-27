@@ -555,7 +555,7 @@ export const generateBookingConfirmation = (bookingData = {}) => {
     '✓ Final payment due 30 days prior to departure date',
     '✓ Standard cancellation policy applies (see Terms & Conditions)',
     '✓ Travel insurance is highly recommended',
-    '✓ Contact us at hello@altuvera.com or +254-XXX-XXXX for assistance'
+    '✓ Contact us at altuverasafari@gmail.com or +254-XXX-XXXX for assistance'
   ];
 
   let noteY = yPos + 16;

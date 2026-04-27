@@ -25,11 +25,11 @@ export const services = [
   {
     id: 2,
     title: 'Mountain Expeditions',
-    iconName: 'mountain',
+    iconName: '',
     description: 'Professional climbing and trekking expeditions to East Africa\'s legendary peaks.',
     features: [
       'Kilimanjaro climbs (all routes)',
-      'Mount Kenya treks',
+      'Mount Rwanda treks',
       'Rwenzori expeditions',
       'Simien Mountains trekking',
       'Professional mountain guides'
@@ -67,7 +67,7 @@ export const services = [
     description: 'Tropical paradise escapes on East Africa\'s stunning Indian Ocean coast.',
     features: [
       'Zanzibar beach resorts',
-      'Kenyan coast retreats',
+      'Rwandan coast retreats',
       'Water sports and diving',
       'Island hopping tours',
       'Safari-beach combinations'

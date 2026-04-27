@@ -65,7 +65,7 @@ const ADMIN = {
   phone2: "+250 792 352 409",
   whatsapp: "+250792352409",
   whatsappDisplay: "+250 792 352 409",
-  email: "bookings@altuvera.com",
+  email: "fabriceigiraneza36@gmail.com",
   office: "Kigali, Rwanda",
 };
 
@@ -87,7 +87,7 @@ const COUNTRIES = [
   "Haiti", "Honduras", "Hungary",
   "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy",
   "Jamaica", "Japan", "Jordan",
-  "Kazakhstan", "Kenya", "Kiribati", "Kosovo", "Kuwait", "Kyrgyzstan",
+  "Kazakhstan", "Rwanda", "Kiribati", "Kosovo", "Kuwait", "Kyrgyzstan",
   "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg",
   "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico",
   "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar",
@@ -2257,7 +2257,7 @@ const PaymentTerms = () => {
         desc: "Quick transfer via Airtel Money across East Africa.",
         popular: false,
         color: "#ED1C24",
-        region: "Uganda, Kenya, Rwanda",
+        region: "Uganda, Rwanda, Rwanda",
       },
       {
         id: "bank",
@@ -2281,10 +2281,10 @@ const PaymentTerms = () => {
         id: "mpesa",
         name: "M-Pesa",
         icon: <FiSmartphone size={24} />,
-        desc: "Kenya & Tanzania's leading mobile money. Fast and reliable.",
+        desc: "Rwanda & Tanzania's leading mobile money. Fast and reliable.",
         popular: true,
         color: "#4CAF50",
-        region: "Kenya, Tanzania",
+        region: "Rwanda, Tanzania",
       },
       {
         id: "western",
@@ -2360,10 +2360,10 @@ const PaymentTerms = () => {
     () => [
       { icon: <FiShield size={22} />, label: "Secure Payments", sub: "Personal & Private" },
       { icon: <FiAward size={22} />, label: "Licensed Operator", sub: "Fully Certified" },
-      { icon: <FiUsers size={22} />, label: "2,000+ Travelers", sub: "Since 2018" },
+      { icon: <FiUsers size={22} />, label: "10+ Travelers", sub: "Since 2018" },
       { icon: <FiCheckCircle size={22} />, label: "Price Guarantee", sub: "No Hidden Fees" },
       { icon: <FiHeart size={22} />, label: "98% Satisfaction", sub: "Verified Reviews" },
-      { icon: <FiGlobe size={22} />, label: "6 Countries", sub: "East Africa" },
+      { icon: <FiGlobe size={22} />, label: "3+ Countries", sub: "East Africa" },
     ],
     []
   );

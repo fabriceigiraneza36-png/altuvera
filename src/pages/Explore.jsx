@@ -132,7 +132,7 @@ const FEATURED_EXPERIENCES = [
       'https://images.unsplash.com/photo-1535941339077-2dd1c7963098?w=800&q=80',
       'https://images.unsplash.com/photo-1549366021-9f761d450615?w=800&q=80',
     ],
-    location: 'Kenya & Tanzania',
+    location: 'Rwanda & Tanzania',
     duration: '7 Days',
     description:
       "Witness millions of wildebeest cross the Mara River in nature's greatest spectacle. Traverse the vast Serengeti plains alongside predators and prey in an ecosystem unchanged for millennia.",
@@ -212,7 +212,7 @@ const FEATURED_EXPERIENCES = [
       'https://i.pinimg.com/736x/99/af/05/99af05ad4a9080b9830ad48438c12043.jpg',
       'https://i.pinimg.com/1200x/79/e1/f8/79e1f8e119ebfbd6bb9483af5f0f7123.jpg',
     ],
-    location: 'Kenya',
+    location: 'Rwanda',
     duration: '3 Days',
     description:
       'Live among the legendary Masai warriors. Learn ancient traditions, participate in ceremonies, craft beadwork, and understand the bond between people and land.',
@@ -282,7 +282,7 @@ const EXPERIENCE_CATEGORIES = [
     title: 'Beach & Island',
     count: 18,
     description:
-      "Paradise beaches lapped by the Indian Ocean — from Zanzibar to Kenya's coral coast.",
+      "Paradise beaches lapped by the Indian Ocean — from Zanzibar to Rwanda's coral coast.",
     images: [
       'https://i.pinimg.com/736x/f6/01/bb/f601bb23119765395c42c4819f2a003e.jpg',
       'https://i.pinimg.com/1200x/f6/1c/c7/f61cc726f0d4057347265241bfcbabcc.jpg',
@@ -355,7 +355,7 @@ const WHY_ITEMS = [
   {
     icon: <FiFeather size={24} />,
     title: 'Rich Cultural Heritage',
-    text: "From the Masai warriors of Kenya to the ancient kingdoms of Uganda, cultures as diverse as the landscapes.",
+    text: "From the Masai warriors of Rwanda to the ancient kingdoms of Uganda, cultures as diverse as the landscapes.",
   },
   {
     icon: <FiBookOpen size={24} />,

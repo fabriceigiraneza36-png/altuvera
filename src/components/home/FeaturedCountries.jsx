@@ -1,12 +1,12 @@
 import React from "react";
 import AnimatedSection from "../common/AnimatedSection";
-import { countries } from "../../data/countries";
-import DestinationCard from "../common/DestinationCard";
+import { useCountries } from "../../hooks/useCountries";
+import FeaturedCountryCard from "../common/FeaturedCountryCard";
 import { FiArrowRight } from "react-icons/fi";
 import Button from "../common/Button";
 
 const FeaturedCountries = () => {
-  const featuredCountries = countries.slice(0, 6);
+  const { countries: backendCountries, loading } = useCountries({ featured: true, limit: 6 });
 
   const styles = {
     section: {
@@ -76,17 +76,20 @@ const FeaturedCountries = () => {
         </AnimatedSection>
 
         <div style={styles.grid}>
-          {featuredCountries.map((country, index) => (
-            <DestinationCard
-              key={country.id}
-              destination={{
-                ...country,
-                location: country.capital,
-                type: `${country.highlights?.length || 0}+ Places`,
-              }}
-              index={index}
-            />
-          ))}
+          {backendCountries && backendCountries.length > 0 ? (
+            backendCountries.map((country, index) => (
+              <FeaturedCountryCard
+                key={country._id || country.id || index}
+                destination={country}
+              />
+            ))
+          ) : (
+            !loading && (
+              <p style={{ gridColumn: '1/-1', textAlign: 'center', color: '#6B7280', padding: '2rem' }}>
+                No featured countries available at the moment.
+              </p>
+            )
+          )}
         </div>
 
         <AnimatedSection animation="fadeInUp">

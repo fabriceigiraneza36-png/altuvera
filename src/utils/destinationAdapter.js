@@ -36,7 +36,7 @@ export const adaptDestination = (raw) => {
   
   // Use slug for frontend URLs - this is the key for linking to country pages
   const countrySlug =
-    raw.countrySlug ||           // Direct field (e.g., "kenya")
+    raw.countrySlug ||           // Direct field (e.g., "Rwanda")
     countryData.slug ||          // From nested country object
     raw.country_slug ||          // Snake case variant
     (typeof countryData.id === 'string' ? countryData.id : null); // String ID from country
