@@ -33,6 +33,13 @@ export default function UserSettings() {
       darkMode: user?.preferences?.darkMode ?? false,
       language: user?.preferences?.language || "en",
       travelUpdates: user?.preferences?.travelUpdates ?? true,
+      // New customization preferences
+      autoFillForms: user?.preferences?.autoFillForms ?? true,
+      defaultCategory: user?.preferences?.defaultCategory || "all",
+      loaderPreference: user?.preferences?.loaderPreference || "default", // default, personalized, minimal
+      customLoaderText: user?.preferences?.customLoaderText || "",
+      reducedAnimations: user?.preferences?.reducedAnimations ?? false,
+      defaultView: user?.preferences?.defaultView || "grid", // grid, list, map
     }),
     [user]
   );
