@@ -1,6 +1,6 @@
 // src/services/countryService.js
 
-import { multiBackendFetch, getBackendInfo } from "../utils/multiBackendFetch";
+import enhancedApiClient from "../utils/enhancedApiClient";
 
 const BASE_PATH = "/countries";
 
@@ -19,16 +19,16 @@ class CountryService {
   }
 
   async _fetch(path, options = {}, abortKey = null) {
-    const signal = abortKey ? this._abort(abortKey) : undefined;
-    
     try {
-      const result = await multiBackendFetch(`${BASE_PATH}${path}`, {
+      const result = await enhancedApiClient.request(`${BASE_PATH}${path}`, {
         ...options,
-        signal,
         headers: {
           "Content-Type": "application/json",
-          ...options.headers,
+          ...(options.headers || {}),
         },
+        // Cache country data for 15 minutes (900000 ms) and disable cache-busting timestamp
+        cacheTime: 15 * 60 * 1000,
+        cacheBust: false,
       });
 
       if (!result.success) {
@@ -37,7 +37,6 @@ class CountryService {
 
       return result.data;
     } catch (err) {
-      if (err.name === "AbortError") return null;
       throw err;
     }
   }
@@ -82,7 +81,7 @@ class CountryService {
 
   // Get current backend info
   getBackendInfo() {
-    return getBackendInfo();
+    return enhancedApiClient.healthCheck();
   }
 }
 

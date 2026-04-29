@@ -296,6 +296,11 @@ export function UserAuthProvider({ children }) {
   const [modalView, setModalView] = useState("login");
   const [pendingEmail, setPendingEmail] = useState("");
 
+  // ── Congratulation state ────────────────────────────────────────────────────
+  const [showCongratulation, setShowCongratulation] = useState(false);
+  const [congratulationType, setCongratulationType] = useState(""); // "login" or "signup"
+  const [showNotLoggedInMessage, setShowNotLoggedInMessage] = useState(false);
+
   // ── Social auth state ───────────────────────────────────────────────────────
   const [googleUser, setGoogleUser] = useState(() =>
     store.getJSON(KEYS.GOOGLE_PENDING),
@@ -428,9 +433,14 @@ export function UserAuthProvider({ children }) {
   // ============================================================================
 
   const openModal = useCallback((view = "login") => {
-    setModalView(view);
-    setIsModalOpen(true);
-    document.body.style.overflow = "hidden";
+    // Show "not logged in" message first
+    setShowNotLoggedInMessage(true);
+    setTimeout(() => {
+      setShowNotLoggedInMessage(false);
+      setModalView(view);
+      setIsModalOpen(true);
+      document.body.style.overflow = "hidden";
+    }, 1500); // Show message for 1.5 seconds before opening modal
   }, []);
 
   const closeModal = useCallback(() => {
@@ -627,6 +637,16 @@ export function UserAuthProvider({ children }) {
       saveAuth(data, { persist: persistSession });
       setPendingEmail("");
       closeModal();
+
+      // Show congratulation window
+      const isNewUser = data.user?.createdAt === data.user?.updatedAt ||
+                       (new Date(data.user?.createdAt) - new Date(data.user?.updatedAt) < 1000);
+      setCongratulationType(isNewUser ? "signup" : "login");
+      setShowCongratulation(true);
+
+      // Auto-hide after 3 seconds
+      setTimeout(() => setShowCongratulation(false), 3000);
+
       return data;
     },
     [authFetch, closeModal, pendingEmail, persistSession, saveAuth],
@@ -1206,6 +1226,9 @@ export function UserAuthProvider({ children }) {
       hasGooglePending,
       socialAuthError,
       persistSession,
+      showCongratulation,
+      congratulationType,
+      showNotLoggedInMessage,
       openModal,
       closeModal,
       setModalView,
@@ -1248,6 +1271,9 @@ export function UserAuthProvider({ children }) {
       hasGooglePending,
       socialAuthError,
       persistSession,
+      showCongratulation,
+      congratulationType,
+      showNotLoggedInMessage,
       openModal,
       closeModal,
       login,

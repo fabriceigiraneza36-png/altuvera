@@ -1,7 +1,6 @@
 // components/DestinationCard.jsx
-import React, { useState, useEffect, useRef, useCallback, memo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef, memo } from 'react';
+import { Link } from 'react-router-dom';
 import {
   FiMapPin,
   FiClock,
@@ -10,14 +9,8 @@ import {
   FiUsers,
   FiAward,
   FiArrowRight,
-  FiChevronLeft,
-  FiChevronRight,
   FiTrendingUp,
   FiGlobe,
-  FiCalendar,
-  FiCamera,
-  FiEye,
-  FiBookmark,
   FiShare2,
   FiThumbsUp,
 } from 'react-icons/fi';
@@ -189,45 +182,22 @@ const getDetailsHref = (item) => {
 };
 
 /* ===================================================================
-   SLIDESHOW HOOK
-   =================================================================== */
-
-function useSlideshow(images, interval = 4500) {
-  const [idx, setIdx] = useState(0);
-  const timerRef = useRef(null);
-
-  useEffect(() => {
-    if (!images || images.length <= 1) return undefined;
-    timerRef.current = setInterval(() => {
-      setIdx((prev) => (prev + 1) % images.length);
-    }, interval);
-    return () => clearInterval(timerRef.current);
-  }, [images, interval]);
-
-  const goNext = useCallback(() => {
-    if (!images) return;
-    setIdx((prev) => (prev + 1) % images.length);
-  }, [images]);
-
-  const goPrev = useCallback(() => {
-    if (!images) return;
-    setIdx((prev) => (prev - 1 + images.length) % images.length);
-  }, [images]);
-
-  return { idx, goNext, goPrev };
-}
-
-/* ===================================================================
    IMAGE SLIDESHOW COMPONENT
    =================================================================== */
 
 function ImageSlideshow({ images, height = 280 }) {
-  const { idx, goNext, goPrev } = useSlideshow(images, 5000);
-  const [hovered, setHovered] = useState(false);
-
-  const safeImages = images?.filter(Boolean)?.length > 0 
-    ? images.filter(Boolean) 
+  const [currentImage, setCurrentImage] = useState(0);
+  const safeImages = images?.filter(Boolean)?.length > 0
+    ? images.filter(Boolean)
     : [FALLBACK_IMAGE];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentImage((prev) => (prev + 1) % safeImages.length);
+    }, 3000); // rotates every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [safeImages.length]);
 
   // Responsive height
   const responsiveHeight = typeof window !== 'undefined' && window.innerWidth < 768 ? Math.min(height * 0.8, 200) : height;
@@ -238,10 +208,7 @@ function ImageSlideshow({ images, height = 280 }) {
         position: 'relative',
         height: responsiveHeight,
         overflow: 'hidden',
-        backgroundColor: COLORS.green[900],
       }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
     >
       {safeImages.map((src, i) => (
         <img
@@ -255,9 +222,9 @@ function ImageSlideshow({ images, height = 280 }) {
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            opacity: i === idx ? 1 : 0,
-            transform: i === idx ? 'scale(1)' : 'scale(1.06)',
-            transition: 'opacity 1s ease, transform 6s ease',
+            opacity: i === currentImage ? 1 : 0,
+            transform: i === currentImage ? 'scale(1)' : 'scale(1.06)',
+            transition: 'opacity 0.7s ease, transform 0.7s ease',
           }}
         />
       ))}
@@ -272,78 +239,12 @@ function ImageSlideshow({ images, height = 280 }) {
         }}
       />
 
-      {/* Navigation arrows */}
-      {safeImages.length > 1 && (
-        <>
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              goPrev();
-            }}
-            aria-label="Previous image"
-            style={{
-              position: 'absolute',
-              left: 14,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              border: 'none',
-              backgroundColor: 'rgba(255,255,255,0.2)',
-              backdropFilter: 'blur(8px)',
-              color: COLORS.white.pure,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: hovered ? 1 : 0,
-              transition: 'opacity 0.3s',
-              zIndex: 5,
-            }}
-          >
-            <FiChevronLeft size={18} />
-          </button>
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              goNext();
-            }}
-            aria-label="Next image"
-            style={{
-              position: 'absolute',
-              right: 14,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              width: 36,
-              height: 36,
-              borderRadius: '50%',
-              border: 'none',
-              backgroundColor: 'rgba(255,255,255,0.2)',
-              backdropFilter: 'blur(8px)',
-              color: COLORS.white.pure,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              opacity: hovered ? 1 : 0,
-              transition: 'opacity 0.3s',
-              zIndex: 5,
-            }}
-          >
-            <FiChevronRight size={18} />
-          </button>
-        </>
-      )}
-
-      {/* Dot indicators */}
+      {/* Slide Indicators */}
       {safeImages.length > 1 && (
         <div
           style={{
             position: 'absolute',
-            top: 16,
+            bottom: 16,
             left: '50%',
             transform: 'translateX(-50%)',
             display: 'flex',
@@ -352,42 +253,18 @@ function ImageSlideshow({ images, height = 280 }) {
           }}
         >
           {safeImages.map((_, i) => (
-            <span
+            <div
               key={i}
               style={{
-                width: i === idx ? 24 : 8,
-                height: 8,
-                borderRadius: 4,
+                height: 6,
+                borderRadius: 3,
+                transition: 'all 0.3s ease',
                 backgroundColor:
-                  i === idx ? COLORS.green[400] : 'rgba(255,255,255,0.4)',
-                transition: 'all 0.4s ease',
+                  i === currentImage ? COLORS.green[400] : 'rgba(255,255,255,0.4)',
+                width: i === currentImage ? 24 : 6,
               }}
             />
           ))}
-        </div>
-      )}
-
-      {/* Image counter */}
-      {safeImages.length > 1 && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 16,
-            right: 16,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: '6px 10px',
-            background: 'rgba(0, 0, 0, 0.6)',
-            backdropFilter: 'blur(8px)',
-            borderRadius: 8,
-            zIndex: 5,
-          }}
-        >
-          <FiCamera size={12} color="rgba(255, 255, 255, 0.8)" />
-          <span style={{ fontSize: 11, color: '#fff', fontWeight: 500 }}>
-            {idx + 1}/{safeImages.length}
-          </span>
         </div>
       )}
     </div>
@@ -398,7 +275,7 @@ function ImageSlideshow({ images, height = 280 }) {
    BADGE COMPONENT
    =================================================================== */
 
-const Badge = memo(({ children, variant = 'default', icon: Icon }) => {
+const Badge = ({ children, variant = 'default', icon: Icon }) => {
   const variants = {
     default: {
       bg: 'rgba(255, 255, 255, 0.95)',
@@ -447,13 +324,13 @@ const Badge = memo(({ children, variant = 'default', icon: Icon }) => {
       {children}
     </span>
   );
-});
+};
 
 /* ===================================================================
    PRICE DISPLAY COMPONENT
    =================================================================== */
 
-const PriceDisplay = memo(({ price, originalPrice, currency = 'USD', period = 'person' }) => {
+const PriceDisplay = ({ price, originalPrice, currency = 'USD', period = 'person' }) => {
   const hasDiscount = originalPrice && originalPrice > price;
   const discount = hasDiscount ? calculateDiscount(originalPrice, price) : 0;
 
@@ -490,7 +367,7 @@ const PriceDisplay = memo(({ price, originalPrice, currency = 'USD', period = 'p
       )}
     </div>
   );
-});
+};
 
 /* ===================================================================
    DESTINATION CARD COMPONENT
@@ -533,7 +410,6 @@ function DestinationCard({
   priority = false,
 }) {
   const [hovered, setHovered] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const cardRef = useRef(null);
   const { loadWishlist, toggleWishlist, isWishlisted } = useWishlist();
@@ -696,17 +572,17 @@ function DestinationCard({
         }}
       >
         {isNew && (
-          <Badge variant="new" size="small">
+          <Badge variant="new">
             NEW
           </Badge>
         )}
         {isPopular && (
-          <Badge variant="popular" size="small">
+          <Badge variant="popular">
             POPULAR
           </Badge>
         )}
         {isFeatured && (
-          <Badge variant="featured" size="small">
+          <Badge variant="featured">
             FEATURED
           </Badge>
         )}
@@ -1213,10 +1089,7 @@ function DestinationCard({
 
             {/* Quick Actions */}
             {hovered && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
+              <div
                 style={{
                   display: 'flex',
                   gap: 8,
@@ -1273,7 +1146,7 @@ function DestinationCard({
                   <FiShare2 size={14} />
                   Share
                 </button>
-              </motion.div>
+              </div>
             )}
           </div>
         )}

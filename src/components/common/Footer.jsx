@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { useUserAuth } from "../../context/UserAuthContext";
 import { getBrandLogoUrl } from "../../utils/seo";
+import { useCountries } from "../../hooks/useCountries";
 import {
   FiFacebook,
   FiTwitter,
@@ -25,6 +26,9 @@ const Footer = () => {
   const [viewportWidth, setViewportWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1280,
   );
+
+  // Fetch countries from backend
+  const { countries: backendCountries, loading: countriesLoading } = useCountries();
 
   const handleSubscribe = (e) => {
     e.preventDefault();
@@ -343,14 +347,10 @@ const Footer = () => {
     },
   };
 
-  const countries = [
-    { name: "Rwanda", path: "/country/Rwanda" },
-    { name: "Tanzania", path: "/country/tanzania" },
-    { name: "Uganda", path: "/country/uganda" },
-    { name: "Rwanda", path: "/country/rwanda" },
-    { name: "Ethiopia", path: "/country/ethiopia" },
-    { name: "Djibouti", path: "/country/djibouti" },
-  ];
+  const countries = backendCountries?.slice(0, 6).map(country => ({
+    name: country.name,
+    path: `/country/${country.slug || country.id || country.name.toLowerCase().replace(/\s+/g, '-')}`,
+  })) || [];
 
   const quickLinks = [
     { name: "Destinations", path: "/destinations" },
@@ -457,56 +457,66 @@ const Footer = () => {
           <div style={styles.column}>
             <h3 style={styles.columnTitle}>Destinations</h3>
             <ul style={styles.linksList}>
-              {countries.map((country) => (
-                <li key={country.name} style={styles.linkItem}>
-                  <Link
-                    to={country.path}
-                    style={styles.link}
-                    onMouseOver={(e) => {
-                      const link = e.currentTarget;
-                      link.style.color = "white";
-                      link.style.transform = "translateX(8px)";
-                      const underline = link.querySelector(".link-underline");
-                      const icon = link.querySelector(".link-icon");
-                      if (underline) {
-                        underline.style.transform = "scaleX(1)";
-                        underline.style.transformOrigin = "left";
-                      }
-                      if (icon) {
-                        icon.style.fontSize = "14px";
-                        icon.style.opacity = "1";
-                        icon.style.marginRight = "8px";
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      const link = e.currentTarget;
-                      link.style.color = "rgba(255,255,255,0.65)";
-                      link.style.transform = "translateX(0)";
-                      const underline = link.querySelector(".link-underline");
-                      const icon = link.querySelector(".link-icon");
-                      if (underline) {
-                        underline.style.transform = "scaleX(0)";
-                        underline.style.transformOrigin = "right";
-                      }
-                      if (icon) {
-                        icon.style.fontSize = "0px";
-                        icon.style.opacity = "0";
-                        icon.style.marginRight = "0";
-                      }
-                    }}
-                  >
-                    <FiArrowRight
-                      className="link-icon"
-                      style={styles.linkIcon}
-                    />
-                    {country.name}
-                    <div
-                      className="link-underline"
-                      style={styles.linkUnderline}
-                    ></div>
-                  </Link>
+              {countriesLoading ? (
+                <li style={styles.linkItem}>
+                  <span style={{ ...styles.link, cursor: 'default' }}>Loading destinations...</span>
                 </li>
-              ))}
+              ) : countries.length > 0 ? (
+                countries.map((country) => (
+                  <li key={country.name} style={styles.linkItem}>
+                    <Link
+                      to={country.path}
+                      style={styles.link}
+                      onMouseOver={(e) => {
+                        const link = e.currentTarget;
+                        link.style.color = "white";
+                        link.style.transform = "translateX(8px)";
+                        const underline = link.querySelector(".link-underline");
+                        const icon = link.querySelector(".link-icon");
+                        if (underline) {
+                          underline.style.transform = "scaleX(1)";
+                          underline.style.transformOrigin = "left";
+                        }
+                        if (icon) {
+                          icon.style.fontSize = "14px";
+                          icon.style.opacity = "1";
+                          icon.style.marginRight = "8px";
+                        }
+                      }}
+                      onMouseOut={(e) => {
+                        const link = e.currentTarget;
+                        link.style.color = "rgba(255,255,255,0.65)";
+                        link.style.transform = "translateX(0)";
+                        const underline = link.querySelector(".link-underline");
+                        const icon = link.querySelector(".link-icon");
+                        if (underline) {
+                          underline.style.transform = "scaleX(0)";
+                          underline.style.transformOrigin = "right";
+                        }
+                        if (icon) {
+                          icon.style.fontSize = "0px";
+                          icon.style.opacity = "0";
+                          icon.style.marginRight = "0";
+                        }
+                      }}
+                    >
+                      <FiArrowRight
+                        className="link-icon"
+                        style={styles.linkIcon}
+                      />
+                      {country.name}
+                      <div
+                        className="link-underline"
+                        style={styles.linkUnderline}
+                      ></div>
+                    </Link>
+                  </li>
+                ))
+              ) : (
+                <li style={styles.linkItem}>
+                  <span style={{ ...styles.link, cursor: 'default' }}>No destinations available</span>
+                </li>
+              )}
             </ul>
           </div>
 

@@ -12,7 +12,12 @@ import {
 } from "react-router-dom";
 import { useApp } from "./context/AppContext";
 import { useUserAuth } from "./context/UserAuthContext";
+import { ConnectionProvider } from "./context/ConnectionContext";
+import ErrorBoundary from "./components/common/ErrorBoundary";
+import ConnectionStatus from "./components/common/ConnectionStatus";
+import TailwindTest from "./components/common/TailwindTest";
 import { HiSparkles } from "react-icons/hi";
+import countryService from "./services/countryService";
 
 // ── Eager imports ─────────────────────────────────────────────────────────────
 import Navbar            from "./components/common/Navbar";
@@ -22,6 +27,8 @@ import ScrollToTop       from "./components/common/ScrollToTop";
 import Loader            from "./components/common/Loader";
 import CookieConsent     from "./components/common/CookieConsent";
 import AuthModal         from "./components/auth/AuthModal";
+import CongratulationWindow from "./components/auth/CongratulationWindow";
+import NotLoggedInMessage from "./components/auth/NotLoggedInMessage";
 import ProtectedRoute    from "./components/auth/ProtectedRoute";
 import PageWrapper       from "./components/common/PageWrapper";
 import WhatsAppButton    from "./components/common/WhatsAppButton";
@@ -46,7 +53,7 @@ const publicRoutes = [
   { path: "/posts",                        component: React.lazy(() => import("./pages/Posts")),                meta: { title: "Journal",                      description: "Travel guides, safari tips, and stories from East Africa." } },
   { path: "/post/:slug",                   component: React.lazy(() => import("./pages/PostDetail")),           meta: { title: "Article",                      description: "Read Altuvera travel stories and guides." } },
   { path: "/interactive-map",              component: React.lazy(() => import("./pages/InteractiveMap")),       meta: { title: "Interactive Map",              description: "Explore destinations with Altuvera's interactive map." } },
-  { path: "/virtual-tour",                 component: React.lazy(() => import("./pages/VirtualTour")),          meta: { title: "Virtual Tour",                 description: "Preview experiences before you travel with Altuvera." } },
+  { path: "/tailwind-test",              component: React.lazy(() => import("./components/common/TailwindTest")), meta: { title: "Tailwind Test", description: "Testing Tailwind CSS functionality" } },
   { path: "/services",                     component: React.lazy(() => import("./pages/Services")),             meta: { title: "Services",                     description: "Safari planning and travel services by Altuvera." } },
   { path: "/about",                        component: React.lazy(() => import("./pages/About")),                meta: { title: "About Altuvera",               description: "Learn about Altuvera and our safari mission." } },
   { path: "/contact",                      component: React.lazy(() => import("./pages/Contact")),              meta: { title: "Contact Altuvera",             description: "Get in touch with Altuvera to plan your safari." } },
@@ -71,11 +78,7 @@ const protectedRoutes = [
 // ============================================================================
 
 const prefetchRoutes = () => {
-  const loaders = publicRoutes.map(r => r.component);
-  const run = () => loaders.forEach((l) => l().catch(() => {}));
-  "requestIdleCallback" in window
-    ? window.requestIdleCallback(run, { timeout: 4000 })
-    : setTimeout(run, 100);
+  // Prefetch disabled to avoid runtime errors with lazy components
 };
 
 // ============================================================================
@@ -387,6 +390,7 @@ const CelebrationOverlay = ({ userName }) => {
 
 const AppLayout = React.memo(() => (
   <>
+    <ConnectionStatus />
     <Navbar />
     <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>
       <Suspense fallback={<Loader />}>
@@ -472,22 +476,30 @@ const renderProtectedRoute = ({ path, component: Component, meta }) => (
 function App() {
   const location             = useLocation();
   const { isLoading, setIsLoading } = useApp();
-  const { isAuthenticated, user } = useUserAuth();
+  const { isAuthenticated, user, showCongratulation, congratulationType, showNotLoggedInMessage } = useUserAuth();
   const [showCelebration, setShowCelebration] = useState(false);
 
-  useEffect(() => {
-    if (location.pathname !== "/" && isLoading) setIsLoading(false);
-  }, [isLoading, location.pathname, setIsLoading]);
+   useEffect(() => {
+     if (location.pathname !== "/" && isLoading) setIsLoading(false);
+   }, [isLoading, location.pathname, setIsLoading]);
 
-  useEffect(() => { prefetchRoutes(); }, []);
+   useEffect(() => { prefetchRoutes(); }, []);
 
-  useEffect(() => {
-    if (!import.meta.env.DEV) return;
-    const entry = performance.getEntriesByType?.("navigation")?.[0];
-    if (entry) {
-      console.debug(`[Router] ${location.pathname} — DOM interactive: ${Math.round(entry.domInteractive)}ms`);
-    }
-  }, [location.pathname]);
+   // Prefetch countries on app start for faster dropdowns
+   useEffect(() => {
+     // Fetch all countries (for footer, destinations filter, etc.)
+     countryService.getAll({}).catch(() => {});
+     // Fetch featured countries (for navbar dropdown)
+     countryService.getAll({ featured: true }).catch(() => {});
+   }, []);
+
+   useEffect(() => {
+     if (!import.meta.env.DEV) return;
+     const entry = performance.getEntriesByType?.("navigation")?.[0];
+     if (entry) {
+       console.debug(`[Router] ${location.pathname} — DOM interactive: ${Math.round(entry.domInteractive)}ms`);
+     }
+   }, [location.pathname]);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -519,8 +531,24 @@ function App() {
       </Routes>
 
       <OverlayLayer isLoading={isLoading} showCelebration={showCelebration} userName={user?.fullName || user?.name} />
+      <CongratulationWindow
+        isVisible={showCongratulation}
+        type={congratulationType}
+        user={user}
+        onClose={() => {}} // Handled automatically by timeout in context
+      />
+      <NotLoggedInMessage isVisible={showNotLoggedInMessage} />
     </div>
   );
 }
 
-export default App;
+// Wrap App with providers
+const AppWithProviders = () => (
+  <ConnectionProvider>
+    <ErrorBoundary>
+      <App />
+    </ErrorBoundary>
+  </ConnectionProvider>
+);
+
+export default AppWithProviders;

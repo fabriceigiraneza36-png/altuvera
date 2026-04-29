@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { fetchCountryPageData } from "../data/countries";
+import countryService from "../services/countryService";
 
 /* ═══════════════════════════════════════════════════
    DESIGN TOKENS
@@ -1020,10 +1020,14 @@ const CountryPage = () => {
     if (!slug) return;
     setLoading(true);
     setError(null);
-    fetchCountryPageData(slug)
-      .then(({ country, destinations }) => {
-        setCountry(country);
-        setDestinations(destinations);
+
+    Promise.all([
+      countryService.getOne(slug),
+      countryService.getDestinations(slug)
+    ])
+      .then(([countryResult, destinationsResult]) => {
+        setCountry(countryResult);
+        setDestinations(destinationsResult || []);
       })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));

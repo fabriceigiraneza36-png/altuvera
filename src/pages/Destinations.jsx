@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { useSearchParams } from "react-router-dom";
-import { FiSearch } from 'react-icons/fi';
+import { FiSearch, FiRefreshCw, FiWifiOff } from 'react-icons/fi';
 import PageHeader from '../components/common/PageHeader';
 import AnimatedSection from '../components/common/AnimatedSection';
 import Button from '../components/common/Button';
-import { countries } from '../data/countries';
+import { useCountries } from '../hooks/useCountries';
 import DestinationCard from '../components/common/DestinationCard';
 import { useCountryDestinations, useDestinations } from "../hooks/useDestinations";
 
@@ -16,6 +16,14 @@ const Destinations = () => {
   const [selectedType, setSelectedType] = useState('all');
   const [isSearching, setIsSearching] = useState(false);
   const searchTimeoutRef = useRef(null);
+
+   // Fetch countries from backend
+   const { 
+     countries: backendCountries, 
+     loading: countriesLoading, 
+     error: countriesError,
+     refetch: refetchCountries
+   } = useCountries();
 
   // Debounce search query to prevent excessive URL updates and re-renders
   useEffect(() => {
@@ -308,20 +316,24 @@ const Destinations = () => {
                     </button>
                   )}
                 </div>
-                <div style={styles.filterGroup} className="destinations-filter-group">
-                  <select
-                    value={selectedCountry}
-                    onChange={(e) => setSelectedCountry(e.target.value)}
-                    style={styles.select}
-                    className="destinations-select"
-                  >
-                    <option value="all">All Countries</option>
-                    {countries.map(country => (
-                      <option key={country.id} value={country.id}>
-                        {country.flag} {country.name}
-                      </option>
-                    ))}
-                  </select>
+                 <div style={styles.filterGroup} className="destinations-filter-group">
+                   <select
+                     value={selectedCountry}
+                     onChange={(e) => setSelectedCountry(e.target.value)}
+                     style={styles.select}
+                     className="destinations-select"
+                     disabled={countriesLoading}
+                   >
+                     <option value="all">All Countries</option>
+                     {countriesLoading && backendCountries.length === 0 && (
+                       <option value="" disabled>Loading countries...</option>
+                     )}
+                      {backendCountries?.map(country => (
+                        <option key={country.id || country._id} value={country.id || country._id}>
+                          {country.flag || country.flagUrl || ''} {country.name}
+                        </option>
+                      ))}
+                   </select>
                   <select
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value)}
@@ -334,16 +346,43 @@ const Destinations = () => {
                     ))}
                   </select>
                 </div>
-              </div>
-              <div style={styles.resultsInfo} className="destinations-results-info">
-                <span style={styles.resultsCount}>
-                  {isSearching ? (
-                    'Searching destinations...'
-                  ) : (
-                    `Showing ${filteredDestinations.length} destinations${debouncedSearchQuery ? ` for "${debouncedSearchQuery}"` : ''}`
+               </div>
+                <div style={styles.resultsInfo} className="destinations-results-info">
+                  <span style={styles.resultsCount}>
+                    {isSearching ? (
+                      'Searching destinations...'
+                    ) : (
+                      `Showing ${filteredDestinations.length} destinations${debouncedSearchQuery ? ` for "${debouncedSearchQuery}"` : ''}`
+                    )}
+                  </span>
+                  {countriesError && (
+                    <span style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      color: '#ef4444',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                    }}>
+                      <FiWifiOff size={14} />
+                      Countries data unavailable
+                      <button
+                        onClick={refetchCountries}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#059669',
+                          cursor: 'pointer',
+                          textDecoration: 'underline',
+                          fontWeight: 600,
+                          fontSize: '13px',
+                        }}
+                      >
+                        Retry
+                      </button>
+                    </span>
                   )}
-                </span>
-              </div>
+                </div>
             </div>
           </div>
 

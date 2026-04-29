@@ -2,11 +2,11 @@ import React from "react";
 import AnimatedSection from "../common/AnimatedSection";
 import { useCountries } from "../../hooks/useCountries";
 import FeaturedCountryCard from "../common/FeaturedCountryCard";
-import { FiArrowRight } from "react-icons/fi";
+import { FiArrowRight, FiRefreshCw, FiWifiOff } from "react-icons/fi";
 import Button from "../common/Button";
 
 const FeaturedCountries = () => {
-  const { countries: backendCountries, loading } = useCountries({ featured: true, limit: 6 });
+  const { countries: backendCountries, loading, error, refetch } = useCountries({ featured: true, limit: 6 });
 
   const styles = {
     section: {
@@ -59,10 +59,34 @@ const FeaturedCountries = () => {
     viewAllContainer: {
       textAlign: "center",
     },
+    loadingCard: {
+      background: 'linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%)',
+      backgroundSize: '200% 100%',
+      animation: 'shimmer 1.5s infinite',
+      borderRadius: '16px',
+      height: '320px',
+    },
+    errorContainer: {
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '16px',
+      padding: '60px 20px',
+      color: '#6B7280',
+      textAlign: 'center',
+      gridColumn: '1 / -1',
+    },
   };
 
   return (
     <section style={styles.section}>
+      <style>{`
+        @keyframes shimmer {
+          0% { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
       <div style={styles.container}>
         <AnimatedSection animation="fadeInUp">
           <div style={styles.header}>
@@ -76,7 +100,36 @@ const FeaturedCountries = () => {
         </AnimatedSection>
 
         <div style={styles.grid}>
-          {backendCountries && backendCountries.length > 0 ? (
+          {loading ? (
+            // Loading skeleton
+            [...Array(6)].map((_, i) => (
+              <div key={i} style={styles.loadingCard} />
+            ))
+          ) : error ? (
+            // Error state
+            <div style={styles.errorContainer}>
+              <FiWifiOff size={48} style={{ color: '#9CA3AF' }} />
+              <p>Unable to load countries</p>
+              <button
+                onClick={refetch}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 20px',
+                  background: '#059669',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                }}
+              >
+                <FiRefreshCw size={14} />
+                Retry
+              </button>
+            </div>
+          ) : backendCountries && backendCountries.length > 0 ? (
             backendCountries.map((country, index) => (
               <FeaturedCountryCard
                 key={country._id || country.id || index}
@@ -84,11 +137,9 @@ const FeaturedCountries = () => {
               />
             ))
           ) : (
-            !loading && (
-              <p style={{ gridColumn: '1/-1', textAlign: 'center', color: '#6B7280', padding: '2rem' }}>
-                No featured countries available at the moment.
-              </p>
-            )
+            <p style={{ gridColumn: '1/-1', textAlign: 'center', color: '#6B7280', padding: '2rem' }}>
+              No featured countries available at the moment.
+            </p>
           )}
         </div>
 

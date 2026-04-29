@@ -19,7 +19,6 @@ import { useApp } from "../../context/AppContext";
 import { useUserAuth } from "../../context/UserAuthContext";
 import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 import { getAllDestinations } from "../../data/destinations";
-import { countries as staticCountries } from "../../data/countries";
 import { preloadRoute } from "../../utils/routeUtils";
 import { useCountries } from "../../hooks/useCountries";
 
@@ -57,32 +56,29 @@ const Navbar = () => {
 
   const localDestinations = useMemo(() => getAllDestinations(), []);
 
-  // Build destinations dropdown from backend with fallback to static
+  // Build destinations dropdown from backend countries only
   const destinationsDropdown = useMemo(() => {
     const items = [
       { name: "All Destinations", path: "/destinations", isOverview: true },
     ];
 
-    const sourceCountries =
-      backendCountries && backendCountries.length > 0
-        ? backendCountries
-        : staticCountries.slice(0, 8);
-
-    sourceCountries.forEach((country) => {
-      items.push({
-        name: country.name,
-        flag: country.flagUrl || country.flag_url || country.flag || "",
-        info:
-          country.tagline ||
-          country.region ||
-          country.capital ||
-          country.continent ||
-          country.subRegion ||
-          country.shortDescription ||
-          (country.description ? `${country.description.slice(0, 60)}…` : ""),
-        path: `/country/${country.slug || country.id || country.name.toLowerCase()}`,
+    if (backendCountries && backendCountries.length > 0) {
+      backendCountries.forEach((country) => {
+        items.push({
+          name: country.name,
+          flag: country.flagUrl || country.flag_url || country.flag || "",
+          info:
+            country.tagline ||
+            country.region ||
+            country.capital ||
+            country.continent ||
+            country.subRegion ||
+            country.shortDescription ||
+            (country.description ? `${country.description.slice(0, 60)}…` : ""),
+          path: `/country/${country.slug || country.id || country.name.toLowerCase()}`,
+        });
       });
-    });
+    }
 
     return items;
   }, [backendCountries]);

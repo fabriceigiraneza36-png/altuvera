@@ -12,15 +12,12 @@ export function useCountries(params = {}) {
 
   useEffect(() => {
     const newParamsKey = JSON.stringify(params);
-    
-    // Only fetch if params actually changed
     if (newParamsKey !== paramsKeyRef.current) {
       paramsKeyRef.current = newParamsKey;
       paramsRef.current = params;
-      
       setLoading(true);
       setError(null);
-      
+
       countryService
         .getAll(params)
         .then((result) => {
@@ -31,13 +28,14 @@ export function useCountries(params = {}) {
         .catch((err) => {
           if (err.name !== "AbortError") {
             setError(err.message || "Failed to load countries");
+            setCountries([]);
           }
         })
         .finally(() => {
           setLoading(false);
         });
     }
-    
+
     return () => countryService.cancelAll();
   }, [params]);
 

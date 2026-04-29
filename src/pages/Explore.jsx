@@ -25,14 +25,16 @@ import {
   FiTarget,
   FiFeather,
   FiBookOpen,
-  FiArrowUpRight
+  FiArrowUpRight,
+  FiRefreshCw,
+  FiWifiOff
 } from 'react-icons/fi';
 import PageHeader from '../components/common/PageHeader';
 import AnimatedSection from '../components/common/AnimatedSection';
 import Button from '../components/common/Button';
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 import ExperienceCard from '../components/common/ExperienceCard';
-import { countries } from '../data/countries';
+import { useCountries } from '../hooks/useCountries';
 
 /* ===================================================================
    DESIGN TOKENS — GREEN & WHITE PALETTE
@@ -1506,6 +1508,9 @@ function NewsletterBlock() {
 function Explore() {
   const [filter, setFilter] = useState('all');
 
+  // Fetch countries from backend
+  const { countries: backendCountries, loading, error, refetch } = useCountries();
+
   useEffect(() => {
     injectStyles();
   }, []);
@@ -1515,15 +1520,15 @@ function Explore() {
     return FEATURED_EXPERIENCES.filter((e) => e.category === filter);
   }, [filter]);
 
-  const displayedCountries = useMemo(
-    () => countries.slice(0, MAX_COUNTRIES),
-    []
-  );
+   const displayedCountries = useMemo(
+     () => backendCountries?.slice(0, MAX_COUNTRIES) || [],
+     [backendCountries]
+   );
 
-  const pad = 'clamp(32px,5vw,56px) clamp(16px,5vw,36px)';
-  const box = { maxWidth: 1400, margin: '0 auto' };
+   const pad = 'clamp(32px,5vw,56px) clamp(16px,5vw,36px)';
+   const box = { maxWidth: 1400, margin: '0 auto' };
 
-  return (
+   return (
     <>
       <SEO
         title="Explore Experiences"
@@ -1964,36 +1969,90 @@ function Explore() {
         </div>
       </section>
 
-      {/* ============ COUNTRIES ============ */}
-      <section style={{ padding: pad }}>
-        <div style={box}>
-          <AnimatedSection animation="fadeInUp">
-            <SectionHeader
-              label="🌍 Destinations"
-              title="Explore by Country"
-              subtitle="Each East African nation offers a distinct mosaic of landscapes, cultures, and wildlife. Click on a country to explore its unique treasures."
-            />
-          </AnimatedSection>
+       {/* ============ COUNTRIES ============ */}
+       <section style={{ padding: pad }}>
+         <div style={box}>
+            <AnimatedSection animation="fadeInUp">
+              <SectionHeader
+                label="🌍 Destinations"
+                title="Explore by Country"
+                subtitle="Each East African nation offers a distinct mosaic of landscapes, cultures, and wildlife. Click on a country to explore its unique treasures."
+              />
+            </AnimatedSection>
 
-          <div
-            className="e-country-grid"
-            style={{
-              display: 'grid',
-              gridTemplateColumns:
-                'repeat(auto-fill, minmax(200px, 1fr))',
-              gap: 22,
-            }}
-          >
-            {displayedCountries.map((c, i) => (
-              <AnimatedSection
-                key={c.id}
-                animation="fadeInUp"
-                delay={i * 0.07}
-              >
-                <CountryCard country={c} />
-              </AnimatedSection>
-            ))}
-          </div>
+           <div
+             className="e-country-grid"
+             style={{
+               display: 'grid',
+               gridTemplateColumns:
+                 'repeat(auto-fill, minmax(200px, 1fr))',
+               gap: 22,
+             }}
+           >
+             <style>{`
+               @keyframes shimmer {
+                 0% { background-position: 200% 0; }
+                 100% { background-position: -200% 0; }
+               }
+             `}</style>
+              {loading ? (
+                // Loading skeleton
+                [...Array(6)].map((_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      background: 'linear-gradient(90deg, #f5f5f5 25%, #e0e0e0 50%, #f5f5f5 75%)',
+                      backgroundSize: '200% 100%',
+                      animation: 'shimmer 1.5s infinite',
+                      borderRadius: '12px',
+                      height: '280px',
+                    }}
+                  />
+                ))
+              ) : error ? (
+                // Error state
+                <div style={{
+                  gridColumn: '1 / -1',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '16px',
+                  padding: '60px 20px',
+                  color: '#6B7280',
+                  textAlign: 'center',
+                }}>
+                  <FiWifiOff size={48} style={{ color: '#9CA3AF' }} />
+                  <p>Unable to load countries</p>
+                  <button
+                    onClick={refetch}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '10px 20px',
+                      background: '#059669',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                    }}
+                  >
+                    <FiRefreshCw size={14} />
+                    Retry
+                  </button>
+                </div>
+              ) : displayedCountries.map((c, i) => (
+               <AnimatedSection
+                 key={c.id}
+                 animation="fadeInUp"
+                 delay={i * 0.07}
+               >
+                 <CountryCard country={c} />
+               </AnimatedSection>
+             ))}
+           </div>
 
           <AnimatedSection animation="fadeInUp">
             <div style={{ textAlign: 'center', marginTop: 36 }}>

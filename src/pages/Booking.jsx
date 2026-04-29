@@ -63,7 +63,6 @@ import PageHeader from "../components/common/PageHeader";
 import AnimatedSection from "../components/common/AnimatedSection";
 import Button from "../components/common/Button";
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
-import { countries as countriesData } from "../data/countries";
 import { services as servicesData } from "../data/services";
 import { useUserAuth } from "../context/UserAuthContext";
 import { apiFetch } from "../utils/apiBase";
@@ -247,6 +246,21 @@ const formatDate = (dateString) => {
     day: "numeric",
   });
 };
+
+const normalizeResponseArray = (value) => {
+  if (Array.isArray(value)) return value;
+  if (value && typeof value === "object") {
+    if (Array.isArray(value.data)) return value.data;
+    if (Array.isArray(value.results)) return value.results;
+  }
+  return [];
+};
+
+const normalizeOptionId = (id) =>
+  id === undefined || id === null ? "" : String(id);
+
+const normalizeOptionValue = (value) =>
+  value === undefined || value === null ? "" : String(value);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFETTI CELEBRATION COMPONENT
@@ -1134,8 +1148,8 @@ const FormSelect = memo(
 
                 return (
                   <option
-                    key={`${name}-option-${optionId}-${optIndex}`}
-                    value={optionId}
+                    key={`${name}-option-${normalizeOptionId(optionId)}-${optIndex}`}
+                    value={normalizeOptionId(optionId)}
                   >
                     {optionFlag && `${optionFlag} `}
                     {optionLabel}
@@ -3277,14 +3291,14 @@ const Booking = () => {
     setLoadingStats(true);
     try {
       const [mostBookedRes, countriesStatsRes, destinationsStatsRes] = await Promise.all([
-        authFetch("/bookings/most-booked").catch(() => ({ data: [] })),
-        authFetch("/bookings/countries-stats").catch(() => ({ data: [] })),
-        authFetch("/bookings/destinations-stats").catch(() => ({ data: [] })),
+        authFetch("/bookings/most-booked").catch(() => null),
+        authFetch("/bookings/countries-stats").catch(() => null),
+        authFetch("/bookings/destinations-stats").catch(() => null),
       ]);
 
-      setMostBookedDestinations(mostBookedRes?.data || []);
-      setCountriesStats(countriesStatsRes?.data || []);
-      setDestinationsStats(destinationsStatsRes?.data || []);
+      setMostBookedDestinations(normalizeResponseArray(mostBookedRes));
+      setCountriesStats(normalizeResponseArray(countriesStatsRes));
+      setDestinationsStats(normalizeResponseArray(destinationsStatsRes));
     } catch (err) {
       console.error("Failed to fetch booking statistics:", err);
     } finally {
@@ -3298,14 +3312,14 @@ const Booking = () => {
       setLoadingData(true);
       try {
         const [cRes, catRes, destRes] = await Promise.all([
-          authFetch("/countries").catch(() => ({ data: [] })),
-          authFetch("/destinations/categories").catch(() => ({ data: [] })),
-          authFetch("/destinations").catch(() => ({ data: [] })),
+          authFetch("/countries").catch(() => null),
+          authFetch("/destinations/categories").catch(() => null),
+          authFetch("/destinations").catch(() => null),
         ]);
 
-        const countries = cRes?.data || cRes || [];
-        const categories = catRes?.data || catRes || [];
-        const destinations = destRes?.data || destRes || [];
+        const countries = normalizeResponseArray(cRes);
+        const categories = normalizeResponseArray(catRes);
+        const destinations = normalizeResponseArray(destRes);
 
         setCountriesList(countries);
         setCategoriesList(categories);
@@ -3585,12 +3599,20 @@ const Booking = () => {
 
   // Get destination name
   const getDestinationName = useCallback(() => {
+    const destinationKey = normalizeOptionValue(formData.destination);
     const dest = destinationsList.find(
-      (c) => c.id === formData.destination || c._id === formData.destination,
+      (c) =>
+        normalizeOptionValue(c.id) === destinationKey ||
+        normalizeOptionValue(c._id) === destinationKey ||
+        normalizeOptionValue(c.slug) === destinationKey ||
+        normalizeOptionValue(c.countryId) === destinationKey,
     );
     if (dest) return `${dest.flag || "📍"} ${dest.name}`;
     const country = countriesList.find(
-      (c) => c.id === formData.destination || c.slug === formData.destination,
+      (c) =>
+        normalizeOptionValue(c.id) === destinationKey ||
+        normalizeOptionValue(c.slug) === destinationKey ||
+        normalizeOptionValue(c.countryId) === destinationKey,
     );
     return country ? `${country.flag || "🏳️"} ${country.name}` : "Not selected";
   }, [formData.destination, destinationsList, countriesList]);
