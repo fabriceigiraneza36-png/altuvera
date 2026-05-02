@@ -116,39 +116,26 @@ const Navbar = () => {
     return items;
   }, [user?.role]);
 
-  // ── Scroll: transparent→white, hide on scroll down, show on scroll up ──
+  // ── Scroll handler ────────────────────────────────────────────────────
   useEffect(() => {
     let ticking = false;
-
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
-
       requestAnimationFrame(() => {
         const currentY = window.scrollY;
         const lastY = lastScrollYRef.current;
-
-        // Transparent at top, white when scrolled
         setIsScrolled(currentY > 20);
-
-        // Hide/show logic: only after scrolling past 80px
         if (currentY > 80) {
-          if (currentY > lastY + 5) {
-            // Scrolling DOWN → hide
-            setNavHidden(true);
-          } else if (currentY < lastY - 5) {
-            // Scrolling UP → show
-            setNavHidden(false);
-          }
+          if (currentY > lastY + 5) setNavHidden(true);
+          else if (currentY < lastY - 5) setNavHidden(false);
         } else {
           setNavHidden(false);
         }
-
         lastScrollYRef.current = currentY;
         ticking = false;
       });
     };
-
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -189,7 +176,6 @@ const Navbar = () => {
       setIsSearching(false);
       return;
     }
-
     const norm = (v) => {
       if (typeof v === "string") return v;
       if (!v) return "";
@@ -209,7 +195,6 @@ const Navbar = () => {
       price: i?.price,
       duration: i?.duration,
     });
-
     const ql = q.toLowerCase();
     const local = localDestinations
       .filter((d) => {
@@ -233,9 +218,7 @@ const Navbar = () => {
       })
       .slice(0, 6)
       .map(toR);
-
     setSearchResults(local);
-
     const tid = setTimeout(async () => {
       setIsSearching(true);
       const ctrl = new AbortController();
@@ -291,7 +274,6 @@ const Navbar = () => {
     },
     [searchValue, navigate]
   );
-
   const toggleMobileDropdown = useCallback(
     (n) => setActiveMobileDropdown((p) => (p === n ? null : n)),
     []
@@ -303,14 +285,12 @@ const Navbar = () => {
   const handleDropdownLeave = useCallback(() => {
     dropdownTimer.current = setTimeout(() => setActiveDropdown(null), 150);
   }, []);
-
   const handleDesktopClick = useCallback((e, l) => {
     if (l.dropdown) {
       e.preventDefault();
       setActiveDropdown((p) => (p === l.name ? null : l.name));
     }
   }, []);
-
   const handleDesktopDblClick = useCallback(
     (e, l) => {
       if (l.dropdown) {
@@ -321,7 +301,6 @@ const Navbar = () => {
     },
     [navigate]
   );
-
   const isActive = useCallback(
     (l) =>
       location.pathname === l.path ||
@@ -329,7 +308,6 @@ const Navbar = () => {
       false,
     [location.pathname]
   );
-
   const getInitials = useCallback(() => {
     const n = user?.fullName || user?.name || "";
     return n
@@ -341,18 +319,15 @@ const Navbar = () => {
           .slice(0, 2)
       : user?.email?.[0]?.toUpperCase() || "U";
   }, [user]);
-
   const displayName = useMemo(
     () =>
       user?.fullName || user?.name || user?.email?.split("@")[0] || "User",
     [user]
   );
-
   const providerLabel = useMemo(() => {
     const p = (user?.authProvider || "").toLowerCase();
     return p === "google" ? "Google" : p === "github" ? "GitHub" : "Email";
   }, [user?.authProvider]);
-
   const handleLogout = useCallback(() => {
     closeAll();
     logout();
@@ -369,13 +344,9 @@ const Navbar = () => {
         className={cn(
           "fixed top-0 left-0 right-0 z-[1000] will-change-transform",
           "transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
-
-          // Transparent at top → glass white on scroll
           isScrolled
-            ? "py-2 bg-white/[0.92] backdrop-blur-2xl shadow-[0_1px_3px_rgba(0,0,0,0.05),0_8px_24px_rgba(5,150,105,0.06)] border-b border-white/60"
-            : "py-3.5 bg-transparent border-b border-transparent",
-
-          // Hide on scroll down, show on scroll up
+            ? "py-2 bg-white/[0.96] backdrop-blur-[24px] [backdrop-filter:blur(24px)_saturate(1.4)] shadow-[0_1px_0_rgba(16,185,129,0.08),0_8px_30px_rgba(5,150,105,0.08)]"
+            : "py-4 bg-transparent",
           navHidden
             ? "-translate-y-full opacity-0 pointer-events-none"
             : "translate-y-0 opacity-100 pointer-events-auto"
@@ -386,16 +357,20 @@ const Navbar = () => {
           <Link
             to="/"
             aria-label="Altuvera Home"
-            className="group relative flex flex-shrink-0 items-center gap-3 no-underline transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]"
+            className="group relative flex flex-shrink-0 items-center gap-3 no-underline transition-transform duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:scale-[1.03] active:scale-[0.98]"
           >
-            <div className="pointer-events-none absolute left-7 top-1/2 h-[70px] w-[70px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.18)_0%,transparent_72%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+            {/* glow */}
+            <div className="pointer-events-none absolute left-7 top-1/2 h-[70px] w-[70px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.16)_0%,transparent_72%)] opacity-0 transition-opacity duration-[350ms] group-hover:opacity-100" />
 
             <div
               className={cn(
-                "relative flex flex-shrink-0 items-center justify-center transition-all duration-500",
-                isScrolled ? "h-10 w-10" : "h-12 w-12",
-                "max-[640px]:h-10 max-[640px]:w-10",
-                "max-[380px]:h-9 max-[380px]:w-9"
+                "relative flex flex-shrink-0 items-center justify-center transition-all duration-[350ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
+                isScrolled ? "h-12 w-12" : "h-[52px] w-[52px]",
+                "max-[860px]:h-12 max-[860px]:w-12",
+                "max-[640px]:h-11 max-[640px]:w-11",
+                "max-[480px]:h-10 max-[480px]:w-10",
+                "max-[380px]:h-[38px] max-[380px]:w-[38px]",
+                "max-[320px]:h-9 max-[320px]:w-9"
               )}
             >
               <img
@@ -403,21 +378,26 @@ const Navbar = () => {
                 alt={BRAND_LOGO_ALT}
                 draggable={false}
                 className={cn(
-                  "relative z-[1] h-full w-full object-contain transition-all duration-500",
+                  "relative z-[1] h-full w-full border-none object-contain outline-none",
+                  "transition-all duration-[350ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
                   isScrolled
-                    ? "drop-shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
-                    : "drop-shadow-[0_4px_16px_rgba(0,0,0,0.2)]",
-                  "group-hover:-translate-y-0.5 group-hover:scale-[1.05]"
+                    ? "drop-shadow-[0_3px_10px_rgba(0,0,0,0.08)]"
+                    : "drop-shadow-[0_8px_18px_rgba(0,0,0,0.14)]",
+                  "group-hover:-translate-y-px group-hover:scale-[1.03]",
+                  isScrolled
+                    ? "group-hover:drop-shadow-[0_6px_16px_rgba(5,150,105,0.14)]"
+                    : "group-hover:drop-shadow-[0_10px_22px_rgba(5,150,105,0.18)]"
                 )}
               />
             </div>
 
             <span
               className={cn(
-                "whitespace-nowrap font-['Playfair_Display',serif] font-extrabold tracking-[-0.8px] transition-all duration-500",
+                "whitespace-nowrap font-['Playfair_Display',serif] text-[clamp(24px,2.5vw,32px)] font-extrabold tracking-[-0.8px]",
+                "transition-all duration-[350ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
                 isScrolled
-                  ? "text-[clamp(20px,2vw,26px)] text-gray-900"
-                  : "text-[clamp(24px,2.5vw,32px)] text-white [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]",
+                  ? "text-gray-900 [text-shadow:none]"
+                  : "text-white [text-shadow:0_3px_15px_rgba(0,0,0,0.3)]",
                 "max-[860px]:hidden"
               )}
             >
@@ -427,15 +407,17 @@ const Navbar = () => {
 
           {/* ── Desktop Nav Links ──────────────────────────────────────── */}
           <div className="flex min-w-0 flex-1 items-center justify-center gap-0.5 max-lg:hidden">
-            {navLinks.map((link) => (
+            {navLinks.map((link, i) => (
               <div
                 key={link.name}
-                className="relative"
+                className="nav-item-anim relative"
+                style={{ "--i": i }}
                 onMouseEnter={() =>
                   link.dropdown && handleDropdownEnter(link.name)
                 }
                 onMouseLeave={handleDropdownLeave}
               >
+                {/* ── Nav Link ─────────────────────────────────────────── */}
                 <Link
                   to={link.path}
                   onClick={(e) => handleDesktopClick(e, link)}
@@ -447,49 +429,70 @@ const Navbar = () => {
                       : undefined
                   }
                   className={cn(
-                    "group/link relative inline-flex items-center gap-1 overflow-hidden rounded-lg px-3 py-2 text-[15px] font-medium no-underline whitespace-nowrap",
-                    "transition-all duration-300 hover:-translate-y-px active:scale-[0.97]",
-                    "max-xl:text-sm max-xl:px-2.5 max-[1180px]:text-[13px] max-[1180px]:px-2",
-                    // Color depends on scroll state
-                    isScrolled
-                      ? cn(
-                          "text-gray-700 hover:bg-emerald-600/10 hover:text-emerald-600",
-                          isActive(link) &&
-                            "bg-emerald-600/10 text-emerald-600"
-                        )
-                      : cn(
-                          "text-white/90 hover:bg-white/15 hover:text-white",
-                          isActive(link) && "bg-white/15 text-white"
-                        )
+                    // Base
+                    "group/link relative inline-flex items-center gap-1 overflow-hidden rounded-lg",
+                    "px-[13px] py-[9px] text-[15px] font-medium no-underline whitespace-nowrap",
+                    "transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
+                    "hover:-translate-y-px active:scale-[0.97]",
+
+                    // Responsive font sizes
+                    "max-xl:text-sm max-xl:px-2.5 max-xl:py-2",
+                    "max-[1180px]:text-[13px] max-[1180px]:px-2",
+
+                    // ── Transparent state (not scrolled) ──
+                    !isScrolled && [
+                      "text-white",
+                      "hover:bg-white/[0.18]",
+                      isActive(link) && "bg-white/[0.16]",
+                    ],
+
+                    // ── Scrolled state ──
+                    isScrolled && [
+                      "text-gray-900",
+                      "hover:bg-[rgba(5,150,105,0.1)] hover:text-emerald-600",
+                      isActive(link) &&
+                        "bg-[rgba(5,150,105,0.1)] text-emerald-600",
+                    ]
                   )}
                 >
-                  <span>{link.name}</span>
+                  {/* Link text */}
+                  <span className="relative z-[1]">{link.name}</span>
+
+                  {/* Chevron for dropdowns */}
                   {link.dropdown && (
                     <FiChevronDown
                       size={14}
                       className={cn(
-                        "transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+                        "relative z-[1] transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
                         activeDropdown === link.name && "rotate-180"
                       )}
                     />
                   )}
-                  {/* underline */}
+
+                  {/* ── Active / hover underline ─── */}
                   <span
                     className={cn(
-                      "absolute bottom-0.5 left-3 right-3 h-[2px] rounded-full",
-                      "origin-right scale-x-0 transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+                      "absolute bottom-1 left-3 right-3 h-[2.5px] rounded-full",
+                      "bg-gradient-to-r from-emerald-600 to-emerald-500",
+                      "origin-right scale-x-0",
+                      "transition-transform duration-[350ms] ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
                       "group-hover/link:origin-left group-hover/link:scale-x-100",
-                      isActive(link) && "!origin-left !scale-x-100",
-                      isScrolled
-                        ? "bg-emerald-600"
-                        : "bg-white"
+                      isActive(link) && "!origin-left !scale-x-100"
                     )}
                   />
-                  {/* shine */}
-                  <span className="pointer-events-none absolute inset-0 -left-full bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover/link:left-full group-hover/link:transition-[left] group-hover/link:duration-700" />
+
+                  {/* ── Shine sweep ─── */}
+                  <span
+                    className={cn(
+                      "pointer-events-none absolute inset-0 -left-full",
+                      "bg-gradient-to-r from-transparent via-white/15 to-transparent",
+                      "group-hover/link:left-full",
+                      "group-hover/link:transition-[left] group-hover/link:duration-600 group-hover/link:ease-linear"
+                    )}
+                  />
                 </Link>
 
-                {/* Dropdown */}
+                {/* ── Desktop Dropdown ──────────────────────────────────── */}
                 {link.dropdown && (
                   <div
                     className={cn(
@@ -497,50 +500,51 @@ const Navbar = () => {
                       "transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
                       activeDropdown === link.name
                         ? "pointer-events-auto visible translate-y-0 scale-100 opacity-100"
-                        : "pointer-events-none invisible -translate-y-3 scale-[0.92] opacity-0"
+                        : "pointer-events-none invisible -translate-y-2 scale-95 opacity-0"
                     )}
                   >
-                    <div className="overflow-hidden rounded-2xl border border-green-100/80 bg-white/[0.98] p-2.5 shadow-[0_20px_50px_rgba(6,78,59,0.12),0_0_0_1px_rgba(16,185,129,0.04)] backdrop-blur-xl">
+                    <div className="overflow-hidden rounded-2xl border border-[#dcfce7] bg-white/[0.98] p-2.5 shadow-[0_20px_50px_rgba(6,78,59,0.15),0_0_0_1px_rgba(16,185,129,0.06)] backdrop-blur-[20px]">
                       {link.dropdown.map((sub, si) => (
                         <Link
                           key={sub.name}
                           to={sub.path}
                           onClick={() => setActiveDropdown(null)}
                           className={cn(
-                            "group/sub flex items-center gap-3 rounded-lg px-4 py-2.5 text-[0.95rem] font-medium text-gray-700 no-underline",
-                            "transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-600",
+                            "group/sub flex items-center gap-3 rounded-md px-4 py-2.5 text-[0.95rem] font-medium text-gray-900 no-underline",
+                            "transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
+                            "hover:bg-[rgba(5,150,105,0.08)] hover:text-emerald-600",
                             sub.info && "items-start py-3",
                             activeDropdown === link.name
                               ? "translate-x-0 opacity-100"
-                              : "-translate-x-3 opacity-0"
+                              : "-translate-x-2.5 opacity-0"
                           )}
                           style={{
                             transitionDelay:
                               activeDropdown === link.name
-                                ? `${si * 40}ms`
+                                ? `${si * 50}ms`
                                 : "0ms",
                           }}
                         >
                           {sub.flag ? (
-                            <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-lg">
+                            <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-[1.1rem]">
                               {sub.flag.startsWith("http") ||
                               sub.flag.includes("/") ? (
                                 <img
                                   src={sub.flag}
                                   alt={`${sub.name} flag`}
-                                  className="h-full w-full rounded-full object-cover shadow-sm"
+                                  className="h-full w-full rounded-full object-cover shadow-[0_1px_3px_rgba(0,0,0,0.1)]"
                                 />
                               ) : (
                                 sub.flag
                               )}
                             </span>
                           ) : (
-                            <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-500 opacity-40 transition-all duration-200 group-hover/sub:scale-150 group-hover/sub:opacity-100" />
+                            <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-gradient-to-r from-emerald-600 to-emerald-500 opacity-40 transition-all duration-200 group-hover/sub:scale-[1.3] group-hover/sub:opacity-100" />
                           )}
                           <div className="flex flex-col gap-0.5">
                             <span>{sub.name}</span>
                             {sub.info && (
-                              <span className="text-xs text-gray-400 group-hover/sub:text-emerald-500/70">
+                              <span className="text-xs text-gray-500">
                                 {sub.info}
                               </span>
                             )}
@@ -561,13 +565,15 @@ const Navbar = () => {
               onClick={() => setSearchOpen(true)}
               aria-label="Search"
               className={cn(
-                "inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border-none transition-all duration-300 hover:scale-110 active:scale-95",
+                "relative inline-flex h-[42px] w-[42px] cursor-pointer items-center justify-center overflow-hidden rounded-xl border-none",
+                "transition-all duration-200 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+                "hover:scale-[1.08] active:scale-[0.94]",
                 isScrolled
-                  ? "bg-gray-100 text-gray-600 hover:bg-emerald-50 hover:text-emerald-600"
-                  : "bg-white/15 text-white hover:bg-white/25"
+                  ? "bg-[rgba(5,150,105,0.1)] text-emerald-600 shadow-[0_4px_12px_rgba(5,150,105,0.1)]"
+                  : "bg-white/[0.18] text-white shadow-[0_6px_14px_rgba(2,44,34,0.1)]"
               )}
             >
-              <FiSearch size={18} />
+              <FiSearch size={19} />
             </button>
 
             {/* Favorites */}
@@ -576,15 +582,17 @@ const Navbar = () => {
                 role="button"
                 aria-label="Favorites"
                 className={cn(
-                  "relative inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl transition-all duration-300 hover:scale-110 active:scale-95",
+                  "relative inline-flex h-[42px] w-[42px] cursor-pointer items-center justify-center overflow-hidden rounded-xl",
+                  "transition-all duration-200 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+                  "hover:scale-[1.08] active:scale-[0.94]",
                   isScrolled
-                    ? "bg-gray-100 text-gray-600 hover:bg-emerald-50 hover:text-emerald-600"
-                    : "bg-white/15 text-white hover:bg-white/25"
+                    ? "bg-[rgba(5,150,105,0.1)] text-emerald-600 shadow-[0_4px_12px_rgba(5,150,105,0.1)]"
+                    : "bg-white/[0.18] text-white shadow-[0_6px_14px_rgba(2,44,34,0.1)]"
                 )}
               >
-                <FiHeart size={18} />
+                <FiHeart size={19} />
                 {favorites.length > 0 && (
-                  <span className="absolute -right-1 -top-1 flex h-[18px] w-[18px] animate-[badgePop_0.4s_ease] items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white shadow-[0_2px_8px_rgba(5,150,105,0.4)] ring-2 ring-white">
+                  <span className="absolute -right-1 -top-1 flex h-5 w-5 animate-[badgePop_0.4s_ease-[cubic-bezier(0.175,0.885,0.32,1.275)]] items-center justify-center rounded-full bg-emerald-600 text-[11px] font-bold text-white shadow-[0_2px_8px_rgba(5,150,105,0.4)]">
                     {favorites.length}
                   </span>
                 )}
@@ -595,8 +603,10 @@ const Navbar = () => {
             {authLoading ? (
               <span
                 className={cn(
-                  "h-9 w-20 animate-pulse rounded-full",
-                  isScrolled ? "bg-gray-100" : "bg-white/15"
+                  "h-10 w-20 animate-[skelPulse_1.4s_ease_infinite] rounded-full",
+                  isScrolled
+                    ? "bg-[rgba(5,150,105,0.1)]"
+                    : "bg-white/15"
                 )}
               />
             ) : isAuthenticated ? (
@@ -606,17 +616,19 @@ const Navbar = () => {
                   aria-expanded={userMenuOpen}
                   aria-haspopup="true"
                   className={cn(
-                    "flex cursor-pointer items-center gap-2 rounded-full py-1 pl-1 pr-3 transition-all duration-300 hover:-translate-y-px",
+                    "flex cursor-pointer items-center gap-2 rounded-full py-1 pl-1 pr-3",
+                    "transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]",
+                    "hover:-translate-y-px",
                     isScrolled
-                      ? "border border-gray-200 bg-white shadow-sm hover:border-emerald-300 hover:shadow-md"
-                      : "border border-white/25 bg-white/15 backdrop-blur-sm hover:border-white/50 hover:bg-white/25"
+                      ? "border-[1.5px] border-emerald-500/[0.22] bg-[rgba(5,150,105,0.08)] shadow-[0_10px_22px_rgba(5,150,105,0.12)] hover:border-emerald-600 hover:shadow-[0_14px_28px_rgba(5,150,105,0.18)]"
+                      : "border-[1.5px] border-white/[0.35] bg-white/15 shadow-[0_10px_22px_rgba(5,150,105,0.12)] hover:border-white/60 hover:shadow-[0_14px_28px_rgba(5,150,105,0.18)]"
                   )}
                 >
                   {user?.avatar ? (
-                    <span className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-full">
+                    <span className="relative h-[34px] w-[34px] flex-shrink-0 overflow-hidden rounded-full">
                       {!avatarLoaded && (
                         <span className="absolute inset-0 z-[2] grid place-items-center rounded-full bg-gradient-to-br from-emerald-50 to-emerald-100">
-                          <span className="h-3 w-3 animate-spin rounded-full border-2 border-emerald-500 border-r-transparent" />
+                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-emerald-500 border-r-transparent" />
                         </span>
                       )}
                       <img
@@ -628,14 +640,15 @@ const Navbar = () => {
                       />
                     </span>
                   ) : (
-                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-xs font-bold text-white">
+                    <span className="flex h-[34px] w-[34px] flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-600 to-emerald-500 text-[13px] font-bold text-white shadow-[inset_0_0_0_2px_rgba(255,255,255,0.5),0_4px_10px_rgba(6,78,59,0.2)]">
                       {getInitials()}
                     </span>
                   )}
+
                   <span
                     className={cn(
-                      "flex max-w-[100px] flex-col overflow-hidden text-ellipsis whitespace-nowrap leading-tight max-[1180px]:hidden",
-                      isScrolled ? "text-gray-800" : "text-white"
+                      "flex max-w-[110px] flex-col overflow-hidden text-ellipsis whitespace-nowrap leading-[1.15] max-[1180px]:hidden",
+                      isScrolled ? "text-gray-900" : "text-white"
                     )}
                   >
                     <span className="text-[13px] font-semibold">
@@ -643,47 +656,49 @@ const Navbar = () => {
                     </span>
                     <small
                       className={cn(
-                        "text-[10px] font-medium uppercase tracking-wider",
-                        isScrolled ? "text-gray-400" : "text-white/60"
+                        "mt-px text-[10px] font-bold uppercase tracking-[0.04em]",
+                        isScrolled ? "text-gray-500" : "text-white/80"
                       )}
                     >
                       {user?.role === "admin"
-                        ? "Admin"
+                        ? "Administrator"
                         : user?.role === "manager"
                           ? "Manager"
                           : "Traveler"}
                     </small>
                   </span>
+
                   <FiChevronDown
-                    size={14}
                     className={cn(
-                      "transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
-                      isScrolled ? "text-gray-400" : "text-white/60",
+                      "text-sm transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+                      isScrolled ? "text-gray-400" : "text-white/70",
                       userMenuOpen && "rotate-180"
                     )}
                   />
                 </button>
 
-                {/* User Dropdown */}
+                {/* User dropdown */}
                 <div
                   className={cn(
-                    "absolute right-0 top-[calc(100%+8px)] z-[9999] w-[260px] overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.12)]",
+                    "absolute right-0 top-[calc(100%+10px)] z-[9999] w-[260px] overflow-hidden rounded-2xl",
+                    "border border-[#d9f6e7] bg-gradient-to-b from-white/[0.99] to-[rgba(249,255,252,0.98)]",
+                    "shadow-[0_24px_60px_rgba(6,78,59,0.18)]",
                     "transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
                     userMenuOpen
                       ? "pointer-events-auto visible translate-y-0 scale-100 opacity-100"
-                      : "pointer-events-none invisible -translate-y-3 scale-[0.95] opacity-0"
+                      : "pointer-events-none invisible -translate-y-2.5 scale-[0.96] opacity-0"
                   )}
                 >
-                  <div className="border-b border-gray-50 px-4 pb-3 pt-3.5">
+                  <div className="border-b border-[#f0fdf4] px-4 pb-3 pt-3.5">
                     <div className="flex items-center gap-2.5">
                       {user?.avatar ? (
                         <img
                           src={user.avatar}
                           alt=""
-                          className="h-10 w-10 flex-shrink-0 rounded-full object-cover ring-2 ring-emerald-100"
+                          className="h-10 w-10 flex-shrink-0 rounded-full object-cover"
                         />
                       ) : (
-                        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-sm font-bold text-white">
+                        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-600 to-emerald-500 text-sm font-bold text-white">
                           {getInitials()}
                         </span>
                       )}
@@ -694,7 +709,7 @@ const Navbar = () => {
                         <p className="m-0 mt-0.5 truncate text-xs text-gray-400">
                           {user?.email}
                         </p>
-                        <span className="mt-2 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-px text-[10px] font-bold text-emerald-700">
+                        <span className="mt-2 inline-flex rounded-full border border-[#97e9c0] bg-gradient-to-br from-green-50 to-green-100 px-2.5 py-[3px] text-[11px] font-bold text-green-800">
                           {user?.isVerified
                             ? "✓ Verified"
                             : providerLabel}{" "}
@@ -703,12 +718,24 @@ const Navbar = () => {
                       </div>
                     </div>
                   </div>
-                  {userMenuItems.map((m) => (
+                  {userMenuItems.map((m, mi) => (
                     <Link
                       key={m.to}
                       to={m.to}
                       onClick={() => setUserMenuOpen(false)}
-                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-600 no-underline transition-all duration-200 hover:bg-emerald-50 hover:pl-5 hover:text-emerald-600"
+                      className={cn(
+                        "flex items-center gap-2.5 px-4 py-[11px] text-sm text-gray-600 no-underline",
+                        "transition-all duration-200",
+                        "hover:bg-emerald-50 hover:pl-5 hover:text-emerald-600",
+                        userMenuOpen
+                          ? "animate-[dropIn_0.3s_ease-[cubic-bezier(0.4,0,0.2,1)]_forwards]"
+                          : "-translate-x-1.5 opacity-0"
+                      )}
+                      style={{
+                        animationDelay: userMenuOpen
+                          ? `${mi * 40 + 100}ms`
+                          : "0ms",
+                      }}
                     >
                       <m.icon size={16} />
                       {m.label}
@@ -716,7 +743,7 @@ const Navbar = () => {
                   ))}
                   <button
                     onClick={handleLogout}
-                    className="flex w-full cursor-pointer items-center gap-2.5 border-t border-gray-100 bg-transparent px-4 py-2.5 text-sm text-red-500 transition-colors duration-200 hover:bg-red-50 hover:text-red-600"
+                    className="flex w-full cursor-pointer items-center gap-2.5 border-t border-gray-100 bg-transparent px-4 py-[11px] text-sm text-red-600 transition-colors duration-200 hover:bg-red-50"
                   >
                     <FiLogOut size={16} /> Sign Out
                   </button>
@@ -725,12 +752,7 @@ const Navbar = () => {
             ) : (
               <button
                 onClick={() => openModal("login")}
-                className={cn(
-                  "cursor-pointer rounded-xl border-none px-5 py-2 text-sm font-semibold transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.96]",
-                  isScrolled
-                    ? "bg-emerald-600 text-white shadow-[0_4px_14px_rgba(5,150,105,0.25)] hover:bg-emerald-700 hover:shadow-[0_6px_20px_rgba(5,150,105,0.3)]"
-                    : "bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
-                )}
+                className="relative cursor-pointer overflow-hidden rounded-xl border-none bg-gradient-to-br from-emerald-600 to-emerald-500 px-5 py-[9px] text-sm font-semibold text-white shadow-[0_4px_14px_rgba(5,150,105,0.3)] transition-all duration-200 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] hover:-translate-y-0.5 hover:shadow-[0_8px_24px_rgba(5,150,105,0.35)] active:scale-[0.96]"
               >
                 Sign In
               </button>
@@ -739,11 +761,11 @@ const Navbar = () => {
             {/* CTA */}
             <Link
               to="/booking"
-              className="group/cta inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-5 py-2 text-sm font-semibold text-white no-underline shadow-[0_4px_14px_rgba(5,150,105,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:gap-2.5 hover:shadow-[0_8px_24px_rgba(5,150,105,0.35)] active:scale-[0.96]"
+              className="group/cta relative inline-flex items-center gap-1.5 overflow-hidden whitespace-nowrap rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-500 px-5 py-[10px] text-sm font-semibold text-white no-underline shadow-[0_4px_15px_rgba(5,150,105,0.3)] transition-all duration-200 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] hover:-translate-y-0.5 hover:gap-2.5 hover:shadow-[0_8px_24px_rgba(5,150,105,0.35)] active:scale-[0.96]"
             >
               <span>Book Now</span>
               <svg
-                className="transition-transform duration-300 group-hover/cta:translate-x-[3px]"
+                className="transition-transform duration-200 group-hover/cta:translate-x-[3px]"
                 width="16"
                 height="16"
                 viewBox="0 0 24 24"
@@ -764,41 +786,43 @@ const Navbar = () => {
             aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={isMobileMenuOpen}
             className={cn(
-              "relative hidden h-11 w-11 flex-shrink-0 cursor-pointer items-center justify-center rounded-xl border-none p-0 [-webkit-tap-highlight-color:transparent]",
-              "transition-all duration-300 hover:scale-105 active:scale-90",
+              "relative hidden h-12 w-12 flex-shrink-0 cursor-pointer items-center justify-center rounded-[14px] border-none p-0 [-webkit-tap-highlight-color:transparent]",
+              "transition-all duration-200 hover:scale-[1.05] active:scale-[0.93]",
               "lg:!hidden max-lg:!flex",
-              "max-[380px]:h-10 max-[380px]:w-10 max-[380px]:rounded-lg",
-              isScrolled
-                ? "bg-gray-100 text-gray-700"
-                : "bg-white/15 text-white backdrop-blur-sm"
+              "max-[640px]:h-11 max-[640px]:w-11 max-[640px]:rounded-xl",
+              "max-[480px]:h-[42px] max-[480px]:w-[42px] max-[480px]:rounded-[10px]",
+              "max-[380px]:h-10 max-[380px]:w-10",
+              "max-[320px]:h-[38px] max-[320px]:w-[38px] max-[320px]:rounded-lg",
+              isScrolled ? "bg-[rgba(5,150,105,0.1)]" : "bg-white/[0.18]"
             )}
           >
-            <span className="pointer-events-none flex h-full w-full flex-col items-center justify-center gap-[5px]">
+            <span className="pointer-events-none flex h-full w-full flex-col items-center justify-center">
               <span
                 className={cn(
-                  "block h-[2px] rounded-full transition-all duration-[400ms] ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
-                  isScrolled ? "bg-gray-700" : "bg-white",
+                  "block h-[2.5px] w-[22px] rounded-full transition-all duration-[450ms] ease-[cubic-bezier(0.175,0.885,0.32,1.275)] origin-center",
+                  "max-[640px]:w-5 max-[380px]:w-[18px] max-[380px]:h-0.5 max-[320px]:w-4",
+                  isScrolled ? "bg-emerald-600" : "bg-white",
                   isMobileMenuOpen
-                    ? "w-5 translate-y-[7px] rotate-45"
-                    : "w-5"
+                    ? "translate-y-[2.5px] rotate-45 !w-6 max-[380px]:translate-y-0.5 max-[320px]:translate-y-[1.5px]"
+                    : "-translate-y-1 max-[380px]:-translate-y-[3.5px] max-[320px]:-translate-y-[3px]"
                 )}
               />
               <span
                 className={cn(
-                  "block h-[2px] rounded-full transition-all duration-300",
-                  isScrolled ? "bg-gray-700" : "bg-white",
-                  isMobileMenuOpen
-                    ? "w-0 opacity-0"
-                    : "w-3.5 opacity-100"
+                  "block h-[2.5px] w-4 rounded-full transition-all duration-[350ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
+                  "max-[380px]:h-0.5 max-[320px]:w-4",
+                  isScrolled ? "bg-emerald-600" : "bg-white",
+                  isMobileMenuOpen && "w-0 opacity-0 translate-x-2.5"
                 )}
               />
               <span
                 className={cn(
-                  "block h-[2px] rounded-full transition-all duration-[400ms] ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
-                  isScrolled ? "bg-gray-700" : "bg-white",
+                  "block h-[2.5px] w-[22px] rounded-full transition-all duration-[450ms] ease-[cubic-bezier(0.175,0.885,0.32,1.275)] origin-center",
+                  "max-[640px]:w-5 max-[380px]:w-[18px] max-[380px]:h-0.5 max-[320px]:w-4",
+                  isScrolled ? "bg-emerald-600" : "bg-white",
                   isMobileMenuOpen
-                    ? "w-5 -translate-y-[7px] -rotate-45"
-                    : "w-5"
+                    ? "-translate-y-[2.5px] -rotate-45 !w-6 max-[380px]:-translate-y-0.5 max-[320px]:-translate-y-[1.5px]"
+                    : "translate-y-1 max-[380px]:translate-y-[3.5px] max-[320px]:translate-y-[3px]"
                 )}
               />
             </span>
@@ -809,20 +833,21 @@ const Navbar = () => {
       {/* ── SEARCH OVERLAY ──────────────────────────────────────────────── */}
       <div
         className={cn(
-          "fixed inset-0 z-[2005] flex items-start justify-center bg-black/60 pt-[min(18vh,160px)] backdrop-blur-md",
-          "transition-all duration-400",
-          "max-[640px]:pt-[min(12vh,100px)]",
+          "fixed inset-0 z-[2005] flex items-start justify-center bg-[rgba(2,44,34,0.88)] pt-[min(20vh,170px)] backdrop-blur-[8px]",
+          "transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
+          "max-[640px]:pt-[min(14vh,120px)]",
           searchOpen ? "visible opacity-100" : "invisible opacity-0"
         )}
         onClick={() => setSearchOpen(false)}
       >
         <div
           className={cn(
-            "w-full max-w-[640px] px-5 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
-            "max-[640px]:px-4 max-[320px]:px-3",
+            "w-full max-w-[660px] px-5",
+            "transition-transform duration-[450ms] ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+            "max-[640px]:px-3.5 max-[320px]:px-2.5",
             searchOpen
-              ? "translate-y-0 scale-100 opacity-100"
-              : "translate-y-8 scale-95 opacity-0"
+              ? "translate-y-0 scale-100"
+              : "translate-y-5 scale-[0.97]"
           )}
           onClick={(e) => e.stopPropagation()}
         >
@@ -832,7 +857,7 @@ const Navbar = () => {
           >
             <FiSearch
               className="pointer-events-none absolute left-5 text-emerald-600"
-              size={20}
+              size={22}
             />
             <input
               ref={searchInputRef}
@@ -840,35 +865,48 @@ const Navbar = () => {
               placeholder="Search destinations, experiences..."
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              className="w-full rounded-2xl border-2 border-emerald-200 bg-white py-4 pl-13 pr-14 text-base font-medium outline-none transition-all duration-200 placeholder:text-gray-400 focus:border-emerald-500 focus:shadow-[0_0_0_4px_rgba(5,150,105,0.1)] max-[640px]:py-3.5 max-[640px]:text-[15px]"
+              className={cn(
+                "w-full rounded-[18px] border-2 border-emerald-300 bg-white py-[22px] pl-[54px] pr-[60px]",
+                "font-['Poppins',sans-serif] text-[17px] outline-none",
+                "transition-all duration-200",
+                "focus:border-emerald-600 focus:shadow-[0_0_0_5px_rgba(5,150,105,0.1)]",
+                "max-[640px]:rounded-2xl max-[640px]:py-[18px] max-[640px]:pl-12 max-[640px]:pr-[52px] max-[640px]:text-base",
+                "max-[320px]:py-4 max-[320px]:pl-11 max-[320px]:pr-12 max-[320px]:text-[15px]"
+              )}
             />
             {searchValue && (
               <button
                 type="button"
                 onClick={() => setSearchValue("")}
-                className="absolute right-4 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none bg-gray-100 text-xs text-gray-500 transition-all duration-200 hover:bg-red-50 hover:text-red-500"
+                className="absolute right-[18px] flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none bg-gray-100 text-[13px] text-gray-500 transition-all duration-200 hover:bg-red-100 hover:text-red-600"
               >
                 ✕
               </button>
             )}
           </form>
 
-          <div className="mt-3 max-h-[50vh] overflow-y-auto rounded-2xl [scrollbar-width:thin]">
+          <div className="mt-4 max-h-[55vh] overflow-y-auto [scrollbar-color:theme(colors.emerald.600)_transparent] [scrollbar-width:thin]">
             {isSearching && (
-              <p className="flex items-center justify-center gap-2 py-6 text-center text-sm font-medium text-white/80">
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-emerald-400" />
+              <p className="flex items-center justify-center gap-2.5 p-[18px] text-center font-medium text-white/80">
+                <span className="h-[18px] w-[18px] animate-spin rounded-full border-2 border-white/30 border-t-emerald-500" />
                 Searching…
               </p>
             )}
             {searchResults.length > 0 && (
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-2">
                 {searchResults.map((r, ri) => (
                   <Link
                     key={r.id || ri}
                     to={`/destination/${r.slug || r.id}`}
                     onClick={() => setSearchOpen(false)}
-                    className="flex animate-[srchIn_0.35s_ease_forwards] items-center gap-3 rounded-xl bg-white/[0.08] p-3 opacity-0 no-underline ring-1 ring-white/[0.06] transition-all duration-200 hover:bg-white/15 hover:ring-emerald-500/30 max-[640px]:p-2.5"
-                    style={{ animationDelay: `${ri * 50}ms` }}
+                    className={cn(
+                      "flex items-center gap-3.5 rounded-xl border border-white/[0.08] p-3 no-underline",
+                      "animate-[srchIn_0.35s_ease_forwards] translate-y-2 opacity-0",
+                      "transition-all duration-200",
+                      "hover:translate-x-1 hover:border-emerald-600 hover:bg-white/10",
+                      "max-[640px]:gap-3 max-[640px]:p-2.5"
+                    )}
+                    style={{ animationDelay: `${ri * 60}ms` }}
                   >
                     <img
                       src={
@@ -876,13 +914,13 @@ const Navbar = () => {
                         "https://placehold.co/80x80/059669/ffffff?text=Altuvera"
                       }
                       alt=""
-                      className="h-12 w-12 flex-shrink-0 rounded-lg object-cover max-[640px]:h-10 max-[640px]:w-10"
+                      className="h-[52px] w-[52px] flex-shrink-0 rounded-[10px] object-cover max-[640px]:h-[46px] max-[640px]:w-[46px]"
                     />
-                    <div className="min-w-0 flex-1">
-                      <p className="m-0 truncate text-sm font-semibold text-white">
+                    <div>
+                      <p className="m-0 text-[15px] font-semibold text-white">
                         {r.name}
                       </p>
-                      <p className="m-0 mt-0.5 truncate text-xs text-white/50">
+                      <p className="m-0 mt-0.5 text-[13px] text-white/60">
                         {r.country} · {r.category || "Destination"}
                         {r.duration && <span> · {r.duration}</span>}
                         {r.price && <span> · From ${r.price}</span>}
@@ -893,7 +931,7 @@ const Navbar = () => {
                 <Link
                   to={`/destinations?search=${encodeURIComponent(searchValue)}`}
                   onClick={() => setSearchOpen(false)}
-                  className="mt-1 block rounded-xl bg-white/[0.05] p-3 text-center text-sm font-semibold text-emerald-400 no-underline transition-colors duration-200 hover:bg-white/10 hover:text-emerald-300"
+                  className="mt-2 block border-t border-white/[0.08] p-3.5 text-center text-sm font-bold text-emerald-500 no-underline transition-colors duration-200 hover:text-emerald-400"
                 >
                   View all results for &ldquo;{searchValue}&rdquo;
                 </Link>
@@ -902,7 +940,7 @@ const Navbar = () => {
             {!isSearching &&
               searchValue.trim().length >= 2 &&
               searchResults.length === 0 && (
-                <p className="py-6 text-center text-sm font-medium text-white/60">
+                <p className="p-[18px] text-center font-medium text-white/80">
                   No destinations found.
                 </p>
               )}
@@ -912,7 +950,12 @@ const Navbar = () => {
         <button
           onClick={() => setSearchOpen(false)}
           aria-label="Close search"
-          className="absolute right-5 top-5 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-none bg-white/10 text-lg text-white transition-all duration-300 hover:rotate-90 hover:scale-110 hover:bg-white/20 max-[480px]:right-3 max-[480px]:top-3 max-[480px]:h-10 max-[480px]:w-10"
+          className={cn(
+            "absolute right-5 top-5 flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border-none bg-white/[0.12] text-xl text-white",
+            "transition-all duration-200 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+            "hover:rotate-90 hover:scale-110 hover:bg-white/25",
+            "max-[480px]:right-3.5 max-[480px]:top-3.5 max-[480px]:h-[42px] max-[480px]:w-[42px]"
+          )}
         >
           ✕
         </button>
@@ -921,7 +964,8 @@ const Navbar = () => {
       {/* ── BACKDROP ────────────────────────────────────────────────────── */}
       <div
         className={cn(
-          "fixed inset-0 z-[1001] bg-black/40 backdrop-blur-sm transition-all duration-400",
+          "fixed inset-0 z-[1001] bg-[rgba(2,44,34,0.45)] backdrop-blur-[4px]",
+          "transition-all duration-[350ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
           isMobileMenuOpen
             ? "visible opacity-100"
             : "invisible opacity-0"
@@ -933,53 +977,80 @@ const Navbar = () => {
       <aside
         aria-hidden={!isMobileMenuOpen}
         className={cn(
-          "fixed bottom-0 right-0 top-0 z-[1002] flex w-[min(380px,90vw)] flex-col overflow-hidden bg-white shadow-[-20px_0_60px_rgba(0,0,0,0.1)]",
-          "transition-transform duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
-          "max-[640px]:w-screen",
-          isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
+          "fixed bottom-0 right-0 top-0 z-[1002] flex flex-col overflow-hidden bg-white",
+          "w-[min(400px,92vw)] max-[640px]:w-screen max-[640px]:rounded-none",
+          "shadow-[-10px_0_50px_rgba(6,78,59,0.12)]",
+          "transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)]",
+          isMobileMenuOpen ? "translate-x-0" : "translate-x-[105%]"
         )}
       >
         {/* Header */}
-        <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 px-5 py-3">
+        <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-200 px-[18px] py-3.5">
           <Link
             to="/"
-            className="flex items-center gap-2.5 no-underline"
+            className="flex items-center gap-3 no-underline"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center max-[380px]:h-9 max-[380px]:w-9">
+            <div
+              className={cn(
+                "flex flex-shrink-0 items-center justify-center bg-transparent",
+                "h-[46px] w-[46px]",
+                "max-[640px]:h-[42px] max-[640px]:w-[42px]",
+                "max-[380px]:h-[38px] max-[380px]:w-[38px]",
+                "max-[320px]:h-9 max-[320px]:w-9"
+              )}
+            >
               <img
                 src={getBrandLogoUrl()}
                 alt={BRAND_LOGO_ALT}
-                className="h-full w-full object-contain"
+                className="h-full w-full border-none object-contain outline-none drop-shadow-[0_4px_10px_rgba(5,150,105,0.16)]"
               />
             </div>
-            <span className="font-['Playfair_Display',serif] text-xl font-bold text-emerald-600 max-[380px]:text-lg">
+            <span
+              className={cn(
+                "whitespace-nowrap font-['Playfair_Display',serif] text-2xl font-bold text-emerald-600",
+                "max-[640px]:text-[22px]",
+                "max-[380px]:text-xl",
+                "max-[320px]:text-lg"
+              )}
+            >
               Altuvera
             </span>
           </Link>
+
           <button
             onClick={() => setIsMobileMenuOpen(false)}
             aria-label="Close"
-            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-none bg-gray-100 text-gray-500 transition-all duration-300 hover:rotate-90 hover:bg-red-50 hover:text-red-500"
+            className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-[10px] border-none bg-[rgba(5,150,105,0.1)] transition-all duration-200 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] hover:rotate-90 hover:bg-[rgba(5,150,105,0.15)]"
           >
-            <span className="text-base font-medium leading-none">✕</span>
+            <span className="text-lg font-bold leading-none text-emerald-600">
+              ✕
+            </span>
           </button>
         </div>
 
         {/* Body */}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-[calc(24px+env(safe-area-inset-bottom,0px))] pt-2 max-[380px]:px-4">
+        <div
+          className={cn(
+            "flex-1 overflow-y-auto overscroll-contain [-webkit-overflow-scrolling:touch]",
+            "px-[18px] pb-[calc(28px+env(safe-area-inset-bottom,0px))] pt-2",
+            "max-[640px]:px-4",
+            "max-[380px]:px-3.5",
+            "max-[320px]:px-3"
+          )}
+        >
           {navLinks.map((link, idx) => (
             <div
               key={link.name}
               className={cn(
-                "border-b border-gray-50",
+                "border-b border-gray-100",
                 isMobileMenuOpen
                   ? "animate-[mmSlideIn_0.5s_ease_forwards]"
-                  : "translate-x-8 opacity-0"
+                  : "translate-x-[30px] opacity-0"
               )}
               style={{
                 animationDelay: isMobileMenuOpen
-                  ? `${idx * 50 + 100}ms`
+                  ? `${idx * 60 + 150}ms`
                   : "0ms",
               }}
             >
@@ -987,63 +1058,74 @@ const Navbar = () => {
                 <>
                   <button
                     onClick={() => toggleMobileDropdown(link.name)}
-                    aria-expanded={
-                      activeMobileDropdown === link.name
-                    }
+                    aria-expanded={activeMobileDropdown === link.name}
                     className={cn(
-                      "flex w-full cursor-pointer items-center justify-between border-none bg-transparent px-0 py-3.5 text-left text-base font-semibold transition-colors duration-200",
+                      "flex w-full cursor-pointer items-center justify-between border-none bg-transparent px-1 py-4 text-left font-['Playfair_Display',serif] text-lg font-bold",
+                      "transition-colors duration-200",
+                      "max-[480px]:text-[17px] max-[480px]:py-3.5",
+                      "max-[320px]:text-base max-[320px]:py-3",
                       activeMobileDropdown === link.name
                         ? "text-emerald-600"
-                        : "text-gray-800"
+                        : "text-gray-900"
                     )}
                   >
                     <span>{link.name}</span>
                     <FiChevronDown
-                      size={16}
+                      size={18}
                       className={cn(
-                        "transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
-                        activeMobileDropdown === link.name &&
-                          "rotate-180"
+                        "transition-transform duration-[350ms] ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+                        activeMobileDropdown === link.name && "rotate-180"
                       )}
                     />
                   </button>
 
                   <div
                     className={cn(
-                      "grid overflow-hidden rounded-xl transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                      "grid gap-0.5 overflow-hidden rounded-[14px] border bg-transparent px-2",
+                      "transition-all duration-[400ms] ease-[cubic-bezier(0.4,0,0.2,1)]",
                       activeMobileDropdown === link.name
-                        ? "mb-3 max-h-[500px] border border-emerald-100 bg-emerald-50/50 p-2 opacity-100"
-                        : "max-h-0 border-transparent p-0 opacity-0"
+                        ? "my-1 mb-2.5 max-h-[500px] translate-y-0 border-green-200 bg-[#f8fffc] py-2.5 opacity-100 shadow-[0_6px_24px_rgba(5,150,105,0.08)]"
+                        : "my-0 max-h-0 -translate-y-1.5 border-transparent py-0 opacity-0"
                     )}
                   >
-                    {link.dropdown.map((sub) => (
+                    {link.dropdown.map((sub, si) => (
                       <Link
                         key={sub.name}
                         to={sub.path}
                         onClick={() => setIsMobileMenuOpen(false)}
                         className={cn(
-                          "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-gray-600 no-underline transition-all duration-200",
-                          "hover:bg-emerald-100/60 hover:text-emerald-600",
-                          sub.info && "items-start",
+                          "flex items-center gap-2.5 rounded-md px-3.5 py-2.5 text-[0.95rem] text-gray-500 no-underline",
+                          "transition-all duration-200",
+                          "hover:bg-[rgba(5,150,105,0.08)] hover:pl-4 hover:text-emerald-600",
+                          "max-[480px]:text-[15px] max-[320px]:text-sm",
+                          sub.info && "items-start py-3",
                           location.pathname === sub.path &&
-                            "bg-emerald-100/80 font-medium text-emerald-700"
+                            "bg-[rgba(5,150,105,0.1)] text-emerald-700",
+                          activeMobileDropdown === link.name &&
+                            "animate-[subIn_0.35s_ease_forwards]"
                         )}
+                        style={{
+                          animationDelay:
+                            activeMobileDropdown === link.name
+                              ? `${si * 50 + 80}ms`
+                              : "0ms",
+                        }}
                       >
                         {sub.flag ? (
-                          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-base">
+                          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-[1.1rem]">
                             {sub.flag.startsWith("http") ||
                             sub.flag.includes("/") ? (
                               <img
                                 src={sub.flag}
                                 alt={`${sub.name} flag`}
-                                className="h-full w-full rounded-full object-cover shadow-sm"
+                                className="h-full w-full rounded-full object-cover shadow-[0_1px_3px_rgba(0,0,0,0.1)]"
                               />
                             ) : (
                               sub.flag
                             )}
                           </span>
                         ) : (
-                          <span className="h-1 w-1 flex-shrink-0 rounded-full bg-emerald-500/40" />
+                          <span className="h-[5px] w-[5px] flex-shrink-0 rounded-full bg-emerald-600 opacity-[0.35] transition-all duration-200" />
                         )}
                         <div className="flex flex-col gap-0.5">
                           <span>{sub.name}</span>
@@ -1062,22 +1144,25 @@ const Navbar = () => {
                   to={link.path}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
-                    "group/ml relative flex items-center px-0 py-3.5 text-base font-semibold text-gray-800 no-underline transition-all duration-200",
-                    "hover:text-emerald-600",
+                    "group/ml relative flex items-center px-1 py-4 font-['Playfair_Display',serif] text-lg font-bold text-gray-900 no-underline",
+                    "transition-all duration-200",
+                    "hover:pl-3.5 hover:text-emerald-600",
+                    "max-[480px]:text-[17px] max-[480px]:py-3.5",
+                    "max-[320px]:text-base max-[320px]:py-3",
                     location.pathname === link.path &&
-                      "text-emerald-600"
+                      "pl-3.5 text-emerald-600"
                   )}
                 >
                   <span
                     className={cn(
-                      "absolute left-0 top-1/2 h-0 w-[3px] -translate-y-1/2 rounded-full bg-emerald-500 transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
-                      "group-hover/ml:h-5",
-                      location.pathname === link.path && "!h-5"
+                      "absolute left-0 top-1/2 w-[3px] -translate-y-1/2 rounded bg-gradient-to-b from-emerald-600 to-emerald-500",
+                      "transition-all duration-[250ms] ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+                      location.pathname === link.path
+                        ? "h-[60%]"
+                        : "h-0 group-hover/ml:h-[60%]"
                     )}
                   />
-                  <span className="transition-transform duration-200 group-hover/ml:translate-x-2">
-                    {link.name}
-                  </span>
+                  {link.name}
                 </Link>
               )}
             </div>
@@ -1086,22 +1171,22 @@ const Navbar = () => {
           {/* Divider */}
           <div
             className={cn(
-              "my-4 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent opacity-0",
+              "my-3 h-0.5 rounded-full bg-gradient-to-r from-transparent via-green-200 to-transparent opacity-0",
               isMobileMenuOpen &&
-                "animate-[divIn_0.5s_ease_0.5s_forwards]"
+                "animate-[divIn_0.6s_ease_0.5s_forwards]"
             )}
           />
 
-          {/* Auth section */}
-          <div className="pt-1">
+          {/* Auth */}
+          <div className="pt-3">
             {isAuthenticated ? (
               <>
-                <div className="mb-4 flex items-center gap-3 rounded-xl bg-gray-50 p-3">
+                <div className="mb-3.5 flex items-center gap-3">
                   {user?.avatar ? (
-                    <span className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-full ring-2 ring-emerald-100">
+                    <span className="relative h-[46px] w-[46px] flex-shrink-0 overflow-hidden rounded-full">
                       {!avatarLoaded && (
-                        <span className="absolute inset-0 z-[2] grid place-items-center rounded-full bg-emerald-50">
-                          <span className="h-3 w-3 animate-spin rounded-full border-2 border-emerald-500 border-r-transparent" />
+                        <span className="absolute inset-0 z-[2] grid place-items-center rounded-full bg-gradient-to-br from-emerald-50 to-emerald-100">
+                          <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-emerald-500 border-r-transparent" />
                         </span>
                       )}
                       <img
@@ -1113,18 +1198,18 @@ const Navbar = () => {
                       />
                     </span>
                   ) : (
-                    <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-sm font-bold text-white">
+                    <span className="flex h-[46px] w-[46px] flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-600 to-emerald-500 text-base font-bold text-white">
                       {getInitials()}
                     </span>
                   )}
                   <div className="min-w-0">
-                    <p className="m-0 truncate text-sm font-semibold text-gray-900">
+                    <p className="m-0 font-['Playfair_Display',serif] text-[17px] font-bold text-gray-900">
                       {displayName}
                     </p>
-                    <p className="m-0 mt-0.5 truncate text-xs text-gray-400">
+                    <p className="m-0 mt-0.5 max-w-[200px] truncate text-[13px] text-gray-400">
                       {user?.email}
                     </p>
-                    <p className="m-0 mt-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-600">
+                    <p className="m-0 mt-1 text-xs font-semibold text-emerald-700">
                       {providerLabel} account
                     </p>
                   </div>
@@ -1135,23 +1220,26 @@ const Navbar = () => {
                     key={m.to}
                     to={m.to}
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="group/mi flex items-center gap-2.5 border-b border-gray-50 px-0 py-3 text-sm font-medium text-gray-600 no-underline transition-all duration-200 hover:text-emerald-600"
+                    className={cn(
+                      "flex items-center gap-2.5 border-b border-gray-100 px-1 py-3 text-base font-semibold text-gray-700 no-underline",
+                      "transition-all duration-200",
+                      "hover:pl-2 hover:text-emerald-600",
+                      "max-[480px]:text-[15px] max-[320px]:text-sm"
+                    )}
                   >
-                    <m.icon
-                      size={16}
-                      className="transition-transform duration-200 group-hover/mi:scale-110"
-                    />{" "}
-                    <span className="transition-transform duration-200 group-hover/mi:translate-x-1">
-                      {m.label}
-                    </span>
+                    <m.icon size={18} /> {m.label}
                   </Link>
                 ))}
 
                 <button
                   onClick={handleLogout}
-                  className="mt-2 flex w-full cursor-pointer items-center gap-2.5 border-none bg-transparent px-0 py-3 text-sm font-medium text-red-500 transition-colors duration-200 hover:text-red-600"
+                  className={cn(
+                    "mt-1.5 flex w-full cursor-pointer items-center gap-2.5 border-none bg-transparent px-1 py-3 text-base font-semibold text-red-600",
+                    "transition-opacity duration-200 hover:opacity-70",
+                    "max-[480px]:text-[15px] max-[320px]:text-sm"
+                  )}
                 >
-                  <FiLogOut size={16} /> Sign Out
+                  <FiLogOut size={18} /> Sign Out
                 </button>
               </>
             ) : (
@@ -1160,7 +1248,7 @@ const Navbar = () => {
                   setIsMobileMenuOpen(false);
                   openModal("login");
                 }}
-                className="w-full cursor-pointer rounded-xl border-none bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-[0_4px_14px_rgba(5,150,105,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-[0_8px_20px_rgba(5,150,105,0.3)] active:scale-[0.97]"
+                className="w-full cursor-pointer rounded-xl border-none bg-emerald-600 px-3.5 py-3.5 text-base font-bold text-white shadow-[0_4px_14px_rgba(5,150,105,0.3)] transition-all duration-200 ease-[cubic-bezier(0.175,0.885,0.32,1.275)] hover:-translate-y-0.5 hover:shadow-[0_8px_22px_rgba(5,150,105,0.35)] active:scale-[0.97]"
               >
                 Sign In / Sign Up
               </button>
@@ -1171,12 +1259,19 @@ const Navbar = () => {
           <Link
             to="/booking"
             onClick={() => setIsMobileMenuOpen(false)}
-            className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-5 py-3.5 text-sm font-semibold text-white no-underline shadow-[0_4px_14px_rgba(5,150,105,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:gap-3 hover:shadow-[0_8px_24px_rgba(5,150,105,0.3)] active:scale-[0.97]"
+            className={cn(
+              "mt-4 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-emerald-600 to-emerald-500 px-[22px] py-3.5 text-base font-semibold text-white no-underline",
+              "shadow-[0_4px_15px_rgba(5,150,105,0.3)]",
+              "transition-all duration-200 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+              "hover:-translate-y-0.5 hover:gap-3 hover:shadow-[0_8px_24px_rgba(5,150,105,0.35)] active:scale-[0.97]",
+              "max-[480px]:text-[15px] max-[480px]:py-[13px] max-[480px]:px-[18px]",
+              "max-[320px]:text-sm max-[320px]:py-3 max-[320px]:px-4"
+            )}
           >
             Book Your Adventure
             <svg
-              width="16"
-              height="16"
+              width="18"
+              height="18"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -1192,14 +1287,38 @@ const Navbar = () => {
 
       {/* ── Keyframes ───────────────────────────────────────────────────── */}
       <style>{`
-        @keyframes badgePop { from { transform: scale(0) } to { transform: scale(1) } }
-        @keyframes srchIn { to { opacity: 1; transform: translateY(0) } }
+        @keyframes navLinkIn {
+          from { opacity: 0; transform: translateY(-10px) }
+          to   { opacity: 1; transform: none }
+        }
+        .nav-item-anim {
+          animation: navLinkIn 0.6s cubic-bezier(0.4,0,0.2,1) calc(var(--i) * 0.06s) both;
+        }
+        @keyframes badgePop {
+          from { transform: scale(0) }
+          to   { transform: scale(1) }
+        }
+        @keyframes skelPulse {
+          0%, 100% { opacity: 0.4 }
+          50%      { opacity: 0.8 }
+        }
+        @keyframes dropIn {
+          to { opacity: 1; transform: none }
+        }
+        @keyframes srchIn {
+          to { opacity: 1; transform: translateY(0) }
+        }
         @keyframes mmSlideIn {
-          0% { opacity: 0; transform: translateX(40px) }
-          60% { opacity: 1 }
+          0%   { opacity: 0; transform: translateX(40px) }
+          60%  { opacity: 1 }
           100% { opacity: 1; transform: none }
         }
-        @keyframes divIn { to { opacity: 1 } }
+        @keyframes subIn {
+          to { opacity: 1; transform: none }
+        }
+        @keyframes divIn {
+          to { opacity: 1 }
+        }
         @media (prefers-reduced-motion: reduce) {
           *, *::before, *::after {
             animation-duration: 0.01ms !important;
