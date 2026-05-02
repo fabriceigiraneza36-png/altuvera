@@ -1,225 +1,186 @@
+// src/pages/Home.jsx
 import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  useMemo,
-  memo,
-  lazy,
-  Suspense,
+  useState, useEffect, useCallback, useRef, useMemo, memo,
 } from "react";
 import { Link } from "react-router-dom";
 import {
-  FiArrowRight,
-  FiArrowUpRight,
-  FiCheck,
-  FiStar,
-  FiMapPin,
-  FiCamera,
-  FiUsers,
-  FiAward,
-  FiHeart,
-  FiShield,
-  FiClock,
-  FiGlobe,
-  FiCompass,
-  FiPlay,
-  FiChevronLeft,
-  FiChevronRight,
-  FiMail,
-  FiMap,
-  FiSun,
-  FiTarget,
-  FiBookOpen,
-  FiZap,
-  FiEye,
-  FiX,
-  FiChevronDown,
-  FiCalendar,
-  FiTrendingUp,
-} from "react-icons/fi";
-import {
-  motion,
-  AnimatePresence,
-  useScroll,
-  useTransform,
-  useInView,
-  useSpring,
-  useMotionValue,
-  useMotionValueEvent,
+  motion, AnimatePresence, useScroll, useTransform, useInView,
+  useSpring, useMotionValue, useMotionValueEvent,
 } from "framer-motion";
+
 import Hero, { HERO_SLIDES } from "../components/home/Hero";
-import CountryGrid from "../components/home/CountriesAside";
 import AnimatedSection from "../components/common/AnimatedSection";
 import Button from "../components/common/Button";
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
-import { useApp } from "../context/AppContext";
-import { sendVerificationCode, verifyCode } from "../utils/verifyEmail";
-import { testimonials } from "../data/testimonials";
-import { services } from "../data/services";
-import { useDestinations } from "../hooks/useDestinations";
-import { useWishlist } from "../hooks/useWishlist";
-import ImageCycle from "../components/common/ImageCycle";
 import Confetti from "../components/common/Confetti";
-import { useScrollTriggeredSlide } from "../hooks/useScrollTriggeredSlide";
-import { useUserAuth } from "../context/UserAuthContext";
-import chatgpt from "../assets/chatgpt.png";
 import SEO from "../components/common/SEO";
+import DestinationCard from "../components/home/DestinationCard";
+
+import { useApp } from "../context/AppContext";
+import { useUserAuth } from "../context/UserAuthContext";
+import { useDestinations } from "../hooks/useDestinations";
+import { useCountries } from "../hooks/useCountries";
+import { useGallery } from "../hooks/useGallery";
+import { useTestimonials } from "../hooks/useTestimonials";
+import { useWishlist } from "../hooks/useWishlist";
+import "../styles/Home.css";
 
 /* ═══════════════════════════════════════════
-   UTILITY: Reduced Motion Hook
+   SVG ICONS
+   ═══════════════════════════════════════════ */
+const IconArrowRight = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
+);
+const IconCheck = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20 6 9 17l-5-5" /></svg>
+);
+const IconStar = ({ size = 16, color = "currentColor", fill = "none", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+);
+const IconMapPin = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+);
+const IconGlobe = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10" /><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" /><path d="M2 12h20" /></svg>
+);
+const IconCompass = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10" /><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" /></svg>
+);
+const IconChevronLeft = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="m15 18-6-6 6-6" /></svg>
+);
+const IconChevronRight = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="m9 18 6-6-6-6" /></svg>
+);
+const IconMail = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
+);
+const IconMap = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z" /><path d="M15 5.764v15" /><path d="M9 3.236v15" /></svg>
+);
+const IconSun = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2m-7.07-14.07 1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2m-4.34-7.07-1.41 1.41M6.34 17.66l-1.41 1.41" /></svg>
+);
+const IconTarget = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>
+);
+const IconBookOpen = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" /></svg>
+);
+const IconZap = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M4 14a1 1 0 0 1-.78-1.63l9.9-10.2a.5.5 0 0 1 .86.46l-1.92 6.02A1 1 0 0 0 13 10h7a1 1 0 0 1 .78 1.63l-9.9 10.2a.5.5 0 0 1-.86-.46l1.92-6.02A1 1 0 0 0 11 14z" /></svg>
+);
+const IconCamera = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" /><circle cx="12" cy="13" r="3" /></svg>
+);
+const IconFlag = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" /><line x1="4" x2="4" y1="22" y2="15" /></svg>
+);
+const IconExpand = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="m21 21-6-6m6 6v-4.8m0 4.8h-4.8M3 16.2V21m0 0h4.8M3 21l6-6M21 7.8V3m0 0h-4.8M21 3l-6 6M3 7.8V3m0 0h4.8M3 3l6 6" /></svg>
+);
+const IconRefresh = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" /><path d="M3 3v5h5" /><path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" /><path d="M16 16h5v5" /></svg>
+);
+const IconWhatsApp = ({ size = 24, ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" {...p}><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z" /></svg>
+);
+const IconPhone = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.56 1.18h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.9a16 16 0 0 0 6.29 6.29l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+);
+const IconMessageCircle = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></svg>
+);
+const IconShield = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
+);
+const IconClock = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+);
+const IconUsers = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+);
+const IconLoader = ({ size = 16, color = "currentColor", ...p }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+);
+
+/* ═══════════════════════════════════════════
+   UTILITY HOOKS
    ═══════════════════════════════════════════ */
 const usePrefersReducedMotion = () => {
-  const [reduced, setReduced] = useState(false);
+  const [r, setR] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    setReduced(mq.matches);
-    const handler = (e) => setReduced(e.matches);
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
+    setR(mq.matches);
+    const h = (e) => setR(e.matches);
+    mq.addEventListener("change", h);
+    return () => mq.removeEventListener("change", h);
   }, []);
-  return reduced;
+  return r;
 };
 
-/* ═══════════════════════════════════════════
-   UTILITY: Window Size Hook
-   ═══════════════════════════════════════════ */
 const useWindowSize = () => {
-  const [size, setSize] = useState({
-    w: typeof window !== "undefined" ? window.innerWidth : 1200,
-    h: typeof window !== "undefined" ? window.innerHeight : 800,
-  });
+  const [s, setS] = useState({ w: typeof window !== "undefined" ? window.innerWidth : 1200, h: typeof window !== "undefined" ? window.innerHeight : 800 });
   useEffect(() => {
     let raf;
-    const handle = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() =>
-        setSize({ w: window.innerWidth, h: window.innerHeight }),
-      );
-    };
-    window.addEventListener("resize", handle);
-    return () => {
-      window.removeEventListener("resize", handle);
-      cancelAnimationFrame(raf);
-    };
+    const h = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => setS({ w: window.innerWidth, h: window.innerHeight })); };
+    window.addEventListener("resize", h);
+    return () => { window.removeEventListener("resize", h); cancelAnimationFrame(raf); };
   }, []);
-  return size;
+  return s;
 };
 
 /* ═══════════════════════════════════════════
-   UTILITY: Smooth Scroll Hook
-   ═══════════════════════════════════════════ */
-const useSmoothScroll = () => {
-  useEffect(() => {
-    const html = document.documentElement;
-    html.style.scrollBehavior = "smooth";
-    return () => {
-      html.style.scrollBehavior = "";
-    };
-  }, []);
-};
-
-/* ═══════════════════════════════════════════
-   COMPONENT: Scroll Progress Bar
+   SCROLL PROGRESS BAR
    ═══════════════════════════════════════════ */
 const ScrollProgress = memo(() => {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, { stiffness: 80, damping: 25 });
-  return (
-    <motion.div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 4,
-        background: "linear-gradient(90deg, #059669, #10B981, #34D399)",
-        transformOrigin: "0%",
-        scaleX,
-        zIndex: 9999,
-      }}
-    />
-  );
+  return <motion.div className="scroll-progress-bar" style={{ scaleX }} />;
 });
 
 /* ═══════════════════════════════════════════
-   COMPONENT: Magnetic Wrapper
+   MAGNETIC WRAPPER
    ═══════════════════════════════════════════ */
 const MagneticWrap = memo(({ children, strength = 0.25, scale = 1.02 }) => {
   const ref = useRef(null);
   const reduced = usePrefersReducedMotion();
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-  const springX = useSpring(x, { stiffness: 180, damping: 18 });
-  const springY = useSpring(y, { stiffness: 180, damping: 18 });
-  const springScale = useSpring(1, { stiffness: 280, damping: 22 });
-
-  const handleMove = useCallback(
-    (e) => {
-      if (reduced) return;
-      const r = ref.current?.getBoundingClientRect();
-      if (!r) return;
-      x.set((e.clientX - r.left - r.width / 2) * strength);
-      y.set((e.clientY - r.top - r.height / 2) * strength);
-      springScale.set(scale);
-    },
-    [reduced, strength, scale, x, y, springScale],
-  );
-
-  const handleLeave = useCallback(() => {
-    x.set(0);
-    y.set(0);
-    springScale.set(1);
-  }, [x, y, springScale]);
-
+  const x = useMotionValue(0), y = useMotionValue(0);
+  const sx = useSpring(x, { stiffness: 180, damping: 18 });
+  const sy = useSpring(y, { stiffness: 180, damping: 18 });
+  const ss = useSpring(1, { stiffness: 280, damping: 22 });
+  const onMove = useCallback((e) => {
+    if (reduced) return;
+    const r = ref.current?.getBoundingClientRect();
+    if (!r) return;
+    x.set((e.clientX - r.left - r.width / 2) * strength);
+    y.set((e.clientY - r.top - r.height / 2) * strength);
+    ss.set(scale);
+  }, [reduced, strength, scale, x, y, ss]);
+  const onLeave = useCallback(() => { x.set(0); y.set(0); ss.set(1); }, [x, y, ss]);
   return (
-    <motion.div
-      ref={ref}
-      onMouseMove={handleMove}
-      onMouseLeave={handleLeave}
-      style={{
-        display: "inline-block",
-        x: springX,
-        y: springY,
-        scale: springScale,
-      }}
-    >
+    <motion.div ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} style={{ display: "inline-block", x: sx, y: sy, scale: ss }}>
       {children}
     </motion.div>
   );
 });
 
 /* ═══════════════════════════════════════════
-   COMPONENT: Animated Counter
+   ANIMATED COUNTER
    ═══════════════════════════════════════════ */
 const Counter = memo(({ end, suffix = "", duration = 2.5 }) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-50px" });
-  const motionVal = useMotionValue(0);
-  const springVal = useSpring(motionVal, {
-    duration: duration * 1000,
-    bounce: 0,
-  });
-  const [display, setDisplay] = useState("0");
-
-  useEffect(() => {
-    if (inView) motionVal.set(parseInt(end, 10));
-  }, [inView, end, motionVal]);
-
-  useMotionValueEvent(springVal, "change", (v) => {
-    setDisplay(Math.round(v).toLocaleString());
-  });
-
-  return (
-    <span ref={ref}>
-      {display}
-      {suffix}
-    </span>
-  );
+  const mv = useMotionValue(0);
+  const sv = useSpring(mv, { duration: duration * 1000, bounce: 0 });
+  const [d, setD] = useState("0");
+  useEffect(() => { if (inView) mv.set(parseInt(end, 10)); }, [inView, end, mv]);
+  useMotionValueEvent(sv, "change", (v) => setD(Math.round(v).toLocaleString()));
+  return <span ref={ref}>{d}{suffix}</span>;
 });
 
 /* ═══════════════════════════════════════════
-   COMPONENT: Text Reveal (line-by-line)
+   TEXT REVEAL
    ═══════════════════════════════════════════ */
 const TextReveal = memo(({ children, delay = 0 }) => {
   const ref = useRef(null);
@@ -228,11 +189,7 @@ const TextReveal = memo(({ children, delay = 0 }) => {
   if (reduced) return <div>{children}</div>;
   return (
     <div ref={ref} style={{ overflow: "hidden" }}>
-      <motion.div
-        initial={{ y: "120%", opacity: 0, rotateX: -20 }}
-        animate={inView ? { y: 0, opacity: 1, rotateX: 0 } : {}}
-        transition={{ duration: 1, delay, ease: [0.25, 1, 0.5, 1] }}
-      >
+      <motion.div initial={{ y: "120%", opacity: 0 }} animate={inView ? { y: 0, opacity: 1 } : {}} transition={{ duration: 0.9, delay, ease: [0.25, 1, 0.5, 1] }}>
         {children}
       </motion.div>
     </div>
@@ -240,48 +197,19 @@ const TextReveal = memo(({ children, delay = 0 }) => {
 });
 
 /* ═══════════════════════════════════════════
-   COMPONENT: Split Text Reveal (word-by-word)
+   SPLIT TEXT
    ═══════════════════════════════════════════ */
 const SplitText = memo(({ children, className, style, delay = 0 }) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-50px" });
   const reduced = usePrefersReducedMotion();
   const words = typeof children === "string" ? children.split(" ") : [children];
-
-  if (reduced)
-    return (
-      <span className={className} style={style}>
-        {children}
-      </span>
-    );
-
+  if (reduced) return <span className={className} style={style}>{children}</span>;
   return (
-    <span
-      ref={ref}
-      className={className}
-      style={{ ...style, display: "inline" }}
-    >
-      {words.map((word, i) => (
-        <span
-          key={i}
-          style={{
-            display: "inline-block",
-            overflow: "hidden",
-            marginRight: "0.3em",
-          }}
-        >
-          <motion.span
-            initial={{ y: "130%", opacity: 0 }}
-            animate={inView ? { y: 0, opacity: 1 } : {}}
-            transition={{
-              duration: 0.7,
-              delay: delay + i * 0.05,
-              ease: [0.25, 1, 0.5, 1],
-            }}
-            style={{ display: "inline-block" }}
-          >
-            {word}
-          </motion.span>
+    <span ref={ref} className={className} style={{ ...style, display: "inline" }}>
+      {words.map((w, i) => (
+        <span key={i} style={{ display: "inline-block", overflow: "hidden", marginRight: "0.3em" }}>
+          <motion.span initial={{ y: "130%", opacity: 0 }} animate={inView ? { y: 0, opacity: 1 } : {}} transition={{ duration: 0.7, delay: delay + i * 0.05, ease: [0.25, 1, 0.5, 1] }} style={{ display: "inline-block" }}>{w}</motion.span>
         </span>
       ))}
     </span>
@@ -289,473 +217,643 @@ const SplitText = memo(({ children, className, style, delay = 0 }) => {
 });
 
 /* ═══════════════════════════════════════════
-   COMPONENT: Stagger Container / Item
+   STAGGER CONTAINER / ITEM
    ═══════════════════════════════════════════ */
 const StaggerWrap = memo(({ children, stagger = 0.1, className, style }) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-40px" });
   return (
-    <motion.div
-      ref={ref}
-      className={className}
-      style={style}
-      initial="hidden"
-      animate={inView ? "visible" : "hidden"}
-      variants={{
-        visible: { transition: { staggerChildren: stagger } },
-        hidden: {},
-      }}
-    >
+    <motion.div ref={ref} className={className} style={style} initial="hidden" animate={inView ? "visible" : "hidden"} variants={{ visible: { transition: { staggerChildren: stagger } }, hidden: {} }}>
       {children}
     </motion.div>
   );
 });
-
 const StaggerChild = memo(({ children, style }) => (
-  <motion.div
-    style={style}
-    variants={{
-      hidden: { opacity: 0, y: 50, scale: 0.95, filter: "blur(6px)" },
-      visible: {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        filter: "blur(0px)",
-        transition: { duration: 0.8, ease: [0.25, 1, 0.5, 1] },
-      },
-    }}
-  >
+  <motion.div style={style} variants={{ hidden: { opacity: 0, y: 44, filter: "blur(6px)" }, visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.75, ease: [0.25, 1, 0.5, 1] } } }}>
     {children}
   </motion.div>
 ));
 
 /* ═══════════════════════════════════════════
-   COMPONENT: 3D Perspective Card
+   PARALLAX SECTION
    ═══════════════════════════════════════════ */
-const PerspectiveCard = memo(
-  ({ children, style, className, intensity = 12 }) => {
-    const ref = useRef(null);
-    const reduced = usePrefersReducedMotion();
-    const rx = useMotionValue(0);
-    const ry = useMotionValue(0);
-    const gx = useMotionValue(50);
-    const gy = useMotionValue(50);
-    const isHovered = useMotionValue(0);
-    const springRx = useSpring(rx, { stiffness: 280, damping: 28 });
-    const springRy = useSpring(ry, { stiffness: 280, damping: 28 });
-    const springHover = useSpring(isHovered, { stiffness: 180, damping: 22 });
-
-    const handleMove = useCallback(
-      (e) => {
-        if (reduced) return;
-        const r = ref.current?.getBoundingClientRect();
-        if (!r) return;
-        const x = (e.clientX - r.left) / r.width;
-        const y = (e.clientY - r.top) / r.height;
-        rx.set((y - 0.5) * -intensity);
-        ry.set((x - 0.5) * intensity);
-        gx.set(x * 100);
-        gy.set(y * 100);
-        isHovered.set(1);
-      },
-      [reduced, intensity, rx, ry, gx, gy, isHovered],
-    );
-
-    const handleLeave = useCallback(() => {
-      rx.set(0);
-      ry.set(0);
-      gx.set(50);
-      gy.set(50);
-      isHovered.set(0);
-    }, [rx, ry, gx, gy, isHovered]);
-
-    const shadow = useTransform(
-      springHover,
-      [0, 1],
-      ["0 4px 24px rgba(0,0,0,0.06)", "0 30px 60px rgba(5,150,105,0.18)"],
-    );
-    const translateY = useTransform(springHover, [0, 1], [0, -8]);
-
-    return (
-      <motion.div
-        ref={ref}
-        className={className}
-        onMouseMove={handleMove}
-        onMouseLeave={handleLeave}
-        style={{
-          ...style,
-          perspective: 900,
-          transformStyle: "preserve-3d",
-          rotateX: springRx,
-          rotateY: springRy,
-          boxShadow: shadow,
-          y: translateY,
-          position: "relative",
-        }}
-      >
-        {children}
-        <motion.div
-          style={{
-            position: "absolute",
-            inset: 0,
-            borderRadius: "inherit",
-            pointerEvents: "none",
-            zIndex: 20,
-            opacity: springHover,
-            background: useTransform(
-              [gx, gy],
-              ([gxVal, gyVal]) =>
-                `radial-gradient(circle at ${gxVal}% ${gyVal}%, rgba(255,255,255,0.18), transparent 55%)`,
-            ),
-          }}
-        />
-      </motion.div>
-    );
-  },
-);
-
-/* ═══════════════════════════════════════════
-   COMPONENT: Parallax Section
-   ═══════════════════════════════════════════ */
-const ParallaxSection = memo(
-  ({ image, children, height = "75vh", overlay, id }) => {
-    const ref = useRef(null);
-    const { scrollYProgress } = useScroll({
-      target: ref,
-      offset: ["start end", "end start"],
-    });
-    const reduced = usePrefersReducedMotion();
-    const y = useTransform(
-      scrollYProgress,
-      [0, 1],
-      reduced ? ["0%", "0%"] : ["-15%", "15%"],
-    );
-    const scale = useTransform(
-      scrollYProgress,
-      [0, 0.5, 1],
-      reduced ? [1, 1, 1] : [1.25, 1.08, 1.15],
-    );
-    const contentOp = useTransform(
-      scrollYProgress,
-      [0, 0.25, 0.75, 1],
-      [0, 1, 1, 0],
-    );
-    const contentY = useTransform(
-      scrollYProgress,
-      [0, 0.35, 0.65, 1],
-      reduced ? [0, 0, 0, 0] : [80, 0, 0, -80],
-    );
-
-    return (
-      <section
-        ref={ref}
-        id={id}
-        style={{
-          position: "relative",
-          height,
-          minHeight: 480,
-          overflow: "hidden",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <motion.div
-          style={{
-            position: "absolute",
-            inset: "-25%",
-            backgroundImage: `url(${image})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            y,
-            scale,
-            willChange: "transform",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              overlay ||
-              "linear-gradient(135deg, rgba(2,44,34,.88) 0%, rgba(5,150,105,.72) 100%)",
-          }}
-        />
-        <motion.div
-          style={{
-            position: "relative",
-            zIndex: 2,
-            opacity: contentOp,
-            y: contentY,
-            width: "100%",
-            maxWidth: 920,
-            padding: "0 24px",
-            textAlign: "center",
-          }}
-        >
-          {children}
-        </motion.div>
-      </section>
-    );
-  },
-);
-
-/* ═══════════════════════════════════════════
-   COMPONENT: Image Lazy Loader with blur
-   ═══════════════════════════════════════════ */
-const LazyImage = memo(({ src, alt, style, className }) => {
-  const [loaded, setLoaded] = useState(false);
+const ParallaxSection = memo(({ image, children, height = "80vh", overlay }) => {
   const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "250px" });
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
+  const reduced = usePrefersReducedMotion();
+  const y = useTransform(scrollYProgress, [0, 1], reduced ? ["0%", "0%"] : ["-15%", "15%"]);
+  const scale = useTransform(scrollYProgress, [0, 0.5, 1], reduced ? [1, 1, 1] : [1.22, 1.08, 1.15]);
+  const contentOp = useTransform(scrollYProgress, [0, 0.25, 0.75, 1], [0, 1, 1, 0]);
+  const contentY = useTransform(scrollYProgress, [0, 0.35, 0.65, 1], reduced ? [0, 0, 0, 0] : [70, 0, 0, -70]);
+  return (
+    <section ref={ref} className="cta-section" style={{ height, minHeight: 480 }}>
+      <motion.div className="cta-bg" style={{ backgroundImage: `url(${image})`, y, scale }} />
+      <div className="cta-overlay" style={{ background: overlay }} />
+      <motion.div className="cta-inner" style={{ opacity: contentOp, y: contentY }}>{children}</motion.div>
+    </section>
+  );
+});
+
+/* ═══════════════════════════════════════════
+   ADVENTURE CARD (with slideshow)
+   ═══════════════════════════════════════════ */
+const AdventureCard = memo(({ adventure, index }) => {
+  const [cur, setCur] = useState(0);
+  const [hov, setHov] = useState(false);
+  const ivRef = useRef(null);
+  const imgs = adventure.images || [adventure.image];
+  useEffect(() => {
+    if (imgs.length <= 1) return;
+    ivRef.current = setInterval(() => setCur((p) => (p + 1) % imgs.length), hov ? 2200 : 4500);
+    return () => clearInterval(ivRef.current);
+  }, [imgs.length, hov]);
+  const goPrev = useCallback((e) => { e.stopPropagation(); setCur((p) => (p - 1 + imgs.length) % imgs.length); }, [imgs.length]);
+  const goNext = useCallback((e) => { e.stopPropagation(); setCur((p) => (p + 1) % imgs.length); }, [imgs.length]);
+  return (
+    <motion.div className="adventure-card-v2" onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, delay: index * 0.1 }}>
+      <div className="adventure-card-v2-images">
+        <AnimatePresence mode="wait">
+          <motion.img key={cur} src={imgs[cur]} alt={adventure.title} className="adventure-card-v2-img" loading="lazy" initial={{ opacity: 0, scale: 1.08 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} transition={{ duration: 0.45 }} />
+        </AnimatePresence>
+        <div className="adventure-card-v2-gradient" />
+        {imgs.length > 1 && (
+          <motion.div className="adventure-card-v2-nav" initial={{ opacity: 0 }} animate={{ opacity: hov ? 1 : 0 }} transition={{ duration: 0.2 }}>
+            <button className="adventure-card-v2-nav-btn" onClick={goPrev} aria-label="Previous"><IconChevronLeft size={18} /></button>
+            <button className="adventure-card-v2-nav-btn" onClick={goNext} aria-label="Next"><IconChevronRight size={18} /></button>
+          </motion.div>
+        )}
+        {imgs.length > 1 && (
+          <div className="adventure-card-v2-indicators">
+            {imgs.map((_, i) => (
+              <button key={i} className={`adventure-card-v2-indicator${i === cur ? " active" : ""}`} onClick={(e) => { e.stopPropagation(); setCur(i); }} aria-label={`Image ${i + 1}`} />
+            ))}
+          </div>
+        )}
+        <div className="adventure-card-v2-icon" style={{ background: adventure.color }}><span>{adventure.icon}</span></div>
+        <div className="adventure-card-v2-count">{adventure.count}</div>
+      </div>
+      <div className="adventure-card-v2-content">
+        <h3 className="adventure-card-v2-title">{adventure.title}</h3>
+        <p className="adventure-card-v2-desc">{adventure.description}</p>
+        <Link to={`/adventures/${adventure.slug || adventure.title.toLowerCase().replace(/\s+/g, "-")}`} className="adventure-card-v2-link">
+          <span>Explore</span><IconArrowRight size={14} />
+        </Link>
+      </div>
+    </motion.div>
+  );
+});
+
+/* ═══════════════════════════════════════════
+   COUNTRY CARD (with slideshow)
+   ═══════════════════════════════════════════ */
+const CountryCard = memo(({ country, index }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
+  const [curImg, setCurImg] = useState(0);
+  const [hover, setHover] = useState(false);
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const ivRef = useRef(null);
+
+  // Build images array for slideshow
+  const allImages = useMemo(() => {
+    if (country.images && Array.isArray(country.images) && country.images.length > 0) {
+      return country.images.filter(Boolean);
+    }
+    const singleImg = country.imageUrl || country.heroImage || country.coverImageUrl || country.flagUrl;
+    return singleImg ? [singleImg] : [];
+  }, [country]);
+
+  // Auto-rotation every 5 seconds (2.2s on hover)
+  useEffect(() => {
+    if (allImages.length <= 1) return;
+    ivRef.current = setInterval(() => {
+      setCurImg((p) => (p + 1) % allImages.length);
+    }, hover ? 2200 : 5000);
+    return () => clearInterval(ivRef.current);
+  }, [allImages.length, hover]);
+
+  // Reset loading state when slide changes
+  useEffect(() => {
+    setImgLoaded(false);
+  }, [curImg]);
+
+  const goPrev = useCallback((e) => {
+    e.stopPropagation();
+    setCurImg((p) => (p - 1 + allImages.length) % allImages.length);
+  }, [allImages.length]);
+
+  const goNext = useCallback((e) => {
+    e.stopPropagation();
+    setCurImg((p) => (p + 1) % allImages.length);
+  }, [allImages.length]);
 
   return (
-    <div
-      ref={ref}
-      style={{ position: "relative", overflow: "hidden", ...style }}
-      className={className}
-    >
-      {/* Placeholder */}
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: "linear-gradient(135deg, #D1FAE5, #A7F3D0)",
-          filter: "blur(0px)",
-          transition: "opacity 0.6s ease",
-          opacity: loaded ? 0 : 1,
-          zIndex: 1,
-        }}
-      />
-      {inView && (
-        <motion.img
-          src={src}
-          alt={alt}
-          onLoad={() => setLoaded(true)}
-          initial={{ opacity: 0, scale: 1.08 }}
-          animate={loaded ? { opacity: 1, scale: 1 } : {}}
-          transition={{ duration: 0.7, ease: "easeOut" }}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            display: "block",
-          }}
-          className={className}
-          loading="lazy"
-        />
+    <motion.div ref={ref} className="country-card" initial={{ opacity: 0, y: 50, scale: 0.95 }} animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}} transition={{ duration: 0.6, delay: index * 0.08, ease: [0.25, 1, 0.5, 1] }} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
+      <Link to={`/country/${country.slug || country.id}`} className="country-card-link">
+        <div className="country-card-image-wrap">
+          {/* Slideshow */}
+          <div className="country-card-images">
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={curImg}
+                src={allImages[curImg]}
+                alt={`${country.name} - ${curImg + 1}`}
+                className="country-card-image"
+                loading={curImg === 0 ? "lazy" : "eager"}
+                onLoad={() => setImgLoaded(true)}
+                initial={{ opacity: 0, scale: 1.08 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.96 }}
+                whileHover={{ scale: 1.08 }}
+                transition={{ duration: 0.5 }}
+              />
+            </AnimatePresence>
+          </div>
+
+          <div className="country-card-image-overlay" />
+          {country.flagUrl && <div className="country-card-flag"><img src={country.flagUrl} alt={`${country.name} flag`} /></div>}
+          {country.isFeatured && <div className="country-card-featured"><IconStar size={12} fill="#F59E0B" color="#F59E0B" /><span>Featured</span></div>}
+          {country.destinationCount > 0 && <div className="country-card-stats-overlay"><div className="country-card-stat"><IconMapPin size={13} /><span>{country.destinationCount} Destinations</span></div></div>}
+
+          {/* Navigation arrows */}
+          {allImages.length > 1 && (
+            <motion.div
+              className="country-card-nav"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: hover ? 1 : 0 }}
+              transition={{ duration: 0.2 }}
+              style={{ pointerEvents: hover ? 'auto' : 'none' }}
+            >
+              <button className="country-card-nav-btn" onClick={goPrev} aria-label="Previous image"><IconChevronLeft size={18} /></button>
+              <button className="country-card-nav-btn" onClick={goNext} aria-label="Next image"><IconChevronRight size={18} /></button>
+            </motion.div>
+          )}
+
+          {/* Indicators */}
+          {allImages.length > 1 && (
+            <div className="country-card-indicators">
+              {allImages.map((_, i) => (
+                <button key={i} className={`country-card-indicator${i === curImg ? " active" : ""}`} onClick={(e) => { e.stopPropagation(); setCurImg(i); }} aria-label={`Image ${i + 1}`} />
+              ))}
+            </div>
+          )}
+
+          {/* Skeleton loader - last so it overlays everything */}
+          {!imgLoaded && (
+            <div className="country-card-skeleton">
+              <div className="skeleton-shimmer" />
+            </div>
+          )}
+        </div>
+        <div className="country-card-content">
+          <div className="country-card-header">
+            <h3 className="country-card-name">{country.name}</h3>
+            {country.continent && <span className="country-card-continent">{country.continent}</span>}
+          </div>
+          {country.tagline && <p className="country-card-tagline">{country.tagline}</p>}
+          <div className="country-card-footer">
+            <div className="country-card-meta">
+              {country.capital && <span className="country-card-capital"><IconFlag size={12} />{country.capital}</span>}
+            </div>
+            <span className="country-card-cta">Explore <IconArrowRight size={14} /></span>
+          </div>
+        </div>
+      </Link>
+    </motion.div>
+  );
+});
+
+/* ═══════════════════════════════════════════
+   COUNTRIES SKELETON
+   ═══════════════════════════════════════════ */
+const CountriesSkeleton = ({ count = 4 }) => (
+  <div className="countries-grid">
+    {Array.from({ length: count }).map((_, i) => (
+      <div key={i} className="country-card country-card--skeleton">
+        <div className="country-card-image-wrap skeleton-shimmer" style={{ height: 180 }} />
+        <div className="country-card-content">
+          <div className="skeleton-line skeleton-line--title" />
+          <div className="skeleton-line skeleton-line--text" />
+          <div className="skeleton-line" style={{ width: "50%" }} />
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+/* ═══════════════════════════════════════════
+   COUNTRIES MESSAGE
+   ═══════════════════════════════════════════ */
+const CountriesMessage = ({ type = "loading", error, onRetry }) => {
+  const cfg = {
+    loading: { icon: "🌍", title: "Discovering Countries…", description: "Loading stunning East African destinations for you.", showRetry: false },
+    error: { icon: "⚠️", title: "Couldn't Load Countries", description: error || "Something went wrong. Please try again.", showRetry: true },
+    empty: { icon: "🗺️", title: "No Countries Found", description: "We're still adding amazing destinations. Check back soon.", showRetry: true },
+  };
+  const c = cfg[type] || cfg.loading;
+  return (
+    <motion.div className="countries-message" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+      <div className="countries-message-icon">{c.icon}</div>
+      <h3 className="countries-message-title">{c.title}</h3>
+      <p className="countries-message-desc">{c.description}</p>
+      {c.showRetry && onRetry && <button className="countries-message-retry" onClick={onRetry}><IconRefresh size={16} /> Try Again</button>}
+    </motion.div>
+  );
+};
+
+/* ═══════════════════════════════════════════
+   SIGNATURE CARD
+   ═══════════════════════════════════════════ */
+const SignatureCard = memo(({ experience, index }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
+  if (!experience) return null;
+  const { title, subtitle, description, image, stats } = experience;
+  return (
+    <motion.article ref={ref} className="sig-card" initial={{ opacity: 0, y: 60 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay: index * 0.14, ease: [0.25, 1, 0.5, 1] }}>
+      <div className="sig-card-img-wrap">
+        <img src={image} alt={title} className="sig-card-img" loading="lazy" />
+        <div className="sig-card-img-gradient" />
+        <div className="sig-card-rating"><IconStar size={13} color="#F59E0B" fill="#F59E0B" /><span className="sig-card-rating-value">{stats?.Rating}</span></div>
+        <div className="sig-card-subtitle-tag">{subtitle}</div>
+      </div>
+      <div className="sig-card-body">
+        <h3 className="sig-card-title">{title}</h3>
+        <p className="sig-card-desc">{description}</p>
+        <div className="sig-card-stats">
+          {Object.entries(stats || {}).filter(([k]) => k !== "Rating").map(([key, value]) => (
+            <div key={key} className="sig-card-stat">
+              <div className="sig-card-stat-label">{key}</div>
+              <div className="sig-card-stat-value">{value}</div>
+            </div>
+          ))}
+        </div>
+        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} className="sig-card-cta" onClick={() => (window.location.href = "/booking")}>
+          Book This Experience <IconArrowRight size={16} />
+        </motion.button>
+      </div>
+      <div className="sig-card-corner-accent" />
+    </motion.article>
+  );
+});
+
+/* ═══════════════════════════════════════════
+   GALLERY CARD
+   ═══════════════════════════════════════════ */
+const GalleryCard = memo(({ image, index, onClick }) => {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-30px" });
+  return (
+    <motion.div ref={ref} className="gallery-card" initial={{ opacity: 0, scale: 0.9 }} animate={inView ? { opacity: 1, scale: 1 } : {}} transition={{ duration: 0.5, delay: index * 0.05 }} onClick={() => onClick?.(image, index)} layoutId={`gallery-${image.id}`}>
+      <div className="gallery-card-image-wrap">
+        <img src={image.thumb || image.src} alt={image.alt || image.title} className="gallery-card-image" loading="lazy" />
+        <div className="gallery-card-overlay">
+          <div className="gallery-card-actions"><button className="gallery-card-action" aria-label="View full size"><IconExpand size={20} /></button></div>
+          {image.category && <span className="gallery-card-category">{image.category}</span>}
+        </div>
+      </div>
+      {(image.title || image.location) && (
+        <div className="gallery-card-info">
+          {image.title && <h4 className="gallery-card-title">{image.title}</h4>}
+          {image.location && <span className="gallery-card-location"><IconMapPin size={12} />{image.location}</span>}
+        </div>
       )}
+    </motion.div>
+  );
+});
+
+/* ═══════════════════════════════════════════
+   GALLERY LIGHTBOX
+   ═══════════════════════════════════════════ */
+const GalleryLightbox = memo(({ images, currentIndex, onClose, onNavigate }) => {
+  const img = images[currentIndex];
+  useEffect(() => {
+    const h = (e) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") onNavigate(currentIndex - 1);
+      if (e.key === "ArrowRight") onNavigate(currentIndex + 1);
+    };
+    window.addEventListener("keydown", h);
+    document.body.style.overflow = "hidden";
+    return () => { window.removeEventListener("keydown", h); document.body.style.overflow = ""; };
+  }, [currentIndex, onClose, onNavigate]);
+  return (
+    <motion.div className="gallery-lightbox" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
+      <button className="gallery-lightbox-close" onClick={onClose}>✕</button>
+      <button className="gallery-lightbox-nav gallery-lightbox-nav--prev" disabled={currentIndex === 0} onClick={(e) => { e.stopPropagation(); onNavigate(currentIndex - 1); }}><IconChevronLeft size={32} /></button>
+      <motion.div className="gallery-lightbox-content" onClick={(e) => e.stopPropagation()} layoutId={`gallery-${img.id}`}>
+        <img src={img.src} alt={img.alt || img.title} className="gallery-lightbox-image" />
+        {(img.title || img.description) && (
+          <div className="gallery-lightbox-info">
+            {img.title && <h3>{img.title}</h3>}
+            {img.description && <p>{img.description}</p>}
+            {img.photographer && <span className="gallery-lightbox-photographer">📷 {img.photographer}</span>}
+          </div>
+        )}
+      </motion.div>
+      <button className="gallery-lightbox-nav gallery-lightbox-nav--next" disabled={currentIndex === images.length - 1} onClick={(e) => { e.stopPropagation(); onNavigate(currentIndex + 1); }}><IconChevronRight size={32} /></button>
+      <div className="gallery-lightbox-counter">{currentIndex + 1} / {images.length}</div>
+    </motion.div>
+  );
+});
+
+/* ═══════════════════════════════════════════
+   WHATSAPP CONTACT SECTION
+   (replaces "Once-in-a-Lifetime Encounters")
+   ═══════════════════════════════════════════ */
+const WHATSAPP_NUMBER = "0783239379";
+const WHATSAPP_LINK = `https://wa.me/27783239379`;
+
+const WhatsAppSection = memo(() => {
+  const handleWhatsApp = useCallback((msg = "") => {
+    const base = WHATSAPP_LINK;
+    const text = msg ? `?text=${encodeURIComponent(msg)}` : "";
+    window.open(`${base}${text}`, "_blank", "noopener,noreferrer");
+  }, []);
+
+  return (
+    <section className="whatsapp-section home-section">
+      <div className="home-container">
+        {/* Central CTA Card Only */}
+        <AnimatedSection animation="scaleIn">
+          <div className="wa-hero-card">
+            <div className="wa-hero-card-glow" />
+            <div className="wa-hero-icon-wrap">
+              <motion.div
+                animate={{ scale: [1, 1.08, 1] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                className="wa-hero-icon-pulse"
+              />
+              <div className="wa-hero-icon">
+                <IconWhatsApp size={52} />
+              </div>
+            </div>
+            <div className="wa-hero-label">All Bookings Happen on WhatsApp</div>
+            <div className="wa-hero-number">{WHATSAPP_NUMBER}</div>
+            <p className="wa-hero-desc">
+              Tap below to start chatting instantly. Tell us where you want to go, when, and with how many people — and we'll craft your perfect East African adventure.
+            </p>
+            <div className="wa-hero-btns">
+              <motion.button
+                className="wa-btn-primary"
+                whileHover={{ scale: 1.04, y: -3 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => handleWhatsApp("Hello! I'm interested in planning a trip to East Africa. Can you help me with information and pricing?")}
+              >
+                <IconWhatsApp size={22} />
+                Chat Now — It's Free
+              </motion.button>
+              <motion.button
+                className="wa-btn-secondary"
+                whileHover={{ scale: 1.02, y: -2 }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => handleWhatsApp("Hi! I'd like to get a custom quote for my East Africa trip.")}
+              >
+                <IconZap size={18} />
+                Get a Custom Quote
+              </motion.button>
+            </div>
+            <div className="wa-hero-badge-row">
+              <span className="wa-badge"><IconCheck size={13} color="#25D366" /> Free Consultation</span>
+              <span className="wa-badge"><IconCheck size={13} color="#25D366" /> No Commitment</span>
+              <span className="wa-badge"><IconCheck size={13} color="#25D366" /> Fast Response</span>
+            </div>
+          </div>
+        </AnimatedSection>
+      </div>
+    </section>
+  );
+});
+
+/* ═══════════════════════════════════════════
+   AUTO-ROTATING TESTIMONIALS (3 per row, rotating 3 by 3)
+   ═══════════════════════════════════════════ */
+const TestimonialsRotator = memo(({ items }) => {
+  const [activeGroup, setActiveGroup] = useState(0);
+  const [dir, setDir] = useState(1);
+  const timerRef = useRef(null);
+  const totalGroups = Math.ceil(items.length / 3);
+
+  const go = useCallback((next) => {
+    setDir(next > activeGroup ? 1 : -1);
+    setActiveGroup(next);
+  }, [activeGroup]);
+
+  useEffect(() => {
+    timerRef.current = setInterval(() => {
+      setDir(1);
+      setActiveGroup((p) => (p + 1) % totalGroups);
+    }, 6000);
+    return () => clearInterval(timerRef.current);
+  }, [totalGroups]);
+
+  const resetTimer = useCallback((next) => {
+    clearInterval(timerRef.current);
+    go(next);
+    timerRef.current = setInterval(() => {
+      setDir(1);
+      setActiveGroup((p) => (p + 1) % totalGroups);
+    }, 6000);
+  }, [go, totalGroups]);
+
+  const variants = {
+    enter: (d) => ({ x: d > 0 ? 100 : -100, opacity: 0, scale: 0.95, filter: "blur(6px)" }),
+    center: { x: 0, opacity: 1, scale: 1, filter: "blur(0px)" },
+    exit: (d) => ({ x: d > 0 ? -100 : 100, opacity: 0, scale: 0.95, filter: "blur(6px)" }),
+  };
+
+  const currentItems = items.slice(activeGroup * 3, (activeGroup + 1) * 3);
+
+  return (
+    <div className="testimonials-rotator">
+      {/* Three testimonials in a row */}
+      <div className="testimonials-rotator-stage">
+        <AnimatePresence mode="wait" custom={dir}>
+          <motion.div
+            key={activeGroup}
+            custom={dir}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.6, ease: [0.25, 1, 0.5, 1] }}
+            className="testimonials-row"
+          >
+            {currentItems.map((t, i) => (
+              <motion.div
+                key={i}
+                className="testimonial-card testimonial-card--featured"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: i * 0.1 }}
+              >
+                <div className="testimonial-stars">★★★★★</div>
+                <p className="testimonial-quote">
+                  "{t?.quote || t?.content || t?.text || t?.testimonial_text || "An unforgettable experience that exceeded all expectations."}"
+                </p>
+                <div className="testimonial-author">
+                  <div className="testimonial-avatar">{(t?.name || "G").charAt(0)}</div>
+                  <div>
+                    <div className="testimonial-name">{t?.name || "Happy Traveler"}</div>
+                    <div className="testimonial-location">{t?.location || t?.country || "East Africa"}</div>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      {/* Navigation dots */}
+      <div className="testimonials-rotator-nav">
+        <button
+          className="testimonials-rotator-arrow"
+          onClick={() => resetTimer((activeGroup - 1 + totalGroups) % totalGroups)}
+          aria-label="Previous"
+        >
+          <IconChevronLeft size={20} />
+        </button>
+
+        <div className="testimonials-rotator-dots">
+          {Array.from({ length: totalGroups }).map((_, i) => (
+            <button
+              key={i}
+              className={`testimonials-rotator-dot${i === activeGroup ? " active" : ""}`}
+              onClick={() => resetTimer(i)}
+              aria-label={`Testimonial group ${i + 1}`}
+            >
+              {i === activeGroup && (
+                <motion.div
+                  className="testimonials-rotator-dot-progress"
+                  initial={{ scaleX: 0 }}
+                  animate={{ scaleX: 1 }}
+                  transition={{ duration: 6, ease: "linear" }}
+                />
+              )}
+            </button>
+          ))}
+        </div>
+
+        <button
+          className="testimonials-rotator-arrow"
+          onClick={() => resetTimer((activeGroup + 1) % totalGroups)}
+          aria-label="Next"
+        >
+          <IconChevronRight size={20} />
+        </button>
+      </div>
+
+      {/* Counter */}
+      <div className="testimonials-rotator-counter">
+        <span className="testimonials-rotator-counter-cur">{activeGroup + 1}</span>
+        <span className="testimonials-rotator-counter-sep">/</span>
+        <span className="testimonials-rotator-counter-total">{totalGroups}</span>
+      </div>
     </div>
   );
 });
 
 /* ═══════════════════════════════════════════
-   COMPONENT: Gallery Lightbox
+   NEWSLETTER FORM (fully integrated with backend)
    ═══════════════════════════════════════════ */
-// Gallery removed from Home (kept in /gallery route).
+const API_BASE = import.meta.env.VITE_API_URL || "";
 
-/* ═══════════════════════════════════════════
-   COMPONENT: Signature Experience Card
-   ═══════════════════════════════════════════ */
-const SignatureExperienceCard = memo(({ experience, index }) => {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-50px" });
-  const reduced = usePrefersReducedMotion();
-  const [hovered, setHovered] = useState(false);
-  
-  if (!experience) return null;
-  
-  const { title, subtitle, description, image, stats } = experience;
-  const ratingNum = parseFloat(stats?.Rating) || 4.9;
-  
-  return (
-    <motion.article
-      ref={ref}
-      initial={{ opacity: 0, y: 60 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.7, delay: index * 0.15, ease: [0.25, 1, 0.5, 1] }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        position: "relative",
-        borderRadius: 28,
-        overflow: "hidden",
-        background: "#ffffff",
-        boxShadow: hovered 
-          ? "0 28px 70px rgba(5,150,105,0.2)" 
-          : "0 8px 32px rgba(0,0,0,0.08)",
-        transform: hovered ? "translateY(-12px)" : "translateY(0)",
-        transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
-        border: `1px solid ${hovered ? "rgba(16,185,129,0.25)" : "rgba(5,150,105,0.08)"}`,
-        cursor: "pointer",
-      }}
-    >
-      {/* Image Section */}
-      <div style={{ position: "relative", height: 260, overflow: "hidden" }}>
-        <motion.img
-          src={image}
-          alt={title}
-          loading="lazy"
-          animate={hovered && !reduced ? { scale: 1.08 } : { scale: 1 }}
-          transition={{ duration: 0.9, ease: "easeOut" }}
-          style={{
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-          }}
-        />
-        {/* Gradient Overlay */}
-        <div style={{
-          position: "absolute",
-          inset: 0,
-          background: "linear-gradient(180deg, transparent 50%, rgba(0,0,0,0.5) 100%)",
-        }} />
-        
-        {/* Rating Badge */}
-        <motion.div
-          animate={hovered ? { scale: 1.05 } : { scale: 1 }}
-          style={{
-            position: "absolute",
-            top: 20,
-            left: 20,
-            padding: "8px 16px",
-            background: "rgba(255,255,255,0.95)",
-            backdropFilter: "blur(10px)",
-            borderRadius: 30,
-            display: "flex",
-            alignItems: "center",
-            gap: 6,
-            boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-          }}
-        >
-          <FiStar size={14} style={{ fill: "#F59E0B", color: "#F59E0B" }} />
-          <span style={{ fontSize: 14, fontWeight: 700, color: "#0F172A" }}>{stats?.Rating}</span>
+const NewsletterForm = memo(({ user }) => {
+  const [email, setEmail] = useState("");
+  const [status, setStatus] = useState("idle"); // idle | loading | success | error | already
+  const [msg, setMsg] = useState("");
+  const [showConfetti, setShowConfetti] = useState(false);
+
+  const handleSubmit = useCallback(async (e) => {
+    e.preventDefault();
+    if (!email || status === "loading") return;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) { setStatus("error"); setMsg("Please enter a valid email address."); return; }
+
+    setStatus("loading");
+    setMsg("");
+
+    try {
+      const res = await fetch(`${API_BASE}/api/subscribers`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+
+      if (res.status === 201) {
+        setStatus("success");
+        setMsg(data.message || "Subscribed successfully!");
+        setEmail("");
+        setShowConfetti(true);
+        setTimeout(() => setShowConfetti(false), 5000);
+      } else if (res.status === 429) {
+        setStatus("error");
+        setMsg("Too many attempts. Please try again in a moment.");
+      } else if (res.status === 400) {
+        setStatus("error");
+        setMsg(data.error || "Please enter a valid email address.");
+      } else {
+        setStatus("error");
+        setMsg(data.error || "Something went wrong. Please try again.");
+      }
+    } catch {
+      setStatus("error");
+      setMsg("Network error. Please check your connection and try again.");
+    }
+  }, [email, status]);
+
+  const handleRetry = useCallback(() => { setStatus("idle"); setMsg(""); }, []);
+
+  if (status === "success" || user?.subscribed) {
+    return (
+      <>
+        <Confetti active={showConfetti} duration={5000} />
+        <motion.div className="newsletter-success" initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", bounce: 0.4 }}>
+          <div className="newsletter-success-icon"><IconCheck size={28} color="#fff" /></div>
+          <div>
+            <div className="newsletter-success-title">You're in! Welcome aboard 🎉</div>
+            <div className="newsletter-success-sub">{msg || "Check your inbox for a welcome email from us."}</div>
+          </div>
         </motion.div>
-        
-        {/* Location Tag */}
-        <div style={{
-          position: "absolute",
-          bottom: 16,
-          left: 20,
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-        }}>
-          <span style={{
-            padding: "6px 14px",
-            background: "rgba(5,150,105,0.9)",
-            backdropFilter: "blur(8px)",
-            borderRadius: 20,
-            fontSize: 12,
-            fontWeight: 600,
-            color: "#fff",
-            textTransform: "uppercase",
-            letterSpacing: 0.5,
-          }}>
-            {subtitle}
-          </span>
-        </div>
-      </div>
+      </>
+    );
+  }
 
-      {/* Content Section */}
-      <div style={{ padding: "28px 28px 32px" }}>
-        <h3 style={{
-          fontFamily: "'Playfair Display', serif",
-          fontSize: 24,
-          fontWeight: 800,
-          color: "#0F172A",
-          marginBottom: 14,
-          lineHeight: 1.2,
-        }}>
-          {title}
-        </h3>
-        
-        <p style={{
-          fontSize: 15,
-          color: "#64748B",
-          lineHeight: 1.75,
-          marginBottom: 24,
-          display: "-webkit-box",
-          WebkitLineClamp: 3,
-          WebkitBoxOrient: "vertical",
-          overflow: "hidden",
-        }}>
-          {description}
-        </p>
-        
-        {/* Stats Grid */}
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(3, 1fr)",
-          gap: 16,
-          paddingTop: 20,
-          borderTop: "1px solid #E5E7EB",
-          marginBottom: 24,
-        }}>
-          {Object.entries(stats || {}).filter(([k]) => k !== "Rating").map(([key, value]) => (
-            <div key={key} style={{ textAlign: "center" }}>
-              <div style={{
-                fontSize: 11,
-                color: "#94A3B8",
-                textTransform: "uppercase",
-                letterSpacing: 0.5,
-                fontWeight: 600,
-                marginBottom: 4,
-              }}>
-                {key}
-              </div>
-              <div style={{
-                fontSize: 15,
-                fontWeight: 700,
-                color: "#0F172A",
-              }}>
-                {value}
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        {/* CTA Button */}
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          onClick={() => window.location.href = '/booking'}
-          style={{
-            width: "100%",
-            padding: "14px 24px",
-            background: hovered 
-              ? "linear-gradient(135deg, #059669, #10B981)" 
-              : "linear-gradient(135deg, #10B981, #34D399)",
-            color: "#fff",
-            border: "none",
-            borderRadius: 14,
-            fontSize: 15,
-            fontWeight: 700,
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 10,
-            boxShadow: hovered 
-              ? "0 8px 24px rgba(5,150,105,0.35)" 
-              : "0 4px 16px rgba(5,150,105,0.2)",
-            transition: "all 0.3s ease",
-          }}
-        >
-          Book This Experience <FiArrowRight size={16} />
-        </motion.button>
+  return (
+    <form className="newsletter-form" onSubmit={handleSubmit} noValidate>
+      <div className="newsletter-form-field-wrap">
+        <EmailAutocompleteInput
+          placeholder="Enter your email address"
+          value={email}
+          onValueChange={setEmail}
+          required
+          className={`newsletter-input${status === "error" ? " newsletter-input--error" : ""}`}
+          disabled={status === "loading"}
+        />
+        {status === "error" && (
+          <motion.div className="newsletter-error-msg" initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}>
+            {msg}
+            <button type="button" className="newsletter-error-retry" onClick={handleRetry}>Retry</button>
+          </motion.div>
+        )}
       </div>
-      
-      {/* Decorative corner accent */}
-      <div style={{
-        position: "absolute",
-        top: 0,
-        right: 0,
-        width: 100,
-        height: 100,
-        background: "radial-gradient(circle at top right, rgba(16,185,129,0.08) 0%, transparent 70%)",
-        pointerEvents: "none",
-      }} />
-    </motion.article>
+      <MagneticWrap strength={0.12}>
+        <motion.button
+          type="submit"
+          className={`newsletter-btn${status === "loading" ? " newsletter-btn--loading" : ""}`}
+          whileTap={{ scale: 0.96 }}
+          disabled={status === "loading"}
+        >
+          {status === "loading" ? (
+            <><motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}><IconLoader size={16} /></motion.span> Subscribing…</>
+          ) : (
+            <>Subscribe <IconArrowRight size={15} /></>
+          )}
+        </motion.button>
+      </MagneticWrap>
+    </form>
   );
 });
 
@@ -767,1419 +865,230 @@ const Home = () => {
   const reduced = usePrefersReducedMotion();
   const { w: winW } = useWindowSize();
   const isMobile = winW < 768;
-  const isTablet = winW < 1024;
   const homeRootRef = useRef(null);
-  const hasCompletedPreloadRef = useRef(false);
+  const hasCompletedRef = useRef(false);
 
-  // Enable smooth scrolling
-  useSmoothScroll();
-
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
-  const [email, setEmail] = useState("");
-  const [isSubscribed, setIsSubscribed] = useState(false);
-  const { user, isAuthenticated } = useUserAuth();
   const [activeProcess, setActiveProcess] = useState(0);
-  const [showConfetti, setShowConfetti] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
 
-  const [gallerySlide, setGallerySlide] = useState(0);
-  const [galleryHover, setGalleryHover] = useState(false);
-
-  const GALLERY_SLIDES = useMemo(
-    () => [
-      {
-        src: "https://i.pinimg.com/736x/c2/26/91/c22691ef2c1f5a1e9544ec1e62774740.jpg",
-        label: "Golden hour in the savanna",
-      },
-      {
-        src: "https://i.pinimg.com/736x/77/d2/9c/77d29c30fa04d28e1b657c5669401f92.jpg",
-        label: "Elephants roaming the riverbanks",
-      },
-      {
-        src: "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg",
-        label: "Still waters, early morning reflections",
-      },
-      {
-        src: "https://i.pinimg.com/736x/55/e3/3e/55e33e50985ece6ae1b4256b880bc1d1.jpg",
-        label: "Lush highland landscapes",
-      },
-      {
-        src: "https://i.pinimg.com/1200x/d0/af/e3/d0afe34b5ae890a0aa78264647847ba6.jpg",
-        label: "Hidden lakes and quiet horizons",
-      },
-    ],
-    [],
-  );
-
-  const { destinations: allDestinations = [], loading: destinationsLoading } =
-    useDestinations({
-      limit: 24,
-      sort: "-featured",
-    });
+  const { user } = useUserAuth();
+  const { destinations: allDest = [], loading: destLoading } = useDestinations({ limit: 6, sort: "-featured" });
+  const { countries = [], loading: countriesLoading, error: countriesError, refetch: refetchCountries } = useCountries({ limit: 8 });
+  const { images: galleryImages = [], loading: galleryLoading } = useGallery({ limit: 12, sort: "featured" });
+  const { testimonials: allTestimonials = [], loading: testimonialsLoading, error: testimonialsError } = useTestimonials();
   const { loadWishlist, toggleWishlist, isWishlisted } = useWishlist();
+  useEffect(() => { loadWishlist(); }, [loadWishlist]);
 
-  useEffect(() => {
-    loadWishlist();
-  }, [loadWishlist]);
-
-  const nextTestimonial = useCallback(() => {
-    setActiveTestimonial((p) => (p + 1) % (testimonials?.length || 1));
-  }, []);
-  const prevTestimonial = useCallback(() => {
-    setActiveTestimonial(
-      (p) =>
-        (p - 1 + (testimonials?.length || 1)) % (testimonials?.length || 1),
-    );
-  }, []);
-  const testimonialRef = useScrollTriggeredSlide(nextTestimonial, 250);
-
-  useEffect(() => {
-    const t = setInterval(nextTestimonial, 6000);
-    return () => clearInterval(t);
-  }, [nextTestimonial]);
-
+  /* Process auto-advance */
   useEffect(() => {
     const t = setInterval(() => setActiveProcess((p) => (p + 1) % 4), 5000);
     return () => clearInterval(t);
   }, []);
 
-  const handleNewsletter = useCallback(
-    async (e) => {
-      e.preventDefault();
-      if (!email) return;
+  /* Lightbox */
+  const openLightbox = useCallback((_, i) => { setLightboxIndex(i); setLightboxOpen(true); }, []);
+  const closeLightbox = useCallback(() => setLightboxOpen(false), []);
+  const navigateLightbox = useCallback((i) => { if (i >= 0 && i < galleryImages.length) setLightboxIndex(i); }, [galleryImages.length]);
 
-      try {
-        // Send OTP to user email
-        const { verificationId } = await sendVerificationCode({
-          email,
-          purpose: "newsletter",
-        });
-
-        const code = window.prompt(
-          "A verification code has been sent to your email. Please enter it to confirm subscription."
-        );
-
-        if (!code) {
-          return;
-        }
-
-        await verifyCode({ email, verificationId, code });
-
-        // Subscribe after verification
-        const result = await sendMessage({
-          type: "newsletter",
-          data: { email },
-        });
-
-        if (result.success) {
-          setIsSubscribed(true);
-          setShowConfetti(true);
-          setEmail("");
-          setTimeout(() => setShowConfetti(false), 5000);
-        } else {
-          window.alert(result.error || "Subscription failed. Please try again.");
-        }
-      } catch (err) {
-        window.alert(err?.message || "Verification failed. Please try again.");
-      }
-    },
-    [email],
-  );
-
-  const getDestImg = useCallback(
-    (d) =>
-      d?.image ||
-      d?.images?.[0] ||
-      d?.heroImage ||
-      "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800",
-    [],
-  );
-
+  /* Preload hero slides */
   useEffect(() => {
-    if (hasCompletedPreloadRef.current) return;
-    if (destinationsLoading) {
-      setIsLoading(true);
-      return;
-    }
-
+    if (hasCompletedRef.current) return;
+    if (destLoading) { setIsLoading(true); return; }
     let cancelled = false;
-
-    const extractUrlsFromBackground = (value = "") => {
-      const urls = [];
-      const regex = /url\((['"]?)(.*?)\1\)/g;
-      let match = regex.exec(value);
-      while (match) {
-        if (match[2]) urls.push(match[2]);
-        match = regex.exec(value);
-      }
-      return urls;
-    };
-
-    const preloadImage = (src) =>
-      new Promise((resolve) => {
-        const img = new Image();
-        img.onload = resolve;
-        img.onerror = resolve;
-        img.src = src;
-      });
-
-    const preloadHomeImages = async () => {
+    const preload = (src) => new Promise((r) => { const img = new Image(); img.onload = r; img.onerror = r; img.src = src; });
+    const run = async () => {
       setIsLoading(true);
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-
+      await new Promise((r) => requestAnimationFrame(r));
       const urls = new Set();
-      const root = homeRootRef.current;
-
-      if (root) {
-        root.querySelectorAll("img").forEach((img) => {
-          const src = img.currentSrc || img.src;
-          if (src) urls.add(src);
-        });
-
-        root.querySelectorAll("*").forEach((el) => {
-          const bg = window.getComputedStyle(el).backgroundImage;
-          extractUrlsFromBackground(bg).forEach((u) => urls.add(u));
-        });
-      }
-
-      HERO_SLIDES.forEach((slide) => {
-        if (slide.image) urls.add(slide.image);
-        if (slide.fallback) urls.add(slide.fallback);
-      });
-
-      await Promise.all(
-        [...urls]
-          .filter(Boolean)
-          .filter((url) => !url.startsWith("blob:"))
-          .map(preloadImage),
-      );
-
-      if (!cancelled) {
-        hasCompletedPreloadRef.current = true;
-        setIsLoading(false);
-      }
+      HERO_SLIDES?.forEach((s) => { if (s.image) urls.add(s.image); if (s.fallback) urls.add(s.fallback); });
+      await Promise.all([...urls].filter(Boolean).filter((u) => !u.startsWith("blob:")).slice(0, 5).map(preload));
+      if (!cancelled) { hasCompletedRef.current = true; setIsLoading(false); }
     };
+    run();
+    return () => { cancelled = true; };
+  }, [destLoading, setIsLoading]);
 
-    preloadHomeImages();
+  /* ─── Static Data ─── */
+  const adventureTypes = useMemo(() => [
+    { icon: "🦁", title: "Safari Adventures", description: "Witness Africa's incredible wildlife in their natural habitat across stunning national parks.", count: "5+ Safaris", color: "#F59E0B", slug: "safari-adventures", images: ["https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=800", "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800", "https://images.unsplash.com/photo-1534759846116-5799c33ce22a?w=800"] },
+    { icon: "🏔️", title: "Mountain Trekking", description: "Conquer legendary peaks from Kilimanjaro to the Rwenzoris with expert guides.", count: "15+ Treks", color: "#6366F1", slug: "mountain-trekking", images: ["https://images.unsplash.com/photo-1609198092458-38a293c7ac4b?w=800", "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800"] },
+    { icon: "🦍", title: "Primate Tracking", description: "Intimate encounters with endangered mountain gorillas in misty bamboo forests.", count: "8+ Experiences", color: "#10B981", slug: "primate-tracking", images: ["https://images.unsplash.com/photo-1580674287404-60e2e0fcb95e?w=800", "https://i.pinimg.com/736x/47/68/82/476882571830551aee93bee95882881c.jpg"] },
+    { icon: "🏖️", title: "Beach Escapes", description: "Pristine white-sand beaches along the Indian Ocean with world-class resorts.", count: "10+ Beaches", color: "#EC4899", slug: "beach-escapes", images: ["https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800", "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800"] },
+    { icon: "🎭", title: "Cultural Immersion", description: "Authentic experiences with local communities, ancient traditions, and vibrant ceremonies.", count: "30+ Experiences", color: "#8B5CF6", slug: "cultural-immersion", images: ["https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=800", "https://images.unsplash.com/photo-1504432842672-1a79f78e4084?w=800"] },
+    { icon: "📸", title: "Photography Tours", description: "Capture award-winning shots on photography-focused expeditions through iconic landscapes.", count: "12+ Tours", color: "#EF4444", slug: "photography-tours", images: ["https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800", "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800"] },
+  ], []);
 
-    return () => {
-      cancelled = true;
-    };
-  }, [destinationsLoading, setIsLoading]);
+  const processSteps = useMemo(() => [
+    { step: "01", title: "Dream & Discover", description: "Share your travel aspirations with our experts. Whether it's the Great Migration, Kilimanjaro, or a hidden beach paradise — we listen and begin crafting possibilities.", icon: IconCompass, image: "https://i.pinimg.com/736x/59/86/5b/59865b2946331b97477e3425c60b7d4d.jpg" },
+    { step: "02", title: "Design & Customize", description: "Our travel architects craft a bespoke itinerary tailored to your interests, budget, and timeline. Every detail hand-selected.", icon: IconMap, image: "https://previews.123rf.com/images/sebra/sebra1703/sebra170300196/74246858-travel-planning-concept-on-map.jpg" },
+    { step: "03", title: "Prepare & Pack", description: "Receive your comprehensive travel guide with packing lists, cultural tips, health advisories, and insider recommendations.", icon: IconBookOpen, image: "https://plus.unsplash.com/premium_photo-1663076518116-0f0637626edf?w=800" },
+    { step: "04", title: "Experience & Remember", description: "Embark on your adventure with confidence, supported by local guides and 24/7 assistance. Create memories that last a lifetime.", icon: IconSun, image: "https://i.pinimg.com/736x/13/bd/69/13bd691c2d9e85cb5009a3d9485d4c94.jpg" },
+  ], []);
 
-  /* ─── Data ─── */
-  const adventureTypes = useMemo(
-    () => [
-      {
-        icon: "🦁",
-        title: "Safari Adventures",
-        description:
-          "Witness Africa's incredible wildlife in their natural habitat across stunning national parks and vast golden savannahs stretching to the horizon.",
-        count: "5+ Safaris",
-        color: "#F59E0B",
-        image:
-          services?.[0]?.image ||
-          "https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=600",
-      },
-      {
-        icon: "🏔️",
-        title: "Mountain Trekking",
-        description:
-          "Conquer legendary peaks from Kilimanjaro to the Rwenzoris with expert guides and unforgettable summit experiences above the clouds.",
-        count: "15+ Treks",
-        color: "#6366F1",
-        image:
-          services?.[1]?.image ||
-          "https://images.unsplash.com/photo-1609198092458-38a293c7ac4b?w=600",
-      },
-      {
-        icon: "🦍",
-        title: "Primate Tracking",
-        description:
-          "Intimate encounters with endangered mountain gorillas and chimpanzees in the misty bamboo forests of Uganda and Rwanda.",
-        count: "1+ Experiences",
-        color: "#10B981",
-        image:
-          services?.[2]?.image ||
-          "https://images.unsplash.com/photo-1580674287404-60e2e0fcb95e?w=600",
-      },
-      {
-        icon: "🏖️",
-        title: "Beach Escapes",
-        description:
-          "Pristine white-sand beaches along the Indian Ocean coast with world-class resorts and hidden tropical island paradises.",
-        count: "1+ Beaches",
-        color: "#EC4899",
-        image:
-          services?.[3]?.image ||
-          "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600",
-      },
-      {
-        icon: "🎭",
-        title: "Cultural Immersion",
-        description:
-          "Authentic experiences with local communities, ancient tribal traditions, and vibrant ceremonies that connect you to Africa's soul.",
-        count: "30+ Experiences",
-        color: "#8B5CF6",
-        image:
-          "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=600",
-      },
-      {
-        icon: "📸",
-        title: "Photography Tours",
-        description:
-          "Capture award-winning shots with professional photography-focused expeditions through the world's most photogenic landscapes.",
-        count: "12+ Tours",
-        color: "#EF4444",
-        image:
-          "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=600",
-      },
-    ],
-    [],
-  );
-
-  const features = useMemo(
-    () => [
-      {
-        icon: FiAward,
-        title: "Expert Local Guides",
-        description:
-          "Our certified professionals possess deep regional knowledge passed down through generations, ensuring authentic journeys you won't find in any guidebook.",
-        accent: "#F59E0B",
-      },
-      {
-        icon: FiShield,
-        title: "Safety Guaranteed",
-        description:
-          "Comprehensive safety protocols, satellite communication, medical kits, and 24/7 on-ground support give you complete peace of mind.",
-        accent: "#3B82F6",
-      },
-      {
-        icon: FiHeart,
-        title: "Personalized Journeys",
-        description:
-          "Every itinerary is handcrafted to match your unique interests, pace, and travel style — no cookie-cutter experiences, ever.",
-        accent: "#EC4899",
-      },
-      {
-        icon: FiGlobe,
-        title: "Sustainable Tourism",
-        description:
-          "Our eco-friendly practices protect the very landscapes and communities that make East Africa extraordinary for generations to come.",
-        accent: "#10B981",
-      },
-      {
-        icon: FiUsers,
-        title: "Small Group Sizes",
-        description:
-          "With a maximum of 12 guests per expedition, enjoy intimate wildlife encounters and personalized attention from your dedicated guide.",
-        accent: "#8B5CF6",
-      },
-      {
-        icon: FiClock,
-        title: "Flexible Booking",
-        description:
-          "Life happens — that's why we offer easy date changes, flexible payment plans, and free cancellation up to 30 days before departure.",
-        accent: "#F97316",
-      },
-    ],
-    [],
-  );
-
-  const processSteps = useMemo(
-    () => [
-      {
-        step: "01",
-        title: "Dream & Discover",
-        description:
-          "Share your travel aspirations with our experts. Whether it's the Great Migration, summiting Kilimanjaro, or a hidden beach paradise — we listen to every detail of your dream journey and begin shaping possibilities.",
-        icon: FiCompass,
-        image:
-          "https://i.pinimg.com/736x/59/86/5b/59865b2946331b97477e3425c60b7d4d.jpg",
-      },
-      {
-        step: "02",
-        title: "Design & Customize",
-        description:
-          "Our travel architects craft a bespoke itinerary tailored to your interests, budget, and timeline. Every accommodation, activity, and transfer is hand-selected for quality, authenticity, and unforgettable impact.",
-        icon: FiMap,
-        image:
-          "https://previews.123rf.com/images/sebra/sebra1703/sebra170300196/74246858-travel-planning-concept-on-map.jpg",
-      },
-      {
-        step: "03",
-        title: "Prepare & Pack",
-        description:
-          "Receive your comprehensive travel guide with packing lists, cultural tips, health advisories, visa guidance, and insider recommendations. Our concierge team handles every logistical detail seamlessly.",
-        icon: FiBookOpen,
-        image:
-          "https://plus.unsplash.com/premium_photo-1663076518116-0f0637626edf?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MXx8dHJhdmVsJTIwcGxhbm5pbmd8ZW58MHx8MHx8fDA%3D&ixlib=rb-4.1.0&q=60&w=3000",
-      },
-      {
-        step: "04",
-        title: "Experience & Remember",
-        description:
-          "Embark on your adventure with confidence, supported by local guides and 24/7 assistance. Create memories that last a lifetime and stories you'll share for generations to come.",
-        icon: FiSun,
-        image:
-          "https://i.pinimg.com/736x/13/bd/69/13bd691c2d9e85cb5009a3d9485d4c94.jpg",
-      },
-    ],
-    [],
-  );
-
-  // Gallery intentionally removed from Home (see /gallery route).
-
-  const signatureExperiences = useMemo(
-    () => [
-      {
-        title: "The Great Migration",
-        subtitle: "Serengeti & Masai Mara",
-        description:
-          "Witness over two million wildebeest, zebras, and gazelles thundering across the plains in nature's most spectacular wildlife event. Our expert guides position you at the best river crossings and calving grounds for front-row seats to this ancient drama that has played out for millennia.",
-        image:
-          "https://www.yourafricansafari.com/media/images/photos/2019/8/image_22741.jpg",
-        stats: {
-          Duration: "7–14 Days",
-          Group: "Max 8 Guests",
-          Rating: "4.9/5",
-        },
-      },
-      {
-        title: "Gorilla Trekking",
-        subtitle: "Bwindi & Volcanoes NP",
-        description:
-          "Trek through emerald bamboo forests to sit just meters from a family of endangered mountain gorillas. With fewer than 1,000 remaining in the wild, this is one of the planet's most humbling and transformative wildlife encounters — a moment that will reshape your understanding of our connection to nature.",
-        image:
-          "https://i.pinimg.com/736x/47/68/82/476882571830551aee93bee95882881c.jpg",
-        stats: { Duration: "3–5 Days", Group: "Max 6 Guests", Rating: "5.0/5" },
-      },
-      {
-        title: "Kilimanjaro Summit",
-        subtitle: "Roof of Africa",
-        description:
-          "Stand on the highest point in Africa at 5,895 meters as the sun rises over the continent. Our experienced mountain guides, premium equipment, and carefully planned acclimatization schedules ensure the highest summit success rates in the industry. This is more than a climb — it's a personal transformation.",
-        image:
-          "https://i.pinimg.com/1200x/02/d0/5f/02d05f9e9e112c1aeefc87aafdb77adf.jpg",
-        stats: {
-          Duration: "6–9 Days",
-          Group: "Max 10 Guests",
-          Rating: "4.8/5",
-        },
-      },
-    ],
-    [],
-  );
-
-  const partners = useMemo(
-    () => [
-      { name: "TripAdvisor", badge: "⭐ Excellence 2024" },
-      { name: "ATTA", badge: "🌍 Certified Member" },
-      { name: "Eco-Tourism", badge: "🌱 Gold Certified" },
-      { name: "SafariBookings", badge: "🏆 Top Rated" },
-      { name: "Lonely Planet", badge: "📘 Recommended" },
-    ],
-    [],
-  );
-
-  /* ═════════════════ RENDER ═════════════════ */
+  /* ═══ RENDER ═══ */
   return (
-    <div ref={homeRootRef} style={{ overflowX: "hidden" }}>
-      <SEO
-        title="Home"
-        description="Discover extraordinary destinations and create unforgettable travel experiences with Altuvеrа. Expert travel planning, virtual tours, and personalized itineraries for your dream adventures."
-        url="/"
-        image="/og-home.jpg"
-        keywords={['travel', 'destinations', 'virtual tours', 'itineraries', 'adventure', 'explore']}
-      />
+    <div ref={homeRootRef} className="home-root">
+      <SEO title="Home" description="Discover extraordinary East African destinations with Altuvera." url="/" image="/og-home.jpg" keywords={["travel", "safari", "East Africa", "gorilla trekking", "Kilimanjaro"]} />
       <ScrollProgress />
-      <Confetti active={showConfetti} duration={5000} />
 
-      {/* ─── Global Styles ─── */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800&family=Dancing+Script:wght@400;500;600;700&display=swap');
-        *{box-sizing:border-box;margin:0;padding:0}
-        html{scroll-behavior:smooth}
-
-        @keyframes floatSoft{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-18px) rotate(1deg)}}
-        @keyframes rotateSlow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-        @keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
-        @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
-        @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
-        @keyframes morphBlob{0%{border-radius:60% 40% 30% 70%/60% 30% 70% 40%}25%{border-radius:30% 60% 70% 40%/50% 60% 30% 60%}50%{border-radius:50% 60% 30% 60%/30% 70% 40% 60%}75%{border-radius:60% 40% 60% 40%/70% 30% 50% 60%}100%{border-radius:60% 40% 30% 70%/60% 30% 70% 40%}}
-
-        .tg{background:linear-gradient(135deg,#059669 0%,#10B981 50%,#34D399 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-        .sp{padding:clamp(16px,2vw,24px) 24px}
-        .ctr{max-width:1400px;margin:0 auto;position:relative;z-index:1}
-        .sh{text-align:center;margin-bottom:clamp(8px,1vw,12px)}
-        .sl{display:inline-flex;align-items:center;gap:8px;padding:10px 22px;background:rgba(5,150,105,.08);border-radius:50px;color:#059669;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:20px}
-        .sl-d{background:rgba(255,255,255,.08);color:#34D399}
-        .st{font-family:'Playfair Display',serif;font-size:clamp(30px,4vw,50px);font-weight:800;color:#0F172A;margin-bottom:16px;line-height:1.16}
-        .ss{font-size:clamp(15px,1.6vw,18px);color:#64748B;max-width:700px;margin:0 auto;line-height:1.8}
-
-        .lr{position:absolute;bottom:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#059669,#10B981,#34D399);transform:scaleX(0);transform-origin:left;transition:transform .6s cubic-bezier(.4,0,.2,1)}
-        .ch:hover .lr{transform:scaleX(1)}
-        .iz{transition:transform .8s cubic-bezier(.4,0,.2,1)}
-        .ch:hover .iz{transform:scale(1.06)}
-
-        /* Blob decoration */
-        .blob{position:absolute;border-radius:60% 40% 30% 70%/60% 30% 70% 40%;animation:morphBlob 12s ease-in-out infinite;pointer-events:none;filter:blur(60px);opacity:.06}
-
-        /* Destination */
-
-
-        /* Gallery */
-        .gf{display:flex;justify-content:center;gap:8px;margin-bottom:44px;flex-wrap:wrap}
-        .gfb{padding:10px 24px;border-radius:50px;border:2px solid #E2E8F0;background:transparent;font-size:14px;font-weight:600;color:#64748B;cursor:pointer;transition:all .35s;font-family:inherit}
-        .gfb:hover{border-color:#059669;color:#059669}
-        .gfb.act{background:#059669;border-color:#059669;color:#fff;box-shadow:0 6px 24px rgba(5,150,105,.3)}
-        .gm{columns:3;column-gap:18px}
-        .gi{break-inside:avoid;margin-bottom:18px;border-radius:20px;overflow:hidden;position:relative;cursor:pointer;display:block}
-        .gi img{width:100%;display:block;transition:transform .7s ease}
-        .gi:hover img{transform:scale(1.05)}
-        .gio{position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(2,44,34,.88) 100%);opacity:0;transition:opacity .45s;display:flex;flex-direction:column;justify-content:flex-end;padding:22px}
-        .gi:hover .gio{opacity:1}
-        .gii{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) scale(0);width:54px;height:54px;border-radius:50%;background:rgba(255,255,255,.15);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;transition:transform .45s cubic-bezier(.34,1.56,.64,1);border:2px solid rgba(255,255,255,.3)}
-        .gi:hover .gii{transform:translate(-50%,-50%) scale(1)}
-        .gcat{display:inline-block;padding:4px 12px;background:rgba(16,185,129,.2);border-radius:20px;font-size:11px;font-weight:700;color:#34D399;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
-        .galt{font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:#fff;margin-bottom:3px}
-        .gloc{font-size:13px;color:rgba(255,255,255,.7);display:flex;align-items:center;gap:4px}
-
-        /* Signature */
-        .sc{display:grid;grid-template-columns:1fr 1fr;border-radius:32px;overflow:hidden;background:#fff;box-shadow:0 12px 48px rgba(0,0,0,.06);min-height:500px;transition:box-shadow .6s}
-        .sc:hover{box-shadow:0 32px 80px rgba(0,0,0,.1)}
-        .sc.rev{direction:rtl}.sc.rev>*{direction:ltr}
-        .siw{position:relative;overflow:hidden;min-height:400px}
-        .siw img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .9s ease}
-        .sc:hover .siw img{transform:scale(1.06)}
-
-        /* Process */
-        .ptab{padding:22px 28px;border-left:3px solid #E5E7EB;cursor:pointer;transition:all .45s;background:transparent;border-right:none;border-top:none;border-bottom:none;text-align:left;width:100%;font-family:inherit}
-        .ptab.act{border-left-color:#059669;background:rgba(5,150,105,.04)}
-        .ptab:hover{background:rgba(5,150,105,.02)}
-
-        /* Horizontal scroll gallery variant */
-        .hsg{display:flex;gap:18px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding-bottom:16px;scrollbar-width:thin;scrollbar-color:#059669 transparent}
-        .hsg::-webkit-scrollbar{height:6px}
-        .hsg::-webkit-scrollbar-track{background:transparent}
-        .hsg::-webkit-scrollbar-thumb{background:#059669;border-radius:6px}
-        .hsi{scroll-snap-align:start;flex-shrink:0}
-
-        /* Responsive */
-        @media(max-width:1200px){
-          .ig{grid-template-columns:1fr!important;gap:48px!important}
-          .iw{order:-1}
-          .dg{grid-template-columns:repeat(2,1fr)!important}
-          .pl{grid-template-columns:1fr!important}
-          .sc{grid-template-columns:1fr!important;min-height:auto!important}
-          .sc.rev{direction:ltr}
-          .ag{grid-template-columns:repeat(2,1fr)!important}
-          .wg{grid-template-columns:repeat(2,1fr)!important}
-        }
-        @media(max-width:1024px){
-          .bg{grid-template-columns:1fr!important}
-          .gm{columns:2}
-        }
-        @media(max-width:768px){
-          .qs{grid-template-columns:repeat(2,1fr)!important}
-          .iis{display:none!important}
-          .wg{grid-template-columns:1fr!important}
-          .dg{grid-template-columns:1fr!important}
-          .ag{grid-template-columns:1fr!important}
-          .nf{flex-direction:column!important}
-          .ctab{flex-direction:column!important;align-items:center}
-          .gm{columns:1}
-          .pf{gap:28px!important}
-          .gf{gap:6px}.gfb{padding:8px 16px;font-size:12px}
-          .siw{min-height:260px!important}
-          .diw{height:210px!important}
-        }
-        @media(max-width:480px){
-          .qs{grid-template-columns:1fr!important}
-        }
-
-        @media(prefers-reduced-motion:reduce){
-          *{animation-duration:0.01ms!important;transition-duration:0.01ms!important}
-          html{scroll-behavior:auto}
-        }
-      `}</style>
-
-      {/* ═══════ HERO ═══════ */}
+      {/* ── HERO ── */}
       <Hero />
 
-      {/* ═══════ INTRODUCTION ═══════ */}
-      <section
-        className="sp"
-        style={{
-          backgroundColor: "#fff",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {/* Decorative blobs */}
-        <div
-          className="blob"
-          style={{
-            top: -100,
-            right: -100,
-            width: 500,
-            height: 500,
-            background: "#059669",
-          }}
-        />
-        <div
-          className="blob"
-          style={{
-            bottom: -150,
-            left: -150,
-            width: 400,
-            height: 400,
-            background: "#10B981",
-            animationDelay: "4s",
-          }}
-        />
-
-        <div className="ctr">
-          <div
-            className="ig"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1.1fr 1fr",
-              gap: 12,
-              alignItems: "center",
-            }}
-          >
-            <div>
-              <TextReveal>
-                <span className="sl">
-                  <FiCompass size={14} /> Welcome to Altuvera
-                </span>
-              </TextReveal>
-              <TextReveal delay={0.08}>
-                <h1
-                  style={{
-                    fontFamily: "'Playfair Display', serif",
-                    fontSize: "clamp(36px, 4.2vw, 58px)",
-                    fontWeight: 800,
-                    color: "#0F172A",
-                    lineHeight: 1.12,
-                    marginBottom: 28,
-                  }}
-                >
-                  Discover the <span className="tg">Untamed Magic</span> of East
-                  Africa
-                </h1>
-              </TextReveal>
-              <TextReveal delay={0.14}>
-                <p
-                  style={{
-                    fontFamily: "'Dancing Script', cursive",
-                    fontSize: "clamp(22px, 2.5vw, 32px)",
-                    color: "#059669",
-                    marginBottom: 28,
-                    paddingLeft: 24,
-                    borderLeft: "4px solid #10B981",
-                    lineHeight: 1.4,
-                  }}
-                >
-                  "Where the wild horizon meets your deepest sense of wonder"
-                </p>
-              </TextReveal>
-              {[
-                "For over fifteen years, Altuvera has been the trusted compass for discerning travelers seeking extraordinary encounters in East Africa. We don't simply organize trips — we architect <strong>transformative journeys</strong> that weave together the thunder of the Great Migration, the gentle gaze of silverback gorillas, and the warmth of Maasai campfires under star-filled skies.",
-                "Our locally-born guides, conservationists, and hospitality artisans share an unshakable commitment to <strong>sustainable, community-driven tourism</strong>. Every safari dollar funds wildlife corridors. Every cultural visit empowers local artisans. Every footprint we leave heals rather than harms.",
-                "Whether you're a seasoned explorer or embarking on your first African adventure, our bespoke approach ensures every moment is curated, every detail anticipated, and every memory indelible. This isn't travel — it's transformation.",
-              ].map((text, i) => (
-                <TextReveal key={i} delay={0.18 + i * 0.06}>
-                  <p
-                    style={{
-                      fontSize: 17,
-                      color: "#475569",
-                      lineHeight: 1.95,
-                      marginBottom: 18,
-                    }}
-                    dangerouslySetInnerHTML={{ __html: text }}
-                  />
-                </TextReveal>
+      {/* ── INTRODUCTION ── */}
+      <section className="home-section intro-section">
+        <div className="blob blob--green-1" /><div className="blob blob--green-2" />
+        <div className="home-container">
+          <div className="intro-grid">
+            <div className="intro-content">
+              <TextReveal><span className="section-label"><IconCompass size={14} /> Welcome to Altuvera</span></TextReveal>
+              <TextReveal delay={0.08}><h1 className="intro-heading">Discover the <span className="text-gradient">Untamed Magic</span> of East Africa</h1></TextReveal>
+              <TextReveal delay={0.14}><p className="intro-quote">"Where the wild horizon meets your deepest sense of wonder"</p></TextReveal>
+              {["For over fifteen years, Altuvera has been the trusted compass for discerning travelers seeking extraordinary encounters in East Africa. We architect <strong>transformative journeys</strong> that weave the thunder of the Great Migration, the gentle gaze of silverback gorillas, and the warmth of Maasai campfires under star-filled skies.", "Our locally-born guides share an unshakable commitment to <strong>sustainable, community-driven tourism</strong>. Every safari dollar funds wildlife corridors. Every cultural visit empowers local artisans."].map((text, i) => (
+                <TextReveal key={i} delay={0.18 + i * 0.06}><p className="intro-paragraph" dangerouslySetInnerHTML={{ __html: text }} /></TextReveal>
               ))}
-              <TextReveal delay={0.4}>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 16,
-                    flexWrap: "wrap",
-                    marginTop: 8,
-                  }}
-                >
-                  <MagneticWrap>
-                    <Button
-                      to="/about"
-                      variant="primary"
-                      icon={<FiArrowRight size={18} />}
-                    >
-                      Our Story
-                    </Button>
-                  </MagneticWrap>
-                  <MagneticWrap>
-                    <Button to="/explore" variant="outline">
-                      Browse Experiences
-                    </Button>
-                  </MagneticWrap>
+              <TextReveal delay={0.32}>
+                <div className="intro-cta-row">
+                  <MagneticWrap><Button to="/about" variant="primary" icon={<IconArrowRight size={17} />}>Our Story</Button></MagneticWrap>
+                  <MagneticWrap><Button to="/destinations" variant="outline">Browse Destinations</Button></MagneticWrap>
                 </div>
               </TextReveal>
-              <StaggerWrap
-                className="qs"
-                stagger={0.1}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(4, 1fr)",
-                  gap: 24,
-                  marginTop: 48,
-                  paddingTop: 40,
-                  borderTop: "1px solid #E5E7EB",
-                }}
-              ></StaggerWrap>
-            </div>
-            <div className="iw" style={{ position: "relative" }}>
-              <AnimatedSection animation="rotateIn" delay={0.2}>
-                <div
-                  style={{
-                    position: "relative",
-                    minHeight: "clamp(360px, 52vw, 580px)",
-                    width: "100%",
-                  }}
-                >
-                 
-
-                 <ImageCycle
-  images={[
-    "https://i.pinimg.com/736x/c2/26/91/c22691ef2c1f5a1e9544ec1e62774740.jpg",
-    "https://i.pinimg.com/736x/77/d2/9c/77d29c30fa04d28e1b657c5669401f92.jpg",
-    "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
-    "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
-    "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg",
-    "https://i.pinimg.com/1200x/d0/af/e3/d0afe34b5ae890a0aa78264647847ba6.jpg",
-    "https://i.pinimg.com/1200x/84/e4/85/84e48535118942a4a468aa686841d974.jpg",
-    "https://i.pinimg.com/736x/55/e3/3e/55e33e50985ece6ae1b4256b880bc1d1.jpg",
-    "https://i.pinimg.com/1200x/bb/eb/a8/bbeba83d5cd3a6f8cef52d503aeb99a8.jpg",
-    "https://i.pinimg.com/736x/a6/fa/e8/a6fae858bd1ecf633229b5dade79c68a.jpg",
-    "https://i.pinimg.com/474x/b5/c6/13/b5c6134e42151a981a41eaf34166e27f.jpg",
-
-    // Added upgraded East Africa tourism images (30 total)
-    "https://images.unsplash.com/photo-1549366021-9f761d450615",
-    "https://images.unsplash.com/photo-1516426122078-c23e76319801",
-    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
-    "https://images.unsplash.com/photo-1472396961693-142e6e269027",
-    "https://images.unsplash.com/photo-1466721591366-2d5fba72006d",
-    "https://images.unsplash.com/photo-1508672019048-805c876b67e2",
-    "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5",
-    "https://images.unsplash.com/photo-1516939884455-1445c8652f83",
-    "https://images.unsplash.com/photo-1504593811423-6dd665756598",
-    "https://images.unsplash.com/photo-1511216113906-8f57bb83e776",
-    "https://images.unsplash.com/photo-1501594907352-04cda38ebc29",
-    "https://images.unsplash.com/photo-1489392191049-fc10c97e64b6",
-    "https://images.unsplash.com/photo-1523805009345-7448845a9e53",
-    "https://images.unsplash.com/photo-1508766206392-8bd5cf550d1c",
-    "https://images.unsplash.com/photo-1493962853295-0fd70327578a",
-    "https://images.unsplash.com/photo-1474511320723-9a56873867b5",
-    "https://images.unsplash.com/photo-1502082553048-f009c37129b9",
-    "https://images.unsplash.com/photo-1546182990-dffeafbe841d",
-    "https://images.unsplash.com/photo-1501004318641-b39e6451bec6",
-    "https://images.unsplash.com/photo-1500534623283-312aade485b7",
-    "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429",
-    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
-    "https://images.unsplash.com/photo-1473773508845-188df298d2d1",
-    "https://images.unsplash.com/photo-1465146344425-f00d5f5c8f07",
-    "https://images.unsplash.com/photo-1473116763249-2faaef81ccda",
-    "https://images.unsplash.com/photo-1501785888041-af3ef285b470",
-    "https://images.unsplash.com/photo-1433086966358-54859d0ed716",
-    "https://images.unsplash.com/photo-1441974231531-c6227db76b6e",
-    "https://images.unsplash.com/photo-1473448912268-2022ce9509d8",
-    "https://images.unsplash.com/photo-1507525428034-b723cf961d3e",
-  ]}
-  style={{
-    width: "100%",
-    height: "clamp(360px, 52vw, 520px)",
-    borderRadius: 28,
-    objectFit: "cover",
-    boxShadow: "0 30px 80px rgba(0,0,0,.15)",
-  }}
-  showControllers={false}
-  clickToNavigate
-  hintStorageKey="altuvera_intro_media_hint_v1"
-  hintText="Tip: Click/tap left or right side to change media"
-  interval={12000}
-/>
-
-
-                  {/* Child cards container for row layout */}
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: "clamp(-40px, -5vw, -50px)", // Pushed much further down
-                      left: 0,
-                      right: 0,
-                      display: "flex",
-                      justifyContent: "center",
-                      gap: "clamp(15px, 3vw, 25px)",
-                      padding: "0 clamp(10px, 5%, 40px)",
-                      zIndex: 10,
-                      pointerEvents: "none",
-                    }}
-                  >
-                     <ImageCycle
-                      images={[
-                        "https://www.vjv.com/media/hyegmdk3/giraffe-walking-savanna-queen-elizabeth-national-park-uganda-shutterstock_58932448.jpg?height=1080&quality=60&width=1920",
-                        "https://www.travelandleisure.com/thmb/4rmCDPTq85-wHGIak69y6Uv1WWo%3D/1500x0/filters%3Ano_upscale%28%29%3Amax_bytes%28150000%29%3Astrip_icc%28%29/TAL-ol-jogi-aerial-view-full-ALISTLIZ1125-fde5875b5cbf433b862221dbaccddf92.jpg",
-                        "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
-                        "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
-                        "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg",
-                      ]}
-                      style={{
-                        width: "clamp(140px, 28%, 220px)",
-                        height: "clamp(110px, 30vw, 160px)",
-                        borderRadius: 20,
-                        objectFit: "cover",
-                        boxShadow: "0 20px 40px rgba(0,0,0,.3)",
-                        pointerEvents: "auto",
-                        transition:
-                          "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-                        animation: "floatSoft 6s ease-in-out infinite",
-                        transform: "translateY(0)",
-                        cursor: "pointer",
-                        outline: "none",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform =
-                          "translateY(-12px) scale(1.05)";
-                        e.currentTarget.style.boxShadow =
-                          "0 30px 60px rgba(0,0,0,.4)";
-                        e.currentTarget.style.filter =
-                          "brightness(1.1) contrast(1.05)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform =
-                          "translateY(0) scale(1)";
-                        e.currentTarget.style.boxShadow =
-                          "0 20px 40px rgba(0,0,0,.3)";
-                        e.currentTarget.style.filter =
-                          "brightness(1) contrast(1)";
-                      }}
-                      onFocus={(e) => {
-                        e.currentTarget.style.transform =
-                          "translateY(-8px) scale(1.03)";
-                        e.currentTarget.style.boxShadow =
-                          "0 25px 50px rgba(5,150,105,.5)";
-                        e.currentTarget.style.outline =
-                          "3px solid rgba(5,150,105,.5)";
-                        e.currentTarget.style.outlineOffset = "3px";
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.style.transform =
-                          "translateY(0) scale(1)";
-                        e.currentTarget.style.boxShadow =
-                          "0 20px 40px rgba(0,0,0,.3)";
-                        e.currentTarget.style.outline = "none";
-                      }}
-                      tabIndex={0}
-                      showControllers={false}
-                      clickToNavigate
-                      hintStorageKey="altuvera_intro_media_hint_v1_card1"
-                      hintText="Tip: Click/tap left or right side to change media"
-                      interval={9000}
-                    />
-                    <ImageCycle
-                      images={[
-                        "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg",
-                        "https://www.vjv.com/media/hyegmdk3/giraffe-walking-savanna-queen-elizabeth-national-park-uganda-shutterstock_58932448.jpg?height=1080&quality=60&width=1920",
-                        "https://www.travelandleisure.com/thmb/4rmCDPTq85-wHGIak69y6Uv1WWo%3D/1500x0/filters%3Ano_upscale%28%29%3Amax_bytes%28150000%29%3Astrip_icc%28%29/TAL-ol-jogi-aerial-view-full-ALISTLIZ1125-fde5875b5cbf433b862221dbaccddf92.jpg",
-                        "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
-                        "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
-                      ]}
-                      style={{
-                        width: "clamp(140px, 28%, 220px)",
-                        height: "clamp(110px, 30vw, 160px)",
-                        borderRadius: 20,
-                        objectFit: "cover",
-                        boxShadow: "0 20px 40px rgba(0,0,0,.3)",
-                        pointerEvents: "auto",
-                        transition:
-                          "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-                        animation: "floatSoft 6s ease-in-out infinite 0.5s",
-                        transform: "translateY(0)",
-                        cursor: "pointer",
-                        outline: "none",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform =
-                          "translateY(-12px) scale(1.05)";
-                        e.currentTarget.style.boxShadow =
-                          "0 30px 60px rgba(0,0,0,.4)";
-                        e.currentTarget.style.filter =
-                          "brightness(1.1) contrast(1.05)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform =
-                          "translateY(0) scale(1)";
-                        e.currentTarget.style.boxShadow =
-                          "0 20px 40px rgba(0,0,0,.3)";
-                        e.currentTarget.style.filter =
-                          "brightness(1) contrast(1)";
-                      }}
-                      onFocus={(e) => {
-                        e.currentTarget.style.transform =
-                          "translateY(-8px) scale(1.03)";
-                        e.currentTarget.style.boxShadow =
-                          "0 25px 50px rgba(5,150,105,.5)";
-                        e.currentTarget.style.outline =
-                          "3px solid rgba(5,150,105,.5)";
-                        e.currentTarget.style.outlineOffset = "3px";
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.style.transform =
-                          "translateY(0) scale(1)";
-                        e.currentTarget.style.boxShadow =
-                          "0 20px 40px rgba(0,0,0,.3)";
-                        e.currentTarget.style.outline = "none";
-                      }}
-                      tabIndex={0}
-                      showControllers={false}
-                      clickToNavigate
-                      hintStorageKey="altuvera_intro_media_hint_v1_card2"
-                      hintText="Tip: Click/tap left or right side to change media"
-                      interval={12000}
-                    />
-                    <ImageCycle
-                      images={[
-                        "https://i.pinimg.com/736x/8d/55/a4/8d55a4b48e6207671ddd3691bbaf5354.jpg",
-                        "https://i.pinimg.com/736x/d7/ef/86/d7ef8653e5a71a77f1be064b91fff916.jpg",
-                        "https://www.vjv.com/media/hyegmdk3/giraffe-walking-savanna-queen-elizabeth-national-park-uganda-shutterstock_58932448.jpg?height=1080&quality=60&width=1920",
-                        "https://www.travelandleisure.com/thmb/4rmCDPTq85-wHGIak69y6Uv1WWo%3D/1500x0/filters%3Ano_upscale%28%29%3Amax_bytes%28150000%29%3Astrip_icc%28%29/TAL-ol-jogi-aerial-view-full-ALISTLIZ1125-fde5875b5cbf433b862221dbaccddf92.jpg",
-                        "https://i.pinimg.com/736x/42/d6/3d/42d63db95b5ef30fb1c076829b554a2a.jpg",
-                      ]}
-                      style={{
-                        width: "clamp(140px, 28%, 220px)",
-                        height: "clamp(110px, 30vw, 160px)",
-                        borderRadius: 20,
-                        objectFit: "cover",
-                        boxShadow: "0 20px 40px rgba(0,0,0,.3)",
-                        pointerEvents: "auto",
-                        transition:
-                          "all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-                        animation: "floatSoft 6s ease-in-out infinite 1s",
-                        transform: "translateY(0)",
-                        cursor: "pointer",
-                        outline: "none",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform =
-                          "translateY(-12px) scale(1.05)";
-                        e.currentTarget.style.boxShadow =
-                          "0 30px 60px rgba(0,0,0,.4)";
-                        e.currentTarget.style.filter =
-                          "brightness(1.1) contrast(1.05)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform =
-                          "translateY(0) scale(1)";
-                        e.currentTarget.style.boxShadow =
-                          "0 20px 40px rgba(0,0,0,.3)";
-                        e.currentTarget.style.filter =
-                          "brightness(1) contrast(1)";
-                      }}
-                      onFocus={(e) => {
-                        e.currentTarget.style.transform =
-                          "translateY(-8px) scale(1.03)";
-                        e.currentTarget.style.boxShadow =
-                          "0 25px 50px rgba(5,150,105,.5)";
-                        e.currentTarget.style.outline =
-                          "3px solid rgba(5,150,105,.5)";
-                        e.currentTarget.style.outlineOffset = "3px";
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.style.transform =
-                          "translateY(0) scale(1)";
-                        e.currentTarget.style.boxShadow =
-                          "0 20px 40px rgba(0,0,0,.3)";
-                        e.currentTarget.style.outline = "none";
-                      }}
-                      tabIndex={0}
-                      showControllers={false}
-                      clickToNavigate
-                      hintStorageKey="altuvera_intro_media_hint_v1_card3"
-                      hintText="Tip: Click/tap left or right side to change media"
-                      interval={15000}
-                    />
-                  </div>
-                  <motion.div
-                    animate={reduced ? {} : { y: [0, -12, 0] }}
-                    transition={{
-                      duration: 10,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
-                    style={{
-                      position: "absolute",
-                      top: "clamp(6px, 3vw, 20px)",
-                      right: "clamp(12px, 3vw, 28px)",
-                      width: "clamp(60px, 18vw, 105px)",
-                      height: "clamp(60px, 18vw, 120px)",
-                      borderRadius: 24,
-                      display: "flex",
-                      backdropFilter: "blur(3px)",
-                      alignItems: "center",
-                      flexDirection: "column",
-                      color: "white",
-                      boxShadow: "0 20px 50px rgba(5,150,105,.45)",
-                      zIndex: 10,
-                      transition: "all 0.3s ease",
-                      cursor: "pointer",
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = "scale(1.05)";
-                      e.currentTarget.style.boxShadow =
-                        "0 30px 60px rgba(5,150,105,.6)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = "scale(1)";
-                      e.currentTarget.style.boxShadow =
-                        "0 20px 50px rgba(5,150,105,.45)";
-                    }}
-                    onFocus={(e) => {
-                      e.currentTarget.style.outline =
-                        "3px solid rgba(255,255,255,.8)";
-                      e.currentTarget.style.outlineOffset = "3px";
-                    }}
-                    onBlur={(e) => {
-                      e.currentTarget.style.outline = "none";
-                    }}
-                    tabIndex={0}
-                  >
-                    <span
-                      style={{
-                        fontFamily: "'Playfair Display', serif",
-                        fontSize: "clamp(30px, 4vw, 48px)",
-                        fontWeight: 800,
-                      }}
-                    >
-                      10+
-                    </span>
-                    <span
-                      style={{
-                        fontSize: 11,
-                        textTransform: "uppercase",
-                        letterSpacing: 1.5,
-                        fontWeight: 700,
-                      }}
-                    >
-                      Countries
-                    </span>
-                  </motion.div>
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: -30,
-                      right: -30,
-                      width: 130,
-                      height: 130,
-                      borderRadius: "50%",
-                      border: "3px dashed rgba(5,150,105,.15)",
-                      animation: "rotateSlow 25s linear infinite",
-                      pointerEvents: "none",
-                    }}
-                  />
+              <TextReveal delay={0.4}>
+                <div className="intro-stats">
+                  <div className="intro-stat"><span className="intro-stat-value"><Counter end={15} suffix="+" /></span><span className="intro-stat-label">Years Experience</span></div>
+                  <div className="intro-stat"><span className="intro-stat-value"><Counter end={5000} suffix="+" /></span><span className="intro-stat-label">Happy Travelers</span></div>
+                  <div className="intro-stat"><span className="intro-stat-value"><Counter end={countries.length || 10} suffix="+" /></span><span className="intro-stat-label">Countries</span></div>
                 </div>
-              </AnimatedSection>
+              </TextReveal>
             </div>
+            <AnimatedSection animation="rotateIn" delay={0.2}>
+              <div className="intro-image-collage">
+                <div className="intro-image-main">
+                  <img src="https://i.pinimg.com/736x/c2/26/91/c22691ef2c1f5a1e9544ec1e62774740.jpg" alt="African Safari" loading="lazy" />
+                  <div className="intro-image-badge"><span className="intro-image-badge-icon">🌍</span><div><span className="intro-image-badge-number">{countries.length || "10"}+</span><span className="intro-image-badge-label">Countries</span></div></div>
+                </div>
+                {!isMobile && (
+                  <div className="intro-image-stack">
+                    <motion.div className="intro-image-stack-item" animate={{ y: [0, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}><img src="https://images.unsplash.com/photo-1549366021-9f761d450615?w=400" alt="Wildlife" loading="lazy" /></motion.div>
+                    <motion.div className="intro-image-stack-item" animate={{ y: [0, 8, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}><img src="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=400" alt="Safari" loading="lazy" /></motion.div>
+                  </div>
+                )}
+              </div>
+            </AnimatedSection>
           </div>
         </div>
       </section>
 
-      {/* ═══════ DESTINATIONS ═══════ */}
-      <section
-        className="sp"
-        style={{
-          background: "linear-gradient(180deg, #F0FDF4 0%, #fff 100%)",
-          position: "relative",
-        }}
-      >
-        <div
-          className="blob"
-          style={{
-            top: "20%",
-            right: -200,
-            width: 500,
-            height: 500,
-            background: "#10B981",
-          }}
-        />
-        <div className="ctr">
+      {/* ── DESTINATIONS ── */}
+      <section className="home-section destinations-section">
+        <div className="blob blob--teal" />
+        <div className="home-container">
           <AnimatedSection animation="blurIn">
-            <div className="sh">
-              <span className="sl">
-                <FiMapPin size={14} /> Explore Our Destinations
-              </span>
-              <h2 className="st">
-                Handpicked <span className="tg">Destinations</span>
-              </h2>
-              <p className="ss">
-                From the endless plains of the Serengeti to the pristine shores
-                of Zanzibar, discover destinations that ignite the soul and stir
-                the imagination. Each one is vetted by our team for authenticity
-                and wonder.
-              </p>
+            <div className="section-header">
+              <span className="section-label"><IconMapPin size={14} /> Featured Destinations</span>
+              <h2 className="section-title">Handpicked <span className="text-gradient">Destinations</span></h2>
+              <p className="section-subtitle">From the endless plains of the Serengeti to the pristine shores of Zanzibar, discover destinations that ignite the soul.</p>
             </div>
           </AnimatedSection>
-          <StaggerWrap className="dg" stagger={0.07}>
-            {allDestinations.slice(0, 6).map((d, i) => (
-              <StaggerChild key={d?.id || d?.slug || i}>
-                <Link
-                  to={`/destination/${d?.slug || d?.id || ""}`}
-                  className="dc ch"
-                  aria-label={`Explore ${d?.name || "destination"}`}
-                >
-                  <div className="db" />
-                  <div className="diw">
-                    <LazyImage
-                      src={getDestImg(d)}
-                      alt={d?.name || "Destination"}
-                      style={{ width: "100%", height: "100%" }}
-                      className="iz"
-                    />
-                    <div className="dog" />
-                    <button
-                      type="button"
-                      aria-label={
-                        isWishlisted(d?._id || d?.id || d?.slug)
-                          ? "Remove from wishlist"
-                          : "Add to wishlist"
-                      }
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        toggleWishlist(d?._id || d?.id || d?.slug);
-                      }}
-                      style={{
-                        position: "absolute",
-                        top: 14,
-                        left: 14,
-                        width: 40,
-                        height: 40,
-                        borderRadius: 999,
-                        border: "1px solid rgba(255,255,255,0.25)",
-                        background: isWishlisted(d?._id || d?.id || d?.slug)
-                          ? "rgba(5,150,105,0.9)"
-                          : "rgba(0,0,0,0.35)",
-                        color: "white",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        cursor: "pointer",
-                        backdropFilter: "blur(10px)",
-                        boxShadow: "0 10px 24px rgba(0,0,0,0.18)",
-                        transition: "transform .2s ease, background .2s ease",
-                        zIndex: 6,
-                      }}
-                      onMouseOver={(e) =>
-                        (e.currentTarget.style.transform = "translateY(-1px)")
-                      }
-                      onMouseOut={(e) =>
-                        (e.currentTarget.style.transform = "translateY(0)")
-                      }
-                    >
-                      <FiHeart
-                        size={18}
-                        style={{
-                          fill: isWishlisted(d?._id || d?.id || d?.slug)
-                            ? "currentColor"
-                            : "transparent",
-                        }}
-                      />
-                    </button>
-                    <div className="deb">
-                      <FiEye size={22} color="#fff" />
-                    </div>
-                    {d?.rating && (
-                      <span className="drt">
-                        <FiStar
-                          size={11}
-                          style={{ fill: "#F59E0B", color: "#F59E0B" }}
-                        />{" "}
-                        {d.rating}
-                      </span>
-                    )}
-                  </div>
-                  <div className="dcc">
-                    <span className="dct">
-                      <FiMapPin size={11} /> {d?.country || "East Africa"}
-                    </span>
-                    <h3 className="dtt">{d?.name || "Destination"}</h3>
-                    <p className="dds">
-                      {(
-                        d?.description ||
-                        "Explore this incredible destination with Altuvera's expert-guided experiences across breathtaking landscapes."
-                      ).slice(0, 120)}
-                      ...
-                    </p>
-                    <div className="dm">
-                      <span
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 4,
-                        }}
-                      >
-                        <FiMapPin size={12} /> {d?.country || "Africa"}
-                      </span>
-                      {d?.duration && (
-                        <span>
-                          <FiClock size={12} /> {d.duration}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="lr" />
-                </Link>
+          <StaggerWrap stagger={0.08} className="destinations-grid">
+            {allDest.slice(0, 6).map((d, i) => (
+              <StaggerChild key={d?._id || d?.slug || i}>
+                <DestinationCard destination={d} isWishlisted={isWishlisted(d?._id || d?.id || d?.slug)} onWishlistToggle={toggleWishlist} />
               </StaggerChild>
             ))}
           </StaggerWrap>
           <AnimatedSection animation="fadeInUp">
-            <div style={{ textAlign: "center", marginTop: 16 }}>
-              <MagneticWrap>
-                <Button
-                  to="/destinations"
-                  variant="primary"
-                  size="large"
-                  icon={<FiArrowRight size={18} />}
-                >
-                  View All Destinations
-                </Button>
-              </MagneticWrap>
-            </div>
+            <div className="section-cta"><MagneticWrap><Button to="/destinations" variant="primary" size="large" icon={<IconArrowRight size={18} />}>View All Destinations</Button></MagneticWrap></div>
           </AnimatedSection>
         </div>
       </section>
 
-      {/* ═══════ HOW IT WORKS ═══════ */}
-      <section
-        className="sp"
-        style={{
-          background:
-            "linear-gradient(180deg, #fff 0%, #F0FDF4 50%, #fff 100%)",
-        }}
-      >
-        <div className="ctr">
-          <AnimatedSection animation="perspectiveIn">
-            <div className="sh">
-              <span className="sl">
-                <FiTarget size={14} /> How It Works
-              </span>
-              <h2 className="st">
-                Your Journey in <span className="tg">Four Simple Steps</span>
-              </h2>
-              <p className="ss">
-                From the first spark of inspiration to stepping onto African
-                soil, we make the entire process seamless, exciting, and utterly
-                stress-free.
-              </p>
+      {/* ── COUNTRIES ── */}
+      <section className="home-section countries-section">
+        <div className="blob blob--emerald" />
+        <div className="home-container">
+          <AnimatedSection animation="blurIn">
+            <div className="section-header">
+              <span className="section-label"><IconGlobe size={14} /> Explore by Country</span>
+              <h2 className="section-title">Discover <span className="text-gradient">East Africa</span></h2>
+              <p className="section-subtitle">From the savannas of Kenya to the beaches of Zanzibar, each country offers unique adventures waiting to be explored.</p>
             </div>
           </AnimatedSection>
-          <div
-            className="pl"
-            style={{
-              display: "grid",
-              gridTemplateColumns: "400px 1fr",
-              gap: 48,
-              alignItems: "start",
-            }}
-          >
+          {countriesLoading ? (<><CountriesMessage type="loading" /><CountriesSkeleton count={isMobile ? 2 : 4} /></>) : countriesError ? (<CountriesMessage type="error" error={countriesError} onRetry={refetchCountries} />) : countries.length === 0 ? (<CountriesMessage type="empty" onRetry={refetchCountries} />) : (
+            <StaggerWrap stagger={0.08} className="countries-grid">
+              {countries.slice(0, isMobile ? 4 : 8).map((country, i) => (
+                <StaggerChild key={country.id || country.slug || i}><CountryCard country={country} index={i} /></StaggerChild>
+              ))}
+            </StaggerWrap>
+          )}
+          {!countriesLoading && !countriesError && countries.length > 0 && (
+            <AnimatedSection animation="fadeInUp">
+              <div className="section-cta"><MagneticWrap><Button to="/countries" variant="outline" size="large" icon={<IconArrowRight size={18} />}>View All Countries</Button></MagneticWrap></div>
+            </AnimatedSection>
+          )}
+        </div>
+      </section>
+
+      {/* ── ADVENTURE TYPES ── */}
+      <section className="home-section adventures-section">
+        <div className="home-container">
+          <AnimatedSection animation="perspectiveIn">
+            <div className="section-header">
+              <span className="section-label"><IconCompass size={14} /> What We Offer</span>
+              <h2 className="section-title">Choose Your <span className="text-gradient">Adventure</span></h2>
+              <p className="section-subtitle">Six categories of extraordinary experiences, each crafted to deliver the Africa you've always dreamed of.</p>
+            </div>
+          </AnimatedSection>
+          <div className="adventures-grid-v2">
+            {adventureTypes.map((a, i) => <AdventureCard key={a.title} adventure={a} index={i} />)}
+          </div>
+        </div>
+      </section>
+
+      {/* ── HOW IT WORKS ── */}
+      <section className="home-section process-section">
+        <div className="home-container">
+          <AnimatedSection animation="perspectiveIn">
+            <div className="section-header">
+              <span className="section-label"><IconTarget size={14} /> How It Works</span>
+              <h2 className="section-title">Your Journey in <span className="text-gradient">Four Simple Steps</span></h2>
+              <p className="section-subtitle">From inspiration to stepping onto African soil, we make every step seamless.</p>
+            </div>
+          </AnimatedSection>
+          <div className="process-layout">
             <AnimatedSection animation="fadeInLeft">
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  borderRadius: 24,
-                  overflow: "hidden",
-                  background: "white",
-                  boxShadow: "0 8px 40px rgba(0,0,0,.06)",
-                }}
-              >
+              <div className="process-tabs-panel">
                 {processSteps.map((s, i) => (
-                  <button
-                    key={i}
-                    className={`ptab ${activeProcess === i ? "act" : ""}`}
-                    onClick={() => setActiveProcess(i)}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 16,
-                        marginBottom: 6,
-                      }}
-                    >
-                      <motion.div
-                        animate={{
-                          background:
-                            activeProcess === i ? "#059669" : "#F1F5F9",
-                          color: activeProcess === i ? "#fff" : "#94A3B8",
-                        }}
-                        transition={{ duration: 0.4 }}
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: 14,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          flexShrink: 0,
-                        }}
-                      >
-                        <s.icon size={19} />
-                      </motion.div>
-                      <div>
-                        <div
-                          style={{
-                            fontSize: 11,
-                            color: "#059669",
-                            fontWeight: 700,
-                            letterSpacing: 2,
-                            textTransform: "uppercase",
-                          }}
-                        >
-                          Step {s.step}
-                        </div>
-                        <div
-                          style={{
-                            fontFamily: "'Playfair Display', serif",
-                            fontSize: 18,
-                            fontWeight: 700,
-                            color: activeProcess === i ? "#059669" : "#1E293B",
-                            transition: "color .4s",
-                          }}
-                        >
-                          {s.title}
-                        </div>
-                      </div>
+                  <button key={i} className={`process-tab${activeProcess === i ? " active" : ""}`} onClick={() => setActiveProcess(i)}>
+                    <div className="process-tab-header">
+                      <motion.div animate={{ background: activeProcess === i ? "#059669" : "#F1F5F9", color: activeProcess === i ? "#fff" : "#94A3B8" }} transition={{ duration: 0.4 }} className="process-tab-icon"><s.icon size={19} /></motion.div>
+                      <div><div className="process-tab-step">Step {s.step}</div><div className={`process-tab-title${activeProcess === i ? " process-tab-title--active" : ""}`}>{s.title}</div></div>
                     </div>
                     <AnimatePresence mode="wait">
                       {activeProcess === i && (
-                        <motion.p
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.4 }}
-                          style={{
-                            fontSize: 14,
-                            color: "#64748B",
-                            lineHeight: 1.75,
-                            overflow: "hidden",
-                            marginTop: 8,
-                          }}
-                        >
+                        <motion.p key="desc" className="process-tab-desc" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.4 }}>
                           {s.description}
                         </motion.p>
                       )}
                     </AnimatePresence>
                   </button>
                 ))}
-
-                {/* Progress indicator */}
-                <div
-                  style={{
-                    height: 4,
-                    background: "#F1F5F9",
-                    position: "relative",
-                    overflow: "hidden",
-                  }}
-                >
-                  <motion.div
-                    animate={{
-                      width: `${((activeProcess + 1) / processSteps.length) * 100}%`,
-                    }}
-                    transition={{ duration: 0.6, ease: "easeOut" }}
-                    style={{
-                      height: "100%",
-                      background: "linear-gradient(90deg, #059669, #10B981)",
-                      borderRadius: 2,
-                    }}
-                  />
+                <div className="process-progress-bar-track">
+                  <motion.div className="process-progress-bar-fill" animate={{ width: `${((activeProcess + 1) / processSteps.length) * 100}%` }} transition={{ duration: 0.6, ease: "easeOut" }} />
                 </div>
               </div>
             </AnimatedSection>
-
             <AnimatedSection animation="fadeInRight">
-              <div
-                style={{
-                  borderRadius: 28,
-                  overflow: "hidden",
-                  position: "relative",
-                  height: "100%",
-                  minHeight: 500,
-                  boxShadow: "0 20px 60px rgba(0,0,0,.1)",
-                }}
-              >
+              <div className="process-image-panel">
                 <AnimatePresence mode="wait">
-                  <motion.div
-                    key={activeProcess}
-                    initial={{ opacity: 0, scale: 1.05 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.6 }}
-                    style={{ position: "absolute", inset: 0 }}
-                  >
-                    <LazyImage
-                      src={processSteps[activeProcess].image}
-                      alt={processSteps[activeProcess].title}
-                      style={{ width: "100%", height: "100%" }}
-                    />
+                  <motion.div key={activeProcess} className="process-image-container" initial={{ opacity: 0, scale: 1.06 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.94 }} transition={{ duration: 0.55 }}>
+                    <img src={processSteps[activeProcess].image} alt={processSteps[activeProcess].title} loading="lazy" />
                   </motion.div>
                 </AnimatePresence>
-                <div
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    background:
-                      "linear-gradient(180deg, transparent 45%, rgba(0,0,0,.6) 100%)",
-                  }}
-                />
-                <motion.div
-                  key={`t-${activeProcess}`}
-                  initial={{ y: 50, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
-                  style={{
-                    position: "absolute",
-                    bottom: 36,
-                    left: 36,
-                    right: 36,
-                    color: "white",
-                  }}
-                >
-                  <span
-                    style={{
-                      fontSize: 12,
-                      fontWeight: 700,
-                      color: "#34D399",
-                      textTransform: "uppercase",
-                      letterSpacing: 2,
-                    }}
-                  >
-                    Step {processSteps[activeProcess].step}
-                  </span>
-                  <div
-                    style={{
-                      fontFamily: "'Playfair Display', serif",
-                      fontSize: 28,
-                      fontWeight: 700,
-                      marginBottom: 10,
-                      marginTop: 6,
-                    }}
-                  >
-                    {processSteps[activeProcess].title}
-                  </div>
-                  <div style={{ fontSize: 14, opacity: 0.9, lineHeight: 1.65 }}>
-                    {processSteps[activeProcess].description.slice(0, 130)}…
-                  </div>
+                <div className="process-image-overlay" />
+                <motion.div key={`cap-${activeProcess}`} className="process-image-caption" initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.55, delay: 0.18 }}>
+                  <span className="process-caption-step">Step {processSteps[activeProcess].step}</span>
+                  <div className="process-caption-title">{processSteps[activeProcess].title}</div>
                 </motion.div>
               </div>
             </AnimatedSection>
@@ -2187,574 +1096,134 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Countries Aside Component */}
-      {!isMobile && <CountryGrid variant="flush" />}
+      {/* ══════ WHATSAPP SECTION (replaces Signature Experiences) ══════ */}
+      <WhatsAppSection />
 
-      {/* ═══════ SIGNATURE EXPERIENCES - REDESIGNED ═══════ */}
-      <section
-        className="sp"
-        style={{ background: "linear-gradient(180deg, #F8FAFC 0%, #ECFDF5 50%, #fff 100%)", position: "relative", overflow: "hidden" }}
-      >
-        {/* Decorative elements */}
-        <div style={{ position: "absolute", top: "10%", right: "-5%", width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)", pointerEvents: "none" }} />
-        <div style={{ position: "absolute", bottom: "15%", left: "-3%", width: 300, height: 300, borderRadius: "50%", background: "radial-gradient(circle, rgba(16,185,129,0.06) 0%, transparent 70%)", pointerEvents: "none" }} />
-        
-        <div className="ctr">
-          <AnimatedSection animation="skewIn">
-            <div className="sh">
-              <span className="sl">
-                <FiZap size={14} /> Signature Experiences
-              </span>
-              <h2 className="st">
-                Once-in-a-Lifetime <span className="tg">Encounters</span>
-              </h2>
-              <p className="ss">
-                These aren't tours — they're the experiences travelers fly
-                halfway around the world to have. Each refined over a decade to
-                deliver pure, unfiltered magic.
-              </p>
+      {/* ── GALLERY ── */}
+      <section className="home-section gallery-section">
+        <div className="home-container">
+          <AnimatedSection animation="fadeInUp">
+            <div className="section-header">
+              <span className="section-label"><IconCamera size={14} /> Photo Gallery</span>
+              <h2 className="section-title">Africa Through <span className="text-gradient">Our Lens</span></h2>
+              <p className="section-subtitle">Every image tells a story of wonder, connection, and discovery. Real moments captured on real journeys.</p>
             </div>
           </AnimatedSection>
-          
-          {/* Redesigned Interactive Cards Grid */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))",
-            gap: 28,
-            maxWidth: 1200,
-            margin: "0 auto"
-          }}>
-            {signatureExperiences.map((exp, i) => (
-              <SignatureExperienceCard key={exp.title} experience={exp} index={i} />
-            ))}
-          </div>
-
-        </div>
-      </section>
-
-      {/* ═══════ GALLERY ═══════ */}
-      <section
-          className="sp"
-          style={{
-            background: "#fff",
-            position: "relative",
-            overflow: "hidden",
-          }}
-        >
-        {/* Animated top border */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 4,
-            background:
-              "linear-gradient(90deg, #059669, #10B981, #34D399, #10B981, #059669)",
-            backgroundSize: "200% 100%",
-            animation: "shimmer 3s linear infinite",
-          }}
-        />
-        <div className="ctr">
-          <AnimatedSection animation="fadeInUp">
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-end",
-                flexWrap: "wrap",
-                gap: 28,
-                marginBottom: 16,
-              }}
-            >
-              <div style={{ maxWidth: 600 }}>
-                <span className="sl">
-                  <FiCamera size={14} /> Visual Stories
-                </span>
-                <h2 className="st" style={{ marginBottom: 14 }}>
-                  Moments We've <span className="tg">Captured</span>
-                </h2>
-                <p style={{ fontSize: 16, color: "#64748B", lineHeight: 1.75 }}>
-                  A curated collection of real moments captured by our travelers
-                  and guides across East Africa's most extraordinary landscapes.
-                  Each image tells a story of wonder, connection, and raw
-                  beauty. Click any image to explore.
-                </p>
+          {galleryLoading ? (
+            <div className="gallery-grid-home">
+              {Array.from({ length: isMobile ? 4 : 8 }).map((_, i) => (
+                <div key={i} className={`gallery-grid-item${i === 0 ? " gallery-grid-item--large" : ""}`}>
+                  <div className="skeleton-shimmer" style={{ width: "100%", height: "100%", minHeight: 180, borderRadius: 16 }} />
+                </div>
+              ))}
+            </div>
+          ) : galleryImages.length > 0 ? (
+            <>
+              <div className="gallery-grid-home">
+                {galleryImages.slice(0, isMobile ? 6 : 9).map((image, i) => (
+                  <div key={image.id} className={`gallery-grid-item${i === 0 ? " gallery-grid-item--large" : ""}${i === 3 ? " gallery-grid-item--tall" : ""}`}>
+                    <GalleryCard image={image} index={i} onClick={openLightbox} />
+                  </div>
+                ))}
               </div>
-              <MagneticWrap>
-                <Button
-                  to="/gallery"
-                  variant="outline"
-                  icon={<FiArrowUpRight size={16} />}
-                >
-                  Full Gallery
-                </Button>
-              </MagneticWrap>
-            </div>
-          </AnimatedSection>
-
-          <AnimatedSection animation="fadeInUp">
-            <div
-              style={{
-                maxWidth: 1120,
-                margin: "0 auto",
-                position: "relative",
-              }}
-              onMouseEnter={() => setGalleryHover(true)}
-              onMouseLeave={() => setGalleryHover(false)}
-            >
-              <ImageCycle
-                images={GALLERY_SLIDES.map((s) => s.src)}
-                style={{
-                  width: "100%",
-                  height: "clamp(380px, 44vw, 520px)",
-                  borderRadius: 28,
-                  objectFit: "cover",
-                  boxShadow: "0 30px 70px rgba(0,0,0,0.18)",
-                }}
-                showControllers={false}
-                showDots
-                clickToNavigate
-                interval={8500}
-                onSlideChange={setGallerySlide}
-                hintStorageKey="altuvera_home_gallery_hint_v1"
-                hintText="Tip: Click/tap left or right side to change image"
-              />
-
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={
-                  galleryHover
-                    ? { opacity: 1, y: 0 }
-                    : { opacity: 0, y: 12 }
-                }
-                transition={{ duration: 0.25, ease: "easeOut" }}
-                style={{
-                  position: "absolute",
-                  bottom: 14,
-                  left: 14,
-                  right: 14,
-                  padding: "12px 16px",
-                  borderRadius: 16,
-                  background: "rgba(0,0,0,0.48)",
-                  color: "#fff",
-                  fontSize: 14,
-                  fontWeight: 600,
-                  backdropFilter: "blur(10px)",
-                  pointerEvents: "none",
-                }}
-              >
-                {GALLERY_SLIDES[gallerySlide]?.label}
-              </motion.div>
-            </div>
-          </AnimatedSection>
-
+              <AnimatedSection animation="fadeInUp">
+                <div className="section-cta"><MagneticWrap><Button to="/gallery" variant="outline" size="large" icon={<IconCamera size={18} />}>Explore Full Gallery</Button></MagneticWrap></div>
+              </AnimatedSection>
+            </>
+          ) : (
+            <div className="gallery-empty"><span className="gallery-empty-icon">📸</span><p>Our gallery is coming soon. Check back for stunning African landscapes.</p></div>
+          )}
         </div>
       </section>
 
-      {/* ═══════ TESTIMONIALS ═══════ */}
-      <section
-        ref={testimonialRef}
-        className="sp"
-        style={{
-          background: "linear-gradient(135deg, #022C22 0%, #065F46 100%)",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            pointerEvents: "none",
-          }}
-        />
-        <div
-          className="blob"
-          style={{
-            top: -200,
-            right: -200,
-            width: 500,
-            height: 500,
-            background: "#10B981",
-            opacity: 0.04,
-          }}
-        />
-        <div className="ctr">
+      {/* ── TESTIMONIALS (auto-rotating) ── */}
+      <section className="home-section testimonials-section">
+        <div className="testimonials-pattern" />
+        <div className="blob blob--testimonials" />
+        <div className="home-container">
           <AnimatedSection animation="fadeInUp">
-            <div className="sh">
-              <span className="sl sl-d">★★★★★</span>
-              <h2 className="st" style={{ color: "#fff" }}>
-                What Our Travelers <span className="tg">Say</span>
-              </h2>
-              <p className="ss" style={{ color: "rgba(255,255,255,0.8)" }}>
-                Real stories from adventurers who've experienced the magic of East Africa with Altuvera.
-              </p>
+            <div className="section-header">
+              <span className="section-label section-label--dark">★★★★★ &nbsp; Traveler Reviews</span>
+              <h2 className="section-title section-title--light">What Our Travelers <span className="text-gradient">Say</span></h2>
+              <p className="section-subtitle section-subtitle--light">Real stories from adventurers who've experienced East Africa with Altuvera.</p>
             </div>
           </AnimatedSection>
-          
-          {/* Testimonial Cards */}
-          <div style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-            gap: 24,
-            maxWidth: 1000,
-            margin: "0 auto"
-          }}>
-            {(testimonials || []).slice(0, 3).map((t, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1, duration: 0.6 }}
-                style={{
-                  background: "rgba(255,255,255,0.08)",
-                  backdropFilter: "blur(12px)",
-                  borderRadius: 20,
-                  padding: 28,
-                  border: "1px solid rgba(255,255,255,0.1)",
-                }}
-              >
-                <div style={{ color: "#F59E0B", fontSize: 18, marginBottom: 12 }}>
-                  {"★".repeat(5)}
-                </div>
-                <p style={{
-                  color: "rgba(255,255,255,0.9)",
-                  fontSize: 15,
-                  lineHeight: 1.7,
-                  marginBottom: 20,
-                  fontStyle: "italic"
-                }}>
-                  "{t?.quote || t?.content || t?.text || "An unforgettable experience that exceeded all expectations."}"
-                </p>
-                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: "50%",
-                    background: "linear-gradient(135deg, #059669, #10B981)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#fff",
-                    fontWeight: 700,
-                    fontSize: 18
-                  }}>
-                    {(t?.name || "Guest").charAt(0)}
-                  </div>
-                  <div>
-                    <div style={{ color: "#fff", fontWeight: 600, fontSize: 14 }}>
-                      {t?.name || "Happy Traveler"}
-                    </div>
-                    <div style={{ color: "rgba(255,255,255,0.6)", fontSize: 12 }}>
-                      {t?.location || t?.country || "East Africa"}
+          {testimonialsLoading ? (
+            <div className="testimonials-loading">
+              <div className="testimonials-row">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="testimonial-card testimonial-card--featured testimonial-card--skeleton">
+                    <div className="skeleton-line skeleton-line--stars" />
+                    <div className="skeleton-line skeleton-line--quote" />
+                    <div className="skeleton-line skeleton-line--quote" style={{ width: "80%" }} />
+                    <div className="testimonial-author">
+                      <div className="testimonial-avatar skeleton-shimmer" />
+                      <div>
+                        <div className="skeleton-line skeleton-line--name" />
+                        <div className="skeleton-line skeleton-line--location" />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+                ))}
+              </div>
+            </div>
+          ) : testimonialsError ? (
+            <div className="testimonials-error">
+              <div className="testimonials-error-icon">⚠️</div>
+              <h3 className="testimonials-error-title">Unable to Load Reviews</h3>
+              <p className="testimonials-error-desc">We're having trouble loading testimonials right now. Please try again later.</p>
+            </div>
+          ) : allTestimonials.length > 0 ? (
+            <TestimonialsRotator items={allTestimonials} />
+          ) : (
+            <div className="testimonials-empty">
+              <div className="testimonials-empty-icon">💬</div>
+              <h3 className="testimonials-empty-title">Reviews Coming Soon</h3>
+              <p className="testimonials-empty-desc">We're collecting amazing stories from our travelers. Check back soon!</p>
+            </div>
+          )}
         </div>
       </section>
 
-
-      {/* ═══════ NEWSLETTER ═══════ */}
-      <section
-        style={{
-          padding: "clamp(16px, 2vw, 24px) 24px",
-          background: "linear-gradient(135deg, #059669, #10B981)",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        <div
-          style={{
-            position: "absolute",
-            top: -140,
-            right: -140,
-            width: 420,
-            height: 420,
-            borderRadius: "50%",
-            border: "2px solid rgba(255,255,255,.08)",
-            pointerEvents: "none",
-          }}
-        />
-        <div
-          style={{
-            position: "absolute",
-            bottom: -100,
-            left: -100,
-            width: 350,
-            height: 350,
-            borderRadius: "50%",
-            background: "rgba(255,255,255,.04)",
-            pointerEvents: "none",
-          }}
-        />
-        <div
-          className="blob"
-          style={{
-            top: "30%",
-            left: "10%",
-            width: 300,
-            height: 300,
-            background: "#fff",
-            opacity: 0.03,
-          }}
-        />
-        <div
-          style={{
-            maxWidth: 720,
-            margin: "0 auto",
-            textAlign: "center",
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
+      {/* ── NEWSLETTER ── */}
+      <section className="newsletter-section">
+        <div className="newsletter-decor-ring newsletter-decor-ring--top" />
+        <div className="newsletter-decor-blob" />
+        <div className="newsletter-inner">
           <AnimatedSection animation="scaleIn">
-            <motion.div
-              animate={reduced ? {} : { y: [0, -8, 0] }}
-              transition={{
-                duration: 3.5,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              style={{
-                width: 78,
-                height: 78,
-                borderRadius: "50%",
-                background: "rgba(255,255,255,.12)",
-                backdropFilter: "blur(12px)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                margin: "0 auto 26px",
-              }}
-            >
-              <FiMail size={33} color="white" />
+            <motion.div className="newsletter-icon-wrap" animate={reduced ? {} : { y: [0, -8, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}>
+              <IconMail size={34} color="white" />
             </motion.div>
-            <h2
-              style={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: "clamp(26px, 4vw, 44px)",
-                fontWeight: 800,
-                color: "white",
-                marginBottom: 14,
-              }}
-            >
-              Join Our Adventure Community
-            </h2>
-            <p
-              style={{
-                fontSize: 17,
-                color: "rgba(255,255,255,.88)",
-                marginBottom: 34,
-                lineHeight: 1.7,
-                maxWidth: 550,
-                margin: "0 auto 34px",
-              }}
-            >
-              Get exclusive travel inspiration, early-bird offers, wildlife
-              migration alerts, and insider tips delivered weekly. Join 25,000+
-              fellow adventurers.
-            </p>
-            {isSubscribed || user?.subscribed ? (
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", bounce: 0.4 }}
-                style={{
-                  padding: "18px 30px",
-                  background: "rgba(255,255,255,.18)",
-                  backdropFilter: "blur(12px)",
-                  borderRadius: 16,
-                  color: "white",
-                  fontWeight: 600,
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 10,
-                  fontSize: 16,
-                }}
-              >
-                <FiCheck size={20} /> Welcome aboard! Your adventure starts now.
-              </motion.div>
-            ) : (
-              <form
-                onSubmit={handleNewsletter}
-                className="nf"
-                style={{
-                  display: "flex",
-                  gap: 12,
-                  maxWidth: 530,
-                  margin: "0 auto",
-                }}
-              >
-                <EmailAutocompleteInput
-                  placeholder="Enter your email address"
-                  value={email}
-                  onValueChange={setEmail}
-                  required
-                  style={{
-                    flex: 1,
-                    padding: "17px 24px",
-                    borderRadius: 14,
-                    border: "2px solid transparent",
-                    fontSize: 15,
-                    outline: "none",
-                    boxSizing: "border-box",
-                    transition: "border-color .35s",
-                  }}
-                  onFocus={(e) => (e.target.style.borderColor = "#059669")}
-                  onBlur={(e) => (e.target.style.borderColor = "transparent")}
-                />
-                <MagneticWrap strength={0.12}>
-                  <motion.button
-                    type="submit"
-                    whileTap={{ scale: 0.95 }}
-                    style={{
-                      padding: "17px 30px",
-                      background: "#022C22",
-                      color: "white",
-                      border: "none",
-                      borderRadius: 14,
-                      fontSize: 15,
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 8,
-                      transition: "all .35s",
-                      whiteSpace: "nowrap",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.background = "#065F46";
-                      e.currentTarget.style.transform = "translateY(-2px)";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.background = "#022C22";
-                      e.currentTarget.style.transform = "";
-                    }}
-                  >
-                    Subscribe <FiArrowRight size={15} />
-                  </motion.button>
-                </MagneticWrap>
-              </form>
-            )}
-            <p
-              style={{
-                fontSize: 12,
-                color: "rgba(255,255,255,.5)",
-                marginTop: 18,
-              }}
-            >
-              No spam, ever. Unsubscribe anytime. Your privacy matters.
-            </p>
+            <h2 className="newsletter-title">Join 10+ Adventurers</h2>
+            <p className="newsletter-subtitle">Get exclusive travel inspiration, early-bird offers, wildlife migration alerts, and insider tips delivered weekly.</p>
+            <NewsletterForm user={user} />
+            <p className="newsletter-privacy">No spam, ever. Unsubscribe anytime.</p>
           </AnimatedSection>
         </div>
       </section>
 
-      {/* ═══════ FINAL CTA ═══════ */}
-      <ParallaxSection
-        image="https://i.pinimg.com/736x/2f/e4/bf/2fe4bffc3c384f4744669a6807620a6d.jpg"
-        height="82vh"
-        overlay="linear-gradient(135deg, rgba(2,44,34,.93) 0%, rgba(5,150,105,.8) 100%)"
-      >
-        <motion.div
-          initial={{ scale: 0.5, opacity: 0 }}
-          whileInView={{ scale: 1, opacity: 1 }}
-          viewport={{ once: true, margin: "-100px" }}
-          transition={{ duration: 0.8, type: "spring", bounce: 0.35 }}
-        >
-          <div
-            style={{
-              width: 64,
-              height: 64,
-              borderRadius: "50%",
-              border: "2px solid rgba(255,255,255,.3)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 30px",
-              background: "rgba(255,255,255,.06)",
-              backdropFilter: "blur(8px)",
-            }}
-          >
-            <FiCompass size={28} color="white" />
-          </div>
+      {/* ── FINAL CTA ── */}
+      <ParallaxSection image="https://i.pinimg.com/736x/2f/e4/bf/2fe4bffc3c384f4744669a6807620a6d.jpg" height="82vh" overlay="linear-gradient(135deg, rgba(2,44,34,.93) 0%, rgba(5,150,105,.82) 100%)">
+        <motion.div initial={{ scale: 0.5, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.75, type: "spring", bounce: 0.32 }}>
+          <div className="cta-compass-icon"><IconCompass size={28} color="white" /></div>
         </motion.div>
-        <SplitText
-          style={{
-            fontFamily: "'Playfair Display', serif",
-            fontSize: "clamp(32px, 5vw, 58px)",
-            fontWeight: 800,
-            color: "white",
-            lineHeight: 1.12,
-            marginBottom: 22,
-            display: "block",
-          }}
-        >
-          Your East African Adventure Awaits
-        </SplitText>
-        <TextReveal delay={0.3}>
-          <p
-            style={{
-              fontSize: "clamp(15px, 1.7vw, 19px)",
-              color: "rgba(255,255,255,.88)",
-              maxWidth: 680,
-              margin: "0 auto 18px",
-              lineHeight: 1.8,
-            }}
-          >
-            Let our team of passionate experts design your perfect journey
-            through the heart of Africa. From the thundering wildebeest
-            crossings of the Mara River to the quiet wonder of a gorilla's gaze
-            — your story begins with a single step.
-          </p>
-        </TextReveal>
-        <TextReveal delay={0.4}>
-          <p
-            style={{
-              fontSize: 15,
-              color: "rgba(255,255,255,.6)",
-              maxWidth: 520,
-              margin: "0 auto 42px",
-              lineHeight: 1.7,
-            }}
-          >
-            Start planning today and join 5+ travelers who've discovered what
-            makes Altuvera truly unforgettable.
-          </p>
-        </TextReveal>
+        <SplitText className="cta-title">Your East African Adventure Awaits</SplitText>
+        <TextReveal delay={0.28}><p className="cta-subtitle">Let our team design your perfect journey through the heart of Africa. From thundering wildebeest crossings to the quiet wonder of a gorilla's gaze — your story begins here.</p></TextReveal>
+        <TextReveal delay={0.4}><p className="cta-note">Join 5,000+ travelers who've discovered what makes Altuvera truly unforgettable.</p></TextReveal>
         <TextReveal delay={0.5}>
-          <div
-            className="ctab"
-            style={{
-              display: "flex",
-              gap: 18,
-              justifyContent: "center",
-              flexWrap: "wrap",
-            }}
-          >
-            <MagneticWrap>
-              <Button
-                to="/booking"
-                variant="white"
-                size="large"
-                icon={<FiArrowRight size={18} />}
-              >
-                Start Planning Now
-              </Button>
-            </MagneticWrap>
-            <MagneticWrap>
-              <Button to="/contact" variant="outline" size="large">
-                Speak to an Expert
-              </Button>
-            </MagneticWrap>
+          <div className="cta-btn-row">
+            <MagneticWrap><Button to="/booking" variant="white" size="large" icon={<IconArrowRight size={18} />}>Start Planning Now</Button></MagneticWrap>
+            <MagneticWrap><Button to="/contact" variant="outline" size="large">Speak to an Expert</Button></MagneticWrap>
           </div>
         </TextReveal>
       </ParallaxSection>
+
+      {/* ── LIGHTBOX ── */}
+      <AnimatePresence>
+        {lightboxOpen && galleryImages.length > 0 && (
+          <GalleryLightbox images={galleryImages} currentIndex={lightboxIndex} onClose={closeLightbox} onNavigate={navigateLightbox} />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

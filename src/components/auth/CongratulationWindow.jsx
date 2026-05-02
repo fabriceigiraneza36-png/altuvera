@@ -1,56 +1,111 @@
-// components/auth/CongratulationWindow.jsx
-import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiCheckCircle, FiZap, FiHeart, FiMapPin, FiStar } from 'react-icons/fi';
+// Elevated premium shiny version — glassmorphism + glow + luxury green-white theme
 
-const CongratulationWindow = ({ isVisible, type, user, onClose }) => {
+import React, { useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import {
+  FiCheckCircle,
+  FiMapPin,
+  FiHeart,
+  FiStar,
+  FiZap,
+  FiX,
+} from "react-icons/fi";
+
+const Sparkle = ({ delay, left }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -80, scale: 0.6 }}
+      animate={{
+        opacity: [0, 1, 0],
+        y: [0, 220, 420],
+        x: [0, -15, 10],
+        rotate: [0, 180, 360],
+        scale: [0.6, 1, 0.7],
+      }}
+      transition={{
+        duration: 3,
+        repeat: Infinity,
+        delay,
+        ease: "easeInOut",
+      }}
+      style={{
+        position: "absolute",
+        left: `${left}%`,
+        top: 0,
+        width: "12px",
+        height: "12px",
+        borderRadius: "50%",
+        background:
+          "radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(34,197,94,0.9) 60%, rgba(34,197,94,0.2) 100%)",
+        boxShadow: "0 0 20px rgba(34,197,94,0.5)",
+      }}
+    />
+  );
+};
+
+const CongratulationWindow = ({
+  isVisible,
+  type = "login",
+  user,
+  onClose,
+}) => {
   const [currentMessage, setCurrentMessage] = useState(0);
 
   const messages = {
     signup: [
       {
         icon: FiZap,
-        title: "Welcome to Altuvera! 🎉",
-        message: "Your adventure begins now. Let's explore the world together!",
-        color: "#22C55E"
+        title: "Welcome to Altuvera ✨",
+        message:
+          "Your premium adventure starts here. Explore unforgettable destinations beautifully.",
       },
       {
         icon: FiMapPin,
-        title: "Ready for Discovery",
-        message: "Thousands of destinations await your exploration.",
-        color: "#3B82F6"
+        title: "Discover New Places",
+        message:
+          "Luxury travel experiences and breathtaking journeys are waiting for you.",
       },
       {
         icon: FiHeart,
-        title: "Personalized Experience",
-        message: "We'll tailor recommendations just for you.",
-        color: "#F43F5E"
-      }
+        title: "Tailored For You",
+        message:
+          "Smart personalized recommendations built around your dream adventures.",
+      },
     ],
     login: [
       {
         icon: FiCheckCircle,
-        title: "Welcome Back! 👋",
-        message: "Great to see you again. Ready to continue your journey?",
-        color: "#22C55E"
+        title: "Welcome Back 👋",
+        message:
+          "We're excited to see you again. Your next beautiful journey awaits.",
       },
       {
         icon: FiStar,
-        title: "Your Adventures Await",
-        message: "New destinations and experiences are waiting for you.",
-        color: "#F59E0B"
+        title: "Your Adventures Continue",
+        message:
+          "Saved destinations, wishlist dreams, and new experiences are ready.",
       },
       {
         icon: FiHeart,
-        title: "Personalized for You",
-        message: "We've saved your preferences and wishlist.",
-        color: "#F43F5E"
-      }
-    ]
+        title: "Your Personalized Space",
+        message:
+          "Everything you love is still here—elegant, organized, and ready.",
+      },
+    ],
   };
 
   const currentMessages = messages[type] || messages.login;
   const current = currentMessages[currentMessage];
+
+  const sparkles = useMemo(
+    () =>
+      Array.from({ length: 25 }, (_, i) => ({
+        id: i,
+        delay: i * 0.12,
+        left: 4 + i * 4,
+      })),
+    []
+  );
 
   useEffect(() => {
     if (!isVisible) {
@@ -60,7 +115,7 @@ const CongratulationWindow = ({ isVisible, type, user, onClose }) => {
 
     const interval = setInterval(() => {
       setCurrentMessage((prev) => (prev + 1) % currentMessages.length);
-    }, 1000); // Change message every second
+    }, 2500);
 
     return () => clearInterval(interval);
   }, [isVisible, currentMessages.length]);
@@ -69,210 +124,179 @@ const CongratulationWindow = ({ isVisible, type, user, onClose }) => {
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.8, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.8, y: 20 }}
-          transition={{
-            type: "spring",
-            stiffness: 300,
-            damping: 25,
-            duration: 0.5
-          }}
-          style={{
-            position: 'fixed',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-            zIndex: 9999,
-            pointerEvents: 'none',
-          }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[9999] flex items-center justify-center px-4"
         >
-          <div
+          {/* Premium backdrop */}
+          <motion.div
+            className="absolute inset-0"
             style={{
-              background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%)',
-              borderRadius: '24px',
-              padding: '32px',
-              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-              backdropFilter: 'blur(20px)',
-              minWidth: '320px',
-              maxWidth: '400px',
-              textAlign: 'center',
-              position: 'relative',
-              overflow: 'hidden',
+              background:
+                "linear-gradient(to bottom right, rgba(0,0,0,0.45), rgba(16,185,129,0.18))",
+              backdropFilter: "blur(14px)",
+            }}
+          />
+
+          {/* Ground sparkling confetti */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {sparkles.map((item) => (
+              <Sparkle
+                key={item.id}
+                delay={item.delay}
+                left={item.left}
+              />
+            ))}
+          </div>
+
+          {/* Premium Modal */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85, y: 80 }}
+            animate={{
+              opacity: 1,
+              scale: 1,
+              y: [20, -8, 4, 0],
+              x: [0, -3, 3, -1, 0],
+            }}
+            exit={{ opacity: 0, scale: 0.9, y: 40 }}
+            transition={{
+              type: "spring",
+              stiffness: 180,
+              damping: 18,
+              duration: 0.7,
+            }}
+            className="relative z-10 w-full max-w-md overflow-hidden rounded-[30px]"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(255,255,255,0.95), rgba(240,253,244,0.92))",
+              border: "1px solid rgba(255,255,255,0.7)",
+              boxShadow:
+                "0 30px 80px rgba(16,185,129,0.18), 0 10px 30px rgba(0,0,0,0.08)",
+              backdropFilter: "blur(30px)",
             }}
           >
-            {/* Animated background gradient */}
-            <motion.div
-              animate={{
-                background: [
-                  'linear-gradient(45deg, #22C55E, #3B82F6, #F43F5E)',
-                  'linear-gradient(45deg, #3B82F6, #F43F5E, #22C55E)',
-                  'linear-gradient(45deg, #F43F5E, #22C55E, #3B82F6)',
-                ]
-              }}
-              transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            {/* Shiny top glow */}
+            <div
               style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                opacity: 0.05,
-                borderRadius: '24px',
+                position: "absolute",
+                top: -80,
+                left: -50,
+                width: "200%",
+                height: "180px",
+                background:
+                  "linear-gradient(90deg, transparent, rgba(255,255,255,0.65), transparent)",
+                transform: "rotate(-6deg)",
               }}
             />
 
-            {/* Floating particles */}
-            {[...Array(6)].map((_, i) => (
+            <div className="relative p-6 sm:p-8 text-center">
+              {/* Close button */}
+              <button
+                onClick={onClose}
+                className="absolute top-4 right-4 h-10 w-10 rounded-full flex items-center justify-center transition hover:scale-110"
+                style={{
+                  background: "rgba(255,255,255,0.8)",
+                  boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
+                }}
+              >
+                <FiX size={18} className="text-green-700" />
+              </button>
+
+              {/* Premium Icon Circle */}
               <motion.div
-                key={i}
                 animate={{
-                  y: [0, -20, 0],
-                  x: [0, Math.random() * 20 - 10, 0],
-                  opacity: [0.3, 0.8, 0.3],
+                  scale: [1, 1.05, 1],
+                  rotate: [0, 2, -2, 0],
                 }}
                 transition={{
-                  duration: 2 + Math.random() * 2,
+                  duration: 2.5,
                   repeat: Infinity,
-                  delay: Math.random() * 2,
                   ease: "easeInOut",
                 }}
+                className="mx-auto mb-6 flex h-28 w-28 items-center justify-center rounded-full"
                 style={{
-                  position: 'absolute',
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  backgroundColor: current?.color || '#22C55E',
-                  top: `${20 + Math.random() * 60}%`,
-                  left: `${20 + Math.random() * 60}%`,
-                }}
-              />
-            ))}
-
-            <motion.div
-              key={currentMessage}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-              style={{
-                position: 'relative',
-                zIndex: 1,
-              }}
-            >
-              {/* Icon */}
-              <motion.div
-                animate={{
-                  scale: [1, 1.1, 1],
-                  rotate: [0, 5, -5, 0]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: '80px',
-                  height: '80px',
-                  borderRadius: '50%',
-                  backgroundColor: `${current?.color || '#22C55E'}15`,
-                  border: `3px solid ${current?.color || '#22C55E'}30`,
-                  marginBottom: '20px',
-                  margin: '0 auto 20px auto',
+                  background:
+                    "linear-gradient(145deg, #ffffff, #dcfce7)",
+                  border: "4px solid rgba(34,197,94,0.15)",
+                  boxShadow:
+                    "0 20px 40px rgba(34,197,94,0.15), inset 0 4px 10px rgba(255,255,255,0.9)",
                 }}
               >
                 {current?.icon && (
                   <current.icon
-                    size={36}
-                    color={current.color}
-                    style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}
+                    size={46}
+                    className="text-green-600"
                   />
                 )}
               </motion.div>
 
-              {/* Title */}
-              <motion.h2
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.3 }}
-                style={{
-                  fontSize: '24px',
-                  fontWeight: '700',
-                  color: '#1E293B',
-                  marginBottom: '12px',
-                  fontFamily: "'Playfair Display', Georgia, serif",
-                }}
-              >
-                {current?.title}
-              </motion.h2>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={currentMessage}
+                  initial={{ opacity: 0, y: 18 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.35 }}
+                >
+                  <h2 className="text-2xl sm:text-3xl font-bold text-slate-800 leading-tight">
+                    {current?.title}
+                  </h2>
 
-              {/* Message */}
-              <motion.p
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2, duration: 0.3 }}
-                style={{
-                  fontSize: '16px',
-                  color: '#64748B',
-                  lineHeight: '1.6',
-                  marginBottom: '20px',
-                }}
-              >
-                {current?.message}
-              </motion.p>
+                  <p className="mt-4 text-sm sm:text-base text-slate-600 leading-7 px-2">
+                    {current?.message}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
 
-              {/* Progress indicator */}
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'center',
-                  gap: '8px',
-                  marginTop: '16px',
-                }}
-              >
-                {currentMessages.map((_, i) => (
+              {user?.fullName && (
+                <p className="mt-5 text-sm font-semibold text-green-700">
+                  Hello, {user.fullName.split(" ")[0]} ✨
+                </p>
+              )}
+
+              {/* Premium progress indicators */}
+              <div className="mt-6 flex items-center justify-center gap-2">
+                {currentMessages.map((_, index) => (
                   <motion.div
-                    key={i}
+                    key={index}
                     animate={{
-                      scale: i === currentMessage ? 1.2 : 1,
-                      opacity: i === currentMessage ? 1 : 0.3,
+                      width: index === currentMessage ? 30 : 8,
+                      opacity: index === currentMessage ? 1 : 0.35,
                     }}
+                    transition={{ duration: 0.3 }}
+                    className="h-2 rounded-full"
                     style={{
-                      width: i === currentMessage ? '12px' : '8px',
-                      height: '8px',
-                      borderRadius: '4px',
-                      backgroundColor: current?.color || '#22C55E',
-                      transition: 'all 0.3s ease',
+                      background:
+                        "linear-gradient(to right, #22c55e, #4ade80)",
+                      boxShadow:
+                        index === currentMessage
+                          ? "0 0 14px rgba(34,197,94,0.35)"
+                          : "none",
                     }}
                   />
                 ))}
               </div>
-            </motion.div>
 
-            {/* Personalized greeting */}
-            {user?.fullName && (
+              {/* Premium bottom box */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ delay: 0.3, duration: 0.3 }}
+                transition={{ delay: 0.4 }}
+                className="mt-7 rounded-3xl p-4"
                 style={{
-                  position: 'absolute',
-                  bottom: '16px',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  fontSize: '14px',
-                  color: '#94A3B8',
-                  fontWeight: '500',
+                  background:
+                    "linear-gradient(135deg, rgba(240,253,244,0.9), rgba(255,255,255,0.9))",
+                  border: "1px solid rgba(34,197,94,0.08)",
+                  boxShadow: "0 10px 30px rgba(34,197,94,0.05)",
                 }}
               >
-                Hello, {user.fullName.split(' ')[0]}! ✨
+                <p className="text-sm font-medium text-slate-700 leading-6">
+                  Premium destinations, smart recommendations, and unforgettable travel experiences await you.
+                </p>
               </motion.div>
-            )}
-          </div>
+            </div>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>

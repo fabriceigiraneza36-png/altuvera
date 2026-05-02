@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { io } from "socket.io-client";
 
 const getSocketUrl = () => {
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
   const socketUrl = import.meta.env.VITE_SOCKET_URL;
   if (socketUrl) return socketUrl.replace(/\/?$/, "");
   return apiUrl.replace(/\/api\/?$/, "");

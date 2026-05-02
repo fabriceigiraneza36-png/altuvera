@@ -1,100 +1,65 @@
-export const FALLBACK_IMAGE =
-  "https://drive.google.com/uc?export=view&id=1BfTgabjQR1J8gj-HEHZ-68WxTvnZrDD1";
+// src/utils/destinationAdapter.js
+export const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=800";
 
-export const FALLBACK_IMAGES = [
-  "https://drive.google.com/uc?export=view&id=1BfTgabjQR1J8gj-HEHZ-68WxTvnZrDD1",
-];
-
-const toNumber = (value, fallback = 0) => {
-  const n = Number(value);
-  return Number.isFinite(n) ? n : fallback;
-};
+const toNum = (v, fb = 0) => { const n = Number(v); return isFinite(n) ? n : fb; };
+const toArr = (v) => Array.isArray(v) ? v.filter(Boolean) : [];
 
 export const adaptDestination = (raw) => {
   if (!raw || typeof raw !== "object") return null;
 
-  const explicitImages = Array.isArray(raw.images)
-    ? raw.images.filter(Boolean)
-    : [];
+  // Backend serializes: images[], imageUrl, heroImage, country{id,slug,name,flag}
+  const images = toArr(raw.images).length ? toArr(raw.images) 
+    : [raw.heroImage || raw.imageUrl || raw.image_url || FALLBACK_IMAGE];
 
-  // Ensure we always have at least the fallback image
-  const primaryImage =
-    raw.image ||
-    raw.image_url ||
-    raw.heroImage ||
-    raw.hero_image_url ||
-    explicitImages[0] ||
-    FALLBACK_IMAGE;
+  const country = raw.country || {};
 
-  // Always include fallback as a guaranteed image option
-  const images = [FALLBACK_IMAGE, primaryImage, ...explicitImages].filter(
-    (img, index, self) => img && self.indexOf(img) === index
-  );
-
-  // Extract country information from nested country object or direct fields
-  const countryData = raw.country || {};
-  
-  // Use slug for frontend URLs - this is the key for linking to country pages
-  const countrySlug =
-    raw.countrySlug ||           // Direct field (e.g., "Rwanda")
-    countryData.slug ||          // From nested country object
-    raw.country_slug ||          // Snake case variant
-    (typeof countryData.id === 'string' ? countryData.id : null); // String ID from country
-  
-  const countryName =
-    raw.countryName ||           // Direct field
-    countryData.name ||         // From nested country object
-    raw.country_name ||          // Snake case variant
-    raw.country ||              // Fallback to string
-    "East Africa";
-  
-  const countryId =
-    raw.countryId ||            // Direct field
-    countryData.id ||           // From nested country object
-    raw.country_id ||           // Snake case variant
-    "";
-  
-  const countryFlag = countryData.flag || "";
-
-  // Primary identifier for frontend URL (use slug)
-  const slug = raw.slug || String(raw.id || "");
-  
   return {
-    ...raw,
-    // Frontend uses slug as the primary ID for URLs
-    id: slug, // This is used for React keys and URL params
-    slug: slug,
-    // Keep numeric ID for internal use
-    numericId: raw.id,
-    // Country information for linking
-    countryId: countryId ? String(countryId) : "",
-    countrySlug: countrySlug || "",
-    countryName: countryName,
-    country: countryName, // Alias for compatibility
-    countryFlag: countryFlag,
-    location: raw.location || countryName,
-    type: raw.type || raw.category || "Destination",
-    description: raw.short_description || raw.description || "",
-    fullDescription:
-      raw.fullDescription || raw.full_description || raw.description || "",
+    // IDs - backend sends both numeric id and slug
+    id:            raw.slug || String(raw.id || ""),
+    slug:          raw.slug || String(raw.id || ""),
+    numericId:     raw.id,
+
+    // Content
+    name:          raw.name || raw.title || "Beautiful Destination",
+    tagline:       raw.tagline || "",
+    shortDescription: raw.shortDescription || raw.short_description || "",
+    description:   raw.description || raw.overview || "",
+    highlights:    toArr(raw.highlights),
+    activities:    toArr(raw.activities),
+
+    // Country
+    country:       country.name || raw.countryName || "East Africa",
+    countrySlug:   country.slug || raw.countrySlug || "",
+    countryId:     country.id   || raw.countryId   || "",
+    countryFlag:   country.flag || raw.countryFlag  || "",
+    location:      raw.region   || raw.nearestCity  || country.name || "East Africa",
+
+    // Media
     images,
-    image: primaryImage,
-    heroImage: primaryImage,
-    highlights: Array.isArray(raw.highlights) ? raw.highlights : [],
-    bestTime: raw.bestTime || raw.best_season || "Year Round",
-    bestSeason: raw.bestSeason || raw.best_season || raw.bestTime || "Year Round",
-    duration: raw.duration || "Flexible",
-    difficulty: raw.difficulty || "All Levels",
-    rating: toNumber(raw.rating, 0),
-    reviews: toNumber(raw.review_count ?? raw.reviews, 0),
-    review_count: toNumber(raw.review_count ?? raw.reviews, 0),
-    price: raw.price || raw.price_range || "On Request",
-    groupSize: raw.groupSize || raw.group_size || "Small Groups",
+    heroImage:     raw.heroImage || raw.imageUrl || images[0],
+
+    // Stats
+    rating:        toNum(raw.rating),
+    reviewCount:   toNum(raw.reviewCount || raw.review_count),
+
+    // Duration & logistics
+    duration:      raw.duration || raw.durationDisplay || null,
+    durationDays:  toNum(raw.durationDays),
+    difficulty:    raw.difficulty || "moderate",
+    category:      raw.category || "",
+    bestTime:      raw.bestTimeToVisit || raw.bestTime || "Year Round",
+
+    // Flags
+    isFeatured:    Boolean(raw.isFeatured),
+    isPopular:     Boolean(raw.isPopular),
+    isNew:         Boolean(raw.isNew),
+    isEcoFriendly: Boolean(raw.isEcoFriendly),
+
+    // Status
+    status:        raw.status || "published",
+    isActive:      raw.isActive !== false,
   };
 };
 
 export const adaptDestinationList = (rows) =>
-  (Array.isArray(rows) ? rows : [])
-    .map(adaptDestination)
-    .filter(Boolean);
-
+  (Array.isArray(rows) ? rows : []).map(adaptDestination).filter(Boolean);

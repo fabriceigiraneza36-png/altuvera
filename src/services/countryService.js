@@ -1,5 +1,4 @@
 // src/services/countryService.js
-
 import enhancedApiClient from "../utils/enhancedApiClient";
 
 const BASE_PATH = "/countries";
@@ -20,28 +19,46 @@ class CountryService {
 
   async _fetch(path, options = {}, abortKey = null) {
     try {
-      const result = await enhancedApiClient.request(`${BASE_PATH}${path}`, {
+      const signal =
+        options.signal ?? (abortKey ? this._abort(abortKey) : undefined);
+
+      // multiBackendFetch returns raw JSON directly (not axios { data } wrapper)
+      const response = await enhancedApiClient.request(`${BASE_PATH}${path}`, {
         ...options,
+        signal,
         headers: {
           "Content-Type": "application/json",
           ...(options.headers || {}),
         },
-        // Cache country data for 15 minutes (900000 ms) and disable cache-busting timestamp
         cacheTime: 15 * 60 * 1000,
         cacheBust: false,
       });
 
-      if (!result.success) {
-        throw new Error(result.error || "Request failed");
+      console.log(`[countryService] Response for ${BASE_PATH}${path}:`, response);
+
+      // ✅ response IS the payload directly — multiBackendFetch is not axios
+      const payload = response;
+
+      // Handle { success, data, pagination } envelope
+      if (
+        payload &&
+        typeof payload === "object" &&
+        "success" in payload
+      ) {
+        if (!payload.success) {
+          throw new Error(payload.error || "Request failed");
+        }
+        return payload; // caller gets { success, data, pagination }
       }
 
-      return result.data;
+      // Raw array or plain object
+      return payload;
     } catch (err) {
       throw err;
     }
   }
 
-  _qs(params) {
+  _qs(params = {}) {
     const filtered = Object.entries(params).filter(
       ([, v]) => v !== undefined && v !== null && v !== ""
     );
@@ -50,47 +67,206 @@ class CountryService {
       : "";
   }
 
-  async getAll(params = {}) {
-    const result = await this._fetch(`${this._qs(params)}`, {}, "getAll");
-    return result;
+  async getAll(params = {}, signal = null) {
+    const { signal: _s, ...cleanParams } = params;
+    const options = signal ? { signal } : {};
+
+    const body = await this._fetch(
+      `${this._qs(cleanParams)}`,
+      options,
+      signal ? null : "getAll"
+    );
+
+    console.log("[countryService.getAll] body:", body);
+
+    // Handle all possible response shapes
+    let data = [];
+    if (Array.isArray(body)) {
+      data = body;
+    } else if (Array.isArray(body?.data)) {
+      data = body.data;
+    } else if (Array.isArray(body?.countries)) {
+      data = body.countries;
+    } else if (Array.isArray(body?.results)) {
+      data = body.results;
+    } else {
+      console.warn("[countryService.getAll] Unrecognised shape:", body);
+    }
+
+    return {
+      data,
+      pagination: body?.pagination ?? body?.meta ?? null,
+    };
   }
 
   async getFeatured(limit = 6) {
-    const result = await this._fetch(`/featured?limit=${limit}`, {}, "featured");
-    return result;
-  }
-
-  async getOne(idOrSlug) {
-    const result = await this._fetch(`/${idOrSlug}`, {}, `getOne-${idOrSlug}`);
-    return result;
-  }
-
-  async getDestinations(countryId) {
-    const result = await this._fetch(
-      `/${countryId}/destinations`,
+    const body = await this._fetch(
+      `/featured?limit=${limit}`,
       {},
-      `destinations-${countryId}`
+      "getFeatured"
     );
-    return result;
+    console.log("[countryService.getFeatured] body:", body);
+    return {
+      data: Array.isArray(body)
+        ? body
+        : Array.isArray(body?.data)
+        ? body.data
+        : [],
+    };
   }
 
-  cancelAll() {
-    this.abortControllers.forEach((c) => c.abort());
-    this.abortControllers.clear();
+  async search(q, limit = 15) {
+    if (!q || String(q).trim().length < 2) return { data: [] };
+    const body = await this._fetch(
+      `/search${this._qs({ q, limit })}`,
+      {},
+      "search"
+    );
+    return {
+      data: Array.isArray(body) ? body : body?.data ?? [],
+    };
   }
 
-  // Get current backend info
-  getBackendInfo() {
-    return enhancedApiClient.healthCheck();
+  async getStats() {
+    const body = await this._fetch("/stats", {}, "getStats");
+    return {
+      data: body?.data ?? body ?? null,
+    };
+  }
+
+  async getContinents() {
+    const body = await this._fetch("/continents", {}, "getContinents");
+    return {
+      data: Array.isArray(body) ? body : body?.data ?? [],
+    };
+  }
+
+  async getByContinent(continent, params = {}) {
+    const body = await this._fetch(
+      `/continent/${encodeURIComponent(continent)}${this._qs(params)}`,
+      {},
+      `byContinent-${continent}`
+    );
+    return {
+      data: Array.isArray(body) ? body : body?.data ?? [],
+      pagination: body?.pagination ?? null,
+    };
+  }
+
+  async getOne(idOrSlug, includeRelated = true) {
+    const body = await this._fetch(
+      `/${encodeURIComponent(idOrSlug)}${this._qs({ includeRelated })}`,
+      {},
+      `getOne-${idOrSlug}`
+    );
+    return body?.data ?? body ?? null;
+  }
+
+  async getDestinations(idOrSlug, params = {}) {
+    const body = await this._fetch(
+      `/${encodeURIComponent(idOrSlug)}/destinations${this._qs(params)}`,
+      {},
+      `destinations-${idOrSlug}`
+    );
+    return {
+      data: Array.isArray(body) ? body : body?.data ?? [],
+      pagination: body?.pagination ?? null,
+      country: body?.country ?? null,
+    };
+  }
+
+  async create(payload) {
+    const body = await this._fetch("", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    return body?.data ?? null;
+  }
+
+  async update(id, payload) {
+    const body = await this._fetch(`/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(payload),
+    });
+    return body?.data ?? null;
+  }
+
+  async remove(id) {
+    const body = await this._fetch(`/${id}`, { method: "DELETE" });
+    return body ?? null;
+  }
+
+  async addAirport(countryId, payload) {
+    const body = await this._fetch(`/${countryId}/airports`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    return body?.data ?? null;
+  }
+
+  async removeAirport(countryId, airportId) {
+    const body = await this._fetch(
+      `/${countryId}/airports/${airportId}`,
+      { method: "DELETE" }
+    );
+    return body ?? null;
+  }
+
+  async addFestival(countryId, payload) {
+    const body = await this._fetch(`/${countryId}/festivals`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    return body?.data ?? null;
+  }
+
+  async removeFestival(countryId, festivalId) {
+    const body = await this._fetch(
+      `/${countryId}/festivals/${festivalId}`,
+      { method: "DELETE" }
+    );
+    return body ?? null;
+  }
+
+  async addUnescoSite(countryId, payload) {
+    const body = await this._fetch(`/${countryId}/unesco-sites`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    return body?.data ?? null;
+  }
+
+  async removeUnescoSite(countryId, siteId) {
+    const body = await this._fetch(
+      `/${countryId}/unesco-sites/${siteId}`,
+      { method: "DELETE" }
+    );
+    return body ?? null;
+  }
+
+  async addHistoricalEvent(countryId, payload) {
+    const body = await this._fetch(`/${countryId}/historical-events`, {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
+    return body?.data ?? null;
+  }
+
+  async removeHistoricalEvent(countryId, eventId) {
+    const body = await this._fetch(
+      `/${countryId}/historical-events/${eventId}`,
+      { method: "DELETE" }
+    );
+    return body ?? null;
+  }
+
+  cancelKey(key) {
+    if (this.abortControllers.has(key)) {
+      this.abortControllers.get(key).abort();
+      this.abortControllers.delete(key);
+    }
   }
 }
 
-// Store a single shared instance across HMR reloads to avoid "Identifier 'countryService' has already been declared" errors
-// (some HMR runtimes may re-execute modules without fully clearing the module scope).
-var countryService = globalThis.__altuvera_countryService;
-if (!countryService) {
-  countryService = new CountryService();
-  globalThis.__altuvera_countryService = countryService;
-}
-
+const countryService = new CountryService();
 export default countryService;

@@ -1,0 +1,298 @@
+/* Gallery.css - Extracted styles from Gallery.jsx */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800&display=swap');
+
+:root {
+  --gl-green-50: #ECFDF5;
+  --gl-green-100: #D1FAE5;
+  --gl-green-200: #A7F3D0;
+  --gl-green-300: #6EE7B7;
+  --gl-green-400: #34D399;
+  --gl-green-500: #10B981;
+  --gl-green-600: #059669;
+  --gl-green-700: #047857;
+  --gl-green-800: #065F46;
+  --gl-green-900: #064E3B;
+  --gl-white: #FFFFFF;
+  --gl-off-white: #FAFDF7;
+  --gl-gray-50: #F9FAFB;
+  --gl-gray-100: #F3F4F6;
+  --gl-gray-200: #E5E7EB;
+  --gl-gray-300: #D1D5DB;
+  --gl-gray-400: #9CA3AF;
+  --gl-gray-500: #6B7280;
+  --gl-gray-600: #4B5563;
+  --gl-gray-700: #374151;
+  --gl-gray-800: #1F2937;
+  --gl-gray-900: #111827;
+  --gl-shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --gl-shadow-md: 0 4px 20px rgba(0,0,0,0.08);
+  --gl-shadow-lg: 0 12px 40px rgba(0,0,0,0.12);
+  --gl-shadow-xl: 0 25px 60px rgba(0,0,0,0.16);
+  --gl-shadow-green: 0 8px 30px rgba(5,150,105,0.25);
+  --gl-radius-sm: 8px;
+  --gl-radius-md: 14px;
+  --gl-radius-lg: 20px;
+  --gl-radius-xl: 28px;
+  --gl-radius-full: 9999px;
+  --gl-transition: cubic-bezier(0.4, 0, 0.2, 1);
+  --gl-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Hero Section */
+.gl-hero {
+  position: relative;
+  height: 75vh;
+  min-height: 520px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: white;
+  overflow: hidden;
+  background: #064E3B;
+}
+
+.gl-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 0%, rgba(6,78,59,0.4) 100%);
+  z-index: 1;
+  pointer-events: none;
+}
+
+.gl-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(6,78,59,0.3) 0%,
+    rgba(6,78,59,0.15) 40%,
+    rgba(6,78,59,0.5) 100%
+  );
+  pointer-events: none;
+  z-index: 1;
+}
+
+.gl-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 0;
+  transition: opacity 1.5s ease-in-out, transform 8s ease;
+  transform: scale(1.05);
+  will-change: opacity, transform;
+}
+
+.gl-slide.active {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.gl-hero-content {
+  position: relative;
+  z-index: 2;
+  max-width: 900px;
+  padding: 0 24px;
+}
+
+.gl-hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 16px;
+  line-height: 1.1;
+}
+
+.gl-hero p {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(1rem, 2vw, 1.4rem);
+  font-weight: 300;
+  margin-bottom: 24px;
+  opacity: 0.9;
+  line-height: 1.6;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.gl-breadcrumbs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.95rem;
+  color: rgba(255,255,255,0.8);
+  flex-wrap: wrap;
+}
+
+.gl-breadcrumbs a {
+  color: white;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(12px);
+  padding: 8px 18px;
+  border-radius: var(--gl-radius-full);
+  transition: all 0.3s var(--gl-transition);
+  border: 1px solid rgba(255,255,255,0.15);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.gl-breadcrumbs a:hover {
+  background: rgba(255,255,255,0.22);
+  transform: translateY(-2px);
+}
+
+/* Gallery Grid */
+.gl-gallery {
+  padding: 40px 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.gl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 24px;
+  margin-bottom: 40px;
+}
+
+.gl-masonry {
+  columns: 4;
+  column-gap: 24px;
+}
+
+.gl-masonry .gl-item {
+  break-inside: avoid;
+  margin-bottom: 24px;
+}
+
+.gl-item {
+  position: relative;
+  border-radius: var(--gl-radius-lg);
+  overflow: hidden;
+  box-shadow: var(--gl-shadow-md);
+  transition: all 0.3s var(--gl-transition);
+  cursor: pointer;
+  background: white;
+}
+
+.gl-item:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--gl-shadow-xl);
+}
+
+.gl-item img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.gl-item:hover img {
+  transform: scale(1.05);
+}
+
+.gl-item-info {
+  padding: 16px;
+  background: white;
+}
+
+.gl-item-title {
+  font-weight: 600;
+  color: var(--gl-gray-900);
+  margin-bottom: 4px;
+}
+
+.gl-item-location {
+  color: var(--gl-gray-600);
+  font-size: 14px;
+}
+
+/* Lightbox */
+.gl-lightbox {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.95);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.gl-lightbox img {
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+}
+
+.gl-lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(0,0,0,0.5);
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .gl-hero {
+    height: 60vh;
+    min-height: 400px;
+  }
+
+  .gl-gallery {
+    padding: 20px 16px;
+  }
+
+  .gl-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .gl-masonry {
+    columns: 1;
+  }
+}</content>
+<parameter name="filePath">c:\Users\chrys\Desktop\altuvera\frontend\src\styles\Gallery.css

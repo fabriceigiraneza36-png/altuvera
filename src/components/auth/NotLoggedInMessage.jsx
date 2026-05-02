@@ -1,100 +1,141 @@
 // components/auth/NotLoggedInMessage.jsx
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiLock, FiUserX } from 'react-icons/fi';
+import React, { useRef } from "react";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
+import { FiUserX } from "react-icons/fi";
 
-const NotLoggedInMessage = ({ isVisible }) => {
+const SnowBubble = ({ delay, left, size }) => {
+  return (
+    <motion.div
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 240, opacity: [0, 1, 0.3, 0] }}
+      transition={{
+        duration: 4.5,
+        repeat: Infinity,
+        delay,
+        ease: "linear",
+      }}
+      style={{
+        position: "absolute",
+        left,
+        top: "-20px",
+        width: size,
+        height: size,
+        borderRadius: "50%",
+        background: "rgba(34,197,94,0.22)",
+        boxShadow: "0 0 10px rgba(34,197,94,0.3)",
+        filter: "blur(0.3px)",
+      }}
+    />
+  );
+};
+
+const NotLoggedInMessage = ({ isVisible, onClose }) => {
+  const dragControls = useDragControls();
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
   return (
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          initial={{ opacity: 0, y: -50, scale: 0.9 }}
+          initial={{ opacity: 0, y: -30, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -50, scale: 0.9 }}
-          transition={{
-            type: "spring",
-            stiffness: 400,
-            damping: 25,
-            duration: 0.4
+          exit={{ opacity: 0, y: -30, scale: 0.9 }}
+          transition={{ type: "spring", stiffness: 320, damping: 24 }}
+          drag={isMobile ? "y" : false}
+          dragControls={dragControls}
+          dragConstraints={{ top: 0, bottom: 80 }}
+          dragElastic={0.25}
+          onDragEnd={(e, info) => {
+            if (info.offset.y > 80) {
+              onClose?.();
+            }
           }}
           style={{
-            position: 'fixed',
-            top: '20px',
-            right: '20px',
+            position: "fixed",
+            top: "16px",
+            right: "16px",
             zIndex: 9999,
-            pointerEvents: 'none',
+            width: "clamp(240px, 85vw, 340px)",
           }}
         >
+          {/* Snow bubbles background */}
           <div
             style={{
-              background: 'linear-gradient(135deg, #FFFFFF 0%, #FEF3C7 100%)',
-              borderRadius: '16px',
-              padding: '16px 20px',
-              boxShadow: '0 10px 25px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)',
-              border: '1px solid #F59E0B',
-              backdropFilter: 'blur(10px)',
-              minWidth: '280px',
-              maxWidth: '350px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '12px',
+              position: "absolute",
+              inset: 0,
+              overflow: "hidden",
+              borderRadius: "16px",
+              pointerEvents: "none",
+            }}
+          >
+            {[...Array(12)].map((_, i) => (
+              <SnowBubble
+                key={i}
+                delay={i * 0.35}
+                left={`${Math.random() * 100}%`}
+                size={`${5 + Math.random() * 6}px`}
+              />
+            ))}
+          </div>
+
+          {/* Toast */}
+          <div
+            style={{
+              position: "relative",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              padding: "12px 14px",
+              borderRadius: "16px",
+              background:
+                "linear-gradient(135deg, #ffffff 0%, #eafff1 60%, #dcfce7 100%)",
+              border: "1px solid rgba(34,197,94,0.25)",
+              boxShadow:
+                "0 12px 28px rgba(0,0,0,0.12), 0 0 0 1px rgba(34,197,94,0.08)",
+              backdropFilter: "blur(14px)",
             }}
           >
             {/* Icon */}
             <div
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '40px',
-                height: '40px',
-                borderRadius: '12px',
-                backgroundColor: '#F59E0B20',
-                border: '2px solid #F59E0B40',
+                width: "40px",
+                height: "40px",
+                borderRadius: "12px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background:
+                  "linear-gradient(135deg, #22c55e20, #16a34a20)",
+                border: "1px solid rgba(34,197,94,0.3)",
                 flexShrink: 0,
               }}
             >
-              <FiUserX size={20} color="#D97706" />
+              <FiUserX size={18} color="#16a34a" />
             </div>
 
-            {/* Content */}
+            {/* Text */}
             <div style={{ flex: 1 }}>
               <div
                 style={{
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  color: '#92400E',
-                  marginBottom: '2px',
-                  lineHeight: '1.4',
+                  fontSize: "13.5px",
+                  fontWeight: 700,
+                  color: "#14532d",
+                  lineHeight: "1.2",
                 }}
               >
-                You are not logged in!
+                Sign in required
               </div>
               <div
                 style={{
-                  fontSize: '12px',
-                  color: '#A16207',
-                  lineHeight: '1.4',
+                  fontSize: "12px",
+                  color: "#166534",
+                  opacity: 0.9,
+                  marginTop: "2px",
                 }}
               >
-                Please sign in to access this feature.
+                You need to log in to continue.
               </div>
             </div>
-
-            {/* Progress bar */}
-            <motion.div
-              initial={{ width: '100%' }}
-              animate={{ width: '0%' }}
-              transition={{ duration: 1.5, ease: "linear" }}
-              style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                height: '3px',
-                backgroundColor: '#F59E0B',
-                borderRadius: '0 0 16px 16px',
-              }}
-            />
           </div>
         </motion.div>
       )}

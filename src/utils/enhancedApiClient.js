@@ -41,21 +41,18 @@ class EnhancedApiClient {
       }
     ];
 
-     // Response interceptor
-     this.responseInterceptors = [
-       (response) => {
-         // Cache successful GET responses
-         if (response.config?.method === 'GET' && response.data) {
-           const ttl = response.config.cacheTime || this.cacheTimeout;
-           this.setCache(response.config.url, response.data, ttl);
-         }
-         return response;
-       }
-     ];
+// Response interceptor
+this.responseInterceptors = [
+  (response) => {
+    // response is raw JSON data (not an axios object)
+    // caching is handled via setCache in the request method below
+    // just pass the response through unchanged
+    return response;
   }
+];}
 
   async request(endpoint, options = {}) {
-    const config = {
+    let config = {
       method: 'GET',
       headers: {},
       retry: true,
@@ -83,39 +80,45 @@ class EnhancedApiClient {
       return this.pendingRequests.get(cacheKey);
     }
 
-    const makeRequest = async (attempt = 1) => {
-      try {
-        const promise = multiBackendFetch(endpoint, config);
-        this.pendingRequests.set(cacheKey, promise);
+   const makeRequest = async (attempt = 1) => {
+  try {
+    const promise = multiBackendFetch(endpoint, config);
+    this.pendingRequests.set(cacheKey, promise);
 
-        const result = await promise;
+    const result = await promise;
 
-        // Apply response interceptors
-        let processedResult = result;
-        for (const interceptor of this.responseInterceptors) {
-          processedResult = await interceptor({ ...processedResult, config });
-        }
+    // Apply response interceptors
+    let processedResult = result;
+    for (const interceptor of this.responseInterceptors) {
+      processedResult = await interceptor(processedResult);
+    }
 
-        this.pendingRequests.delete(cacheKey);
-        return processedResult;
+    // ✅ Cache successful GET responses here
+    // result is raw JSON — not axios, so no result.data wrapper
+    if (config.method === 'GET' && processedResult) {
+      const ttl = config.cacheTime || this.cacheTimeout;
+      this.setCache(cacheKey, processedResult, ttl);
+    }
 
-      } catch (error) {
-        this.pendingRequests.delete(cacheKey);
+    this.pendingRequests.delete(cacheKey);
+    return processedResult;
 
-        if (config.retry && attempt < this.maxRetries && this.shouldRetry(error)) {
-          console.warn(`[API] Retry ${attempt}/${this.maxRetries} for ${endpoint}:`, error.message);
-          await this.delay(this.retryDelay * attempt);
-          return makeRequest(attempt + 1);
-        }
+  } catch (error) {
+    this.pendingRequests.delete(cacheKey);
 
-        // If offline, queue for retry
-        if (!this.isOnline && config.retry) {
-          this.addToRetryQueue({ endpoint, options: config });
-        }
+    if (config.retry && attempt < this.maxRetries && this.shouldRetry(error)) {
+      console.warn(`[API] Retry ${attempt}/${this.maxRetries} for ${endpoint}:`, error.message);
+      await this.delay(this.retryDelay * attempt);
+      return makeRequest(attempt + 1);
+    }
 
-        throw this.enhanceError(error, endpoint, attempt);
-      }
-    };
+    if (!this.isOnline && config.retry) {
+      this.addToRetryQueue({ endpoint, options: config });
+    }
+
+    throw this.enhanceError(error, endpoint, attempt);
+  }
+};
 
     return makeRequest();
   }

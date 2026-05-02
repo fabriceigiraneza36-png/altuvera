@@ -1,423 +1,792 @@
-import React, { useState, useEffect, useRef } from "react";
+// src/pages/DestinationDetail.jsx
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  memo,
+} from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
+import { useDestination } from "../hooks/useDestinations";
 
 /* ═══════════════════════════════════════════════════
    DESIGN TOKENS
-   ═══════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════ */
 const T = {
-  green50: "#ECFDF5",
-  green100: "#D1FAE5",
-  green200: "#A7F3D0",
-  green300: "#6EE7B7",
-  green400: "#34D399",
-  green500: "#10B981",
-  green600: "#059669",
-  green700: "#047857",
-  green800: "#065F46",
-  green900: "#064E3B",
+  // Greens
+  g50:  "#ECFDF5", g100: "#D1FAE5", g200: "#A7F3D0",
+  g300: "#6EE7B7", g400: "#34D399", g500: "#10B981",
+  g600: "#059669", g700: "#047857", g800: "#065F46", g900: "#064E3B",
 
+  // Neutrals
   white: "#FFFFFF",
-  gray50: "#F9FAFB",
-  gray100: "#F3F4F6",
-  gray200: "#E5E7EB",
-  gray300: "#D1D5DB",
-  gray400: "#9CA3AF",
-  gray500: "#6B7280",
-  gray600: "#4B5563",
-  gray700: "#374151",
-  gray800: "#1F2937",
-  gray900: "#111827",
+  f50:  "#F9FAFB", f100: "#F3F4F6", f200: "#E5E7EB",
+  f300: "#D1D5DB", f400: "#9CA3AF", f500: "#6B7280",
+  f600: "#4B5563", f700: "#374151", f800: "#1F2937", f900: "#111827",
 
-  amber: "#F59E0B",
-  amberLight: "#FEF3C7",
-  red: "#EF4444",
-  redLight: "#FEF2F2",
-  blue: "#3B82F6",
-  blueLight: "#DBEAFE",
+  // Accents
+  amber:     "#F59E0B", amberBg:  "#FEF3C7",
+  red:       "#EF4444", redBg:    "#FEF2F2",
+  blue:      "#3B82F6", blueBg:   "#DBEAFE",
+  purple:    "#8B5CF6", purpleBg: "#EDE9FE",
 
-  sans: "'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
+  // Typography
+  sans:  "'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif",
   serif: "'Playfair Display',Georgia,serif",
 
-  max: "1280px",
-  narrow: "960px",
+  // Layout
+  maxW:   "1280px",
+  narrowW:"960px",
 
-  r: { xs: "6px", sm: "10px", md: "14px", lg: "20px", xl: "28px", full: "9999px" },
+  // Radii
+  rSm: "8px",  rMd: "14px", rLg: "20px",
+  rXl: "28px", rFull: "9999px",
 
-  shadow: {
-    xs: "0 1px 2px rgba(0,0,0,.05)",
-    sm: "0 1px 3px rgba(0,0,0,.1),0 1px 2px rgba(0,0,0,.06)",
-    md: "0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1)",
-    lg: "0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1)",
-    xl: "0 20px 25px -5px rgba(0,0,0,.1),0 8px 10px -6px rgba(0,0,0,.1)",
-    xxl: "0 25px 50px -12px rgba(0,0,0,.25)",
-  },
+  // Shadows
+  shSm:  "0 1px 3px rgba(0,0,0,.08), 0 1px 2px rgba(0,0,0,.04)",
+  shMd:  "0 4px 12px rgba(0,0,0,.08), 0 2px 4px rgba(0,0,0,.04)",
+  shLg:  "0 12px 24px rgba(0,0,0,.1), 0 4px 8px rgba(0,0,0,.06)",
+  shXl:  "0 24px 48px rgba(0,0,0,.12), 0 8px 16px rgba(0,0,0,.06)",
+  shGreen: "0 8px 24px rgba(16,185,129,.25)",
 };
 
 /* ═══════════════════════════════════════════════════
-   GLOBAL ANIMATION STYLES
-   ═══════════════════════════════════════════════════ */
-const AnimationStyles = () => (
-  <style>{`
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@500;600;700;800&display=swap');
+   GLOBAL STYLES — injected once
+═══════════════════════════════════════════════════ */
+const GLOBAL_CSS = `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Playfair+Display:wght@600;700;800&display=swap');
 
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    html { scroll-behavior: smooth; }
-    body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-    ::selection { background: ${T.green100}; color: ${T.green900}; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { -webkit-font-smoothing: antialiased; }
+  ::selection { background: ${T.g100}; color: ${T.g900}; }
+  ::-webkit-scrollbar { width: 7px; }
+  ::-webkit-scrollbar-track { background: ${T.f100}; }
+  ::-webkit-scrollbar-thumb { background: ${T.g300}; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: ${T.g400}; }
 
-    /* ── keyframes ──────────────────────────── */
-    @keyframes dd-shimmer {
-      0%   { background-position: -200% 0; }
-      100% { background-position: 200% 0; }
-    }
-    @keyframes dd-fadeUp {
-      from { opacity: 0; transform: translateY(32px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes dd-fadeIn {
-      from { opacity: 0; }
-      to   { opacity: 1; }
-    }
-    @keyframes dd-scaleIn {
-      from { opacity: 0; transform: scale(.92); }
-      to   { opacity: 1; transform: scale(1); }
-    }
-    @keyframes dd-slideRight {
-      from { opacity: 0; transform: translateX(-24px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes dd-slideLeft {
-      from { opacity: 0; transform: translateX(24px); }
-      to   { opacity: 1; transform: translateX(0); }
-    }
-    @keyframes dd-float {
-      0%, 100% { transform: translateY(0); }
-      50%      { transform: translateY(-8px); }
-    }
-    @keyframes dd-pulse {
-      0%, 100% { opacity: 1; }
-      50%      { opacity: .6; }
-    }
-    @keyframes dd-glow {
-      0%, 100% { box-shadow: 0 0 8px ${T.green400}44; }
-      50%      { box-shadow: 0 0 24px ${T.green400}66; }
-    }
-    @keyframes dd-heroZoom {
-      from { transform: scale(1.05); }
-      to   { transform: scale(1); }
-    }
-    @keyframes dd-countUp {
-      from { opacity: 0; transform: translateY(10px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-    @keyframes dd-borderFlow {
-      0%   { background-position: 0% 50%; }
-      50%  { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    @keyframes dd-wiggle {
-      0%, 100% { transform: rotate(0deg); }
-      25%      { transform: rotate(3deg); }
-      75%      { transform: rotate(-3deg); }
-    }
+  @keyframes dd-shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position:  200% 0; }
+  }
+  @keyframes dd-fadeUp {
+    from { opacity: 0; transform: translateY(28px); }
+    to   { opacity: 1; transform: translateY(0);    }
+  }
+  @keyframes dd-fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes dd-scaleIn {
+    from { opacity: 0; transform: scale(.94); }
+    to   { opacity: 1; transform: scale(1);   }
+  }
+  @keyframes dd-heroZoom {
+    from { transform: scale(1.06); }
+    to   { transform: scale(1);    }
+  }
+  @keyframes dd-float {
+    0%, 100% { transform: translateY(0);   }
+    50%      { transform: translateY(-9px);}
+  }
+  @keyframes dd-flow {
+    0%   { background-position: 0%   50%; }
+    50%  { background-position: 100% 50%; }
+    100% { background-position: 0%   50%; }
+  }
+  @keyframes dd-spin {
+    to { transform: rotate(360deg); }
+  }
+  @keyframes dd-staggerFade {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0);    }
+  }
 
-    /* ── utility classes ────────────────────── */
-    .dd-skel {
-      background: linear-gradient(90deg, ${T.gray200} 25%, ${T.gray100} 50%, ${T.gray200} 75%);
-      background-size: 200% 100%;
-      animation: dd-shimmer 1.4s ease-in-out infinite;
-      border-radius: ${T.r.sm};
-    }
-    .dd-fadeUp   { animation: dd-fadeUp .7s cubic-bezier(.22,1,.36,1) forwards; }
-    .dd-fadeIn   { animation: dd-fadeIn .5s ease forwards; }
-    .dd-scaleIn  { animation: dd-scaleIn .4s ease forwards; }
-    .dd-slideR   { animation: dd-slideRight .6s ease forwards; }
-    .dd-slideL   { animation: dd-slideLeft .6s ease forwards; }
-    .dd-float    { animation: dd-float 3s ease-in-out infinite; }
-    .dd-wiggle:hover { animation: dd-wiggle .4s ease; }
+  .dd-skel {
+    background: linear-gradient(90deg, ${T.f200} 25%, ${T.f100} 50%, ${T.f200} 75%);
+    background-size: 200% 100%;
+    animation: dd-shimmer 1.5s ease-in-out infinite;
+  }
+  .dd-fadeUp  { animation: dd-fadeUp  .65s cubic-bezier(.22,1,.36,1) both; }
+  .dd-fadeIn  { animation: dd-fadeIn  .45s ease both; }
+  .dd-scaleIn { animation: dd-scaleIn .38s ease both; }
 
-    .dd-lift {
-      transition: transform .25s cubic-bezier(.22,1,.36,1), box-shadow .25s ease;
-    }
-    .dd-lift:hover {
-      transform: translateY(-6px);
-      box-shadow: ${T.shadow.xl};
-    }
+  .dd-lift {
+    transition: transform .28s cubic-bezier(.22,1,.36,1),
+                box-shadow .28s ease;
+    will-change: transform;
+  }
+  .dd-lift:hover {
+    transform:  translateY(-5px);
+    box-shadow: ${T.shXl};
+  }
+  .dd-imgHover { overflow: hidden; }
+  .dd-imgHover img {
+    transition: transform .55s cubic-bezier(.22,1,.36,1);
+  }
+  .dd-imgHover:hover img { transform: scale(1.07); }
 
-    .dd-imgZoom {
-      overflow: hidden;
-    }
-    .dd-imgZoom img {
-      transition: transform .5s cubic-bezier(.22,1,.36,1);
-    }
-    .dd-imgZoom:hover img {
-      transform: scale(1.08);
-    }
+  /* staggered children */
+  .dd-stagger > * {
+    opacity: 0;
+    animation: dd-staggerFade .55s cubic-bezier(.22,1,.36,1) both;
+  }
+  ${Array.from({length:12},(_,i)=>
+    `.dd-stagger>*:nth-child(${i+1}){animation-delay:${i*75}ms}`
+  ).join(";")}
 
-    .dd-stagger > * {
-      opacity: 0;
-      animation: dd-fadeUp .6s cubic-bezier(.22,1,.36,1) forwards;
-    }
-    ${Array.from({ length: 12 }, (_, i) => `.dd-stagger > *:nth-child(${i + 1}) { animation-delay: ${i * 80}ms; }`).join("\n")}
+  /* responsive helpers */
+  @media (max-width: 767px) {
+    .dd-hide-mob { display: none !important; }
+  }
+  @media (min-width: 768px) {
+    .dd-hide-desk { display: none !important; }
+  }
+`;
 
-    /* ── scrollbar ──────────────────────────── */
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: ${T.gray100}; }
-    ::-webkit-scrollbar-thumb { background: ${T.green300}; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: ${T.green400}; }
-  `}</style>
-);
+function injectGlobalStyles() {
+  if (typeof document === "undefined") return;
+  if (document.getElementById("dd-global")) return;
+  const s = document.createElement("style");
+  s.id = "dd-global";
+  s.textContent = GLOBAL_CSS;
+  document.head.appendChild(s);
+}
 
 /* ═══════════════════════════════════════════════════
    HOOKS
-   ═══════════════════════════════════════════════════ */
-const useWindowSize = () => {
-  const [s, setS] = useState({ w: window.innerWidth, h: window.innerHeight });
+═══════════════════════════════════════════════════ */
+function useWindowSize() {
+  const [s, setS] = useState({
+    w: typeof window !== "undefined" ? window.innerWidth : 1024,
+  });
   useEffect(() => {
-    const fn = () => setS({ w: window.innerWidth, h: window.innerHeight });
-    window.addEventListener("resize", fn);
+    const fn = () => setS({ w: window.innerWidth });
+    window.addEventListener("resize", fn, { passive: true });
     return () => window.removeEventListener("resize", fn);
   }, []);
-  return { ...s, mob: s.w < 768, tab: s.w >= 768 && s.w < 1024, desk: s.w >= 1024 };
-};
+  return {
+    w:    s.w,
+    mob:  s.w < 640,
+    tab:  s.w >= 640 && s.w < 1024,
+    desk: s.w >= 1024,
+    sm:   s.w >= 640,
+  };
+}
 
-const useInView = (opts = {}) => {
+function useInView(threshold = 0.12) {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const obs = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } }, { threshold: opts.threshold || 0.15 });
+    const obs = new IntersectionObserver(
+      ([e]) => { if (e.isIntersecting) { setVisible(true); obs.disconnect(); } },
+      { threshold }
+    );
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, [threshold]);
   return [ref, visible];
-};
+}
 
 /* ═══════════════════════════════════════════════════
-   SKELETON LOADER (FULL PAGE)
-   ═══════════════════════════════════════════════════ */
-const Skel = ({ w = "100%", h = "20px", r = T.r.sm, style = {} }) => (
-  <div className="dd-skel" style={{ width: w, height: h, borderRadius: r, ...style }} />
+   PRIMITIVES
+═══════════════════════════════════════════════════ */
+const Container = ({ children, narrow = false, style = {} }) => (
+  <div
+    style={{
+      maxWidth: narrow ? T.narrowW : T.maxW,
+      margin: "0 auto",
+      padding: "0 clamp(16px, 4vw, 48px)",
+      width: "100%",
+      ...style,
+    }}
+  >
+    {children}
+  </div>
 );
 
-const FullPageSkeleton = ({ mob }) => (
+const SectionTitle = ({ children, sub, accent = true, center = false }) => (
+  <div style={{ marginBottom: "clamp(28px,4vw,48px)", textAlign: center ? "center" : "left" }}>
+    <h2
+      style={{
+        fontFamily: T.serif,
+        fontSize: "clamp(26px,4vw,42px)",
+        fontWeight: 800,
+        color: T.f900,
+        margin: "0 0 10px",
+        lineHeight: 1.15,
+        letterSpacing: "-0.02em",
+      }}
+    >
+      {children}
+    </h2>
+    {sub && (
+      <p
+        style={{
+          fontSize: "clamp(14px,1.5vw,17px)",
+          color: T.f500,
+          margin: "0 0 16px",
+          lineHeight: 1.6,
+          maxWidth: center ? 540 : "100%",
+          marginLeft: center ? "auto" : 0,
+          marginRight: center ? "auto" : 0,
+        }}
+      >
+        {sub}
+      </p>
+    )}
+    {accent && (
+      <div
+        style={{
+          width: 56,
+          height: 4,
+          borderRadius: 2,
+          background: `linear-gradient(90deg,${T.g400},${T.g600})`,
+          marginLeft: center ? "auto" : 0,
+          marginRight: center ? "auto" : 0,
+        }}
+      />
+    )}
+  </div>
+);
+
+const Badge = ({
+  children, variant = "primary", size = "md", icon, style = {},
+}) => {
+  const variants = {
+    primary:  { bg: T.g100,    color: T.g800 },
+    green:    { bg: T.g500,    color: T.white },
+    white:    { bg: "rgba(255,255,255,.18)", color: T.white, border: "1px solid rgba(255,255,255,.3)" },
+    dark:     { bg: "rgba(0,0,0,.5)",        color: T.white },
+    gray:     { bg: T.f100,    color: T.f700 },
+    success:  { bg: "#D1FAE5", color: "#065F46" },
+    warning:  { bg: "#FEF3C7", color: "#92400E" },
+    info:     { bg: T.blueBg,  color: "#1E40AF" },
+    star:     { bg: "rgba(251,191,36,.18)", color: "#D97706" },
+    eco:      { bg: T.g50,     color: T.g700 },
+  };
+  const sizes = {
+    xs: { p: "3px 8px",   f: 10 },
+    sm: { p: "4px 11px",  f: 11 },
+    md: { p: "6px 14px",  f: 12 },
+    lg: { p: "8px 18px",  f: 13 },
+  };
+  const v = variants[variant] || variants.primary;
+  const s = sizes[size]       || sizes.md;
+  return (
+    <span
+      style={{
+        display: "inline-flex", alignItems: "center", gap: 5,
+        background: v.bg, color: v.color,
+        border: v.border || "none",
+        fontWeight: 700, fontFamily: T.sans,
+        borderRadius: T.rFull,
+        textTransform: "uppercase", letterSpacing: ".55px",
+        padding: s.p, fontSize: s.f,
+        whiteSpace: "nowrap",
+        ...style,
+      }}
+    >
+      {icon && <span style={{ fontSize: s.f + 2 }}>{icon}</span>}
+      {children}
+    </span>
+  );
+};
+
+const Divider = ({ color = T.f200, my = 24 }) => (
+  <hr style={{ border: "none", height: 1, background: color, margin: `${my}px 0` }} />
+);
+
+const IconCircle = ({
+  icon, size = 48, bg = T.g50, color = T.g600, style = {},
+}) => (
+  <div
+    style={{
+      width: size, height: size,
+      borderRadius: "50%", background: bg,
+      display: "flex", alignItems: "center",
+      justifyContent: "center",
+      fontSize: size * 0.44, color,
+      flexShrink: 0, ...style,
+    }}
+  >
+    {icon}
+  </div>
+);
+
+/* ═══════════════════════════════════════════════════
+   ANIMATED SECTION WRAPPER
+═══════════════════════════════════════════════════ */
+const Section = memo(({ children, id, bg = T.white, py }) => {
+  const [ref, visible] = useInView();
+  return (
+    <section
+      ref={ref}
+      id={id}
+      style={{
+        background: bg,
+        padding: py || "clamp(56px,8vw,100px) 0",
+        opacity:   visible ? 1 : 0,
+        transform: visible ? "translateY(0)" : "translateY(36px)",
+        transition: "opacity .65s cubic-bezier(.22,1,.36,1), transform .65s cubic-bezier(.22,1,.36,1)",
+      }}
+    >
+      {children}
+    </section>
+  );
+});
+Section.displayName = "Section";
+
+/* ═══════════════════════════════════════════════════
+   SKELETON LOADER
+═══════════════════════════════════════════════════ */
+const Skel = ({ w = "100%", h = 18, r = T.rSm, mb = 0, style = {} }) => (
+  <div
+    className="dd-skel"
+    style={{ width: w, height: h, borderRadius: r, marginBottom: mb, ...style }}
+  />
+);
+
+const FullPageSkeleton = memo(({ mob }) => (
   <div style={{ background: T.white, minHeight: "100vh", fontFamily: T.sans }}>
     {/* Hero */}
-    <div style={{ position: "relative", height: mob ? "60vh" : "80vh" }}>
+    <div style={{ position: "relative", height: mob ? "65vh" : "85vh" }}>
       <Skel w="100%" h="100%" r="0" />
-      <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, padding: mob ? "32px 20px" : "64px 48px", background: "linear-gradient(to top,rgba(0,0,0,.7),transparent)" }}>
-        <div style={{ maxWidth: T.max, margin: "0 auto" }}>
-          <Skel w="100px" h="28px" style={{ marginBottom: 16, opacity: .6 }} />
-          <Skel w={mob ? "85%" : "420px"} h={mob ? "32px" : "52px"} style={{ marginBottom: 14, opacity: .6 }} />
-          <Skel w={mob ? "60%" : "300px"} h="22px" style={{ marginBottom: 28, opacity: .6 }} />
-          <div style={{ display: "flex", gap: 10 }}>
-            {[100, 80, 110].map((x, i) => <Skel key={i} w={`${x}px`} h="34px" r={T.r.full} style={{ opacity: .5 }} />)}
+      <div
+        style={{
+          position: "absolute", bottom: 0, left: 0, right: 0,
+          padding: mob ? "32px 20px" : "72px 48px",
+          background: "linear-gradient(transparent,rgba(0,0,0,.65))",
+        }}
+      >
+        <div style={{ maxWidth: T.maxW, margin: "0 auto" }}>
+          <Skel w={90} h={26} mb={18} style={{ opacity:.5, borderRadius: T.rFull }} />
+          <Skel w={mob ? "80%" : 480} h={mob ? 36 : 58} mb={16} style={{ opacity:.55 }} />
+          <Skel w={mob ? "55%" : 300} h={22} mb={32} style={{ opacity:.45 }} />
+          <div style={{ display:"flex", gap:10 }}>
+            {[90,70,100].map((x,i) => (
+              <Skel key={i} w={x} h={32} style={{ borderRadius:T.rFull, opacity:.4 }} />
+            ))}
           </div>
         </div>
       </div>
     </div>
 
     {/* Quick bar */}
-    <div style={{ borderBottom: `1px solid ${T.gray200}`, padding: "20px 24px" }}>
-      <div style={{ maxWidth: T.max, margin: "0 auto", display: "grid", gridTemplateColumns: mob ? "repeat(2,1fr)" : "repeat(5,1fr)", gap: 20 }}>
-        {Array.from({ length: mob ? 4 : 5 }).map((_, i) => (
-          <div key={i} style={{ textAlign: "center" }}>
-            <Skel w="44px" h="44px" r="50%" style={{ margin: "0 auto 10px" }} />
-            <Skel w="50%" h="12px" style={{ margin: "0 auto 6px" }} />
-            <Skel w="70%" h="16px" style={{ margin: "0 auto" }} />
+    <div style={{ borderBottom:`1px solid ${T.f200}`, padding:"20px 24px" }}>
+      <div style={{ maxWidth:T.maxW, margin:"0 auto", display:"grid", gridTemplateColumns: mob?"repeat(2,1fr)":"repeat(5,1fr)", gap:24 }}>
+        {Array.from({length: mob?4:5}).map((_,i) => (
+          <div key={i} style={{ textAlign:"center" }}>
+            <Skel w={44} h={44} r="50%" style={{ margin:"0 auto 10px" }} />
+            <Skel w="50%" h={11} mb={6} style={{ margin:"0 auto 6px" }} />
+            <Skel w="65%" h={15} style={{ margin:"0 auto" }} />
           </div>
         ))}
       </div>
     </div>
 
-    {/* Content */}
-    <div style={{ maxWidth: T.max, margin: "0 auto", padding: mob ? "48px 20px" : "80px 48px" }}>
-      <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "5fr 3fr", gap: 48 }}>
+    {/* Body */}
+    <div style={{ maxWidth:T.maxW, margin:"0 auto", padding: mob?"40px 20px":"80px 48px" }}>
+      <div style={{ display:"grid", gridTemplateColumns: mob?"1fr":"5fr 3fr", gap:48 }}>
         <div>
-          <Skel w="200px" h="32px" style={{ marginBottom: 24 }} />
-          {[1, 2, 3, 4, 5].map(i => <Skel key={i} w={i === 5 ? "55%" : "100%"} h="16px" style={{ marginBottom: 14 }} />)}
-          <div style={{ marginTop: 40 }}>
-            <Skel w="160px" h="28px" style={{ marginBottom: 20 }} />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
-              {[1, 2, 3, 4, 5, 6].map(i => (
-                <div key={i} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                  <Skel w="28px" h="28px" r="50%" />
-                  <Skel w="65%" h="16px" />
+          <Skel w={200} h={34} mb={24} />
+          {[100,100,100,100,55].map((w,i) => (
+            <Skel key={i} w={`${w}%`} h={15} mb={14} />
+          ))}
+          <div style={{ marginTop:40 }}>
+            <Skel w={160} h={26} mb={22} />
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16 }}>
+              {Array.from({length:6}).map((_,i) => (
+                <div key={i} style={{ display:"flex", gap:12, alignItems:"center" }}>
+                  <Skel w={32} h={32} r="50%" />
+                  <Skel w="60%" h={14} />
                 </div>
               ))}
             </div>
           </div>
         </div>
         <div>
-          <div style={{ background: T.gray50, borderRadius: T.r.lg, padding: 24 }}>
-            <Skel w="100%" h="52px" r={T.r.md} style={{ marginBottom: 18 }} />
-            <Skel w="55%" h="18px" style={{ marginBottom: 22 }} />
-            {[1, 2, 3, 4].map(i => (
-              <div key={i} style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-                <Skel w="38%" h="14px" />
-                <Skel w="48%" h="14px" />
+          <div style={{ background:T.f50, borderRadius:T.rLg, padding:28 }}>
+            <Skel w="100%" h={56} r={T.rMd} mb={20} />
+            <Skel w="100%" h={48} r={T.rMd} mb={20} />
+            <Divider />
+            {[1,2,3,4].map(i => (
+              <div key={i} style={{ display:"flex", justifyContent:"space-between", marginBottom:18 }}>
+                <Skel w="38%" h={14} />
+                <Skel w="45%" h={14} />
               </div>
             ))}
           </div>
         </div>
       </div>
 
-      {/* Gallery skeleton */}
-      <div style={{ marginTop: 80 }}>
-        <Skel w="140px" h="30px" style={{ marginBottom: 28 }} />
-        <div style={{ display: "grid", gridTemplateColumns: mob ? "repeat(2,1fr)" : "repeat(4,1fr)", gap: 14 }}>
-          {[1, 2, 3, 4].map(i => <div key={i} style={{ position: "relative", paddingBottom: "75%" }}><Skel w="100%" h="100%" style={{ position: "absolute", inset: 0 }} r={T.r.md} /></div>)}
+      {/* Gallery skel */}
+      <div style={{ marginTop:80 }}>
+        <Skel w={150} h={32} mb={32} />
+        <div style={{ display:"grid", gridTemplateColumns: mob?"repeat(2,1fr)":"repeat(4,1fr)", gap:16 }}>
+          {[1,2,3,4].map(i => (
+            <div key={i} style={{ position:"relative", paddingBottom:"70%" }}>
+              <Skel w="100%" h="100%" r={T.rMd} style={{ position:"absolute", inset:0 }} />
+            </div>
+          ))}
         </div>
       </div>
     </div>
   </div>
-);
+));
+FullPageSkeleton.displayName = "FullPageSkeleton";
 
 /* ═══════════════════════════════════════════════════
-   PRIMITIVES
-   ═══════════════════════════════════════════════════ */
-const Container = ({ children, narrow, style = {} }) => (
-  <div style={{ maxWidth: narrow ? T.narrow : T.max, margin: "0 auto", padding: "0 24px", width: "100%", ...style }}>{children}</div>
-);
-
-const Badge = ({ children, variant = "primary", size = "md", icon, style = {} }) => {
-  const v = {
-    primary: { bg: T.green100, c: T.green800 },
-    accent: { bg: T.green200, c: T.green900 },
-    white: { bg: "rgba(255,255,255,.18)", c: T.white, border: "1px solid rgba(255,255,255,.35)" },
-    dark: { bg: "rgba(0,0,0,.55)", c: T.white },
-    gray: { bg: T.gray100, c: T.gray700 },
-    success: { bg: "#D1FAE5", c: "#065F46" },
-    warning: { bg: "#FEF3C7", c: "#92400E" },
-    info: { bg: "#DBEAFE", c: "#1E40AF" },
-    star: { bg: "rgba(251,191,36,.2)", c: "#FBBF24" },
-  }[variant] || { bg: T.green100, c: T.green800 };
-  const s = { xs: { p: "3px 8px", f: 10 }, sm: { p: "5px 12px", f: 11 }, md: { p: "6px 16px", f: 12 }, lg: { p: "8px 20px", f: 14 } }[size] || { p: "6px 16px", f: 12 };
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: v.bg, color: v.c, border: v.border || "none", fontWeight: 700, fontFamily: T.sans, borderRadius: T.r.full, textTransform: "uppercase", letterSpacing: ".6px", padding: s.p, fontSize: s.f, whiteSpace: "nowrap", ...style }}>
-      {icon && <span style={{ fontSize: s.f + 3 }}>{icon}</span>}
-      {children}
-    </span>
-  );
-};
-
-const IconCircle = ({ icon, size = 48, bg = T.green50, color = T.green600, style = {} }) => (
-  <div style={{ width: size, height: size, borderRadius: "50%", background: bg, display: "flex", alignItems: "center", justifyContent: "center", fontSize: size * .48, color, flexShrink: 0, ...style }}>
-    {icon}
+   ERROR STATE
+═══════════════════════════════════════════════════ */
+const ErrorState = memo(({ error, navigate }) => (
+  <div
+    style={{
+      minHeight: "85vh",
+      display: "flex", flexDirection: "column",
+      alignItems: "center", justifyContent: "center",
+      fontFamily: T.sans, padding: "clamp(24px,5vw,64px)",
+      textAlign: "center", background: T.f50,
+    }}
+  >
+    <div
+      style={{
+        width: 140, height: 140, borderRadius: "50%",
+        background: T.g50, border: `3px solid ${T.g200}`,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 68, marginBottom: 36,
+        animation: "dd-float 3s ease-in-out infinite",
+      }}
+    >
+      🗺️
+    </div>
+    <h2
+      style={{
+        fontFamily: T.serif,
+        fontSize: "clamp(26px,4vw,40px)",
+        fontWeight: 800, color: T.f800,
+        margin: "0 0 14px",
+      }}
+    >
+      Destination Not Found
+    </h2>
+    <p style={{ fontSize:"clamp(15px,1.5vw,18px)", color:T.f500, maxWidth:480, margin:"0 0 36px", lineHeight:1.65 }}>
+      {error || "The destination you're looking for doesn't exist or may have been removed."}
+    </p>
+    <div style={{ display:"flex", gap:14, flexWrap:"wrap", justifyContent:"center" }}>
+      <button
+        onClick={() => navigate(-1)}
+        style={{
+          padding: "13px 28px", background: T.white,
+          color: T.f700, border: `2px solid ${T.f300}`,
+          borderRadius: T.rMd, fontSize: 15, fontWeight: 600,
+          cursor: "pointer", fontFamily: T.sans,
+          transition: "border-color .2s",
+        }}
+        onMouseEnter={e => e.currentTarget.style.borderColor = T.f500}
+        onMouseLeave={e => e.currentTarget.style.borderColor = T.f300}
+      >
+        ← Go Back
+      </button>
+      <button
+        onClick={() => navigate("/destinations")}
+        style={{
+          padding: "13px 28px", background: T.g600,
+          color: T.white, border: "none",
+          borderRadius: T.rMd, fontSize: 15, fontWeight: 700,
+          cursor: "pointer", fontFamily: T.sans,
+          transition: "background .2s",
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = T.g700}
+        onMouseLeave={e => e.currentTarget.style.background = T.g600}
+      >
+        Browse All Destinations
+      </button>
+    </div>
   </div>
-);
-
-const AnimatedSection = ({ children, id, bg = T.white, py, mob }) => {
-  const [ref, visible] = useInView();
-  return (
-    <section ref={ref} id={id} style={{ background: bg, padding: py || (mob ? "64px 0" : "100px 0"), opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(40px)", transition: "opacity .7s cubic-bezier(.22,1,.36,1), transform .7s cubic-bezier(.22,1,.36,1)" }}>
-      {children}
-    </section>
-  );
-};
+));
+ErrorState.displayName = "ErrorState";
 
 /* ═══════════════════════════════════════════════════
    HERO
-   ═══════════════════════════════════════════════════ */
-const Hero = ({ d, mob }) => (
-  <section style={{ position: "relative", height: mob ? "75vh" : "88vh", minHeight: 520, overflow: "hidden" }}>
-    {/* BG Image with zoom animation */}
-    <div style={{ position: "absolute", inset: 0, animation: "dd-heroZoom 8s ease forwards" }}>
-      <img src={d.heroImage || d.imageUrl} alt={d.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-    </div>
+═══════════════════════════════════════════════════ */
+const Hero = memo(({ d, size }) => {
+  const heroImg = d.heroImage || d.imageUrl || (d.images || [])[0];
 
-    {/* Overlays */}
-    <div style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(0,0,0,.15) 0%, rgba(0,0,0,.35) 50%, rgba(0,0,0,.82) 100%)" }} />
-    <div style={{ position: "absolute", inset: 0, background: `linear-gradient(135deg, ${T.green900}30, transparent 70%)` }} />
+  return (
+    <section
+      style={{
+        position: "relative",
+        height: size.mob ? "72vh" : "88vh",
+        minHeight: size.mob ? 480 : 600,
+        overflow: "hidden",
+      }}
+    >
+      {/* Background image */}
+      {heroImg ? (
+        <div
+          style={{
+            position: "absolute", inset: 0,
+            animation: "dd-heroZoom 9s ease forwards",
+          }}
+        >
+          <img
+            src={heroImg}
+            alt={d.name}
+            style={{ width:"100%", height:"100%", objectFit:"cover", objectPosition:"center" }}
+          />
+        </div>
+      ) : (
+        <div style={{ position:"absolute", inset:0, background:`linear-gradient(135deg,${T.g700},${T.g900})` }} />
+      )}
 
-    {/* Bottom green accent */}
-    <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 5, background: `linear-gradient(90deg, ${T.green400}, ${T.green600}, ${T.green400})`, backgroundSize: "200% 100%", animation: "dd-borderFlow 3s ease infinite" }} />
+      {/* Overlays */}
+      <div style={{ position:"absolute", inset:0, background:"linear-gradient(180deg,rgba(0,0,0,.12) 0%,rgba(0,0,0,.3) 45%,rgba(0,0,0,.8) 100%)" }} />
+      <div style={{ position:"absolute", inset:0, background:`linear-gradient(135deg,${T.g900}28,transparent 65%)` }} />
 
-    {/* Content */}
-    <Container style={{ position: "relative", height: "100%", display: "flex", flexDirection: "column", justifyContent: "flex-end", paddingBottom: mob ? 44 : 72 }}>
-      <div style={{ maxWidth: 820 }}>
-        {/* Breadcrumb */}
-        <div className="dd-fadeUp" style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18, animationDelay: ".1s", opacity: 0 }}>
-          {d.countrySlug && (
-            <Link to={`/countries/${d.countrySlug}`} style={{ display: "flex", alignItems: "center", gap: 8, color: "rgba(255,255,255,.9)", textDecoration: "none", fontSize: 15, fontWeight: 500, transition: "color .2s" }}>
-              {d.country?.flag && <span style={{ fontSize: 22 }}>{d.country.flag}</span>}
-              <span>{d.countryName || d.country?.name}</span>
+      {/* Content */}
+      <Container
+        style={{
+          position: "relative", height: "100%",
+          display: "flex", flexDirection: "column",
+          justifyContent: "flex-end",
+          paddingBottom: size.mob ? "clamp(36px,6vw,56px)" : "clamp(56px,6vw,88px)",
+        }}
+      >
+        <div style={{ maxWidth: 820 }}>
+          {/* Breadcrumb */}
+          <div
+            className="dd-fadeUp"
+            style={{
+              display:"flex", alignItems:"center", gap:10,
+              marginBottom:18, animationDelay:".08s",
+            }}
+          >
+            <Link
+              to="/destinations"
+              style={{
+                color:"rgba(255,255,255,.75)", textDecoration:"none",
+                fontSize:14, fontWeight:500, transition:"color .2s",
+              }}
+              onMouseEnter={e => e.currentTarget.style.color = T.white}
+              onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,.75)"}
+            >
+              Destinations
             </Link>
+            {(d.countryName || d.country?.name) && (
+              <>
+                <span style={{ color:"rgba(255,255,255,.35)", fontSize:13 }}>›</span>
+                <Link
+                  to={`/country/${d.countrySlug || d.country?.slug}`}
+                  style={{
+                    display:"flex", alignItems:"center", gap:7,
+                    color:"rgba(255,255,255,.8)", textDecoration:"none",
+                    fontSize:14, fontWeight:600, transition:"color .2s",
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.color = T.white}
+                  onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,.8)"}
+                >
+                  {(d.country?.flag || d.countryFlag) && (
+                    <span style={{ fontSize:20 }}>{d.country?.flag || d.countryFlag}</span>
+                  )}
+                  {d.countryName || d.country?.name}
+                </Link>
+              </>
+            )}
+            {d.region && (
+              <>
+                <span style={{ color:"rgba(255,255,255,.35)", fontSize:13 }}>›</span>
+                <span style={{ color:"rgba(255,255,255,.65)", fontSize:13, fontWeight:500 }}>
+                  {d.region}
+                </span>
+              </>
+            )}
+          </div>
+
+          {/* Badges */}
+          <div
+            className="dd-fadeUp"
+            style={{ display:"flex", flexWrap:"wrap", gap:8, marginBottom:18, animationDelay:".16s" }}
+          >
+            {d.isFeatured   && <Badge variant="star"    size="md" icon="⭐">Featured</Badge>}
+            {d.isPopular    && <Badge variant="warning" size="md" icon="🔥">Popular</Badge>}
+            {d.isNew        && <Badge variant="success" size="md" icon="✨">New</Badge>}
+            {d.isEcoFriendly && <Badge variant="eco"   size="md" icon="🌿">Eco-Friendly</Badge>}
+            {d.destinationType && <Badge variant="white" size="md">{d.destinationType}</Badge>}
+          </div>
+
+          {/* Title */}
+          <h1
+            className="dd-fadeUp"
+            style={{
+              fontFamily: T.serif,
+              fontSize: "clamp(32px,5.5vw,64px)",
+              fontWeight: 800, color: T.white,
+              margin: "0 0 12px", lineHeight: 1.06,
+              textShadow: "0 3px 24px rgba(0,0,0,.45)",
+              letterSpacing: "-0.02em",
+              animationDelay: ".22s",
+            }}
+          >
+            {d.name}
+          </h1>
+
+          {/* Tagline */}
+          {d.tagline && (
+            <p
+              className="dd-fadeUp"
+              style={{
+                fontSize: "clamp(15px,1.8vw,22px)",
+                color: "rgba(255,255,255,.85)",
+                margin: "0 0 26px", lineHeight: 1.55,
+                fontWeight: 500, maxWidth: 580,
+                animationDelay: ".3s",
+              }}
+            >
+              {d.tagline}
+            </p>
           )}
-          {d.region && (
-            <>
-              <span style={{ color: "rgba(255,255,255,.45)", fontSize: 13 }}>›</span>
-              <span style={{ color: "rgba(255,255,255,.7)", fontSize: 14 }}>{d.region}</span>
-            </>
-          )}
-        </div>
 
-        {/* Badges */}
-        <div className="dd-fadeUp" style={{ display: "flex", flexWrap: "wrap", gap: 10, marginBottom: 18, animationDelay: ".2s", opacity: 0 }}>
-          {d.isFeatured && <Badge variant="star" size="md" icon="⭐">Featured</Badge>}
-          {d.isPopular && <Badge variant="warning" size="md" icon="🔥">Popular</Badge>}
-          {d.isEcoFriendly && <Badge variant="success" size="md" icon="🌿">Eco-Friendly</Badge>}
-          {d.destinationType && <Badge variant="white" size="md">{d.destinationType}</Badge>}
-        </div>
-
-        {/* Title */}
-        <h1 className="dd-fadeUp" style={{ fontFamily: T.serif, fontSize: mob ? 36 : 60, fontWeight: 800, color: T.white, margin: "0 0 14px", lineHeight: 1.08, textShadow: "0 4px 32px rgba(0,0,0,.5)", animationDelay: ".3s", opacity: 0 }}>
-          {d.name}
-        </h1>
-
-        {/* Tagline */}
-        {d.tagline && (
-          <p className="dd-fadeUp" style={{ fontSize: mob ? 18 : 24, color: "rgba(255,255,255,.88)", margin: "0 0 28px", lineHeight: 1.5, fontWeight: 500, maxWidth: 600, animationDelay: ".4s", opacity: 0 }}>
-            {d.tagline}
-          </p>
-        )}
-
-        {/* Rating + Duration */}
-        <div className="dd-fadeUp" style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: mob ? 14 : 24, animationDelay: ".5s", opacity: 0 }}>
-          {d.rating && (
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 5, background: "rgba(251,191,36,.2)", padding: "8px 16px", borderRadius: T.r.full, backdropFilter: "blur(8px)" }}>
-                <span style={{ color: "#FBBF24", fontSize: 20 }}>★</span>
-                <span style={{ color: T.white, fontWeight: 800, fontSize: 17 }}>{d.rating}</span>
+          {/* Meta row */}
+          <div
+            className="dd-fadeUp"
+            style={{
+              display:"flex", flexWrap:"wrap",
+              alignItems:"center", gap: size.mob ? 12 : 20,
+              animationDelay:".38s",
+            }}
+          >
+            {d.rating > 0 && (
+              <div
+                style={{
+                  display:"flex", alignItems:"center", gap:9,
+                  background:"rgba(251,191,36,.18)",
+                  padding:"8px 16px", borderRadius:T.rFull,
+                  backdropFilter:"blur(10px)",
+                  border:"1px solid rgba(251,191,36,.3)",
+                }}
+              >
+                <span style={{ color:"#FBBF24", fontSize:18, lineHeight:1 }}>★</span>
+                <span style={{ color:T.white, fontWeight:800, fontSize:16 }}>{d.rating.toFixed(1)}</span>
+                {d.reviewCount > 0 && (
+                  <span style={{ color:"rgba(255,255,255,.6)", fontSize:13 }}>
+                    ({d.reviewCount.toLocaleString()})
+                  </span>
+                )}
               </div>
-              {d.reviewCount > 0 && <span style={{ color: "rgba(255,255,255,.65)", fontSize: 14 }}>({d.reviewCount} reviews)</span>}
-            </div>
-          )}
-          {d.duration && <Badge variant="dark" size="lg" icon="🕐">{d.duration}</Badge>}
-          {d.category && <Badge variant="dark" size="lg">{d.category}</Badge>}
+            )}
+            {d.duration && <Badge variant="dark" size="lg" icon="🕐">{d.duration}</Badge>}
+            {d.difficulty && (
+              <Badge
+                variant={
+                  d.difficulty === "easy" ? "success" :
+                  d.difficulty === "moderate" ? "warning" : "info"
+                }
+                size="lg"
+              >
+                {d.difficulty}
+              </Badge>
+            )}
+            {d.category && <Badge variant="dark" size="lg">{d.category}</Badge>}
+          </div>
         </div>
-      </div>
-    </Container>
-  </section>
-);
+      </Container>
+
+      {/* Scroll hint */}
+      {!size.mob && (
+        <div
+          style={{
+            position:"absolute", bottom:32, right:48,
+            display:"flex", flexDirection:"column",
+            alignItems:"center", gap:6,
+            color:"rgba(255,255,255,.5)", fontSize:12,
+            fontWeight:600, letterSpacing:".8px",
+            textTransform:"uppercase",
+            animation:"dd-float 2.5s ease-in-out infinite",
+          }}
+        >
+          <span>Scroll</span>
+          <span style={{ fontSize:20 }}>↓</span>
+        </div>
+      )}
+    </section>
+  );
+});
+Hero.displayName = "Hero";
 
 /* ═══════════════════════════════════════════════════
    QUICK INFO BAR (sticky)
-   ═══════════════════════════════════════════════════ */
-const QuickInfoBar = ({ d, mob }) => {
+═══════════════════════════════════════════════════ */
+const QuickInfoBar = memo(({ d, size }) => {
   const items = [
-    { icon: "🕐", label: "Duration", value: d.duration || (d.durationDays ? `${d.durationDays} Days` : null) },
-    { icon: "📊", label: "Difficulty", value: d.difficulty || d.fitnessLevel, badge: true },
-    { icon: "👥", label: "Group Size", value: d.minGroupSize && d.maxGroupSize ? `${d.minGroupSize} – ${d.maxGroupSize}` : null },
-    { icon: "⭐", label: "Rating", value: d.rating ? `${d.rating} / 5` : null, highlight: true },
-    { icon: "🎫", label: "Entry Fee", value: d.entranceFee },
-  ].filter(i => i.value);
+    { icon:"🕐", label:"Duration",   value: d.duration || (d.durationDays ? `${d.durationDays} Days` : null) },
+    { icon:"📊", label:"Difficulty", value: d.difficulty, isDiff: true },
+    { icon:"👥", label:"Group Size", value: d.minGroupSize && d.maxGroupSize ? `${d.minGroupSize}–${d.maxGroupSize} pax` : null },
+    { icon:"⭐", label:"Rating",     value: d.rating ? `${d.rating.toFixed(1)} / 5.0` : null, highlight: true },
+    { icon:"🎫", label:"Entry Fee",  value: d.entranceFee },
+  ].filter(x => x.value);
 
   if (!items.length) return null;
+  const cols = size.mob ? Math.min(items.length, 2) : items.length;
 
   return (
-    <div style={{ background: T.white, borderBottom: `1px solid ${T.gray200}`, position: "sticky", top: 0, zIndex: 90, boxShadow: T.shadow.sm }}>
+    <div
+      style={{
+        background: T.white,
+        borderBottom: `1px solid ${T.f200}`,
+        position: "sticky", top: 0, zIndex: 90,
+        boxShadow: T.shSm,
+      }}
+    >
       <Container>
-        <div style={{ display: "grid", gridTemplateColumns: mob ? `repeat(${Math.min(items.length, 2)},1fr)` : `repeat(${items.length},1fr)`, gap: 0, padding: mob ? "16px 0" : "0" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: `repeat(${cols},1fr)`,
+          }}
+        >
           {items.map((it, i) => (
-            <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", padding: mob ? "10px" : "22px 16px", borderRight: !mob && i < items.length - 1 ? `1px solid ${T.gray200}` : "none" }}>
-              <span className="dd-wiggle" style={{ fontSize: 26, marginBottom: 6, cursor: "default" }}>{it.icon}</span>
-              <span style={{ fontSize: 11, fontWeight: 600, color: T.gray400, textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 3 }}>{it.label}</span>
-              {it.badge ? (
-                <Badge variant={it.value === "easy" ? "success" : it.value === "moderate" ? "warning" : "info"} size="sm">{it.value}</Badge>
+            <div
+              key={i}
+              style={{
+                display:"flex", flexDirection:"column",
+                alignItems:"center", textAlign:"center",
+                padding: size.mob ? "14px 8px" : "22px 12px",
+                borderRight: i < items.length - 1 && !size.mob
+                  ? `1px solid ${T.f200}` : "none",
+              }}
+            >
+              <span style={{ fontSize: size.mob ? 22 : 28, marginBottom:6 }}>{it.icon}</span>
+              <span
+                style={{
+                  fontSize:10, fontWeight:700, color:T.f400,
+                  textTransform:"uppercase", letterSpacing:".7px", marginBottom:4,
+                }}
+              >
+                {it.label}
+              </span>
+              {it.isDiff ? (
+                <Badge
+                  variant={
+                    it.value === "easy" ? "success" :
+                    it.value === "moderate" ? "warning" : "info"
+                  }
+                  size="sm"
+                >
+                  {it.value}
+                </Badge>
               ) : (
-                <span style={{ fontSize: 15, fontWeight: 700, color: it.highlight ? T.green600 : T.gray800 }}>{it.value}</span>
+                <span
+                  style={{
+                    fontSize: size.mob ? 13 : 15,
+                    fontWeight:700,
+                    color: it.highlight ? T.g600 : T.f800,
+                  }}
+                >
+                  {it.value}
+                </span>
               )}
             </div>
           ))}
@@ -425,523 +794,1145 @@ const QuickInfoBar = ({ d, mob }) => {
       </Container>
     </div>
   );
-};
+});
+QuickInfoBar.displayName = "QuickInfoBar";
 
 /* ═══════════════════════════════════════════════════
-   OVERVIEW + SIDEBAR
-   ═══════════════════════════════════════════════════ */
-const OverviewSection = ({ d, mob }) => {
+   SIDEBAR CARD
+═══════════════════════════════════════════════════ */
+const SidebarCard = memo(({ d, navigate }) => {
+  const infoRows = [
+    { icon:"🕐", label:"Operating Hours",  value: d.operatingHours },
+    { icon:"🏙️", label:"Nearest City",    value: d.nearestCity },
+    { icon:"✈️", label:"Nearest Airport", value: d.nearestAirport },
+    { icon:"⛰️", label:"Altitude",        value: d.altitudeMeters ? `${d.altitudeMeters.toLocaleString()}m` : null },
+    { icon:"📅", label:"Best Time",       value: d.bestTimeToVisit },
+  ].filter(x => x.value);
+
+  return (
+    <div
+      style={{
+        borderRadius: T.rXl, overflow:"hidden",
+        border: `2px solid ${T.g500}`,
+        boxShadow: T.shGreen,
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          background: `linear-gradient(135deg,${T.g600},${T.g800})`,
+          padding: "clamp(22px,3vw,32px) clamp(20px,3vw,28px)",
+          textAlign:"center", position:"relative",
+        }}
+      >
+        <div
+          style={{
+            position:"absolute", top:-20, right:-20,
+            width:120, height:120, borderRadius:"50%",
+            background:"rgba(255,255,255,.05)",
+            pointerEvents:"none",
+          }}
+        />
+        <p style={{ margin:"0 0 4px", fontSize:12, color:"rgba(255,255,255,.7)", fontWeight:600, textTransform:"uppercase", letterSpacing:".6px" }}>
+          Starting from
+        </p>
+        <p style={{ margin:"0 0 6px", fontSize:"clamp(22px,3vw,30px)", fontWeight:800, color:T.white, fontFamily:T.sans }}>
+          {d.entranceFee || "Contact for Price"}
+        </p>
+        <p style={{ margin:0, fontSize:12, color:"rgba(255,255,255,.55)" }}>
+          per person · prices may vary
+        </p>
+      </div>
+
+      {/* CTAs */}
+      <div style={{ padding:"clamp(18px,2vw,24px)", background:T.white }}>
+        <button
+          onClick={() => navigate("/booking")}
+          style={{
+            width:"100%", padding:"clamp(13px,1.5vw,16px)",
+            background:`linear-gradient(135deg,${T.g500},${T.g700})`,
+            color:T.white, border:"none",
+            borderRadius:T.rMd, fontSize:"clamp(14px,1.3vw,16px)",
+            fontWeight:700, cursor:"pointer", fontFamily:T.sans,
+            marginBottom:10, boxShadow:T.shGreen,
+            transition:"all .25s",
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.transform="translateY(-2px)";
+            e.currentTarget.style.boxShadow=`0 12px 28px rgba(16,185,129,.35)`;
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.transform="translateY(0)";
+            e.currentTarget.style.boxShadow=T.shGreen;
+          }}
+        >
+          📅 Book This Experience
+        </button>
+        <button
+          onClick={() => navigate("/contact")}
+          style={{
+            width:"100%", padding:"clamp(11px,1.3vw,14px)",
+            background:T.white, color:T.g700,
+            border:`2px solid ${T.g400}`,
+            borderRadius:T.rMd, fontSize:"clamp(13px,1.2vw,15px)",
+            fontWeight:600, cursor:"pointer", fontFamily:T.sans,
+            transition:"all .2s",
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background=T.g50;
+            e.currentTarget.style.borderColor=T.g600;
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background=T.white;
+            e.currentTarget.style.borderColor=T.g400;
+          }}
+        >
+          💬 Ask a Question
+        </button>
+
+        {infoRows.length > 0 && (
+          <>
+            <Divider my={20} />
+            <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
+              {infoRows.map((row, i) => (
+                <div key={i} style={{ display:"flex", alignItems:"center", gap:14 }}>
+                  <IconCircle icon={row.icon} size={40} bg={T.g50} />
+                  <div style={{ minWidth:0 }}>
+                    <p style={{ margin:0, fontSize:11, color:T.f400, fontWeight:600, textTransform:"uppercase", letterSpacing:".4px" }}>
+                      {row.label}
+                    </p>
+                    <p style={{ margin:"2px 0 0", fontSize:13, color:T.f700, fontWeight:600, lineHeight:1.35 }}>
+                      {row.value}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Trust signals */}
+        <div
+          style={{
+            display:"grid", gridTemplateColumns:"repeat(3,1fr)",
+            gap:8, marginTop:22,
+            padding:"16px 12px",
+            background:T.f50, borderRadius:T.rMd,
+          }}
+        >
+          {[
+            { icon:"✅", text:"Verified" },
+            { icon:"🔒", text:"Secure" },
+            { icon:"💬", text:"24/7" },
+          ].map((t, i) => (
+            <div key={i} style={{ textAlign:"center" }}>
+              <div style={{ fontSize:18, marginBottom:3 }}>{t.icon}</div>
+              <div style={{ fontSize:10, color:T.f500, fontWeight:600, letterSpacing:".3px" }}>
+                {t.text}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+});
+SidebarCard.displayName = "SidebarCard";
+
+/* ═══════════════════════════════════════════════════
+   OVERVIEW SECTION
+═══════════════════════════════════════════════════ */
+const OverviewSection = memo(({ d, size, navigate }) => {
   const desc = d.description || d.shortDescription;
   if (!desc && !d.overview) return null;
 
   return (
-    <AnimatedSection id="overview" bg={T.white} mob={mob}>
+    <Section id="overview" bg={T.white}>
       <Container>
-        <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "5fr 3fr", gap: mob ? 48 : 64, alignItems: "start" }}>
+        <div
+          style={{
+            display:"grid",
+            gridTemplateColumns: size.desk ? "5fr 3fr" : "1fr",
+            gap: "clamp(36px,5vw,64px)",
+            alignItems:"start",
+          }}
+        >
           {/* Left */}
           <div>
-            <h2 style={{ fontFamily: T.serif, fontSize: mob ? 28 : 40, fontWeight: 700, color: T.gray900, margin: "0 0 12px", lineHeight: 1.15 }}>
+            <SectionTitle sub={`Discover what makes ${d.name} extraordinary`}>
               About This Destination
-            </h2>
-            <div style={{ width: 60, height: 4, borderRadius: 2, background: `linear-gradient(90deg, ${T.green400}, ${T.green600})`, marginBottom: 32 }} />
+            </SectionTitle>
 
             {d.overview && (
-              <div style={{ background: T.green50, borderLeft: `4px solid ${T.green500}`, borderRadius: `0 ${T.r.md} ${T.r.md} 0`, padding: mob ? 20 : 28, marginBottom: 32 }}>
-                <p style={{ margin: 0, fontSize: 17, fontWeight: 500, color: T.green800, lineHeight: 1.75, fontStyle: "italic" }}>{d.overview}</p>
+              <div
+                style={{
+                  background:T.g50, borderLeft:`4px solid ${T.g500}`,
+                  borderRadius:`0 ${T.rMd} ${T.rMd} 0`,
+                  padding:"clamp(18px,2vw,28px)", marginBottom:28,
+                }}
+              >
+                <p style={{ margin:0, fontSize:"clamp(15px,1.4vw,17px)", fontWeight:500, color:T.g800, lineHeight:1.8, fontStyle:"italic" }}>
+                  {d.overview}
+                </p>
               </div>
             )}
 
             {desc && (
-              <div style={{ fontSize: 16, lineHeight: 1.9, color: T.gray600 }}>
-                {desc.split("\n\n").filter(Boolean).map((p, i) => (
-                  <p key={i} style={{ margin: i > 0 ? "22px 0 0" : 0 }}>{p}</p>
+              <div style={{ fontSize:"clamp(14px,1.3vw,16px)", lineHeight:1.9, color:T.f600 }}>
+                {desc.split("\n\n").filter(Boolean).map((para, i) => (
+                  <p key={i} style={{ margin: i > 0 ? "20px 0 0" : 0 }}>{para}</p>
                 ))}
               </div>
             )}
 
-            {/* Tags */}
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: 32 }}>
-              {d.isFamilyFriendly && <Badge variant="success" size="lg" icon="👨‍👩‍👧‍👦">Family Friendly</Badge>}
-              {d.isEcoFriendly && <Badge variant="primary" size="lg" icon="🌿">Eco-Friendly</Badge>}
-              {d.minAge && <Badge variant="info" size="lg" icon="📋">Min Age: {d.minAge}+</Badge>}
-            </div>
+            {/* Flags */}
+            {(d.isFamilyFriendly || d.isEcoFriendly || d.minAge) && (
+              <div style={{ display:"flex", flexWrap:"wrap", gap:8, marginTop:28 }}>
+                {d.isFamilyFriendly && (
+                  <Badge variant="success" size="lg" icon="👨‍👩‍👧‍👦">Family Friendly</Badge>
+                )}
+                {d.isEcoFriendly && (
+                  <Badge variant="eco" size="lg" icon="🌿">Eco-Friendly</Badge>
+                )}
+                {d.minAge && (
+                  <Badge variant="info" size="lg" icon="📋">Min Age: {d.minAge}+</Badge>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Right — Sidebar */}
-          {!mob && <SidebarCard d={d} />}
+          {/* Right sidebar */}
+          <div style={{ position: size.desk ? "sticky" : "static", top:80 }}>
+            <SidebarCard d={d} navigate={navigate} />
+          </div>
         </div>
-        {mob && <div style={{ marginTop: 40 }}><SidebarCard d={d} /></div>}
       </Container>
-    </AnimatedSection>
+    </Section>
   );
-};
-
-const SidebarCard = ({ d }) => (
-  <div style={{ position: "sticky", top: 100, borderRadius: T.r.lg, overflow: "hidden", border: `2px solid ${T.green500}`, boxShadow: T.shadow.lg }}>
-    {/* Header */}
-    <div style={{ background: `linear-gradient(135deg, ${T.green600}, ${T.green700})`, padding: "28px 24px", textAlign: "center" }}>
-      <p style={{ margin: "0 0 4px", fontSize: 14, color: "rgba(255,255,255,.75)", fontWeight: 500 }}>Starting from</p>
-      <p style={{ margin: 0, fontSize: 28, fontWeight: 800, color: T.white, fontFamily: T.sans }}>{d.entranceFee || "Contact for Price"}</p>
-    </div>
-
-    <div style={{ padding: 24, background: T.white }}>
-      {/* Buttons */}
-      <button style={{ width: "100%", padding: "16px", background: T.green600, color: T.white, border: "none", borderRadius: T.r.md, fontSize: 16, fontWeight: 700, cursor: "pointer", fontFamily: T.sans, marginBottom: 12, transition: "background .2s" }}
-        onMouseEnter={e => e.currentTarget.style.background = T.green700}
-        onMouseLeave={e => e.currentTarget.style.background = T.green600}
-      >
-        Book Now
-      </button>
-      <button style={{ width: "100%", padding: "14px", background: T.white, color: T.green700, border: `2px solid ${T.green500}`, borderRadius: T.r.md, fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: T.sans, transition: "background .2s" }}
-        onMouseEnter={e => e.currentTarget.style.background = T.green50}
-        onMouseLeave={e => e.currentTarget.style.background = T.white}
-      >
-        Contact Us
-      </button>
-
-      <hr style={{ border: "none", height: 1, background: T.gray200, margin: "24px 0" }} />
-
-      {/* Details */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        {[
-          { icon: "🕐", label: "Operating Hours", value: d.operatingHours },
-          { icon: "🏙️", label: "Nearest City", value: d.nearestCity },
-          { icon: "✈️", label: "Nearest Airport", value: d.nearestAirport },
-          { icon: "⛰️", label: "Altitude", value: d.altitudeMeters ? `${d.altitudeMeters.toLocaleString()}m` : null },
-        ].filter(x => x.value).map((x, i) => (
-          <div key={i} style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <IconCircle icon={x.icon} size={42} bg={T.green50} />
-            <div>
-              <p style={{ margin: 0, fontSize: 12, color: T.gray400, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".4px" }}>{x.label}</p>
-              <p style={{ margin: "2px 0 0", fontSize: 14, color: T.gray800, fontWeight: 600 }}>{x.value}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  </div>
-);
+});
+OverviewSection.displayName = "OverviewSection";
 
 /* ═══════════════════════════════════════════════════
    HIGHLIGHTS
-   ═══════════════════════════════════════════════════ */
-const Highlights = ({ d, mob }) => {
+═══════════════════════════════════════════════════ */
+const HighlightsSection = memo(({ d, size }) => {
   const list = d.highlights || [];
   if (!list.length) return null;
 
   return (
-    <AnimatedSection id="highlights" bg={T.gray50} mob={mob}>
+    <Section id="highlights" bg={T.f50}>
       <Container>
-        <h2 style={{ fontFamily: T.serif, fontSize: mob ? 28 : 40, fontWeight: 700, color: T.gray900, margin: "0 0 12px" }}>Highlights</h2>
-        <p style={{ fontSize: mob ? 16 : 18, color: T.gray500, margin: "0 0 8px", lineHeight: 1.6, maxWidth: 560 }}>What makes {d.name} extraordinary</p>
-        <div style={{ width: 60, height: 4, borderRadius: 2, background: `linear-gradient(90deg, ${T.green400}, ${T.green600})`, marginBottom: 40 }} />
-
-        <div className="dd-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "repeat(3,1fr)", gap: 24 }}>
+        <SectionTitle sub={`What makes ${d.name} unforgettable`}>
+          Highlights
+        </SectionTitle>
+        <div
+          className="dd-stagger"
+          style={{
+            display:"grid",
+            gridTemplateColumns: size.mob ? "1fr" : size.tab ? "repeat(2,1fr)" : "repeat(3,1fr)",
+            gap: "clamp(16px,2vw,24px)",
+          }}
+        >
           {list.map((h, i) => (
-            <div key={i} className="dd-lift" style={{ background: T.white, borderRadius: T.r.lg, padding: mob ? 24 : 32, border: `1px solid ${T.gray200}`, display: "flex", alignItems: "flex-start", gap: 18 }}>
-              <div style={{ width: 52, height: 52, borderRadius: "50%", background: `linear-gradient(135deg, ${T.green500}, ${T.green600})`, display: "flex", alignItems: "center", justifyContent: "center", color: T.white, fontWeight: 800, fontSize: 20, flexShrink: 0, boxShadow: `0 4px 14px ${T.green500}44` }}>
+            <div
+              key={i}
+              className="dd-lift"
+              style={{
+                background:T.white, borderRadius:T.rLg,
+                padding:"clamp(20px,2.5vw,32px)",
+                border:`1px solid ${T.f200}`,
+                display:"flex", alignItems:"flex-start", gap:18,
+              }}
+            >
+              <div
+                style={{
+                  width:48, height:48, borderRadius:"50%",
+                  background:`linear-gradient(135deg,${T.g500},${T.g700})`,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  color:T.white, fontWeight:800, fontSize:18, flexShrink:0,
+                  boxShadow:`0 4px 14px ${T.g500}38`,
+                }}
+              >
                 {i + 1}
               </div>
-              <p style={{ margin: 0, fontSize: 16, color: T.gray700, lineHeight: 1.65, fontWeight: 500 }}>{h}</p>
+              <p style={{ margin:0, fontSize:"clamp(14px,1.2vw,16px)", color:T.f700, lineHeight:1.7, fontWeight:500 }}>
+                {h}
+              </p>
             </div>
           ))}
         </div>
       </Container>
-    </AnimatedSection>
+    </Section>
   );
-};
+});
+HighlightsSection.displayName = "HighlightsSection";
 
 /* ═══════════════════════════════════════════════════
    ACTIVITIES
-   ═══════════════════════════════════════════════════ */
-const Activities = ({ d, mob }) => {
+═══════════════════════════════════════════════════ */
+const ACTIVITY_ICONS = {
+  "Game drives":"🚙", "Hot air balloon safari":"🎈",
+  "Bush walks":"🚶", "Cultural village visits":"🏘️",
+  "Bird watching":"🦅", "Photography safaris":"📷",
+  "Night game drives":"🌙", "Bush breakfast":"🍳",
+  "Hiking":"🥾", "Snorkeling":"🤿", "Swimming":"🏊",
+  "Boat safari":"🚤", "Camel riding":"🐪",
+};
+
+const ActivitiesSection = memo(({ d, size }) => {
   const list = d.activities || [];
   if (!list.length) return null;
 
-  const icons = { "Game drives": "🚙", "Hot air balloon safari": "🎈", "Bush walks": "🚶", "Cultural village visits": "🏘️", "Bird watching": "🦅", "Photography safaris": "📷", "Night game drives": "🌙", "Bush breakfast": "🍳" };
-
   return (
-    <AnimatedSection id="activities" bg={T.white} mob={mob}>
+    <Section id="activities" bg={T.white}>
       <Container>
-        <h2 style={{ fontFamily: T.serif, fontSize: mob ? 28 : 40, fontWeight: 700, color: T.gray900, margin: "0 0 12px" }}>Things To Do</h2>
-        <p style={{ fontSize: mob ? 16 : 18, color: T.gray500, margin: "0 0 8px", lineHeight: 1.6 }}>Experiences awaiting you</p>
-        <div style={{ width: 60, height: 4, borderRadius: 2, background: `linear-gradient(90deg, ${T.green400}, ${T.green600})`, marginBottom: 40 }} />
-
-        <div className="dd-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "repeat(2,1fr)" : "repeat(4,1fr)", gap: 20 }}>
+        <SectionTitle sub="Experiences awaiting you">
+          Things To Do
+        </SectionTitle>
+        <div
+          className="dd-stagger"
+          style={{
+            display:"grid",
+            gridTemplateColumns: size.mob ? "repeat(2,1fr)" : size.tab ? "repeat(3,1fr)" : "repeat(4,1fr)",
+            gap: "clamp(14px,1.8vw,22px)",
+          }}
+        >
           {list.map((act, i) => (
-            <div key={i} className="dd-lift dd-wiggle" style={{ background: T.gray50, borderRadius: T.r.lg, padding: 28, textAlign: "center", border: `1px solid ${T.gray200}`, cursor: "default" }}>
-              <div className="dd-float" style={{ width: 72, height: 72, borderRadius: "50%", background: T.green50, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 36, margin: "0 auto 18px", border: `2px solid ${T.green200}` }}>
-                {icons[act] || "✨"}
+            <div
+              key={i}
+              className="dd-lift"
+              style={{
+                background:T.f50, borderRadius:T.rLg,
+                padding:"clamp(18px,2.5vw,28px) clamp(14px,2vw,22px)",
+                textAlign:"center", border:`1px solid ${T.f200}`,
+                cursor:"default",
+              }}
+            >
+              <div
+                style={{
+                  width:"clamp(56px,7vw,72px)", height:"clamp(56px,7vw,72px)",
+                  borderRadius:"50%", background:T.g50,
+                  display:"flex", alignItems:"center", justifyContent:"center",
+                  fontSize:"clamp(26px,3.5vw,38px)",
+                  margin:"0 auto clamp(12px,1.5vw,18px)",
+                  border:`2px solid ${T.g200}`,
+                  animation:"dd-float 3s ease-in-out infinite",
+                  animationDelay:`${i * 0.3}s`,
+                }}
+              >
+                {ACTIVITY_ICONS[act] || "✨"}
               </div>
-              <h4 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: T.gray800, lineHeight: 1.35 }}>{act}</h4>
+              <h4
+                style={{
+                  margin:0, fontSize:"clamp(13px,1.2vw,15px)",
+                  fontWeight:700, color:T.f800, lineHeight:1.35,
+                }}
+              >
+                {act}
+              </h4>
             </div>
           ))}
         </div>
       </Container>
-    </AnimatedSection>
+    </Section>
   );
-};
+});
+ActivitiesSection.displayName = "ActivitiesSection";
 
 /* ═══════════════════════════════════════════════════
    WILDLIFE
-   ═══════════════════════════════════════════════════ */
-const WildlifeSection = ({ d, mob }) => {
+═══════════════════════════════════════════════════ */
+const WILDLIFE_ICONS = {
+  Lion:"🦁", Leopard:"🐆", Cheetah:"🐆",
+  "African Elephant":"🐘", Elephant:"🐘",
+  "Cape Buffalo":"🐃", Wildebeest:"🦬", Zebra:"🦓",
+  Hippopotamus:"🦛", "Nile Crocodile":"🐊", Giraffe:"🦒",
+  Hyena:"🐺", "African Wild Dog":"🐕", Rhinoceros:"🦏",
+  Gorilla:"🦍", Chimpanzee:"🐒", Flamingo:"🦩",
+};
+
+const WildlifeSection = memo(({ d }) => {
   const list = d.wildlife || [];
   if (!list.length) return null;
 
-  const ico = { Lion: "🦁", Leopard: "🐆", Cheetah: "🐆", "African Elephant": "🐘", Elephant: "🐘", "Cape Buffalo": "🐃", Wildebeest: "🦬", Zebra: "🦓", Hippopotamus: "🦛", "Nile Crocodile": "🐊", Giraffe: "🦒", Hyena: "🐺", "African Wild Dog": "🐕", Rhinoceros: "🦏" };
-
   return (
-    <AnimatedSection id="wildlife" bg={T.gray50} mob={mob}>
+    <Section id="wildlife" bg={T.f50}>
       <Container>
-        <div style={{ textAlign: "center", marginBottom: 48 }}>
-          <h2 style={{ fontFamily: T.serif, fontSize: mob ? 28 : 40, fontWeight: 700, color: T.gray900, margin: "0 0 12px" }}>Wildlife</h2>
-          <p style={{ fontSize: mob ? 16 : 18, color: T.gray500, margin: "0 auto", lineHeight: 1.6, maxWidth: 520 }}>Incredible species you may encounter at {d.name}</p>
-          <div style={{ width: 60, height: 4, borderRadius: 2, background: `linear-gradient(90deg, ${T.green400}, ${T.green600})`, margin: "16px auto 0" }} />
-        </div>
-
-        <div className="dd-stagger" style={{ display: "flex", flexWrap: "wrap", gap: 16, justifyContent: "center" }}>
-          {list.map((a, i) => (
-            <div key={i} className="dd-lift" style={{ display: "flex", alignItems: "center", gap: 12, background: T.white, padding: "16px 24px", borderRadius: T.r.full, border: `1px solid ${T.gray200}`, cursor: "default" }}>
-              <span style={{ fontSize: 28 }}>{ico[a] || "🦌"}</span>
-              <span style={{ fontSize: 15, fontWeight: 600, color: T.gray700 }}>{a}</span>
+        <SectionTitle sub={`Incredible species at ${d.name}`} center>
+          Wildlife
+        </SectionTitle>
+        <div
+          className="dd-stagger"
+          style={{ display:"flex", flexWrap:"wrap", gap:"clamp(10px,1.5vw,16px)", justifyContent:"center" }}
+        >
+          {list.map((animal, i) => (
+            <div
+              key={i}
+              className="dd-lift"
+              style={{
+                display:"flex", alignItems:"center", gap:12,
+                background:T.white, padding:"clamp(12px,1.5vw,16px) clamp(18px,2.5vw,26px)",
+                borderRadius:T.rFull, border:`1px solid ${T.f200}`,
+                cursor:"default",
+              }}
+            >
+              <span style={{ fontSize:"clamp(22px,2.5vw,28px)" }}>
+                {WILDLIFE_ICONS[animal] || "🦌"}
+              </span>
+              <span style={{ fontSize:"clamp(13px,1.2vw,15px)", fontWeight:700, color:T.f700 }}>
+                {animal}
+              </span>
             </div>
           ))}
         </div>
       </Container>
-    </AnimatedSection>
+    </Section>
   );
-};
+});
+WildlifeSection.displayName = "WildlifeSection";
 
 /* ═══════════════════════════════════════════════════
    GALLERY
-   ═══════════════════════════════════════════════════ */
-const GallerySection = ({ d, mob }) => {
+═══════════════════════════════════════════════════ */
+const GallerySection = memo(({ d, size }) => {
   const [lb, setLb] = useState({ open: false, idx: 0 });
-
   const gallery = d.gallery || [];
-  const imgs = gallery.length ? gallery.map(g => g.imageUrl) : d.images || [];
+  const imgs = gallery.length
+    ? gallery.map(g => g.imageUrl).filter(Boolean)
+    : (d.images || []).filter(Boolean);
+
   if (!imgs.length) return null;
 
-  const closeLb = () => setLb({ ...lb, open: false });
-  const prev = (e) => { e.stopPropagation(); setLb(p => ({ ...p, idx: (p.idx - 1 + imgs.length) % imgs.length })); };
-  const next = (e) => { e.stopPropagation(); setLb(p => ({ ...p, idx: (p.idx + 1) % imgs.length })); };
+  const prev = useCallback((e) => {
+    e.stopPropagation();
+    setLb(p => ({ ...p, idx: (p.idx - 1 + imgs.length) % imgs.length }));
+  }, [imgs.length]);
+
+  const next = useCallback((e) => {
+    e.stopPropagation();
+    setLb(p => ({ ...p, idx: (p.idx + 1) % imgs.length }));
+  }, [imgs.length]);
+
+  useEffect(() => {
+    if (!lb.open) return;
+    const handler = (e) => {
+      if (e.key === "Escape") setLb(p => ({ ...p, open: false }));
+      if (e.key === "ArrowLeft")  setLb(p => ({ ...p, idx: (p.idx - 1 + imgs.length) % imgs.length }));
+      if (e.key === "ArrowRight") setLb(p => ({ ...p, idx: (p.idx + 1) % imgs.length }));
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [lb.open, imgs.length]);
+
+  const visible = imgs.slice(0, 8);
+  const cols = size.mob ? 2 : 4;
 
   return (
-    <AnimatedSection id="gallery" bg={T.white} mob={mob}>
+    <Section id="gallery" bg={T.white}>
       <Container>
-        <h2 style={{ fontFamily: T.serif, fontSize: mob ? 28 : 40, fontWeight: 700, color: T.gray900, margin: "0 0 12px" }}>Photo Gallery</h2>
-        <p style={{ fontSize: mob ? 16 : 18, color: T.gray500, margin: "0 0 8px", lineHeight: 1.6 }}>Stunning visuals from {d.name}</p>
-        <div style={{ width: 60, height: 4, borderRadius: 2, background: `linear-gradient(90deg, ${T.green400}, ${T.green600})`, marginBottom: 40 }} />
+        <SectionTitle sub={`Stunning visuals from ${d.name}`}>
+          Photo Gallery
+        </SectionTitle>
 
-        <div className="dd-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "repeat(2,1fr)" : imgs.length <= 4 ? "repeat(4,1fr)" : "repeat(4,1fr)", gap: 16 }}>
-          {imgs.slice(0, 8).map((img, i) => (
-            <div key={i} className="dd-imgZoom dd-lift" onClick={() => setLb({ open: true, idx: i })} style={{ position: "relative", paddingBottom: i === 0 && !mob && imgs.length > 4 ? "100%" : "75%", gridColumn: i === 0 && !mob && imgs.length > 4 ? "span 2" : "span 1", gridRow: i === 0 && !mob && imgs.length > 4 ? "span 2" : "span 1", borderRadius: T.r.md, overflow: "hidden", cursor: "pointer" }}>
-              <img src={img} alt={`${d.name} ${i + 1}`} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
-              <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,.25), transparent 50%)", opacity: 0, transition: "opacity .3s" }}
-                onMouseEnter={e => e.currentTarget.style.opacity = 1}
-                onMouseLeave={e => e.currentTarget.style.opacity = 0}
+        <div
+          className="dd-stagger"
+          style={{
+            display:"grid",
+            gridTemplateColumns:`repeat(${cols},1fr)`,
+            gap:"clamp(10px,1.5vw,16px)",
+          }}
+        >
+          {visible.map((img, i) => {
+            const isFeatured = i === 0 && !size.mob && visible.length > 4;
+            return (
+              <div
+                key={i}
+                className="dd-imgHover dd-lift"
+                onClick={() => setLb({ open: true, idx: i })}
+                style={{
+                  position:"relative",
+                  paddingBottom: isFeatured ? "100%" : "70%",
+                  gridColumn: isFeatured ? "span 2" : "span 1",
+                  gridRow:    isFeatured ? "span 2" : "span 1",
+                  borderRadius:T.rMd, overflow:"hidden",
+                  cursor:"pointer",
+                  border:`1px solid ${T.f200}`,
+                }}
               >
-                <div style={{ position: "absolute", bottom: 12, right: 12, background: "rgba(255,255,255,.9)", borderRadius: T.r.full, padding: "6px 14px", fontSize: 12, fontWeight: 600, color: T.gray700 }}>
-                  View ↗
+                <img
+                  src={img}
+                  alt={`${d.name} ${i + 1}`}
+                  loading={i === 0 ? "eager" : "lazy"}
+                  style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }}
+                />
+                <div
+                  style={{
+                    position:"absolute", inset:0,
+                    background:"linear-gradient(to top,rgba(0,0,0,.3),transparent 60%)",
+                    opacity:0, transition:"opacity .3s",
+                    display:"flex", alignItems:"flex-end", justifyContent:"flex-end",
+                    padding:12,
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.opacity="1"}
+                  onMouseLeave={e => e.currentTarget.style.opacity="0"}
+                >
+                  <span
+                    style={{
+                      background:"rgba(255,255,255,.92)",
+                      borderRadius:T.rFull, padding:"5px 14px",
+                      fontSize:12, fontWeight:700, color:T.f700,
+                    }}
+                  >
+                    View ↗
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Container>
+
+      {/* Lightbox */}
+      {lb.open && (
+        <div
+          className="dd-fadeIn"
+          onClick={() => setLb(p => ({ ...p, open: false }))}
+          style={{
+            position:"fixed", inset:0,
+            background:"rgba(0,0,0,.97)",
+            zIndex:1000, display:"flex",
+            alignItems:"center", justifyContent:"center",
+            padding:"clamp(16px,3vw,32px)",
+          }}
+        >
+          {/* Close */}
+          <button
+            onClick={() => setLb(p => ({ ...p, open: false }))}
+            style={{
+              position:"absolute", top:20, right:20,
+              background:"rgba(255,255,255,.1)", border:"none",
+              color:T.white, width:48, height:48, borderRadius:"50%",
+              fontSize:22, cursor:"pointer", backdropFilter:"blur(4px)",
+              transition:"background .2s",
+            }}
+            onMouseEnter={e => e.currentTarget.style.background="rgba(255,255,255,.2)"}
+            onMouseLeave={e => e.currentTarget.style.background="rgba(255,255,255,.1)"}
+          >
+            ✕
+          </button>
+
+          <img
+            src={imgs[lb.idx]}
+            alt=""
+            className="dd-scaleIn"
+            onClick={e => e.stopPropagation()}
+            style={{
+              maxWidth:"90vw", maxHeight:"88vh",
+              objectFit:"contain", borderRadius:T.rMd,
+              boxShadow:"0 32px 64px rgba(0,0,0,.6)",
+            }}
+          />
+
+          {/* Nav */}
+          {imgs.length > 1 && (
+            <>
+              {[
+                { fn: prev, label:"←", pos:{ left:"clamp(8px,2vw,24px)" } },
+                { fn: next, label:"→", pos:{ right:"clamp(8px,2vw,24px)" } },
+              ].map(({ fn, label, pos }) => (
+                <button
+                  key={label}
+                  onClick={fn}
+                  style={{
+                    position:"absolute", top:"50%",
+                    transform:"translateY(-50%)", ...pos,
+                    background:"rgba(255,255,255,.1)", border:"none",
+                    color:T.white, width:"clamp(44px,5vw,56px)", height:"clamp(44px,5vw,56px)",
+                    borderRadius:"50%", fontSize:"clamp(18px,2vw,24px)",
+                    cursor:"pointer", backdropFilter:"blur(4px)",
+                    transition:"background .2s",
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background="rgba(255,255,255,.22)"}
+                  onMouseLeave={e => e.currentTarget.style.background="rgba(255,255,255,.1)"}
+                >
+                  {label}
+                </button>
+              ))}
+              <div
+                style={{
+                  position:"absolute", bottom:20, left:"50%",
+                  transform:"translateX(-50%)",
+                  color:"rgba(255,255,255,.55)", fontSize:13, fontWeight:600,
+                }}
+              >
+                {lb.idx + 1} / {imgs.length}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+    </Section>
+  );
+});
+GallerySection.displayName = "GallerySection";
+
+/* ═══════════════════════════════════════════════════
+   LOCATION
+═══════════════════════════════════════════════════ */
+const LocationSection = memo(({ d, size }) => {
+  const hasMap  = d.latitude && d.longitude;
+  const hasInfo = d.region || d.nearestCity || d.nearestAirport;
+  if (!hasMap && !hasInfo) return null;
+
+  const rows = [
+    { icon:"📍", label:"Region",         value: d.region },
+    { icon:"🏙️", label:"Nearest City",  value: d.nearestCity },
+    { icon:"✈️", label:"Nearest Airport",value: d.nearestAirport, sub: d.distanceFromAirportKm ? `${d.distanceFromAirportKm} km away` : null },
+    { icon:"⛰️", label:"Altitude",       value: d.altitudeMeters ? `${d.altitudeMeters.toLocaleString()}m asl` : null },
+  ].filter(x => x.value);
+
+  return (
+    <Section id="location" bg={T.f50}>
+      <Container>
+        <SectionTitle sub="How to get there">
+          Location &amp; Access
+        </SectionTitle>
+        <div
+          style={{
+            display:"grid",
+            gridTemplateColumns: hasMap && hasInfo && !size.mob ? "1fr 1fr" : "1fr",
+            gap:"clamp(24px,3vw,36px)",
+          }}
+        >
+          {hasMap && (
+            <div
+              style={{
+                borderRadius:T.rLg, overflow:"hidden",
+                border:`1px solid ${T.f200}`, boxShadow:T.shMd,
+                height:"clamp(280px,35vw,420px)",
+              }}
+            >
+              <iframe
+                title={`${d.name} map`}
+                src={`https://www.google.com/maps?q=${d.latitude},${d.longitude}&z=12&output=embed`}
+                style={{ width:"100%", height:"100%", border:"none" }}
+                loading="lazy"
+                allowFullScreen
+              />
+            </div>
+          )}
+
+          {rows.length > 0 && (
+            <div className="dd-stagger" style={{ display:"flex", flexDirection:"column", gap:"clamp(12px,1.5vw,18px)" }}>
+              {rows.map((row, i) => (
+                <div
+                  key={i}
+                  className="dd-lift"
+                  style={{
+                    background:T.white, borderRadius:T.rLg,
+                    padding:"clamp(16px,2vw,24px)",
+                    border:`1px solid ${T.f200}`,
+                    display:"flex", alignItems:"center", gap:18,
+                  }}
+                >
+                  <IconCircle icon={row.icon} size={52} bg={T.g50} />
+                  <div>
+                    <p style={{ margin:0, fontSize:11, color:T.f400, fontWeight:700, textTransform:"uppercase", letterSpacing:".5px" }}>
+                      {row.label}
+                    </p>
+                    <p style={{ margin:"3px 0 0", fontSize:"clamp(15px,1.5vw,18px)", color:T.f800, fontWeight:700 }}>
+                      {row.value}
+                    </p>
+                    {row.sub && (
+                      <p style={{ margin:"2px 0 0", fontSize:12, color:T.f500 }}>{row.sub}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Getting there */}
+        {d.gettingThere && (
+          <div
+            style={{
+              marginTop:"clamp(24px,3vw,36px)",
+              background:T.white, borderRadius:T.rLg,
+              border:`1px solid ${T.f200}`,
+              overflow:"hidden",
+            }}
+          >
+            <div style={{ padding:"16px 24px", background:T.g50, borderBottom:`1px solid ${T.f200}`, display:"flex", alignItems:"center", gap:12 }}>
+              <span style={{ fontSize:22 }}>🗺️</span>
+              <h4 style={{ margin:0, fontSize:16, fontWeight:700, color:T.g800 }}>Getting There</h4>
+            </div>
+            <div style={{ padding:"clamp(18px,2vw,24px)" }}>
+              <p style={{ margin:0, fontSize:"clamp(14px,1.3vw,16px)", color:T.f600, lineHeight:1.8 }}>
+                {d.gettingThere}
+              </p>
+            </div>
+          </div>
+        )}
+      </Container>
+    </Section>
+  );
+});
+LocationSection.displayName = "LocationSection";
+
+/* ═══════════════════════════════════════════════════
+   PRACTICAL INFO
+═══════════════════════════════════════════════════ */
+const PracticalSection = memo(({ d, size }) => {
+  const items = [
+    { icon:"🎫", label:"Entrance Fee",   value: d.entranceFee },
+    { icon:"🕐", label:"Opening Hours",  value: d.operatingHours },
+    { icon:"📅", label:"Best Season",    value: d.bestTimeToVisit },
+    { icon:"👥", label:"Group Size",     value: d.minGroupSize && d.maxGroupSize ? `${d.minGroupSize}–${d.maxGroupSize} people` : null },
+    { icon:"👶", label:"Minimum Age",    value: d.minAge ? `${d.minAge}+ years` : null },
+    { icon:"💪", label:"Fitness Level",  value: d.fitnessLevel },
+  ].filter(x => x.value);
+
+  const infoCards = [
+    { icon:"📋", title:"What to Expect", text: d.whatToExpect, bg: T.g50,       accent: T.g700 },
+    { icon:"💡", title:"Local Tips",     text: d.localTips,    bg: T.amberBg,   accent: "#92400E" },
+    { icon:"⚠️", title:"Safety Info",   text: d.safetyInfo,   bg: T.redBg,     accent: T.red, span: true },
+  ].filter(x => x.text);
+
+  if (!items.length && !infoCards.length) return null;
+
+  const cols = size.mob ? 1 : size.tab ? 2 : 3;
+
+  return (
+    <Section id="practical" bg={T.white}>
+      <Container>
+        <SectionTitle sub="Everything you need to plan your visit">
+          Practical Information
+        </SectionTitle>
+
+        {items.length > 0 && (
+          <div
+            className="dd-stagger"
+            style={{
+              display:"grid",
+              gridTemplateColumns:`repeat(${cols},1fr)`,
+              gap:"clamp(14px,1.8vw,20px)",
+              marginBottom: infoCards.length ? "clamp(28px,3vw,40px)" : 0,
+            }}
+          >
+            {items.map((it, i) => (
+              <div
+                key={i}
+                className="dd-lift"
+                style={{
+                  background:T.f50, borderRadius:T.rLg,
+                  padding:"clamp(16px,2vw,24px)",
+                  border:`1px solid ${T.f200}`,
+                  display:"flex", alignItems:"center", gap:16,
+                }}
+              >
+                <span style={{ fontSize:"clamp(26px,3vw,34px)", flexShrink:0 }}>{it.icon}</span>
+                <div style={{ minWidth:0 }}>
+                  <p style={{ margin:0, fontSize:11, color:T.f400, fontWeight:700, textTransform:"uppercase", letterSpacing:".4px" }}>
+                    {it.label}
+                  </p>
+                  <p style={{ margin:"3px 0 0", fontSize:"clamp(13px,1.2vw,15px)", color:T.f800, fontWeight:700, lineHeight:1.35 }}>
+                    {it.value}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {infoCards.length > 0 && (
+          <div
+            className="dd-stagger"
+            style={{
+              display:"grid",
+              gridTemplateColumns: size.mob ? "1fr" : "repeat(2,1fr)",
+              gap:"clamp(16px,2vw,24px)",
+            }}
+          >
+            {infoCards.map((c, i) => (
+              <div
+                key={i}
+                style={{
+                  borderRadius:T.rLg, overflow:"hidden",
+                  border:`1px solid ${T.f200}`,
+                  gridColumn: c.span && !size.mob ? "span 2" : "span 1",
+                  boxShadow:T.shSm,
+                }}
+              >
+                <div
+                  style={{
+                    padding:"16px 22px", background:c.bg,
+                    borderBottom:`2px solid ${c.accent}22`,
+                    display:"flex", alignItems:"center", gap:10,
+                  }}
+                >
+                  <span style={{ fontSize:20 }}>{c.icon}</span>
+                  <h4 style={{ margin:0, fontSize:"clamp(14px,1.3vw,17px)", fontWeight:700, color:c.accent }}>
+                    {c.title}
+                  </h4>
+                </div>
+                <div style={{ padding:"clamp(16px,2vw,24px)", background:T.white }}>
+                  <p style={{ margin:0, fontSize:"clamp(13px,1.2vw,15px)", color:T.f600, lineHeight:1.8 }}>
+                    {c.text}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Container>
+    </Section>
+  );
+});
+PracticalSection.displayName = "PracticalSection";
+
+/* ═══════════════════════════════════════════════════
+   ITINERARY
+═══════════════════════════════════════════════════ */
+const ItinerarySection = memo(({ d, size }) => {
+  const list = d.itinerary || [];
+  if (!list.length) return null;
+
+  return (
+    <Section id="itinerary" bg={T.f50}>
+      <Container>
+        <SectionTitle sub="Your day-by-day journey">
+          Itinerary
+        </SectionTitle>
+        <div style={{ display:"flex", flexDirection:"column", gap:"clamp(16px,2vw,22px)" }}>
+          {list.map((day, i) => (
+            <div
+              key={i}
+              className="dd-lift"
+              style={{
+                background:T.white, borderRadius:T.rLg,
+                border:`1px solid ${T.f200}`,
+                overflow:"hidden",
+              }}
+            >
+              {/* Day header */}
+              <div
+                style={{
+                  padding:"clamp(14px,1.8vw,20px) clamp(18px,2.5vw,28px)",
+                  background:`linear-gradient(135deg,${T.g50},${T.white})`,
+                  borderBottom:`1px solid ${T.f200}`,
+                  display:"flex", alignItems:"center", gap:16,
+                }}
+              >
+                <div
+                  style={{
+                    width:"clamp(40px,5vw,52px)", height:"clamp(40px,5vw,52px)",
+                    borderRadius:"50%",
+                    background:`linear-gradient(135deg,${T.g500},${T.g700})`,
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    color:T.white, fontWeight:800,
+                    fontSize:"clamp(14px,1.5vw,18px)", flexShrink:0,
+                    boxShadow:`0 4px 12px ${T.g500}38`,
+                  }}
+                >
+                  {day.dayNumber || i + 1}
+                </div>
+                <div>
+                  <p style={{ margin:0, fontSize:11, color:T.g600, fontWeight:700, textTransform:"uppercase", letterSpacing:".6px" }}>
+                    Day {day.dayNumber || i + 1}
+                  </p>
+                  <h4 style={{ margin:"2px 0 0", fontSize:"clamp(15px,1.5vw,18px)", fontWeight:700, color:T.f800 }}>
+                    {day.title}
+                  </h4>
+                </div>
+              </div>
+
+              {/* Day body */}
+              <div style={{ padding:"clamp(16px,2.5vw,26px) clamp(18px,2.5vw,28px)" }}>
+                {day.description && (
+                  <p style={{ margin:"0 0 16px", fontSize:"clamp(13px,1.2vw,15px)", color:T.f600, lineHeight:1.75 }}>
+                    {day.description}
+                  </p>
+                )}
+                <div style={{ display:"flex", flexWrap:"wrap", gap:8 }}>
+                  {(day.activities || []).map((a, j) => (
+                    <Badge key={j} variant="primary" size="sm" icon="✓">{a}</Badge>
+                  ))}
+                  {(day.meals || []).map((m, j) => (
+                    <Badge key={j} variant="warning" size="sm" icon="🍽️">{m}</Badge>
+                  ))}
+                  {day.accommodation && (
+                    <Badge variant="info" size="sm" icon="🏨">{day.accommodation}</Badge>
+                  )}
                 </div>
               </div>
             </div>
           ))}
         </div>
-
-        {/* Lightbox */}
-        {lb.open && (
-          <div onClick={closeLb} className="dd-fadeIn" style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.96)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
-            <button onClick={closeLb} style={{ position: "absolute", top: 20, right: 20, background: "rgba(255,255,255,.1)", border: "none", color: T.white, width: 52, height: 52, borderRadius: "50%", fontSize: 26, cursor: "pointer", transition: "background .2s" }}
-              onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.2)"}
-              onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,.1)"}
-            >✕</button>
-
-            <img src={imgs[lb.idx]} alt="" className="dd-scaleIn" onClick={e => e.stopPropagation()} style={{ maxWidth: "90vw", maxHeight: "85vh", objectFit: "contain", borderRadius: T.r.md }} />
-
-            {imgs.length > 1 && (
-              <>
-                <button onClick={prev} style={{ position: "absolute", left: 20, top: "50%", transform: "translateY(-50%)", background: "rgba(255,255,255,.12)", border: "none", color: T.white, width: 56, height: 56, borderRadius: "50%", fontSize: 24, cursor: "pointer", transition: "background .2s", backdropFilter: "blur(4px)" }}
-                  onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.25)"}
-                  onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,.12)"}
-                >←</button>
-                <button onClick={next} style={{ position: "absolute", right: 20, top: "50%", transform: "translateY(-50%)", background: "rgba(255,255,255,.12)", border: "none", color: T.white, width: 56, height: 56, borderRadius: "50%", fontSize: 24, cursor: "pointer", transition: "background .2s", backdropFilter: "blur(4px)" }}
-                  onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,.25)"}
-                  onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,.12)"}
-                >→</button>
-              </>
-            )}
-
-            <div style={{ position: "absolute", bottom: 24, left: "50%", transform: "translateX(-50%)", color: "rgba(255,255,255,.6)", fontSize: 14, fontWeight: 500 }}>
-              {lb.idx + 1} / {imgs.length}
-            </div>
-          </div>
-        )}
       </Container>
-    </AnimatedSection>
+    </Section>
   );
-};
+});
+ItinerarySection.displayName = "ItinerarySection";
 
 /* ═══════════════════════════════════════════════════
-   LOCATION & MAP
-   ═══════════════════════════════════════════════════ */
-const LocationSection = ({ d, mob }) => {
-  const hasMap = d.latitude && d.longitude;
-  const hasInfo = d.region || d.nearestCity || d.nearestAirport || d.gettingThere;
-  if (!hasMap && !hasInfo) return null;
+   FAQs
+═══════════════════════════════════════════════════ */
+const FAQSection = memo(({ d }) => {
+  const [open, setOpen] = useState(null);
+  const list = d.faqs || [];
+  if (!list.length) return null;
 
   return (
-    <AnimatedSection id="location" bg={T.gray50} mob={mob}>
-      <Container>
-        <h2 style={{ fontFamily: T.serif, fontSize: mob ? 28 : 40, fontWeight: 700, color: T.gray900, margin: "0 0 12px" }}>Location & Access</h2>
-        <p style={{ fontSize: mob ? 16 : 18, color: T.gray500, margin: "0 0 8px", lineHeight: 1.6 }}>How to get there</p>
-        <div style={{ width: 60, height: 4, borderRadius: 2, background: `linear-gradient(90deg, ${T.green400}, ${T.green600})`, marginBottom: 40 }} />
-
-        <div style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "1fr 1fr", gap: 32 }}>
-          {hasMap && (
-            <div style={{ borderRadius: T.r.lg, overflow: "hidden", border: `1px solid ${T.gray200}`, height: mob ? 300 : 420, boxShadow: T.shadow.md }}>
-              <iframe title="Map" src={`https://www.google.com/maps?q=${d.latitude},${d.longitude}&z=12&output=embed`} style={{ width: "100%", height: "100%", border: "none" }} loading="lazy" allowFullScreen />
-            </div>
-          )}
-
-          <div className="dd-stagger" style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            {[
-              { icon: "📍", label: "Region", value: d.region, bg: T.green50 },
-              { icon: "🏙️", label: "Nearest City", value: d.nearestCity, bg: T.green50 },
-              { icon: "✈️", label: "Nearest Airport", value: d.nearestAirport, sub: d.distanceFromAirportKm ? `${d.distanceFromAirportKm} km away` : null, bg: T.blueLight },
-              { icon: "⛰️", label: "Altitude", value: d.altitudeMeters ? `${d.altitudeMeters.toLocaleString()}m above sea level` : null, bg: T.amberLight },
-            ].filter(x => x.value).map((x, i) => (
-              <div key={i} className="dd-lift" style={{ background: T.white, borderRadius: T.r.lg, padding: 24, border: `1px solid ${T.gray200}`, display: "flex", alignItems: "center", gap: 20 }}>
-                <IconCircle icon={x.icon} size={56} bg={x.bg} />
-                <div>
-                  <p style={{ margin: 0, fontSize: 12, color: T.gray400, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".5px" }}>{x.label}</p>
-                  <p style={{ margin: "3px 0 0", fontSize: 18, color: T.gray800, fontWeight: 700 }}>{x.value}</p>
-                  {x.sub && <p style={{ margin: "2px 0 0", fontSize: 13, color: T.gray500 }}>{x.sub}</p>}
+    <Section id="faqs" bg={T.white}>
+      <Container narrow>
+        <SectionTitle sub="Common questions answered" center>
+          Frequently Asked Questions
+        </SectionTitle>
+        <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          {list.map((faq, i) => (
+            <div
+              key={i}
+              style={{
+                borderRadius:T.rMd, border:`1px solid`,
+                borderColor: open === i ? T.g400 : T.f200,
+                overflow:"hidden", transition:"border-color .25s",
+                boxShadow: open === i ? `0 4px 16px rgba(16,185,129,.1)` : "none",
+              }}
+            >
+              <button
+                onClick={() => setOpen(open === i ? null : i)}
+                style={{
+                  width:"100%", padding:"clamp(16px,2vw,22px) clamp(18px,2.5vw,26px)",
+                  background: open === i ? T.g50 : T.white,
+                  border:"none", cursor:"pointer", fontFamily:T.sans,
+                  display:"flex", justifyContent:"space-between",
+                  alignItems:"center", gap:16,
+                  transition:"background .2s",
+                  textAlign:"left",
+                }}
+              >
+                <span style={{ fontSize:"clamp(14px,1.3vw,16px)", fontWeight:700, color: open===i ? T.g800 : T.f800, lineHeight:1.4 }}>
+                  {faq.question}
+                </span>
+                <span
+                  style={{
+                    width:28, height:28, borderRadius:"50%",
+                    background: open===i ? T.g500 : T.f100,
+                    display:"flex", alignItems:"center", justifyContent:"center",
+                    color: open===i ? T.white : T.f500,
+                    fontSize:16, flexShrink:0,
+                    transition:"all .25s",
+                    transform: open===i ? "rotate(45deg)" : "rotate(0)",
+                  }}
+                >
+                  +
+                </span>
+              </button>
+              {open === i && (
+                <div
+                  className="dd-fadeIn"
+                  style={{
+                    padding:"0 clamp(18px,2.5vw,26px) clamp(16px,2vw,22px)",
+                    background:T.white,
+                  }}
+                >
+                  <p style={{ margin:0, fontSize:"clamp(13px,1.2vw,15px)", color:T.f600, lineHeight:1.8 }}>
+                    {faq.answer}
+                  </p>
                 </div>
-              </div>
-            ))}
-          </div>
+              )}
+            </div>
+          ))}
         </div>
       </Container>
-    </AnimatedSection>
+    </Section>
   );
-};
-
-/* ═══════════════════════════════════════════════════
-   PRACTICAL INFO
-   ═══════════════════════════════════════════════════ */
-const PracticalInfo = ({ d, mob }) => {
-  const items = [
-    { icon: "🎫", label: "Entrance Fee", value: d.entranceFee },
-    { icon: "🕐", label: "Operating Hours", value: d.operatingHours },
-    { icon: "📅", label: "Best Time to Visit", value: d.bestTimeToVisit },
-    { icon: "👥", label: "Group Size", value: d.minGroupSize && d.maxGroupSize ? `${d.minGroupSize} – ${d.maxGroupSize} people` : null },
-    { icon: "👶", label: "Minimum Age", value: d.minAge ? `${d.minAge} years` : null },
-    { icon: "💪", label: "Fitness Level", value: d.fitnessLevel },
-  ].filter(x => x.value);
-
-  const cards = [
-    { icon: "📋", title: "What to Expect", text: d.whatToExpect, bg: T.green50, accent: T.green600 },
-    { icon: "💡", title: "Local Tips", text: d.localTips, bg: T.amberLight, accent: "#B45309" },
-    { icon: "⚠️", title: "Safety Information", text: d.safetyInfo, bg: T.redLight, accent: T.red, span: true },
-  ].filter(x => x.text);
-
-  if (!items.length && !cards.length) return null;
-
-  return (
-    <AnimatedSection id="practical" bg={T.white} mob={mob}>
-      <Container>
-        <h2 style={{ fontFamily: T.serif, fontSize: mob ? 28 : 40, fontWeight: 700, color: T.gray900, margin: "0 0 12px" }}>Practical Information</h2>
-        <p style={{ fontSize: mob ? 16 : 18, color: T.gray500, margin: "0 0 8px", lineHeight: 1.6 }}>Everything you need to plan your visit</p>
-        <div style={{ width: 60, height: 4, borderRadius: 2, background: `linear-gradient(90deg, ${T.green400}, ${T.green600})`, marginBottom: 40 }} />
-
-        {items.length > 0 && (
-          <div className="dd-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "repeat(3,1fr)", gap: 20, marginBottom: cards.length ? 40 : 0 }}>
-            {items.map((it, i) => (
-              <div key={i} className="dd-lift" style={{ background: T.gray50, borderRadius: T.r.lg, padding: 24, border: `1px solid ${T.gray200}`, display: "flex", alignItems: "center", gap: 18 }}>
-                <span style={{ fontSize: 34 }}>{it.icon}</span>
-                <div>
-                  <p style={{ margin: 0, fontSize: 12, color: T.gray400, fontWeight: 600, textTransform: "uppercase", letterSpacing: ".4px" }}>{it.label}</p>
-                  <p style={{ margin: "3px 0 0", fontSize: 16, color: T.gray800, fontWeight: 600 }}>{it.value}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {cards.length > 0 && (
-          <div className="dd-stagger" style={{ display: "grid", gridTemplateColumns: mob ? "1fr" : "repeat(2,1fr)", gap: 24 }}>
-            {cards.map((c, i) => (
-              <div key={i} style={{ borderRadius: T.r.lg, overflow: "hidden", border: `1px solid ${T.gray200}`, gridColumn: c.span && !mob ? "span 2" : "span 1", boxShadow: T.shadow.sm }}>
-                <div style={{ padding: "18px 24px", background: c.bg, display: "flex", alignItems: "center", gap: 12, borderBottom: `1px solid ${c.accent}22` }}>
-                  <span style={{ fontSize: 22 }}>{c.icon}</span>
-                  <h4 style={{ margin: 0, fontSize: 17, fontWeight: 700, color: c.accent }}>{c.title}</h4>
-                </div>
-                <div style={{ padding: 24, background: T.white }}>
-                  <p style={{ margin: 0, fontSize: 15, color: T.gray600, lineHeight: 1.75 }}>{c.text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </Container>
-    </AnimatedSection>
-  );
-};
+});
+FAQSection.displayName = "FAQSection";
 
 /* ═══════════════════════════════════════════════════
    CTA FOOTER
-   ═══════════════════════════════════════════════════ */
-const CTAFooter = ({ d, mob }) => (
-  <section style={{ background: `linear-gradient(135deg, ${T.green700} 0%, ${T.green900} 100%)`, padding: mob ? "80px 0" : "120px 0", textAlign: "center", position: "relative", overflow: "hidden" }}>
-    {/* Pattern */}
-    <div style={{ position: "absolute", inset: 0, opacity: .06, backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23fff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }} />
+═══════════════════════════════════════════════════ */
+const CTAFooter = memo(({ d, navigate, size }) => (
+  <section
+    style={{
+      background:`linear-gradient(135deg,${T.g700} 0%,${T.g900} 100%)`,
+      padding:"clamp(72px,10vw,128px) 0",
+      textAlign:"center", position:"relative", overflow:"hidden",
+    }}
+  >
+    {/* Subtle pattern */}
+    <div
+      style={{
+        position:"absolute", inset:0, opacity:.05,
+        backgroundImage:`url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fff'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E")`,
+        pointerEvents:"none",
+      }}
+    />
 
-    {/* Floating decorative circles */}
-    <div className="dd-float" style={{ position: "absolute", top: "15%", left: "8%", width: 120, height: 120, borderRadius: "50%", border: `2px solid rgba(255,255,255,.08)`, animationDelay: "0s" }} />
-    <div className="dd-float" style={{ position: "absolute", bottom: "20%", right: "10%", width: 80, height: 80, borderRadius: "50%", border: `2px solid rgba(255,255,255,.06)`, animationDelay: "1.5s" }} />
+    {/* Floating rings */}
+    {[
+      { size:140, top:"12%", left:"6%",  delay:"0s"   },
+      { size:90,  top:"65%", right:"8%", delay:"1.8s" },
+      { size:60,  top:"35%", right:"15%",delay:"0.9s" },
+    ].map((r, i) => (
+      <div
+        key={i}
+        style={{
+          position:"absolute", width:r.size, height:r.size,
+          borderRadius:"50%", border:"1.5px solid rgba(255,255,255,.07)",
+          top:r.top, left:r.left, right:r.right,
+          animation:`dd-float 4s ease-in-out ${r.delay} infinite`,
+          pointerEvents:"none",
+        }}
+      />
+    ))}
 
-    <Container style={{ position: "relative" }}>
-      <div className="dd-float" style={{ display: "inline-block", marginBottom: 24 }}>
-        <span style={{ fontSize: 56 }}>🌍</span>
+    <Container style={{ position:"relative" }}>
+      {/* Globe */}
+      <div style={{ fontSize:"clamp(44px,6vw,64px)", marginBottom:24, animation:"dd-float 3.5s ease-in-out infinite" }}>
+        🌍
       </div>
-      <h2 style={{ fontFamily: T.serif, fontSize: mob ? 32 : 52, fontWeight: 800, color: T.white, margin: "0 0 20px", lineHeight: 1.15 }}>
+
+      <h2
+        style={{
+          fontFamily:T.serif,
+          fontSize:"clamp(28px,4.5vw,56px)",
+          fontWeight:800, color:T.white,
+          margin:"0 0 18px", lineHeight:1.12,
+          letterSpacing:"-0.02em",
+        }}
+      >
         Ready to Experience<br />{d.name}?
       </h2>
-      <p style={{ fontSize: mob ? 17 : 20, color: "rgba(255,255,255,.85)", maxWidth: 580, margin: "0 auto 44px", lineHeight: 1.65 }}>
+
+      <p
+        style={{
+          fontSize:"clamp(15px,1.6vw,20px)",
+          color:"rgba(255,255,255,.8)",
+          maxWidth:560, margin:"0 auto 44px",
+          lineHeight:1.7,
+        }}
+      >
         Start planning your unforgettable adventure today. Create memories that will last a lifetime.
       </p>
 
-      <div style={{ display: "flex", gap: 16, justifyContent: "center", flexWrap: "wrap", marginBottom: 56 }}>
-        <button style={{ padding: "18px 40px", background: T.white, color: T.green800, border: "none", borderRadius: T.r.md, fontSize: 17, fontWeight: 700, cursor: "pointer", fontFamily: T.sans, transition: "transform .2s, box-shadow .2s", boxShadow: T.shadow.lg }}
-          onMouseEnter={e => { e.currentTarget.style.transform = "translateY(-3px)"; e.currentTarget.style.boxShadow = T.shadow.xxl; }}
-          onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = T.shadow.lg; }}
+      {/* CTA buttons */}
+      <div style={{ display:"flex", gap:"clamp(10px,2vw,18px)", justifyContent:"center", flexWrap:"wrap", marginBottom:56 }}>
+        <button
+          onClick={() => navigate("/booking")}
+          style={{
+            padding:"clamp(14px,1.8vw,18px) clamp(28px,4vw,44px)",
+            background:T.white, color:T.g800,
+            border:"none", borderRadius:T.rMd,
+            fontSize:"clamp(14px,1.4vw,17px)", fontWeight:800,
+            cursor:"pointer", fontFamily:T.sans,
+            boxShadow:T.shLg, transition:"all .25s",
+          }}
+          onMouseEnter={e => { e.currentTarget.style.transform="translateY(-3px)"; e.currentTarget.style.boxShadow=T.shXl; }}
+          onMouseLeave={e => { e.currentTarget.style.transform="translateY(0)";    e.currentTarget.style.boxShadow=T.shLg; }}
         >
           📅 Book This Experience
         </button>
-        {d.countrySlug && (
-          <Link to={`/countries/${d.countrySlug}`} style={{ padding: "18px 40px", background: "transparent", color: T.white, border: "2px solid rgba(255,255,255,.35)", borderRadius: T.r.md, fontSize: 17, fontWeight: 600, cursor: "pointer", fontFamily: T.sans, textDecoration: "none", transition: "background .2s, border-color .2s", display: "inline-flex", alignItems: "center" }}
-            onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,.1)"; e.currentTarget.style.borderColor = "rgba(255,255,255,.55)"; }}
-            onMouseLeave={e => { e.currentTarget.style.background = "transparent"; e.currentTarget.style.borderColor = "rgba(255,255,255,.35)"; }}
+
+        {(d.countrySlug || d.country?.slug) && (
+          <Link
+            to={`/country/${d.countrySlug || d.country?.slug}`}
+            style={{
+              padding:"clamp(14px,1.8vw,18px) clamp(28px,4vw,44px)",
+              background:"transparent", color:T.white,
+              border:"2px solid rgba(255,255,255,.3)",
+              borderRadius:T.rMd, fontSize:"clamp(14px,1.4vw,17px)",
+              fontWeight:700, cursor:"pointer", fontFamily:T.sans,
+              textDecoration:"none", display:"inline-flex",
+              alignItems:"center", transition:"all .25s",
+            }}
+            onMouseEnter={e => { e.currentTarget.style.background="rgba(255,255,255,.1)"; e.currentTarget.style.borderColor="rgba(255,255,255,.55)"; }}
+            onMouseLeave={e => { e.currentTarget.style.background="transparent";           e.currentTarget.style.borderColor="rgba(255,255,255,.3)"; }}
           >
-            Explore {d.countryName}
+            Explore {d.countryName || d.country?.name} →
           </Link>
         )}
       </div>
 
-      {/* Trust Row */}
-      <div style={{ display: "flex", justifyContent: "center", gap: mob ? 28 : 56, flexWrap: "wrap" }}>
+      {/* Trust signals */}
+      <div style={{ display:"flex", justifyContent:"center", gap:"clamp(24px,5vw,64px)", flexWrap:"wrap" }}>
         {[
-          { icon: "🏆", text: "Top Rated" },
-          { icon: "✅", text: "Verified" },
-          { icon: "🔒", text: "Secure" },
-          { icon: "💬", text: "24 / 7 Support" },
+          { icon:"🏆", text:"Top Rated"   },
+          { icon:"✅", text:"Verified"    },
+          { icon:"🔒", text:"Secure"      },
+          { icon:"💬", text:"24/7 Support"},
         ].map((t, i) => (
-          <div key={i} style={{ color: "rgba(255,255,255,.75)", textAlign: "center" }}>
-            <div className="dd-wiggle" style={{ fontSize: 30, marginBottom: 8, cursor: "default" }}>{t.icon}</div>
-            <div style={{ fontSize: 13, fontWeight: 600, letterSpacing: ".3px" }}>{t.text}</div>
+          <div key={i} style={{ textAlign:"center", color:"rgba(255,255,255,.7)" }}>
+            <div style={{ fontSize:"clamp(24px,3vw,32px)", marginBottom:6 }}>{t.icon}</div>
+            <div style={{ fontSize:"clamp(11px,1vw,13px)", fontWeight:700, letterSpacing:".4px" }}>{t.text}</div>
           </div>
         ))}
       </div>
     </Container>
   </section>
-);
+));
+CTAFooter.displayName = "CTAFooter";
 
 /* ═══════════════════════════════════════════════════
-   ERROR STATE
-   ═══════════════════════════════════════════════════ */
-const ErrorState = ({ error, navigate }) => (
-  <div style={{ minHeight: "85vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: T.sans, padding: 48, textAlign: "center", background: T.gray50 }}>
-    <div className="dd-float" style={{ width: 150, height: 150, borderRadius: "50%", background: T.green50, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 72, marginBottom: 36, border: `3px solid ${T.green200}` }}>
-      🗺️
-    </div>
-    <h2 style={{ fontFamily: T.serif, fontSize: 38, fontWeight: 700, color: T.gray800, margin: "0 0 16px" }}>Destination Not Found</h2>
-    <p style={{ fontSize: 18, color: T.gray500, maxWidth: 480, margin: "0 0 36px", lineHeight: 1.65 }}>
-      {error || "The destination you're looking for doesn't exist or may have been removed."}
-    </p>
-    <div style={{ display: "flex", gap: 14 }}>
-      <button onClick={() => navigate(-1)} style={{ padding: "14px 32px", background: T.white, color: T.gray700, border: `2px solid ${T.gray300}`, borderRadius: T.r.md, fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: T.sans }}>Go Back</button>
-      <button onClick={() => navigate("/destinations")} style={{ padding: "14px 32px", background: T.green600, color: T.white, border: "none", borderRadius: T.r.md, fontSize: 15, fontWeight: 600, cursor: "pointer", fontFamily: T.sans }}>Browse Destinations</button>
-    </div>
-  </div>
-);
-
-/* ═══════════════════════════════════════════════════
-   API FETCH
-   ═══════════════════════════════════════════════════ */
-const fetchDestination = async (slug) => {
-  const res = await fetch(`/api/destinations/${slug}`);
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const json = await res.json();
-  if (!json.success) throw new Error(json.message || "Failed to fetch destination");
-  return json.data;
-};
-
-/* ═══════════════════════════════════════════════════
-   MAIN — DestinationDetails
-   ═══════════════════════════════════════════════════ */
-const DestinationDetails = () => {
-  const { slug, id, destinationId } = useParams();
-  const identifier = slug || id || destinationId;
+   ROOT COMPONENT
+═══════════════════════════════════════════════════ */
+const DestinationDetail = () => {
+  const { destinationId, slug, id } = useParams();
+  const identifier = destinationId || slug || id;
   const navigate = useNavigate();
-  const { mob } = useWindowSize();
+  const size = useWindowSize();
 
-  const [destination, setDestination] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { destination, loading, error } = useDestination(identifier);
 
-  useEffect(() => {
-    if (!identifier) return;
-    setLoading(true);
-    setError(null);
-    fetchDestination(identifier)
-      .then(setDestination)
-      .catch(e => setError(e.message))
-      .finally(() => setLoading(false));
-  }, [identifier]);
+  // Inject styles once
+  useEffect(() => { injectGlobalStyles(); }, []);
 
-  useEffect(() => { window.scrollTo(0, 0); }, [identifier]);
+  // Scroll to top on route change
+  useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, [identifier]);
 
-  /* Loading */
   if (loading) {
     return (
       <div style={{ fontFamily: T.sans }}>
-        <AnimationStyles />
-        <FullPageSkeleton mob={mob} />
+        <FullPageSkeleton mob={size.mob} />
       </div>
     );
   }
 
-  /* Error */
   if (error || !destination) {
     return (
       <div style={{ fontFamily: T.sans }}>
-        <AnimationStyles />
         <ErrorState error={error} navigate={navigate} />
       </div>
     );
   }
 
-  /* Success */
   const d = destination;
 
   return (
-    <div style={{ fontFamily: T.sans, color: T.gray800, background: T.white }}>
-      <AnimationStyles />
-
-      <Hero d={d} mob={mob} />
-      <QuickInfoBar d={d} mob={mob} />
-      <OverviewSection d={d} mob={mob} />
-      <Highlights d={d} mob={mob} />
-      <Activities d={d} mob={mob} />
-      <WildlifeSection d={d} mob={mob} />
-      <GallerySection d={d} mob={mob} />
-      <LocationSection d={d} mob={mob} />
-      <PracticalInfo d={d} mob={mob} />
-      <CTAFooter d={d} mob={mob} />
+    <div
+      style={{
+        fontFamily: T.sans,
+        color: T.f800,
+        background: T.white,
+        overflowX: "hidden",
+      }}
+    >
+      <Hero             d={d} size={size} />
+      <QuickInfoBar     d={d} size={size} />
+      <OverviewSection  d={d} size={size} navigate={navigate} />
+      <HighlightsSection d={d} size={size} />
+      <ActivitiesSection d={d} size={size} />
+      <WildlifeSection   d={d} />
+      <GallerySection    d={d} size={size} />
+      <ItinerarySection  d={d} size={size} />
+      <LocationSection   d={d} size={size} />
+      <PracticalSection  d={d} size={size} />
+      <FAQSection        d={d} />
+      <CTAFooter         d={d} size={size} navigate={navigate} />
     </div>
   );
 };
 
-export default DestinationDetails;
+export default DestinationDetail;

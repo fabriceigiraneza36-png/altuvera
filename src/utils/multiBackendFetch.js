@@ -9,14 +9,18 @@ const API_URL = import.meta.env.VITE_API_URL || 'https://backend-jd8f.onrender.c
  * Main fetch function - single backend only
  */
 export const multiBackendFetch = async (endpoint, options = {}) => {
-  const url = `${API_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const baseUrl = `${API_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const params = options.params || {};
+  const queryString = Object.keys(params).length ? `?${new URLSearchParams(params).toString()}` : "";
+  const url = `${baseUrl}${queryString}`;
+  const { params: _params, cache, cacheTime, cacheBust, retry, ...requestOptions } = options;
   
   const defaultOptions = {
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...requestOptions.headers,
     },
-    ...options,
+    ...requestOptions,
   };
 
   // Add auth token if available
@@ -40,7 +44,11 @@ export const multiBackendFetch = async (endpoint, options = {}) => {
     return data;
     
   } catch (error) {
-    console.error(`[API] Error fetching ${endpoint}:`, error);
+    if (error?.name !== "AbortError") {
+      console.error(`[API] Error fetching ${endpoint}:`, error);
+    } else {
+      console.warn(`[API] Aborted fetch: ${endpoint}`);
+    }
     throw error;
   }
 };

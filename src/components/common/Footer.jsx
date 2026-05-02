@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useUserAuth } from "../../context/UserAuthContext";
 import { getBrandLogoUrl } from "../../utils/seo";
@@ -19,23 +19,35 @@ import { FaXTwitter } from "react-icons/fa6";
 
 const Footer = () => {
   const { user } = useUserAuth();
-  const displayName = user?.fullName || user?.name || user?.email?.split("@")[0] || "";
+  const displayName =
+    user?.fullName || user?.name || user?.email?.split("@")[0] || "";
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 1280,
+    typeof window !== "undefined" ? window.innerWidth : 1280
   );
 
-  // Fetch countries from backend
-  const { countries: backendCountries, loading: countriesLoading } = useCountries();
+  // Fetch countries from backend — pass limit so we don't fetch everything
+  const {
+    countries: backendCountries,
+    loading: countriesLoading,
+    error: countriesError,
+  } = useCountries({ limit: 6 });
+
+// 👇 ADD THIS TEMPORARILY
+useEffect(() => {
+  console.log("=== FOOTER COUNTRIES DEBUG ===");
+  console.log("loading:", countriesLoading);
+  console.log("error:", countriesError);
+  console.log("backendCountries:", backendCountries);
+}, [backendCountries, countriesLoading, countriesError]);
+
 
   const handleSubscribe = (e) => {
     e.preventDefault();
     if (!email) return;
-
     setIsSubmitting(true);
-    // Simulate API call
     setTimeout(() => {
       setSubscribed(true);
       setIsSubmitting(false);
@@ -52,6 +64,56 @@ const Footer = () => {
     window.addEventListener("resize", onResize, { passive: true });
     return () => window.removeEventListener("resize", onResize);
   }, []);
+
+  // Stable mapping — only re-computes when backendCountries changes
+  const countries = useMemo(() => {
+    if (!backendCountries?.length) return [];
+    return backendCountries.slice(0, 6).map((country) => ({
+      name: country.name,
+      path: `/country/${
+        country.slug ||
+        country.id ||
+        country.name.toLowerCase().replace(/\s+/g, "-")
+      }`,
+    }));
+  }, [backendCountries]);
+
+  const quickLinks = [
+    { name: "Destinations", path: "/destinations" },
+    { name: "Services", path: "/services" },
+    { name: "Virtual Tours", path: "/virtual-tour" },
+    { name: "Travel Tips", path: "/tips" },
+    { name: "Gallery", path: "/gallery" },
+    { name: "FAQ", path: "/faq" },
+  ];
+
+  const socialIcons = [
+    {
+      icon: FiFacebook,
+      label: "Facebook",
+      url: "https://www.facebook.com/profile.php?id=61585299893450",
+    },
+    {
+      icon: FaXTwitter,
+      label: "X",
+      url: "https://x.com/altuverasafari",
+    },
+    {
+      icon: FiInstagram,
+      label: "Instagram",
+      url: "https://www.instagram.com/altu.vera1/",
+    },
+    {
+      icon: FiLinkedin,
+      label: "LinkedIn",
+      url: "https://www.linkedin.com/in/altuvera-safari-14b9033b5/",
+    },
+    {
+      icon: FiYoutube,
+      label: "YouTube",
+      url: "#",
+    },
+  ];
 
   const styles = {
     footer: {
@@ -70,82 +132,14 @@ const Footer = () => {
         "linear-gradient(180deg, rgba(5, 150, 105, 0.1) 0%, transparent 100%)",
       pointerEvents: "none",
     },
-    topSection: {
-      background: "linear-gradient(135deg, #059669 0%, #10B981 100%)",
-      padding: "60px 24px",
-      position: "relative",
-    },
-    topContainer: {
-      maxWidth: "1200px",
-      margin: "0 auto",
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-      gap: "40px",
-      alignItems: "center",
-    },
-    topContent: {},
-    topTitle: {
-      fontFamily: "'Playfair Display', serif",
-      fontSize: "32px",
-      fontWeight: "700",
-      color: "white",
-      marginBottom: "12px",
-    },
-    topText: {
-      fontSize: "16px",
-      color: "rgba(255, 255, 255, 0.9)",
-      lineHeight: "1.7",
-    },
-    subscribeForm: {
-      display: "flex",
-      gap: "12px",
-      flexWrap: "wrap",
-    },
-    subscribeInput: {
-      flex: "1",
-      minWidth: "250px",
-      padding: "18px 24px",
-      borderRadius: "14px",
-      border: "none",
-      fontSize: "15px",
-      outline: "none",
-      backgroundColor: "white",
-      color: "#1a1a1a",
-      boxSizing: "border-box",
-    },
-    subscribeButton: {
-      padding: "18px 32px",
-      backgroundColor: "#022C22",
-      color: "white",
-      border: "none",
-      borderRadius: "14px",
-      fontSize: "15px",
-      fontWeight: "600",
-      cursor: "pointer",
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-      transition: "all 0.3s ease",
-      whiteSpace: "nowrap",
-    },
-    successMessage: {
-      display: "flex",
-      alignItems: "center",
-      gap: "10px",
-      padding: "18px 24px",
-      backgroundColor: "rgba(255, 255, 255, 0.2)",
-      borderRadius: "14px",
-      color: "white",
-      fontWeight: "600",
-    },
     container: {
       maxWidth: "1400px",
       margin: "0 auto",
       padding: isMobile
         ? "56px 16px calc(26px + env(safe-area-inset-bottom, 0px))"
         : isTablet
-          ? "68px 20px 34px"
-          : "80px 24px 40px",
+        ? "68px 20px 34px"
+        : "80px 24px 40px",
       position: "relative",
       zIndex: 1,
     },
@@ -345,55 +339,141 @@ const Footer = () => {
       color: "#10B981",
       fontWeight: "600",
     },
+    // Loading skeleton styles
+    skeletonItem: {
+      height: isMobile ? "14px" : "15px",
+      backgroundColor: "rgba(255,255,255,0.08)",
+      borderRadius: "6px",
+      marginBottom: isMobile ? "10px" : "14px",
+      animation: "pulse 1.5s ease-in-out infinite",
+    },
+    errorText: {
+      fontSize: isMobile ? "13px" : "14px",
+      color: "#f87171",
+      lineHeight: "1.5",
+    },
   };
 
-  const countries = backendCountries?.slice(0, 6).map(country => ({
-    name: country.name,
-    path: `/country/${country.slug || country.id || country.name.toLowerCase().replace(/\s+/g, '-')}`,
-  })) || [];
+  // Shared hover handlers for nav links
+  const onLinkMouseOver = (e) => {
+    const link = e.currentTarget;
+    link.style.color = "white";
+    link.style.transform = "translateX(8px)";
+    const underline = link.querySelector(".link-underline");
+    const icon = link.querySelector(".link-icon");
+    if (underline) {
+      underline.style.transform = "scaleX(1)";
+      underline.style.transformOrigin = "left";
+    }
+    if (icon) {
+      icon.style.fontSize = "14px";
+      icon.style.opacity = "1";
+      icon.style.marginRight = "8px";
+    }
+  };
 
-  const quickLinks = [
-    { name: "Destinations", path: "/destinations" },
-    { name: "Services", path: "/services" },
-    { name: "Virtual Tours", path: "/virtual-tour" },
-    { name: "Travel Tips", path: "/tips" },
-    { name: "Gallery", path: "/gallery" },
-    { name: "FAQ", path: "/faq" },
-  ];
+  const onLinkMouseOut = (e) => {
+    const link = e.currentTarget;
+    link.style.color = "rgba(255,255,255,0.65)";
+    link.style.transform = "translateX(0)";
+    const underline = link.querySelector(".link-underline");
+    const icon = link.querySelector(".link-icon");
+    if (underline) {
+      underline.style.transform = "scaleX(0)";
+      underline.style.transformOrigin = "right";
+    }
+    if (icon) {
+      icon.style.fontSize = "0px";
+      icon.style.opacity = "0";
+      icon.style.marginRight = "0";
+    }
+  };
 
-  const socialIcons = [
-    {
-      icon: FiFacebook,
-      label: "Facebook",
-      url: "https://www.facebook.com/profile.php?id=61585299893450",
-    },
-    {
-      icon: FaXTwitter,
-      label: "X",
-      url: "https://x.com/altuverasafari",
-    },
-    {
-      icon: FiInstagram,
-      label: "Instagram",
-      url: "https://www.instagram.com/altu.vera1/",
-    },
-    {
-      icon: FiLinkedin,
-      label: "LinkedIn",
-      url: "https://www.linkedin.com/in/altuvera-safari-14b9033b5/",
-    },
-    {
-      icon: FiYoutube,
-      label: "YouTube",
-      url: "#",
-    },
-  ];
+  const renderDestinations = () => {
+    if (countriesLoading) {
+      // Skeleton shimmer placeholders
+      return Array.from({ length: 5 }).map((_, i) => (
+        <li key={i} style={styles.linkItem}>
+          <div
+            style={{
+              ...styles.skeletonItem,
+              width: `${55 + Math.random() * 30}%`,
+            }}
+          />
+        </li>
+      ));
+    }
+
+    if (countriesError) {
+      return (
+        <li style={styles.linkItem}>
+          <span style={styles.errorText}>
+            ⚠ Could not load destinations.
+            <br />
+            <Link
+              to="/destinations"
+              style={{
+                color: "#10B981",
+                textDecoration: "underline",
+                fontSize: "inherit",
+              }}
+            >
+              Browse all destinations →
+            </Link>
+          </span>
+        </li>
+      );
+    }
+
+    if (countries.length === 0) {
+      return (
+        <li style={styles.linkItem}>
+          <Link
+            to="/destinations"
+            style={styles.link}
+            onMouseOver={onLinkMouseOver}
+            onMouseOut={onLinkMouseOut}
+          >
+            <FiArrowRight className="link-icon" style={styles.linkIcon} />
+            View all destinations
+            <div className="link-underline" style={styles.linkUnderline} />
+          </Link>
+        </li>
+      );
+    }
+
+    return countries.map((country) => (
+      <li key={country.name} style={styles.linkItem}>
+        <Link
+          to={country.path}
+          style={styles.link}
+          onMouseOver={onLinkMouseOver}
+          onMouseOut={onLinkMouseOut}
+        >
+          <FiArrowRight className="link-icon" style={styles.linkIcon} />
+          {country.name}
+          <div className="link-underline" style={styles.linkUnderline} />
+        </Link>
+      </li>
+    ));
+  };
 
   return (
     <footer style={styles.footer}>
-      <div style={styles.pattern}></div>
+      {/* Pulse animation for skeleton */}
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.4; }
+        }
+      `}</style>
+
+      <div style={styles.pattern} />
+
       <div style={styles.container}>
         <div style={styles.grid}>
+
+          {/* ── Column 1: Brand ── */}
           <div style={styles.column}>
             <Link
               to="/"
@@ -413,17 +493,29 @@ const Footer = () => {
                 const glow = e.currentTarget.querySelector(".footer-logo-glow");
                 if (img) {
                   img.style.transform = "translateY(0) scale(1)";
-                  img.style.filter = "drop-shadow(0 8px 18px rgba(0,0,0,0.2))";
+                  img.style.filter =
+                    "drop-shadow(0 8px 18px rgba(0,0,0,0.2))";
                 }
                 if (glow) glow.style.opacity = "0";
               }}
             >
               <div style={styles.logoWrapper}>
-                <div className="footer-logo-glow" style={styles.logoGlow}></div>
-                <img src={getBrandLogoUrl()} alt="Altuvera logo" style={styles.logoImg} onError={(e) => { e.currentTarget.src = getBrandLogoUrl(); }} />
+                <div
+                  className="footer-logo-glow"
+                  style={styles.logoGlow}
+                />
+                <img
+                  src={getBrandLogoUrl()}
+                  alt="Altuvera logo"
+                  style={styles.logoImg}
+                  onError={(e) => {
+                    e.currentTarget.src = getBrandLogoUrl();
+                  }}
+                />
               </div>
               <span style={styles.logoText}>Altuvera</span>
             </Link>
+
             <p style={styles.tagline}>
               " True adventure in High Places & Deep Culture "
               <br />
@@ -431,12 +523,15 @@ const Footer = () => {
               Your gateway to extraordinary East African experiences. We craft
               journeys that transform, inspire, and create lasting memories.
             </p>
+
             <div style={styles.socialLinks}>
               {socialIcons.map((social, index) => (
                 <a
                   key={index}
                   href={social.url}
                   aria-label={social.label}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   style={styles.socialLink}
                   onMouseOver={(e) => {
                     e.currentTarget.style.backgroundColor = "#059669";
@@ -454,130 +549,37 @@ const Footer = () => {
             </div>
           </div>
 
+          {/* ── Column 2: Destinations ── */}
           <div style={styles.column}>
             <h3 style={styles.columnTitle}>Destinations</h3>
-            <ul style={styles.linksList}>
-              {countriesLoading ? (
-                <li style={styles.linkItem}>
-                  <span style={{ ...styles.link, cursor: 'default' }}>Loading destinations...</span>
-                </li>
-              ) : countries.length > 0 ? (
-                countries.map((country) => (
-                  <li key={country.name} style={styles.linkItem}>
-                    <Link
-                      to={country.path}
-                      style={styles.link}
-                      onMouseOver={(e) => {
-                        const link = e.currentTarget;
-                        link.style.color = "white";
-                        link.style.transform = "translateX(8px)";
-                        const underline = link.querySelector(".link-underline");
-                        const icon = link.querySelector(".link-icon");
-                        if (underline) {
-                          underline.style.transform = "scaleX(1)";
-                          underline.style.transformOrigin = "left";
-                        }
-                        if (icon) {
-                          icon.style.fontSize = "14px";
-                          icon.style.opacity = "1";
-                          icon.style.marginRight = "8px";
-                        }
-                      }}
-                      onMouseOut={(e) => {
-                        const link = e.currentTarget;
-                        link.style.color = "rgba(255,255,255,0.65)";
-                        link.style.transform = "translateX(0)";
-                        const underline = link.querySelector(".link-underline");
-                        const icon = link.querySelector(".link-icon");
-                        if (underline) {
-                          underline.style.transform = "scaleX(0)";
-                          underline.style.transformOrigin = "right";
-                        }
-                        if (icon) {
-                          icon.style.fontSize = "0px";
-                          icon.style.opacity = "0";
-                          icon.style.marginRight = "0";
-                        }
-                      }}
-                    >
-                      <FiArrowRight
-                        className="link-icon"
-                        style={styles.linkIcon}
-                      />
-                      {country.name}
-                      <div
-                        className="link-underline"
-                        style={styles.linkUnderline}
-                      ></div>
-                    </Link>
-                  </li>
-                ))
-              ) : (
-                <li style={styles.linkItem}>
-                  <span style={{ ...styles.link, cursor: 'default' }}>No destinations available</span>
-                </li>
-              )}
-            </ul>
+            <ul style={styles.linksList}>{renderDestinations()}</ul>
           </div>
 
+          {/* ── Column 3: Quick Links ── */}
           <div style={styles.column}>
             <h3 style={styles.columnTitle}>Quick Links</h3>
             <ul style={styles.linksList}>
-              {quickLinks.map((link) => (
-                <li key={link.name} style={styles.linkItem}>
+              {quickLinks.map((ql) => (
+                <li key={ql.name} style={styles.linkItem}>
                   <Link
-                    to={link.path}
+                    to={ql.path}
                     style={styles.link}
-                    onMouseOver={(e) => {
-                      const el = e.currentTarget;
-                      el.style.color = "white";
-                      el.style.transform = "translateX(8px)";
-                      const underline = el.querySelector(".link-underline");
-                      const icon = el.querySelector(".link-icon");
-                      if (underline) {
-                        underline.style.transform = "scaleX(1)";
-                        underline.style.transformOrigin = "left";
-                      }
-                      if (icon) {
-                        icon.style.fontSize = "14px";
-                        icon.style.opacity = "1";
-                        icon.style.marginRight = "8px";
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      const el = e.currentTarget;
-                      el.style.color = "rgba(255,255,255,0.65)";
-                      el.style.transform = "translateX(0)";
-                      const underline = el.querySelector(".link-underline");
-                      const icon = el.querySelector(".link-icon");
-                      if (underline) {
-                        underline.style.transform = "scaleX(0)";
-                        underline.style.transformOrigin = "right";
-                      }
-                      if (icon) {
-                        icon.style.fontSize = "0px";
-                        icon.style.opacity = "0";
-                        icon.style.marginRight = "0";
-                      }
-                    }}
+                    onMouseOver={onLinkMouseOver}
+                    onMouseOut={onLinkMouseOut}
                   >
-                    <FiArrowRight
-                      className="link-icon"
-                      style={styles.linkIcon}
-                    />
-                    {link.name}
-                    <div
-                      className="link-underline"
-                      style={styles.linkUnderline}
-                    ></div>
+                    <FiArrowRight className="link-icon" style={styles.linkIcon} />
+                    {ql.name}
+                    <div className="link-underline" style={styles.linkUnderline} />
                   </Link>
                 </li>
               ))}
             </ul>
           </div>
 
+          {/* ── Column 4: Contact ── */}
           <div style={styles.column}>
             <h3 style={styles.columnTitle}>Contact Us</h3>
+
             <div style={styles.contactItem}>
               <div style={styles.contactIcon}>
                 <FiMapPin size={18} />
@@ -588,6 +590,7 @@ const Footer = () => {
                 Musanze, Rwanda
               </span>
             </div>
+
             <div style={styles.contactItem}>
               <div style={styles.contactIcon}>
                 <FiPhone size={18} />
@@ -598,6 +601,7 @@ const Footer = () => {
                 +250 792 352 409
               </span>
             </div>
+
             <div style={styles.contactItem}>
               <div style={styles.contactIcon}>
                 <FiMail size={18} />
@@ -611,47 +615,39 @@ const Footer = () => {
           </div>
         </div>
 
-        <div style={styles.divider}></div>
+        {/* ── Divider ── */}
+        <div style={styles.divider} />
 
+        {/* ── Bottom Bar ── */}
         <div style={styles.bottom}>
           <p style={styles.copyright}>
-            © {currentYear} Altuvera. All rights reserved. {displayName ? `Made for you, ${displayName}.` : "Made for you."}
+            © {currentYear} Altuvera. All rights reserved.{" "}
+            {displayName ? `Made for you, ${displayName}.` : "Made for you."}
           </p>
+
           <div style={styles.certifications}>
             <span style={styles.certBadge}>🌱 Eco-Certified</span>
             <span style={styles.certBadge}>⭐ ATTA Member</span>
           </div>
+
           <div style={styles.bottomLinks}>
-            <Link
-              to="/privacy"
-              style={styles.bottomLink}
-              onMouseOver={(e) => (e.target.style.color = "#10B981")}
-              onMouseOut={(e) =>
-                (e.target.style.color = "rgba(255,255,255,0.6)")
-              }
-            >
-              Privacy Policy
-            </Link>
-            <Link
-              to="/terms"
-              style={styles.bottomLink}
-              onMouseOver={(e) => (e.target.style.color = "#10B981")}
-              onMouseOut={(e) =>
-                (e.target.style.color = "rgba(255,255,255,0.6)")
-              }
-            >
-              Terms of Service
-            </Link>
-            <Link
-              to="/cookies"
-              style={styles.bottomLink}
-              onMouseOver={(e) => (e.target.style.color = "#10B981")}
-              onMouseOut={(e) =>
-                (e.target.style.color = "rgba(255,255,255,0.6)")
-              }
-            >
-              Cookie Policy
-            </Link>
+            {[
+              { label: "Privacy Policy", path: "/privacy" },
+              { label: "Terms of Service", path: "/terms" },
+              { label: "Cookie Policy", path: "/cookies" },
+            ].map((item) => (
+              <Link
+                key={item.label}
+                to={item.path}
+                style={styles.bottomLink}
+                onMouseOver={(e) => (e.target.style.color = "#10B981")}
+                onMouseOut={(e) =>
+                  (e.target.style.color = "rgba(255,255,255,0.6)")
+                }
+              >
+                {item.label}
+              </Link>
+            ))}
           </div>
         </div>
       </div>

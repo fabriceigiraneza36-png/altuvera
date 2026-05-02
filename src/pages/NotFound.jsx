@@ -1,259 +1,234 @@
-import React, { useCallback, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { 
-  FiHome, 
-  FiSearch, 
-  FiMapPin, 
+// src/pages/NotFound.jsx
+import React, { useState, useCallback, useMemo } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  FiHome,
+  FiSearch,
+  FiMapPin,
   FiArrowRight,
-  FiCompass 
-} from 'react-icons/fi';
-import SEO from '../components/common/SEO';
+  FiCompass,
+  FiBookOpen,
+  FiMail,
+} from "react-icons/fi";
+import SEO from "../components/common/SEO";
 
-/** @type {NavigationSuggestion[]} */
-const NAVIGATION_SUGGESTIONS = [
-  { 
-    icon: FiMapPin, 
-    text: 'Explore Destinations', 
-    path: '/destinations',
-    ariaLabel: 'Navigate to destinations page'
+/* ═══════════════════════════════════════════════════════
+   CONSTANTS
+   ═══════════════════════════════════════════════════════ */
+const SUGGESTIONS = [
+  {
+    icon:     FiMapPin,
+    text:     "Explore Destinations",
+    sub:      "Discover East Africa's finest locations",
+    path:     "/destinations",
+    ariaLabel:"Navigate to destinations",
   },
-  { 
-    icon: FiSearch, 
-    text: 'Search Our Services', 
-    path: '/services',
-    ariaLabel: 'Navigate to services page'
+  {
+    icon:     FiSearch,
+    text:     "Browse Services",
+    sub:      "Find the perfect travel package for you",
+    path:     "/services",
+    ariaLabel:"Navigate to services",
   },
-  { 
-    icon: FiHome, 
-    text: 'Return Home', 
-    path: '/',
-    ariaLabel: 'Navigate to home page'
+  {
+    icon:     FiBookOpen,
+    text:     "Read Travel Stories",
+    sub:      "Inspiration from our community of explorers",
+    path:     "/posts",
+    ariaLabel:"Navigate to blog posts",
+  },
+  {
+    icon:     FiMail,
+    text:     "Contact Us",
+    sub:      "Our team is happy to point you in the right direction",
+    path:     "/contact",
+    ariaLabel:"Navigate to contact page",
   },
 ];
 
-/** Design system color tokens */
-const COLORS = {
-  primary: {
-    main: '#059669',
-    light: '#10B981',
-    lighter: '#D1FAE5',
-    lightest: '#F0FDF4',
-  },
-  neutral: {
-    dark: '#1a1a1a',
-    medium: '#6B7280',
-    light: '#FFFFFF',
-  },
-  shadow: {
-    soft: '0 10px 40px rgba(0, 0, 0, 0.08)',
-    medium: '0 4px 20px rgba(0, 0, 0, 0.1)',
-  },
+const PATTERN = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23059669' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`;
+
+/* ═══════════════════════════════════════════════════════
+   INTERNAL: primary / secondary buttons (replaces missing Button)
+   ═══════════════════════════════════════════════════════ */
+const PrimaryButton = ({ to, children, icon }) => {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <Link
+      to={to}
+      onMouseOver={() => setHovered(true)}
+      onMouseOut={()  => setHovered(false)}
+      style={{
+        display:        "inline-flex",
+        alignItems:     "center",
+        gap:            10,
+        padding:        "14px 28px",
+        borderRadius:   9999,
+        background:     hovered
+          ? "linear-gradient(135deg,#047857,#059669)"
+          : "linear-gradient(135deg,#059669,#10B981)",
+        color:          "white",
+        fontWeight:     700,
+        fontSize:       15,
+        textDecoration: "none",
+        boxShadow:      hovered
+          ? "0 14px 40px rgba(5,150,105,0.40)"
+          : "0 8px 24px rgba(5,150,105,0.28)",
+        transform:      hovered ? "translateY(-2px) scale(1.02)" : "translateY(0) scale(1)",
+        transition:     "all 0.3s cubic-bezier(0.4,0,0.2,1)",
+        letterSpacing:  "-0.01em",
+        position:       "relative",
+        overflow:       "hidden",
+        border:         "none",
+      }}
+    >
+      {icon}
+      {children}
+    </Link>
+  );
 };
 
-/** SVG pattern for background decoration */
-const BACKGROUND_PATTERN = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23059669' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`;
+const SecondaryButton = ({ to, children }) => {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <Link
+      to={to}
+      onMouseOver={() => setHovered(true)}
+      onMouseOut={()  => setHovered(false)}
+      style={{
+        display:        "inline-flex",
+        alignItems:     "center",
+        gap:            8,
+        padding:        "13px 28px",
+        borderRadius:   9999,
+        background:     hovered ? "#ECFDF5" : "white",
+        color:          "#059669",
+        fontWeight:     700,
+        fontSize:       15,
+        textDecoration: "none",
+        border:         `2px solid ${hovered ? "#059669" : "#D1FAE5"}`,
+        transform:      hovered ? "translateY(-2px)" : "translateY(0)",
+        boxShadow:      hovered
+          ? "0 8px 24px rgba(5,150,105,0.14)"
+          : "0 2px 8px rgba(5,150,105,0.08)",
+        transition:     "all 0.3s cubic-bezier(0.4,0,0.2,1)",
+      }}
+    >
+      {children}
+      <FiArrowRight
+        size={16}
+        style={{
+          transform:  hovered ? "translateX(3px)" : "translateX(0)",
+          transition: "transform 0.3s ease",
+        }}
+      />
+    </Link>
+  );
+};
 
-/**
- * Floating decorative element component
- * @param {Object} props
- * @param {string} props.size - Element size (CSS value)
- * @param {Object} props.position - Position coordinates
- */
-const FloatingElement = ({ size, position }) => (
-  <div
-    aria-hidden="true"
-    style={{
-      position: 'absolute',
-      width: size,
-      height: size,
-      borderRadius: '50%',
-      background: `radial-gradient(circle, rgba(5, 150, 105, 0.1) 0%, transparent 70%)`,
-      pointerEvents: 'none',
-      ...position,
-    }}
-  />
-);
-
-/**
- * Suggestion link card component with hover interactions
- * @param {Object} props
- * @param {NavigationSuggestion} props.suggestion - Suggestion data
- * @param {number} props.index - Item index for animation delay
- */
+/* ═══════════════════════════════════════════════════════
+   SUGGESTION CARD
+   ═══════════════════════════════════════════════════════ */
 const SuggestionCard = ({ suggestion, index }) => {
-  const [isHovered, setIsHovered] = React.useState(false);
-  const IconComponent = suggestion.icon;
-
-  const cardStyles = useMemo(() => ({
-    display: 'flex',
-    alignItems: 'center',
-    gap: '16px',
-    padding: '18px 24px',
-    backgroundColor: isHovered ? COLORS.primary.lighter : COLORS.primary.lightest,
-    borderRadius: '16px',
-    textDecoration: 'none',
-    color: COLORS.neutral.dark,
-    fontWeight: '500',
-    fontSize: '15px',
-    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    transform: isHovered ? 'translateX(12px)' : 'translateX(0)',
-    animationDelay: `${index * 100}ms`,
-  }), [isHovered, index]);
-
-  const iconContainerStyles = useMemo(() => ({
-    width: '44px',
-    height: '44px',
-    borderRadius: '12px',
-    backgroundColor: isHovered ? COLORS.primary.main : COLORS.primary.lighter,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: isHovered ? COLORS.neutral.light : COLORS.primary.main,
-    transition: 'all 0.3s ease',
-    flexShrink: 0,
-  }), [isHovered]);
+  const [hovered, setHovered] = useState(false);
+  const Icon = suggestion.icon;
 
   return (
     <Link
       to={suggestion.path}
-      style={cardStyles}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onFocus={() => setIsHovered(true)}
-      onBlur={() => setIsHovered(false)}
       aria-label={suggestion.ariaLabel}
+      onMouseOver={() => setHovered(true)}
+      onMouseOut={()  => setHovered(false)}
+      onFocus={()    => setHovered(true)}
+      onBlur={()     => setHovered(false)}
+      style={{
+        display:        "flex",
+        alignItems:     "center",
+        gap:            16,
+        padding:        "16px 20px",
+        borderRadius:   16,
+        textDecoration: "none",
+        backgroundColor: hovered ? "#D1FAE5" : "#F0FDF4",
+        border:         `1px solid ${hovered ? "#A7F3D0" : "#D1FAE5"}`,
+        transform:      hovered ? "translateX(8px)" : "translateX(0)",
+        boxShadow:      hovered
+          ? "0 6px 20px rgba(5,150,105,0.12)"
+          : "0 1px 4px rgba(5,150,105,0.06)",
+        transition:     "all 0.3s cubic-bezier(0.4,0,0.2,1)",
+        animationDelay: `${index * 80}ms`,
+      }}
     >
-      <span style={iconContainerStyles}>
-        <IconComponent size={20} aria-hidden="true" />
-      </span>
-      <span>{suggestion.text}</span>
-      <FiArrowRight 
-        size={18} 
-        style={{ 
-          marginLeft: 'auto', 
-          color: COLORS.primary.main,
-          transform: isHovered ? 'translateX(4px)' : 'translateX(0)',
-          transition: 'transform 0.3s ease',
-        }} 
+      {/* Icon */}
+      <div
+        style={{
+          width:          46,
+          height:         46,
+          borderRadius:   14,
+          backgroundColor: hovered ? "#059669" : "#D1FAE5",
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "center",
+          color:          hovered ? "white" : "#059669",
+          flexShrink:     0,
+          transition:     "all 0.3s ease",
+          boxShadow:      hovered ? "0 6px 16px rgba(5,150,105,0.28)" : "none",
+        }}
+      >
+        <Icon size={20} aria-hidden="true" />
+      </div>
+
+      {/* Text */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{
+          fontSize:   14.5, fontWeight: 700,
+          color:      "#064E3B", lineHeight: 1.3, marginBottom: 2,
+        }}>
+          {suggestion.text}
+        </div>
+        <div style={{ fontSize: 12.5, color: "#6B7280", lineHeight: 1.4 }}>
+          {suggestion.sub}
+        </div>
+      </div>
+
+      {/* Arrow */}
+      <FiArrowRight
+        size={17}
+        style={{
+          color:      "#059669",
+          transform:  hovered ? "translateX(4px)" : "translateX(0)",
+          transition: "transform 0.3s ease",
+          flexShrink: 0,
+        }}
         aria-hidden="true"
       />
     </Link>
   );
 };
 
-/**
- * 404 Not Found Page Component
- * 
- * Displays a user-friendly error page when a route is not found.
- * Features animated elements, navigation suggestions, and clear CTAs.
- * 
- * @component
- * @example
- * return <NotFound />
- */
+/* ═══════════════════════════════════════════════════════
+   FLOATING DECORATION
+   ═══════════════════════════════════════════════════════ */
+const Blob = ({ style }) => (
+  <div
+    aria-hidden="true"
+    style={{
+      position:      "absolute",
+      borderRadius:  "50%",
+      pointerEvents: "none",
+      ...style,
+    }}
+  />
+);
+
+/* ═══════════════════════════════════════════════════════
+   MAIN PAGE
+   ═══════════════════════════════════════════════════════ */
 const NotFound = () => {
   const navigate = useNavigate();
 
-  const handleKeyDown = useCallback((event) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      navigate('/');
-    }
+  const handleKeyDown = useCallback((e) => {
+    if (e.key === "Enter" || e.key === " ") navigate("/");
   }, [navigate]);
-
-  const styles = useMemo(() => ({
-    container: {
-      minHeight: '100vh',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: COLORS.primary.lightest,
-      padding: 'clamp(24px, 5vw, 60px)',
-      position: 'relative',
-      overflow: 'hidden',
-    },
-    pattern: {
-      position: 'absolute',
-      inset: 0,
-      backgroundImage: BACKGROUND_PATTERN,
-      pointerEvents: 'none',
-    },
-    content: {
-      textAlign: 'center',
-      position: 'relative',
-      zIndex: 1,
-      maxWidth: '640px',
-      width: '100%',
-    },
-    illustration: {
-      marginBottom: 'clamp(32px, 5vw, 48px)',
-      position: 'relative',
-      display: 'inline-block',
-    },
-    errorCode: {
-      fontFamily: "'Playfair Display', Georgia, serif",
-      fontSize: 'clamp(120px, 20vw, 200px)',
-      fontWeight: '700',
-      background: `linear-gradient(135deg, ${COLORS.primary.main} 0%, ${COLORS.primary.light} 100%)`,
-      WebkitBackgroundClip: 'text',
-      WebkitTextFillColor: 'transparent',
-      backgroundClip: 'text',
-      lineHeight: '1',
-      margin: 0,
-      letterSpacing: '-0.02em',
-    },
-    compassIcon: {
-      position: 'absolute',
-      top: '50%',
-      left: '50%',
-      transform: 'translate(-50%, -50%)',
-      opacity: 0.15,
-      pointerEvents: 'none',
-    },
-    heading: {
-      fontFamily: "'Playfair Display', Georgia, serif",
-      fontSize: 'clamp(28px, 4vw, 40px)',
-      fontWeight: '700',
-      color: COLORS.neutral.dark,
-      marginBottom: '16px',
-      lineHeight: '1.2',
-    },
-    description: {
-      fontSize: 'clamp(16px, 2vw, 18px)',
-      color: COLORS.neutral.medium,
-      marginBottom: 'clamp(32px, 5vw, 48px)',
-      lineHeight: '1.8',
-      maxWidth: '500px',
-      marginLeft: 'auto',
-      marginRight: 'auto',
-    },
-    buttonGroup: {
-      display: 'flex',
-      gap: '16px',
-      justifyContent: 'center',
-      marginBottom: 'clamp(40px, 6vw, 60px)',
-      flexWrap: 'wrap',
-    },
-    suggestionsPanel: {
-      backgroundColor: COLORS.neutral.light,
-      borderRadius: '28px',
-      padding: 'clamp(28px, 4vw, 44px)',
-      boxShadow: COLORS.shadow.soft,
-      border: `1px solid ${COLORS.primary.lighter}`,
-    },
-    suggestionsHeading: {
-      fontSize: '16px',
-      fontWeight: '600',
-      color: COLORS.neutral.dark,
-      marginBottom: '24px',
-      textTransform: 'uppercase',
-      letterSpacing: '0.5px',
-    },
-    suggestionsList: {
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '14px',
-    },
-  }), []);
 
   return (
     <>
@@ -261,88 +236,251 @@ const NotFound = () => {
         title="Page Not Found"
         description="The page you're looking for cannot be found. Explore our destinations or return home."
         url="/404"
-        keywords={["404", "page not found", "safari adventures"]}
+        keywords={["404", "page not found", "not found", "error"]}
       />
 
-      <main style={styles.container} role="main">
-        <div style={styles.pattern} aria-hidden="true" />
-        
-        {/* Decorative floating elements */}
-        <FloatingElement 
-          size="400px" 
-          position={{ top: '-100px', right: '-100px' }} 
-        />
-        <FloatingElement 
-          size="300px" 
-          position={{ bottom: '-50px', left: '-50px' }} 
+      <main
+        role="main"
+        style={{
+          minHeight:      "100vh",
+          display:        "flex",
+          alignItems:     "center",
+          justifyContent: "center",
+          backgroundColor:"#F0FDF4",
+          padding:        "clamp(24px,5vw,60px)",
+          position:       "relative",
+          overflow:       "hidden",
+          fontFamily:     "'Inter', system-ui, sans-serif",
+        }}
+      >
+        {/* Background pattern */}
+        <div
+          aria-hidden="true"
+          style={{
+            position:        "absolute",
+            inset:           0,
+            backgroundImage: PATTERN,
+            pointerEvents:   "none",
+          }}
         />
 
-        <article style={styles.content}>
-          {/* Error illustration */}
-          <figure style={styles.illustration}>
-            <h1 style={styles.errorCode} aria-label="Error 404">
+        {/* Decorative blobs */}
+        <Blob style={{
+          width: "clamp(200px,30vw,400px)", height: "clamp(200px,30vw,400px)",
+          top: "-80px", right: "-80px",
+          background: "radial-gradient(circle, rgba(52,211,153,0.18) 0%, rgba(52,211,153,0.06) 50%, transparent 75%)",
+        }} />
+        <Blob style={{
+          width: "clamp(160px,22vw,300px)", height: "clamp(160px,22vw,300px)",
+          bottom: "-60px", left: "-60px",
+          background: "radial-gradient(circle, rgba(16,185,129,0.14) 0%, rgba(16,185,129,0.04) 50%, transparent 75%)",
+        }} />
+        <Blob style={{
+          width: 180, height: 180,
+          top: "40%", left: "10%",
+          background: "radial-gradient(circle, rgba(5,150,105,0.06) 0%, transparent 70%)",
+        }} />
+
+        {/* Main card */}
+        <article
+          style={{
+            position:        "relative",
+            zIndex:          1,
+            maxWidth:        680,
+            width:           "100%",
+            textAlign:       "center",
+          }}
+        >
+          {/* ── 404 number ── */}
+          <div style={{ position: "relative", display: "inline-block", marginBottom: 8 }}>
+            <h1
+              aria-label="Error 404"
+              style={{
+                fontFamily:            "'Playfair Display', Georgia, serif",
+                fontSize:              "clamp(110px,18vw,190px)",
+                fontWeight:            800,
+                background:            "linear-gradient(135deg,#059669 0%,#10B981 50%,#34D399 100%)",
+                WebkitBackgroundClip:  "text",
+                WebkitTextFillColor:   "transparent",
+                backgroundClip:        "text",
+                lineHeight:            1,
+                margin:                0,
+                letterSpacing:         "-0.03em",
+                filter:                "drop-shadow(0 4px 24px rgba(5,150,105,0.18))",
+              }}
+            >
               404
             </h1>
-            <FiCompass 
-              size={80} 
-              style={styles.compassIcon}
-              aria-hidden="true"
-            />
-          </figure>
 
-          {/* Error message */}
-          <h2 style={styles.heading}>Lost in the Wilderness?</h2>
-          <p style={styles.description}>
-            Even the best explorers sometimes take a wrong turn. The page you're 
-            looking for seems to have wandered off into the savanna. Let's get 
-            you back on track!
+            {/* Compass watermark behind 404 */}
+            <FiCompass
+              size={100}
+              aria-hidden="true"
+              style={{
+                position:  "absolute",
+                top:       "50%",
+                left:      "50%",
+                transform: "translate(-50%,-50%)",
+                color:     "#059669",
+                opacity:   0.06,
+                pointerEvents: "none",
+              }}
+            />
+          </div>
+
+          {/* Divider pill */}
+          <div style={{
+            display:        "inline-flex",
+            alignItems:     "center",
+            gap:            8,
+            padding:        "6px 18px",
+            borderRadius:   9999,
+            backgroundColor:"#ECFDF5",
+            border:         "1px solid #A7F3D0",
+            marginBottom:   24,
+          }}>
+            <span style={{
+              width: 8, height: 8, borderRadius: "50%",
+              backgroundColor: "#10B981",
+              boxShadow: "0 0 0 3px rgba(16,185,129,0.18)",
+            }} />
+            <span style={{ fontSize: 12.5, fontWeight: 700, color: "#047857", letterSpacing: "0.04em", textTransform: "uppercase" }}>
+              Page Not Found
+            </span>
+          </div>
+
+          {/* Heading */}
+          <h2
+            style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontSize:   "clamp(26px,4vw,40px)",
+              fontWeight: 800,
+              color:      "#064E3B",
+              marginBottom: 14,
+              lineHeight: 1.2,
+              letterSpacing: "-0.02em",
+            }}
+          >
+            Lost in the Wilderness?
+          </h2>
+
+          {/* Description */}
+          <p
+            style={{
+              fontSize:   "clamp(15px,2vw,17px)",
+              color:      "#4B5563",
+              marginBottom: "clamp(32px,5vw,48px)",
+              lineHeight: 1.8,
+              maxWidth:   500,
+              marginLeft: "auto",
+              marginRight:"auto",
+            }}
+          >
+            Even the best explorers take a wrong turn sometimes. The page you're
+            looking for seems to have wandered off into the savanna — but don't
+            worry, we'll get you back on track.
           </p>
 
-          {/* Primary actions */}
-          <nav style={styles.buttonGroup} aria-label="Primary navigation">
-            <Button 
-              to="/" 
-              variant="primary" 
-              size="large" 
-              icon={<FiHome size={18} />}
-              aria-label="Return to home page"
-            >
+          {/* CTA buttons */}
+          <nav
+            aria-label="Primary navigation options"
+            style={{
+              display:       "flex",
+              gap:           14,
+              justifyContent:"center",
+              flexWrap:      "wrap",
+              marginBottom:  "clamp(36px,5vw,52px)",
+            }}
+          >
+            <PrimaryButton to="/" icon={<FiHome size={18} />}>
               Back to Home
-            </Button>
-            <Button 
-              to="/destinations" 
-              variant="secondary" 
-              size="large"
-              aria-label="Browse all destinations"
-            >
+            </PrimaryButton>
+            <SecondaryButton to="/destinations">
               Explore Destinations
-            </Button>
+            </SecondaryButton>
           </nav>
 
           {/* Suggestions panel */}
-          <section 
-            style={styles.suggestionsPanel}
+          <section
             aria-labelledby="suggestions-heading"
+            style={{
+              backgroundColor: "white",
+              borderRadius:    28,
+              padding:         "clamp(24px,4vw,40px)",
+              boxShadow:
+                "0 20px 60px rgba(5,150,105,0.10), 0 4px 16px rgba(0,0,0,0.04)",
+              border:          "1px solid #D1FAE5",
+              textAlign:       "left",
+            }}
           >
-            <h3 
-              id="suggestions-heading" 
-              style={styles.suggestionsHeading}
+            {/* Panel header */}
+            <div style={{
+              display:       "flex",
+              alignItems:    "center",
+              gap:           10,
+              marginBottom:  22,
+            }}>
+              <div style={{
+                width:          34,
+                height:         34,
+                borderRadius:   10,
+                background:     "linear-gradient(135deg,#ECFDF5,#D1FAE5)",
+                display:        "flex",
+                alignItems:     "center",
+                justifyContent: "center",
+                color:          "#059669",
+                border:         "1px solid #A7F3D0",
+              }}>
+                <FiCompass size={16} />
+              </div>
+              <div>
+                <h3
+                  id="suggestions-heading"
+                  style={{
+                    fontSize:   13.5,
+                    fontWeight: 700,
+                    color:      "#064E3B",
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                    lineHeight: 1,
+                  }}
+                >
+                  Quick Navigation
+                </h3>
+                <p style={{ fontSize: 11.5, color: "#9CA3AF", marginTop: 2 }}>
+                  Popular destinations to help you find your way
+                </p>
+              </div>
+            </div>
+
+            <nav
+              aria-label="Alternative navigation"
+              style={{ display: "flex", flexDirection: "column", gap: 10 }}
             >
-              Quick Navigation
-            </h3>
-            <nav 
-              style={styles.suggestionsList} 
-              aria-label="Alternative navigation options"
-            >
-              {NAVIGATION_SUGGESTIONS.map((suggestion, index) => (
-                <SuggestionCard
-                  key={suggestion.path}
-                  suggestion={suggestion}
-                  index={index}
-                />
+              {SUGGESTIONS.map((s, i) => (
+                <SuggestionCard key={s.path} suggestion={s} index={i} />
               ))}
             </nav>
           </section>
+
+          {/* Footer note */}
+          <p style={{
+            marginTop: 28,
+            fontSize:  12.5,
+            color:     "#9CA3AF",
+            lineHeight: 1.6,
+          }}>
+            If you believe this is a mistake, please{" "}
+            <Link
+              to="/contact"
+              style={{ color: "#059669", fontWeight: 600, textDecoration: "none" }}
+              onMouseOver={(e) => (e.currentTarget.style.textDecoration = "underline")}
+              onMouseOut={(e)  => (e.currentTarget.style.textDecoration = "none")}
+            >
+              contact our team
+            </Link>{" "}
+            and we'll help you out.
+          </p>
         </article>
       </main>
     </>

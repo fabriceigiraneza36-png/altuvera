@@ -1,7 +1,13 @@
 // src/pages/Posts.jsx
 
-import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import React, {
+  useState,
+  useMemo,
+  useRef,
+  useEffect,
+  useCallback,
+} from "react";
+import { Link } from "react-router-dom";
 import {
   FiSearch,
   FiCalendar,
@@ -10,34 +16,30 @@ import {
   FiUser,
   FiBookmark,
   FiHeart,
-  FiShare2,
   FiTrendingUp,
   FiGrid,
   FiList,
-  FiFilter,
   FiX,
   FiChevronRight,
   FiChevronLeft,
   FiTag,
-  FiMessageCircle,
   FiEye,
   FiArrowUp,
   FiBookOpen,
   FiCoffee,
   FiStar,
-  FiExternalLink,
   FiMail,
   FiChevronDown,
   FiZap,
-  FiCompass,
   FiFeather,
-} from 'react-icons/fi';
-import PageHeader from '../components/common/PageHeader';
-import AnimatedSection from '../components/common/AnimatedSection';
+  FiAlertCircle,
+  FiRefreshCw,
+  FiFilter,
+} from "react-icons/fi";
+import PageHeader from "../components/common/PageHeader";
+import AnimatedSection from "../components/common/AnimatedSection";
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
-import { posts } from '../data/posts';
 import { apiFetch } from "../utils/apiBase";
-import { SkeletonCard, SkeletonKeyframes } from "../components/common/Skeleton";
 
 /* ═══════════════════════════════════════════════════════
    GLOBAL STYLES
@@ -46,114 +48,108 @@ const globalStyles = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap');
 
   :root {
-    --ps-green-50: #ECFDF5;
-    --ps-green-100: #D1FAE5;
-    --ps-green-200: #A7F3D0;
-    --ps-green-300: #6EE7B7;
-    --ps-green-400: #34D399;
-    --ps-green-500: #10B981;
-    --ps-green-600: #059669;
-    --ps-green-700: #047857;
-    --ps-green-800: #065F46;
-    --ps-green-900: #064E3B;
-    --ps-white: #FFFFFF;
-    --ps-off-white: #FAFDF7;
-    --ps-gray-50: #F9FAFB;
-    --ps-gray-100: #F3F4F6;
-    --ps-gray-200: #E5E7EB;
-    --ps-gray-300: #D1D5DB;
-    --ps-gray-400: #9CA3AF;
-    --ps-gray-500: #6B7280;
-    --ps-gray-600: #4B5563;
-    --ps-gray-700: #374151;
-    --ps-gray-800: #1F2937;
-    --ps-gray-900: #111827;
-    --ps-shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
-    --ps-shadow-md: 0 4px 16px rgba(0,0,0,0.06);
-    --ps-shadow-lg: 0 12px 40px rgba(0,0,0,0.1);
-    --ps-shadow-xl: 0 25px 60px rgba(0,0,0,0.14);
-    --ps-shadow-green: 0 8px 30px rgba(5,150,105,0.2);
-    --ps-radius-sm: 8px;
-    --ps-radius-md: 14px;
-    --ps-radius-lg: 20px;
-    --ps-radius-xl: 28px;
+    --ps-green-50:   #ECFDF5;
+    --ps-green-100:  #D1FAE5;
+    --ps-green-200:  #A7F3D0;
+    --ps-green-300:  #6EE7B7;
+    --ps-green-400:  #34D399;
+    --ps-green-500:  #10B981;
+    --ps-green-600:  #059669;
+    --ps-green-700:  #047857;
+    --ps-green-800:  #065F46;
+    --ps-green-900:  #064E3B;
+    --ps-white:      #FFFFFF;
+    --ps-off-white:  #F8FFFE;
+    --ps-gray-50:    #F9FAFB;
+    --ps-gray-100:   #F3F4F6;
+    --ps-gray-200:   #E5E7EB;
+    --ps-gray-300:   #D1D5DB;
+    --ps-gray-400:   #9CA3AF;
+    --ps-gray-500:   #6B7280;
+    --ps-gray-600:   #4B5563;
+    --ps-gray-700:   #374151;
+    --ps-gray-800:   #1F2937;
+    --ps-gray-900:   #111827;
+    --ps-shadow-sm:    0 1px 4px rgba(5,150,105,0.06);
+    --ps-shadow-md:    0 4px 20px rgba(5,150,105,0.08);
+    --ps-shadow-lg:    0 12px 44px rgba(5,150,105,0.12);
+    --ps-shadow-xl:    0 25px 64px rgba(5,150,105,0.16);
+    --ps-shadow-green: 0 8px 32px rgba(5,150,105,0.22);
+    --ps-radius-sm:   8px;
+    --ps-radius-md:   14px;
+    --ps-radius-lg:   20px;
+    --ps-radius-xl:   28px;
     --ps-radius-full: 9999px;
-    --ps-transition: cubic-bezier(0.4, 0, 0.2, 1);
+    --ps-transition:  cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(24px); }
+    from { opacity: 0; transform: translateY(28px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-
   @keyframes fadeIn {
     from { opacity: 0; }
     to   { opacity: 1; }
   }
-
   @keyframes slideUp {
-    from { opacity: 0; transform: translateY(16px); }
+    from { opacity: 0; transform: translateY(18px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-
   @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.92); }
+    from { opacity: 0; transform: scale(0.90); }
     to   { opacity: 1; transform: scale(1); }
   }
-
   @keyframes shimmer {
     0%   { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
+    100% { background-position:  200% 0; }
   }
-
   @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-6px); }
+    0%, 100% { transform: translateY(0px); }
+    50%      { transform: translateY(-8px); }
   }
-
-  @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50%      { transform: scale(1.04); }
+  @keyframes pulse-green {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(5,150,105,0.3); }
+    50%      { box-shadow: 0 0 0 8px rgba(5,150,105,0); }
   }
-
   @keyframes bounceIn {
     0%   { transform: scale(0.3); opacity: 0; }
-    50%  { transform: scale(1.05); }
-    70%  { transform: scale(0.9); }
-    100% { transform: scale(1); opacity: 1; }
+    50%  { transform: scale(1.06); }
+    70%  { transform: scale(0.92); }
+    100% { transform: scale(1);   opacity: 1; }
   }
-
-  @keyframes marquee {
-    0%   { transform: translateX(0); }
-    100% { transform: translateX(-50%); }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
   }
-
-  @keyframes gradientShift {
+  @keyframes gradientMove {
     0%   { background-position: 0% 50%; }
     50%  { background-position: 100% 50%; }
     100% { background-position: 0% 50%; }
   }
 
+  /* ── Card hover ─────────────────────────────────────── */
   .ps-card-hover {
     transition: all 0.4s var(--ps-transition);
+    will-change: transform;
   }
   .ps-card-hover:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 60px rgba(5,150,105,0.12);
+    transform: translateY(-6px);
+    box-shadow: 0 24px 64px rgba(5,150,105,0.14) !important;
   }
 
+  /* ── Focus ring ─────────────────────────────────────── */
   .ps-focus-ring:focus-visible {
     outline: 2px solid var(--ps-green-600);
     outline-offset: 2px;
   }
 
+  /* ── Line clamps ────────────────────────────────────── */
   .ps-line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
-
   .ps-line-clamp-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -161,26 +157,14 @@ const globalStyles = `
     overflow: hidden;
   }
 
-  .ps-scrollbar-hidden::-webkit-scrollbar {
-    display: none;
-  }
+  /* ── Scrollbars ─────────────────────────────────────── */
+  .ps-scrollbar-hidden::-webkit-scrollbar { display: none; }
   .ps-scrollbar-hidden {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
 
-  .ps-scrollbar-thin::-webkit-scrollbar {
-    height: 4px;
-  }
-  .ps-scrollbar-thin::-webkit-scrollbar-track {
-    background: rgba(0,0,0,0.03);
-    border-radius: 2px;
-  }
-  .ps-scrollbar-thin::-webkit-scrollbar-thumb {
-    background: linear-gradient(90deg, #059669, #34D399);
-    border-radius: 2px;
-  }
-
+  /* ── Primary button ─────────────────────────────────── */
   .ps-btn-primary {
     background: linear-gradient(135deg, #059669 0%, #047857 100%);
     color: white;
@@ -195,90 +179,49 @@ const globalStyles = `
   .ps-btn-primary::before {
     content: '';
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
+    top: 50%; left: 50%;
+    width: 0; height: 0;
     border-radius: 50%;
-    background: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.18);
     transform: translate(-50%, -50%);
-    transition: width 0.6s, height 0.6s;
+    transition: width 0.5s, height 0.5s;
   }
-  .ps-btn-primary:hover::before {
-    width: 300px;
-    height: 300px;
-  }
+  .ps-btn-primary:hover::before { width: 320px; height: 320px; }
   .ps-btn-primary:hover {
     transform: translateY(-2px) scale(1.02);
-    box-shadow: 0 12px 40px rgba(5,150,105,0.35);
+    box-shadow: 0 14px 44px rgba(5,150,105,0.36);
   }
-  .ps-btn-primary:active {
-    transform: translateY(0) scale(0.98);
+  .ps-btn-primary:active { transform: translateY(0) scale(0.98); }
+
+  /* ── Shimmer skeleton ───────────────────────────────── */
+  .ps-shimmer {
+    background: linear-gradient(110deg,
+      #d1fae5 8%, #ecfdf5 18%, #d1fae5 33%);
+    background-size: 200% 100%;
+    animation: shimmer 1.6s ease infinite;
   }
 
-  /* Responsive */
+  /* ── Responsive grid ────────────────────────────────── */
+  @media (max-width: 1200px) {
+    .ps-posts-grid { grid-template-columns: repeat(2,1fr) !important; }
+  }
   @media (max-width: 1024px) {
-    .ps-featured-card {
-      grid-template-columns: 1fr !important;
-    }
-    .ps-featured-image {
-      min-height: 300px !important;
-      height: 300px !important;
-    }
-    .ps-featured-content {
-      padding: 32px !important;
-    }
-    .ps-posts-grid {
-      grid-template-columns: repeat(2, 1fr) !important;
-    }
+    .ps-featured-card { grid-template-columns: 1fr !important; }
+    .ps-featured-image { min-height: 280px !important; height: 280px !important; }
+    .ps-featured-content { padding: 32px !important; }
   }
-
   @media (max-width: 768px) {
-    .ps-filter-bar {
-      flex-direction: column !important;
-      align-items: stretch !important;
-    }
-    .ps-search-wrap {
-      max-width: 100% !important;
-    }
-    .ps-category-scroll {
-      width: 100% !important;
-      overflow-x: auto !important;
-    }
-    .ps-posts-grid {
-      grid-template-columns: 1fr !important;
-      gap: 20px !important;
-    }
-    .ps-featured-title {
-      font-size: 24px !important;
-    }
-    .ps-section-title {
-      font-size: 24px !important;
-    }
-    .ps-stats-bar {
-      flex-direction: column !important;
-      gap: 12px !important;
-    }
-    .ps-newsletter {
-      padding: 40px 24px !important;
-    }
-    .ps-reading-list {
-      flex-direction: column !important;
-    }
+    .ps-posts-grid { grid-template-columns: 1fr !important; gap: 18px !important; }
+    .ps-featured-title { font-size: 22px !important; }
+    .ps-section-title  { font-size: 22px !important; }
+    .ps-newsletter { padding: 36px 20px !important; }
+    .ps-filter-row { flex-direction: column !important; align-items: stretch !important; }
+    .ps-search-wrap { max-width: 100% !important; }
   }
-
   @media (max-width: 480px) {
-    .ps-featured-content {
-      padding: 24px !important;
-    }
-    .ps-post-content {
-      padding: 20px !important;
-    }
-    .ps-meta-row {
-      flex-wrap: wrap !important;
-    }
+    .ps-featured-content { padding: 22px !important; }
+    .ps-post-content     { padding: 18px !important; }
   }
-
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
@@ -288,993 +231,982 @@ const globalStyles = `
 `;
 
 /* ═══════════════════════════════════════════════════════
-   UTILITY HOOK
+   UTILITY: window size hook
    ═══════════════════════════════════════════════════════ */
 const useWindowSize = () => {
-  const [size, setSize] = useState({
-    width: typeof window !== 'undefined' ? window.innerWidth : 1200,
-  });
-
+  const [width, setWidth] = useState(
+    typeof window !== "undefined" ? window.innerWidth : 1200
+  );
   useEffect(() => {
-    let timeout;
-    const handleResize = () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => setSize({ width: window.innerWidth }), 150);
+    let t;
+    const fn = () => {
+      clearTimeout(t);
+      t = setTimeout(() => setWidth(window.innerWidth), 120);
     };
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      clearTimeout(timeout);
-    };
+    window.addEventListener("resize", fn);
+    return () => { window.removeEventListener("resize", fn); clearTimeout(t); };
   }, []);
-
-  return size;
+  return width;
 };
 
 /* ═══════════════════════════════════════════════════════
-   READING TIME ESTIMATOR
+   UTILITY: reading-time icon
    ═══════════════════════════════════════════════════════ */
-const getReadingIcon = (readTime) => {
-  const min = parseInt(readTime) || 5;
-  if (min <= 3) return <FiZap size={12} />;
-  if (min <= 7) return <FiCoffee size={12} />;
-  return <FiBookOpen size={12} />;
+const readIcon = (rt) => {
+  const m = parseInt(rt) || 5;
+  if (m <= 3) return <FiZap size={11} />;
+  if (m <= 7) return <FiCoffee size={11} />;
+  return <FiBookOpen size={11} />;
 };
 
 /* ═══════════════════════════════════════════════════════
-   PILL COMPONENT
+   UTILITY: format backend date
+   ═══════════════════════════════════════════════════════ */
+const fmtDate = (d) => {
+  if (!d) return "";
+  try {
+    return new Date(d).toLocaleDateString("en-US", {
+      year: "numeric", month: "short", day: "numeric",
+    });
+  } catch { return ""; }
+};
+
+/* ═══════════════════════════════════════════════════════
+   UTILITY: normalise a raw backend post row
+   ═══════════════════════════════════════════════════════ */
+const normalise = (p) => ({
+  id: p.id,
+  slug: p.slug,
+  title: p.title || "Untitled",
+  excerpt: p.excerpt || "",
+  image: p.image_url || "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
+  author: p.author_name || "Altuvera Team",
+  authorImage: p.author_avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(p.author_name || "A")}&background=059669&color=fff`,
+  date: fmtDate(p.published_at || p.created_at),
+  readTime: p.read_time ? `${p.read_time} min read` : "5 min read",
+  category: p.category || "General",
+  tags: Array.isArray(p.tags) ? p.tags : [],
+  views: p.view_count || 0,
+  likes: p.like_count || 0,
+  featured: p.is_featured || false,
+});
+
+/* ═══════════════════════════════════════════════════════
+   PILL
    ═══════════════════════════════════════════════════════ */
 const Pill = ({
-  children,
-  icon,
-  active = false,
-  onClick,
-  variant = 'default',
-  size = 'md',
-  color,
+  children, icon, active = false,
+  onClick, variant = "default", size = "md",
 }) => {
-  const sizes = {
-    sm: { padding: '4px 10px', fontSize: '11px', gap: '4px' },
-    md: { padding: '8px 18px', fontSize: '13px', gap: '6px' },
-    lg: { padding: '10px 22px', fontSize: '14px', gap: '8px' },
-  };
+  const sz = {
+    sm: { padding: "4px 10px", fontSize: "11px", gap: "4px" },
+    md: { padding: "7px 16px", fontSize: "13px", gap: "6px" },
+    lg: { padding: "10px 22px", fontSize: "14px", gap: "8px" },
+  }[size];
 
-  const variants = {
+  const v = {
     default: {
-      backgroundColor: active ? '#059669' : 'white',
-      color: active ? 'white' : '#374151',
-      border: active ? '2px solid #059669' : '2px solid #E5E7EB',
-      boxShadow: active ? 'var(--ps-shadow-green)' : 'var(--ps-shadow-sm)',
+      backgroundColor: active ? "#059669" : "white",
+      color: active ? "white" : "#374151",
+      border: active ? "2px solid #059669" : "2px solid #E5E7EB",
+      boxShadow: active ? "var(--ps-shadow-green)" : "var(--ps-shadow-sm)",
     },
     green: {
-      backgroundColor: '#ECFDF5',
-      color: '#059669',
-      border: '1px solid #D1FAE5',
+      backgroundColor: "#ECFDF5",
+      color: "#059669",
+      border: "1px solid #D1FAE5",
     },
     solid: {
-      background: 'linear-gradient(135deg, #059669, #047857)',
-      color: 'white',
-      border: 'none',
+      background: "linear-gradient(135deg,#059669,#047857)",
+      color: "white", border: "none",
     },
     glass: {
-      backgroundColor: 'rgba(255,255,255,0.15)',
-      backdropFilter: 'blur(12px)',
-      color: 'white',
-      border: '1px solid rgba(255,255,255,0.15)',
+      backgroundColor: "rgba(255,255,255,0.14)",
+      backdropFilter: "blur(12px)",
+      color: "white",
+      border: "1px solid rgba(255,255,255,0.18)",
     },
-    custom: {
-      backgroundColor: `${color}12`,
-      color: color,
-      border: `1px solid ${color}20`,
-    },
-  };
+  }[variant] || {};
 
   return (
     <span
       onClick={onClick}
-      role={onClick ? 'button' : undefined}
+      role={onClick ? "button" : undefined}
       tabIndex={onClick ? 0 : undefined}
-      className={onClick ? 'ps-focus-ring' : ''}
-      onKeyDown={(e) => {
-        if (onClick && e.key === 'Enter') onClick();
-      }}
+      className={onClick ? "ps-focus-ring" : ""}
+      onKeyDown={(e) => { if (onClick && e.key === "Enter") onClick(); }}
       style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        borderRadius: 'var(--ps-radius-full)',
-        fontWeight: '600',
-        letterSpacing: '0.3px',
-        cursor: onClick ? 'pointer' : 'default',
-        transition: 'all 0.3s var(--ps-transition)',
-        whiteSpace: 'nowrap',
-        textTransform: variant === 'green' ? 'uppercase' : 'none',
-        ...sizes[size],
-        ...variants[variant],
+        display: "inline-flex",
+        alignItems: "center",
+        borderRadius: "var(--ps-radius-full)",
+        fontWeight: "600",
+        letterSpacing: "0.3px",
+        cursor: onClick ? "pointer" : "default",
+        transition: "all 0.3s var(--ps-transition)",
+        whiteSpace: "nowrap",
+        ...sz, ...v,
       }}
       onMouseOver={(e) => {
         if (onClick && !active) {
-          e.currentTarget.style.transform = 'translateY(-1px) scale(1.03)';
-          if (variant === 'default') {
-            e.currentTarget.style.borderColor = '#059669';
-            e.currentTarget.style.color = '#059669';
+          e.currentTarget.style.transform = "translateY(-1px) scale(1.03)";
+          if (variant === "default") {
+            e.currentTarget.style.borderColor = "#059669";
+            e.currentTarget.style.color = "#059669";
           }
         }
       }}
       onMouseOut={(e) => {
         if (onClick && !active) {
-          e.currentTarget.style.transform = 'translateY(0) scale(1)';
-          if (variant === 'default') {
-            e.currentTarget.style.borderColor = '#E5E7EB';
-            e.currentTarget.style.color = '#374151';
+          e.currentTarget.style.transform = "translateY(0) scale(1)";
+          if (variant === "default") {
+            e.currentTarget.style.borderColor = "#E5E7EB";
+            e.currentTarget.style.color = "#374151";
           }
         }
       }}
     >
-      {icon && <span style={{ display: 'flex', alignItems: 'center' }}>{icon}</span>}
+      {icon && <span style={{ display: "flex", alignItems: "center" }}>{icon}</span>}
       {children}
     </span>
   );
 };
 
 /* ═══════════════════════════════════════════════════════
-   SKELETON LOADER
+   SKELETON CARD
    ═══════════════════════════════════════════════════════ */
-const shimmerBg = {
-  background: 'linear-gradient(110deg, #e8f5e9 8%, #f1f8f2 18%, #e8f5e9 33%)',
-  backgroundSize: '200% 100%',
-  animation: 'shimmer 1.5s ease infinite',
-};
-
-const PostSkeleton = () => (
-  <div
-    style={{
-      backgroundColor: 'white',
-      borderRadius: 'var(--ps-radius-xl)',
-      overflow: 'hidden',
-      boxShadow: 'var(--ps-shadow-sm)',
-    }}
-  >
-    <div style={{ height: 220, ...shimmerBg }} />
-    <div style={{ padding: 28 }}>
-      <div style={{ width: 80, height: 24, borderRadius: 30, marginBottom: 16, ...shimmerBg }} />
-      <div style={{ width: '90%', height: 22, borderRadius: 6, marginBottom: 10, ...shimmerBg }} />
-      <div style={{ width: '70%', height: 22, borderRadius: 6, marginBottom: 16, ...shimmerBg }} />
-      <div style={{ width: '100%', height: 14, borderRadius: 4, marginBottom: 6, ...shimmerBg }} />
-      <div style={{ width: '80%', height: 14, borderRadius: 4, marginBottom: 20, ...shimmerBg }} />
-      <div style={{ display: 'flex', gap: 12, paddingTop: 16, borderTop: '1px solid #F3F4F6' }}>
-        <div style={{ width: 40, height: 40, borderRadius: '50%', ...shimmerBg }} />
+const SkeletonCard = () => (
+  <div style={{
+    backgroundColor: "white",
+    borderRadius: "var(--ps-radius-xl)",
+    overflow: "hidden",
+    boxShadow: "var(--ps-shadow-sm)",
+    border: "1px solid #F3F4F6",
+  }}>
+    <div className="ps-shimmer" style={{ height: 220 }} />
+    <div style={{ padding: 24 }}>
+      <div className="ps-shimmer" style={{ width: 80, height: 22, borderRadius: 30, marginBottom: 14 }} />
+      <div className="ps-shimmer" style={{ width: "90%", height: 20, borderRadius: 6, marginBottom: 8 }} />
+      <div className="ps-shimmer" style={{ width: "65%", height: 20, borderRadius: 6, marginBottom: 14 }} />
+      <div className="ps-shimmer" style={{ width: "100%", height: 13, borderRadius: 4, marginBottom: 5 }} />
+      <div className="ps-shimmer" style={{ width: "80%", height: 13, borderRadius: 4, marginBottom: 18 }} />
+      <div style={{ display: "flex", gap: 10, paddingTop: 14, borderTop: "1px solid #F3F4F6" }}>
+        <div className="ps-shimmer" style={{ width: 38, height: 38, borderRadius: "50%" }} />
         <div>
-          <div style={{ width: 100, height: 14, borderRadius: 4, marginBottom: 4, ...shimmerBg }} />
-          <div style={{ width: 140, height: 12, borderRadius: 4, ...shimmerBg }} />
+          <div className="ps-shimmer" style={{ width: 100, height: 13, borderRadius: 4, marginBottom: 4 }} />
+          <div className="ps-shimmer" style={{ width: 140, height: 11, borderRadius: 4 }} />
         </div>
       </div>
     </div>
   </div>
 );
 
-/* ═══════════════════════════════════════════════════════
-   SHARE DROPDOWN
-   ═══════════════════════════════════════════════════════ */
-const ShareDropdown = ({ postTitle, onClose }) => (
-  <div
-    onClick={(e) => e.stopPropagation()}
-    style={{
-      position: 'absolute',
-      top: 'calc(100% + 8px)',
-      right: 0,
-      backgroundColor: 'white',
-      borderRadius: 'var(--ps-radius-md)',
-      padding: '12px',
-      boxShadow: 'var(--ps-shadow-lg)',
-      border: '1px solid var(--ps-gray-100)',
-      zIndex: 50,
-      minWidth: 180,
-      animation: 'scaleIn 0.2s ease',
-    }}
-  >
-    {['Twitter', 'Facebook', 'LinkedIn', 'Copy Link'].map((platform) => (
-      <button
-        key={platform}
-        className="ps-focus-ring"
-        style={{
-          display: 'block',
-          width: '100%',
-          textAlign: 'left',
-          padding: '10px 14px',
-          border: 'none',
-          background: 'none',
-          cursor: 'pointer',
-          fontSize: '13px',
-          fontWeight: '500',
-          color: '#374151',
-          borderRadius: 'var(--ps-radius-sm)',
-          transition: 'all 0.2s',
-        }}
-        onMouseOver={(e) => {
-          e.currentTarget.style.backgroundColor = '#ECFDF5';
-          e.currentTarget.style.color = '#059669';
-        }}
-        onMouseOut={(e) => {
-          e.currentTarget.style.backgroundColor = 'transparent';
-          e.currentTarget.style.color = '#374151';
-        }}
-        onClick={() => {
-          if (platform === 'Copy Link') {
-            navigator.clipboard?.writeText(window.location.href);
-          }
-          onClose();
-        }}
-      >
-        {platform}
-      </button>
-    ))}
+const SkeletonListCard = () => (
+  <div style={{
+    display: "grid", gridTemplateColumns: "260px 1fr",
+    backgroundColor: "white", borderRadius: "var(--ps-radius-xl)",
+    overflow: "hidden", boxShadow: "var(--ps-shadow-sm)",
+    border: "1px solid #F3F4F6",
+  }}>
+    <div className="ps-shimmer" style={{ minHeight: 180 }} />
+    <div style={{ padding: 28 }}>
+      <div className="ps-shimmer" style={{ width: 80, height: 22, borderRadius: 30, marginBottom: 14 }} />
+      <div className="ps-shimmer" style={{ width: "85%", height: 20, borderRadius: 6, marginBottom: 8 }} />
+      <div className="ps-shimmer" style={{ width: "60%", height: 20, borderRadius: 6, marginBottom: 14 }} />
+      <div className="ps-shimmer" style={{ width: "100%", height: 13, borderRadius: 4, marginBottom: 5 }} />
+      <div className="ps-shimmer" style={{ width: "75%", height: 13, borderRadius: 4 }} />
+    </div>
   </div>
 );
 
 /* ═══════════════════════════════════════════════════════
-   POST CARD COMPONENT
+   ERROR STATE
    ═══════════════════════════════════════════════════════ */
-const PostCard = ({ post, index, onBookmark, isBookmarked, viewMode = 'grid' }) => {
-  const [showShare, setShowShare] = useState(false);
-  const [liked, setLiked] = useState(false);
-  const [imageLoaded, setImageLoaded] = useState(false);
-
-  if (viewMode === 'list') {
-    return (
-      <Link to={`/post/${post.slug}`} style={{ textDecoration: 'none' }}>
-        <div
-          className="ps-card-hover"
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '280px 1fr',
-            backgroundColor: 'white',
-            borderRadius: 'var(--ps-radius-xl)',
-            overflow: 'hidden',
-            boxShadow: 'var(--ps-shadow-sm)',
-            border: '1px solid #F3F4F6',
-            animation: `slideUp 0.4s ease ${index * 0.05}s both`,
-          }}
-        >
-          <div style={{ overflow: 'hidden', position: 'relative' }}>
-            <img
-              src={post.image}
-              alt={post.title}
-              loading="lazy"
-              style={{
-                width: '100%',
-                height: '100%',
-                minHeight: 200,
-                objectFit: 'cover',
-                transition: 'transform 0.6s var(--ps-transition)',
-              }}
-              onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.08)')}
-              onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                top: 12,
-                left: 12,
-              }}
-            >
-              <Pill variant="green" size="sm" icon={<FiTag size={10} />}>
-                {post.category}
-              </Pill>
-            </div>
-          </div>
-
-          <div style={{ padding: '28px 32px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-            <h3
-              style={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: '22px',
-                fontWeight: '700',
-                color: '#111827',
-                marginBottom: '10px',
-                lineHeight: 1.35,
-              }}
-            >
-              {post.title}
-            </h3>
-            <p
-              className="ps-line-clamp-2"
-              style={{
-                fontSize: '15px',
-                color: '#6B7280',
-                lineHeight: 1.7,
-                marginBottom: '16px',
-              }}
-            >
-              {post.excerpt}
-            </p>
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <img
-                  src={post.authorImage}
-                  alt={post.author}
-                  style={{
-                    width: 36,
-                    height: 36,
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    border: '2px solid #ECFDF5',
-                  }}
-                />
-                <div>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#111827', display: 'block' }}>
-                    {post.author}
-                  </span>
-                  <span style={{ fontSize: 12, color: '#9CA3AF' }}>
-                    {post.date} · {post.readTime}
-                  </span>
-                </div>
-              </div>
-              <span
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  color: '#059669',
-                  fontSize: 14,
-                  fontWeight: 600,
-                }}
-              >
-                Read More <FiArrowRight size={14} />
-              </span>
-            </div>
-          </div>
-        </div>
-      </Link>
-    );
-  }
-
-  // Grid view
-  return (
-    <div
+const ErrorState = ({ message, onRetry }) => (
+  <div style={{
+    textAlign: "center", padding: "60px 24px",
+    animation: "fadeUp 0.4s ease",
+  }}>
+    <div style={{
+      width: 90, height: 90, borderRadius: "50%",
+      background: "linear-gradient(135deg,#FEF2F2,#FEE2E2)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      margin: "0 auto 20px",
+    }}>
+      <FiAlertCircle size={38} color="#EF4444" />
+    </div>
+    <h3 style={{
+      fontFamily: "'Playfair Display', serif", fontSize: 22,
+      color: "#111827", marginBottom: 8,
+    }}>Failed to Load Articles</h3>
+    <p style={{ color: "#6B7280", marginBottom: 24, lineHeight: 1.6 }}>
+      {message || "Something went wrong. Please try again."}
+    </p>
+    <button
+      onClick={onRetry}
+      className="ps-btn-primary ps-focus-ring"
       style={{
-        position: 'relative',
-        animation: `slideUp 0.4s ease ${index * 0.06}s both`,
+        padding: "12px 28px", borderRadius: "var(--ps-radius-full)",
+        fontSize: 14, display: "inline-flex", alignItems: "center", gap: 8,
       }}
     >
-      <Link to={`/post/${post.slug}`} style={{ textDecoration: 'none' }}>
+      <FiRefreshCw size={15} /> Try Again
+    </button>
+  </div>
+);
+
+/* ═══════════════════════════════════════════════════════
+   EMPTY STATE
+   ═══════════════════════════════════════════════════════ */
+const EmptyState = ({ onClear }) => (
+  <div style={{
+    textAlign: "center", padding: "80px 24px",
+    animation: "fadeUp 0.4s ease",
+  }}>
+    <div style={{
+      width: 100, height: 100, borderRadius: "50%",
+      background: "linear-gradient(135deg,#ECFDF5,#D1FAE5)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      margin: "0 auto 24px",
+      animation: "float 3s ease infinite",
+    }}>
+      <FiSearch size={40} color="#059669" />
+    </div>
+    <h3 style={{
+      fontFamily: "'Playfair Display', serif", fontSize: 24,
+      color: "#111827", marginBottom: 8,
+    }}>No Articles Found</h3>
+    <p style={{ color: "#6B7280", marginBottom: 24, lineHeight: 1.6 }}>
+      Try adjusting your search or filter criteria.
+    </p>
+    <button
+      onClick={onClear}
+      className="ps-btn-primary ps-focus-ring"
+      style={{
+        padding: "12px 28px", borderRadius: "var(--ps-radius-full)", fontSize: 14,
+      }}
+    >
+      Clear All Filters
+    </button>
+  </div>
+);
+
+/* ═══════════════════════════════════════════════════════
+   POST CARD — GRID VIEW
+   ═══════════════════════════════════════════════════════ */
+const GridCard = ({ post, index, isBookmarked, onBookmark }) => {
+  const [liked, setLiked] = useState(false);
+  const [imgOk, setImgOk] = useState(false);
+
+  return (
+    <div style={{ position: "relative", animation: `slideUp 0.4s ease ${index * 0.06}s both` }}>
+      <Link to={`/post/${post.slug}`} style={{ textDecoration: "none" }}>
         <div
           className="ps-card-hover"
           style={{
-            backgroundColor: 'white',
-            borderRadius: 'var(--ps-radius-xl)',
-            overflow: 'hidden',
-            boxShadow: 'var(--ps-shadow-sm)',
-            border: '1px solid #F3F4F6',
-            height: '100%',
-            display: 'flex',
-            flexDirection: 'column',
+            backgroundColor: "white",
+            borderRadius: "var(--ps-radius-xl)",
+            overflow: "hidden",
+            boxShadow: "var(--ps-shadow-sm)",
+            border: "1px solid #F3F4F6",
+            height: "100%",
+            display: "flex",
+            flexDirection: "column",
           }}
         >
           {/* Image */}
-          <div style={{ overflow: 'hidden', position: 'relative' }}>
-            {!imageLoaded && (
-              <div style={{ height: 220, ...shimmerBg, position: 'absolute', inset: 0, zIndex: 1 }} />
+          <div style={{ overflow: "hidden", position: "relative", flexShrink: 0 }}>
+            {!imgOk && (
+              <div className="ps-shimmer" style={{
+                height: 220, position: "absolute", inset: 0, zIndex: 1,
+              }} />
             )}
             <img
               src={post.image}
               alt={post.title}
               loading="lazy"
-              onLoad={() => setImageLoaded(true)}
+              onLoad={() => setImgOk(true)}
               style={{
-                height: 220,
-                width: '100%',
-                objectFit: 'cover',
-                transition: 'transform 0.6s var(--ps-transition)',
-                display: 'block',
+                height: 220, width: "100%", objectFit: "cover", display: "block",
+                transition: "transform 0.6s var(--ps-transition)",
               }}
-              onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.08)')}
-              onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+              onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.07)")}
+              onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
             />
-
-            {/* Gradient overlay */}
-            <div
-              style={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: '60%',
-                background: 'linear-gradient(transparent, rgba(0,0,0,0.3))',
-                pointerEvents: 'none',
-              }}
-            />
-
-            {/* Category pill */}
-            <div style={{ position: 'absolute', top: 14, left: 14 }}>
+            {/* overlay */}
+            <div style={{
+              position: "absolute", bottom: 0, left: 0, right: 0, height: "55%",
+              background: "linear-gradient(transparent,rgba(0,0,0,0.28))",
+              pointerEvents: "none",
+            }} />
+            <div style={{ position: "absolute", top: 12, left: 12 }}>
               <Pill variant="green" size="sm" icon={<FiTag size={10} />}>
                 {post.category}
               </Pill>
             </div>
-
-            {/* Read time badge */}
-            <div style={{ position: 'absolute', top: 14, right: 14 }}>
-              <Pill variant="glass" size="sm" icon={getReadingIcon(post.readTime)}>
+            <div style={{ position: "absolute", top: 12, right: 12 }}>
+              <Pill variant="glass" size="sm" icon={readIcon(post.readTime)}>
                 {post.readTime}
               </Pill>
             </div>
+            {post.featured && (
+              <div style={{ position: "absolute", bottom: 12, left: 12 }}>
+                <Pill variant="solid" size="sm" icon={<FiStar size={10} />}>
+                  Featured
+                </Pill>
+              </div>
+            )}
           </div>
 
-          {/* Content */}
+          {/* Body */}
           <div
             className="ps-post-content"
-            style={{
-              padding: '24px 24px 20px',
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-            }}
+            style={{ padding: "22px 22px 18px", flex: 1, display: "flex", flexDirection: "column" }}
           >
             <h3
               className="ps-line-clamp-2"
               style={{
                 fontFamily: "'Playfair Display', serif",
-                fontSize: '20px',
-                fontWeight: '700',
-                color: '#111827',
-                marginBottom: '10px',
-                lineHeight: 1.35,
-                letterSpacing: '-0.01em',
+                fontSize: 19, fontWeight: 700, color: "#111827",
+                marginBottom: 9, lineHeight: 1.35, letterSpacing: "-0.01em",
               }}
             >
               {post.title}
             </h3>
-
             <p
               className="ps-line-clamp-3"
-              style={{
-                fontSize: '14px',
-                color: '#6B7280',
-                lineHeight: 1.7,
-                marginBottom: '18px',
-                flex: 1,
-              }}
+              style={{ fontSize: 13.5, color: "#6B7280", lineHeight: 1.7, marginBottom: 16, flex: 1 }}
             >
               {post.excerpt}
             </p>
 
-            {/* Author + Meta */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                paddingTop: '16px',
-                borderTop: '1px solid #F3F4F6',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            {/* Stats row */}
+            <div style={{
+              display: "flex", gap: 12, marginBottom: 14,
+            }}>
+              {[
+                { icon: <FiEye size={12} />, val: post.views },
+                { icon: <FiHeart size={12} />, val: post.likes },
+              ].map((s, i) => (
+                <span key={i} style={{
+                  display: "flex", alignItems: "center", gap: 4,
+                  fontSize: 12, color: "#9CA3AF",
+                }}>
+                  {s.icon} {s.val}
+                </span>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              paddingTop: 14, borderTop: "1px solid #F3F4F6",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <img
-                  src={post.authorImage}
-                  alt={post.author}
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: '50%',
-                    objectFit: 'cover',
-                    border: '2px solid #ECFDF5',
-                  }}
+                  src={post.authorImage} alt={post.author}
+                  style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", border: "2px solid #ECFDF5" }}
                 />
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>
-                    {post.author}
-                  </div>
-                  <div style={{ fontSize: 12, color: '#9CA3AF', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 600, color: "#111827" }}>{post.author}</div>
+                  <div style={{ fontSize: 11.5, color: "#9CA3AF", display: "flex", alignItems: "center", gap: 3 }}>
                     <FiCalendar size={10} /> {post.date}
                   </div>
                 </div>
               </div>
-
-              <span
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  color: '#059669',
-                  fontSize: 13,
-                  fontWeight: 600,
-                }}
-              >
-                Read <FiArrowRight size={13} />
+              <span style={{
+                display: "flex", alignItems: "center", gap: 4,
+                color: "#059669", fontSize: 12.5, fontWeight: 600,
+              }}>
+                Read <FiArrowRight size={12} />
               </span>
             </div>
           </div>
         </div>
       </Link>
 
-      {/* Action buttons overlay */}
-      <div
-        style={{
-          position: 'absolute',
-          bottom: 85,
-          right: 14,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 6,
-          zIndex: 5,
-        }}
-      >
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            setLiked((p) => !p);
-          }}
-          className="ps-focus-ring"
-          aria-label="Like"
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(255,255,255,0.9)',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(0,0,0,0.05)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.3s',
-            color: liked ? '#EF4444' : '#9CA3AF',
-            boxShadow: 'var(--ps-shadow-sm)',
-          }}
-          onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.15)')}
-          onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-        >
-          <FiHeart size={14} fill={liked ? '#EF4444' : 'none'} />
-        </button>
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onBookmark?.(post.id);
-          }}
-          className="ps-focus-ring"
-          aria-label="Bookmark"
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: '50%',
-            backgroundColor: 'rgba(255,255,255,0.9)',
-            backdropFilter: 'blur(8px)',
-            border: '1px solid rgba(0,0,0,0.05)',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            transition: 'all 0.3s',
-            color: isBookmarked ? '#059669' : '#9CA3AF',
-            boxShadow: 'var(--ps-shadow-sm)',
-          }}
-          onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.15)')}
-          onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-        >
-          <FiBookmark size={14} fill={isBookmarked ? '#059669' : 'none'} />
-        </button>
+      {/* Action buttons */}
+      <div style={{
+        position: "absolute", bottom: 78, right: 12,
+        display: "flex", flexDirection: "column", gap: 6, zIndex: 5,
+      }}>
+        {[
+          {
+            label: "Like",
+            icon: <FiHeart size={13} fill={liked ? "#EF4444" : "none"} />,
+            color: liked ? "#EF4444" : "#9CA3AF",
+            onClick: (e) => { e.preventDefault(); e.stopPropagation(); setLiked((p) => !p); },
+          },
+          {
+            label: "Bookmark",
+            icon: <FiBookmark size={13} fill={isBookmarked ? "#059669" : "none"} />,
+            color: isBookmarked ? "#059669" : "#9CA3AF",
+            onClick: (e) => { e.preventDefault(); e.stopPropagation(); onBookmark?.(post.id); },
+          },
+        ].map((btn) => (
+          <button
+            key={btn.label}
+            onClick={btn.onClick}
+            className="ps-focus-ring"
+            aria-label={btn.label}
+            style={{
+              width: 32, height: 32, borderRadius: "50%",
+              backgroundColor: "rgba(255,255,255,0.92)",
+              backdropFilter: "blur(8px)",
+              border: "1px solid rgba(0,0,0,0.06)",
+              cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transition: "all 0.25s", color: btn.color,
+              boxShadow: "var(--ps-shadow-sm)",
+            }}
+            onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.18)")}
+            onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+          >
+            {btn.icon}
+          </button>
+        ))}
       </div>
     </div>
   );
 };
 
 /* ═══════════════════════════════════════════════════════
-   MAIN POSTS COMPONENT
+   POST CARD — LIST VIEW
+   ═══════════════════════════════════════════════════════ */
+const ListCard = ({ post, index }) => (
+  <Link to={`/post/${post.slug}`} style={{ textDecoration: "none" }}>
+    <div
+      className="ps-card-hover"
+      style={{
+        display: "grid",
+        gridTemplateColumns: "clamp(200px,28%,300px) 1fr",
+        backgroundColor: "white",
+        borderRadius: "var(--ps-radius-xl)",
+        overflow: "hidden",
+        boxShadow: "var(--ps-shadow-sm)",
+        border: "1px solid #F3F4F6",
+        animation: `slideUp 0.4s ease ${index * 0.05}s both`,
+      }}
+    >
+      <div style={{ overflow: "hidden", position: "relative" }}>
+        <img
+          src={post.image} alt={post.title} loading="lazy"
+          style={{
+            width: "100%", height: "100%", minHeight: 190,
+            objectFit: "cover",
+            transition: "transform 0.6s var(--ps-transition)",
+          }}
+          onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.07)")}
+          onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+        />
+        <div style={{ position: "absolute", top: 12, left: 12 }}>
+          <Pill variant="green" size="sm" icon={<FiTag size={10} />}>{post.category}</Pill>
+        </div>
+      </div>
+
+      <div style={{ padding: "26px 30px", display: "flex", flexDirection: "column", justifyContent: "center" }}>
+        <h3 style={{
+          fontFamily: "'Playfair Display', serif",
+          fontSize: 21, fontWeight: 700, color: "#111827",
+          marginBottom: 9, lineHeight: 1.35,
+        }}>
+          {post.title}
+        </h3>
+        <p className="ps-line-clamp-2" style={{ fontSize: 14, color: "#6B7280", lineHeight: 1.7, marginBottom: 14 }}>
+          {post.excerpt}
+        </p>
+
+        <div style={{ display: "flex", gap: 16, marginBottom: 14 }}>
+          {[
+            { icon: <FiEye size={12} />, v: post.views },
+            { icon: <FiHeart size={12} />, v: post.likes },
+            { icon: <FiClock size={12} />, v: post.readTime },
+          ].map((s, i) => (
+            <span key={i} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 12, color: "#9CA3AF" }}>
+              {s.icon} {s.v}
+            </span>
+          ))}
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <img
+              src={post.authorImage} alt={post.author}
+              style={{ width: 34, height: 34, borderRadius: "50%", objectFit: "cover", border: "2px solid #ECFDF5" }}
+            />
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 600, color: "#111827" }}>{post.author}</div>
+              <div style={{ fontSize: 12, color: "#9CA3AF" }}>{post.date}</div>
+            </div>
+          </div>
+          <span style={{ display: "flex", alignItems: "center", gap: 6, color: "#059669", fontSize: 13, fontWeight: 600 }}>
+            Read More <FiArrowRight size={13} />
+          </span>
+        </div>
+      </div>
+    </div>
+  </Link>
+);
+
+/* ═══════════════════════════════════════════════════════
+   FEATURED POST CARD
+   ═══════════════════════════════════════════════════════ */
+const FeaturedCard = ({ post }) => (
+  <Link to={`/post/${post.slug}`} style={{ textDecoration: "none" }}>
+    <div
+      className="ps-featured-card ps-card-hover"
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1.4fr 1fr",
+        backgroundColor: "white",
+        borderRadius: "var(--ps-radius-xl)",
+        overflow: "hidden",
+        boxShadow: "var(--ps-shadow-md)",
+        border: "1px solid #F3F4F6",
+        position: "relative",
+      }}
+    >
+      {/* Image */}
+      <div style={{ overflow: "hidden", position: "relative" }}>
+        <img
+          src={post.image} alt={post.title}
+          className="ps-featured-image"
+          style={{
+            height: "100%", minHeight: 420, width: "100%", objectFit: "cover",
+            transition: "transform 0.6s var(--ps-transition)",
+          }}
+          onMouseOver={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+          onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+        />
+        <div style={{
+          position: "absolute", inset: 0,
+          background: "linear-gradient(135deg,rgba(5,150,105,0.12),transparent)",
+          pointerEvents: "none",
+        }} />
+        <div style={{ position: "absolute", top: 20, left: 20 }}>
+          <Pill variant="solid" size="md" icon={<FiStar size={12} />}>Featured</Pill>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div
+        className="ps-featured-content"
+        style={{ padding: "48px 44px", display: "flex", flexDirection: "column", justifyContent: "center" }}
+      >
+        <Pill variant="green" size="md" icon={<FiTag size={11} />}>{post.category}</Pill>
+
+        <h3
+          className="ps-featured-title"
+          style={{
+            fontFamily: "'Playfair Display', serif",
+            fontSize: 28, fontWeight: 800, color: "#111827",
+            marginTop: 18, marginBottom: 12, lineHeight: 1.25, letterSpacing: "-0.02em",
+          }}
+        >
+          {post.title}
+        </h3>
+
+        <p style={{ fontSize: 15, color: "#6B7280", lineHeight: 1.75, marginBottom: 22 }}>
+          {post.excerpt}
+        </p>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 18, marginBottom: 22 }}>
+          {[
+            { icon: <FiCalendar size={13} />, t: post.date },
+            { icon: <FiClock size={13} />, t: post.readTime },
+            { icon: <FiEye size={13} />, t: `${post.views} views` },
+          ].map((m, i) => (
+            <span key={i} style={{
+              display: "flex", alignItems: "center", gap: 5,
+              fontSize: 13, color: "#9CA3AF", fontWeight: 500,
+            }}>
+              {m.icon} {m.t}
+            </span>
+          ))}
+        </div>
+
+        {/* Author */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 12, marginBottom: 26,
+          padding: "12px 16px",
+          backgroundColor: "#F8FFFE",
+          borderRadius: "var(--ps-radius-md)",
+          border: "1px solid #ECFDF5",
+        }}>
+          <img
+            src={post.authorImage} alt={post.author}
+            style={{ width: 42, height: 42, borderRadius: "50%", objectFit: "cover", border: "2px solid #D1FAE5" }}
+          />
+          <div>
+            <div style={{ fontSize: 13.5, fontWeight: 700, color: "#111827" }}>{post.author}</div>
+            <div style={{ fontSize: 12, color: "#9CA3AF" }}>Travel Writer</div>
+          </div>
+        </div>
+
+        <span
+          className="ps-btn-primary"
+          style={{
+            display: "inline-flex", alignItems: "center", gap: 10,
+            padding: "13px 28px", borderRadius: "var(--ps-radius-full)",
+            fontSize: 14, width: "fit-content",
+          }}
+        >
+          Read Full Article <FiArrowRight size={15} />
+        </span>
+      </div>
+    </div>
+  </Link>
+);
+
+/* ═══════════════════════════════════════════════════════
+   STAT CARD
+   ═══════════════════════════════════════════════════════ */
+const StatCard = ({ icon, value, label }) => (
+  <div
+    style={{
+      flex: "1 1 180px",
+      display: "flex", alignItems: "center", gap: 14,
+      padding: "16px 20px",
+      backgroundColor: "white",
+      borderRadius: "var(--ps-radius-lg)",
+      border: "1px solid #ECFDF5",
+      boxShadow: "var(--ps-shadow-sm)",
+      transition: "all 0.3s var(--ps-transition)",
+    }}
+    onMouseOver={(e) => {
+      e.currentTarget.style.transform = "translateY(-3px)";
+      e.currentTarget.style.boxShadow = "var(--ps-shadow-md)";
+    }}
+    onMouseOut={(e) => {
+      e.currentTarget.style.transform = "translateY(0)";
+      e.currentTarget.style.boxShadow = "var(--ps-shadow-sm)";
+    }}
+  >
+    <div style={{
+      width: 42, height: 42, borderRadius: 13,
+      background: "linear-gradient(135deg,#ECFDF5,#D1FAE5)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      color: "#059669", flexShrink: 0,
+    }}>
+      {icon}
+    </div>
+    <div>
+      <div style={{ fontSize: 21, fontWeight: 800, color: "#111827", lineHeight: 1 }}>{value}</div>
+      <div style={{ fontSize: 11.5, color: "#9CA3AF", fontWeight: 500, marginTop: 2 }}>{label}</div>
+    </div>
+  </div>
+);
+
+/* ═══════════════════════════════════════════════════════
+   MAIN COMPONENT
    ═══════════════════════════════════════════════════════ */
 const Posts = () => {
-  const [remotePosts, setRemotePosts] = useState(null);
-  const [remoteLoading, setRemoteLoading] = useState(true);
-  const [remoteError, setRemoteError] = useState("");
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [viewMode, setViewMode] = useState('grid');
-  const [sortBy, setSortBy] = useState('newest');
+  /* ── Remote data ─────────────────────────────────────── */
+  const [posts, setPosts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [retryKey, setRetryKey] = useState(0);
+
+  /* ── UI state ────────────────────────────────────────── */
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("all");
+  const [sort, setSort] = useState("created");
+  const [viewMode, setViewMode] = useState("grid");
   const [bookmarks, setBookmarks] = useState(new Set());
-  const [showBackToTop, setShowBackToTop] = useState(false);
+  const [backToTop, setBackToTop] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [emailInput, setEmailInput] = useState('');
+  const [totalCount, setTotalCount] = useState(0);
+  const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
 
-  const postsPerPage = 9;
-  const categoryRef = useRef(null);
-  const { width: windowWidth } = useWindowSize();
-  const isMobile = windowWidth < 768;
-  const isTablet = windowWidth < 1024;
+  const POSTS_PER_PAGE = 9;
+  const w = useWindowSize();
+  const isMobile = w < 768;
 
+  /* ── Fetch posts from backend ────────────────────────── */
+  const fetchPosts = useCallback(async (signal) => {
+    setLoading(true);
+    setError("");
+    try {
+      const params = new URLSearchParams({
+        page: currentPage,
+        limit: POSTS_PER_PAGE,
+        sort,
+        ...(category !== "all" && { category }),
+        ...(search.trim() && { search: search.trim() }),
+      });
+
+      const res = await apiFetch(`/posts?${params}`, { signal });
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const json = await res.json();
+
+      const raw = json?.data || json?.posts || json || [];
+      setPosts(Array.isArray(raw) ? raw.map(normalise) : []);
+      setTotalCount(json?.totalCount || json?.total || raw.length || 0);
+    } catch (err) {
+      if (err?.name === "AbortError") return;
+      setError(err?.message || "Failed to load posts");
+      setPosts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, sort, category, search, retryKey]); // eslint-disable-line
+
+  /* ── Fetch categories ────────────────────────────────── */
+  const fetchCategories = useCallback(async (signal) => {
+    try {
+      const res = await apiFetch("/posts/categories", { signal });
+      if (!res.ok) return;
+      const json = await res.json();
+      const rows = json?.data || [];
+      setCategories(rows.map((r) => r.category).filter(Boolean));
+    } catch { /* silent */ }
+  }, []);
+
+  /* ── Fetch blog stats ────────────────────────────────── */
+  const fetchStats = useCallback(async (signal) => {
+    try {
+      const res = await apiFetch("/posts/stats", { signal });
+      if (!res.ok) return;
+      const json = await res.json();
+      setStats(json?.data || null);
+    } catch { /* silent */ }
+  }, []);
+
+  /* ── Initial data load ───────────────────────────────── */
   useEffect(() => {
     const ac = new AbortController();
-    (async () => {
-      setRemoteLoading(true);
-      setRemoteError("");
-      try {
-        const res = await apiFetch("/posts", { signal: ac.signal });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const json = await res.json();
-        const list = json?.data || json?.posts || json || [];
-        setRemotePosts(Array.isArray(list) ? list : []);
-      } catch (err) {
-        if (err?.name !== "AbortError") {
-          setRemotePosts([]);
-          setRemoteError(err?.message || "Failed to load posts");
-        }
-      } finally {
-        setRemoteLoading(false);
-      }
-    })();
+    fetchCategories(ac.signal);
+    fetchStats(ac.signal);
     return () => ac.abort();
-  }, []);
+  }, [fetchCategories, fetchStats]);
 
-  const basePosts = useMemo(() => {
-    if (remoteLoading) return [];
-    if (Array.isArray(remotePosts) && remotePosts.length > 0) return remotePosts;
-    if (remoteError) return posts.slice(0, 1);
-    return posts.slice(0, 1);
-  }, [remoteLoading, remotePosts, remoteError]);
+  /* ── Posts refetch on deps change ───────────────────── */
+  useEffect(() => {
+    const ac = new AbortController();
+    fetchPosts(ac.signal);
+    return () => ac.abort();
+  }, [fetchPosts]);
 
-  const categories = useMemo(
-    () =>
-      [...new Set((remotePosts?.length ? remotePosts : posts).map((p) => p.category))],
-    [remotePosts],
-  );
-  const featuredPosts = useMemo(() => basePosts.filter((p) => p.featured), [basePosts]);
-
-  // Filtered and sorted
-  const filteredPosts = useMemo(() => {
-    let result = basePosts.filter((post) => {
-      const matchesSearch =
-        !searchQuery ||
-        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.author?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        post.category?.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory =
-        selectedCategory === 'all' || post.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
-
-    // Sort
-    if (sortBy === 'newest') {
-      result.sort((a, b) => new Date(b.date) - new Date(a.date));
-    } else if (sortBy === 'oldest') {
-      result.sort((a, b) => new Date(a.date) - new Date(b.date));
-    } else if (sortBy === 'popular') {
-      result.sort((a, b) => (b.views || 0) - (a.views || 0));
-    }
-
-    return result;
-  }, [basePosts, searchQuery, selectedCategory, sortBy]);
-
-  // Pagination
-  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
-  const paginatedPosts = useMemo(() => {
-    const start = (currentPage - 1) * postsPerPage;
-    return filteredPosts.slice(start, start + postsPerPage);
-  }, [filteredPosts, currentPage]);
-
-  // Reset page on filter change
+  /* ── Reset page when filters change ─────────────────── */
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCategory, sortBy]);
+  }, [search, category, sort]);
 
-  // Back to top
+  /* ── Back-to-top ─────────────────────────────────────── */
   useEffect(() => {
-    const handleScroll = () => setShowBackToTop(window.scrollY > 500);
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    const fn = () => setBackToTop(window.scrollY > 500);
+    window.addEventListener("scroll", fn, { passive: true });
+    return () => window.removeEventListener("scroll", fn);
   }, []);
 
-  // Bookmark handler
-  const toggleBookmark = useCallback((postId) => {
+  /* ── Bookmark toggle ─────────────────────────────────── */
+  const toggleBookmark = useCallback((id) => {
     setBookmarks((prev) => {
       const next = new Set(prev);
-      if (next.has(postId)) next.delete(postId);
-      else next.add(postId);
+      next.has(id) ? next.delete(id) : next.add(id);
       return next;
     });
   }, []);
 
-  // Newsletter submit
+  /* ── Newsletter ──────────────────────────────────────── */
   const handleSubscribe = (e) => {
     e.preventDefault();
-    if (emailInput.trim()) {
-      setSubscribed(true);
-      setEmailInput('');
-      setTimeout(() => setSubscribed(false), 3000);
-    }
+    if (!email.trim()) return;
+    setSubscribed(true);
+    setEmail("");
+    setTimeout(() => setSubscribed(false), 3200);
   };
 
-  // Stats
-  const totalReadTime = useMemo(() => {
-    return (basePosts || []).reduce((sum, p) => sum + (parseInt(p.readTime) || 5), 0);
-  }, [basePosts]);
+  /* ── Derived ─────────────────────────────────────────── */
+  const featuredPost = useMemo(() => posts.find((p) => p.featured), [posts]);
+  const totalPages = Math.ceil(totalCount / POSTS_PER_PAGE);
 
+  const displayPosts = useMemo(() => {
+    if (search.trim() || category !== "all") return posts;
+    return featuredPost ? posts.filter((p) => !p.featured) : posts;
+  }, [posts, featuredPost, search, category]);
+
+  /* ── Stat values ─────────────────────────────────────── */
+  const statItems = [
+    { icon: <FiFeather size={17} />, value: stats?.total_published ?? "…", label: "Articles Published" },
+    { icon: <FiUser size={17} />, value: stats?.total_featured ?? "…", label: "Featured Posts" },
+    { icon: <FiTag size={17} />, value: stats?.total_categories ?? categories.length ?? "…", label: "Categories" },
+    { icon: <FiEye size={17} />, value: stats?.total_views ?? "…", label: "Total Views" },
+  ];
+
+  /* ════════════════════════════════════════════════════
+     RENDER
+     ════════════════════════════════════════════════════ */
   return (
-    <div style={{ backgroundColor: 'var(--ps-off-white)' }}>
-      <SkeletonKeyframes />
+    <div style={{ backgroundColor: "var(--ps-off-white)", minHeight: "100vh" }}>
       <style>{globalStyles}</style>
 
       <PageHeader
         title="Travel Journal"
-        subtitle="Stories, guides, and inspiration from East Africa's most experienced travelers"
+        subtitle="Stories, guides and inspiration from East Africa's most experienced travelers"
         backgroundImage="https://i.pinimg.com/1200x/01/4e/6b/014e6b237eb7a5b6f7c70cd9b8b5b253.jpg"
-        breadcrumbs={[{ label: 'Posts' }]}
+        breadcrumbs={[{ label: "Posts" }]}
       />
 
-      <section
-        style={{
-          padding: isMobile ? '32px 16px 80px' : '60px 24px 120px',
-          maxWidth: '1280px',
-          margin: '0 auto',
-        }}
-      >
-        {/* ══════════ STATS BAR ══════════ */}
+      <section style={{
+        padding: isMobile ? "28px 16px 72px" : "56px 24px 112px",
+        maxWidth: 1280, margin: "0 auto",
+      }}>
+
+        {/* ════ STATS BAR ════ */}
         <AnimatedSection animation="fadeInUp">
-          <div
-            className="ps-stats-bar"
-            style={{
-              display: 'flex',
-              gap: '20px',
-              marginBottom: '40px',
-              flexWrap: 'wrap',
-            }}
-          >
-            {[
-              { icon: <FiFeather size={18} />, value: posts.length, label: 'Articles Published' },
-              { icon: <FiUser size={18} />, value: new Set(posts.map((p) => p.author)).size, label: 'Authors' },
-              { icon: <FiTag size={18} />, value: categories.length, label: 'Categories' },
-              { icon: <FiClock size={18} />, value: `${totalReadTime} min`, label: 'Total Reading' },
-            ].map((stat, i) => (
-              <div
-                key={i}
-                style={{
-                  flex: '1 1 200px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '14px',
-                  padding: '18px 22px',
-                  backgroundColor: 'white',
-                  borderRadius: 'var(--ps-radius-lg)',
-                  border: '1px solid #F3F4F6',
-                  boxShadow: 'var(--ps-shadow-sm)',
-                  transition: 'all 0.3s var(--ps-transition)',
-                }}
-                onMouseOver={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = 'var(--ps-shadow-md)';
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'var(--ps-shadow-sm)';
-                }}
-              >
-                <div
-                  style={{
-                    width: 44,
-                    height: 44,
-                    borderRadius: 14,
-                    backgroundColor: '#ECFDF5',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#059669',
-                    flexShrink: 0,
-                  }}
-                >
-                  {stat.icon}
-                </div>
-                <div>
-                  <div style={{ fontSize: 22, fontWeight: 800, color: '#111827', lineHeight: 1 }}>
-                    {stat.value}
-                  </div>
-                  <div style={{ fontSize: 12, color: '#9CA3AF', fontWeight: 500, marginTop: 2 }}>
-                    {stat.label}
-                  </div>
-                </div>
-              </div>
+          <div style={{
+            display: "flex", gap: 16, marginBottom: 40, flexWrap: "wrap",
+          }}>
+            {statItems.map((s, i) => (
+              <StatCard key={i} icon={s.icon} value={s.value} label={s.label} />
             ))}
           </div>
         </AnimatedSection>
 
-        {/* ══════════ FILTER BAR ══════════ */}
+        {/* ════ FILTER BAR ════ */}
         <AnimatedSection animation="fadeInUp">
           <div
-            className="ps-filter-bar"
+            className="ps-filter-row"
             style={{
-              display: 'flex',
-              gap: '16px',
-              marginBottom: '40px',
-              alignItems: 'center',
-              flexWrap: 'wrap',
+              display: "flex", gap: 14, marginBottom: 36,
+              alignItems: "center", flexWrap: "wrap",
             }}
           >
             {/* Search */}
             <div
               className="ps-search-wrap"
-              style={{
-                position: 'relative',
-                flex: '1 1 320px',
-                maxWidth: isMobile ? '100%' : '420px',
-              }}
+              style={{ position: "relative", flex: "1 1 300px", maxWidth: isMobile ? "100%" : 400 }}
             >
-              <FiSearch
-                size={18}
-                style={{
-                  position: 'absolute',
-                  left: '16px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  color: '#9CA3AF',
-                  transition: 'color 0.3s',
-                }}
-              />
+              <FiSearch size={17} style={{
+                position: "absolute", left: 15, top: "50%",
+                transform: "translateY(-50%)", color: "#9CA3AF",
+              }} />
               <input
                 type="text"
-                placeholder="Search articles, authors, topics..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search articles, authors, topics…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
                 className="ps-focus-ring"
                 style={{
-                  width: '100%',
-                  padding: '14px 44px 14px 48px',
-                  borderRadius: 'var(--ps-radius-full)',
-                  border: '2px solid #E5E7EB',
-                  backgroundColor: 'white',
-                  fontSize: '14px',
-                  color: '#374151',
-                  outline: 'none',
-                  transition: 'all 0.3s var(--ps-transition)',
-                  boxShadow: 'var(--ps-shadow-sm)',
-                  boxSizing: 'border-box',
+                  width: "100%", boxSizing: "border-box",
+                  padding: "13px 42px 13px 46px",
+                  borderRadius: "var(--ps-radius-full)",
+                  border: "2px solid #E5E7EB",
+                  backgroundColor: "white", fontSize: 13.5,
+                  color: "#374151", outline: "none",
+                  transition: "all 0.3s var(--ps-transition)",
+                  boxShadow: "var(--ps-shadow-sm)",
                 }}
                 onFocus={(e) => {
-                  e.target.style.borderColor = '#059669';
-                  e.target.style.boxShadow = '0 0 0 3px rgba(5,150,105,0.1)';
+                  e.target.style.borderColor = "#059669";
+                  e.target.style.boxShadow = "0 0 0 3px rgba(5,150,105,0.10)";
                 }}
                 onBlur={(e) => {
-                  e.target.style.borderColor = '#E5E7EB';
-                  e.target.style.boxShadow = 'var(--ps-shadow-sm)';
+                  e.target.style.borderColor = "#E5E7EB";
+                  e.target.style.boxShadow = "var(--ps-shadow-sm)";
                 }}
               />
-              {searchQuery && (
+              {search && (
                 <button
-                  onClick={() => setSearchQuery('')}
+                  onClick={() => setSearch("")}
                   style={{
-                    position: 'absolute',
-                    right: 14,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    cursor: 'pointer',
-                    color: '#9CA3AF',
-                    padding: 4,
-                    display: 'flex',
-                    transition: 'color 0.2s',
+                    position: "absolute", right: 12, top: "50%",
+                    transform: "translateY(-50%)",
+                    background: "none", border: "none",
+                    cursor: "pointer", color: "#9CA3AF", padding: 3,
+                    display: "flex", transition: "color 0.2s",
                   }}
-                  onMouseOver={(e) => (e.currentTarget.style.color = '#EF4444')}
-                  onMouseOut={(e) => (e.currentTarget.style.color = '#9CA3AF')}
+                  onMouseOver={(e) => (e.currentTarget.style.color = "#EF4444")}
+                  onMouseOut={(e) => (e.currentTarget.style.color = "#9CA3AF")}
                 >
-                  <FiX size={16} />
+                  <FiX size={15} />
                 </button>
               )}
             </div>
 
             {/* Category pills */}
             <div
-              ref={categoryRef}
-              className="ps-category-scroll ps-scrollbar-hidden"
-              style={{
-                display: 'flex',
-                gap: '8px',
-                flexWrap: 'nowrap',
-                overflowX: 'auto',
-              }}
+              className="ps-scrollbar-hidden"
+              style={{ display: "flex", gap: 8, overflowX: "auto", flexWrap: "nowrap" }}
             >
               <Pill
-                active={selectedCategory === 'all'}
-                onClick={() => setSelectedCategory('all')}
+                active={category === "all"}
+                onClick={() => setCategory("all")}
                 size="md"
               >
-                All Posts
+                All
               </Pill>
-              {categories.map((cat) => (
+              {categories.map((c) => (
                 <Pill
-                  key={cat}
-                  active={selectedCategory === cat}
-                  onClick={() => setSelectedCategory(cat)}
+                  key={c}
+                  active={category === c}
+                  onClick={() => setCategory(c)}
                   size="md"
                 >
-                  {cat}
+                  {c}
                 </Pill>
               ))}
             </div>
 
             {/* Controls */}
-            <div
-              style={{
-                display: 'flex',
-                gap: '8px',
-                alignItems: 'center',
-                marginLeft: isMobile ? 0 : 'auto',
-              }}
-            >
+            <div style={{
+              display: "flex", gap: 8, alignItems: "center",
+              marginLeft: isMobile ? 0 : "auto",
+            }}>
               {/* Sort */}
-              <div style={{ position: 'relative' }}>
+              <div style={{ position: "relative" }}>
                 <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
                   className="ps-focus-ring"
                   style={{
-                    padding: '10px 36px 10px 14px',
-                    borderRadius: 'var(--ps-radius-sm)',
-                    border: '2px solid #E5E7EB',
-                    backgroundColor: 'white',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    color: '#374151',
-                    cursor: 'pointer',
-                    outline: 'none',
-                    appearance: 'none',
-                    transition: 'border-color 0.2s',
+                    padding: "9px 34px 9px 12px",
+                    borderRadius: "var(--ps-radius-sm)",
+                    border: "2px solid #E5E7EB",
+                    backgroundColor: "white",
+                    fontSize: 13, fontWeight: 600, color: "#374151",
+                    cursor: "pointer", outline: "none", appearance: "none",
+                    transition: "border-color 0.2s",
                   }}
-                  onFocus={(e) => (e.target.style.borderColor = '#059669')}
-                  onBlur={(e) => (e.target.style.borderColor = '#E5E7EB')}
+                  onFocus={(e) => (e.target.style.borderColor = "#059669")}
+                  onBlur={(e) => (e.target.style.borderColor = "#E5E7EB")}
                 >
-                  <option value="newest">Newest</option>
+                  <option value="created">Newest</option>
                   <option value="oldest">Oldest</option>
-                  <option value="popular">Popular</option>
+                  <option value="views">Most Viewed</option>
+                  <option value="likes">Most Liked</option>
+                  <option value="title">A → Z</option>
                 </select>
-                <FiChevronDown
-                  size={14}
-                  style={{
-                    position: 'absolute',
-                    right: 12,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: '#9CA3AF',
-                    pointerEvents: 'none',
-                  }}
-                />
+                <FiChevronDown size={13} style={{
+                  position: "absolute", right: 10, top: "50%",
+                  transform: "translateY(-50%)", color: "#9CA3AF", pointerEvents: "none",
+                }} />
               </div>
 
-              {/* View mode */}
-              <div
-                style={{
-                  display: 'flex',
-                  gap: 0,
-                  padding: '4px',
-                  backgroundColor: '#F3F4F6',
-                  borderRadius: 'var(--ps-radius-sm)',
-                }}
-              >
+              {/* View toggle */}
+              <div style={{
+                display: "flex", padding: 4,
+                backgroundColor: "#F3F4F6", borderRadius: "var(--ps-radius-sm)",
+              }}>
                 {[
-                  { mode: 'grid', icon: <FiGrid size={16} /> },
-                  { mode: 'list', icon: <FiList size={16} /> },
+                  { mode: "grid", icon: <FiGrid size={15} /> },
+                  { mode: "list", icon: <FiList size={15} /> },
                 ].map(({ mode, icon }) => (
                   <button
                     key={mode}
                     onClick={() => setViewMode(mode)}
                     className="ps-focus-ring"
                     style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 6,
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: viewMode === mode ? 'white' : 'transparent',
-                      color: viewMode === mode ? '#059669' : '#9CA3AF',
-                      boxShadow: viewMode === mode ? 'var(--ps-shadow-sm)' : 'none',
-                      transition: 'all 0.2s',
+                      width: 34, height: 34, borderRadius: 6,
+                      border: "none", cursor: "pointer",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      backgroundColor: viewMode === mode ? "white" : "transparent",
+                      color: viewMode === mode ? "#059669" : "#9CA3AF",
+                      boxShadow: viewMode === mode ? "var(--ps-shadow-sm)" : "none",
+                      transition: "all 0.2s",
                     }}
                   >
                     {icon}
@@ -1286,38 +1218,26 @@ const Posts = () => {
         </AnimatedSection>
 
         {/* Search results info */}
-        {searchQuery && (
-          <div
-            style={{
-              marginBottom: '24px',
-              padding: '12px 20px',
-              backgroundColor: '#ECFDF5',
-              borderRadius: 'var(--ps-radius-md)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              animation: 'slideUp 0.3s ease',
-            }}
-          >
-            <FiSearch size={14} color="#059669" />
-            <span style={{ fontSize: 14, color: '#065F46' }}>
-              Found <strong>{filteredPosts.length}</strong> article
-              {filteredPosts.length !== 1 ? 's' : ''} for "{searchQuery}"
+        {search && !loading && (
+          <div style={{
+            marginBottom: 22,
+            padding: "11px 18px",
+            backgroundColor: "#ECFDF5",
+            borderRadius: "var(--ps-radius-md)",
+            display: "flex", alignItems: "center", gap: 8,
+            animation: "slideUp 0.3s ease",
+            border: "1px solid #D1FAE5",
+          }}>
+            <FiSearch size={13} color="#059669" />
+            <span style={{ fontSize: 13.5, color: "#065F46" }}>
+              Found <strong>{totalCount}</strong> result{totalCount !== 1 ? "s" : ""} for "{search}"
             </span>
             <button
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedCategory('all');
-              }}
+              onClick={() => { setSearch(""); setCategory("all"); }}
               style={{
-                marginLeft: 'auto',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                color: '#059669',
-                fontSize: 13,
-                fontWeight: 600,
-                textDecoration: 'underline',
+                marginLeft: "auto", background: "none", border: "none",
+                cursor: "pointer", color: "#059669", fontSize: 12.5,
+                fontWeight: 600, textDecoration: "underline",
               }}
             >
               Clear
@@ -1325,644 +1245,311 @@ const Posts = () => {
           </div>
         )}
 
-        {/* ══════════ FEATURED POST ══════════ */}
-        {featuredPosts[0] && selectedCategory === 'all' && !searchQuery && (
+        {/* ════ FEATURED POST ════ */}
+        {featuredPost && category === "all" && !search && !loading && (
           <AnimatedSection animation="fadeInUp">
-            <div style={{ marginBottom: '56px' }}>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                  marginBottom: '24px',
-                }}
-              >
-                <div
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: 12,
-                    background: 'linear-gradient(135deg, #059669, #047857)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                  }}
-                >
-                  <FiStar size={20} />
+            <div style={{ marginBottom: 52 }}>
+              {/* Section heading */}
+              <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 22 }}>
+                <div style={{
+                  width: 38, height: 38, borderRadius: 12,
+                  background: "linear-gradient(135deg,#059669,#047857)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: "white",
+                }}>
+                  <FiStar size={18} />
                 </div>
                 <div>
-                  <h2
-                    className="ps-section-title"
-                    style={{
-                      fontFamily: "'Playfair Display', serif",
-                      fontSize: '28px',
-                      fontWeight: '800',
-                      color: '#111827',
-                      letterSpacing: '-0.02em',
-                    }}
-                  >
+                  <h2 style={{
+                    fontFamily: "'Playfair Display', serif",
+                    fontSize: 26, fontWeight: 800, color: "#111827", letterSpacing: "-0.02em",
+                  }}>
                     Featured Article
                   </h2>
-                  <p style={{ fontSize: 13, color: '#9CA3AF', marginTop: 2 }}>
-                    Editor's pick of the week
-                  </p>
+                  <p style={{ fontSize: 12, color: "#9CA3AF", marginTop: 1 }}>Editor's pick</p>
                 </div>
               </div>
-
-              <Link to={`/post/${featuredPosts[0].slug}`} style={{ textDecoration: 'none' }}>
-                <div
-                  className="ps-featured-card ps-card-hover"
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: '1.4fr 1fr',
-                    backgroundColor: 'white',
-                    borderRadius: 'var(--ps-radius-xl)',
-                    overflow: 'hidden',
-                    boxShadow: 'var(--ps-shadow-md)',
-                    border: '1px solid #F3F4F6',
-                    position: 'relative',
-                  }}
-                >
-                  {/* Image */}
-                  <div style={{ overflow: 'hidden', position: 'relative' }}>
-                    <img
-                      src={featuredPosts[0].image}
-                      alt={featuredPosts[0].title}
-                      className="ps-featured-image"
-                      style={{
-                        height: '100%',
-                        minHeight: '420px',
-                        width: '100%',
-                        objectFit: 'cover',
-                        transition: 'transform 0.6s var(--ps-transition)',
-                      }}
-                      onMouseOver={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
-                      onMouseOut={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-                    />
-                    <div
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        background: 'linear-gradient(135deg, rgba(5,150,105,0.15), transparent)',
-                        pointerEvents: 'none',
-                      }}
-                    />
-                    {/* Featured badge */}
-                    <div style={{ position: 'absolute', top: 20, left: 20 }}>
-                      <Pill variant="solid" size="md" icon={<FiStar size={12} />}>
-                        Featured
-                      </Pill>
-                    </div>
-                  </div>
-
-                  {/* Content */}
-                  <div
-                    className="ps-featured-content"
-                    style={{
-                      padding: '48px 44px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Pill variant="green" size="md" icon={<FiTag size={11} />}>
-                      {featuredPosts[0].category}
-                    </Pill>
-
-                    <h3
-                      className="ps-featured-title"
-                      style={{
-                        fontFamily: "'Playfair Display', serif",
-                        fontSize: '30px',
-                        fontWeight: '800',
-                        color: '#111827',
-                        marginTop: '20px',
-                        marginBottom: '14px',
-                        lineHeight: 1.25,
-                        letterSpacing: '-0.02em',
-                      }}
-                    >
-                      {featuredPosts[0].title}
-                    </h3>
-
-                    <p
-                      style={{
-                        fontSize: '16px',
-                        color: '#6B7280',
-                        lineHeight: 1.75,
-                        marginBottom: '24px',
-                      }}
-                    >
-                      {featuredPosts[0].excerpt}
-                    </p>
-
-                    <div
-                      className="ps-meta-row"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '20px',
-                        marginBottom: '28px',
-                      }}
-                    >
-                      {[
-                        { icon: <FiCalendar size={14} />, text: featuredPosts[0].date },
-                        { icon: <FiClock size={14} />, text: featuredPosts[0].readTime },
-                      ].map((item, i) => (
-                        <span
-                          key={i}
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '6px',
-                            fontSize: '14px',
-                            color: '#9CA3AF',
-                            fontWeight: 500,
-                          }}
-                        >
-                          {item.icon} {item.text}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Author */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '12px',
-                        marginBottom: '28px',
-                        padding: '14px 18px',
-                        backgroundColor: '#FAFDF7',
-                        borderRadius: 'var(--ps-radius-md)',
-                        border: '1px solid #F3F4F6',
-                      }}
-                    >
-                      <img
-                        src={featuredPosts[0].authorImage}
-                        alt={featuredPosts[0].author}
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: '50%',
-                          objectFit: 'cover',
-                          border: '3px solid #D1FAE5',
-                        }}
-                      />
-                      <div>
-                        <div style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>
-                          {featuredPosts[0].author}
-                        </div>
-                        <div style={{ fontSize: 12, color: '#9CA3AF' }}>Travel Writer</div>
-                      </div>
-                    </div>
-
-                    <span
-                      className="ps-btn-primary"
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        padding: '14px 32px',
-                        borderRadius: 'var(--ps-radius-full)',
-                        fontSize: '15px',
-                        width: 'fit-content',
-                      }}
-                    >
-                      Read Full Article <FiArrowRight size={16} />
-                    </span>
-                  </div>
-                </div>
-              </Link>
+              <FeaturedCard post={featuredPost} />
             </div>
           </AnimatedSection>
         )}
 
-        {/* ══════════ POSTS GRID / LIST ══════════ */}
+        {/* ════ ARTICLES SECTION HEADING ════ */}
         <AnimatedSection animation="fadeInUp">
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '24px',
-            }}
-          >
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            marginBottom: 22, flexWrap: "wrap", gap: 10,
+          }}>
             <h2
               className="ps-section-title"
               style={{
                 fontFamily: "'Playfair Display', serif",
-                fontSize: '28px',
-                fontWeight: '800',
-                color: '#111827',
-                letterSpacing: '-0.02em',
+                fontSize: 26, fontWeight: 800, color: "#111827", letterSpacing: "-0.02em",
               }}
             >
-              {selectedCategory === 'all' ? 'All Articles' : selectedCategory}
+              {category === "all" ? "All Articles" : category}
             </h2>
-            <p style={{ fontSize: 14, color: '#9CA3AF', fontWeight: 500 }}>
-              {filteredPosts.length} article{filteredPosts.length !== 1 ? 's' : ''}
-            </p>
+            {!loading && (
+              <span style={{
+                fontSize: 13, color: "#9CA3AF", fontWeight: 500,
+                padding: "4px 12px", backgroundColor: "#F3F4F6",
+                borderRadius: "var(--ps-radius-full)",
+              }}>
+                {totalCount} article{totalCount !== 1 ? "s" : ""}
+              </span>
+            )}
           </div>
 
-          {remoteLoading ? (
+          {/* ── Loading ── */}
+          {loading ? (
             viewMode === "list" ? (
-              <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-                {Array.from({ length: Math.min(postsPerPage, 6) }).map((_, i) => (
-                  <SkeletonCard key={i} style={{ borderRadius: 22 }} />
-                ))}
+              <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+                {Array.from({ length: 5 }).map((_, i) => <SkeletonListCard key={i} />)}
               </div>
             ) : (
               <div
                 className="ps-posts-grid"
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, 1fr)",
-                  gap: 28,
-                }}
+                style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 26 }}
               >
-                {Array.from({ length: postsPerPage }).map((_, i) => (
-                  <SkeletonCard key={i} />
-                ))}
+                {Array.from({ length: POSTS_PER_PAGE }).map((_, i) => <SkeletonCard key={i} />)}
               </div>
             )
-          ) : filteredPosts.length === 0 ? (
-            <div
-              style={{
-                textAlign: 'center',
-                padding: '80px 24px',
-                animation: 'fadeUp 0.4s ease',
-              }}
-            >
-              <div
-                style={{
-                  width: 100,
-                  height: 100,
-                  borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 24px',
-                  animation: 'float 3s ease infinite',
-                }}
-              >
-                <FiSearch size={40} color="#059669" />
-              </div>
-              <h3
-                style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: '24px',
-                  color: '#111827',
-                  marginBottom: '8px',
-                }}
-              >
-                No Articles Found
-              </h3>
-              <p style={{ color: '#6B7280', marginBottom: '24px', lineHeight: 1.6 }}>
-                Try adjusting your search or filter criteria
-              </p>
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setSelectedCategory('all');
-                }}
-                className="ps-btn-primary ps-focus-ring"
-                style={{
-                  padding: '12px 28px',
-                  borderRadius: 'var(--ps-radius-full)',
-                  fontSize: '14px',
-                }}
-              >
-                Clear All Filters
-              </button>
-            </div>
-          ) : viewMode === 'list' ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {paginatedPosts.map((post, index) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  index={index}
-                  viewMode="list"
-                  onBookmark={toggleBookmark}
-                  isBookmarked={bookmarks.has(post.id)}
-                />
+          ) : error ? (
+            <ErrorState message={error} onRetry={() => setRetryKey((k) => k + 1)} />
+          ) : displayPosts.length === 0 ? (
+            <EmptyState onClear={() => { setSearch(""); setCategory("all"); }} />
+          ) : viewMode === "list" ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+              {displayPosts.map((p, i) => (
+                <ListCard key={p.id} post={p} index={i} />
               ))}
             </div>
           ) : (
             <div
               className="ps-posts-grid"
-              style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '28px',
-              }}
+              style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 26 }}
             >
-              {paginatedPosts.map((post, index) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  index={index}
-                  viewMode="grid"
+              {displayPosts.map((p, i) => (
+                <GridCard
+                  key={p.id}
+                  post={p}
+                  index={i}
+                  isBookmarked={bookmarks.has(p.id)}
                   onBookmark={toggleBookmark}
-                  isBookmarked={bookmarks.has(post.id)}
                 />
               ))}
             </div>
           )}
         </AnimatedSection>
 
-        {/* ══════════ PAGINATION ══════════ */}
-        {totalPages > 1 && (
+        {/* ════ PAGINATION ════ */}
+        {!loading && !error && totalPages > 1 && (
           <AnimatedSection animation="fadeInUp">
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '8px',
-                marginTop: '48px',
-                flexWrap: 'wrap',
-              }}
-            >
+            <div style={{
+              display: "flex", justifyContent: "center", alignItems: "center",
+              gap: 8, marginTop: 48, flexWrap: "wrap",
+            }}>
+              {/* Prev */}
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
                 className="ps-focus-ring"
                 style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 'var(--ps-radius-sm)',
-                  border: '1px solid #E5E7EB',
-                  backgroundColor: 'white',
-                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: currentPage === 1 ? '#D1D5DB' : '#374151',
-                  transition: 'all 0.2s',
+                  width: 40, height: 40, borderRadius: "var(--ps-radius-sm)",
+                  border: "1px solid #E5E7EB", backgroundColor: "white",
+                  cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: currentPage === 1 ? "#D1D5DB" : "#374151",
                   opacity: currentPage === 1 ? 0.5 : 1,
+                  transition: "all 0.2s",
                 }}
-                onMouseOver={(e) => {
-                  if (currentPage !== 1) {
-                    e.currentTarget.style.borderColor = '#059669';
-                    e.currentTarget.style.color = '#059669';
-                  }
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.borderColor = '#E5E7EB';
-                  e.currentTarget.style.color = currentPage === 1 ? '#D1D5DB' : '#374151';
-                }}
+                onMouseOver={(e) => { if (currentPage !== 1) { e.currentTarget.style.borderColor = "#059669"; e.currentTarget.style.color = "#059669"; } }}
+                onMouseOut={(e) => { e.currentTarget.style.borderColor = "#E5E7EB"; e.currentTarget.style.color = currentPage === 1 ? "#D1D5DB" : "#374151"; }}
               >
-                <FiChevronLeft size={18} />
+                <FiChevronLeft size={17} />
               </button>
 
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className="ps-focus-ring"
-                  style={{
-                    width: 42,
-                    height: 42,
-                    borderRadius: 'var(--ps-radius-sm)',
-                    border: page === currentPage ? '2px solid #059669' : '1px solid #E5E7EB',
-                    backgroundColor: page === currentPage ? '#059669' : 'white',
-                    color: page === currentPage ? 'white' : '#374151',
-                    cursor: 'pointer',
-                    fontSize: 14,
-                    fontWeight: page === currentPage ? 700 : 500,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.2s',
-                    boxShadow:
-                      page === currentPage
-                        ? '0 4px 12px rgba(5,150,105,0.3)'
-                        : 'none',
-                  }}
-                  onMouseOver={(e) => {
-                    if (page !== currentPage) {
-                      e.currentTarget.style.borderColor = '#059669';
-                      e.currentTarget.style.color = '#059669';
-                    }
-                  }}
-                  onMouseOut={(e) => {
-                    if (page !== currentPage) {
-                      e.currentTarget.style.borderColor = '#E5E7EB';
-                      e.currentTarget.style.color = '#374151';
-                    }
-                  }}
-                >
-                  {page}
-                </button>
-              ))}
+              {/* Page numbers */}
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 2)
+                .reduce((acc, p, idx, arr) => {
+                  if (idx > 0 && arr[idx - 1] !== p - 1) acc.push("…");
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((item, idx) =>
+                  item === "…" ? (
+                    <span key={`dots-${idx}`} style={{ padding: "0 6px", color: "#9CA3AF", fontSize: 14 }}>…</span>
+                  ) : (
+                    <button
+                      key={item}
+                      onClick={() => setCurrentPage(item)}
+                      className="ps-focus-ring"
+                      style={{
+                        width: 40, height: 40, borderRadius: "var(--ps-radius-sm)",
+                        border: item === currentPage ? "2px solid #059669" : "1px solid #E5E7EB",
+                        backgroundColor: item === currentPage ? "#059669" : "white",
+                        color: item === currentPage ? "white" : "#374151",
+                        cursor: "pointer", fontSize: 13.5,
+                        fontWeight: item === currentPage ? 700 : 500,
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        transition: "all 0.2s",
+                        boxShadow: item === currentPage ? "0 4px 14px rgba(5,150,105,0.28)" : "none",
+                      }}
+                      onMouseOver={(e) => { if (item !== currentPage) { e.currentTarget.style.borderColor = "#059669"; e.currentTarget.style.color = "#059669"; } }}
+                      onMouseOut={(e) => { if (item !== currentPage) { e.currentTarget.style.borderColor = "#E5E7EB"; e.currentTarget.style.color = "#374151"; } }}
+                    >
+                      {item}
+                    </button>
+                  )
+                )}
 
+              {/* Next */}
               <button
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
                 className="ps-focus-ring"
                 style={{
-                  width: 42,
-                  height: 42,
-                  borderRadius: 'var(--ps-radius-sm)',
-                  border: '1px solid #E5E7EB',
-                  backgroundColor: 'white',
-                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: currentPage === totalPages ? '#D1D5DB' : '#374151',
-                  transition: 'all 0.2s',
+                  width: 40, height: 40, borderRadius: "var(--ps-radius-sm)",
+                  border: "1px solid #E5E7EB", backgroundColor: "white",
+                  cursor: currentPage === totalPages ? "not-allowed" : "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  color: currentPage === totalPages ? "#D1D5DB" : "#374151",
                   opacity: currentPage === totalPages ? 0.5 : 1,
+                  transition: "all 0.2s",
                 }}
-                onMouseOver={(e) => {
-                  if (currentPage !== totalPages) {
-                    e.currentTarget.style.borderColor = '#059669';
-                    e.currentTarget.style.color = '#059669';
-                  }
-                }}
-                onMouseOut={(e) => {
-                  e.currentTarget.style.borderColor = '#E5E7EB';
-                  e.currentTarget.style.color =
-                    currentPage === totalPages ? '#D1D5DB' : '#374151';
-                }}
+                onMouseOver={(e) => { if (currentPage !== totalPages) { e.currentTarget.style.borderColor = "#059669"; e.currentTarget.style.color = "#059669"; } }}
+                onMouseOut={(e) => { e.currentTarget.style.borderColor = "#E5E7EB"; e.currentTarget.style.color = currentPage === totalPages ? "#D1D5DB" : "#374151"; }}
               >
-                <FiChevronRight size={18} />
+                <FiChevronRight size={17} />
               </button>
             </div>
+
+            {/* Page info */}
+            <p style={{ textAlign: "center", fontSize: 12.5, color: "#9CA3AF", marginTop: 12 }}>
+              Page {currentPage} of {totalPages} · {totalCount} articles
+            </p>
           </AnimatedSection>
         )}
 
-        {/* ══════════ NEWSLETTER CTA ══════════ */}
+        {/* ════ NEWSLETTER ════ */}
         <AnimatedSection animation="fadeInUp">
           <div
             className="ps-newsletter"
             style={{
-              marginTop: '80px',
-              padding: isMobile ? '40px 24px' : '56px 48px',
-              background: 'linear-gradient(135deg, #064E3B 0%, #065F46 40%, #047857 100%)',
-              borderRadius: 'var(--ps-radius-xl)',
-              textAlign: 'center',
-              position: 'relative',
-              overflow: 'hidden',
+              marginTop: 76,
+              padding: isMobile ? "40px 22px" : "56px 48px",
+              background: "linear-gradient(135deg,#064E3B 0%,#065F46 40%,#047857 100%)",
+              borderRadius: "var(--ps-radius-xl)",
+              textAlign: "center",
+              position: "relative",
+              overflow: "hidden",
             }}
           >
-            {/* Decorative circles */}
-            <div
-              style={{
-                position: 'absolute',
-                top: '-80px',
-                right: '-80px',
-                width: '250px',
-                height: '250px',
-                borderRadius: '50%',
-                background: 'rgba(52,211,153,0.08)',
-              }}
-            />
-            <div
-              style={{
-                position: 'absolute',
-                bottom: '-60px',
-                left: '-60px',
-                width: '180px',
-                height: '180px',
-                borderRadius: '50%',
-                background: 'rgba(110,231,183,0.06)',
-              }}
-            />
+            {/* Decorative blobs */}
+            {[
+              { top: -80, right: -80, size: 240 },
+              { bottom: -60, left: -60, size: 170 },
+            ].map((b, i) => (
+              <div key={i} style={{
+                position: "absolute",
+                top: b.top, bottom: b.bottom,
+                left: b.left, right: b.right,
+                width: b.size, height: b.size,
+                borderRadius: "50%",
+                background: "rgba(52,211,153,0.07)",
+                pointerEvents: "none",
+              }} />
+            ))}
 
-            <div style={{ position: 'relative', zIndex: 1 }}>
-              <div
-                style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 20,
-                  background: 'rgba(255,255,255,0.1)',
-                  backdropFilter: 'blur(12px)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  margin: '0 auto 24px',
-                  animation: 'float 3s ease infinite',
-                }}
-              >
-                <FiMail size={28} color="#34D399" />
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <div style={{
+                width: 62, height: 62, borderRadius: 18,
+                background: "rgba(255,255,255,0.1)",
+                backdropFilter: "blur(12px)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                margin: "0 auto 22px",
+                animation: "float 3s ease infinite",
+                border: "1px solid rgba(255,255,255,0.12)",
+              }}>
+                <FiMail size={27} color="#34D399" />
               </div>
 
-              <h3
-                style={{
-                  fontFamily: "'Playfair Display', serif",
-                  fontSize: isMobile ? '24px' : '32px',
-                  fontWeight: '800',
-                  color: 'white',
-                  marginBottom: '12px',
-                  letterSpacing: '-0.02em',
-                }}
-              >
+              <h3 style={{
+                fontFamily: "'Playfair Display', serif",
+                fontSize: isMobile ? 22 : 30,
+                fontWeight: 800, color: "white",
+                marginBottom: 10, letterSpacing: "-0.02em",
+              }}>
                 Never Miss a Story
               </h3>
 
-              <p
-                style={{
-                  fontSize: isMobile ? '14px' : '16px',
-                  color: 'rgba(255,255,255,0.75)',
-                  maxWidth: '480px',
-                  margin: '0 auto 32px',
-                  lineHeight: 1.7,
-                }}
-              >
-                Get the latest travel stories, tips, and exclusive content delivered
+              <p style={{
+                fontSize: isMobile ? 13.5 : 15.5,
+                color: "rgba(255,255,255,0.72)",
+                maxWidth: 460, margin: "0 auto 28px", lineHeight: 1.7,
+              }}>
+                Get the latest travel stories, tips and exclusive content delivered
                 straight to your inbox every week.
               </p>
 
               <form
                 onSubmit={handleSubscribe}
                 style={{
-                  display: 'flex',
-                  gap: '12px',
-                  maxWidth: '480px',
-                  margin: '0 auto',
-                  flexWrap: isMobile ? 'wrap' : 'nowrap',
+                  display: "flex", gap: 10,
+                  maxWidth: 460, margin: "0 auto",
+                  flexWrap: isMobile ? "wrap" : "nowrap",
                 }}
               >
                 <EmailAutocompleteInput
-                  value={emailInput}
-                  onValueChange={setEmailInput}
+                  value={email}
+                  onValueChange={setEmail}
                   placeholder="Enter your email address"
                   required
                   className="ps-focus-ring"
                   style={{
                     flex: 1,
-                    padding: '14px 20px',
-                    borderRadius: 'var(--ps-radius-full)',
-                    border: '2px solid rgba(255,255,255,0.2)',
-                    backgroundColor: 'rgba(255,255,255,0.1)',
-                    color: 'white',
-                    fontSize: '14px',
-                    outline: 'none',
-                    transition: 'border-color 0.3s',
-                    backdropFilter: 'blur(8px)',
-                    minWidth: isMobile ? '100%' : 'auto',
+                    padding: "13px 18px",
+                    borderRadius: "var(--ps-radius-full)",
+                    border: "2px solid rgba(255,255,255,0.18)",
+                    backgroundColor: "rgba(255,255,255,0.09)",
+                    color: "white", fontSize: 13.5, outline: "none",
+                    transition: "border-color 0.3s",
+                    backdropFilter: "blur(8px)",
+                    minWidth: isMobile ? "100%" : "auto",
                   }}
-                  onFocus={(e) => (e.target.style.borderColor = 'rgba(52,211,153,0.6)')}
-                  onBlur={(e) => (e.target.style.borderColor = 'rgba(255,255,255,0.2)')}
+                  onFocus={(e) => (e.target.style.borderColor = "rgba(52,211,153,0.55)")}
+                  onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.18)")}
                 />
                 <button
                   type="submit"
                   className="ps-focus-ring"
                   style={{
-                    padding: '14px 28px',
-                    borderRadius: 'var(--ps-radius-full)',
+                    padding: "13px 26px",
+                    borderRadius: "var(--ps-radius-full)",
                     background: subscribed
-                      ? 'linear-gradient(135deg, #34D399, #10B981)'
-                      : 'linear-gradient(135deg, white, #F9FAFB)',
-                    color: subscribed ? 'white' : '#065F46',
-                    border: 'none',
-                    cursor: 'pointer',
-                    fontSize: '14px',
-                    fontWeight: '700',
-                    transition: 'all 0.3s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    whiteSpace: 'nowrap',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
-                    minWidth: isMobile ? '100%' : 'auto',
-                    justifyContent: 'center',
+                      ? "linear-gradient(135deg,#34D399,#10B981)"
+                      : "linear-gradient(135deg,white,#F9FAFB)",
+                    color: subscribed ? "white" : "#065F46",
+                    border: "none", cursor: "pointer",
+                    fontSize: 13.5, fontWeight: 700,
+                    display: "flex", alignItems: "center", gap: 8,
+                    whiteSpace: "nowrap",
+                    boxShadow: "0 4px 18px rgba(0,0,0,0.18)",
+                    transition: "all 0.3s",
+                    minWidth: isMobile ? "100%" : "auto",
+                    justifyContent: "center",
                   }}
-                  onMouseOver={(e) => {
-                    if (!subscribed) {
-                      e.currentTarget.style.transform = 'translateY(-2px)';
-                      e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.2)';
-                    }
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.15)';
-                  }}
+                  onMouseOver={(e) => { if (!subscribed) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 28px rgba(0,0,0,0.24)"; } }}
+                  onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 18px rgba(0,0,0,0.18)"; }}
                 >
-                  {subscribed ? (
-                    <>
-                      <FiStar size={16} /> Subscribed!
-                    </>
-                  ) : (
-                    <>
-                      <FiMail size={16} /> Subscribe
-                    </>
-                  )}
+                  {subscribed
+                    ? <><FiStar size={15} /> Subscribed!</>
+                    : <><FiMail size={15} /> Subscribe</>}
                 </button>
               </form>
 
-              <p
-                style={{
-                  fontSize: 12,
-                  color: 'rgba(255,255,255,0.4)',
-                  marginTop: 16,
-                }}
-              >
+              <p style={{ fontSize: 11.5, color: "rgba(255,255,255,0.38)", marginTop: 14 }}>
                 No spam. Unsubscribe anytime. We respect your privacy.
               </p>
             </div>
@@ -1970,28 +1557,21 @@ const Posts = () => {
         </AnimatedSection>
       </section>
 
-      {/* ══════════ BACK TO TOP ══════════ */}
-      {showBackToTop && (
+      {/* ════ BACK TO TOP ════ */}
+      {backToTop && (
         <button
-          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           className="ps-btn-primary ps-focus-ring"
           aria-label="Back to top"
           style={{
-            position: 'fixed',
-            bottom: '32px',
-            right: '32px',
-            width: '52px',
-            height: '52px',
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 100,
-            animation: 'bounceIn 0.4s ease',
-            padding: 0,
+            position: "fixed", bottom: 30, right: 30,
+            width: 50, height: 50, borderRadius: "50%",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            zIndex: 100, padding: 0,
+            animation: "bounceIn 0.4s ease",
           }}
         >
-          <FiArrowUp size={22} />
+          <FiArrowUp size={20} />
         </button>
       )}
     </div>
