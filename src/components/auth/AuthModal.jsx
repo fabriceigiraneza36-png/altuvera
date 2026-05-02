@@ -796,8 +796,8 @@ export default function AuthModal() {
             </p>
             <div className="auth-side-panel__stats">
               {[
-                { value: "50K+", label: "Travelers" },
-                { value: "120+", label: "Destinations" },
+                { value: "1K+", label: "Travelers" },
+                { value: "7+", label: "Destinations" },
                 { value: "4.9★", label: "Rated" },
               ].map(({ value, label }) => (
                 <div className="auth-side-stat" key={label}>
