@@ -194,13 +194,27 @@ function ImageSlideshow({ images, height = 280 }) {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentImage((prev) => (prev + 1) % safeImages.length);
-    }, 3000); // rotates every 3 seconds
+    }, 3000);
 
     return () => clearInterval(interval);
   }, [safeImages.length]);
 
-  // Responsive height
-  const responsiveHeight = typeof window !== 'undefined' && window.innerWidth < 768 ? Math.min(height * 0.8, 200) : height;
+  const prevSlide = () => {
+    setCurrentImage((prev) =>
+      prev === 0 ? safeImages.length - 1 : prev - 1,
+    );
+  };
+
+  const nextSlide = () => {
+    setCurrentImage((prev) =>
+      prev === safeImages.length - 1 ? 0 : prev + 1,
+    );
+  };
+
+  const responsiveHeight =
+    typeof window !== 'undefined' && window.innerWidth < 768
+      ? Math.min(height * 0.8, 200)
+      : height;
 
   return (
     <div
@@ -214,7 +228,7 @@ function ImageSlideshow({ images, height = 280 }) {
         <img
           key={`${src}-${i}`}
           src={src}
-          alt=""
+          alt="Destination"
           loading="lazy"
           style={{
             position: 'absolute',
@@ -229,43 +243,98 @@ function ImageSlideshow({ images, height = 280 }) {
         />
       ))}
 
-      {/* Gradient overlay */}
       <div
         style={{
           position: 'absolute',
           inset: 0,
           background:
-            'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.35) 100%)',
+            'linear-gradient(180deg, rgba(0,0,0,0) 25%, rgba(0,0,0,0.5) 100%)',
         }}
       />
 
-      {/* Slide Indicators */}
       {safeImages.length > 1 && (
-        <div
-          style={{
-            position: 'absolute',
-            bottom: 16,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            display: 'flex',
-            gap: 6,
-            zIndex: 5,
-          }}
-        >
-          {safeImages.map((_, i) => (
-            <div
-              key={i}
-              style={{
-                height: 6,
-                borderRadius: 3,
-                transition: 'all 0.3s ease',
-                backgroundColor:
-                  i === currentImage ? COLORS.green[400] : 'rgba(255,255,255,0.4)',
-                width: i === currentImage ? 24 : 6,
-              }}
-            />
-          ))}
-        </div>
+        <>
+          <button
+            onClick={prevSlide}
+            aria-label="Previous slide"
+            style={{
+              position: 'absolute',
+              top: '50%',
+              left: 14,
+              transform: 'translateY(-50%)',
+              width: 38,
+              height: 38,
+              borderRadius: '50%',
+              border: 'none',
+              background: 'rgba(255,255,255,0.75)',
+              cursor: 'pointer',
+              fontSize: 26,
+              color: COLORS.neutral[900],
+              display: 'grid',
+              placeItems: 'center',
+              boxShadow: '0 12px 28px rgba(0,0,0,0.12)',
+              zIndex: 10,
+            }}
+          >
+            ‹
+          </button>
+          <button
+            onClick={nextSlide}
+            aria-label="Next slide"
+            style={{
+              position: 'absolute',
+              top: '50%',
+              right: 14,
+              transform: 'translateY(-50%)',
+              width: 38,
+              height: 38,
+              borderRadius: '50%',
+              border: 'none',
+              background: 'rgba(255,255,255,0.75)',
+              cursor: 'pointer',
+              fontSize: 26,
+              color: COLORS.neutral[900],
+              display: 'grid',
+              placeItems: 'center',
+              boxShadow: '0 12px 28px rgba(0,0,0,0.12)',
+              zIndex: 10,
+            }}
+          >
+            ›
+          </button>
+
+          <div
+            style={{
+              position: 'absolute',
+              bottom: 16,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              gap: 8,
+              zIndex: 10,
+            }}
+          >
+            {safeImages.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentImage(index)}
+                aria-label={`Go to slide ${index + 1}`}
+                style={{
+                  width: currentImage === index ? 18 : 10,
+                  height: 10,
+                  borderRadius: 999,
+                  border: 'none',
+                  background:
+                    currentImage === index
+                      ? COLORS.white.pure
+                      : 'rgba(255,255,255,0.45)',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s ease',
+                }}
+              />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
@@ -404,6 +473,7 @@ function DestinationCard({
   destination,
   onWishlistToggle,
   showBookButton = true,
+  showPrice = false,
   compact = false,
   user,
   isMobile = false,
@@ -509,6 +579,7 @@ function DestinationCard({
   const hasRating = Number.isFinite(ratingValue) && ratingValue > 0;
   const numericPrice = Number(price ?? startingPrice);
   const hasPrice = Number.isFinite(numericPrice) && numericPrice > 0;
+  const shouldShowPrice = Boolean(showPrice && hasPrice);
 
   return (
     <article
@@ -741,45 +812,87 @@ function DestinationCard({
           </div>
         </div>
 
-        {/* Location pill with country info */}
-        <Link
-          to={`/country/${destination.countrySlug}`}
+        {/* Bottom overlay with destination summary */}
+        <div
           style={{
             position: 'absolute',
-            bottom: 16,
-            left: 16,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            padding: '8px 14px',
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(12px)',
-            borderRadius: 30,
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: '22px 22px 18px',
+            background: 'linear-gradient(180deg, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.85) 100%)',
+            color: COLORS.white.pure,
             zIndex: 6,
-            boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-            textDecoration: 'none',
-            transition: 'all 0.3s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.05)';
-            e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.15)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1)';
-            e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
           }}
         >
-          <FiMapPin size={14} color={COLORS.green[600]} />
-          <span
+          <h3
             style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: COLORS.neutral[700],
+              margin: 0,
+              fontSize: 22,
+              lineHeight: 1.2,
+              fontWeight: 800,
+              textShadow: '0 12px 24px rgba(0,0,0,0.3)',
             }}
           >
-            {destination.countryFlag && `${destination.countryFlag} `}{locationLabel}
-          </span>
-        </Link>
+            {name}
+          </h3>
+          <p
+            style={{
+              margin: '10px 0 0',
+              fontSize: 13,
+              opacity: 0.9,
+              color: 'rgba(255,255,255,0.92)',
+              maxWidth: '95%',
+            }}
+          >
+            📍 {locationLabel}
+          </p>
+          <div
+            style={{
+              display: 'flex',
+              gap: 12,
+              alignItems: 'center',
+              marginTop: 14,
+              flexWrap: 'wrap',
+            }}
+          >
+            {hasRating && (
+              <span
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  background: 'rgba(255,255,255,0.12)',
+                  border: '1px solid rgba(255,255,255,0.18)',
+                  borderRadius: 999,
+                  padding: '8px 12px',
+                  fontSize: 13,
+                  fontWeight: 700,
+                }}
+              >
+                ⭐ {ratingValue.toFixed(1)}
+              </span>
+            )}
+            <span
+              style={{
+                fontSize: 13,
+                opacity: 0.86,
+              }}
+            >
+              {reviewsCount ? `${formatNumber(reviewsCount)} reviews` : 'Highly rated'}
+            </span>
+            {duration && (
+              <span
+                style={{
+                  fontSize: 13,
+                  opacity: 0.86,
+                }}
+              >
+                ⏱ {duration}
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Content Section */}
@@ -1074,7 +1187,7 @@ function DestinationCard({
               />
 
               <span style={{ position: 'relative', zIndex: 1 }}>
-                {isCountry ? 'Explore Country' : 'View Details'}
+                {isCountry ? 'Explore Country' : 'Explore Now'}
               </span>
               <FiArrowRight
                 size={16}

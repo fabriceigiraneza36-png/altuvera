@@ -1,10 +1,5 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  useMemo,
-} from "react";
+// src/components/common/Navbar.jsx
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   FiChevronDown,
@@ -22,9 +17,11 @@ import { getAllDestinations } from "../../data/destinations";
 import { preloadRoute } from "../../utils/routeUtils";
 import { useCountries } from "../../hooks/useCountries";
 
+const cn = (...c) => c.filter(Boolean).join(" ");
+
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
+  const [navHidden, setNavHidden] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
@@ -34,8 +31,6 @@ const Navbar = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
-  const [navVisible, setNavVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
 
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
   const location = useLocation();
@@ -43,9 +38,7 @@ const Navbar = () => {
   const { favorites } = useApp();
   const { user, isAuthenticated, authLoading, openModal, logout } =
     useUserAuth();
-
-  // Fetch countries from backend API
-  const { countries: backendCountries } = useCountries({ featured: true });
+  const { countries: backendCountries } = useCountries({ limit: 12 });
 
   const headerRef = useRef(null);
   const userMenuRef = useRef(null);
@@ -53,33 +46,31 @@ const Navbar = () => {
   const dropdownTimer = useRef(null);
   const searchAbortRef = useRef(null);
   const latestSearchRef = useRef("");
+  const lastScrollYRef = useRef(0);
 
   const localDestinations = useMemo(() => getAllDestinations(), []);
 
-  // Build destinations dropdown from backend countries only
   const destinationsDropdown = useMemo(() => {
     const items = [
       { name: "All Destinations", path: "/destinations", isOverview: true },
     ];
-
-    if (backendCountries && backendCountries.length > 0) {
-      backendCountries.forEach((country) => {
+    if (backendCountries?.length > 0) {
+      backendCountries.forEach((c) =>
         items.push({
-          name: country.name,
-          flag: country.flagUrl || country.flag_url || country.flag || "",
+          name: c.name,
+          flag: c.flagUrl || c.flag_url || c.flag || "",
           info:
-            country.tagline ||
-            country.region ||
-            country.capital ||
-            country.continent ||
-            country.subRegion ||
-            country.shortDescription ||
-            (country.description ? `${country.description.slice(0, 60)}…` : ""),
-          path: `/country/${country.slug || country.id || country.name.toLowerCase()}`,
-        });
-      });
+            c.tagline ||
+            c.region ||
+            c.capital ||
+            c.continent ||
+            c.subRegion ||
+            c.shortDescription ||
+            (c.description ? `${c.description.slice(0, 60)}…` : ""),
+          path: `/country/${c.slug || c.id || c.name.toLowerCase()}`,
+        })
+      );
     }
-
     return items;
   }, [backendCountries]);
 
@@ -106,7 +97,7 @@ const Navbar = () => {
       },
       { name: "Contact", path: "/contact" },
     ],
-    [destinationsDropdown],
+    [destinationsDropdown]
   );
 
   const userMenuItems = useMemo(() => {
@@ -116,41 +107,51 @@ const Navbar = () => {
       { to: "/wishlist", icon: FiHeart, label: "Wishlist" },
       { to: "/settings", icon: FiSettings, label: "Settings" },
     ];
-
-    if (user?.role === "admin" || user?.role === "manager") {
+    if (user?.role === "admin" || user?.role === "manager")
       items.push({
         to: "/admin/dashboard",
         icon: FiSettings,
         label: "Admin Dashboard",
       });
-    }
-
     return items;
   }, [user?.role]);
 
+  // ── Scroll: transparent→white, hide on scroll down, show on scroll up ──
   useEffect(() => {
     let ticking = false;
-    const onScroll = () => {
-      if (!ticking) {
-        requestAnimationFrame(() => {
-          const currentY = window.scrollY;
-          setScrollY(currentY);
-          setIsScrolled(currentY > 40);
 
-          if (currentY > 300) {
-            setNavVisible(currentY < lastScrollY || currentY < 100);
-          } else {
-            setNavVisible(true);
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+
+      requestAnimationFrame(() => {
+        const currentY = window.scrollY;
+        const lastY = lastScrollYRef.current;
+
+        // Transparent at top, white when scrolled
+        setIsScrolled(currentY > 20);
+
+        // Hide/show logic: only after scrolling past 80px
+        if (currentY > 80) {
+          if (currentY > lastY + 5) {
+            // Scrolling DOWN → hide
+            setNavHidden(true);
+          } else if (currentY < lastY - 5) {
+            // Scrolling UP → show
+            setNavHidden(false);
           }
-          setLastScrollY(currentY);
-          ticking = false;
-        });
-        ticking = true;
-      }
+        } else {
+          setNavHidden(false);
+        }
+
+        lastScrollYRef.current = currentY;
+        ticking = false;
+      });
     };
+
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [lastScrollY]);
+  }, []);
 
   const closeAll = useCallback(() => {
     setIsMobileMenuOpen(false);
@@ -175,103 +176,90 @@ const Navbar = () => {
     if (searchOpen) setTimeout(() => searchInputRef.current?.focus(), 100);
   }, [searchOpen]);
 
-   useEffect(() => {
-     const q = searchValue.trim();
-     latestSearchRef.current = q;
+  // ── Search logic ──────────────────────────────────────────────────────
+  useEffect(() => {
+    const q = searchValue.trim();
+    latestSearchRef.current = q;
+    if (searchAbortRef.current) {
+      searchAbortRef.current.abort();
+      searchAbortRef.current = null;
+    }
+    if (q.length < 2) {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
 
-     if (searchAbortRef.current) {
-       searchAbortRef.current.abort();
-       searchAbortRef.current = null;
-     }
+    const norm = (v) => {
+      if (typeof v === "string") return v;
+      if (!v) return "";
+      if (typeof v === "object")
+        return v.name || v.countryName || v.location || v.slug || "";
+      return String(v);
+    };
+    const key = (i) => i?._id || i?.id || i?.slug || i?.name;
+    const toR = (i) => ({
+      id: i?.id || i?._id || i?.slug,
+      slug: i?.slug || i?.id,
+      name: i?.title || i?.name || i?.category || "Result",
+      country: norm(i?.country || i?.countryName || i?.location),
+      category: norm(i?.category || i?.type || "Destination"),
+      heroImage: i?.image || i?.heroImage || i?.images?.[0] || "",
+      description: i?.description,
+      price: i?.price,
+      duration: i?.duration,
+    });
 
-     if (q.length < 2) {
-       setSearchResults([]);
-       setIsSearching(false);
-       return;
-     }
+    const ql = q.toLowerCase();
+    const local = localDestinations
+      .filter((d) => {
+        const n = (d?.name || "").toLowerCase();
+        const ds = (d?.description || "").toLowerCase();
+        const co = norm(d?.country).toLowerCase();
+        const lo = (d?.location || "").toLowerCase();
+        return (
+          n.includes(ql) ||
+          ds.includes(ql) ||
+          co.includes(ql) ||
+          lo.includes(ql)
+        );
+      })
+      .sort((a, b) => {
+        const as = (a?.name || "").toLowerCase().startsWith(ql) ? 1 : 0;
+        const bs = (b?.name || "").toLowerCase().startsWith(ql) ? 1 : 0;
+        return as !== bs
+          ? bs - as
+          : (a?.name || "").localeCompare(b?.name || "");
+      })
+      .slice(0, 6)
+      .map(toR);
 
-     const normalizeString = (value) => {
-       if (typeof value === "string") return value;
-       if (!value) return "";
-       if (typeof value === "object") {
-         return (
-           value.name || value.countryName || value.location || value.slug || ""
-         );
-       }
-       return String(value);
-     };
+    setSearchResults(local);
 
-     const normalizeKey = (item) =>
-       item?._id || item?.id || item?.slug || item?.name;
-
-     const toResult = (item) => ({
-       id: item?.id || item?._id || item?.slug,
-       slug: item?.slug || item?.id,
-       name: item?.title || item?.name || item?.category || "Result",
-       country: normalizeString(item?.country || item?.countryName || item?.location),
-       category: normalizeString(item?.category || item?.type || "Destination"),
-       heroImage: item?.image || item?.heroImage || item?.images?.[0] || "",
-       description: item?.description,
-       price: item?.price,
-       duration: item?.duration,
-     });
-
-     const qLower = q.toLowerCase();
-     const localMatches = localDestinations
-       .filter((d) => {
-         const name = (d?.name || "").toLowerCase();
-         const desc = (d?.description || "").toLowerCase();
-         const country = normalizeString(d?.country).toLowerCase();
-         const loc = (d?.location || "").toLowerCase();
-         return (
-           name.includes(qLower) ||
-           desc.includes(qLower) ||
-           country.includes(qLower) ||
-           loc.includes(qLower)
-         );
-       })
-       .sort((a, b) => {
-         const an = (a?.name || "").toLowerCase();
-         const bn = (b?.name || "").toLowerCase();
-         const aStarts = an.startsWith(qLower) ? 1 : 0;
-         const bStarts = bn.startsWith(qLower) ? 1 : 0;
-         if (aStarts !== bStarts) return bStarts - aStarts;
-         return an.localeCompare(bn);
-       })
-       .slice(0, 6)
-       .map(toResult);
-
-     setSearchResults(localMatches);
-
-     const id = setTimeout(async () => {
-       setIsSearching(true);
-       const controller = new AbortController();
-       searchAbortRef.current = controller;
-
-       try {
-         const res = await fetch(
-           `${API_URL}/search?q=${encodeURIComponent(q)}&limit=10`,
-           { signal: controller.signal }
-         );
-         const data = await res.json();
-         if (latestSearchRef.current !== q) return;
-
-         const remoteItems = (data?.data || []).map(toResult);
-
-         const merged = new Map();
-         for (const item of localMatches) merged.set(normalizeKey(item), item);
-         for (const item of remoteItems) merged.set(normalizeKey(item), item);
-
-         setSearchResults(Array.from(merged.values()).slice(0, 10));
-       } catch {
-         // Ignore abort errors
-       } finally {
-         if (latestSearchRef.current === q) setIsSearching(false);
-       }
-     }, 300);
-
-     return () => clearTimeout(id);
-   }, [searchValue, API_URL, localDestinations]);
+    const tid = setTimeout(async () => {
+      setIsSearching(true);
+      const ctrl = new AbortController();
+      searchAbortRef.current = ctrl;
+      try {
+        const res = await fetch(
+          `${API_URL}/search?q=${encodeURIComponent(q)}&limit=10`,
+          { signal: ctrl.signal }
+        );
+        const data = await res.json();
+        if (latestSearchRef.current !== q) return;
+        const remote = (data?.data || []).map(toR);
+        const m = new Map();
+        for (const i of local) m.set(key(i), i);
+        for (const i of remote) m.set(key(i), i);
+        setSearchResults(Array.from(m.values()).slice(0, 10));
+      } catch {
+        /* abort */
+      } finally {
+        if (latestSearchRef.current === q) setIsSearching(false);
+      }
+    }, 300);
+    return () => clearTimeout(tid);
+  }, [searchValue, API_URL, localDestinations]);
 
   useEffect(() => {
     const fn = (e) => e.key === "Escape" && closeAll();
@@ -290,6 +278,7 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", fn);
   }, []);
 
+  // ── Handlers ──────────────────────────────────────────────────────────
   const handleSearchSubmit = useCallback(
     (e) => {
       e.preventDefault();
@@ -300,46 +289,45 @@ const Navbar = () => {
         setSearchValue("");
       }
     },
-    [searchValue, navigate],
+    [searchValue, navigate]
   );
 
-  const toggleMobileDropdown = useCallback((name) => {
-    setActiveMobileDropdown((p) => (p === name ? null : name));
-  }, []);
-
-  const handleDropdownEnter = useCallback((name) => {
+  const toggleMobileDropdown = useCallback(
+    (n) => setActiveMobileDropdown((p) => (p === n ? null : n)),
+    []
+  );
+  const handleDropdownEnter = useCallback((n) => {
     clearTimeout(dropdownTimer.current);
-    setActiveDropdown(name);
+    setActiveDropdown(n);
   }, []);
-
   const handleDropdownLeave = useCallback(() => {
     dropdownTimer.current = setTimeout(() => setActiveDropdown(null), 150);
   }, []);
 
-  const handleDesktopClick = useCallback((e, link) => {
-    if (link.dropdown) {
+  const handleDesktopClick = useCallback((e, l) => {
+    if (l.dropdown) {
       e.preventDefault();
-      setActiveDropdown((p) => (p === link.name ? null : link.name));
+      setActiveDropdown((p) => (p === l.name ? null : l.name));
     }
   }, []);
 
   const handleDesktopDblClick = useCallback(
-    (e, link) => {
-      if (link.dropdown) {
+    (e, l) => {
+      if (l.dropdown) {
         e.preventDefault();
         setActiveDropdown(null);
-        navigate(link.path);
+        navigate(l.path);
       }
     },
-    [navigate],
+    [navigate]
   );
 
   const isActive = useCallback(
-    (link) =>
-      location.pathname === link.path ||
-      link.dropdown?.some((d) => d.path === location.pathname) ||
+    (l) =>
+      location.pathname === l.path ||
+      l.dropdown?.some((d) => d.path === location.pathname) ||
       false,
-    [location.pathname],
+    [location.pathname]
   );
 
   const getInitials = useCallback(() => {
@@ -355,8 +343,9 @@ const Navbar = () => {
   }, [user]);
 
   const displayName = useMemo(
-    () => user?.fullName || user?.name || user?.email?.split("@")[0] || "User",
-    [user],
+    () =>
+      user?.fullName || user?.name || user?.email?.split("@")[0] || "User",
+    [user]
   );
 
   const providerLabel = useMemo(() => {
@@ -370,34 +359,78 @@ const Navbar = () => {
     navigate("/");
   }, [closeAll, logout, navigate]);
 
+  // ════════════════════════════════════════════════════════════════════════
   return (
     <>
+      {/* ── NAVBAR ──────────────────────────────────────────────────────── */}
       <nav
         ref={headerRef}
-        className={`nav ${isScrolled ? "nav--scrolled" : ""} ${!navVisible && isScrolled ? "nav--hidden" : ""}`}
         role="navigation"
-        style={{ "--scroll-progress": Math.min(scrollY / 200, 1) }}
+        className={cn(
+          "fixed top-0 left-0 right-0 z-[1000] will-change-transform",
+          "transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+
+          // Transparent at top → glass white on scroll
+          isScrolled
+            ? "py-2 bg-white/[0.92] backdrop-blur-2xl shadow-[0_1px_3px_rgba(0,0,0,0.05),0_8px_24px_rgba(5,150,105,0.06)] border-b border-white/60"
+            : "py-3.5 bg-transparent border-b border-transparent",
+
+          // Hide on scroll down, show on scroll up
+          navHidden
+            ? "-translate-y-full opacity-0 pointer-events-none"
+            : "translate-y-0 opacity-100 pointer-events-auto"
+        )}
       >
-        <div className="nav__inner">
-          <Link to="/" className="nav__logo" aria-label="Altuvera Home">
-            <div className="nav__logo-glow" />
-            <div className="nav__logo-img-wrapper">
+        <div className="mx-auto flex w-full max-w-[1600px] items-center gap-3 px-[clamp(14px,3vw,28px)] max-lg:justify-between">
+          {/* ── Logo ───────────────────────────────────────────────────── */}
+          <Link
+            to="/"
+            aria-label="Altuvera Home"
+            className="group relative flex flex-shrink-0 items-center gap-3 no-underline transition-transform duration-300 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            <div className="pointer-events-none absolute left-7 top-1/2 h-[70px] w-[70px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[radial-gradient(circle,rgba(16,185,129,0.18)_0%,transparent_72%)] opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+
+            <div
+              className={cn(
+                "relative flex flex-shrink-0 items-center justify-center transition-all duration-500",
+                isScrolled ? "h-10 w-10" : "h-12 w-12",
+                "max-[640px]:h-10 max-[640px]:w-10",
+                "max-[380px]:h-9 max-[380px]:w-9"
+              )}
+            >
               <img
                 src={getBrandLogoUrl()}
                 alt={BRAND_LOGO_ALT}
-                className="nav__logo-img"
                 draggable={false}
+                className={cn(
+                  "relative z-[1] h-full w-full object-contain transition-all duration-500",
+                  isScrolled
+                    ? "drop-shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
+                    : "drop-shadow-[0_4px_16px_rgba(0,0,0,0.2)]",
+                  "group-hover:-translate-y-0.5 group-hover:scale-[1.05]"
+                )}
               />
             </div>
-            <span className="nav__logo-text">Altuvera</span>
+
+            <span
+              className={cn(
+                "whitespace-nowrap font-['Playfair_Display',serif] font-extrabold tracking-[-0.8px] transition-all duration-500",
+                isScrolled
+                  ? "text-[clamp(20px,2vw,26px)] text-gray-900"
+                  : "text-[clamp(24px,2.5vw,32px)] text-white [text-shadow:0_2px_12px_rgba(0,0,0,0.25)]",
+                "max-[860px]:hidden"
+              )}
+            >
+              Altuvera
+            </span>
           </Link>
 
-          <div className="nav__links">
-            {navLinks.map((link, i) => (
+          {/* ── Desktop Nav Links ──────────────────────────────────────── */}
+          <div className="flex min-w-0 flex-1 items-center justify-center gap-0.5 max-lg:hidden">
+            {navLinks.map((link) => (
               <div
                 key={link.name}
-                className="nav__item"
-                style={{ "--i": i }}
+                className="relative"
                 onMouseEnter={() =>
                   link.dropdown && handleDropdownEnter(link.name)
                 }
@@ -408,52 +441,106 @@ const Navbar = () => {
                   onClick={(e) => handleDesktopClick(e, link)}
                   onDoubleClick={(e) => handleDesktopDblClick(e, link)}
                   onMouseEnter={() => preloadRoute(link.path)}
-                  className={`nav__link ${isActive(link) ? "nav__link--active" : ""}`}
                   aria-expanded={
-                    link.dropdown ? activeDropdown === link.name : undefined
+                    link.dropdown
+                      ? activeDropdown === link.name
+                      : undefined
                   }
+                  className={cn(
+                    "group/link relative inline-flex items-center gap-1 overflow-hidden rounded-lg px-3 py-2 text-[15px] font-medium no-underline whitespace-nowrap",
+                    "transition-all duration-300 hover:-translate-y-px active:scale-[0.97]",
+                    "max-xl:text-sm max-xl:px-2.5 max-[1180px]:text-[13px] max-[1180px]:px-2",
+                    // Color depends on scroll state
+                    isScrolled
+                      ? cn(
+                          "text-gray-700 hover:bg-emerald-600/10 hover:text-emerald-600",
+                          isActive(link) &&
+                            "bg-emerald-600/10 text-emerald-600"
+                        )
+                      : cn(
+                          "text-white/90 hover:bg-white/15 hover:text-white",
+                          isActive(link) && "bg-white/15 text-white"
+                        )
+                  )}
                 >
-                  <span className="nav__link-text">{link.name}</span>
+                  <span>{link.name}</span>
                   {link.dropdown && (
                     <FiChevronDown
                       size={14}
-                      className={`nav__chevron ${activeDropdown === link.name ? "nav__chevron--open" : ""}`}
+                      className={cn(
+                        "transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+                        activeDropdown === link.name && "rotate-180"
+                      )}
                     />
                   )}
-                  <span className="nav__link-shine" />
+                  {/* underline */}
+                  <span
+                    className={cn(
+                      "absolute bottom-0.5 left-3 right-3 h-[2px] rounded-full",
+                      "origin-right scale-x-0 transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+                      "group-hover/link:origin-left group-hover/link:scale-x-100",
+                      isActive(link) && "!origin-left !scale-x-100",
+                      isScrolled
+                        ? "bg-emerald-600"
+                        : "bg-white"
+                    )}
+                  />
+                  {/* shine */}
+                  <span className="pointer-events-none absolute inset-0 -left-full bg-gradient-to-r from-transparent via-white/10 to-transparent group-hover/link:left-full group-hover/link:transition-[left] group-hover/link:duration-700" />
                 </Link>
 
+                {/* Dropdown */}
                 {link.dropdown && (
                   <div
-                    className={`nav__dropdown ${activeDropdown === link.name ? "nav__dropdown--open" : ""}`}
+                    className={cn(
+                      "absolute left-1/2 top-[calc(100%+8px)] z-[100] min-w-[240px] -translate-x-1/2",
+                      "transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+                      activeDropdown === link.name
+                        ? "pointer-events-auto visible translate-y-0 scale-100 opacity-100"
+                        : "pointer-events-none invisible -translate-y-3 scale-[0.92] opacity-0"
+                    )}
                   >
-                    <div className="nav__dropdown-inner">
+                    <div className="overflow-hidden rounded-2xl border border-green-100/80 bg-white/[0.98] p-2.5 shadow-[0_20px_50px_rgba(6,78,59,0.12),0_0_0_1px_rgba(16,185,129,0.04)] backdrop-blur-xl">
                       {link.dropdown.map((sub, si) => (
                         <Link
                           key={sub.name}
                           to={sub.path}
-                          className={`nav__dropdown-link ${sub.info ? "nav__dropdown-link--rich" : ""}`}
-                          style={{ "--si": si }}
                           onClick={() => setActiveDropdown(null)}
+                          className={cn(
+                            "group/sub flex items-center gap-3 rounded-lg px-4 py-2.5 text-[0.95rem] font-medium text-gray-700 no-underline",
+                            "transition-all duration-200 hover:bg-emerald-50 hover:text-emerald-600",
+                            sub.info && "items-start py-3",
+                            activeDropdown === link.name
+                              ? "translate-x-0 opacity-100"
+                              : "-translate-x-3 opacity-0"
+                          )}
+                          style={{
+                            transitionDelay:
+                              activeDropdown === link.name
+                                ? `${si * 40}ms`
+                                : "0ms",
+                          }}
                         >
                           {sub.flag ? (
-                            <span className="nav__dropdown-flag">
+                            <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-lg">
                               {sub.flag.startsWith("http") ||
                               sub.flag.includes("/") ? (
-                                <img src={sub.flag} alt={`${sub.name} flag`} />
+                                <img
+                                  src={sub.flag}
+                                  alt={`${sub.name} flag`}
+                                  className="h-full w-full rounded-full object-cover shadow-sm"
+                                />
                               ) : (
                                 sub.flag
                               )}
                             </span>
                           ) : (
-                            <span className="nav__dropdown-dot" />
+                            <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-500 opacity-40 transition-all duration-200 group-hover/sub:scale-150 group-hover/sub:opacity-100" />
                           )}
-                          <div className="nav__dropdown-text-wrap">
-                            <span className="nav__dropdown-name">
-                              {sub.name}
-                            </span>
+                          <div className="flex flex-col gap-0.5">
+                            <span>{sub.name}</span>
                             {sub.info && (
-                              <span className="nav__dropdown-info">
+                              <span className="text-xs text-gray-400 group-hover/sub:text-emerald-500/70">
                                 {sub.info}
                               </span>
                             )}
@@ -467,114 +554,196 @@ const Navbar = () => {
             ))}
           </div>
 
-          <div className="nav__actions">
+          {/* ── Actions ────────────────────────────────────────────────── */}
+          <div className="flex flex-shrink-0 items-center gap-2 max-lg:hidden">
+            {/* Search */}
             <button
-              className="nav__icon-btn"
               onClick={() => setSearchOpen(true)}
               aria-label="Search"
+              className={cn(
+                "inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl border-none transition-all duration-300 hover:scale-110 active:scale-95",
+                isScrolled
+                  ? "bg-gray-100 text-gray-600 hover:bg-emerald-50 hover:text-emerald-600"
+                  : "bg-white/15 text-white hover:bg-white/25"
+              )}
             >
-              <FiSearch size={19} />
-              <span className="nav__icon-ripple" />
+              <FiSearch size={18} />
             </button>
 
-            <Link to="/gallery" className="nav__icon-link">
+            {/* Favorites */}
+            <Link to="/gallery" className="flex no-underline">
               <span
-                className="nav__icon-btn"
                 role="button"
                 aria-label="Favorites"
-              >
-                <FiHeart size={19} />
-                {favorites.length > 0 && (
-                  <span className="nav__badge">{favorites.length}</span>
+                className={cn(
+                  "relative inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl transition-all duration-300 hover:scale-110 active:scale-95",
+                  isScrolled
+                    ? "bg-gray-100 text-gray-600 hover:bg-emerald-50 hover:text-emerald-600"
+                    : "bg-white/15 text-white hover:bg-white/25"
                 )}
-                <span className="nav__icon-ripple" />
+              >
+                <FiHeart size={18} />
+                {favorites.length > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-[18px] w-[18px] animate-[badgePop_0.4s_ease] items-center justify-center rounded-full bg-emerald-500 text-[10px] font-bold text-white shadow-[0_2px_8px_rgba(5,150,105,0.4)] ring-2 ring-white">
+                    {favorites.length}
+                  </span>
+                )}
               </span>
             </Link>
 
+            {/* Auth */}
             {authLoading ? (
-              <span className="nav__auth-skel" />
+              <span
+                className={cn(
+                  "h-9 w-20 animate-pulse rounded-full",
+                  isScrolled ? "bg-gray-100" : "bg-white/15"
+                )}
+              />
             ) : isAuthenticated ? (
-              <div className="nav__user" ref={userMenuRef}>
+              <div className="relative" ref={userMenuRef}>
                 <button
-                  className="nav__user-trigger nav__user-trigger--card"
                   onClick={() => setUserMenuOpen((p) => !p)}
                   aria-expanded={userMenuOpen}
                   aria-haspopup="true"
+                  className={cn(
+                    "flex cursor-pointer items-center gap-2 rounded-full py-1 pl-1 pr-3 transition-all duration-300 hover:-translate-y-px",
+                    isScrolled
+                      ? "border border-gray-200 bg-white shadow-sm hover:border-emerald-300 hover:shadow-md"
+                      : "border border-white/25 bg-white/15 backdrop-blur-sm hover:border-white/50 hover:bg-white/25"
+                  )}
                 >
                   {user?.avatar ? (
-                    <span className="nav__avatar-wrap">
-                      {!avatarLoaded && <span className="nav__avatar-spin" />}
+                    <span className="relative h-8 w-8 flex-shrink-0 overflow-hidden rounded-full">
+                      {!avatarLoaded && (
+                        <span className="absolute inset-0 z-[2] grid place-items-center rounded-full bg-gradient-to-br from-emerald-50 to-emerald-100">
+                          <span className="h-3 w-3 animate-spin rounded-full border-2 border-emerald-500 border-r-transparent" />
+                        </span>
+                      )}
                       <img
                         src={user.avatar}
                         alt=""
-                        className="nav__avatar-img"
+                        className="h-full w-full rounded-full object-cover"
                         onLoad={() => setAvatarLoaded(true)}
                         onError={() => setAvatarLoaded(true)}
                       />
                     </span>
                   ) : (
-                    <span className="nav__avatar-initials">
+                    <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-xs font-bold text-white">
                       {getInitials()}
                     </span>
                   )}
-                  <span className="nav__user-info">
-                    <span className="nav__user-name">{displayName}</span>
-                    <small className="nav__user-role">{user?.role === 'admin' ? 'Administrator' : user?.role === 'manager' ? 'Manager' : 'Traveler'}</small>
+                  <span
+                    className={cn(
+                      "flex max-w-[100px] flex-col overflow-hidden text-ellipsis whitespace-nowrap leading-tight max-[1180px]:hidden",
+                      isScrolled ? "text-gray-800" : "text-white"
+                    )}
+                  >
+                    <span className="text-[13px] font-semibold">
+                      {displayName}
+                    </span>
+                    <small
+                      className={cn(
+                        "text-[10px] font-medium uppercase tracking-wider",
+                        isScrolled ? "text-gray-400" : "text-white/60"
+                      )}
+                    >
+                      {user?.role === "admin"
+                        ? "Admin"
+                        : user?.role === "manager"
+                          ? "Manager"
+                          : "Traveler"}
+                    </small>
                   </span>
                   <FiChevronDown
-                    className={`nav__user-chev ${userMenuOpen ? "nav__user-chev--open" : ""}`}
+                    size={14}
+                    className={cn(
+                      "transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+                      isScrolled ? "text-gray-400" : "text-white/60",
+                      userMenuOpen && "rotate-180"
+                    )}
                   />
                 </button>
 
+                {/* User Dropdown */}
                 <div
-                  className={`nav__user-drop ${userMenuOpen ? "nav__user-drop--open" : ""}`}
+                  className={cn(
+                    "absolute right-0 top-[calc(100%+8px)] z-[9999] w-[260px] overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-[0_20px_60px_rgba(0,0,0,0.12)]",
+                    "transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+                    userMenuOpen
+                      ? "pointer-events-auto visible translate-y-0 scale-100 opacity-100"
+                      : "pointer-events-none invisible -translate-y-3 scale-[0.95] opacity-0"
+                  )}
                 >
-                  <div className="nav__user-drop-head">
-                    <div className="nav__user-drop-profile">
+                  <div className="border-b border-gray-50 px-4 pb-3 pt-3.5">
+                    <div className="flex items-center gap-2.5">
                       {user?.avatar ? (
-                        <img src={user.avatar} alt="" className="nav__user-drop-avatar" />
+                        <img
+                          src={user.avatar}
+                          alt=""
+                          className="h-10 w-10 flex-shrink-0 rounded-full object-cover ring-2 ring-emerald-100"
+                        />
                       ) : (
-                        <span className="nav__user-drop-avatar-initials">{getInitials()}</span>
+                        <span className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-sm font-bold text-white">
+                          {getInitials()}
+                        </span>
                       )}
-                      <div className="nav__user-drop-info">
-                        <p className="nav__user-drop-name">{displayName}</p>
-                        <p className="nav__user-drop-email">{user?.email}</p>
-                        <span className="nav__pill">
-                          {user?.isVerified ? '✓ Verified' : providerLabel} account
+                      <div className="min-w-0 flex-1">
+                        <p className="m-0 truncate text-sm font-semibold text-gray-900">
+                          {displayName}
+                        </p>
+                        <p className="m-0 mt-0.5 truncate text-xs text-gray-400">
+                          {user?.email}
+                        </p>
+                        <span className="mt-2 inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2 py-px text-[10px] font-bold text-emerald-700">
+                          {user?.isVerified
+                            ? "✓ Verified"
+                            : providerLabel}{" "}
+                          account
                         </span>
                       </div>
                     </div>
                   </div>
-                  {userMenuItems.map((m, mi) => (
+                  {userMenuItems.map((m) => (
                     <Link
                       key={m.to}
                       to={m.to}
-                      className="nav__user-drop-item"
-                      style={{ "--mi": mi }}
                       onClick={() => setUserMenuOpen(false)}
+                      className="flex items-center gap-2.5 px-4 py-2.5 text-sm text-gray-600 no-underline transition-all duration-200 hover:bg-emerald-50 hover:pl-5 hover:text-emerald-600"
                     >
                       <m.icon size={16} />
                       {m.label}
                     </Link>
                   ))}
-                  <button className="nav__user-drop-out" onClick={handleLogout}>
+                  <button
+                    onClick={handleLogout}
+                    className="flex w-full cursor-pointer items-center gap-2.5 border-t border-gray-100 bg-transparent px-4 py-2.5 text-sm text-red-500 transition-colors duration-200 hover:bg-red-50 hover:text-red-600"
+                  >
                     <FiLogOut size={16} /> Sign Out
                   </button>
                 </div>
               </div>
             ) : (
               <button
-                className="nav__sign-btn"
                 onClick={() => openModal("login")}
+                className={cn(
+                  "cursor-pointer rounded-xl border-none px-5 py-2 text-sm font-semibold transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.96]",
+                  isScrolled
+                    ? "bg-emerald-600 text-white shadow-[0_4px_14px_rgba(5,150,105,0.25)] hover:bg-emerald-700 hover:shadow-[0_6px_20px_rgba(5,150,105,0.3)]"
+                    : "bg-white/20 text-white backdrop-blur-sm hover:bg-white/30"
+                )}
               >
-                <span>Sign In</span>
+                Sign In
               </button>
             )}
 
-            <Link to="/booking" className="nav__cta">
+            {/* CTA */}
+            <Link
+              to="/booking"
+              className="group/cta inline-flex items-center gap-1.5 whitespace-nowrap rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-5 py-2 text-sm font-semibold text-white no-underline shadow-[0_4px_14px_rgba(5,150,105,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:gap-2.5 hover:shadow-[0_8px_24px_rgba(5,150,105,0.35)] active:scale-[0.96]"
+            >
               <span>Book Now</span>
               <svg
-                className="nav__cta-arrow"
+                className="transition-transform duration-300 group-hover/cta:translate-x-[3px]"
                 width="16"
                 height="16"
                 viewBox="0 0 24 24"
@@ -589,93 +758,142 @@ const Navbar = () => {
             </Link>
           </div>
 
+          {/* ── Hamburger ──────────────────────────────────────────────── */}
           <button
-            className={`nav__hamburger ${isMobileMenuOpen ? "nav__hamburger--open" : ""}`}
             onClick={() => setIsMobileMenuOpen((p) => !p)}
             aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={isMobileMenuOpen}
+            className={cn(
+              "relative hidden h-11 w-11 flex-shrink-0 cursor-pointer items-center justify-center rounded-xl border-none p-0 [-webkit-tap-highlight-color:transparent]",
+              "transition-all duration-300 hover:scale-105 active:scale-90",
+              "lg:!hidden max-lg:!flex",
+              "max-[380px]:h-10 max-[380px]:w-10 max-[380px]:rounded-lg",
+              isScrolled
+                ? "bg-gray-100 text-gray-700"
+                : "bg-white/15 text-white backdrop-blur-sm"
+            )}
           >
-            <span className="nav__hamburger-box">
-              <span className="nav__hline nav__hline--1" />
-              <span className="nav__hline nav__hline--2" />
-              <span className="nav__hline nav__hline--3" />
+            <span className="pointer-events-none flex h-full w-full flex-col items-center justify-center gap-[5px]">
+              <span
+                className={cn(
+                  "block h-[2px] rounded-full transition-all duration-[400ms] ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+                  isScrolled ? "bg-gray-700" : "bg-white",
+                  isMobileMenuOpen
+                    ? "w-5 translate-y-[7px] rotate-45"
+                    : "w-5"
+                )}
+              />
+              <span
+                className={cn(
+                  "block h-[2px] rounded-full transition-all duration-300",
+                  isScrolled ? "bg-gray-700" : "bg-white",
+                  isMobileMenuOpen
+                    ? "w-0 opacity-0"
+                    : "w-3.5 opacity-100"
+                )}
+              />
+              <span
+                className={cn(
+                  "block h-[2px] rounded-full transition-all duration-[400ms] ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+                  isScrolled ? "bg-gray-700" : "bg-white",
+                  isMobileMenuOpen
+                    ? "w-5 -translate-y-[7px] -rotate-45"
+                    : "w-5"
+                )}
+              />
             </span>
           </button>
         </div>
-
-        <div
-          className="nav__progress"
-          style={{
-            transform: `scaleX(${Math.min(scrollY / (document.documentElement.scrollHeight - window.innerHeight || 1), 1)})`,
-          }}
-        />
       </nav>
 
+      {/* ── SEARCH OVERLAY ──────────────────────────────────────────────── */}
       <div
-        className={`srch ${searchOpen ? "srch--open" : ""}`}
+        className={cn(
+          "fixed inset-0 z-[2005] flex items-start justify-center bg-black/60 pt-[min(18vh,160px)] backdrop-blur-md",
+          "transition-all duration-400",
+          "max-[640px]:pt-[min(12vh,100px)]",
+          searchOpen ? "visible opacity-100" : "invisible opacity-0"
+        )}
         onClick={() => setSearchOpen(false)}
       >
-        <div className="srch__box" onClick={(e) => e.stopPropagation()}>
-          <form onSubmit={handleSearchSubmit} className="srch__form">
-            <FiSearch className="srch__icon" size={22} />
+        <div
+          className={cn(
+            "w-full max-w-[640px] px-5 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+            "max-[640px]:px-4 max-[320px]:px-3",
+            searchOpen
+              ? "translate-y-0 scale-100 opacity-100"
+              : "translate-y-8 scale-95 opacity-0"
+          )}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <form
+            onSubmit={handleSearchSubmit}
+            className="relative flex items-center"
+          >
+            <FiSearch
+              className="pointer-events-none absolute left-5 text-emerald-600"
+              size={20}
+            />
             <input
               ref={searchInputRef}
               type="text"
               placeholder="Search destinations, experiences..."
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              className="srch__input"
+              className="w-full rounded-2xl border-2 border-emerald-200 bg-white py-4 pl-13 pr-14 text-base font-medium outline-none transition-all duration-200 placeholder:text-gray-400 focus:border-emerald-500 focus:shadow-[0_0_0_4px_rgba(5,150,105,0.1)] max-[640px]:py-3.5 max-[640px]:text-[15px]"
             />
             {searchValue && (
               <button
                 type="button"
-                className="srch__clear"
                 onClick={() => setSearchValue("")}
+                className="absolute right-4 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border-none bg-gray-100 text-xs text-gray-500 transition-all duration-200 hover:bg-red-50 hover:text-red-500"
               >
                 ✕
               </button>
             )}
           </form>
-          <div className="srch__results">
+
+          <div className="mt-3 max-h-[50vh] overflow-y-auto rounded-2xl [scrollbar-width:thin]">
             {isSearching && (
-              <p className="srch__status">
-                <span className="srch__spinner" />
+              <p className="flex items-center justify-center gap-2 py-6 text-center text-sm font-medium text-white/80">
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-emerald-400" />
                 Searching…
               </p>
             )}
             {searchResults.length > 0 && (
-              <div className="srch__list">
-                 {searchResults.map((r, ri) => (
-                   <Link
-                     key={r.id || r._id}
-                     to={`/destination/${r.slug || r.id}`}
-                     className="srch__item"
-                     style={{ "--ri": ri }}
-                     onClick={() => setSearchOpen(false)}
-                   >
-                     <img
-                       src={
-                         r.heroImage ||
-                         r.images?.[0] ||
-                         "https://placehold.co/80x80/059669/ffffff?text=Altuvera"
-                       }
-                       alt=""
-                       className="srch__thumb"
-                     />
-                     <div>
-                       <p className="srch__name">{r.name}</p>
-                       <p className="srch__meta">
-                         {r.country} · {r.category || "Destination"}
-                         {r.duration && <span> · {r.duration}</span>}
-                         {r.price && <span> · From ${r.price}</span>}
-                       </p>
-                     </div>
-                   </Link>
-                 ))}
+              <div className="flex flex-col gap-1.5">
+                {searchResults.map((r, ri) => (
+                  <Link
+                    key={r.id || ri}
+                    to={`/destination/${r.slug || r.id}`}
+                    onClick={() => setSearchOpen(false)}
+                    className="flex animate-[srchIn_0.35s_ease_forwards] items-center gap-3 rounded-xl bg-white/[0.08] p-3 opacity-0 no-underline ring-1 ring-white/[0.06] transition-all duration-200 hover:bg-white/15 hover:ring-emerald-500/30 max-[640px]:p-2.5"
+                    style={{ animationDelay: `${ri * 50}ms` }}
+                  >
+                    <img
+                      src={
+                        r.heroImage ||
+                        "https://placehold.co/80x80/059669/ffffff?text=Altuvera"
+                      }
+                      alt=""
+                      className="h-12 w-12 flex-shrink-0 rounded-lg object-cover max-[640px]:h-10 max-[640px]:w-10"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="m-0 truncate text-sm font-semibold text-white">
+                        {r.name}
+                      </p>
+                      <p className="m-0 mt-0.5 truncate text-xs text-white/50">
+                        {r.country} · {r.category || "Destination"}
+                        {r.duration && <span> · {r.duration}</span>}
+                        {r.price && <span> · From ${r.price}</span>}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
                 <Link
                   to={`/destinations?search=${encodeURIComponent(searchValue)}`}
-                  className="srch__all"
                   onClick={() => setSearchOpen(false)}
+                  className="mt-1 block rounded-xl bg-white/[0.05] p-3 text-center text-sm font-semibold text-emerald-400 no-underline transition-colors duration-200 hover:bg-white/10 hover:text-emerald-300"
                 >
                   View all results for &ldquo;{searchValue}&rdquo;
                 </Link>
@@ -684,95 +902,155 @@ const Navbar = () => {
             {!isSearching &&
               searchValue.trim().length >= 2 &&
               searchResults.length === 0 && (
-                <p className="srch__status">No destinations found.</p>
+                <p className="py-6 text-center text-sm font-medium text-white/60">
+                  No destinations found.
+                </p>
               )}
           </div>
         </div>
+
         <button
-          className="srch__close"
           onClick={() => setSearchOpen(false)}
           aria-label="Close search"
+          className="absolute right-5 top-5 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border-none bg-white/10 text-lg text-white transition-all duration-300 hover:rotate-90 hover:scale-110 hover:bg-white/20 max-[480px]:right-3 max-[480px]:top-3 max-[480px]:h-10 max-[480px]:w-10"
         >
           ✕
         </button>
       </div>
 
+      {/* ── BACKDROP ────────────────────────────────────────────────────── */}
       <div
-        className={`backdrop ${isMobileMenuOpen ? "backdrop--open" : ""}`}
+        className={cn(
+          "fixed inset-0 z-[1001] bg-black/40 backdrop-blur-sm transition-all duration-400",
+          isMobileMenuOpen
+            ? "visible opacity-100"
+            : "invisible opacity-0"
+        )}
         onClick={() => setIsMobileMenuOpen(false)}
       />
 
+      {/* ── MOBILE MENU ─────────────────────────────────────────────────── */}
       <aside
-        className={`mm ${isMobileMenuOpen ? "mm--open" : ""}`}
         aria-hidden={!isMobileMenuOpen}
+        className={cn(
+          "fixed bottom-0 right-0 top-0 z-[1002] flex w-[min(380px,90vw)] flex-col overflow-hidden bg-white shadow-[-20px_0_60px_rgba(0,0,0,0.1)]",
+          "transition-transform duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)]",
+          "max-[640px]:w-screen",
+          isMobileMenuOpen ? "translate-x-0" : "translate-x-full"
+        )}
       >
-        <div className="mm__head">
+        {/* Header */}
+        <div className="flex flex-shrink-0 items-center justify-between border-b border-gray-100 px-5 py-3">
           <Link
             to="/"
-            className="mm__logo"
+            className="flex items-center gap-2.5 no-underline"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            <div className="mm__logo-img-wrapper">
+            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center max-[380px]:h-9 max-[380px]:w-9">
               <img
                 src={getBrandLogoUrl()}
                 alt={BRAND_LOGO_ALT}
-                className="mm__logo-img"
+                className="h-full w-full object-contain"
               />
             </div>
-            <span className="mm__logo-text">Altuvera</span>
+            <span className="font-['Playfair_Display',serif] text-xl font-bold text-emerald-600 max-[380px]:text-lg">
+              Altuvera
+            </span>
           </Link>
           <button
-            className="mm__close-btn"
             onClick={() => setIsMobileMenuOpen(false)}
             aria-label="Close"
+            className="flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border-none bg-gray-100 text-gray-500 transition-all duration-300 hover:rotate-90 hover:bg-red-50 hover:text-red-500"
           >
-            <span className="mm__close-x">✕</span>
+            <span className="text-base font-medium leading-none">✕</span>
           </button>
         </div>
 
-        <div className="mm__body">
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-[calc(24px+env(safe-area-inset-bottom,0px))] pt-2 max-[380px]:px-4">
           {navLinks.map((link, idx) => (
-            <div key={link.name} className="mm__item" style={{ "--idx": idx }}>
+            <div
+              key={link.name}
+              className={cn(
+                "border-b border-gray-50",
+                isMobileMenuOpen
+                  ? "animate-[mmSlideIn_0.5s_ease_forwards]"
+                  : "translate-x-8 opacity-0"
+              )}
+              style={{
+                animationDelay: isMobileMenuOpen
+                  ? `${idx * 50 + 100}ms`
+                  : "0ms",
+              }}
+            >
               {link.dropdown ? (
                 <>
                   <button
-                    className={`mm__toggle ${activeMobileDropdown === link.name ? "mm__toggle--on" : ""}`}
                     onClick={() => toggleMobileDropdown(link.name)}
-                    aria-expanded={activeMobileDropdown === link.name}
+                    aria-expanded={
+                      activeMobileDropdown === link.name
+                    }
+                    className={cn(
+                      "flex w-full cursor-pointer items-center justify-between border-none bg-transparent px-0 py-3.5 text-left text-base font-semibold transition-colors duration-200",
+                      activeMobileDropdown === link.name
+                        ? "text-emerald-600"
+                        : "text-gray-800"
+                    )}
                   >
-                    <span className="mm__toggle-text">{link.name}</span>
+                    <span>{link.name}</span>
                     <FiChevronDown
-                      size={18}
-                      className={`mm__chev ${activeMobileDropdown === link.name ? "mm__chev--open" : ""}`}
+                      size={16}
+                      className={cn(
+                        "transition-transform duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+                        activeMobileDropdown === link.name &&
+                          "rotate-180"
+                      )}
                     />
                   </button>
+
                   <div
-                    className={`mm__sub ${activeMobileDropdown === link.name ? "mm__sub--open" : ""}`}
+                    className={cn(
+                      "grid overflow-hidden rounded-xl transition-all duration-400 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                      activeMobileDropdown === link.name
+                        ? "mb-3 max-h-[500px] border border-emerald-100 bg-emerald-50/50 p-2 opacity-100"
+                        : "max-h-0 border-transparent p-0 opacity-0"
+                    )}
                   >
-                    {link.dropdown.map((sub, si) => (
+                    {link.dropdown.map((sub) => (
                       <Link
                         key={sub.name}
                         to={sub.path}
-                        className={`mm__sub-link ${sub.info ? "mm__sub-link--rich" : ""}`}
-                        style={{ "--si": si }}
                         onClick={() => setIsMobileMenuOpen(false)}
+                        className={cn(
+                          "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm text-gray-600 no-underline transition-all duration-200",
+                          "hover:bg-emerald-100/60 hover:text-emerald-600",
+                          sub.info && "items-start",
+                          location.pathname === sub.path &&
+                            "bg-emerald-100/80 font-medium text-emerald-700"
+                        )}
                       >
                         {sub.flag ? (
-                          <span className="mm__sub-flag">
+                          <span className="flex h-5 w-5 flex-shrink-0 items-center justify-center text-base">
                             {sub.flag.startsWith("http") ||
                             sub.flag.includes("/") ? (
-                              <img src={sub.flag} alt={`${sub.name} flag`} />
+                              <img
+                                src={sub.flag}
+                                alt={`${sub.name} flag`}
+                                className="h-full w-full rounded-full object-cover shadow-sm"
+                              />
                             ) : (
                               sub.flag
                             )}
                           </span>
                         ) : (
-                          <span className="mm__sub-dot" />
+                          <span className="h-1 w-1 flex-shrink-0 rounded-full bg-emerald-500/40" />
                         )}
-                        <div className="mm__sub-text-wrap">
-                          <span className="mm__sub-name">{sub.name}</span>
+                        <div className="flex flex-col gap-0.5">
+                          <span>{sub.name}</span>
                           {sub.info && (
-                            <span className="mm__sub-info">{sub.info}</span>
+                            <span className="text-xs text-gray-400">
+                              {sub.info}
+                            </span>
                           )}
                         </div>
                       </Link>
@@ -782,77 +1060,123 @@ const Navbar = () => {
               ) : (
                 <Link
                   to={link.path}
-                  className={`mm__link ${location.pathname === link.path ? "mm__link--active" : ""}`}
                   onClick={() => setIsMobileMenuOpen(false)}
+                  className={cn(
+                    "group/ml relative flex items-center px-0 py-3.5 text-base font-semibold text-gray-800 no-underline transition-all duration-200",
+                    "hover:text-emerald-600",
+                    location.pathname === link.path &&
+                      "text-emerald-600"
+                  )}
                 >
-                  {link.name}
+                  <span
+                    className={cn(
+                      "absolute left-0 top-1/2 h-0 w-[3px] -translate-y-1/2 rounded-full bg-emerald-500 transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]",
+                      "group-hover/ml:h-5",
+                      location.pathname === link.path && "!h-5"
+                    )}
+                  />
+                  <span className="transition-transform duration-200 group-hover/ml:translate-x-2">
+                    {link.name}
+                  </span>
                 </Link>
               )}
             </div>
           ))}
 
-          <div className="mm__divider" />
+          {/* Divider */}
+          <div
+            className={cn(
+              "my-4 h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent opacity-0",
+              isMobileMenuOpen &&
+                "animate-[divIn_0.5s_ease_0.5s_forwards]"
+            )}
+          />
 
-          <div className="mm__auth">
+          {/* Auth section */}
+          <div className="pt-1">
             {isAuthenticated ? (
               <>
-                <div className="mm__profile">
+                <div className="mb-4 flex items-center gap-3 rounded-xl bg-gray-50 p-3">
                   {user?.avatar ? (
-                    <span className="mm__pav-wrap">
-                      {!avatarLoaded && <span className="nav__avatar-spin" />}
+                    <span className="relative h-11 w-11 flex-shrink-0 overflow-hidden rounded-full ring-2 ring-emerald-100">
+                      {!avatarLoaded && (
+                        <span className="absolute inset-0 z-[2] grid place-items-center rounded-full bg-emerald-50">
+                          <span className="h-3 w-3 animate-spin rounded-full border-2 border-emerald-500 border-r-transparent" />
+                        </span>
+                      )}
                       <img
                         src={user.avatar}
                         alt=""
-                        className="mm__pav-img"
+                        className="h-full w-full rounded-full object-cover"
                         onLoad={() => setAvatarLoaded(true)}
                         onError={() => setAvatarLoaded(true)}
                       />
                     </span>
                   ) : (
-                    <span className="mm__pav-init">{getInitials()}</span>
+                    <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 text-sm font-bold text-white">
+                      {getInitials()}
+                    </span>
                   )}
-                  <div>
-                    <p className="mm__pname">{displayName}</p>
-                    <p className="mm__pemail">{user?.email}</p>
-                    <p className="mm__pprov">{providerLabel} account</p>
+                  <div className="min-w-0">
+                    <p className="m-0 truncate text-sm font-semibold text-gray-900">
+                      {displayName}
+                    </p>
+                    <p className="m-0 mt-0.5 truncate text-xs text-gray-400">
+                      {user?.email}
+                    </p>
+                    <p className="m-0 mt-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-600">
+                      {providerLabel} account
+                    </p>
                   </div>
                 </div>
+
                 {userMenuItems.map((m) => (
                   <Link
                     key={m.to}
                     to={m.to}
-                    className="mm__auth-link"
                     onClick={() => setIsMobileMenuOpen(false)}
+                    className="group/mi flex items-center gap-2.5 border-b border-gray-50 px-0 py-3 text-sm font-medium text-gray-600 no-underline transition-all duration-200 hover:text-emerald-600"
                   >
-                    <m.icon size={18} /> {m.label}
+                    <m.icon
+                      size={16}
+                      className="transition-transform duration-200 group-hover/mi:scale-110"
+                    />{" "}
+                    <span className="transition-transform duration-200 group-hover/mi:translate-x-1">
+                      {m.label}
+                    </span>
                   </Link>
                 ))}
-                <button className="mm__out" onClick={handleLogout}>
-                  <FiLogOut size={18} /> Sign Out
+
+                <button
+                  onClick={handleLogout}
+                  className="mt-2 flex w-full cursor-pointer items-center gap-2.5 border-none bg-transparent px-0 py-3 text-sm font-medium text-red-500 transition-colors duration-200 hover:text-red-600"
+                >
+                  <FiLogOut size={16} /> Sign Out
                 </button>
               </>
             ) : (
               <button
-                className="mm__sign"
                 onClick={() => {
                   setIsMobileMenuOpen(false);
                   openModal("login");
                 }}
+                className="w-full cursor-pointer rounded-xl border-none bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-[0_4px_14px_rgba(5,150,105,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-[0_8px_20px_rgba(5,150,105,0.3)] active:scale-[0.97]"
               >
                 Sign In / Sign Up
               </button>
             )}
           </div>
 
+          {/* Mobile CTA */}
           <Link
             to="/booking"
-            className="mm__cta"
             onClick={() => setIsMobileMenuOpen(false)}
+            className="mt-4 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 px-5 py-3.5 text-sm font-semibold text-white no-underline shadow-[0_4px_14px_rgba(5,150,105,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:gap-3 hover:shadow-[0_8px_24px_rgba(5,150,105,0.3)] active:scale-[0.97]"
           >
             Book Your Adventure
             <svg
-              width="18"
-              height="18"
+              width="16"
+              height="16"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -866,1556 +1190,23 @@ const Navbar = () => {
         </div>
       </aside>
 
+      {/* ── Keyframes ───────────────────────────────────────────────────── */}
       <style>{`
-:root{
-  --c:#059669;
-  --ch:#047857;
-  --cl:rgba(5,150,105,.1);
-  --cg:linear-gradient(135deg,#059669,#10b981);
-  --txt:#1a1a1a;
-  --txt2:#4b5563;
-  --mute:#888;
-  --wh:#fff;
-  --brd:#e5e7eb;
-  --r:12px;
-  --spring:cubic-bezier(.175,.885,.32,1.275);
-  --smooth:cubic-bezier(.4,0,.2,1);
-  --bounce:cubic-bezier(.68,-.55,.265,1.55);
-  --fast:.2s;
-  --med:.35s;
-  --slow:.5s;
-  --fd:'Playfair Display',serif;
-  --fb:'Poppins',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
-}
-
-.nav{
-  position:fixed;
-  top:0;
-  left:0;
-  right:0;
-  z-index:1000;
-  padding:16px 0;
-  background:transparent;
-  transition:
-    padding var(--med) var(--smooth),
-    background var(--med) var(--smooth),
-    box-shadow var(--med) var(--smooth),
-    transform var(--med) var(--smooth);
-  will-change:transform;
-}
-.nav--scrolled{
-  padding:8px 0;
-  background:rgba(255,255,255,.96);
-  backdrop-filter:blur(24px) saturate(1.4);
-  -webkit-backdrop-filter:blur(24px) saturate(1.4);
-  box-shadow:
-    0 1px 0 rgba(16,185,129,.08),
-    0 8px 30px rgba(5,150,105,.08);
-}
-.nav--hidden{
-  transform:translateY(-110%);
-  box-shadow:none;
-}
-.nav__inner{
-  max-width:1600px;
-  width:100%;
-  margin:0 auto;
-  padding:0 clamp(14px,3vw,28px);
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-.nav__progress{
-  position:absolute;
-  bottom:0;
-  left:0;
-  right:0;
-  height:2px;
-  background:var(--cg);
-  transform-origin:left;
-  transition:none;
-  opacity:0;
-}
-.nav--scrolled .nav__progress{opacity:1}
-
-/* LOGO */
-.nav__logo{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  text-decoration:none;
-  flex-shrink:0;
-  position:relative;
-  transition:transform var(--fast) var(--smooth);
-}
-.nav__logo:hover{transform:scale(1.03)}
-.nav__logo:active{transform:scale(.98)}
-
-.nav__logo-glow{
-  position:absolute;
-  left:28px;
-  top:50%;
-  width:70px;
-  height:70px;
-  transform:translate(-50%,-50%);
-  background:radial-gradient(circle,rgba(16,185,129,.16) 0%,transparent 72%);
-  border-radius:50%;
-  pointer-events:none;
-  opacity:0;
-  transition:opacity var(--med);
-}
-.nav__logo:hover .nav__logo-glow{opacity:1}
-
-.nav__logo-img-wrapper{
-  position:relative;
-  width:52px;
-  height:52px;
-  flex-shrink:0;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  background:transparent;
-  padding:0;
-  box-shadow:none;
-  border:none;
-  outline:none;
-}
-
-.nav__logo-img{
-  width:100%;
-  height:100%;
-  object-fit:contain;
-  border:none !important;
-  outline:none !important;
-  background:transparent;
-  border-radius:0 !important;
-  box-shadow:none !important;
-  filter:drop-shadow(0 8px 18px rgba(0,0,0,.14));
-  transition:
-    transform var(--med) var(--smooth),
-    filter var(--med) var(--smooth);
-  position:relative;
-  z-index:1;
-}
-
-.nav__logo:hover .nav__logo-img{
-  transform:translateY(-1px) scale(1.03);
-  filter:drop-shadow(0 10px 22px rgba(5,150,105,.18));
-}
-
-.nav--scrolled .nav__logo-img-wrapper{
-  width:48px;
-  height:48px;
-}
-
-.nav--scrolled .nav__logo-img{
-  filter:drop-shadow(0 3px 10px rgba(0,0,0,.08));
-}
-
-.nav__logo-text{
-  font-family:var(--fd);
-  font-size:clamp(24px,2.5vw,32px);
-  font-weight:800;
-  color:var(--wh);
-  letter-spacing:-.8px;
-  text-shadow:0 3px 15px rgba(0,0,0,.3);
-  transition:all var(--med) var(--smooth);
-  white-space:nowrap;
-}
-.nav--scrolled .nav__logo-text{
-  color:var(--txt);
-  text-shadow:none;
-}
-
-/* NAV LINKS */
-.nav__links{
-  display:flex;
-  align-items:center;
-  gap:2px;
-  flex:1;
-  justify-content:center;
-  min-width:0;
-}
-.nav__item{
-  position:relative;
-  animation:navLinkIn .6s var(--smooth) calc(var(--i) * .06s) both;
-}
-@keyframes navLinkIn{
-  from{opacity:0;transform:translateY(-10px)}
-  to{opacity:1;transform:none}
-}
-
-.nav__link{
-  display:inline-flex;
-  align-items:center;
-  gap:4px;
-  padding:9px 13px;
-  font-size:15px;
-  font-weight:500;
-  color:var(--wh);
-  text-decoration:none;
-  border-radius:8px;
-  position:relative;
-  overflow:hidden;
-  transition:background var(--fast),color var(--fast),transform var(--fast);
-  white-space:nowrap;
-}
-.nav--scrolled .nav__link{color:var(--txt)}
-.nav__link:hover{
-  background:rgba(255,255,255,.18);
-  transform:translateY(-1px);
-}
-.nav--scrolled .nav__link:hover{
-  background:var(--cl);
-  color:var(--c);
-}
-.nav__link:active{transform:scale(.97)}
-
-.nav__link::after{
-  content:"";
-  position:absolute;
-  left:12px;
-  right:12px;
-  bottom:4px;
-  height:2.5px;
-  border-radius:99px;
-  background:var(--cg);
-  transform:scaleX(0);
-  transform-origin:right;
-  transition:transform .35s var(--spring);
-}
-.nav__link:hover::after,
-.nav__link--active::after{
-  transform:scaleX(1);
-  transform-origin:left;
-}
-
-.nav__link-shine{
-  position:absolute;
-  top:0;
-  left:-100%;
-  width:100%;
-  height:100%;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.15),transparent);
-  transition:none;
-  pointer-events:none;
-}
-.nav__link:hover .nav__link-shine{
-  left:100%;
-  transition:left .6s ease;
-}
-
-.nav__link--active{background:rgba(255,255,255,.16)}
-.nav--scrolled .nav__link--active{
-  background:var(--cl);
-  color:var(--c);
-}
-.nav__chevron{transition:transform .3s var(--spring)}
-.nav__chevron--open{transform:rotate(180deg)}
-
-/* DESKTOP DROPDOWN */
-.nav__dropdown{
-  position:absolute;
-  top:calc(100% + 8px);
-  left:50%;
-  min-width:240px;
-  padding:0;
-  transform:translateX(-50%) translateY(-8px) scale(.95);
-  opacity:0;
-  visibility:hidden;
-  transition:all .3s var(--spring);
-  z-index:100;
-  pointer-events:none;
-}
-.nav__dropdown--open{
-  opacity:1;
-  visibility:visible;
-  transform:translateX(-50%) translateY(0) scale(1);
-  pointer-events:auto;
-}
-.nav__dropdown-inner{
-  background:rgba(255,255,255,.98);
-  backdrop-filter:blur(20px);
-  -webkit-backdrop-filter:blur(20px);
-  border-radius:16px;
-  border:1px solid #dcfce7;
-  box-shadow:0 20px 50px rgba(6,78,59,.15),0 0 0 1px rgba(16,185,129,.06);
-  padding:10px;
-  overflow:hidden;
-}
-.nav__dropdown-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 16px;
-  color: var(--txt);
-  text-decoration: none;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  font-size: 0.95rem;
-  font-weight: 500;
-  opacity: 0;
-  transform: translateX(-10px);
-}
-.nav__dropdown--open .nav__dropdown-link {
-  opacity: 1;
-  transform: translateX(0);
-  transition: all 0.3s cubic-bezier(0.4,0,0.2,1) calc(var(--si) * 0.05s);
-}
-.nav__dropdown-link:hover {
-  background: var(--bg3);
-  color: var(--c);
-}
-.nav__dropdown-link--rich {
-  padding: 12px 16px;
-  align-items: flex-start;
-}
-.nav__dropdown-text-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.nav__dropdown-info {
-  font-size: 0.75rem;
-  color: var(--txt2);
-}
-.nav__dropdown-flag {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  font-size: 1.1rem;
-  flex-shrink: 0;
-}
-.nav__dropdown-flag img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-.nav__dropdown-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--cg);
-  opacity: 0.4;
-  flex-shrink: 0;
-  transition: opacity var(--fast),transform var(--fast);
-}
-.nav__dropdown-link:hover .nav__dropdown-dot {
-  opacity: 1;
-  transform:scale(1.3);
-}
-@keyframes dropIn{
-  to{opacity:1;transform:none}
-}
-
-/* ACTIONS */
-.nav__actions{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex-shrink:0;
-}
-.nav__icon-link{text-decoration:none;display:flex}
-.nav__icon-btn{
-  width:42px;
-  height:42px;
-  border-radius:var(--r);
-  border:none;
-  background:rgba(255,255,255,.18);
-  color:var(--wh);
-  cursor:pointer;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-  overflow:hidden;
-  transition:transform var(--fast) var(--spring),background var(--fast),box-shadow var(--fast);
-  box-shadow:0 6px 14px rgba(2,44,34,.1);
-}
-.nav--scrolled .nav__icon-btn{
-  background:var(--cl);
-  color:var(--c);
-  box-shadow:0 4px 12px rgba(5,150,105,.1);
-}
-.nav__icon-btn:hover{transform:scale(1.08)}
-.nav__icon-btn:active{transform:scale(.94)}
-
-.nav__icon-ripple{
-  position:absolute;
-  inset:0;
-  background:radial-gradient(circle at center,rgba(255,255,255,.3) 0%,transparent 70%);
-  opacity:0;
-  transform:scale(0);
-  transition:none;
-  pointer-events:none;
-}
-.nav__icon-btn:active .nav__icon-ripple{
-  opacity:1;
-  transform:scale(2.5);
-  transition:transform .4s,opacity .4s;
-}
-
-.nav__badge{
-  position:absolute;
-  top:-4px;
-  right:-4px;
-  width:20px;
-  height:20px;
-  border-radius:50%;
-  background:var(--c);
-  color:var(--wh);
-  font-size:11px;
-  font-weight:700;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  box-shadow:0 2px 8px rgba(5,150,105,.4);
-  animation:badgePop .4s var(--spring);
-}
-@keyframes badgePop{
-  from{transform:scale(0)}
-  to{transform:scale(1)}
-}
-
-.nav__auth-skel{
-  width:80px;
-  height:40px;
-  border-radius:99px;
-  background:rgba(255,255,255,.15);
-  animation:skelPulse 1.4s ease infinite;
-}
-.nav--scrolled .nav__auth-skel{background:var(--cl)}
-@keyframes skelPulse{0%,100%{opacity:.4}50%{opacity:.8}}
-
-.nav__sign-btn{
-  padding:9px 20px;
-  border-radius:var(--r);
-  font-size:14px;
-  font-weight:600;
-  border:none;
-  cursor:pointer;
-  color:var(--wh);
-  background:var(--cg);
-  position:relative;
-  overflow:hidden;
-  box-shadow:0 4px 14px rgba(5,150,105,.3);
-  transition:transform var(--fast) var(--spring),box-shadow var(--fast);
-}
-.nav__sign-btn:hover{
-  transform:translateY(-2px);
-  box-shadow:0 8px 24px rgba(5,150,105,.35);
-}
-.nav__sign-btn:active{transform:scale(.96)}
-
-.nav__cta{
-  padding:10px 20px;
-  background:var(--cg);
-  color:var(--wh);
-  border:none;
-  border-radius:var(--r);
-  font-size:14px;
-  font-weight:600;
-  text-decoration:none;
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  box-shadow:0 4px 15px rgba(5,150,105,.3);
-  position:relative;
-  overflow:hidden;
-  transition:transform var(--fast) var(--spring),box-shadow var(--fast),gap var(--fast);
-  white-space:nowrap;
-}
-.nav__cta:hover{
-  transform:translateY(-2px);
-  box-shadow:0 8px 24px rgba(5,150,105,.35);
-  gap:10px;
-}
-.nav__cta:active{transform:scale(.96)}
-.nav__cta-arrow{transition:transform var(--fast)}
-.nav__cta:hover .nav__cta-arrow{transform:translateX(3px)}
-
-/* USER MENU */
-.nav__user{position:relative}
-.nav__user-trigger{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  padding:4px 12px 4px 4px;
-  background:rgba(255,255,255,.15);
-  border:1.5px solid rgba(255,255,255,.35);
-  border-radius:99px;
-  cursor:pointer;
-  box-shadow:0 10px 22px rgba(5,150,105,.12);
-  transition:all var(--fast) var(--smooth);
-}
-.nav--scrolled .nav__user-trigger{
-  background:rgba(5,150,105,.08);
-  border-color:rgba(16,185,129,.22);
-}
-.nav__user-trigger:hover{
-  border-color:rgba(255,255,255,.6);
-  transform:translateY(-1px);
-  box-shadow:0 14px 28px rgba(5,150,105,.18);
-}
-.nav--scrolled .nav__user-trigger:hover{border-color:var(--c)}
-
-.nav__avatar-initials{
-  width:34px;
-  height:34px;
-  border-radius:50%;
-  background:var(--cg);
-  color:var(--wh);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:13px;
-  font-weight:700;
-  flex-shrink:0;
-  box-shadow:inset 0 0 0 2px rgba(255,255,255,.5),0 4px 10px rgba(6,78,59,.2);
-}
-.nav__avatar-wrap{
-  position:relative;
-  width:34px;
-  height:34px;
-  border-radius:50%;
-  overflow:hidden;
-  flex-shrink:0;
-}
-.nav__avatar-img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  border-radius:50%;
-}
-.nav__avatar-spin{
-  position:absolute;
-  inset:0;
-  border-radius:50%;
-  background:linear-gradient(135deg,#ecfdf5,#d1fae5);
-  display:grid;
-  place-items:center;
-  z-index:2;
-}
-.nav__avatar-spin::after{
-  content:"";
-  width:14px;
-  height:14px;
-  border:2px solid #10b981;
-  border-right-color:transparent;
-  border-radius:50%;
-  animation:spin .8s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-.nav__user-info{
-  display:flex;
-  flex-direction:column;
-  line-height:1.15;
-  font-size:13px;
-  font-weight:600;
-  color:var(--wh);
-  max-width:110px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-.nav__user-info small{
-  font-size:10px;
-  text-transform:uppercase;
-  letter-spacing:.04em;
-  color:rgba(255,255,255,.8);
-  font-weight:700;
-  margin-top:1px;
-}
-.nav--scrolled .nav__user-info{color:var(--txt)}
-.nav--scrolled .nav__user-info small{color:#6b7280}
-.nav__user-chev{
-  font-size:14px;
-  color:rgba(255,255,255,.7);
-  transition:transform .3s var(--spring);
-}
-.nav--scrolled .nav__user-chev{color:var(--mute)}
-.nav__user-chev--open{transform:rotate(180deg)}
-
-.nav__user-drop{
-  position:absolute;
-  top:calc(100% + 10px);
-  right:0;
-  width:260px;
-  border-radius:16px;
-  overflow:hidden;
-  background:linear-gradient(180deg,rgba(255,255,255,.99),rgba(249,255,252,.98));
-  border:1px solid #d9f6e7;
-  z-index:9999;
-  box-shadow:0 24px 60px rgba(6,78,59,.18);
-  opacity:0;
-  visibility:hidden;
-  transform:translateY(-10px) scale(.96);
-  transition:all .3s var(--spring);
-  pointer-events:none;
-}
-.nav__user-drop--open{
-  opacity:1;
-  visibility:visible;
-  transform:none;
-  pointer-events:auto;
-}
-.nav__user-drop-head{
-  padding:14px 16px 12px;
-  border-bottom:1px solid #f0fdf4;
-}
-.nav__user-drop-name{
-  font-size:14px;
-  font-weight:600;
-  color:#111;
-  margin:0;
-}
-.nav__user-drop-email{
-  font-size:12px;
-  color:var(--mute);
-  margin:2px 0 0;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.nav__pill{
-  display:inline-flex;
-  margin-top:8px;
-  padding:3px 10px;
-  border-radius:99px;
-  border:1px solid #97e9c0;
-  background:linear-gradient(135deg,#f0fdf4,#dcfce7);
-  color:#166534;
-  font-size:11px;
-  font-weight:700;
-}
-.nav__user-drop-item{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:11px 16px;
-  font-size:14px;
-  color:#444;
-  text-decoration:none;
-  opacity:0;
-  transform:translateX(-6px);
-  transition:background var(--fast),color var(--fast),padding-left var(--fast);
-}
-.nav__user-drop--open .nav__user-drop-item{
-  animation:dropIn .3s var(--smooth) calc(var(--mi) * .04s + .1s) forwards;
-}
-.nav__user-drop-item:hover{
-  background:#ecfdf5;
-  color:var(--c);
-  padding-left:20px;
-}
-.nav__user-drop-out{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:11px 16px;
-  font-size:14px;
-  color:#dc2626;
-  border:none;
-  background:none;
-  width:100%;
-  cursor:pointer;
-  border-top:1px solid #f3f4f6;
-  transition:background var(--fast);
-}
-.nav__user-drop-out:hover{background:#fef2f2}
-
-/* HAMBURGER */
-.nav__hamburger{
-  display:none;
-  width:48px;
-  height:48px;
-  border:none;
-  border-radius:14px;
-  cursor:pointer;
-  background:rgba(255,255,255,.18);
-  padding:0;
-  flex-shrink:0;
-  position:relative;
-  transition:background var(--fast),transform var(--fast);
-  -webkit-tap-highlight-color:transparent;
-}
-.nav--scrolled .nav__hamburger{background:var(--cl)}
-.nav__hamburger:hover{transform:scale(1.05)}
-.nav__hamburger:active{transform:scale(.93)}
-
-.nav__hamburger-box{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  width:100%;
-  height:100%;
-  pointer-events:none;
-}
-.nav__hline{
-  display:block;
-  width:22px;
-  height:2.5px;
-  background:var(--wh);
-  border-radius:4px;
-  transition:
-    transform .45s var(--spring),
-    opacity .35s var(--smooth),
-    width .35s var(--smooth),
-    background .3s;
-  transform-origin:center;
-}
-.nav--scrolled .nav__hline{background:var(--c)}
-.nav__hline--1{transform:translateY(-4px)}
-.nav__hline--2{width:16px}
-.nav__hline--3{transform:translateY(4px)}
-
-.nav__hamburger--open .nav__hline--1{
-  transform:translateY(2.5px) rotate(45deg);
-  width:24px;
-}
-.nav__hamburger--open .nav__hline--2{
-  opacity:0;
-  width:0;
-  transform:translateX(10px);
-}
-.nav__hamburger--open .nav__hline--3{
-  transform:translateY(-2.5px) rotate(-45deg);
-  width:24px;
-}
-
-/* SEARCH */
-.srch{
-  position:fixed;
-  inset:0;
-  z-index:2005;
-  background:rgba(2,44,34,.88);
-  display:flex;
-  align-items:flex-start;
-  justify-content:center;
-  padding-top:min(20vh,170px);
-  opacity:0;
-  visibility:hidden;
-  transition:opacity .4s var(--smooth),visibility .4s;
-  backdrop-filter:blur(8px);
-}
-.srch--open{opacity:1;visibility:visible}
-.srch__box{
-  width:100%;
-  max-width:660px;
-  padding:0 20px;
-  transform:translateY(20px) scale(.97);
-  transition:transform .45s var(--spring);
-}
-.srch--open .srch__box{transform:none}
-.srch__form{position:relative;display:flex;align-items:center}
-.srch__icon{position:absolute;left:20px;color:var(--c);pointer-events:none}
-.srch__input{
-  width:100%;
-  padding:22px 60px 22px 54px;
-  font-size:17px;
-  border:2px solid #a7f3d0;
-  border-radius:18px;
-  background:var(--wh);
-  outline:none;
-  box-sizing:border-box;
-  font-family:var(--fb);
-  transition:border-color var(--fast),box-shadow var(--fast);
-}
-.srch__input:focus{
-  border-color:var(--c);
-  box-shadow:0 0 0 5px rgba(5,150,105,.1);
-}
-.srch__clear{
-  position:absolute;
-  right:18px;
-  width:28px;
-  height:28px;
-  border-radius:50%;
-  border:none;
-  background:#f1f5f9;
-  color:#666;
-  font-size:13px;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition:background var(--fast),color var(--fast);
-}
-.srch__clear:hover{background:#fee2e2;color:#dc2626}
-
-.srch__close{
-  position:absolute;
-  top:20px;
-  right:20px;
-  width:48px;
-  height:48px;
-  border-radius:50%;
-  border:none;
-  background:rgba(255,255,255,.12);
-  color:var(--wh);
-  font-size:20px;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition:all var(--fast) var(--spring);
-}
-.srch__close:hover{
-  background:rgba(255,255,255,.25);
-  transform:rotate(90deg) scale(1.1);
-}
-
-.srch__results{
-  margin-top:16px;
-  max-height:55vh;
-  overflow-y:auto;
-  scrollbar-width:thin;
-  scrollbar-color:#059669 transparent;
-}
-.srch__status{
-  padding:18px;
-  text-align:center;
-  color:rgba(255,255,255,.8);
-  font-weight:500;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-}
-.srch__spinner{
-  width:18px;
-  height:18px;
-  border:2px solid rgba(255,255,255,.3);
-  border-top-color:#10b981;
-  border-radius:50%;
-  animation:spin .7s linear infinite;
-}
-.srch__list{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-.srch__item{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  padding:12px;
-  text-decoration:none;
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:var(--r);
-  opacity:0;
-  transform:translateY(8px);
-  animation:srchIn .35s var(--smooth) calc(var(--ri) * .06s) forwards;
-  transition:background var(--fast),border-color var(--fast),transform var(--fast);
-}
-@keyframes srchIn{to{opacity:1;transform:none}}
-.srch__item:hover{
-  background:rgba(255,255,255,.1);
-  border-color:#059669;
-  transform:translateX(4px);
-}
-.srch__thumb{
-  width:52px;
-  height:52px;
-  border-radius:10px;
-  object-fit:cover;
-  flex-shrink:0;
-}
-.srch__name{
-  color:#fff;
-  font-weight:600;
-  font-size:15px;
-  margin:0;
-}
-.srch__meta{
-  color:rgba(255,255,255,.6);
-  font-size:13px;
-  margin:2px 0 0;
-}
-.srch__all{
-  display:block;
-  padding:14px;
-  text-align:center;
-  color:var(--c);
-  font-weight:700;
-  font-size:14px;
-  text-decoration:none;
-  border-top:1px solid rgba(255,255,255,.08);
-  margin-top:8px;
-  transition:color var(--fast);
-}
-.srch__all:hover{color:#34d399}
-
-/* BACKDROP */
-.backdrop{
-  position:fixed;
-  inset:0;
-  z-index:1001;
-  background:rgba(2,44,34,.45);
-  backdrop-filter:blur(4px);
-  opacity:0;
-  visibility:hidden;
-  transition:opacity var(--med) var(--smooth),visibility var(--med);
-}
-.backdrop--open{opacity:1;visibility:visible}
-
-/* MOBILE MENU */
-.mm{
-  position:fixed;
-  top:0;
-  right:0;
-  bottom:0;
-  width:min(400px,92vw);
-  z-index:1002;
-  background:var(--wh);
-  box-shadow:-10px 0 50px rgba(6,78,59,.12);
-  transform:translateX(105%);
-  transition:transform .5s var(--smooth);
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
-}
-.mm--open{transform:translateX(0)}
-
-.mm__head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:14px 18px;
-  border-bottom:1px solid var(--brd);
-  background:var(--wh);
-  flex-shrink:0;
-}
-.mm__logo{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  text-decoration:none;
-}
-.mm__logo-img-wrapper{
-  width:46px;
-  height:46px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-shrink:0;
-  border:none !important;
-  outline:none !important;
-  background:transparent;
-  box-shadow:none;
-}
-.mm__logo-img{
-  width:100%;
-  height:100%;
-  object-fit:contain;
-  border:none !important;
-  outline:none !important;
-  border-radius:0 !important;
-  background:transparent;
-  box-shadow:none !important;
-  filter:drop-shadow(0 4px 10px rgba(5,150,105,.16));
-}
-.mm__logo-text{
-  font-family:var(--fd);
-  font-size:24px;
-  font-weight:700;
-  color:var(--c);
-  white-space:nowrap;
-}
-
-.mm__close-btn{
-  width:40px;
-  height:40px;
-  border:none;
-  border-radius:10px;
-  background:var(--cl);
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  transition:background var(--fast),transform .3s var(--spring);
-}
-.mm__close-btn:hover{
-  background:rgba(5,150,105,.15);
-  transform:rotate(90deg);
-}
-.mm__close-x{
-  font-size:18px;
-  color:var(--c);
-  font-weight:700;
-  line-height:1;
-}
-
-.mm__body{
-  flex:1;
-  overflow-y:auto;
-  overscroll-behavior:contain;
-  -webkit-overflow-scrolling:touch;
-  padding:8px 18px calc(28px + env(safe-area-inset-bottom,0px));
-}
-
-.mm__item{
-  border-bottom:1px solid #f3f4f6;
-  opacity:0;
-  transform:translateX(30px);
-  transition:opacity .01s,transform .01s;
-}
-.mm--open .mm__item{
-  animation:mmSlideIn .5s var(--smooth) calc(var(--idx) * .06s + .15s) forwards;
-}
-@keyframes mmSlideIn{
-  0%{opacity:0;transform:translateX(40px)}
-  60%{opacity:1}
-  100%{opacity:1;transform:none}
-}
-
-.mm__link{
-  display:flex;
-  align-items:center;
-  padding:16px 4px;
-  font-size:18px;
-  font-weight:700;
-  color:var(--txt);
-  text-decoration:none;
-  font-family:var(--fd);
-  position:relative;
-  transition:color var(--fast),padding-left var(--fast);
-}
-.mm__link::before{
-  content:"";
-  position:absolute;
-  left:0;
-  top:50%;
-  width:3px;
-  height:0;
-  border-radius:4px;
-  background:var(--cg);
-  transform:translateY(-50%);
-  transition:height .25s var(--spring);
-}
-.mm__link:hover,
-.mm__link--active{
-  color:var(--c);
-  padding-left:14px;
-}
-.mm__link:hover::before,
-.mm__link--active::before{height:60%}
-
-.mm__toggle{
-  width:100%;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:16px 4px;
-  font-size:18px;
-  font-weight:700;
-  color:var(--txt);
-  background:none;
-  border:none;
-  font-family:var(--fd);
-  cursor:pointer;
-  text-align:left;
-  transition:color var(--fast);
-}
-.mm__toggle--on{color:var(--c)}
-.mm__chev{transition:transform .35s var(--spring)}
-.mm__chev--open{transform:rotate(180deg)}
-
-.mm__sub{
-  display:grid;
-  gap:2px;
-  max-height:0;
-  overflow:hidden;
-  opacity:0;
-  transform:translateY(-6px);
-  transition:
-    max-height .4s var(--smooth),
-    opacity .3s var(--smooth),
-    transform .3s var(--smooth),
-    padding .4s var(--smooth),
-    margin .4s var(--smooth);
-  padding:0 8px;
-  margin:0;
-  border-radius:14px;
-  border:1px solid transparent;
-  background:transparent;
-}
-.mm__sub--open{
-  max-height:500px;
-  opacity:1;
-  transform:none;
-  padding:10px;
-  margin:4px 0 10px;
-  border-color:#d1fae5;
-  background:#f8fffc;
-  box-shadow:0 6px 24px rgba(5,150,105,.08);
-}
-.mm__sub-link {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  color: var(--txt2);
-  text-decoration: none;
-  border-radius: 6px;
-  font-size: 0.95rem;
-  transition: all 0.2s ease;
-}
-.mm__sub-link:hover {
-  background: var(--bg2);
-  color: var(--c);
-}
-.mm__sub-link--active {
-  background: var(--cl);
-  color: var(--ch);
-}
-.mm__sub-link--rich {
-  align-items: flex-start;
-  padding: 12px 14px;
-}
-.mm__sub-text-wrap {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.mm__sub-info {
-  font-size: 0.75rem;
-  color: var(--mute);
-}
-.mm__sub-flag {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  font-size: 1.1rem;
-  flex-shrink: 0;
-}
-.mm__sub-flag img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-.mm__sub-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.4;
-  flex-shrink: 0;
-}
-.mm__sub--open .mm__sub-link{
-  animation:subIn .35s var(--smooth) calc(var(--si) * .05s + .08s) forwards;
-}
-@keyframes subIn{to{opacity:1;transform:none}}
-.mm__sub-link:hover{
-  background:rgba(5,150,105,.08);
-  color:var(--c);
-  padding-left:16px;
-}
-.mm__sub-dot{
-  width:5px;
-  height:5px;
-  border-radius:50%;
-  background:var(--c);
-  opacity:.35;
-  flex-shrink:0;
-  transition:opacity var(--fast),transform var(--fast);
-}
-.mm__sub-link:hover .mm__sub-dot{
-  opacity:1;
-  transform:scale(1.4);
-}
-
-.mm__divider{
-  height:2px;
-  margin:12px 0;
-  border-radius:99px;
-  background:linear-gradient(90deg,transparent,#d1fae5,transparent);
-  opacity:0;
-}
-.mm--open .mm__divider{
-  animation:divIn .6s var(--smooth) .5s forwards;
-}
-@keyframes divIn{to{opacity:1}}
-
-.mm__auth{padding-top:12px}
-.mm__profile{
-  display:flex;
-  align-items:center;
-  gap:12px;
-  margin-bottom:14px;
-}
-.mm__pav-wrap{
-  position:relative;
-  width:46px;
-  height:46px;
-  border-radius:50%;
-  overflow:hidden;
-  flex-shrink:0;
-}
-.mm__pav-img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  border-radius:50%;
-}
-.mm__pav-init{
-  width:46px;
-  height:46px;
-  border-radius:50%;
-  background:var(--cg);
-  color:var(--wh);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:16px;
-  font-weight:700;
-  flex-shrink:0;
-}
-.mm__pname{
-  font-size:17px;
-  font-weight:700;
-  color:#111;
-  font-family:var(--fd);
-  margin:0;
-}
-.mm__pemail{
-  font-size:13px;
-  color:var(--mute);
-  margin:2px 0 0;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  max-width:200px;
-}
-.mm__pprov{
-  font-size:12px;
-  color:var(--ch);
-  font-weight:600;
-  margin-top:4px;
-}
-
-.mm__auth-link{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:12px 4px;
-  font-size:16px;
-  font-weight:600;
-  color:#333;
-  text-decoration:none;
-  border-bottom:1px solid #f3f4f6;
-  transition:color var(--fast),padding-left var(--fast);
-}
-.mm__auth-link:hover{
-  color:var(--c);
-  padding-left:8px;
-}
-
-.mm__out{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  padding:12px 4px;
-  font-size:16px;
-  font-weight:600;
-  color:#dc2626;
-  background:none;
-  border:none;
-  width:100%;
-  cursor:pointer;
-  margin-top:6px;
-  transition:opacity var(--fast);
-}
-.mm__out:hover{opacity:.7}
-
-.mm__sign{
-  width:100%;
-  padding:14px;
-  border-radius:var(--r);
-  border:none;
-  background:var(--c);
-  color:var(--wh);
-  font-size:16px;
-  font-weight:700;
-  cursor:pointer;
-  box-shadow:0 4px 14px rgba(5,150,105,.3);
-  transition:transform var(--fast) var(--spring),box-shadow var(--fast);
-}
-.mm__sign:hover{
-  transform:translateY(-2px);
-  box-shadow:0 8px 22px rgba(5,150,105,.35);
-}
-.mm__sign:active{transform:scale(.97)}
-
-.mm__cta{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  margin-top:16px;
-  padding:14px 22px;
-  background:var(--cg);
-  color:var(--wh);
-  border:none;
-  border-radius:var(--r);
-  font-size:16px;
-  font-weight:600;
-  text-decoration:none;
-  box-shadow:0 4px 15px rgba(5,150,105,.3);
-  transition:transform var(--fast) var(--spring),box-shadow var(--fast),gap var(--fast);
-}
-.mm__cta:hover{
-  transform:translateY(-2px);
-  box-shadow:0 8px 24px rgba(5,150,105,.35);
-  gap:12px;
-}
-.mm__cta:active{transform:scale(.97)}
-
-/* RESPONSIVE */
-@media (max-width:1280px){
-  .nav__inner{
-    padding:0 clamp(12px,2.2vw,24px);
-  }
-  .nav__links{
-    gap:0;
-  }
-  .nav__link{
-    font-size:14px;
-    padding:8px 10px;
-  }
-}
-
-@media (max-width:1180px){
-  .nav__link{
-    font-size:13px;
-    padding:8px 8px;
-  }
-  .nav__user-info{display:none}
-  .nav__cta{
-    padding:10px 16px;
-  }
-}
-
-@media(max-width:1024px){
-  .nav{
-    padding:14px 0;
-  }
-  .nav__links,
-  .nav__actions{display:none!important}
-  .nav__hamburger{display:flex!important}
-  .nav__inner{
-    justify-content:space-between;
-  }
-}
-
-@media(min-width:1025px){
-  .nav__hamburger{display:none!important}
-}
-
-@media(max-width:860px){
-  .nav__logo-text{display:none}
-  .nav__logo-img-wrapper{
-    width:48px;
-    height:48px;
-  }
-}
-
-@media(max-width:640px){
-  .mm{
-    width:100vw;
-    border-radius:0;
-  }
-  .nav{
-    padding:12px 0;
-  }
-  .nav--scrolled{
-    padding:8px 0;
-  }
-  .nav__hamburger{
-    width:44px;
-    height:44px;
-    border-radius:12px;
-  }
-  .nav__hline{width:20px}
-  .srch{
-    padding-top:min(14vh,120px);
-  }
-  .srch__box{padding:0 14px}
-  .srch__input{
-    font-size:16px;
-    padding:18px 52px 18px 48px;
-    border-radius:16px;
-  }
-  .srch__item{
-    padding:10px;
-    gap:12px;
-  }
-  .srch__thumb{
-    width:46px;
-    height:46px;
-  }
-  .nav__logo-img-wrapper{
-    width:44px;
-    height:44px;
-  }
-  .mm__body{
-    padding-left:16px;
-    padding-right:16px;
-  }
-  .mm__logo-img-wrapper{
-    width:42px;
-    height:42px;
-  }
-  .mm__logo-text{
-    font-size:22px;
-  }
-}
-
-@media(max-width:480px){
-  .nav__inner{
-    padding:0 14px;
-  }
-  .nav__logo-img-wrapper{
-    width:40px;
-    height:40px;
-  }
-  .nav__hamburger{
-    width:42px;
-    height:42px;
-    border-radius:10px;
-  }
-  .srch__close{
-    top:14px;
-    right:14px;
-    width:42px;
-    height:42px;
-  }
-  .mm__link,
-  .mm__toggle{
-    font-size:17px;
-    padding:14px 4px;
-  }
-  .mm__sub-link{
-    font-size:15px;
-  }
-  .mm__auth-link,
-  .mm__out{
-    font-size:15px;
-  }
-  .mm__cta{
-    font-size:15px;
-    padding:13px 18px;
-  }
-}
-
-@media(max-width:380px){
-  .nav__logo-img-wrapper{
-    width:38px;
-    height:38px;
-  }
-  .nav__hamburger{
-    width:40px;
-    height:40px;
-    border-radius:10px;
-  }
-  .nav__hline{
-    width:18px;
-    height:2px;
-  }
-  .nav__hline--1{transform:translateY(-3.5px)}
-  .nav__hline--3{transform:translateY(3.5px)}
-  .nav__hamburger--open .nav__hline--1{transform:translateY(2px) rotate(45deg)}
-  .nav__hamburger--open .nav__hline--3{transform:translateY(-2px) rotate(-45deg)}
-  .mm__body{
-    padding-left:14px;
-    padding-right:14px;
-  }
-  .mm__logo-img-wrapper{
-    width:38px;
-    height:38px;
-  }
-  .mm__logo-text{
-    font-size:20px;
-  }
-}
-
-@media(max-width:320px){
-  .nav__inner{
-    padding:0 10px;
-  }
-  .nav__logo-img-wrapper{
-    width:36px;
-    height:36px;
-  }
-  .nav__hamburger{
-    width:38px;
-    height:38px;
-    border-radius:8px;
-  }
-  .nav__hline{
-    width:16px;
-    height:2px;
-  }
-  .nav__hline--1{transform:translateY(-3px)}
-  .nav__hline--3{transform:translateY(3px)}
-  .nav__hamburger--open .nav__hline--1{transform:translateY(1.5px) rotate(45deg)}
-  .nav__hamburger--open .nav__hline--3{transform:translateY(-1.5px) rotate(-45deg)}
-  .srch__box{
-    padding:0 10px;
-  }
-  .srch__input{
-    font-size:15px;
-    padding:16px 48px 16px 44px;
-  }
-  .mm{
-    width:100vw;
-  }
-  .mm__body{
-    padding-left:12px;
-    padding-right:12px;
-  }
-  .mm__logo-img-wrapper{
-    width:36px;
-    height:36px;
-  }
-  .mm__logo-text{
-    font-size:18px;
-  }
-  .mm__link,
-  .mm__toggle{
-    font-size:16px;
-    padding:12px 4px;
-  }
-  .mm__sub-link{
-    font-size:14px;
-  }
-  .mm__auth-link,
-  .mm__out{
-    font-size:14px;
-  }
-  .mm__cta{
-    font-size:14px;
-    padding:12px 16px;
-  }
-}
-
-/* REDUCED MOTION */
-@media(prefers-reduced-motion:reduce){
-  *,*::before,*::after{
-    animation-duration:.01ms!important;
-    animation-iteration-count:1!important;
-    transition-duration:.01ms!important;
-  }
-}
+        @keyframes badgePop { from { transform: scale(0) } to { transform: scale(1) } }
+        @keyframes srchIn { to { opacity: 1; transform: translateY(0) } }
+        @keyframes mmSlideIn {
+          0% { opacity: 0; transform: translateX(40px) }
+          60% { opacity: 1 }
+          100% { opacity: 1; transform: none }
+        }
+        @keyframes divIn { to { opacity: 1 } }
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            animation-iteration-count: 1 !important;
+            transition-duration: 0.01ms !important;
+          }
+        }
       `}</style>
     </>
   );

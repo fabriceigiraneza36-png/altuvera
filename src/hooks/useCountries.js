@@ -10,36 +10,7 @@ export function useCountries(params = {}) {
   const paramsRef = useRef(params);
   const paramsKeyRef = useRef(JSON.stringify(params));
 
-  useEffect(() => {
-    const newParamsKey = JSON.stringify(params);
-    if (newParamsKey !== paramsKeyRef.current) {
-      paramsKeyRef.current = newParamsKey;
-      paramsRef.current = params;
-      setLoading(true);
-      setError(null);
-
-      countryService
-        .getAll(params)
-        .then((result) => {
-          if (result) {
-            setCountries(result.data || []);
-          }
-        })
-        .catch((err) => {
-          if (err.name !== "AbortError") {
-            setError(err.message || "Failed to load countries");
-            setCountries([]);
-          }
-        })
-        .finally(() => {
-          setLoading(false);
-        });
-    }
-
-    return () => countryService.cancelAll();
-  }, [params]);
-
-  const refetch = useCallback(() => {
+  const fetchCountries = useCallback(() => {
     setLoading(true);
     setError(null);
     countryService
@@ -52,12 +23,37 @@ export function useCountries(params = {}) {
       .catch((err) => {
         if (err.name !== "AbortError") {
           setError(err.message || "Failed to load countries");
+          setCountries([]);
         }
       })
       .finally(() => {
         setLoading(false);
       });
   }, []);
+
+  useEffect(() => {
+    const newParamsKey = JSON.stringify(params);
+    if (newParamsKey !== paramsKeyRef.current) {
+      paramsKeyRef.current = newParamsKey;
+      paramsRef.current = params;
+      fetchCountries();
+    }
+
+    return () => countryService.cancelAll();
+  }, [params, fetchCountries]);
+
+  // Real-time sync: refetch every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchCountries();
+    }, 30000); // 30 seconds
+
+    return () => clearInterval(interval);
+  }, [fetchCountries]);
+
+  const refetch = useCallback(() => {
+    fetchCountries();
+  }, [fetchCountries]);
 
   return { countries, loading, error, refetch };
 }

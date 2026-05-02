@@ -2642,6 +2642,126 @@ const StepFour = memo(
           </p>
         </div>
 
+        <div
+          style={{
+            marginBottom: 24,
+            padding: 22,
+            borderRadius: 22,
+            background: `linear-gradient(135deg, ${THEME.primary}10, ${THEME.background} 100%)`,
+            border: `1px solid rgba(16, 185, 129, 0.16)`,
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 14,
+              marginBottom: 18,
+            }}
+          >
+            <div
+              style={{
+                width: 46,
+                height: 46,
+                borderRadius: 16,
+                backgroundColor: THEME.primary,
+                display: 'grid',
+                placeItems: 'center',
+                color: '#fff',
+              }}
+            >
+              <FiUser size={22} />
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: 15,
+                  fontWeight: 700,
+                  color: THEME.text,
+                }}
+              >
+                Auto-filled contact details
+              </div>
+              <div
+                style={{
+                  fontSize: 13,
+                  color: THEME.textLight,
+                }}
+              >
+                We preloaded your name and email from your account for a smoother booking experience.
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+              gap: 16,
+            }}
+          >
+            <div
+              style={{
+                padding: 16,
+                borderRadius: 18,
+                backgroundColor: '#fff',
+                border: `1px solid ${THEME.gray200}`,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 12,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.16em',
+                  color: THEME.textLight,
+                  marginBottom: 6,
+                }}
+              >
+                Full name
+              </div>
+              <div
+                style={{
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: THEME.text,
+                }}
+              >
+                {formData.name || 'Enter your name'}
+              </div>
+            </div>
+
+            <div
+              style={{
+                padding: 16,
+                borderRadius: 18,
+                backgroundColor: '#fff',
+                border: `1px solid ${THEME.gray200}`,
+              }}
+            >
+              <div
+                style={{
+                  fontSize: 12,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.16em',
+                  color: THEME.textLight,
+                  marginBottom: 6,
+                }}
+              >
+                Email address
+              </div>
+              <div
+                style={{
+                  fontSize: 16,
+                  fontWeight: 700,
+                  color: THEME.text,
+                }}
+              >
+                {formData.email || 'Enter your email'}
+              </div>
+            </div>
+          </div>
+        </div>
+
         <ProfileImageUpload
           user={user}
           formData={formData}
