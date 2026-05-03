@@ -541,7 +541,7 @@ function SectionHeader({ icon, label, title, subtitle, align, dark }) {
   const a = align || 'center';
   const d = dark || false;
   return (
-    <header style={{ textAlign: a, marginBottom: 44 }}>
+    <header style={{ textAlign: a, marginBottom: 32 }}>
       {d ? (
         <SectionLabelDark icon={icon} text={label} />
       ) : (
@@ -1525,7 +1525,7 @@ function Explore() {
      [backendCountries]
    );
 
-   const pad = 'clamp(32px,5vw,56px) clamp(16px,5vw,36px)';
+   const pad = 'clamp(24px,4vw,42px) clamp(16px,5vw,32px)';
    const box = { maxWidth: 1400, margin: '0 auto' };
 
    return (
@@ -1768,7 +1768,7 @@ function Explore() {
                 display: 'flex',
                 justifyContent: 'center',
                 gap: 10,
-                marginBottom: 48,
+                marginBottom: 32,
                 overflowX: 'auto',
                 paddingBottom: 4,
               }}
@@ -1886,7 +1886,7 @@ function Explore() {
           )}
 
           <AnimatedSection animation="fadeInUp">
-        <div style={{ textAlign: 'center', marginTop: 40 }}>
+        <div style={{ textAlign: 'center', marginTop: 28 }}>
               <Button
                 to="/destinations"
                 variant="primary"
@@ -2055,7 +2055,7 @@ function Explore() {
            </div>
 
           <AnimatedSection animation="fadeInUp">
-            <div style={{ textAlign: 'center', marginTop: 36 }}>
+            <div style={{ textAlign: 'center', marginTop: 24 }}>
               <Button
                 to="/destinations"
                 variant="primary"
@@ -2252,7 +2252,7 @@ function Explore() {
       {/* ============ TRUST BADGES ============ */}
       <section
         style={{
-          padding: 'clamp(28px,4vw,48px) clamp(16px,5vw,36px)',
+          padding: 'clamp(22px,4vw,40px) clamp(16px,5vw,32px)',
         }}
       >
         <div style={box}>
@@ -2331,7 +2331,7 @@ function Explore() {
       {/* ============ NEWSLETTER ============ */}
       <section
         style={{
-          padding: 'clamp(28px,4vw,48px) clamp(16px,5vw,36px)',
+          padding: 'clamp(22px,4vw,40px) clamp(16px,5vw,32px)',
           backgroundColor: G[50],
         }}
       >
@@ -2345,7 +2345,7 @@ function Explore() {
       {/* ============ FINAL CTA ============ */}
       <section
         style={{
-          padding: 'clamp(48px,8vw,80px) clamp(16px,5vw,36px)',
+          padding: 'clamp(36px,7vw,60px) clamp(16px,5vw,32px)',
           background:
             'linear-gradient(160deg,' +
             N[900] +

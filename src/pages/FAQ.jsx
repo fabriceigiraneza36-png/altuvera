@@ -172,7 +172,7 @@ const FAQ = () => {
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
         .faq-section {
-          padding: 60px 24px 100px;
+          padding: 40px 24px 70px;
           background: linear-gradient(180deg, #f0fdf4 0%, #ecfdf5 30%, #f8fffe 60%, #f0fdf4 100%);
           min-height: 100vh;
           position: relative;
@@ -202,7 +202,7 @@ const FAQ = () => {
 
         .faq-header {
           text-align: center;
-          margin-bottom: 56px;
+          margin-bottom: 36px;
         }
 
         .faq-badge {
@@ -242,7 +242,7 @@ const FAQ = () => {
           font-size: 18px;
           color: #64748b;
           max-width: 520px;
-          margin: 0 auto 40px;
+          margin: 0 auto 28px;
           line-height: 1.7;
         }
 
@@ -250,7 +250,7 @@ const FAQ = () => {
         .faq-search-wrapper {
           position: relative;
           max-width: 560px;
-          margin: 0 auto 36px;
+          margin: 0 auto 24px;
         }
 
         .faq-search-icon {
@@ -384,7 +384,7 @@ const FAQ = () => {
 
         /* FAQ List */
         .faq-list {
-          margin-top: 48px;
+          margin-top: 32px;
           display: flex;
           flex-direction: column;
           gap: 16px;
@@ -433,7 +433,7 @@ const FAQ = () => {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 26px 28px;
+          padding: 20px 22px;
           cursor: pointer;
           user-select: none;
           gap: 16px;
@@ -528,7 +528,7 @@ const FAQ = () => {
         }
 
         .faq-answer-content {
-          padding: 0 28px 28px 80px;
+          padding: 0 20px 24px 60px;
           font-family: 'Inter', sans-serif;
           font-size: 15.5px;
           color: #475569;
@@ -579,10 +579,10 @@ const FAQ = () => {
 
         /* CTA Section */
         .faq-cta {
-          margin-top: 72px;
+          margin-top: 48px;
           background: white;
           border-radius: 28px;
-          padding: 56px 40px;
+          padding: 40px 32px;
           text-align: center;
           box-shadow: 0 8px 40px rgba(0, 0, 0, 0.06);
           border: 1px solid rgba(5, 150, 105, 0.06);
@@ -653,7 +653,7 @@ const FAQ = () => {
 
         @media (max-width: 640px) {
           .faq-section {
-            padding: 48px 16px 100px;
+            padding: 40px 16px 70px;
           }
 
           .faq-item-header {

@@ -223,7 +223,7 @@ const Tips = () => {
         .tips-container {
           max-width: 1280px;
           margin: 0 auto;
-          padding: 40px 24px 80px;
+          padding: 32px 24px 60px;
         }
 
         /* --- STICKY TOOLBAR --- */
@@ -234,7 +234,7 @@ const Tips = () => {
           border: 1px solid rgba(255, 255, 255, 0.5);
           border-radius: 20px;
           padding: 16px 24px;
-          margin-bottom: 40px;
+          margin-bottom: 28px;
           box-shadow: var(--shadow-md);
           display: flex;
           flex-wrap: wrap;
@@ -316,7 +316,7 @@ const Tips = () => {
           gap: 10px;
           overflow-x: auto;
           padding-bottom: 4px;
-          margin-bottom: 32px;
+          margin-bottom: 24px;
           scrollbar-width: none;
         }
         .category-scroller::-webkit-scrollbar { display: none; }
@@ -544,7 +544,7 @@ const Tips = () => {
         }
 
         .modal-header {
-          padding: 32px;
+          padding: 24px;
           background: linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%);
           border-bottom: 1px solid #f1f5f9;
           display: flex;
@@ -597,7 +597,7 @@ const Tips = () => {
         }
 
         .modal-body {
-          padding: 32px;
+          padding: 24px;
           overflow-y: auto;
         }
 

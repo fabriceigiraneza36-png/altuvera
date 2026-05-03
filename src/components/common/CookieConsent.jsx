@@ -1,8 +1,8 @@
 // src/components/common/CookieConsent.jsx
 
 import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
-  HiAdjustments,
   HiShieldCheck,
   HiSparkles,
   HiX,
@@ -36,278 +36,205 @@ const readStoredPreferences = () => {
       ...defaultPrefs,
       ...parsed,
       necessary: true,
-      consentGiven: true,
     };
   } catch {
     return null;
   }
 };
 
-const Toggle = ({ checked, onChange, disabled = false }) => {
-  return (
-    <label className={`cookie-toggle ${checked ? "active" : ""} ${disabled ? "disabled" : ""}`}>
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onChange}
-        disabled={disabled}
-      />
-      <span className="toggle-track">
-        <span className="toggle-thumb">
-          {checked && <HiCheck />}
-        </span>
+const Toggle = ({ checked, onChange, disabled }) => (
+  <label className={`cc-toggle ${checked ? "on" : ""} ${disabled ? "off" : ""}`}>
+    <input type="checkbox" checked={checked} onChange={onChange} disabled={disabled} />
+    <span />
+  </label>
+);
+
+const Row = ({ icon: Icon, title, desc, checked, onChange, disabled }) => (
+  <div className={`cc-row ${disabled ? "disabled" : ""}`}>
+    <div className="cc-row-left">
+      <span className="cc-icon">
+        <Icon />
       </span>
-    </label>
-  );
-};
-
-const CookieCard = ({
-  icon: Icon,
-  title,
-  description,
-  checked,
-  onChange,
-  disabled = false,
-}) => {
-  return (
-    <div className={`cookie-card ${disabled ? "disabled" : ""}`}>
-      <div className="cookie-card-left">
-        <div className="cookie-card-icon">
-          <Icon />
-        </div>
-
-        <div>
-          <h4>{title}</h4>
-          <p>{description}</p>
-        </div>
+      <div>
+        <h5>{title}</h5>
+        <p>{desc}</p>
       </div>
-
-      <Toggle
-        checked={checked}
-        onChange={onChange}
-        disabled={disabled}
-      />
     </div>
-  );
-};
 
-const Button = ({
-  children,
-  variant = "secondary",
-  onClick,
-  className = "",
-}) => {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`cookie-btn ${variant} ${className}`}
-    >
-      {children}
-    </button>
-  );
-};
+    <Toggle checked={checked} onChange={onChange} disabled={disabled} />
+  </div>
+);
+
+const Button = ({ children, variant = "ghost", onClick }) => (
+  <button className={`cc-btn ${variant}`} onClick={onClick}>
+    {children}
+  </button>
+);
 
 export default function CookieConsent() {
   const stored = useMemo(() => readStoredPreferences(), []);
-  const [preferences, setPreferences] = useState(stored || defaultPrefs);
-  const [showBanner, setShowBanner] = useState(!stored);
-  const [showSettings, setShowSettings] = useState(false);
 
+  // STRICT: only hidden when consent is given
+  const [open, setOpen] = useState(!stored?.consentGiven);
+  const [settings, setSettings] = useState(false);
+  const [prefs, setPrefs] = useState(stored || defaultPrefs);
+
+  // external trigger support
   useEffect(() => {
-    const openSettings = () => setShowSettings(true);
-
-    window.addEventListener(
-      OPEN_COOKIE_SETTINGS_EVENT,
-      openSettings
-    );
-
-    return () =>
-      window.removeEventListener(
-        OPEN_COOKIE_SETTINGS_EVENT,
-        openSettings
-      );
+    const handler = () => setSettings(true);
+    window.addEventListener(OPEN_COOKIE_SETTINGS_EVENT, handler);
+    return () => window.removeEventListener(OPEN_COOKIE_SETTINGS_EVENT, handler);
   }, []);
 
+  // Apple-style background focus effect
   useEffect(() => {
-    if (showSettings) {
-      document.body.classList.add("cookie-lock");
-    } else {
-      document.body.classList.remove("cookie-lock");
-    }
+    const active = open || settings;
+    document.body.classList.toggle("cc-active", active);
+    return () => document.body.classList.remove("cc-active");
+  }, [open, settings]);
 
-    return () =>
-      document.body.classList.remove("cookie-lock");
-  }, [showSettings]);
-
-  const persistPreferences = useCallback((nextPrefs) => {
-    const finalPrefs = {
+  const save = useCallback((data) => {
+    const final = {
       ...defaultPrefs,
-      ...nextPrefs,
+      ...data,
       necessary: true,
       consentGiven: true,
       updatedAt: new Date().toISOString(),
     };
 
-    localStorage.setItem(
-      COOKIE_PREFS_KEY,
-      JSON.stringify(finalPrefs)
-    );
+    localStorage.setItem(COOKIE_PREFS_KEY, JSON.stringify(final));
 
-    setPreferences(finalPrefs);
-    setShowBanner(false);
-    setShowSettings(false);
+    setPrefs(final);
+    setOpen(false);
+    setSettings(false);
   }, []);
-
-  const acceptAll = () => {
-    persistPreferences({
-      analytics: true,
-      marketing: true,
-    });
-  };
-
-  const acceptEssentialOnly = () => {
-    persistPreferences({
-      analytics: false,
-      marketing: false,
-    });
-  };
-
-  const saveCustomPreferences = () => {
-    persistPreferences(preferences);
-  };
 
   return (
     <>
-      {showBanner && (
-        <div className="cookie-banner">
-          <div className="cookie-banner-top">
-            <div className="banner-icon">
-              <HiShieldCheck />
-            </div>
-
-            <div className="banner-content">
-              <span className="cookie-badge">
-                <HiSparkles />
-                Privacy First
-              </span>
-
-              <h2>We value your privacy</h2>
-
-              <p>
-                We use cookies to improve your browsing
-                experience, maintain security, and help us
-                improve our services.
-              </p>
-            </div>
-          </div>
-
-          <div className="cookie-actions">
-            <Button
-              variant="ghost"
-              onClick={() => setShowSettings(true)}
-            >
-              <HiAdjustments />
-              Customize
-            </Button>
-
-            <Button
-              variant="secondary"
-              onClick={acceptEssentialOnly}
-            >
-              Essential Only
-            </Button>
-
-            <Button
-              variant="primary"
-              onClick={acceptAll}
-            >
-              Accept All
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {showSettings && (
-        <div
-          className="cookie-overlay"
-          onClick={() => setShowSettings(false)}
-        >
-          <div
-            className="cookie-modal"
-            onClick={(e) => e.stopPropagation()}
+      {/* ================= BANNER ================= */}
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            className="cc-banner"
+            initial={{ opacity: 0, y: 40, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 30 }}
+            transition={{ type: "spring", stiffness: 130, damping: 18 }}
           >
-            <button
-              className="close-modal"
-              onClick={() => setShowSettings(false)}
-            >
-              <HiX />
-            </button>
+            <div className="cc-top">
+              <div className="cc-mark">
+                <HiShieldCheck />
+              </div>
 
-            <div className="modal-header">
-              <h3>Cookie Preferences</h3>
+              <div>
+                <span className="cc-tag">
+                  <HiSparkles /> Privacy First
+                </span>
 
-              <p>
-                Manage how cookies are used on your account.
-                Essential cookies are required for security
-                and core platform functionality.
-              </p>
+                <h3>We use cookies</h3>
+                <p>
+                  We use cookies to improve your experience, security, and performance.
+                </p>
+              </div>
             </div>
 
-            <div className="modal-body">
-              <CookieCard
-                icon={HiLockClosed}
-                title="Essential Cookies"
-                description="Required for login, security and platform stability."
-                checked={true}
-                disabled={true}
-              />
+            <div className="cc-actions">
+              <Button onClick={() => setSettings(true)}>Customize</Button>
 
-              <CookieCard
-                icon={HiChartBar}
-                title="Analytics Cookies"
-                description="Help us improve performance and understand user behavior."
-                checked={preferences.analytics}
-                onChange={(e) =>
-                  setPreferences((prev) => ({
-                    ...prev,
-                    analytics: e.target.checked,
-                  }))
-                }
-              />
-
-              <CookieCard
-                icon={HiSpeakerphone}
-                title="Marketing Cookies"
-                description="Used to personalize recommendations and promotions."
-                checked={preferences.marketing}
-                onChange={(e) =>
-                  setPreferences((prev) => ({
-                    ...prev,
-                    marketing: e.target.checked,
-                  }))
-                }
-              />
-            </div>
-
-            <div className="modal-footer">
               <Button
-                variant="secondary"
-                onClick={acceptEssentialOnly}
+                onClick={() => save({ analytics: false, marketing: false })}
               >
-                Essential Only
+                Essential
               </Button>
 
               <Button
                 variant="primary"
-                onClick={saveCustomPreferences}
+                onClick={() => save({ analytics: true, marketing: true })}
               >
-                Save Preferences
+                Accept All
               </Button>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ================= MODAL ================= */}
+      <AnimatePresence>
+        {settings && (
+          <motion.div
+            className="cc-overlay"
+            onClick={() => setSettings(false)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="cc-modal"
+              onClick={(e) => e.stopPropagation()}
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              transition={{ type: "spring", stiffness: 160, damping: 18 }}
+            >
+              <button className="cc-close" onClick={() => setSettings(false)}>
+                <HiX />
+              </button>
+
+              <div className="cc-head">
+                <h3>Cookie Preferences</h3>
+                <p>Control how your data is used across the platform.</p>
+              </div>
+
+              <div className="cc-body">
+                <Row
+                  icon={HiLockClosed}
+                  title="Essential"
+                  desc="Required for security & core features"
+                  checked
+                  disabled
+                />
+
+                <Row
+                  icon={HiChartBar}
+                  title="Analytics"
+                  desc="Help improve performance"
+                  checked={prefs.analytics}
+                  onChange={(e) =>
+                    setPrefs((p) => ({ ...p, analytics: e.target.checked }))
+                  }
+                />
+
+                <Row
+                  icon={HiSpeakerphone}
+                  title="Marketing"
+                  desc="Personalized content & offers"
+                  checked={prefs.marketing}
+                  onChange={(e) =>
+                    setPrefs((p) => ({ ...p, marketing: e.target.checked }))
+                  }
+                />
+              </div>
+
+              <div className="cc-footer">
+                <Button
+                  onClick={() =>
+                    save({ analytics: false, marketing: false })
+                  }
+                >
+                  Essential Only
+                </Button>
+
+                <Button
+                  variant="primary"
+                  onClick={() => save(prefs)}
+                >
+                  Save Preferences
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

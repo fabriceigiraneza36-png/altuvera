@@ -12,11 +12,25 @@ import countryInsightService from "../services/countryInsightService";
 /* ─────────────────────────────────────────────────────────
    useCountries — paginated/filtered list of countries
    ───────────────────────────────────────────────────────── */
+let STATIC_CACHE = null;
+
 export function useCountries(params = {}) {
   const [countries, setCountries]   = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
+
+  // Cache static data
+  const loadStatic = useCallback(async () => {
+    if (STATIC_CACHE) return STATIC_CACHE;
+    try {
+      const { countries: staticCountries } = await import('../services/staticCountries.js');
+      STATIC_CACHE = staticCountries;
+      return staticCountries;
+    } catch {
+      return [];
+    }
+  }, []);
 
   // ✅ FIX: Serialize params to a stable string for comparison.
   // This MUST be the dependency, not the params object itself,
@@ -40,9 +54,11 @@ export function useCountries(params = {}) {
     setLoading(true);
     setError(null);
     try {
-      const result = await countryService.getAll(paramsRef.current);
-      setCountries(result.data       ?? []);
-      setPagination(result.pagination ?? null);
+
+  const result = await countryService.getAll(paramsRef.current);
+  setCountries(result.data       ?? []);
+  setPagination(result.pagination ?? null);
+
     } catch (err) {
       if (err?.name !== "AbortError" && err?.message !== "canceled") {
         console.error("[useCountries] fetch error:", err?.message);
@@ -407,6 +423,7 @@ export function useCountry(idOrSlug, { withInsights = false } = {}) {
 /* ─────────────────────────────────────────────────────────
    Default export for legacy compat
    ───────────────────────────────────────────────────────── */
+
 export default {
   useCountries,
   useFeaturedCountries,
@@ -417,3 +434,4 @@ export default {
   useCountryDestinations,
   useCountry,
 };
+

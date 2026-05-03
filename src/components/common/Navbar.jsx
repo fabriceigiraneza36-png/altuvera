@@ -15,6 +15,7 @@ import { useUserAuth } from "../../context/UserAuthContext";
 import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 import { getAllDestinations } from "../../data/destinations";
 import { preloadRoute } from "../../utils/routeUtils";
+import { getCountrySlug } from "../../utils/countrySlugMap";
 import { useCountries } from "../../hooks/useCountries";
 import "./Navbar.css";
 
@@ -68,7 +69,7 @@ const Navbar = () => {
             c.subRegion ||
             c.shortDescription ||
             (c.description ? `${c.description.slice(0, 60)}…` : ""),
-          path: `/country/${c.slug || c.id || c.name.toLowerCase()}`,
+path: `/country/${getCountrySlug(c)}`
         })
       );
     }

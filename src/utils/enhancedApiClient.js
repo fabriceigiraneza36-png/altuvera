@@ -82,7 +82,12 @@ this.responseInterceptors = [
 
    const makeRequest = async (attempt = 1) => {
   try {
-    const promise = multiBackendFetch(endpoint, config);
+const controller = new AbortController();
+config.signal = controller.signal;
+const timeoutId = setTimeout(() => controller.abort(), 60000); // 60s timeout
+
+const promise = multiBackendFetch(endpoint, config);
+promise.finally(() => clearTimeout(timeoutId));
     this.pendingRequests.set(cacheKey, promise);
 
     const result = await promise;

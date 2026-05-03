@@ -23,6 +23,7 @@ import { useCountries } from "../hooks/useCountries";
 import { useGallery } from "../hooks/useGallery";
 import { useTestimonials } from "../hooks/useTestimonials";
 import { useWishlist } from "../hooks/useWishlist";
+import { getCountrySlug } from "../utils/countrySlugMap";
 import "../styles/Home.css";
 
 /* ═══════════════════════════════════════════
@@ -120,12 +121,23 @@ const usePrefersReducedMotion = () => {
 };
 
 const useWindowSize = () => {
-  const [s, setS] = useState({ w: typeof window !== "undefined" ? window.innerWidth : 1200, h: typeof window !== "undefined" ? window.innerHeight : 800 });
+  const [s, setS] = useState({
+    w: typeof window !== "undefined" ? window.innerWidth : 1200,
+    h: typeof window !== "undefined" ? window.innerHeight : 800,
+  });
   useEffect(() => {
     let raf;
-    const h = () => { cancelAnimationFrame(raf); raf = requestAnimationFrame(() => setS({ w: window.innerWidth, h: window.innerHeight })); };
+    const h = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() =>
+        setS({ w: window.innerWidth, h: window.innerHeight })
+      );
+    };
     window.addEventListener("resize", h);
-    return () => { window.removeEventListener("resize", h); cancelAnimationFrame(raf); };
+    return () => {
+      window.removeEventListener("resize", h);
+      cancelAnimationFrame(raf);
+    };
   }, []);
   return s;
 };
@@ -145,21 +157,34 @@ const ScrollProgress = memo(() => {
 const MagneticWrap = memo(({ children, strength = 0.25, scale = 1.02 }) => {
   const ref = useRef(null);
   const reduced = usePrefersReducedMotion();
-  const x = useMotionValue(0), y = useMotionValue(0);
+  const x = useMotionValue(0);
+  const y = useMotionValue(0);
   const sx = useSpring(x, { stiffness: 180, damping: 18 });
   const sy = useSpring(y, { stiffness: 180, damping: 18 });
   const ss = useSpring(1, { stiffness: 280, damping: 22 });
-  const onMove = useCallback((e) => {
-    if (reduced) return;
-    const r = ref.current?.getBoundingClientRect();
-    if (!r) return;
-    x.set((e.clientX - r.left - r.width / 2) * strength);
-    y.set((e.clientY - r.top - r.height / 2) * strength);
-    ss.set(scale);
-  }, [reduced, strength, scale, x, y, ss]);
-  const onLeave = useCallback(() => { x.set(0); y.set(0); ss.set(1); }, [x, y, ss]);
+  const onMove = useCallback(
+    (e) => {
+      if (reduced) return;
+      const r = ref.current?.getBoundingClientRect();
+      if (!r) return;
+      x.set((e.clientX - r.left - r.width / 2) * strength);
+      y.set((e.clientY - r.top - r.height / 2) * strength);
+      ss.set(scale);
+    },
+    [reduced, strength, scale, x, y, ss]
+  );
+  const onLeave = useCallback(() => {
+    x.set(0);
+    y.set(0);
+    ss.set(1);
+  }, [x, y, ss]);
   return (
-    <motion.div ref={ref} onMouseMove={onMove} onMouseLeave={onLeave} style={{ display: "inline-block", x: sx, y: sy, scale: ss }}>
+    <motion.div
+      ref={ref}
+      onMouseMove={onMove}
+      onMouseLeave={onLeave}
+      style={{ display: "inline-block", x: sx, y: sy, scale: ss }}
+    >
       {children}
     </motion.div>
   );
@@ -174,7 +199,9 @@ const Counter = memo(({ end, suffix = "", duration = 2.5 }) => {
   const mv = useMotionValue(0);
   const sv = useSpring(mv, { duration: duration * 1000, bounce: 0 });
   const [d, setD] = useState("0");
-  useEffect(() => { if (inView) mv.set(parseInt(end, 10)); }, [inView, end, mv]);
+  useEffect(() => {
+    if (inView) mv.set(parseInt(end, 10));
+  }, [inView, end, mv]);
   useMotionValueEvent(sv, "change", (v) => setD(Math.round(v).toLocaleString()));
   return <span ref={ref}>{d}{suffix}</span>;
 });
@@ -189,7 +216,11 @@ const TextReveal = memo(({ children, delay = 0 }) => {
   if (reduced) return <div>{children}</div>;
   return (
     <div ref={ref} style={{ overflow: "hidden" }}>
-      <motion.div initial={{ y: "120%", opacity: 0 }} animate={inView ? { y: 0, opacity: 1 } : {}} transition={{ duration: 0.9, delay, ease: [0.25, 1, 0.5, 1] }}>
+      <motion.div
+        initial={{ y: "120%", opacity: 0 }}
+        animate={inView ? { y: 0, opacity: 1 } : {}}
+        transition={{ duration: 0.9, delay, ease: [0.25, 1, 0.5, 1] }}
+      >
         {children}
       </motion.div>
     </div>
@@ -208,8 +239,22 @@ const SplitText = memo(({ children, className, style, delay = 0 }) => {
   return (
     <span ref={ref} className={className} style={{ ...style, display: "inline" }}>
       {words.map((w, i) => (
-        <span key={i} style={{ display: "inline-block", overflow: "hidden", marginRight: "0.3em" }}>
-          <motion.span initial={{ y: "130%", opacity: 0 }} animate={inView ? { y: 0, opacity: 1 } : {}} transition={{ duration: 0.7, delay: delay + i * 0.05, ease: [0.25, 1, 0.5, 1] }} style={{ display: "inline-block" }}>{w}</motion.span>
+        <span
+          key={i}
+          style={{ display: "inline-block", overflow: "hidden", marginRight: "0.3em" }}
+        >
+          <motion.span
+            initial={{ y: "130%", opacity: 0 }}
+            animate={inView ? { y: 0, opacity: 1 } : {}}
+            transition={{
+              duration: 0.7,
+              delay: delay + i * 0.05,
+              ease: [0.25, 1, 0.5, 1],
+            }}
+            style={{ display: "inline-block" }}
+          >
+            {w}
+          </motion.span>
         </span>
       ))}
     </span>
@@ -223,13 +268,35 @@ const StaggerWrap = memo(({ children, stagger = 0.1, className, style }) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-40px" });
   return (
-    <motion.div ref={ref} className={className} style={style} initial="hidden" animate={inView ? "visible" : "hidden"} variants={{ visible: { transition: { staggerChildren: stagger } }, hidden: {} }}>
+    <motion.div
+      ref={ref}
+      className={className}
+      style={style}
+      initial="hidden"
+      animate={inView ? "visible" : "hidden"}
+      variants={{
+        visible: { transition: { staggerChildren: stagger } },
+        hidden: {},
+      }}
+    >
       {children}
     </motion.div>
   );
 });
+
 const StaggerChild = memo(({ children, style }) => (
-  <motion.div style={style} variants={{ hidden: { opacity: 0, y: 44, filter: "blur(6px)" }, visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.75, ease: [0.25, 1, 0.5, 1] } } }}>
+  <motion.div
+    style={style}
+    variants={{
+      hidden: { opacity: 0, y: 44, filter: "blur(6px)" },
+      visible: {
+        opacity: 1,
+        y: 0,
+        filter: "blur(0px)",
+        transition: { duration: 0.75, ease: [0.25, 1, 0.5, 1] },
+      },
+    }}
+  >
     {children}
   </motion.div>
 ));
@@ -241,15 +308,36 @@ const ParallaxSection = memo(({ image, children, height = "80vh", overlay }) => 
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
   const reduced = usePrefersReducedMotion();
-  const y = useTransform(scrollYProgress, [0, 1], reduced ? ["0%", "0%"] : ["-15%", "15%"]);
-  const scale = useTransform(scrollYProgress, [0, 0.5, 1], reduced ? [1, 1, 1] : [1.22, 1.08, 1.15]);
-  const contentOp = useTransform(scrollYProgress, [0, 0.25, 0.75, 1], [0, 1, 1, 0]);
-  const contentY = useTransform(scrollYProgress, [0, 0.35, 0.65, 1], reduced ? [0, 0, 0, 0] : [70, 0, 0, -70]);
+  const y = useTransform(
+    scrollYProgress,
+    [0, 1],
+    reduced ? ["0%", "0%"] : ["-15%", "15%"]
+  );
+  const scale = useTransform(
+    scrollYProgress,
+    [0, 0.5, 1],
+    reduced ? [1, 1, 1] : [1.22, 1.08, 1.15]
+  );
+  const contentOp = useTransform(
+    scrollYProgress,
+    [0, 0.25, 0.75, 1],
+    [0, 1, 1, 0]
+  );
+  const contentY = useTransform(
+    scrollYProgress,
+    [0, 0.35, 0.65, 1],
+    reduced ? [0, 0, 0, 0] : [70, 0, 0, -70]
+  );
   return (
     <section ref={ref} className="cta-section" style={{ height, minHeight: 480 }}>
-      <motion.div className="cta-bg" style={{ backgroundImage: `url(${image})`, y, scale }} />
+      <motion.div
+        className="cta-bg"
+        style={{ backgroundImage: `url(${image})`, y, scale }}
+      />
       <div className="cta-overlay" style={{ background: overlay }} />
-      <motion.div className="cta-inner" style={{ opacity: contentOp, y: contentY }}>{children}</motion.div>
+      <motion.div className="cta-inner" style={{ opacity: contentOp, y: contentY }}>
+        {children}
+      </motion.div>
     </section>
   );
 });
@@ -262,41 +350,114 @@ const AdventureCard = memo(({ adventure, index }) => {
   const [hov, setHov] = useState(false);
   const ivRef = useRef(null);
   const imgs = adventure.images || [adventure.image];
+
   useEffect(() => {
     if (imgs.length <= 1) return;
-    ivRef.current = setInterval(() => setCur((p) => (p + 1) % imgs.length), hov ? 2200 : 4500);
+    ivRef.current = setInterval(
+      () => setCur((p) => (p + 1) % imgs.length),
+      hov ? 2200 : 4500
+    );
     return () => clearInterval(ivRef.current);
   }, [imgs.length, hov]);
-  const goPrev = useCallback((e) => { e.stopPropagation(); setCur((p) => (p - 1 + imgs.length) % imgs.length); }, [imgs.length]);
-  const goNext = useCallback((e) => { e.stopPropagation(); setCur((p) => (p + 1) % imgs.length); }, [imgs.length]);
+
+  const goPrev = useCallback(
+    (e) => {
+      e.stopPropagation();
+      setCur((p) => (p - 1 + imgs.length) % imgs.length);
+    },
+    [imgs.length]
+  );
+  const goNext = useCallback(
+    (e) => {
+      e.stopPropagation();
+      setCur((p) => (p + 1) % imgs.length);
+    },
+    [imgs.length]
+  );
+
   return (
-    <motion.div className="adventure-card-v2" onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 0.6, delay: index * 0.1 }}>
+    <motion.div
+      className="adventure-card-v2"
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      initial={{ opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.6, delay: index * 0.1 }}
+    >
       <div className="adventure-card-v2-images">
         <AnimatePresence mode="wait">
-          <motion.img key={cur} src={imgs[cur]} alt={adventure.title} className="adventure-card-v2-img" loading="lazy" initial={{ opacity: 0, scale: 1.08 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.96 }} transition={{ duration: 0.45 }} />
+          <motion.img
+            key={cur}
+            src={imgs[cur]}
+            alt={adventure.title}
+            className="adventure-card-v2-img"
+            loading="lazy"
+            initial={{ opacity: 0, scale: 1.08 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{ duration: 0.45 }}
+          />
         </AnimatePresence>
         <div className="adventure-card-v2-gradient" />
         {imgs.length > 1 && (
-          <motion.div className="adventure-card-v2-nav" initial={{ opacity: 0 }} animate={{ opacity: hov ? 1 : 0 }} transition={{ duration: 0.2 }}>
-            <button className="adventure-card-v2-nav-btn" onClick={goPrev} aria-label="Previous"><IconChevronLeft size={18} /></button>
-            <button className="adventure-card-v2-nav-btn" onClick={goNext} aria-label="Next"><IconChevronRight size={18} /></button>
+          <motion.div
+            className="adventure-card-v2-nav"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: hov ? 1 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <button
+              className="adventure-card-v2-nav-btn"
+              onClick={goPrev}
+              aria-label="Previous"
+            >
+              <IconChevronLeft size={18} />
+            </button>
+            <button
+              className="adventure-card-v2-nav-btn"
+              onClick={goNext}
+              aria-label="Next"
+            >
+              <IconChevronRight size={18} />
+            </button>
           </motion.div>
         )}
         {imgs.length > 1 && (
           <div className="adventure-card-v2-indicators">
             {imgs.map((_, i) => (
-              <button key={i} className={`adventure-card-v2-indicator${i === cur ? " active" : ""}`} onClick={(e) => { e.stopPropagation(); setCur(i); }} aria-label={`Image ${i + 1}`} />
+              <button
+                key={i}
+                className={`adventure-card-v2-indicator${i === cur ? " active" : ""}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setCur(i);
+                }}
+                aria-label={`Image ${i + 1}`}
+              />
             ))}
           </div>
         )}
-        <div className="adventure-card-v2-icon" style={{ background: adventure.color }}><span>{adventure.icon}</span></div>
+        <div
+          className="adventure-card-v2-icon"
+          style={{ background: adventure.color }}
+        >
+          <span>{adventure.icon}</span>
+        </div>
         <div className="adventure-card-v2-count">{adventure.count}</div>
       </div>
       <div className="adventure-card-v2-content">
         <h3 className="adventure-card-v2-title">{adventure.title}</h3>
         <p className="adventure-card-v2-desc">{adventure.description}</p>
-        <Link to={`/adventures/${adventure.slug || adventure.title.toLowerCase().replace(/\s+/g, "-")}`} className="adventure-card-v2-link">
-          <span>Explore</span><IconArrowRight size={14} />
+        <Link
+          to={`/adventures/${
+            adventure.slug ||
+            adventure.title.toLowerCase().replace(/\s+/g, "-")
+          }`}
+          className="adventure-card-v2-link"
+        >
+          <span>Explore</span>
+          <IconArrowRight size={14} />
         </Link>
       </div>
     </motion.div>
@@ -314,16 +475,22 @@ const CountryCard = memo(({ country, index }) => {
   const [imgLoaded, setImgLoaded] = useState(false);
   const ivRef = useRef(null);
 
-  // Build images array for slideshow
   const allImages = useMemo(() => {
-    if (country.images && Array.isArray(country.images) && country.images.length > 0) {
+    if (
+      country.images &&
+      Array.isArray(country.images) &&
+      country.images.length > 0
+    ) {
       return country.images.filter(Boolean);
     }
-    const singleImg = country.imageUrl || country.heroImage || country.coverImageUrl || country.flagUrl;
+    const singleImg =
+      country.imageUrl ||
+      country.heroImage ||
+      country.coverImageUrl ||
+      country.flagUrl;
     return singleImg ? [singleImg] : [];
   }, [country]);
 
-  // Auto-rotation every 5 seconds (2.2s on hover)
   useEffect(() => {
     if (allImages.length <= 1) return;
     ivRef.current = setInterval(() => {
@@ -332,24 +499,42 @@ const CountryCard = memo(({ country, index }) => {
     return () => clearInterval(ivRef.current);
   }, [allImages.length, hover]);
 
-  // Reset loading state when slide changes
   useEffect(() => {
     setImgLoaded(false);
   }, [curImg]);
 
-  const goPrev = useCallback((e) => {
-    e.stopPropagation();
-    setCurImg((p) => (p - 1 + allImages.length) % allImages.length);
-  }, [allImages.length]);
+  const goPrev = useCallback(
+    (e) => {
+      e.stopPropagation();
+      setCurImg((p) => (p - 1 + allImages.length) % allImages.length);
+    },
+    [allImages.length]
+  );
 
-  const goNext = useCallback((e) => {
-    e.stopPropagation();
-    setCurImg((p) => (p + 1) % allImages.length);
-  }, [allImages.length]);
+  const goNext = useCallback(
+    (e) => {
+      e.stopPropagation();
+      setCurImg((p) => (p + 1) % allImages.length);
+    },
+    [allImages.length]
+  );
 
   return (
-    <motion.div ref={ref} className="country-card" initial={{ opacity: 0, y: 50, scale: 0.95 }} animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}} transition={{ duration: 0.6, delay: index * 0.08, ease: [0.25, 1, 0.5, 1] }} onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}>
-      <Link to={`/country/${country.slug || country.id}`} className="country-card-link">
+    <motion.div
+      ref={ref}
+      className="country-card"
+      initial={{ opacity: 0, y: 50, scale: 0.95 }}
+      animate={inView ? { opacity: 1, y: 0, scale: 1 } : {}}
+      transition={{
+        duration: 0.6,
+        delay: index * 0.08,
+        ease: [0.25, 1, 0.5, 1],
+      }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      {/* ✅ FIX: Link wraps content INSIDE motion.div, closes before motion.div */}
+      <Link to={`/country/${country.slug || country.id}`}>
         <div className="country-card-image-wrap">
           {/* Slideshow */}
           <div className="country-card-images">
@@ -371,9 +556,25 @@ const CountryCard = memo(({ country, index }) => {
           </div>
 
           <div className="country-card-image-overlay" />
-          {country.flagUrl && <div className="country-card-flag"><img src={country.flagUrl} alt={`${country.name} flag`} /></div>}
-          {country.isFeatured && <div className="country-card-featured"><IconStar size={12} fill="#F59E0B" color="#F59E0B" /><span>Featured</span></div>}
-          {country.destinationCount > 0 && <div className="country-card-stats-overlay"><div className="country-card-stat"><IconMapPin size={13} /><span>{country.destinationCount} Destinations</span></div></div>}
+          {country.flagUrl && (
+            <div className="country-card-flag">
+              <img src={country.flagUrl} alt={`${country.name} flag`} />
+            </div>
+          )}
+          {country.isFeatured && (
+            <div className="country-card-featured">
+              <IconStar size={12} fill="#F59E0B" color="#F59E0B" />
+              <span>Featured</span>
+            </div>
+          )}
+          {country.destinationCount > 0 && (
+            <div className="country-card-stats-overlay">
+              <div className="country-card-stat">
+                <IconMapPin size={13} />
+                <span>{country.destinationCount} Destinations</span>
+              </div>
+            </div>
+          )}
 
           {/* Navigation arrows */}
           {allImages.length > 1 && (
@@ -382,10 +583,22 @@ const CountryCard = memo(({ country, index }) => {
               initial={{ opacity: 0 }}
               animate={{ opacity: hover ? 1 : 0 }}
               transition={{ duration: 0.2 }}
-              style={{ pointerEvents: hover ? 'auto' : 'none' }}
+              style={{ pointerEvents: hover ? "auto" : "none" }}
             >
-              <button className="country-card-nav-btn" onClick={goPrev} aria-label="Previous image"><IconChevronLeft size={18} /></button>
-              <button className="country-card-nav-btn" onClick={goNext} aria-label="Next image"><IconChevronRight size={18} /></button>
+              <button
+                className="country-card-nav-btn"
+                onClick={goPrev}
+                aria-label="Previous image"
+              >
+                <IconChevronLeft size={18} />
+              </button>
+              <button
+                className="country-card-nav-btn"
+                onClick={goNext}
+                aria-label="Next image"
+              >
+                <IconChevronRight size={18} />
+              </button>
             </motion.div>
           )}
 
@@ -393,32 +606,55 @@ const CountryCard = memo(({ country, index }) => {
           {allImages.length > 1 && (
             <div className="country-card-indicators">
               {allImages.map((_, i) => (
-                <button key={i} className={`country-card-indicator${i === curImg ? " active" : ""}`} onClick={(e) => { e.stopPropagation(); setCurImg(i); }} aria-label={`Image ${i + 1}`} />
+                <button
+                  key={i}
+                  className={`country-card-indicator${
+                    i === curImg ? " active" : ""
+                  }`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setCurImg(i);
+                  }}
+                  aria-label={`Image ${i + 1}`}
+                />
               ))}
             </div>
           )}
 
-          {/* Skeleton loader - last so it overlays everything */}
+          {/* Skeleton loader */}
           {!imgLoaded && (
             <div className="country-card-skeleton">
               <div className="skeleton-shimmer" />
             </div>
           )}
         </div>
+
         <div className="country-card-content">
           <div className="country-card-header">
             <h3 className="country-card-name">{country.name}</h3>
-            {country.continent && <span className="country-card-continent">{country.continent}</span>}
+            {country.continent && (
+              <span className="country-card-continent">{country.continent}</span>
+            )}
           </div>
-          {country.tagline && <p className="country-card-tagline">{country.tagline}</p>}
+          {country.tagline && (
+            <p className="country-card-tagline">{country.tagline}</p>
+          )}
           <div className="country-card-footer">
             <div className="country-card-meta">
-              {country.capital && <span className="country-card-capital"><IconFlag size={12} />{country.capital}</span>}
+              {country.capital && (
+                <span className="country-card-capital">
+                  <IconFlag size={12} />
+                  {country.capital}
+                </span>
+              )}
             </div>
-            <span className="country-card-cta">Explore <IconArrowRight size={14} /></span>
+            <span className="country-card-cta">
+              Explore <IconArrowRight size={14} />
+            </span>
           </div>
         </div>
       </Link>
+      {/* ✅ Link closes here, INSIDE motion.div */}
     </motion.div>
   );
 });
@@ -430,7 +666,10 @@ const CountriesSkeleton = ({ count = 4 }) => (
   <div className="countries-grid">
     {Array.from({ length: count }).map((_, i) => (
       <div key={i} className="country-card country-card--skeleton">
-        <div className="country-card-image-wrap skeleton-shimmer" style={{ height: 180 }} />
+        <div
+          className="country-card-image-wrap skeleton-shimmer"
+          style={{ height: 180 }}
+        />
         <div className="country-card-content">
           <div className="skeleton-line skeleton-line--title" />
           <div className="skeleton-line skeleton-line--text" />
@@ -446,17 +685,42 @@ const CountriesSkeleton = ({ count = 4 }) => (
    ═══════════════════════════════════════════ */
 const CountriesMessage = ({ type = "loading", error, onRetry }) => {
   const cfg = {
-    loading: { icon: "🌍", title: "Discovering Countries…", description: "Loading stunning East African destinations for you.", showRetry: false },
-    error: { icon: "⚠️", title: "Couldn't Load Countries", description: error || "Something went wrong. Please try again.", showRetry: true },
-    empty: { icon: "🗺️", title: "No Countries Found", description: "We're still adding amazing destinations. Check back soon.", showRetry: true },
+    loading: {
+      icon: "🌍",
+      title: "Discovering Countries…",
+      description: "Loading stunning East African destinations for you.",
+      showRetry: false,
+    },
+    error: {
+      icon: "⚠️",
+      title: "Couldn't Load Countries",
+      description: error || "Something went wrong. Please try again.",
+      showRetry: true,
+    },
+    empty: {
+      icon: "🗺️",
+      title: "No Countries Found",
+      description:
+        "We're still adding amazing destinations. Check back soon.",
+      showRetry: true,
+    },
   };
   const c = cfg[type] || cfg.loading;
   return (
-    <motion.div className="countries-message" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+    <motion.div
+      className="countries-message"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+    >
       <div className="countries-message-icon">{c.icon}</div>
       <h3 className="countries-message-title">{c.title}</h3>
       <p className="countries-message-desc">{c.description}</p>
-      {c.showRetry && onRetry && <button className="countries-message-retry" onClick={onRetry}><IconRefresh size={16} /> Try Again</button>}
+      {c.showRetry && onRetry && (
+        <button className="countries-message-retry" onClick={onRetry}>
+          <IconRefresh size={16} /> Try Again
+        </button>
+      )}
     </motion.div>
   );
 };
@@ -470,25 +734,41 @@ const SignatureCard = memo(({ experience, index }) => {
   if (!experience) return null;
   const { title, subtitle, description, image, stats } = experience;
   return (
-    <motion.article ref={ref} className="sig-card" initial={{ opacity: 0, y: 60 }} animate={inView ? { opacity: 1, y: 0 } : {}} transition={{ duration: 0.7, delay: index * 0.14, ease: [0.25, 1, 0.5, 1] }}>
+    <motion.article
+      ref={ref}
+      className="sig-card"
+      initial={{ opacity: 0, y: 60 }}
+      animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.7, delay: index * 0.14, ease: [0.25, 1, 0.5, 1] }}
+    >
       <div className="sig-card-img-wrap">
         <img src={image} alt={title} className="sig-card-img" loading="lazy" />
         <div className="sig-card-img-gradient" />
-        <div className="sig-card-rating"><IconStar size={13} color="#F59E0B" fill="#F59E0B" /><span className="sig-card-rating-value">{stats?.Rating}</span></div>
+        <div className="sig-card-rating">
+          <IconStar size={13} color="#F59E0B" fill="#F59E0B" />
+          <span className="sig-card-rating-value">{stats?.Rating}</span>
+        </div>
         <div className="sig-card-subtitle-tag">{subtitle}</div>
       </div>
       <div className="sig-card-body">
         <h3 className="sig-card-title">{title}</h3>
         <p className="sig-card-desc">{description}</p>
         <div className="sig-card-stats">
-          {Object.entries(stats || {}).filter(([k]) => k !== "Rating").map(([key, value]) => (
-            <div key={key} className="sig-card-stat">
-              <div className="sig-card-stat-label">{key}</div>
-              <div className="sig-card-stat-value">{value}</div>
-            </div>
-          ))}
+          {Object.entries(stats || {})
+            .filter(([k]) => k !== "Rating")
+            .map(([key, value]) => (
+              <div key={key} className="sig-card-stat">
+                <div className="sig-card-stat-label">{key}</div>
+                <div className="sig-card-stat-value">{value}</div>
+              </div>
+            ))}
         </div>
-        <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} className="sig-card-cta" onClick={() => (window.location.href = "/booking")}>
+        <motion.button
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.97 }}
+          className="sig-card-cta"
+          onClick={() => (window.location.href = "/booking")}
+        >
           Book This Experience <IconArrowRight size={16} />
         </motion.button>
       </div>
@@ -504,18 +784,44 @@ const GalleryCard = memo(({ image, index, onClick }) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-30px" });
   return (
-    <motion.div ref={ref} className="gallery-card" initial={{ opacity: 0, scale: 0.9 }} animate={inView ? { opacity: 1, scale: 1 } : {}} transition={{ duration: 0.5, delay: index * 0.05 }} onClick={() => onClick?.(image, index)} layoutId={`gallery-${image.id}`}>
+    <motion.div
+      ref={ref}
+      className="gallery-card"
+      initial={{ opacity: 0, scale: 0.9 }}
+      animate={inView ? { opacity: 1, scale: 1 } : {}}
+      transition={{ duration: 0.5, delay: index * 0.05 }}
+      onClick={() => onClick?.(image, index)}
+      layoutId={`gallery-${image.id}`}
+    >
       <div className="gallery-card-image-wrap">
-        <img src={image.thumb || image.src} alt={image.alt || image.title} className="gallery-card-image" loading="lazy" />
+        <img
+          src={image.thumb || image.src}
+          alt={image.alt || image.title}
+          className="gallery-card-image"
+          loading="lazy"
+        />
         <div className="gallery-card-overlay">
-          <div className="gallery-card-actions"><button className="gallery-card-action" aria-label="View full size"><IconExpand size={20} /></button></div>
-          {image.category && <span className="gallery-card-category">{image.category}</span>}
+          <div className="gallery-card-actions">
+            <button className="gallery-card-action" aria-label="View full size">
+              <IconExpand size={20} />
+            </button>
+          </div>
+          {image.category && (
+            <span className="gallery-card-category">{image.category}</span>
+          )}
         </div>
       </div>
       {(image.title || image.location) && (
         <div className="gallery-card-info">
-          {image.title && <h4 className="gallery-card-title">{image.title}</h4>}
-          {image.location && <span className="gallery-card-location"><IconMapPin size={12} />{image.location}</span>}
+          {image.title && (
+            <h4 className="gallery-card-title">{image.title}</h4>
+          )}
+          {image.location && (
+            <span className="gallery-card-location">
+              <IconMapPin size={12} />
+              {image.location}
+            </span>
+          )}
         </div>
       )}
     </motion.div>
@@ -535,31 +841,74 @@ const GalleryLightbox = memo(({ images, currentIndex, onClose, onNavigate }) => 
     };
     window.addEventListener("keydown", h);
     document.body.style.overflow = "hidden";
-    return () => { window.removeEventListener("keydown", h); document.body.style.overflow = ""; };
+    return () => {
+      window.removeEventListener("keydown", h);
+      document.body.style.overflow = "";
+    };
   }, [currentIndex, onClose, onNavigate]);
+
   return (
-    <motion.div className="gallery-lightbox" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose}>
-      <button className="gallery-lightbox-close" onClick={onClose}>✕</button>
-      <button className="gallery-lightbox-nav gallery-lightbox-nav--prev" disabled={currentIndex === 0} onClick={(e) => { e.stopPropagation(); onNavigate(currentIndex - 1); }}><IconChevronLeft size={32} /></button>
-      <motion.div className="gallery-lightbox-content" onClick={(e) => e.stopPropagation()} layoutId={`gallery-${img.id}`}>
-        <img src={img.src} alt={img.alt || img.title} className="gallery-lightbox-image" />
+    <motion.div
+      className="gallery-lightbox"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={onClose}
+    >
+      <button className="gallery-lightbox-close" onClick={onClose}>
+        ✕
+      </button>
+      <button
+        className="gallery-lightbox-nav gallery-lightbox-nav--prev"
+        disabled={currentIndex === 0}
+        onClick={(e) => {
+          e.stopPropagation();
+          onNavigate(currentIndex - 1);
+        }}
+      >
+        <IconChevronLeft size={32} />
+      </button>
+      <motion.div
+        className="gallery-lightbox-content"
+        onClick={(e) => e.stopPropagation()}
+        layoutId={`gallery-${img.id}`}
+      >
+        <img
+          src={img.src}
+          alt={img.alt || img.title}
+          className="gallery-lightbox-image"
+        />
         {(img.title || img.description) && (
           <div className="gallery-lightbox-info">
             {img.title && <h3>{img.title}</h3>}
             {img.description && <p>{img.description}</p>}
-            {img.photographer && <span className="gallery-lightbox-photographer">📷 {img.photographer}</span>}
+            {img.photographer && (
+              <span className="gallery-lightbox-photographer">
+                📷 {img.photographer}
+              </span>
+            )}
           </div>
         )}
       </motion.div>
-      <button className="gallery-lightbox-nav gallery-lightbox-nav--next" disabled={currentIndex === images.length - 1} onClick={(e) => { e.stopPropagation(); onNavigate(currentIndex + 1); }}><IconChevronRight size={32} /></button>
-      <div className="gallery-lightbox-counter">{currentIndex + 1} / {images.length}</div>
+      <button
+        className="gallery-lightbox-nav gallery-lightbox-nav--next"
+        disabled={currentIndex === images.length - 1}
+        onClick={(e) => {
+          e.stopPropagation();
+          onNavigate(currentIndex + 1);
+        }}
+      >
+        <IconChevronRight size={32} />
+      </button>
+      <div className="gallery-lightbox-counter">
+        {currentIndex + 1} / {images.length}
+      </div>
     </motion.div>
   );
 });
 
 /* ═══════════════════════════════════════════
-   WHATSAPP CONTACT SECTION
-   (replaces "Once-in-a-Lifetime Encounters")
+   WHATSAPP SECTION
    ═══════════════════════════════════════════ */
 const WHATSAPP_NUMBER = "0783239379";
 const WHATSAPP_LINK = `https://wa.me/27783239379`;
@@ -574,7 +923,6 @@ const WhatsAppSection = memo(() => {
   return (
     <section className="whatsapp-section home-section">
       <div className="home-container">
-        {/* Central CTA Card Only */}
         <AnimatedSection animation="scaleIn">
           <div className="wa-hero-card">
             <div className="wa-hero-card-glow" />
@@ -591,14 +939,20 @@ const WhatsAppSection = memo(() => {
             <div className="wa-hero-label">All Bookings Happen on WhatsApp</div>
             <div className="wa-hero-number">{WHATSAPP_NUMBER}</div>
             <p className="wa-hero-desc">
-              Tap below to start chatting instantly. Tell us where you want to go, when, and with how many people — and we'll craft your perfect East African adventure.
+              Tap below to start chatting instantly. Tell us where you want to
+              go, when, and with how many people — and we'll craft your perfect
+              East African adventure.
             </p>
             <div className="wa-hero-btns">
               <motion.button
                 className="wa-btn-primary"
                 whileHover={{ scale: 1.04, y: -3 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => handleWhatsApp("Hello! I'm interested in planning a trip to East Africa. Can you help me with information and pricing?")}
+                onClick={() =>
+                  handleWhatsApp(
+                    "Hello! I'm interested in planning a trip to East Africa. Can you help me with information and pricing?"
+                  )
+                }
               >
                 <IconWhatsApp size={22} />
                 Chat Now — It's Free
@@ -607,16 +961,26 @@ const WhatsAppSection = memo(() => {
                 className="wa-btn-secondary"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => handleWhatsApp("Hi! I'd like to get a custom quote for my East Africa trip.")}
+                onClick={() =>
+                  handleWhatsApp(
+                    "Hi! I'd like to get a custom quote for my East Africa trip."
+                  )
+                }
               >
                 <IconZap size={18} />
                 Get a Custom Quote
               </motion.button>
             </div>
             <div className="wa-hero-badge-row">
-              <span className="wa-badge"><IconCheck size={13} color="#25D366" /> Free Consultation</span>
-              <span className="wa-badge"><IconCheck size={13} color="#25D366" /> No Commitment</span>
-              <span className="wa-badge"><IconCheck size={13} color="#25D366" /> Fast Response</span>
+              <span className="wa-badge">
+                <IconCheck size={13} color="#25D366" /> Free Consultation
+              </span>
+              <span className="wa-badge">
+                <IconCheck size={13} color="#25D366" /> No Commitment
+              </span>
+              <span className="wa-badge">
+                <IconCheck size={13} color="#25D366" /> Fast Response
+              </span>
             </div>
           </div>
         </AnimatedSection>
@@ -626,7 +990,7 @@ const WhatsAppSection = memo(() => {
 });
 
 /* ═══════════════════════════════════════════
-   AUTO-ROTATING TESTIMONIALS (3 per row, rotating 3 by 3)
+   AUTO-ROTATING TESTIMONIALS
    ═══════════════════════════════════════════ */
 const TestimonialsRotator = memo(({ items }) => {
   const [activeGroup, setActiveGroup] = useState(0);
@@ -634,10 +998,13 @@ const TestimonialsRotator = memo(({ items }) => {
   const timerRef = useRef(null);
   const totalGroups = Math.ceil(items.length / 3);
 
-  const go = useCallback((next) => {
-    setDir(next > activeGroup ? 1 : -1);
-    setActiveGroup(next);
-  }, [activeGroup]);
+  const go = useCallback(
+    (next) => {
+      setDir(next > activeGroup ? 1 : -1);
+      setActiveGroup(next);
+    },
+    [activeGroup]
+  );
 
   useEffect(() => {
     timerRef.current = setInterval(() => {
@@ -647,26 +1014,38 @@ const TestimonialsRotator = memo(({ items }) => {
     return () => clearInterval(timerRef.current);
   }, [totalGroups]);
 
-  const resetTimer = useCallback((next) => {
-    clearInterval(timerRef.current);
-    go(next);
-    timerRef.current = setInterval(() => {
-      setDir(1);
-      setActiveGroup((p) => (p + 1) % totalGroups);
-    }, 6000);
-  }, [go, totalGroups]);
+  const resetTimer = useCallback(
+    (next) => {
+      clearInterval(timerRef.current);
+      go(next);
+      timerRef.current = setInterval(() => {
+        setDir(1);
+        setActiveGroup((p) => (p + 1) % totalGroups);
+      }, 6000);
+    },
+    [go, totalGroups]
+  );
 
   const variants = {
-    enter: (d) => ({ x: d > 0 ? 100 : -100, opacity: 0, scale: 0.95, filter: "blur(6px)" }),
+    enter: (d) => ({
+      x: d > 0 ? 100 : -100,
+      opacity: 0,
+      scale: 0.95,
+      filter: "blur(6px)",
+    }),
     center: { x: 0, opacity: 1, scale: 1, filter: "blur(0px)" },
-    exit: (d) => ({ x: d > 0 ? -100 : 100, opacity: 0, scale: 0.95, filter: "blur(6px)" }),
+    exit: (d) => ({
+      x: d > 0 ? -100 : 100,
+      opacity: 0,
+      scale: 0.95,
+      filter: "blur(6px)",
+    }),
   };
 
   const currentItems = items.slice(activeGroup * 3, (activeGroup + 1) * 3);
 
   return (
     <div className="testimonials-rotator">
-      {/* Three testimonials in a row */}
       <div className="testimonials-rotator-stage">
         <AnimatePresence mode="wait" custom={dir}>
           <motion.div
@@ -689,13 +1068,25 @@ const TestimonialsRotator = memo(({ items }) => {
               >
                 <div className="testimonial-stars">★★★★★</div>
                 <p className="testimonial-quote">
-                  "{t?.quote || t?.content || t?.text || t?.testimonial_text || "An unforgettable experience that exceeded all expectations."}"
+                  "
+                  {t?.quote ||
+                    t?.content ||
+                    t?.text ||
+                    t?.testimonial_text ||
+                    "An unforgettable experience that exceeded all expectations."}
+                  "
                 </p>
                 <div className="testimonial-author">
-                  <div className="testimonial-avatar">{(t?.name || "G").charAt(0)}</div>
+                  <div className="testimonial-avatar">
+                    {(t?.name || "G").charAt(0)}
+                  </div>
                   <div>
-                    <div className="testimonial-name">{t?.name || "Happy Traveler"}</div>
-                    <div className="testimonial-location">{t?.location || t?.country || "East Africa"}</div>
+                    <div className="testimonial-name">
+                      {t?.name || "Happy Traveler"}
+                    </div>
+                    <div className="testimonial-location">
+                      {t?.location || t?.country || "East Africa"}
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -704,11 +1095,12 @@ const TestimonialsRotator = memo(({ items }) => {
         </AnimatePresence>
       </div>
 
-      {/* Navigation dots */}
       <div className="testimonials-rotator-nav">
         <button
           className="testimonials-rotator-arrow"
-          onClick={() => resetTimer((activeGroup - 1 + totalGroups) % totalGroups)}
+          onClick={() =>
+            resetTimer((activeGroup - 1 + totalGroups) % totalGroups)
+          }
           aria-label="Previous"
         >
           <IconChevronLeft size={20} />
@@ -718,7 +1110,9 @@ const TestimonialsRotator = memo(({ items }) => {
           {Array.from({ length: totalGroups }).map((_, i) => (
             <button
               key={i}
-              className={`testimonials-rotator-dot${i === activeGroup ? " active" : ""}`}
+              className={`testimonials-rotator-dot${
+                i === activeGroup ? " active" : ""
+              }`}
               onClick={() => resetTimer(i)}
               aria-label={`Testimonial group ${i + 1}`}
             >
@@ -743,78 +1137,98 @@ const TestimonialsRotator = memo(({ items }) => {
         </button>
       </div>
 
-      {/* Counter */}
       <div className="testimonials-rotator-counter">
-        <span className="testimonials-rotator-counter-cur">{activeGroup + 1}</span>
+        <span className="testimonials-rotator-counter-cur">
+          {activeGroup + 1}
+        </span>
         <span className="testimonials-rotator-counter-sep">/</span>
-        <span className="testimonials-rotator-counter-total">{totalGroups}</span>
+        <span className="testimonials-rotator-counter-total">
+          {totalGroups}
+        </span>
       </div>
     </div>
   );
 });
 
 /* ═══════════════════════════════════════════
-   NEWSLETTER FORM (fully integrated with backend)
+   NEWSLETTER FORM
    ═══════════════════════════════════════════ */
 const API_BASE = import.meta.env.VITE_API_URL || "";
 
 const NewsletterForm = memo(({ user }) => {
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState("idle"); // idle | loading | success | error | already
+  const [status, setStatus] = useState("idle");
   const [msg, setMsg] = useState("");
   const [showConfetti, setShowConfetti] = useState(false);
 
-  const handleSubmit = useCallback(async (e) => {
-    e.preventDefault();
-    if (!email || status === "loading") return;
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) { setStatus("error"); setMsg("Please enter a valid email address."); return; }
-
-    setStatus("loading");
-    setMsg("");
-
-    try {
-      const res = await fetch(`${API_BASE}/api/subscribers`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await res.json();
-
-      if (res.status === 201) {
-        setStatus("success");
-        setMsg(data.message || "Subscribed successfully!");
-        setEmail("");
-        setShowConfetti(true);
-        setTimeout(() => setShowConfetti(false), 5000);
-      } else if (res.status === 429) {
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (!email || status === "loading") return;
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
         setStatus("error");
-        setMsg("Too many attempts. Please try again in a moment.");
-      } else if (res.status === 400) {
-        setStatus("error");
-        setMsg(data.error || "Please enter a valid email address.");
-      } else {
-        setStatus("error");
-        setMsg(data.error || "Something went wrong. Please try again.");
+        setMsg("Please enter a valid email address.");
+        return;
       }
-    } catch {
-      setStatus("error");
-      setMsg("Network error. Please check your connection and try again.");
-    }
-  }, [email, status]);
+      setStatus("loading");
+      setMsg("");
+      try {
+        const res = await fetch(`${API_BASE}/api/subscribers`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+        const data = await res.json();
+        if (res.status === 201) {
+          setStatus("success");
+          setMsg(data.message || "Subscribed successfully!");
+          setEmail("");
+          setShowConfetti(true);
+          setTimeout(() => setShowConfetti(false), 5000);
+        } else if (res.status === 429) {
+          setStatus("error");
+          setMsg("Too many attempts. Please try again in a moment.");
+        } else if (res.status === 400) {
+          setStatus("error");
+          setMsg(data.error || "Please enter a valid email address.");
+        } else {
+          setStatus("error");
+          setMsg(data.error || "Something went wrong. Please try again.");
+        }
+      } catch {
+        setStatus("error");
+        setMsg("Network error. Please check your connection and try again.");
+      }
+    },
+    [email, status]
+  );
 
-  const handleRetry = useCallback(() => { setStatus("idle"); setMsg(""); }, []);
+  const handleRetry = useCallback(() => {
+    setStatus("idle");
+    setMsg("");
+  }, []);
 
   if (status === "success" || user?.subscribed) {
     return (
       <>
         <Confetti active={showConfetti} duration={5000} />
-        <motion.div className="newsletter-success" initial={{ scale: 0.85, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", bounce: 0.4 }}>
-          <div className="newsletter-success-icon"><IconCheck size={28} color="#fff" /></div>
+        <motion.div
+          className="newsletter-success"
+          initial={{ scale: 0.85, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", bounce: 0.4 }}
+        >
+          <div className="newsletter-success-icon">
+            <IconCheck size={28} color="#fff" />
+          </div>
           <div>
-            <div className="newsletter-success-title">You're in! Welcome aboard 🎉</div>
-            <div className="newsletter-success-sub">{msg || "Check your inbox for a welcome email from us."}</div>
+            <div className="newsletter-success-title">
+              You're in! Welcome aboard 🎉
+            </div>
+            <div className="newsletter-success-sub">
+              {msg || "Check your inbox for a welcome email from us."}
+            </div>
           </div>
         </motion.div>
       </>
@@ -829,27 +1243,51 @@ const NewsletterForm = memo(({ user }) => {
           value={email}
           onValueChange={setEmail}
           required
-          className={`newsletter-input${status === "error" ? " newsletter-input--error" : ""}`}
+          className={`newsletter-input${
+            status === "error" ? " newsletter-input--error" : ""
+          }`}
           disabled={status === "loading"}
         />
         {status === "error" && (
-          <motion.div className="newsletter-error-msg" initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}>
+          <motion.div
+            className="newsletter-error-msg"
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
             {msg}
-            <button type="button" className="newsletter-error-retry" onClick={handleRetry}>Retry</button>
+            <button
+              type="button"
+              className="newsletter-error-retry"
+              onClick={handleRetry}
+            >
+              Retry
+            </button>
           </motion.div>
         )}
       </div>
       <MagneticWrap strength={0.12}>
         <motion.button
           type="submit"
-          className={`newsletter-btn${status === "loading" ? " newsletter-btn--loading" : ""}`}
+          className={`newsletter-btn${
+            status === "loading" ? " newsletter-btn--loading" : ""
+          }`}
           whileTap={{ scale: 0.96 }}
           disabled={status === "loading"}
         >
           {status === "loading" ? (
-            <><motion.span animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}><IconLoader size={16} /></motion.span> Subscribing…</>
+            <>
+              <motion.span
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              >
+                <IconLoader size={16} />
+              </motion.span>{" "}
+              Subscribing…
+            </>
           ) : (
-            <>Subscribe <IconArrowRight size={15} /></>
+            <>
+              Subscribe <IconArrowRight size={15} />
+            </>
           )}
         </motion.button>
       </MagneticWrap>
@@ -873,12 +1311,29 @@ const Home = () => {
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
   const { user } = useUserAuth();
-  const { destinations: allDest = [], loading: destLoading } = useDestinations({ limit: 6, sort: "-featured" });
-  const { countries = [], loading: countriesLoading, error: countriesError, refetch: refetchCountries } = useCountries({ limit: 8 });
-  const { images: galleryImages = [], loading: galleryLoading } = useGallery({ limit: 12, sort: "featured" });
-  const { testimonials: allTestimonials = [], loading: testimonialsLoading, error: testimonialsError } = useTestimonials();
+  const { destinations: allDest = [], loading: destLoading } = useDestinations({
+    limit: 6,
+    sort: "-featured",
+  });
+  const {
+    countries = [],
+    loading: countriesLoading,
+    error: countriesError,
+    refetch: refetchCountries,
+  } = useCountries({ limit: 8 });
+  const { images: galleryImages = [], loading: galleryLoading } = useGallery({
+    limit: 12,
+    sort: "featured",
+  });
+  const {
+    testimonials: allTestimonials = [],
+    loading: testimonialsLoading,
+    error: testimonialsError,
+  } = useTestimonials();
   const { loadWishlist, toggleWishlist, isWishlisted } = useWishlist();
-  useEffect(() => { loadWishlist(); }, [loadWishlist]);
+  useEffect(() => {
+    loadWishlist();
+  }, [loadWishlist]);
 
   /* Process auto-advance */
   useEffect(() => {
@@ -887,49 +1342,197 @@ const Home = () => {
   }, []);
 
   /* Lightbox */
-  const openLightbox = useCallback((_, i) => { setLightboxIndex(i); setLightboxOpen(true); }, []);
+  const openLightbox = useCallback((_, i) => {
+    setLightboxIndex(i);
+    setLightboxOpen(true);
+  }, []);
   const closeLightbox = useCallback(() => setLightboxOpen(false), []);
-  const navigateLightbox = useCallback((i) => { if (i >= 0 && i < galleryImages.length) setLightboxIndex(i); }, [galleryImages.length]);
+  const navigateLightbox = useCallback(
+    (i) => {
+      if (i >= 0 && i < galleryImages.length) setLightboxIndex(i);
+    },
+    [galleryImages.length]
+  );
 
   /* Preload hero slides */
   useEffect(() => {
     if (hasCompletedRef.current) return;
-    if (destLoading) { setIsLoading(true); return; }
+    if (destLoading) {
+      setIsLoading(true);
+      return;
+    }
     let cancelled = false;
-    const preload = (src) => new Promise((r) => { const img = new Image(); img.onload = r; img.onerror = r; img.src = src; });
+    const preload = (src) =>
+      new Promise((r) => {
+        const img = new Image();
+        img.onload = r;
+        img.onerror = r;
+        img.src = src;
+      });
     const run = async () => {
       setIsLoading(true);
       await new Promise((r) => requestAnimationFrame(r));
       const urls = new Set();
-      HERO_SLIDES?.forEach((s) => { if (s.image) urls.add(s.image); if (s.fallback) urls.add(s.fallback); });
-      await Promise.all([...urls].filter(Boolean).filter((u) => !u.startsWith("blob:")).slice(0, 5).map(preload));
-      if (!cancelled) { hasCompletedRef.current = true; setIsLoading(false); }
+      HERO_SLIDES?.forEach((s) => {
+        if (s.image) urls.add(s.image);
+        if (s.fallback) urls.add(s.fallback);
+      });
+      await Promise.all(
+        [...urls]
+          .filter(Boolean)
+          .filter((u) => !u.startsWith("blob:"))
+          .slice(0, 5)
+          .map(preload)
+      );
+      if (!cancelled) {
+        hasCompletedRef.current = true;
+        setIsLoading(false);
+      }
     };
     run();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [destLoading, setIsLoading]);
 
   /* ─── Static Data ─── */
-  const adventureTypes = useMemo(() => [
-    { icon: "🦁", title: "Safari Adventures", description: "Witness Africa's incredible wildlife in their natural habitat across stunning national parks.", count: "5+ Safaris", color: "#F59E0B", slug: "safari-adventures", images: ["https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=800", "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800", "https://images.unsplash.com/photo-1534759846116-5799c33ce22a?w=800"] },
-    { icon: "🏔️", title: "Mountain Trekking", description: "Conquer legendary peaks from Kilimanjaro to the Rwenzoris with expert guides.", count: "0+ Treks", color: "#6366F1", slug: "mountain-trekking", images: ["https://images.unsplash.com/photo-1609198092458-38a293c7ac4b?w=800", "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800"] },
-    { icon: "🦍", title: "Primate Tracking", description: "Intimate encounters with endangered mountain gorillas in misty bamboo forests.", count: "1+ Experiences", color: "#10B981", slug: "primate-tracking", images: ["https://images.unsplash.com/photo-1580674287404-60e2e0fcb95e?w=800", "https://i.pinimg.com/736x/47/68/82/476882571830551aee93bee95882881c.jpg"] },
-    { icon: "🏖️", title: "Beach Escapes", description: "Pristine white-sand beaches along the Indian Ocean with world-class resorts.", count: "1+ Beaches", color: "#EC4899", slug: "beach-escapes", images: ["https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800", "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800"] },
-    { icon: "🎭", title: "Cultural Immersion", description: "Authentic experiences with local communities, ancient traditions, and vibrant ceremonies.", count: "1+ Experiences", color: "#8B5CF6", slug: "cultural-immersion", images: ["https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=800", "https://images.unsplash.com/photo-1504432842672-1a79f78e4084?w=800"] },
-    { icon: "📸", title: "Photography Tours", description: "Capture award-winning shots on photography-focused expeditions through iconic landscapes.", count: "1+ Tours", color: "#EF4444", slug: "photography-tours", images: ["https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800", "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800"] },
-  ], []);
+  const adventureTypes = useMemo(
+    () => [
+      {
+        icon: "🦁",
+        title: "Safari Adventures",
+        description:
+          "Witness Africa's incredible wildlife in their natural habitat across stunning national parks.",
+        count: "5+ Safaris",
+        color: "#F59E0B",
+        slug: "safari-adventures",
+        images: [
+          "https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=800",
+          "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800",
+          "https://images.unsplash.com/photo-1534759846116-5799c33ce22a?w=800",
+        ],
+      },
+      {
+        icon: "🏔️",
+        title: "Mountain Trekking",
+        description:
+          "Conquer legendary peaks from Kilimanjaro to the Rwenzoris with expert guides.",
+        count: "0+ Treks",
+        color: "#6366F1",
+        slug: "mountain-trekking",
+        images: [
+          "https://images.unsplash.com/photo-1609198092458-38a293c7ac4b?w=800",
+          "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800",
+        ],
+      },
+      {
+        icon: "🦍",
+        title: "Primate Tracking",
+        description:
+          "Intimate encounters with endangered mountain gorillas in misty bamboo forests.",
+        count: "1+ Experiences",
+        color: "#10B981",
+        slug: "primate-tracking",
+        images: [
+          "https://images.unsplash.com/photo-1580674287404-60e2e0fcb95e?w=800",
+          "https://i.pinimg.com/736x/47/68/82/476882571830551aee93bee95882881c.jpg",
+        ],
+      },
+      {
+        icon: "🏖️",
+        title: "Beach Escapes",
+        description:
+          "Pristine white-sand beaches along the Indian Ocean with world-class resorts.",
+        count: "1+ Beaches",
+        color: "#EC4899",
+        slug: "beach-escapes",
+        images: [
+          "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
+          "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800",
+        ],
+      },
+      {
+        icon: "🎭",
+        title: "Cultural Immersion",
+        description:
+          "Authentic experiences with local communities, ancient traditions, and vibrant ceremonies.",
+        count: "1+ Experiences",
+        color: "#8B5CF6",
+        slug: "cultural-immersion",
+        images: [
+          "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=800",
+          "https://images.unsplash.com/photo-1504432842672-1a79f78e4084?w=800",
+        ],
+      },
+      {
+        icon: "📸",
+        title: "Photography Tours",
+        description:
+          "Capture award-winning shots on photography-focused expeditions through iconic landscapes.",
+        count: "1+ Tours",
+        color: "#EF4444",
+        slug: "photography-tours",
+        images: [
+          "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800",
+          "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800",
+        ],
+      },
+    ],
+    []
+  );
 
-  const processSteps = useMemo(() => [
-    { step: "01", title: "Dream & Discover", description: "Share your travel aspirations with our experts. Whether it's the Great Migration, Kilimanjaro, or a hidden beach paradise — we listen and begin crafting possibilities.", icon: IconCompass, image: "https://i.pinimg.com/736x/59/86/5b/59865b2946331b97477e3425c60b7d4d.jpg" },
-    { step: "02", title: "Design & Customize", description: "Our travel architects craft a bespoke itinerary tailored to your interests, budget, and timeline. Every detail hand-selected.", icon: IconMap, image: "https://previews.123rf.com/images/sebra/sebra1703/sebra170300196/74246858-travel-planning-concept-on-map.jpg" },
-    { step: "03", title: "Prepare & Pack", description: "Receive your comprehensive travel guide with packing lists, cultural tips, health advisories, and insider recommendations.", icon: IconBookOpen, image: "https://plus.unsplash.com/premium_photo-1663076518116-0f0637626edf?w=800" },
-    { step: "04", title: "Experience & Remember", description: "Embark on your adventure with confidence, supported by local guides and 24/7 assistance. Create memories that last a lifetime.", icon: IconSun, image: "https://i.pinimg.com/736x/13/bd/69/13bd691c2d9e85cb5009a3d9485d4c94.jpg" },
-  ], []);
+  const processSteps = useMemo(
+    () => [
+      {
+        step: "01",
+        title: "Dream & Discover",
+        description:
+          "Share your travel aspirations with our experts. Whether it's the Great Migration, Kilimanjaro, or a hidden beach paradise — we listen and begin crafting possibilities.",
+        icon: IconCompass,
+        image:
+          "https://i.pinimg.com/736x/59/86/5b/59865b2946331b97477e3425c60b7d4d.jpg",
+      },
+      {
+        step: "02",
+        title: "Design & Customize",
+        description:
+          "Our travel architects craft a bespoke itinerary tailored to your interests, budget, and timeline. Every detail hand-selected.",
+        icon: IconMap,
+        image:
+          "https://previews.123rf.com/images/sebra/sebra1703/sebra170300196/74246858-travel-planning-concept-on-map.jpg",
+      },
+      {
+        step: "03",
+        title: "Prepare & Pack",
+        description:
+          "Receive your comprehensive travel guide with packing lists, cultural tips, health advisories, and insider recommendations.",
+        icon: IconBookOpen,
+        image:
+          "https://plus.unsplash.com/premium_photo-1663076518116-0f0637626edf?w=800",
+      },
+      {
+        step: "04",
+        title: "Experience & Remember",
+        description:
+          "Embark on your adventure with confidence, supported by local guides and 24/7 assistance. Create memories that last a lifetime.",
+        icon: IconSun,
+        image:
+          "https://i.pinimg.com/736x/13/bd/69/13bd691c2d9e85cb5009a3d9485d4c94.jpg",
+      },
+    ],
+    []
+  );
 
   /* ═══ RENDER ═══ */
   return (
     <div ref={homeRootRef} className="home-root">
-      <SEO title="Home" description="Discover extraordinary East African destinations with Altuvera." url="/" image="/og-home.jpg" keywords={["travel", "safari", "East Africa", "gorilla trekking", "Kilimanjaro"]} />
+      <SEO
+        title="Home"
+        description="Discover extraordinary East African destinations with Altuvera."
+        url="/"
+        image="/og-home.jpg"
+        keywords={["travel", "safari", "East Africa", "gorilla trekking", "Kilimanjaro"]}
+      />
       <ScrollProgress />
 
       {/* ── HERO ── */}
@@ -937,40 +1540,131 @@ const Home = () => {
 
       {/* ── INTRODUCTION ── */}
       <section className="home-section intro-section">
-        <div className="blob blob--green-1" /><div className="blob blob--green-2" />
+        <div className="blob blob--green-1" />
+        <div className="blob blob--green-2" />
         <div className="home-container">
           <div className="intro-grid">
             <div className="intro-content">
-              <TextReveal><span className="section-label"><IconCompass size={14} /> Welcome to Altuvera</span></TextReveal>
-              <TextReveal delay={0.08}><h1 className="intro-heading">Discover the <span className="text-gradient">Untamed Magic</span> of East Africa</h1></TextReveal>
-              <TextReveal delay={0.14}><p className="intro-quote">"Where the wild horizon meets your deepest sense of wonder"</p></TextReveal>
-              {["For over fifteen years, Altuvera has been the trusted compass for discerning travelers seeking extraordinary encounters in East Africa. We architect <strong>transformative journeys</strong> that weave the thunder of the Great Migration, the gentle gaze of silverback gorillas, and the warmth of Maasai campfires under star-filled skies.", "Our locally-born guides share an unshakable commitment to <strong>sustainable, community-driven tourism</strong>. Every safari dollar funds wildlife corridors. Every cultural visit empowers local artisans."].map((text, i) => (
-                <TextReveal key={i} delay={0.18 + i * 0.06}><p className="intro-paragraph" dangerouslySetInnerHTML={{ __html: text }} /></TextReveal>
+              <TextReveal>
+                <span className="section-label">
+                  <IconCompass size={14} /> Welcome to Altuvera
+                </span>
+              </TextReveal>
+              <TextReveal delay={0.08}>
+                <h1 className="intro-heading">
+                  Discover the{" "}
+                  <span className="text-gradient">Untamed Magic</span> of East
+                  Africa
+                </h1>
+              </TextReveal>
+              <TextReveal delay={0.14}>
+                <p className="intro-quote">
+                  "Where the wild horizon meets your deepest sense of wonder"
+                </p>
+              </TextReveal>
+              {[
+                'For over fifteen years, Altuvera has been the trusted compass for discerning travelers seeking extraordinary encounters in East Africa. We architect <strong>transformative journeys</strong> that weave the thunder of the Great Migration, the gentle gaze of silverback gorillas, and the warmth of Maasai campfires under star-filled skies.',
+                'Our locally-born guides share an unshakable commitment to <strong>sustainable, community-driven tourism</strong>. Every safari dollar funds wildlife corridors. Every cultural visit empowers local artisans.',
+              ].map((text, i) => (
+                <TextReveal key={i} delay={0.18 + i * 0.06}>
+                  <p
+                    className="intro-paragraph"
+                    dangerouslySetInnerHTML={{ __html: text }}
+                  />
+                </TextReveal>
               ))}
               <TextReveal delay={0.32}>
                 <div className="intro-cta-row">
-                  <MagneticWrap><Button to="/about" variant="primary" icon={<IconArrowRight size={17} />}>Our Story</Button></MagneticWrap>
-                  <MagneticWrap><Button to="/destinations" variant="outline">Browse Destinations</Button></MagneticWrap>
+                  <MagneticWrap>
+                    <Button
+                      to="/about"
+                      variant="primary"
+                      icon={<IconArrowRight size={17} />}
+                    >
+                      Our Story
+                    </Button>
+                  </MagneticWrap>
+                  <MagneticWrap>
+                    <Button to="/destinations" variant="outline">
+                      Browse Destinations
+                    </Button>
+                  </MagneticWrap>
                 </div>
               </TextReveal>
               <TextReveal delay={0.4}>
                 <div className="intro-stats">
-                  <div className="intro-stat"><span className="intro-stat-value"><Counter end={15} suffix="+" /></span><span className="intro-stat-label">Years Experience</span></div>
-                  <div className="intro-stat"><span className="intro-stat-value"><Counter end={5000} suffix="+" /></span><span className="intro-stat-label">Happy Travelers</span></div>
-                  <div className="intro-stat"><span className="intro-stat-value"><Counter end={countries.length || 10} suffix="+" /></span><span className="intro-stat-label">Countries</span></div>
+                  <div className="intro-stat">
+                    <span className="intro-stat-value">
+                      <Counter end={15} suffix="+" />
+                    </span>
+                    <span className="intro-stat-label">Years Experience</span>
+                  </div>
+                  <div className="intro-stat">
+                    <span className="intro-stat-value">
+                      <Counter end={5000} suffix="+" />
+                    </span>
+                    <span className="intro-stat-label">Happy Travelers</span>
+                  </div>
+                  <div className="intro-stat">
+                    <span className="intro-stat-value">
+                      <Counter end={countries.length || 10} suffix="+" />
+                    </span>
+                    <span className="intro-stat-label">Countries</span>
+                  </div>
                 </div>
               </TextReveal>
             </div>
             <AnimatedSection animation="rotateIn" delay={0.2}>
               <div className="intro-image-collage">
                 <div className="intro-image-main">
-                  <img src="https://i.pinimg.com/736x/c2/26/91/c22691ef2c1f5a1e9544ec1e62774740.jpg" alt="African Safari" loading="lazy" />
-                  <div className="intro-image-badge"><span className="intro-image-badge-icon">🌍</span><div><span className="intro-image-badge-number">{countries.length || "10"}+</span><span className="intro-image-badge-label">Countries</span></div></div>
+                  <img
+                    src="https://i.pinimg.com/736x/c2/26/91/c22691ef2c1f5a1e9544ec1e62774740.jpg"
+                    alt="African Safari"
+                    loading="lazy"
+                  />
+                  <div className="intro-image-badge">
+                    <span className="intro-image-badge-icon">🌍</span>
+                    <div>
+                      <span className="intro-image-badge-number">
+                        {countries.length || "10"}+
+                      </span>
+                      <span className="intro-image-badge-label">Countries</span>
+                    </div>
+                  </div>
                 </div>
                 {!isMobile && (
                   <div className="intro-image-stack">
-                    <motion.div className="intro-image-stack-item" animate={{ y: [0, -8, 0] }} transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}><img src="https://images.unsplash.com/photo-1549366021-9f761d450615?w=400" alt="Wildlife" loading="lazy" /></motion.div>
-                    <motion.div className="intro-image-stack-item" animate={{ y: [0, 8, 0] }} transition={{ duration: 5, repeat: Infinity, ease: "easeInOut", delay: 0.5 }}><img src="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=400" alt="Safari" loading="lazy" /></motion.div>
+                    <motion.div
+                      className="intro-image-stack-item"
+                      animate={{ y: [0, -8, 0] }}
+                      transition={{
+                        duration: 4,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                    >
+                      <img
+                        src="https://images.unsplash.com/photo-1549366021-9f761d450615?w=400"
+                        alt="Wildlife"
+                        loading="lazy"
+                      />
+                    </motion.div>
+                    <motion.div
+                      className="intro-image-stack-item"
+                      animate={{ y: [0, 8, 0] }}
+                      transition={{
+                        duration: 5,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                        delay: 0.5,
+                      }}
+                    >
+                      <img
+                        src="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=400"
+                        alt="Safari"
+                        loading="lazy"
+                      />
+                    </motion.div>
                   </div>
                 )}
               </div>
@@ -985,20 +1679,42 @@ const Home = () => {
         <div className="home-container">
           <AnimatedSection animation="blurIn">
             <div className="section-header">
-              <span className="section-label"><IconMapPin size={14} /> Featured Destinations</span>
-              <h2 className="section-title">Handpicked <span className="text-gradient">Destinations</span></h2>
-              <p className="section-subtitle">From the endless plains of the Serengeti to the pristine shores of Zanzibar, discover destinations that ignite the soul.</p>
+              <span className="section-label">
+                <IconMapPin size={14} /> Featured Destinations
+              </span>
+              <h2 className="section-title">
+                Handpicked <span className="text-gradient">Destinations</span>
+              </h2>
+              <p className="section-subtitle">
+                From the endless plains of the Serengeti to the pristine shores
+                of Zanzibar, discover destinations that ignite the soul.
+              </p>
             </div>
           </AnimatedSection>
           <StaggerWrap stagger={0.08} className="destinations-grid">
             {allDest.slice(0, 6).map((d, i) => (
               <StaggerChild key={d?._id || d?.slug || i}>
-                <DestinationCard destination={d} isWishlisted={isWishlisted(d?._id || d?.id || d?.slug)} onWishlistToggle={toggleWishlist} />
+                <DestinationCard
+                  destination={d}
+                  isWishlisted={isWishlisted(d?._id || d?.id || d?.slug)}
+                  onWishlistToggle={toggleWishlist}
+                />
               </StaggerChild>
             ))}
           </StaggerWrap>
           <AnimatedSection animation="fadeInUp">
-            <div className="section-cta"><MagneticWrap><Button to="/destinations" variant="primary" size="large" icon={<IconArrowRight size={18} />}>View All Destinations</Button></MagneticWrap></div>
+            <div className="section-cta">
+              <MagneticWrap>
+                <Button
+                  to="/destinations"
+                  variant="primary"
+                  size="large"
+                  icon={<IconArrowRight size={18} />}
+                >
+                  View All Destinations
+                </Button>
+              </MagneticWrap>
+            </div>
           </AnimatedSection>
         </div>
       </section>
@@ -1009,21 +1725,54 @@ const Home = () => {
         <div className="home-container">
           <AnimatedSection animation="blurIn">
             <div className="section-header">
-              <span className="section-label"><IconGlobe size={14} /> Explore by Country</span>
-              <h2 className="section-title">Discover <span className="text-gradient">East Africa</span></h2>
-              <p className="section-subtitle">From the savannas of Kenya to the beaches of Zanzibar, each country offers unique adventures waiting to be explored.</p>
+              <span className="section-label">
+                <IconGlobe size={14} /> Explore by Country
+              </span>
+              <h2 className="section-title">
+                Discover <span className="text-gradient">East Africa</span>
+              </h2>
+              <p className="section-subtitle">
+                From the savannas of Kenya to the beaches of Zanzibar, each
+                country offers unique adventures waiting to be explored.
+              </p>
             </div>
           </AnimatedSection>
-          {countriesLoading ? (<><CountriesMessage type="loading" /><CountriesSkeleton count={isMobile ? 2 : 4} /></>) : countriesError ? (<CountriesMessage type="error" error={countriesError} onRetry={refetchCountries} />) : countries.length === 0 ? (<CountriesMessage type="empty" onRetry={refetchCountries} />) : (
+          {countriesLoading ? (
+            <>
+              <CountriesMessage type="loading" />
+              <CountriesSkeleton count={isMobile ? 2 : 4} />
+            </>
+          ) : countriesError ? (
+            <CountriesMessage
+              type="error"
+              error={countriesError}
+              onRetry={refetchCountries}
+            />
+          ) : countries.length === 0 ? (
+            <CountriesMessage type="empty" onRetry={refetchCountries} />
+          ) : (
             <StaggerWrap stagger={0.08} className="countries-grid">
               {countries.slice(0, isMobile ? 4 : 8).map((country, i) => (
-                <StaggerChild key={country.id || country.slug || i}><CountryCard country={country} index={i} /></StaggerChild>
+                <StaggerChild key={country.id || country.slug || i}>
+                  <CountryCard country={country} index={i} />
+                </StaggerChild>
               ))}
             </StaggerWrap>
           )}
           {!countriesLoading && !countriesError && countries.length > 0 && (
             <AnimatedSection animation="fadeInUp">
-              <div className="section-cta"><MagneticWrap><Button to="/countries" variant="outline" size="large" icon={<IconArrowRight size={18} />}>View All Countries</Button></MagneticWrap></div>
+              <div className="section-cta">
+                <MagneticWrap>
+                  <Button
+                    to="/countries"
+                    variant="outline"
+                    size="large"
+                    icon={<IconArrowRight size={18} />}
+                  >
+                    View All Countries
+                  </Button>
+                </MagneticWrap>
+              </div>
             </AnimatedSection>
           )}
         </div>
@@ -1034,13 +1783,22 @@ const Home = () => {
         <div className="home-container">
           <AnimatedSection animation="perspectiveIn">
             <div className="section-header">
-              <span className="section-label"><IconCompass size={14} /> What We Offer</span>
-              <h2 className="section-title">Choose Your <span className="text-gradient">Adventure</span></h2>
-              <p className="section-subtitle">Six categories of extraordinary experiences, each crafted to deliver the Africa you've always dreamed of.</p>
+              <span className="section-label">
+                <IconCompass size={14} /> What We Offer
+              </span>
+              <h2 className="section-title">
+                Choose Your <span className="text-gradient">Adventure</span>
+              </h2>
+              <p className="section-subtitle">
+                Six categories of extraordinary experiences, each crafted to
+                deliver the Africa you've always dreamed of.
+              </p>
             </div>
           </AnimatedSection>
           <div className="adventures-grid-v2">
-            {adventureTypes.map((a, i) => <AdventureCard key={a.title} adventure={a} index={i} />)}
+            {adventureTypes.map((a, i) => (
+              <AdventureCard key={a.title} adventure={a} index={i} />
+            ))}
           </div>
         </div>
       </section>
@@ -1050,23 +1808,63 @@ const Home = () => {
         <div className="home-container">
           <AnimatedSection animation="perspectiveIn">
             <div className="section-header">
-              <span className="section-label"><IconTarget size={14} /> How It Works</span>
-              <h2 className="section-title">Your Journey in <span className="text-gradient">Four Simple Steps</span></h2>
-              <p className="section-subtitle">From inspiration to stepping onto African soil, we make every step seamless.</p>
+              <span className="section-label">
+                <IconTarget size={14} /> How It Works
+              </span>
+              <h2 className="section-title">
+                Your Journey in{" "}
+                <span className="text-gradient">Four Simple Steps</span>
+              </h2>
+              <p className="section-subtitle">
+                From inspiration to stepping onto African soil, we make every
+                step seamless.
+              </p>
             </div>
           </AnimatedSection>
           <div className="process-layout">
             <AnimatedSection animation="fadeInLeft">
               <div className="process-tabs-panel">
                 {processSteps.map((s, i) => (
-                  <button key={i} className={`process-tab${activeProcess === i ? " active" : ""}`} onClick={() => setActiveProcess(i)}>
+                  <button
+                    key={i}
+                    className={`process-tab${activeProcess === i ? " active" : ""}`}
+                    onClick={() => setActiveProcess(i)}
+                  >
                     <div className="process-tab-header">
-                      <motion.div animate={{ background: activeProcess === i ? "#059669" : "#F1F5F9", color: activeProcess === i ? "#fff" : "#94A3B8" }} transition={{ duration: 0.4 }} className="process-tab-icon"><s.icon size={19} /></motion.div>
-                      <div><div className="process-tab-step">Step {s.step}</div><div className={`process-tab-title${activeProcess === i ? " process-tab-title--active" : ""}`}>{s.title}</div></div>
+                      <motion.div
+                        animate={{
+                          background:
+                            activeProcess === i ? "#059669" : "#F1F5F9",
+                          color: activeProcess === i ? "#fff" : "#94A3B8",
+                        }}
+                        transition={{ duration: 0.4 }}
+                        className="process-tab-icon"
+                      >
+                        <s.icon size={19} />
+                      </motion.div>
+                      <div>
+                        <div className="process-tab-step">Step {s.step}</div>
+                        <div
+                          className={`process-tab-title${
+                            activeProcess === i
+                              ? " process-tab-title--active"
+                              : ""
+                          }`}
+                        >
+                          {s.title}
+                        </div>
+                      </div>
                     </div>
                     <AnimatePresence mode="wait">
                       {activeProcess === i && (
-                        <motion.p key="desc" className="process-tab-desc" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.4 }}>
+                        <motion.p
+                          key="desc"
+                          className="process-tab-desc"
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.4 }}
+                        >
                           {s.description}
                         </motion.p>
                       )}
@@ -1074,21 +1872,50 @@ const Home = () => {
                   </button>
                 ))}
                 <div className="process-progress-bar-track">
-                  <motion.div className="process-progress-bar-fill" animate={{ width: `${((activeProcess + 1) / processSteps.length) * 100}%` }} transition={{ duration: 0.6, ease: "easeOut" }} />
+                  <motion.div
+                    className="process-progress-bar-fill"
+                    animate={{
+                      width: `${
+                        ((activeProcess + 1) / processSteps.length) * 100
+                      }%`,
+                    }}
+                    transition={{ duration: 0.6, ease: "easeOut" }}
+                  />
                 </div>
               </div>
             </AnimatedSection>
             <AnimatedSection animation="fadeInRight">
               <div className="process-image-panel">
                 <AnimatePresence mode="wait">
-                  <motion.div key={activeProcess} className="process-image-container" initial={{ opacity: 0, scale: 1.06 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.94 }} transition={{ duration: 0.55 }}>
-                    <img src={processSteps[activeProcess].image} alt={processSteps[activeProcess].title} loading="lazy" />
+                  <motion.div
+                    key={activeProcess}
+                    className="process-image-container"
+                    initial={{ opacity: 0, scale: 1.06 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.94 }}
+                    transition={{ duration: 0.55 }}
+                  >
+                    <img
+                      src={processSteps[activeProcess].image}
+                      alt={processSteps[activeProcess].title}
+                      loading="lazy"
+                    />
                   </motion.div>
                 </AnimatePresence>
                 <div className="process-image-overlay" />
-                <motion.div key={`cap-${activeProcess}`} className="process-image-caption" initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.55, delay: 0.18 }}>
-                  <span className="process-caption-step">Step {processSteps[activeProcess].step}</span>
-                  <div className="process-caption-title">{processSteps[activeProcess].title}</div>
+                <motion.div
+                  key={`cap-${activeProcess}`}
+                  className="process-image-caption"
+                  initial={{ y: 40, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ duration: 0.55, delay: 0.18 }}
+                >
+                  <span className="process-caption-step">
+                    Step {processSteps[activeProcess].step}
+                  </span>
+                  <div className="process-caption-title">
+                    {processSteps[activeProcess].title}
+                  </div>
                 </motion.div>
               </div>
             </AnimatedSection>
@@ -1096,7 +1923,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ══════ WHATSAPP SECTION (replaces Signature Experiences) ══════ */}
+      {/* ── WHATSAPP SECTION ── */}
       <WhatsAppSection />
 
       {/* ── GALLERY ── */}
@@ -1104,16 +1931,36 @@ const Home = () => {
         <div className="home-container">
           <AnimatedSection animation="fadeInUp">
             <div className="section-header">
-              <span className="section-label"><IconCamera size={14} /> Photo Gallery</span>
-              <h2 className="section-title">Africa Through <span className="text-gradient">Our Lens</span></h2>
-              <p className="section-subtitle">Every image tells a story of wonder, connection, and discovery. Real moments captured on real journeys.</p>
+              <span className="section-label">
+                <IconCamera size={14} /> Photo Gallery
+              </span>
+              <h2 className="section-title">
+                Africa Through <span className="text-gradient">Our Lens</span>
+              </h2>
+              <p className="section-subtitle">
+                Every image tells a story of wonder, connection, and discovery.
+                Real moments captured on real journeys.
+              </p>
             </div>
           </AnimatedSection>
           {galleryLoading ? (
             <div className="gallery-grid-home">
               {Array.from({ length: isMobile ? 4 : 8 }).map((_, i) => (
-                <div key={i} className={`gallery-grid-item${i === 0 ? " gallery-grid-item--large" : ""}`}>
-                  <div className="skeleton-shimmer" style={{ width: "100%", height: "100%", minHeight: 180, borderRadius: 16 }} />
+                <div
+                  key={i}
+                  className={`gallery-grid-item${
+                    i === 0 ? " gallery-grid-item--large" : ""
+                  }`}
+                >
+                  <div
+                    className="skeleton-shimmer"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      minHeight: 180,
+                      borderRadius: 16,
+                    }}
+                  />
                 </div>
               ))}
             </div>
@@ -1121,41 +1968,77 @@ const Home = () => {
             <>
               <div className="gallery-grid-home">
                 {galleryImages.slice(0, isMobile ? 6 : 9).map((image, i) => (
-                  <div key={image.id} className={`gallery-grid-item${i === 0 ? " gallery-grid-item--large" : ""}${i === 3 ? " gallery-grid-item--tall" : ""}`}>
+                  <div
+                    key={image.id}
+                    className={`gallery-grid-item${
+                      i === 0 ? " gallery-grid-item--large" : ""
+                    }${i === 3 ? " gallery-grid-item--tall" : ""}`}
+                  >
                     <GalleryCard image={image} index={i} onClick={openLightbox} />
                   </div>
                 ))}
               </div>
               <AnimatedSection animation="fadeInUp">
-                <div className="section-cta"><MagneticWrap><Button to="/gallery" variant="outline" size="large" icon={<IconCamera size={18} />}>Explore Full Gallery</Button></MagneticWrap></div>
+                <div className="section-cta">
+                  <MagneticWrap>
+                    <Button
+                      to="/gallery"
+                      variant="outline"
+                      size="large"
+                      icon={<IconCamera size={18} />}
+                    >
+                      Explore Full Gallery
+                    </Button>
+                  </MagneticWrap>
+                </div>
               </AnimatedSection>
             </>
           ) : (
-            <div className="gallery-empty"><span className="gallery-empty-icon">📸</span><p>Our gallery is coming soon. Check back for stunning African landscapes.</p></div>
+            <div className="gallery-empty">
+              <span className="gallery-empty-icon">📸</span>
+              <p>
+                Our gallery is coming soon. Check back for stunning African
+                landscapes.
+              </p>
+            </div>
           )}
         </div>
       </section>
 
-      {/* ── TESTIMONIALS (auto-rotating) ── */}
+      {/* ── TESTIMONIALS ── */}
       <section className="home-section testimonials-section">
         <div className="testimonials-pattern" />
         <div className="blob blob--testimonials" />
         <div className="home-container">
           <AnimatedSection animation="fadeInUp">
             <div className="section-header">
-              <span className="section-label section-label--dark">★★★★★ &nbsp; Traveler Reviews</span>
-              <h2 className="section-title section-title--light">What Our Travelers <span className="text-gradient">Say</span></h2>
-              <p className="section-subtitle section-subtitle--light">Real stories from adventurers who've experienced East Africa with Altuvera.</p>
+              <span className="section-label section-label--dark">
+                ★★★★★ &nbsp; Traveler Reviews
+              </span>
+              <h2 className="section-title section-title--light">
+                What Our Travelers{" "}
+                <span className="text-gradient">Say</span>
+              </h2>
+              <p className="section-subtitle section-subtitle--light">
+                Real stories from adventurers who've experienced East Africa
+                with Altuvera.
+              </p>
             </div>
           </AnimatedSection>
           {testimonialsLoading ? (
             <div className="testimonials-loading">
               <div className="testimonials-row">
                 {Array.from({ length: 3 }).map((_, i) => (
-                  <div key={i} className="testimonial-card testimonial-card--featured testimonial-card--skeleton">
+                  <div
+                    key={i}
+                    className="testimonial-card testimonial-card--featured testimonial-card--skeleton"
+                  >
                     <div className="skeleton-line skeleton-line--stars" />
                     <div className="skeleton-line skeleton-line--quote" />
-                    <div className="skeleton-line skeleton-line--quote" style={{ width: "80%" }} />
+                    <div
+                      className="skeleton-line skeleton-line--quote"
+                      style={{ width: "80%" }}
+                    />
                     <div className="testimonial-author">
                       <div className="testimonial-avatar skeleton-shimmer" />
                       <div>
@@ -1170,8 +2053,13 @@ const Home = () => {
           ) : testimonialsError ? (
             <div className="testimonials-error">
               <div className="testimonials-error-icon">⚠️</div>
-              <h3 className="testimonials-error-title">Unable to Load Reviews</h3>
-              <p className="testimonials-error-desc">We're having trouble loading testimonials right now. Please try again later.</p>
+              <h3 className="testimonials-error-title">
+                Unable to Load Reviews
+              </h3>
+              <p className="testimonials-error-desc">
+                We're having trouble loading testimonials right now. Please try
+                again later.
+              </p>
             </div>
           ) : allTestimonials.length > 0 ? (
             <TestimonialsRotator items={allTestimonials} />
@@ -1179,7 +2067,10 @@ const Home = () => {
             <div className="testimonials-empty">
               <div className="testimonials-empty-icon">💬</div>
               <h3 className="testimonials-empty-title">Reviews Coming Soon</h3>
-              <p className="testimonials-empty-desc">We're collecting amazing stories from our travelers. Check back soon!</p>
+              <p className="testimonials-empty-desc">
+                We're collecting amazing stories from our travelers. Check back
+                soon!
+              </p>
             </div>
           )}
         </div>
@@ -1191,29 +2082,75 @@ const Home = () => {
         <div className="newsletter-decor-blob" />
         <div className="newsletter-inner">
           <AnimatedSection animation="scaleIn">
-            <motion.div className="newsletter-icon-wrap" animate={reduced ? {} : { y: [0, -8, 0] }} transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}>
+            <motion.div
+              className="newsletter-icon-wrap"
+              animate={reduced ? {} : { y: [0, -8, 0] }}
+              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+            >
               <IconMail size={34} color="white" />
             </motion.div>
             <h2 className="newsletter-title">Join 10+ Adventurers</h2>
-            <p className="newsletter-subtitle">Get exclusive travel inspiration, early-bird offers, wildlife migration alerts, and insider tips delivered weekly.</p>
+            <p className="newsletter-subtitle">
+              Get exclusive travel inspiration, early-bird offers, wildlife
+              migration alerts, and insider tips delivered weekly.
+            </p>
             <NewsletterForm user={user} />
-            <p className="newsletter-privacy">No spam, ever. Unsubscribe anytime.</p>
+            <p className="newsletter-privacy">
+              No spam, ever. Unsubscribe anytime.
+            </p>
           </AnimatedSection>
         </div>
       </section>
 
       {/* ── FINAL CTA ── */}
-      <ParallaxSection image="https://i.pinimg.com/736x/2f/e4/bf/2fe4bffc3c384f4744669a6807620a6d.jpg" height="82vh" overlay="linear-gradient(135deg, rgba(2,44,34,.93) 0%, rgba(5,150,105,.82) 100%)">
-        <motion.div initial={{ scale: 0.5, opacity: 0 }} whileInView={{ scale: 1, opacity: 1 }} viewport={{ once: true, margin: "-100px" }} transition={{ duration: 0.75, type: "spring", bounce: 0.32 }}>
-          <div className="cta-compass-icon"><IconCompass size={28} color="white" /></div>
+      <ParallaxSection
+        image="https://i.pinimg.com/736x/2f/e4/bf/2fe4bffc3c384f4744669a6807620a6d.jpg"
+        height="82vh"
+        overlay="linear-gradient(135deg, rgba(2,44,34,.93) 0%, rgba(5,150,105,.82) 100%)"
+      >
+        <motion.div
+          initial={{ scale: 0.5, opacity: 0 }}
+          whileInView={{ scale: 1, opacity: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.75, type: "spring", bounce: 0.32 }}
+        >
+          <div className="cta-compass-icon">
+            <IconCompass size={28} color="white" />
+          </div>
         </motion.div>
-        <SplitText className="cta-title">Your East African Adventure Awaits</SplitText>
-        <TextReveal delay={0.28}><p className="cta-subtitle">Let our team design your perfect journey through the heart of Africa. From thundering wildebeest crossings to the quiet wonder of a gorilla's gaze — your story begins here.</p></TextReveal>
-        <TextReveal delay={0.4}><p className="cta-note">Join 5,000+ travelers who've discovered what makes Altuvera truly unforgettable.</p></TextReveal>
+        <SplitText className="cta-title">
+          Your East African Adventure Awaits
+        </SplitText>
+        <TextReveal delay={0.28}>
+          <p className="cta-subtitle">
+            Let our team design your perfect journey through the heart of
+            Africa. From thundering wildebeest crossings to the quiet wonder of
+            a gorilla's gaze — your story begins here.
+          </p>
+        </TextReveal>
+        <TextReveal delay={0.4}>
+          <p className="cta-note">
+            Join 5,000+ travelers who've discovered what makes Altuvera truly
+            unforgettable.
+          </p>
+        </TextReveal>
         <TextReveal delay={0.5}>
           <div className="cta-btn-row">
-            <MagneticWrap><Button to="/booking" variant="white" size="large" icon={<IconArrowRight size={18} />}>Start Planning Now</Button></MagneticWrap>
-            <MagneticWrap><Button to="/contact" variant="outline" size="large">Speak to an Expert</Button></MagneticWrap>
+            <MagneticWrap>
+              <Button
+                to="/booking"
+                variant="white"
+                size="large"
+                icon={<IconArrowRight size={18} />}
+              >
+                Start Planning Now
+              </Button>
+            </MagneticWrap>
+            <MagneticWrap>
+              <Button to="/contact" variant="outline" size="large">
+                Speak to an Expert
+              </Button>
+            </MagneticWrap>
           </div>
         </TextReveal>
       </ParallaxSection>
@@ -1221,7 +2158,12 @@ const Home = () => {
       {/* ── LIGHTBOX ── */}
       <AnimatePresence>
         {lightboxOpen && galleryImages.length > 0 && (
-          <GalleryLightbox images={galleryImages} currentIndex={lightboxIndex} onClose={closeLightbox} onNavigate={navigateLightbox} />
+          <GalleryLightbox
+            images={galleryImages}
+            currentIndex={lightboxIndex}
+            onClose={closeLightbox}
+            onNavigate={navigateLightbox}
+          />
         )}
       </AnimatePresence>
     </div>

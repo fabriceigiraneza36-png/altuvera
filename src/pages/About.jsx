@@ -1246,7 +1246,7 @@ const TeamCard = ({ member, index }) => {
           )}
         </div>
         
-        <div style={{ padding: 'clamp(24px, 3vw, 32px)' }}>
+        <div style={{ padding: 'clamp(20px, 3vw, 28px)' }}>
           <h3 style={{
             fontSize: 'clamp(20px, 2.2vw, 24px)',
             fontWeight: '700',
@@ -1325,7 +1325,7 @@ const QuoteBlock = ({ quote, author, role, image }) => (
     <div style={{
       background: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)',
       borderRadius: '32px',
-      padding: 'clamp(32px, 5vw, 56px)',
+      padding: 'clamp(24px, 4vw, 42px)',
       position: 'relative',
       overflow: 'hidden'
     }}>
@@ -1654,7 +1654,7 @@ const About = () => {
 
       {/* Introduction Section */}
       <section style={{ 
-        padding: 'clamp(60px, 10vw, 120px) 24px',
+        padding: 'clamp(40px, 8vw, 80px) 24px',
         background: 'linear-gradient(180deg, #fff 0%, #FAFFFE 100%)'
       }}>
         <div style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center' }}>
@@ -1705,11 +1705,11 @@ const About = () => {
 
       {/* Video Section */}
       <section style={{
-        padding: 'clamp(60px, 10vw, 120px) 24px',
+        padding: 'clamp(40px, 8vw, 80px) 24px',
         background: '#fff'
       }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 'clamp(40px, 6vw, 60px)' }}>
+          <div style={{ textAlign: 'center', marginBottom: 'clamp(28px, 4vw, 44px)' }}>
             <FadeInSection>
               <span style={styles.label}>Watch & Explore</span>
               <h2 style={styles.h2}>
@@ -1816,7 +1816,7 @@ const About = () => {
 
       {/* Philosophy Section with Image */}
       <section style={{ 
-        padding: 'clamp(60px, 10vw, 140px) 24px',
+        padding: 'clamp(40px, 8vw, 100px) 24px',
         position: 'relative',
         overflow: 'hidden',
         background: '#F0FDF4'
@@ -1974,7 +1974,7 @@ const About = () => {
 
       {/* Founder's Story Section */}
       <section style={{
-        padding: 'clamp(60px, 10vw, 120px) 24px',
+        padding: 'clamp(40px, 8vw, 80px) 24px',
         background: '#fff'
       }}>
         <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
@@ -1991,7 +1991,7 @@ const About = () => {
             <div style={{
               background: 'linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)',
               borderRadius: '32px',
-              padding: 'clamp(32px, 5vw, 56px)',
+              padding: 'clamp(24px, 4vw, 42px)',
               boxShadow: '0 20px 50px rgba(5, 150, 105, 0.1)'
             }}>
               <p style={{
@@ -2048,11 +2048,11 @@ const About = () => {
 
       {/* Stats Section */}
       <section style={{
-        padding: 'clamp(60px, 10vw, 120px) 24px',
+        padding: 'clamp(40px, 8vw, 80px) 24px',
         background: '#fff'
       }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 'clamp(40px, 6vw, 60px)' }}>
+          <div style={{ textAlign: 'center', marginBottom: 'clamp(28px, 4vw, 44px)' }}>
             <FadeInSection>
               <span style={styles.label}>By the Numbers</span>
               <h2 style={styles.h2}>
@@ -2075,11 +2075,11 @@ const About = () => {
 
       {/* Gallery Section */}
       <section style={{
-        padding: 'clamp(60px, 10vw, 120px) 24px',
+        padding: 'clamp(40px, 8vw, 80px) 24px',
         background: '#F0FDF4'
       }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 'clamp(40px, 6vw, 60px)' }}>
+          <div style={{ textAlign: 'center', marginBottom: 'clamp(28px, 4vw, 44px)' }}>
             <FadeInSection>
               <span style={styles.label}>Visual Stories</span>
               <h2 style={styles.h2}>
@@ -2109,7 +2109,7 @@ const About = () => {
           </div>
 
           <FadeInSection delay={0.4}>
-            <div style={{ textAlign: 'center', marginTop: 'clamp(40px, 6vw, 60px)' }}>
+            <div style={{ textAlign: 'center', marginTop: 'clamp(28px, 4vw, 44px)' }}>
               <Button to="/gallery" variant="primary" size="large">
                 <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <FiCamera size={18} />
@@ -2123,11 +2123,11 @@ const About = () => {
 
       {/* Values Section */}
       <section style={{
-        padding: 'clamp(60px, 10vw, 140px) 24px',
+        padding: 'clamp(40px, 8vw, 100px) 24px',
         background: '#fff'
       }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 'clamp(50px, 7vw, 80px)' }}>
+          <div style={{ textAlign: 'center', marginBottom: 'clamp(32px, 5vw, 56px)' }}>
             <FadeInSection>
               <span style={styles.label}>Our Core Values</span>
               <h2 style={styles.h2}>The Principles <span style={{ color: '#059669' }}>Fabrice Designed</span></h2>
@@ -2152,7 +2152,7 @@ const About = () => {
 
       {/* Quote Section */}
       <section style={{
-        padding: 'clamp(60px, 8vw, 100px) 24px',
+        padding: 'clamp(40px, 7vw, 70px) 24px',
         background: '#FAFFFE'
       }}>
         <div style={{ maxWidth: '900px', margin: '0 auto' }}>
@@ -2167,11 +2167,11 @@ const About = () => {
 
       {/* Team Section */}
       <section style={{
-        padding: 'clamp(60px, 10vw, 140px) 24px',
+        padding: 'clamp(40px, 8vw, 100px) 24px',
         background: '#fff'
       }}>
         <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 'clamp(50px, 7vw, 80px)' }}>
+          <div style={{ textAlign: 'center', marginBottom: 'clamp(32px, 5vw, 56px)' }}>
             <FadeInSection>
               <span style={styles.label}>Our Leadership</span>
               <h2 style={styles.h2}>The <span style={{ color: '#059669' }}>People</span> Behind Your Journey</h2>
@@ -2196,7 +2196,7 @@ const About = () => {
 
       {/* Mission & Vision Section */}
       <section style={{
-        padding: 'clamp(60px, 10vw, 140px) 24px',
+        padding: 'clamp(40px, 8vw, 100px) 24px',
         background: '#F0FDF4'
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>

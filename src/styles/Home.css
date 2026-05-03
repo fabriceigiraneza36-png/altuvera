@@ -70,7 +70,9 @@ html {
   --font-sans:   'Inter', system-ui, sans-serif;
   --font-script: 'Dancing Script', cursive;
 
-  --section-padding: clamp(48px, 8vw, 80px) clamp(16px, 4vw, 40px);
+--section-padding: clamp(20px, 3vw, 32px) clamp(16px, 4vw, 40px);
+  --section-padding-tight: clamp(16px, 2.5vw, 28px);
+  --section-padding-hero: clamp(24px, 3.5vw, 36px);
   --container-max:   1320px;
 }
 
@@ -153,6 +155,14 @@ html {
   position: relative;
 }
 
+.home-section--tight {
+  padding: var(--section-padding-tight);
+}
+
+.home-section--hero {
+  padding: var(--section-padding-hero);
+}
+
 .home-container {
   max-width: var(--container-max);
   margin: 0 auto;
@@ -171,7 +181,7 @@ html {
 /* ─── Section Header ─── */
 .section-header {
   text-align: center;
-  margin-bottom: clamp(40px, 5vw, 72px);
+  margin-bottom: clamp(20px, 3vw, 36px);
 }
 
 .section-header--centered {
@@ -225,7 +235,7 @@ html {
 .section-cta {
   display: flex;
   justify-content: center;
-  margin-top: 52px;
+  margin-top: 36px;
 }
 
 /* ─── Blob Decorations ─── */
@@ -336,7 +346,7 @@ html {
 .intro-grid {
   display: grid;
   grid-template-columns: 1.1fr 1fr;
-  gap: clamp(32px, 5vw, 80px);
+  gap: clamp(24px, 3vw, 48px);
   align-items: center;
 }
 
@@ -617,7 +627,7 @@ html {
 .countries-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: clamp(16px, 2vw, 24px);
+  gap: clamp(14px, 1.8vw, 20px);
 }
 
 /* ─── Country Card ─── */
@@ -914,7 +924,7 @@ html {
 .destinations-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: clamp(20px, 2.5vw, 32px);
+  gap: clamp(14px, 2vw, 20px);
 }
 
 /* ═══════════════════════════════════════════
@@ -935,7 +945,7 @@ html {
 .adventures-grid-v2 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: clamp(20px, 2.5vw, 28px);
+  gap: clamp(14px, 2vw, 20px);
 }
 
 /* ─── Adventure Card V2 ─── */
@@ -3130,7 +3140,7 @@ html {
 .wa-hero-card {
   position: relative;
   max-width: 620px;
-  margin: 0 auto 64px;
+  margin: 0 auto 40px;
   background: rgba(255,255,255,0.05);
   backdrop-filter: blur(20px);
   border: 1px solid rgba(37,211,102,0.2);

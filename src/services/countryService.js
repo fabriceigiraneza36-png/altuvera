@@ -153,13 +153,27 @@ class CountryService {
     };
   }
 
-  async getOne(idOrSlug, includeRelated = true) {
-    const body = await this._fetch(
-      `/${encodeURIComponent(idOrSlug)}${this._qs({ includeRelated })}`,
-      {},
-      `getOne-${idOrSlug}`
-    );
-    return body?.data ?? body ?? null;
+async getOne(idOrSlug, includeRelated = true) {
+    try {
+      const body = await this._fetch(
+        `/${encodeURIComponent(idOrSlug)}${this._qs({ includeRelated })}`,
+        {},
+        `getOne-${idOrSlug}`
+      );
+      return body?.data ?? body ?? null;
+    } catch (error) {
+      if (error.name === 'AbortError') throw error;
+      
+      // Fallback to static data
+      console.warn(`[countryService] API failed for ${idOrSlug}, trying static fallback:`, error.message);
+      try {
+        const { getFallbackCountry } = await import('./staticCountries.js');
+        return await getFallbackCountry(idOrSlug);
+      } catch (fallbackError) {
+        console.error('[countryService] Static fallback also failed:', fallbackError);
+        throw new Error(`Country not found: ${idOrSlug} (API & fallback failed)`);
+      }
+    }
   }
 
   async getDestinations(idOrSlug, params = {}) {

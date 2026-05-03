@@ -378,7 +378,8 @@ export default function EastAfricaFlags({ variant = "full" }) {
           return (
             <Link
               key={country.code}
-              to={`/country/${country.name.toLowerCase().replace(/ /g, "-")}`}
+to={`/country/${getCountrySlug(country)}`}
+
               className="card-enter-anim group relative w-[280px] flex-shrink-0 snap-center
                          cursor-pointer no-underline opacity-0 translate-y-5
                          md:w-[260px] sm:w-[240px] max-[480px]:w-[220px]"

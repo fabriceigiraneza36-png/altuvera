@@ -2850,70 +2850,94 @@ const FooterCTA = ({ c, mob }) => (
 /* ═══════════════════════════════════════════════════
    ERROR STATE
    ═══════════════════════════════════════════════════ */
-const ErrorState = ({ error, navigate }) => (
-  <div
-    style={{
-      minHeight: "85vh", display: "flex", flexDirection: "column",
-      alignItems: "center", justifyContent: "center",
-      fontFamily: T.sans, padding: 48, textAlign: "center",
-      background: T.g50,
-    }}
-  >
+const ErrorState = ({ error, navigate, refetch, slug }) => {
+  const errorType = error?.name || error?.message?.includes('AbortSignal') ? 'network' : 
+                    error?.message?.includes('404') ? 'notFound' : 'unknown';
+  const errorMsg = {
+    network: 'Connection timeout or server error. Network issues or backend temporarily unavailable.',
+    notFound: `Country "${decodeURIComponent(slug)}" not found in database.`,
+    unknown: 'Unable to load country. Please try again.',
+  }[errorType] || error?.message || 'Unknown error occurred.';
+
+  return (
     <div
-      className="cp-float"
       style={{
-        width: 150, height: 150, borderRadius: "50%",
-        background: T.green50,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        fontSize: 72, marginBottom: 36,
-        border: `3px solid ${T.green200}`,
+        minHeight: "85vh", display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        fontFamily: T.sans, padding: 48, textAlign: "center",
+        background: T.g50,
       }}
     >
-      🌍
-    </div>
-    <h2
-      style={{
-        fontFamily: T.serif, fontSize: 38, fontWeight: 700,
-        color: T.g800, margin: "0 0 16px",
-      }}
-    >
-      Country Not Found
-    </h2>
-    <p
-      style={{
-        fontSize: 18, color: T.g500, maxWidth: 480,
-        margin: "0 0 36px", lineHeight: 1.65,
-      }}
-    >
-      {error ||
-        "The country you're looking for doesn't exist or has been removed."}
-    </p>
-    <div style={{ display: "flex", gap: 14 }}>
-      <button
-        onClick={() => navigate(-1)}
+      <div
+        className="cp-float"
         style={{
-          padding: "14px 32px", background: T.white, color: T.g700,
-          border: `2px solid ${T.g300}`, borderRadius: T.r.md,
-          fontSize: 15, fontWeight: 600, cursor: "pointer",
-          fontFamily: T.sans,
+          width: 150, height: 150, borderRadius: "50%",
+          background: T.green50,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 72, marginBottom: 36,
+          border: `3px solid ${T.green200}`,
         }}
       >
-        Go Back
-      </button>
-      <button
-        onClick={() => navigate("/destinations")}
+        🌍
+      </div>
+      <h2
         style={{
-          padding: "14px 32px", background: T.green600,
-          color: T.white, border: "none", borderRadius: T.r.md,
-          fontSize: 15, fontWeight: 600, cursor: "pointer",
-          fontFamily: T.sans,
+          fontFamily: T.serif, fontSize: 38, fontWeight: 700,
+          color: T.g800, margin: "0 0 16px",
         }}
       >
-        Browse Countries
-      </button>
+        {errorType === 'notFound' ? 'Country Not Found' : 'Loading Failed'}
+      </h2>
+      <p
+        style={{
+          fontSize: 18, color: T.g500, maxWidth: 480,
+          margin: "0 0 36px", lineHeight: 1.65,
+        }}
+      >
+        {errorMsg}
+      </p>
+      <div style={{ display: "flex", gap: 14, flexWrap: "wrap", justifyContent: "center" }}>
+        <button
+          onClick={refetch}
+          style={{
+            padding: "14px 32px", background: T.green600, color: T.white,
+            border: "none", borderRadius: T.r.md,
+            fontSize: 15, fontWeight: 600, cursor: "pointer",
+            fontFamily: T.sans,
+          }}
+        >
+          🔄 Retry
+        </button>
+        <button
+          onClick={() => navigate(-1)}
+          style={{
+            padding: "14px 32px", background: T.white, color: T.g700,
+            border: `2px solid ${T.g300}`, borderRadius: T.r.md,
+            fontSize: 15, fontWeight: 600, cursor: "pointer",
+            fontFamily: T.sans,
+          }}
+        >
+          ← Go Back
+        </button>
+        <button
+          onClick={() => navigate("/countries")}
+          style={{
+            padding: "14px 32px", background: T.green600,
+            color: T.white, border: "none", borderRadius: T.r.md,
+            fontSize: 15, fontWeight: 600, cursor: "pointer",
+            fontFamily: T.sans,
+          }}
+        >
+          Browse All Countries
+        </button>
+      </div>
+      <p style={{ marginTop: 36, fontSize: 14, color: T.g400 }}>
+        Showing {errorType} — {new Date().toLocaleTimeString()}
+      </p>
     </div>
-  </div>
-);
+  );
+};
+
 
 /* ═══════════════════════════════════════════════════
    MAIN COMPONENT
@@ -3065,7 +3089,7 @@ const CountryPage = () => {
     return (
       <div style={{ fontFamily: T.sans }}>
         <Styles />
-        <ErrorState error={error} navigate={navigate} />
+        <ErrorState error={error} navigate={navigate} refetch={refetch} slug={slug} />
       </div>
     );
   }
