@@ -5,11 +5,9 @@ import {
   HiShieldCheck,
   HiSparkles,
   HiX,
-  HiCheck,
   HiLockClosed,
   HiChartBar,
   HiSpeakerphone,
-  HiCog,
 } from "react-icons/hi";
 import {
   COOKIE_PREFS_KEY,
@@ -29,29 +27,34 @@ const readStoredPreferences = () => {
   try {
     const raw = localStorage.getItem(COOKIE_PREFS_KEY);
     if (!raw) return null;
-
     const parsed = JSON.parse(raw);
-    return {
-      ...defaultPrefs,
-      ...parsed,
-      necessary: true,
-    };
+    return { ...defaultPrefs, ...parsed, necessary: true };
   } catch {
     return null;
   }
 };
 
 const Toggle = ({ checked, onChange, disabled }) => (
-  <label className={`cc-toggle ${checked ? "on" : ""} ${disabled ? "off" : ""}`}>
-    <input type="checkbox" checked={checked} onChange={onChange} disabled={disabled} />
+  <label className={`cc-toggle ${checked ? "on" : ""}`}>
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={onChange}
+      disabled={disabled}
+    />
     <span />
   </label>
 );
 
 const Row = ({ icon: Icon, title, desc, checked, onChange, disabled }) => (
-  <div className={`cc-row ${disabled ? "disabled" : ""}`}>
+  <motion.div
+    className={`cc-row ${disabled ? "disabled" : ""}`}
+    whileHover={{ scale: 1.02 }}
+    whileTap={{ scale: 0.98 }}
+    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+  >
     <div className="cc-row-left">
-      <span className="cc-icon">
+      <span className={`cc-icon ${disabled ? "essential" : ""}`}>
         <Icon />
       </span>
       <div>
@@ -60,16 +63,20 @@ const Row = ({ icon: Icon, title, desc, checked, onChange, disabled }) => (
       </div>
     </div>
     <Toggle checked={checked} onChange={onChange} disabled={disabled} />
-  </div>
+  </motion.div>
 );
 
-const Button = ({ children, variant = "ghost", onClick, fullWidth }) => (
-  <button
-    className={`cc-btn ${variant} ${fullWidth ? 'full-width' : ''}`}
+const Button = ({ children, variant = "ghost", onClick }) => (
+  <motion.button
+    className={`cc-btn ${variant}`}
     onClick={onClick}
+    whileHover={{ scale: 1.05 }}
+    whileTap={{ scale: 0.95 }}
+    transition={{ type: "spring", stiffness: 400, damping: 25 }}
+    aria-label={typeof children === "string" ? children : "Button"}
   >
     {children}
-  </button>
+  </motion.button>
 );
 
 export default function CookieConsent() {
@@ -85,9 +92,8 @@ export default function CookieConsent() {
   }, []);
 
   useEffect(() => {
-    const active = open || settings;
-    document.body.classList.toggle("cc-active", active);
-    return () => document.body.classList.remove("cc-active");
+    document.body.style.overflow = open || settings ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
   }, [open, settings]);
 
   const save = useCallback((data) => {
@@ -98,7 +104,6 @@ export default function CookieConsent() {
       consentGiven: true,
       updatedAt: new Date().toISOString(),
     };
-
     localStorage.setItem(COOKIE_PREFS_KEY, JSON.stringify(final));
     setPrefs(final);
     setOpen(false);
@@ -107,17 +112,17 @@ export default function CookieConsent() {
 
   return (
     <>
-      {/* ================= BANNER ================= */}
+      {/* ===== BANNER ===== */}
       <AnimatePresence>
         {open && (
           <motion.div
             className="cc-banner"
-            initial={{ opacity: 0, y: 40, scale: 0.98 }}
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 30 }}
-            transition={{ type: "spring", stiffness: 130, damping: 18 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 150, damping: 20 }}
           >
-            <div className="cc-content">
+            <div className="cc-banner-inner">
               <div className="cc-header">
                 <div className="cc-icon-bg">
                   <HiShieldCheck />
@@ -127,13 +132,14 @@ export default function CookieConsent() {
                     <HiSparkles /> Privacy First
                   </span>
                   <h3>We value your privacy</h3>
-                  <p>We use cookies to enhance your experience, security, and performance.</p>
+                  <p>
+                    We use cookies to enhance your experience, security, and performance.
+                  </p>
                 </div>
               </div>
-
               <div className="cc-actions">
-                <Button onClick={() => setSettings(true)}>Customize</Button>
-                <Button onClick={() => save({ analytics: false, marketing: false })}>Essential Only</Button>
+                <Button onClick={() => setSettings(true)}>⚙️ Customize</Button>
+                <Button onClick={() => save({ analytics: false, marketing: false })}>Essential</Button>
                 <Button variant="primary" onClick={() => save({ analytics: true, marketing: true })}>Accept All</Button>
               </div>
             </div>
@@ -141,28 +147,27 @@ export default function CookieConsent() {
         )}
       </AnimatePresence>
 
-      {/* ================= MODAL ================= */}
+      {/* ===== MODAL ===== */}
       <AnimatePresence>
         {settings && (
           <motion.div
             className="cc-overlay"
-            onClick={() => setSettings(false)}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
           >
             <motion.div
               className="cc-modal"
-              onClick={(e) => e.stopPropagation()}
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.92, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 160, damping: 18 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 160, damping: 20 }}
             >
               <div className="cc-modal-header">
                 <div>
                   <h3>Cookie Preferences</h3>
-                  <p>Choose what data we can collect about you</p>
+                  <p>Choose what data we can collect</p>
                 </div>
                 <button className="cc-close" onClick={() => setSettings(false)}>
                   <HiX />
@@ -180,16 +185,16 @@ export default function CookieConsent() {
                 <Row
                   icon={HiChartBar}
                   title="Analytics"
-                  desc="Help improve performance"
+                  desc="Help us improve performance"
                   checked={prefs.analytics}
-                  onChange={(e) => setPrefs(p => ({ ...p, analytics: e.target.checked }))}
+                  onChange={(e) => setPrefs((p) => ({ ...p, analytics: e.target.checked }))}
                 />
                 <Row
                   icon={HiSpeakerphone}
                   title="Marketing"
                   desc="Personalized content & offers"
                   checked={prefs.marketing}
-                  onChange={(e) => setPrefs(p => ({ ...p, marketing: e.target.checked }))}
+                  onChange={(e) => setPrefs((p) => ({ ...p, marketing: e.target.checked }))}
                 />
               </div>
 
