@@ -1,204 +1,126 @@
-/* src/components/auth/CongratulationWindow.css */
-
-* {
-  box-sizing: border-box;
-}
-
-.congrats-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-}
-
-.congrats-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(10, 20, 10, 0.35);
-  backdrop-filter: blur(10px);
-}
-
-.bubble-container {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.floating-bubble {
-  position: absolute;
-  top: 0;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    #ffffff 0%,
-    #bbf7d0 45%,
-    #22c55e 100%
-  );
-  box-shadow: 0 0 18px rgba(34, 197, 94, 0.25);
-}
-
 .congrats-modal {
   position: relative;
   z-index: 10;
   width: 100%;
-  max-width: 430px;
-  background: rgba(255, 255, 255, 0.96);
+  max-width: 360px;
+  background: rgba(255, 255, 255, 0.97);
   border: 1px solid rgba(34, 197, 94, 0.12);
-  border-radius: 26px;
-  padding: 28px 24px;
+  border-radius: 20px;
+  padding: 22px 18px;
   text-align: center;
-  box-shadow:
-    0 25px 60px rgba(34, 197, 94, 0.08),
-    0 10px 30px rgba(0, 0, 0, 0.05);
-  backdrop-filter: blur(18px);
+  box-shadow: 0 18px 45px rgba(34, 197, 94, 0.08);
+  backdrop-filter: blur(16px);
 }
 
+/* close button */
 .close-btn {
   position: absolute;
-  top: 14px;
-  right: 14px;
-  width: 40px;
-  height: 40px;
+  top: 10px;
+  right: 10px;
+  width: 34px;
+  height: 34px;
   border: none;
   background: #f0fdf4;
-  border-radius: 50%;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #15803d;
   cursor: pointer;
-  transition: 0.3s;
+  transition: 0.25s ease;
 }
 
 .close-btn:hover {
-  transform: scale(1.08);
+  transform: scale(1.05);
+  background: #dcfce7;
 }
 
+/* icon */
 .icon-wrapper {
-  width: 86px;
-  height: 86px;
-  margin: 0 auto 20px;
-  border-radius: 50%;
-  background: linear-gradient(
-    135deg,
-    #ffffff,
-    #dcfce7
-  );
-  border: 1px solid rgba(34, 197, 94, 0.14);
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 14px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #ffffff, #dcfce7);
+  border: 1px solid rgba(34, 197, 94, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #16a34a;
-  box-shadow:
-    0 12px 30px rgba(34, 197, 94, 0.08),
-    inset 0 2px 8px rgba(255, 255, 255, 0.8);
 }
 
+/* content spacing wrapper */
+.content-area {
+  padding: 0 6px;
+}
+
+/* title */
 .congrats-title {
-  font-size: 1.8rem;
+  font-size: 1.25rem;
   font-weight: 800;
   color: #14532d;
-  margin-bottom: 12px;
-  line-height: 1.2;
+  margin-bottom: 8px;
 }
 
+/* message */
 .congrats-message {
-  font-size: 0.98rem;
-  line-height: 1.7;
+  font-size: 0.9rem;
+  line-height: 1.6;
   color: #4b5563;
-  margin-bottom: 18px;
-  padding: 0 4px;
+  margin-bottom: 10px;
 }
 
+/* user greeting */
 .user-greeting {
-  font-size: 0.95rem;
-  font-weight: 700;
+  font-size: 0.85rem;
+  font-weight: 600;
   color: #16a34a;
-  margin-bottom: 18px;
+  margin-bottom: 10px;
 }
 
+/* progress */
 .progress-wrapper {
   display: flex;
   justify-content: center;
-  gap: 8px;
-  margin-bottom: 22px;
+  gap: 6px;
+  margin: 12px 0 14px;
 }
 
 .progress-dot {
-  height: 8px;
+  height: 6px;
   border-radius: 999px;
-  background: linear-gradient(
-    to right,
-    #22c55e,
-    #4ade80
-  );
+  background: linear-gradient(to right, #22c55e, #4ade80);
 }
 
+/* footer */
 .bottom-note {
   background: #f0fdf4;
   border: 1px solid #dcfce7;
-  border-radius: 18px;
-  padding: 16px;
-  font-size: 0.92rem;
-  line-height: 1.6;
+  border-radius: 14px;
+  padding: 12px;
+  font-size: 0.82rem;
   color: #166534;
-  font-weight: 500;
+  line-height: 1.5;
 }
 
-/* Responsive */
-
-@media (max-width: 768px) {
+/* MOBILE IMPROVEMENT */
+@media (max-width: 480px) {
   .congrats-modal {
-    max-width: 380px;
-    padding: 24px 20px;
+    max-width: 92%;
+    padding: 18px 14px;
+    border-radius: 18px;
   }
 
   .congrats-title {
-    font-size: 1.5rem;
+    font-size: 1.1rem;
   }
 
   .congrats-message {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
   }
 
   .icon-wrapper {
-    width: 76px;
-    height: 76px;
-  }
-}
-
-@media (max-width: 480px) {
-  .congrats-overlay {
-    padding: 12px;
-  }
-
-  .congrats-modal {
-    max-width: 100%;
-    padding: 22px 18px;
-    border-radius: 22px;
-  }
-
-  .congrats-title {
-    font-size: 1.3rem;
-  }
-
-  .congrats-message {
-    font-size: 0.92rem;
-  }
-
-  .bottom-note {
-    font-size: 0.88rem;
-    padding: 14px;
-  }
-
-  .close-btn {
-    width: 36px;
-    height: 36px;
+    width: 58px;
+    height: 58px;
   }
 }

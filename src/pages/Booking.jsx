@@ -3342,12 +3342,6 @@ const Booking = () => {
   const [destinationsList, setDestinationsList] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
 
-  // Booking statistics from live backend
-  const [mostBookedDestinations, setMostBookedDestinations] = useState([]);
-  const [countriesStats, setCountriesStats] = useState([]);
-  const [destinationsStats, setDestinationsStats] = useState([]);
-  const [loadingStats, setLoadingStats] = useState(true);
-
   // Form states
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -3451,24 +3445,11 @@ const Booking = () => {
   }, [user]);
 
   // Fetch live booking statistics from backend
+  // NOTE: These endpoints are not implemented on backend and not used in UI
+  // Removing to prevent 500 errors and improve page load time
   const fetchBookingStats = useCallback(async () => {
-    setLoadingStats(true);
-    try {
-      const [mostBookedRes, countriesStatsRes, destinationsStatsRes] = await Promise.all([
-        authFetch("/bookings/most-booked").catch(() => null),
-        authFetch("/bookings/countries-stats").catch(() => null),
-        authFetch("/bookings/destinations-stats").catch(() => null),
-      ]);
-
-      setMostBookedDestinations(normalizeResponseArray(mostBookedRes));
-      setCountriesStats(normalizeResponseArray(countriesStatsRes));
-      setDestinationsStats(normalizeResponseArray(destinationsStatsRes));
-    } catch (err) {
-      console.error("Failed to fetch booking statistics:", err);
-    } finally {
-      setLoadingStats(false);
-    }
-  }, [authFetch]);
+    // No-op function - stats are not available from backend
+  }, []);
 
   // Fetch main data (countries, categories, destinations)
   useEffect(() => {

@@ -3,7 +3,7 @@ import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { useUserAuth } from "../../context/UserAuthContext";
 import DashboardLayout from "../../components/auth/DashboardLayout";
-import { HiCalendar, HiLocationMarker, HiUsers, HiClock } from "react-icons/hi";
+import { HiCalendar, HiLocationMarker, HiUsers, HiClock, HiExclamationCircle } from "react-icons/hi";
 import { FiDollarSign } from "react-icons/fi";
 import Loader from "../../components/common/Loader";
 import "./AuthPages.css";
