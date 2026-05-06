@@ -8,7 +8,6 @@ import React, {
   createContext,
   useContext,
 } from "react";
-import { useSearchParams } from "react-router-dom";
 import {
   FiCalendar,
   FiUsers,
@@ -67,7 +66,7 @@ import { useUserAuth } from "../context/UserAuthContext";
 import { useServices } from "../hooks/useServices";
 import { apiFetch } from "../utils/apiBase";
 import { sendMessage } from "../utils/sendMessage";
-import { applyBookingPrefill, getBookingPrefill } from "../utils/bookingPrefill";
+import { applyBookingPrefill } from "../utils/bookingPrefill";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONSTANTS & CONFIGURATION
@@ -2586,6 +2585,8 @@ const StepFour = memo(
     user,
     isMobile,
     displayName,
+    isAuthenticated,
+    openModal,
   }) => {
     const getPersonalizedContactMessage = () => {
       if (displayName) {
@@ -2778,6 +2779,48 @@ const StepFour = memo(
           user={user}
           isMobile={isMobile}
         />
+        {!isAuthenticated ? (
+          <div
+            style={{
+              marginBottom: 24,
+              padding: 18,
+              borderRadius: 20,
+              backgroundColor: "#D1FAE5",
+              color: "#064E3B",
+            }}
+          >
+            <div style={{ fontWeight: 600, marginBottom: 10 }}>
+              Sign in to auto-fill your booking contact details.
+            </div>
+            <button
+              type="button"
+              onClick={() => openModal("login")}
+              style={{
+                padding: "12px 20px",
+                borderRadius: 16,
+                border: "none",
+                backgroundColor: "#059669",
+                color: "#ffffff",
+                cursor: "pointer",
+                fontWeight: 600,
+              }}
+            >
+              Sign in with your account
+            </button>
+          </div>
+        ) : (
+          <div
+            style={{
+              marginBottom: 24,
+              padding: 18,
+              borderRadius: 20,
+              backgroundColor: "#ECFDF5",
+              color: "#166534",
+            }}
+          >
+            Signed in as <strong>{user.fullName || user.email}</strong>. Your booking details are synced.
+          </div>
+        )}
         <div
           style={{
             display: "grid",
@@ -3291,7 +3334,7 @@ const SuccessScreen = memo(({ isMobile, displayName }) => {
 // ═══════════════════════════════════════════════════════════════════════════
 
 const Booking = () => {
-  const { authFetch, user } = useUserAuth();
+  const { authFetch, user, openModal } = useUserAuth();
 
   // Data fetching states
   const [countriesList, setCountriesList] = useState([]);
@@ -3396,14 +3439,15 @@ const Booking = () => {
 
   // Update form data when user changes
   useEffect(() => {
-    if (user) {
-      setFormData((prev) => ({
-        ...prev,
-        name: user.full_name || user.name || prev.name,
-        email: user.email || prev.email,
-        phone: user.phone || prev.phone,
-      }));
-    }
+    if (!user) return;
+
+    setFormData((prev) => ({
+      ...prev,
+      name: user.full_name || user.fullName || user.name || prev.name,
+      email: user.email || prev.email,
+      phone: user.phone || prev.phone,
+      country: prev.country || user.country || prev.country,
+    }));
   }, [user]);
 
   // Fetch live booking statistics from backend
@@ -3457,37 +3501,8 @@ const Booking = () => {
 
   // Apply booking prefill from query params or storage
   useEffect(() => {
-    // Get query params
-    const searchParams = new URLSearchParams(window.location.search);
-    const queryDestination = searchParams.get("destination");
-    const queryDestinationId = searchParams.get("destinationId");
-    const queryTripType = searchParams.get("tripType");
-    const queryCountry = searchParams.get("country");
-
-    // If we have query params, apply them
-    if (queryDestination) {
-      setFormData((prev) => ({
-        ...prev,
-        destination: queryDestinationId || queryDestination,
-        tripType: queryTripType || prev.tripType,
-      }));
-      return;
-    }
-
-    // Otherwise check storage prefill
-    const storagePrefill = getBookingPrefill();
-    if (storagePrefill) {
-      // Only apply if destination field is empty
-      setFormData((prev) => {
-        if (prev.destination) return prev;
-        return {
-          ...prev,
-          destination: storagePrefill.destinationId || storagePrefill.destination,
-          tripType: storagePrefill.destinationType || prev.tripType,
-        };
-      });
-    }
-  }, []);
+    applyBookingPrefill(formData, setFormData);
+  }, [formData]);
 
 
   // Handle resize
@@ -3737,8 +3752,7 @@ const Booking = () => {
     return country ? `${country.flag || "🏳️"} ${country.name}` : "Not selected";
   }, [formData.destination, destinationsList, countriesList]);
 
-  // Send WhatsApp message
-  const sendWhatsAppMessage = useCallback(() => {
+  const buildBookingMessage = useCallback(() => {
     const tripDuration = getTripDuration() || "Not specified";
     const totalVisitors = getTotalVisitors();
     const destinationName = getDestinationName();
@@ -3753,7 +3767,7 @@ const Booking = () => {
         ? formData.interests.join(", ")
         : "None selected";
 
-    const message = `🌍 *NEW BOOKING REQUEST - ALTUVERA TOURS*
+    return `🌍 *NEW BOOKING REQUEST - ALTUVERA TOURS*
 
 Hello ${ADMIN_CONTACT.name}! 👋
 
@@ -3798,8 +3812,6 @@ ${formData.specialRequests || "No special requests"}
 📅 *Submitted:* ${new Date().toLocaleString()}
 
 Please provide a personalized quote and itinerary. Thank you!`;
-
-    window.open(getWhatsAppLink(message), "_blank");
   }, [
     formData,
     getTripDuration,
@@ -3808,6 +3820,11 @@ Please provide a personalized quote and itinerary. Thank you!`;
     accommodationTypes,
     groupTypes,
   ]);
+
+  // Send WhatsApp message
+  const sendWhatsAppMessage = useCallback(() => {
+    window.open(getWhatsAppLink(buildBookingMessage()), "_blank");
+  }, [buildBookingMessage]);
 
   // Handle form submit
   const saveBookingLocally = (booking) => {
@@ -3834,9 +3851,14 @@ Please provide a personalized quote and itinerary. Thank you!`;
 
       const bookingPayload = {
         ...formData,
+        userId: user?.id || user?.userId || null,
+        userName: user?.fullName || user?.name || formData.name,
+        userEmail: user?.email || formData.email,
+        userPhone: user?.phone || formData.phone,
         tripDuration: getTripDuration(),
         totalTravelers: getTotalVisitors(),
         destinationName: getDestinationName(),
+        message: buildBookingMessage(),
         status: "Pending",
         createdAt: new Date().toISOString(),
       };
@@ -3979,6 +4001,8 @@ Please provide a personalized quote and itinerary. Thank you!`;
             accommodationTypes={accommodationTypes}
             user={user}
             displayName={displayName}
+            isAuthenticated={isAuthenticated}
+            openModal={openModal}
           />
         );
       default:

@@ -1,12 +1,10 @@
 /* src/components/common/CookieConsent.css */
 
-/* ================= GLOBAL LOCK ================= */
-
+/* ================= GLOBAL ================= */
 body.cc-active {
   overflow: hidden;
 }
 
-/* Apple-style background zoom + blur */
 body.cc-active .app-root {
   transform: scale(0.985);
   filter: blur(6px);
@@ -15,177 +13,186 @@ body.cc-active .app-root {
 }
 
 /* ================= BANNER ================= */
-
 .cc-banner {
   position: fixed;
-  bottom: 22px;
+  bottom: 24px;
   left: 50%;
   transform: translateX(-50%);
-  width: min(560px, calc(100% - 16px));
-  background: rgba(255, 255, 255, 0.92);
+  width: min(520px, 90%);
+  background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(18px);
-  border: 1px solid rgba(34, 197, 94, 0.18);
-  border-radius: 18px;
-  padding: 16px;
-  box-shadow: 0 25px 80px rgba(0,0,0,0.12);
+  border: 1px solid rgba(34, 197, 94, 0.12);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   z-index: 9999;
+  transition: all 0.3s ease;
 }
 
-/* header */
-.cc-top {
+.cc-content {
   display: flex;
-  gap: 12px;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.cc-header {
+  display: flex;
+  gap: 16px;
   align-items: flex-start;
 }
 
-.cc-mark {
-  width: 42px;
-  height: 42px;
+.cc-icon-bg {
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 25px rgba(34,197,94,0.25);
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.2);
 }
 
 .cc-tag {
   display: inline-flex;
+  align-items: center;
   gap: 6px;
   font-size: 12px;
   padding: 4px 10px;
-  background: #ecfdf5;
+  background: #f0fdf4;
   border-radius: 999px;
   color: #15803d;
-  margin-bottom: 6px;
   font-weight: 600;
+  margin-bottom: 4px;
 }
 
-.cc-top h3 {
+.cc-banner h3 {
   margin: 0;
   font-size: 16px;
-  font-weight: 700;
-  color: #14532d;
+  font-weight: 600;
+  color: #111827;
 }
 
-.cc-top p {
-  margin: 3px 0 0;
-  font-size: 13px;
-  color: #64748b;
+.cc-banner p {
+  margin: 0;
+  font-size: 14px;
+  color: #475569;
 }
 
 /* ================= ACTIONS ================= */
-
 .cc-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 12px;
+  gap: 8px;
 }
 
 .cc-btn {
   flex: 1;
-  padding: 10px 12px;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
   border: none;
   cursor: pointer;
-  transition: 0.25s ease;
+  transition: all 0.2s ease;
+}
+
+.cc-btn:hover {
+  transform: translateY(-1px);
 }
 
 .cc-btn.primary {
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: white;
-  box-shadow: 0 10px 25px rgba(34,197,94,0.25);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
 }
 
 .cc-btn:not(.primary) {
-  background: #f1f5f9;
-  color: #0f172a;
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+.full-width {
+  width: 100%;
 }
 
 /* ================= OVERLAY ================= */
-
 .cc-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.35);
+  background: rgba(10, 10, 10, 0.4);
   backdrop-filter: blur(12px);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 16px;
+  z-index: 10000;
 }
 
 /* ================= MODAL ================= */
-
 .cc-modal {
   width: 100%;
-  max-width: 460px;
-  background: rgba(255,255,255,0.94);
+  max-width: 440px;
+  background: rgba(255, 255, 255, 0.98);
   backdrop-filter: blur(20px);
   border-radius: 20px;
-  padding: 18px;
-  border: 1px solid rgba(34,197,94,0.12);
-  box-shadow: 0 40px 120px rgba(0,0,0,0.18);
-  position: relative;
+  padding: 24px;
+  border: 1px solid rgba(34, 197, 94, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
 }
 
-.cc-close {
-  position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 34px;
-  height: 34px;
-  border: none;
-  border-radius: 10px;
-  background: #f1f5f9;
-  cursor: pointer;
+.cc-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
 }
 
-/* ================= CONTENT ================= */
+.cc-modal-header h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+}
 
-.cc-head h3 {
+.cc-modal-header p {
   margin: 0;
-  font-size: 17px;
-  color: #14532d;
-}
-
-.cc-head p {
-  margin: 6px 0 12px;
-  font-size: 13px;
+  font-size: 14px;
   color: #64748b;
 }
 
+/* ================= CONTENT ================= */
 .cc-body {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  margin-bottom: 20px;
 }
-
-/* ================= ROW ================= */
 
 .cc-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px;
-  border-radius: 14px;
-  background: #f8fffa;
+  padding: 14px;
+  border-radius: 12px;
+  background: #f8fafc;
   border: 1px solid #e2e8f0;
+  transition: all 0.2s ease;
+}
+
+.cc-row:hover {
+  background: #f1f5f9;
 }
 
 .cc-row-left {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   align-items: center;
 }
 
 .cc-icon {
-  width: 34px;
-  height: 34px;
-  background: #ecfdf5;
+  width: 36px;
+  height: 36px;
+  background: #f0fdf4;
   color: #16a34a;
   display: flex;
   align-items: center;
@@ -193,11 +200,23 @@ body.cc-active .app-root {
   border-radius: 10px;
 }
 
-/* ================= TOGGLE ================= */
+.cc-row h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #111827;
+}
 
+.cc-row p {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* ================= TOGGLE ================= */
 .cc-toggle {
-  width: 44px;
-  height: 24px;
+  width: 48px;
+  height: 26px;
   position: relative;
 }
 
@@ -208,44 +227,46 @@ body.cc-active .app-root {
 .cc-toggle span {
   position: absolute;
   inset: 0;
-  background: #cbd5e1;
+  background: #d1d5db;
   border-radius: 999px;
-  transition: 0.3s;
+  transition: all 0.3s ease;
 }
 
 .cc-toggle span::after {
   content: "";
   position: absolute;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   top: 3px;
   left: 3px;
   background: white;
   border-radius: 50%;
-  transition: 0.3s;
+  transition: all 0.3s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .cc-toggle.on span {
-  background: #16a34a;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
 }
 
 .cc-toggle.on span::after {
-  transform: translateX(20px);
+  transform: translateX(22px);
 }
 
 /* ================= FOOTER ================= */
-
 .cc-footer {
   display: flex;
   gap: 10px;
-  margin-top: 14px;
 }
 
-/* ================= MOBILE ================= */
-
+/* ================= RESPONSIVE ================= */
 @media (max-width: 520px) {
   .cc-actions,
   .cc-footer {
     flex-direction: column;
+  }
+
+  .cc-btn {
+    width: 100%;
   }
 }

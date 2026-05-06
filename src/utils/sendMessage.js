@@ -99,6 +99,24 @@ export const sendMessage = async (formData) => {
     source: formData.source || "website",
   };
 
+  // Generate a fallback message for bookings when no explicit message field exists
+  if (!payload.message?.trim()) {
+    const details = [];
+    if (formData.destinationName) details.push(`Destination: ${formData.destinationName}`);
+    if (formData.destination) details.push(`Destination ID: ${formData.destination}`);
+    if (formData.tripType) details.push(`Trip Type: ${formData.tripType}`);
+    if (formData.startDate) details.push(`Start Date: ${formData.startDate}`);
+    if (formData.endDate) details.push(`End Date: ${formData.endDate}`);
+    if (formData.adults || formData.children) {
+      const children = formData.children || 0;
+      details.push(`Travelers: ${formData.adults || 0} adults, ${children} children`);
+    }
+    if (formData.specialRequests) details.push(`Special Requests: ${formData.specialRequests}`);
+    if (details.length > 0) {
+      payload.message = details.join("\n");
+    }
+  }
+
   // ✅ Debug log in development
   if (import.meta.env.DEV) {
     console.log("[Contact] Sending payload:", payload);
