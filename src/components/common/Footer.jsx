@@ -459,7 +459,7 @@ useEffect(() => {
   };
 
   return (
-    <footer style={styles.footer}>
+    <footer data-checklist-trigger style={styles.footer}>
       {/* Pulse animation for skeleton */}
       <style>{`
         @keyframes pulse {

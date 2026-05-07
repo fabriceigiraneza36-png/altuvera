@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import {
   FiArrowRight,
   FiLinkedin,
@@ -24,8 +30,7 @@ import Button from "./Button";
 // API SERVICE — Connects to the updated backend controller
 // ══════════════════════════════════════════════════════════════════════════════
 const API_BASE =
-  import.meta.env.VITE_API_URL ||
-  "https://backend-1-ghrv.onrender.com/api";
+  import.meta.env.VITE_API_URL || "https://backend-1-ghrv.onrender.com/api";
 
 const teamAPI = {
   /**
@@ -51,7 +56,7 @@ const teamAPI = {
       if (!response.ok) {
         const errorBody = await response.json().catch(() => ({}));
         throw new Error(
-          errorBody.message || `Request failed with status ${response.status}`
+          errorBody.message || `Request failed with status ${response.status}`,
         );
       }
 
@@ -60,7 +65,11 @@ const teamAPI = {
       clearTimeout(timeout);
 
       // Retry on network errors (not on 4xx/5xx)
-      if (retries > 0 && err.name !== "AbortError" && !err.message.includes("status")) {
+      if (
+        retries > 0 &&
+        err.name !== "AbortError" &&
+        !err.message.includes("status")
+      ) {
         await new Promise((r) => setTimeout(r, 1000));
         return this._fetch(endpoint, options, retries - 1);
       }
@@ -73,8 +82,8 @@ const teamAPI = {
   async getAll(params = {}) {
     const query = new URLSearchParams(
       Object.fromEntries(
-        Object.entries(params).filter(([, v]) => v !== undefined && v !== "")
-      )
+        Object.entries(params).filter(([, v]) => v !== undefined && v !== ""),
+      ),
     ).toString();
     return this._fetch(`/team${query ? `?${query}` : ""}`);
   },
@@ -117,7 +126,11 @@ const FALLBACK_MEMBERS = [
     department: "Leadership",
     image_url: "https://randomuser.me/api/portraits/men/32.jpg",
     bio: "Visionary entrepreneur leading Altuvera's mission to deliver transformative travel experiences across East Africa.",
-    expertise: ["Strategic Planning", "Tourism Innovation", "Partnership Development"],
+    expertise: [
+      "Strategic Planning",
+      "Tourism Innovation",
+      "Partnership Development",
+    ],
     languages: ["English", "French", "Kinyarwanda"],
     certifications: [],
     years_experience: 12,
@@ -143,7 +156,11 @@ const FALLBACK_MEMBERS = [
     department: "Operations",
     image_url: "https://randomuser.me/api/portraits/women/44.jpg",
     bio: "Ensures seamless coordination of every itinerary with precision, local expertise, and attention to detail.",
-    expertise: ["Logistics Management", "Quality Assurance", "Team Coordination"],
+    expertise: [
+      "Logistics Management",
+      "Quality Assurance",
+      "Team Coordination",
+    ],
     languages: ["English", "Swahili"],
     certifications: [],
     years_experience: 8,
@@ -169,7 +186,11 @@ const FALLBACK_MEMBERS = [
     department: "Guides",
     image_url: "https://randomuser.me/api/portraits/men/67.jpg",
     bio: "Expert wildlife guide combining extensive field knowledge with exceptional safety standards for unforgettable expeditions.",
-    expertise: ["Wildlife Tracking", "Bird Identification", "Conservation Education"],
+    expertise: [
+      "Wildlife Tracking",
+      "Bird Identification",
+      "Conservation Education",
+    ],
     languages: ["English", "Swahili", "French"],
     certifications: ["Certified Safari Guide", "Wilderness First Aid"],
     years_experience: 15,
@@ -221,7 +242,11 @@ const FALLBACK_MEMBERS = [
     department: "Conservation",
     image_url: "https://randomuser.me/api/portraits/men/52.jpg",
     bio: "Manages partnerships with wildlife conservancies and oversees community development initiatives across the region.",
-    expertise: ["Conservation Strategy", "Community Engagement", "Sustainability"],
+    expertise: [
+      "Conservation Strategy",
+      "Community Engagement",
+      "Sustainability",
+    ],
     languages: ["English", "Rukiga"],
     certifications: ["Conservation Management Certificate"],
     years_experience: 10,
@@ -282,22 +307,129 @@ const TeamCardSkeleton = ({ styles }) => (
     <div style={styles.skeletonImageContainer}>
       <div style={styles.skeletonImage} />
     </div>
-    <div style={{ ...styles.skeletonText, width: "70%", height: "24px", margin: "0 auto 8px" }} />
-    <div style={{ ...styles.skeletonText, width: "50%", height: "16px", margin: "0 auto 12px" }} />
-    <div style={{ ...styles.skeletonText, width: "40%", height: "22px", margin: "0 auto 14px", borderRadius: "50px" }} />
-    <div style={{ ...styles.skeletonText, width: "90%", height: "14px", margin: "0 auto 6px" }} />
-    <div style={{ ...styles.skeletonText, width: "80%", height: "14px", margin: "0 auto 6px" }} />
-    <div style={{ ...styles.skeletonText, width: "70%", height: "14px", margin: "0 auto 16px" }} />
-    <div style={{ display: "flex", justifyContent: "center", gap: "8px", marginBottom: "14px" }}>
-      <div style={{ ...styles.skeletonText, width: "60px", height: "22px", borderRadius: "6px" }} />
-      <div style={{ ...styles.skeletonText, width: "60px", height: "22px", borderRadius: "6px" }} />
-      <div style={{ ...styles.skeletonText, width: "60px", height: "22px", borderRadius: "6px" }} />
+    <div
+      style={{
+        ...styles.skeletonText,
+        width: "70%",
+        height: "24px",
+        margin: "0 auto 8px",
+      }}
+    />
+    <div
+      style={{
+        ...styles.skeletonText,
+        width: "50%",
+        height: "16px",
+        margin: "0 auto 12px",
+      }}
+    />
+    <div
+      style={{
+        ...styles.skeletonText,
+        width: "40%",
+        height: "22px",
+        margin: "0 auto 14px",
+        borderRadius: "50px",
+      }}
+    />
+    <div
+      style={{
+        ...styles.skeletonText,
+        width: "90%",
+        height: "14px",
+        margin: "0 auto 6px",
+      }}
+    />
+    <div
+      style={{
+        ...styles.skeletonText,
+        width: "80%",
+        height: "14px",
+        margin: "0 auto 6px",
+      }}
+    />
+    <div
+      style={{
+        ...styles.skeletonText,
+        width: "70%",
+        height: "14px",
+        margin: "0 auto 16px",
+      }}
+    />
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        gap: "8px",
+        marginBottom: "14px",
+      }}
+    >
+      <div
+        style={{
+          ...styles.skeletonText,
+          width: "60px",
+          height: "22px",
+          borderRadius: "6px",
+        }}
+      />
+      <div
+        style={{
+          ...styles.skeletonText,
+          width: "60px",
+          height: "22px",
+          borderRadius: "6px",
+        }}
+      />
+      <div
+        style={{
+          ...styles.skeletonText,
+          width: "60px",
+          height: "22px",
+          borderRadius: "6px",
+        }}
+      />
     </div>
-    <div style={{ ...styles.skeletonText, width: "45%", height: "14px", margin: "0 auto 16px" }} />
-    <div style={{ display: "flex", justifyContent: "center", gap: "10px", paddingTop: "16px", borderTop: "1px solid #F3F4F6" }}>
-      <div style={{ ...styles.skeletonText, width: "40px", height: "40px", borderRadius: "50%" }} />
-      <div style={{ ...styles.skeletonText, width: "40px", height: "40px", borderRadius: "50%" }} />
-      <div style={{ ...styles.skeletonText, width: "40px", height: "40px", borderRadius: "50%" }} />
+    <div
+      style={{
+        ...styles.skeletonText,
+        width: "45%",
+        height: "14px",
+        margin: "0 auto 16px",
+      }}
+    />
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        gap: "10px",
+        paddingTop: "16px",
+        borderTop: "1px solid #F3F4F6",
+      }}
+    >
+      <div
+        style={{
+          ...styles.skeletonText,
+          width: "40px",
+          height: "40px",
+          borderRadius: "50%",
+        }}
+      />
+      <div
+        style={{
+          ...styles.skeletonText,
+          width: "40px",
+          height: "40px",
+          borderRadius: "50%",
+        }}
+      />
+      <div
+        style={{
+          ...styles.skeletonText,
+          width: "40px",
+          height: "40px",
+          borderRadius: "50%",
+        }}
+      />
     </div>
   </div>
 );
@@ -313,16 +445,44 @@ const TeamCard = ({ member, styles }) => {
   const imageSrc = member.image_url || member.image;
   const expertise = Array.isArray(member.expertise) ? member.expertise : [];
   const languages = Array.isArray(member.languages) ? member.languages : [];
-  const certifications = Array.isArray(member.certifications) ? member.certifications : [];
+  const certifications = Array.isArray(member.certifications)
+    ? member.certifications
+    : [];
 
   // Count how many social links exist (for layout)
   const socialLinks = [
-    member.linkedin_url && { href: member.linkedin_url, icon: <FiLinkedin size={16} />, label: "LinkedIn" },
-    member.twitter_url && { href: member.twitter_url, icon: <FiTwitter size={16} />, label: "Twitter" },
-    member.instagram_url && { href: member.instagram_url, icon: <FiInstagram size={16} />, label: "Instagram" },
-    member.website_url && { href: member.website_url, icon: <FiExternalLink size={16} />, label: "Website" },
-    member.email && { href: `mailto:${member.email}`, icon: <FiMail size={16} />, label: "Email", external: false },
-    member.phone && { href: `tel:${member.phone}`, icon: <FiPhone size={16} />, label: "Phone", external: false },
+    member.linkedin_url && {
+      href: member.linkedin_url,
+      icon: <FiLinkedin size={16} />,
+      label: "LinkedIn",
+    },
+    member.twitter_url && {
+      href: member.twitter_url,
+      icon: <FiTwitter size={16} />,
+      label: "Twitter",
+    },
+    member.instagram_url && {
+      href: member.instagram_url,
+      icon: <FiInstagram size={16} />,
+      label: "Instagram",
+    },
+    member.website_url && {
+      href: member.website_url,
+      icon: <FiExternalLink size={16} />,
+      label: "Website",
+    },
+    member.email && {
+      href: `mailto:${member.email}`,
+      icon: <FiMail size={16} />,
+      label: "Email",
+      external: false,
+    },
+    member.phone && {
+      href: `tel:${member.phone}`,
+      icon: <FiPhone size={16} />,
+      label: "Phone",
+      external: false,
+    },
   ].filter(Boolean);
 
   // Generate initials for fallback avatar
@@ -454,7 +614,9 @@ const TeamCard = ({ member, styles }) => {
             <FiAward size={12} style={{ flexShrink: 0, color: "#D97706" }} />
             <span style={styles.certificationsText}>
               {certifications[0]}
-              {certifications.length > 1 ? ` +${certifications.length - 1}` : ""}
+              {certifications.length > 1
+                ? ` +${certifications.length - 1}`
+                : ""}
             </span>
           </div>
         )}
@@ -520,16 +682,34 @@ const StatsSection = ({ styles }) => {
       }
     };
     fetchStats();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const data = stats || FALLBACK_STATS;
 
   const items = [
-    { icon: <FiUsers size={28} />, value: `${data.total_members || 3}+`, label: "Team Members" },
-    { icon: <FiGlobe size={28} />, value: `${data.countries_covered || 2}`, label: "Countries Covered" },
-    { icon: <FiAward size={28} />, value: `${data.combined_experience || 5}+`, label: "Years Combined Experience" },
-    { icon: <FiHeart size={28} />, value: `${data.happy_travelers || "2"}+`, label: "Happy Travelers" },
+    {
+      icon: <FiUsers size={28} />,
+      value: `${data.total_members || 3}+`,
+      label: "Team Members",
+    },
+    {
+      icon: <FiGlobe size={28} />,
+      value: `${data.countries_covered || 2}`,
+      label: "Countries Covered",
+    },
+    {
+      icon: <FiAward size={28} />,
+      value: `${data.combined_experience || 5}+`,
+      label: "Years Combined Experience",
+    },
+    {
+      icon: <FiHeart size={28} />,
+      value: `${data.happy_travelers || "2"}+`,
+      label: "Happy Travelers",
+    },
   ];
 
   return (
@@ -555,7 +735,13 @@ const StatsSection = ({ styles }) => {
 // ══════════════════════════════════════════════════════════════════════════════
 // DEPARTMENT FILTER
 // ══════════════════════════════════════════════════════════════════════════════
-const DepartmentFilter = ({ departments, activeFilter, onFilterChange, memberCounts, styles }) => {
+const DepartmentFilter = ({
+  departments,
+  activeFilter,
+  onFilterChange,
+  memberCounts,
+  styles,
+}) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   // On mobile, show a collapsible list
@@ -577,36 +763,22 @@ const DepartmentFilter = ({ departments, activeFilter, onFilterChange, memberCou
           <span style={styles.filterCount}>{memberCounts.all}</span>
         )}
       </button>
-
-      {visibleDepartments.map((dept) => (
-        <button
-          key={dept}
-          style={{
-            ...styles.filterButton,
-            ...(activeFilter === dept ? styles.filterButtonActive : {}),
-          }}
-          onClick={() => onFilterChange(dept)}
-          aria-pressed={activeFilter === dept}
+      {departments.map((dept) => (
+          <button
+          key={dept.name}
+          onClick={() => onFilterChange(dept.name)}
         >
-          {dept}
-          {(memberCounts[dept] || 0) > 0 && (
-            <span
-              style={{
-                ...styles.filterCount,
-                ...(activeFilter === dept ? styles.filterCountActive : {}),
-              }}
-            >
-              {memberCounts[dept]}
-            </span>
-          )}
+          {dept.name}
+          {dept.memberCount > 0 && <span>({dept.memberCount})</span>}
         </button>
       ))}
-
       {hasMore && (
         <button
           style={styles.filterExpandButton}
           onClick={() => setIsExpanded(!isExpanded)}
-          aria-label={isExpanded ? "Show fewer departments" : "Show more departments"}
+          aria-label={
+            isExpanded ? "Show fewer departments" : "Show more departments"
+          }
         >
           <FiChevronDown
             size={16}
@@ -627,7 +799,10 @@ const DepartmentFilter = ({ departments, activeFilter, onFilterChange, memberCou
 // ══════════════════════════════════════════════════════════════════════════════
 const ErrorState = ({ message, onRetry, styles }) => (
   <div style={styles.errorContainer}>
-    <FiAlertCircle size={40} style={{ color: "#DC2626", marginBottom: "16px" }} />
+    <FiAlertCircle
+      size={40}
+      style={{ color: "#DC2626", marginBottom: "16px" }}
+    />
     <p style={styles.errorText}>{message}</p>
     <button style={styles.retryButton} onClick={onRetry}>
       <FiRefreshCw size={16} />
@@ -692,19 +867,24 @@ const TeamContent = () => {
         setMembers(memberArray);
         setFilteredMembers(memberArray);
       } else {
-        throw new Error(membersRes.reason?.message || "Failed to fetch team members");
+        throw new Error(
+          membersRes.reason?.message || "Failed to fetch team members",
+        );
       }
 
       // Departments
       if (departmentsRes.status === "fulfilled") {
-        const deptData = departmentsRes.value.data || departmentsRes.value || [];
+        const deptData =
+          departmentsRes.value.data || departmentsRes.value || [];
         setDepartments(Array.isArray(deptData) ? deptData : []);
       }
       // If departments fail, derive from members
       else if (membersRes.status === "fulfilled") {
         const teamData = membersRes.value.data || membersRes.value || [];
         const memberArray = Array.isArray(teamData) ? teamData : [];
-        const derived = [...new Set(memberArray.map((m) => m.department).filter(Boolean))].sort();
+        const derived = [
+          ...new Set(memberArray.map((m) => m.department).filter(Boolean)),
+        ].sort();
         setDepartments(derived);
       }
     } catch (err) {
@@ -714,7 +894,9 @@ const TeamContent = () => {
       setMembers(FALLBACK_MEMBERS);
       setFilteredMembers(FALLBACK_MEMBERS);
       setDepartments(
-        [...new Set(FALLBACK_MEMBERS.map((m) => m.department).filter(Boolean))].sort()
+        [
+          ...new Set(FALLBACK_MEMBERS.map((m) => m.department).filter(Boolean)),
+        ].sort(),
       );
       setUsingFallback(true);
     } finally {
@@ -737,8 +919,10 @@ const TeamContent = () => {
     } else {
       setFilteredMembers(
         members.filter(
-          (m) => m.department && m.department.toLowerCase() === activeFilter.toLowerCase()
-        )
+          (m) =>
+            m.department &&
+            m.department.toLowerCase() === activeFilter.toLowerCase(),
+        ),
       );
     }
   }, [activeFilter, members]);
@@ -767,7 +951,8 @@ const TeamContent = () => {
     // Section
     section: {
       padding: "100px 24px",
-      background: "linear-gradient(180deg, #FFFFFF 0%, #F0FDF4 50%, #ECFDF5 100%)",
+      background:
+        "linear-gradient(180deg, #FFFFFF 0%, #F0FDF4 50%, #ECFDF5 100%)",
       position: "relative",
       overflow: "hidden",
     },
@@ -1009,7 +1194,8 @@ const TeamContent = () => {
     shimmer: {
       position: "absolute",
       inset: 0,
-      backgroundImage: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%)",
+      backgroundImage:
+        "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.5) 50%, transparent 100%)",
       backgroundSize: "200% 100%",
       animation: "teamShimmer 1.5s infinite linear",
     },
@@ -1176,13 +1362,15 @@ const TeamContent = () => {
       height: "100%",
       borderRadius: "50%",
       backgroundColor: "#E5E7EB",
-      backgroundImage: "linear-gradient(90deg, #E5E7EB 0%, #F3F4F6 50%, #E5E7EB 100%)",
+      backgroundImage:
+        "linear-gradient(90deg, #E5E7EB 0%, #F3F4F6 50%, #E5E7EB 100%)",
       backgroundSize: "200% 100%",
       animation: "teamShimmer 1.5s infinite linear",
     },
     skeletonText: {
       backgroundColor: "#E5E7EB",
-      backgroundImage: "linear-gradient(90deg, #E5E7EB 0%, #F3F4F6 50%, #E5E7EB 100%)",
+      backgroundImage:
+        "linear-gradient(90deg, #E5E7EB 0%, #F3F4F6 50%, #E5E7EB 100%)",
       backgroundSize: "200% 100%",
       animation: "teamShimmer 1.5s infinite linear",
       borderRadius: "6px",
@@ -1353,7 +1541,10 @@ const TeamContent = () => {
           <AnimatedSection animation="fadeInUp">
             <div style={styles.fallbackBanner}>
               <FiAlertCircle size={16} />
-              <span>Showing preview data — live data will load when the server is available.</span>
+              <span>
+                Showing preview data — live data will load when the server is
+                available.
+              </span>
               <button
                 onClick={handleRetry}
                 style={{
@@ -1391,11 +1582,7 @@ const TeamContent = () => {
         {/* Error State */}
         {error && (
           <AnimatedSection animation="fadeInUp">
-            <ErrorState
-              message={error}
-              onRetry={handleRetry}
-              styles={styles}
-            />
+            <ErrorState message={error} onRetry={handleRetry} styles={styles} />
           </AnimatedSection>
         )}
 
@@ -1403,7 +1590,11 @@ const TeamContent = () => {
         <div style={styles.grid} className="team-grid" role="list">
           {loading
             ? [...Array(6)].map((_, index) => (
-                <AnimatedSection key={`skeleton-${index}`} animation="fadeInUp" delay={index * 0.08}>
+                <AnimatedSection
+                  key={`skeleton-${index}`}
+                  animation="fadeInUp"
+                  delay={index * 0.08}
+                >
                   <TeamCardSkeleton styles={styles} />
                 </AnimatedSection>
               ))

@@ -47,22 +47,34 @@ export const useAuthStats = () => {
         }
 
         // Fetch platform rating
+        // Backend may be temporarily down; keep defaults without polluting error state.
         let rating = 4.9;
         try {
           const ratingRes = await api.get('/reviews/stats');
-          rating = ratingRes.data?.data?.averageRating || 4.9;
-        } catch {
-          // Fallback to hardcoded if endpoint doesn't exist
+          rating = ratingRes.data?.data?.averageRating ?? rating;
+        } catch (ratingErr) {
+          // Silence failures; hook will still resolve with defaults.
+          if (ratingErr?.name !== 'AbortError') {
+            console.warn(
+              '[useAuthStats] /reviews/stats failed, using default rating:',
+              ratingErr?.message || ratingErr
+            );
+          }
           rating = 4.9;
         }
 
+
+
+
         // Format the stats for display
+
         const formatCount = (num) => {
           if (num >= 1000) {
             return `${(num / 1000).toFixed(1).replace(/\.0$/, '')}K+`;
           }
           return `${num}+`;
         };
+
 
         setStats({
           countries: countriesCount.toString(),

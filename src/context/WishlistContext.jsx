@@ -8,6 +8,7 @@ import React, {
   useState,
 } from "react";
 import { useUserAuth } from "./UserAuthContext";
+import { useToast } from "./ToastContext";
 
 const STORAGE_KEY = "altuvera_wishlist_ids";
 
@@ -33,6 +34,7 @@ const saveToStorage = (set) => {
 
 export function WishlistProvider({ children }) {
   const { isAuthenticated, openModal } = useUserAuth();
+  const toast = useToast();
   const [wishlistIds, setWishlistIds] = useState(() => new Set());
   const [loaded, setLoaded] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -80,6 +82,10 @@ export function WishlistProvider({ children }) {
     (destinationId) => {
       if (!destinationId) return;
       if (!isAuthenticated) {
+        toast.info(
+          "Sign in to save this destination to your wishlist.",
+          { title: "Login required" },
+        );
         openModal("login");
         return;
       }
@@ -88,14 +94,16 @@ export function WishlistProvider({ children }) {
         const next = new Set(prev);
         if (next.has(destinationId)) {
           next.delete(destinationId);
+          toast.success("Destination removed from your wishlist.");
         } else {
           next.add(destinationId);
+          toast.success("Destination added to your wishlist.");
         }
         saveToStorage(next);
         return next;
       });
     },
-    [isAuthenticated, openModal],
+    [isAuthenticated, openModal, toast],
   );
 
   const isWishlisted = useCallback(
