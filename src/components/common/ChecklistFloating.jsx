@@ -1,57 +1,60 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { CheckCircle } from 'lucide-react';
 import PackageChecklist from './PackageChecklist';
 import './ChecklistFloating.css';
 
-const ChecklistFloating = ({
-  triggerSelector = '[data-download-trigger]',
-  threshold = 0.1,
-} = {}) => {
-  const [triggerVisible, setTriggerVisible] = useState(false);
+const ChecklistFloating = () => {
   const [open, setOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const lastScrollY = useRef(
+    typeof window !== 'undefined' ? window.scrollY : 0,
+  );
 
   useEffect(() => {
-    let observer;
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      const delta = currentScrollY - lastScrollY.current;
 
-    const observeTrigger = () => {
-      const trigger = document.querySelector(triggerSelector);
-      if (!trigger) return false;
+      if (delta > 15 && currentScrollY > 100) {
+        setIsVisible(true);
+      } else if (delta < -15 || currentScrollY < 100) {
+        setIsVisible(false);
+      }
 
-      observer = new IntersectionObserver(
-        ([entry]) => setTriggerVisible(entry.isIntersecting),
-        { threshold },
-      );
-
-      observer.observe(trigger);
-      return true;
+      lastScrollY.current = currentScrollY;
     };
 
-    if (!observeTrigger()) {
-      const id = setInterval(() => {
-        if (observeTrigger()) clearInterval(id);
-      }, 250);
-      return () => clearInterval(id);
-    }
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
 
-    return () => observer?.disconnect();
-  }, [triggerSelector, threshold]);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <>
-      <button
-        className={`cf-button ${triggerVisible ? 'cf-visible' : ''}`}
-        onClick={() => setOpen(true)}
-        aria-label="Open checklist"
-        title="Open packing checklist"
-      >
-        Checklist
-      </button>
+      {/* Floating Action Button */}
+      {isVisible && (
+        <button
+          className="cf-fab"
+          onClick={() => setOpen(true)}
+          aria-label="Open checklist"
+        >
+          <CheckCircle size={18} />
+        </button>
+      )}
 
+      {/* Modal */}
       {open && (
         <div className="cf-modal" role="dialog" aria-modal="true">
-          <div className="cf-modal__bg" onClick={() => setOpen(false)} />
-          <div className="cf-modal__content">
-            <button className="cf-close" onClick={() => setOpen(false)} aria-label="Close checklist">×</button>
-            <div className="cf-modal__body">
+          <div className="cf-overlay" onClick={() => setOpen(false)} />
+
+          <div className="cf-container">
+            <div className="cf-header">
+              <h3>Travel Checklist</h3>
+              <button onClick={() => setOpen(false)} className="cf-close">×</button>
+            </div>
+
+            <div className="cf-body">
               <PackageChecklist tourData={{ tourName: 'Your Trip Checklist' }} />
             </div>
           </div>

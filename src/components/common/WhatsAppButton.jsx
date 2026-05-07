@@ -56,289 +56,176 @@ const PRESET_MESSAGES = [
 ];
 
 // ============================================================
-// LOCAL NOTIFICATION TRACKER
+// SCROLL VISIBILITY STATE
 // ============================================================
-class NotificationTracker {
-  constructor() {
-    this.storageKey = "altuvera_wa_state";
-  }
-
-  getState() {
-    try {
-      const raw = localStorage.getItem(this.storageKey);
-      if (!raw) return this._defaultState();
-      return JSON.parse(raw);
-    } catch {
-      return this._defaultState();
-    }
-  }
-
-  setState(updates) {
-    const current = this.getState();
-    const next = { ...current, ...updates, lastUpdated: Date.now() };
-    localStorage.setItem(this.storageKey, JSON.stringify(next));
-    return next;
-  }
-
-  recordMessageSent() {
-    const state = this.getState();
-    return this.setState({
-      messagesSent: (state.messagesSent || 0) + 1,
-      lastMessageSent: Date.now(),
-      hasInteracted: true,
-      // After user sends a message, expect a reply badge after delay
-      expectReplyAfter: Date.now() + 30000, // 30 seconds
-    });
-  }
-
-  recordWidgetOpened() {
-    return this.setState({
-      widgetOpened: true,
-      lastOpened: Date.now(),
-      pendingBadge: false,
-    });
-  }
-
-  shouldShowBadge() {
-    const state = this.getState();
-    // Show badge if user sent a message and enough time passed
-    if (
-      state.expectReplyAfter &&
-      Date.now() > state.expectReplyAfter &&
-      !state.pendingBadge
-    ) {
-      this.setState({ pendingBadge: true });
-      return true;
-    }
-    // Show badge on first visit after 10 seconds
-    if (!state.hasInteracted && !state.widgetOpened) {
-      return true;
-    }
-    return state.pendingBadge || false;
-  }
-
-  dismissBadge() {
-    this.setState({ pendingBadge: false, expectReplyAfter: null });
-  }
-
-  _defaultState() {
-    return {
-      messagesSent: 0,
-      lastMessageSent: null,
-      hasInteracted: false,
-      widgetOpened: false,
-      lastOpened: null,
-      pendingBadge: false,
-      expectReplyAfter: null,
-      lastUpdated: Date.now(),
-    };
-  }
-}
-
-const tracker = new NotificationTracker();
+// We keep the WhatsApp button minimal and visible only when the user scrolls up.
 
 // ============================================================
-// SVG ICONS — Clean, crisp
+// REMOTE ICON FETCHER — modern CDN icons
 // ============================================================
+const ICONIFY_MAP = {
+  WhatsApp: 'logos:whatsapp',
+  Close: 'akar-icons:cross',
+  Send: 'mdi:send',
+  User: 'mdi:account-circle-outline',
+  MessageSquare: 'mdi:message-text-outline',
+  Chat: 'mdi:chat-processing-outline',
+  Phone: 'mdi:phone-outline',
+  Shield: 'mdi:shield-check-outline',
+  Rocket: 'mdi:rocket-launch-outline',
+  ArrowRight: 'mdi:arrow-right-bold',
+  ArrowLeft: 'mdi:arrow-left-bold',
+  Check: 'mdi:check-bold',
+  ExternalLink: 'mdi:open-in-new',
+  Clock: 'mdi:clock-time-five-outline',
+};
+
+const getIconifyUrl = (name, size, color) => {
+  const icon = ICONIFY_MAP[name];
+  const hex = (color || '#000').replace(/^#/, '');
+  return `https://api.iconify.design/${icon}.svg?color=%23${encodeURIComponent(hex)}&width=${size}&height=${size}`;
+};
+
 const Icons = {
-  WhatsApp: ({ size = 24, color = "#fff" }) => (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
-    </svg>
-  ),
-  Close: ({ size = 20, color = "#128C7E" }) => (
-    <svg
+  WhatsApp: ({ size = 24, color = '#fff' }) => (
+    <img
+      src={getIconifyUrl('WhatsApp', size, color)}
+      alt="WhatsApp icon"
       width={size}
       height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="18" y1="6" x2="6" y2="18" />
-      <line x1="6" y1="6" x2="18" y2="18" />
-    </svg>
+      style={{ display: 'block' }}
+      loading="lazy"
+    />
   ),
-  Send: ({ size = 20, color = "#fff" }) => (
-    <svg
+  Close: ({ size = 20, color = '#128C7E' }) => (
+    <img
+      src={getIconifyUrl('Close', size, color)}
+      alt="Close icon"
       width={size}
       height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="22" y1="2" x2="11" y2="13" />
-      <polygon points="22 2 15 22 11 13 2 9 22 2" />
-    </svg>
+      style={{ display: 'block' }}
+      loading="lazy"
+    />
   ),
-  User: ({ size = 16, color = "#25D366" }) => (
-    <svg
+  Send: ({ size = 20, color = '#fff' }) => (
+    <img
+      src={getIconifyUrl('Send', size, color)}
+      alt="Send icon"
       width={size}
       height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-      <circle cx="12" cy="7" r="4" />
-    </svg>
+      style={{ display: 'block' }}
+      loading="lazy"
+    />
   ),
-  MessageSquare: ({ size = 16, color = "#25D366" }) => (
-    <svg
+  User: ({ size = 16, color = '#25D366' }) => (
+    <img
+      src={getIconifyUrl('User', size, color)}
+      alt="User icon"
       width={size}
       height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-    </svg>
+      style={{ display: 'block' }}
+      loading="lazy"
+    />
   ),
-  Chat: ({ size = 22, color = "#fff" }) => (
-    <svg
+  MessageSquare: ({ size = 16, color = '#25D366' }) => (
+    <img
+      src={getIconifyUrl('MessageSquare', size, color)}
+      alt="Message icon"
       width={size}
       height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-    </svg>
+      style={{ display: 'block' }}
+      loading="lazy"
+    />
   ),
-  Phone: ({ size = 14, color = "#128C7E" }) => (
-    <svg
+  Chat: ({ size = 22, color = '#fff' }) => (
+    <img
+      src={getIconifyUrl('Chat', size, color)}
+      alt="Chat icon"
       width={size}
       height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
-    </svg>
+      style={{ display: 'block' }}
+      loading="lazy"
+    />
   ),
-  Shield: ({ size = 14, color = "#25D366" }) => (
-    <svg
+  Phone: ({ size = 14, color = '#128C7E' }) => (
+    <img
+      src={getIconifyUrl('Phone', size, color)}
+      alt="Phone icon"
       width={size}
       height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-      <polyline points="9 12 11 14 15 10" />
-    </svg>
+      style={{ display: 'block' }}
+      loading="lazy"
+    />
   ),
-  Rocket: ({ size = 40, color = "#fff" }) => (
-    <svg
+  Shield: ({ size = 14, color = '#25D366' }) => (
+    <img
+      src={getIconifyUrl('Shield', size, color)}
+      alt="Shield icon"
       width={size}
       height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z" />
-      <path d="M12 15l-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z" />
-      <path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0" />
-      <path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5" />
-    </svg>
+      style={{ display: 'block' }}
+      loading="lazy"
+    />
   ),
-  ArrowRight: ({ size = 18, color = "#128C7E" }) => (
-    <svg
+  Rocket: ({ size = 40, color = '#fff' }) => (
+    <img
+      src={getIconifyUrl('Rocket', size, color)}
+      alt="Rocket icon"
       width={size}
       height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="5" y1="12" x2="19" y2="12" />
-      <polyline points="12 5 19 12 12 19" />
-    </svg>
+      style={{ display: 'block' }}
+      loading="lazy"
+    />
   ),
-  ArrowLeft: ({ size = 16, color = "#128C7E" }) => (
-    <svg
+  ArrowRight: ({ size = 18, color = '#128C7E' }) => (
+    <img
+      src={getIconifyUrl('ArrowRight', size, color)}
+      alt="Right arrow icon"
       width={size}
       height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="2.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <line x1="19" y1="12" x2="5" y2="12" />
-      <polyline points="12 19 5 12 12 5" />
-    </svg>
+      style={{ display: 'block' }}
+      loading="lazy"
+    />
   ),
-  Check: ({ size = 12, color = "#fff" }) => (
-    <svg
+  ArrowLeft: ({ size = 16, color = '#128C7E' }) => (
+    <img
+      src={getIconifyUrl('ArrowLeft', size, color)}
+      alt="Left arrow icon"
       width={size}
       height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="3"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
+      style={{ display: 'block' }}
+      loading="lazy"
+    />
   ),
-  ExternalLink: ({ size = 14, color = "#128C7E" }) => (
-    <svg
+  Check: ({ size = 12, color = '#fff' }) => (
+    <img
+      src={getIconifyUrl('Check', size, color)}
+      alt="Check icon"
       width={size}
       height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-      <polyline points="15 3 21 3 21 9" />
-      <line x1="10" y1="14" x2="21" y2="3" />
-    </svg>
+      style={{ display: 'block' }}
+      loading="lazy"
+    />
   ),
-  Clock: ({ size = 14, color = "#25D366" }) => (
-    <svg
+  ExternalLink: ({ size = 14, color = '#128C7E' }) => (
+    <img
+      src={getIconifyUrl('ExternalLink', size, color)}
+      alt="External link icon"
       width={size}
       height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="10" />
-      <polyline points="12 6 12 12 16 14" />
-    </svg>
+      style={{ display: 'block' }}
+      loading="lazy"
+    />
+  ),
+  Clock: ({ size = 14, color = '#25D366' }) => (
+    <img
+      src={getIconifyUrl('Clock', size, color)}
+      alt="Clock icon"
+      width={size}
+      height={size}
+      style={{ display: 'block' }}
+      loading="lazy"
+    />
   ),
 };
 
@@ -405,11 +292,12 @@ const WhatsAppButton = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
-  const [showBadge, setShowBadge] = useState(false);
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1200,
   );
-  const badgeTimerRef = useRef(null);
+  const lastScrollY = useRef(
+    typeof window !== "undefined" ? window.scrollY : 0,
+  );
 
   const isMobile = windowWidth < 480;
 
@@ -425,25 +313,23 @@ const WhatsAppButton = () => {
     return () => clearTimeout(showTimer);
   }, []);
 
-  // Badge logic
   useEffect(() => {
-    const checkBadge = () => {
-      if (!isModalOpen) {
-        setShowBadge(tracker.shouldShowBadge());
+    const handleScroll = () => {
+      const currentScroll = window.scrollY;
+      const delta = currentScroll - lastScrollY.current;
+
+      if (delta > 15 && currentScroll > 100) {
+        setIsVisible(false);
+      } else if (delta < -15 || currentScroll < 100) {
+        setIsVisible(true);
       }
+
+      lastScrollY.current = currentScroll;
     };
 
-    // Initial check after 8 seconds
-    badgeTimerRef.current = setTimeout(checkBadge, 8000);
-
-    // Periodic check
-    const interval = setInterval(checkBadge, 15000);
-
-    return () => {
-      if (badgeTimerRef.current) clearTimeout(badgeTimerRef.current);
-      clearInterval(interval);
-    };
-  }, [isModalOpen]);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     if (isModalOpen) {
@@ -471,9 +357,6 @@ const WhatsAppButton = () => {
 
   const handleOpenModal = useCallback(() => {
     setIsModalOpen(true);
-    setShowBadge(false);
-    tracker.recordWidgetOpened();
-    tracker.dismissBadge();
   }, []);
 
   const handleCloseModal = useCallback(() => {
@@ -492,7 +375,6 @@ const WhatsAppButton = () => {
     setIsSending(true);
     setShowSuccess(true);
     fireConfetti();
-    tracker.recordMessageSent();
     setTimeout(() => {
       window.open(generateWhatsAppURL(), "_blank");
       setIsSending(false);
@@ -509,7 +391,6 @@ const WhatsAppButton = () => {
     setIsSending(true);
     setShowSuccess(true);
     fireConfetti();
-    tracker.recordMessageSent();
 
     setTimeout(() => {
       window.open(generateWhatsAppURL(msg), "_blank");
@@ -519,6 +400,7 @@ const WhatsAppButton = () => {
   }, [selectedPreset, customMessage, generateWhatsAppURL, handleCloseModal]);
 
   const canSend = selectedPreset || customMessage.trim();
+  const showFloatingButton = isVisible && !isModalOpen;
 
   // ============================================================
   // RENDER
@@ -527,7 +409,7 @@ const WhatsAppButton = () => {
     <>
       {/* ═══════════ FLOATING BUTTON ═══════════ */}
       <AnimatePresence>
-        {isVisible && (
+        {showFloatingButton && (
           <motion.div
             style={{
               position: "fixed",
@@ -597,37 +479,6 @@ const WhatsAppButton = () => {
             >
               <Icons.WhatsApp size={isMobile ? 22 : 25} />
 
-              {/* Badge */}
-              <AnimatePresence>
-                {showBadge && (
-                  <motion.div
-                    style={{
-                      position: "absolute",
-                      top: "-5px",
-                      right: "-5px",
-                      width: "20px",
-                      height: "20px",
-                      borderRadius: "50%",
-                      background: "#dc2626",
-                      color: "#fff",
-                      fontSize: "11px",
-                      fontWeight: "800",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      border: "2px solid #fff",
-                      boxShadow: "0 2px 8px rgba(220,38,38,0.5)",
-                      fontFamily: "system-ui, sans-serif",
-                    }}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: [1, 1.2, 1] }}
-                    exit={{ scale: 0 }}
-                    transition={{ duration: 0.8, repeat: Infinity }}
-                  >
-                    1
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </motion.button>
 
             {/* Tooltip */}
