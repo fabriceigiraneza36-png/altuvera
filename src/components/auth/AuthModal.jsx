@@ -29,6 +29,7 @@ import { FcGoogle } from "react-icons/fc";
 import { MdVerified, MdOutlineSecurityUpdateGood } from "react-icons/md";
 import { RiShieldKeyholeLine } from "react-icons/ri";
 import { useUserAuth } from "../../context/UserAuthContext";
+import { useAuthStats } from "../../hooks/useAuthStats";
 import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 import EmailAutocompleteInput from "../common/EmailAutocompleteInput";
 import "./AuthModal.css";
@@ -252,17 +253,6 @@ const SideMediaRotator = ({ intervalMs = 6500 }) => {
       {/* Ken Burns parallax */}
       <div className="auth-side-media__ken-burns" key={`kb-${idx}`} />
 
-      {/* Caption overlay */}
-      <div className="auth-side-media__caption" key={`cap-${idx}`}>
-        <span
-          className="auth-side-media__caption-dot"
-          style={{ background: cur.accent }}
-        />
-        <span className="auth-side-media__caption-text">
-          {cur.caption}
-        </span>
-      </div>
-
       {/* Progress bar */}
       <div className="auth-side-media__progress">
         <div
@@ -291,17 +281,6 @@ const SideMediaRotator = ({ intervalMs = 6500 }) => {
             }
           />
         ))}
-      </div>
-
-      {/* Image counter */}
-      <div className="auth-side-media__counter">
-        <span className="auth-side-media__counter-current">
-          {String(idx + 1).padStart(2, "0")}
-        </span>
-        <span className="auth-side-media__counter-sep">/</span>
-        <span className="auth-side-media__counter-total">
-          {String(SIDE_MEDIA.length).padStart(2, "0")}
-        </span>
       </div>
     </div>
   );
@@ -474,6 +453,9 @@ export default function AuthModal() {
     clearSocialAuthError,
     uploadAvatar,
   } = useUserAuth();
+
+  /* ── Platform Stats ── */
+  const authStats = useAuthStats();
 
   /* ── Form State ── */
   const [form, setForm] = useState({
@@ -1095,9 +1077,10 @@ export default function AuthModal() {
 
             <div className="auth-side-panel__stats">
               {[
-                { value: "1K+", label: "Travelers" },
-                { value: "7+", label: "Destinations" },
-                { value: "4.9★", label: "Rated" },
+                { value: authStats.countries, label: "Countries" },
+                { value: authStats.destinations, label: "Destinations" },
+                { value: authStats.travelers, label: "Travelers" },
+                { value: authStats.rating, label: "Rated" },
               ].map(({ value, label }) => (
                 <div className="auth-side-stat" key={label}>
                   <span className="auth-side-stat__value">

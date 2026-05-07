@@ -432,7 +432,15 @@ export function UserAuthProvider({ children }) {
   // Modal
   // ============================================================================
 
-  const openModal = useCallback((view = "login") => {
+  const openModal = useCallback((view = "login", options = {}) => {
+    const { skipNotLoggedInMessage = false } = options;
+    if (skipNotLoggedInMessage) {
+      setModalView(view);
+      setIsModalOpen(true);
+      document.body.style.overflow = "hidden";
+      return;
+    }
+
     // Show "not logged in" message first
     setShowNotLoggedInMessage(true);
     setTimeout(() => {

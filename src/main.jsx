@@ -11,6 +11,7 @@ import App from "./App.jsx";
 import { AppProvider } from "./context/AppContext.jsx";
 import { UserAuthProvider } from "./context/UserAuthContext.jsx";
 import { WishlistProvider } from "./context/WishlistContext.jsx";
+import { ToastProvider } from "./context/ToastContext.jsx";
 import "./index.css";
 import { generateSvgPlaceholder } from "./utils/placeholderImage";
 
@@ -117,11 +118,13 @@ ReactDOM.createRoot(rootElement).render(
     >
       <HelmetProvider>
         <AppProvider>
-          <UserAuthProvider>
-            <WishlistProvider>
-              <App />
-            </WishlistProvider>
-          </UserAuthProvider>
+          <ToastProvider>
+            <UserAuthProvider>
+              <WishlistProvider>
+                <App />
+              </WishlistProvider>
+            </UserAuthProvider>
+          </ToastProvider>
         </AppProvider>
       </HelmetProvider>
     </BrowserRouter>
