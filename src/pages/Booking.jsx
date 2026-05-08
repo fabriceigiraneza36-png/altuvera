@@ -3335,6 +3335,7 @@ const SuccessScreen = memo(({ isMobile, displayName }) => {
 
 const Booking = () => {
   const { authFetch, user, openModal } = useUserAuth();
+  const { services: servicesData = [] } = useServices();
 
   // Data fetching states
   const [countriesList, setCountriesList] = useState([]);
