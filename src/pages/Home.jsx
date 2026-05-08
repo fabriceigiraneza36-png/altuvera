@@ -21,6 +21,7 @@ import { useUserAuth } from "../context/UserAuthContext";
 import { useDestinations } from "../hooks/useDestinations";
 import { useCountries } from "../hooks/useCountries";
 import { useGallery } from "../hooks/useGallery";
+import { useTestimonials } from "../hooks/useTestimonials";
 import { ArrowLeft, ArrowRight, Quote, Star, MapPin } from "lucide-react";
 import { useWishlist } from "../hooks/useWishlist";
 import { getCountrySlug } from "../utils/countrySlugMap";
