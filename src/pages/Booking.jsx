@@ -258,6 +258,15 @@ const normalizeResponseArray = (value) => {
 const normalizeOptionId = (id) =>
   id === undefined || id === null ? "" : String(id);
 
+const normalizeOptionLabel = (label) => {
+  if (label === undefined || label === null) return "";
+  if (typeof label === "object") {
+    if (Array.isArray(label)) return label.join(", ");
+    return JSON.stringify(label);
+  }
+  return String(label);
+};
+
 const normalizeOptionValue = (value) =>
   value === undefined || value === null ? "" : String(value);
 
@@ -1133,16 +1142,13 @@ const FormSelect = memo(
                 } else if (typeof opt === "object" && opt !== null) {
                   optionId =
                     opt.id || opt.value || opt._id || opt.name || optIndex;
-                  optionLabel =
-                    opt.name ||
-                    opt.title ||
-                    opt.label ||
-                    opt.category ||
-                    String(optionId);
-                  optionFlag = opt.flag || "";
+                  optionLabel = normalizeOptionLabel(
+                    opt.name || opt.title || opt.label || opt.category || optionId,
+                  );
+                  optionFlag = normalizeOptionLabel(opt.flag || "");
                 } else {
                   optionId = optIndex;
-                  optionLabel = String(opt);
+                  optionLabel = normalizeOptionLabel(opt);
                 }
 
                 return (
@@ -1810,7 +1816,7 @@ const StepOne = memo(
                   })
                 : servicesData.map((s) => ({
                     id: s.id || s.value || s.name,
-                    name: s.name || s.title || s,
+                    name: normalizeOptionLabel(s.name || s.title || s),
                   }))
             }
             required
@@ -1945,7 +1951,7 @@ const StepOne = memo(
                       marginBottom: 4,
                     }}
                   >
-                    {dest.name || dest.title}
+                    {normalizeOptionLabel(dest.name || dest.title)}
                   </div>
                   <div
                     style={{
@@ -1953,7 +1959,7 @@ const StepOne = memo(
                       color: formData.destination === (dest.id || dest._id || dest.name) ? "rgba(255,255,255,0.8)" : THEME.textLight,
                     }}
                   >
-                    {dest.location || dest.country}
+                    {normalizeOptionLabel(dest.location || dest.country)}
                   </div>
                 </motion.div>
               ))}
