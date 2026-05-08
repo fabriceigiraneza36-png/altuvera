@@ -1118,8 +1118,7 @@ const ServiceModal = ({ service, onClose }) => {
   useEffect(() => { modalRef.current?.focus(); }, []);
 
   const contacts = useMemo(() => [
-    { href: "tel:+250 792 352 4090702773",           Icon: FiPhone,         label: "+250 780 702 773", ext: true },
-    { href: "mailto:altuverasafari@gmail.com", Icon: FiMail,      label: "Email Us",          ext: true },
+    { href: "tel:+250792352409",           Icon: FiPhone,         label: "+250 792352409", ext: true },
     { href: "/contact",                    Icon: FiMessageCircle, label: "Live Chat",          ext: false },
   ], []);
 

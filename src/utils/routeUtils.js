@@ -27,11 +27,11 @@ export const BRAND_COLORS = {
 };
 
 export const BRAND_CONTACT = {
-  phone: "+250 780 702 773",
-  phoneAlt: "+250 792 352 409",
+  phone: "+250 792352409",
+  phoneAlt: "+250 792352409",
   email: "altuverasafari@gmail.com",
   emailBookings: "fabriceigiraneza36@gmail.com",
-  address: "Altuvera House, Safari Way, Kinigi, Musanze, Rwanda",
+  address: "Musanze, Rwanda",
   whatsapp: "https://wa.me/250792352409",
 };
 

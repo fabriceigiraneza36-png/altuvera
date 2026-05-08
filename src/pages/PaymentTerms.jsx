@@ -61,12 +61,12 @@ import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput"
    ═══════════════════════════════════════════════════════ */
 const ADMIN = {
   name: "IGIRANEZA Fabrice",
-  phone1: "+250 780 702 773",
-  phone2: "+250 792 352 409",
+  phone1: "+250 792352409",
+  phone2: "+250 792352409",
   whatsapp: "+250792352409",
-  whatsappDisplay: "+250 792 352 409",
+  whatsappDisplay: "+250 792352409",
   email: "fabriceigiraneza36@gmail.com",
-  office: "Kigali, Rwanda",
+  office: "Musanze, Rwanda",
 };
 
 /* ═══════════════════════════════════════════════════════

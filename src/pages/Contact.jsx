@@ -116,8 +116,8 @@ const TRUST_STATS = [
 ];
 
 const CONTACT_CARDS = [
-  { icon: FiMapPin, title: "Visit Our Office", lines: ["Altuvera House, Safari Way", "Kinigi, Musanze, Rwanda"], href: "https://maps.google.com/?q=Kinigi+Musanze" },
-  { icon: FiPhone, title: "Call Us", lines: ["+250 780 702 773", "+250 792 352 409"], href: "tel:+250780702773" },
+  { icon: FiMapPin, title: "Visit Our Office", lines: ["Musanze, Rwanda"], href: "https://maps.google.com/?q=Musanze+Rwanda" },
+  { icon: FiPhone, title: "Call Us", lines: ["+250 792352409"], href: "tel:+250792352409" },
   { icon: FiMail, title: "Email Us", lines: ["altuverasafari@gmail.com", "fabriceigiraneza36@gmail.com"], href: "mailto:altuverasafari@gmail.com" },
   { icon: FiClock, title: "Working Hours", lines: ["Mon – Fri: 8 AM – 6 PM EAT", "Sat: 9 AM – 2 PM EAT"] },
 ];
@@ -166,8 +166,8 @@ const FAQS = [
 ];
 
 const QUICK_CHANNELS = [
-  { icon: FaWhatsapp, title: "WhatsApp", subtitle: "Chat instantly", detail: "+250 780 702 773", href: "https://wa.me/250792352409", color: "#25D366" },
-  { icon: FiPhone, title: "Call Us", subtitle: "Speak with an expert", detail: "+250 780 702 773", href: "tel:+250780702773", color: G[700] },
+  { icon: FaWhatsapp, title: "WhatsApp", subtitle: "Chat instantly", detail: "+250 792352409", href: "https://wa.me/250792352409", color: "#25D366" },
+  { icon: FiPhone, title: "Call Us", subtitle: "Speak with an expert", detail: "+250 792352409", href: "tel:+250792352409", color: G[700] },
   { icon: FiMail, title: "Email", subtitle: "Detailed inquiries", detail: "altuverasafari@gmail.com", href: "mailto:altuverasafari@gmail.com", color: "#3B82F6" },
 ];
 
@@ -857,7 +857,7 @@ const Contact = () => {
             <a href="#contact-form" className="ct-btn ct-btn--white">
               <FiSend size={15} /> Send Message
             </a>
-            <a href="tel:+250780702773" className="ct-btn ct-btn--ghost">
+            <a href="tel:+250792352409" className="ct-btn ct-btn--ghost">
               <FiPhone size={15} /> Call Us Now
             </a>
           </motion.div>

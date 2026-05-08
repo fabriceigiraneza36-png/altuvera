@@ -580,27 +580,23 @@ useEffect(() => {
           <div style={styles.column}>
             <h3 style={styles.columnTitle}>Contact Us</h3>
 
-            <div style={styles.contactItem}>
-              <div style={styles.contactIcon}>
-                <FiMapPin size={18} />
-              </div>
-              <span style={styles.contactText}>
-                Altuvera House, Safari Way
-                <br />
-                Musanze, Rwanda
-              </span>
-            </div>
+             <div style={styles.contactItem}>
+               <div style={styles.contactIcon}>
+                 <FiMapPin size={18} />
+               </div>
+               <span style={styles.contactText}>
+                 Musanze, Rwanda
+               </span>
+             </div>
 
-            <div style={styles.contactItem}>
-              <div style={styles.contactIcon}>
-                <FiPhone size={18} />
-              </div>
-              <span style={styles.contactText}>
-                +250 780 702 773
-                <br />
-                +250 792 352 409
-              </span>
-            </div>
+             <div style={styles.contactItem}>
+               <div style={styles.contactIcon}>
+                 <FiPhone size={18} />
+               </div>
+               <span style={styles.contactText}>
+                 +250 792352409
+               </span>
+             </div>
 
             <div style={styles.contactItem}>
               <div style={styles.contactIcon}>

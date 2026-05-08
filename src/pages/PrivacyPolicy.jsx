@@ -220,7 +220,7 @@ const SECTIONS = [
     ],
     contact: {
       email: "altuverasafari@gmail.com",
-      address: "Altuvera House, Safari Way, Kinigi, Musanze, Rwanda",
+      address: "Musanze, Rwanda",
       response: "We aim to respond within 48 hours on business days.",
     },
   },
