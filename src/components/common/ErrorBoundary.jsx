@@ -1,27 +1,20 @@
 // src/components/common/ErrorBoundary.jsx
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   FiAlertTriangle,
   FiRefreshCw,
   FiWifi,
   FiWifiOff,
-  FiXCircle,
-  FiClock,
-  FiCpu,
-  FiShield,
-  FiX,
-  FiCode,
-  FiLayers,
-  FiInfo,
-  FiTerminal,
+  FiCopy,
+  FiCheck,
 } from "react-icons/fi";
 import { useConnection } from "../../context/ConnectionContext";
 import "./ErrorBoundary.css";
 
-/* ═══════════════════════════════════════════════════════════════
-   ERROR BOUNDARY (class wrapper)
-   ═══════════════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════════════
+// ERROR BOUNDARY CLASS
+// ═══════════════════════════════════════════════════════════════
 
 class ErrorBoundary extends React.Component {
   state = { hasError: false, error: null, errorInfo: null, retryCount: 0 };
@@ -45,9 +38,7 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
-      return this.props.fallback ? (
-        this.props.fallback
-      ) : (
+      return this.props.fallback || (
         <ErrorCard
           error={this.state.error}
           errorInfo={this.state.errorInfo}
@@ -60,150 +51,83 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-/* ═══════════════════════════════════════════════════════════════
-   FULL DETAILS POPUP
-   ═══════════════════════════════════════════════════════════════ */
-
-const DetailsPopup = ({ error, errorInfo, timestamp, onClose }) => {
-  const popupRef = useRef(null);
-  const errorMessage = error?.message || error?.toString?.() || "Unknown error";
-  const errorName = error?.name || "Error";
-  const stack = error?.stack || "";
-  const componentStack = errorInfo?.componentStack || "";
-  const timeStr = timestamp.toLocaleString();
-
-  useEffect(() => {
-    const h = (e) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", h);
-    popupRef.current?.querySelector("button")?.focus();
-    return () => window.removeEventListener("keydown", h);
-  }, [onClose]);
-
-  return (
-    <div className="eb-detail-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="eb-detail-popup" ref={popupRef}>
-
-        {/* Header */}
-        <div className="eb-detail-header">
-          <div className="eb-detail-header-left">
-            <span className="eb-detail-header-dot" />
-            <span className="eb-detail-header-title">Full Error Report</span>
-          </div>
-          <button className="eb-detail-close" onClick={onClose} aria-label="Close">
-            <FiX />
-          </button>
-        </div>
-
-        {/* Body */}
-        <div className="eb-detail-body">
-
-          {/* Error message */}
-          <div className="eb-detail-section">
-            <p className="eb-detail-section-label">
-              <FiAlertTriangle /> Error Message
-            </p>
-            <p className="eb-detail-msg">{errorMessage}</p>
-          </div>
-
-          {/* Metadata */}
-          <div className="eb-detail-section">
-            <p className="eb-detail-section-label">
-              <FiInfo /> Details
-            </p>
-            <div className="eb-detail-info-grid">
-              <div className="eb-detail-info-item">
-                <span className="eb-detail-info-label">Name</span>
-                <span className="eb-detail-info-value">{errorName}</span>
-              </div>
-              <div className="eb-detail-info-item">
-                <span className="eb-detail-info-label">Time</span>
-                <span className="eb-detail-info-value">{timeStr}</span>
-              </div>
-              <div className="eb-detail-info-item">
-                <span className="eb-detail-info-label">URL</span>
-                <span className="eb-detail-info-value">{window.location.pathname}</span>
-              </div>
-              <div className="eb-detail-info-item">
-                <span className="eb-detail-info-label">Browser</span>
-                <span className="eb-detail-info-value">
-                  {navigator.userAgent.split(" ").slice(-2).join(" ").substring(0, 30)}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Stack trace */}
-          {stack && (
-            <div className="eb-detail-section">
-              <p className="eb-detail-section-label">
-                <FiTerminal /> Stack Trace
-              </p>
-              <pre className="eb-detail-stack">{stack}</pre>
-            </div>
-          )}
-
-          {/* Component stack */}
-          {componentStack && (
-            <div className="eb-detail-section">
-              <p className="eb-detail-section-label">
-                <FiLayers /> Component Tree
-              </p>
-              <pre className="eb-detail-component">{componentStack.trim()}</pre>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-/* ═══════════════════════════════════════════════════════════════
-   COMPACT ERROR CARD
-   ═══════════════════════════════════════════════════════════════ */
+// ═══════════════════════════════════════════════════════════════
+// ERROR CARD
+// ═══════════════════════════════════════════════════════════════
 
 const ErrorCard = ({ error, errorInfo, retryCount, onRetry }) => {
   const { isOnline, connectionStatus, checkConnection } = useConnection();
   const [isRetrying, setIsRetrying] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
+  const [copied, setCopied] = useState(false);
   const [timestamp] = useState(() => new Date());
 
-  const isNetworkError = !isOnline || connectionStatus === "disconnected";
+  const isNetwork = !isOnline || connectionStatus === "disconnected";
   const maxRetries = 3;
   const canRetry = retryCount < maxRetries;
 
-  const errorMessage = error?.message || error?.toString?.() || "Unknown error";
+  // ── Build full error string ──────────────────────────────────
   const errorName = error?.name || "Error";
+  const errorMessage = error?.message || error?.toString?.() || "Unknown error";
+  const stack = error?.stack || "";
+  const componentStack = errorInfo?.componentStack || "";
+  const url = typeof window !== "undefined" ? window.location.href : "";
+  const timeStr = timestamp.toLocaleString();
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
 
-  const type = isNetworkError
-    ? "network"
-    : error?.name === "ChunkLoadError"
-      ? "chunk"
-      : "runtime";
+  const fullErrorText = [
+    `═══ ERROR REPORT ═══`,
+    ``,
+    `▸ NAME`,
+    `  ${errorName}`,
+    ``,
+    `▸ MESSAGE`,
+    `  ${errorMessage}`,
+    ``,
+    `▸ URL`,
+    `  ${url}`,
+    ``,
+    `▸ TIME`,
+    `  ${timeStr}`,
+    ``,
+    `▸ CONNECTION`,
+    `  ${isNetwork ? "Offline" : "Online"}`,
+    ``,
+    `▸ RETRY ATTEMPTS`,
+    `  ${retryCount} / ${maxRetries}`,
+    ``,
+    `▸ BROWSER`,
+    `  ${ua}`,
+    ...(stack
+      ? [``, `▸ STACK TRACE`, stack]
+      : []),
+    ...(componentStack
+      ? [``, `▸ COMPONENT TREE`, componentStack.trim()]
+      : []),
+    ``,
+    `═══ END REPORT ═══`,
+  ].join("\n");
 
-  const cfg = {
-    network: {
-      icon: <FiWifiOff />,
-      title: "Connection Lost",
-      sub: "Network Error",
-      alertTitle: "You Are Offline",
-      alertDesc: "Check your internet connection and try again.",
-    },
-    chunk: {
-      icon: <FiCpu />,
-      title: "Update Required",
-      sub: "Version Changed",
-      alertTitle: "App Was Updated",
-      alertDesc: "Refresh the page to load the latest version.",
-    },
-    runtime: {
-      icon: <FiAlertTriangle />,
-      title: "Error Detected",
-      sub: "Runtime Exception",
-      alertTitle: "Something Broke",
-      alertDesc: "An unexpected error occurred. View details or retry.",
-    },
-  }[type];
+  // ── Copy handler ─────────────────────────────────────────────
+  const handleCopy = useCallback(async () => {
+    try {
+      await navigator.clipboard.writeText(fullErrorText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    } catch {
+      // Fallback
+      const area = document.createElement("textarea");
+      area.value = fullErrorText;
+      area.style.cssText = "position:fixed;opacity:0";
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand("copy");
+      document.body.removeChild(area);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2200);
+    }
+  }, [fullErrorText]);
 
+  // ── Retry handler ────────────────────────────────────────────
   const handleRetry = useCallback(async () => {
     if (!canRetry || isRetrying) return;
     setIsRetrying(true);
@@ -212,6 +136,7 @@ const ErrorCard = ({ error, errorInfo, retryCount, onRetry }) => {
     onRetry();
   }, [canRetry, isRetrying, onRetry]);
 
+  // ── Connection check ─────────────────────────────────────────
   const handleCheck = useCallback(async () => {
     setIsRetrying(true);
     await checkConnection();
@@ -220,165 +145,166 @@ const ErrorCard = ({ error, errorInfo, retryCount, onRetry }) => {
     if (navigator.onLine) onRetry();
   }, [checkConnection, onRetry]);
 
+  // ── ESC to retry ─────────────────────────────────────────────
   useEffect(() => {
     const h = (e) => {
-      if (e.key === "Escape" && canRetry && !showPopup) handleRetry();
+      if (e.key === "Escape" && canRetry) handleRetry();
     };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
-  }, [handleRetry, canRetry, showPopup]);
-
-  const time = timestamp.toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  });
+  }, [handleRetry, canRetry]);
 
   return (
-    <>
-      <div className="eb-overlay" role="dialog" aria-modal="true">
-        <div className="eb-card">
-          {/* ── Header ─────────────────────────────── */}
-          <div className="eb-top">
-            <div className="eb-top-dots" />
-            <div className={`eb-icon-bubble ${isNetworkError ? "shake" : ""}`}>
-              {cfg.icon}
-              <span className="eb-icon-dot" />
-            </div>
-            <h1 className="eb-title">{cfg.title}</h1>
-            <p className="eb-subtitle">{cfg.sub}</p>
+    <div className="eb-overlay" role="dialog" aria-modal="true">
+      <div className="eb-card">
+
+        {/* ── Header ─────────────────────────────── */}
+        <div className="eb-head">
+          <div className="eb-head-dots" />
+          <div className="eb-icon-wrap">
+            {isNetwork ? <FiWifiOff /> : <FiAlertTriangle />}
+            <span className="eb-icon-badge" />
           </div>
+          <h1 className="eb-h-title">
+            {isNetwork ? "Connection Lost" : "Error Detected"}
+          </h1>
+          <p className="eb-h-sub">
+            {isNetwork ? "Network Unavailable" : "Runtime Exception"}
+          </p>
+        </div>
 
-          {/* ── Body ───────────────────────────────── */}
-          <div className="eb-content">
-            {/* Alert strip */}
-            <div className={`eb-strip ${type === "runtime" ? "is-error" : ""}`}>
-              <div className="eb-strip-icon">
-                <FiShield />
-              </div>
-              <div>
-                <p className="eb-strip-title">{cfg.alertTitle}</p>
-                <p className="eb-strip-desc">{cfg.alertDesc}</p>
-              </div>
-            </div>
+        {/* ── Body ───────────────────────────────── */}
+        <div className="eb-body">
 
-            {/* Error preview */}
-            <div className="eb-err-preview">
-              <div className="eb-err-preview-head">
+          {/* ── Single error container ─────────── */}
+          <div className="eb-error-container">
+            <div className="eb-err-bar">
+              <div className="eb-err-bar-left">
                 <span className="eb-err-dot" />
-                <span className="eb-err-name">{errorName}</span>
+                <span className="eb-err-label">{errorName}</span>
               </div>
-              <p className="eb-err-msg">
-                {errorMessage.length > 120
-                  ? `${errorMessage.substring(0, 120)}…`
-                  : errorMessage}
-              </p>
               <button
-                className="eb-details-btn"
-                onClick={() => setShowPopup(true)}
+                className={`eb-copy-btn ${copied ? "copied" : ""}`}
+                onClick={handleCopy}
+                title="Copy full error report"
               >
-                <FiCode style={{ fontSize: "12px" }} />
-                View Full Details
-                <span className={`eb-details-arrow ${showPopup ? "open" : ""}`}>
-                  ▶
-                </span>
+                {copied ? <FiCheck /> : <FiCopy />}
+                {copied ? "Copied!" : "Copy"}
               </button>
             </div>
 
-            {/* Info chips */}
-            <div className="eb-info-row">
-              <div className="eb-info-chip">
-                <span className="eb-chip-label"><FiClock /> Time</span>
-                <span className="eb-chip-value">{time}</span>
-              </div>
-              <div className="eb-info-chip">
-                <span className="eb-chip-label"><FiWifi /> Status</span>
-                <span className="eb-chip-value">
-                  {isNetworkError ? "Offline" : "Online"}
+            <div className="eb-err-content">
+              <div className="eb-err-text">
+
+                {/* Error message */}
+                <span className="err-section">
+                  <span className="err-heading">Message</span>
+                  <span className="err-value">{errorMessage}</span>
                 </span>
+
+                {/* URL */}
+                <span className="err-section">
+                  <span className="err-heading">URL</span>
+                  <span className="err-value">{url}</span>
+                </span>
+
+                {/* Time + Status */}
+                <span className="err-section">
+                  <span className="err-heading">Time / Status</span>
+                  <span className="err-value">
+                    {timeStr} · {isNetwork ? "Offline" : "Online"} · Attempt {retryCount}/{maxRetries}
+                  </span>
+                </span>
+
+                {/* Stack trace */}
+                {stack && (
+                  <span className="err-section">
+                    <span className="err-heading">Stack Trace</span>
+                    <span className="err-stack">{stack}</span>
+                  </span>
+                )}
+
+                {/* Component tree */}
+                {componentStack && (
+                  <span className="err-section">
+                    <span className="err-heading">Component Tree</span>
+                    <span className="err-stack">{componentStack.trim()}</span>
+                  </span>
+                )}
+
               </div>
             </div>
+          </div>
 
-            {/* Action buttons */}
-            <div className="eb-btns">
-              {canRetry && (
-                <button
-                  className="eb-b eb-b-primary"
-                  onClick={handleRetry}
-                  disabled={isRetrying}
-                >
-                  <span className={`eb-b-icon ${isRetrying ? "spin" : ""}`}>
-                    <FiRefreshCw />
-                  </span>
-                  {isRetrying ? "Retrying…" : "Try Again"}
-                </button>
-              )}
+          {/* ── Buttons ────────────────────────── */}
+          <div className="eb-btns">
+            {canRetry && (
+              <button
+                className="eb-b eb-b-primary"
+                onClick={handleRetry}
+                disabled={isRetrying}
+              >
+                <span className={`eb-b-icon ${isRetrying ? "spin" : ""}`}>
+                  <FiRefreshCw />
+                </span>
+                {isRetrying ? "Retrying…" : "Try Again"}
+              </button>
+            )}
 
-              {isNetworkError && (
-                <button
-                  className="eb-b eb-b-secondary"
-                  onClick={handleCheck}
-                  disabled={isRetrying}
-                >
-                  <span className="eb-b-icon"><FiWifi /></span>
-                  Check Connection
-                </button>
-              )}
-
+            {isNetwork && (
               <button
                 className="eb-b eb-b-ghost"
-                onClick={() => window.location.reload()}
+                onClick={handleCheck}
+                disabled={isRetrying}
               >
-                <span className="eb-b-icon"><FiRefreshCw /></span>
-                Refresh Page
+                <span className="eb-b-icon"><FiWifi /></span>
+                Check Connection
               </button>
-            </div>
-
-            {/* Retry dots */}
-            {retryCount > 0 && (
-              <div className="eb-retry">
-                <p className="eb-retry-label">
-                  Attempt {retryCount} / {maxRetries}
-                </p>
-                <div className="eb-retry-dots">
-                  {[...Array(maxRetries)].map((_, i) => (
-                    <span
-                      key={i}
-                      className={`eb-rdot ${
-                        i < retryCount
-                          ? i === retryCount - 1 && !canRetry
-                            ? "fail"
-                            : "used"
-                          : ""
-                      }`}
-                    />
-                  ))}
-                </div>
-              </div>
             )}
+
+            <button
+              className="eb-b eb-b-ghost"
+              onClick={() => window.location.reload()}
+            >
+              <span className="eb-b-icon"><FiRefreshCw /></span>
+              Refresh Page
+            </button>
           </div>
 
-          {/* ── Footer ─────────────────────────────── */}
-          <div className="eb-foot">
-            <p className="eb-foot-text">
-              <span className="eb-foot-brand">Altuvera</span>
-              {" · "}
-              <kbd>ESC</kbd> to retry
-            </p>
-          </div>
+          {/* ── Retry dots ─────────────────────── */}
+          {retryCount > 0 && (
+            <div className="eb-retry">
+              <p className="eb-retry-label">
+                Attempt {retryCount} / {maxRetries}
+              </p>
+              <div className="eb-retry-dots">
+                {[...Array(maxRetries)].map((_, i) => (
+                  <span
+                    key={i}
+                    className={`eb-rdot ${
+                      i < retryCount
+                        ? i === retryCount - 1 && !canRetry
+                          ? "fail"
+                          : "used"
+                        : ""
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Footer ─────────────────────────────── */}
+        <div className="eb-foot">
+          <p>
+            <span className="eb-foot-brand">Altuvera</span>
+            {" · "}
+            <kbd>ESC</kbd> to retry
+          </p>
         </div>
       </div>
-
-      {/* ── Full Details Popup ─────────────────────── */}
-      {showPopup && (
-        <DetailsPopup
-          error={error}
-          errorInfo={errorInfo}
-          timestamp={timestamp}
-          onClose={() => setShowPopup(false)}
-        />
-      )}
-    </>
+    </div>
   );
 };
 

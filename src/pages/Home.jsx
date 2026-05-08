@@ -21,7 +21,7 @@ import { useUserAuth } from "../context/UserAuthContext";
 import { useDestinations } from "../hooks/useDestinations";
 import { useCountries } from "../hooks/useCountries";
 import { useGallery } from "../hooks/useGallery";
-import { useTestimonials } from "../hooks/useTestimonials";
+import { ArrowLeft, ArrowRight, Quote, Star, MapPin } from "lucide-react";
 import { useWishlist } from "../hooks/useWishlist";
 import { getCountrySlug } from "../utils/countrySlugMap";
 import "../styles/Home.css";
@@ -986,6 +986,180 @@ const WhatsAppSection = memo(() => {
         </AnimatedSection>
       </div>
     </section>
+  );
+});
+
+/* ═══════════════════════════════════════════
+   PREMIUM TOURISM TESTIMONIALS SLIDER
+   ═══════════════════════════════════════════ */
+const PremiumTourismTestimonials = memo(({ items }) => {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const autoPlayRef = useRef(null);
+  const reduced = usePrefersReducedMotion();
+
+  const nextSlide = useCallback(() => {
+    setActiveSlide((prev) => (prev + 1) % items.length);
+  }, [items.length]);
+
+  const prevSlide = useCallback(() => {
+    setActiveSlide((prev) => (prev - 1 + items.length) % items.length);
+  }, [items.length]);
+
+  const goToSlide = useCallback((index) => {
+    setActiveSlide(index);
+  }, []);
+
+  const pauseAutoPlay = useCallback(() => {
+    setIsAutoPlaying(false);
+  }, []);
+
+  const resumeAutoPlay = useCallback(() => {
+    setIsAutoPlaying(true);
+  }, []);
+
+  useEffect(() => {
+    if (isAutoPlaying && !reduced && items.length > 1) {
+      autoPlayRef.current = setInterval(nextSlide, 5000);
+    }
+    return () => {
+      if (autoPlayRef.current) {
+        clearInterval(autoPlayRef.current);
+      }
+    };
+  }, [isAutoPlaying, nextSlide, reduced, items.length]);
+
+  if (!items || items.length === 0) {
+    return (
+      <div className="premium-testimonials-empty">
+        <Quote className="w-16 h-16 text-emerald-200 mb-4" />
+        <h3 className="text-xl font-semibold text-white mb-2">Reviews Coming Soon</h3>
+        <p className="text-emerald-100">We're collecting amazing stories from our travelers.</p>
+      </div>
+    );
+  }
+
+  const currentItem = items[activeSlide];
+
+  return (
+    <div className="premium-testimonials-container">
+      {/* Main Testimonial Card */}
+      <motion.div
+        className="premium-testimonial-card"
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        onMouseEnter={pauseAutoPlay}
+        onMouseLeave={resumeAutoPlay}
+      >
+        {/* Glassmorphism Background */}
+        <div className="premium-testimonial-glass" />
+
+        {/* Quote Icon */}
+        <div className="premium-testimonial-quote-icon">
+          <Quote className="w-8 h-8 text-emerald-300" />
+        </div>
+
+        {/* Stars */}
+        <div className="premium-testimonial-stars">
+          {[...Array(5)].map((_, i) => (
+            <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+          ))}
+        </div>
+
+        {/* Testimonial Text */}
+        <blockquote className="premium-testimonial-text">
+          {currentItem?.quote ||
+           currentItem?.content ||
+           currentItem?.text ||
+           currentItem?.testimonial_text ||
+           "An unforgettable experience that exceeded all expectations."}
+        </blockquote>
+
+        {/* Author Info */}
+        <div className="premium-testimonial-author">
+          <div className="premium-testimonial-avatar">
+            <div className="premium-testimonial-avatar-bg">
+              {(currentItem?.name || "G").charAt(0).toUpperCase()}
+            </div>
+          </div>
+          <div className="premium-testimonial-author-info">
+            <div className="premium-testimonial-name">
+              {currentItem?.name || "Happy Traveler"}
+            </div>
+            <div className="premium-testimonial-location">
+              <MapPin className="w-4 h-4" />
+              {currentItem?.location || currentItem?.country || "East Africa"}
+            </div>
+          </div>
+        </div>
+
+        {/* Navigation Arrows */}
+        <button
+          className="premium-testimonial-nav-btn premium-testimonial-nav-prev"
+          onClick={prevSlide}
+          aria-label="Previous testimonial"
+        >
+          <ArrowLeft className="w-6 h-6" />
+        </button>
+        <button
+          className="premium-testimonial-nav-btn premium-testimonial-nav-next"
+          onClick={nextSlide}
+          aria-label="Next testimonial"
+        >
+          <ArrowRight className="w-6 h-6" />
+        </button>
+      </motion.div>
+
+      {/* Dots Navigation */}
+      <div className="premium-testimonials-dots">
+        {items.map((_, index) => (
+          <button
+            key={index}
+            className={`premium-testimonials-dot ${
+              index === activeSlide ? 'active' : ''
+            }`}
+            onClick={() => goToSlide(index)}
+            aria-label={`Go to testimonial ${index + 1}`}
+          >
+            <motion.div
+              className="premium-testimonials-dot-inner"
+              animate={{
+                scale: index === activeSlide ? 1.2 : 1,
+                backgroundColor: index === activeSlide ? '#10b981' : '#6b7280'
+              }}
+              transition={{ duration: 0.3 }}
+            />
+          </button>
+        ))}
+      </div>
+
+      {/* Progress Bar */}
+      <div className="premium-testimonials-progress">
+        <motion.div
+          className="premium-testimonials-progress-bar"
+          initial={{ scaleX: 0 }}
+          animate={{ scaleX: isAutoPlaying ? 1 : 0 }}
+          transition={{
+            duration: isAutoPlaying ? 5 : 0,
+            ease: "linear",
+            repeat: isAutoPlaying ? Infinity : 0
+          }}
+          key={activeSlide} // Reset animation on slide change
+        />
+      </div>
+
+      {/* Counter */}
+      <div className="premium-testimonials-counter">
+        <span className="premium-testimonials-counter-current">
+          {activeSlide + 1}
+        </span>
+        <span className="premium-testimonials-counter-separator">/</span>
+        <span className="premium-testimonials-counter-total">
+          {items.length}
+        </span>
+      </div>
+    </div>
   );
 });
 
@@ -2062,7 +2236,7 @@ const Home = () => {
               </p>
             </div>
           ) : allTestimonials.length > 0 ? (
-            <TestimonialsRotator items={allTestimonials} />
+            <PremiumTourismTestimonials items={allTestimonials} />
           ) : (
             <div className="testimonials-empty">
               <div className="testimonials-empty-icon">💬</div>
