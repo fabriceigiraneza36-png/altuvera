@@ -23,7 +23,6 @@ const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID || "";
 const GITHUB_SCOPE =
   import.meta.env.VITE_GITHUB_SCOPE || "read:user user:email";
 
-// Resolve redirect URI — never access window at module top level
 const resolveGithubRedirectUri = () => {
   if (import.meta.env.VITE_GITHUB_REDIRECT_URI) {
     return import.meta.env.VITE_GITHUB_REDIRECT_URI;
@@ -57,6 +56,8 @@ const KEYS = {
   GOOGLE_PENDING: "altuvera_google_pending",
   GITHUB_STATE: "altuvera_github_state",
   GITHUB_INTENT: "altuvera_github_intent",
+  LOGIN_COUNTER: "altuvera_login_counter",
+  LAST_LOGOUT: "altuvera_last_logout",
 };
 
 // ============================================================================
@@ -124,6 +125,21 @@ const store = {
       return true;
     }
   },
+  getLoginCounter: () => {
+    try {
+      const saved = localStorage.getItem(KEYS.LOGIN_COUNTER);
+      return saved ? parseInt(saved, 10) : 0;
+    } catch {
+      return 0;
+    }
+  },
+  setLoginCounter: (count) => {
+    try {
+      localStorage.setItem(KEYS.LOGIN_COUNTER, String(count));
+    } catch {
+      /* ignore */
+    }
+  },
   clearAuth: () => {
     [KEYS.TOKEN, KEYS.REFRESH].forEach((k) => {
       try {
@@ -161,12 +177,7 @@ const pick = (...vals) => {
 
 const normalizeUser = (
   raw,
-  {
-    fallbackEmail = "",
-    fallbackName = "",
-    fallbackAvatar = "",
-    cache = {},
-  } = {},
+  { fallbackEmail = "", fallbackName = "", fallbackAvatar = "", cache = {} } = {},
 ) => {
   if (!raw || typeof raw !== "object") return null;
 
@@ -202,12 +213,7 @@ const normalizeUser = (
     phone: pick(raw.phone, raw.phoneNumber, raw.phone_number),
     bio: pick(raw.bio, raw.biography, raw.about),
     role: pick(raw.role, raw.userRole, "user"),
-    authProvider: pick(
-      raw.authProvider,
-      raw.auth_provider,
-      raw.provider,
-      "email",
-    ),
+    authProvider: pick(raw.authProvider, raw.auth_provider, raw.provider, "email"),
     isVerified: Boolean(
       raw.isVerified || raw.is_verified || raw.emailVerified || raw.verified,
     ),
@@ -233,8 +239,7 @@ const extractPayload = (data) => {
   const d = data?.data || data || {};
   return {
     token: d.token || d.accessToken || d.access_token || data?.token || null,
-    refreshToken:
-      d.refreshToken || d.refresh_token || data?.refreshToken || null,
+    refreshToken: d.refreshToken || d.refresh_token || data?.refreshToken || null,
     user: d.user || data?.user || d || null,
     isNewUser: Boolean(d.isNewUser || d.is_new_user || data?.isNewUser),
     requiresProfile: Boolean(
@@ -278,6 +283,20 @@ const readProfileCache = () => {
   }
 };
 
+const isNewUserCheck = (userData) => {
+  if (!userData?.createdAt || !userData?.updatedAt) return false;
+  try {
+    return (
+      Math.abs(
+        new Date(userData.createdAt).getTime() -
+          new Date(userData.updatedAt).getTime(),
+      ) < 1000
+    );
+  } catch {
+    return false;
+  }
+};
+
 // ============================================================================
 // Provider
 // ============================================================================
@@ -287,21 +306,24 @@ export function UserAuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(() => store.get(KEYS.TOKEN));
   const [authLoading, setAuthLoading] = useState(true);
-  const [persistSession, setPersistSession] = useState(() =>
-    store.getPersist(),
-  );
+  const [persistSession, setPersistSession] = useState(() => store.getPersist());
 
-  // ── Modal state ─────────────────────────────────────────────────────────────
+  // ── Modal state ──────────────────────────────────────────────────────────────
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalView, setModalView] = useState("login");
   const [pendingEmail, setPendingEmail] = useState("");
 
-  // ── Congratulation state ────────────────────────────────────────────────────
+  // ── Re-verification state ────────────────────────────────────────────────────
+  const [requiresLoginVerification, setRequiresLoginVerification] = useState(false);
+  const [pendingSocialAuth, setPendingSocialAuth] = useState(null);
+  const [loginCounter, setLoginCounter] = useState(() => store.getLoginCounter());
+
+  // ── Congratulation / notification state ─────────────────────────────────────
   const [showCongratulation, setShowCongratulation] = useState(false);
-  const [congratulationType, setCongratulationType] = useState(""); // "login" or "signup"
+  const [congratulationType, setCongratulationType] = useState("");
   const [showNotLoggedInMessage, setShowNotLoggedInMessage] = useState(false);
 
-  // ── Social auth state ───────────────────────────────────────────────────────
+  // ── Social auth state ────────────────────────────────────────────────────────
   const [googleUser, setGoogleUser] = useState(() =>
     store.getJSON(KEYS.GOOGLE_PENDING),
   );
@@ -310,29 +332,55 @@ export function UserAuthProvider({ children }) {
   const [githubLoading, setGithubLoading] = useState(false);
   const [socialAuthError, setSocialAuthError] = useState("");
 
-  // ── Refs ────────────────────────────────────────────────────────────────────
+  // ── Refs ─────────────────────────────────────────────────────────────────────
+  // ✅ All useRef calls are at top level, never inside callbacks or IIFEs
   const fetchingRef = useRef(false);
   const pendingRef = useRef(null);
   const googleInitRef = useRef(false);
   const refreshRef = useRef(null);
   const googleCbRef = useRef(null);
-  const profileCacheRef = useRef(null); // lazy-init in effect below
+  const profileCacheRef = useRef(null);
+  const congratTimerRef = useRef(null);
+  const notLoggedInTimerRef = useRef(null);
 
-  // ── Computed ────────────────────────────────────────────────────────────────
+  // ── Computed ─────────────────────────────────────────────────────────────────
   const isAuthenticated = useMemo(() => !!user && !!token, [user, token]);
   const hasGooglePending = useMemo(
     () => !!googleUser?.email && !!googleUser?.credential,
     [googleUser],
   );
 
-  // ── Init profile cache (safe: runs after mount) ─────────────────────────────
+  // ── Init profile cache lazily (after mount) ──────────────────────────────────
   useEffect(() => {
     if (profileCacheRef.current === null) {
       profileCacheRef.current = readProfileCache();
     }
   }, []);
 
+  // ── Cleanup timers on unmount ────────────────────────────────────────────────
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = "";
+      if (congratTimerRef.current) clearTimeout(congratTimerRef.current);
+      if (notLoggedInTimerRef.current) clearTimeout(notLoggedInTimerRef.current);
+    };
+  }, []);
+
   const getCache = useCallback(() => profileCacheRef.current ?? {}, []);
+
+  // ============================================================================
+  // Helpers
+  // ============================================================================
+
+  const triggerCongratulation = useCallback((type) => {
+    if (congratTimerRef.current) clearTimeout(congratTimerRef.current);
+    setCongratulationType(type);
+    setShowCongratulation(true);
+    congratTimerRef.current = setTimeout(() => {
+      setShowCongratulation(false);
+      congratTimerRef.current = null;
+    }, 3000);
+  }, []);
 
   // ============================================================================
   // Profile Cache
@@ -370,6 +418,13 @@ export function UserAuthProvider({ children }) {
     setUser(null);
     setGoogleUser(null);
     pendingRef.current = null;
+    setRequiresLoginVerification(false);
+    setPendingSocialAuth(null);
+    try {
+      localStorage.setItem(KEYS.LAST_LOGOUT, Date.now().toString());
+    } catch {
+      /* storage unavailable */
+    }
   }, []);
 
   const setSessionPreference = useCallback(
@@ -429,11 +484,20 @@ export function UserAuthProvider({ children }) {
   );
 
   // ============================================================================
+  // Login Counter (persist on change)
+  // ============================================================================
+
+  useEffect(() => {
+    store.setLoginCounter(loginCounter);
+  }, [loginCounter]);
+
+  // ============================================================================
   // Modal
   // ============================================================================
 
   const openModal = useCallback((view = "login", options = {}) => {
     const { skipNotLoggedInMessage = false } = options;
+
     if (skipNotLoggedInMessage) {
       setModalView(view);
       setIsModalOpen(true);
@@ -441,14 +505,16 @@ export function UserAuthProvider({ children }) {
       return;
     }
 
-    // Show "not logged in" message first
+    if (notLoggedInTimerRef.current) clearTimeout(notLoggedInTimerRef.current);
     setShowNotLoggedInMessage(true);
-    setTimeout(() => {
+
+    notLoggedInTimerRef.current = setTimeout(() => {
       setShowNotLoggedInMessage(false);
       setModalView(view);
       setIsModalOpen(true);
       document.body.style.overflow = "hidden";
-    }, 1500); // Show message for 1.5 seconds before opening modal
+      notLoggedInTimerRef.current = null;
+    }, 1500);
   }, []);
 
   const closeModal = useCallback(() => {
@@ -483,8 +549,10 @@ export function UserAuthProvider({ children }) {
       let res;
       try {
         res = await fetch(url, { ...opts, headers: makeHeaders(tok) });
-      } catch {
-        throw new Error("Network error. Please check your connection.");
+      } catch (networkErr) {
+        throw new Error(
+          "Network error. Please check your connection.",
+        );
       }
 
       // Token refresh on 401
@@ -596,6 +664,22 @@ export function UserAuthProvider({ children }) {
       if (typeof p.persistSession === "boolean")
         setSessionPreference(p.persistSession);
 
+      // Re-verification required after 2+ successful logins
+      if (loginCounter >= 2) {
+        setPendingEmail(email);
+        setRequiresLoginVerification(true);
+        try {
+          await authFetch("/users/login", {
+            method: "POST",
+            body: JSON.stringify({ email }),
+          });
+        } catch {
+          // User can manually resend
+        }
+        setModalView("verify");
+        return { requiresVerification: true };
+      }
+
       const data = await authFetch("/users/login", {
         method: "POST",
         body: JSON.stringify({ email }),
@@ -604,7 +688,7 @@ export function UserAuthProvider({ children }) {
       setModalView("verify");
       return data;
     },
-    [authFetch, setSessionPreference],
+    [authFetch, loginCounter, setSessionPreference],
   );
 
   const register = useCallback(
@@ -642,22 +726,48 @@ export function UserAuthProvider({ children }) {
         method: "POST",
         body: JSON.stringify({ email: e, code: c }),
       });
+
+      // Handle re-verification path (social or email after 2+ logins)
+      if (requiresLoginVerification) {
+        if (pendingSocialAuth) {
+          saveAuth(pendingSocialAuth, { persist: persistSession });
+        } else {
+          saveAuth(data, { persist: persistSession });
+        }
+
+        // Reset counter after successful re-verification
+        setLoginCounter(0);
+        setRequiresLoginVerification(false);
+        setPendingSocialAuth(null);
+        setPendingEmail("");
+        closeModal();
+
+        const userData = pendingSocialAuth?.user || data?.user;
+        triggerCongratulation(isNewUserCheck(userData) ? "signup" : "login");
+        return data;
+      }
+
+      // Normal verification flow
       saveAuth(data, { persist: persistSession });
       setPendingEmail("");
       closeModal();
 
-      // Show congratulation window
-      const isNewUser = data.user?.createdAt === data.user?.updatedAt ||
-                       (new Date(data.user?.createdAt) - new Date(data.user?.updatedAt) < 1000);
-      setCongratulationType(isNewUser ? "signup" : "login");
-      setShowCongratulation(true);
+      // Increment counter on successful login
+      setLoginCounter((prev) => prev + 1);
 
-      // Auto-hide after 3 seconds
-      setTimeout(() => setShowCongratulation(false), 3000);
-
+      triggerCongratulation(isNewUserCheck(data?.user) ? "signup" : "login");
       return data;
     },
-    [authFetch, closeModal, pendingEmail, persistSession, saveAuth],
+    [
+      authFetch,
+      closeModal,
+      pendingEmail,
+      pendingSocialAuth,
+      persistSession,
+      requiresLoginVerification,
+      saveAuth,
+      triggerCongratulation,
+    ],
   );
 
   const resendCode = useCallback(
@@ -700,6 +810,27 @@ export function UserAuthProvider({ children }) {
       setSocialAuthError("");
 
       try {
+        const decoded = decodeJWT(credential);
+        const userEmail = decoded?.email || "";
+
+        // Re-verification required
+        if (loginCounter >= 2 && userEmail) {
+          setPendingEmail(userEmail);
+          setRequiresLoginVerification(true);
+          setPendingSocialAuth({ credential, extra, userEmail });
+          try {
+            await authFetch("/users/login", {
+              method: "POST",
+              body: JSON.stringify({ email: userEmail }),
+            });
+          } catch {
+            /* user can resend */
+          }
+          setModalView("verify");
+          return { requiresVerification: true };
+        }
+
+        // Normal flow
         const data = await authFetch("/users/google", {
           method: "POST",
           body: JSON.stringify({
@@ -713,7 +844,6 @@ export function UserAuthProvider({ children }) {
         const { isNewUser, requiresProfile } = extractPayload(data);
 
         if (isNewUser || requiresProfile) {
-          const decoded = decodeJWT(credential);
           const pending = {
             credential,
             email: decoded?.email || "",
@@ -738,7 +868,7 @@ export function UserAuthProvider({ children }) {
         setGoogleLoading(false);
       }
     },
-    [authFetch, closeModal, persistSession, saveAuth],
+    [authFetch, closeModal, loginCounter, persistSession, saveAuth],
   );
 
   const handleGoogleResponse = useCallback(
@@ -796,9 +926,11 @@ export function UserAuthProvider({ children }) {
       'script[src="https://accounts.google.com/gsi/client"]',
     );
     if (existing) {
-      existing.dataset.loaded === "true"
-        ? setup()
-        : existing.addEventListener("load", setup, { once: true });
+      if (existing.dataset.loaded === "true") {
+        setup();
+      } else {
+        existing.addEventListener("load", setup, { once: true });
+      }
       return;
     }
 
@@ -810,7 +942,10 @@ export function UserAuthProvider({ children }) {
       s.dataset.loaded = "true";
       setup();
     };
-    s.onerror = () => setGoogleLoaded(false);
+    s.onerror = () => {
+      console.warn("[Auth] Failed to load Google SDK (check connectivity).");
+      setGoogleLoaded(false);
+    };
     document.head.appendChild(s);
   }, [handleGoogleResponse]);
 
@@ -822,9 +957,7 @@ export function UserAuthProvider({ children }) {
         }
         if (!googleLoaded || !window.google?.accounts?.id) {
           return reject(
-            new Error(
-              "Google Sign-In is loading. Please try again in a moment.",
-            ),
+            new Error("Google Sign-In is loading. Please try again in a moment."),
           );
         }
 
@@ -954,25 +1087,58 @@ export function UserAuthProvider({ children }) {
     async (code, profileData = {}) => {
       if (!code) throw new Error("GitHub authorization code is required.");
 
-      const data = await authFetch("/users/github", {
-        method: "POST",
-        body: JSON.stringify({
-          code,
-          phone: trim(profileData?.phone),
-          bio: trim(profileData?.bio),
-        }),
-      });
-      const { token: tok } = extractPayload(data);
-      if (!tok)
-        throw new Error(
-          "GitHub authentication did not return a valid session.",
-        );
+      setGithubLoading(true);
+      setSocialAuthError("");
 
-      saveAuth(data, { persist: persistSession });
-      closeModal();
-      return data;
+      try {
+        const data = await authFetch("/users/github", {
+          method: "POST",
+          body: JSON.stringify({
+            code,
+            phone: trim(profileData?.phone),
+            bio: trim(profileData?.bio),
+          }),
+        });
+
+        const { token: tok } = extractPayload(data);
+        if (!tok) {
+          throw new Error(
+            "GitHub authentication did not return a valid session.",
+          );
+        }
+
+        // Re-verification required
+        const userEmail = data?.user?.email || data?.data?.user?.email || "";
+        if (loginCounter >= 2 && userEmail) {
+          setPendingSocialAuth(data);
+          setRequiresLoginVerification(true);
+          setPendingEmail(userEmail);
+          try {
+            await authFetch("/users/login", {
+              method: "POST",
+              body: JSON.stringify({ email: userEmail }),
+            });
+          } catch {
+            /* user can resend */
+          }
+          setModalView("verify");
+          return { requiresVerification: true };
+        }
+
+        // Normal flow
+        saveAuth(data, { persist: persistSession });
+        setLoginCounter((prev) => prev + 1);
+        closeModal();
+        return data;
+      } catch (err) {
+        const msg = err?.message || "GitHub sign-in failed.";
+        setSocialAuthError(msg);
+        throw new Error(msg);
+      } finally {
+        setGithubLoading(false);
+      }
     },
-    [authFetch, closeModal, persistSession, saveAuth],
+    [authFetch, closeModal, loginCounter, persistSession, saveAuth],
   );
 
   const startGithubAuth = useCallback((mode = "signin") => {
@@ -990,7 +1156,6 @@ export function UserAuthProvider({ children }) {
 
     setSocialAuthError("");
 
-    // Resolve redirect URI at call time (safe — inside event handler)
     const redirectUri = resolveGithubRedirectUri();
     const state = randomState();
 
@@ -1121,8 +1286,9 @@ export function UserAuthProvider({ children }) {
       });
       const p = data?.data || data || {};
       const avatarUrl = p.url || p.imageUrl || p.avatar || p.avatarUrl;
-      if (!avatarUrl)
+      if (!avatarUrl) {
         throw new Error("Upload succeeded but no image URL was returned.");
+      }
 
       const normalized = normalizeUser(
         { ...(user || {}), avatar: avatarUrl },
@@ -1190,29 +1356,26 @@ export function UserAuthProvider({ children }) {
   const resetPassword = useCallback(async () => {
     throw new Error("Please use email OTP or social login.");
   }, []);
+
   const changePassword = useCallback(async () => {
     throw new Error("Please use email OTP or social login.");
   }, []);
 
   // ============================================================================
-  // Effects
+  // Bootstrap Effects
   // ============================================================================
 
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
+
   useEffect(() => {
     initGoogleSdk();
   }, [initGoogleSdk]);
+
   useEffect(() => {
     consumeGithubCallback();
   }, [consumeGithubCallback]);
-  useEffect(
-    () => () => {
-      document.body.style.overflow = "";
-    },
-    [],
-  );
 
   // ============================================================================
   // Context Value
@@ -1220,6 +1383,7 @@ export function UserAuthProvider({ children }) {
 
   const value = useMemo(
     () => ({
+      // State
       user,
       token,
       isAuthenticated,
@@ -1237,29 +1401,37 @@ export function UserAuthProvider({ children }) {
       showCongratulation,
       congratulationType,
       showNotLoggedInMessage,
+      requiresLoginVerification,
+      // Modal
       openModal,
       closeModal,
       setModalView,
+      // Email auth
       login,
       register,
       verifyCode,
       resendCode,
       checkEmail,
+      // Google auth
       googleSignIn,
       completeGoogleSignUp,
       promptGoogleAuth,
       clearGooglePending,
       clearSocialAuthError,
+      // GitHub auth
       githubSignIn,
       startGithubAuth,
+      // Profile
       updateProfile,
       uploadAvatar,
+      // Session
       setSessionPreference,
       refreshAuthToken,
       logout,
       deleteAccount,
       resetPassword,
       changePassword,
+      // Utilities
       fetchUser,
       authFetch,
       saveAuth,
@@ -1282,8 +1454,10 @@ export function UserAuthProvider({ children }) {
       showCongratulation,
       congratulationType,
       showNotLoggedInMessage,
+      requiresLoginVerification,
       openModal,
       closeModal,
+      setModalView,
       login,
       register,
       verifyCode,
@@ -1323,8 +1497,9 @@ export function UserAuthProvider({ children }) {
 
 export function useUserAuth() {
   const ctx = useContext(UserAuthContext);
-  if (!ctx)
+  if (!ctx) {
     throw new Error("useUserAuth must be used within a UserAuthProvider");
+  }
   return ctx;
 }
 
