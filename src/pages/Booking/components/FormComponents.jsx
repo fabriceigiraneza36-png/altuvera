@@ -1,6 +1,6 @@
 import React, { memo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiCheckCircle, FiAlertCircle, FiChevronDown } from "react-icons/fi";
+import { CheckCircle, AlertCircle, ChevronDown } from "lucide-react";
 // import EmailAutocompleteInput from "../../components/common/EmailAutocompleteInput";
 import { THEME, normalizeOptionId, normalizeOptionLabel, normalizeOptionValue } from "../BookingShared";
 
@@ -61,112 +61,92 @@ export const FormInput = memo(
           }}
           transition={{ duration: 0.35 }}
         >
-          {type === "email" ? (
-            <motion.input
-              type={type}
-              name={name}
-              value={value}
-              onChange={onChange}
-              onFocus={() => setIsFocused(true)}
-              onBlur={(e) => {
-                setIsFocused(false);
-                onBlur?.(e);
-              }}
-              placeholder={placeholder}
-              style={{
-                width: "100%",
-                padding: isMobile ? "14px 16px" : "16px 20px",
-                paddingRight: isValid ? 48 : 20,
-                fontSize: isMobile ? 16 : 15,
-                border: "2px solid",
-                borderColor: hasError
-                  ? THEME.error
-                  : isFocused
-                    ? THEME.primary
-                    : isValid
-                      ? THEME.primaryLight
-                      : THEME.gray200,
-                borderRadius: 14,
-                backgroundColor: hasError
-                  ? "#FEF2F2"
-                  : isFocused
-                    ? THEME.white
-                    : isValid
-                      ? THEME.background
-                      : THEME.gray50,
-                outline: "none",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                boxShadow: isFocused
-                  ? `0 0 0 4px rgba(5, 150, 105, 0.08), 0 4px 12px ${THEME.shadow}`
-                  : hasError
-                    ? "0 0 0 4px rgba(239, 68, 68, 0.08)"
-                    : "none",
-              }}
-              aria-invalid={hasError}
-              {...props}
-            />
-          ) : (
-            <motion.input
-              type={type}
-              name={name}
-              value={value}
-              onChange={onChange}
-              onFocus={() => setIsFocused(true)}
-              onBlur={(e) => {
-                setIsFocused(false);
-                onBlur?.(e);
-              }}
-              placeholder={placeholder}
-              style={{
-                width: "100%",
-                padding: isMobile ? "14px 16px" : "16px 20px",
-                paddingRight: isValid ? 48 : 20,
-                fontSize: isMobile ? 16 : 15,
-                border: "2px solid",
-                borderColor: hasError
-                  ? THEME.error
-                  : isFocused
-                    ? THEME.primary
-                    : isValid
-                      ? THEME.primaryLight
-                      : THEME.gray200,
-                borderRadius: 14,
-                backgroundColor: hasError
-                  ? "#FEF2F2"
-                  : isFocused
-                    ? THEME.white
-                    : isValid
-                      ? THEME.background
-                      : THEME.gray50,
-                outline: "none",
-                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-                boxShadow: isFocused
-                  ? `0 0 0 4px rgba(5, 150, 105, 0.08), 0 4px 12px ${THEME.shadow}`
-                  : hasError
-                    ? "0 0 0 4px rgba(239, 68, 68, 0.08)"
-                    : "none",
-              }}
-              {...props}
-            />
-          )}
-
-          <AnimatePresence>
-            {isValid && (
-              <motion.div
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0, opacity: 0 }}
-                style={{
-                  position: "absolute",
-                  right: 16,
-                  top: "50%",
-                  transform: "translateY(-50%)",
+          <div
+            style={{
+              position: "relative",
+              background: `linear-gradient(135deg, ${hasError ? '#FEF2F2' : isFocused ? '#FFFFFF' : isValid ? THEME.background : THEME.gray50} 0%, ${hasError ? '#FEF2F2' : isFocused ? '#FFFFFF' : THEME.gray50} 100%)`,
+              borderRadius: 16,
+              border: `2px solid ${hasError ? THEME.error : isFocused ? THEME.primary : isValid ? THEME.primaryLight : THEME.gray200}`,
+              boxShadow: isFocused
+                ? `0 0 0 4px rgba(5, 150, 105, 0.08), 0 8px 24px ${THEME.shadow}`
+                : hasError
+                  ? "0 0 0 4px rgba(239, 68, 68, 0.08)"
+                  : "0 4px 12px rgba(0, 0, 0, 0.05)",
+              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              overflow: "hidden",
+            }}
+          >
+            {type === "email" ? (
+              <motion.input
+                type={type}
+                name={name}
+                value={value}
+                onChange={onChange}
+                onFocus={() => setIsFocused(true)}
+                onBlur={(e) => {
+                  setIsFocused(false);
+                  onBlur?.(e);
                 }}
-              >
-                <FiCheckCircle size={20} color={THEME.primaryLight} />
-              </motion.div>
+                placeholder={placeholder}
+                style={{
+                  width: "100%",
+                  padding: isMobile ? "16px 18px" : "18px 22px",
+                  paddingRight: isValid ? 52 : 22,
+                  fontSize: isMobile ? 16 : 15,
+                  fontWeight: 500,
+                  border: "none",
+                  backgroundColor: "transparent",
+                  outline: "none",
+                  color: THEME.text,
+                }}
+                aria-invalid={hasError}
+                {...props}
+              />
+            ) : (
+              <motion.input
+                type={type}
+                name={name}
+                value={value}
+                onChange={onChange}
+                onFocus={() => setIsFocused(true)}
+                onBlur={(e) => {
+                  setIsFocused(false);
+                  onBlur?.(e);
+                }}
+                placeholder={placeholder}
+                style={{
+                  width: "100%",
+                  padding: isMobile ? "16px 18px" : "18px 22px",
+                  paddingRight: isValid ? 52 : 22,
+                  fontSize: isMobile ? 16 : 15,
+                  fontWeight: 500,
+                  border: "none",
+                  backgroundColor: "transparent",
+                  outline: "none",
+                  color: THEME.text,
+                }}
+                {...props}
+              />
             )}
-          </AnimatePresence>
+
+            <AnimatePresence>
+              {isValid && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0, opacity: 0 }}
+                  style={{
+                    position: "absolute",
+                    right: 18,
+                    top: "50%",
+                    transform: "translateY(-50%)",
+                  }}
+                >
+                  <CheckCircle size={20} color={THEME.primaryLight} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         </motion.div>
 
         <AnimatePresence>
@@ -187,7 +167,7 @@ export const FormInput = memo(
                 borderRadius: 8,
               }}
             >
-              <FiAlertCircle size={14} />
+              <AlertCircle size={14} />
               {error}
             </motion.div>
           )}
@@ -252,90 +232,88 @@ export const FormSelect = memo(
         </label>
 
         <div style={{ position: "relative" }}>
-          <select
-            name={name}
-            value={value}
-            onChange={onChange}
-            onFocus={() => setIsFocused(true)}
-            onBlur={(e) => {
-              setIsFocused(false);
-              onBlur?.(e);
-            }}
-            style={{
-              width: "100%",
-              padding: isMobile ? "14px 16px" : "16px 20px",
-              paddingRight: 48,
-              fontSize: isMobile ? 16 : 15,
-              border: "2px solid",
-              borderColor: hasError
-                ? THEME.error
-                : isFocused
-                  ? THEME.primary
-                  : isValid
-                    ? THEME.primaryLight
-                    : THEME.gray200,
-              borderRadius: 14,
-              backgroundColor: hasError
-                ? "#FEF2F2"
-                : isFocused
-                  ? THEME.white
-                  : isValid
-                    ? THEME.background
-                    : THEME.gray50,
-              outline: "none",
-              cursor: "pointer",
-              appearance: "none",
-              WebkitAppearance: "none",
-              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-              boxShadow: isFocused
-                ? `0 0 0 4px rgba(5, 150, 105, 0.08), 0 4px 12px ${THEME.shadow}`
-                : "none",
-            }}
-          >
-            <option value="">
-              {placeholder || `Select ${label.toLowerCase()}`}
-            </option>
-            {Array.isArray(options) &&
-              options.map((opt, optIndex) => {
-                let optionId, optionLabel, optionFlag;
-
-                if (typeof opt === "string") {
-                  optionId = opt;
-                  optionLabel = opt;
-                } else if (typeof opt === "object" && opt !== null) {
-                  optionId = opt.id || opt.value || opt._id || opt.name || optIndex;
-                  optionLabel = normalizeOptionLabel(
-                    opt.name || opt.title || opt.label || opt.category || optionId,
-                  );
-                  optionFlag = normalizeOptionLabel(opt.flag || "");
-                } else {
-                  optionId = optIndex;
-                  optionLabel = normalizeOptionLabel(opt);
-                }
-
-                return (
-                  <option
-                    key={`${name}-option-${normalizeOptionId(optionId)}-${optIndex}`}
-                    value={normalizeOptionId(optionId)}
-                  >
-                    {optionFlag && `${optionFlag} `}
-                    {optionLabel}
-                  </option>
-                );
-              })}
-          </select>
-
           <div
             style={{
-              position: "absolute",
-              right: 16,
-              top: "50%",
-              transform: "translateY(-50%)",
-              pointerEvents: "none",
-              color: THEME.gray500,
+              position: "relative",
+              background: `linear-gradient(135deg, ${hasError ? '#FEF2F2' : isFocused ? '#FFFFFF' : isValid ? THEME.background : THEME.gray50} 0%, ${hasError ? '#FEF2F2' : isFocused ? '#FFFFFF' : THEME.gray50} 100%)`,
+              borderRadius: 16,
+              border: `2px solid ${hasError ? THEME.error : isFocused ? THEME.primary : isValid ? THEME.primaryLight : THEME.gray200}`,
+              boxShadow: isFocused
+                ? `0 0 0 4px rgba(5, 150, 105, 0.08), 0 8px 24px ${THEME.shadow}`
+                : "0 4px 12px rgba(0, 0, 0, 0.05)",
+              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+              overflow: "hidden",
             }}
           >
-            <FiChevronDown size={20} />
+            <select
+              name={name}
+              value={value}
+              onChange={onChange}
+              onFocus={() => setIsFocused(true)}
+              onBlur={(e) => {
+                setIsFocused(false);
+                onBlur?.(e);
+              }}
+              style={{
+                width: "100%",
+                padding: isMobile ? "16px 18px" : "18px 22px",
+                paddingRight: 52,
+                fontSize: isMobile ? 16 : 15,
+                fontWeight: 500,
+                border: "none",
+                backgroundColor: "transparent",
+                outline: "none",
+                cursor: "pointer",
+                appearance: "none",
+                WebkitAppearance: "none",
+                color: THEME.text,
+              }}
+            >
+              <option value="">
+                {placeholder || `Select ${label.toLowerCase()}`}
+              </option>
+              {Array.isArray(options) &&
+                options.map((opt, optIndex) => {
+                  let optionId, optionLabel, optionFlag;
+
+                  if (typeof opt === "string") {
+                    optionId = opt;
+                    optionLabel = opt;
+                  } else if (typeof opt === "object" && opt !== null) {
+                    optionId = opt.id || opt.value || opt._id || opt.name || optIndex;
+                    optionLabel = normalizeOptionLabel(
+                      opt.name || opt.title || opt.label || opt.category || optionId,
+                    );
+                    optionFlag = normalizeOptionLabel(opt.flag || "");
+                  } else {
+                    optionId = optIndex;
+                    optionLabel = normalizeOptionLabel(opt);
+                  }
+
+                  return (
+                    <option
+                      key={`${name}-option-${normalizeOptionId(optionId)}-${optIndex}`}
+                      value={normalizeOptionId(optionId)}
+                    >
+                      {optionFlag && `${optionFlag} `}
+                      {optionLabel}
+                    </option>
+                  );
+                })}
+            </select>
+
+            <div
+              style={{
+                position: "absolute",
+                right: 18,
+                top: "50%",
+                transform: "translateY(-50%)",
+                pointerEvents: "none",
+                color: THEME.gray500,
+              }}
+            >
+              <ChevronDown size={20} />
+            </div>
           </div>
         </div>
 
@@ -348,16 +326,18 @@ export const FormSelect = memo(
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 6,
-                marginTop: 8,
-                padding: "8px 12px",
+                gap: 8,
+                marginTop: 12,
+                padding: "12px 16px",
                 fontSize: 13,
                 color: "#DC2626",
                 backgroundColor: "#FEF2F2",
-                borderRadius: 8,
+                borderRadius: 12,
+                border: "1px solid rgba(220, 38, 38, 0.2)",
+                boxShadow: "0 2px 8px rgba(220, 38, 38, 0.1)",
               }}
             >
-              <FiAlertCircle size={14} />
+              <AlertCircle size={16} />
               {error}
             </motion.div>
           )}

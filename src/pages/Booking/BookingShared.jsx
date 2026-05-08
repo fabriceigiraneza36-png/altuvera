@@ -119,10 +119,10 @@ export const normalizeOptionValue = (value) =>
 // Icon helpers
 export const getIconComponent = (iconName, size = 22) => {
   const iconMap = {
-    compass: <FiCompass size={size} />,
-    users: <FiUsers size={size} />,
-    heart: <FiHeart size={size} />,
-    user: <FiUser size={size} />,
+    compass: <Compass size={size} />,
+    users: <Users size={size} />,
+    heart: <Heart size={size} />,
+    user: <User size={size} />,
   };
   return iconMap[iconName] || null;
 };

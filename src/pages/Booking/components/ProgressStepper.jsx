@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiCompass, FiUsers, FiHeart, FiUser, FiCheck } from "react-icons/fi";
+import { Compass, Users, Heart, User, Check } from "lucide-react";
 import { THEME } from "../BookingShared";
 
 const ProgressStepper = memo(
@@ -9,10 +9,10 @@ const ProgressStepper = memo(
 
     const getIcon = (iconName) => {
       const iconMap = {
-        compass: <FiCompass size={22} />,
-        users: <FiUsers size={22} />,
-        heart: <FiHeart size={22} />,
-        user: <FiUser size={22} />,
+        compass: <Compass size={22} />,
+        users: <Users size={22} />,
+        heart: <Heart size={22} />,
+        user: <User size={22} />,
       };
       return iconMap[iconName] || null;
     };
@@ -133,7 +133,7 @@ const ProgressStepper = memo(
                         exit={{ scale: 0, rotate: 180 }}
                         transition={{ duration: 0.25 }}
                       >
-                        <FiCheck
+                        <Check
                           size={isMobile ? 18 : 22}
                           color="white"
                           strokeWidth={3}

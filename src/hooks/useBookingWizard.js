@@ -43,8 +43,6 @@ export const useBookingWizard = () => {
       groupType: "couple",
       accommodation: "mid-range",
       interests: [],
-      budgetPerPerson: "",
-      currency: "USD",
       preferredContactMethod: "whatsapp",
       preferredContactTime: "",
       pickupLocation: "",
@@ -457,15 +455,27 @@ Please provide a personalized quote and itinerary. Thank you!`;
         saveBookingLocally(bookingPayload);
 
         if (result?.success) {
-          sendWhatsAppMessage();
+          // Show success animation before redirecting
           setIsSubmitted(true);
+          // Delay WhatsApp redirect to allow confetti animation
+          setTimeout(() => {
+            sendWhatsAppMessage();
+          }, 3000);
         } else {
-          sendWhatsAppMessage();
+          // Still show success even if backend fails, but redirect immediately
+          setIsSubmitted(true);
+          setTimeout(() => {
+            sendWhatsAppMessage();
+          }, 1500);
         }
       } catch (err) {
         console.error("Booking submission error:", err);
         saveBookingLocally(bookingPayload);
-        sendWhatsAppMessage();
+        // Show success animation even on error, then redirect
+        setIsSubmitted(true);
+        setTimeout(() => {
+          sendWhatsAppMessage();
+        }, 1500);
       } finally {
         setIsSubmitting(false);
       }

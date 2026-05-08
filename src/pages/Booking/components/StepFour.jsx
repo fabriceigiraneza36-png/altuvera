@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { motion } from "framer-motion";
-import { FiUser, FiMail, FiPhone, FiGlobe, FiSettings, FiClock, FiDollarSign, FiCreditCard, FiMapPin, FiCompass, FiMessageSquare } from "react-icons/fi";
+import { User, Mail, Phone, Globe, Settings, Clock, MapPin, Compass, MessageSquare } from "lucide-react";
 import { THEME } from "../BookingShared";
 import { FormInput, FormSelect } from "./FormComponents";
 
@@ -53,7 +53,7 @@ const StepFour = memo(
               boxShadow: `0 12px 32px ${THEME.shadowDark}`,
             }}
           >
-            <FiUser size={30} color="white" />
+            <User size={30} color="white" />
           </motion.div>
           <h2
             style={{
@@ -108,7 +108,7 @@ const StepFour = memo(
                 color: '#fff',
               }}
             >
-              <FiUser size={22} />
+              <User size={22} />
             </div>
             <div>
               <div
@@ -212,7 +212,7 @@ const StepFour = memo(
             label="Full Name"
             placeholder="John Smith"
             required
-            icon={FiUser}
+            icon={User}
             value={formData.name}
             onChange={handleChange}
             onBlur={handleBlur}
@@ -227,7 +227,7 @@ const StepFour = memo(
             type="email"
             placeholder="john@example.com"
             required
-            icon={FiMail}
+            icon={Mail}
             value={formData.email}
             onChange={handleChange}
             onBlur={handleBlur}
@@ -242,7 +242,7 @@ const StepFour = memo(
             type="tel"
             placeholder="+1 234 567 8900"
             required
-            icon={FiPhone}
+            icon={Phone}
             value={formData.phone}
             onChange={handleChange}
             onBlur={handleBlur}
@@ -256,7 +256,7 @@ const StepFour = memo(
             label="Your Country"
             placeholder="United States"
             required
-            icon={FiGlobe}
+            icon={Globe}
             value={formData.country}
             onChange={handleChange}
             onBlur={handleBlur}
@@ -289,7 +289,7 @@ const StepFour = memo(
                 justifyContent: "center",
               }}
             >
-              <FiSettings size={18} color={THEME.primary} />
+              <Settings size={18} color={THEME.primary} />
             </div>
             Travel Preferences (Optional)
           </div>
@@ -309,7 +309,7 @@ const StepFour = memo(
                 { value: "email", name: "Email" },
                 { value: "phone", name: "Phone Call" },
               ]}
-              icon={FiMessageSquare}
+              icon={MessageSquare}
               value={formData.preferredContactMethod}
               onChange={handleChange}
               onBlur={handleBlur}
@@ -322,7 +322,7 @@ const StepFour = memo(
               name="preferredContactTime"
               label="Best Time to Reach You"
               placeholder="e.g. 9am–12pm (GMT+2)"
-              icon={FiClock}
+              icon={Clock}
               value={formData.preferredContactTime}
               onChange={handleChange}
               onBlur={handleBlur}
@@ -333,46 +333,10 @@ const StepFour = memo(
             />
 
             <FormInput
-              name="budgetPerPerson"
-              label="Budget Per Person"
-              type="number"
-              placeholder="e.g. 2500"
-              icon={FiDollarSign}
-              value={formData.budgetPerPerson}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              touched={touched.budgetPerPerson}
-              error={errors.budgetPerPerson}
-              isMobile={isMobile}
-            />
-
-            <FormSelect
-              name="currency"
-              label="Currency"
-              options={[
-                { value: "USD", name: "USD" },
-                { value: "EUR", name: "EUR" },
-                { value: "GBP", name: "GBP" },
-                { value: "ZAR", name: "ZAR" },
-                { value: "KES", name: "KES" },
-                { value: "TZS", name: "TZS" },
-                { value: "UGX", name: "UGX" },
-                { value: "RWF", name: "RWF" },
-              ]}
-              icon={FiCreditCard}
-              value={formData.currency}
-              onChange={handleChange}
-              onBlur={handleBlur}
-              touched={touched.currency}
-              error={errors.currency}
-              isMobile={isMobile}
-            />
-
-            <FormInput
               name="pickupLocation"
               label="Pickup Location (If Known)"
               placeholder="Hotel / Airport / City"
-              icon={FiMapPin}
+              icon={MapPin}
               value={formData.pickupLocation}
               onChange={handleChange}
               onBlur={handleBlur}
@@ -393,7 +357,7 @@ const StepFour = memo(
                 { value: "returning", name: "Returning Traveler" },
                 { value: "other", name: "Other" },
               ]}
-              icon={FiCompass}
+              icon={Compass}
               value={formData.marketingSource}
               onChange={handleChange}
               onBlur={handleBlur}
@@ -447,7 +411,7 @@ const StepFour = memo(
               marginBottom: 10,
             }}
           >
-            <FiMessageSquare size={16} style={{ color: THEME.primary }} />
+            <MessageSquare size={16} style={{ color: THEME.primary }} />
             Special Requests or Questions
           </label>
           <textarea

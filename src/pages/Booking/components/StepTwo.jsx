@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { motion } from "framer-motion";
-import { FiUsers, FiHome } from "react-icons/fi";
+import { Users, Home } from "lucide-react";
 import { THEME } from "../BookingShared";
 import { Counter, SelectionCard } from "./FormComponents";
 
@@ -45,7 +45,7 @@ const StepTwo = memo(
               boxShadow: `0 12px 32px ${THEME.shadowDark}`,
             }}
           >
-            <FiUsers size={30} color="white" />
+            <Users size={30} color="white" />
           </motion.div>
           <h2
             style={{
@@ -96,7 +96,7 @@ const StepTwo = memo(
                 justifyContent: "center",
               }}
             >
-              <FiUsers size={18} color={THEME.primary} />
+              <Users size={18} color={THEME.primary} />
             </div>
             Group Type
           </div>
@@ -172,7 +172,7 @@ const StepTwo = memo(
                 justifyContent: "center",
               }}
             >
-              <FiUsers size={18} color={THEME.primary} />
+              <Users size={18} color={THEME.primary} />
             </div>
             Number of Travelers
           </div>
@@ -233,7 +233,7 @@ const StepTwo = memo(
                 fontSize: isMobile ? 15 : 17,
               }}
             >
-              <FiUsers size={24} color={THEME.primary} />
+              <Users size={24} color={THEME.primary} />
               Total Travelers
             </div>
             <motion.span
@@ -275,7 +275,7 @@ const StepTwo = memo(
                 justifyContent: "center",
               }}
             >
-              <FiHome size={18} color={THEME.primary} />
+              <Home size={18} color={THEME.primary} />
             </div>
             Accommodation Style
           </div>

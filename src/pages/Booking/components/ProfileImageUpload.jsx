@@ -1,5 +1,5 @@
 import React, { memo, useState, useRef } from "react";
-import { FiUser, FiCamera } from "react-icons/fi";
+import { User, Camera } from "lucide-react";
 import { THEME } from "../BookingShared";
 
 const ProfileImageUpload = ({ user, formData, setFormData, isMobile }) => {
@@ -57,7 +57,7 @@ const ProfileImageUpload = ({ user, formData, setFormData, isMobile }) => {
               alt="Profile Preview"
             />
           ) : (
-            <FiUser size={isMobile ? 50 : 60} color={THEME.gray400} />
+            <User size={isMobile ? 50 : 60} color={THEME.gray400} />
           )}
         </div>
         <div
@@ -76,7 +76,7 @@ const ProfileImageUpload = ({ user, formData, setFormData, isMobile }) => {
             boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
           }}
         >
-          <FiCamera size={isMobile ? 16 : 18} color="white" />
+          <Camera size={isMobile ? 16 : 18} color="white" />
         </div>
       </div>
       <input

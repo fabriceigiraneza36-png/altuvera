@@ -1,6 +1,6 @@
 import React, { memo, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiSunrise, FiGlobe, FiCalendar, FiStar } from "react-icons/fi";
+import { Sunrise, Globe, Calendar, Star, Compass } from "lucide-react";
 import { THEME, normalizeOptionLabel } from "../BookingShared";
 import { FormSelect, FormInput } from "./FormComponents";
 
@@ -61,7 +61,7 @@ const StepOne = memo(
               boxShadow: `0 12px 32px ${THEME.shadowDark}`,
             }}
           >
-            <FiCompass size={30} color="white" />
+            <Compass size={30} color="white" />
           </motion.div>
           <h2
             style={{
@@ -99,7 +99,7 @@ const StepOne = memo(
           <FormSelect
             name="tripType"
             label="Safari Experience"
-            icon={FiSunrise}
+            icon={Sunrise}
             options={
               categoriesList.length > 0
                 ? categoriesList.map((c) => {
@@ -128,7 +128,7 @@ const StepOne = memo(
           <FormSelect
             name="destination"
             label="Where would you like to explore?"
-            icon={FiGlobe}
+            icon={Globe}
             options={destinationsList.length > 0 ? destinationsList : countriesList}
             required
             placeholder="Select your destination..."
@@ -144,7 +144,7 @@ const StepOne = memo(
             name="startDate"
             label="Start Date"
             type="date"
-            icon={FiCalendar}
+            icon={Calendar}
             required
             value={formData.startDate}
             onChange={handleChange}
@@ -159,7 +159,7 @@ const StepOne = memo(
             name="endDate"
             label="End Date"
             type="date"
-            icon={FiCalendar}
+            icon={Calendar}
             required
             value={formData.endDate}
             onChange={handleChange}
@@ -207,7 +207,7 @@ const StepOne = memo(
                   justifyContent: "center",
                 }}
               >
-                <FiStar size={18} color="white" />
+                <Star size={18} color="white" />
               </div>
               Recommended for You, {displayName}
             </div>

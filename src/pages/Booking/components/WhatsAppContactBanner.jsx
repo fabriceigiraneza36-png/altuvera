@@ -1,6 +1,6 @@
 import React, { memo, useState } from "react";
 import { motion } from "framer-motion";
-import { FaWhatsapp } from "react-icons/fa";
+import { MessageSquare } from "lucide-react";
 import { ADMIN_CONTACT, THEME, getWhatsAppLink } from "../BookingShared";
 
 const WhatsAppContactBanner = memo(({ isMobile }) => {
@@ -59,7 +59,7 @@ const WhatsAppContactBanner = memo(({ isMobile }) => {
             flexShrink: 0,
           }}
         >
-          <FaWhatsapp size={28} color="white" />
+          <MessageSquare size={28} color="white" />
         </motion.div>
         <div>
           <div
@@ -99,7 +99,7 @@ const WhatsAppContactBanner = memo(({ isMobile }) => {
           justifyContent: "center",
         }}
       >
-        <FaWhatsapp size={18} />
+        <MessageSquare size={18} />
         <span style={{ fontSize: isMobile ? 13 : 14, lineHeight: 1.6, textAlign: isMobile ? "center" : "left" }}>
           {ADMIN_CONTACT.phone1}
           <br />

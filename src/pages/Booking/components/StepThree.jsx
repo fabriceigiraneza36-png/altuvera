@@ -1,7 +1,6 @@
 import React, { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FiStar, FiCheckCircle } from "react-icons/fi";
-import { FaWhatsapp } from "react-icons/fa";
+import { Heart, Star, CheckCircle, MessageSquare } from "lucide-react";
 import { THEME } from "../BookingShared";
 import { InterestTag } from "./FormComponents";
 
@@ -44,7 +43,7 @@ const StepThree = memo(({ formData, setFormData, interests, handleInterestToggle
             boxShadow: `0 12px 32px ${THEME.shadowDark}`,
           }}
         >
-          <FiHeart size={30} color="white" />
+          <Heart size={30} color="white" />
         </motion.div>
         <h2
           style={{
@@ -94,7 +93,7 @@ const StepThree = memo(({ formData, setFormData, interests, handleInterestToggle
               justifyContent: "center",
             }}
           >
-            <FiStar size={18} color={THEME.primary} />
+            <Star size={18} color={THEME.primary} />
           </div>
           Select Your Interests
           <span
@@ -159,7 +158,7 @@ const StepThree = memo(({ formData, setFormData, interests, handleInterestToggle
                   justifyContent: "center",
                 }}
               >
-                <FiCheckCircle size={20} color="white" />
+                <CheckCircle size={20} color="white" />
               </div>
               <div>
                 <div
@@ -217,7 +216,7 @@ const StepThree = memo(({ formData, setFormData, interests, handleInterestToggle
             flexShrink: 0,
           }}
         >
-          <FaWhatsapp size={24} color="white" />
+          <MessageSquare size={24} color="white" />
         </div>
         <div>
           <div

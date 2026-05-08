@@ -1,6 +1,6 @@
 import React, { memo } from "react";
 import { motion } from "framer-motion";
-import { FiMapPin, FiCalendar, FiUsers, FiHome, FiCheckCircle } from "react-icons/fi";
+import { MapPin, Calendar, Users, Home, CheckCircle } from "lucide-react";
 import { THEME, normalizeOptionValue } from "../BookingShared";
 
 const TripSummary = memo(
@@ -14,22 +14,22 @@ const TripSummary = memo(
   }) => {
     const items = [
       {
-        icon: FiMapPin,
+        icon: MapPin,
         label: "Destination",
         value: getDestinationName(),
       },
       {
-        icon: FiCalendar,
+        icon: Calendar,
         label: "Duration",
         value: getTripDuration() || "Not set",
       },
       {
-        icon: FiUsers,
+        icon: Users,
         label: "Travelers",
         value: `${getTotalVisitors()} ${getTotalVisitors() === 1 ? "person" : "people"}`,
       },
       {
-        icon: FiHome,
+        icon: Home,
         label: "Accommodation",
         value:
           accommodationTypes.find((a) => a.id === formData.accommodation)
@@ -60,7 +60,7 @@ const TripSummary = memo(
             color: THEME.primaryDark,
           }}
         >
-          <FiCheckCircle size={20} />
+          <CheckCircle size={20} />
           Your Trip Summary
         </div>
 
