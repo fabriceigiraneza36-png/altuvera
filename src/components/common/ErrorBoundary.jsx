@@ -20,7 +20,7 @@ class ErrorBoundary extends React.Component {
     };
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError() {
     return { hasError: true };
   }
 
@@ -58,29 +58,38 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-const ErrorFallback = ({
-  error,
-  retryCount,
-  onRetry,
-  fallback,
-}) => {
-  const { isOnline, connectionStatus, checkConnection } =
-    useConnection();
+const ErrorFallback = ({ error, retryCount, onRetry, fallback }) => {
+  const { isOnline, connectionStatus, checkConnection } = useConnection();
 
-  if (fallback) {
-    return fallback;
-  }
+  if (fallback) return fallback;
 
-  const isNetworkError =
-    !isOnline || connectionStatus === "disconnected";
+  const isNetworkError = !isOnline || connectionStatus === "disconnected";
   const isRetryable = retryCount < 3;
 
-  return (
-    <div className="error-boundary-wrapper">
-      <div className="error-card">
-        <div className="error-glow"></div>
+  const title = isNetworkError ? "Connection Lost" : "Something Went Wrong";
+  const description = isNetworkError
+    ? "Your internet connection appears to be unavailable. Please check your network and try again."
+    : "We hit an unexpected problem while loading this section. You can retry or refresh the page.";
 
-        <div className="error-icon-box">
+  return (
+    <section className="error-boundary-wrapper">
+      <div className="error-background">
+        <span className="bg-orb orb-1"></span>
+        <span className="bg-orb orb-2"></span>
+        <span className="bg-orb orb-3"></span>
+      </div>
+
+      <div className="error-card" role="alert" aria-live="assertive">
+        <div className="error-status-badge">
+          {isNetworkError ? <FiWifiOff /> : <FiAlertTriangle />}
+          <span>{isNetworkError ? "Offline Mode" : "Application Error"}</span>
+        </div>
+
+        <div
+          className={`error-icon-shell ${
+            isNetworkError ? "network-shell" : "warning-shell"
+          }`}
+        >
           {isNetworkError ? (
             <FiWifiOff className="error-icon network" />
           ) : (
@@ -88,33 +97,36 @@ const ErrorFallback = ({
           )}
         </div>
 
-        <h2 className="error-title">
-          {isNetworkError
-            ? "Connection Lost"
-            : "Something went wrong"}
-        </h2>
+        <h2 className="error-title">{title}</h2>
 
-        <p className="error-description">
-          {isNetworkError
-            ? "Please check your internet connection and try again."
-            : "We encountered an unexpected error. Please try refreshing the page."}
-        </p>
+        <p className="error-description">{description}</p>
+
+        <div className="error-info-row">
+          <div className="info-chip">
+            <span className="chip-label">Status</span>
+            <span className="chip-value">
+              {isNetworkError ? "Disconnected" : "Unexpected issue"}
+            </span>
+          </div>
+
+          <div className="info-chip">
+            <span className="chip-label">Retry attempts</span>
+            <span className="chip-value">{retryCount} / 3</span>
+          </div>
+        </div>
 
         {process.env.NODE_ENV === "development" && error && (
           <details className="error-details">
-            <summary>Error Details (Development)</summary>
+            <summary>Error details</summary>
             <pre>{error.toString()}</pre>
           </details>
         )}
 
         <div className="error-actions">
           {isRetryable && (
-            <button
-              onClick={onRetry}
-              className="action-btn primary-btn"
-            >
+            <button onClick={onRetry} className="action-btn primary-btn">
               <FiRefreshCw />
-              Try Again
+              <span>Try Again</span>
             </button>
           )}
 
@@ -124,25 +136,26 @@ const ErrorFallback = ({
               className="action-btn secondary-btn"
             >
               <FiWifi />
-              Check Connection
+              <span>Check Connection</span>
             </button>
           )}
 
           <button
             onClick={() => window.location.reload()}
-            className="action-btn neutral-btn"
+            className="action-btn ghost-btn"
           >
-            Refresh Page
+            <FiRefreshCw />
+            <span>Refresh Page</span>
           </button>
         </div>
 
-        {retryCount > 0 && (
-          <p className="retry-text">
-            Retry attempts: {retryCount}
+        {!isRetryable && (
+          <p className="retry-limit-text">
+            Maximum quick retries reached. A full page refresh is recommended.
           </p>
         )}
       </div>
-    </div>
+    </section>
   );
 };
 
