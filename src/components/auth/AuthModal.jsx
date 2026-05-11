@@ -54,7 +54,7 @@ const SIDE_MEDIA = [
   },
   {
     type: "image",
-    src: "https://images.unsplash.com/photo-1626569104037-7756f7e2d93e?auto=format&fit=crop&w=1200&q=85",
+    src: "https://i.pinimg.com/736x/0e/50/b5/0e50b5e1d08f7f0e90358d0c59d4bb24.jpg",
     alt: "Mount Kilimanjaro above the clouds",
     caption: "Kilimanjaro, Tanzania",
     accent: "#8b9dc3",
