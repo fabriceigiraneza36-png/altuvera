@@ -1,7 +1,7 @@
 import React, { memo, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sunrise, Globe, Calendar, Star, Compass } from "lucide-react";
-import { THEME, normalizeOptionLabel } from "../BookingShared";
+import { THEME, normalizeOptionLabel, normalizeOptionValue } from "../BookingShared";
 import { FormSelect, FormInput } from "./FormComponents";
 
 const StepOne = memo(
@@ -219,44 +219,51 @@ const StepOne = memo(
                 gap: 16,
               }}
             >
-              {destinationsList.slice(0, 3).map((dest, i) => (
-                <motion.div
-                  key={dest.id || dest._id || i}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.4 + i * 0.1 }}
-                  onClick={() => setFormData(prev => ({ ...prev, destination: dest.id || dest._id || dest.name }))}
-                  style={{
-                    padding: 16,
-                    borderRadius: 12,
-                    backgroundColor: formData.destination === (dest.id || dest._id || dest.name) ? THEME.primary : THEME.white,
-                    border: `2px solid ${formData.destination === (dest.id || dest._id || dest.name) ? THEME.primary : THEME.gray200}`,
-                    cursor: "pointer",
-                    textAlign: "center",
-                    transition: "all 0.3s ease",
-                    boxShadow: formData.destination === (dest.id || dest._id || dest.name) ? `0 4px 16px ${THEME.shadow}` : "none",
-                  }}
-                >
-                  <div
+              {destinationsList.slice(0, 3).map((dest, i) => {
+                const destinationOptionId = normalizeOptionValue(
+                  dest.id || dest._id || dest.slug || dest.name || dest.title || dest,
+                );
+                const isActive = formData.destination === destinationOptionId;
+
+                return (
+                  <motion.div
+                    key={dest.id || dest._id || dest.slug || destinationOptionId || i}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.4 + i * 0.1 }}
+                    onClick={() => setFormData(prev => ({ ...prev, destination: destinationOptionId }))}
                     style={{
-                      fontSize: isMobile ? 14 : 16,
-                      fontWeight: 700,
-                      color: formData.destination === (dest.id || dest._id || dest.name) ? THEME.white : THEME.text,
-                      marginBottom: 4,
+                      padding: 16,
+                      borderRadius: 12,
+                      backgroundColor: isActive ? THEME.primary : THEME.white,
+                      border: `2px solid ${isActive ? THEME.primary : THEME.gray200}`,
+                      cursor: "pointer",
+                      textAlign: "center",
+                      transition: "all 0.3s ease",
+                      boxShadow: isActive ? `0 4px 16px ${THEME.shadow}` : "none",
                     }}
                   >
-                    {normalizeOptionLabel(dest.name || dest.title)}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 12,
-                      color: formData.destination === (dest.id || dest._id || dest.name) ? "rgba(255,255,255,0.8)" : THEME.textLight,
-                    }}
-                  >
-                    {normalizeOptionLabel(dest.location || dest.country)}
-                  </div>
-                </motion.div>
-              ))}
+                    <div
+                      style={{
+                        fontSize: isMobile ? 14 : 16,
+                        fontWeight: 700,
+                        color: isActive ? THEME.white : THEME.text,
+                        marginBottom: 4,
+                      }}
+                    >
+                      {normalizeOptionLabel(dest.name || dest.title || dest.slug)}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: isActive ? "rgba(255,255,255,0.8)" : THEME.textLight,
+                      }}
+                    >
+                      {normalizeOptionLabel(dest.location || dest.country || dest.region || dest.subregion)}
+                    </div>
+                  </motion.div>
+                );
+              })}
             </div>
           </motion.div>
         )}

@@ -6,6 +6,7 @@ import { HiHeart, HiTrash, HiLocationMarker } from "react-icons/hi";
 import Loader from "../../components/common/Loader";
 import { useWishlist } from "../../hooks/useWishlist";
 import { apiFetch } from "../../utils/apiBase";
+import { normalizeOptionLabel } from "../../pages/Booking/BookingShared";
 import "./AuthPages.css";
 
 export default function Wishlist() {
@@ -89,10 +90,10 @@ export default function Wishlist() {
                     />
                   )}
                   <div className="wishlist-card-body">
-                    <h3>{item.name}</h3>
+                    <h3>{normalizeOptionLabel(item.name)}</h3>
                     {item.country && (
                       <p>
-                        <HiLocationMarker /> {item.country}
+                        <HiLocationMarker /> {normalizeOptionLabel(item.country)}
                       </p>
                     )}
                   </div>

@@ -101,20 +101,40 @@ export const normalizeResponseArray = (value) => {
   return [];
 };
 
-export const normalizeOptionId = (id) =>
-  id === undefined || id === null ? "" : String(id);
+export const normalizeOptionId = (id) => {
+  if (id === undefined || id === null) return "";
+  if (typeof id === "object") {
+    return normalizeOptionId(
+      id.id || id._id || id.value || id.name || id.title || id.slug || id,
+    );
+  }
+  return String(id);
+};
 
 export const normalizeOptionLabel = (label) => {
   if (label === undefined || label === null) return "";
   if (typeof label === "object") {
-    if (Array.isArray(label)) return label.join(", ");
+    if (Array.isArray(label)) return label.map(normalizeOptionLabel).join(", ");
+    if (label.name || label.title || label.label || label.value || label.slug || label.country) {
+      return normalizeOptionLabel(
+        label.name || label.title || label.label || label.value || label.slug || label.country,
+      );
+    }
     return JSON.stringify(label);
   }
   return String(label);
 };
 
-export const normalizeOptionValue = (value) =>
-  value === undefined || value === null ? "" : String(value);
+export const normalizeOptionValue = (value) => {
+  if (value === undefined || value === null) return "";
+  if (typeof value === "object") {
+    if (Array.isArray(value)) return value.map(normalizeOptionValue).join(",");
+    return normalizeOptionValue(
+      value.id || value._id || value.value || value.name || value.title || value.slug || value,
+    );
+  }
+  return String(value);
+};
 
 // Icon helpers
 export const getIconComponent = (iconName, size = 22) => {
