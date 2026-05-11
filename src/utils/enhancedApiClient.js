@@ -5,30 +5,14 @@ class EnhancedApiClient {
   constructor() {
     this.cache = new Map();
     this.pendingRequests = new Map();
-    this.retryQueue = [];
-    this.isOnline = navigator.onLine;
     this.maxRetries = 3;
     this.retryDelay = 1000;
     this.cacheTimeout = 5 * 60 * 1000; // 5 minutes default
 
-    this.setupNetworkListeners();
     this.setupInterceptors();
   }
 
-  setupNetworkListeners() {
-    window.addEventListener('online', () => {
-      this.isOnline = true;
-      this.processRetryQueue();
-      this.emit('online');
-    });
-
-    window.addEventListener('offline', () => {
-      this.isOnline = false;
-      this.emit('offline');
-    });
-  }
-
-   setupInterceptors() {
+  setupInterceptors() {
     // Request interceptor
     this.requestInterceptors = [
       (config) => {
@@ -68,7 +52,7 @@ this.responseInterceptors = [
     const cacheKey = this.getCacheKey(endpoint, config);
 
     // Check cache for GET requests
-    if (config.method === 'GET' && config.cache && this.isOnline) {
+    if (config.method === 'GET' && config.cache) {
       const cached = this.getCache(cacheKey);
       if (cached) {
         return cached;
@@ -117,10 +101,6 @@ promise.finally(() => clearTimeout(timeoutId));
       return makeRequest(attempt + 1);
     }
 
-    if (!this.isOnline && config.retry) {
-      this.addToRetryQueue({ endpoint, options: config });
-    }
-
     throw this.enhanceError(error, endpoint, attempt);
   }
 };
@@ -153,7 +133,7 @@ promise.finally(() => clearTimeout(timeoutId));
     enhancedError.endpoint = endpoint;
     enhancedError.attempt = attempt;
     enhancedError.timestamp = Date.now();
-    enhancedError.isNetworkError = !this.isOnline;
+    enhancedError.isNetworkError = false;
     enhancedError.originalError = error;
 
     return enhancedError;
@@ -192,70 +172,6 @@ promise.finally(() => clearTimeout(timeoutId));
     this.cache.clear();
   }
 
-  addToRetryQueue(request) {
-    this.retryQueue.push(request);
-  }
-
-  async processRetryQueue() {
-    if (!this.isOnline || this.retryQueue.length === 0) return;
-
-    const queue = [...this.retryQueue];
-    this.retryQueue = [];
-
-    for (const request of queue) {
-      try {
-        await this.request(request.endpoint, request.options);
-      } catch (error) {
-        // If still failing, add back to queue
-        if (this.shouldRetry(error)) {
-          this.addToRetryQueue(request);
-        }
-      }
-    }
-  }
-
-  // Event system for connection status
-  eventListeners = new Map();
-
-  on(event, callback) {
-    if (!this.eventListeners.has(event)) {
-      this.eventListeners.set(event, []);
-    }
-    this.eventListeners.get(event).push(callback);
-  }
-
-  emit(event, data) {
-    const listeners = this.eventListeners.get(event) || [];
-    listeners.forEach(callback => callback(data));
-  }
-
-  // Health check
-  async healthCheck() {
-    try {
-      await this.request('/health', { method: 'GET', retry: false, cache: false });
-      return { status: 'healthy', timestamp: Date.now() };
-    } catch (error) {
-      return {
-        status: 'unhealthy',
-        error: error.message,
-        timestamp: Date.now()
-      };
-    }
-  }
-
-  // Connection monitoring
-  startConnectionMonitoring(interval = 30000) {
-    this.healthCheckInterval = setInterval(async () => {
-      const health = await this.healthCheck();
-      this.emit('health-check', health);
-    }, interval);
-  }
-
-  stopConnectionMonitoring() {
-    if (this.healthCheckInterval) {
-      clearInterval(this.healthCheckInterval);
-    }
-  }
 
   // Convenience methods
   get(endpoint, options = {}) {

@@ -4,12 +4,9 @@ import React, { useState, useEffect, useCallback } from "react";
 import {
   FiAlertTriangle,
   FiRefreshCw,
-  FiWifi,
-  FiWifiOff,
   FiCopy,
   FiCheck,
 } from "react-icons/fi";
-import { useConnection } from "../../context/ConnectionContext";
 import "./ErrorBoundary.css";
 
 // ═══════════════════════════════════════════════════════════════
@@ -56,12 +53,10 @@ class ErrorBoundary extends React.Component {
 // ═══════════════════════════════════════════════════════════════
 
 const ErrorCard = ({ error, errorInfo, retryCount, onRetry }) => {
-  const { isOnline, connectionStatus, checkConnection } = useConnection();
   const [isRetrying, setIsRetrying] = useState(false);
   const [copied, setCopied] = useState(false);
   const [timestamp] = useState(() => new Date());
 
-  const isNetwork = !isOnline || connectionStatus === "disconnected";
   const maxRetries = 3;
   const canRetry = retryCount < maxRetries;
 
@@ -88,9 +83,6 @@ const ErrorCard = ({ error, errorInfo, retryCount, onRetry }) => {
     ``,
     `▸ TIME`,
     `  ${timeStr}`,
-    ``,
-    `▸ CONNECTION`,
-    `  ${isNetwork ? "Offline" : "Online"}`,
     ``,
     `▸ RETRY ATTEMPTS`,
     `  ${retryCount} / ${maxRetries}`,
@@ -136,15 +128,6 @@ const ErrorCard = ({ error, errorInfo, retryCount, onRetry }) => {
     onRetry();
   }, [canRetry, isRetrying, onRetry]);
 
-  // ── Connection check ─────────────────────────────────────────
-  const handleCheck = useCallback(async () => {
-    setIsRetrying(true);
-    await checkConnection();
-    await new Promise((r) => setTimeout(r, 500));
-    setIsRetrying(false);
-    if (navigator.onLine) onRetry();
-  }, [checkConnection, onRetry]);
-
   // ── ESC to retry ─────────────────────────────────────────────
   useEffect(() => {
     const h = (e) => {
@@ -162,15 +145,11 @@ const ErrorCard = ({ error, errorInfo, retryCount, onRetry }) => {
         <div className="eb-head">
           <div className="eb-head-dots" />
           <div className="eb-icon-wrap">
-            {isNetwork ? <FiWifiOff /> : <FiAlertTriangle />}
+            <FiAlertTriangle />
             <span className="eb-icon-badge" />
           </div>
-          <h1 className="eb-h-title">
-            {isNetwork ? "Connection Lost" : "Error Detected"}
-          </h1>
-          <p className="eb-h-sub">
-            {isNetwork ? "Network Unavailable" : "Runtime Exception"}
-          </p>
+          <h1 className="eb-h-title">Error Detected</h1>
+          <p className="eb-h-sub">Runtime Exception</p>
         </div>
 
         {/* ── Body ───────────────────────────────── */}
@@ -212,7 +191,7 @@ const ErrorCard = ({ error, errorInfo, retryCount, onRetry }) => {
                 <span className="err-section">
                   <span className="err-heading">Time / Status</span>
                   <span className="err-value">
-                    {timeStr} · {isNetwork ? "Offline" : "Online"} · Attempt {retryCount}/{maxRetries}
+                    {timeStr} · Attempt {retryCount}/{maxRetries}
                   </span>
                 </span>
 
@@ -251,16 +230,6 @@ const ErrorCard = ({ error, errorInfo, retryCount, onRetry }) => {
               </button>
             )}
 
-            {isNetwork && (
-              <button
-                className="eb-b eb-b-ghost"
-                onClick={handleCheck}
-                disabled={isRetrying}
-              >
-                <span className="eb-b-icon"><FiWifi /></span>
-                Check Connection
-              </button>
-            )}
 
             <button
               className="eb-b eb-b-ghost"

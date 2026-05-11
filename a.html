@@ -467,7 +467,7 @@
                     celebrate();
                 } catch (error) {
                     console.error('AI error:', error);
-                    contentDiv.innerHTML = `<span style="color: #b33c3c;"><i class="fa-regular fa-circle-exclamation"></i> Error — check connection or try again.</span>`;
+                    contentDiv.innerHTML = `<span style="color: #b33c3c;"><i class="fa-regular fa-circle-exclamation"></i> Error — please try again.</span>`;
                     // add meta anyway (timestamp only)
                     const fallbackMeta = document.createElement('div');
                     fallbackMeta.className = 'message-meta';

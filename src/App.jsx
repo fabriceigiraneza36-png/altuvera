@@ -18,7 +18,7 @@ import {
 } from "react-router-dom";
 import { useApp }      from "./context/AppContext";
 import { useUserAuth } from "./context/UserAuthContext";
-import { ConnectionProvider } from "./context/ConnectionContext";
+import { MessagingProvider } from "./context/MessagingContext";
 import ErrorBoundary   from "./components/common/ErrorBoundary";
 import countryService  from "./services/countryService";
 
@@ -825,11 +825,11 @@ function App() {
 // ============================================================================
 
 const AppWithProviders = () => (
-  <ConnectionProvider>
+  <MessagingProvider>
     <ErrorBoundary>
       <App />
     </ErrorBoundary>
-  </ConnectionProvider>
+  </MessagingProvider>
 );
 
 export default AppWithProviders;

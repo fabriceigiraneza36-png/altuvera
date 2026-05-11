@@ -1,7 +1,6 @@
 // src/components/common/LoadingStates.jsx
 import React from 'react';
-import { FiLoader, FiWifi, FiAlertCircle, FiRefreshCw } from 'react-icons/fi';
-import { useConnection } from '../../context/ConnectionContext';
+import { FiLoader, FiAlertCircle, FiRefreshCw } from 'react-icons/fi';
 
 export const LoadingSpinner = ({
   size = 'md',
@@ -63,49 +62,6 @@ export const LoadingCard = ({ className = '' }) => {
 };
 
 export const ConnectionAwareWrapper = ({ children, loading, error, onRetry }) => {
-  const { isOnline, connectionStatus } = useConnection();
-
-  if (!isOnline) {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 text-center">
-        <FiWifi className="w-12 h-12 text-gray-400 mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          You're offline
-        </h3>
-        <p className="text-gray-600 mb-4">
-          Please check your internet connection and try again.
-        </p>
-        <button
-          onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
-
-  if (connectionStatus === 'disconnected') {
-    return (
-      <div className="flex flex-col items-center justify-center p-8 text-center">
-        <FiAlertCircle className="w-12 h-12 text-red-500 mb-4" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">
-          Connection lost
-        </h3>
-        <p className="text-gray-600 mb-4">
-          Unable to connect to our servers. Please try again.
-        </p>
-        <button
-          onClick={onRetry || (() => window.location.reload())}
-          className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-        >
-          <FiRefreshCw className="w-4 h-4" />
-          Retry
-        </button>
-      </div>
-    );
-  }
-
   if (loading) {
     return (
       <div className="flex items-center justify-center p-8">
