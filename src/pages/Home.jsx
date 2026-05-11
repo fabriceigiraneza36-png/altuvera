@@ -1702,11 +1702,11 @@ const Home = () => {
   return (
     <div ref={homeRootRef} className="home-root">
       <SEO
-        title="Home"
-        description="Discover extraordinary East African destinations with Altuvera."
+        title="Altuvera | East Africa Safaris, Gorilla Trekking & Cultural Tours"
+        description="Explore authentic East African safari adventures with Altuvera. Plan gorilla trekking, cultural tours, and personalized itineraries across Rwanda, Tanzania, Uganda, and Ethiopia."
         url="/"
-        image="/og-home.jpg"
-        keywords={["travel", "safari", "East Africa", "gorilla trekking", "Kilimanjaro"]}
+        image="/altuvera.png"
+        keywords={["Altuvera", "East Africa safari", "gorilla trekking", "cultural tours", "Rwanda travel", "Tanzania safari", "Uganda wildlife", "Ethiopia tours"]}
       />
       <ScrollProgress />
 

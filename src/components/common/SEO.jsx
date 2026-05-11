@@ -19,9 +19,9 @@ const SEO = ({
   section,
   tags,
 }) => {
-  const siteName = 'Altuvеrа';
-  const defaultDescription = 'Discover extraordinary destinations and create unforgettable travel experiences with Altuvеrа. Expert travel planning, virtual tours, and personalized itineraries for your dream adventures.';
-  const defaultImage = 'https://altuvera.vercel.app/og-image.jpg';
+  const siteName = 'Altuvera';
+  const defaultDescription = 'Explore authentic East African safari adventures with Altuvera. Plan gorilla trekking, cultural tours, and personalized itineraries across Rwanda, Tanzania, Uganda, and Ethiopia.';
+  const defaultImage = 'https://altuvera.vercel.app/altuvera.png';
   const baseUrl = 'https://altuvera.vercel.app';
 
   const fullTitle = title ? `${title} | ${siteName}` : siteName;

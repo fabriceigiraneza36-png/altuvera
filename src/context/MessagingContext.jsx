@@ -7,7 +7,7 @@ import { useUserAuth } from './UserAuthContext'
 
 const MessagingContext = createContext(null)
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000'
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'https://backend-jd8f.onrender.com'
 const SESSION_KEY = 'altuvera_msg_session'
 
 /* ── helpers ─────────────────────────────────────────────────────────────── */
