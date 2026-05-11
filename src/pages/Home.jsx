@@ -11,7 +11,7 @@ import {
 import Hero, { HERO_SLIDES } from "../components/home/Hero";
 import AnimatedSection from "../components/common/AnimatedSection";
 import Button from "../components/common/Button";
-import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
+import NewsletterWidget from "../components/common/NewsletterWidget";
 import Confetti from "../components/common/Confetti";
 import SEO from "../components/common/SEO";
 import DestinationCard from "../components/home/DestinationCard";
@@ -1323,152 +1323,7 @@ const TestimonialsRotator = memo(({ items }) => {
       </div>
     </div>
   );
-});
-
-/* ═══════════════════════════════════════════
-   NEWSLETTER FORM
-   ═══════════════════════════════════════════ */
-const API_BASE = import.meta.env.VITE_API_URL || "";
-
-const NewsletterForm = memo(({ user }) => {
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState("idle");
-  const [msg, setMsg] = useState("");
-  const [showConfetti, setShowConfetti] = useState(false);
-
-  const handleSubmit = useCallback(
-    async (e) => {
-      e.preventDefault();
-      if (!email || status === "loading") return;
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        setStatus("error");
-        setMsg("Please enter a valid email address.");
-        return;
-      }
-      setStatus("loading");
-      setMsg("");
-      try {
-        const res = await fetch(`${API_BASE}/api/subscribers`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        });
-        const data = await res.json();
-        if (res.status === 201) {
-          setStatus("success");
-          setMsg(data.message || "Subscribed successfully!");
-          setEmail("");
-          setShowConfetti(true);
-          setTimeout(() => setShowConfetti(false), 5000);
-        } else if (res.status === 429) {
-          setStatus("error");
-          setMsg("Too many attempts. Please try again in a moment.");
-        } else if (res.status === 400) {
-          setStatus("error");
-          setMsg(data.error || "Please enter a valid email address.");
-        } else {
-          setStatus("error");
-          setMsg(data.error || "Something went wrong. Please try again.");
-        }
-      } catch {
-        setStatus("error");
-        setMsg("Network error. Please check your connection and try again.");
-      }
-    },
-    [email, status]
-  );
-
-  const handleRetry = useCallback(() => {
-    setStatus("idle");
-    setMsg("");
-  }, []);
-
-  if (status === "success" || user?.subscribed) {
-    return (
-      <>
-        <Confetti active={showConfetti} duration={5000} />
-        <motion.div
-          className="newsletter-success"
-          initial={{ scale: 0.85, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", bounce: 0.4 }}
-        >
-          <div className="newsletter-success-icon">
-            <IconCheck size={28} color="#fff" />
-          </div>
-          <div>
-            <div className="newsletter-success-title">
-              You're in! Welcome aboard 🎉
-            </div>
-            <div className="newsletter-success-sub">
-              {msg || "Check your inbox for a welcome email from us."}
-            </div>
-          </div>
-        </motion.div>
-      </>
-    );
-  }
-
-  return (
-    <form className="newsletter-form" onSubmit={handleSubmit} noValidate>
-      <div className="newsletter-form-field-wrap">
-        <EmailAutocompleteInput
-          placeholder="Enter your email address"
-          value={email}
-          onValueChange={setEmail}
-          required
-          className={`newsletter-input${
-            status === "error" ? " newsletter-input--error" : ""
-          }`}
-          disabled={status === "loading"}
-        />
-        {status === "error" && (
-          <motion.div
-            className="newsletter-error-msg"
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            {msg}
-            <button
-              type="button"
-              className="newsletter-error-retry"
-              onClick={handleRetry}
-            >
-              Retry
-            </button>
-          </motion.div>
-        )}
-      </div>
-      <MagneticWrap strength={0.12}>
-        <motion.button
-          type="submit"
-          className={`newsletter-btn${
-            status === "loading" ? " newsletter-btn--loading" : ""
-          }`}
-          whileTap={{ scale: 0.96 }}
-          disabled={status === "loading"}
-        >
-          {status === "loading" ? (
-            <>
-              <motion.span
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              >
-                <IconLoader size={16} />
-              </motion.span>{" "}
-              Subscribing…
-            </>
-          ) : (
-            <>
-              Subscribe <IconArrowRight size={15} />
-            </>
-          )}
-        </motion.button>
-      </MagneticWrap>
-    </form>
-  );
-});
+};
 
 /* ═══════════════════════════════════════════
    MAIN HOME COMPONENT
@@ -2256,24 +2111,28 @@ const Home = () => {
         <div className="newsletter-decor-ring newsletter-decor-ring--top" />
         <div className="newsletter-decor-blob" />
         <div className="newsletter-inner">
-          <AnimatedSection animation="scaleIn">
-            <motion.div
-              className="newsletter-icon-wrap"
-              animate={reduced ? {} : { y: [0, -8, 0] }}
-              transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-            >
-              <IconMail size={34} color="white" />
-            </motion.div>
-            <h2 className="newsletter-title">Join 10+ Adventurers</h2>
-            <p className="newsletter-subtitle">
-              Get exclusive travel inspiration, early-bird offers, wildlife
-              migration alerts, and insider tips delivered weekly.
-            </p>
-            <NewsletterForm user={user} />
-            <p className="newsletter-privacy">
-              No spam, ever. Unsubscribe anytime.
-            </p>
-          </AnimatedSection>
+             <AnimatedSection animation="scaleIn">
+               <motion.div
+                 className="newsletter-icon-wrap"
+                 animate={reduced ? {} : { y: [0, -8, 0] }}
+                 transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+               >
+                 <IconMail size={34} color="white" />
+               </motion.div>
+               <h2 className="newsletter-title">Join 10+ Adventurers</h2>
+               <p className="newsletter-subtitle">
+                 Get exclusive travel inspiration, early-bird offers, wildlife
+                 migration alerts, and insider tips delivered weekly.
+               </p>
+               <NewsletterWidget
+                 source="home-hero"
+                 className="home-newsletter-widget"
+                 initialEmail={user?.email || ''}
+               />
+               <p className="newsletter-privacy">
+                 No spam, ever. Unsubscribe anytime.
+               </p>
+             </AnimatedSection>
         </div>
       </section>
 

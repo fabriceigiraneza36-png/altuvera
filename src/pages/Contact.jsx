@@ -35,6 +35,7 @@ import { sendVerificationCode, verifyCode } from "../utils/verifyEmail";
 import { useChatSocket } from "../hooks/useChatSocket";
 import VerificationModal from "../components/common/VerificationModal";
 import { useUserAuth } from "../context/UserAuthContext";
+import SubscriptionForm from "../components/common/SubscriptionForm";
 
 /* ══════════════════════════════════════════════════════
    BRAND TOKENS
@@ -1372,7 +1373,37 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* ══ CTA ══ */}
+      {/* ── Newsletter Subscription ── */}
+      <section style={{
+        background: 'linear-gradient(135deg, #065F46 0%, #047857 100%)',
+        padding: 'clamp(28px, 5vw, 52px)',
+        textAlign: 'center',
+        position: 'relative',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          position: 'absolute',
+          top: '-30%',
+          right: '-10%',
+          width: 400,
+          height: 400,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%)',
+          pointerEvents: 'none',
+        }} />
+        <SubscriptionForm
+          title="Get Safari Inspiration"
+          description="Subscribe for exclusive travel tips, wildlife migration alerts, and members-only offers."
+          buttonText="Subscribe"
+          source="contact-page"
+          theme="light"
+          showNameField={false}
+          sectionLabel="Newsletter"
+          onSuccess={() => {}}
+        />
+      </section>
+
+      {/* ── CTA ── */}
       <section className="ct-section ct-section--dark">
         <div className="ct-cta-pat" />
         <ScrollReveal>

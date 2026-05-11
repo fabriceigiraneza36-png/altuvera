@@ -232,6 +232,8 @@ const normalizeUser = (
         : {},
     lastLogin: raw.lastLogin || raw.last_login || null,
     createdAt: raw.createdAt || raw.created_at || null,
+    // Include subscription status if provided by backend
+    subscribed: Boolean(raw.subscribed ?? raw.isSubscribed ?? false),
   };
 };
 

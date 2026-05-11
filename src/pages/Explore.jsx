@@ -33,6 +33,7 @@ import PageHeader from '../components/common/PageHeader';
 import AnimatedSection from '../components/common/AnimatedSection';
 import Button from '../components/common/Button';
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
+import SubscriptionForm from "../components/common/SubscriptionForm";
 import ExperienceCard from '../components/common/ExperienceCard';
 import { useCountries } from '../hooks/useCountries';
 
@@ -1355,149 +1356,14 @@ function TrustBadge({ icon, title, desc }) {
 /* ---- Newsletter ---- */
 
 function NewsletterBlock() {
-  const [email, setEmail] = useState('');
-  const [done, setDone] = useState(false);
-
-  const submit = (e) => {
-    e.preventDefault();
-    if (email) {
-      setDone(true);
-      setTimeout(() => {
-        setDone(false);
-        setEmail('');
-      }, 3000);
-    }
-  };
-
   return (
-    <div
-      style={{
-        background:
-          'linear-gradient(135deg,' + G[700] + ' 0%,' + G[900] + ' 100%)',
-        borderRadius: 32,
-        padding: 'clamp(28px,5vw,52px)',
-        textAlign: 'center',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      <div
-        style={{
-          position: 'absolute',
-          top: '-40%',
-          right: '-10%',
-          width: 400,
-          height: 400,
-          borderRadius: '50%',
-          background:
-            'radial-gradient(circle, rgba(34,197,94,0.15) 0%, transparent 70%)',
-          pointerEvents: 'none',
-        }}
-      />
-      <div style={{ position: 'relative', zIndex: 1 }}>
-        <SectionLabelDark icon={<FiMail size={14} />} text="Stay Inspired" />
-        <h3
-          style={{
-            fontFamily: "'Playfair Display', Georgia, serif",
-            fontSize: 'clamp(26px,4vw,38px)',
-            fontWeight: 700,
-            color: W.pure,
-            marginBottom: 14,
-          }}
-        >
-          Get Exclusive Travel Inspiration
-        </h3>
-        <p
-          style={{
-            fontSize: 16,
-            color: 'rgba(255,255,255,0.7)',
-            marginBottom: 32,
-            lineHeight: 1.7,
-            maxWidth: 520,
-            marginLeft: 'auto',
-            marginRight: 'auto',
-          }}
-        >
-          Join 25,000+ adventurers receiving hand-picked destination
-          stories, insider tips, and members-only offers every week.
-        </p>
-        {done ? (
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 10,
-              padding: '16px 32px',
-              backgroundColor: 'rgba(255,255,255,0.12)',
-              borderRadius: 50,
-              color: G[300],
-              fontWeight: 700,
-              fontSize: 15,
-            }}
-          >
-            <FiCheck size={20} /> Welcome aboard! Check your inbox.
-          </div>
-        ) : (
-          <form
-            onSubmit={submit}
-            style={{
-              display: 'flex',
-              gap: 12,
-              maxWidth: 480,
-              margin: '0 auto',
-              flexWrap: 'wrap',
-              justifyContent: 'center',
-            }}
-          >
-            <EmailAutocompleteInput
-              value={email}
-              onValueChange={setEmail}
-              required
-              placeholder="Enter your email"
-              style={{
-                flex: '1 1 260px',
-                padding: '16px 24px',
-                borderRadius: 50,
-                border: '2px solid rgba(255,255,255,0.15)',
-                backgroundColor: 'rgba(255,255,255,0.08)',
-                color: W.pure,
-                fontSize: 15,
-                outline: 'none',
-                minWidth: 200,
-              }}
-            />
-            <button
-              type="submit"
-              style={{
-                padding: '16px 32px',
-                borderRadius: 50,
-                border: 'none',
-                backgroundColor: W.pure,
-                color: G[700],
-                fontSize: 15,
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              Subscribe <FiArrowRight size={16} />
-            </button>
-          </form>
-        )}
-        <p
-          style={{
-            fontSize: 12,
-            color: 'rgba(255,255,255,0.4)',
-            marginTop: 16,
-          }}
-        >
-          No spam. Unsubscribe anytime.
-        </p>
-      </div>
-    </div>
+    <SubscriptionForm
+      theme="dark"
+      title="Get Exclusive Travel Inspiration"
+      description="Join 25,000+ adventurers receiving hand-picked destination stories, insider tips, and members-only offers every week."
+      sectionLabel="Stay Inspired"
+      icon={<FiMail size={14} />}
+    />
   );
 }
 

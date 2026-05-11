@@ -21,6 +21,8 @@ import { useUserAuth } from "./context/UserAuthContext";
 import { MessagingProvider } from "./context/MessagingContext";
 import ErrorBoundary   from "./components/common/ErrorBoundary";
 import countryService  from "./services/countryService";
+import NewsletterPopup from "./components/common/NewsletterPopup";
+import AutoSubscribeModal from "./components/common/AutoSubscribeModal";
 
 // ── Eager imports ─────────────────────────────────────────────────────────────
 import Navbar               from "./components/common/Navbar";
@@ -638,9 +640,9 @@ const OverlayLayer = React.memo(
       <CookieConsent />
       <AuthModal />
       <WhatsAppButton />
-      {showCelebration && (
-        <CelebrationOverlay userName={userName} />
-      )}
+      <NewsletterPopup source="exit-popup" />
+      <AutoSubscribeModal />
+      {showCelebration && <CelebrationOverlay userName={userName} />}
       {isLoading && <Loader fullScreen />}
     </>
   )

@@ -39,6 +39,7 @@ import {
 import PageHeader from "../components/common/PageHeader";
 import AnimatedSection from "../components/common/AnimatedSection";
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
+import SubscriptionForm from "../components/common/SubscriptionForm";
 import { apiFetch } from "../utils/apiBase";
 
 /* ═══════════════════════════════════════════════════════
@@ -917,8 +918,6 @@ const Posts = () => {
   const [backToTop, setBackToTop] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
 
   const POSTS_PER_PAGE = 9;
   const w = useWindowSize();
@@ -1009,15 +1008,6 @@ const Posts = () => {
       return next;
     });
   }, []);
-
-  /* ── Newsletter ──────────────────────────────────────── */
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (!email.trim()) return;
-    setSubscribed(true);
-    setEmail("");
-    setTimeout(() => setSubscribed(false), 3200);
-  };
 
   /* ── Derived ─────────────────────────────────────────── */
   const featuredPost = useMemo(() => posts.find((p) => p.featured), [posts]);
@@ -1434,126 +1424,17 @@ const Posts = () => {
 
         {/* ════ NEWSLETTER ════ */}
         <AnimatedSection animation="fadeInUp">
-          <div
-            className="ps-newsletter"
+          <SubscriptionForm
+            theme="dark"
+            title="Never Miss a Story"
+            description="Get the latest travel stories, tips and exclusive content delivered straight to your inbox every week."
+            successText="Welcome aboard! Check your inbox."
+            disclaimer="No spam. Unsubscribe anytime. We respect your privacy."
             style={{
               marginTop: 76,
-              padding: isMobile ? "40px 22px" : "56px 48px",
               background: "linear-gradient(135deg,#064E3B 0%,#065F46 40%,#047857 100%)",
-              borderRadius: "var(--ps-radius-xl)",
-              textAlign: "center",
-              position: "relative",
-              overflow: "hidden",
             }}
-          >
-            {/* Decorative blobs */}
-            {[
-              { top: -80, right: -80, size: 240 },
-              { bottom: -60, left: -60, size: 170 },
-            ].map((b, i) => (
-              <div key={i} style={{
-                position: "absolute",
-                top: b.top, bottom: b.bottom,
-                left: b.left, right: b.right,
-                width: b.size, height: b.size,
-                borderRadius: "50%",
-                background: "rgba(52,211,153,0.07)",
-                pointerEvents: "none",
-              }} />
-            ))}
-
-            <div style={{ position: "relative", zIndex: 1 }}>
-              <div style={{
-                width: 62, height: 62, borderRadius: 18,
-                background: "rgba(255,255,255,0.1)",
-                backdropFilter: "blur(12px)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                margin: "0 auto 22px",
-                animation: "float 3s ease infinite",
-                border: "1px solid rgba(255,255,255,0.12)",
-              }}>
-                <FiMail size={27} color="#34D399" />
-              </div>
-
-              <h3 style={{
-                fontFamily: "'Playfair Display', serif",
-                fontSize: isMobile ? 22 : 30,
-                fontWeight: 800, color: "white",
-                marginBottom: 10, letterSpacing: "-0.02em",
-              }}>
-                Never Miss a Story
-              </h3>
-
-              <p style={{
-                fontSize: isMobile ? 13.5 : 15.5,
-                color: "rgba(255,255,255,0.72)",
-                maxWidth: 460, margin: "0 auto 28px", lineHeight: 1.7,
-              }}>
-                Get the latest travel stories, tips and exclusive content delivered
-                straight to your inbox every week.
-              </p>
-
-              <form
-                onSubmit={handleSubscribe}
-                style={{
-                  display: "flex", gap: 10,
-                  maxWidth: 460, margin: "0 auto",
-                  flexWrap: isMobile ? "wrap" : "nowrap",
-                }}
-              >
-                <EmailAutocompleteInput
-                  value={email}
-                  onValueChange={setEmail}
-                  placeholder="Enter your email address"
-                  required
-                  className="ps-focus-ring"
-                  style={{
-                    flex: 1,
-                    padding: "13px 18px",
-                    borderRadius: "var(--ps-radius-full)",
-                    border: "2px solid rgba(255,255,255,0.18)",
-                    backgroundColor: "rgba(255,255,255,0.09)",
-                    color: "white", fontSize: 13.5, outline: "none",
-                    transition: "border-color 0.3s",
-                    backdropFilter: "blur(8px)",
-                    minWidth: isMobile ? "100%" : "auto",
-                  }}
-                  onFocus={(e) => (e.target.style.borderColor = "rgba(52,211,153,0.55)")}
-                  onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.18)")}
-                />
-                <button
-                  type="submit"
-                  className="ps-focus-ring"
-                  style={{
-                    padding: "13px 26px",
-                    borderRadius: "var(--ps-radius-full)",
-                    background: subscribed
-                      ? "linear-gradient(135deg,#34D399,#10B981)"
-                      : "linear-gradient(135deg,white,#F9FAFB)",
-                    color: subscribed ? "white" : "#065F46",
-                    border: "none", cursor: "pointer",
-                    fontSize: 13.5, fontWeight: 700,
-                    display: "flex", alignItems: "center", gap: 8,
-                    whiteSpace: "nowrap",
-                    boxShadow: "0 4px 18px rgba(0,0,0,0.18)",
-                    transition: "all 0.3s",
-                    minWidth: isMobile ? "100%" : "auto",
-                    justifyContent: "center",
-                  }}
-                  onMouseOver={(e) => { if (!subscribed) { e.currentTarget.style.transform = "translateY(-2px)"; e.currentTarget.style.boxShadow = "0 8px 28px rgba(0,0,0,0.24)"; } }}
-                  onMouseOut={(e) => { e.currentTarget.style.transform = "translateY(0)"; e.currentTarget.style.boxShadow = "0 4px 18px rgba(0,0,0,0.18)"; }}
-                >
-                  {subscribed
-                    ? <><FiStar size={15} /> Subscribed!</>
-                    : <><FiMail size={15} /> Subscribe</>}
-                </button>
-              </form>
-
-              <p style={{ fontSize: 11.5, color: "rgba(255,255,255,0.38)", marginTop: 14 }}>
-                No spam. Unsubscribe anytime. We respect your privacy.
-              </p>
-            </div>
-          </div>
+          />
         </AnimatedSection>
       </section>
 

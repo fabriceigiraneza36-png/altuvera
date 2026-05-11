@@ -5,25 +5,21 @@ import { getBrandLogoUrl } from "../../utils/seo";
 import { useCountries } from "../../hooks/useCountries";
 import {
   FiFacebook,
-  FiTwitter,
   FiInstagram,
   FiYoutube,
   FiMail,
   FiPhone,
   FiMapPin,
   FiArrowRight,
-  FiCheck,
   FiLinkedin,
 } from "react-icons/fi";
 import { FaXTwitter } from "react-icons/fa6";
+import NewsletterWidget from "./NewsletterWidget";
 
 const Footer = () => {
   const { user } = useUserAuth();
   const displayName =
     user?.fullName || user?.name || user?.email?.split("@")[0] || "";
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [viewportWidth, setViewportWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1280
   );
@@ -35,25 +31,15 @@ const Footer = () => {
     error: countriesError,
   } = useCountries({ limit: 6 });
 
-// 👇 ADD THIS TEMPORARILY
-useEffect(() => {
-  console.log("=== FOOTER COUNTRIES DEBUG ===");
-  console.log("loading:", countriesLoading);
-  console.log("error:", countriesError);
-  console.log("backendCountries:", backendCountries);
-}, [backendCountries, countriesLoading, countriesError]);
-
-
-  const handleSubscribe = (e) => {
-    e.preventDefault();
-    if (!email) return;
-    setIsSubmitting(true);
-    setTimeout(() => {
-      setSubscribed(true);
-      setIsSubmitting(false);
-      setEmail("");
-    }, 1000);
-  };
+  // Debug countries (temporary)
+  useEffect(() => {
+    if (import.meta.env.DEV) {
+      console.log("=== FOOTER COUNTRIES DEBUG ===");
+      console.log("loading:", countriesLoading);
+      console.log("error:", countriesError);
+      console.log("backendCountries:", backendCountries);
+    }
+  }, [backendCountries, countriesLoading, countriesError]);
 
   const currentYear = new Date().getFullYear();
   const isMobile = viewportWidth <= 640;
@@ -611,11 +597,51 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* ── Divider ── */}
-        <div style={styles.divider} />
+         <div style={styles.divider} />
 
-        {/* ── Bottom Bar ── */}
-        <div style={styles.bottom}>
+         {/* ── Newsletter Section ── */}
+         <div style={{
+           padding: isMobile ? '28px 0' : '36px 0',
+           borderBottom: '1px solid rgba(255,255,255,0.08)',
+           marginBottom: isMobile ? '24px' : '32px',
+         }}>
+           <div style={{
+             display: 'flex',
+             flexDirection: isMobile ? 'column' : 'row',
+             alignItems: isMobile ? 'flex-start' : 'center',
+             justifyContent: 'space-between',
+             gap: isMobile ? 20 : 0,
+           }}>
+             <div style={{ maxWidth: 360, flex: 1 }}>
+               <h3 style={{
+                 fontFamily: "'Playfair Display', serif",
+                 fontSize: isMobile ? 18 : 20,
+                 fontWeight: 700,
+                 color: 'white',
+                 margin: '0 0 6px',
+               }}>
+                 Get旅行 Inspiration
+               </h3>
+               <p style={{
+                 fontSize: isMobile ? 13 : 14,
+                 color: 'rgba(255,255,255,0.65)',
+                 lineHeight: 1.55,
+                 margin: 0,
+               }}>
+                 Subscribe for exclusive deals, safari tips, and destination guides.
+               </p>
+             </div>
+               <div style={{ flex: isMobile ? 1 : 0, minWidth: isMobile ? '100%' : 280, maxWidth: 400 }}>
+                 <NewsletterWidget
+                   source="footer"
+                   initialEmail={user?.email || ''}
+                 />
+               </div>
+           </div>
+         </div>
+
+         {/* ── Bottom Bar ── */}
+         <div style={styles.bottom}>
           <p style={styles.copyright}>
             © {currentYear} Altuvera. All rights reserved.{" "}
             {displayName ? `Made for you, ${displayName}.` : "Made for you."}
