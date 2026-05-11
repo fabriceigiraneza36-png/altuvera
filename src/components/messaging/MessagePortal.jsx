@@ -62,36 +62,36 @@ const ConnectionDot = ({ state }) => {
 }
 
 /* ── Single message bubble ──────────────────────────────────────────────── */
-const MessageBubble = ({ msg, isOwn }) => {
-  return (
-    <div className={`mp__bubble-row ${isOwn ? 'mp__bubble-row--own' : ''}`}>
+const MessageBubble = React.memo(({ msg, isOwn }) => (
+  <div className={`mp__bubble-row ${isOwn ? 'mp__bubble-row--own' : ''}`}>
+    {!isOwn && (
+      <div className="mp__avatar-sm">
+        <span>A</span>
+      </div>
+    )}
+    <div className={`mp__bubble ${isOwn ? 'mp__bubble--own' : 'mp__bubble--other'}`}>
       {!isOwn && (
-        <div className="mp__avatar-sm">
-          <span>S</span>
-        </div>
+        <p className="mp__bubble-sender">{msg.senderName || 'Support'}</p>
       )}
-      <div className={`mp__bubble ${isOwn ? 'mp__bubble--own' : 'mp__bubble--other'}`}>
-        {!isOwn && (
-          <p className="mp__bubble-sender">{msg.senderName || 'Support'}</p>
+      <p className="mp__bubble-text">{msg.body}</p>
+      <div className="mp__bubble-meta">
+        <span className="mp__bubble-time">{formatTime(msg.createdAt)}</span>
+        {isOwn && (
+          <span className="mp__bubble-read" title={msg.isRead ? 'Read' : 'Sent'}>
+            {msg.isRead ? '✓✓' : '✓'}
+          </span>
         )}
-        <p className="mp__bubble-text">{msg.body}</p>
-        <div className="mp__bubble-meta">
-          <span className="mp__bubble-time">{formatTime(msg.createdAt)}</span>
-          {isOwn && (
-            <span className="mp__bubble-read" title={msg.isRead ? 'Read' : 'Sent'}>
-              {msg.isRead ? '✓✓' : '✓'}
-            </span>
-          )}
-        </div>
       </div>
     </div>
-  )
-}
+  </div>
+))
+
+MessageBubble.displayName = 'MessageBubble'
 
 /* ── Typing animation ────────────────────────────────────────────────────── */
 const TypingIndicator = () => (
   <div className="mp__bubble-row">
-    <div className="mp__avatar-sm"><span>S</span></div>
+    <div className="mp__avatar-sm"><span>A</span></div>
     <div className="mp__bubble mp__bubble--other mp__bubble--typing">
       <span className="mp__typing-dot" />
       <span className="mp__typing-dot" />
@@ -125,21 +125,21 @@ export default function MessagePortal() {
   const typingTimer = useRef(null)
   const emojiRef    = useRef(null)
 
-  const displayName = user?.fullName || user?.name || guestName || 'You'
-
   /* ── auto-scroll ─────────────────────────────────────────────────────── */
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
       }, 80)
+      return () => clearTimeout(timer)
     }
   }, [messages, isTyping, isOpen])
 
   /* ── focus input on open ─────────────────────────────────────────────── */
   useEffect(() => {
     if (isOpen && registered) {
-      setTimeout(() => inputRef.current?.focus(), 200)
+      const timer = setTimeout(() => inputRef.current?.focus(), 200)
+      return () => clearTimeout(timer)
     }
   }, [isOpen, registered])
 
@@ -189,7 +189,6 @@ export default function MessagePortal() {
     const body = input.trim()
     if (!body) return
 
-    // If not logged in, ensure we have name
     if (!user && !guestName.trim()) {
       inputRef.current?.blur()
       return
@@ -218,6 +217,12 @@ export default function MessagePortal() {
     setInput((prev) => prev + emoji)
     setEmojiOpen(false)
     inputRef.current?.focus()
+  }, [])
+
+  /* ── textarea auto-resize ────────────────────────────────────────────── */
+  const handleTextareaInput = useCallback((e) => {
+    e.target.style.height = 'auto'
+    e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`
   }, [])
 
   /* ── grouped messages ────────────────────────────────────────────────── */
@@ -260,8 +265,10 @@ export default function MessagePortal() {
           <div className="mp__header-actions">
             <button
               className="mp__header-btn"
-              onClick={() => window.location.href = 'mailto:support@altuvera.com'}
+              onClick={() => { window.location.href = 'mailto:support@altuvera.com' }}
               title="Email us"
+              type="button"
+              aria-label="Email support"
             >
               📧
             </button>
@@ -270,13 +277,14 @@ export default function MessagePortal() {
               onClick={closePortal}
               aria-label="Close chat"
               title="Close"
+              type="button"
             >
               ✕
             </button>
           </div>
         </div>
 
-        {/* ── Guest info form (if not logged in and no messages yet) ── */}
+        {/* ── Guest info form ── */}
         {!user && showIntro && (
           <div className="mp__guest-form">
             <p className="mp__guest-title">👋 Start a conversation</p>
@@ -287,6 +295,7 @@ export default function MessagePortal() {
               placeholder="Your name (optional)"
               value={guestName}
               onChange={(e) => setGuestName(e.target.value)}
+              autoComplete="name"
             />
             <input
               className="mp__guest-input"
@@ -294,6 +303,7 @@ export default function MessagePortal() {
               placeholder="Your email (optional)"
               value={guestEmail}
               onChange={(e) => setGuestEmail(e.target.value)}
+              autoComplete="email"
             />
           </div>
         )}
@@ -320,6 +330,7 @@ export default function MessagePortal() {
                     key={chip}
                     className="mp__intro-chip"
                     onClick={() => { setInput(chip.slice(3)); setShowIntro(false) }}
+                    type="button"
                   >
                     {chip}
                   </button>
@@ -368,6 +379,7 @@ export default function MessagePortal() {
               onClick={() => setEmojiOpen((v) => !v)}
               title="Emoji"
               type="button"
+              aria-label="Toggle emoji picker"
             >
               😊
             </button>
@@ -375,11 +387,7 @@ export default function MessagePortal() {
             <textarea
               ref={inputRef}
               className="mp__textarea"
-              placeholder={
-                connected
-                  ? 'Type your message…'
-                  : 'Connecting…'
-              }
+              placeholder={connected ? 'Type your message…' : 'Connecting…'}
               value={input}
               onChange={(e) => {
                 setInput(e.target.value)
@@ -388,15 +396,13 @@ export default function MessagePortal() {
               onKeyDown={handleKeyDown}
               rows={1}
               disabled={!connected}
+              aria-label="Message input"
               style={{
                 height: 'auto',
-                minHeight: '40px',
+                minHeight: '36px',
                 maxHeight: '120px',
               }}
-              onInput={(e) => {
-                e.target.style.height = 'auto'
-                e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`
-              }}
+              onInput={handleTextareaInput}
             />
 
             <button
@@ -405,13 +411,22 @@ export default function MessagePortal() {
               disabled={!input.trim() || !connected || sendingMsg}
               title="Send message"
               type="button"
+              aria-label="Send message"
             >
               {sendingMsg ? (
                 <span className="mp__send-spinner" />
               ) : (
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
-                  width="18" height="18">
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  width="18"
+                  height="18"
+                  aria-hidden="true"
+                >
                   <path d="M22 2L11 13M22 2L15 22 11 13 2 9l20-7z" />
                 </svg>
               )}
