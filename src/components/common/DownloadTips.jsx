@@ -1,6 +1,21 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { FiDownload, FiCheckCircle, FiX, FiEye, FiAlertCircle, FiFileText, FiPrinter, FiShield } from 'react-icons/fi';
-import { generateTravelGuide, generatePackageChecklist, downloadPDF, previewPDF } from '../../utils/pdfGenerator';
+import {
+  FiDownload,
+  FiCheckCircle,
+  FiX,
+  FiEye,
+  FiAlertCircle,
+  FiFileText,
+  FiPrinter,
+  FiShield,
+  FiRefreshCw
+} from 'react-icons/fi';
+import {
+  generateTravelGuide,
+  generatePackageChecklist,
+  downloadPDF,
+  previewPDF
+} from '../../utils/pdfGenerator';
 import './DownloadTips.css';
 
 const DownloadTips = ({
@@ -18,57 +33,103 @@ const DownloadTips = ({
   const [downloadStatus, setDownloadStatus] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
   const [activeTab, setActiveTab] = useState('download');
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [isPreviewLoading, setIsPreviewLoading] = useState(false);
+  const [previewError, setPreviewError] = useState('');
+
   const buttonRef = useRef(null);
   const modalRef = useRef(null);
   const triggerRef = useRef(null);
+  const previewBlobUrl = useRef(null);
 
+  // Intersection Observer
   useEffect(() => {
     const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsVisible(entry.isIntersecting);
-      },
-      {
-        threshold: 0.1,
-        rootMargin: '50px'
-      }
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0.1, rootMargin: '50px' }
     );
 
-    if (triggerRef.current) {
-      observer.observe(triggerRef.current);
-    }
-
+    const el = triggerRef.current;
+    if (el) observer.observe(el);
     return () => {
-      if (triggerRef.current) {
-        observer.unobserve(triggerRef.current);
-      }
+      if (el) observer.unobserve(el);
     };
   }, []);
 
+  // Escape key + body lock
   useEffect(() => {
     const handleEscape = (e) => {
-      if (e.key === 'Escape') setShowModal(false);
+      if (e.key === 'Escape') handleCloseModal();
     };
 
     if (showModal) {
       document.addEventListener('keydown', handleEscape);
       document.body.style.overflow = 'hidden';
     }
-
     return () => {
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
   }, [showModal]);
 
-  const generatePDF = useCallback(() => {
-    switch (type) {
-      case 'checklist':
-        return generatePackageChecklist(tourData, expenses, userInfo);
-      case 'tips':
-      default:
-        return generateTravelGuide(tips, tourName);
+  // Cleanup blob URL on unmount
+  useEffect(() => {
+    return () => {
+      if (previewBlobUrl.current) {
+        URL.revokeObjectURL(previewBlobUrl.current);
+      }
+    };
+  }, []);
+
+  // Generate preview when modal opens or tab switches to download
+  useEffect(() => {
+    if (showModal && activeTab === 'download' && !previewUrl && !previewError) {
+      generatePreview();
+    }
+  }, [showModal, activeTab]);
+
+  const generatePDFDocument = useCallback(() => {
+    try {
+      switch (type) {
+        case 'checklist':
+          return generatePackageChecklist(tourData, expenses, userInfo);
+        case 'tips':
+        default:
+          return generateTravelGuide(tips, tourName);
+      }
+    } catch (err) {
+      console.error('PDF generation error:', err);
+      throw new Error('Failed to generate document. Please try again.');
     }
   }, [type, tourData, expenses, userInfo, tips, tourName]);
+
+  const generatePreview = useCallback(async () => {
+    setIsPreviewLoading(true);
+    setPreviewError('');
+
+    try {
+      // Revoke old blob
+      if (previewBlobUrl.current) {
+        URL.revokeObjectURL(previewBlobUrl.current);
+        previewBlobUrl.current = null;
+      }
+
+      await new Promise((r) => setTimeout(r, 300));
+
+      const pdf = generatePDFDocument();
+      const blob = pdf.output('blob');
+      const url = URL.createObjectURL(blob);
+
+      previewBlobUrl.current = url;
+      setPreviewUrl(url);
+    } catch (err) {
+      console.error('Preview generation error:', err);
+      setPreviewError(err.message || 'Could not generate preview.');
+      setPreviewUrl(null);
+    } finally {
+      setIsPreviewLoading(false);
+    }
+  }, [generatePDFDocument]);
 
   const handleDownload = async () => {
     setIsDownloading(true);
@@ -76,9 +137,9 @@ const DownloadTips = ({
     setErrorMessage('');
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((r) => setTimeout(r, 600));
 
-      const pdf = generatePDF();
+      const pdf = generatePDFDocument();
       const timestamp = new Date().toISOString().split('T')[0];
       const filename = `Altuvera_${tourName.replace(/\s+/g, '_')}_${type}_${timestamp}.pdf`;
 
@@ -86,11 +147,9 @@ const DownloadTips = ({
 
       if (result.success) {
         setDownloadStatus('success');
-        setTimeout(() => {
-          setDownloadStatus(null);
-        }, 3000);
+        setTimeout(() => setDownloadStatus(null), 3000);
       } else {
-        throw new Error(result.message);
+        throw new Error(result.message || 'Download failed.');
       }
     } catch (error) {
       console.error('Download error:', error);
@@ -101,18 +160,9 @@ const DownloadTips = ({
     }
   };
 
-  const handlePreview = async () => {
-    setErrorMessage('');
-    try {
-      const pdf = generatePDF();
-      const result = previewPDF(pdf);
-
-      if (!result.success) {
-        throw new Error(result.message);
-      }
-    } catch (error) {
-      console.error('Preview error:', error);
-      setErrorMessage(error.message || 'Failed to preview PDF. Please try downloading instead.');
+  const handleOpenInNewTab = () => {
+    if (previewUrl) {
+      window.open(previewUrl, '_blank');
     }
   };
 
@@ -121,6 +171,13 @@ const DownloadTips = ({
     setDownloadStatus(null);
     setErrorMessage('');
     setActiveTab('download');
+    // Keep preview URL cached for re-open
+  };
+
+  const handleRetryPreview = () => {
+    setPreviewUrl(null);
+    setPreviewError('');
+    generatePreview();
   };
 
   const getDocumentTitle = () => {
@@ -139,233 +196,223 @@ const DownloadTips = ({
   return (
     <>
       {/* Scroll Trigger */}
-      <div ref={triggerRef} className="download-trigger" aria-hidden="true" />
+      <div ref={triggerRef} className="dl-trigger" aria-hidden="true" />
 
       {/* Floating Action Button */}
       <div
         ref={buttonRef}
-        className={`download-fab-wrapper ${isVisible ? 'download-fab-visible' : 'download-fab-hidden'} ${className}`}
+        className={`dl-fab-container ${isVisible ? 'dl-fab-show' : 'dl-fab-hide'} ${className}`}
       >
         <button
           onClick={() => setShowModal(true)}
-          className="download-fab"
+          className="dl-fab-button"
           aria-label={`Download ${getDocumentTitle()}`}
         >
-          <span className="download-fab-pulse" />
-          <span className="download-fab-ring" />
-          <FiDownload className="download-fab-icon" />
-          <span className="download-fab-label">Download PDF</span>
-          <span className="download-fab-badge">{tips.length}</span>
+          <span className="dl-fab-ripple" />
+          <FiDownload className="dl-fab-icon" />
+          <span className="dl-fab-text">Download PDF</span>
+          <span className="dl-fab-count">{tips.length}</span>
         </button>
       </div>
 
       {/* Modal */}
       {showModal && (
-        <div className="download-overlay" onClick={handleCloseModal}>
+        <div className="dl-overlay" onClick={handleCloseModal}>
           <div
             ref={modalRef}
             onClick={(e) => e.stopPropagation()}
-            className="download-modal"
+            className="dl-modal"
             role="dialog"
             aria-modal="true"
-            aria-labelledby="download-modal-title"
+            aria-labelledby="dl-modal-heading"
           >
-            {/* Modal Header */}
-            <header className="download-modal-header">
-              <div className="download-modal-header-bg" />
-              <div className="download-modal-header-content">
-                <div className="download-modal-header-icon-wrapper">
-                  <div className="download-modal-header-icon">
-                    <FiFileText />
-                  </div>
+            {/* Header */}
+            <header className="dl-header">
+              <div className="dl-header-decor" />
+              <div className="dl-header-inner">
+                <div className="dl-header-icon-box">
+                  <FiFileText />
                 </div>
-                <div className="download-modal-header-text">
-                  <h2 id="download-modal-title" className="download-modal-title">
+                <div className="dl-header-info">
+                  <h2 id="dl-modal-heading" className="dl-header-title">
                     {getDocumentTitle()}
                   </h2>
-                  <p className="download-modal-subtitle">
-                    {tourName}
-                  </p>
+                  <p className="dl-header-sub">{tourName}</p>
                 </div>
                 <button
                   onClick={handleCloseModal}
-                  className="download-modal-close"
-                  aria-label="Close download dialog"
+                  className="dl-header-close"
+                  aria-label="Close"
                 >
                   <FiX />
                 </button>
               </div>
 
-              {/* Tab Navigation */}
-              <nav className="download-tabs">
+              {/* Tabs */}
+              <nav className="dl-tabs">
                 <button
-                  className={`download-tab ${activeTab === 'download' ? 'download-tab-active' : ''}`}
+                  className={`dl-tab ${activeTab === 'download' ? 'dl-tab-on' : ''}`}
                   onClick={() => setActiveTab('download')}
                 >
-                  <FiDownload className="download-tab-icon" />
-                  <span>Download</span>
+                  <FiDownload className="dl-tab-ico" />
+                  Download
                 </button>
                 <button
-                  className={`download-tab ${activeTab === 'contents' ? 'download-tab-active' : ''}`}
+                  className={`dl-tab ${activeTab === 'preview' ? 'dl-tab-on' : ''}`}
+                  onClick={() => setActiveTab('preview')}
+                >
+                  <FiEye className="dl-tab-ico" />
+                  Preview
+                </button>
+                <button
+                  className={`dl-tab ${activeTab === 'contents' ? 'dl-tab-on' : ''}`}
                   onClick={() => setActiveTab('contents')}
                 >
-                  <FiFileText className="download-tab-icon" />
-                  <span>Contents</span>
+                  <FiFileText className="dl-tab-ico" />
+                  Contents
                 </button>
               </nav>
             </header>
 
-            {/* Modal Body */}
-            <div className="download-modal-body">
-              {/* Download Tab */}
+            {/* Body */}
+            <div className="dl-body">
+              {/* ===== DOWNLOAD TAB ===== */}
               {activeTab === 'download' && (
-                <div className="download-tab-content download-tab-content-enter">
-                  {/* Document Card */}
-                  <div className="download-document-card">
-                    <div className="download-document-preview">
-                      <div className="download-document-mock">
-                        <div className="download-document-mock-header" />
-                        <div className="download-document-mock-lines">
-                          <div className="download-document-mock-line download-document-mock-line-full" />
-                          <div className="download-document-mock-line download-document-mock-line-3q" />
-                          <div className="download-document-mock-line download-document-mock-line-half" />
-                          <div className="download-document-mock-line download-document-mock-line-full" />
-                          <div className="download-document-mock-line download-document-mock-line-2q" />
+                <div className="dl-panel dl-panel-enter">
+                  {/* File Card */}
+                  <div className="dl-file-card">
+                    <div className="dl-file-thumb">
+                      <div className="dl-file-mock">
+                        <div className="dl-mock-bar" />
+                        <div className="dl-mock-lines">
+                          <span style={{ width: '100%' }} />
+                          <span style={{ width: '75%' }} />
+                          <span style={{ width: '50%' }} />
+                          <span style={{ width: '90%' }} />
+                          <span style={{ width: '60%' }} />
                         </div>
-                        <div className="download-document-mock-footer">
-                          <span>ALTUVERA</span>
-                        </div>
+                        <div className="dl-mock-brand">ALTUVERA</div>
                       </div>
                     </div>
-
-                    <div className="download-document-info">
-                      <h3 className="download-document-name">
-                        Altuvera_{tourName.replace(/\s+/g, '_')}_{type}.pdf
+                    <div className="dl-file-info">
+                      <h3 className="dl-file-name">
+                        Altuvera_{tourName.replace(/\s+/g, '_')}.pdf
                       </h3>
-                      <div className="download-document-meta">
-                        <span className="download-document-meta-item">
-                          <FiFileText className="download-document-meta-icon" />
-                          PDF Document
+                      <div className="dl-file-meta">
+                        <span>
+                          <FiFileText /> PDF Document
                         </span>
-                        <span className="download-document-meta-divider">•</span>
-                        <span className="download-document-meta-item">
-                          <FiPrinter className="download-document-meta-icon" />
-                          Print Ready
+                        <span className="dl-file-dot">•</span>
+                        <span>
+                          <FiPrinter /> Print Ready
                         </span>
                       </div>
                     </div>
                   </div>
 
-                  {/* Features Grid */}
-                  <div className="download-features">
-                    <div className="download-feature">
-                      <div className="download-feature-icon">
+                  {/* Features */}
+                  <div className="dl-features">
+                    <div className="dl-feat">
+                      <div className="dl-feat-ico">
                         <FiFileText />
                       </div>
-                      <div className="download-feature-text">
+                      <div>
                         <h4>Professional Layout</h4>
-                        <p>Beautifully formatted guide with clear sections</p>
+                        <p>Clean, structured sections</p>
                       </div>
                     </div>
-                    <div className="download-feature">
-                      <div className="download-feature-icon">
+                    <div className="dl-feat">
+                      <div className="dl-feat-ico">
                         <FiPrinter />
                       </div>
-                      <div className="download-feature-text">
+                      <div>
                         <h4>Print Optimized</h4>
-                        <p>High quality output ready for printing</p>
+                        <p>High-quality output</p>
                       </div>
                     </div>
-                    <div className="download-feature">
-                      <div className="download-feature-icon">
+                    <div className="dl-feat">
+                      <div className="dl-feat-ico">
                         <FiShield />
                       </div>
-                      <div className="download-feature-text">
+                      <div>
                         <h4>Safety Info</h4>
-                        <p>Important health and safety guidelines</p>
+                        <p>Health & safety tips</p>
                       </div>
                     </div>
-                    <div className="download-feature">
-                      <div className="download-feature-icon">
+                    <div className="dl-feat">
+                      <div className="dl-feat-ico">
                         <FiCheckCircle />
                       </div>
-                      <div className="download-feature-text">
+                      <div>
                         <h4>Complete Guide</h4>
-                        <p>{tips.length} tips and recommendations included</p>
+                        <p>{tips.length} items included</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Status Messages */}
+                  {/* Status */}
                   {downloadStatus === 'success' && (
-                    <div className="download-status download-status-success">
-                      <div className="download-status-icon-wrapper download-status-icon-success">
-                        <FiCheckCircle />
-                      </div>
-                      <div className="download-status-content">
-                        <h4>Download Complete!</h4>
-                        <p>Your document has been saved to your downloads folder.</p>
+                    <div className="dl-alert dl-alert-ok dl-panel-enter">
+                      <FiCheckCircle className="dl-alert-ico" />
+                      <div>
+                        <strong>Download Complete!</strong>
+                        <p>Saved to your downloads folder.</p>
                       </div>
                     </div>
                   )}
 
                   {downloadStatus === 'preparing' && (
-                    <div className="download-status download-status-preparing">
-                      <div className="download-status-icon-wrapper download-status-icon-preparing">
-                        <div className="download-spinner" />
+                    <div className="dl-alert dl-alert-wait dl-panel-enter">
+                      <div className="dl-spin" />
+                      <div>
+                        <strong>Preparing Document...</strong>
+                        <p>Generating your travel guide.</p>
                       </div>
-                      <div className="download-status-content">
-                        <h4>Preparing Document...</h4>
-                        <p>Generating your professional travel guide.</p>
-                      </div>
-                      <div className="download-progress-bar">
-                        <div className="download-progress-fill" />
+                      <div className="dl-progress">
+                        <div className="dl-progress-bar" />
                       </div>
                     </div>
                   )}
 
                   {downloadStatus === 'error' && errorMessage && (
-                    <div className="download-status download-status-error">
-                      <div className="download-status-icon-wrapper download-status-icon-error">
-                        <FiAlertCircle />
-                      </div>
-                      <div className="download-status-content">
-                        <h4>Download Failed</h4>
+                    <div className="dl-alert dl-alert-err dl-panel-enter">
+                      <FiAlertCircle className="dl-alert-ico" />
+                      <div>
+                        <strong>Download Failed</strong>
                         <p>{errorMessage}</p>
                       </div>
                     </div>
                   )}
 
-                  {/* Action Buttons */}
-                  <div className="download-actions">
+                  {/* Buttons */}
+                  <div className="dl-actions">
                     <button
-                      onClick={handlePreview}
+                      onClick={() => setActiveTab('preview')}
                       disabled={isDownloading}
-                      className="download-btn download-btn-secondary"
+                      className="dl-btn dl-btn-ghost"
                     >
-                      <FiEye className="download-btn-icon" />
-                      <span>Preview</span>
+                      <FiEye />
+                      Preview
                     </button>
-
                     <button
                       onClick={handleDownload}
                       disabled={isDownloading}
-                      className="download-btn download-btn-primary"
+                      className="dl-btn dl-btn-solid"
                     >
                       {isDownloading ? (
                         <>
-                          <div className="download-btn-spinner" />
-                          <span>Generating...</span>
+                          <div className="dl-btn-spin" />
+                          Generating...
                         </>
                       ) : downloadStatus === 'success' ? (
                         <>
-                          <FiCheckCircle className="download-btn-icon" />
-                          <span>Downloaded!</span>
+                          <FiCheckCircle />
+                          Downloaded!
                         </>
                       ) : (
                         <>
-                          <FiDownload className="download-btn-icon" />
-                          <span>Download PDF</span>
+                          <FiDownload />
+                          Download PDF
                         </>
                       )}
                     </button>
@@ -373,55 +420,125 @@ const DownloadTips = ({
                 </div>
               )}
 
-              {/* Contents Tab */}
-              {activeTab === 'contents' && (
-                <div className="download-tab-content download-tab-content-enter">
-                  <div className="download-contents-header">
-                    <h3>Document Contents</h3>
-                    <span className="download-contents-count">{tips.length} items</span>
+              {/* ===== PREVIEW TAB ===== */}
+              {activeTab === 'preview' && (
+                <div className="dl-panel dl-panel-enter">
+                  <div className="dl-preview-wrapper">
+                    {isPreviewLoading && (
+                      <div className="dl-preview-loader">
+                        <div className="dl-spin dl-spin-lg" />
+                        <p>Generating preview...</p>
+                      </div>
+                    )}
+
+                    {previewError && !isPreviewLoading && (
+                      <div className="dl-preview-error">
+                        <FiAlertCircle className="dl-preview-error-ico" />
+                        <p>{previewError}</p>
+                        <button onClick={handleRetryPreview} className="dl-btn dl-btn-ghost dl-btn-sm">
+                          <FiRefreshCw />
+                          Retry
+                        </button>
+                      </div>
+                    )}
+
+                    {previewUrl && !isPreviewLoading && !previewError && (
+                      <iframe
+                        src={previewUrl}
+                        className="dl-preview-frame"
+                        title="PDF Preview"
+                      />
+                    )}
+
+                    {!previewUrl && !isPreviewLoading && !previewError && (
+                      <div className="dl-preview-empty">
+                        <FiEye className="dl-preview-empty-ico" />
+                        <p>Click below to generate preview</p>
+                        <button onClick={generatePreview} className="dl-btn dl-btn-ghost dl-btn-sm">
+                          <FiEye />
+                          Generate Preview
+                        </button>
+                      </div>
+                    )}
                   </div>
 
-                  <div className="download-contents-list">
-                    {tips.map((tip, index) => (
-                      <div key={index} className="download-contents-item">
-                        <div className="download-contents-item-number">
-                          {String(index + 1).padStart(2, '0')}
+                  {/* Preview Actions */}
+                  <div className="dl-actions">
+                    <button
+                      onClick={handleOpenInNewTab}
+                      disabled={!previewUrl}
+                      className="dl-btn dl-btn-ghost"
+                    >
+                      <FiEye />
+                      Open in New Tab
+                    </button>
+                    <button
+                      onClick={handleDownload}
+                      disabled={isDownloading}
+                      className="dl-btn dl-btn-solid"
+                    >
+                      {isDownloading ? (
+                        <>
+                          <div className="dl-btn-spin" />
+                          Generating...
+                        </>
+                      ) : (
+                        <>
+                          <FiDownload />
+                          Download PDF
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ===== CONTENTS TAB ===== */}
+              {activeTab === 'contents' && (
+                <div className="dl-panel dl-panel-enter">
+                  <div className="dl-contents-top">
+                    <h3>Document Contents</h3>
+                    <span className="dl-contents-badge">{tips.length} items</span>
+                  </div>
+
+                  <div className="dl-contents-list">
+                    {tips.map((tip, i) => (
+                      <div key={i} className="dl-contents-row">
+                        <div className="dl-contents-num">
+                          {String(i + 1).padStart(2, '0')}
                         </div>
-                        <div className="download-contents-item-text">
+                        <div className="dl-contents-text">
                           <h4>{tip.title || tip}</h4>
-                          {tip.description && (
-                            <p>{tip.description}</p>
-                          )}
+                          {tip.description && <p>{tip.description}</p>}
                         </div>
-                        <FiCheckCircle className="download-contents-item-check" />
+                        <FiCheckCircle className="dl-contents-check" />
                       </div>
                     ))}
                   </div>
 
-                  {/* Download from Contents */}
-                  <div className="download-contents-action">
+                  <div className="dl-actions dl-actions-single">
                     <button
                       onClick={handleDownload}
                       disabled={isDownloading}
-                      className="download-btn download-btn-primary download-btn-full"
+                      className="dl-btn dl-btn-solid dl-btn-full"
                     >
-                      <FiDownload className="download-btn-icon" />
-                      <span>Download All {tips.length} Items as PDF</span>
+                      <FiDownload />
+                      Download All {tips.length} Items
                     </button>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Modal Footer */}
-            <footer className="download-modal-footer">
-              <div className="download-modal-footer-brand">
-                <span className="download-modal-footer-logo">ALTUVERA</span>
-                <span className="download-modal-footer-divider">|</span>
-                <span className="download-modal-footer-tagline">Travel Made Beautiful</span>
+            {/* Footer */}
+            <footer className="dl-footer">
+              <div className="dl-footer-brand">
+                <span className="dl-footer-logo">ALTUVERA</span>
+                <span className="dl-footer-sep">|</span>
+                <span className="dl-footer-tag">Travel Made Beautiful</span>
               </div>
-              <p className="download-modal-footer-note">
-                Compatible with all devices • High-quality PDF • Ready to print
+              <p className="dl-footer-note">
+                Compatible with all devices · High-quality PDF · Ready to print
               </p>
             </footer>
           </div>
