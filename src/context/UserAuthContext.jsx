@@ -658,7 +658,7 @@ export function UserAuthProvider({ children }) {
   // Email OTP Auth
   // ============================================================================
 
-  const login = useCallback(
+   const login = useCallback(
     async (payload) => {
       const p = typeof payload === "object" ? payload : { email: payload };
       const email = trim(p.email);
@@ -668,27 +668,35 @@ export function UserAuthProvider({ children }) {
 
       // Re-verification required after 2+ successful logins
       if (loginCounter >= 2) {
-        setPendingEmail(email);
-        setRequiresLoginVerification(true);
         try {
           await authFetch("/users/login", {
             method: "POST",
             body: JSON.stringify({ email }),
           });
-        } catch {
-          // User can manually resend
+        } catch (err) {
+          throw new Error(
+            err?.message || "Failed to send verification code. Please try again."
+          );
         }
+        setPendingEmail(email);
+        setRequiresLoginVerification(true);
         setModalView("verify");
         return { requiresVerification: true };
       }
 
-      const data = await authFetch("/users/login", {
-        method: "POST",
-        body: JSON.stringify({ email }),
-      });
-      setPendingEmail(email);
-      setModalView("verify");
-      return data;
+      try {
+        const data = await authFetch("/users/login", {
+          method: "POST",
+          body: JSON.stringify({ email }),
+        });
+        setPendingEmail(email);
+        setModalView("verify");
+        return data;
+      } catch (err) {
+        throw new Error(
+          err?.message || "Failed to send verification code. Please try again."
+        );
+      }
     },
     [authFetch, loginCounter, setSessionPreference],
   );
@@ -701,18 +709,24 @@ export function UserAuthProvider({ children }) {
       if (typeof p.persistSession === "boolean")
         setSessionPreference(p.persistSession);
 
-      const data = await authFetch("/users/register", {
-        method: "POST",
-        body: JSON.stringify({
-          email,
-          fullName: trim(p.fullName) || undefined,
-          phone: trim(p.phone) || undefined,
-          bio: trim(p.bio) || undefined,
-        }),
-      });
-      setPendingEmail(email);
-      setModalView("verify");
-      return data;
+      try {
+        const data = await authFetch("/users/register", {
+          method: "POST",
+          body: JSON.stringify({
+            email,
+            fullName: trim(p.fullName) || undefined,
+            phone: trim(p.phone) || undefined,
+            bio: trim(p.bio) || undefined,
+          }),
+        });
+        setPendingEmail(email);
+        setModalView("verify");
+        return data;
+      } catch (err) {
+        throw new Error(
+          err?.message || "Failed to send verification code. Please try again."
+        );
+      }
     },
     [authFetch, setSessionPreference],
   );
