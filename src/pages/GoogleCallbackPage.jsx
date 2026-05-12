@@ -1,104 +1,112 @@
 // src/pages/GoogleCallbackPage.jsx
-// Route: /auth/google/callback
-// This page is loaded inside the Google OAuth2 popup window.
-// It parses the id_token from the URL and posts it to the opener.
-
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 export default function GoogleCallbackPage() {
+  const sentRef = useRef(false);
+
   useEffect(() => {
+    if (sentRef.current) return;
+    sentRef.current = true;
+
     const send = () => {
       try {
-        // Parse from hash (implicit flow) or query (code flow)
-        const hash = new URLSearchParams(
+        // Parse id_token from hash (implicit flow) or query string
+        const hash  = new URLSearchParams(
           window.location.hash.replace("#", "?")
         );
         const query = new URLSearchParams(window.location.search);
 
         const idToken =
-          hash.get("id_token") ||
-          query.get("id_token") ||
-          query.get("credential");
+          hash.get("id_token")   || hash.get("credential") ||
+          query.get("id_token")  || query.get("credential");
 
         const error =
-          hash.get("error") ||
-          query.get("error");
+          hash.get("error")  || query.get("error");
 
         const state =
-          hash.get("state") ||
-          query.get("state");
+          hash.get("state")  || query.get("state");
 
-        if (!window.opener) {
-          // Not in a popup — redirect to home
-          window.location.replace("/");
-          return;
+        const payload = {
+          type:       "google_auth_callback",
+          credential: idToken || null,
+          idToken:    idToken || null,
+          error:      error   || null,
+          state:      state   || null,
+        };
+
+        // ── Strategy 1: BroadcastChannel (works under all COOP policies) ──
+        try {
+          const bc = new BroadcastChannel("google_auth_popup");
+          bc.postMessage(payload);
+          // Small delay so parent receives before channel closes
+          setTimeout(() => { try { bc.close(); } catch { /* ignore */ } }, 500);
+        } catch { /* BroadcastChannel not supported */ }
+
+        // ── Strategy 2: postMessage to opener (needs same-origin-allow-popups) ──
+        try {
+          if (window.opener && !window.opener.closed) {
+            window.opener.postMessage(payload, window.location.origin);
+          }
+        } catch {
+          // COOP blocked — BroadcastChannel already handled it
         }
 
-        // Post result back to parent
-        window.opener.postMessage(
-          {
-            type: "google_auth_callback",
-            credential: idToken || null,
-            error: error || null,
-            state: state || null,
-          },
-          window.location.origin,
-        );
-
-        // Give parent time to process, then close
-        setTimeout(() => window.close(), 300);
+        // Close popup after sending
+        setTimeout(() => {
+          try { window.close(); } catch { /* ignore */ }
+        }, 800);
       } catch (err) {
-        console.error("[GoogleCallback] Error:", err);
+        // Last resort error reporting
         try {
-          window.opener?.postMessage(
-            {
-              type: "google_auth_callback",
-              credential: null,
-              error: err.message || "Callback error",
-              state: null,
-            },
-            window.location.origin,
-          );
+          const bc = new BroadcastChannel("google_auth_popup");
+          bc.postMessage({
+            type: "google_auth_callback",
+            credential: null,
+            error: err.message || "Callback failed",
+            state: null,
+          });
+          setTimeout(() => { try { bc.close(); } catch { /* ignore */ } }, 500);
         } catch { /* ignore */ }
-        setTimeout(() => window.close(), 300);
+        setTimeout(() => { try { window.close(); } catch { /* ignore */ } }, 800);
       }
     };
 
-    send();
+    // Small delay to ensure parent listener is ready
+    setTimeout(send, 100);
   }, []);
 
-  // Minimal UI shown briefly in the popup
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        height: "100vh",
-        fontFamily: "Inter, system-ui, sans-serif",
-        background: "#f9fafb",
-        color: "#374151",
-        gap: "16px",
-      }}
-    >
-      <div
-        style={{
-          width: "40px",
-          height: "40px",
-          border: "3px solid #e5e7eb",
-          borderTopColor: "#059669",
-          borderRadius: "50%",
-          animation: "spin 0.8s linear infinite",
-        }}
-      />
-      <p style={{ fontSize: "15px", margin: 0 }}>
-        Completing sign-in…
-      </p>
+    <div style={{
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      minHeight: "100vh",
+      fontFamily: "Inter, system-ui, sans-serif",
+      background: "linear-gradient(135deg, #022C22 0%, #065F46 100%)",
+      color: "#ffffff",
+      gap: "20px",
+    }}>
+      {/* Spinner */}
+      <div style={{
+        width: "48px", height: "48px",
+        border: "4px solid rgba(255,255,255,0.2)",
+        borderTopColor: "#10b981",
+        borderRadius: "50%",
+        animation: "spin 0.8s linear infinite",
+      }} />
+
+      <div style={{ textAlign: "center" }}>
+        <p style={{ fontSize: "18px", fontWeight: 600, margin: "0 0 8px" }}>
+          Completing sign-in…
+        </p>
+        <p style={{ fontSize: "14px", opacity: 0.7, margin: 0 }}>
+          This window will close automatically.
+        </p>
+      </div>
+
       <style>{`
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
       `}</style>
     </div>
   );
