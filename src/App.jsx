@@ -16,27 +16,28 @@ import {
   Navigate,
   Outlet,
 } from "react-router-dom";
-import { useApp }      from "./context/AppContext";
+import { useApp } from "./context/AppContext";
+import GoogleCallbackPage from "./pages/GoogleCallbackPage";
 import { useUserAuth } from "./context/UserAuthContext";
 import { MessagingProvider } from "./context/MessagingContext";
-import ErrorBoundary   from "./components/common/ErrorBoundary";
-import countryService  from "./services/countryService";
+import ErrorBoundary from "./components/common/ErrorBoundary";
+import countryService from "./services/countryService";
 import NewsletterPopup from "./components/common/NewsletterPopup";
 import AutoSubscribeModal from "./components/common/AutoSubscribeModal";
 
 // ── Eager imports ─────────────────────────────────────────────────────────────
-import Navbar               from "./components/common/Navbar";
-import Footer               from "./components/common/Footer";
-import ChecklistFloating    from "./components/common/ChecklistFloating";
-import ScrollToTop          from "./components/common/ScrollToTop";
-import Loader               from "./components/common/Loader";
-import CookieConsent        from "./components/common/CookieConsent";
-import AuthModal            from "./components/auth/AuthModal";
+import Navbar from "./components/common/Navbar";
+import Footer from "./components/common/Footer";
+import ChecklistFloating from "./components/common/ChecklistFloating";
+import ScrollToTop from "./components/common/ScrollToTop";
+import Loader from "./components/common/Loader";
+import CookieConsent from "./components/common/CookieConsent";
+import AuthModal from "./components/auth/AuthModal";
 import CongratulationWindow from "./components/auth/CongratulationWindow";
-import NotLoggedInMessage   from "./components/auth/NotLoggedInMessage";
-import ProtectedRoute       from "./components/auth/ProtectedRoute";
-import PageWrapper          from "./components/common/PageWrapper";
-import WhatsAppButton       from "./components/common/WhatsAppButton";
+import NotLoggedInMessage from "./components/auth/NotLoggedInMessage";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
+import PageWrapper from "./components/common/PageWrapper";
+import WhatsAppButton from "./components/common/WhatsAppButton";
 
 // ── Lazy imports ──────────────────────────────────────────────────────────────
 const PersistentVideoPlayer = React.lazy(() =>
@@ -52,18 +53,18 @@ const NotFound = React.lazy(() => import("./pages/NotFound"));
 // ============================================================================
 
 const REDIRECT_MAP = {
-  "/home":          "/",
+  "/home": "/",
   "/destinations/": "/destinations",
-  "/tours":         "/destinations",
-  "/safaris":       "/destinations",
-  "/blog":          "/posts",
-  "/articles":      "/posts",
-  "/news":          "/posts",
-  "/map":           "/interactive-map",
-  "/contact-us":    "/contact",
-  "/about-us":      "/about",
-  "/our-team":      "/team",
-  "/faqs":          "/faq",
+  "/tours": "/destinations",
+  "/safaris": "/destinations",
+  "/blog": "/posts",
+  "/articles": "/posts",
+  "/news": "/posts",
+  "/map": "/interactive-map",
+  "/contact-us": "/contact",
+  "/about-us": "/about",
+  "/our-team": "/team",
+  "/faqs": "/faq",
 };
 
 /**
@@ -288,15 +289,15 @@ const GitHubCallbackPage = React.memo(() => {
   }, [githubLoading, isAuthenticated, socialAuthError]);
 
   const isError = Boolean(socialAuthError);
-  const isDone  = !githubLoading && isAuthenticated;
+  const isDone = !githubLoading && isAuthenticated;
 
   const statusMsg = isError
     ? "Sign-in failed. Redirecting…"
     : isDone
-    ? "Signed in! Redirecting…"
-    : githubLoading
-    ? "Verifying your GitHub account…"
-    : "Completing sign-in…";
+      ? "Signed in! Redirecting…"
+      : githubLoading
+        ? "Verifying your GitHub account…"
+        : "Completing sign-in…";
 
   return (
     <div style={cbStyles.page}>
@@ -309,8 +310,8 @@ const GitHubCallbackPage = React.memo(() => {
             borderTopColor: isError
               ? "#ef4444"
               : isDone
-              ? "#059669"
-              : "#059669",
+                ? "#059669"
+                : "#059669",
             animationDuration: isDone ? "2s" : "0.8s",
           }}
         />
@@ -410,9 +411,9 @@ const CELEBRATION_KEYFRAMES = `
 const CelebrationOverlay = React.memo(({ userName }) => {
   const displayName = userName
     ? userName
-        .split(" ")
-        .map((n) => n[0]?.toUpperCase() + n.slice(1))
-        .join(" ")
+      .split(" ")
+      .map((n) => n[0]?.toUpperCase() + n.slice(1))
+      .join(" ")
     : "Traveler";
 
   return (
@@ -734,7 +735,7 @@ function App() {
   } = useUserAuth();
 
   // Track previous auth state to only show celebration on NEW login
-  const [prevAuth, setPrevAuth]         = useState(false);
+  const [prevAuth, setPrevAuth] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
 
   // Clear loader on navigation (except home)
@@ -746,8 +747,8 @@ function App() {
 
   // Prefetch countries for dropdowns/filters
   useEffect(() => {
-    countryService.getAll({}).catch(() => {});
-    countryService.getAll({ featured: true }).catch(() => {});
+    countryService.getAll({}).catch(() => { });
+    countryService.getAll({ featured: true }).catch(() => { });
   }, []);
 
   // Dev performance logging
@@ -802,6 +803,8 @@ function App() {
           {/* Catch-all: redirect legacy URLs or show 404 */}
           <Route path="*" element={<SmartRedirect />} />
         </Route>
+
+        <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
       </Routes>
 
       <OverlayLayer
@@ -814,7 +817,7 @@ function App() {
         isVisible={showCongratulation}
         type={congratulationType}
         user={user}
-        onClose={() => {}}
+        onClose={() => { }}
       />
 
       <NotLoggedInMessage isVisible={showNotLoggedInMessage} />

@@ -1,5 +1,5 @@
 // ============================================================================
-// UserAuthContext.jsx — Optimized & FedCM-ready
+// UserAuthContext.jsx — Optimized & FedCM-ready with Popup Fallback
 // ============================================================================
 
 import React, {
@@ -53,6 +53,7 @@ const KEYS = {
   SESSION_PREF: "altuvera_persist_session",
   PROFILE_CACHE: "altuvera_profile_cache",
   GOOGLE_PENDING: "altuvera_google_pending",
+  GOOGLE_POPUP_STATE: "altuvera_google_popup_state",
   GITHUB_STATE: "altuvera_github_state",
   GITHUB_INTENT: "altuvera_github_intent",
   LOGIN_COUNTER: "altuvera_login_counter",
@@ -138,10 +139,13 @@ const store = {
         sessionStorage.removeItem(k);
       } catch { /* ignore */ }
     });
-    [KEYS.GOOGLE_PENDING, KEYS.GITHUB_STATE, KEYS.GITHUB_INTENT].forEach((k) => {
-      try {
-        sessionStorage.removeItem(k);
-      } catch { /* ignore */ }
+    [
+      KEYS.GOOGLE_PENDING,
+      KEYS.GOOGLE_POPUP_STATE,
+      KEYS.GITHUB_STATE,
+      KEYS.GITHUB_INTENT,
+    ].forEach((k) => {
+      try { sessionStorage.removeItem(k); } catch { /* ignore */ }
     });
   },
 };
@@ -187,7 +191,9 @@ const normalizeUser = (
     phone: pick(raw.phone, raw.phoneNumber, raw.phone_number),
     bio: pick(raw.bio, raw.biography, raw.about),
     role: pick(raw.role, raw.userRole, "user"),
-    authProvider: pick(raw.authProvider, raw.auth_provider, raw.provider, "email"),
+    authProvider: pick(
+      raw.authProvider, raw.auth_provider, raw.provider, "email"
+    ),
     isVerified: Boolean(
       raw.isVerified || raw.is_verified || raw.emailVerified || raw.verified,
     ),
@@ -223,11 +229,15 @@ const extractPayload = (data) => {
 const decodeJWT = (credential) => {
   if (!credential) return null;
   try {
-    const b64 = credential.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const b64 = credential
+      .split(".")[1]
+      .replace(/-/g, "+")
+      .replace(/_/g, "/");
     const json = decodeURIComponent(
-      atob(b64).split("").map((c) =>
-        "%" + c.charCodeAt(0).toString(16).padStart(2, "0")
-      ).join(""),
+      atob(b64)
+        .split("")
+        .map((c) => "%" + c.charCodeAt(0).toString(16).padStart(2, "0"))
+        .join(""),
     );
     return JSON.parse(json);
   } catch {
@@ -268,11 +278,9 @@ const isNewUserCheck = (userData) => {
   }
 };
 
-// ─── Classify Google prompt notification outcomes ───────────────────────────
-// Returns: 'success' | 'dismissed' | 'unavailable' | 'error'
+// ─── Classify Google One Tap notification (FedCM-safe) ───────────────────────
 const classifyGoogleNotification = (notification) => {
   try {
-    // FedCM-safe checks — use try/catch per method
     let isDisplayed = false;
     let isSkipped = false;
     let isDismissed = false;
@@ -286,11 +294,207 @@ const classifyGoogleNotification = (notification) => {
     if (isDisplayed) return "success";
     if (isSkipped || isDismissed) return "dismissed";
     if (isNotDisplayed) return "unavailable";
-    return "dismissed"; // safe fallback
+    return "dismissed";
   } catch {
     return "dismissed";
   }
 };
+
+// ─── Is this a user-dismissal (not a real error)? ────────────────────────────
+const isDismissalError = (msg = "") => {
+  const m = msg.toLowerCase();
+  return (
+    m.includes("dismiss") ||
+    m.includes("cancel") ||
+    m.includes("closed") ||
+    m.includes("credential_cancelled") ||
+    m.includes("popup_closed") ||
+    m.includes("skipped") ||
+    m.includes("not_displayed") ||
+    m.includes("google button")
+  );
+};
+
+// ============================================================================
+// Google OAuth2 Popup Flow
+// ============================================================================
+
+const GOOGLE_OAUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
+const GOOGLE_TOKEN_INFO = "https://oauth2.googleapis.com/tokeninfo";
+// Must be registered in Google Cloud Console as an authorized redirect URI
+// e.g. https://yourdomain.com/auth/google/callback  OR  window.location.origin
+const GOOGLE_POPUP_REDIRECT = `${window.location.origin}/auth/google/callback`;
+
+/**
+ * Opens a Google OAuth2 popup window and returns a credential (id_token).
+ *
+ * Flow:
+ *   1. Build OAuth2 URL with response_type=id_token (implicit) or code
+ *   2. Open a small popup
+ *   3. Poll popup for redirect back to our origin
+ *   4. Parse id_token from URL hash
+ *   5. Resolve with the id_token (same shape as One Tap credential)
+ *
+ * ⚠️  You must add GOOGLE_POPUP_REDIRECT to your Google Cloud Console
+ *     Authorized redirect URIs.
+ */
+const openGooglePopup = (mode = "signin") =>
+  new Promise((resolve, reject) => {
+    if (!GOOGLE_CLIENT_ID) {
+      return reject(new Error("Google Sign-In is not configured."));
+    }
+
+    const state = randomState();
+    const nonce = randomState();
+
+    // Store state so the callback page can verify it
+    try {
+      sessionStorage.setItem(KEYS.GOOGLE_POPUP_STATE, state);
+    } catch { /* ignore */ }
+
+    const params = new URLSearchParams({
+      client_id: GOOGLE_CLIENT_ID,
+      redirect_uri: GOOGLE_POPUP_REDIRECT,
+      response_type: "id_token",   // implicit → id_token in hash
+      scope: "openid email profile",
+      state,
+      nonce,
+      prompt: mode === "signup" ? "select_account consent" : "select_account",
+    });
+
+    const url = `${GOOGLE_OAUTH_ENDPOINT}?${params}`;
+
+    // Popup dimensions
+    const w = 500, h = 600;
+    const left = Math.max(0, (window.screen.width - w) / 2);
+    const top  = Math.max(0, (window.screen.height - h) / 2);
+
+    const popup = window.open(
+      url,
+      "google_auth_popup",
+      `width=${w},height=${h},left=${left},top=${top},` +
+      `resizable=yes,scrollbars=yes,status=yes,toolbar=no,menubar=no`,
+    );
+
+    if (!popup || popup.closed) {
+      return reject(
+        new Error(
+          "Popup was blocked. Please allow popups for this site and try again.",
+        ),
+      );
+    }
+
+    let settled = false;
+    let pollTimer = null;
+    let msgHandler = null;
+
+    const cleanup = () => {
+      settled = true;
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+      if (msgHandler) {
+        window.removeEventListener("message", msgHandler);
+        msgHandler = null;
+      }
+      try { sessionStorage.removeItem(KEYS.GOOGLE_POPUP_STATE); } catch { /* ignore */ }
+      try { if (popup && !popup.closed) popup.close(); } catch { /* ignore */ }
+    };
+
+    // ── Strategy A: postMessage from callback page ────────────────────────────
+    // If you have a /auth/google/callback page that posts the token back.
+    msgHandler = (event) => {
+      if (settled) return;
+      // Security: only accept messages from our own origin
+      if (event.origin !== window.location.origin) return;
+
+      const { type, credential, error, state: retState } = event.data || {};
+      if (type !== "google_auth_callback") return;
+
+      cleanup();
+
+      if (error) {
+        return reject(new Error(error));
+      }
+      if (!credential) {
+        return reject(new Error("Google sign-in was cancelled."));
+      }
+
+      // Verify state
+      const savedState = sessionStorage.getItem(KEYS.GOOGLE_POPUP_STATE) || state;
+      if (retState && retState !== savedState) {
+        return reject(new Error("Security check failed. Please try again."));
+      }
+
+      resolve(credential);
+    };
+    window.addEventListener("message", msgHandler);
+
+    // ── Strategy B: Poll popup URL for hash (same-origin redirect) ────────────
+    pollTimer = setInterval(() => {
+      if (settled) { clearInterval(pollTimer); return; }
+
+      try {
+        if (!popup || popup.closed) {
+          cleanup();
+          return reject(new Error("Google sign-in was cancelled."));
+        }
+
+        // Only readable when popup is back on our origin
+        const href = popup.location?.href || "";
+        if (!href.startsWith(window.location.origin)) return;
+
+        // Parse id_token from hash fragment
+        const hash = new URLSearchParams(
+          popup.location.hash.replace("#", "?")
+        );
+        const fragment = new URLSearchParams(popup.location.search);
+
+        const idToken =
+          hash.get("id_token") ||
+          fragment.get("id_token") ||
+          fragment.get("credential");
+
+        const errParam =
+          hash.get("error") ||
+          fragment.get("error");
+
+        const retState =
+          hash.get("state") ||
+          fragment.get("state");
+
+        if (errParam) {
+          cleanup();
+          return reject(
+            new Error(
+              errParam === "access_denied"
+                ? "Google sign-in was cancelled."
+                : `Google error: ${errParam}`,
+            ),
+          );
+        }
+
+        if (idToken) {
+          // Verify state
+          const savedState = sessionStorage.getItem(KEYS.GOOGLE_POPUP_STATE) || state;
+          if (retState && retState !== savedState) {
+            cleanup();
+            return reject(new Error("Security check failed. Please try again."));
+          }
+          cleanup();
+          resolve(idToken);
+        }
+      } catch {
+        // Cross-origin read — popup still on Google's domain, keep polling
+      }
+    }, 300);
+
+    // ── Timeout after 5 minutes ────────────────────────────────────────────────
+    setTimeout(() => {
+      if (!settled) {
+        cleanup();
+        reject(new Error("Google sign-in timed out. Please try again."));
+      }
+    }, 5 * 60 * 1000);
+  });
 
 // ============================================================================
 // Provider
@@ -336,8 +540,8 @@ export function UserAuthProvider({ children }) {
   const profileCacheRef = useRef(null);
   const congratTimerRef = useRef(null);
   const notLoggedInTimerRef = useRef(null);
-  // Track if One Tap prompt is in flight so we don't double-reject
-  const googlePromiseRef = useRef(null);
+  // Track active popup so we don't open duplicates
+  const googlePopupRef = useRef(null);
 
   // ── Computed ─────────────────────────────────────────────────────────────────
   const isAuthenticated = useMemo(() => !!user && !!token, [user, token]);
@@ -346,7 +550,7 @@ export function UserAuthProvider({ children }) {
     [googleUser],
   );
 
-  // ── Init profile cache lazily ────────────────────────────────────────────────
+  // ── Init profile cache ───────────────────────────────────────────────────────
   useEffect(() => {
     if (profileCacheRef.current === null) {
       profileCacheRef.current = readProfileCache();
@@ -359,6 +563,12 @@ export function UserAuthProvider({ children }) {
       document.body.style.overflow = "";
       if (congratTimerRef.current) clearTimeout(congratTimerRef.current);
       if (notLoggedInTimerRef.current) clearTimeout(notLoggedInTimerRef.current);
+      // Close any open Google popup
+      try {
+        if (googlePopupRef.current && !googlePopupRef.current.closed) {
+          googlePopupRef.current.close();
+        }
+      } catch { /* ignore */ }
     };
   }, []);
 
@@ -748,14 +958,8 @@ export function UserAuthProvider({ children }) {
       return data;
     },
     [
-      authFetch,
-      closeModal,
-      pendingEmail,
-      pendingSocialAuth,
-      persistSession,
-      requiresLoginVerification,
-      saveAuth,
-      triggerCongratulation,
+      authFetch, closeModal, pendingEmail, pendingSocialAuth,
+      persistSession, requiresLoginVerification, saveAuth, triggerCongratulation,
     ],
   );
 
@@ -789,7 +993,7 @@ export function UserAuthProvider({ children }) {
   );
 
   // ============================================================================
-  // Google Auth — FedCM-safe, no dismiss errors
+  // Google Core Sign-In (shared by One Tap + Popup)
   // ============================================================================
 
   const googleSignIn = useCallback(
@@ -854,13 +1058,20 @@ export function UserAuthProvider({ children }) {
         setGoogleLoading(false);
       }
     },
-    [authFetch, closeModal, loginCounter, persistSession, saveAuth, triggerCongratulation],
+    [
+      authFetch, closeModal, loginCounter,
+      persistSession, saveAuth, triggerCongratulation,
+    ],
   );
+
+  // ============================================================================
+  // Google One Tap Handler
+  // ============================================================================
 
   const handleGoogleResponse = useCallback(
     async (response) => {
       if (!response?.credential) {
-        // User closed the popup — not an error, just stop loading
+        // Silently cancelled
         setGoogleLoading(false);
         return;
       }
@@ -875,7 +1086,6 @@ export function UserAuthProvider({ children }) {
         await googleSignIn(response.credential);
       } catch (err) {
         const msg = err?.message || "";
-        // Only surface real errors, not dismissals
         if (!isDismissalError(msg)) {
           setSocialAuthError(msg || "Google sign-in failed.");
         }
@@ -885,6 +1095,10 @@ export function UserAuthProvider({ children }) {
     },
     [googleSignIn],
   );
+
+  // ============================================================================
+  // Google SDK Init
+  // ============================================================================
 
   const initGoogleSdk = useCallback(() => {
     if (!GOOGLE_CLIENT_ID || googleInitRef.current) return;
@@ -897,7 +1111,6 @@ export function UserAuthProvider({ children }) {
           callback: handleGoogleResponse,
           auto_select: false,
           cancel_on_tap_outside: true,
-          // ✅ Opt in to FedCM — fixes the GSI_LOGGER warning
           use_fedcm_for_prompt: true,
           itp_support: true,
         });
@@ -909,10 +1122,7 @@ export function UserAuthProvider({ children }) {
       }
     };
 
-    if (window.google?.accounts) {
-      setup();
-      return;
-    }
+    if (window.google?.accounts) { setup(); return; }
 
     const existing = document.querySelector(
       'script[src="https://accounts.google.com/gsi/client"]',
@@ -930,10 +1140,7 @@ export function UserAuthProvider({ children }) {
     s.src = "https://accounts.google.com/gsi/client";
     s.async = true;
     s.defer = true;
-    s.onload = () => {
-      s.dataset.loaded = "true";
-      setup();
-    };
+    s.onload = () => { s.dataset.loaded = "true"; setup(); };
     s.onerror = () => {
       console.warn("[Auth] Failed to load Google SDK.");
       setGoogleLoaded(false);
@@ -941,24 +1148,21 @@ export function UserAuthProvider({ children }) {
     document.head.appendChild(s);
   }, [handleGoogleResponse]);
 
+  // ============================================================================
+  // promptGoogleAuth — One Tap → Popup fallback
+  // ============================================================================
+
   /**
-   * ✅ KEY FIX: promptGoogleAuth
-   *
-   * - NEVER rejects on dismiss/skip/not-displayed
-   * - Resolves with { dismissed: true } instead so the modal
-   *   can silently ignore it and fall back to button click
-   * - Only rejects on genuine errors (network, config)
+   * Strategy:
+   *  1. Try Google One Tap (inline prompt)
+   *  2. If dismissed / unavailable / blocked → automatically fall back to popup
+   *  3. If popup is blocked by browser → throw actionable error
    */
   const promptGoogleAuth = useCallback(
     (opts = {}) =>
       new Promise((resolve, reject) => {
         if (!GOOGLE_CLIENT_ID) {
           return reject(new Error("Google Sign-In is not configured."));
-        }
-        if (!googleLoaded || !window.google?.accounts?.id) {
-          return reject(
-            new Error("Google Sign-In is loading. Please try again."),
-          );
         }
 
         setSocialAuthError("");
@@ -973,8 +1177,14 @@ export function UserAuthProvider({ children }) {
           fn(val);
         };
 
-        // Button rendering path (no prompt needed)
+        // ── Button rendering path ─────────────────────────────────────────────
         if (opts.container) {
+          if (!googleLoaded || !window.google?.accounts?.id) {
+            return settle(
+              reject,
+              new Error("Google Sign-In is loading. Please try again."),
+            );
+          }
           try {
             opts.container.innerHTML = "";
             window.google.accounts.id.renderButton(opts.container, {
@@ -993,18 +1203,83 @@ export function UserAuthProvider({ children }) {
           }
         }
 
-        const timeout = setTimeout(() => {
-          // Timeout is NOT an error — One Tap just didn't show
-          settle(resolve, { dismissed: true, reason: "timeout" });
-        }, 30_000);
+        // ── Attempt Google One Tap first ─────────────────────────────────────
+        const tryOneTap = () => {
+          if (!googleLoaded || !window.google?.accounts?.id) {
+            // SDK not ready → go straight to popup
+            return tryPopup("SDK not ready");
+          }
 
-        googleCbRef.current = async (credential) => {
-          clearTimeout(timeout);
+          const oneTapTimeout = setTimeout(() => {
+            // One Tap didn't resolve in time → popup fallback
+            tryPopup("timeout");
+          }, 8_000);
+
+          googleCbRef.current = async (credential) => {
+            clearTimeout(oneTapTimeout);
+            try {
+              let result;
+              if (opts.mode === "signup") {
+                const decoded = decodeJWT(credential);
+                result = {
+                  credential,
+                  email: decoded?.email || "",
+                  name: decoded?.name || "",
+                  picture: decoded?.picture || "",
+                  sub: decoded?.sub || "",
+                };
+                setGoogleUser(result);
+                store.setJSON(KEYS.GOOGLE_PENDING, result);
+              } else {
+                result = await googleSignIn(credential);
+              }
+              settle(resolve, result);
+            } catch (err) {
+              settle(reject, err);
+            }
+          };
+
           try {
-            let result;
+            window.google.accounts.id.prompt((notification) => {
+              const outcome = classifyGoogleNotification(notification);
+              if (outcome === "dismissed" || outcome === "unavailable") {
+                clearTimeout(oneTapTimeout);
+                googleCbRef.current = null;
+                // ✅ Don't reject — fall back to popup silently
+                tryPopup(outcome);
+              }
+              // outcome === 'success' → wait for credential callback
+            });
+          } catch {
+            clearTimeout(oneTapTimeout);
+            googleCbRef.current = null;
+            tryPopup("one_tap_exception");
+          }
+        };
+
+        // ── Popup fallback ───────────────────────────────────────────────────
+        const tryPopup = async (reason) => {
+          if (settled) return;
+
+          if (import.meta.env.DEV) {
+            console.info(`[Auth] Google One Tap ${reason} → popup fallback`);
+          }
+
+          setGoogleLoading(true);
+
+          try {
+            // Close any existing popup
+            try {
+              if (googlePopupRef.current && !googlePopupRef.current.closed) {
+                googlePopupRef.current.close();
+              }
+            } catch { /* ignore */ }
+
+            const credential = await openGooglePopup(opts.mode || "signin");
+
             if (opts.mode === "signup") {
               const decoded = decodeJWT(credential);
-              result = {
+              const result = {
                 credential,
                 email: decoded?.email || "",
                 name: decoded?.name || "",
@@ -1013,37 +1288,49 @@ export function UserAuthProvider({ children }) {
               };
               setGoogleUser(result);
               store.setJSON(KEYS.GOOGLE_PENDING, result);
+              settle(resolve, result);
             } else {
-              result = await googleSignIn(credential);
+              const result = await googleSignIn(credential);
+              settle(resolve, result);
             }
-            settle(resolve, result);
           } catch (err) {
+            const msg = err?.message || "";
+
+            // User closed popup — resolve silently (not an error)
+            if (
+              isDismissalError(msg) ||
+              msg.includes("cancelled") ||
+              msg.includes("access_denied")
+            ) {
+              settle(resolve, { dismissed: true, reason: "popup_closed" });
+              return;
+            }
+
+            // Popup was blocked by browser
+            if (msg.includes("blocked") || msg.includes("Popup was blocked")) {
+              settle(
+                reject,
+                new Error(
+                  "Popups are blocked. Please allow popups for this site " +
+                  "in your browser settings and try again.",
+                ),
+              );
+              return;
+            }
+
             settle(reject, err);
           }
         };
 
-        // ✅ FIX: One Tap prompt — never reject on dismiss/skip/unavailable
-        try {
-          window.google.accounts.id.prompt((notification) => {
-            const outcome = classifyGoogleNotification(notification);
-
-            if (outcome === "dismissed" || outcome === "unavailable") {
-              // ✅ Resolve silently — caller checks result.dismissed
-              clearTimeout(timeout);
-              settle(resolve, { dismissed: true, reason: outcome });
-            }
-            // outcome === 'success' → wait for credential callback
-            // outcome === 'error'   → also resolve silently (use button)
-          });
-        } catch {
-          // One Tap completely unavailable (blocked by extension/browser)
-          // Resolve silently so the Google button still works
-          clearTimeout(timeout);
-          settle(resolve, { dismissed: true, reason: "unavailable" });
-        }
+        // Start with One Tap
+        tryOneTap();
       }),
     [googleLoaded, googleSignIn],
   );
+
+  // ============================================================================
+  // Complete Google Sign-Up
+  // ============================================================================
 
   const completeGoogleSignUp = useCallback(
     async (profileData = {}) => {
@@ -1078,7 +1365,10 @@ export function UserAuthProvider({ children }) {
     store.remove(KEYS.GOOGLE_PENDING);
   }, []);
 
-  const clearSocialAuthError = useCallback(() => setSocialAuthError(""), []);
+  const clearSocialAuthError = useCallback(
+    () => setSocialAuthError(""),
+    [],
+  );
 
   // ============================================================================
   // GitHub Auth
@@ -1102,10 +1392,13 @@ export function UserAuthProvider({ children }) {
 
         const { token: tok } = extractPayload(data);
         if (!tok) {
-          throw new Error("GitHub authentication did not return a valid session.");
+          throw new Error(
+            "GitHub authentication did not return a valid session.",
+          );
         }
 
-        const userEmail = data?.user?.email || data?.data?.user?.email || "";
+        const userEmail =
+          data?.user?.email || data?.data?.user?.email || "";
         if (loginCounter >= 2 && userEmail) {
           setPendingSocialAuth(data);
           setRequiresLoginVerification(true);
@@ -1133,14 +1426,17 @@ export function UserAuthProvider({ children }) {
         setGithubLoading(false);
       }
     },
-    [authFetch, closeModal, loginCounter, persistSession, saveAuth, triggerCongratulation],
+    [
+      authFetch, closeModal, loginCounter,
+      persistSession, saveAuth, triggerCongratulation,
+    ],
   );
 
   const startGithubAuth = useCallback((mode = "signin") => {
     if (!GITHUB_CLIENT_ID) {
       const msg = import.meta.env.DEV
         ? "GitHub Sign-In is not configured. Add VITE_GITHUB_CLIENT_ID to your .env.local file."
-        : "GitHub Sign-In is temporarily unavailable. Please use Google or email sign-in.";
+        : "GitHub Sign-In is temporarily unavailable.";
       setSocialAuthError(msg);
       throw new Error(msg);
     }
@@ -1191,11 +1487,15 @@ export function UserAuthProvider({ children }) {
     try {
       if (oauthErr) {
         throw new Error(
-          errDesc ? decodeURIComponent(errDesc) : "GitHub sign-in was cancelled.",
+          errDesc
+            ? decodeURIComponent(errDesc)
+            : "GitHub sign-in was cancelled.",
         );
       }
       if (!code || !state || !expectedState || expectedState !== state) {
-        throw new Error("GitHub sign-in could not be verified. Please try again.");
+        throw new Error(
+          "GitHub sign-in could not be verified. Please try again.",
+        );
       }
       await githubSignIn(code);
     } catch (err) {
@@ -1240,9 +1540,14 @@ export function UserAuthProvider({ children }) {
       if (file.size > 10 * 1024 * 1024)
         throw new Error("Image must be 10MB or less.");
 
-      const allowed = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/avif"];
+      const allowed = [
+        "image/jpeg", "image/png", "image/gif",
+        "image/webp", "image/avif",
+      ];
       if (!allowed.includes(file.type)) {
-        throw new Error("Please upload a JPEG, PNG, GIF, WebP, or AVIF image.");
+        throw new Error(
+          "Please upload a JPEG, PNG, GIF, WebP, or AVIF image.",
+        );
       }
 
       const form = new FormData();
@@ -1256,7 +1561,9 @@ export function UserAuthProvider({ children }) {
       const p = data?.data || data || {};
       const avatarUrl = p.url || p.imageUrl || p.avatar || p.avatarUrl;
       if (!avatarUrl) {
-        throw new Error("Upload succeeded but no image URL was returned.");
+        throw new Error(
+          "Upload succeeded but no image URL was returned.",
+        );
       }
 
       const normalized = normalizeUser(
@@ -1409,24 +1716,16 @@ export function UserAuthProvider({ children }) {
   );
 }
 
+// ============================================================================
+// Hook
+// ============================================================================
+
 export function useUserAuth() {
   const ctx = useContext(UserAuthContext);
-  if (!ctx) throw new Error("useUserAuth must be used within a UserAuthProvider");
+  if (!ctx) {
+    throw new Error("useUserAuth must be used within a UserAuthProvider");
+  }
   return ctx;
 }
 
 export default UserAuthContext;
-
-// ── Helper used in handleGoogleResponse ──────────────────────────────────────
-function isDismissalError(msg = "") {
-  const m = msg.toLowerCase();
-  return (
-    m.includes("dismiss") ||
-    m.includes("cancel") ||
-    m.includes("closed") ||
-    m.includes("credential_cancelled") ||
-    m.includes("popup_closed") ||
-    m.includes("skipped") ||
-    m.includes("not_displayed")
-  );
-}
