@@ -652,3 +652,8 @@ video {
     font-size: 22px !important;
   }
 }
+
+/* index.css */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

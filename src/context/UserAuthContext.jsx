@@ -830,35 +830,40 @@ export function UserAuthProvider({ children }) {
     if (!email) throw new Error("Email is required.");
     if (typeof p.persistSession === "boolean") setSessionPreference(p.persistSession);
 
-    if (loginCounter >= 2) {
-      await authFetch("/users/login", {
-        method: "POST",
-        body: JSON.stringify({ email }),
-      }).catch((err) => {
-        throw new Error(err?.message || "Failed to send verification code.");
-      });
-      setPendingEmail(email);
-      setRequiresLoginVerification(true);
-      setModalView("verify");
-      return { requiresVerification: true };
-    }
+    // Store pending ref immediately so verifyCode always has it
+    pendingRef.current = { email, fullName: trim(p.fullName) || "" };
 
     const data = await authFetch("/users/login", {
       method: "POST",
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({
+        email,
+        // Send fullName so backend can store it for new users
+        fullName: trim(p.fullName) || undefined,
+      }),
     }).catch((err) => {
+      pendingRef.current = null;
       throw new Error(err?.message || "Failed to send verification code.");
     });
+
+    // Set pendingEmail BEFORE switching view — prevents race condition
     setPendingEmail(email);
+    setRequiresLoginVerification(false);
     setModalView("verify");
+
     return data;
-  }, [authFetch, loginCounter, setSessionPreference]);
+  }, [authFetch, setSessionPreference]);
 
   const register = useCallback(async (payload) => {
     const p     = typeof payload === "object" ? payload : { email: payload };
     const email = trim(p.email);
     if (!email) throw new Error("Email is required.");
     if (typeof p.persistSession === "boolean") setSessionPreference(p.persistSession);
+
+    pendingRef.current = {
+      email,
+      fullName: trim(p.fullName) || "",
+      avatar:   trim(p.avatar)   || "",
+    };
 
     const data = await authFetch("/users/register", {
       method: "POST",
@@ -867,12 +872,17 @@ export function UserAuthProvider({ children }) {
         fullName: trim(p.fullName) || undefined,
         phone:    trim(p.phone)    || undefined,
         bio:      trim(p.bio)      || undefined,
+        avatar:   trim(p.avatar)   || undefined,
       }),
     }).catch((err) => {
+      pendingRef.current = null;
       throw new Error(err?.message || "Failed to send verification code.");
     });
+
+    // Set pendingEmail BEFORE switching view
     setPendingEmail(email);
     setModalView("verify");
+
     return data;
   }, [authFetch, setSessionPreference]);
 
@@ -887,24 +897,39 @@ export function UserAuthProvider({ children }) {
       body: JSON.stringify({ email: e, code: c }),
     });
 
+    // Backend returns the authoritative loginCounter — use it directly
+    const serverCounter = data?.data?.loginCounter ?? data?.loginCounter ?? 0;
+
     if (requiresLoginVerification) {
       if (pendingSocialAuth) saveAuth(pendingSocialAuth, { persist: persistSession });
       else saveAuth(data, { persist: persistSession });
-      setLoginCounter(0);
+
+      // Sync counter from server
+      setLoginCounter(serverCounter);
+      store.setLoginCounter(serverCounter);
+
       setRequiresLoginVerification(false);
       setPendingSocialAuth(null);
       setPendingEmail("");
       closeModal();
-      const userData = pendingSocialAuth?.user || data?.user;
-      triggerCongratulation(isNewUserCheck(userData) ? "signup" : "login");
+      const userData = pendingSocialAuth?.user || data?.data?.user || data?.user;
+      triggerCongratulation(
+        data?.data?.isNewUser || data?.isNewUser ? "signup" : "login",
+      );
       return data;
     }
 
     saveAuth(data, { persist: persistSession });
     setPendingEmail("");
     closeModal();
-    setLoginCounter((p) => p + 1);
-    triggerCongratulation(isNewUserCheck(data?.user) ? "signup" : "login");
+
+    // Use server's counter — don't increment locally
+    setLoginCounter(serverCounter);
+    store.setLoginCounter(serverCounter);
+
+    triggerCongratulation(
+      data?.data?.isNewUser || data?.isNewUser ? "signup" : "login",
+    );
     return data;
   }, [
     authFetch, closeModal, pendingEmail, pendingSocialAuth,
@@ -1229,21 +1254,38 @@ export function UserAuthProvider({ children }) {
   const completeGoogleSignUp = useCallback(async (profileData = {}) => {
     const pending = googleUser || store.getJSON(KEYS.GOOGLE_PENDING);
     if (!pending?.credential) {
-      throw new Error("Google authentication required. Please sign in with Google first.");
+      throw new Error(
+        "Google authentication required. Please sign in with Google first.",
+      );
     }
     const fullName = trim(profileData?.fullName || pending.name);
     const avatar   = trim(profileData?.avatar   || pending.picture);
     pendingRef.current = { email: pending.email, fullName, avatar };
 
-    const data = await googleSignIn(pending.credential, {
-      phone:  trim(profileData?.phone),
-      bio:    trim(profileData?.bio),
-      avatar,
-    });
-    const { token: tok, requiresProfile } = extractPayload(data);
-    if (!tok || requiresProfile) {
-      throw new Error("Account setup incomplete. Please complete all required fields.");
+    let data;
+    try {
+      data = await googleSignIn(pending.credential, {
+        phone:  trim(profileData?.phone),
+        bio:    trim(profileData?.bio),
+        avatar,
+      });
+    } catch (err) {
+      pendingRef.current = null;
+      throw err;
     }
+
+    // extractPayload looks at data.data.token and data.token
+    const extracted = extractPayload(data);
+
+    // If backend says it STILL needs profile (shouldn't happen but guard it)
+    if (extracted.requiresProfile && !extracted.token) {
+      throw new Error(
+        "Account setup incomplete. Please ensure all required fields are filled.",
+      );
+    }
+
+    // googleSignIn already called saveAuth + closeModal + triggerCongratulation
+    // so nothing more needed here
     return data;
   }, [googleSignIn, googleUser]);
 

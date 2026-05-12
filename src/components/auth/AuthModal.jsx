@@ -145,7 +145,6 @@ const SideMediaRotator = ({ intervalMs = 6500 }) => {
     return () => clearInterval(timerRef.current);
   }, [advance, intervalMs, isPaused]);
 
-  // Preload next image
   useEffect(() => {
     const nextIdx = (idx + 1) % SIDE_MEDIA.length;
     const img = new Image();
@@ -232,7 +231,12 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_RE = /^[+\d][\d\s\-()]{6,}$/;
 const MAX_BIO = 300;
 const MAX_FILE = 10 * 1024 * 1024;
-const CODE_TTL = 10;
+
+// ── Expiry TTLs — must match backend exactly ──────────────────────────────
+// authController.js: OTP_EXPIRY_MINUTES = 10  (login + register)
+// authController.js: resendCode uses 15 * 60_000
+const CODE_TTL_LOGIN_REGISTER = 10 * 60; // 600 seconds
+const CODE_TTL_RESEND = 15 * 60; // 900 seconds
 
 const ROLES = [
   {
@@ -310,7 +314,15 @@ const readFile = (file) =>
 
 const formatPhone = (v) => String(v || "").replace(/[^\d+]/g, "");
 
-// ── Dismissal error classifier ───────────────────────────────────────────────
+// Format seconds → MM:SS with tabular-nums friendly string
+const formatExpiry = (seconds) => {
+  const s = Math.max(0, seconds);
+  const m = Math.floor(s / 60).toString().padStart(2, "0");
+  const sec = (s % 60).toString().padStart(2, "0");
+  return `${m}:${sec}`;
+};
+
+// ── Dismissal error classifier ────────────────────────────────────────────
 const isDismissalError = (msg = "") => {
   const m = msg.toLowerCase();
   return (
@@ -394,12 +406,17 @@ export default function AuthModal() {
   const [emailTouched, setEmailTouched] = useState(false);
   const [nameTouched, setNameTouched] = useState(false);
 
+  /* ── Expiry Countdown State ── */
+  const [codeExpiry, setCodeExpiry] = useState(CODE_TTL_LOGIN_REGISTER);
+  const [codeExpired, setCodeExpired] = useState(false);
+
   /* ── Refs ── */
   const codeRefs = useRef([]);
   const firstInputRef = useRef(null);
   const prevTitleRef = useRef(document.title);
   const wasOpenRef = useRef(false);
   const modalRef = useRef(null);
+  const expiryTimerRef = useRef(null);
 
   /* ── Computed ── */
   const isLogin = modalView === "login";
@@ -422,8 +439,61 @@ export default function AuthModal() {
       form.avatarPreview ||
       (googleUser?.picture && authMethod === "google" ? googleUser.picture : null) ||
       initAvatar(form.fullName || form.email || "U", currentRole?.color),
-    [form.avatarPreview, form.fullName, form.email, googleUser?.picture, authMethod, currentRole?.color],
+    [form.avatarPreview, form.fullName, form.email,
+    googleUser?.picture, authMethod, currentRole?.color],
   );
+
+  /* ═══════════════════════════════════════════════════════════
+     EXPIRY COUNTDOWN — matches backend OTP_EXPIRY_MINUTES
+  ═══════════════════════════════════════════════════════════ */
+
+  /**
+   * startExpiryCountdown(seconds)
+   * Clears any existing timer, resets expired flag, then
+   * counts down one tick per second.
+   *
+   * Call with CODE_TTL_LOGIN_REGISTER (600s) after login/register send.
+   * Call with CODE_TTL_RESEND (900s) after resend — matches backend's 15 min.
+   */
+  const startExpiryCountdown = useCallback((seconds = CODE_TTL_LOGIN_REGISTER) => {
+    // Clear any previous interval
+    if (expiryTimerRef.current) {
+      clearInterval(expiryTimerRef.current);
+      expiryTimerRef.current = null;
+    }
+
+    setCodeExpiry(seconds);
+    setCodeExpired(false);
+
+    expiryTimerRef.current = setInterval(() => {
+      setCodeExpiry((prev) => {
+        if (prev <= 1) {
+          clearInterval(expiryTimerRef.current);
+          expiryTimerRef.current = null;
+          setCodeExpired(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  /** Stop and reset the expiry timer (called on modal close / view switch) */
+  const stopExpiryCountdown = useCallback(() => {
+    if (expiryTimerRef.current) {
+      clearInterval(expiryTimerRef.current);
+      expiryTimerRef.current = null;
+    }
+    setCodeExpiry(CODE_TTL_LOGIN_REGISTER);
+    setCodeExpired(false);
+  }, []);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (expiryTimerRef.current) clearInterval(expiryTimerRef.current);
+    };
+  }, []);
 
   /* ── Field Updater ── */
   const set = useCallback(
@@ -439,6 +509,7 @@ export default function AuthModal() {
   const switchView = useCallback(
     (view) => {
       if (loading) return;
+      stopExpiryCountdown();
       setModalView(view);
       setError("");
       setSuccess("");
@@ -449,17 +520,24 @@ export default function AuthModal() {
       clearSocialAuthError?.();
       if (view === "login") clearGooglePending?.();
     },
-    [clearGooglePending, clearSocialAuthError, loading, setModalView],
+    [clearGooglePending, clearSocialAuthError, loading,
+      setModalView, stopExpiryCountdown],
   );
 
-  /* ── Effects ── */
+  /* ═══════════════════════════════════════════════════════════
+     EFFECTS
+  ═══════════════════════════════════════════════════════════ */
+
+  // Document title + body scroll lock
   useEffect(() => {
     if (isModalOpen && !wasOpenRef.current)
       prevTitleRef.current = document.title;
     if (isModalOpen) {
       document.title =
-        { login: "Sign In | Altuvera", register: "Create Account | Altuvera", verify: "Verify Email | Altuvera" }[modalView]
-        || "Account | Altuvera";
+        {
+          login: "Sign In | Altuvera", register: "Create Account | Altuvera",
+          verify: "Verify Email | Altuvera"
+        }[modalView] || "Account | Altuvera";
       document.body.style.overflow = "hidden";
     } else if (wasOpenRef.current) {
       document.title = prevTitleRef.current;
@@ -469,6 +547,7 @@ export default function AuthModal() {
     return () => { document.body.style.overflow = ""; };
   }, [isModalOpen, modalView]);
 
+  // Escape key
   useEffect(() => {
     if (!isModalOpen) return;
     const handler = (e) => { if (e.key === "Escape") closeModal(); };
@@ -476,8 +555,11 @@ export default function AuthModal() {
     return () => window.removeEventListener("keydown", handler);
   }, [closeModal, isModalOpen]);
 
+  // Reset on view change / modal open — also stops any running countdown
   useEffect(() => {
     if (!isModalOpen) return;
+
+    stopExpiryCountdown();
     setError("");
     setSuccess("");
     setCode(emptyCode());
@@ -489,9 +571,10 @@ export default function AuthModal() {
     if (isRegister && !hasGooglePending) setSignUpStep(1);
     setForm((p) => ({ ...p, keepSignedIn: persistSession }));
     setTimeout(() => firstInputRef.current?.focus(), 350);
-  }, [isLogin, isModalOpen, isRegister, persistSession, hasGooglePending]);
+  }, [isLogin, isModalOpen, isRegister, persistSession,
+    hasGooglePending, stopExpiryCountdown]);
 
-  // ✅ KEY FIX: Filter socialAuthError — never show dismissal messages
+  // Filter dismissal errors from social auth
   useEffect(() => {
     if (!socialAuthError) return;
     if (isDismissalError(socialAuthError)) {
@@ -501,6 +584,7 @@ export default function AuthModal() {
     setError(socialAuthError);
   }, [socialAuthError, clearSocialAuthError]);
 
+  // Google user auto-fill on register
   useEffect(() => {
     if (googleUser && isRegister) {
       setForm((p) => ({
@@ -515,45 +599,45 @@ export default function AuthModal() {
     }
   }, [googleUser, isRegister]);
 
+  // Resend cooldown countdown
   useEffect(() => {
     if (resendTimer <= 0) return;
-    const t = setInterval(() => setResendTimer((p) => Math.max(0, p - 1)), 1000);
+    const t = setInterval(
+      () => setResendTimer((p) => Math.max(0, p - 1)), 1000,
+    );
     return () => clearInterval(t);
   }, [resendTimer]);
 
-  // Auto-verify on 6 digits
+  // Auto-verify when all 6 digits filled
   useEffect(() => {
     const val = code.join("");
-    if (val.length === 6 && isVerify && !loading && codeState !== "verifying") {
+    if (
+      val.length === 6 && isVerify && !loading &&
+      codeState !== "verifying" && !codeExpired
+    ) {
       const t = setTimeout(() => doVerify(val), 300);
       return () => clearTimeout(t);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [code, isVerify, loading, codeState]);
+  }, [code, isVerify, loading, codeState, codeExpired]);
 
-  /* ── Google Auth ── */
+  /* ═══════════════════════════════════════════════════════════
+     SOCIAL AUTH
+  ═══════════════════════════════════════════════════════════ */
   const handleGoogleAuth = useCallback(
     async (mode = "signin") => {
       if (!googleLoaded || isBusy) return;
       clearSocialAuthError?.();
       setError("");
       setSuccess("");
-
       try {
         const result = await promptGoogleAuth({ mode });
-
-        // ✅ Prompt was dismissed/unavailable — not an error, do nothing
-        // The Google button rendered on the modal still works
         if (result?.dismissed) return;
-
         if (mode === "signup" && result)
           setSuccess("Google account connected! Complete your profile.");
       } catch (err) {
         const msg = err?.message || "";
-
-        // ✅ Never surface dismissal as an error
         if (isDismissalError(msg)) return;
-
         setError(msg || "Google authentication failed. Please try again.");
       }
     },
@@ -575,17 +659,17 @@ export default function AuthModal() {
     [clearSocialAuthError, isBusy, startGithubAuth],
   );
 
-  /* ── Avatar ── */
+  /* ═══════════════════════════════════════════════════════════
+     AVATAR
+  ═══════════════════════════════════════════════════════════ */
   const handleAvatarChange = useCallback(async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setError("Please select a valid image file.");
-      return;
+      setError("Please select a valid image file."); return;
     }
     if (file.size > MAX_FILE) {
-      setError("Image must be 10 MB or less.");
-      return;
+      setError("Image must be 10 MB or less."); return;
     }
     try {
       const preview = await readFile(file);
@@ -611,9 +695,19 @@ export default function AuthModal() {
     } finally {
       setAvatarUploading(false);
     }
-  }, [currentRole?.color, form.avatarFile, form.avatarPreview, form.email, form.fullName, googleUser?.picture, uploadAvatar]);
+  }, [currentRole?.color, form.avatarFile, form.avatarPreview,
+  form.email, form.fullName, googleUser?.picture, uploadAvatar]);
 
-  /* ── Sign In ── */
+  /* ═══════════════════════════════════════════════════════════
+     SIGN IN
+     Sends OTP via POST /users/login
+     Backend: OTP_EXPIRY_MINUTES = 10 → starts 600s countdown
+  ═══════════════════════════════════════════════════════════ */
+
+  // AuthModal.jsx — targeted fixes only
+
+  // ─── Fix 1: handleSignIn should NOT call startExpiryCountdown
+  //            if login() throws — move it inside try AFTER await ─────────────
   const handleSignIn = useCallback(
     async (e) => {
       e.preventDefault();
@@ -633,17 +727,126 @@ export default function AuthModal() {
           fullName: form.fullName.trim(),
           persistSession: form.keepSignedIn,
         });
+        // Only start countdown AFTER successful send
+        startExpiryCountdown(CODE_TTL_LOGIN_REGISTER);
         setSuccess("Verification code sent! Check your inbox.");
       } catch (err) {
+        // login() threw — stay on login view, show error
         setError(err?.message || "Sign in failed. Please try again.");
       } finally {
         setLoading(false);
       }
     },
-    [emailOk, nameOk, form.email, form.fullName, form.keepSignedIn, login, setSessionPreference],
+    [emailOk, nameOk, form.email, form.fullName, form.keepSignedIn,
+      login, setSessionPreference, startExpiryCountdown],
   );
 
-  /* ── Sign Up ── */
+  // ─── Fix 2: handleSignUp — same pattern, countdown only on success ──────────
+  const handleSignUp = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (!agreeTerms) {
+        setError("Please accept the Terms of Service and Privacy Policy.");
+        return;
+      }
+      if (authMethod === "google" && !hasGooglePending) {
+        setError("Google authentication required.");
+        return;
+      }
+      try {
+        setLoading(true);
+        setError("");
+        setSuccess("");
+        setVerifySource("register");
+        setSessionPreference(form.keepSignedIn);
+        const avatar = await resolveAvatar();
+
+        if (authMethod === "google") {
+          await completeGoogleSignUp({
+            fullName: form.fullName.trim(),
+            phone: form.phone.trim(),
+            bio: form.bio.trim(),
+            role: form.role,
+            avatar,
+          });
+          // Google auth completes fully — modal closes automatically
+          // No countdown needed
+        } else {
+          await register({
+            email: form.email.trim(),
+            fullName: form.fullName.trim(),
+            phone: form.phone.trim(),
+            bio: form.bio.trim(),
+            role: form.role,
+            avatar,
+            persistSession: form.keepSignedIn,
+          });
+          // Email OTP sent — start 10-min countdown
+          startExpiryCountdown(CODE_TTL_LOGIN_REGISTER);
+          setSuccess("Verification code sent to your email.");
+        }
+      } catch (err) {
+        setError(err?.message || "Sign up failed. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [agreeTerms, authMethod, completeGoogleSignUp, form, hasGooglePending,
+      register, resolveAvatar, setSessionPreference, startExpiryCountdown],
+  );
+
+  // ─── Fix 3: doVerify — clear code inputs on error so user can retry ─────────
+  const doVerify = useCallback(
+    async (val) => {
+      if (!activeEmail) { setError("Missing email. Please restart."); return; }
+      if (val.length !== 6) { setError("Please enter the full 6-digit code."); return; }
+      if (codeExpired) { setError("Code has expired. Please request a new one."); return; }
+      try {
+        setLoading(true);
+        setCodeState("verifying");
+        setError("");
+        await verifyCode(activeEmail, val);
+        setCodeState("success");
+        stopExpiryCountdown();
+      } catch (err) {
+        setCodeState("error");
+        setError(err?.message || "Verification failed. Please try again.");
+        // Clear inputs after shake animation so user can re-enter
+        setTimeout(() => {
+          setCodeState("");
+          setCode(emptyCode());
+          codeRefs.current[0]?.focus();
+        }, 700);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [activeEmail, codeExpired, verifyCode, stopExpiryCountdown],
+  );
+
+  // ─── Fix 4: auto-verify guard — prevent double-fire ─────────────────────────
+  // Replace the existing auto-verify useEffect:
+  useEffect(() => {
+    const val = code.join("");
+    if (
+      val.length === 6 &&
+      isVerify &&
+      !loading &&
+      codeState !== "verifying" &&
+      codeState !== "success" &&
+      !codeExpired
+    ) {
+      const t = setTimeout(() => doVerify(val), 400);
+      return () => clearTimeout(t);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code, isVerify, loading, codeState, codeExpired]);
+
+  /* ═══════════════════════════════════════════════════════════
+     SIGN UP
+     Sends OTP via POST /users/register
+     Backend: OTP_EXPIRY_MINUTES = 10 → starts 600s countdown
+  ═══════════════════════════════════════════════════════════ */
   const handleSignUp = useCallback(
     async (e) => {
       e.preventDefault();
@@ -670,6 +873,8 @@ export default function AuthModal() {
             role: form.role,
             avatar,
           });
+          // Google sign-up completes immediately — no OTP countdown needed
+          setSuccess("Account created! Welcome to Altuvera.");
         } else {
           await register({
             email: form.email.trim(),
@@ -680,22 +885,23 @@ export default function AuthModal() {
             avatar,
             persistSession: form.keepSignedIn,
           });
+          // Email OTP sent — start 10-minute countdown (matches OTP_EXPIRY_MINUTES)
+          startExpiryCountdown(CODE_TTL_LOGIN_REGISTER);
+          setSuccess("Verification code sent to your email.");
         }
-        setSuccess(
-          authMethod === "google"
-            ? "Account created! Welcome to Altuvera."
-            : "Verification code sent to your email.",
-        );
       } catch (err) {
         setError(err?.message || "Sign up failed. Please try again.");
       } finally {
         setLoading(false);
       }
     },
-    [agreeTerms, authMethod, completeGoogleSignUp, form, hasGooglePending, register, resolveAvatar, setSessionPreference],
+    [agreeTerms, authMethod, completeGoogleSignUp, form, hasGooglePending,
+      register, resolveAvatar, setSessionPreference, startExpiryCountdown],
   );
 
-  /* ── Code Handlers ── */
+  /* ═══════════════════════════════════════════════════════════
+     CODE HANDLERS
+  ═══════════════════════════════════════════════════════════ */
   const handleCodeChange = useCallback((i, val) => {
     if (!/^[0-9]?$/.test(val)) return;
     setCode((p) => { const n = [...p]; n[i] = val; return n; });
@@ -723,16 +929,24 @@ export default function AuthModal() {
     codeRefs.current[Math.min(digits.length, 5)]?.focus();
   }, []);
 
+  /* ═══════════════════════════════════════════════════════════
+     VERIFY
+     POST /users/verify-code { email, code }
+     Backend validates: code matches, not expired, attempts < 5
+  ═══════════════════════════════════════════════════════════ */
   const doVerify = useCallback(
     async (val) => {
       if (!activeEmail) { setError("Missing email. Please restart."); return; }
       if (val.length !== 6) { setError("Please enter the full 6-digit code."); return; }
+      if (codeExpired) { setError("Code has expired. Please request a new one."); return; }
       try {
         setLoading(true);
         setCodeState("verifying");
         setError("");
         await verifyCode(activeEmail, val);
         setCodeState("success");
+        // Stop countdown — verification succeeded
+        stopExpiryCountdown();
       } catch (err) {
         setCodeState("error");
         setError(err?.message || "Verification failed. Please try again.");
@@ -741,7 +955,7 @@ export default function AuthModal() {
         setLoading(false);
       }
     },
-    [activeEmail, verifyCode],
+    [activeEmail, codeExpired, verifyCode, stopExpiryCountdown],
   );
 
   const handleVerifySubmit = useCallback(
@@ -749,29 +963,39 @@ export default function AuthModal() {
     [code, doVerify],
   );
 
+  /* ═══════════════════════════════════════════════════════════
+     RESEND
+     POST /users/resend-code { email }
+     Backend: 15 * 60_000 ms expiry → starts 900s countdown
+  ═══════════════════════════════════════════════════════════ */
   const handleResend = useCallback(async () => {
     if (!activeEmail || resendTimer > 0 || loading) return;
     try {
       setLoading(true);
       setError("");
+      setSuccess("");
       await resendCode(activeEmail);
-      setSuccess(`New code sent to ${activeEmail}. Valid for ${CODE_TTL} minutes.`);
-      setResendTimer(60);
+      // New code has 15-minute expiry (matches backend resend: 15 * 60_000)
+      startExpiryCountdown(CODE_TTL_RESEND);
+      setResendTimer(60); // 60s UI cooldown before next resend
       setCode(emptyCode());
+      setCodeState("");
+      setSuccess(`New code sent to ${activeEmail}. Valid for 15 minutes.`);
       codeRefs.current[0]?.focus();
     } catch (err) {
       setError(err?.message || "Unable to resend code.");
     } finally {
       setLoading(false);
     }
-  }, [activeEmail, loading, resendCode, resendTimer]);
+  }, [activeEmail, loading, resendCode, resendTimer, startExpiryCountdown]);
 
   const handleBackFromVerify = useCallback(() => {
+    stopExpiryCountdown();
     setCode(emptyCode());
     setError("");
     setSuccess("");
     setModalView(verifySource);
-  }, [setModalView, verifySource]);
+  }, [setModalView, stopExpiryCountdown, verifySource]);
 
   if (!isModalOpen) return null;
 
@@ -792,7 +1016,9 @@ export default function AuthModal() {
           <FcGoogle className="auth-social-icon" aria-hidden="true" />
         )}
         <span>
-          {!googleLoaded ? "Google (loading…)" : googleLoading ? "Connecting…" : "Google"}
+          {!googleLoaded
+            ? "Google (loading…)"
+            : googleLoading ? "Connecting…" : "Google"}
         </span>
       </button>
       <button
@@ -900,7 +1126,11 @@ export default function AuthModal() {
 
           {/* Tab Nav */}
           {!isVerify && (
-            <nav className="auth-tab-nav" role="tablist" aria-label="Authentication options">
+            <nav
+              className="auth-tab-nav"
+              role="tablist"
+              aria-label="Authentication options"
+            >
               <button
                 type="button"
                 className={`auth-tab ${isLogin ? "auth-tab--active" : ""}`}
@@ -936,7 +1166,11 @@ export default function AuthModal() {
           <div className="auth-modal-body">
             {/* Alerts */}
             {error && (
-              <div className="auth-alert auth-alert--error" role="alert" aria-live="assertive">
+              <div
+                className="auth-alert auth-alert--error"
+                role="alert"
+                aria-live="assertive"
+              >
                 <HiExclamationCircle aria-hidden="true" />
                 <p>{typeof error === "string" ? error : error?.message || "An error occurred."}</p>
                 <button
@@ -950,7 +1184,11 @@ export default function AuthModal() {
               </div>
             )}
             {success && (
-              <div className="auth-alert auth-alert--success" role="status" aria-live="polite">
+              <div
+                className="auth-alert auth-alert--success"
+                role="status"
+                aria-live="polite"
+              >
                 <HiCheckCircle aria-hidden="true" />
                 <span>{success}</span>
               </div>
@@ -980,10 +1218,9 @@ export default function AuthModal() {
 
                 <form className="auth-form" onSubmit={handleSignIn} noValidate>
                   {/* Email */}
-                  <div className={`auth-field ${
-                    emailTouched && !emailOk ? "auth-field--error"
-                    : emailTouched && emailOk ? "auth-field--valid" : ""
-                  }`}>
+                  <div className={`auth-field ${emailTouched && !emailOk ? "auth-field--error"
+                      : emailTouched && emailOk ? "auth-field--valid" : ""
+                    }`}>
                     <label className="auth-field-label" htmlFor="login-email">
                       Email Address
                     </label>
@@ -1013,10 +1250,9 @@ export default function AuthModal() {
                   </div>
 
                   {/* Full Name */}
-                  <div className={`auth-field ${
-                    nameTouched && !nameOk ? "auth-field--error"
-                    : nameTouched && nameOk ? "auth-field--valid" : ""
-                  }`}>
+                  <div className={`auth-field ${nameTouched && !nameOk ? "auth-field--error"
+                      : nameTouched && nameOk ? "auth-field--valid" : ""
+                    }`}>
                     <label className="auth-field-label" htmlFor="login-name">
                       Full Name
                     </label>
@@ -1172,10 +1408,9 @@ export default function AuthModal() {
                     ) : (
                       <>
                         {/* Email */}
-                        <div className={`auth-field ${
-                          emailTouched && !emailOk ? "auth-field--error"
-                          : emailTouched && emailOk ? "auth-field--valid" : ""
-                        }`}>
+                        <div className={`auth-field ${emailTouched && !emailOk ? "auth-field--error"
+                            : emailTouched && emailOk ? "auth-field--valid" : ""
+                          }`}>
                           <label className="auth-field-label" htmlFor="reg-email">
                             Email Address
                           </label>
@@ -1204,10 +1439,9 @@ export default function AuthModal() {
                         </div>
 
                         {/* Full Name */}
-                        <div className={`auth-field ${
-                          nameTouched && !nameOk ? "auth-field--error"
-                          : nameTouched && nameOk ? "auth-field--valid" : ""
-                        }`}>
+                        <div className={`auth-field ${nameTouched && !nameOk ? "auth-field--error"
+                            : nameTouched && nameOk ? "auth-field--valid" : ""
+                          }`}>
                           <label className="auth-field-label" htmlFor="reg-name">
                             Full Name
                           </label>
@@ -1285,10 +1519,9 @@ export default function AuthModal() {
                     )}
 
                     {/* Phone */}
-                    <div className={`auth-field ${
-                      form.phone && !phoneOk ? "auth-field--error"
-                      : form.phone && phoneOk ? "auth-field--valid" : ""
-                    }`}>
+                    <div className={`auth-field ${form.phone && !phoneOk ? "auth-field--error"
+                        : form.phone && phoneOk ? "auth-field--valid" : ""
+                      }`}>
                       <label className="auth-field-label" htmlFor="reg-phone">
                         Phone Number
                         <span className="auth-field-optional"> — Optional</span>
@@ -1316,7 +1549,11 @@ export default function AuthModal() {
                     {/* Role */}
                     <div className="auth-field">
                       <span className="auth-field-label">I am a…</span>
-                      <div className="auth-role-grid" role="radiogroup" aria-label="Select your role">
+                      <div
+                        className="auth-role-grid"
+                        role="radiogroup"
+                        aria-label="Select your role"
+                      >
                         {ROLES.map(({ value, label, icon: RoleIcon, desc, color }) => (
                           <button
                             key={value}
@@ -1363,9 +1600,8 @@ export default function AuthModal() {
                         <FieldHint>Shown on your public profile.</FieldHint>
                         <span
                           id="bio-counter"
-                          className={`auth-char-counter ${
-                            form.bio.length > MAX_BIO * 0.85 ? "auth-char-counter--warn" : ""
-                          } ${form.bio.length > MAX_BIO ? "auth-char-counter--over" : ""}`}
+                          className={`auth-char-counter ${form.bio.length > MAX_BIO * 0.85 ? "auth-char-counter--warn" : ""
+                            } ${form.bio.length > MAX_BIO ? "auth-char-counter--over" : ""}`}
                         >
                           {form.bio.length}/{MAX_BIO}
                         </span>
@@ -1377,7 +1613,10 @@ export default function AuthModal() {
                       <button
                         type="button"
                         className="auth-btn auth-btn--ghost"
-                        onClick={() => { setSignUpStep(1); clearGooglePending?.(); }}
+                        onClick={() => {
+                          setSignUpStep(1);
+                          clearGooglePending?.();
+                        }}
                       >
                         <HiArrowLeft aria-hidden="true" />
                         <span>Back</span>
@@ -1566,15 +1805,47 @@ export default function AuthModal() {
                     <HiMail aria-hidden="true" />
                     <span>{activeEmail || "No email found"}</span>
                   </div>
-                  <span className="auth-verify-expiry">
-                    <HiInformationCircle aria-hidden="true" />
-                    Code expires in {CODE_TTL} minutes
-                  </span>
+
+                  {/* ── Real-time expiry countdown ── */}
+                  {codeState !== "success" && (
+                    !codeExpired ? (
+                      <span
+                        className={`auth-verify-expiry${codeExpiry <= 120 ? " auth-verify-expiry--warning" : ""
+                          }${codeExpiry <= 30 ? " auth-verify-expiry--critical" : ""}`}
+                        aria-live="off"
+                        aria-atomic="true"
+                        role="timer"
+                        aria-label={`Code expires in ${formatExpiry(codeExpiry)}`}
+                      >
+                        <HiInformationCircle aria-hidden="true" />
+                        <span>
+                          Code expires in{" "}
+                          <strong className="auth-expiry-timer">
+                            {formatExpiry(codeExpiry)}
+                          </strong>
+                        </span>
+                      </span>
+                    ) : (
+                      <span
+                        className="auth-verify-expiry auth-verify-expiry--expired"
+                        role="alert"
+                        aria-live="assertive"
+                      >
+                        <HiExclamationCircle aria-hidden="true" />
+                        <span>Code expired — please request a new one</span>
+                      </span>
+                    )
+                  )}
                 </div>
 
-                <form className="auth-form" onSubmit={handleVerifySubmit} noValidate>
+                <form
+                  className="auth-form"
+                  onSubmit={handleVerifySubmit}
+                  noValidate
+                >
+                  {/* OTP inputs */}
                   <div
-                    className={`auth-code-group ${codeState ? `auth-code-group--${codeState}` : ""}`}
+                    className={`auth-code-group${codeState ? ` auth-code-group--${codeState}` : ""}${codeExpired ? " auth-code-group--expired" : ""}`}
                     onPaste={handleCodePaste}
                     role="group"
                     aria-label="Enter 6-digit verification code"
@@ -1590,14 +1861,19 @@ export default function AuthModal() {
                         value={digit}
                         onChange={(e) => handleCodeChange(i, e.target.value)}
                         onKeyDown={(e) => handleCodeKey(i, e)}
-                        className={`auth-code-input ${digit ? "is-filled" : ""}`}
+                        className={`auth-code-input${digit ? " is-filled" : ""}${codeExpired ? " is-expired" : ""}`}
                         aria-label={`Digit ${i + 1} of 6`}
                         autoComplete={i === 0 ? "one-time-code" : "off"}
-                        disabled={codeState === "verifying" || codeState === "success"}
+                        disabled={
+                          codeState === "verifying" ||
+                          codeState === "success" ||
+                          codeExpired
+                        }
                       />
                     ))}
                   </div>
 
+                  {/* Status messages */}
                   {codeState === "verifying" && (
                     <div className="auth-verify-status auth-verify-status--verifying">
                       <Spinner label="Verifying code" />
@@ -1610,13 +1886,28 @@ export default function AuthModal() {
                       <span>Verified! Redirecting…</span>
                     </div>
                   )}
+                  {codeExpired && codeState !== "success" && (
+                    <div
+                      className="auth-verify-status auth-verify-status--expired"
+                      role="alert"
+                    >
+                      <HiExclamationCircle aria-hidden="true" />
+                      <span>
+                        Your code has expired. Click "Resend Code" to get a new one.
+                      </span>
+                    </div>
+                  )}
 
+                  {/* Submit */}
                   <button
                     type="submit"
                     className="auth-btn auth-btn--primary auth-btn--full"
                     disabled={
-                      loading || code.join("").length !== 6 ||
-                      codeState === "verifying" || codeState === "success"
+                      loading ||
+                      code.join("").length !== 6 ||
+                      codeState === "verifying" ||
+                      codeState === "success" ||
+                      codeExpired
                     }
                     aria-busy={loading}
                   >
@@ -1624,6 +1915,8 @@ export default function AuthModal() {
                       <><Spinner label="Verifying" /><span>Verifying…</span></>
                     ) : codeState === "success" ? (
                       <><HiCheckCircle aria-hidden="true" /><span>Verified!</span></>
+                    ) : codeExpired ? (
+                      <><HiExclamationCircle aria-hidden="true" /><span>Code Expired</span></>
                     ) : (
                       <><span>Verify & Continue</span><HiArrowRight aria-hidden="true" /></>
                     )}
@@ -1651,7 +1944,9 @@ export default function AuthModal() {
                         aria-hidden="true"
                       />
                       <span>
-                        {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend Code"}
+                        {resendTimer > 0
+                          ? `Resend in ${resendTimer}s`
+                          : "Resend Code"}
                       </span>
                     </button>
                   </div>
