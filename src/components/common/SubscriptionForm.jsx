@@ -4,14 +4,21 @@
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { FiMail, FiCheck, FiArrowRight, FiAlertCircle, FiRefreshCw } from 'react-icons/fi';
+import {
+  FiMail,
+  FiCheck,
+  FiArrowRight,
+  FiAlertCircle,
+  FiRefreshCw,
+} from 'react-icons/fi';
 import EmailAutocompleteInput from './EmailAutocompleteInput';
 import { useSubscription } from '../../hooks/useSubscription';
 
 // ── Loading spinner ───────────────────────────────────────────────────────────
 const Spinner = ({ color = '#065F46' }) => (
   <svg
-    width="16" height="16"
+    width="16"
+    height="16"
     viewBox="0 0 24 24"
     fill="none"
     stroke={color}
@@ -20,28 +27,42 @@ const Spinner = ({ color = '#065F46' }) => (
     style={{ animation: 'subSpin 0.8s linear infinite', flexShrink: 0 }}
   >
     <style>{`@keyframes subSpin { to { transform: rotate(360deg); } }`}</style>
-    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
   </svg>
 );
+
+// ── Safe string coercion — last line of defence before render ─────────────────
+const safeString = (value) => {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  // object shape { code, message } or { message }
+  if (typeof value === 'object') {
+    if (typeof value.message === 'string') return value.message;
+    if (typeof value.code    === 'string') return value.code;
+    try { return JSON.stringify(value); } catch { return 'An error occurred.'; }
+  }
+  return 'An error occurred.';
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 
 const SubscriptionForm = ({
-  title        = "Get Exclusive Travel Inspiration",
-  description  = "Join 25,000+ adventurers receiving hand-picked destination stories, insider tips, and members-only offers every week.",
-  buttonText   = "Subscribe",
-  disclaimer   = "No spam. Unsubscribe anytime.",
-  theme        = "dark",       // "dark" | "light"
-  icon         = <FiMail size={14} />,
-  sectionLabel = "Stay Inspired",
-  showNameField = false,        // optional name input
-  source       = "website",    // tracks where the signup came from
-  className    = "",
-  style        = {},
-  onSuccess    = null,          // optional callback({ email, subscriber, alreadySubscribed })
-  initialEmail = "",            // optional pre-filled email (e.g., from logged-in user)
-  initialName  = "",            // optional pre-filled name
-  user         = null,          // optional user object for context
+  title         = 'Get Exclusive Travel Inspiration',
+  description   = 'Join 25,000+ adventurers receiving hand-picked destination stories, insider tips, and members-only offers every week.',
+  buttonText    = 'Subscribe',
+  disclaimer    = 'No spam. Unsubscribe anytime.',
+  theme         = 'dark',       // "dark" | "light"
+  icon          = <FiMail size={14} />,
+  sectionLabel  = 'Stay Inspired',
+  showNameField = false,
+  source        = 'website',
+  className     = '',
+  style         = {},
+  onSuccess     = null,
+  initialEmail  = '',
+  initialName   = '',
+  user          = null,
 }) => {
   const [email, setEmail] = useState(initialEmail);
   const [name,  setName]  = useState(initialName);
@@ -58,13 +79,13 @@ const SubscriptionForm = ({
 
   const isDark = theme === 'dark';
 
-  // Update local state if initial props change (e.g., user logs in)
+  // Update local state when props change (e.g., user logs in)
   useEffect(() => {
     if (initialEmail && !email) setEmail(initialEmail);
-    if (initialName && !name) setName(initialName);
-  }, [initialEmail, initialName, email, name]);
+    if (initialName  && !name)  setName(initialName);
+  }, [initialEmail, initialName]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Submit handler ──────────────────────────────────────────────────────────
+  // ── Submit ──────────────────────────────────────────────────────────────────
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
 
@@ -74,7 +95,7 @@ const SubscriptionForm = ({
       source,
     });
 
-    if (result.success) {
+    if (result?.success) {
       setEmail('');
       setName('');
       onSuccess?.({
@@ -145,17 +166,17 @@ const SubscriptionForm = ({
       marginRight:  'auto',
     },
     form: {
-      display:        'flex',
-      flexDirection:  'column',
-      gap:            12,
-      maxWidth:       480,
-      margin:         '0 auto',
+      display:       'flex',
+      flexDirection: 'column',
+      gap:           12,
+      maxWidth:      480,
+      margin:        '0 auto',
     },
     row: {
-      display:         'flex',
-      gap:             12,
-      flexWrap:        'wrap',
-      justifyContent:  'center',
+      display:        'flex',
+      gap:            12,
+      flexWrap:       'wrap',
+      justifyContent: 'center',
     },
     nameInput: {
       width:           '100%',
@@ -243,21 +264,21 @@ const SubscriptionForm = ({
       margin:     0,
     },
     successSubtitle: {
-      fontSize:    14,
-      color:       isDark ? 'rgba(255,255,255,0.65)' : 'rgba(6,95,70,0.7)',
-      margin:      0,
-      lineHeight:  1.6,
+      fontSize:   14,
+      color:      isDark ? 'rgba(255,255,255,0.65)' : 'rgba(6,95,70,0.7)',
+      margin:     0,
+      lineHeight: 1.6,
     },
     resetBtn: {
-      background:  'none',
-      border:      'none',
-      cursor:      'pointer',
-      fontSize:    13,
-      color:       isDark ? 'rgba(255,255,255,0.45)' : 'rgba(6,95,70,0.5)',
-      display:     'flex',
-      alignItems:  'center',
-      gap:         5,
-      padding:     '4px 8px',
+      background:   'none',
+      border:       'none',
+      cursor:       'pointer',
+      fontSize:     13,
+      color:        isDark ? 'rgba(255,255,255,0.45)' : 'rgba(6,95,70,0.5)',
+      display:      'flex',
+      alignItems:   'center',
+      gap:          5,
+      padding:      '4px 8px',
       borderRadius: 8,
     },
     disclaimer: {
@@ -269,6 +290,9 @@ const SubscriptionForm = ({
 
   // ── Render: Success ─────────────────────────────────────────────────────────
   if (success) {
+    const subscriberEmail =
+      typeof subscriber?.email === 'string' ? subscriber.email : null;
+
     return (
       <div className={className} style={s.container}>
         <div style={s.blob} />
@@ -287,19 +311,19 @@ const SubscriptionForm = ({
             <p style={s.successTitle}>
               {alreadySubscribed
                 ? "You're Already Subscribed!"
-                : "Welcome to the Family! 🎉"}
+                : 'Welcome to the Family! 🎉'}
             </p>
 
             {/* Message */}
             <p style={s.successSubtitle}>
               {alreadySubscribed
                 ? "You're already on our list. Keep an eye on your inbox for our latest updates!"
-                : subscriber?.email
-                  ? `A welcome email is on its way to ${subscriber.email}. Check your inbox!`
-                  : "A welcome email is on its way. Check your inbox (and spam folder)!"}
+                : subscriberEmail
+                  ? `A welcome email is on its way to ${subscriberEmail}. Check your inbox!`
+                  : 'A welcome email is on its way. Check your inbox (and spam folder)!'}
             </p>
 
-            {/* Reset button */}
+            {/* Reset */}
             <button onClick={reset} style={s.resetBtn}>
               <FiRefreshCw size={12} />
               Subscribe another email
@@ -311,6 +335,9 @@ const SubscriptionForm = ({
   }
 
   // ── Render: Form ────────────────────────────────────────────────────────────
+  // safeString() is the final safety net in case the hook ever returns an object
+  const errorMessage = error ? safeString(error) : null;
+
   return (
     <div className={className} style={s.container}>
       <div style={s.blob} />
@@ -371,11 +398,11 @@ const SubscriptionForm = ({
             </button>
           </div>
 
-          {/* Error message */}
-          {error && (
-            <div style={s.errorBox}>
+          {/* Error message — only rendered when errorMessage is a non-empty string */}
+          {errorMessage && (
+            <div style={s.errorBox} role="alert" aria-live="polite">
               <FiAlertCircle size={16} style={{ flexShrink: 0 }} />
-              <span>{error}</span>
+              <span>{errorMessage}</span>
             </div>
           )}
         </form>

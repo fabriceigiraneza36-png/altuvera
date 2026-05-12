@@ -24,12 +24,10 @@ import {
   FiMessageCircle,
   FiDollarSign,
   FiCamera,
-  FiDownloadCloud,
-  FiMenu,
 } from "react-icons/fi";
 import PageHeader from "../components/common/PageHeader";
 import DownloadTips from "../components/common/DownloadTips";
-import { tips } from "../data/tips";
+import api from "../services/api";
 
 // --- ASSETS & CONFIGURATION ---
 const categoryBackgrounds = {
@@ -73,8 +71,6 @@ const getBackgroundForCategory = (category) => {
   }
   return categoryBackgrounds.default;
 };
-
-// --- CUSTOM HOOK: USE IN VIEW (FIXED FOR CRASHES) ---
 const useInView = (options = { threshold: 0.1, rootMargin: "0px" }) => {
   const [isInView, setIsInView] = useState(false);
   const ref = useRef(null);
@@ -105,11 +101,46 @@ const Tips = () => {
   const [modalTip, setModalTip] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [tipCount, setTipCount] = useState(0);
+  const [tips, setTips] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch tips from backend
+  useEffect(() => {
+    const fetchTips = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await api.get('/tips/');
+        // Backend returns { data: [...] }
+        const fetchedTips = response.data?.data || [];
+        // Map backend fields to frontend expected structure
+        const normalizedTips = fetchedTips.map((tip) => ({
+          ...tip,
+          // Backend uses 'checklist' for tips array, frontend expects 'tips'
+          tips: tip.checklist || tip.tips || [],
+          // Use updated_at or created_at as lastUpdated
+          lastUpdated: tip.updated_at || tip.created_at || null,
+          // Use image_url if available, otherwise use category background
+          imageUrl: tip.image_url || null,
+        }));
+        setTips(normalizedTips);
+      } catch (err) {
+        console.error('Error fetching tips:', err);
+        setError(err.message || 'Failed to load tips');
+        setTips([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTips();
+  }, []);
 
   // Derived State
   const categories = useMemo(
-    () => ["all", ...new Set(tips.map((t) => t.category))],
-    [],
+    () => ["all", ...new Set(tips.map((t) => t.category).filter(Boolean))],
+    [tips]
   );
 
   const filteredTips = useMemo(() => {
@@ -117,18 +148,18 @@ const Tips = () => {
       const q = searchQuery.trim().toLowerCase();
       const matchSearch =
         !q ||
-        tip.title.toLowerCase().includes(q) ||
-        tip.summary.toLowerCase().includes(q) ||
-        tip.content.toLowerCase().includes(q) ||
+        (tip.title && tip.title.toLowerCase().includes(q)) ||
+        (tip.summary && tip.summary.toLowerCase().includes(q)) ||
+        (tip.content && tip.content.toLowerCase().includes(q)) ||
         (tip.lastUpdated && tip.lastUpdated.toLowerCase().includes(q)) ||
         (tip.source && tip.source.toLowerCase().includes(q)) ||
-        tip.tips.some((t) => t.toLowerCase().includes(q));
+        (tip.tips && tip.tips.some((t) => t.toLowerCase().includes(q)));
 
       const matchCat =
         selectedCategory === "all" || tip.category === selectedCategory;
       return matchSearch && matchCat;
     });
-  }, [searchQuery, selectedCategory]);
+  }, [searchQuery, selectedCategory, tips]);
 
   // Animated Counter
   useEffect(() => {
@@ -168,7 +199,7 @@ const Tips = () => {
 
   // Get Icon for Category
   const getCategoryIcon = (cat) => {
-    const lower = cat.toLowerCase();
+    const lower = cat?.toLowerCase() || "";
     if (lower.includes("health") || lower.includes("safety"))
       return <FiShield />;
     if (lower.includes("culture")) return <FiGlobe />;
@@ -182,6 +213,142 @@ const Tips = () => {
     if (lower.includes("comm")) return <FiMessageCircle />;
     return <FiMapPin />;
   };
+
+  // Render loading state
+  if (loading) {
+    return (
+      <div className="tips-wrapper">
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+          .tips-wrapper {
+            background: #f8fafc;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+          }
+          .tips-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 32px 24px 60px;
+          }
+          .loading-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 32px;
+          }
+          .skeleton-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+          }
+          .skeleton-media {
+            height: 200px;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+          }
+          .skeleton-content {
+            padding: 24px;
+          }
+          .skeleton-title {
+            height: 24px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            width: 70%;
+          }
+          .skeleton-text {
+            height: 16px;
+            background: #f0f0f0;
+            border-radius: 6px;
+            margin-bottom: 8px;
+          }
+          .skeleton-text.short {
+            width: 40%;
+          }
+          @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+          }
+        `}</style>
+        <PageHeader
+          title="Travel Insights"
+          subtitle="Curated professional advice for a seamless East African experience."
+          backgroundImage="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1600&q=80"
+          breadcrumbs={[{ label: "Travel Tips" }]}
+        />
+        <div className="tips-container">
+          <div className="loading-grid">
+            {[...Array(6)].map((_, i) => (
+              <div key={i} className="skeleton-card">
+                <div className="skeleton-media" />
+                <div className="skeleton-content">
+                  <div className="skeleton-title" />
+                  <div className="skeleton-text" />
+                  <div className="skeleton-text short" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render error state
+  if (error) {
+    return (
+      <div className="tips-wrapper">
+        <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+          .tips-wrapper {
+            background: #f8fafc;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+          }
+          .tips-container {
+            max-width: 1280px;
+            margin: 0 auto;
+            padding: 32px 24px 60px;
+          }
+          .error-state {
+            text-align: center;
+            padding: 80px 20px;
+          }
+          .error-icon {
+            width: 64px;
+            height: 64px;
+            background: #fee2e2;
+            color: #ef4444;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+          }
+        `}</style>
+        <PageHeader
+          title="Travel Insights"
+          subtitle="Curated professional advice for a seamless East African experience."
+          backgroundImage="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1600&q=80"
+          breadcrumbs={[{ label: "Travel Tips" }]}
+        />
+        <div className="tips-container">
+          <div className="error-state">
+            <div className="error-icon">
+              <FiX size={32} />
+            </div>
+            <h3 style={{ margin: "0 0 8px", color: "#0f172a" }}>
+              Unable to load tips
+            </h3>
+            <p style={{ color: "#64748b", margin: 0 }}>
+              {error}. Please try again later.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="tips-wrapper">
@@ -837,7 +1004,7 @@ const Tips = () => {
                 </div>
               )}
 
-              {modalTip.source && (
+              {modalTip.source_url && (
                 <div
                   style={{
                     marginTop: "40px",
@@ -846,7 +1013,9 @@ const Tips = () => {
                   }}
                 >
                   <a
-                    href="#"
+                    href={modalTip.source_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
                     style={{
                       color: "var(--c-primary)",
                       textDecoration: "none",
@@ -873,12 +1042,15 @@ const Tips = () => {
 const TipCard = ({ tip, layout, onOpen, getIcon }) => {
   const [ref, isInView] = useInView({ threshold: 0.1 });
 
+  // Determine background image: use tip's image_url if available, otherwise category-based
+  const backgroundImage = tip.imageUrl || getBackgroundForCategory(tip.category);
+
   return (
     <article ref={ref} className={`tip-card ${isInView ? "in-view" : ""}`}>
       <div
         className="tip-card__media"
         style={{
-          backgroundImage: `url(${getBackgroundForCategory(tip.category)})`,
+          backgroundImage: `url(${backgroundImage})`,
         }}
       />
 
