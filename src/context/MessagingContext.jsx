@@ -20,23 +20,24 @@ const saveSession = (sid) => localStorage.setItem(SESSION_KEY, sid)
 export function MessagingProvider({ children }) {
   const { user, isAuthenticated } = useUserAuth()
 
-  const socketRef     = useRef(null)
-  const typingTimer   = useRef(null)
-  const reconnectRef  = useRef(null)
+  const socketRef = useRef(null)
+  const typingTimer = useRef(null)
+  const reconnectRef = useRef(null)
 
-  const [connected,        setConnected]        = useState(false)
-  const [isOpen,           setIsOpen]           = useState(false)
-  const [messages,         setMessages]         = useState([])
-  const [conversationId,   setConversationId]   = useState(null)
-  const [sessionId,        setSessionId]        = useState(getStoredSession)
-  const [isTyping,         setIsTyping]         = useState(false)   // admin typing
-  const [adminOnline,      setAdminOnline]      = useState(false)
-  const [onlineUsers,      setOnlineUsers]      = useState(new Set())
-  const [unreadCount,      setUnreadCount]      = useState(0)
-  const [sendingMsg,       setSendingMsg]       = useState(false)
-  const [registered,       setRegistered]       = useState(false)
-  const [connectionState,  setConnectionState]  = useState('disconnected')
-  // 'disconnected' | 'connecting' | 'connected' | 'reconnecting'
+  const [connected, setConnected] = useState(false)
+  const [isOpen, setIsOpen] = useState(false)
+  const [messages, setMessages] = useState([])
+  const [conversationId, setConversationId] = useState(null)
+  const [sessionId, setSessionId] = useState(getStoredSession)
+  const [isTyping, setIsTyping] = useState(false)
+  const [adminOnline, setAdminOnline] = useState(false)
+  const [onlineUsers, setOnlineUsers] = useState(new Set())
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [sendingMsg, setSendingMsg] = useState(false)
+  const [registered, setRegistered] = useState(false)
+  const [connectionState, setConnectionState] = useState('disconnected')
+  const [newConversationNotification, setNewConversationNotification] = useState(null)
+  const [adminUserList, setAdminUserList] = useState([])
 
   /* ── connect socket ──────────────────────────────────────────────────── */
   const connect = useCallback(() => {
@@ -47,12 +48,13 @@ export function MessagingProvider({ children }) {
                   localStorage.getItem('token') || null
 
     const socket = io(SOCKET_URL, {
-      auth:         { token },
-      transports:   ['websocket', 'polling'],
+      auth: { token },
+      transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 15,
       timeout: 10000,
+      query: user?.id ? { userId: user.id } : {},
     })
 
     socket.on('connect', () => {
@@ -60,7 +62,6 @@ export function MessagingProvider({ children }) {
       setConnectionState('connected')
       clearTimeout(reconnectRef.current)
 
-      // Re-register session after reconnect
       const sid = sessionId || getStoredSession() || genSessionId()
       registerSession(socket, sid)
     })
@@ -82,9 +83,16 @@ export function MessagingProvider({ children }) {
       setMessages((prev) => {
         const exists = prev.some((m) => m.id === msg.id)
         if (exists) return prev
-        return [...prev, msg]
+        return [...prev, {
+          ...msg,
+          createdAt: msg.createdAt || msg.created_at,
+          senderType: msg.senderType || msg.sender_type,
+          senderName: msg.senderName || msg.sender_name,
+          senderAvatar: msg.senderAvatar || msg.sender_avatar,
+          isRead: msg.isRead !== undefined ? msg.isRead : msg.is_read,
+        }]
       })
-      if (msg.senderType === 'admin') {
+      if ((msg.senderType || msg.sender_type) === 'admin') {
         setIsTyping(false)
         if (!isOpen) {
           setUnreadCount((c) => c + 1)
@@ -92,20 +100,45 @@ export function MessagingProvider({ children }) {
       }
     })
 
-    /* ── session data ── */
-    socket.on('msg:session', (data) => {
-      if (data.conversationId) setConversationId(data.conversationId)
-      if (data.sessionId)      {
+    /* ── new conversation notification ── */
+    socket.on('msg:new-conversation', (data) => {
+      setNewConversationNotification(data)
+      if (data.conversationId) {
+        setConversationId(data.conversationId)
+      }
+      if (data.sessionId) {
         setSessionId(data.sessionId)
         saveSession(data.sessionId)
       }
-      if (data.messages?.length) setMessages(data.messages)
+      setRegistered(true)
+      
+      // Auto-clear notification after 5 seconds
+      setTimeout(() => setNewConversationNotification(null), 5000)
+    })
+
+    /* ── session data ── */
+    socket.on('msg:session', (data) => {
+      if (data.conversationId) setConversationId(data.conversationId)
+      if (data.sessionId) {
+        setSessionId(data.sessionId)
+        saveSession(data.sessionId)
+      }
+      if (data.messages?.length) {
+        setMessages(data.messages.map(msg => ({
+          ...msg,
+          createdAt: msg.createdAt || msg.created_at,
+          senderType: msg.senderType || msg.sender_type,
+          senderName: msg.senderName || msg.sender_name,
+          senderAvatar: msg.senderAvatar || msg.sender_avatar,
+          isRead: msg.isRead !== undefined ? msg.isRead : msg.is_read,
+        })))
+      }
       setRegistered(true)
     })
 
     /* ── typing indicator ── */
     socket.on('msg:typing', (data) => {
-      if (data.senderType === 'admin') {
+      if ((data.senderType || data.sender_type) === 'admin') {
         setIsTyping(data.isTyping)
         if (data.isTyping) {
           clearTimeout(typingTimer.current)
@@ -116,11 +149,11 @@ export function MessagingProvider({ children }) {
 
     /* ── read receipts ── */
     socket.on('msg:read', (data) => {
-      if (data.readBy === 'admin') {
+      if ((data.readBy || data.read_by) === 'admin') {
         setMessages((prev) =>
           prev.map((m) =>
-            m.senderType === 'user' && !m.isRead
-              ? { ...m, isRead: true }
+            (m.senderType || m.sender_type) === 'user' && !m.isRead && !m.is_read
+              ? { ...m, isRead: true, is_read: true }
               : m
           )
         )
@@ -131,10 +164,15 @@ export function MessagingProvider({ children }) {
     socket.on('admin:online', () => setAdminOnline(true))
     socket.on('admin:offline', () => setAdminOnline(false))
 
+    /* ── user list update (for admin users) ── */
+    socket.on('msg:user-list', (users) => {
+      setAdminUserList(users)
+    })
+
     /* ── conversation updated ── */
     socket.on('msg:conversation-updated', (data) => {
       if (data.status === 'closed') {
-        // Admin closed the conversation
+        // Handle conversation closure if needed
       }
     })
 
@@ -148,15 +186,25 @@ export function MessagingProvider({ children }) {
     setSessionId(resolvedSid)
 
     socket.emit('msg:register', {
-      sessionId:  resolvedSid,
-      name:       user?.fullName || user?.name || null,
-      email:      user?.email    || null,
-      guestName:  user?.fullName || user?.name || null,
-      guestEmail: user?.email    || null,
+      sessionId: resolvedSid,
+      userId: user?.id || null,
+      name: user?.fullName || user?.name || null,
+      email: user?.email || null,
+      guestName: user?.fullName || user?.name || null,
+      guestEmail: user?.email || null,
     }, (res) => {
       if (res?.success) {
         if (res.conversationId) setConversationId(res.conversationId)
-        if (res.messages?.length) setMessages(res.messages)
+        if (res.messages?.length) {
+          setMessages(res.messages.map(msg => ({
+            ...msg,
+            createdAt: msg.createdAt || msg.created_at,
+            senderType: msg.senderType || msg.sender_type,
+            senderName: msg.senderName || msg.sender_name,
+            senderAvatar: msg.senderAvatar || msg.sender_avatar,
+            isRead: msg.isRead !== undefined ? msg.isRead : msg.is_read,
+          })))
+        }
         setRegistered(true)
       }
     })
@@ -175,6 +223,7 @@ export function MessagingProvider({ children }) {
   const openPortal = useCallback(() => {
     setIsOpen(true)
     setUnreadCount(0)
+    setNewConversationNotification(null)
     if (!socketRef.current?.connected) connect()
   }, [connect])
 
@@ -188,22 +237,35 @@ export function MessagingProvider({ children }) {
     const sid = sessionId || getStoredSession() || genSessionId()
 
     socketRef.current.emit('msg:send', {
-      body:       body.trim(),
-      sessionId:  sid,
-      name:       user?.fullName || user?.name  || null,
-      email:      user?.email    || null,
+      body: body.trim(),
+      sessionId: sid,
+      conversationId,
+      name: user?.fullName || user?.name || metadata.guestName || null,
+      email: user?.email || metadata.guestEmail || null,
+      userId: user?.id || null,
       metadata,
     }, (res) => {
       setSendingMsg(false)
       if (res?.success && res.message) {
         setMessages((prev) => {
           const exists = prev.some((m) => m.id === res.message.id)
-          return exists ? prev : [...prev, res.message]
+          if (exists) return prev
+          return [...prev, {
+            ...res.message,
+            createdAt: res.message.createdAt || res.message.created_at,
+            senderType: res.message.senderType || res.message.sender_type,
+            senderName: res.message.senderName || res.message.sender_name,
+            senderAvatar: res.message.senderAvatar || res.message.sender_avatar,
+            isRead: res.message.isRead !== undefined ? res.message.isRead : res.message.is_read,
+          }]
         })
+        if (res.conversationId && !conversationId) {
+          setConversationId(res.conversationId)
+        }
       }
     })
     return true
-  }, [sessionId, user])
+  }, [sessionId, conversationId, user])
 
   /* ── typing emitter ─────────────────────────────────────────────────── */
   const emitTyping = useCallback((isTypingNow) => {
@@ -212,6 +274,7 @@ export function MessagingProvider({ children }) {
       conversationId,
       isTyping: isTypingNow,
       senderName: user?.fullName || user?.name || 'Guest',
+      senderType: 'user',
     })
   }, [conversationId, user])
 
@@ -222,7 +285,7 @@ export function MessagingProvider({ children }) {
     }
   }, [isOpen, connect])
 
-  /* ── reconnect on auth change ─────────────────────────────────────────  */
+  /* ── reconnect on auth change ───────────────────────────────────────── */
   useEffect(() => {
     if (isAuthenticated && socketRef.current?.connected) {
       const sid = sessionId || genSessionId()
@@ -245,11 +308,13 @@ export function MessagingProvider({ children }) {
     messages,
     conversationId,
     sessionId,
-    isTyping,          // admin is typing
+    isTyping,
     adminOnline,
     unreadCount,
     sendingMsg,
     registered,
+    newConversationNotification,
+    adminUserList,
     openPortal,
     closePortal,
     sendMessage,
@@ -258,7 +323,8 @@ export function MessagingProvider({ children }) {
   }), [
     connected, connectionState, isOpen, messages, conversationId,
     sessionId, isTyping, adminOnline, unreadCount, sendingMsg,
-    registered, openPortal, closePortal, sendMessage, emitTyping,
+    registered, newConversationNotification, adminUserList,
+    openPortal, closePortal, sendMessage, emitTyping,
   ])
 
   return (

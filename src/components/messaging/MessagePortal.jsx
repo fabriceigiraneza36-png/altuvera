@@ -2,13 +2,12 @@ import React, {
   useState, useRef, useEffect, useCallback, useMemo,
 } from 'react'
 import { useMessaging } from '../../context/MessagingContext'
-import { useUserAuth }  from '../../context/UserAuthContext'
-import EmojiPicker      from './EmojiPicker'
+import { useUserAuth } from '../../context/UserAuthContext'
+import EmojiPicker from './EmojiPicker'
 import './MessagePortal.css'
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Lucide-style SVG Icon Component (fetched via CDN-style inline SVGs)
-   Uses the same paths as https://lucide.dev icons
+   Lucide-style SVG Icon Component
    ═══════════════════════════════════════════════════════════════════════════ */
 const Icon = ({ name, className = '', ...props }) => {
   const icons = {
@@ -19,9 +18,7 @@ const Icon = ({ name, className = '', ...props }) => {
         <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
       </>
     ),
-    send: (
-      <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-    ),
+    send: <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />,
     smile: (
       <>
         <circle cx="12" cy="12" r="10" />
@@ -86,9 +83,7 @@ const Icon = ({ name, className = '', ...props }) => {
     plane: (
       <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z" />
     ),
-    check: (
-      <polyline points="20 6 9 17 4 12" />
-    ),
+    check: <polyline points="20 6 9 17 4 12" />,
     checkCheck: (
       <>
         <path d="M18 6 7 17l-5-5" />
@@ -114,6 +109,13 @@ const Icon = ({ name, className = '', ...props }) => {
       <>
         <path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2v5Z" />
         <path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1" />
+      </>
+    ),
+    alertCircle: (
+      <>
+        <circle cx="12" cy="12" r="10" />
+        <line x1="12" y1="8" x2="12" y2="12" />
+        <line x1="12" y1="16" x2="12.01" y2="16" />
       </>
     ),
   }
@@ -149,7 +151,7 @@ const formatTime = (dateStr) => {
 const formatDay = (dateStr) => {
   if (!dateStr) return ''
   try {
-    const d   = new Date(dateStr)
+    const d = new Date(dateStr)
     const now = new Date()
     const diff = Math.floor((now - d) / 86400000)
     if (diff === 0) return 'Today'
@@ -160,7 +162,7 @@ const formatDay = (dateStr) => {
 
 const groupByDay = (msgs) => {
   const groups = []
-  let lastDay  = null
+  let lastDay = null
   for (const msg of msgs) {
     const day = formatDay(msg.createdAt)
     if (day !== lastDay) {
@@ -175,10 +177,10 @@ const groupByDay = (msgs) => {
 /* ── Status dot ─────────────────────────────────────────────────────────── */
 const ConnectionDot = ({ state }) => {
   const map = {
-    connected:    { color: '#22c55e', label: 'Online',        pulse: true },
-    connecting:   { color: '#86efac', label: 'Connecting…',   pulse: true },
+    connected: { color: '#22c55e', label: 'Online', pulse: true },
+    connecting: { color: '#86efac', label: 'Connecting…', pulse: true },
     reconnecting: { color: '#86efac', label: 'Reconnecting…', pulse: true },
-    disconnected: { color: '#bbf7d0', label: 'Offline',       pulse: false },
+    disconnected: { color: '#bbf7d0', label: 'Offline', pulse: false },
   }
   const cfg = map[state] || map.disconnected
   return (
@@ -241,9 +243,9 @@ const TypingIndicator = () => (
 /* ── Quick-reply chip config ──────────────────────────────────────────── */
 const QUICK_CHIPS = [
   { label: 'Destinations', icon: 'mapPin' },
-  { label: 'Booking',      icon: 'calendar' },
-  { label: 'Wildlife',     icon: 'compass' },
-  { label: 'Planning',     icon: 'plane' },
+  { label: 'Booking', icon: 'calendar' },
+  { label: 'Wildlife', icon: 'compass' },
+  { label: 'Planning', icon: 'plane' },
 ]
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -255,21 +257,22 @@ export default function MessagePortal() {
     messages, sendMessage, emitTyping,
     isTyping, adminOnline, connected,
     connectionState, sendingMsg, registered,
+    newConversationNotification,
   } = useMessaging()
 
   const { user } = useUserAuth()
 
-  const [input,       setInput]       = useState('')
-  const [emojiOpen,   setEmojiOpen]   = useState(false)
+  const [input, setInput] = useState('')
+  const [emojiOpen, setEmojiOpen] = useState(false)
   const [isTypingNow, setIsTypingNow] = useState(false)
-  const [guestName,   setGuestName]   = useState('')
-  const [guestEmail,  setGuestEmail]  = useState('')
-  const [showIntro,   setShowIntro]   = useState(true)
+  const [guestName, setGuestName] = useState('')
+  const [guestEmail, setGuestEmail] = useState('')
+  const [showIntro, setShowIntro] = useState(true)
 
-  const bottomRef   = useRef(null)
-  const inputRef    = useRef(null)
+  const bottomRef = useRef(null)
+  const inputRef = useRef(null)
   const typingTimer = useRef(null)
-  const emojiRef    = useRef(null)
+  const emojiRef = useRef(null)
 
   /* ── auto-scroll ─────────────────────────────────────────────────────── */
   useEffect(() => {
@@ -293,6 +296,13 @@ export default function MessagePortal() {
   useEffect(() => {
     if (messages.length > 0) setShowIntro(false)
   }, [messages.length])
+
+  /* ── Handle new conversation notification ────────────────────────────── */
+  useEffect(() => {
+    if (newConversationNotification && isOpen) {
+      setShowIntro(false)
+    }
+  }, [newConversationNotification, isOpen])
 
   /* ── outside click → close emoji ────────────────────────────────────── */
   useEffect(() => {
@@ -343,12 +353,15 @@ export default function MessagePortal() {
     clearTimeout(typingTimer.current)
     emitTyping(false)
     setIsTypingNow(false)
-    sendMessage(body)
+    sendMessage(body, {
+      guestName: guestName.trim() || user?.fullName || user?.name || 'Guest',
+      guestEmail: guestEmail.trim() || user?.email || null,
+    })
     setInput('')
     setEmojiOpen(false)
     setShowIntro(false)
     inputRef.current?.focus()
-  }, [input, user, guestName, sendMessage, emitTyping])
+  }, [input, user, guestName, guestEmail, sendMessage, emitTyping])
 
   const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -387,13 +400,9 @@ export default function MessagePortal() {
 
   return (
     <>
-      {/* ── Backdrop ── */}
       <div className="mp__backdrop" onClick={closePortal} />
-
-      {/* ── Portal window ── */}
       <div className="mp" role="dialog" aria-label="Live support chat">
-
-        {/* ════════════ HEADER ════════════ */}
+        {/* Header */}
         <div className="mp__header">
           <div className="mp__header-left">
             <div className="mp__support-avatar">
@@ -409,6 +418,11 @@ export default function MessagePortal() {
             </div>
           </div>
           <div className="mp__header-actions">
+            {newConversationNotification && (
+              <div className="mp__notification-badge" title="New message from support">
+                <Icon name="alertCircle" />
+              </div>
+            )}
             <button
               className="mp__header-btn"
               onClick={() => { window.location.href = 'mailto:support@altuvera.com' }}
@@ -430,7 +444,7 @@ export default function MessagePortal() {
           </div>
         </div>
 
-        {/* ════════════ GUEST FORM ════════════ */}
+        {/* Guest Form */}
         {!user && showIntro && (
           <div className="mp__guest-form">
             <div className="mp__guest-header">
@@ -438,7 +452,6 @@ export default function MessagePortal() {
               <p className="mp__guest-title">Start a conversation</p>
             </div>
             <p className="mp__guest-sub">We typically reply within minutes</p>
-
             <div className="mp__guest-field">
               <input
                 className="mp__guest-input"
@@ -450,7 +463,6 @@ export default function MessagePortal() {
               />
               <Icon name="user" />
             </div>
-
             <div className="mp__guest-field">
               <input
                 className="mp__guest-input"
@@ -465,10 +477,8 @@ export default function MessagePortal() {
           </div>
         )}
 
-        {/* ════════════ MESSAGES ════════════ */}
+        {/* Messages */}
         <div className="mp__messages">
-
-          {/* ── Intro ── */}
           {showIntro && messages.length === 0 && (
             <div className="mp__intro">
               <div className="mp__intro-icon-wrap">
@@ -495,7 +505,6 @@ export default function MessagePortal() {
             </div>
           )}
 
-          {/* ── Day-grouped messages ── */}
           {grouped.map((item) =>
             item.type === 'day' ? (
               <div key={item.key} className="mp__day-label">
@@ -510,17 +519,12 @@ export default function MessagePortal() {
             )
           )}
 
-          {/* ── Typing ── */}
           {isTyping && <TypingIndicator />}
-
-          {/* ── Scroll anchor ── */}
           <div ref={bottomRef} />
         </div>
 
-        {/* ════════════ INPUT ════════════ */}
+        {/* Input */}
         <div className="mp__input-area">
-
-          {/* ── Emoji picker ── */}
           {emojiOpen && (
             <div ref={emojiRef} className="mp__emoji-wrap">
               <EmojiPicker

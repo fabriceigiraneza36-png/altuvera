@@ -1213,3 +1213,72 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Add to your existing MessagePortal.css */
+
+/* ── Notification Badge ────────────────────────────────────────────── */
+.mp__notification-badge {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--mp-radius-full);
+  background: rgba(255, 255, 255, 0.2);
+  animation: mpNotificationPulse 2s ease-in-out infinite;
+}
+
+.mp__notification-badge .mp__icon {
+  width: 16px;
+  height: 16px;
+  color: #fbbf24;
+  stroke-width: 2.5;
+}
+
+@keyframes mpNotificationPulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.1); opacity: 0.8; }
+}
+
+/* ── System Message ───────────────────────────────────────────────────── */
+.mp__bubble--system {
+  text-align: center;
+  margin: 16px auto;
+  padding: 8px 16px;
+  background-color: var(--mp-green-50);
+  border: 1px solid var(--mp-green-200);
+  border-radius: var(--mp-radius-full);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--mp-text-secondary);
+  max-width: 80%;
+  animation: mpFadeIn 0.3s ease;
+}
+
+/* ── Enhanced Intro State (when admin initiates conversation) ─────────── */
+.mp__intro--admin-started {
+  border: 2px dashed var(--mp-green-200);
+  background: linear-gradient(135deg, var(--mp-green-50), var(--mp-white));
+  border-radius: var(--mp-radius-lg);
+  padding: 24px 20px;
+  margin: 12px;
+}
+
+.mp__intro-admin-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: var(--mp-green-100);
+  color: var(--mp-green-700);
+  border-radius: var(--mp-radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.mp__intro-admin-badge .mp__icon {
+  width: 14px;
+  height: 14px;
+}

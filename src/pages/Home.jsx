@@ -1320,12 +1320,12 @@ const TestimonialsRotator = memo(({ items }) => {
         <span className="testimonials-rotator-counter-total">
           {totalGroups}
         </span>
-      </div>
-    </div>
-  );
-};
+       </div>
+     </div>
+   );
+ });
 
-/* ═══════════════════════════════════════════
+ /* ═══════════════════════════════════════════
    MAIN HOME COMPONENT
    ═══════════════════════════════════════════ */
 const Home = () => {
