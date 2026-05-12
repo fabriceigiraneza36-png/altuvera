@@ -33,6 +33,7 @@ import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput"
 import { sendMessage } from "../utils/sendMessage";
 import { sendVerificationCode, verifyCode } from "../utils/verifyEmail";
 import { useChatSocket } from "../hooks/useChatSocket";
+import { apiFetch } from "../utils/apiBase";
 import VerificationModal from "../components/common/VerificationModal";
 import { useUserAuth } from "../context/UserAuthContext";
 import SubscriptionForm from "../components/common/SubscriptionForm";
@@ -141,29 +142,6 @@ const SOCIALS = [
   { icon: FaYoutube, label: "YouTube", url: "#" },
   { icon: FaWhatsapp, label: "WhatsApp", url: "#" },
   { icon: FaTiktok, label: "TikTok", url: "#" },
-];
-
-const FAQS = [
-  {
-    q: "How far in advance should I book my safari?",
-    a: "We recommend booking 3–6 months ahead, especially for peak season (June–October, December–February). This ensures the best lodge availability and gorilla permits.",
-  },
-  {
-    q: "What is included in your safari packages?",
-    a: "Packages typically include accommodation, all meals on safari, game drives with professional guides, park and conservation fees, airport transfers, and 24/7 support.",
-  },
-  {
-    q: "Is it safe to go on safari in East Africa?",
-    a: "Absolutely. East Africa has a strong tourism safety record. Our experienced guides, vetted partners, and comprehensive safety protocols ensure your wellbeing.",
-  },
-  {
-    q: "Can you build a fully custom itinerary?",
-    a: "Yes — bespoke itineraries are our specialty. Share your interests, dates, budget, and group size, and our safari designers will craft a tailor-made journey.",
-  },
-  {
-    q: "What should I pack for an East African safari?",
-    a: "Neutral-colored clothing, sun hat, sunscreen SPF 50+, binoculars, a camera with zoom lens, comfortable walking shoes, and insect repellent. We send a full packing list on booking.",
-  },
 ];
 
 const QUICK_CHANNELS = [
@@ -538,9 +516,12 @@ const Contact = () => {
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
 
-  /* ── UI state ── */
-  const [openFaq, setOpenFaq] = useState(null);
-  const [chatOpen, setChatOpen] = useState(false);
+   /* ── UI state ── */
+   const [openFaqId, setOpenFaqId] = useState(null);
+   const [faqs, setFaqs] = useState([]);
+   const [faqsLoading, setFaqsLoading] = useState(true);
+   const [faqsError, setFaqsError] = useState("");
+   const [chatOpen, setChatOpen] = useState(false);
   const [chatMin, setChatMin] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatSending, setChatSending] = useState(false);
@@ -574,6 +555,40 @@ const Contact = () => {
   });
   const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "28%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.75], [1, 0]);
+
+  /* ══════════════════════════════════════════════════
+     FETCH FAQS
+  ══════════════════════════════════════════════════ */
+  const fetchFaqs = useCallback(async (signal) => {
+    setFaqsLoading(true);
+    setFaqsError("");
+    try {
+      const res = await apiFetch("/faqs", { signal });
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const json = await res.json();
+      const data = json?.data || [];
+      const mapped = data.map(f => ({
+        id: f.id,
+        q: f.question,
+        a: f.answer,
+        category: f.category,
+      }));
+      setFaqs(mapped);
+    } catch (err) {
+      if (err?.name !== "AbortError") {
+        setFaqsError(err?.message || "Failed to load FAQs");
+        setFaqs([]);
+      }
+    } finally {
+      setFaqsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const ac = new AbortController();
+    fetchFaqs(ac.signal);
+    return () => ac.abort();
+  }, [fetchFaqs]);
 
   /* ══════════════════════════════════════════════════
      AUTO-FILL LOGIC
@@ -1298,45 +1313,59 @@ const Contact = () => {
               <p className="ct-sub">Find quick answers about our safari experiences and booking process.</p>
             </div>
           </ScrollReveal>
-          <div className="ct-faq-list">
-            {FAQS.map((faq, i) => {
-              const open = openFaq === i;
-              return (
-                <ScrollReveal key={i} delay={i * 0.055}>
-                  <div className={`ct-faq${open ? " open" : ""}`}>
-                    <button
-                      className="ct-faq-btn" type="button"
-                      onClick={() => setOpenFaq(open ? null : i)}
-                      aria-expanded={open}
-                    >
-                      <span className="ct-faq-num">{String(i + 1).padStart(2, "0")}</span>
-                      <span className="ct-faq-q">{faq.q}</span>
-                      <motion.span
-                        className={`ct-faq-chevron${open ? " open" : ""}`}
-                        animate={{ rotate: open ? 180 : 0 }}
-                        transition={{ duration: 0.32 }}
-                      >
-                        <FiChevronDown size={17} />
-                      </motion.span>
-                    </button>
-                    <AnimatePresence initial={false}>
-                      {open && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.38, ease: EASE.snappy }}
-                          style={{ overflow: "hidden" }}
-                        >
-                          <div className="ct-faq-body"><p>{faq.a}</p></div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </ScrollReveal>
-              );
-            })}
-          </div>
+           <div className="ct-faq-list">
+             {faqsLoading ? (
+               <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>
+                 Loading FAQs...
+               </div>
+             ) : faqsError ? (
+               <div style={{ textAlign: "center", padding: 40, color: "#ef4444" }}>
+                 {faqsError}
+               </div>
+             ) : faqs.length === 0 ? (
+               <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>
+                 No FAQs available at the moment.
+               </div>
+             ) : (
+               faqs.map((faq, i) => {
+                 const open = openFaqId === faq.id;
+                 return (
+                   <ScrollReveal key={faq.id} delay={i * 0.055}>
+                     <div className={`ct-faq${open ? " open" : ""}`}>
+                       <button
+                         className="ct-faq-btn" type="button"
+                         onClick={() => setOpenFaqId(open ? null : faq.id)}
+                         aria-expanded={open}
+                       >
+                         <span className="ct-faq-num">{String(i + 1).padStart(2, "0")}</span>
+                         <span className="ct-faq-q">{faq.q}</span>
+                         <motion.span
+                           className={`ct-faq-chevron${open ? " open" : ""}`}
+                           animate={{ rotate: open ? 180 : 0 }}
+                           transition={{ duration: 0.32 }}
+                         >
+                           <FiChevronDown size={17} />
+                         </motion.span>
+                       </button>
+                       <AnimatePresence initial={false}>
+                         {open && (
+                           <motion.div
+                             initial={{ height: 0, opacity: 0 }}
+                             animate={{ height: "auto", opacity: 1 }}
+                             exit={{ height: 0, opacity: 0 }}
+                             transition={{ duration: 0.38, ease: EASE.snappy }}
+                             style={{ overflow: "hidden" }}
+                           >
+                             <div className="ct-faq-body"><p>{faq.a}</p></div>
+                           </motion.div>
+                         )}
+                       </AnimatePresence>
+                     </div>
+                   </ScrollReveal>
+                 );
+               })}
+             )}
+           </div>
         </div>
       </section>
 
