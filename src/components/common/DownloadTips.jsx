@@ -1,25 +1,27 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { FiDownload, FiCheckCircle, FiX, FiEye, FiAlertCircle } from 'react-icons/fi';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { FiDownload, FiCheckCircle, FiX, FiEye, FiAlertCircle, FiFileText, FiPrinter, FiShield } from 'react-icons/fi';
 import { generateTravelGuide, generatePackageChecklist, downloadPDF, previewPDF } from '../../utils/pdfGenerator';
+import './DownloadTips.css';
 
-const DownloadTips = ({ 
-  tips = [], 
+const DownloadTips = ({
+  tips = [],
   tourName = 'East Africa Safari',
   tourData = {},
   expenses = {},
   userInfo = {},
-  type = 'tips', // 'tips', 'checklist', 'booking'
-  className = '' 
+  type = 'tips',
+  className = ''
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [downloadStatus, setDownloadStatus] = useState(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [activeTab, setActiveTab] = useState('download');
   const buttonRef = useRef(null);
   const modalRef = useRef(null);
+  const triggerRef = useRef(null);
 
-  // Intersection Observer for scroll-into-view effect
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -31,17 +33,17 @@ const DownloadTips = ({
       }
     );
 
-    const triggerElement = document.querySelector('[data-download-trigger]');
-    if (triggerElement) {
-      observer.observe(triggerElement);
+    if (triggerRef.current) {
+      observer.observe(triggerRef.current);
     }
 
     return () => {
-      if (triggerElement) observer.unobserve(triggerElement);
+      if (triggerRef.current) {
+        observer.unobserve(triggerRef.current);
+      }
     };
   }, []);
 
-  // Close modal on escape key
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape') setShowModal(false);
@@ -58,7 +60,7 @@ const DownloadTips = ({
     };
   }, [showModal]);
 
-  const generatePDF = () => {
+  const generatePDF = useCallback(() => {
     switch (type) {
       case 'checklist':
         return generatePackageChecklist(tourData, expenses, userInfo);
@@ -66,7 +68,7 @@ const DownloadTips = ({
       default:
         return generateTravelGuide(tips, tourName);
     }
-  };
+  }, [type, tourData, expenses, userInfo, tips, tourName]);
 
   const handleDownload = async () => {
     setIsDownloading(true);
@@ -74,7 +76,7 @@ const DownloadTips = ({
     setErrorMessage('');
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       const pdf = generatePDF();
       const timestamp = new Date().toISOString().split('T')[0];
@@ -86,31 +88,49 @@ const DownloadTips = ({
         setDownloadStatus('success');
         setTimeout(() => {
           setDownloadStatus(null);
-          setShowModal(false);
-        }, 2000);
+        }, 3000);
       } else {
         throw new Error(result.message);
       }
     } catch (error) {
       console.error('Download error:', error);
       setDownloadStatus('error');
-      setErrorMessage(error.message || 'Failed to generate PDF');
+      setErrorMessage(error.message || 'Failed to generate PDF. Please try again.');
     } finally {
       setIsDownloading(false);
     }
   };
 
   const handlePreview = async () => {
+    setErrorMessage('');
     try {
       const pdf = generatePDF();
       const result = previewPDF(pdf);
-      
+
       if (!result.success) {
         throw new Error(result.message);
       }
     } catch (error) {
       console.error('Preview error:', error);
-      setErrorMessage(error.message || 'Failed to preview PDF');
+      setErrorMessage(error.message || 'Failed to preview PDF. Please try downloading instead.');
+    }
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setDownloadStatus(null);
+    setErrorMessage('');
+    setActiveTab('download');
+  };
+
+  const getDocumentTitle = () => {
+    switch (type) {
+      case 'checklist':
+        return 'Travel Checklist';
+      case 'booking':
+        return 'Booking Confirmation';
+      default:
+        return 'Travel Guide';
     }
   };
 
@@ -118,230 +138,295 @@ const DownloadTips = ({
 
   return (
     <>
-      {/* Floating Download Button - Hidden until scrolled into view */}
+      {/* Scroll Trigger */}
+      <div ref={triggerRef} className="download-trigger" aria-hidden="true" />
+
+      {/* Floating Action Button */}
       <div
         ref={buttonRef}
-        className={`
-          fixed bottom-8 right-8 z-40 transition-all duration-500 transform
-          ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0 pointer-events-none'}
-          ${className}
-        `}
+        className={`download-fab-wrapper ${isVisible ? 'download-fab-visible' : 'download-fab-hidden'} ${className}`}
       >
         <button
           onClick={() => setShowModal(true)}
-          className="
-            group relative bg-gradient-to-r from-green-600 to-green-700 
-            hover:from-green-700 hover:to-green-800
-            text-white px-6 py-4 rounded-full shadow-2xl
-            transition-all duration-300 ease-out
-            hover:scale-105 hover:shadow-green-500/50
-            focus:outline-none focus:ring-4 focus:ring-green-300
-            flex items-center gap-3
-          "
-          aria-label="Download travel documents"
+          className="download-fab"
+          aria-label={`Download ${getDocumentTitle()}`}
         >
-          <FiDownload className="w-5 h-5 group-hover:animate-bounce" />
-          <span className="font-semibold hidden sm:inline">Download PDF</span>
-          
-          {/* Pulse animation */}
-          <span className="absolute inset-0 rounded-full bg-green-400 opacity-0 group-hover:opacity-25 group-hover:animate-ping"></span>
+          <span className="download-fab-pulse" />
+          <span className="download-fab-ring" />
+          <FiDownload className="download-fab-icon" />
+          <span className="download-fab-label">Download PDF</span>
+          <span className="download-fab-badge">{tips.length}</span>
         </button>
       </div>
 
-      {/* Modal Overlay */}
+      {/* Modal */}
       {showModal && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
-          onClick={() => setShowModal(false)}
-        >
-          {/* Modal Content */}
+        <div className="download-overlay" onClick={handleCloseModal}>
           <div
             ref={modalRef}
             onClick={(e) => e.stopPropagation()}
-            className="
-              bg-white rounded-2xl shadow-2xl max-w-2xl w-full
-              transform transition-all duration-300 animate-slideUp
-              max-h-[90vh] overflow-y-auto
-            "
-            style={{
-              animation: 'slideUp 0.3s ease-out'
-            }}
+            className="download-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="download-modal-title"
           >
             {/* Modal Header */}
-            <div className="relative bg-gradient-to-r from-green-600 to-green-700 p-6 rounded-t-2xl">
-              <button
-                onClick={() => setShowModal(false)}
-                className="
-                  absolute top-4 right-4 text-white/80 hover:text-white
-                  transition-colors p-2 hover:bg-white/10 rounded-full
-                "
-                aria-label="Close modal"
-              >
-                <FiX className="w-6 h-6" />
-              </button>
-
-              <div className="pr-12">
-                <h2 className="text-2xl font-bold text-white mb-2">
-                  Download Your Travel Documents
-                </h2>
-                <p className="text-green-100 text-sm">
-                  {tourName} - Professional PDF Package
-                </p>
+            <header className="download-modal-header">
+              <div className="download-modal-header-bg" />
+              <div className="download-modal-header-content">
+                <div className="download-modal-header-icon-wrapper">
+                  <div className="download-modal-header-icon">
+                    <FiFileText />
+                  </div>
+                </div>
+                <div className="download-modal-header-text">
+                  <h2 id="download-modal-title" className="download-modal-title">
+                    {getDocumentTitle()}
+                  </h2>
+                  <p className="download-modal-subtitle">
+                    {tourName}
+                  </p>
+                </div>
+                <button
+                  onClick={handleCloseModal}
+                  className="download-modal-close"
+                  aria-label="Close download dialog"
+                >
+                  <FiX />
+                </button>
               </div>
-            </div>
+
+              {/* Tab Navigation */}
+              <nav className="download-tabs">
+                <button
+                  className={`download-tab ${activeTab === 'download' ? 'download-tab-active' : ''}`}
+                  onClick={() => setActiveTab('download')}
+                >
+                  <FiDownload className="download-tab-icon" />
+                  <span>Download</span>
+                </button>
+                <button
+                  className={`download-tab ${activeTab === 'contents' ? 'download-tab-active' : ''}`}
+                  onClick={() => setActiveTab('contents')}
+                >
+                  <FiFileText className="download-tab-icon" />
+                  <span>Contents</span>
+                </button>
+              </nav>
+            </header>
 
             {/* Modal Body */}
-            <div className="p-8">
-              {/* Document Preview */}
-              <div className="bg-gradient-to-br from-green-50 to-white border-2 border-green-200 rounded-xl p-6 mb-6">
-                <div className="flex items-start gap-4">
-                  <div className="bg-green-100 p-3 rounded-lg">
-                    <FiDownload className="w-8 h-8 text-green-600" />
+            <div className="download-modal-body">
+              {/* Download Tab */}
+              {activeTab === 'download' && (
+                <div className="download-tab-content download-tab-content-enter">
+                  {/* Document Card */}
+                  <div className="download-document-card">
+                    <div className="download-document-preview">
+                      <div className="download-document-mock">
+                        <div className="download-document-mock-header" />
+                        <div className="download-document-mock-lines">
+                          <div className="download-document-mock-line download-document-mock-line-full" />
+                          <div className="download-document-mock-line download-document-mock-line-3q" />
+                          <div className="download-document-mock-line download-document-mock-line-half" />
+                          <div className="download-document-mock-line download-document-mock-line-full" />
+                          <div className="download-document-mock-line download-document-mock-line-2q" />
+                        </div>
+                        <div className="download-document-mock-footer">
+                          <span>ALTUVERA</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="download-document-info">
+                      <h3 className="download-document-name">
+                        Altuvera_{tourName.replace(/\s+/g, '_')}_{type}.pdf
+                      </h3>
+                      <div className="download-document-meta">
+                        <span className="download-document-meta-item">
+                          <FiFileText className="download-document-meta-icon" />
+                          PDF Document
+                        </span>
+                        <span className="download-document-meta-divider">•</span>
+                        <span className="download-document-meta-item">
+                          <FiPrinter className="download-document-meta-icon" />
+                          Print Ready
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                      What's Included:
-                    </h3>
-                    <ul className="space-y-2 text-sm text-gray-600">
-                      <li className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                        Professional travel tips & destination guide
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                        Comprehensive packing checklist
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                        Important safety & health information
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                        Beautifully formatted for printing
-                      </li>
-                    </ul>
+
+                  {/* Features Grid */}
+                  <div className="download-features">
+                    <div className="download-feature">
+                      <div className="download-feature-icon">
+                        <FiFileText />
+                      </div>
+                      <div className="download-feature-text">
+                        <h4>Professional Layout</h4>
+                        <p>Beautifully formatted guide with clear sections</p>
+                      </div>
+                    </div>
+                    <div className="download-feature">
+                      <div className="download-feature-icon">
+                        <FiPrinter />
+                      </div>
+                      <div className="download-feature-text">
+                        <h4>Print Optimized</h4>
+                        <p>High quality output ready for printing</p>
+                      </div>
+                    </div>
+                    <div className="download-feature">
+                      <div className="download-feature-icon">
+                        <FiShield />
+                      </div>
+                      <div className="download-feature-text">
+                        <h4>Safety Info</h4>
+                        <p>Important health and safety guidelines</p>
+                      </div>
+                    </div>
+                    <div className="download-feature">
+                      <div className="download-feature-icon">
+                        <FiCheckCircle />
+                      </div>
+                      <div className="download-feature-text">
+                        <h4>Complete Guide</h4>
+                        <p>{tips.length} tips and recommendations included</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Status Messages */}
-              {downloadStatus === 'success' && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-6 flex items-center gap-3 animate-fadeIn">
-                  <FiCheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-                  <p className="text-green-800 text-sm font-medium">
-                    PDF downloaded successfully! Check your downloads folder.
-                  </p>
-                </div>
-              )}
-
-              {downloadStatus === 'error' && errorMessage && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 flex items-center gap-3 animate-fadeIn">
-                  <FiAlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-                  <p className="text-red-800 text-sm font-medium">
-                    {errorMessage}
-                  </p>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <button
-                  onClick={handlePreview}
-                  disabled={isDownloading}
-                  className="
-                    flex items-center justify-center gap-2 px-6 py-3 
-                    bg-white border-2 border-green-600 text-green-600
-                    rounded-lg font-semibold transition-all duration-200
-                    hover:bg-green-50 focus:outline-none focus:ring-4 focus:ring-green-200
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                  "
-                >
-                  <FiEye className="w-5 h-5" />
-                  Preview PDF
-                </button>
-
-                <button
-                  onClick={handleDownload}
-                  disabled={isDownloading}
-                  className="
-                    flex items-center justify-center gap-2 px-6 py-3 
-                    bg-gradient-to-r from-green-600 to-green-700
-                    hover:from-green-700 hover:to-green-800
-                    text-white rounded-lg font-semibold 
-                    transition-all duration-200 shadow-lg hover:shadow-xl
-                    focus:outline-none focus:ring-4 focus:ring-green-300
-                    disabled:opacity-50 disabled:cursor-not-allowed
-                    relative overflow-hidden
-                  "
-                >
-                  {isDownloading ? (
-                    <>
-                      <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      <span>Preparing...</span>
-                    </>
-                  ) : downloadStatus === 'success' ? (
-                    <>
-                      <FiCheckCircle className="w-5 h-5" />
-                      <span>Downloaded!</span>
-                    </>
-                  ) : (
-                    <>
-                      <FiDownload className="w-5 h-5" />
-                      <span>Download Now</span>
-                    </>
+                  {/* Status Messages */}
+                  {downloadStatus === 'success' && (
+                    <div className="download-status download-status-success">
+                      <div className="download-status-icon-wrapper download-status-icon-success">
+                        <FiCheckCircle />
+                      </div>
+                      <div className="download-status-content">
+                        <h4>Download Complete!</h4>
+                        <p>Your document has been saved to your downloads folder.</p>
+                      </div>
+                    </div>
                   )}
-                </button>
-              </div>
 
-              {/* Additional Info */}
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <p className="text-xs text-gray-500 text-center">
-                  Your document will be downloaded as a high-quality PDF file.
-                  <br />
-                  Compatible with all devices and ready to print.
-                </p>
-              </div>
+                  {downloadStatus === 'preparing' && (
+                    <div className="download-status download-status-preparing">
+                      <div className="download-status-icon-wrapper download-status-icon-preparing">
+                        <div className="download-spinner" />
+                      </div>
+                      <div className="download-status-content">
+                        <h4>Preparing Document...</h4>
+                        <p>Generating your professional travel guide.</p>
+                      </div>
+                      <div className="download-progress-bar">
+                        <div className="download-progress-fill" />
+                      </div>
+                    </div>
+                  )}
+
+                  {downloadStatus === 'error' && errorMessage && (
+                    <div className="download-status download-status-error">
+                      <div className="download-status-icon-wrapper download-status-icon-error">
+                        <FiAlertCircle />
+                      </div>
+                      <div className="download-status-content">
+                        <h4>Download Failed</h4>
+                        <p>{errorMessage}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Action Buttons */}
+                  <div className="download-actions">
+                    <button
+                      onClick={handlePreview}
+                      disabled={isDownloading}
+                      className="download-btn download-btn-secondary"
+                    >
+                      <FiEye className="download-btn-icon" />
+                      <span>Preview</span>
+                    </button>
+
+                    <button
+                      onClick={handleDownload}
+                      disabled={isDownloading}
+                      className="download-btn download-btn-primary"
+                    >
+                      {isDownloading ? (
+                        <>
+                          <div className="download-btn-spinner" />
+                          <span>Generating...</span>
+                        </>
+                      ) : downloadStatus === 'success' ? (
+                        <>
+                          <FiCheckCircle className="download-btn-icon" />
+                          <span>Downloaded!</span>
+                        </>
+                      ) : (
+                        <>
+                          <FiDownload className="download-btn-icon" />
+                          <span>Download PDF</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Contents Tab */}
+              {activeTab === 'contents' && (
+                <div className="download-tab-content download-tab-content-enter">
+                  <div className="download-contents-header">
+                    <h3>Document Contents</h3>
+                    <span className="download-contents-count">{tips.length} items</span>
+                  </div>
+
+                  <div className="download-contents-list">
+                    {tips.map((tip, index) => (
+                      <div key={index} className="download-contents-item">
+                        <div className="download-contents-item-number">
+                          {String(index + 1).padStart(2, '0')}
+                        </div>
+                        <div className="download-contents-item-text">
+                          <h4>{tip.title || tip}</h4>
+                          {tip.description && (
+                            <p>{tip.description}</p>
+                          )}
+                        </div>
+                        <FiCheckCircle className="download-contents-item-check" />
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Download from Contents */}
+                  <div className="download-contents-action">
+                    <button
+                      onClick={handleDownload}
+                      disabled={isDownloading}
+                      className="download-btn download-btn-primary download-btn-full"
+                    >
+                      <FiDownload className="download-btn-icon" />
+                      <span>Download All {tips.length} Items as PDF</span>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
+
+            {/* Modal Footer */}
+            <footer className="download-modal-footer">
+              <div className="download-modal-footer-brand">
+                <span className="download-modal-footer-logo">ALTUVERA</span>
+                <span className="download-modal-footer-divider">|</span>
+                <span className="download-modal-footer-tagline">Travel Made Beautiful</span>
+              </div>
+              <p className="download-modal-footer-note">
+                Compatible with all devices • High-quality PDF • Ready to print
+              </p>
+            </footer>
           </div>
         </div>
       )}
-
-      {/* Scroll Trigger Element (place this where you want the button to appear) */}
-      <div data-download-trigger className="h-1 w-1 opacity-0 pointer-events-none"></div>
-
-      {/* Animations */}
-      <style jsx>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-
-        @keyframes slideUp {
-          from {
-            transform: translateY(50px);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-
-        .animate-fadeIn {
-          animation: fadeIn 0.3s ease-out;
-        }
-
-        .animate-slideUp {
-          animation: slideUp 0.3s ease-out;
-        }
-      `}</style>
     </>
   );
 };
