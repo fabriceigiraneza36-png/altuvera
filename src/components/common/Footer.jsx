@@ -14,7 +14,6 @@ import {
   FiLinkedin,
 } from "react-icons/fi";
 import { FaXTwitter } from "react-icons/fa6";
-import NewsletterWidget from "./NewsletterWidget";
 
 const Footer = () => {
   const { user } = useUserAuth();
@@ -41,7 +40,6 @@ const Footer = () => {
     }
   }, [backendCountries, countriesLoading, countriesError]);
 
-  const currentYear = new Date().getFullYear();
   const isMobile = viewportWidth <= 640;
   const isTablet = viewportWidth <= 1024;
 
@@ -325,7 +323,6 @@ const Footer = () => {
       color: "#10B981",
       fontWeight: "600",
     },
-    // Loading skeleton styles
     skeletonItem: {
       height: isMobile ? "14px" : "15px",
       backgroundColor: "rgba(255,255,255,0.08)",
@@ -340,7 +337,6 @@ const Footer = () => {
     },
   };
 
-  // Shared hover handlers for nav links
   const onLinkMouseOver = (e) => {
     const link = e.currentTarget;
     link.style.color = "white";
@@ -377,7 +373,6 @@ const Footer = () => {
 
   const renderDestinations = () => {
     if (countriesLoading) {
-      // Skeleton shimmer placeholders
       return Array.from({ length: 5 }).map((_, i) => (
         <li key={i} style={styles.linkItem}>
           <div
@@ -446,7 +441,6 @@ const Footer = () => {
 
   return (
     <footer data-checklist-trigger style={styles.footer}>
-      {/* Pulse animation for skeleton */}
       <style>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; }
@@ -458,7 +452,6 @@ const Footer = () => {
 
       <div style={styles.container}>
         <div style={styles.grid}>
-
           {/* ── Column 1: Brand ── */}
           <div style={styles.column}>
             <Link
@@ -566,23 +559,19 @@ const Footer = () => {
           <div style={styles.column}>
             <h3 style={styles.columnTitle}>Contact Us</h3>
 
-             <div style={styles.contactItem}>
-               <div style={styles.contactIcon}>
-                 <FiMapPin size={18} />
-               </div>
-               <span style={styles.contactText}>
-                 Musanze, Rwanda
-               </span>
-             </div>
+            <div style={styles.contactItem}>
+              <div style={styles.contactIcon}>
+                <FiMapPin size={18} />
+              </div>
+              <span style={styles.contactText}>Musanze, Rwanda</span>
+            </div>
 
-             <div style={styles.contactItem}>
-               <div style={styles.contactIcon}>
-                 <FiPhone size={18} />
-               </div>
-               <span style={styles.contactText}>
-                 +250 792352409
-               </span>
-             </div>
+            <div style={styles.contactItem}>
+              <div style={styles.contactIcon}>
+                <FiPhone size={18} />
+              </div>
+              <span style={styles.contactText}>+250 792352409</span>
+            </div>
 
             <div style={styles.contactItem}>
               <div style={styles.contactIcon}>
@@ -597,54 +586,12 @@ const Footer = () => {
           </div>
         </div>
 
-         <div style={styles.divider} />
+        <div style={styles.divider} />
 
-         {/* ── Newsletter Section ── */}
-         <div style={{
-           padding: isMobile ? '28px 0' : '36px 0',
-           borderBottom: '1px solid rgba(255,255,255,0.08)',
-           marginBottom: isMobile ? '24px' : '32px',
-         }}>
-           <div style={{
-             display: 'flex',
-             flexDirection: isMobile ? 'column' : 'row',
-             alignItems: isMobile ? 'flex-start' : 'center',
-             justifyContent: 'space-between',
-             gap: isMobile ? 20 : 0,
-           }}>
-             <div style={{ maxWidth: 360, flex: 1 }}>
-               <h3 style={{
-                 fontFamily: "'Playfair Display', serif",
-                 fontSize: isMobile ? 18 : 20,
-                 fontWeight: 700,
-                 color: 'white',
-                 margin: '0 0 6px',
-               }}>
-                 Get旅行 Inspiration
-               </h3>
-               <p style={{
-                 fontSize: isMobile ? 13 : 14,
-                 color: 'rgba(255,255,255,0.65)',
-                 lineHeight: 1.55,
-                 margin: 0,
-               }}>
-                 Subscribe for exclusive deals, safari tips, and destination guides.
-               </p>
-             </div>
-               <div style={{ flex: isMobile ? 1 : 0, minWidth: isMobile ? '100%' : 280, maxWidth: 400 }}>
-                 <NewsletterWidget
-                   source="footer"
-                   initialEmail={user?.email || ''}
-                 />
-               </div>
-           </div>
-         </div>
-
-         {/* ── Bottom Bar ── */}
-         <div style={styles.bottom}>
+        {/* ── Bottom Bar ── */}
+        <div style={styles.bottom}>
           <p style={styles.copyright}>
-            © {currentYear} Altuvera. All rights reserved.{" "}
-            {displayName ? `Made for you, ${displayName}.` : "Made for you."}
+            © 2026 Altuvera. All rights reserved. Made for you, hert1456.
           </p>
 
           <div style={styles.certifications}>
@@ -656,7 +603,7 @@ const Footer = () => {
             {[
               { label: "Privacy Policy", path: "/privacy" },
               { label: "Terms of Service", path: "/terms" },
-              { label: "Cookie Policy", path: "/cookies" },
+              { label: "Coo", path: "/cookies" },
             ].map((item) => (
               <Link
                 key={item.label}
@@ -678,3 +625,4 @@ const Footer = () => {
 };
 
 export default Footer;
+

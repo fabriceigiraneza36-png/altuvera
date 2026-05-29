@@ -58,6 +58,7 @@ const KEYS = {
   GITHUB_INTENT: "altuvera_github_intent",
   LOGIN_COUNTER: "altuvera_login_counter",
   LAST_LOGOUT: "altuvera_last_logout",
+  WELCOME_SHOWN_PREFIX: "altuvera_welcome_shown:",
 };
 
 // ============================================================================
@@ -593,6 +594,19 @@ export function UserAuthProvider({ children }) {
   // ============================================================================
 
   const triggerCongratulation = useCallback((type) => {
+    // Only show the full congratulations welcome modal for a true signup,
+    // and only once per user/email. Prevents repeated popups on every login.
+    try {
+      if (type !== "signup") return;
+      const email = (user?.email || pendingRef.current?.email || "").toLowerCase();
+      if (!email) return;
+      const key = `${KEYS.WELCOME_SHOWN_PREFIX}${email}`;
+      if (localStorage.getItem(key)) return; // already shown for this user
+      localStorage.setItem(key, Date.now().toString());
+    } catch (err) {
+      // storage may be unavailable — fall back to still showing the modal
+    }
+
     if (congratTimerRef.current) clearTimeout(congratTimerRef.current);
     setCongratulationType(type);
     setShowCongratulation(true);
@@ -600,7 +614,7 @@ export function UserAuthProvider({ children }) {
       setShowCongratulation(false);
       congratTimerRef.current = null;
     }, 3000);
-  }, []);
+  }, [user]);
 
   // ============================================================================
   // Profile Cache

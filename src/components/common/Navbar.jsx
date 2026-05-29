@@ -79,12 +79,12 @@ const Navbar = () => {
       { name: "Destinations",    path: "/destinations", dropdown: destinationsDropdown },
       { name: "Interactive Map", path: "/interactive-map" },
       { name: "Tips",            path: "/tips" },
-      { name: "Services",        path: "/services" },
       {
         name: "About",
         path: "/about",
         dropdown: [
           { name: "About",         path: "/about" },
+          { name: "Services",      path: "/services" },
           { name: "Payment Terms", path: "/payment-terms" },
           { name: "Team",          path: "/team" },
         ],

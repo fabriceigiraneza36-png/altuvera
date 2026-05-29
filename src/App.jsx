@@ -401,19 +401,29 @@ const cbStyles = {
 // Celebration Overlay
 // ============================================================================
 
+
 const CELEBRATION_KEYFRAMES = `
-  @keyframes celFadeIn    { from { opacity:0; }                            to { opacity:1; } }
-  @keyframes celSlideUp   { from { opacity:0; transform:translateY(30px);} to { opacity:1; transform:translateY(0); } }
-  @keyframes celPulse     { 0%,100%{transform:scale(1);}                  50%{transform:scale(1.08);} }
-  @keyframes celBounce    { 0%,100%{transform:translateY(0);}              50%{transform:translateY(-8px);} }
+  @keyframes celFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes celScaleUp {
+    from { opacity: 0; transform: scale(0.96) translateY(16px); }
+    to { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  @keyframes celCheckmark {
+    0% { transform: scale(0.8); opacity: 0; }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
 `;
 
 const CelebrationOverlay = React.memo(({ userName }) => {
   const displayName = userName
     ? userName
-      .split(" ")
-      .map((n) => n[0]?.toUpperCase() + n.slice(1))
-      .join(" ")
+        .split(" ")
+        .map((n) => n[0]?.toUpperCase() + n.slice(1).toLowerCase())
+        .join(" ")
     : "Traveler";
 
   return (
@@ -421,41 +431,42 @@ const CelebrationOverlay = React.memo(({ userName }) => {
       style={{
         position: "fixed",
         inset: 0,
-        background: "rgba(5,150,105,0.96)",
+        backgroundColor: "rgba(4, 47, 31, 0.35)",
+        backdropFilter: "blur(12px)",
+        WebkitBackdropFilter: "blur(12px)",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         zIndex: 99999,
-        animation: "celFadeIn 0.5s ease-out forwards",
+        padding: 20,
+        animation: "celFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards",
       }}
     >
       <style>{CELEBRATION_KEYFRAMES}</style>
 
       <div
         style={{
-          background: "linear-gradient(135deg,#fff 0%,#f0fdf4 100%)",
-          borderRadius: 32,
-          padding: "60px 40px",
+          background: "#ffffff",
+          borderRadius: 24,
+          padding: "40px 32px 36px",
           textAlign: "center",
-          boxShadow:
-            "0 32px 64px -16px rgba(0,0,0,0.28), 0 0 0 1px rgba(5,150,105,0.1)",
-          maxWidth: 480,
-          width: "90%",
+          boxShadow: "0 24px 48px -12px rgba(4, 47, 31, 0.15), 0 0 0 1px rgba(4, 47, 31, 0.05)",
+          maxWidth: 400,
+          width: "100%",
           position: "relative",
           overflow: "hidden",
-          animation: "celSlideUp 0.8s cubic-bezier(0.34,1.56,0.64,1) forwards",
+          animation: "celScaleUp 0.6s cubic-bezier(0.34, 1.3, 0.64, 1) forwards",
         }}
       >
-        {/* Decorative blobs */}
+        {/* Modern Minimal Ambient Vectors */}
         <div
           style={{
             position: "absolute",
-            top: -20,
-            right: -20,
-            width: 130,
-            height: 130,
-            background:
-              "radial-gradient(circle,rgba(16,185,129,0.15) 0%,transparent 70%)",
+            top: -40,
+            right: -40,
+            width: 140,
+            height: 140,
+            background: "radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)",
             borderRadius: "50%",
             pointerEvents: "none",
           }}
@@ -463,39 +474,38 @@ const CelebrationOverlay = React.memo(({ userName }) => {
         <div
           style={{
             position: "absolute",
-            bottom: -30,
-            left: -30,
-            width: 160,
-            height: 160,
-            background:
-              "radial-gradient(circle,rgba(5,150,105,0.1) 0%,transparent 70%)",
+            bottom: -40,
+            left: -40,
+            width: 140,
+            height: 140,
+            background: "radial-gradient(circle, rgba(5, 150, 105, 0.06) 0%, transparent 70%)",
             borderRadius: "50%",
             pointerEvents: "none",
           }}
         />
 
-        {/* Checkmark icon */}
+        {/* Refined Checkmark Container */}
         <div
           style={{
-            width: 100,
-            height: 100,
-            margin: "0 auto 28px",
+            width: 64,
+            height: 64,
+            margin: "0 auto 20px",
             borderRadius: "50%",
-            background: "linear-gradient(135deg,#10b981,#059669)",
+            background: "linear-gradient(135deg, #10b981, #047857)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "0 16px 32px rgba(5,150,105,0.4)",
-            animation: "celPulse 2.5s ease-in-out infinite",
+            boxShadow: "0 12px 24px rgba(5, 150, 105, 0.25)",
+            animation: "celCheckmark 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) delay(0.1s) forwards",
           }}
         >
           <svg
-            width="48"
-            height="48"
+            width="28"
+            height="28"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#fff"
-            strokeWidth="3"
+            stroke="#ffffff"
+            strokeWidth="3.5"
             strokeLinecap="round"
             strokeLinejoin="round"
           >
@@ -503,15 +513,16 @@ const CelebrationOverlay = React.memo(({ userName }) => {
           </svg>
         </div>
 
+        {/* Typography */}
         <h1
           style={{
-            fontSize: "clamp(26px,5vw,40px)",
-            fontWeight: 800,
-            color: "#111827",
-            margin: "0 0 10px",
-            fontFamily: "'Playfair Display',Georgia,serif",
-            letterSpacing: "-0.02em",
-            animation: "celBounce 3s ease-in-out 1s infinite",
+            fontSize: "clamp(22px, 4.5vw, 28px)",
+            fontWeight: 700,
+            color: "#0f172a",
+            margin: "0 0 6px",
+            fontFamily: "system-ui, -apple-system, sans-serif",
+            letterSpacing: "-0.01em",
+            lineHeight: 1.25,
           }}
         >
           Welcome, {displayName}!
@@ -519,11 +530,12 @@ const CelebrationOverlay = React.memo(({ userName }) => {
 
         <p
           style={{
-            fontSize: 17,
+            fontSize: 14,
             color: "#059669",
-            margin: "0 0 18px",
+            margin: "0 0 16px",
             fontWeight: 600,
-            fontStyle: "italic",
+            letterSpacing: "0.02em",
+            textTransform: "uppercase",
           }}
         >
           Your adventure starts now
@@ -531,38 +543,37 @@ const CelebrationOverlay = React.memo(({ userName }) => {
 
         <p
           style={{
-            fontSize: 15,
+            fontSize: 14,
             color: "#475569",
-            lineHeight: 1.7,
-            margin: "0 auto 28px",
-            maxWidth: 380,
+            lineHeight: 1.6,
+            margin: "0 auto 24px",
+            maxWidth: 320,
           }}
         >
-          You now have full access to plan your dream safari, save
-          destinations, and discover the magic of East Africa.
+          You now have full access to plan your dream safari, save stunning destinations, and explore East Africa.
         </p>
 
-        {/* Feature pills */}
+        {/* Clean, Micro Feature Tags */}
         <div
           style={{
             display: "flex",
             justifyContent: "center",
-            gap: 12,
+            gap: 8,
             flexWrap: "wrap",
-            marginBottom: 32,
+            marginBottom: 28,
           }}
         >
           {["🗺️ Explore", "📅 Book", "❤️ Save"].map((item, i) => (
             <span
               key={i}
               style={{
-                padding: "10px 18px",
-                background: "rgba(5,150,105,0.08)",
-                borderRadius: 12,
-                border: "1px solid rgba(5,150,105,0.15)",
-                fontSize: 14,
-                color: "#059669",
-                fontWeight: 700,
+                padding: "6px 14px",
+                background: "#f0fdf4",
+                borderRadius: 99,
+                border: "1px solid rgba(4, 120, 87, 0.12)",
+                fontSize: 13,
+                color: "#047857",
+                fontWeight: 600,
               }}
             >
               {item}
@@ -570,40 +581,43 @@ const CelebrationOverlay = React.memo(({ userName }) => {
           ))}
         </div>
 
-        {/* CTA */}
+        {/* Premium CTA Button */}
         <a
           href="/destinations"
           style={{
             display: "inline-flex",
             alignItems: "center",
-            gap: 10,
-            padding: "15px 32px",
-            background: "linear-gradient(135deg,#059669,#10b981)",
-            color: "#fff",
+            justifyContent: "center",
+            width: "100%",
+            boxSizing: "border-box",
+            padding: "14px 28px",
+            background: "#047857",
+            color: "#ffffff",
             textDecoration: "none",
-            borderRadius: 16,
-            fontWeight: 700,
-            fontSize: 16,
-            boxShadow: "0 10px 24px rgba(5,150,105,0.3)",
-            transition: "transform 0.25s,box-shadow 0.25s",
+            borderRadius: 12,
+            fontWeight: 600,
+            fontSize: 15,
+            boxShadow: "0 8px 20px rgba(4, 120, 87, 0.15)",
+            transition: "all 0.2s ease-in-out",
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.transform = "translateY(-2px)";
-            e.currentTarget.style.boxShadow =
-              "0 16px 32px rgba(5,150,105,0.42)";
+            e.currentTarget.style.backgroundColor = "#065f46";
+            e.currentTarget.style.transform = "translateY(-1px)";
+            e.currentTarget.style.boxShadow = "0 12px 24px rgba(4, 120, 87, 0.25)";
           }}
           onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = "#047857";
             e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow =
-              "0 10px 24px rgba(5,150,105,0.3)";
+            e.currentTarget.style.boxShadow = "0 8px 20px rgba(4, 120, 87, 0.15)";
           }}
         >
-          Start Exploring →
+          Start Exploring
         </a>
       </div>
     </div>
   );
 });
+
 CelebrationOverlay.displayName = "CelebrationOverlay";
 
 // ============================================================================
@@ -762,14 +776,31 @@ function App() {
     }
   }, [location.pathname]);
 
-  // Show celebration ONLY when auth transitions false → true
+  // Show celebration ONLY when auth transitions false → true and only once per user
   useEffect(() => {
     if (isAuthenticated && !prevAuth && user) {
-      setShowCelebration(true);
-      const timer = setTimeout(() => {
-        setShowCelebration(false);
-      }, 4000);
-      return () => clearTimeout(timer);
+      try {
+        const keyPrefix = "altuvera_welcome_shown:";
+        const email = (user?.email || "").toLowerCase();
+        const key = email ? `${keyPrefix}${email}` : null;
+        // If we've already shown the welcome for this user, skip overlay
+        if (!key || !localStorage.getItem(key)) {
+          setShowCelebration(true);
+          // Mark as shown so future logins don't repeat the overlay
+          if (key) localStorage.setItem(key, Date.now().toString());
+          const timer = setTimeout(() => {
+            setShowCelebration(false);
+          }, 4000);
+          return () => clearTimeout(timer);
+        }
+      } catch (err) {
+        // storage may be unavailable — fall back to showing celebration once
+        setShowCelebration(true);
+        const timer = setTimeout(() => {
+          setShowCelebration(false);
+        }, 4000);
+        return () => clearTimeout(timer);
+      }
     }
     setPrevAuth(isAuthenticated);
   }, [isAuthenticated, prevAuth, user]);
