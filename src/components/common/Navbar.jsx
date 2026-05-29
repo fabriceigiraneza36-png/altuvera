@@ -242,8 +242,24 @@ const Navbar = () => {
   );
   const handleDropdownEnter   = useCallback((n) => { clearTimeout(dropdownTimer.current); setActiveDropdown(n); }, []);
   const handleDropdownLeave   = useCallback(() => { dropdownTimer.current = setTimeout(() => setActiveDropdown(null), 150); }, []);
-  const handleDesktopClick    = useCallback((e, l) => { if (l.dropdown) { e.preventDefault(); setActiveDropdown((p) => (p === l.name ? null : l.name)); } }, []);
-  const handleDesktopDblClick = useCallback((e, l) => { if (l.dropdown) { e.preventDefault(); setActiveDropdown(null); navigate(l.path); } }, [navigate]);
+  const handleDesktopClick    = useCallback((e, l) => {
+    if (l.dropdown) {
+      // On touch devices, rely on click/tap to open dropdown.
+      // Prevent immediate navigation so user can pick a sub-item.
+      e.preventDefault();
+      setActiveDropdown((p) => (p === l.name ? null : l.name));
+    }
+  }, []);
+
+  const handleDesktopDblClick = useCallback((e, l) => {
+    // Double click/tap should navigate to the parent page.
+    if (l.dropdown) {
+      e.preventDefault();
+      setActiveDropdown(null);
+      navigate(l.path);
+    }
+  }, [navigate]);
+
 
   const isActive = useCallback(
     (l) => location.pathname === l.path || l.dropdown?.some((d) => d.path === location.pathname) || false,
@@ -305,6 +321,8 @@ const Navbar = () => {
                   to={link.path}
                   onClick={(e) => handleDesktopClick(e, link)}
                   onDoubleClick={(e) => handleDesktopDblClick(e, link)}
+                  onTouchStart={() => link.dropdown && handleDropdownEnter(link.name)}
+
                   onMouseEnter={() => preloadRoute(link.path)}
                   className={cn("nav__link", isActive(link) && "nav__link--active")}
                   aria-expanded={link.dropdown ? activeDropdown === link.name : undefined}

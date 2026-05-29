@@ -741,60 +741,6 @@ export default function AuthModal() {
       login, setSessionPreference, startExpiryCountdown],
   );
 
-  // ─── Fix 2: handleSignUp — same pattern, countdown only on success ──────────
-  const handleSignUp = useCallback(
-    async (e) => {
-      e.preventDefault();
-      if (!agreeTerms) {
-        setError("Please accept the Terms of Service and Privacy Policy.");
-        return;
-      }
-      if (authMethod === "google" && !hasGooglePending) {
-        setError("Google authentication required.");
-        return;
-      }
-      try {
-        setLoading(true);
-        setError("");
-        setSuccess("");
-        setVerifySource("register");
-        setSessionPreference(form.keepSignedIn);
-        const avatar = await resolveAvatar();
-
-        if (authMethod === "google") {
-          await completeGoogleSignUp({
-            fullName: form.fullName.trim(),
-            phone: form.phone.trim(),
-            bio: form.bio.trim(),
-            role: form.role,
-            avatar,
-          });
-          // Google auth completes fully — modal closes automatically
-          // No countdown needed
-        } else {
-          await register({
-            email: form.email.trim(),
-            fullName: form.fullName.trim(),
-            phone: form.phone.trim(),
-            bio: form.bio.trim(),
-            role: form.role,
-            avatar,
-            persistSession: form.keepSignedIn,
-          });
-          // Email OTP sent — start 10-min countdown
-          startExpiryCountdown(CODE_TTL_LOGIN_REGISTER);
-          setSuccess("Verification code sent to your email.");
-        }
-      } catch (err) {
-        setError(err?.message || "Sign up failed. Please try again.");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [agreeTerms, authMethod, completeGoogleSignUp, form, hasGooglePending,
-      register, resolveAvatar, setSessionPreference, startExpiryCountdown],
-  );
-
   // ─── Fix 3: doVerify — clear code inputs on error so user can retry ─────────
   const doVerify = useCallback(
     async (val) => {
@@ -928,35 +874,6 @@ export default function AuthModal() {
     setCodeState("");
     codeRefs.current[Math.min(digits.length, 5)]?.focus();
   }, []);
-
-  /* ═══════════════════════════════════════════════════════════
-     VERIFY
-     POST /users/verify-code { email, code }
-     Backend validates: code matches, not expired, attempts < 5
-  ═══════════════════════════════════════════════════════════ */
-  const doVerify = useCallback(
-    async (val) => {
-      if (!activeEmail) { setError("Missing email. Please restart."); return; }
-      if (val.length !== 6) { setError("Please enter the full 6-digit code."); return; }
-      if (codeExpired) { setError("Code has expired. Please request a new one."); return; }
-      try {
-        setLoading(true);
-        setCodeState("verifying");
-        setError("");
-        await verifyCode(activeEmail, val);
-        setCodeState("success");
-        // Stop countdown — verification succeeded
-        stopExpiryCountdown();
-      } catch (err) {
-        setCodeState("error");
-        setError(err?.message || "Verification failed. Please try again.");
-        setTimeout(() => setCodeState(""), 900);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [activeEmail, codeExpired, verifyCode, stopExpiryCountdown],
-  );
 
   const handleVerifySubmit = useCallback(
     async (e) => { e.preventDefault(); await doVerify(code.join("")); },

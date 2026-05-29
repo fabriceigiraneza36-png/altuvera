@@ -11,7 +11,6 @@ import {
 import Hero, { HERO_SLIDES } from "../components/home/Hero";
 import AnimatedSection from "../components/common/AnimatedSection";
 import Button from "../components/common/Button";
-import NewsletterWidget from "../components/common/NewsletterWidget";
 import Confetti from "../components/common/Confetti";
 import SEO from "../components/common/SEO";
 import DestinationCard from "../components/home/DestinationCard";
@@ -54,9 +53,7 @@ const IconChevronLeft = ({ size = 16, color = "currentColor", ...p }) => (
 const IconChevronRight = ({ size = 16, color = "currentColor", ...p }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="m9 18 6-6-6-6" /></svg>
 );
-const IconMail = ({ size = 16, color = "currentColor", ...p }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
-);
+
 const IconMap = ({ size = 16, color = "currentColor", ...p }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...p}><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z" /><path d="M15 5.764v15" /><path d="M9 3.236v15" /></svg>
 );
@@ -909,80 +906,112 @@ const GalleryLightbox = memo(({ images, currentIndex, onClose, onNavigate }) => 
 });
 
 /* ═══════════════════════════════════════════
-   WHATSAPP SECTION
-   ═══════════════════════════════════════════ */
-const WHATSAPP_NUMBER = "0783239379";
-const WHATSAPP_LINK = `https://wa.me/27783239379`;
+  WHATSAPP SECTION (removed)
+  ═══════════════════════════════════════════ */
+// Keep a safe placeholder to avoid initialization errors in builds
+const WhatsAppSection = null;
 
-const WhatsAppSection = memo(() => {
-  const handleWhatsApp = useCallback((msg = "") => {
-    const base = WHATSAPP_LINK;
-    const text = msg ? `?text=${encodeURIComponent(msg)}` : "";
-    window.open(`${base}${text}`, "_blank", "noopener,noreferrer");
-  }, []);
+const GalleryShowcaseSection = memo(({ images = [], loading, onCardClick }) => {
+  const reduced = usePrefersReducedMotion();
+  const [activeIndex, setActiveIndex] = useState(0);
+  const visible = images.slice(0, 6);
+  const primaryItem = visible[activeIndex] || visible[0];
+
+  useEffect(() => {
+    if (reduced || visible.length <= 1) return undefined;
+    const timer = window.setInterval(
+      () => setActiveIndex((prev) => (prev + 1) % visible.length),
+      6000,
+    );
+    return () => window.clearInterval(timer);
+  }, [reduced, visible.length]);
 
   return (
-    <section className="whatsapp-section home-section">
+    <section className="gallery-showcase-section home-section">
       <div className="home-container">
-        <AnimatedSection animation="scaleIn">
-          <div className="wa-hero-card">
-            <div className="wa-hero-card-glow" />
-            <div className="wa-hero-icon-wrap">
-              <motion.div
-                animate={{ scale: [1, 1.08, 1] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-                className="wa-hero-icon-pulse"
-              />
-              <div className="wa-hero-icon">
-                <IconWhatsApp size={52} />
-              </div>
-            </div>
-            <div className="wa-hero-label">All Bookings Happen on WhatsApp</div>
-            <div className="wa-hero-number">{WHATSAPP_NUMBER}</div>
-            <p className="wa-hero-desc">
-              Tap below to start chatting instantly. Tell us where you want to
-              go, when, and with how many people — and we'll craft your perfect
-              East African adventure.
+        <AnimatedSection animation="fadeInUp">
+          <div className="section-header section-header--centered">
+            <span className="section-label">
+              <IconCamera size={14} /> Inspiration Gallery
+            </span>
+            <h2 className="section-title">
+              Travel Moments Curated <span className="text-gradient">for You</span>
+            </h2>
+            <p className="section-subtitle">
+              Immerse yourself in East Africa through polished visuals, vivid
+              stories, and our best travel moments.
             </p>
-            <div className="wa-hero-btns">
-              <motion.button
-                className="wa-btn-primary"
-                whileHover={{ scale: 1.04, y: -3 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() =>
-                  handleWhatsApp(
-                    "Hello! I'm interested in planning a trip to East Africa. Can you help me with information and pricing?"
-                  )
-                }
-              >
-                <IconWhatsApp size={22} />
-                Chat Now — It's Free
-              </motion.button>
-              <motion.button
-                className="wa-btn-secondary"
-                whileHover={{ scale: 1.02, y: -2 }}
-                whileTap={{ scale: 0.97 }}
-                onClick={() =>
-                  handleWhatsApp(
-                    "Hi! I'd like to get a custom quote for my East Africa trip."
-                  )
-                }
-              >
-                <IconZap size={18} />
-                Get a Custom Quote
-              </motion.button>
+          </div>
+        </AnimatedSection>
+
+        {loading ? (
+          <div className="gallery-showcase-skeleton">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="gallery-showcase-skeleton-card" />
+            ))}
+          </div>
+        ) : primaryItem ? (
+          <div className="gallery-showcase-grid">
+            <motion.div
+              className="gallery-showcase-primary"
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.65 }}
+              onClick={() => onCardClick?.(primaryItem, activeIndex)}
+            >
+              <img
+                src={primaryItem.thumb || primaryItem.src}
+                alt={primaryItem.alt || primaryItem.title}
+                className="gallery-showcase-primary-image"
+                loading="lazy"
+              />
+              <div className="gallery-showcase-primary-copy">
+                <div className="gallery-showcase-primary-tag">
+                  {primaryItem.category || "Journey"}
+                </div>
+                <h3>{primaryItem.title || "East Africa Highlights"}</h3>
+                {primaryItem.location && (
+                  <div className="gallery-showcase-primary-location">
+                    <IconMapPin size={14} /> {primaryItem.location}
+                  </div>
+                )}
+              </div>
+            </motion.div>
+
+            <div className="gallery-showcase-secondary">
+              {visible.map((image, index) => (
+                <motion.div
+                  key={image.id}
+                  className={`gallery-showcase-thumb ${index === activeIndex ? "active" : ""}`}
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5, delay: index * 0.05 }}
+                  onClick={() => setActiveIndex(index)}
+                >
+                  <img
+                    src={image.thumb || image.src}
+                    alt={image.alt || image.title}
+                    className="gallery-showcase-thumb-image"
+                    loading="lazy"
+                  />
+                  <div className="gallery-showcase-thumb-overlay">
+                    <span>{image.title || image.location}</span>
+                  </div>
+                </motion.div>
+              ))}
             </div>
-            <div className="wa-hero-badge-row">
-              <span className="wa-badge">
-                <IconCheck size={13} color="#25D366" /> Free Consultation
-              </span>
-              <span className="wa-badge">
-                <IconCheck size={13} color="#25D366" /> No Commitment
-              </span>
-              <span className="wa-badge">
-                <IconCheck size={13} color="#25D366" /> Fast Response
-              </span>
-            </div>
+          </div>
+        ) : (
+          <div className="gallery-showcase-empty">
+            <p>Our curated adventure gallery is being prepared for launch.</p>
+          </div>
+        )}
+
+        <AnimatedSection animation="fadeInUp">
+          <div className="section-cta section-cta--centered">
+            <Button to="/gallery" variant="outline" size="large" icon={<IconCamera size={18} />}>
+              View Full Gallery
+            </Button>
           </div>
         </AnimatedSection>
       </div>
@@ -1042,14 +1071,37 @@ const PremiumTourismTestimonials = memo(({ items }) => {
 
   const currentItem = items[activeSlide];
 
+  const slideAnimations = useMemo(
+    () => [
+      {
+        initial: { opacity: 0, y: 24, scale: 0.98 },
+        animate: { opacity: 1, y: 0, scale: 1 },
+      },
+      {
+        initial: { opacity: 0, x: -24, scale: 0.98 },
+        animate: { opacity: 1, x: 0, scale: 1 },
+      },
+      {
+        initial: { opacity: 0, x: 24, rotate: -1.5, scale: 0.98 },
+        animate: { opacity: 1, x: 0, rotate: 0, scale: 1 },
+      },
+      {
+        initial: { opacity: 0, y: -24, scale: 0.98 },
+        animate: { opacity: 1, y: 0, scale: 1 },
+      },
+    ],
+    [],
+  );
+  const currentSlideAnimation = slideAnimations[activeSlide % slideAnimations.length];
+
   return (
     <div className="premium-testimonials-container">
       {/* Main Testimonial Card */}
       <motion.div
         className="premium-testimonial-card"
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        initial={currentSlideAnimation.initial}
+        animate={currentSlideAnimation.animate}
+        transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
         onMouseEnter={pauseAutoPlay}
         onMouseLeave={resumeAutoPlay}
       >
@@ -1135,31 +1187,7 @@ const PremiumTourismTestimonials = memo(({ items }) => {
         ))}
       </div>
 
-      {/* Progress Bar */}
-      <div className="premium-testimonials-progress">
-        <motion.div
-          className="premium-testimonials-progress-bar"
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: isAutoPlaying ? 1 : 0 }}
-          transition={{
-            duration: isAutoPlaying ? 5 : 0,
-            ease: "linear",
-            repeat: isAutoPlaying ? Infinity : 0
-          }}
-          key={activeSlide} // Reset animation on slide change
-        />
-      </div>
-
-      {/* Counter */}
-      <div className="premium-testimonials-counter">
-        <span className="premium-testimonials-counter-current">
-          {activeSlide + 1}
-        </span>
-        <span className="premium-testimonials-counter-separator">/</span>
-        <span className="premium-testimonials-counter-total">
-          {items.length}
-        </span>
-      </div>
+      {/* Dots only, no progress tracker */}
     </div>
   );
 });
@@ -1953,8 +1981,12 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── WHATSAPP SECTION ── */}
-      <WhatsAppSection />
+      {/* ── GALLERY SHOWCASE SECTION ── */}
+      <GalleryShowcaseSection
+        images={galleryImages}
+        loading={galleryLoading}
+        onCardClick={openLightbox}
+      />
 
       {/* ── GALLERY ── */}
       <section className="home-section gallery-section">
@@ -2106,35 +2138,7 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── NEWSLETTER ── */}
-      <section className="newsletter-section">
-        <div className="newsletter-decor-ring newsletter-decor-ring--top" />
-        <div className="newsletter-decor-blob" />
-        <div className="newsletter-inner">
-             <AnimatedSection animation="scaleIn">
-               <motion.div
-                 className="newsletter-icon-wrap"
-                 animate={reduced ? {} : { y: [0, -8, 0] }}
-                 transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
-               >
-                 <IconMail size={34} color="white" />
-               </motion.div>
-               <h2 className="newsletter-title">Join 10+ Adventurers</h2>
-               <p className="newsletter-subtitle">
-                 Get exclusive travel inspiration, early-bird offers, wildlife
-                 migration alerts, and insider tips delivered weekly.
-               </p>
-               <NewsletterWidget
-                 source="home-hero"
-                 className="home-newsletter-widget"
-                 initialEmail={user?.email || ''}
-               />
-               <p className="newsletter-privacy">
-                 No spam, ever. Unsubscribe anytime.
-               </p>
-             </AnimatedSection>
-        </div>
-      </section>
+      {/* Newsletter section removed intentionally for a more polished homepage */}
 
       {/* ── FINAL CTA ── */}
       <ParallaxSection

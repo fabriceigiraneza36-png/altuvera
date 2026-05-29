@@ -5,7 +5,7 @@ import { apiFetch } from "./apiBase";
 export const api = {
   /**
    * Make API requests with consistent base URL
-   * @param {string} endpoint - e.g., '/api/subscribers'
+   * @param {string} endpoint - e.g., '/subscribers'
    * @param {object} options - fetch options
    */
   async fetch(endpoint, options = {}) {
