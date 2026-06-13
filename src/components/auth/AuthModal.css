@@ -112,32 +112,42 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   MODAL CONTAINER
-═══════════════════════════════════════════════════════════════════════════════ */
+    MODAL CONTAINER
+   ═══════════════════════════════════════════════════════════════════════════════ */
 .auth-modal {
   position: relative;
   z-index: var(--auth-z-modal);
   display: flex;
   width: 100%;
-  max-width: var(--auth-modal-max-w);
-  max-height: var(--auth-modal-max-h);
+  max-width: 1000px;
+  max-height: 92vh;
   background: var(--auth-bg);
   border-radius: var(--auth-radius-xl);
   box-shadow: var(--auth-shadow-xl);
   overflow: hidden;
   animation: authModalIn 450ms var(--auth-transition-spring) both;
   animation-delay: 80ms;
+  transform-origin: center;
 }
 
 @keyframes authModalIn {
   from {
     opacity: 0;
-    transform: scale(0.92) translateY(24px);
+    transform: scale(0.94) translateY(24px);
   }
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
+}
+
+.auth-modal--switch {
+  animation: authViewSwitch 350ms ease-out both;
+}
+
+@keyframes authViewSwitch {
+  0%   { opacity: 0; transform: translateX(20px); }
+  100% { opacity: 1; transform: translateX(0); }
 }
 
 /* Accent bar (top gradient) */
@@ -167,16 +177,23 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   SIDE PANEL (left imagery)
-═══════════════════════════════════════════════════════════════════════════════ */
+    SIDE PANEL (left imagery)
+    Equally-sized with main panel on desktop
+   ═══════════════════════════════════════════════════════════════════════════════ */
 .auth-side-panel {
-  position: relative;
-  width: var(--auth-side-width);
-  min-width: var(--auth-side-width);
+  width: 50%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background: #111827;
+}
+
+/* On larger screens, show side panel with max width constraint */
+@media (min-width: 861px) {
+  .auth-side-panel {
+    max-width: 500px;
+  }
 }
 
 .auth-side-panel__overlay {
@@ -1518,12 +1535,21 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   ROLE CARDS
-═══════════════════════════════════════════════════════════════════════════════ */
+    ROLE CARDS
+    Responsive grid: 3 cols on desktop, 2 on tablet, 1 on mobile
+   ═══════════════════════════════════════════════════════════════════════════════ */
 .auth-role-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 10px;
+}
+
+/* Tablet: 2 columns */
+@media (max-width: 700px) {
+  .auth-role-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
 }
 
 .auth-role-card {
@@ -2027,21 +2053,21 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
-   RESPONSIVE — TABLET (< 860px)
-═══════════════════════════════════════════════════════════════════════════════ */
+    RESPONSIVE — TABLET (< 860px)
+    Side panel stacks on top on mobile, shows equally-sized on tablet+
+   ═══════════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 860px) {
   .auth-modal {
-    max-width: 520px;
+    max-width: 480px;
     max-height: 96vh;
+    flex-direction: column;
   }
 
   .auth-side-panel {
-    display: none;
-  }
-
-  .auth-role-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
+    width: 100%;
+    max-width: none;
+    min-height: 180px;
+    max-height: 220px;
   }
 
   .auth-role-card {
