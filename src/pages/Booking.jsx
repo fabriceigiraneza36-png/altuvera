@@ -1,3 +1,4 @@
+// src/pages/Booking.jsx
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "../components/common/PageHeader";
@@ -7,7 +8,6 @@ import BookingContact from "./Booking/BookingContact";
 import GlobalStyles from "./Booking/GlobalStyles";
 import FloatingParticles from "./Booking/components/FloatingParticles";
 import GlassCard from "./Booking/components/GlassCard";
-import MagneticButton from "./Booking/components/MagneticButton";
 import ConfettiCelebration from "./Booking/components/ConfettiCelebration";
 import { useBookingWizard } from "../hooks/useBookingWizard";
 import { STEPS } from "./Booking/BookingShared";
@@ -15,27 +15,41 @@ import ProgressStepper from "./Booking/components/ProgressStepper";
 import WhatsAppContactBanner from "./Booking/components/WhatsAppContactBanner";
 import SuccessScreen from "./Booking/components/SuccessScreen";
 
+const TRUST_ITEMS = [
+  { icon: "🛡️", text: "Secure & Verified" },
+  { icon: "🏆", text: "Expert Guidance" },
+  { icon: "🎧", text: "24/7 WhatsApp Support" },
+];
+
+const BG_PATTERN = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23059669' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`;
+
 const Booking = () => {
   const wizard = useBookingWizard();
-  const { user } = wizard;
 
-  // Window size
   const [windowWidth, setWindowWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 1200,
+    typeof window !== "undefined" ? window.innerWidth : 1200
   );
   const isMobile = windowWidth < 640;
   const isTablet = windowWidth >= 640 && windowWidth < 1024;
 
   useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const onResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
 
-  // Loading state
+  const sectionPadding = isMobile
+    ? "40px 16px 100px"
+    : isTablet
+    ? "50px 24px 120px"
+    : "80px 24px 140px";
+
+  const cardPadding = isMobile ? "28px 20px" : isTablet ? "44px 34px" : "54px 68px";
+
+  /* ── Loading ── */
   if (wizard.loadingData) {
     return (
-      <div>
+      <>
         <GlobalStyles />
         <PageHeader
           title="Book Your Adventure"
@@ -51,32 +65,37 @@ const Booking = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            flexDirection: "column",
+            gap: 16,
           }}
         >
           <motion.div
             animate={{ rotate: 360 }}
-            transition={{ duration: 1.2, repeat: Infinity, ease: "linear" }}
+            transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
             style={{
-              width: 56,
-              height: 56,
+              width: 52,
+              height: 52,
               borderRadius: "50%",
-              border: `4px solid #E5E7EB`,
+              border: "4px solid #E5E7EB",
               borderTopColor: "#059669",
             }}
           />
+          <p style={{ color: "#6B7280", fontSize: 15, fontWeight: 500 }}>
+            Loading booking details…
+          </p>
         </section>
-      </div>
+      </>
     );
   }
 
-  // Success state
+  /* ── Success ── */
   if (wizard.isSubmitted) {
     return (
-      <div>
+      <>
         <GlobalStyles />
-        <ConfettiCelebration active={true} duration={5000} />
+        <ConfettiCelebration active duration={5000} />
         <PageHeader
-          title="Booking Request"
+          title="Booking Submitted!"
           subtitle="Your adventure awaits!"
           backgroundImage="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1920"
           breadcrumbs={[{ label: "Booking" }]}
@@ -90,34 +109,20 @@ const Booking = () => {
           }}
         >
           <FloatingParticles />
-          <div
-            style={{
-              maxWidth: 800,
-              margin: "0 auto",
-              position: "relative",
-              zIndex: 1,
-            }}
-          >
-            <GlassCard
-              glow
-              style={{ padding: isMobile ? "20px 20px" : "35px 40px" }}
-            >
-              <SuccessScreen
-                isMobile={isMobile}
-                displayName={wizard.displayName}
-              />
+          <div style={{ maxWidth: 800, margin: "0 auto", position: "relative", zIndex: 1 }}>
+            <GlassCard glow style={{ padding: isMobile ? "24px 20px" : "40px 44px" }}>
+              <SuccessScreen isMobile={isMobile} displayName={wizard.displayName} />
             </GlassCard>
           </div>
         </section>
-      </div>
+      </>
     );
   }
 
-  // Main booking form
+  /* ── Main ── */
   return (
-    <div>
+    <>
       <GlobalStyles />
-
       <PageHeader
         title="Book Your Adventure"
         subtitle="Start planning your East African adventure today."
@@ -127,89 +132,43 @@ const Booking = () => {
 
       <section
         style={{
-          padding: isMobile
-            ? "40px 16px 100px"
-            : isTablet
-              ? "50px 24px 120px"
-              : "80px 24px 140px",
+          padding: sectionPadding,
           backgroundColor: "#F0FDF4",
           minHeight: "100vh",
           position: "relative",
           overflow: "hidden",
         }}
       >
-        {/* Background Pattern */}
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23059669' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-            pointerEvents: "none",
-            zIndex: 0,
-          }}
-        />
-
-        {/* Floating particles */}
+        {/* Background pattern */}
+        <div style={{ position: "absolute", inset: 0, backgroundImage: BG_PATTERN, pointerEvents: "none", zIndex: 0 }} />
         <FloatingParticles />
 
         {/* Decorative blobs */}
         <motion.div
-          animate={{
-            scale: [1, 1.08, 1],
-            rotate: [0, 4, 0],
-          }}
-          transition={{
-            duration: 18,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
+          animate={{ scale: [1, 1.08, 1], rotate: [0, 4, 0] }}
+          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
           style={{
-            position: "absolute",
-            top: -180,
-            right: -180,
-            width: 450,
-            height: 450,
+            position: "absolute", top: -180, right: -180,
+            width: 450, height: 450,
             borderRadius: "60% 40% 30% 70% / 60% 30% 70% 40%",
-            background: `linear-gradient(135deg, rgba(5, 150, 105, 0.06) 0%, rgba(16, 185, 129, 0.03) 100%)`,
-            filter: "blur(50px)",
-            pointerEvents: "none",
-            zIndex: 0,
+            background: "linear-gradient(135deg, rgba(5,150,105,0.06), rgba(16,185,129,0.03))",
+            filter: "blur(50px)", pointerEvents: "none", zIndex: 0,
           }}
         />
         <motion.div
-          animate={{
-            scale: [1, 1.12, 1],
-            rotate: [0, -4, 0],
-          }}
-          transition={{
-            duration: 22,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 3,
-          }}
+          animate={{ scale: [1, 1.12, 1], rotate: [0, -4, 0] }}
+          transition={{ duration: 22, repeat: Infinity, ease: "easeInOut", delay: 3 }}
           style={{
-            position: "absolute",
-            bottom: -130,
-            left: -130,
-            width: 380,
-            height: 380,
+            position: "absolute", bottom: -130, left: -130,
+            width: 380, height: 380,
             borderRadius: "40% 60% 70% 30% / 40% 50% 60% 50%",
-            background: `linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(52, 211, 153, 0.02) 100%)`,
-            filter: "blur(50px)",
-            pointerEvents: "none",
-            zIndex: 0,
+            background: "linear-gradient(135deg, rgba(16,185,129,0.05), rgba(52,211,153,0.02))",
+            filter: "blur(50px)", pointerEvents: "none", zIndex: 0,
           }}
         />
 
-        <div
-          style={{
-            maxWidth: 1100,
-            margin: "0 auto",
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
-          {/* WhatsApp Contact Banner */}
+        <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative", zIndex: 1 }}>
+          {/* WhatsApp Banner */}
           <AnimatedSection animation="fadeInUp">
             <WhatsAppContactBanner isMobile={isMobile} />
           </AnimatedSection>
@@ -229,23 +188,16 @@ const Booking = () => {
             <GlassCard
               glow
               style={{
-                padding: isMobile
-                  ? "30px 22px"
-                  : isTablet
-                    ? "45px 35px"
-                    : "55px 70px",
+                padding: cardPadding,
                 opacity: wizard.isAnimating ? 0 : 1,
-                transform: wizard.isAnimating
-                  ? "translateY(16px)"
-                  : "translateY(0)",
-                transition: "all 0.25s ease",
+                transform: wizard.isAnimating ? "translateY(14px)" : "translateY(0)",
+                transition: "opacity 0.22s ease, transform 0.22s ease",
                 position: "relative",
                 zIndex: 2,
-                boxShadow:
-                  "0 32px 80px rgba(2,44,34,.14), 0 12px 30px rgba(2,44,34,.08)",
+                boxShadow: "0 32px 80px rgba(2,44,34,.13), 0 12px 30px rgba(2,44,34,.07)",
               }}
             >
-              <form onSubmit={wizard.handleSubmit}>
+              <form onSubmit={wizard.handleSubmit} noValidate>
                 {wizard.currentStep < 4 ? (
                   <BookingSteps
                     currentStep={wizard.currentStep}
@@ -293,6 +245,7 @@ const Booking = () => {
                     openModal={wizard.openModal}
                     isSubmitting={wizard.isSubmitting}
                     onSubmit={wizard.handleSubmit}
+                    prevStep={wizard.prevStep}
                     isMobile={isMobile}
                   />
                 )}
@@ -302,7 +255,7 @@ const Booking = () => {
 
           {/* Trust badges */}
           <AnimatedSection animation="fadeInUp" delay={0.25}>
-            <motion.div
+            <div
               style={{
                 display: "flex",
                 justifyContent: "center",
@@ -312,34 +265,26 @@ const Booking = () => {
                 flexWrap: "wrap",
               }}
             >
-              {[
-                { icon: "🛡️", text: "Secure & Verified" },
-                { icon: "🏆", text: "Expert Guidance" },
-                { icon: "🎧", text: "24/7 WhatsApp Support" },
-              ].map((item, i) => (
+              {TRUST_ITEMS.map((item, i) => (
                 <motion.div
                   key={item.text}
-                  initial={{ opacity: 0, y: 16 }}
+                  initial={{ opacity: 0, y: 14 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.35 + i * 0.08 }}
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    color: "#6B7280",
-                    fontSize: isMobile ? 12 : 14,
-                    fontWeight: 500,
+                    display: "flex", alignItems: "center", gap: 8,
+                    color: "#6B7280", fontSize: isMobile ? 12 : 14, fontWeight: 500,
                   }}
                 >
                   <span style={{ fontSize: 18 }}>{item.icon}</span>
                   {item.text}
                 </motion.div>
               ))}
-            </motion.div>
+            </div>
           </AnimatedSection>
         </div>
       </section>
-    </div>
+    </>
   );
 };
 

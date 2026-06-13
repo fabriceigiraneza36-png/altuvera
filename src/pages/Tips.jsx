@@ -26,7 +26,6 @@ import {
   FiCamera,
 } from "react-icons/fi";
 import PageHeader from "../components/common/PageHeader";
-import DownloadTips from "../components/common/DownloadTips";
 import api from "../services/api";
 
 // --- ASSETS & CONFIGURATION ---
@@ -930,20 +929,6 @@ const Tips = () => {
           </div>
         )}
 
-        {/* --- DOWNLOAD --- */}
-        <div
-          style={{
-            marginTop: "80px",
-            borderTop: "1px solid #e2e8f0",
-            paddingTop: "40px",
-          }}
-        >
-          <DownloadTips
-            tips={filteredTips}
-            tourName="East Africa Travel Guide"
-            className="tips__download"
-          />
-        </div>
       </div>
 
       {/* --- MODAL --- */}

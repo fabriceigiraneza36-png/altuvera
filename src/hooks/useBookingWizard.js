@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+// src/hooks/useBookingWizard.js
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useUserAuth } from "../context/UserAuthContext";
 import { useServices } from "../hooks/useServices";
-import { applyBookingPrefill } from "../utils/bookingPrefill";
 import {
   STEPS,
   ADMIN_CONTACT,
@@ -9,6 +9,48 @@ import {
   getWhatsAppLink,
   normalizeResponseArray,
 } from "../pages/Booking/BookingShared";
+import { sendMessage } from "../utils/sendMessage";
+
+const BOOKING_DRAFT_KEY = "altuvera_booking_draft_v1";
+
+const buildDefaults = (user) => ({
+  tripType: "",
+  destination: "",
+  startDate: "",
+  endDate: "",
+  adults: 2,
+  children: 0,
+  groupType: "couple",
+  accommodation: "mid-range",
+  interests: [],
+  preferredContactMethod: "whatsapp",
+  preferredContactTime: "",
+  pickupLocation: "",
+  flightArrival: "",
+  flightDeparture: "",
+  dietaryRequirements: "",
+  accessibilityNeeds: "",
+  marketingSource: "",
+  newsletterOptIn: false,
+  userImage: user?.avatar || "",
+  name: user?.full_name || user?.fullName || user?.name || "",
+  email: user?.email || "",
+  phone: user?.phone || "",
+  country: "",
+  specialRequests: "",
+});
+
+const readDraft = (user) => {
+  try {
+    const raw = sessionStorage.getItem(BOOKING_DRAFT_KEY);
+    if (!raw) return buildDefaults(user);
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return buildDefaults(user);
+    return { ...buildDefaults(user), ...parsed };
+  } catch {
+    return buildDefaults(user);
+  }
+};
 
 export const useBookingWizard = () => {
   const { authFetch, user, openModal } = useUserAuth();
@@ -24,88 +66,49 @@ export const useBookingWizard = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
 
+  const [formData, setFormData] = useState(() => readDraft(user));
+  const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+
+  // Track whether user-sync has run once
+  const userSynced = useRef(false);
+
+  /* ── Display name ── */
   const displayName = useMemo(
-    () => user?.full_name || user?.name || user?.email?.split("@")[0] || "",
+    () => user?.full_name || user?.fullName || user?.name || user?.email?.split("@")[0] || "",
     [user],
   );
   const isAuthenticated = Boolean(user?.email);
 
-  const BOOKING_DRAFT_KEY = "altuvera_booking_draft_v1";
-
-  const [formData, setFormData] = useState(() => {
-    const defaults = {
-      tripType: "",
-      destination: "",
-      startDate: "",
-      endDate: "",
-      adults: 2,
-      children: 0,
-      groupType: "couple",
-      accommodation: "mid-range",
-      interests: [],
-      preferredContactMethod: "whatsapp",
-      preferredContactTime: "",
-      pickupLocation: "",
-      flightArrival: "",
-      flightDeparture: "",
-      dietaryRequirements: "",
-      accessibilityNeeds: "",
-      marketingSource: "",
-      newsletterOptIn: false,
-      userImage: user?.avatar || "",
-      name: user?.full_name || user?.name || "",
-      email: user?.email || "",
-      phone: user?.phone || "",
-      country: "",
-      specialRequests: "",
-    };
-
-    try {
-      const raw =
-        sessionStorage.getItem(BOOKING_DRAFT_KEY) ||
-        localStorage.getItem(BOOKING_DRAFT_KEY);
-      if (!raw) return defaults;
-      const parsed = JSON.parse(raw);
-      if (!parsed || typeof parsed !== "object") return defaults;
-      return { ...defaults, ...parsed };
-    } catch {
-      return defaults;
-    }
-  });
-
-  const [errors, setErrors] = useState({});
-  const [touched, setTouched] = useState({});
-
+  /* ── Persist draft to sessionStorage (debounced) ── */
   useEffect(() => {
     if (isSubmitted) {
       sessionStorage.removeItem(BOOKING_DRAFT_KEY);
-      localStorage.removeItem(BOOKING_DRAFT_KEY);
+      return;
     }
-  }, [BOOKING_DRAFT_KEY, isSubmitted]);
-
-  useEffect(() => {
-    if (isSubmitted) return;
     const id = setTimeout(() => {
       try {
         sessionStorage.setItem(BOOKING_DRAFT_KEY, JSON.stringify(formData));
-      } catch {
-        // ignore storage failures
-      }
-    }, 250);
+      } catch { /* ignore */ }
+    }, 300);
     return () => clearTimeout(id);
-  }, [BOOKING_DRAFT_KEY, formData, isSubmitted]);
+  }, [formData, isSubmitted]);
 
+  /* ── Sync auth user fields ONCE on mount / user change ── */
   useEffect(() => {
-    if (!user) return;
+    if (!user || userSynced.current) return;
+    userSynced.current = true;
     setFormData((prev) => ({
       ...prev,
       name: user.full_name || user.fullName || user.name || prev.name,
       email: user.email || prev.email,
       phone: user.phone || prev.phone,
-      country: prev.country || user.country || prev.country,
+      country: prev.country || user.country || "",
+      userImage: user.avatar || prev.userImage || "",
     }));
   }, [user]);
 
+  /* ── Fetch booking data ── */
   const fetchBookingData = useCallback(async () => {
     setLoadingData(true);
     try {
@@ -114,14 +117,9 @@ export const useBookingWizard = () => {
         authFetch("/destinations/categories").catch(() => null),
         authFetch("/destinations").catch(() => null),
       ]);
-
-      const countries = normalizeResponseArray(cRes);
-      const categories = normalizeResponseArray(catRes);
-      const destinations = normalizeResponseArray(destRes);
-
-      setCountriesList(countries);
-      setCategoriesList(categories);
-      setDestinationsList(destinations);
+      setCountriesList(normalizeResponseArray(cRes));
+      setCategoriesList(normalizeResponseArray(catRes));
+      setDestinationsList(normalizeResponseArray(destRes));
     } catch (err) {
       console.error("Failed to fetch booking data", err);
     } finally {
@@ -133,137 +131,89 @@ export const useBookingWizard = () => {
     fetchBookingData();
   }, [fetchBookingData]);
 
-  useEffect(() => {
-    applyBookingPrefill(formData, setFormData);
-  }, [formData]);
+  /* ── Static lists ── */
+  const interests = useMemo(() => [
+    { name: "Wildlife Safari", icon: "🦁" },
+    { name: "Mountain Trekking", icon: "🏔️" },
+    { name: "Gorilla Tracking", icon: "🦍" },
+    { name: "Beach & Relaxation", icon: "🏖️" },
+    { name: "Cultural Experiences", icon: "🎭" },
+    { name: "Photography", icon: "📸" },
+    { name: "Bird Watching", icon: "🦅" },
+    { name: "Adventure Sports", icon: "🪂" },
+  ], []);
 
-  const interests = useMemo(
-    () => [
-      { name: "Wildlife Safari", icon: "🦁" },
-      { name: "Mountain Trekking", icon: "🏔️" },
-      { name: "Gorilla Tracking", icon: "🦍" },
-      { name: "Beach & Relaxation", icon: "🏖️" },
-      { name: "Cultural Experiences", icon: "🎭" },
-      { name: "Photography", icon: "📸" },
-      { name: "Bird Watching", icon: "🦅" },
-      { name: "Adventure Sports", icon: "🪂" },
-    ],
-    [],
-  );
+  const accommodationTypes = useMemo(() => [
+    { id: "budget", name: "Budget Friendly", description: "Comfortable lodges & camps", icon: "🏕️" },
+    { id: "mid-range", name: "Mid-Range", description: "Quality lodges & tented camps", icon: "🏨" },
+    { id: "luxury", name: "Luxury", description: "Premium lodges & camps", icon: "🏰" },
+    { id: "ultra-luxury", name: "Ultra Luxury", description: "Exclusive private experiences", icon: "👑" },
+  ], []);
 
-  const accommodationTypes = useMemo(
-    () => [
-      { id: "budget", name: "Budget Friendly", description: "Comfortable lodges & camps", icon: "🏕️" },
-      { id: "mid-range", name: "Mid-Range", description: "Quality lodges & tented camps", icon: "🏨" },
-      { id: "luxury", name: "Luxury", description: "Premium lodges & camps", icon: "🏰" },
-      { id: "ultra-luxury", name: "Ultra Luxury", description: "Exclusive private experiences", icon: "👑" },
-    ],
-    [],
-  );
+  const groupTypes = useMemo(() => [
+    { id: "solo", name: "Solo", full_name: "Solo Traveler", icon: "🧑" },
+    { id: "couple", name: "Couple", full_name: "Couple", icon: "💑" },
+    { id: "family", name: "Family", full_name: "Family", icon: "👨‍👩‍👧‍👦" },
+    { id: "friends", name: "Friends", full_name: "Friends", icon: "👥" },
+    { id: "business", name: "Business", full_name: "Business", icon: "💼" },
+  ], []);
 
-  const groupTypes = useMemo(
-    () => [
-      { id: "solo", name: "Solo", full_name: "Solo Traveler", icon: "🧑" },
-      { id: "couple", name: "Couple", full_name: "Couple", icon: "💑" },
-      { id: "family", name: "Family", full_name: "Family", icon: "👨‍👩‍👧‍👦" },
-      { id: "friends", name: "Friends", full_name: "Friends", icon: "👥" },
-      { id: "business", name: "Business", full_name: "Business", icon: "💼" },
-    ],
-    [],
-  );
-
-  const validationRules = useMemo(
-    () => ({
-      tripType: { required: true, message: "Please select a trip type" },
-      destination: { required: true, message: "Please select a destination" },
-      startDate: {
-        required: true,
-        message: "Please select a start date",
-        validate: (value) => {
-          const today = new Date();
-          today.setHours(0, 0, 0, 0);
-          if (new Date(value) < today) return "Start date cannot be in the past";
-          return null;
-        },
+  /* ── Validation ── */
+  const validationRules = useMemo(() => ({
+    tripType: { required: true, message: "Please select a trip type" },
+    destination: { required: true, message: "Please select a destination" },
+    startDate: {
+      required: true,
+      message: "Please select a start date",
+      validate: (v) => {
+        const today = new Date(); today.setHours(0, 0, 0, 0);
+        return new Date(v) < today ? "Start date cannot be in the past" : null;
       },
-      endDate: {
-        required: true,
-        message: "Please select an end date",
-        validate: (value) => {
-          if (formData.startDate && new Date(value) <= new Date(formData.startDate)) {
-            return "End date must be after start date";
-          }
-          return null;
-        },
-      },
-      name: {
-        required: true,
-        message: "Full name is required",
-        minLength: 3,
-        pattern: /^[a-zA-Z\s'-]+$/,
-        patternMessage: "Please enter a valid name (letters only)",
-      },
-      email: {
-        required: true,
-        message: "Email is required",
-        pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-        patternMessage: "Please enter a valid email address",
-      },
-      phone: {
-        required: true,
-        message: "Phone number is required",
-        pattern: /^[\d\s+\-()]{8,20}$/,
-        patternMessage: "Please enter a valid phone number",
-      },
-      country: { required: true, message: "Please enter your country" },
-    }),
-    [formData.startDate],
-  );
-
-  const validateField = useCallback(
-    (name, value) => {
-      const rules = validationRules[name];
-      if (!rules) return null;
-
-      if (rules.required && (!value || (typeof value === "string" && !value.trim()))) {
-        return rules.message;
-      }
-      if (rules.minLength && value.length < rules.minLength) {
-        return `Minimum ${rules.minLength} characters required`;
-      }
-      if (rules.pattern && !rules.pattern.test(value)) {
-        return rules.patternMessage;
-      }
-      if (rules.validate) {
-        return rules.validate(value);
-      }
-      return null;
     },
-    [validationRules],
-  );
-
-  const handleChange = useCallback(
-    (e) => {
-      const { name, value } = e.target;
-      setFormData((prev) => ({ ...prev, [name]: value }));
-
-      if (touched[name]) {
-        const error = validateField(name, value);
-        setErrors((prev) => ({ ...prev, [name]: error }));
-      }
+    endDate: {
+      required: true,
+      message: "Please select an end date",
+      validate: (v) =>
+        formData.startDate && new Date(v) <= new Date(formData.startDate)
+          ? "End date must be after start date"
+          : null,
     },
-    [touched, validateField],
-  );
-
-  const handleBlur = useCallback(
-    (e) => {
-      const { name, value } = e.target;
-      setTouched((prev) => ({ ...prev, [name]: true }));
-      const error = validateField(name, value);
-      setErrors((prev) => ({ ...prev, [name]: error }));
+    name: {
+      required: true, message: "Full name is required", minLength: 3,
+      pattern: /^[a-zA-Z\s'\-]+$/, patternMessage: "Letters only please",
     },
-    [validateField],
-  );
+    email: {
+      required: true, message: "Email is required",
+      pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, patternMessage: "Enter a valid email",
+    },
+    phone: {
+      required: true, message: "Phone number is required",
+      pattern: /^[\d\s+\-()]{8,20}$/, patternMessage: "Enter a valid phone number",
+    },
+    country: { required: true, message: "Please enter your country" },
+  }), [formData.startDate]);
+
+  const validateField = useCallback((name, value) => {
+    const rules = validationRules[name];
+    if (!rules) return null;
+    if (rules.required && (!value || (typeof value === "string" && !value.trim()))) return rules.message;
+    if (rules.minLength && value && value.length < rules.minLength) return `Minimum ${rules.minLength} characters`;
+    if (rules.pattern && value && !rules.pattern.test(value)) return rules.patternMessage;
+    if (rules.validate) return rules.validate(value);
+    return null;
+  }, [validationRules]);
+
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => touched[name] ? { ...prev, [name]: validateField(name, value) } : prev);
+  }, [touched, validateField]);
+
+  const handleBlur = useCallback((e) => {
+    const { name, value } = e.target;
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+  }, [validateField]);
 
   const handleInterestToggle = useCallback((interest) => {
     setFormData((prev) => ({
@@ -274,90 +224,58 @@ export const useBookingWizard = () => {
     }));
   }, []);
 
-  const validateStep = useCallback(
-    (step) => {
-      const stepFields = {
-        1: ["tripType", "destination", "startDate", "endDate"],
-        2: [],
-        3: [],
-        4: ["name", "email", "phone", "country"],
-      };
+  const validateStep = useCallback((step) => {
+    const stepFields = {
+      1: ["tripType", "destination", "startDate", "endDate"],
+      2: [],
+      3: [],
+      4: ["name", "email", "phone", "country"],
+    };
+    const fields = stepFields[step] || [];
+    const newErrors = {}, newTouched = {};
+    let isValid = true;
+    fields.forEach((field) => {
+      newTouched[field] = true;
+      const error = validateField(field, formData[field]);
+      if (error) { newErrors[field] = error; isValid = false; }
+    });
+    setTouched((prev) => ({ ...prev, ...newTouched }));
+    setErrors((prev) => ({ ...prev, ...newErrors }));
+    return isValid;
+  }, [formData, validateField]);
 
-      const fields = stepFields[step] || [];
-      let isValid = true;
-      const newErrors = {};
-      const newTouched = {};
-
-      fields.forEach((field) => {
-        newTouched[field] = true;
-        const error = validateField(field, formData[field]);
-        if (error) {
-          newErrors[field] = error;
-          isValid = false;
-        }
-      });
-
-      setTouched((prev) => ({ ...prev, ...newTouched }));
-      setErrors((prev) => ({ ...prev, ...newErrors }));
-      return isValid;
-    },
-    [formData, validateField],
-  );
-
+  /* ── Helpers ── */
   const getTripDuration = useCallback(() => {
-    if (formData.startDate && formData.endDate) {
-      const start = new Date(formData.startDate);
-      const end = new Date(formData.endDate);
-      const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-      return diff > 0 ? `${diff} ${diff === 1 ? "day" : "days"}` : null;
-    }
-    return null;
+    if (!formData.startDate || !formData.endDate) return null;
+    const diff = Math.ceil(
+      (new Date(formData.endDate) - new Date(formData.startDate)) / 86400000
+    );
+    return diff > 0 ? `${diff} ${diff === 1 ? "day" : "days"}` : null;
   }, [formData.startDate, formData.endDate]);
 
   const getTotalVisitors = useCallback(
-    () => formData.adults + formData.children,
+    () => (formData.adults || 0) + (formData.children || 0),
     [formData.adults, formData.children],
   );
 
   const getDestinationName = useCallback(() => {
-    const destinationKey = String(formData.destination || "").trim();
-    const dest = destinationsList.find(
-      (c) =>
-        String(c.id || "").trim() === destinationKey ||
-        String(c._id || "").trim() === destinationKey ||
-        String(c.slug || "").trim() === destinationKey ||
-        String(c.countryId || "").trim() === destinationKey,
+    const key = String(formData.destination || "").trim();
+    if (!key) return "Not selected";
+    const dest = [...destinationsList, ...countriesList].find(
+      (c) => [c.id, c._id, c.slug, c.countryId].map(String).includes(key)
     );
-    if (dest) return `${dest.flag || "📍"} ${dest.name}`;
-    const country = countriesList.find(
-      (c) =>
-        String(c.id || "").trim() === destinationKey ||
-        String(c.slug || "").trim() === destinationKey ||
-        String(c.countryId || "").trim() === destinationKey,
-    );
-    return country ? `${country.flag || "🏳️"} ${country.name}` : "Not selected";
+    return dest ? `${dest.flag || "📍"} ${dest.name}` : "Not selected";
   }, [formData.destination, destinationsList, countriesList]);
 
+  /* ── Build WhatsApp message ── */
   const buildBookingMessage = useCallback(() => {
-    const tripDuration = getTripDuration() || "Not specified";
-    const totalVisitors = getTotalVisitors();
-    const destinationName = getDestinationName();
-    const accommodationType =
-      accommodationTypes.find((a) => a.id === formData.accommodation)?.name ||
-      "Not specified";
-    const groupTypeName =
-      groupTypes.find((g) => g.id === formData.groupType)?.full_name ||
-      "Not specified";
-    const interestsList =
-      formData.interests.length > 0
-        ? formData.interests.join(", ")
-        : "None selected";
+    const accommodationName = accommodationTypes.find((a) => a.id === formData.accommodation)?.name || "Not specified";
+    const groupTypeName = groupTypes.find((g) => g.id === formData.groupType)?.full_name || "Not specified";
+    const interestsList = formData.interests.length > 0 ? formData.interests.join(", ") : "None selected";
 
-    return `🌍 *NEW BOOKING REQUEST - ALTUVERA TOURS*
+    return `🌍 *NEW BOOKING REQUEST — ALTUVERA TOURS*
 
 Hello ${ADMIN_CONTACT.name}! 👋
-
-You have received a new booking inquiry:
 
 📋 *TRAVELER INFORMATION*
 ━━━━━━━━━━━━━━━━━━━━━━
@@ -369,203 +287,120 @@ You have received a new booking inquiry:
 ✈️ *TRIP DETAILS*
 ━━━━━━━━━━━━━━━━━━━━━━
 • *Trip Type:* ${formData.tripType || "Not specified"}
-• *Destination:* ${destinationName}
-• *Travel Dates:* ${formatDate(formData.startDate)} to ${formatDate(formData.endDate)}
-• *Duration:* ${tripDuration}
+• *Destination:* ${getDestinationName()}
+• *Dates:* ${formatDate(formData.startDate)} → ${formatDate(formData.endDate)}
+• *Duration:* ${getTripDuration() || "Not specified"}
 
 👥 *GROUP INFORMATION*
 ━━━━━━━━━━━━━━━━━━━━━━
 • *Group Type:* ${groupTypeName}
 • *Adults:* ${formData.adults}
 • *Children:* ${formData.children}
-• *Total Travelers:* ${totalVisitors}
+• *Total:* ${getTotalVisitors()} travelers
 
 ⭐ *PREFERENCES*
 ━━━━━━━━━━━━━━━━━━━━━━
-• *Accommodation Style:* ${accommodationType}
+• *Accommodation:* ${accommodationName}
 • *Interests:* ${interestsList}
-• *Budget/Person:* ${formData.budgetPerPerson ? `${formData.currency} ${formData.budgetPerPerson}` : "Not specified"}
 • *Preferred Contact:* ${formData.preferredContactMethod || "Not specified"}
-• *Best Contact Time:* ${formData.preferredContactTime || "Not specified"}
-• *Pickup Location:* ${formData.pickupLocation || "Not specified"}
+• *Best Time:* ${formData.preferredContactTime || "Not specified"}
+• *Pickup:* ${formData.pickupLocation || "Not specified"}
 • *Found Us Via:* ${formData.marketingSource || "Not specified"}
 
 💬 *SPECIAL REQUESTS*
 ━━━━━━━━━━━━━━━━━━━━━━
 ${formData.specialRequests || "No special requests"}
 
-━━━━━━━━━━━━━━━━━━━━━━
-📅 *Submitted:* ${new Date().toLocaleString()}
-
-Please provide a personalized quote and itinerary. Thank you!`;
-  }, [
-    formData,
-    getTripDuration,
-    getTotalVisitors,
-    getDestinationName,
-    accommodationTypes,
-    groupTypes,
-  ]);
+📅 *Submitted:* ${new Date().toLocaleString()}`;
+  }, [formData, getTripDuration, getTotalVisitors, getDestinationName, accommodationTypes, groupTypes]);
 
   const sendWhatsAppMessage = useCallback(() => {
     window.open(getWhatsAppLink(buildBookingMessage()), "_blank");
   }, [buildBookingMessage]);
 
-  const saveBookingLocally = (booking) => {
+  const saveBookingLocally = useCallback((booking) => {
     try {
-      const raw = localStorage.getItem("altuvera_bookings");
-      const existing = raw ? JSON.parse(raw) : [];
-      const list = Array.isArray(existing) ? existing : [];
+      const existing = JSON.parse(localStorage.getItem("altuvera_bookings") || "[]");
       localStorage.setItem(
         "altuvera_bookings",
-        JSON.stringify([booking, ...list].slice(0, 50)),
+        JSON.stringify([booking, ...(Array.isArray(existing) ? existing : [])].slice(0, 50))
       );
-    } catch {
-      // ignore
+    } catch { /* ignore */ }
+  }, []);
+
+  /* ── Submit ── */
+  const handleSubmit = useCallback(async (e) => {
+    if (e?.preventDefault) e.preventDefault();
+    if (!validateStep(4)) return;
+
+    setIsSubmitting(true);
+    const payload = {
+      ...formData,
+      userId: user?.id || user?.userId || null,
+      userName: user?.fullName || user?.name || formData.name,
+      userEmail: user?.email || formData.email,
+      userPhone: user?.phone || formData.phone,
+      tripDuration: getTripDuration(),
+      totalTravelers: getTotalVisitors(),
+      destinationName: getDestinationName(),
+      message: buildBookingMessage(),
+      status: "Pending",
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      await sendMessage({ type: "booking", data: payload });
+    } catch (err) {
+      console.error("Booking submission error:", err);
+    } finally {
+      saveBookingLocally(payload);
+      setIsSubmitting(false);
+      setIsSubmitted(true);
+      setTimeout(() => sendWhatsAppMessage(), 2500);
     }
-  };
+  }, [
+    validateStep, formData, user,
+    getTripDuration, getTotalVisitors, getDestinationName,
+    buildBookingMessage, sendWhatsAppMessage, saveBookingLocally,
+  ]);
 
-  const handleSubmit = useCallback(
-    async (e) => {
-      e.preventDefault();
-      if (!validateStep(4)) return;
-
-      setIsSubmitting(true);
-
-      const bookingPayload = {
-        ...formData,
-        userId: user?.id || user?.userId || null,
-        userName: user?.fullName || user?.name || formData.name,
-        userEmail: user?.email || formData.email,
-        userPhone: user?.phone || formData.phone,
-        tripDuration: getTripDuration(),
-        totalTravelers: getTotalVisitors(),
-        destinationName: getDestinationName(),
-        message: buildBookingMessage(),
-        status: "Pending",
-        createdAt: new Date().toISOString(),
-      };
-
-      try {
-        const result = await sendMessage({
-          type: "booking",
-          data: bookingPayload,
-        });
-
-        saveBookingLocally(bookingPayload);
-
-        if (result?.success) {
-          // Show success animation before redirecting
-          setIsSubmitted(true);
-          // Delay WhatsApp redirect to allow confetti animation
-          setTimeout(() => {
-            sendWhatsAppMessage();
-          }, 3000);
-        } else {
-          // Still show success even if backend fails, but redirect immediately
-          setIsSubmitted(true);
-          setTimeout(() => {
-            sendWhatsAppMessage();
-          }, 1500);
-        }
-      } catch (err) {
-        console.error("Booking submission error:", err);
-        saveBookingLocally(bookingPayload);
-        // Show success animation even on error, then redirect
-        setIsSubmitted(true);
-        setTimeout(() => {
-          sendWhatsAppMessage();
-        }, 1500);
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    [
-      validateStep,
-      formData,
-      getTripDuration,
-      getTotalVisitors,
-      getDestinationName,
-      sendWhatsAppMessage,
-    ],
-  );
-
+  /* ── Navigation ── */
   const nextStep = useCallback(() => {
-    if (validateStep(currentStep)) {
-      setIsAnimating(true);
-      setTimeout(() => {
-        setCurrentStep((prev) => Math.min(prev + 1, 4));
-        setIsAnimating(false);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      }, 250);
-    }
+    if (!validateStep(currentStep)) return;
+    setIsAnimating(true);
+    setTimeout(() => {
+      setCurrentStep((s) => Math.min(s + 1, 4));
+      setIsAnimating(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 220);
   }, [currentStep, validateStep]);
 
   const prevStep = useCallback(() => {
     setIsAnimating(true);
     setTimeout(() => {
-      setCurrentStep((prev) => Math.max(prev - 1, 1));
+      setCurrentStep((s) => Math.max(s - 1, 1));
       setIsAnimating(false);
       window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 250);
+    }, 220);
   }, []);
 
-  const handleStepClick = useCallback(
-    (stepNumber) => {
-      if (stepNumber < currentStep) {
-        setIsAnimating(true);
-        setTimeout(() => {
-          setCurrentStep(stepNumber);
-          setIsAnimating(false);
-        }, 250);
-      }
-    },
-    [currentStep],
-  );
+  const handleStepClick = useCallback((stepNumber) => {
+    if (stepNumber >= currentStep) return;
+    setIsAnimating(true);
+    setTimeout(() => {
+      setCurrentStep(stepNumber);
+      setIsAnimating(false);
+    }, 220);
+  }, [currentStep]);
 
   return {
-    // State
-    currentStep,
-    isAnimating,
-    isSubmitting,
-    isSubmitted,
-    loadingData,
-    isAuthenticated,
-
-    // Data
-    formData,
-    setFormData,
-    displayName,
-    user,
-    openModal,
-
-    // Lists
-    countriesList,
-    categoriesList,
-    destinationsList,
-    servicesData,
-    groupTypes,
-    accommodationTypes,
-    interests,
-
-    // Helpers
-    errors,
-    touched,
-    handleChange,
-    handleBlur,
-    handleInterestToggle,
-    validateStep,
-    getTripDuration,
-    getTotalVisitors,
-    getDestinationName,
-
-    // Actions
-    nextStep,
-    prevStep,
-    handleStepClick,
-    handleSubmit,
-
-    // Constants
+    currentStep, isAnimating, isSubmitting, isSubmitted, loadingData, isAuthenticated,
+    formData, setFormData, displayName, user, openModal,
+    countriesList, categoriesList, destinationsList, servicesData,
+    groupTypes, accommodationTypes, interests,
+    errors, touched, handleChange, handleBlur, handleInterestToggle,
+    validateStep, getTripDuration, getTotalVisitors, getDestinationName,
+    nextStep, prevStep, handleStepClick, handleSubmit,
     STEPS,
   };
 };

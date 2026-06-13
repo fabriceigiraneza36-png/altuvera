@@ -1,3 +1,4 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap");
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════
@@ -45,6 +46,10 @@
   --shadow-lg: 0 24px 56px rgba(2, 44, 34, 0.15);
   --shadow-xl: 0 40px 80px rgba(2, 44, 34, 0.18);
 
+  /* Typography scale */
+  --font-heading: "Playfair Display", Georgia, serif;
+  --font-body: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+
   /* Keep legacy aliases so existing components don't break */
   --ui-primary: var(--clr-primary);
   --ui-primary-2: var(--clr-primary-2);
@@ -73,17 +78,27 @@ html {
 }
 
 body {
-  font-family:
-    "Poppins",
-    system-ui,
-    -apple-system,
-    sans-serif;
+  font-family: var(--font-body);
   background-color: var(--clr-surface);
   color: var(--clr-ink);
   line-height: 1.6;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.text-hero,
+.text-heading,
+.page-title,
+.section-title,
+.hero-title {
+  font-family: var(--font-heading);
 }
 
 ::selection {

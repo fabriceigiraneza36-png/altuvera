@@ -1,29 +1,19 @@
 // src/pages/Contact.jsx
 import React, {
-  useState,
-  useRef,
-  useEffect,
-  useCallback,
-  useMemo,
+  useState, useRef, useEffect, useCallback, useMemo,
 } from "react";
 import {
-  motion,
-  AnimatePresence,
-  useInView,
-  useScroll,
-  useTransform,
+  motion, AnimatePresence, useInView, useScroll, useTransform,
 } from "framer-motion";
 import {
-  FiMail, FiPhone, FiMapPin, FiClock, FiSend,
-  FiMessageSquare, FiCheckCircle, FiUser, FiAlertCircle,
-  FiChevronDown, FiCalendar, FiUsers, FiGlobe, FiStar,
-  FiArrowRight, FiArrowLeft, FiMessageCircle, FiHelpCircle,
-  FiShield, FiHeadphones, FiX, FiExternalLink, FiAward,
-  FiZap, FiLogIn, FiUserCheck,
+  FiMail, FiPhone, FiMapPin, FiClock, FiSend, FiMessageSquare,
+  FiCheckCircle, FiUser, FiAlertCircle, FiChevronDown, FiUsers,
+  FiGlobe, FiStar, FiArrowRight, FiArrowLeft, FiHelpCircle,
+  FiShield, FiX, FiExternalLink, FiAward, FiZap, FiUserCheck,
+  FiMessageCircle,
 } from "react-icons/fi";
 import {
-  FaFacebookF, FaInstagram, FaTwitter,
-  FaYoutube, FaWhatsapp, FaTiktok,
+  FaFacebookF, FaInstagram, FaTwitter, FaYoutube, FaWhatsapp, FaTiktok,
 } from "react-icons/fa";
 import { HiSparkles } from "react-icons/hi";
 import { BiSupport } from "react-icons/bi";
@@ -36,7 +26,6 @@ import { useChatSocket } from "../hooks/useChatSocket";
 import { apiFetch } from "../utils/apiBase";
 import VerificationModal from "../components/common/VerificationModal";
 import { useUserAuth } from "../context/UserAuthContext";
-import SubscriptionForm from "../components/common/SubscriptionForm";
 
 /* ══════════════════════════════════════════════════════
    BRAND TOKENS
@@ -45,7 +34,6 @@ const G = {
   900: "#064e3b", 800: "#065f46", 700: "#047857",
   600: "#059669", 500: "#10b981", 400: "#34d399",
   300: "#6ee7b7", 200: "#a7f3d0", 100: "#d1fae5", 50: "#ecfdf5",
-  glow: "rgba(5,150,105,0.32)",
 };
 
 const EASE = {
@@ -61,11 +49,7 @@ const RULES = {
   name: {
     required: true, minLength: 2,
     pattern: /^[a-zA-Z\s'\-]+$/,
-    msg: {
-      required: "Full name is required",
-      minLength: "At least 2 characters",
-      pattern: "Letters only",
-    },
+    msg: { required: "Full name is required", minLength: "At least 2 characters", pattern: "Letters only" },
   },
   email: {
     required: true,
@@ -97,14 +81,13 @@ const validateField = (name, value) => {
 
 const STEP_FIELDS = [
   ["name", "email", "phone"],
-  ["tripType", "travelDate", "travelers"],
   ["subject", "message"],
 ];
 
 const INIT_FORM = {
   name: "", email: "", phone: "",
-  subject: "", message: "",
   tripType: "", travelDate: "", travelers: "",
+  subject: "", message: "",
 };
 
 /* ══════════════════════════════════════════════════════
@@ -114,14 +97,29 @@ const TRUST_STATS = [
   { icon: FiUsers, value: "5,000+", label: "Happy Travelers" },
   { icon: FiStar, value: "4.9/5", label: "Average Rating" },
   { icon: FiAward, value: "12+", label: "Years Experience" },
-  { icon: FiZap, value: "<2hrs", label: "Avg Response Time" },
+  { icon: FiZap, value: "<2hrs", label: "Response Time" },
 ];
 
 const CONTACT_CARDS = [
-  { icon: FiMapPin, title: "Visit Our Office", lines: ["Musanze, Rwanda"], href: "https://maps.google.com/?q=Musanze+Rwanda" },
-  { icon: FiPhone, title: "Call Us", lines: ["+250 792352409"], href: "tel:+250792352409" },
-  { icon: FiMail, title: "Email Us", lines: ["altuverasafari@gmail.com", "fabriceigiraneza36@gmail.com"], href: "mailto:altuverasafari@gmail.com" },
-  { icon: FiClock, title: "Working Hours", lines: ["Mon – Fri: 8 AM – 6 PM EAT", "Sat: 9 AM – 2 PM EAT"] },
+  {
+    icon: FiMapPin, title: "Visit Us",
+    lines: ["Musanze, Rwanda"],
+    href: "https://maps.google.com/?q=Musanze+Rwanda",
+  },
+  {
+    icon: FiPhone, title: "Call Us",
+    lines: ["+250 792 352 409"],
+    href: "tel:+250792352409",
+  },
+  {
+    icon: FiMail, title: "Email Us",
+    lines: ["altuverasafari@gmail.com"],
+    href: "mailto:altuverasafari@gmail.com",
+  },
+  {
+    icon: FiClock, title: "Working Hours",
+    lines: ["Mon–Fri: 8 AM – 6 PM EAT", "Sat: 9 AM – 2 PM EAT"],
+  },
 ];
 
 const TRIP_TYPES = [
@@ -130,155 +128,52 @@ const TRIP_TYPES = [
   "💕 Honeymoon", "👨‍👩‍👧‍👦 Family Trip",
 ];
 
-const TRAVELER_OPTIONS = [
-  "1 — Solo", "2 — Couple / Duo", "3–4 — Small Group",
-  "5–8 — Group", "9+ — Large Group",
-];
-
 const SOCIALS = [
-  { icon: FaFacebookF, label: "Facebook", url: "#" },
-  { icon: FaInstagram, label: "Instagram", url: "#" },
-  { icon: FaTwitter, label: "Twitter", url: "#" },
-  { icon: FaYoutube, label: "YouTube", url: "#" },
-  { icon: FaWhatsapp, label: "WhatsApp", url: "#" },
-  { icon: FaTiktok, label: "TikTok", url: "#" },
+  { icon: FaFacebookF, label: "Facebook", url: "#", color: "#1877F2" },
+  { icon: FaInstagram, label: "Instagram", url: "#", color: "#E1306C" },
+  { icon: FaTwitter, label: "Twitter", url: "#", color: "#1DA1F2" },
+  { icon: FaYoutube, label: "YouTube", url: "#", color: "#FF0000" },
+  { icon: FaWhatsapp, label: "WhatsApp", url: "https://wa.me/250792352409", color: "#25D366" },
+  { icon: FaTiktok, label: "TikTok", url: "#", color: "#000" },
 ];
 
 const QUICK_CHANNELS = [
-  { icon: FaWhatsapp, title: "WhatsApp", subtitle: "Chat instantly", detail: "+250 792352409", href: "https://wa.me/250792352409", color: "#25D366" },
-  { icon: FiPhone, title: "Call Us", subtitle: "Speak with an expert", detail: "+250 792352409", href: "tel:+250792352409", color: G[700] },
-  { icon: FiMail, title: "Email", subtitle: "Detailed inquiries", detail: "altuverasafari@gmail.com", href: "mailto:altuverasafari@gmail.com", color: "#3B82F6" },
+  {
+    icon: FaWhatsapp, title: "WhatsApp", subtitle: "Instant chat",
+    detail: "+250 792 352 409", href: "https://wa.me/250792352409", color: "#25D366",
+  },
+  {
+    icon: FiPhone, title: "Call Us", subtitle: "Speak to an expert",
+    detail: "+250 792 352 409", href: "tel:+250792352409", color: G[700],
+  },
+  {
+    icon: FiMail, title: "Email", subtitle: "Detailed inquiries",
+    detail: "altuverasafari@gmail.com", href: "mailto:altuverasafari@gmail.com", color: "#3B82F6",
+  },
 ];
 
 const STEP_CONFIG = [
-  { label: "Personal Info", icon: FiUser, description: "Tell us about yourself" },
-  { label: "Trip Details", icon: FiGlobe, description: "Describe your dream trip" },
-  { label: "Your Message", icon: FiMessageSquare, description: "Share your thoughts" },
+  { label: "Your Info", icon: FiUser, desc: "Tell us about yourself" },
+  { label: "Message", icon: FiMessageSquare, desc: "What's on your mind?" },
 ];
-
-/* ══════════════════════════════════════════════════════
-   AUTO-FILL BANNER COMPONENT
-══════════════════════════════════════════════════════ */
-const AutoFillBanner = ({ user, onDismiss }) => (
-  <motion.div
-    initial={{ opacity: 0, y: -12, scale: 0.97 }}
-    animate={{ opacity: 1, y: 0, scale: 1 }}
-    exit={{ opacity: 0, y: -12, scale: 0.97 }}
-    transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
-    style={{
-      display: "flex",
-      alignItems: "center",
-      gap: 12,
-      padding: "12px 16px",
-      marginBottom: 20,
-      background: "linear-gradient(135deg, #ecfdf5, #d1fae5)",
-      border: "1px solid #a7f3d0",
-      borderRadius: 14,
-      position: "relative",
-      overflow: "hidden",
-    }}
-  >
-    <div style={{
-      position: "absolute", top: 0, left: 0, bottom: 0, width: 4,
-      background: "linear-gradient(180deg, #065f46, #10b981)",
-      borderRadius: "14px 0 0 14px",
-    }} />
-
-    <div style={{
-      width: 36, height: 36, borderRadius: "50%",
-      background: "linear-gradient(135deg, #065f46, #047857)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      flexShrink: 0, boxShadow: "0 4px 12px rgba(6,78,59,0.25)",
-    }}>
-      {user?.avatar || user?.avatarUrl ? (
-        <img
-          src={user.avatar || user.avatarUrl}
-          alt={user.fullName || user.name}
-          style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
-        />
-      ) : (
-        <FiUserCheck size={17} color="#fff" />
-      )}
-    </div>
-
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <div style={{ fontSize: 13, fontWeight: 700, color: "#064e3b", lineHeight: 1.3 }}>
-        Welcome back, {user?.fullName || user?.name || "there"}! 👋
-      </div>
-      <div style={{ fontSize: 11.5, color: "#065f46", opacity: 0.8, marginTop: 2 }}>
-        Your details have been auto-filled — just review and send.
-      </div>
-    </div>
-
-    <button
-      onClick={onDismiss}
-      style={{
-        background: "none", border: "none", cursor: "pointer",
-        color: "#065f46", opacity: 0.6, padding: 4,
-        display: "flex", alignItems: "center",
-        transition: "opacity 0.2s",
-        flexShrink: 0,
-      }}
-      onMouseOver={e => (e.currentTarget.style.opacity = "1")}
-      onMouseOut={e => (e.currentTarget.style.opacity = "0.6")}
-      aria-label="Dismiss"
-    >
-      <FiX size={15} />
-    </button>
-  </motion.div>
-);
-
-/* ══════════════════════════════════════════════════════
-   FIELD LOCK INDICATOR
-══════════════════════════════════════════════════════ */
-const FieldLockBadge = () => (
-  <motion.span
-    initial={{ opacity: 0, scale: 0.7 }}
-    animate={{ opacity: 1, scale: 1 }}
-    exit={{ opacity: 0, scale: 0.7 }}
-    transition={{ duration: 0.25 }}
-    style={{
-      display: "inline-flex",
-      alignItems: "center",
-      gap: 3,
-      padding: "2px 7px",
-      borderRadius: 999,
-      backgroundColor: "#d1fae5",
-      border: "1px solid #a7f3d0",
-      color: "#065f46",
-      fontSize: 10,
-      fontWeight: 700,
-      letterSpacing: "0.3px",
-      marginLeft: 6,
-      verticalAlign: "middle",
-    }}
-  >
-    <FiUserCheck size={9} /> Auto-filled
-  </motion.span>
-);
 
 /* ══════════════════════════════════════════════════════
    SCROLL REVEAL
 ══════════════════════════════════════════════════════ */
-const ScrollReveal = ({
-  children, delay = 0, direction = "up",
-  distance = 36, style = {}, className = "",
-}) => {
+const ScrollReveal = ({ children, delay = 0, direction = "up", distance = 32, style = {}, className = "" }) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
   const dirs = {
     up: { y: distance }, down: { y: -distance },
     left: { x: -distance }, right: { x: distance },
-    scale: { scale: 0.92 },
+    scale: { scale: 0.94 },
   };
   return (
     <motion.div
-      ref={ref}
-      className={className}
-      style={style}
+      ref={ref} className={className} style={style}
       initial={{ opacity: 0, ...dirs[direction] }}
       animate={inView ? { opacity: 1, x: 0, y: 0, scale: 1 } : {}}
-      transition={{ duration: 0.65, delay, ease: EASE.smooth }}
+      transition={{ duration: 0.6, delay, ease: EASE.smooth }}
     >
       {children}
     </motion.div>
@@ -286,96 +181,76 @@ const ScrollReveal = ({
 };
 
 /* ══════════════════════════════════════════════════════
-   FIELD — INPUT
+   FIELD INPUT
 ══════════════════════════════════════════════════════ */
 const FieldInput = React.memo(({
   name, label, icon: Icon, type = "text", placeholder,
-  required, value, onChange, onBlur, error, touched, full,
-  autoFilled = false,
+  required, value, onChange, onBlur, error, touched, autoFilled = false,
 }) => {
   const [focused, setFocused] = useState(false);
   const hasErr = touched && error;
   const isOk = touched && !error && value;
 
   return (
-    <div className={`ct-field${full ? " ct-field--full" : ""}`}>
-      <label
-        className="ct-label"
-        style={{ color: hasErr ? "#ef4444" : focused ? G[700] : undefined }}
-      >
-        {Icon && <Icon size={13} style={{ opacity: 0.7 }} />}
+    <div className="cf-field">
+      <label className="cf-label" style={{ color: hasErr ? "#ef4444" : focused ? G[700] : undefined }}>
+        {Icon && <Icon size={13} />}
         {label}
-        {required && <span className="ct-req">*</span>}
-        <AnimatePresence>
-          {autoFilled && <FieldLockBadge key="badge" />}
-        </AnimatePresence>
+        {required && <span className="cf-req">*</span>}
+        {autoFilled && (
+          <span className="cf-autobadge"><FiUserCheck size={9} /> Auto-filled</span>
+        )}
       </label>
-      <div className={`ct-wrap-f${focused ? " focused" : ""}${autoFilled ? " autofilled" : ""}`}>
+      <div className={`cf-input-wrap${focused ? " is-focused" : ""}${hasErr ? " is-error" : isOk ? " is-ok" : ""}${autoFilled ? " is-auto" : ""}`}>
         {type === "email" ? (
           <EmailAutocompleteInput
-            name={name}
-            value={value}
+            name={name} value={value} placeholder={placeholder}
             onValueChange={v => onChange?.({ target: { name, value: v } })}
-            placeholder={placeholder}
             onFocus={() => setFocused(true)}
             onBlur={e => { setFocused(false); onBlur?.(e); }}
-            className={`ct-input${hasErr ? " err" : isOk ? " ok" : ""}${autoFilled ? " autofill-glow" : ""}`}
+            className="cf-input"
             aria-invalid={!!hasErr}
-            aria-describedby={hasErr ? `${name}-err` : undefined}
           />
         ) : (
           <input
-            type={type}
-            name={name}
-            value={value}
-            placeholder={placeholder}
+            type={type} name={name} value={value} placeholder={placeholder}
             onChange={onChange}
             onFocus={() => setFocused(true)}
             onBlur={e => { setFocused(false); onBlur?.(e); }}
-            className={`ct-input${hasErr ? " err" : isOk ? " ok" : ""}${autoFilled ? " autofill-glow" : ""}`}
+            className="cf-input"
             aria-invalid={!!hasErr}
             aria-describedby={hasErr ? `${name}-err` : undefined}
           />
         )}
-        <div className="ct-uline" />
         <AnimatePresence mode="wait">
           {hasErr && (
-            <motion.span className="ct-status" key="err"
-              initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0 }} transition={{ duration: 0.25, ease: EASE.bounce }}
-            >
-              <FiAlertCircle size={17} color="#ef4444" />
+            <motion.span key="err" className="cf-icon-right"
+              initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+              <FiAlertCircle size={16} color="#ef4444" />
             </motion.span>
           )}
           {isOk && !autoFilled && (
-            <motion.span className="ct-status" key="ok"
-              initial={{ scale: 0, rotate: -90 }} animate={{ scale: 1, rotate: 0 }}
-              exit={{ scale: 0 }} transition={{ duration: 0.25, ease: EASE.bounce }}
-            >
-              <FiCheckCircle size={17} color={G[700]} />
+            <motion.span key="ok" className="cf-icon-right"
+              initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+              <FiCheckCircle size={16} color={G[600]} />
             </motion.span>
           )}
           {autoFilled && (
-            <motion.span className="ct-status" key="autofill"
-              initial={{ scale: 0 }} animate={{ scale: 1 }}
-              exit={{ scale: 0 }} transition={{ duration: 0.25 }}
-            >
-              <FiUserCheck size={17} color={G[600]} />
+            <motion.span key="auto" className="cf-icon-right"
+              initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
+              <FiUserCheck size={16} color={G[600]} />
             </motion.span>
           )}
         </AnimatePresence>
       </div>
       <AnimatePresence>
         {hasErr && (
-          <motion.div
-            id={`${name}-err`} className="ct-field-err" role="alert"
-            initial={{ opacity: 0, height: 0, y: -4 }}
-            animate={{ opacity: 1, height: "auto", y: 0 }}
-            exit={{ opacity: 0, height: 0, y: -4 }}
-            transition={{ duration: 0.25 }}
-          >
-            <FiAlertCircle size={12} /> {error}
-          </motion.div>
+          <motion.p id={`${name}-err`} className="cf-err-msg" role="alert"
+            initial={{ opacity: 0, y: -4, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: "auto" }}
+            exit={{ opacity: 0, y: -4, height: 0 }}>
+            <FiAlertCircle size={11} /> {error}
+          </motion.p>
         )}
       </AnimatePresence>
     </div>
@@ -384,24 +259,24 @@ const FieldInput = React.memo(({
 FieldInput.displayName = "FieldInput";
 
 /* ══════════════════════════════════════════════════════
-   FIELD — SELECT
+   FIELD SELECT
 ══════════════════════════════════════════════════════ */
 const FieldSelect = React.memo(({
   name, label, icon: Icon, placeholder, options,
-  value, onChange, onBlur, full,
+  value, onChange, onBlur,
 }) => {
   const [focused, setFocused] = useState(false);
   return (
-    <div className={`ct-field${full ? " ct-field--full" : ""}`}>
-      <label className="ct-label" style={{ color: focused ? G[700] : undefined }}>
-        {Icon && <Icon size={13} style={{ opacity: 0.7 }} />} {label}
+    <div className="cf-field">
+      <label className="cf-label" style={{ color: focused ? G[700] : undefined }}>
+        {Icon && <Icon size={13} />} {label}
       </label>
-      <div className={`ct-wrap-f${focused ? " focused" : ""}`}>
+      <div className={`cf-input-wrap cf-select-wrap${focused ? " is-focused" : ""}`}>
         <select
           name={name} value={value} onChange={onChange}
           onFocus={() => setFocused(true)}
           onBlur={e => { setFocused(false); onBlur?.(e); }}
-          className="ct-select"
+          className="cf-select"
         >
           <option value="">{placeholder}</option>
           {options.map((o, i) => (
@@ -410,9 +285,8 @@ const FieldSelect = React.memo(({
             </option>
           ))}
         </select>
-        <div className="ct-uline" />
-        <span className="ct-sel-arr" style={{ color: focused ? G[700] : "#94a3b8" }}>
-          <FiChevronDown size={18} />
+        <span className="cf-sel-icon" style={{ color: focused ? G[700] : "#94a3b8" }}>
+          <FiChevronDown size={17} />
         </span>
       </div>
     </div>
@@ -421,62 +295,53 @@ const FieldSelect = React.memo(({
 FieldSelect.displayName = "FieldSelect";
 
 /* ══════════════════════════════════════════════════════
-   FIELD — TEXTAREA
+   FIELD TEXTAREA
 ══════════════════════════════════════════════════════ */
 const FieldTextarea = React.memo(({
   name, label, placeholder, required, maxLength = 2000,
-  value, onChange, onBlur, error, touched, full,
+  value, onChange, onBlur, error, touched,
 }) => {
   const [focused, setFocused] = useState(false);
   const hasErr = touched && error;
   const isOk = touched && !error && value;
   const chars = value?.length || 0;
   const pct = (chars / maxLength) * 100;
-  const pctColor = pct > 90 ? "#ef4444" : pct > 70 ? "#f59e0b" : G[700];
+  const barColor = pct > 90 ? "#ef4444" : pct > 70 ? "#f59e0b" : G[600];
 
   return (
-    <div className={`ct-field${full ? " ct-field--full" : ""}`}>
-      <label
-        className="ct-label"
-        style={{ color: hasErr ? "#ef4444" : focused ? G[700] : undefined }}
-      >
-        <FiMessageSquare size={13} style={{ opacity: 0.7 }} /> {label}
-        {required && <span className="ct-req">*</span>}
+    <div className="cf-field cf-field--full">
+      <label className="cf-label" style={{ color: hasErr ? "#ef4444" : focused ? G[700] : undefined }}>
+        <FiMessageSquare size={13} /> {label}
+        {required && <span className="cf-req">*</span>}
       </label>
-      <div className={`ct-wrap-f${focused ? " focused" : ""}`}>
+      <div className={`cf-input-wrap cf-ta-wrap${focused ? " is-focused" : ""}${hasErr ? " is-error" : isOk ? " is-ok" : ""}`}>
         <textarea
           name={name} value={value} placeholder={placeholder}
           maxLength={maxLength} onChange={onChange}
           onFocus={() => setFocused(true)}
           onBlur={e => { setFocused(false); onBlur?.(e); }}
-          className={`ct-textarea${hasErr ? " err" : isOk ? " ok" : ""}`}
+          className="cf-textarea"
           aria-invalid={!!hasErr}
           aria-describedby={hasErr ? `${name}-err` : undefined}
         />
-        <div className="ct-uline" />
-        <div className="ct-char">
-          <div className="ct-char-track">
-            <motion.div
-              className="ct-char-fill"
-              animate={{ width: `${pct}%`, backgroundColor: pctColor }}
-              transition={{ duration: 0.3 }}
-            />
+        <div className="cf-char-row">
+          <div className="cf-char-track">
+            <motion.div className="cf-char-fill"
+              animate={{ width: `${pct}%`, background: barColor }}
+              transition={{ duration: 0.3 }} />
           </div>
-          <span className="ct-char-num" style={{ color: pct > 90 ? "#ef4444" : "#94a3b8" }}>
+          <span className="cf-char-cnt" style={{ color: pct > 90 ? "#ef4444" : "#94a3b8" }}>
             {chars}/{maxLength}
           </span>
         </div>
       </div>
       <AnimatePresence>
         {hasErr && (
-          <motion.div
-            id={`${name}-err`} className="ct-field-err" role="alert"
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-          >
-            <FiAlertCircle size={12} /> {error}
-          </motion.div>
+          <motion.p id={`${name}-err`} className="cf-err-msg" role="alert"
+            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}>
+            <FiAlertCircle size={11} /> {error}
+          </motion.p>
         )}
       </AnimatePresence>
     </div>
@@ -488,154 +353,115 @@ FieldTextarea.displayName = "FieldTextarea";
    MAIN COMPONENT
 ══════════════════════════════════════════════════════ */
 const Contact = () => {
-  /* ── Auth ── */
   const { user, isAuthenticated } = useUserAuth();
 
-  /* ── Track auto-filled fields ── */
+  /* ── Auto-fill tracking ── */
   const [autoFilledFields, setAutoFilledFields] = useState(new Set());
-  const [showAutoFillBanner, setShowAutoFillBanner] = useState(false);
-  const autoFillApplied = useRef(false);
+  const [showBanner, setShowBanner] = useState(false);
+  const autoFillDone = useRef(false);
 
   /* ── Form state ── */
   const [form, setForm] = useState(INIT_FORM);
   const [touched, setTouched] = useState({});
   const [errors, setErrors] = useState({});
-  const [submitting, setSubmitting] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [progress, setProgress] = useState(0);
   const [step, setStep] = useState(0);
   const [direction, setDirection] = useState(1);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitProgress, setSubmitProgress] = useState(0);
+  const [submitted, setSubmitted] = useState(false);
 
-  /* ── UI state ── */
-  const [openFaqId, setOpenFaqId] = useState(null);
+  /* ── Verification ── */
+  const [verOpen, setVerOpen] = useState(false);
+  const [verId, setVerId] = useState(null);
+  const [verErr, setVerErr] = useState("");
+  const [verLoading, setVerLoading] = useState(false);
+
+  /* ── FAQ ── */
   const [faqs, setFaqs] = useState([]);
   const [faqsLoading, setFaqsLoading] = useState(true);
   const [faqsError, setFaqsError] = useState("");
+  const [openFaqId, setOpenFaqId] = useState(null);
+
+  /* ── Chat ── */
   const [chatOpen, setChatOpen] = useState(false);
-  const [chatMin, setChatMin] = useState(false);
   const [chatInput, setChatInput] = useState("");
   const [chatSending, setChatSending] = useState(false);
-  const [chatError, setChatError] = useState("");
-
-  /* ── Verification state ── */
-  const [verModalOpen, setVerModalOpen] = useState(false);
-  const [verId, setVerId] = useState(null);
-  const [verError, setVerError] = useState("");
-  const [verLoading, setVerLoading] = useState(false);
+  const [chatErr, setChatErr] = useState("");
 
   /* ── Refs ── */
   const heroRef = useRef(null);
-  const chatRef = useRef(null);
+  const chatBodyRef = useRef(null);
+
+  /* ── Parallax ── */
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
   /* ── Chat socket ── */
   const {
     connected: chatConnected,
     connect: connectChat,
     registerChat,
-    sendMessage: sendChatMessage,
+    sendMessage: sendChatMsg,
     messages: chatMessages,
-    error: chatSocketError,
   } = useChatSocket();
 
-  /* ── Parallax ── */
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"],
-  });
-  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "28%"]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.75], [1, 0]);
-
-  /* ══════════════════════════════════════════════════
-     FETCH FAQS
-  ══════════════════════════════════════════════════ */
-  const fetchFaqs = useCallback(async (signal) => {
-    setFaqsLoading(true);
-    setFaqsError("");
-    try {
-      const res = await apiFetch("/faqs", { signal });
-      if (!res.ok) throw new Error(`Server error ${res.status}`);
-      const json = await res.json();
-      const data = json?.data || [];
-      const mapped = data.map(f => ({
-        id: f.id,
-        q: f.question,
-        a: f.answer,
-        category: f.category,
-      }));
-      setFaqs(mapped);
-    } catch (err) {
-      if (err?.name !== "AbortError") {
-        setFaqsError(err?.message || "Failed to load FAQs");
-        setFaqs([]);
-      }
-    } finally {
-      setFaqsLoading(false);
-    }
-  }, []);
-
+  /* ═══════════════════════════════
+     FETCH FAQs
+  ═══════════════════════════════ */
   useEffect(() => {
     const ac = new AbortController();
-    fetchFaqs(ac.signal);
+    (async () => {
+      setFaqsLoading(true);
+      try {
+        const res = await apiFetch("/faqs", { signal: ac.signal });
+        if (!res.ok) throw new Error(`Server error ${res.status}`);
+        const json = await res.json();
+        setFaqs((json?.data || []).map(f => ({ id: f.id, q: f.question, a: f.answer })));
+      } catch (err) {
+        if (err?.name !== "AbortError") {
+          setFaqsError(err?.message || "Failed to load FAQs");
+        }
+      } finally {
+        setFaqsLoading(false);
+      }
+    })();
     return () => ac.abort();
-  }, [fetchFaqs]);
+  }, []);
 
-  /* ══════════════════════════════════════════════════
-     AUTO-FILL LOGIC
-  ══════════════════════════════════════════════════ */
+  /* ═══════════════════════════════
+     AUTO-FILL FROM AUTH USER
+  ═══════════════════════════════ */
   useEffect(() => {
-    if (!user || !isAuthenticated || autoFillApplied.current) return;
+    if (!user || !isAuthenticated || autoFillDone.current) return;
+    const name = user.fullName || user.full_name || user.name || "";
+    const email = user.email || "";
+    const phone = user.phone || "";
+    if (!name && !email && !phone) return;
 
-    const autoName = user.fullName || user.full_name || user.name || "";
-    const autoEmail = user.email || "";
-    const autoPhone = user.phone || "";
-
-    if (!autoName && !autoEmail && !autoPhone) return;
-
-    autoFillApplied.current = true;
-
-    const newAutoFilled = new Set();
+    autoFillDone.current = true;
     const updates = {};
-
-    if (autoName && !form.name) { updates.name = autoName; newAutoFilled.add("name"); }
-    if (autoEmail && !form.email) { updates.email = autoEmail; newAutoFilled.add("email"); }
-    if (autoPhone && !form.phone) { updates.phone = autoPhone; newAutoFilled.add("phone"); }
-
-    if (Object.keys(updates).length === 0) return;
+    const filled = new Set();
+    if (name) { updates.name = name; filled.add("name"); }
+    if (email) { updates.email = email; filled.add("email"); }
+    if (phone) { updates.phone = phone; filled.add("phone"); }
 
     setForm(prev => ({ ...prev, ...updates }));
-    setAutoFilledFields(newAutoFilled);
-    setShowAutoFillBanner(true);
+    setAutoFilledFields(filled);
+    setShowBanner(true);
 
-    const newTouched = {};
-    const newErrors = {};
-    Object.keys(updates).forEach(field => {
-      newTouched[field] = true;
-      newErrors[field] = validateField(field, updates[field]);
+    const newTouched = {}, newErrors = {};
+    Object.keys(updates).forEach(k => {
+      newTouched[k] = true;
+      newErrors[k] = validateField(k, updates[k]);
     });
     setTouched(prev => ({ ...prev, ...newTouched }));
     setErrors(prev => ({ ...prev, ...newErrors }));
   }, [user, isAuthenticated]);
 
-  /* ── Handle field change ── */
-  const handleChange = useCallback(e => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
-
-    if (autoFilledFields.has(name)) {
-      setAutoFilledFields(prev => {
-        const next = new Set(prev);
-        next.delete(name);
-        return next;
-      });
-    }
-
-    setErrors(prev => prev[name]
-      ? { ...prev, [name]: validateField(name, value) }
-      : prev
-    );
-  }, [autoFilledFields]);
-
-  /* ── Chat lifecycle ── */
+  /* ═══════════════════════════════
+     CHAT LIFECYCLE
+  ═══════════════════════════════ */
   useEffect(() => {
     if (chatOpen && !chatConnected) connectChat();
   }, [chatOpen, chatConnected, connectChat]);
@@ -643,17 +469,29 @@ const Contact = () => {
   useEffect(() => {
     if (!chatOpen || !chatConnected) return;
     registerChat({
-      name: form.name || user?.fullName || user?.name || "Guest",
+      name: form.name || user?.fullName || "Guest",
       email: form.email || user?.email || "",
     }).catch(() => { });
-  }, [chatOpen, chatConnected, registerChat, form.name, form.email, user]);
+  }, [chatOpen, chatConnected]);
 
   useEffect(() => {
-    if (!chatRef.current) return;
-    chatRef.current.scrollTop = chatRef.current.scrollHeight;
+    if (chatBodyRef.current) {
+      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
+    }
   }, [chatMessages, chatOpen]);
 
-  /* ── Field handlers ── */
+  /* ═══════════════════════════════
+     HANDLERS
+  ═══════════════════════════════ */
+  const handleChange = useCallback(e => {
+    const { name, value } = e.target;
+    setForm(prev => ({ ...prev, [name]: value }));
+    if (autoFilledFields.has(name)) {
+      setAutoFilledFields(prev => { const s = new Set(prev); s.delete(name); return s; });
+    }
+    setErrors(prev => prev[name] ? { ...prev, [name]: validateField(name, value) } : prev);
+  }, [autoFilledFields]);
+
   const handleBlur = useCallback(e => {
     const { name, value } = e.target;
     setTouched(prev => ({ ...prev, [name]: true }));
@@ -661,233 +499,210 @@ const Contact = () => {
   }, []);
 
   const validateStep = useCallback(idx => {
-    const newErr = {}, newTouched = {};
-    STEP_FIELDS[idx].forEach(field => {
-      const e = validateField(field, form[field]);
-      if (e) newErr[field] = e;
-      newTouched[field] = true;
+    const errs = {}, touch = {};
+    STEP_FIELDS[idx].forEach(f => {
+      touch[f] = true;
+      const e = validateField(f, form[f]);
+      if (e) errs[f] = e;
     });
-    setErrors(prev => ({ ...prev, ...newErr }));
-    setTouched(prev => ({ ...prev, ...newTouched }));
-    return !Object.keys(newErr).length;
+    setTouched(prev => ({ ...prev, ...touch }));
+    setErrors(prev => ({ ...prev, ...errs }));
+    return Object.keys(errs).length === 0;
   }, [form]);
 
-  const goStep = useCallback(target => {
-    if (target > step && !validateStep(step)) return;
-    setDirection(target > step ? 1 : -1);
-    setStep(target);
-  }, [step, validateStep]);
-
-  const nextStep = useCallback(() => {
+  const goNext = useCallback(() => {
     if (!validateStep(step)) return;
     setDirection(1);
-    setStep(s => Math.min(s + 1, 2));
+    setStep(s => Math.min(s + 1, STEP_FIELDS.length - 1));
   }, [step, validateStep]);
 
-  const prevStep = useCallback(() => {
+  const goPrev = useCallback(() => {
     setDirection(-1);
     setStep(s => Math.max(s - 1, 0));
   }, []);
 
   const handleSubmit = useCallback(async e => {
     e.preventDefault();
-    if (!validateStep(2)) return;
+    if (!validateStep(step)) return;
     setSubmitting(true);
-    setProgress(0);
-    let pv = 0;
-    const interval = setInterval(() => {
-      pv = Math.min(pv + 8, 92);
-      setProgress(pv);
-    }, 100);
+    setSubmitProgress(0);
+
+    const tick = setInterval(() => setSubmitProgress(p => Math.min(p + 7, 88)), 120);
     try {
-      const { verificationId: id } = await sendVerificationCode({
-        email: form.email,
-        purpose: "contact",
-      });
-      setVerId(id);
-      setVerError("");
-      setVerModalOpen(true);
+      const { verificationId } = await sendVerificationCode({ email: form.email, purpose: "contact" });
+      setVerId(verificationId);
+      setVerErr("");
+      setVerOpen(true);
     } catch (err) {
-      setErrors(prev => ({ ...prev, submit: err.message || "Failed to send verification" }));
+      setErrors(prev => ({ ...prev, submit: err?.message || "Unable to send. Please try again." }));
     } finally {
-      clearInterval(interval);
-      setProgress(100);
+      clearInterval(tick);
+      setSubmitProgress(100);
       setSubmitting(false);
     }
-  }, [form, validateStep]);
+  }, [form, step, validateStep]);
 
-  const handleVerifyCode = useCallback(async code => {
+  const handleVerify = useCallback(async code => {
     if (!verId) return;
     setVerLoading(true);
-    setVerError("");
+    setVerErr("");
     try {
       await verifyCode({ email: form.email, verificationId: verId, code });
-      const result = await sendMessage({ type: "contact", data: { ...form } });
-      if (!result.error) {
+      const res = await sendMessage({ type: "contact", data: { ...form } });
+      if (!res?.error) {
         setSubmitted(true);
-        setVerModalOpen(false);
+        setVerOpen(false);
         setForm(INIT_FORM);
         setTouched({});
         setErrors({});
         setAutoFilledFields(new Set());
-        autoFillApplied.current = false;
+        autoFillDone.current = false;
       } else {
-        setVerError(result.error);
+        setVerErr(res.error);
       }
     } catch (err) {
-      setVerError(err.message || "Invalid code");
+      setVerErr(err?.message || "Invalid code. Please try again.");
     } finally {
       setVerLoading(false);
     }
   }, [form, verId]);
 
-  const closeVerModal = useCallback(() => {
-    setVerModalOpen(false);
-    setVerError("");
+  const closeVer = useCallback(() => {
+    setVerOpen(false);
+    setVerErr("");
     setVerId(null);
-    setProgress(0);
   }, []);
 
   const resetForm = useCallback(() => {
     setSubmitted(false);
     setStep(0);
     setDirection(1);
-    setProgress(0);
     setForm(INIT_FORM);
     setTouched({});
     setErrors({});
     setAutoFilledFields(new Set());
-    setShowAutoFillBanner(false);
-    autoFillApplied.current = false;
+    setShowBanner(false);
+    autoFillDone.current = false;
+    setSubmitProgress(0);
   }, []);
 
   const handleChatSend = useCallback(async () => {
     const body = chatInput.trim();
     if (!body) return;
-    setChatError("");
+    setChatErr("");
     setChatSending(true);
     try {
       await registerChat({
-        name: form.name || user?.fullName || user?.name || "Guest",
+        name: form.name || user?.fullName || "Guest",
         email: form.email || user?.email || "",
       });
-      await sendChatMessage({
+      await sendChatMsg({
         body,
-        name: form.name || user?.fullName || user?.name || "Guest",
+        name: form.name || user?.fullName || "Guest",
         email: form.email || user?.email || "",
-        metadata: { source: "frontend-chat" },
       });
       setChatInput("");
     } catch (err) {
-      setChatError(err?.message || "Unable to send message");
+      setChatErr(err?.message || "Failed to send. Try again.");
     } finally {
       setChatSending(false);
     }
-  }, [chatInput, form.name, form.email, user, registerChat, sendChatMessage]);
+  }, [chatInput, form, user, registerChat, sendChatMsg]);
 
+  /* ── Completion % ── */
   const completion = useMemo(() => {
-    const filled = Object.values(form).filter(v => String(v).trim()).length;
-    return Math.round((filled / Object.keys(form).length) * 100);
+    const required = ["name", "email", "subject", "message"];
+    const filled = required.filter(k => form[k]?.trim()).length;
+    return Math.round((filled / required.length) * 100);
   }, [form]);
 
-  /* ════════════════════════════════════
+  /* ═══════════════════════════════
      RENDER
-  ════════════════════════════════════ */
+  ═══════════════════════════════ */
   return (
-    <div className="ct">
+    <div className="cf">
       <SEO
-        title="Contact Us"
-        description="Get in touch with Altuvera for personalized safari planning, booking assistance, and expert travel advice."
+        title="Contact Us — Altuvera Safari"
+        description="Get in touch with Altuvera for personalized safari planning, booking assistance, and expert travel advice across East Africa."
         keywords={["contact Altuvera", "safari booking", "East Africa travel"]}
         url="/contact"
       />
       <style>{CSS}</style>
 
-      {/* ══ HERO ══ */}
-      <section className="ct-hero" ref={heroRef}>
+      {/* ══════════ HERO ══════════ */}
+      <section className="cf-hero" ref={heroRef}>
         <motion.div
-          className="ct-hero-bg"
+          className="cf-hero-bg"
           style={{
             backgroundImage: `url(https://i.pinimg.com/736x/bb/ca/d1/bbcad1c07136f38bfc47257f8b38cf2a.jpg)`,
             y: heroY,
           }}
-          initial={{ scale: 1.14 }}
+          initial={{ scale: 1.12 }}
           animate={{ scale: 1 }}
-          transition={{ duration: 14, ease: "easeOut" }}
+          transition={{ duration: 12, ease: "easeOut" }}
         />
-        <div className="ct-hero-overlay" />
+        <div className="cf-hero-overlay" />
 
-        <motion.div className="ct-hero-inner" style={{ opacity: heroOpacity }}>
-          <motion.div
-            className="ct-hero-badge"
-            initial={{ opacity: 0, y: -20, scale: 0.9 }}
+        <motion.div className="cf-hero-inner" style={{ opacity: heroOpacity }}>
+          <motion.div className="cf-hero-badge"
+            initial={{ opacity: 0, y: -18, scale: 0.88 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.6, ease: EASE.bounce }}
+            transition={{ delay: 0.25, duration: 0.6, ease: EASE.bounce }}
           >
-            <HiSparkles size={15} color={G[300]} />
-            Your Safari Adventure Starts Here
+            <HiSparkles size={14} /> Your Safari Starts Here
           </motion.div>
 
-          <motion.h1
-            className="ct-hero-h1"
-            initial={{ opacity: 0, y: 32 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.42, duration: 0.75 }}
+          <motion.h1 className="cf-hero-h1"
+            initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4, duration: 0.7 }}
           >
             Let's Plan Your<br /><em>Dream Safari</em>
           </motion.h1>
 
-          <motion.p
-            className="ct-hero-p"
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.56, duration: 0.7 }}
+          <motion.p className="cf-hero-p"
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.55, duration: 0.65 }}
           >
             Connect with our expert team and let us craft an unforgettable
             African adventure tailored just for you.
           </motion.p>
 
-          <motion.div
-            className="ct-hero-btns"
-            initial={{ opacity: 0, y: 22 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.7, duration: 0.65 }}
+          <motion.div className="cf-hero-btns"
+            initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.68, duration: 0.6 }}
           >
-            <a href="#contact-form" className="ct-btn ct-btn--white">
-              <FiSend size={15} /> Send Message
+            <a href="#contact-form" className="cf-btn cf-btn--white">
+              <FiSend size={15} /> Send a Message
             </a>
-            <a href="tel:+250792352409" className="ct-btn ct-btn--ghost">
+            <a href="tel:+250792352409" className="cf-btn cf-btn--ghost">
               <FiPhone size={15} /> Call Us Now
             </a>
           </motion.div>
         </motion.div>
 
-        <motion.div
-          className="ct-scroll"
-          animate={{ y: [0, 10, 0] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+        <motion.div className="cf-scroll-hint"
+          animate={{ y: [0, 9, 0] }}
+          transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
         >
-          <div className="ct-scroll-pill">
-            <motion.div
-              className="ct-scroll-dot"
-              animate={{ y: [0, 14, 0], opacity: [1, 0.2, 1] }}
-              transition={{ duration: 1.8, repeat: Infinity }}
-            />
+          <div className="cf-scroll-pill">
+            <motion.div className="cf-scroll-dot"
+              animate={{ y: [0, 13, 0], opacity: [1, 0.2, 1] }}
+              transition={{ duration: 1.7, repeat: Infinity }} />
           </div>
         </motion.div>
       </section>
 
-      {/* ══ TRUST BAR ══ */}
-      <div className="ct-trust-bar">
-        <div className="ct-wrap">
-          <div className="ct-trust-grid">
+      {/* ══════════ TRUST BAR ══════════ */}
+      <div className="cf-trust">
+        <div className="cf-wrap">
+          <div className="cf-trust-grid">
             {TRUST_STATS.map((s, i) => (
-              <ScrollReveal key={i} delay={i * 0.08} direction="up" distance={20}>
-                <div className="ct-trust-item">
-                  <div className="ct-trust-icon"><s.icon size={20} /></div>
+              <ScrollReveal key={i} delay={i * 0.07} direction="up" distance={18}>
+                <div className="cf-trust-item">
+                  <div className="cf-trust-icon"><s.icon size={20} /></div>
                   <div>
-                    <div className="ct-trust-val">{s.value}</div>
-                    <div className="ct-trust-lbl">{s.label}</div>
+                    <div className="cf-trust-val">{s.value}</div>
+                    <div className="cf-trust-lbl">{s.label}</div>
                   </div>
                 </div>
               </ScrollReveal>
@@ -896,98 +711,73 @@ const Contact = () => {
         </div>
       </div>
 
-      {/* ══ MAIN FORM SECTION ══ */}
-      <section className="ct-section ct-section--soft" id="contact-form">
-        <div className="ct-wrap">
+      {/* ══════════ MAIN FORM SECTION ══════════ */}
+      <section className="cf-section cf-section--soft" id="contact-form">
+        <div className="cf-wrap">
           <ScrollReveal>
-            <div className="ct-hdr">
-              <div className="ct-badge-pill">
-                <FiMessageSquare size={13} /> Get In Touch
-              </div>
-              <h2 className="ct-h2">We'd Love to <em>Hear From You</em></h2>
-              <p className="ct-sub">
-                Have questions about your dream safari? Our Africa travel experts are here to help.
+            <div className="cf-hdr">
+              <div className="cf-pill"><FiMessageSquare size={12} /> Get In Touch</div>
+              <h2 className="cf-h2">We'd Love to <em>Hear From You</em></h2>
+              <p className="cf-sub">
+                Our Africa travel experts are ready to help craft your perfect adventure.
               </p>
             </div>
           </ScrollReveal>
 
-          <div className="ct-two-col">
+          <div className="cf-two-col">
             {/* ── Contact Info ── */}
             <ScrollReveal direction="left" delay={0.1}>
-              <div className="ct-info-col">
-                {isAuthenticated && user && (
-                  <motion.div
-                    className="ct-user-card"
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <div className="ct-user-card-inner">
-                      <div className="ct-user-avatar">
-                        {user.avatar || user.avatarUrl ? (
-                          <img
-                            src={user.avatar || user.avatarUrl}
-                            alt={user.fullName || user.name}
-                            style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
-                          />
-                        ) : (
-                          <FiUser size={22} color="#fff" />
-                        )}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div className="ct-user-name">
-                          {user.fullName || user.name || "Traveler"}
-                        </div>
-                        <div className="ct-user-email">{user.email}</div>
-                        {user.phone && (
-                          <div className="ct-user-phone">{user.phone}</div>
-                        )}
-                      </div>
-                      <div className="ct-user-badge">
-                        <FiUserCheck size={13} /> Signed In
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-
-                <h3 className="ct-info-h3">Contact Information</h3>
-                <p className="ct-info-p">
-                  Reach out through any channel. We respond within 2 hours during business hours.
-                </p>
-
-                {CONTACT_CARDS.map((card, i) => (
-                  <ScrollReveal key={i} delay={0.15 + i * 0.06}>
-                    <a
-                      href={card.href || "#"}
-                      className="ct-contact-card"
-                      onClick={!card.href ? e => e.preventDefault() : undefined}
+              <div className="cf-info">
+                {/* Auth user card */}
+                <AnimatePresence>
+                  {isAuthenticated && user && (
+                    <motion.div className="cf-user-card"
+                      initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }} transition={{ duration: 0.45 }}
                     >
-                      <div className="ct-contact-icon"><card.icon size={20} /></div>
-                      <div>
-                        <div className="ct-contact-title">{card.title}</div>
-                        {card.lines.map((l, j) => (
-                          <div key={j} className="ct-contact-line">{l}</div>
-                        ))}
+                      <div className="cf-user-av">
+                        {user.avatar || user.avatarUrl
+                          ? <img src={user.avatar || user.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
+                          : <FiUser size={20} color="#fff" />
+                        }
                       </div>
-                      {card.href && <FiExternalLink size={13} className="ct-contact-ext" />}
+                      <div className="cf-user-meta">
+                        <div className="cf-user-name">{user.fullName || user.name || "Traveler"}</div>
+                        <div className="cf-user-email">{user.email}</div>
+                      </div>
+                      <div className="cf-user-badge"><FiUserCheck size={11} /> Signed In</div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <h3 className="cf-info-h3">Contact Information</h3>
+                <p className="cf-info-p">Reach us through any channel. We respond within 2 hours during working hours.</p>
+
+                {CONTACT_CARDS.map((c, i) => (
+                  <ScrollReveal key={i} delay={0.12 + i * 0.06}>
+                    <a
+                      href={c.href || "#"}
+                      className="cf-card-link"
+                      onClick={!c.href ? e => e.preventDefault() : undefined}
+                    >
+                      <div className="cf-card-icon"><c.icon size={19} /></div>
+                      <div className="cf-card-body">
+                        <div className="cf-card-title">{c.title}</div>
+                        {c.lines.map((l, j) => <div key={j} className="cf-card-line">{l}</div>)}
+                      </div>
+                      {c.href && <FiExternalLink size={12} className="cf-card-ext" />}
                     </a>
                   </ScrollReveal>
                 ))}
 
-                <ScrollReveal delay={0.46}>
-                  <div className="ct-socials-box">
-                    <div className="ct-socials-title">Follow Our Adventures</div>
-                    <div className="ct-socials-row">
+                <ScrollReveal delay={0.44}>
+                  <div className="cf-socials">
+                    <div className="cf-socials-title">Follow Our Adventures</div>
+                    <div className="cf-socials-row">
                       {SOCIALS.map((s, i) => (
-                        <motion.a
-                          key={i}
-                          href={s.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title={s.label}
-                          className="ct-social"
-                          whileHover={{ scale: 1.12, y: -3 }}
-                          whileTap={{ scale: 0.95 }}
+                        <motion.a key={i} href={s.url} target="_blank" rel="noopener noreferrer"
+                          title={s.label} className="cf-social"
+                          whileHover={{ scale: 1.14, y: -3 }} whileTap={{ scale: 0.93 }}
                         >
                           <s.icon />
                         </motion.a>
@@ -998,107 +788,268 @@ const Contact = () => {
               </div>
             </ScrollReveal>
 
-            {/* ── Form ── */}
+            {/* ── Form Panel ── */}
             <ScrollReveal direction="right" delay={0.15}>
               <AnimatePresence mode="wait">
+                {/* SUCCESS STATE */}
                 {submitted ? (
-                  <motion.div
-                    key="success"
-                    className="ct-card"
-                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  <motion.div key="success" className="cf-panel"
+                    initial={{ opacity: 0, scale: 0.92, y: 18 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    transition={{ duration: 0.5, ease: EASE.snappy }}
+                    exit={{ opacity: 0, scale: 0.92 }}
+                    transition={{ duration: 0.45, ease: EASE.snappy }}
                   >
-                    <div className="ct-success">
-                      <motion.div
-                        className="ct-success-circle"
-                        initial={{ scale: 0 }}
-                        animate={{ scale: 1 }}
-                        transition={{ delay: 0.2, duration: 0.5, ease: EASE.bounce }}
+                    <div className="cf-success">
+                      <motion.div className="cf-success-ring"
+                        initial={{ scale: 0 }} animate={{ scale: 1 }}
+                        transition={{ delay: 0.15, duration: 0.5, ease: EASE.bounce }}
                       >
-                        <FiCheckCircle size={52} color="#fff" />
+                        <FiCheckCircle size={50} color="#fff" />
                       </motion.div>
-                      <motion.h3 className="ct-success-h3"
-                        initial={{ opacity: 0, y: 14 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.35 }}
-                      >
-                        Message Sent Successfully!
+                      <motion.h3 className="cf-success-h3"
+                        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}>
+                        Message Sent! 🎉
                       </motion.h3>
-                      <motion.p className="ct-success-p"
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}>
+                      <motion.p className="cf-success-p"
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
                         Our safari experts will respond within 24 hours.
                       </motion.p>
-                      <motion.div className="ct-success-email"
-                        initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.55 }}>
+                      <motion.div className="cf-success-tag"
+                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
                         <small>Confirmation sent to</small>
-                        <strong>{form.email}</strong>
+                        <strong>{form.email || user?.email}</strong>
                       </motion.div>
-                      <motion.div className="ct-success-btns"
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.65 }}>
-                        <button className="ct-btn ct-btn--green" onClick={resetForm}>
+                      <motion.div className="cf-success-actions"
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
+                        <button className="cf-btn cf-btn--green" onClick={resetForm}>
                           <FiSend size={14} /> Send Another
                         </button>
-                        <a href="/" className="ct-btn ct-btn--outline">
-                          <FiArrowLeft size={14} /> Back to Home
+                        <a href="/" className="cf-btn cf-btn--outline">
+                          <FiArrowLeft size={14} /> Back Home
                         </a>
                       </motion.div>
                     </div>
                   </motion.div>
                 ) : (
-                  <motion.form
-                    key="form"
-                    className="ct-card"
-                    onSubmit={handleSubmit}
-                    autoComplete="off"
-                    noValidate
-                    initial={{ opacity: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
+                  /* FORM */
+                  <motion.form key="form" className="cf-panel"
+                    onSubmit={handleSubmit} autoComplete="off" noValidate
+                    initial={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.96 }}
                   >
+                    {/* Auto-fill banner */}
                     <AnimatePresence>
-                      {showAutoFillBanner && isAuthenticated && user && (
-                        <AutoFillBanner
-                          key="banner"
-                          user={user}
-                          onDismiss={() => setShowAutoFillBanner(false)}
-                        />
+                      {showBanner && isAuthenticated && user && (
+                        <motion.div key="banner" className="cf-banner"
+                          initial={{ opacity: 0, y: -10, scale: 0.97 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          transition={{ duration: 0.38 }}
+                        >
+                          <div className="cf-banner-av">
+                            {user.avatar || user.avatarUrl
+                              ? <img src={user.avatar || user.avatarUrl} alt="" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
+                              : <FiUserCheck size={15} color="#fff" />
+                            }
+                          </div>
+                          <div className="cf-banner-txt">
+                            <span className="cf-banner-name">Welcome back, {user.fullName || user.name || "there"}! 👋</span>
+                            <span className="cf-banner-sub">Your details have been auto-filled — just review and send.</span>
+                          </div>
+                          <button type="button" className="cf-banner-close" onClick={() => setShowBanner(false)} aria-label="Dismiss">
+                            <FiX size={14} />
+                          </button>
+                        </motion.div>
                       )}
                     </AnimatePresence>
 
                     {/* Completion bar */}
-                    <div className="ct-prog-row">
-                      <span className="ct-prog-label">Form Completion</span>
-                      <span className="ct-prog-pct">{completion}%</span>
-                    </div>
-                    <div className="ct-prog-track">
-                      <motion.div
-                        className="ct-prog-fill"
-                        animate={{ width: `${completion}%` }}
-                        transition={{ duration: 0.4 }}
-                      />
+                    <div className="cf-prog">
+                      <div className="cf-prog-top">
+                        <span className="cf-prog-lbl">Form Completion</span>
+                        <span className="cf-prog-pct">{completion}%</span>
+                      </div>
+                      <div className="cf-prog-track">
+                        <motion.div className="cf-prog-fill"
+                          animate={{ width: `${completion}%` }}
+                          transition={{ duration: 0.4 }} />
+                      </div>
                     </div>
 
-                    {/* Step dots */}
-                    <div className="ct-steps">
+                    {/* Step indicator */}
+                    <div className="cf-stepper">
                       {STEP_CONFIG.map((cfg, i) => (
                         <React.Fragment key={i}>
-                          <motion.button
-                            type="button"
-                            className={`ct-step-dot${step === i ? " active" : step > i ? " done" : ""}`}
-                            onClick={() => goStep(i)}
-                            whileHover={{ scale: 1.08 }}
-                            whileTap={{ scale: 0.95 }}
+                          <div
+                            className={`cf-step${step === i ? " cf-step--active" : step > i ? " cf-step--done" : ""}`}
+                            onClick={() => { if (i < step || (i > step && validateStep(step))) { setDirection(i > step ? 1 : -1); setStep(i); } }}
+                            role="button" tabIndex={0}
                             aria-label={`Step ${i + 1}: ${cfg.label}`}
                           >
-                            {step > i ? <FiCheckCircle size={18} /> : <cfg.icon size={18} />}
-                          </motion.button>
+                            <div className="cf-step-circle">
+                              {step > i ? <FiCheckCircle size={17} /> : <cfg.icon size={17} />}
+                            </div>
+                            <div className="cf-step-meta">
+                              <span className="cf-step-num">Step {i + 1}</span>
+                              <span className="cf-step-lbl">{cfg.label}</span>
+                            </div>
+                          </div>
+                          {i < STEP_CONFIG.length - 1 && (
+                            <div className={`cf-step-line${step > i ? " cf-step-line--done" : ""}`} />
+                          )}
                         </React.Fragment>
                       ))}
                     </div>
 
-                    {/* Rest of the form remains the same... */}
-                    {/* I've truncated the rest for space - keep your existing form code */}
+                    {/* Step body */}
+                    <div className="cf-step-body">
+                      <AnimatePresence mode="wait" custom={direction}>
+                        {/* STEP 0 — Personal Info */}
+                        {step === 0 && (
+                          <motion.div key="s0"
+                            custom={direction}
+                            variants={{
+                              enter: d => ({ opacity: 0, x: d * 40 }),
+                              center: { opacity: 1, x: 0 },
+                              exit: d => ({ opacity: 0, x: d * -40 }),
+                            }}
+                            initial="enter" animate="center" exit="exit"
+                            transition={{ duration: 0.32, ease: EASE.snappy }}
+                          >
+                            <div className="cf-step-hd">
+                              <h4>Personal Information</h4>
+                              <p>Tell us who you are so we can personalise your experience.</p>
+                            </div>
+                            <div className="cf-grid-2">
+                              <FieldInput
+                                name="name" label="Full Name" icon={FiUser}
+                                placeholder="e.g. Jane Smith" required
+                                value={form.name} onChange={handleChange} onBlur={handleBlur}
+                                error={errors.name} touched={touched.name}
+                                autoFilled={autoFilledFields.has("name")}
+                              />
+                              <FieldInput
+                                name="email" label="Email Address" icon={FiMail}
+                                type="email" placeholder="you@example.com" required
+                                value={form.email} onChange={handleChange} onBlur={handleBlur}
+                                error={errors.email} touched={touched.email}
+                                autoFilled={autoFilledFields.has("email")}
+                              />
+                            </div>
+                            <FieldInput
+                              name="phone" label="Phone Number (Optional)" icon={FiPhone}
+                              type="tel" placeholder="+250 700 000 000"
+                              value={form.phone} onChange={handleChange} onBlur={handleBlur}
+                              error={errors.phone} touched={touched.phone}
+                              autoFilled={autoFilledFields.has("phone")}
+                            />
+
+                            {/* Optional trip details */}
+                            <div className="cf-optional-block">
+                              <div className="cf-optional-lbl">
+                                <FiGlobe size={13} /> Optional Trip Details
+                              </div>
+                              <div className="cf-grid-2">
+                                <FieldSelect
+                                  name="tripType" label="Trip Type" icon={FiGlobe}
+                                  placeholder="Select trip type" options={TRIP_TYPES}
+                                  value={form.tripType} onChange={handleChange} onBlur={handleBlur}
+                                />
+                                <FieldInput
+                                  name="travelDate" label="Travel Date" icon={FiClock}
+                                  type="date"
+                                  value={form.travelDate} onChange={handleChange} onBlur={handleBlur}
+                                />
+                              </div>
+                              <FieldSelect
+                                name="travelers" label="Number of Travelers" icon={FiUsers}
+                                placeholder="Select group size"
+                                options={["Solo", "2 — Couple", "3–4 — Small Group", "5–8 — Group", "9+ — Large Group"]}
+                                value={form.travelers} onChange={handleChange} onBlur={handleBlur}
+                              />
+                            </div>
+                          </motion.div>
+                        )}
+
+                        {/* STEP 1 — Message */}
+                        {step === 1 && (
+                          <motion.div key="s1"
+                            custom={direction}
+                            variants={{
+                              enter: d => ({ opacity: 0, x: d * 40 }),
+                              center: { opacity: 1, x: 0 },
+                              exit: d => ({ opacity: 0, x: d * -40 }),
+                            }}
+                            initial="enter" animate="center" exit="exit"
+                            transition={{ duration: 0.32, ease: EASE.snappy }}
+                          >
+                            <div className="cf-step-hd">
+                              <h4>Your Message</h4>
+                              <p>Tell us about your dream trip and any questions you have.</p>
+                            </div>
+                            <FieldInput
+                              name="subject" label="Subject" icon={FiMessageSquare}
+                              placeholder="e.g. 7-Day Gorilla Trekking Package" required
+                              value={form.subject} onChange={handleChange} onBlur={handleBlur}
+                              error={errors.subject} touched={touched.subject}
+                            />
+                            <FieldTextarea
+                              name="message" label="Message" required
+                              placeholder="Hi, I'm interested in booking a gorilla trekking experience for 2 people in October..."
+                              value={form.message} onChange={handleChange} onBlur={handleBlur}
+                              error={errors.message} touched={touched.message}
+                            />
+
+                            {/* Server error */}
+                            {errors.submit && (
+                              <div className="cf-srv-err">
+                                <FiAlertCircle size={15} /> {errors.submit}
+                              </div>
+                            )}
+
+                            {/* Submit button */}
+                            <button
+                              type="submit" className="cf-submit"
+                              disabled={submitting}
+                              aria-busy={submitting}
+                            >
+                              {submitting ? (
+                                <>
+                                  <svg className="cf-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                    <circle cx="12" cy="12" r="10" strokeOpacity=".25" />
+                                    <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
+                                  </svg>
+                                  Sending…
+                                  <div className="cf-submit-bar" style={{ width: `${submitProgress}%` }} />
+                                </>
+                              ) : (
+                                <>
+                                  <RiSendPlaneFill size={17} /> Send Message
+                                </>
+                              )}
+                            </button>
+
+                            <div className="cf-privacy">
+                              <FiShield size={12} /> Your information is encrypted and never shared.
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+
+                    {/* Navigation */}
+                    <div className="cf-nav">
+                      {step > 0 ? (
+                        <button type="button" className="cf-nav-back" onClick={goPrev}>
+                          <FiArrowLeft size={15} /> Back
+                        </button>
+                      ) : <div />}
+                      {step < STEP_FIELDS.length - 1 && (
+                        <button type="button" className="cf-nav-next" onClick={goNext}>
+                          Next Step <FiArrowRight size={15} />
+                        </button>
+                      )}
+                    </div>
                   </motion.form>
                 )}
               </AnimatePresence>
@@ -1107,48 +1058,76 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* ══ FAQ ══ */}
-      <section className="ct-section ct-section--white">
-        <div className="ct-wrap ct-wrap--sm">
+      {/* ══════════ QUICK CHANNELS ══════════ */}
+      <section className="cf-section cf-section--white">
+        <div className="cf-wrap cf-wrap--md">
           <ScrollReveal>
-            <div className="ct-hdr">
-              <div className="ct-badge-pill"><FiHelpCircle size={13} /> FAQ</div>
-              <h2 className="ct-h2">Got <em>Questions</em>?</h2>
-              <p className="ct-sub">Find quick answers about our safari experiences and booking process.</p>
+            <div className="cf-hdr">
+              <div className="cf-pill"><BiSupport size={13} /> Reach Us Instantly</div>
+              <h2 className="cf-h2">Prefer to <em>Talk Directly</em>?</h2>
+              <p className="cf-sub">Choose the channel that suits you best. We're always ready to help.</p>
             </div>
           </ScrollReveal>
-          <div className="ct-faq-list">
+          <div className="cf-channels">
+            {QUICK_CHANNELS.map((ch, i) => (
+              <ScrollReveal key={i} delay={i * 0.1} direction="up">
+                <a href={ch.href} className="cf-ch-card" target="_blank" rel="noopener noreferrer"
+                  style={{ "--ch-color": ch.color }}>
+                  <div className="cf-ch-icon">
+                    <ch.icon size={26} />
+                  </div>
+                  <div className="cf-ch-title">{ch.title}</div>
+                  <div className="cf-ch-sub">{ch.subtitle}</div>
+                  <div className="cf-ch-detail">{ch.detail}</div>
+                  <div className="cf-ch-arrow"><FiArrowRight size={16} /></div>
+                </a>
+              </ScrollReveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════ FAQ ══════════ */}
+      <section className="cf-section cf-section--soft">
+        <div className="cf-wrap cf-wrap--sm">
+          <ScrollReveal>
+            <div className="cf-hdr">
+              <div className="cf-pill"><FiHelpCircle size={12} /> FAQ</div>
+              <h2 className="cf-h2">Got <em>Questions</em>?</h2>
+              <p className="cf-sub">Quick answers about our safaris and booking process.</p>
+            </div>
+          </ScrollReveal>
+
+          <div className="cf-faqs">
             {faqsLoading ? (
-              <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>
-                Loading FAQs...
+              <div className="cf-faq-state">
+                <div className="cf-spinner" />
+                <span>Loading FAQs…</span>
               </div>
             ) : faqsError ? (
-              <div style={{ textAlign: "center", padding: 40, color: "#ef4444" }}>
-                {faqsError}
+              <div className="cf-faq-state cf-faq-state--err">
+                <FiAlertCircle size={22} /> {faqsError}
               </div>
             ) : faqs.length === 0 ? (
-              <div style={{ textAlign: "center", padding: 40, color: "#6b7280" }}>
-                No FAQs available at the moment.
-              </div>
+              <div className="cf-faq-state">No FAQs available at the moment.</div>
             ) : (
               faqs.map((faq, i) => {
                 const open = openFaqId === faq.id;
                 return (
-                  <ScrollReveal key={faq.id} delay={i * 0.055}>
-                    <div className={`ct-faq${open ? " open" : ""}`}>
+                  <ScrollReveal key={faq.id} delay={i * 0.05}>
+                    <div className={`cf-faq${open ? " cf-faq--open" : ""}`}>
                       <button
-                        className="ct-faq-btn" type="button"
+                        className="cf-faq-btn" type="button"
                         onClick={() => setOpenFaqId(open ? null : faq.id)}
                         aria-expanded={open}
                       >
-                        <span className="ct-faq-num">{String(i + 1).padStart(2, "0")}</span>
-                        <span className="ct-faq-q">{faq.q}</span>
-                        <motion.span
-                          className={`ct-faq-chevron${open ? " open" : ""}`}
+                        <span className="cf-faq-num">{String(i + 1).padStart(2, "0")}</span>
+                        <span className="cf-faq-q">{faq.q}</span>
+                        <motion.span className="cf-faq-chev"
                           animate={{ rotate: open ? 180 : 0 }}
-                          transition={{ duration: 0.32 }}
+                          transition={{ duration: 0.3 }}
                         >
-                          <FiChevronDown size={17} />
+                          <FiChevronDown size={16} />
                         </motion.span>
                       </button>
                       <AnimatePresence initial={false}>
@@ -1157,10 +1136,10 @@ const Contact = () => {
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.38, ease: EASE.snappy }}
+                            transition={{ duration: 0.35, ease: EASE.snappy }}
                             style={{ overflow: "hidden" }}
                           >
-                            <div className="ct-faq-body"><p>{faq.a}</p></div>
+                            <div className="cf-faq-body">{faq.a}</div>
                           </motion.div>
                         )}
                       </AnimatePresence>
@@ -1173,21 +1152,159 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* Rest of your sections (QUICK CHANNELS, CTA, CHAT FAB, etc.) remain the same */}
+      {/* ══════════ CTA STRIP ══════════ */}
+      <section className="cf-section cf-cta">
+        <div className="cf-cta-pat" />
+        <div className="cf-wrap">
+          <ScrollReveal>
+            <div className="cf-cta-inner">
+              <div className="cf-cta-icon"><HiSparkles size={34} color="#6ee7b7" /></div>
+              <h2 className="cf-h2 cf-h2--white">Ready for Your <em>African Adventure</em>?</h2>
+              <p className="cf-sub cf-sub--light">
+                Join thousands of happy travellers who trusted Altuvera to make their safari dreams a reality.
+              </p>
+              <div className="cf-cta-btns">
+                <a href="#contact-form" className="cf-btn cf-btn--white">
+                  <FiSend size={15} /> Plan My Safari
+                </a>
+                <a href="https://wa.me/250792352409" target="_blank" rel="noopener noreferrer" className="cf-btn cf-btn--ghost">
+                  <FaWhatsapp size={16} /> WhatsApp Us
+                </a>
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
 
+      {/* ══════════ LIVE CHAT FAB ══════════ */}
+      <AnimatePresence>
+        {!chatOpen && (
+          <motion.button
+            key="fab"
+            className="cf-fab"
+            onClick={() => setChatOpen(true)}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0, opacity: 0 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.93 }}
+            aria-label="Open live chat"
+          >
+            <FiMessageCircle size={24} color="#fff" />
+            <span className="cf-fab-pulse" />
+            <span className="cf-fab-badge">Chat</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* ══════════ CHAT WINDOW ══════════ */}
+      <AnimatePresence>
+        {chatOpen && (
+          <motion.div
+            key="chat"
+            className="cf-chat"
+            initial={{ opacity: 0, y: 24, scale: 0.94 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.94 }}
+            transition={{ duration: 0.38, ease: EASE.snappy }}
+          >
+            {/* Header */}
+            <div className="cf-chat-head">
+              <div className="cf-chat-head-l">
+                <div className="cf-chat-av"><BiSupport size={20} color="#fff" /></div>
+                <div>
+                  <div className="cf-chat-name">Altuvera Support</div>
+                  <div className="cf-chat-status">
+                    <span className={`cf-chat-dot${chatConnected ? " live" : ""}`} />
+                    {chatConnected ? "Online" : "Connecting…"}
+                  </div>
+                </div>
+              </div>
+              <button className="cf-chat-close" onClick={() => setChatOpen(false)} aria-label="Close chat">
+                <FiX size={17} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="cf-chat-body" ref={chatBodyRef}>
+              {chatMessages.length === 0 && (
+                <div className="cf-chat-welcome">
+                  <div className="cf-chat-welcome-icon"><BiSupport size={26} color={G[700]} /></div>
+                  <p><strong>Hi there! 👋</strong></p>
+                  <p>How can we help you plan your safari today?</p>
+                  <div className="cf-chips">
+                    {["Gorilla Trekking", "Safari Packages", "Group Tours", "Pricing"].map(t => (
+                      <button key={t} className="cf-chip" type="button"
+                        onClick={() => { setChatInput(t); }}>
+                        {t}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {chatMessages.map((msg, i) => {
+                const isUser = msg.sender === "user" || msg.role === "user";
+                return (
+                  <motion.div key={i} className={`cf-bubble${isUser ? " cf-bubble--user" : ""}`}
+                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.28 }}
+                  >
+                    {!isUser && <span className="cf-bubble-who">Support</span>}
+                    <p>{msg.body || msg.message || msg.content}</p>
+                    <span className="cf-bubble-time">
+                      {new Date(msg.createdAt || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {chatErr && (
+              <div className="cf-chat-err"><FiAlertCircle size={13} /> {chatErr}</div>
+            )}
+
+            {/* Input */}
+            <div className="cf-chat-foot">
+              <input
+                className="cf-chat-in"
+                placeholder="Type your message…"
+                value={chatInput}
+                onChange={e => setChatInput(e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleChatSend(); } }}
+                disabled={chatSending}
+                aria-label="Chat message"
+              />
+              <motion.button
+                className="cf-chat-send"
+                onClick={handleChatSend}
+                disabled={!chatInput.trim() || chatSending}
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.93 }}
+                aria-label="Send message"
+              >
+                {chatSending
+                  ? <svg className="cf-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><circle cx="12" cy="12" r="10" strokeOpacity=".25" /><path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" /></svg>
+                  : <RiSendPlaneFill size={16} color="#fff" />
+                }
+              </motion.button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ══════════ VERIFICATION MODAL ══════════ */}
       <VerificationModal
-        open={verModalOpen}
+        open={verOpen}
         email={form.email}
         loading={verLoading}
-        error={verError}
-        onClose={closeVerModal}
-        onSubmit={handleVerifyCode}
+        error={verErr}
+        onClose={closeVer}
+        onSubmit={handleVerify}
       />
     </div>
   );
 };
 
-/* Keep your existing CSS the same */
 /* ══════════════════════════════════════════════════════
    CSS
 ══════════════════════════════════════════════════════ */
@@ -1198,278 +1315,812 @@ const CSS = `
 html{scroll-behavior:smooth}
 body{-webkit-font-smoothing:antialiased}
 ::selection{background:#065f46;color:#fff}
-::-webkit-scrollbar{width:7px}
+::-webkit-scrollbar{width:6px}
 ::-webkit-scrollbar-track{background:#f0fdf4}
-::-webkit-scrollbar-thumb{background:#065f46;border-radius:4px}
+::-webkit-scrollbar-thumb{background:#065f46;border-radius:3px}
 
-.ct{font-family:'Inter',system-ui,sans-serif;color:#1e293b;background:#fff}
+.cf{font-family:'Inter',system-ui,sans-serif;color:#1e293b;background:#fff;line-height:1.6}
 
-/* ── HERO ── */
-.ct-hero{position:relative;min-height:78vh;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.ct-hero-bg{position:absolute;inset:-10%;background-size:cover;background-position:center;will-change:transform;filter:brightness(.82)}
-.ct-hero-overlay{position:absolute;inset:0;background:linear-gradient(170deg,rgba(6,78,59,.32) 0%,rgba(4,120,87,.7) 40%,rgba(6,95,70,.78) 70%,rgba(6,78,59,.85) 100%)}
-.ct-hero-inner{position:relative;z-index:2;text-align:center;padding:0 clamp(16px,4vw,24px);max-width:840px}
-.ct-hero-badge{display:inline-flex;align-items:center;gap:8px;padding:10px 24px;background:rgba(255,255,255,.08);backdrop-filter:blur(16px);border:1px solid rgba(255,255,255,.12);border-radius:999px;font-size:13px;font-weight:600;color:#a7f3d0;margin-bottom:26px;letter-spacing:.3px}
-.ct-hero-h1{font-family:'Playfair Display',serif;font-size:clamp(34px,6.5vw,68px);font-weight:800;color:#fff;line-height:1.06;margin-bottom:22px;letter-spacing:-.4px}
-.ct-hero-h1 em{font-style:normal;background:linear-gradient(90deg,#6ee7b7,#a7f3d0,#d1fae5);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.ct-hero-p{font-size:clamp(15px,1.8vw,19px);color:rgba(255,255,255,.85);line-height:1.75;max-width:560px;margin:0 auto 38px}
-.ct-hero-btns{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
-.ct-scroll{position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:2}
-.ct-scroll-pill{width:28px;height:46px;border:2px solid rgba(255,255,255,.2);border-radius:14px;display:flex;justify-content:center;padding-top:10px}
-.ct-scroll-dot{width:4px;height:10px;background:#fff;border-radius:2px}
-
-/* ── BUTTONS ── */
-.ct-btn{display:inline-flex;align-items:center;gap:9px;padding:clamp(13px,1.6vw,16px) clamp(22px,3vw,34px);border-radius:14px;font-family:'Inter',sans-serif;font-size:clamp(14px,1.3vw,15px);font-weight:700;text-decoration:none;border:none;cursor:pointer;transition:all .35s cubic-bezier(.4,0,.2,1)}
-.ct-btn--white{background:#fff;color:#065f46;box-shadow:0 8px 28px rgba(0,0,0,.18)}
-.ct-btn--white:hover{transform:translateY(-3px);box-shadow:0 16px 44px rgba(0,0,0,.22)}
-.ct-btn--ghost{background:rgba(255,255,255,.1);backdrop-filter:blur(8px);color:#fff;border:2px solid rgba(255,255,255,.18)}
-.ct-btn--ghost:hover{background:rgba(255,255,255,.18);transform:translateY(-3px)}
-.ct-btn--green{background:linear-gradient(135deg,#065f46,#047857);color:#fff;box-shadow:0 8px 24px rgba(6,78,59,.32)}
-.ct-btn--green:hover{transform:translateY(-3px);box-shadow:0 14px 40px rgba(6,78,59,.42)}
-.ct-btn--outline{background:#fff;color:#065f46;border:2px solid #059669}
-.ct-btn--outline:hover{background:#ecfdf5;transform:translateY(-2px)}
-
-/* ── TRUST BAR ── */
-.ct-trust-bar{background:#064e3b;padding:0 clamp(16px,4vw,24px);box-shadow:0 4px 20px rgba(6,78,59,.28);position:relative;z-index:5}
-.ct-trust-grid{display:grid;grid-template-columns:repeat(4,1fr);max-width:1340px;margin:0 auto}
-.ct-trust-item{display:flex;align-items:center;gap:14px;padding:clamp(18px,2.5vw,28px) clamp(12px,2vw,20px);border-right:1px solid rgba(255,255,255,.07);transition:background .25s}
-.ct-trust-item:last-child{border-right:none}
-.ct-trust-item:hover{background:rgba(255,255,255,.04)}
-.ct-trust-icon{width:44px;height:44px;border-radius:12px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;color:#6ee7b7;flex-shrink:0}
-.ct-trust-val{font-size:clamp(17px,2vw,21px);font-weight:800;color:#fff;line-height:1.2}
-.ct-trust-lbl{font-size:12px;color:rgba(255,255,255,.58);font-weight:500}
-
-/* ── SECTIONS ── */
-.ct-section{padding:clamp(56px,8vw,100px) clamp(16px,4vw,24px);position:relative;overflow:hidden}
-.ct-section--white{background:#fff}
-.ct-section--soft{background:linear-gradient(180deg,#f0fdf4,#ecfdf5 50%,#f8fffe)}
-.ct-section--soft::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 10% 20%,rgba(6,78,59,.04) 0%,transparent 50%),radial-gradient(circle at 90% 75%,rgba(4,120,87,.03) 0%,transparent 50%)}
-.ct-section--dark{background:linear-gradient(135deg,#064e3b 0%,#065f46 40%,#047857 100%);color:#fff}
-.ct-wrap{max-width:1340px;margin:0 auto;position:relative;z-index:1}
-.ct-wrap--sm{max-width:860px}
-.ct-wrap--md{max-width:1120px}
-.ct-hdr{text-align:center;margin-bottom:clamp(40px,6vw,64px)}
-.ct-badge-pill{display:inline-flex;align-items:center;gap:7px;padding:7px 18px;background:rgba(6,78,59,.08);border:1px solid rgba(6,78,59,.12);border-radius:999px;font-size:12.5px;font-weight:700;color:#065f46;margin-bottom:18px}
-.ct-h2{font-family:'Playfair Display',serif;font-size:clamp(26px,4.5vw,48px);font-weight:800;line-height:1.12;letter-spacing:-.4px;color:#0f172a;margin-bottom:12px}
-.ct-h2 em{font-style:normal;background:linear-gradient(135deg,#065f46,#059669);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.ct-h2--white{color:#fff}
-.ct-h2--white em{background:linear-gradient(90deg,#6ee7b7,#a7f3d0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.ct-sub{font-size:clamp(14px,1.5vw,17px);color:#64748b;max-width:540px;margin:0 auto;line-height:1.7}
-.ct-sub--light{color:rgba(255,255,255,.78)}
-
-/* ── TWO-COL ── */
-.ct-two-col{display:grid;grid-template-columns:1fr;gap:clamp(28px,5vw,52px)}
-@media(min-width:1024px){.ct-two-col{grid-template-columns:5fr 7fr}}
-
-/* ── USER CARD (auth greeting) ── */
-.ct-user-card{
-  background:linear-gradient(135deg,#ecfdf5,#d1fae5);
-  border:1px solid #a7f3d0;border-radius:18px;
-  padding:16px 18px;margin-bottom:4px;
-  box-shadow:0 4px 16px rgba(6,78,59,.08);
-  overflow:hidden;position:relative;
+/* ─── HERO ─────────────────────────────────── */
+.cf-hero{
+  position:relative;min-height:80vh;
+  display:flex;align-items:center;justify-content:center;
+  overflow:hidden;
 }
-.ct-user-card::before{
+.cf-hero-bg{
+  position:absolute;inset:-12%;
+  background-size:cover;background-position:center;
+  will-change:transform;filter:brightness(.78);
+}
+.cf-hero-overlay{
+  position:absolute;inset:0;
+  background:linear-gradient(160deg,
+    rgba(6,78,59,.28) 0%,
+    rgba(4,120,87,.68) 35%,
+    rgba(6,95,70,.8) 65%,
+    rgba(6,78,59,.88) 100%
+  );
+}
+.cf-hero-inner{
+  position:relative;z-index:2;
+  text-align:center;
+  padding:0 clamp(20px,5vw,32px);
+  max-width:820px;
+}
+.cf-hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 22px;
+  background:rgba(255,255,255,.09);backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.14);border-radius:999px;
+  font-size:13px;font-weight:600;color:#a7f3d0;
+  margin-bottom:24px;letter-spacing:.3px;
+}
+.cf-hero-h1{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(36px,7vw,70px);
+  font-weight:800;color:#fff;
+  line-height:1.05;margin-bottom:20px;letter-spacing:-.5px;
+}
+.cf-hero-h1 em{
+  font-style:normal;
+  background:linear-gradient(90deg,#6ee7b7,#a7f3d0,#d1fae5);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.cf-hero-p{
+  font-size:clamp(15px,1.9vw,19px);color:rgba(255,255,255,.84);
+  line-height:1.75;max-width:520px;margin:0 auto 36px;
+}
+.cf-hero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.cf-scroll-hint{position:absolute;bottom:28px;left:50%;transform:translateX(-50%);z-index:2}
+.cf-scroll-pill{width:26px;height:44px;border:2px solid rgba(255,255,255,.22);border-radius:13px;display:flex;justify-content:center;padding-top:8px}
+.cf-scroll-dot{width:4px;height:9px;background:#fff;border-radius:2px}
+
+/* ─── BUTTONS ───────────────────────────────── */
+.cf-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:clamp(12px,1.5vw,15px) clamp(22px,3vw,32px);
+  border-radius:13px;
+  font-family:'Inter',sans-serif;
+  font-size:clamp(13.5px,1.3vw,15px);font-weight:700;
+  text-decoration:none;border:none;cursor:pointer;
+  transition:all .32s cubic-bezier(.4,0,.2,1);
+}
+.cf-btn--white{background:#fff;color:#065f46;box-shadow:0 8px 26px rgba(0,0,0,.17)}
+.cf-btn--white:hover{transform:translateY(-3px);box-shadow:0 16px 42px rgba(0,0,0,.22)}
+.cf-btn--ghost{background:rgba(255,255,255,.1);backdrop-filter:blur(8px);color:#fff;border:2px solid rgba(255,255,255,.2)}
+.cf-btn--ghost:hover{background:rgba(255,255,255,.18);transform:translateY(-3px)}
+.cf-btn--green{background:linear-gradient(135deg,#065f46,#047857);color:#fff;box-shadow:0 8px 22px rgba(6,78,59,.3)}
+.cf-btn--green:hover{transform:translateY(-3px);box-shadow:0 14px 38px rgba(6,78,59,.42)}
+.cf-btn--outline{background:#fff;color:#065f46;border:2px solid #059669}
+.cf-btn--outline:hover{background:#ecfdf5;transform:translateY(-2px)}
+
+/* ─── TRUST BAR ─────────────────────────────── */
+.cf-trust{background:#064e3b;padding:0 clamp(16px,4vw,24px);box-shadow:0 4px 18px rgba(6,78,59,.26)}
+.cf-trust-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  max-width:1280px;margin:0 auto;
+}
+.cf-trust-item{
+  display:flex;align-items:center;gap:13px;
+  padding:clamp(18px,2.5vw,26px) clamp(12px,1.8vw,20px);
+  border-right:1px solid rgba(255,255,255,.07);
+  transition:background .25s;
+}
+.cf-trust-item:last-child{border-right:none}
+.cf-trust-item:hover{background:rgba(255,255,255,.04)}
+.cf-trust-icon{
+  width:42px;height:42px;border-radius:11px;
+  background:rgba(255,255,255,.08);
+  display:flex;align-items:center;justify-content:center;
+  color:#6ee7b7;flex-shrink:0;
+}
+.cf-trust-val{font-size:clamp(16px,2vw,20px);font-weight:800;color:#fff;line-height:1.2}
+.cf-trust-lbl{font-size:11.5px;color:rgba(255,255,255,.55);font-weight:500;margin-top:1px}
+
+/* ─── SECTIONS ──────────────────────────────── */
+.cf-section{
+  padding:clamp(56px,8vw,96px) clamp(16px,4vw,24px);
+  position:relative;overflow:hidden;
+}
+.cf-section--white{background:#fff}
+.cf-section--soft{
+  background:linear-gradient(180deg,#f0fdf4,#ecfdf5 60%,#f8fffe);
+}
+.cf-section--soft::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(circle at 8% 18%,rgba(6,78,59,.045) 0%,transparent 48%),
+    radial-gradient(circle at 88% 72%,rgba(4,120,87,.035) 0%,transparent 48%);
+}
+.cf-cta{
+  background:linear-gradient(135deg,#064e3b 0%,#065f46 45%,#047857 100%);
+  text-align:center;
+}
+.cf-cta-pat{
+  position:absolute;inset:0;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fff' fill-opacity='.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+}
+.cf-cta-inner{position:relative;z-index:1;max-width:680px;margin:0 auto}
+.cf-cta-icon{
+  width:72px;height:72px;border-radius:50%;
+  background:rgba(255,255,255,.1);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 22px;backdrop-filter:blur(4px);
+}
+.cf-cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:32px}
+
+.cf-wrap{max-width:1280px;margin:0 auto;position:relative;z-index:1}
+.cf-wrap--sm{max-width:820px}
+.cf-wrap--md{max-width:1060px}
+
+.cf-hdr{text-align:center;margin-bottom:clamp(36px,5.5vw,60px)}
+.cf-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 16px;
+  background:rgba(6,78,59,.08);border:1px solid rgba(6,78,59,.12);
+  border-radius:999px;font-size:12px;font-weight:700;color:#065f46;
+  margin-bottom:16px;
+}
+.cf-h2{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(26px,4.5vw,46px);
+  font-weight:800;line-height:1.12;
+  letter-spacing:-.4px;color:#0f172a;margin-bottom:12px;
+}
+.cf-h2 em{
+  font-style:normal;
+  background:linear-gradient(135deg,#065f46,#059669);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.cf-h2--white{color:#fff}
+.cf-h2--white em{
+  background:linear-gradient(90deg,#6ee7b7,#a7f3d0);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.cf-sub{font-size:clamp(14px,1.5vw,16.5px);color:#64748b;max-width:520px;margin:0 auto;line-height:1.72}
+.cf-sub--light{color:rgba(255,255,255,.78)}
+
+/* ─── TWO-COL LAYOUT ────────────────────────── */
+.cf-two-col{
+  display:grid;grid-template-columns:1fr;
+  gap:clamp(28px,5vw,52px);align-items:start;
+}
+@media(min-width:1024px){.cf-two-col{grid-template-columns:5fr 7fr}}
+
+/* ─── CONTACT INFO ──────────────────────────── */
+.cf-info{display:flex;flex-direction:column;gap:clamp(12px,1.4vw,16px)}
+.cf-info-h3{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(20px,2.4vw,26px);font-weight:700;color:#0f172a;
+}
+.cf-info-p{font-size:clamp(13px,1.2vw,14.5px);color:#64748b;line-height:1.7}
+
+.cf-card-link{
+  display:flex;align-items:flex-start;gap:15px;
+  padding:clamp(14px,1.8vw,20px) clamp(14px,2vw,22px);
+  background:#fff;border-radius:16px;
+  border:1px solid rgba(6,78,59,.06);
+  box-shadow:0 2px 10px rgba(0,0,0,.024);
+  text-decoration:none;color:inherit;
+  transition:all .32s cubic-bezier(.4,0,.2,1);
+  position:relative;overflow:hidden;
+}
+.cf-card-link::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+  background:linear-gradient(180deg,#065f46,#059669);
+  border-radius:4px 0 0 4px;
+  opacity:0;transition:opacity .28s;
+}
+.cf-card-link:hover{transform:translateX(5px);box-shadow:0 8px 26px rgba(6,78,59,.09);border-color:rgba(6,78,59,.12)}
+.cf-card-link:hover::before{opacity:1}
+.cf-card-icon{
+  width:46px;height:46px;border-radius:13px;
+  background:linear-gradient(135deg,#065f46,#047857);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;flex-shrink:0;
+  box-shadow:0 4px 12px rgba(6,78,59,.26);
+  transition:transform .28s;
+}
+.cf-card-link:hover .cf-card-icon{transform:rotate(-5deg) scale(1.06)}
+.cf-card-body{flex:1;min-width:0}
+.cf-card-title{font-size:clamp(13px,1.2vw,14.5px);font-weight:700;color:#0f172a;margin-bottom:3px}
+.cf-card-line{font-size:clamp(12px,1.1vw,13px);color:#64748b;line-height:1.5}
+.cf-card-ext{position:absolute;top:14px;right:14px;color:#cbd5e1;opacity:0;transition:opacity .28s}
+.cf-card-link:hover .cf-card-ext{opacity:1}
+
+/* User card */
+.cf-user-card{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px;
+  background:linear-gradient(135deg,#ecfdf5,#d1fae5);
+  border:1px solid #a7f3d0;border-radius:16px;
+  box-shadow:0 4px 14px rgba(6,78,59,.07);
+  position:relative;overflow:hidden;
+}
+.cf-user-card::before{
   content:'';position:absolute;top:0;left:0;right:0;height:3px;
   background:linear-gradient(90deg,#065f46,#10b981,#065f46);
   background-size:200% 100%;
-  animation:ct-flow 4s ease infinite;
+  animation:cf-flow 4s ease infinite;
 }
-.ct-user-card-inner{display:flex;align-items:center;gap:12px}
-.ct-user-avatar{
-  width:48px;height:48px;border-radius:50%;
+.cf-user-av{
+  width:46px;height:46px;border-radius:50%;flex-shrink:0;
   background:linear-gradient(135deg,#065f46,#047857);
   display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;box-shadow:0 4px 14px rgba(6,78,59,.25);
-  overflow:hidden;border:2px solid rgba(255,255,255,.5);
+  box-shadow:0 4px 12px rgba(6,78,59,.24);
+  border:2px solid rgba(255,255,255,.5);overflow:hidden;
 }
-.ct-user-name{font-size:14.5px;font-weight:700;color:#064e3b;line-height:1.3}
-.ct-user-email{font-size:12px;color:#065f46;opacity:.75;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.ct-user-phone{font-size:12px;color:#065f46;opacity:.65;margin-top:2px}
-.ct-user-badge{
+.cf-user-meta{flex:1;min-width:0}
+.cf-user-name{font-size:14px;font-weight:700;color:#064e3b}
+.cf-user-email{font-size:12px;color:#065f46;opacity:.75;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cf-user-badge{
   display:inline-flex;align-items:center;gap:4px;
-  padding:4px 10px;border-radius:999px;
+  padding:4px 9px;border-radius:999px;
   background:rgba(6,78,59,.1);border:1px solid rgba(6,78,59,.15);
   color:#065f46;font-size:10.5px;font-weight:700;
   white-space:nowrap;flex-shrink:0;
 }
 
-/* ── CONTACT INFO COL ── */
-.ct-info-col{display:flex;flex-direction:column;gap:clamp(12px,1.5vw,16px)}
-.ct-info-h3{font-family:'Playfair Display',serif;font-size:clamp(22px,2.5vw,28px);font-weight:700;color:#0f172a;margin-bottom:4px}
-.ct-info-p{font-size:clamp(13px,1.2vw,15px);color:#64748b;line-height:1.7;margin-bottom:8px}
-.ct-contact-card{display:flex;align-items:flex-start;gap:16px;padding:clamp(16px,2vw,22px) clamp(16px,2vw,24px);background:#fff;border-radius:18px;border:1px solid rgba(6,78,59,.06);box-shadow:0 2px 10px rgba(0,0,0,.025);text-decoration:none;color:inherit;transition:all .35s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden}
-.ct-contact-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#065f46,#059669);border-radius:4px 0 0 4px;opacity:0;transition:opacity .3s}
-.ct-contact-card:hover{transform:translateX(6px);box-shadow:0 8px 28px rgba(6,78,59,.09);border-color:rgba(6,78,59,.12)}
-.ct-contact-card:hover::before{opacity:1}
-.ct-contact-icon{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,#065f46,#047857);display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;box-shadow:0 4px 14px rgba(6,78,59,.28);transition:transform .3s}
-.ct-contact-card:hover .ct-contact-icon{transform:rotate(-6deg) scale(1.07)}
-.ct-contact-title{font-size:clamp(13px,1.2vw,15px);font-weight:700;color:#0f172a;margin-bottom:4px}
-.ct-contact-line{font-size:clamp(12px,1.1vw,13.5px);color:#64748b;line-height:1.55}
-.ct-contact-ext{position:absolute;top:16px;right:16px;color:#cbd5e1;opacity:0;transition:opacity .3s}
-.ct-contact-card:hover .ct-contact-ext{opacity:1}
-.ct-socials-box{background:#fff;padding:clamp(18px,2vw,24px);border-radius:18px;border:1px solid rgba(6,78,59,.06);box-shadow:0 2px 10px rgba(0,0,0,.025)}
-.ct-socials-title{font-size:13.5px;font-weight:700;color:#0f172a;margin-bottom:14px}
-.ct-socials-row{display:flex;flex-wrap:wrap;gap:10px}
-.ct-social{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;text-decoration:none;background:#ecfdf5;color:#065f46;border:1px solid rgba(6,78,59,.08);transition:all .3s cubic-bezier(.4,0,.2,1)}
-.ct-social:hover{background:#065f46;color:#fff;box-shadow:0 8px 22px rgba(6,78,59,.28);border-color:#065f46}
-
-/* ── FORM CARD ── */
-.ct-card{background:#fff;border-radius:24px;padding:clamp(22px,4vw,44px);box-shadow:0 6px 36px rgba(0,0,0,.05);border:1px solid rgba(6,78,59,.06);position:relative;overflow:hidden}
-.ct-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#064e3b,#047857,#10b981,#047857,#064e3b);background-size:200% 100%;animation:ct-flow 5s ease infinite}
-@keyframes ct-flow{0%{background-position:200% 0}100%{background-position:-200% 0}}
-
-/* Auto-fill glow on inputs */
-.ct-input.autofill-glow{
-  border-color:#a7f3d0 !important;
-  background:linear-gradient(135deg,#fff,#f0fdf4) !important;
-  box-shadow:0 0 0 3px rgba(6,78,59,.06) !important;
+/* Socials */
+.cf-socials{background:#fff;padding:clamp(16px,1.8vw,22px);border-radius:16px;border:1px solid rgba(6,78,59,.06);box-shadow:0 2px 10px rgba(0,0,0,.024)}
+.cf-socials-title{font-size:13px;font-weight:700;color:#0f172a;margin-bottom:13px}
+.cf-socials-row{display:flex;flex-wrap:wrap;gap:9px}
+.cf-social{
+  width:40px;height:40px;border-radius:11px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;text-decoration:none;
+  background:#ecfdf5;color:#065f46;
+  border:1px solid rgba(6,78,59,.08);
+  transition:all .28s cubic-bezier(.4,0,.2,1);
 }
-.ct-wrap-f.autofilled .ct-uline{background:linear-gradient(90deg,#047857,#34d399)!important;transform:scaleX(1)!important}
+.cf-social:hover{background:#065f46;color:#fff;box-shadow:0 7px 20px rgba(6,78,59,.26)}
 
-/* Completion */
-.ct-prog-row{display:flex;justify-content:space-between;margin-bottom:7px}
-.ct-prog-label{font-size:11.5px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px}
-.ct-prog-pct{font-size:11.5px;font-weight:700;color:#065f46}
-.ct-prog-track{height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden;margin-bottom:28px}
-.ct-prog-fill{height:100%;background:linear-gradient(90deg,#065f46,#059669);border-radius:2px}
+/* ─── FORM PANEL ────────────────────────────── */
+.cf-panel{
+  background:#fff;border-radius:22px;
+  padding:clamp(22px,4vw,42px);
+  box-shadow:0 6px 34px rgba(0,0,0,.048);
+  border:1px solid rgba(6,78,59,.07);
+  position:relative;overflow:hidden;
+}
+.cf-panel::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,#064e3b,#047857,#10b981,#047857,#064e3b);
+  background-size:200% 100%;
+  animation:cf-flow 5s ease infinite;
+}
+@keyframes cf-flow{0%{background-position:200% 0}100%{background-position:-200% 0}}
 
-/* Step dots */
-.ct-steps{display:flex;align-items:center;justify-content:center;margin-bottom:10px}
-.ct-step-dot{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #e2e8f0;background:#fff;color:#94a3b8;cursor:pointer;transition:all .35s cubic-bezier(.4,0,.2,1);position:relative;z-index:2}
-.ct-step-dot.active{background:linear-gradient(135deg,#065f46,#047857);border-color:#065f46;color:#fff;box-shadow:0 4px 18px rgba(6,78,59,.32)}
-.ct-step-dot.done{background:#047857;border-color:#047857;color:#fff}
-.ct-step-line{flex:1;max-width:80px;height:3px;background:#e2e8f0;border-radius:2px;transition:background .4s}
-.ct-step-line.filled{background:linear-gradient(90deg,#065f46,#059669)}
-.ct-step-lbls{display:flex;justify-content:space-between;margin-bottom:28px;padding:0 6px}
-.ct-step-lbls span{font-size:clamp(10px,1.1vw,12px);font-weight:600;color:#94a3b8;text-align:center;flex:1;transition:color .3s}
-.ct-step-lbls span.active{color:#065f46}
-.ct-step-lbls span.done{color:#047857}
-.ct-step-hd{margin-bottom:24px}
-.ct-step-hd h4{font-family:'Playfair Display',serif;font-size:clamp(18px,2vw,22px);font-weight:700;color:#0f172a;margin-bottom:5px}
-.ct-step-hd p{font-size:13.5px;color:#64748b;line-height:1.6}
+/* Auto-fill banner */
+.cf-banner{
+  display:flex;align-items:center;gap:11px;
+  padding:11px 14px;margin-bottom:18px;
+  background:linear-gradient(135deg,#ecfdf5,#d1fae5);
+  border:1px solid #a7f3d0;border-radius:13px;
+  position:relative;overflow:hidden;
+}
+.cf-banner::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,#065f46,#10b981);
+  border-radius:13px 0 0 13px;
+}
+.cf-banner-av{
+  width:34px;height:34px;border-radius:50%;flex-shrink:0;
+  background:linear-gradient(135deg,#065f46,#047857);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 3px 10px rgba(6,78,59,.22);overflow:hidden;
+}
+.cf-banner-txt{flex:1;min-width:0}
+.cf-banner-name{display:block;font-size:12.5px;font-weight:700;color:#064e3b}
+.cf-banner-sub{display:block;font-size:11px;color:#065f46;opacity:.75;margin-top:1px}
+.cf-banner-close{
+  background:none;border:none;cursor:pointer;
+  color:#065f46;opacity:.6;padding:3px;
+  display:flex;align-items:center;flex-shrink:0;
+  transition:opacity .2s;
+}
+.cf-banner-close:hover{opacity:1}
+
+/* Completion bar */
+.cf-prog{margin-bottom:24px}
+.cf-prog-top{display:flex;justify-content:space-between;margin-bottom:6px}
+.cf-prog-lbl{font-size:11px;font-weight:600;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px}
+.cf-prog-pct{font-size:11px;font-weight:700;color:#065f46}
+.cf-prog-track{height:4px;background:#e2e8f0;border-radius:2px;overflow:hidden}
+.cf-prog-fill{height:100%;background:linear-gradient(90deg,#065f46,#059669);border-radius:2px}
+
+/* Stepper */
+.cf-stepper{
+  display:flex;align-items:center;
+  gap:0;margin-bottom:28px;
+  background:#f8fafc;border-radius:14px;
+  padding:14px 18px;border:1px solid #e2e8f0;
+}
+.cf-step{
+  display:flex;align-items:center;gap:10px;
+  cursor:pointer;flex:1;
+  padding:2px 0;transition:opacity .25s;
+}
+.cf-step:not(.cf-step--active):not(.cf-step--done){opacity:.45}
+.cf-step-circle{
+  width:38px;height:38px;border-radius:50%;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border:2px solid #e2e8f0;background:#fff;color:#94a3b8;
+  transition:all .3s cubic-bezier(.4,0,.2,1);
+}
+.cf-step--active .cf-step-circle{
+  background:linear-gradient(135deg,#065f46,#047857);
+  border-color:#065f46;color:#fff;
+  box-shadow:0 4px 16px rgba(6,78,59,.3);
+}
+.cf-step--done .cf-step-circle{
+  background:#047857;border-color:#047857;color:#fff;
+}
+.cf-step-meta{display:flex;flex-direction:column}
+.cf-step-num{font-size:10px;font-weight:600;color:#94a3b8;letter-spacing:.3px;text-transform:uppercase}
+.cf-step-lbl{font-size:13px;font-weight:700;color:#0f172a;line-height:1.3}
+.cf-step--active .cf-step-lbl{color:#065f46}
+.cf-step-line{
+  flex:1;height:2px;background:#e2e8f0;
+  margin:0 10px;border-radius:1px;
+  transition:background .35s;
+}
+.cf-step-line--done{background:linear-gradient(90deg,#065f46,#059669)}
+
+/* Step body */
+.cf-step-body{min-height:260px;position:relative}
+.cf-step-hd{margin-bottom:22px}
+.cf-step-hd h4{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(17px,2vw,21px);font-weight:700;color:#0f172a;margin-bottom:4px;
+}
+.cf-step-hd p{font-size:13.5px;color:#64748b;line-height:1.6}
+
+/* Grid */
+.cf-grid-2{
+  display:grid;grid-template-columns:1fr 1fr;gap:0 16px;
+}
+@media(max-width:560px){.cf-grid-2{grid-template-columns:1fr}}
+
+/* Optional block */
+.cf-optional-block{
+  margin-top:8px;padding:16px;
+  background:#f8fafc;border-radius:13px;
+  border:1px dashed #e2e8f0;
+}
+.cf-optional-lbl{
+  display:flex;align-items:center;gap:6px;
+  font-size:11.5px;font-weight:700;color:#94a3b8;
+  text-transform:uppercase;letter-spacing:.4px;
+  margin-bottom:14px;
+}
 
 /* Form fields */
-.ct-body{position:relative;min-height:240px}
-.ct-step-wrap{width:100%}
-.ct-row{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
-@media(max-width:580px){.ct-row{grid-template-columns:1fr}}
-.ct-field{margin-bottom:18px}
-.ct-field--full{grid-column:1/-1}
-.ct-label{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:#334155;margin-bottom:7px;transition:color .3s;flex-wrap:wrap}
-.ct-req{color:#ef4444;margin-left:2px}
-.ct-wrap-f{position:relative}
-.ct-input,.ct-select,.ct-textarea{width:100%;padding:14px 42px 14px 16px;font-family:'Inter',sans-serif;font-size:14px;border:2px solid #e2e8f0;border-radius:13px;outline:none;background:#f8fafc;color:#1e293b;transition:all .32s cubic-bezier(.4,0,.2,1)}
-.ct-input::placeholder,.ct-textarea::placeholder{color:#94a3b8}
-.ct-input:focus,.ct-select:focus,.ct-textarea:focus{border-color:#065f46;background:#fff;box-shadow:0 0 0 4px rgba(6,78,59,.07)}
-.ct-input.err,.ct-textarea.err{border-color:#ef4444}
-.ct-input.ok{border-color:#059669}
-.ct-select{appearance:none;cursor:pointer;padding-right:42px}
-.ct-sel-arr{position:absolute;right:13px;top:50%;transform:translateY(-50%);pointer-events:none;transition:color .3s}
-.ct-textarea{min-height:130px;resize:vertical;padding-bottom:40px}
-.ct-uline{position:absolute;bottom:0;left:5%;width:90%;height:3px;background:linear-gradient(90deg,#065f46,#059669,#34d399);border-radius:0 0 13px 13px;transform:scaleX(0);transform-origin:center;transition:transform .32s cubic-bezier(.4,0,.2,1)}
-.ct-wrap-f.focused .ct-uline{transform:scaleX(1)}
-.ct-status{position:absolute;right:13px;top:50%;transform:translateY(-50%)}
-.ct-field-err{display:flex;align-items:center;gap:5px;font-size:11.5px;color:#ef4444;margin-top:5px;font-weight:500;overflow:hidden}
-.ct-char{position:absolute;bottom:11px;left:14px;right:14px;display:flex;align-items:center;gap:10px}
-.ct-char-track{flex:1;height:3px;background:#e2e8f0;border-radius:2px;overflow:hidden}
-.ct-char-fill{height:100%;border-radius:2px}
-.ct-char-num{font-size:11px;font-weight:500;flex-shrink:0}
+.cf-field{margin-bottom:16px}
+.cf-field--full{grid-column:1/-1}
+.cf-label{
+  display:flex;align-items:center;gap:6px;
+  font-size:12.5px;font-weight:600;color:#334155;
+  margin-bottom:6px;transition:color .25s;flex-wrap:wrap;
+}
+.cf-req{color:#ef4444;margin-left:1px}
+.cf-autobadge{
+  display:inline-flex;align-items:center;gap:3px;
+  padding:2px 7px;border-radius:999px;
+  background:#d1fae5;border:1px solid #a7f3d0;
+  color:#065f46;font-size:10px;font-weight:700;
+  letter-spacing:.2px;margin-left:4px;
+}
+.cf-input-wrap{position:relative;transition:all .28s}
+.cf-input-wrap.is-focused .cf-input,
+.cf-input-wrap.is-focused .cf-select{
+  border-color:#065f46;background:#fff;
+  box-shadow:0 0 0 4px rgba(6,78,59,.07);
+}
+.cf-input-wrap.is-error .cf-input{border-color:#ef4444}
+.cf-input-wrap.is-ok .cf-input{border-color:#059669}
+.cf-input-wrap.is-auto .cf-input{
+  border-color:#a7f3d0;
+  background:linear-gradient(135deg,#fff,#f0fdf4);
+}
+.cf-input,.cf-select{
+  width:100%;
+  padding:13px 40px 13px 14px;
+  font-family:'Inter',sans-serif;font-size:14px;
+  border:2px solid #e2e8f0;border-radius:12px;
+  outline:none;background:#f8fafc;color:#1e293b;
+  transition:all .28s cubic-bezier(.4,0,.2,1);
+}
+.cf-input::placeholder{color:#94a3b8}
+.cf-select{appearance:none;cursor:pointer;padding-right:40px}
+.cf-select-wrap{display:block}
+.cf-sel-icon{position:absolute;right:12px;top:50%;transform:translateY(-50%);pointer-events:none;transition:color .25s}
+.cf-icon-right{position:absolute;right:12px;top:50%;transform:translateY(-50%)}
+.cf-err-msg{
+  display:flex;align-items:center;gap:5px;
+  font-size:11.5px;color:#ef4444;margin-top:4px;
+  font-weight:500;overflow:hidden;
+}
+
+/* Textarea */
+.cf-ta-wrap{display:block}
+.cf-textarea{
+  width:100%;
+  padding:13px 14px 44px;
+  font-family:'Inter',sans-serif;font-size:14px;
+  border:2px solid #e2e8f0;border-radius:12px;
+  outline:none;background:#f8fafc;color:#1e293b;
+  min-height:140px;resize:vertical;
+  transition:all .28s cubic-bezier(.4,0,.2,1);
+}
+.cf-textarea::placeholder{color:#94a3b8}
+.cf-ta-wrap.is-focused .cf-textarea{
+  border-color:#065f46;background:#fff;
+  box-shadow:0 0 0 4px rgba(6,78,59,.07);
+}
+.cf-ta-wrap.is-error .cf-textarea{border-color:#ef4444}
+.cf-ta-wrap.is-ok .cf-textarea{border-color:#059669}
+.cf-char-row{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 14px 10px;
+}
+.cf-char-track{flex:1;height:3px;background:#e2e8f0;border-radius:2px;overflow:hidden}
+.cf-char-fill{height:100%;border-radius:2px}
+.cf-char-cnt{font-size:11px;font-weight:500;color:#94a3b8;flex-shrink:0}
 
 /* Server error */
-.ct-srv-err{display:flex;align-items:center;gap:8px;padding:13px 16px;background:#fef2f2;border:1px solid #fecaca;border-radius:12px;margin-bottom:14px;font-size:13.5px;color:#dc2626;font-weight:500}
+.cf-srv-err{
+  display:flex;align-items:center;gap:8px;
+  padding:12px 15px;
+  background:#fef2f2;border:1px solid #fecaca;border-radius:12px;
+  font-size:13.5px;color:#dc2626;font-weight:500;
+  margin-bottom:14px;
+}
+
+/* Submit */
+.cf-submit{
+  width:100%;padding:16px 28px;
+  border-radius:14px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,#064e3b,#047857);
+  color:#fff;
+  font-family:'Inter',sans-serif;font-size:15px;font-weight:700;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  box-shadow:0 6px 22px rgba(6,78,59,.28);
+  position:relative;overflow:hidden;
+  transition:box-shadow .3s;
+  margin-top:4px;
+}
+.cf-submit:hover:not(:disabled){box-shadow:0 14px 36px rgba(6,78,59,.42)}
+.cf-submit:disabled{opacity:.82;cursor:wait}
+.cf-submit-bar{
+  position:absolute;bottom:0;left:0;height:3px;
+  background:rgba(255,255,255,.35);
+  border-radius:0 2px 2px 0;
+  transition:width .15s linear;
+}
+.cf-privacy{
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  font-size:11.5px;color:#94a3b8;margin-top:14px;
+}
 
 /* Nav */
-.ct-nav{display:flex;justify-content:space-between;align-items:center;margin-top:26px;gap:12px}
-.ct-nav-back{display:inline-flex;align-items:center;gap:7px;padding:13px 24px;border-radius:13px;background:#ecfdf5;color:#065f46;border:2px solid rgba(6,78,59,.14);font-family:'Inter',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:background .25s}
-.ct-nav-back:hover{background:#d1fae5}
-.ct-nav-next{display:inline-flex;align-items:center;gap:7px;padding:13px 28px;border-radius:13px;background:linear-gradient(135deg,#065f46,#047857);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 6px 20px rgba(6,78,59,.28);transition:box-shadow .3s}
-.ct-nav-next:hover{box-shadow:0 10px 30px rgba(6,78,59,.38)}
-.ct-nav-submit{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:17px 28px;border-radius:15px;background:linear-gradient(135deg,#064e3b,#047857);color:#fff;border:none;font-family:'Inter',sans-serif;font-size:15px;font-weight:700;cursor:pointer;box-shadow:0 6px 24px rgba(6,78,59,.3);position:relative;overflow:hidden;transition:box-shadow .3s}
-.ct-nav-submit:hover:not(:disabled){box-shadow:0 14px 40px rgba(6,78,59,.42)}
-.ct-nav-submit:disabled{opacity:.8;cursor:wait}
-.ct-progress-strip{position:absolute;bottom:0;left:0;height:4px;background:rgba(255,255,255,.3);border-radius:0 2px 2px 0;transition:width .15s}
-.ct-privacy-note{display:flex;align-items:center;justify-content:center;gap:7px;font-size:11.5px;color:#94a3b8;margin-top:16px}
+.cf-nav{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-top:24px;gap:10px;border-top:1px solid #f1f5f9;
+  padding-top:20px;
+}
+.cf-nav-back{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:12px 22px;border-radius:12px;
+  background:#f1f5f9;color:#475569;
+  border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;
+  cursor:pointer;transition:background .22s;
+}
+.cf-nav-back:hover{background:#e2e8f0}
+.cf-nav-next{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:12px 26px;border-radius:12px;
+  background:linear-gradient(135deg,#065f46,#047857);
+  color:#fff;border:none;
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;box-shadow:0 5px 18px rgba(6,78,59,.26);
+  transition:box-shadow .28s;
+}
+.cf-nav-next:hover{box-shadow:0 10px 28px rgba(6,78,59,.38)}
 
-/* ── SUCCESS ── */
-.ct-success{text-align:center;padding:clamp(32px,5vw,52px) 16px}
-.ct-success-circle{width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,#065f46,#059669);display:flex;align-items:center;justify-content:center;margin:0 auto 26px;box-shadow:0 14px 40px rgba(6,78,59,.32)}
-.ct-success-h3{font-family:'Playfair Display',serif;font-size:clamp(22px,3vw,30px);font-weight:700;color:#0f172a;margin-bottom:12px}
-.ct-success-p{font-size:clamp(13px,1.3vw,15px);color:#64748b;line-height:1.7;max-width:360px;margin:0 auto 24px}
-.ct-success-email{display:inline-block;background:#ecfdf5;padding:14px 26px;border-radius:14px;margin-bottom:28px;border:1px solid rgba(6,78,59,.1)}
-.ct-success-email small{display:block;font-size:12px;color:#64748b;margin-bottom:3px}
-.ct-success-email strong{font-size:15px;color:#065f46}
-.ct-success-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+/* ─── SUCCESS ────────────────────────────────── */
+.cf-success{text-align:center;padding:clamp(28px,5vw,50px) 16px}
+.cf-success-ring{
+  width:92px;height:92px;border-radius:50%;
+  background:linear-gradient(135deg,#065f46,#059669);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 24px;box-shadow:0 14px 38px rgba(6,78,59,.3);
+}
+.cf-success-h3{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(22px,3vw,28px);font-weight:700;color:#0f172a;margin-bottom:11px;
+}
+.cf-success-p{font-size:clamp(13px,1.3vw,15px);color:#64748b;line-height:1.7;max-width:340px;margin:0 auto 22px}
+.cf-success-tag{
+  display:inline-block;background:#ecfdf5;
+  padding:12px 24px;border-radius:13px;margin-bottom:26px;
+  border:1px solid rgba(6,78,59,.1);
+}
+.cf-success-tag small{display:block;font-size:11.5px;color:#64748b;margin-bottom:2px}
+.cf-success-tag strong{font-size:14.5px;color:#065f46}
+.cf-success-actions{display:flex;gap:11px;justify-content:center;flex-wrap:wrap}
 
-/* ── FAQ ── */
-.ct-faq-list{display:flex;flex-direction:column;gap:12px}
-.ct-faq{background:#fff;border-radius:18px;border:1px solid rgba(6,78,59,.06);box-shadow:0 2px 8px rgba(0,0,0,.02);overflow:hidden;transition:all .35s cubic-bezier(.4,0,.2,1);position:relative}
-.ct-faq::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#065f46,#059669,#34d399);border-radius:4px 0 0 4px;opacity:0;transition:opacity .3s}
-.ct-faq:hover{box-shadow:0 6px 22px rgba(6,78,59,.07);border-color:rgba(6,78,59,.1)}
-.ct-faq:hover::before,.ct-faq.open::before{opacity:1}
-.ct-faq.open{box-shadow:0 8px 28px rgba(6,78,59,.09);border-color:rgba(6,78,59,.12)}
-.ct-faq-btn{width:100%;padding:clamp(16px,2vw,22px) clamp(18px,2.5vw,24px);display:flex;align-items:center;gap:14px;background:none;border:none;cursor:pointer;text-align:left}
-.ct-faq-num{font-size:12px;font-weight:700;color:#065f46;background:rgba(6,78,59,.08);width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s}
-.ct-faq.open .ct-faq-num{background:linear-gradient(135deg,#065f46,#047857);color:#fff}
-.ct-faq-q{flex:1;font-size:clamp(14px,1.3vw,15.5px);font-weight:650;color:#1e293b;line-height:1.45;transition:color .3s}
-.ct-faq:hover .ct-faq-q{color:#065f46}
-.ct-faq-chevron{width:36px;height:36px;border-radius:11px;border:none;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;background:#ecfdf5;color:#065f46;transition:all .32s}
-.ct-faq-chevron.open{background:linear-gradient(135deg,#065f46,#047857);color:#fff;box-shadow:0 4px 14px rgba(6,78,59,.28)}
-.ct-faq-body{padding:0 clamp(18px,2.5vw,24px) clamp(16px,2vw,22px) clamp(56px,6vw,72px);font-size:clamp(13px,1.2vw,14.5px);color:#475569;line-height:1.8}
-.ct-faq-body::before{content:'';display:block;height:1px;background:linear-gradient(90deg,transparent,#e2e8f0,transparent);margin-bottom:16px}
-.ct-faq-body p{margin:0}
-@media(max-width:580px){.ct-faq-body{padding-left:24px}}
+/* ─── QUICK CHANNELS ─────────────────────────── */
+.cf-channels{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.cf-ch-card{
+  display:flex;flex-direction:column;align-items:center;
+  text-align:center;
+  padding:clamp(22px,3vw,32px) clamp(18px,2.5vw,26px);
+  background:#fff;border-radius:20px;
+  border:2px solid transparent;
+  box-shadow:0 2px 14px rgba(0,0,0,.04);
+  text-decoration:none;color:inherit;
+  transition:all .32s cubic-bezier(.4,0,.2,1);
+  position:relative;overflow:hidden;
+}
+.cf-ch-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--ch-color,#065f46),transparent 70%);
+  opacity:0;transition:opacity .32s;
+  pointer-events:none;
+}
+.cf-ch-card:hover{
+  border-color:var(--ch-color,#065f46);
+  transform:translateY(-5px);
+  box-shadow:0 16px 40px rgba(0,0,0,.08);
+}
+.cf-ch-card:hover::before{opacity:.05}
+.cf-ch-icon{
+  width:56px;height:56px;border-radius:16px;
+  background:#ecfdf5;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;color:var(--ch-color,#065f46);
+  margin-bottom:14px;
+  transition:all .28s;
+}
+.cf-ch-card:hover .cf-ch-icon{
+  background:var(--ch-color,#065f46);color:#fff;
+  box-shadow:0 8px 20px rgba(0,0,0,.18);
+}
+.cf-ch-title{font-size:17px;font-weight:700;color:#0f172a;margin-bottom:3px}
+.cf-ch-sub{font-size:12px;color:#94a3b8;margin-bottom:8px}
+.cf-ch-detail{font-size:13.5px;font-weight:600;color:var(--ch-color,#065f46)}
+.cf-ch-arrow{
+  margin-top:14px;width:32px;height:32px;border-radius:50%;
+  background:#f1f5f9;
+  display:flex;align-items:center;justify-content:center;
+  color:#94a3b8;transition:all .28s;
+}
+.cf-ch-card:hover .cf-ch-arrow{background:var(--ch-color,#065f46);color:#fff}
 
-/* ── QUICK CHANNELS ── */
-.ct-quick-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
-.ct-quick-card{display:flex;align-items:center;gap:18px;padding:clamp(20px,2.5vw,28px) clamp(18px,2vw,26px);background:#fff;border-radius:20px;border:2px solid transparent;box-shadow:0 2px 12px rgba(0,0,0,.03);text-decoration:none;color:inherit;transition:all .35s cubic-bezier(.4,0,.2,1)}
-.ct-quick-card:hover{box-shadow:0 14px 38px rgba(6,78,59,.1);border-color:rgba(6,78,59,.14)}
-.ct-quick-icon{width:52px;height:52px;border-radius:15px;background:#ecfdf5;color:#065f46;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .3s}
-.ct-quick-card:hover .ct-quick-icon{background:linear-gradient(135deg,var(--ch,#065f46),#059669);color:#fff;box-shadow:0 8px 22px rgba(6,78,59,.28)}
-.ct-quick-title{font-size:clamp(15px,1.5vw,17px);font-weight:700;color:#0f172a;margin-bottom:3px}
-.ct-quick-sub{font-size:12px;color:#94a3b8;margin-bottom:5px}
-.ct-quick-detail{font-size:clamp(13px,1.2vw,14.5px);font-weight:600;color:#065f46}
+/* ─── FAQ ────────────────────────────────────── */
+.cf-faqs{display:flex;flex-direction:column;gap:10px}
+.cf-faq{
+  background:#fff;border-radius:16px;
+  border:1px solid rgba(6,78,59,.06);
+  box-shadow:0 2px 8px rgba(0,0,0,.022);
+  overflow:hidden;
+  transition:all .32s cubic-bezier(.4,0,.2,1);
+  position:relative;
+}
+.cf-faq::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+  background:linear-gradient(180deg,#065f46,#059669);
+  border-radius:4px 0 0 4px;
+  opacity:0;transition:opacity .28s;
+}
+.cf-faq:hover,.cf-faq--open{box-shadow:0 6px 20px rgba(6,78,59,.08)}
+.cf-faq:hover::before,.cf-faq--open::before{opacity:1}
+.cf-faq-btn{
+  width:100%;padding:clamp(15px,2vw,20px) clamp(16px,2.2vw,22px);
+  display:flex;align-items:center;gap:13px;
+  background:none;border:none;cursor:pointer;text-align:left;
+}
+.cf-faq-num{
+  font-size:11.5px;font-weight:700;color:#065f46;
+  background:rgba(6,78,59,.08);
+  width:32px;height:32px;border-radius:9px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .28s;
+}
+.cf-faq--open .cf-faq-num{
+  background:linear-gradient(135deg,#065f46,#047857);color:#fff;
+}
+.cf-faq-q{
+  flex:1;font-size:clamp(13.5px,1.3vw,15px);
+  font-weight:650;color:#1e293b;line-height:1.44;
+  transition:color .25s;
+}
+.cf-faq:hover .cf-faq-q{color:#065f46}
+.cf-faq-chev{
+  width:34px;height:34px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  background:#f1f5f9;color:#64748b;
+  flex-shrink:0;transition:all .28s;
+}
+.cf-faq--open .cf-faq-chev{background:linear-gradient(135deg,#065f46,#047857);color:#fff;box-shadow:0 4px 12px rgba(6,78,59,.26)}
+.cf-faq-body{
+  padding:0 clamp(16px,2.2vw,22px) clamp(14px,2vw,20px) clamp(50px,5.5vw,65px);
+  font-size:clamp(13px,1.2vw,14.5px);color:#475569;line-height:1.8;
+  border-top:1px solid #f1f5f9;padding-top:14px;
+}
 
-/* ── CTA ── */
-.ct-cta-pat{position:absolute;inset:0;pointer-events:none;background-image:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23fff' fill-opacity='.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E")}
-.ct-cta-icon{width:74px;height:74px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;margin:0 auto 26px;backdrop-filter:blur(4px)}
+/* FAQ loading/error states */
+.cf-faq-state{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  padding:48px 20px;color:#94a3b8;font-size:15px;
+}
+.cf-faq-state--err{color:#ef4444}
+.cf-spinner{
+  width:22px;height:22px;border-radius:50%;
+  border:3px solid #e2e8f0;
+  border-top-color:#065f46;
+  animation:cf-spin 0.7s linear infinite;
+}
+@keyframes cf-spin{to{transform:rotate(360deg)}}
 
-/* ── CHAT ── */
-.ct-chat-fab{position:fixed;bottom:28px;right:28px;width:58px;height:58px;border-radius:50%;background:linear-gradient(135deg,#065f46,#047857);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 28px rgba(6,78,59,.38);z-index:999}
-.ct-fab-pulse{position:absolute;inset:0;border-radius:50%;border:3px solid #059669;animation:ct-pulse 2.2s ease-out infinite}
-@keyframes ct-pulse{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.6);opacity:0}}
-.ct-chat-win{position:fixed;bottom:28px;right:28px;width:clamp(300px,90vw,372px);background:#fff;border-radius:22px;box-shadow:0 24px 64px rgba(0,0,0,.16);overflow:hidden;z-index:1000;display:flex;flex-direction:column}
-.ct-chat-head{background:linear-gradient(135deg,#064e3b,#047857);padding:16px 18px;display:flex;align-items:center;justify-content:space-between}
-.ct-chat-head-l{display:flex;align-items:center;gap:11px}
-.ct-chat-avatar{width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center}
-.ct-chat-name{color:#fff;font-weight:600;font-size:14px}
-.ct-chat-status{color:rgba(255,255,255,.72);font-size:11.5px;display:flex;align-items:center;gap:5px}
-.ct-chat-dot{width:7px;height:7px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px rgba(74,222,128,.5)}
-.ct-chat-head-r{display:flex;gap:5px}
-.ct-chat-hbtn{width:29px;height:29px;border-radius:50%;background:rgba(255,255,255,.12);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;transition:background .2s}
-.ct-chat-hbtn:hover{background:rgba(255,255,255,.22)}
-.ct-chat-body{flex:1;padding:18px;background:#f8fffe;overflow-y:auto;max-height:280px}
-.ct-bubble{background:#fff;padding:13px 16px;border-radius:16px 16px 16px 4px;max-width:86%;box-shadow:0 2px 8px rgba(0,0,0,.04);margin-bottom:12px}
-.ct-bubble--admin{background:#dbeafe;margin-left:auto;border-radius:16px 16px 4px 16px}
-.ct-bubble--user{background:#fff;margin-right:auto}
-.ct-bubble-who{font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px}
-.ct-bubble p{font-size:13.5px;color:#1e293b;line-height:1.55;margin:0 0 4px}
-.ct-bubble p:last-child{margin-bottom:0}
-.ct-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
-.ct-chip{padding:6px 13px;background:#fff;border:1px solid #059669;border-radius:999px;font-size:11.5px;font-weight:600;color:#065f46;cursor:pointer;transition:all .2s}
-.ct-chip:hover{background:#065f46;color:#fff;border-color:#065f46}
-.ct-chat-foot{padding:12px;border-top:1px solid #e2e8f0;display:flex;gap:9px}
-.ct-chat-in{flex:1;padding:10px 15px;border:1.5px solid #e2e8f0;border-radius:999px;font-size:13.5px;font-family:'Inter',sans-serif;outline:none;transition:border-color .25s}
-.ct-chat-in:focus{border-color:#065f46}
-.ct-chat-send{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#065f46,#059669);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(6,78,59,.24);flex-shrink:0}
-.ct-chat-err{padding:8px 14px;margin:0 14px 12px;border-radius:12px;background:rgba(248,113,113,.1);color:#b91c1c;font-size:12.5px}
+/* ─── CHAT FAB ───────────────────────────────── */
+.cf-fab{
+  position:fixed;bottom:28px;right:28px;
+  width:58px;height:58px;border-radius:50%;
+  background:linear-gradient(135deg,#065f46,#047857);
+  border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 26px rgba(6,78,59,.36);
+  z-index:900;
+}
+.cf-fab-pulse{
+  position:absolute;inset:-4px;border-radius:50%;
+  border:3px solid #059669;opacity:.5;
+  animation:cf-pulse 2s ease-out infinite;
+}
+@keyframes cf-pulse{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.55);opacity:0}}
+.cf-fab-badge{
+  position:absolute;top:-4px;right:-4px;
+  background:#ef4444;color:#fff;
+  font-size:10px;font-weight:700;
+  padding:2px 6px;border-radius:999px;
+  border:2px solid #fff;
+  pointer-events:none;
+}
 
-/* ── RESPONSIVE ── */
-@media(max-width:1024px){.ct-trust-grid{grid-template-columns:repeat(2,1fr)}.ct-trust-item:nth-child(2){border-right:none}}
-@media(max-width:768px){.ct-hero{min-height:65vh}.ct-hdr{margin-bottom:clamp(28px,5vw,44px)}}
-@media(max-width:640px){.ct-trust-grid{grid-template-columns:1fr 1fr}.ct-trust-item{padding:16px 12px}.ct-trust-val{font-size:17px}.ct-step-lbls span{font-size:10px}.ct-step-line{max-width:40px}}
-@media(max-width:480px){.ct-hero-btns,.ct-success-btns{flex-direction:column;align-items:stretch}.ct-btn,.ct-success-btns>*{justify-content:center;width:100%}.ct-nav{flex-direction:column}.ct-nav>div{width:100%}.ct-nav-back,.ct-nav-next,.ct-nav-submit{width:100%;justify-content:center}.ct-trust-grid{grid-template-columns:1fr}.ct-trust-item{border-right:none;border-bottom:1px solid rgba(255,255,255,.07)}.ct-trust-item:last-child{border-bottom:none}.ct-chat-win{bottom:0;right:0;width:100vw;border-radius:22px 22px 0 0}.ct-chat-fab{bottom:20px;right:20px}}
-@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+/* ─── CHAT WINDOW ────────────────────────────── */
+.cf-chat{
+  position:fixed;bottom:28px;right:28px;
+  width:clamp(300px,88vw,370px);
+  background:#fff;border-radius:20px;
+  box-shadow:0 22px 60px rgba(0,0,0,.15);
+  overflow:hidden;z-index:950;
+  display:flex;flex-direction:column;
+  max-height:calc(100vh - 56px);
+}
+.cf-chat-head{
+  background:linear-gradient(135deg,#064e3b,#047857);
+  padding:14px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+  flex-shrink:0;
+}
+.cf-chat-head-l{display:flex;align-items:center;gap:10px}
+.cf-chat-av{
+  width:38px;height:38px;border-radius:50%;
+  background:rgba(255,255,255,.14);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.cf-chat-name{color:#fff;font-weight:700;font-size:14px}
+.cf-chat-status{color:rgba(255,255,255,.72);font-size:11.5px;display:flex;align-items:center;gap:5px;margin-top:1px}
+.cf-chat-dot{width:7px;height:7px;border-radius:50%;background:#94a3b8}
+.cf-chat-dot.live{background:#4ade80;box-shadow:0 0 7px rgba(74,222,128,.5)}
+.cf-chat-close{
+  width:28px;height:28px;border-radius:50%;
+  background:rgba(255,255,255,.14);border:none;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:#fff;transition:background .2s;
+}
+.cf-chat-close:hover{background:rgba(255,255,255,.24)}
+.cf-chat-body{flex:1;padding:16px;background:#f8fffe;overflow-y:auto;min-height:200px;max-height:300px}
+.cf-chat-welcome{
+  background:#fff;padding:16px;border-radius:14px;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+.cf-chat-welcome-icon{
+  width:42px;height:42px;border-radius:12px;
+  background:#ecfdf5;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:10px;
+}
+.cf-chat-welcome p{font-size:13.5px;color:#1e293b;line-height:1.55;margin-bottom:6px}
+.cf-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
+.cf-chip{
+  padding:6px 12px;background:#fff;
+  border:1px solid #059669;border-radius:999px;
+  font-size:11.5px;font-weight:600;color:#065f46;
+  cursor:pointer;transition:all .2s;
+}
+.cf-chip:hover{background:#065f46;color:#fff;border-color:#065f46}
+.cf-bubble{
+  padding:11px 14px;border-radius:14px;
+  max-width:88%;margin-bottom:10px;
+  box-shadow:0 2px 7px rgba(0,0,0,.04);
+}
+.cf-bubble--user{
+  background:linear-gradient(135deg,#065f46,#047857);
+  margin-left:auto;border-radius:14px 14px 4px 14px;
+}
+.cf-bubble--user p{color:#fff}
+.cf-bubble:not(.cf-bubble--user){
+  background:#fff;margin-right:auto;
+  border-radius:14px 14px 14px 4px;
+}
+.cf-bubble-who{display:block;font-size:10.5px;font-weight:700;color:#94a3b8;margin-bottom:3px}
+.cf-bubble p{font-size:13.5px;line-height:1.5;margin:0 0 3px}
+.cf-bubble-time{font-size:10px;color:#94a3b8;display:block;text-align:right}
+.cf-bubble--user .cf-bubble-time{color:rgba(255,255,255,.6)}
+.cf-chat-err{
+  padding:8px 14px;margin:0 14px 10px;
+  border-radius:10px;background:#fef2f2;
+  color:#b91c1c;font-size:12px;
+  display:flex;align-items:center;gap:6px;
+  flex-shrink:0;
+}
+.cf-chat-foot{
+  padding:10px 12px;border-top:1px solid #e2e8f0;
+  display:flex;gap:8px;align-items:center;flex-shrink:0;
+}
+.cf-chat-in{
+  flex:1;padding:9px 14px;
+  border:1.5px solid #e2e8f0;border-radius:999px;
+  font-family:'Inter',sans-serif;font-size:13.5px;
+  outline:none;transition:border-color .22s;
+}
+.cf-chat-in:focus{border-color:#065f46}
+.cf-chat-send{
+  width:38px;height:38px;border-radius:50%;
+  background:linear-gradient(135deg,#065f46,#059669);
+  border:none;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 4px 11px rgba(6,78,59,.22);flex-shrink:0;
+  transition:box-shadow .22s;
+}
+.cf-chat-send:hover:not(:disabled){box-shadow:0 7px 18px rgba(6,78,59,.34)}
+.cf-chat-send:disabled{opacity:.55;cursor:not-allowed}
+
+/* ─── SPINNER ────────────────────────────────── */
+.cf-spin{animation:cf-spin .7s linear infinite}
+
+/* ─── RESPONSIVE ─────────────────────────────── */
+@media(max-width:1024px){
+  .cf-trust-grid{grid-template-columns:repeat(2,1fr)}
+  .cf-trust-item:nth-child(2){border-right:none}
+}
+@media(max-width:768px){
+  .cf-hero{min-height:68vh}
+  .cf-stepper{flex-wrap:wrap;gap:8px}
+  .cf-step-line{display:none}
+}
+@media(max-width:640px){
+  .cf-trust-grid{grid-template-columns:1fr 1fr}
+  .cf-trust-item{padding:14px 10px}
+}
+@media(max-width:520px){
+  .cf-hero-btns,.cf-cta-btns,.cf-success-actions{flex-direction:column;align-items:stretch}
+  .cf-btn{justify-content:center}
+  .cf-nav{flex-direction:column}
+  .cf-nav-back,.cf-nav-next{width:100%;justify-content:center}
+  .cf-trust-grid{grid-template-columns:1fr}
+  .cf-trust-item{border-right:none;border-bottom:1px solid rgba(255,255,255,.07)}
+  .cf-trust-item:last-child{border-bottom:none}
+  .cf-chat{bottom:0;right:0;width:100vw;border-radius:20px 20px 0 0;max-height:85vh}
+  .cf-fab{bottom:18px;right:18px}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
 `;
 
 export default Contact;

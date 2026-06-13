@@ -1,333 +1,190 @@
-import React, { memo, useMemo } from "react";
+// src/pages/Booking/components/StepOne.jsx
+// (fixed: removed internal motion wrapper since BookingSteps handles animation)
+import React, { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sunrise, Globe, Calendar, Star, Compass } from "lucide-react";
 import { THEME, normalizeOptionLabel, normalizeOptionValue } from "../BookingShared";
 import { FormSelect, FormInput } from "./FormComponents";
 
-const StepOne = memo(
-  ({
-    formData,
-    setFormData,
-    errors,
-    touched,
-    handleChange,
-    handleBlur,
-    categoriesList,
-    destinationsList,
-    countriesList,
-    servicesData,
-    getTripDuration,
-    isMobile,
-    displayName,
-  }) => {
-    const getPersonalizedGreeting = () => {
-      const hour = new Date().getHours();
-      const timeGreeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+const StepOne = memo(({
+  formData, setFormData,
+  errors, touched,
+  handleChange, handleBlur,
+  categoriesList, destinationsList, countriesList, servicesData,
+  getTripDuration, isMobile, displayName,
+}) => {
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
-      if (displayName) {
-        return `${timeGreeting}, ${displayName}!`;
-      }
-      return `${timeGreeting}!`;
-    };
-
-    const getPersonalizedSubtitle = () => {
-      if (formData.email) {
-        return "Let's create your perfect African adventure. Based on your preferences, here are some tailored recommendations.";
-      }
-      return "Let's start planning your perfect African adventure. Choose from our most popular destinations.";
-    };
-
-    return (
-      <motion.div
-        initial={{ opacity: 0, x: 40 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -40 }}
-        transition={{ duration: 0.45, ease: [0.4, 0, 0.2, 1] }}
-      >
-        <div style={{ textAlign: "center", marginBottom: isMobile ? 32 : 44 }}>
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.15, type: "spring", bounce: 0.5 }}
-            style={{
-              width: 68,
-              height: 68,
-              borderRadius: "50%",
-              background: `linear-gradient(135deg, ${THEME.primary} 0%, ${THEME.primaryLight} 100%)`,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              margin: "0 auto 20px",
-              boxShadow: `0 12px 32px ${THEME.shadowDark}`,
-            }}
-          >
-            <Compass size={30} color="white" />
-          </motion.div>
-          <h2
-            style={{
-              fontFamily: "'Playfair Display', serif",
-              fontSize: isMobile ? 26 : 36,
-              fontWeight: 700,
-              color: THEME.text,
-              marginBottom: 10,
-              lineHeight: 1.2,
-            }}
-          >
-            {getPersonalizedGreeting()}{" "}
-            <span style={{ color: THEME.primary }}>Where's Your Dream Destination?</span>
-          </h2>
-          <p
-            style={{
-              fontSize: isMobile ? 14 : 16,
-              color: THEME.textLight,
-              lineHeight: 1.6,
-              maxWidth: 600,
-              margin: "0 auto",
-            }}
-          >
-            {getPersonalizedSubtitle()}
-          </p>
-        </div>
-
-        <div
+  return (
+    <div>
+      {/* Header */}
+      <div style={{ textAlign: "center", marginBottom: isMobile ? 30 : 42 }}>
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ delay: 0.1, type: "spring", bounce: 0.5 }}
           style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-            gap: isMobile ? 20 : 24,
+            width: 66, height: 66, borderRadius: "50%",
+            background: `linear-gradient(135deg, ${THEME.primary}, ${THEME.primaryLight})`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            margin: "0 auto 18px",
+            boxShadow: `0 12px 30px rgba(5,150,105,0.3)`,
           }}
         >
-          <FormSelect
-            name="tripType"
-            label="Safari Experience"
-            icon={Sunrise}
-            options={
-              categoriesList.length > 0
-                ? categoriesList.map((c) => {
-                    if (typeof c === "object" && c !== null) {
-                      if (c.category) return { id: c.category, name: c.category };
-                      if (c.name) return { id: c.name, name: c.name };
-                      return { id: String(c), name: String(c) };
-                    }
-                    return { id: c, name: c };
-                  })
-                : servicesData.map((s) => ({
-                    id: s.id || s.value || s.name,
-                    name: normalizeOptionLabel(s.name || s.title || s),
-                  }))
-            }
-            required
-            placeholder="What type of adventure?"
-            value={formData.tripType}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={errors.tripType}
-            touched={touched.tripType}
-            isMobile={isMobile}
-          />
+          <Compass size={28} color="white" />
+        </motion.div>
+        <h2 style={{
+          fontFamily: "'Playfair Display', serif",
+          fontSize: isMobile ? 24 : 34,
+          fontWeight: 700, color: THEME.text, marginBottom: 10, lineHeight: 1.2,
+        }}>
+          {displayName ? `${greeting}, ${displayName}! ` : `${greeting}! `}
+          <span style={{ color: THEME.primary }}>Where to?</span>
+        </h2>
+        <p style={{ fontSize: isMobile ? 14 : 16, color: THEME.textLight, lineHeight: 1.65, maxWidth: 560, margin: "0 auto" }}>
+          Choose your destination and travel dates to begin planning your perfect African adventure.
+        </p>
+      </div>
 
-          <FormSelect
-            name="destination"
-            label="Where would you like to explore?"
-            icon={Globe}
-            options={destinationsList.length > 0 ? destinationsList : countriesList}
-            required
-            placeholder="Select your destination..."
-            value={formData.destination}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={errors.destination}
-            touched={touched.destination}
-            isMobile={isMobile}
-          />
+      {/* Fields */}
+      <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: isMobile ? 18 : 22 }}>
+        <FormSelect
+          name="tripType"
+          label="Safari Experience"
+          icon={Sunrise}
+          options={
+            categoriesList.length > 0
+              ? categoriesList.map((c) => typeof c === "object" ? { id: c.category || c.name || c.id, name: c.category || c.name || String(c) } : { id: c, name: c })
+              : servicesData.map((s) => ({ id: s.id || s.name, name: normalizeOptionLabel(s.name || s.title || s) }))
+          }
+          required
+          placeholder="What type of adventure?"
+          value={formData.tripType}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          error={errors.tripType}
+          touched={touched.tripType}
+          isMobile={isMobile}
+        />
 
-          <FormInput
-            name="startDate"
-            label="Start Date"
-            type="date"
-            icon={Calendar}
-            required
-            value={formData.startDate}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={errors.startDate}
-            touched={touched.startDate}
-            isMobile={isMobile}
-            min={new Date().toISOString().split("T")[0]}
-          />
+        <FormSelect
+          name="destination"
+          label="Destination"
+          icon={Globe}
+          options={destinationsList.length > 0 ? destinationsList : countriesList}
+          required
+          placeholder="Where would you like to go?"
+          value={formData.destination}
+          onChange={handleChange}
+          onBlur={handleBlur}
+          error={errors.destination}
+          touched={touched.destination}
+          isMobile={isMobile}
+        />
 
-          <FormInput
-            name="endDate"
-            label="End Date"
-            type="date"
-            icon={Calendar}
-            required
-            value={formData.endDate}
-            onChange={handleChange}
-            onBlur={handleBlur}
-            error={errors.endDate}
-            touched={touched.endDate}
-            isMobile={isMobile}
-            min={formData.startDate || new Date().toISOString().split("T")[0]}
-          />
-        </div>
+        <FormInput
+          name="startDate" label="Start Date" type="date"
+          icon={Calendar} required
+          value={formData.startDate}
+          onChange={handleChange} onBlur={handleBlur}
+          error={errors.startDate} touched={touched.startDate}
+          isMobile={isMobile}
+          min={new Date().toISOString().split("T")[0]}
+        />
 
-        {/* Personalized Recommendations */}
-        {displayName && destinationsList.length > 0 && (
+        <FormInput
+          name="endDate" label="End Date" type="date"
+          icon={Calendar} required
+          value={formData.endDate}
+          onChange={handleChange} onBlur={handleBlur}
+          error={errors.endDate} touched={touched.endDate}
+          isMobile={isMobile}
+          min={formData.startDate || new Date().toISOString().split("T")[0]}
+        />
+      </div>
+
+      {/* Quick destination picks */}
+      {destinationsList.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          style={{
+            marginTop: 28, padding: isMobile ? 18 : 24,
+            background: `linear-gradient(135deg, ${THEME.backgroundAlt}, ${THEME.background})`,
+            borderRadius: 18, border: `2px solid ${THEME.primaryLighter}`,
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 14, fontSize: isMobile ? 14 : 16, fontWeight: 700, color: THEME.primaryDark }}>
+            <div style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: THEME.primary, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Star size={16} color="white" />
+            </div>
+            Popular Destinations
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(3, 1fr)", gap: 12 }}>
+            {destinationsList.slice(0, 6).map((dest, i) => {
+              const id = normalizeOptionValue(dest.id || dest._id || dest.slug || dest.name || dest);
+              const isActive = formData.destination === id;
+              return (
+                <motion.button
+                  key={id || i}
+                  type="button"
+                  onClick={() => setFormData((prev) => ({ ...prev, destination: id }))}
+                  whileHover={{ y: -2, boxShadow: `0 6px 18px ${THEME.shadow}` }}
+                  whileTap={{ scale: 0.97 }}
+                  style={{
+                    padding: "12px 14px", borderRadius: 12,
+                    backgroundColor: isActive ? THEME.primary : THEME.white,
+                    border: `2px solid ${isActive ? THEME.primary : THEME.gray200}`,
+                    cursor: "pointer", textAlign: "left",
+                    transition: "all 0.22s ease",
+                    fontFamily: "inherit",
+                  }}
+                >
+                  <div style={{ fontSize: isMobile ? 13 : 14, fontWeight: 700, color: isActive ? "#fff" : THEME.text, marginBottom: 2 }}>
+                    {dest.flag ? `${dest.flag} ` : ""}{normalizeOptionLabel(dest.name || dest.title || dest.slug)}
+                  </div>
+                  {(dest.country || dest.region) && (
+                    <div style={{ fontSize: 11, color: isActive ? "rgba(255,255,255,0.78)" : THEME.textLight }}>
+                      {normalizeOptionLabel(dest.country || dest.region)}
+                    </div>
+                  )}
+                </motion.button>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Duration badge */}
+      <AnimatePresence>
+        {getTripDuration() && (
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            initial={{ opacity: 0, y: 14, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: "auto" }}
+            exit={{ opacity: 0, y: 14, height: 0 }}
             style={{
-              marginTop: 32,
-              padding: isMobile ? 20 : 24,
-              background: `linear-gradient(135deg, ${THEME.backgroundAlt} 0%, ${THEME.background} 100%)`,
-              borderRadius: 18,
-              border: `2px solid ${THEME.primaryLighter}`,
+              marginTop: 24, padding: isMobile ? 16 : 22,
+              background: `linear-gradient(135deg, ${THEME.background}, ${THEME.backgroundAlt})`,
+              borderRadius: 16, border: `2px solid ${THEME.primaryLighter}`,
+              display: "flex", alignItems: "center", gap: 16,
             }}
           >
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                marginBottom: 16,
-                fontSize: isMobile ? 15 : 17,
-                fontWeight: 700,
-                color: THEME.primaryDark,
-              }}
-            >
-              <div
-                style={{
-                  width: 36,
-                  height: 36,
-                  borderRadius: 10,
-                  backgroundColor: THEME.primary,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <Star size={18} color="white" />
-              </div>
-              Recommended for You, {displayName}
+            <div style={{ width: 50, height: 50, borderRadius: 14, backgroundColor: THEME.white, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: `0 4px 12px ${THEME.shadow}` }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={THEME.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
+              </svg>
             </div>
-
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: isMobile ? "1fr" : "repeat(3, 1fr)",
-                gap: 16,
-              }}
-            >
-              {destinationsList.slice(0, 3).map((dest, i) => {
-                const destinationOptionId = normalizeOptionValue(
-                  dest.id || dest._id || dest.slug || dest.name || dest.title || dest,
-                );
-                const isActive = formData.destination === destinationOptionId;
-
-                return (
-                  <motion.div
-                    key={dest.id || dest._id || dest.slug || destinationOptionId || i}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.4 + i * 0.1 }}
-                    onClick={() => setFormData(prev => ({ ...prev, destination: destinationOptionId }))}
-                    style={{
-                      padding: 16,
-                      borderRadius: 12,
-                      backgroundColor: isActive ? THEME.primary : THEME.white,
-                      border: `2px solid ${isActive ? THEME.primary : THEME.gray200}`,
-                      cursor: "pointer",
-                      textAlign: "center",
-                      transition: "all 0.3s ease",
-                      boxShadow: isActive ? `0 4px 16px ${THEME.shadow}` : "none",
-                    }}
-                  >
-                    <div
-                      style={{
-                        fontSize: isMobile ? 14 : 16,
-                        fontWeight: 700,
-                        color: isActive ? THEME.white : THEME.text,
-                        marginBottom: 4,
-                      }}
-                    >
-                      {normalizeOptionLabel(dest.name || dest.title || dest.slug)}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 12,
-                        color: isActive ? "rgba(255,255,255,0.8)" : THEME.textLight,
-                      }}
-                    >
-                      {normalizeOptionLabel(dest.location || dest.country || dest.region || dest.subregion)}
-                    </div>
-                  </motion.div>
-                );
-              })}
+            <div>
+              <div style={{ fontSize: 13, color: THEME.primaryDark, fontWeight: 600 }}>Trip Duration</div>
+              <div style={{ fontSize: isMobile ? 22 : 28, fontWeight: 800, color: THEME.primary }}>{getTripDuration()}</div>
             </div>
           </motion.div>
         )}
-
-        <AnimatePresence>
-          {getTripDuration() && (
-            <motion.div
-              initial={{ opacity: 0, y: 16, height: 0 }}
-              animate={{ opacity: 1, y: 0, height: "auto" }}
-              exit={{ opacity: 0, y: 16, height: 0 }}
-              style={{
-                marginTop: 28,
-                padding: isMobile ? 18 : 24,
-                background: `linear-gradient(135deg, ${THEME.background} 0%, ${THEME.backgroundAlt} 100%)`,
-                borderRadius: 18,
-                border: `2px solid ${THEME.primaryLighter}`,
-                display: "flex",
-                alignItems: "center",
-                gap: 16,
-              }}
-            >
-              <div
-                style={{
-                  width: 52,
-                  height: 52,
-                  borderRadius: 14,
-                  backgroundColor: THEME.white,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  boxShadow: `0 4px 12px ${THEME.shadow}`,
-                }}
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={THEME.primary} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10"/>
-                  <polyline points="12 6 12 12 16 14"/>
-                </svg>
-              </div>
-              <div>
-                <div
-                  style={{
-                    fontSize: 14,
-                    color: THEME.primaryDark,
-                    fontWeight: 600,
-                  }}
-                >
-                  Trip Duration
-                </div>
-                <div
-                  style={{
-                    fontSize: isMobile ? 24 : 30,
-                    fontWeight: 800,
-                    color: THEME.primary,
-                  }}
-                >
-                  {getTripDuration()}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-    );
-  },
-);
+      </AnimatePresence>
+    </div>
+  );
+});
 
 export default StepOne;

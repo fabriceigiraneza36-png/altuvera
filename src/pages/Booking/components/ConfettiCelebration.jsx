@@ -1,120 +1,92 @@
-import React, { memo, useRef, useEffect } from "react";
-import { motion, useMotionValue, useSpring } from "framer-motion";
-import { THEME } from "../BookingShared";
+// src/pages/Booking/components/ConfettiCelebration.jsx
+import React, { useEffect, useRef } from "react";
 
-const ConfettiCelebration = memo(({ active, duration = 5000 }) => {
+const COLORS = ["#059669", "#10B981", "#34D399", "#6EE7B7", "#FCD34D", "#F59E0B", "#FFFFFF"];
+
+const rand = (min, max) => Math.random() * (max - min) + min;
+
+const ConfettiCelebration = ({ active = false, duration = 5000 }) => {
   const canvasRef = useRef(null);
+  const rafRef = useRef(null);
+  const startRef = useRef(null);
+  const particlesRef = useRef([]);
 
   useEffect(() => {
     if (!active) return;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
-
     const ctx = canvas.getContext("2d");
-    const DPR = window.devicePixelRatio || 1;
 
     const resize = () => {
-      canvas.width = window.innerWidth * DPR;
-      canvas.height = window.innerHeight * DPR;
-      canvas.style.width = `${window.innerWidth}px`;
-      canvas.style.height = `${window.innerHeight}px`;
-      ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     };
     resize();
+    window.addEventListener("resize", resize);
 
-    const colors = [
-      THEME.primary,
-      THEME.primaryLight,
-      THEME.primaryLighter,
-      THEME.success,
-      THEME.white,
-      "#A7F3D0",
-      "#6EE7B7",
-      "#D1FAE5",
-    ];
+    // Spawn particles
+    particlesRef.current = Array.from({ length: 140 }, () => ({
+      x: rand(0, canvas.width),
+      y: rand(-canvas.height * 0.3, -10),
+      size: rand(6, 14),
+      color: COLORS[Math.floor(Math.random() * COLORS.length)],
+      speedX: rand(-2, 2),
+      speedY: rand(2.5, 6),
+      rotation: rand(0, 360),
+      rotationSpeed: rand(-4, 4),
+      opacity: 1,
+      shape: Math.random() > 0.5 ? "rect" : "circle",
+    }));
 
-    const particles = [];
-    const startTime = performance.now();
+    startRef.current = null;
 
-    for (let burst = 0; burst < 10; burst++) {
-      const burstDelay = burst * 180;
-      const burstX = (0.15 + Math.random() * 0.7) * window.innerWidth;
-      const burstY = Math.random() * window.innerHeight * 0.4;
+    const draw = (ts) => {
+      if (!startRef.current) startRef.current = ts;
+      const elapsed = ts - startRef.current;
 
-      for (let i = 0; i < 60; i++) {
-        const angle = Math.random() * Math.PI * 2;
-        const velocity = 10 + Math.random() * 18;
-        particles.push({
-          x: burstX + (Math.random() - 0.5) * 80,
-          y: burstY,
-          vx: Math.cos(angle) * velocity,
-          vy: Math.sin(angle) * velocity - 6,
-          size: 4 + Math.random() * 10,
-          color: colors[Math.floor(Math.random() * colors.length)],
-          rotation: Math.random() * 360,
-          rotationSpeed: (Math.random() - 0.5) * 12,
-          gravity: 0.25 + Math.random() * 0.35,
-          friction: 0.985,
-          opacity: 1,
-          delay: burstDelay,
-          shape: Math.random() > 0.5 ? "rect" : "circle",
-          wobble: Math.random() * Math.PI * 2,
-          wobbleSpeed: 0.04 + Math.random() * 0.08,
-        });
-      }
-    }
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    let rafId;
-    const animate = (now) => {
-      ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-      const elapsed = now - startTime;
-
-      particles.forEach((p) => {
-        if (elapsed < p.delay) return;
-
-        const t = elapsed - p.delay;
-
-        p.vy += p.gravity;
-        p.vx *= p.friction;
-        p.vy *= p.friction;
-        p.x += p.vx + Math.sin(p.wobble + t * p.wobbleSpeed) * 1.5;
-        p.y += p.vy;
+      particlesRef.current.forEach((p) => {
+        p.x += p.speedX;
+        p.y += p.speedY;
         p.rotation += p.rotationSpeed;
+        p.speedX += rand(-0.05, 0.05);
+        p.opacity = Math.max(0, 1 - elapsed / duration);
 
-        if (elapsed > duration * 0.65) {
-          p.opacity -= 0.018;
+        ctx.save();
+        ctx.globalAlpha = p.opacity;
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.fillStyle = p.color;
+
+        if (p.shape === "rect") {
+          ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+          ctx.fill();
         }
+        ctx.restore();
 
-        if (p.opacity > 0 && p.y < window.innerHeight + 100) {
-          ctx.save();
-          ctx.globalAlpha = Math.max(0, p.opacity);
-          ctx.translate(p.x, p.y);
-          ctx.rotate((p.rotation * Math.PI) / 180);
-          ctx.fillStyle = p.color;
-
-          if (p.shape === "rect") {
-            ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
-          } else {
-            ctx.beginPath();
-            ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
-            ctx.fill();
-          }
-
-          ctx.restore();
+        // Reset particles that fall off screen
+        if (p.y > canvas.height + 20) {
+          p.y = rand(-50, -10);
+          p.x = rand(0, canvas.width);
         }
       });
 
-      if (elapsed < duration + 2000) {
-        rafId = requestAnimationFrame(animate);
+      if (elapsed < duration) {
+        rafRef.current = requestAnimationFrame(draw);
+      } else {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
       }
     };
 
-    rafId = requestAnimationFrame(animate);
-    window.addEventListener("resize", resize);
+    rafRef.current = requestAnimationFrame(draw);
 
     return () => {
-      cancelAnimationFrame(rafId);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       window.removeEventListener("resize", resize);
     };
   }, [active, duration]);
@@ -126,12 +98,13 @@ const ConfettiCelebration = memo(({ active, duration = 5000 }) => {
       ref={canvasRef}
       style={{
         position: "fixed",
-        inset: 0,
+        top: 0, left: 0,
+        width: "100%", height: "100%",
         pointerEvents: "none",
-        zIndex: 10000,
+        zIndex: 9999,
       }}
     />
   );
-});
+};
 
 export default ConfettiCelebration;

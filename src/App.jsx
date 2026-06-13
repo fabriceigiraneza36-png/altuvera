@@ -2,13 +2,7 @@
 // App.jsx — Application Shell
 // ============================================================================
 
-import React, {
-  useEffect,
-  useMemo,
-  Suspense,
-  useState,
-  useCallback,
-} from "react";
+import React, { useEffect, useMemo, Suspense, useState } from "react";
 import {
   Routes,
   Route,
@@ -28,7 +22,6 @@ import AutoSubscribeModal from "./components/common/AutoSubscribeModal";
 // ── Eager imports ─────────────────────────────────────────────────────────────
 import Navbar from "./components/common/Navbar";
 import Footer from "./components/common/Footer";
-import ChecklistFloating from "./components/common/ChecklistFloating";
 import ScrollToTop from "./components/common/ScrollToTop";
 import Loader from "./components/common/Loader";
 import CookieConsent from "./components/common/CookieConsent";
@@ -87,7 +80,8 @@ const publicRoutes = [
     component: React.lazy(() => import("./pages/Home")),
     meta: {
       title: "East Africa Safaris & Tours",
-      description: "Book authentic East African safaris and cultural tours with Altuvera.",
+      description:
+        "Book authentic East African safaris and cultural tours with Altuvera.",
     },
   },
   {
@@ -103,7 +97,8 @@ const publicRoutes = [
     component: React.lazy(() => import("./pages/DestinationDetail")),
     meta: {
       title: "Destination",
-      description: "Discover destination highlights, best time to visit, and travel tips.",
+      description:
+        "Discover destination highlights, best time to visit, and travel tips.",
     },
   },
   {
@@ -111,7 +106,8 @@ const publicRoutes = [
     component: React.lazy(() => import("./pages/CountryPage")),
     meta: {
       title: "Country Guides",
-      description: "Country travel guides and planning tips for East African adventures.",
+      description:
+        "Country travel guides and planning tips for East African adventures.",
     },
   },
   {
@@ -135,7 +131,8 @@ const publicRoutes = [
     component: React.lazy(() => import("./pages/Explore")),
     meta: {
       title: "Explore",
-      description: "Explore experiences and culture for your East African journey.",
+      description:
+        "Explore experiences and culture for your East African journey.",
     },
   },
   {
@@ -143,7 +140,8 @@ const publicRoutes = [
     component: React.lazy(() => import("./pages/Posts")),
     meta: {
       title: "Journal",
-      description: "Travel guides, safari tips, and stories from East Africa.",
+      description:
+        "Travel guides, safari tips, and stories from East Africa.",
     },
   },
   {
@@ -191,7 +189,8 @@ const publicRoutes = [
     component: React.lazy(() => import("./pages/Gallery")),
     meta: {
       title: "Gallery",
-      description: "Browse photos from safaris and cultural experiences.",
+      description:
+        "Browse photos from safaris and cultural experiences.",
     },
   },
   {
@@ -199,7 +198,8 @@ const publicRoutes = [
     component: React.lazy(() => import("./pages/FAQ")),
     meta: {
       title: "FAQ",
-      description: "Answers to common questions about booking and safaris.",
+      description:
+        "Answers to common questions about booking and safaris.",
     },
   },
   {
@@ -272,12 +272,64 @@ const protectedRoutes = [
 ];
 
 // ============================================================================
+// Route Renderers  ← FIX: defined as named functions at module scope
+//                    so they are always in scope when JSX is evaluated
+// ============================================================================
+
+/**
+ * Renders a single public route wrapped in PageWrapper + Suspense.
+ */
+function renderPublicRoute({ path, component: Component, meta = {} }) {
+  return (
+    <Route
+      key={path}
+      path={path}
+      element={
+        <PageWrapper
+          title={meta.title}
+          description={meta.description}
+          noindex={meta.noindex}
+        >
+          <Suspense fallback={<Loader />}>
+            <Component />
+          </Suspense>
+        </PageWrapper>
+      }
+    />
+  );
+}
+
+/**
+ * Renders a single protected route wrapped in ProtectedRoute + PageWrapper + Suspense.
+ */
+function renderProtectedRoute({ path, component: Component, meta = {} }) {
+  return (
+    <Route
+      key={path}
+      path={path}
+      element={
+        <ProtectedRoute>
+          <PageWrapper
+            title={meta.title}
+            description={meta.description}
+            noindex={meta.noindex}
+          >
+            <Suspense fallback={<Loader />}>
+              <Component />
+            </Suspense>
+          </PageWrapper>
+        </ProtectedRoute>
+      }
+    />
+  );
+}
+
+// ============================================================================
 // GitHub OAuth Callback Page
 // ============================================================================
 
 const GitHubCallbackPage = React.memo(() => {
-  const { githubLoading, isAuthenticated, socialAuthError } =
-    useUserAuth();
+  const { githubLoading, isAuthenticated, socialAuthError } = useUserAuth();
 
   useEffect(() => {
     if (githubLoading) return;
@@ -401,20 +453,19 @@ const cbStyles = {
 // Celebration Overlay
 // ============================================================================
 
-
 const CELEBRATION_KEYFRAMES = `
   @keyframes celFadeIn {
     from { opacity: 0; }
-    to { opacity: 1; }
+    to   { opacity: 1; }
   }
   @keyframes celScaleUp {
     from { opacity: 0; transform: scale(0.96) translateY(16px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+    to   { opacity: 1; transform: scale(1)    translateY(0);    }
   }
   @keyframes celCheckmark {
-    0% { transform: scale(0.8); opacity: 0; }
-    50% { transform: scale(1.1); }
-    100% { transform: scale(1); opacity: 1; }
+    0%   { transform: scale(0.8); opacity: 0; }
+    50%  { transform: scale(1.1);             }
+    100% { transform: scale(1);   opacity: 1; }
   }
 `;
 
@@ -450,15 +501,17 @@ const CelebrationOverlay = React.memo(({ userName }) => {
           borderRadius: 24,
           padding: "40px 32px 36px",
           textAlign: "center",
-          boxShadow: "0 24px 48px -12px rgba(4, 47, 31, 0.15), 0 0 0 1px rgba(4, 47, 31, 0.05)",
+          boxShadow:
+            "0 24px 48px -12px rgba(4, 47, 31, 0.15), 0 0 0 1px rgba(4, 47, 31, 0.05)",
           maxWidth: 400,
           width: "100%",
           position: "relative",
           overflow: "hidden",
-          animation: "celScaleUp 0.6s cubic-bezier(0.34, 1.3, 0.64, 1) forwards",
+          animation:
+            "celScaleUp 0.6s cubic-bezier(0.34, 1.3, 0.64, 1) forwards",
         }}
       >
-        {/* Modern Minimal Ambient Vectors */}
+        {/* Ambient blobs */}
         <div
           style={{
             position: "absolute",
@@ -466,7 +519,8 @@ const CelebrationOverlay = React.memo(({ userName }) => {
             right: -40,
             width: 140,
             height: 140,
-            background: "radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)",
+            background:
+              "radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)",
             borderRadius: "50%",
             pointerEvents: "none",
           }}
@@ -478,13 +532,14 @@ const CelebrationOverlay = React.memo(({ userName }) => {
             left: -40,
             width: 140,
             height: 140,
-            background: "radial-gradient(circle, rgba(5, 150, 105, 0.06) 0%, transparent 70%)",
+            background:
+              "radial-gradient(circle, rgba(5,150,105,0.06) 0%, transparent 70%)",
             borderRadius: "50%",
             pointerEvents: "none",
           }}
         />
 
-        {/* Refined Checkmark Container */}
+        {/* Checkmark */}
         <div
           style={{
             width: 64,
@@ -495,8 +550,9 @@ const CelebrationOverlay = React.memo(({ userName }) => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            boxShadow: "0 12px 24px rgba(5, 150, 105, 0.25)",
-            animation: "celCheckmark 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) delay(0.1s) forwards",
+            boxShadow: "0 12px 24px rgba(5,150,105,0.25)",
+            animation:
+              "celCheckmark 0.6s cubic-bezier(0.34,1.56,0.64,1) 0.1s forwards",
           }}
         >
           <svg
@@ -513,7 +569,7 @@ const CelebrationOverlay = React.memo(({ userName }) => {
           </svg>
         </div>
 
-        {/* Typography */}
+        {/* Copy */}
         <h1
           style={{
             fontSize: "clamp(22px, 4.5vw, 28px)",
@@ -550,10 +606,11 @@ const CelebrationOverlay = React.memo(({ userName }) => {
             maxWidth: 320,
           }}
         >
-          You now have full access to plan your dream safari, save stunning destinations, and explore East Africa.
+          You now have full access to plan your dream safari, save stunning
+          destinations, and explore East Africa.
         </p>
 
-        {/* Clean, Micro Feature Tags */}
+        {/* Feature tags */}
         <div
           style={{
             display: "flex",
@@ -570,7 +627,7 @@ const CelebrationOverlay = React.memo(({ userName }) => {
                 padding: "6px 14px",
                 background: "#f0fdf4",
                 borderRadius: 99,
-                border: "1px solid rgba(4, 120, 87, 0.12)",
+                border: "1px solid rgba(4,120,87,0.12)",
                 fontSize: 13,
                 color: "#047857",
                 fontWeight: 600,
@@ -581,7 +638,7 @@ const CelebrationOverlay = React.memo(({ userName }) => {
           ))}
         </div>
 
-        {/* Premium CTA Button */}
+        {/* CTA */}
         <a
           href="/destinations"
           style={{
@@ -597,18 +654,20 @@ const CelebrationOverlay = React.memo(({ userName }) => {
             borderRadius: 12,
             fontWeight: 600,
             fontSize: 15,
-            boxShadow: "0 8px 20px rgba(4, 120, 87, 0.15)",
+            boxShadow: "0 8px 20px rgba(4,120,87,0.15)",
             transition: "all 0.2s ease-in-out",
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = "#065f46";
             e.currentTarget.style.transform = "translateY(-1px)";
-            e.currentTarget.style.boxShadow = "0 12px 24px rgba(4, 120, 87, 0.25)";
+            e.currentTarget.style.boxShadow =
+              "0 12px 24px rgba(4,120,87,0.25)";
           }}
           onMouseLeave={(e) => {
             e.currentTarget.style.backgroundColor = "#047857";
             e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "0 8px 20px rgba(4, 120, 87, 0.15)";
+            e.currentTarget.style.boxShadow =
+              "0 8px 20px rgba(4,120,87,0.15)";
           }}
         >
           Start Exploring
@@ -617,7 +676,6 @@ const CelebrationOverlay = React.memo(({ userName }) => {
     </div>
   );
 });
-
 CelebrationOverlay.displayName = "CelebrationOverlay";
 
 // ============================================================================
@@ -627,41 +685,32 @@ CelebrationOverlay.displayName = "CelebrationOverlay";
 const AppLayout = React.memo(() => (
   <>
     <Navbar />
-    <main
-      style={{
-        flex: 1,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <main style={{ flex: 1, display: "flex", flexDirection: "column" }}>
       <Suspense fallback={<Loader />}>
         <Outlet />
       </Suspense>
     </main>
     <Footer />
-    <ChecklistFloating />
   </>
 ));
 AppLayout.displayName = "AppLayout";
 
-const OverlayLayer = React.memo(
-  ({ isLoading, showCelebration, userName }) => (
-    <>
-      <ScrollToTop />
-      <Suspense fallback={null}>
-        <PersistentVideoPlayer />
-        <PersistentMapViewer />
-      </Suspense>
-      <CookieConsent />
-      <AuthModal />
-      <WhatsAppButton />
-      <NewsletterPopup source="exit-popup" />
-      <AutoSubscribeModal />
-      {showCelebration && <CelebrationOverlay userName={userName} />}
-      {isLoading && <Loader fullScreen />}
-    </>
-  )
-);
+const OverlayLayer = React.memo(({ isLoading, showCelebration, userName }) => (
+  <>
+    <ScrollToTop />
+    <Suspense fallback={null}>
+      <PersistentVideoPlayer />
+      <PersistentMapViewer />
+    </Suspense>
+    <CookieConsent />
+    <AuthModal />
+    <WhatsAppButton />
+    <NewsletterPopup source="exit-popup" />
+    <AutoSubscribeModal />
+    {showCelebration && <CelebrationOverlay userName={userName} />}
+    {isLoading && <Loader fullScreen />}
+  </>
+));
 OverlayLayer.displayName = "OverlayLayer";
 
 // ============================================================================
@@ -671,11 +720,7 @@ OverlayLayer.displayName = "OverlayLayer";
 const SmartRedirect = React.memo(() => {
   const { pathname } = useLocation();
 
-  // getRedirectUrl is defined at module scope above — always available
-  const redirectUrl = useMemo(
-    () => getRedirectUrl(pathname),
-    [pathname]
-  );
+  const redirectUrl = useMemo(() => getRedirectUrl(pathname), [pathname]);
 
   if (redirectUrl) {
     return <Navigate to={redirectUrl} replace />;
@@ -692,48 +737,6 @@ const SmartRedirect = React.memo(() => {
 SmartRedirect.displayName = "SmartRedirect";
 
 // ============================================================================
-// Route Renderers
-// ============================================================================
-
-const renderPublicRoute = ({ path, component: Component, meta }) => (
-  <Route
-    key={path}
-    path={path}
-    element={
-      <PageWrapper
-        title={meta.title}
-        description={meta.description}
-        noindex={meta.noindex}
-      >
-        <Component />
-      </PageWrapper>
-    }
-  />
-);
-
-const renderProtectedRoute = ({
-  path,
-  component: Component,
-  meta,
-}) => (
-  <Route
-    key={path}
-    path={path}
-    element={
-      <ProtectedRoute>
-        <PageWrapper
-          title={meta.title}
-          description={meta.description}
-          noindex={meta.noindex ?? true}
-        >
-          <Component />
-        </PageWrapper>
-      </ProtectedRoute>
-    }
-  />
-);
-
-// ============================================================================
 // Root App
 // ============================================================================
 
@@ -748,7 +751,6 @@ function App() {
     showNotLoggedInMessage,
   } = useUserAuth();
 
-  // Track previous auth state to only show celebration on NEW login
   const [prevAuth, setPrevAuth] = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
 
@@ -759,10 +761,10 @@ function App() {
     }
   }, [isLoading, location.pathname, setIsLoading]);
 
-  // Prefetch countries for dropdowns/filters
+  // Prefetch countries for dropdowns / filters
   useEffect(() => {
-    countryService.getAll({}).catch(() => { });
-    countryService.getAll({ featured: true }).catch(() => { });
+    countryService.getAll({}).catch(() => {});
+    countryService.getAll({ featured: true }).catch(() => {});
   }, []);
 
   // Dev performance logging
@@ -771,34 +773,31 @@ function App() {
     const entry = performance.getEntriesByType?.("navigation")?.[0];
     if (entry) {
       console.debug(
-        `[Router] ${location.pathname} — DOM interactive: ${Math.round(entry.domInteractive)}ms`
+        `[Router] ${location.pathname} — DOM interactive: ${Math.round(
+          entry.domInteractive
+        )}ms`
       );
     }
   }, [location.pathname]);
 
-  // Show celebration ONLY when auth transitions false → true and only once per user
+  // Show celebration ONLY when auth transitions false → true (once per user)
   useEffect(() => {
     if (isAuthenticated && !prevAuth && user) {
       try {
         const keyPrefix = "altuvera_welcome_shown:";
         const email = (user?.email || "").toLowerCase();
         const key = email ? `${keyPrefix}${email}` : null;
-        // If we've already shown the welcome for this user, skip overlay
+
         if (!key || !localStorage.getItem(key)) {
           setShowCelebration(true);
-          // Mark as shown so future logins don't repeat the overlay
           if (key) localStorage.setItem(key, Date.now().toString());
-          const timer = setTimeout(() => {
-            setShowCelebration(false);
-          }, 4000);
+
+          const timer = setTimeout(() => setShowCelebration(false), 4000);
           return () => clearTimeout(timer);
         }
-      } catch (err) {
-        // storage may be unavailable — fall back to showing celebration once
+      } catch {
         setShowCelebration(true);
-        const timer = setTimeout(() => {
-          setShowCelebration(false);
-        }, 4000);
+        const timer = setTimeout(() => setShowCelebration(false), 4000);
         return () => clearTimeout(timer);
       }
     }
@@ -835,7 +834,10 @@ function App() {
           <Route path="*" element={<SmartRedirect />} />
         </Route>
 
-        <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
+        <Route
+          path="/auth/google/callback"
+          element={<GoogleCallbackPage />}
+        />
       </Routes>
 
       <OverlayLayer
@@ -848,7 +850,7 @@ function App() {
         isVisible={showCongratulation}
         type={congratulationType}
         user={user}
-        onClose={() => { }}
+        onClose={() => {}}
       />
 
       <NotLoggedInMessage isVisible={showNotLoggedInMessage} />

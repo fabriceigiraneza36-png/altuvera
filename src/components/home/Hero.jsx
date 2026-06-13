@@ -17,7 +17,7 @@ export const HERO_SLIDES = [
   {
     // https://i.pinimg.com/1200x/cc/22/42/cc2242dbd24507eca2cd4313ffbd5c72.jpg
     image:
-      "https://i.pinimg.com/1200x/cc/22/42/cc2242dbd24507eca2cd4313ffbd5c72.jpg",
+      "https://res.cloudinary.com/doijjawna/image/upload/v1781342220/ChatGPT_Image_Jun_13_2026_11_16_51_AM_oibwwb.png",
     fallback:
       "https://drive.google.com/uc?export=view&id=15LlHLEX_dDLEqMVPX2C3M4Gz6FfsAkWY",
     title: "Witness the Great Migration",
@@ -134,7 +134,7 @@ export const HERO_SLIDES = [
   },
   {
     image:
-      "https://i.pinimg.com/1200x/77/19/ad/7719adaae5f3d0c347a8d034aee9c9b2.jpg",
+      "https://res.cloudinary.com/doijjawna/image/upload/v1781342711/ChatGPT_Image_Jun_13_2026_11_24_57_AM_fu7nt6.png",
     fallback:
       "https://i.pinimg.com/1200x/77/19/ad/7719adaae5f3d0c347a8d034aee9c9b2.jpg",
     title: "Amboseli & Kilimanjaro",

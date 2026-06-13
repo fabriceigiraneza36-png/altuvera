@@ -16,14 +16,11 @@ import SEO from "../components/common/SEO";
 import DestinationCard from "../components/home/DestinationCard";
 
 import { useApp } from "../context/AppContext";
-import { useUserAuth } from "../context/UserAuthContext";
 import { useDestinations } from "../hooks/useDestinations";
 import { useCountries } from "../hooks/useCountries";
 import { useGallery } from "../hooks/useGallery";
 import { useTestimonials } from "../hooks/useTestimonials";
-import { ArrowLeft, ArrowRight, Quote, Star, MapPin } from "lucide-react";
 import { useWishlist } from "../hooks/useWishlist";
-import { getCountrySlug } from "../utils/countrySlugMap";
 import "../styles/Home.css";
 
 /* ═══════════════════════════════════════════
@@ -436,13 +433,6 @@ const AdventureCard = memo(({ adventure, index }) => {
             ))}
           </div>
         )}
-        <div
-          className="adventure-card-v2-icon"
-          style={{ background: adventure.color }}
-        >
-          <span>{adventure.icon}</span>
-        </div>
-        <div className="adventure-card-v2-count">{adventure.count}</div>
       </div>
       <div className="adventure-card-v2-content">
         <h3 className="adventure-card-v2-title">{adventure.title}</h3>
@@ -557,20 +547,6 @@ const CountryCard = memo(({ country, index }) => {
           {country.flagUrl && (
             <div className="country-card-flag">
               <img src={country.flagUrl} alt={`${country.name} flag`} />
-            </div>
-          )}
-          {country.isFeatured && (
-            <div className="country-card-featured">
-              <IconStar size={12} fill="#F59E0B" color="#F59E0B" />
-              <span>Featured</span>
-            </div>
-          )}
-          {country.destinationCount > 0 && (
-            <div className="country-card-stats-overlay">
-              <div className="country-card-stat">
-                <IconMapPin size={13} />
-                <span>{country.destinationCount} Destinations</span>
-              </div>
             </div>
           )}
 
@@ -739,15 +715,11 @@ const SignatureCard = memo(({ experience, index }) => {
       animate={inView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.7, delay: index * 0.14, ease: [0.25, 1, 0.5, 1] }}
     >
-      <div className="sig-card-img-wrap">
-        <img src={image} alt={title} className="sig-card-img" loading="lazy" />
-        <div className="sig-card-img-gradient" />
-        <div className="sig-card-rating">
-          <IconStar size={13} color="#F59E0B" fill="#F59E0B" />
-          <span className="sig-card-rating-value">{stats?.Rating}</span>
+<div className="sig-card-img-wrap">
+          <img src={image} alt={title} className="sig-card-img" loading="lazy" />
+          <div className="sig-card-img-gradient" />
+          <div className="sig-card-subtitle-tag">{subtitle}</div>
         </div>
-        <div className="sig-card-subtitle-tag">{subtitle}</div>
-      </div>
       <div className="sig-card-body">
         <h3 className="sig-card-title">{title}</h3>
         <p className="sig-card-desc">{description}</p>
@@ -906,126 +878,13 @@ const GalleryLightbox = memo(({ images, currentIndex, onClose, onNavigate }) => 
 });
 
 /* ═══════════════════════════════════════════
-  WHATSAPP SECTION (removed)
-  ═══════════════════════════════════════════ */
-// Keep a safe placeholder to avoid initialization errors in builds
-const WhatsAppSection = null;
-
-const GalleryShowcaseSection = memo(({ images = [], loading, onCardClick }) => {
-  const reduced = usePrefersReducedMotion();
-  const [activeIndex, setActiveIndex] = useState(0);
-  const visible = images.slice(0, 6);
-  const primaryItem = visible[activeIndex] || visible[0];
-
-  useEffect(() => {
-    if (reduced || visible.length <= 1) return undefined;
-    const timer = window.setInterval(
-      () => setActiveIndex((prev) => (prev + 1) % visible.length),
-      6000,
-    );
-    return () => window.clearInterval(timer);
-  }, [reduced, visible.length]);
-
-  return (
-    <section className="gallery-showcase-section home-section">
-      <div className="home-container">
-        <AnimatedSection animation="fadeInUp">
-          <div className="section-header section-header--centered">
-            <span className="section-label">
-              <IconCamera size={14} /> Inspiration Gallery
-            </span>
-            <h2 className="section-title">
-              Travel Moments Curated <span className="text-gradient">for You</span>
-            </h2>
-            <p className="section-subtitle">
-              Immerse yourself in East Africa through polished visuals, vivid
-              stories, and our best travel moments.
-            </p>
-          </div>
-        </AnimatedSection>
-
-        {loading ? (
-          <div className="gallery-showcase-skeleton">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="gallery-showcase-skeleton-card" />
-            ))}
-          </div>
-        ) : primaryItem ? (
-          <div className="gallery-showcase-grid">
-            <motion.div
-              className="gallery-showcase-primary"
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.65 }}
-              onClick={() => onCardClick?.(primaryItem, activeIndex)}
-            >
-              <img
-                src={primaryItem.thumb || primaryItem.src}
-                alt={primaryItem.alt || primaryItem.title}
-                className="gallery-showcase-primary-image"
-                loading="lazy"
-              />
-              <div className="gallery-showcase-primary-copy">
-                <div className="gallery-showcase-primary-tag">
-                  {primaryItem.category || "Journey"}
-                </div>
-                <h3>{primaryItem.title || "East Africa Highlights"}</h3>
-                {primaryItem.location && (
-                  <div className="gallery-showcase-primary-location">
-                    <IconMapPin size={14} /> {primaryItem.location}
-                  </div>
-                )}
-              </div>
-            </motion.div>
-
-            <div className="gallery-showcase-secondary">
-              {visible.map((image, index) => (
-                <motion.div
-                  key={image.id}
-                  className={`gallery-showcase-thumb ${index === activeIndex ? "active" : ""}`}
-                  initial={{ opacity: 0, scale: 0.96 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: index * 0.05 }}
-                  onClick={() => setActiveIndex(index)}
-                >
-                  <img
-                    src={image.thumb || image.src}
-                    alt={image.alt || image.title}
-                    className="gallery-showcase-thumb-image"
-                    loading="lazy"
-                  />
-                  <div className="gallery-showcase-thumb-overlay">
-                    <span>{image.title || image.location}</span>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="gallery-showcase-empty">
-            <p>Our curated adventure gallery is being prepared for launch.</p>
-          </div>
-        )}
-
-        <AnimatedSection animation="fadeInUp">
-          <div className="section-cta section-cta--centered">
-            <Button to="/gallery" variant="outline" size="large" icon={<IconCamera size={18} />}>
-              View Full Gallery
-            </Button>
-          </div>
-        </AnimatedSection>
-      </div>
-    </section>
-  );
-});
-
-/* ═══════════════════════════════════════════
-   PREMIUM TOURISM TESTIMONIALS SLIDER
-   ═══════════════════════════════════════════ */
-const PremiumTourismTestimonials = memo(({ items }) => {
+    SCROLL-INTO-VIEW TESTIMONIALS SLIDER
+    ═══════════════════════════════════════════ */
+const ScrollIntoViewTestimonials = memo(({ items }) => {
   const [activeSlide, setActiveSlide] = useState(0);
-  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
-  const autoPlayRef = useRef(null);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+  const [typedText, setTypedText] = useState("");
+  const sectionRef = useRef(null);
   const reduced = usePrefersReducedMotion();
 
   const nextSlide = useCallback(() => {
@@ -1040,325 +899,151 @@ const PremiumTourismTestimonials = memo(({ items }) => {
     setActiveSlide(index);
   }, []);
 
-  const pauseAutoPlay = useCallback(() => {
-    setIsAutoPlaying(false);
-  }, []);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsAutoPlaying(true);
+          } else {
+            setIsAutoPlaying(false);
+          }
+        });
+      },
+      { threshold: 0.3 }
+    );
 
-  const resumeAutoPlay = useCallback(() => {
-    setIsAutoPlaying(true);
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
-    if (isAutoPlaying && !reduced && items.length > 1) {
-      autoPlayRef.current = setInterval(nextSlide, 5000);
-    }
-    return () => {
-      if (autoPlayRef.current) {
-        clearInterval(autoPlayRef.current);
-      }
-    };
+    if (!isAutoPlaying || reduced || items.length <= 1) return;
+
+    const interval = setInterval(() => {
+      nextSlide();
+    }, 15000);
+
+    return () => clearInterval(interval);
   }, [isAutoPlaying, nextSlide, reduced, items.length]);
 
-  if (!items || items.length === 0) {
-    return (
-      <div className="premium-testimonials-empty">
-        <Quote className="w-16 h-16 text-emerald-200 mb-4" />
-        <h3 className="text-xl font-semibold text-white mb-2">Reviews Coming Soon</h3>
-        <p className="text-emerald-100">We're collecting amazing stories from our travelers.</p>
-      </div>
-    );
-  }
+  const currentItem = items[activeSlide] || items[0];
 
-  const currentItem = items[activeSlide];
+  useEffect(() => {
+    const text = currentItem?.quote || currentItem?.content || currentItem?.text || currentItem?.testimonial_text || "An unforgettable experience that exceeded all expectations.";
 
-  const slideAnimations = useMemo(
-    () => [
-      {
-        initial: { opacity: 0, y: 24, scale: 0.98 },
-        animate: { opacity: 1, y: 0, scale: 1 },
-      },
-      {
-        initial: { opacity: 0, x: -24, scale: 0.98 },
-        animate: { opacity: 1, x: 0, scale: 1 },
-      },
-      {
-        initial: { opacity: 0, x: 24, rotate: -1.5, scale: 0.98 },
-        animate: { opacity: 1, x: 0, rotate: 0, scale: 1 },
-      },
-      {
-        initial: { opacity: 0, y: -24, scale: 0.98 },
-        animate: { opacity: 1, y: 0, scale: 1 },
-      },
-    ],
-    [],
-  );
-  const currentSlideAnimation = slideAnimations[activeSlide % slideAnimations.length];
+    if (reduced) {
+      setTypedText(text);
+      return undefined;
+    }
+
+    setTypedText("");
+    let index = 0;
+
+    const interval = window.setInterval(() => {
+      index += 1;
+      setTypedText(text.slice(0, index));
+      if (index >= text.length) {
+        window.clearInterval(interval);
+      }
+    }, 24);
+
+    return () => window.clearInterval(interval);
+  }, [currentItem, reduced]);
+
+  const renderStars = (count = 5) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <span key={i} className={`testimonial-star${i >= count ? ' empty' : ''}`}>
+        ★
+      </span>
+    ));
+  };
 
   return (
-    <div className="premium-testimonials-container">
-      {/* Main Testimonial Card */}
-      <motion.div
-        className="premium-testimonial-card"
-        initial={currentSlideAnimation.initial}
-        animate={currentSlideAnimation.animate}
-        transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
-        onMouseEnter={pauseAutoPlay}
-        onMouseLeave={resumeAutoPlay}
-      >
-        {/* Glassmorphism Background */}
-        <div className="premium-testimonial-glass" />
-
-        {/* Quote Icon */}
-        <div className="premium-testimonial-quote-icon">
-          <Quote className="w-8 h-8 text-emerald-300" />
-        </div>
-
-        {/* Stars */}
-        <div className="premium-testimonial-stars">
-          {[...Array(5)].map((_, i) => (
-            <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-          ))}
-        </div>
-
-        {/* Testimonial Text */}
-        <blockquote className="premium-testimonial-text">
-          {currentItem?.quote ||
-           currentItem?.content ||
-           currentItem?.text ||
-           currentItem?.testimonial_text ||
-           "An unforgettable experience that exceeded all expectations."}
-        </blockquote>
-
-        {/* Author Info */}
-        <div className="premium-testimonial-author">
-          <div className="premium-testimonial-avatar">
-            <div className="premium-testimonial-avatar-bg">
-              {(currentItem?.name || "G").charAt(0).toUpperCase()}
+    <div ref={sectionRef} className="testimonials-sliders">
+      <div className="testimonials-track" style={{ transform: `translateX(-${activeSlide * 100}%)` }}>
+        {items.map((t, i) => (
+          <div key={t._id || t.id || i} className="testimonial-slide">
+            <div className="testimonial-card">
+              <div className="testimonial-image-side">
+                <div className="testimonial-curve-sep">
+                  <svg viewBox="0 0 50 500" preserveAspectRatio="none">
+                    <path d="M50,0 C0,80 50,160 0,250 C50,340 0,420 50,500 L50,0Z" fill="#fff"/>
+                  </svg>
+                </div>
+                <div className="testimonial-image-wrapper">
+                  <div className="testimonial-avatar-ring">
+                    <img
+                      src={t.image || `https://i.pravatar.cc/130?img=${i + 10}`}
+                      alt={t.name || 'Traveler'}
+                    />
+                  </div>
+                  <div>
+                    <div className="testimonial-customer-name">{t.name || 'Happy Traveler'}</div>
+                    <div className="testimonial-customer-role">{t.role || t.location || 'East Africa'}</div>
+                    <div className="testimonial-customer-company">🏢 {t.company || t.country || 'Altuvera'}</div>
+                  </div>
+                </div>
+              </div>
+              <div className="testimonial-content-side">
+                <div className="testimonial-quote-icon">"</div>
+                <div className="testimonial-stars">
+                  {renderStars(t.stars || t.rating || 5)}
+                </div>
+                <div className="testimonial-green-bar"></div>
+                <div className="testimonial-text">
+                  {i === activeSlide ? typedText : (t.quote || t.content || t.text || t.testimonial_text || 'An unforgettable experience that exceeded all expectations.')}
+                  {i === activeSlide && !reduced && <span className="testimonial-cursor" aria-hidden="true" />}
+                </div>
+                <div className="testimonial-content-author">
+                  <span className="testimonial-author-line"></span>
+                  <span className="testimonial-author-name-text">
+                    {t.name || 'Happy Traveler'}, {t.company || t.country || 'East Africa'}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
-          <div className="premium-testimonial-author-info">
-            <div className="premium-testimonial-name">
-              {currentItem?.name || "Happy Traveler"}
-            </div>
-            <div className="premium-testimonial-location">
-              <MapPin className="w-4 h-4" />
-              {currentItem?.location || currentItem?.country || "East Africa"}
-            </div>
-          </div>
-        </div>
-
-        {/* Navigation Arrows */}
-        <button
-          className="premium-testimonial-nav-btn premium-testimonial-nav-prev"
-          onClick={prevSlide}
-          aria-label="Previous testimonial"
-        >
-          <ArrowLeft className="w-6 h-6" />
-        </button>
-        <button
-          className="premium-testimonial-nav-btn premium-testimonial-nav-next"
-          onClick={nextSlide}
-          aria-label="Next testimonial"
-        >
-          <ArrowRight className="w-6 h-6" />
-        </button>
-      </motion.div>
-
-      {/* Dots Navigation */}
-      <div className="premium-testimonials-dots">
-        {items.map((_, index) => (
-          <button
-            key={index}
-            className={`premium-testimonials-dot ${
-              index === activeSlide ? 'active' : ''
-            }`}
-            onClick={() => goToSlide(index)}
-            aria-label={`Go to testimonial ${index + 1}`}
-          >
-            <motion.div
-              className="premium-testimonials-dot-inner"
-              animate={{
-                scale: index === activeSlide ? 1.2 : 1,
-                backgroundColor: index === activeSlide ? '#10b981' : '#6b7280'
-              }}
-              transition={{ duration: 0.3 }}
-            />
-          </button>
         ))}
       </div>
-
-      {/* Dots only, no progress tracker */}
+      <div className="testimonials-slider-nav">
+        <button
+          className="testimonials-nav-btn"
+          onClick={prevSlide}
+          aria-label="Previous"
+        >
+          ◀
+        </button>
+        <div className="testimonials-slider-dots">
+          {items.map((_, i) => (
+            <button
+              key={i}
+              className={`testimonials-dot${i === activeSlide ? ' active' : ''}`}
+              onClick={() => goToSlide(i)}
+              aria-label={`Go to testimonial ${i + 1}`}
+            />
+          ))}
+        </div>
+        <button
+          className="testimonials-nav-btn"
+          onClick={nextSlide}
+          aria-label="Next"
+        >
+          ▶
+        </button>
+      </div>
     </div>
   );
 });
 
 /* ═══════════════════════════════════════════
-   AUTO-ROTATING TESTIMONIALS
-   ═══════════════════════════════════════════ */
-const TestimonialsRotator = memo(({ items }) => {
-  const [activeGroup, setActiveGroup] = useState(0);
-  const [dir, setDir] = useState(1);
-  const timerRef = useRef(null);
-  const totalGroups = Math.ceil(items.length / 3);
-
-  const go = useCallback(
-    (next) => {
-      setDir(next > activeGroup ? 1 : -1);
-      setActiveGroup(next);
-    },
-    [activeGroup]
-  );
-
-  useEffect(() => {
-    timerRef.current = setInterval(() => {
-      setDir(1);
-      setActiveGroup((p) => (p + 1) % totalGroups);
-    }, 6000);
-    return () => clearInterval(timerRef.current);
-  }, [totalGroups]);
-
-  const resetTimer = useCallback(
-    (next) => {
-      clearInterval(timerRef.current);
-      go(next);
-      timerRef.current = setInterval(() => {
-        setDir(1);
-        setActiveGroup((p) => (p + 1) % totalGroups);
-      }, 6000);
-    },
-    [go, totalGroups]
-  );
-
-  const variants = {
-    enter: (d) => ({
-      x: d > 0 ? 100 : -100,
-      opacity: 0,
-      scale: 0.95,
-      filter: "blur(6px)",
-    }),
-    center: { x: 0, opacity: 1, scale: 1, filter: "blur(0px)" },
-    exit: (d) => ({
-      x: d > 0 ? -100 : 100,
-      opacity: 0,
-      scale: 0.95,
-      filter: "blur(6px)",
-    }),
-  };
-
-  const currentItems = items.slice(activeGroup * 3, (activeGroup + 1) * 3);
-
-  return (
-    <div className="testimonials-rotator">
-      <div className="testimonials-rotator-stage">
-        <AnimatePresence mode="wait" custom={dir}>
-          <motion.div
-            key={activeGroup}
-            custom={dir}
-            variants={variants}
-            initial="enter"
-            animate="center"
-            exit="exit"
-            transition={{ duration: 0.6, ease: [0.25, 1, 0.5, 1] }}
-            className="testimonials-row"
-          >
-            {currentItems.map((t, i) => (
-              <motion.div
-                key={i}
-                className="testimonial-card testimonial-card--featured"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: i * 0.1 }}
-              >
-                <div className="testimonial-stars">★★★★★</div>
-                <p className="testimonial-quote">
-                  "
-                  {t?.quote ||
-                    t?.content ||
-                    t?.text ||
-                    t?.testimonial_text ||
-                    "An unforgettable experience that exceeded all expectations."}
-                  "
-                </p>
-                <div className="testimonial-author">
-                  <div className="testimonial-avatar">
-                    {(t?.name || "G").charAt(0)}
-                  </div>
-                  <div>
-                    <div className="testimonial-name">
-                      {t?.name || "Happy Traveler"}
-                    </div>
-                    <div className="testimonial-location">
-                      {t?.location || t?.country || "East Africa"}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </AnimatePresence>
-      </div>
-
-      <div className="testimonials-rotator-nav">
-        <button
-          className="testimonials-rotator-arrow"
-          onClick={() =>
-            resetTimer((activeGroup - 1 + totalGroups) % totalGroups)
-          }
-          aria-label="Previous"
-        >
-          <IconChevronLeft size={20} />
-        </button>
-
-        <div className="testimonials-rotator-dots">
-          {Array.from({ length: totalGroups }).map((_, i) => (
-            <button
-              key={i}
-              className={`testimonials-rotator-dot${
-                i === activeGroup ? " active" : ""
-              }`}
-              onClick={() => resetTimer(i)}
-              aria-label={`Testimonial group ${i + 1}`}
-            >
-              {i === activeGroup && (
-                <motion.div
-                  className="testimonials-rotator-dot-progress"
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{ duration: 6, ease: "linear" }}
-                />
-              )}
-            </button>
-          ))}
-        </div>
-
-        <button
-          className="testimonials-rotator-arrow"
-          onClick={() => resetTimer((activeGroup + 1) % totalGroups)}
-          aria-label="Next"
-        >
-          <IconChevronRight size={20} />
-        </button>
-      </div>
-
-      <div className="testimonials-rotator-counter">
-        <span className="testimonials-rotator-counter-cur">
-          {activeGroup + 1}
-        </span>
-        <span className="testimonials-rotator-counter-sep">/</span>
-        <span className="testimonials-rotator-counter-total">
-          {totalGroups}
-        </span>
-       </div>
-     </div>
-   );
- });
-
- /* ═══════════════════════════════════════════
    MAIN HOME COMPONENT
    ═══════════════════════════════════════════ */
 const Home = () => {
   const { setIsLoading } = useApp();
-  const reduced = usePrefersReducedMotion();
   const { w: winW } = useWindowSize();
   const isMobile = winW < 768;
   const homeRootRef = useRef(null);
@@ -1368,7 +1053,6 @@ const Home = () => {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
-  const { user } = useUserAuth();
   const { destinations: allDest = [], loading: destLoading } = useDestinations({
     limit: 6,
     sort: "-featured",
@@ -1604,11 +1288,6 @@ const Home = () => {
           <div className="intro-grid">
             <div className="intro-content">
               <TextReveal>
-                <span className="section-label">
-                  <IconCompass size={14} /> Welcome to Altuvera
-                </span>
-              </TextReveal>
-              <TextReveal delay={0.08}>
                 <h1 className="intro-heading">
                   Discover the{" "}
                   <span className="text-gradient">Untamed Magic</span> of East
@@ -1675,22 +1354,12 @@ const Home = () => {
             <AnimatedSection animation="rotateIn" delay={0.2}>
               <div className="intro-image-collage">
                 <div className="intro-image-main">
-                  <img
-                    src="https://i.pinimg.com/736x/c2/26/91/c22691ef2c1f5a1e9544ec1e62774740.jpg"
-                    alt="African Safari"
-                    loading="lazy"
-                  />
-                  <div className="intro-image-badge">
-                    <span className="intro-image-badge-icon">🌍</span>
-                    <div>
-                      <span className="intro-image-badge-number">
-                        {countries.length || "10"}+
-                      </span>
-                      <span className="intro-image-badge-label">Countries</span>
-                    </div>
-                  </div>
-                </div>
-                {!isMobile && (
+<img
+                     src="https://i.pinimg.com/736x/c2/26/91/c22691ef2c1f5a1e9544ec1e62774740.jpg"
+                     alt="African Safari"
+                     loading="lazy"
+                   /></div>
+                 {!isMobile && (
                   <div className="intro-image-stack">
                     <motion.div
                       className="intro-image-stack-item"
@@ -1735,11 +1404,8 @@ const Home = () => {
       <section className="home-section destinations-section">
         <div className="blob blob--teal" />
         <div className="home-container">
-          <AnimatedSection animation="blurIn">
+            <AnimatedSection animation="blurIn">
             <div className="section-header">
-              <span className="section-label">
-                <IconMapPin size={14} /> Featured Destinations
-              </span>
               <h2 className="section-title">
                 Handpicked <span className="text-gradient">Destinations</span>
               </h2>
@@ -1781,11 +1447,8 @@ const Home = () => {
       <section className="home-section countries-section">
         <div className="blob blob--emerald" />
         <div className="home-container">
-          <AnimatedSection animation="blurIn">
+            <AnimatedSection animation="blurIn">
             <div className="section-header">
-              <span className="section-label">
-                <IconGlobe size={14} /> Explore by Country
-              </span>
               <h2 className="section-title">
                 Discover <span className="text-gradient">East Africa</span>
               </h2>
@@ -1839,11 +1502,8 @@ const Home = () => {
       {/* ── ADVENTURE TYPES ── */}
       <section className="home-section adventures-section">
         <div className="home-container">
-          <AnimatedSection animation="perspectiveIn">
+            <AnimatedSection animation="perspectiveIn">
             <div className="section-header">
-              <span className="section-label">
-                <IconCompass size={14} /> What We Offer
-              </span>
               <h2 className="section-title">
                 Choose Your <span className="text-gradient">Adventure</span>
               </h2>
@@ -1864,11 +1524,8 @@ const Home = () => {
       {/* ── HOW IT WORKS ── */}
       <section className="home-section process-section">
         <div className="home-container">
-          <AnimatedSection animation="perspectiveIn">
+            <AnimatedSection animation="perspectiveIn">
             <div className="section-header">
-              <span className="section-label">
-                <IconTarget size={14} /> How It Works
-              </span>
               <h2 className="section-title">
                 Your Journey in{" "}
                 <span className="text-gradient">Four Simple Steps</span>
@@ -1979,23 +1636,13 @@ const Home = () => {
             </AnimatedSection>
           </div>
         </div>
-      </section>
+</section>
 
-      {/* ── GALLERY SHOWCASE SECTION ── */}
-      <GalleryShowcaseSection
-        images={galleryImages}
-        loading={galleryLoading}
-        onCardClick={openLightbox}
-      />
-
-      {/* ── GALLERY ── */}
-      <section className="home-section gallery-section">
+       {/* ── GALLERY ── */}
+       <section className="home-section gallery-section">
         <div className="home-container">
-          <AnimatedSection animation="fadeInUp">
+        <AnimatedSection animation="fadeInUp">
             <div className="section-header">
-              <span className="section-label">
-                <IconCamera size={14} /> Photo Gallery
-              </span>
               <h2 className="section-title">
                 Africa Through <span className="text-gradient">Our Lens</span>
               </h2>
@@ -2069,19 +1716,14 @@ const Home = () => {
 
       {/* ── TESTIMONIALS ── */}
       <section className="home-section testimonials-section">
-        <div className="testimonials-pattern" />
-        <div className="blob blob--testimonials" />
         <div className="home-container">
           <AnimatedSection animation="fadeInUp">
             <div className="section-header">
-              <span className="section-label section-label--dark">
-                ★★★★★ &nbsp; Traveler Reviews
-              </span>
-              <h2 className="section-title section-title--light">
+              <h2 className="section-title">
                 What Our Travelers{" "}
                 <span className="text-gradient">Say</span>
               </h2>
-              <p className="section-subtitle section-subtitle--light">
+              <p className="section-subtitle">
                 Real stories from adventurers who've experienced East Africa
                 with Altuvera.
               </p>
@@ -2090,24 +1732,12 @@ const Home = () => {
           {testimonialsLoading ? (
             <div className="testimonials-loading">
               <div className="testimonials-row">
-                {Array.from({ length: 3 }).map((_, i) => (
+                {Array.from({ length: 1 }).map((_, i) => (
                   <div
                     key={i}
-                    className="testimonial-card testimonial-card--featured testimonial-card--skeleton"
+                    className="testimonial-card testimonial-card--skeleton"
                   >
-                    <div className="skeleton-line skeleton-line--stars" />
-                    <div className="skeleton-line skeleton-line--quote" />
-                    <div
-                      className="skeleton-line skeleton-line--quote"
-                      style={{ width: "80%" }}
-                    />
-                    <div className="testimonial-author">
-                      <div className="testimonial-avatar skeleton-shimmer" />
-                      <div>
-                        <div className="skeleton-line skeleton-line--name" />
-                        <div className="skeleton-line skeleton-line--location" />
-                      </div>
-                    </div>
+                    <div className="skeleton-shimmer" style={{ height: 200, borderRadius: 24 }} />
                   </div>
                 ))}
               </div>
@@ -2124,9 +1754,9 @@ const Home = () => {
               </p>
             </div>
           ) : allTestimonials.length > 0 ? (
-            <PremiumTourismTestimonials items={allTestimonials} />
+            <ScrollIntoViewTestimonials items={allTestimonials} />
           ) : (
-            <div className="testimonials-empty">
+            <div className="testimonials-empty-state">
               <div className="testimonials-empty-icon">💬</div>
               <h3 className="testimonials-empty-title">Reviews Coming Soon</h3>
               <p className="testimonials-empty-desc">
@@ -2135,8 +1765,8 @@ const Home = () => {
               </p>
             </div>
           )}
-        </div>
-      </section>
+         </div>
+       </section>
 
       {/* Newsletter section removed intentionally for a more polished homepage */}
 
