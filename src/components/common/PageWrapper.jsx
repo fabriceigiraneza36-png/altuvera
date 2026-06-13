@@ -1,17 +1,10 @@
 import React from "react";
 import { Helmet } from "react-helmet-async";
 import { useLocation } from "react-router-dom";
-import { getBrandLogoUrl, toAbsoluteUrl } from "../../utils/seo";
+import { getBrandLogoUrl, toAbsoluteUrl, withBrand } from "../../utils/seo";
 
 const DEFAULT_DESCRIPTION =
   "Book authentic East African safaris and cultural tours with Altuvera. Expert-guided adventures across Rwanda, Tanzania, Uganda, Rwanda, and Ethiopia.";
-
-const withBrand = (title) => {
-  const t = String(title || "").trim();
-  if (!t) return "Altuvera";
-  if (/altuvera/i.test(t)) return t;
-  return `${t} | Altuvera`;
-};
 
 const PageWrapper = ({
   title,

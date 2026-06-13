@@ -1137,6 +1137,175 @@ html {
   gap: 10px;
 }
 
+/* Adventure detail modal */
+.adventure-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.68);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 2000;
+}
+
+.adventure-modal-card {
+  width: min(1100px, 100%);
+  max-height: 90vh;
+  overflow: auto;
+  background: #fff;
+  border-radius: 28px;
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.35);
+  position: relative;
+}
+
+.adventure-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255,255,255,0.92);
+  color: #111827;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.adventure-modal-hero {
+  position: relative;
+  min-height: 320px;
+}
+
+.adventure-modal-hero-img {
+  width: 100%;
+  height: 320px;
+  object-fit: cover;
+}
+
+.adventure-modal-hero-copy {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 28px;
+  background: linear-gradient(180deg, rgba(2,6,23,0.12) 0%, rgba(2,6,23,0.78) 100%);
+  color: #fff;
+}
+
+.adventure-modal-label {
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 12px;
+  font-weight: 700;
+  color: #bfdbfe;
+  margin-bottom: 8px;
+}
+
+.adventure-modal-title {
+  font-family: var(--font-serif);
+  font-size: clamp(30px, 6vw, 46px);
+  line-height: 1.05;
+  margin: 0 0 10px;
+}
+
+.adventure-modal-copy {
+  max-width: 700px;
+  color: #e5eefb;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.adventure-modal-body {
+  padding: 24px 24px 28px;
+}
+
+.adventure-modal-subtitle {
+  font-size: 18px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 6px;
+}
+
+.adventure-modal-text {
+  color: #4b5563;
+  line-height: 1.6;
+  margin: 0 0 18px;
+}
+
+.adventure-modal-destinations {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.adventure-modal-destination-card {
+  display: flex;
+  gap: 14px;
+  padding: 12px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #f8fafc 0%, #eefbf7 100%);
+  border: 1px solid #dbeafe;
+  text-decoration: none;
+  color: inherit;
+}
+
+.adventure-modal-destination-img {
+  width: 120px;
+  height: 104px;
+  object-fit: cover;
+  border-radius: 14px;
+  flex: 0 0 120px;
+}
+
+.adventure-modal-destination-copy {
+  min-width: 0;
+}
+
+.adventure-modal-destination-category {
+  margin: 0 0 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 11px;
+  font-weight: 800;
+  color: #059669;
+}
+
+.adventure-modal-destination-title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  line-height: 1.2;
+  color: #111827;
+}
+
+.adventure-modal-destination-desc {
+  margin: 0;
+  color: #4b5563;
+  font-size: 13px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.adventure-modal-empty {
+  padding: 16px;
+  color: #4b5563;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
+}
+
+@media (max-width: 900px) {
+  .adventure-modal-destinations { grid-template-columns: 1fr; }
+}
+
 /* Legacy adventure card (kept for compat) */
 .adventure-card {
   position: relative;

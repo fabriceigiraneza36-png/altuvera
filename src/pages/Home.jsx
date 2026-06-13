@@ -340,7 +340,7 @@ const ParallaxSection = memo(({ image, children, height = "80vh", overlay }) => 
 /* ═══════════════════════════════════════════
    ADVENTURE CARD (with slideshow)
    ═══════════════════════════════════════════ */
-const AdventureCard = memo(({ adventure, index }) => {
+const AdventureCard = memo(({ adventure, index, onOpen }) => {
   const [cur, setCur] = useState(0);
   const [hov, setHov] = useState(false);
   const ivRef = useRef(null);
@@ -373,6 +373,15 @@ const AdventureCard = memo(({ adventure, index }) => {
   return (
     <motion.div
       className="adventure-card-v2"
+      onClick={() => onOpen?.(adventure)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen?.(adventure);
+        }
+      }}
+      role="button"
+      tabIndex={0}
       onMouseEnter={() => setHov(true)}
       onMouseLeave={() => setHov(false)}
       initial={{ opacity: 0, y: 40 }}
@@ -437,16 +446,17 @@ const AdventureCard = memo(({ adventure, index }) => {
       <div className="adventure-card-v2-content">
         <h3 className="adventure-card-v2-title">{adventure.title}</h3>
         <p className="adventure-card-v2-desc">{adventure.description}</p>
-        <Link
-          to={`/adventures/${
-            adventure.slug ||
-            adventure.title.toLowerCase().replace(/\s+/g, "-")
-          }`}
+        <button
+          type="button"
           className="adventure-card-v2-link"
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpen?.(adventure);
+          }}
         >
-          <span>Explore</span>
+          <span>View details</span>
           <IconArrowRight size={14} />
-        </Link>
+        </button>
       </div>
     </motion.div>
   );
@@ -1052,9 +1062,10 @@ const Home = () => {
   const [activeProcess, setActiveProcess] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
+  const [selectedAdventure, setSelectedAdventure] = useState(null);
 
   const { destinations: allDest = [], loading: destLoading } = useDestinations({
-    limit: 6,
+    limit: 100,
     sort: "-featured",
   });
   const {
@@ -1148,6 +1159,7 @@ const Home = () => {
         count: "5+ Safaris",
         color: "#F59E0B",
         slug: "safari-adventures",
+        filters: ["safari", "wildlife", "savanna", "park"],
         images: [
           "https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=800",
           "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800",
@@ -1162,6 +1174,7 @@ const Home = () => {
         count: "0+ Treks",
         color: "#6366F1",
         slug: "mountain-trekking",
+        filters: ["mountain", "trek", "hiking", "climb"],
         images: [
           "https://images.unsplash.com/photo-1609198092458-38a293c7ac4b?w=800",
           "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800",
@@ -1175,6 +1188,7 @@ const Home = () => {
         count: "1+ Experiences",
         color: "#10B981",
         slug: "primate-tracking",
+        filters: ["gorilla", "primate", "wildlife", "forest"],
         images: [
           "https://images.unsplash.com/photo-1580674287404-60e2e0fcb95e?w=800",
           "https://i.pinimg.com/736x/47/68/82/476882571830551aee93bee95882881c.jpg",
@@ -1188,6 +1202,7 @@ const Home = () => {
         count: "1+ Beaches",
         color: "#EC4899",
         slug: "beach-escapes",
+        filters: ["beach", "coast", "island", "ocean"],
         images: [
           "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800",
           "https://images.unsplash.com/photo-1519046904884-53103b34b206?w=800",
@@ -1201,6 +1216,7 @@ const Home = () => {
         count: "1+ Experiences",
         color: "#8B5CF6",
         slug: "cultural-immersion",
+        filters: ["culture", "heritage", "community", "traditional"],
         images: [
           "https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=800",
           "https://images.unsplash.com/photo-1504432842672-1a79f78e4084?w=800",
@@ -1214,6 +1230,7 @@ const Home = () => {
         count: "1+ Tours",
         color: "#EF4444",
         slug: "photography-tours",
+        filters: ["photography", "camera", "wildlife", "landscape"],
         images: [
           "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=800",
           "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800",
@@ -1222,6 +1239,37 @@ const Home = () => {
     ],
     []
   );
+
+  const openAdventureModal = useCallback((adventure) => {
+    setSelectedAdventure(adventure);
+  }, []);
+
+  const closeAdventureModal = useCallback(() => {
+    setSelectedAdventure(null);
+  }, []);
+
+  const matchedDestinations = useMemo(() => {
+    if (!selectedAdventure) return [];
+
+    const terms = (selectedAdventure.filters || []).map((term) => String(term).toLowerCase());
+    const normalized = (value) => String(value || "").toLowerCase();
+
+    return allDest.filter((destination) => {
+      const haystack = [
+        destination.category,
+        destination.experienceCategory,
+        destination.adventureCategory,
+        destination.classification,
+        destination.destinationType,
+        destination.name,
+        destination.tagline,
+      ]
+        .map(normalized)
+        .join(" ");
+
+      return terms.some((term) => haystack.includes(term));
+    });
+  }, [allDest, selectedAdventure]);
 
   const processSteps = useMemo(
     () => [
@@ -1268,13 +1316,6 @@ const Home = () => {
   /* ═══ RENDER ═══ */
   return (
     <div ref={homeRootRef} className="home-root">
-      <SEO
-        title="Altuvera | East Africa Safaris, Gorilla Trekking & Cultural Tours"
-        description="Explore authentic East African safari adventures with Altuvera. Plan gorilla trekking, cultural tours, and personalized itineraries across Rwanda, Tanzania, Uganda, and Ethiopia."
-        url="/"
-        image="/altuvera.png"
-        keywords={["Altuvera", "East Africa safari", "gorilla trekking", "cultural tours", "Rwanda travel", "Tanzania safari", "Uganda wildlife", "Ethiopia tours"]}
-      />
       <ScrollProgress />
 
       {/* ── HERO ── */}
@@ -1515,7 +1556,7 @@ const Home = () => {
           </AnimatedSection>
           <div className="adventures-grid-v2">
             {adventureTypes.map((a, i) => (
-              <AdventureCard key={a.title} adventure={a} index={i} />
+              <AdventureCard key={a.title} adventure={a} index={i} onOpen={openAdventureModal} />
             ))}
           </div>
         </div>
@@ -1822,6 +1863,83 @@ const Home = () => {
           </div>
         </TextReveal>
       </ParallaxSection>
+
+      {/* ── ADVENTURE MODAL ── */}
+      <AnimatePresence>
+        {selectedAdventure && (
+          <motion.div
+            className="adventure-modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={closeAdventureModal}
+          >
+            <motion.div
+              className="adventure-modal-card"
+              initial={{ opacity: 0, y: 28, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 18, scale: 0.98 }}
+              transition={{ duration: 0.24, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                className="adventure-modal-close"
+                onClick={closeAdventureModal}
+                aria-label="Close adventure details"
+              >
+                ×
+              </button>
+              <div className="adventure-modal-hero">
+                <img
+                  src={selectedAdventure.images?.[0] || "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1200"}
+                  alt={selectedAdventure.title}
+                  className="adventure-modal-hero-img"
+                />
+                <div className="adventure-modal-hero-copy">
+                  <p className="adventure-modal-label">Choose Your Adventure</p>
+                  <h3 className="adventure-modal-title">{selectedAdventure.title}</h3>
+                  <p className="adventure-modal-copy">{selectedAdventure.description}</p>
+                </div>
+              </div>
+
+              <div className="adventure-modal-body">
+                <div>
+                  <h4 className="adventure-modal-subtitle">Available destinations</h4>
+                  <p className="adventure-modal-text">
+                    Live results from our backend, grouped by the same adventure category you selected.
+                  </p>
+                </div>
+                <div className="adventure-modal-destinations">
+                  {matchedDestinations.length > 0 ? (
+                    matchedDestinations.slice(0, 6).map((destination) => (
+                      <Link
+                        key={destination.slug || destination.id}
+                        to={`/destinations/${destination.slug || destination.id}`}
+                        className="adventure-modal-destination-card"
+                        onClick={closeAdventureModal}
+                      >
+                        <img
+                          src={destination.imageUrl || destination.images?.[0] || "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=800"}
+                          alt={destination.name}
+                          className="adventure-modal-destination-img"
+                        />
+                        <div className="adventure-modal-destination-copy">
+                          <p className="adventure-modal-destination-category">{destination.category || "Adventure"}</p>
+                          <h5 className="adventure-modal-destination-title">{destination.name}</h5>
+                          <p className="adventure-modal-destination-desc">{destination.shortDescription || destination.description}</p>
+                        </div>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="adventure-modal-empty">No matching destinations are available yet for this adventure. Please try another category.</div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── LIGHTBOX ── */}
       <AnimatePresence>

@@ -13,7 +13,7 @@
   "dependencies": {
     "@react-google-maps/api": "^2.20.8",
     "@simplewebauthn/browser": "^13.2.2",
-    "@tailwindcss/vite": "^4.2.4",
+    "@tailwindcss/vite": "^4.3.1",
     "axios": "^1.16.0",
     "canvas-confetti": "^1.9.4",
     "framer-motion": "^10.18.0",
@@ -36,17 +36,15 @@
     "web-vitals": "^5.1.0"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4.2.2",
     "@types/react": "^18.2.37",
     "@types/react-dom": "^18.2.15",
-    "@vitejs/plugin-react": "^4.2.0",
-    "autoprefixer": "^10.4.27",
+    "@vitejs/plugin-react": "^6.0.2",
+    "esbuild": "^0.28.1",
     "eslint": "^8.53.0",
     "eslint-plugin-react": "^7.33.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.4",
-    "postcss": "^8.5.8",
-    "tailwindcss": "^4.2.4",
-    "vite": "^7.3.1"
+    "tailwindcss": "^4.3.1",
+    "vite": "^8.0.16"
   }
 }

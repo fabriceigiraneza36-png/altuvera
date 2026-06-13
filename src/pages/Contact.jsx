@@ -3,14 +3,14 @@ import React, {
   useState, useRef, useEffect, useCallback, useMemo,
 } from "react";
 import {
-  motion, AnimatePresence, useInView, useScroll, useTransform,
+  AnimatePresence, useInView, useScroll, useTransform,
 } from "framer-motion";
 import {
   FiMail, FiPhone, FiMapPin, FiClock, FiSend, FiMessageSquare,
   FiCheckCircle, FiUser, FiAlertCircle, FiChevronDown, FiUsers,
   FiGlobe, FiStar, FiArrowRight, FiArrowLeft, FiHelpCircle,
   FiShield, FiX, FiExternalLink, FiAward, FiZap, FiUserCheck,
-  FiMessageCircle,
+  FiMessageCircle, FiSmile,
 } from "react-icons/fi";
 import {
   FaFacebookF, FaInstagram, FaTwitter, FaYoutube, FaWhatsapp, FaTiktok,
@@ -25,6 +25,7 @@ import { sendVerificationCode, verifyCode } from "../utils/verifyEmail";
 import { useChatSocket } from "../hooks/useChatSocket";
 import { apiFetch } from "../utils/apiBase";
 import VerificationModal from "../components/common/VerificationModal";
+import EmojiPicker from "../components/messaging/EmojiPicker";
 import { useUserAuth } from "../context/UserAuthContext";
 
 /* ══════════════════════════════════════════════════════
@@ -49,7 +50,11 @@ const RULES = {
   name: {
     required: true, minLength: 2,
     pattern: /^[a-zA-Z\s'\-]+$/,
-    msg: { required: "Full name is required", minLength: "At least 2 characters", pattern: "Letters only" },
+    msg: {
+      required: "Full name is required",
+      minLength: "At least 2 characters",
+      pattern: "Letters only",
+    },
   },
   email: {
     required: true,
@@ -160,7 +165,10 @@ const STEP_CONFIG = [
 /* ══════════════════════════════════════════════════════
    SCROLL REVEAL
 ══════════════════════════════════════════════════════ */
-const ScrollReveal = ({ children, delay = 0, direction = "up", distance = 32, style = {}, className = "" }) => {
+const ScrollReveal = ({
+  children, delay = 0, direction = "up", distance = 32,
+  style = {}, className = "",
+}) => {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
   const dirs = {
@@ -185,7 +193,8 @@ const ScrollReveal = ({ children, delay = 0, direction = "up", distance = 32, st
 ══════════════════════════════════════════════════════ */
 const FieldInput = React.memo(({
   name, label, icon: Icon, type = "text", placeholder,
-  required, value, onChange, onBlur, error, touched, autoFilled = false,
+  required, value, onChange, onBlur, error, touched,
+  autoFilled = false,
 }) => {
   const [focused, setFocused] = useState(false);
   const hasErr = touched && error;
@@ -193,21 +202,27 @@ const FieldInput = React.memo(({
 
   return (
     <div className="cf-field">
-      <label className="cf-label" style={{ color: hasErr ? "#ef4444" : focused ? G[700] : undefined }}>
+      <label
+        className="cf-label"
+        style={{ color: hasErr ? "#ef4444" : focused ? G[700] : undefined }}
+      >
         {Icon && <Icon size={13} />}
         {label}
         {required && <span className="cf-req">*</span>}
         {autoFilled && (
-          <span className="cf-autobadge"><FiUserCheck size={9} /> Auto-filled</span>
+          <span className="cf-autobadge">
+            <FiUserCheck size={9} /> Auto-filled
+          </span>
         )}
       </label>
+
       <div className={`cf-input-wrap${focused ? " is-focused" : ""}${hasErr ? " is-error" : isOk ? " is-ok" : ""}${autoFilled ? " is-auto" : ""}`}>
         {type === "email" ? (
           <EmailAutocompleteInput
             name={name} value={value} placeholder={placeholder}
-            onValueChange={v => onChange?.({ target: { name, value: v } })}
+            onValueChange={(v) => onChange?.({ target: { name, value: v } })}
             onFocus={() => setFocused(true)}
-            onBlur={e => { setFocused(false); onBlur?.(e); }}
+            onBlur={(e) => { setFocused(false); onBlur?.(e); }}
             className="cf-input"
             aria-invalid={!!hasErr}
           />
@@ -216,12 +231,13 @@ const FieldInput = React.memo(({
             type={type} name={name} value={value} placeholder={placeholder}
             onChange={onChange}
             onFocus={() => setFocused(true)}
-            onBlur={e => { setFocused(false); onBlur?.(e); }}
+            onBlur={(e) => { setFocused(false); onBlur?.(e); }}
             className="cf-input"
             aria-invalid={!!hasErr}
             aria-describedby={hasErr ? `${name}-err` : undefined}
           />
         )}
+
         <AnimatePresence mode="wait">
           {hasErr && (
             <motion.span key="err" className="cf-icon-right"
@@ -243,12 +259,14 @@ const FieldInput = React.memo(({
           )}
         </AnimatePresence>
       </div>
+
       <AnimatePresence>
         {hasErr && (
           <motion.p id={`${name}-err`} className="cf-err-msg" role="alert"
             initial={{ opacity: 0, y: -4, height: 0 }}
             animate={{ opacity: 1, y: 0, height: "auto" }}
-            exit={{ opacity: 0, y: -4, height: 0 }}>
+            exit={{ opacity: 0, y: -4, height: 0 }}
+          >
             <FiAlertCircle size={11} /> {error}
           </motion.p>
         )}
@@ -275,7 +293,7 @@ const FieldSelect = React.memo(({
         <select
           name={name} value={value} onChange={onChange}
           onFocus={() => setFocused(true)}
-          onBlur={e => { setFocused(false); onBlur?.(e); }}
+          onBlur={(e) => { setFocused(false); onBlur?.(e); }}
           className="cf-select"
         >
           <option value="">{placeholder}</option>
@@ -310,16 +328,20 @@ const FieldTextarea = React.memo(({
 
   return (
     <div className="cf-field cf-field--full">
-      <label className="cf-label" style={{ color: hasErr ? "#ef4444" : focused ? G[700] : undefined }}>
+      <label
+        className="cf-label"
+        style={{ color: hasErr ? "#ef4444" : focused ? G[700] : undefined }}
+      >
         <FiMessageSquare size={13} /> {label}
         {required && <span className="cf-req">*</span>}
       </label>
+
       <div className={`cf-input-wrap cf-ta-wrap${focused ? " is-focused" : ""}${hasErr ? " is-error" : isOk ? " is-ok" : ""}`}>
         <textarea
           name={name} value={value} placeholder={placeholder}
           maxLength={maxLength} onChange={onChange}
           onFocus={() => setFocused(true)}
-          onBlur={e => { setFocused(false); onBlur?.(e); }}
+          onBlur={(e) => { setFocused(false); onBlur?.(e); }}
           className="cf-textarea"
           aria-invalid={!!hasErr}
           aria-describedby={hasErr ? `${name}-err` : undefined}
@@ -328,18 +350,22 @@ const FieldTextarea = React.memo(({
           <div className="cf-char-track">
             <motion.div className="cf-char-fill"
               animate={{ width: `${pct}%`, background: barColor }}
-              transition={{ duration: 0.3 }} />
+              transition={{ duration: 0.3 }}
+            />
           </div>
           <span className="cf-char-cnt" style={{ color: pct > 90 ? "#ef4444" : "#94a3b8" }}>
             {chars}/{maxLength}
           </span>
         </div>
       </div>
+
       <AnimatePresence>
         {hasErr && (
           <motion.p id={`${name}-err`} className="cf-err-msg" role="alert"
-            initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}>
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+          >
             <FiAlertCircle size={11} /> {error}
           </motion.p>
         )}
@@ -372,9 +398,10 @@ const Contact = () => {
 
   /* ── Verification ── */
   const [verOpen, setVerOpen] = useState(false);
-  const [verId, setVerId] = useState(null);
   const [verErr, setVerErr] = useState("");
   const [verLoading, setVerLoading] = useState(false);
+  // Store email at time of submit so it survives form resets
+  const verEmailRef = useRef("");
 
   /* ── FAQ ── */
   const [faqs, setFaqs] = useState([]);
@@ -387,13 +414,20 @@ const Contact = () => {
   const [chatInput, setChatInput] = useState("");
   const [chatSending, setChatSending] = useState(false);
   const [chatErr, setChatErr] = useState("");
+  const [emojiOpen, setEmojiOpen] = useState(false);
 
   /* ── Refs ── */
   const heroRef = useRef(null);
   const chatBodyRef = useRef(null);
+  const emojiRef = useRef(null);
+  // Store the full form data at submit time for use after verification
+  const pendingFormRef = useRef(null);
 
   /* ── Parallax ── */
-  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
   const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
@@ -417,7 +451,13 @@ const Contact = () => {
         const res = await apiFetch("/faqs", { signal: ac.signal });
         if (!res.ok) throw new Error(`Server error ${res.status}`);
         const json = await res.json();
-        setFaqs((json?.data || []).map(f => ({ id: f.id, q: f.question, a: f.answer })));
+        setFaqs(
+          (json?.data || []).map((f) => ({
+            id: f.id,
+            q: f.question,
+            a: f.answer,
+          }))
+        );
       } catch (err) {
         if (err?.name !== "AbortError") {
           setFaqsError(err?.message || "Failed to load FAQs");
@@ -446,17 +486,18 @@ const Contact = () => {
     if (email) { updates.email = email; filled.add("email"); }
     if (phone) { updates.phone = phone; filled.add("phone"); }
 
-    setForm(prev => ({ ...prev, ...updates }));
+    setForm((prev) => ({ ...prev, ...updates }));
     setAutoFilledFields(filled);
     setShowBanner(true);
 
-    const newTouched = {}, newErrors = {};
-    Object.keys(updates).forEach(k => {
+    const newTouched = {};
+    const newErrors = {};
+    Object.keys(updates).forEach((k) => {
       newTouched[k] = true;
       newErrors[k] = validateField(k, updates[k]);
     });
-    setTouched(prev => ({ ...prev, ...newTouched }));
-    setErrors(prev => ({ ...prev, ...newErrors }));
+    setTouched((prev) => ({ ...prev, ...newTouched }));
+    setErrors((prev) => ({ ...prev, ...newErrors }));
   }, [user, isAuthenticated]);
 
   /* ═══════════════════════════════
@@ -466,13 +507,21 @@ const Contact = () => {
     if (chatOpen && !chatConnected) connectChat();
   }, [chatOpen, chatConnected, connectChat]);
 
+  const chatRegistered = useRef(false);
   useEffect(() => {
-    if (!chatOpen || !chatConnected) return;
+    if (!chatOpen || !chatConnected || chatRegistered.current) return;
+    chatRegistered.current = true;
     registerChat({
       name: form.name || user?.fullName || "Guest",
       email: form.email || user?.email || "",
     }).catch(() => { });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatOpen, chatConnected]);
+
+  // Reset chat registration when chat closes
+  useEffect(() => {
+    if (!chatOpen) chatRegistered.current = false;
+  }, [chatOpen]);
 
   useEffect(() => {
     if (chatBodyRef.current) {
@@ -480,99 +529,195 @@ const Contact = () => {
     }
   }, [chatMessages, chatOpen]);
 
+  useEffect(() => {
+    if (!emojiOpen) return;
+    const handlePointerDown = (event) => {
+      if (emojiRef.current && !emojiRef.current.contains(event.target)) {
+        setEmojiOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => document.removeEventListener("mousedown", handlePointerDown);
+  }, [emojiOpen]);
+
   /* ═══════════════════════════════
      HANDLERS
   ═══════════════════════════════ */
-  const handleChange = useCallback(e => {
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
     if (autoFilledFields.has(name)) {
-      setAutoFilledFields(prev => { const s = new Set(prev); s.delete(name); return s; });
+      setAutoFilledFields((prev) => {
+        const s = new Set(prev);
+        s.delete(name);
+        return s;
+      });
     }
-    setErrors(prev => prev[name] ? { ...prev, [name]: validateField(name, value) } : prev);
+    setErrors((prev) =>
+      prev[name] ? { ...prev, [name]: validateField(name, value) } : prev
+    );
   }, [autoFilledFields]);
 
-  const handleBlur = useCallback(e => {
+  const handleBlur = useCallback((e) => {
     const { name, value } = e.target;
-    setTouched(prev => ({ ...prev, [name]: true }));
-    setErrors(prev => ({ ...prev, [name]: validateField(name, value) }));
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
   }, []);
 
-  const validateStep = useCallback(idx => {
-    const errs = {}, touch = {};
-    STEP_FIELDS[idx].forEach(f => {
+  const handleEmojiSelect = useCallback((emoji) => {
+    setForm((prev) => ({
+      ...prev,
+      message: `${prev.message || ""}${emoji}`,
+    }));
+    setEmojiOpen(false);
+  }, []);
+
+  const validateStep = useCallback((idx) => {
+    const errs = {};
+    const touch = {};
+    STEP_FIELDS[idx].forEach((f) => {
       touch[f] = true;
       const e = validateField(f, form[f]);
       if (e) errs[f] = e;
     });
-    setTouched(prev => ({ ...prev, ...touch }));
-    setErrors(prev => ({ ...prev, ...errs }));
+    setTouched((prev) => ({ ...prev, ...touch }));
+    setErrors((prev) => ({ ...prev, ...errs }));
     return Object.keys(errs).length === 0;
   }, [form]);
 
   const goNext = useCallback(() => {
     if (!validateStep(step)) return;
     setDirection(1);
-    setStep(s => Math.min(s + 1, STEP_FIELDS.length - 1));
+    setStep((s) => Math.min(s + 1, STEP_FIELDS.length - 1));
   }, [step, validateStep]);
 
   const goPrev = useCallback(() => {
     setDirection(-1);
-    setStep(s => Math.max(s - 1, 0));
+    setStep((s) => Math.max(s - 1, 0));
   }, []);
 
-  const handleSubmit = useCallback(async e => {
+  /* ── Submit → Send OTP ── */
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
-    if (!validateStep(step)) return;
+
+    // Validate all steps
+    let hasErrors = false;
+    STEP_FIELDS.forEach((_, idx) => {
+      if (!validateStep(idx)) hasErrors = true;
+    });
+    if (hasErrors) return;
+
+    const email = form.email?.trim().toLowerCase();
+    if (!email) {
+      setErrors((prev) => ({ ...prev, email: "Email is required" }));
+      return;
+    }
+
     setSubmitting(true);
     setSubmitProgress(0);
+    setErrors((prev) => ({ ...prev, submit: "" }));
 
-    const tick = setInterval(() => setSubmitProgress(p => Math.min(p + 7, 88)), 120);
+    const tick = setInterval(
+      () => setSubmitProgress((p) => Math.min(p + 7, 88)),
+      120
+    );
+
     try {
-      const { verificationId } = await sendVerificationCode({ email: form.email, purpose: "contact" });
-      setVerId(verificationId);
+      // Store form data and email for after-verification use
+      pendingFormRef.current = { ...form };
+      verEmailRef.current = email;
+
+      await sendVerificationCode({ email });
+
       setVerErr("");
       setVerOpen(true);
     } catch (err) {
-      setErrors(prev => ({ ...prev, submit: err?.message || "Unable to send. Please try again." }));
+      setErrors((prev) => ({
+        ...prev,
+        submit: err?.message || "Unable to send verification code. Please try again.",
+      }));
     } finally {
       clearInterval(tick);
       setSubmitProgress(100);
-      setSubmitting(false);
+      setTimeout(() => setSubmitting(false), 300);
     }
-  }, [form, step, validateStep]);
+  }, [form, validateStep]);
 
-  const handleVerify = useCallback(async code => {
-    if (!verId) return;
+  /* ── Verify OTP → Send Message ── */
+  const handleVerify = useCallback(async (code) => {
+    const email = verEmailRef.current;
+    if (!email) {
+      setVerErr("Email is missing. Please close and try again.");
+      return;
+    }
+    if (!code?.trim()) {
+      setVerErr("Please enter the verification code.");
+      return;
+    }
+
+    const sanitizedCode = String(code).replace(/\D/g, "").slice(0, 6);
+    if (sanitizedCode.length !== 6) {
+      setVerErr("Enter a valid 6-digit code.");
+      return;
+    }
+
     setVerLoading(true);
     setVerErr("");
+
     try {
-      await verifyCode({ email: form.email, verificationId: verId, code });
-      const res = await sendMessage({ type: "contact", data: { ...form } });
-      if (!res?.error) {
-        setSubmitted(true);
-        setVerOpen(false);
-        setForm(INIT_FORM);
-        setTouched({});
-        setErrors({});
-        setAutoFilledFields(new Set());
-        autoFillDone.current = false;
-      } else {
+      // Step 1: Verify the OTP code
+      await verifyCode({
+        email,
+        code: sanitizedCode,
+      });
+
+      // Step 2: Send the actual contact message
+      const formData = pendingFormRef.current || form;
+      const res = await sendMessage({
+        type: "contact",
+        data: { ...formData },
+      });
+
+      if (res?.error) {
         setVerErr(res.error);
+        return;
       }
+
+      // Step 3: Success — clean up everything
+      setSubmitted(true);
+      setVerOpen(false);
+      setForm(INIT_FORM);
+      setTouched({});
+      setErrors({});
+      setAutoFilledFields(new Set());
+      autoFillDone.current = false;
+      pendingFormRef.current = null;
+      verEmailRef.current = "";
     } catch (err) {
-      setVerErr(err?.message || "Invalid code. Please try again.");
+      const msg = err?.message || "Invalid code. Please try again.";
+
+      // Provide user-friendly messages
+      if (msg.includes("expired")) {
+        setVerErr("Code expired. Please close and request a new one.");
+      } else if (msg.includes("attempts")) {
+        setVerErr("Too many attempts. Please close and try again.");
+      } else {
+        setVerErr(msg);
+      }
     } finally {
       setVerLoading(false);
     }
-  }, [form, verId]);
+  }, [form]);
 
+  /* ── Close verification modal ── */
   const closeVer = useCallback(() => {
     setVerOpen(false);
     setVerErr("");
-    setVerId(null);
+    // Don't clear verEmailRef or pendingFormRef here
+    // in case user wants to re-open
   }, []);
 
+  /* ── Reset form completely ── */
   const resetForm = useCallback(() => {
     setSubmitted(false);
     setStep(0);
@@ -583,24 +728,27 @@ const Contact = () => {
     setAutoFilledFields(new Set());
     setShowBanner(false);
     autoFillDone.current = false;
+    pendingFormRef.current = null;
+    verEmailRef.current = "";
     setSubmitProgress(0);
   }, []);
 
+  /* ── Chat send ── */
   const handleChatSend = useCallback(async () => {
     const body = chatInput.trim();
     if (!body) return;
     setChatErr("");
     setChatSending(true);
     try {
-      await registerChat({
-        name: form.name || user?.fullName || "Guest",
-        email: form.email || user?.email || "",
-      });
-      await sendChatMsg({
-        body,
-        name: form.name || user?.fullName || "Guest",
-        email: form.email || user?.email || "",
-      });
+      const chatName = form.name || user?.fullName || "Guest";
+      const chatEmail = form.email || user?.email || "";
+
+      if (!chatRegistered.current) {
+        await registerChat({ name: chatName, email: chatEmail });
+        chatRegistered.current = true;
+      }
+
+      await sendChatMsg({ body, name: chatName, email: chatEmail });
       setChatInput("");
     } catch (err) {
       setChatErr(err?.message || "Failed to send. Try again.");
@@ -612,7 +760,7 @@ const Contact = () => {
   /* ── Completion % ── */
   const completion = useMemo(() => {
     const required = ["name", "email", "subject", "message"];
-    const filled = required.filter(k => form[k]?.trim()).length;
+    const filled = required.filter((k) => form[k]?.trim()).length;
     return Math.round((filled / required.length) * 100);
   }, [form]);
 
@@ -634,7 +782,8 @@ const Contact = () => {
         <motion.div
           className="cf-hero-bg"
           style={{
-            backgroundImage: `url(https://i.pinimg.com/736x/bb/ca/d1/bbcad1c07136f38bfc47257f8b38cf2a.jpg)`,
+            backgroundImage:
+              "url(https://i.pinimg.com/736x/bb/ca/d1/bbcad1c07136f38bfc47257f8b38cf2a.jpg)",
             y: heroY,
           }}
           initial={{ scale: 1.12 }}
@@ -644,7 +793,8 @@ const Contact = () => {
         <div className="cf-hero-overlay" />
 
         <motion.div className="cf-hero-inner" style={{ opacity: heroOpacity }}>
-          <motion.div className="cf-hero-badge"
+          <motion.div
+            className="cf-hero-badge"
             initial={{ opacity: 0, y: -18, scale: 0.88 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay: 0.25, duration: 0.6, ease: EASE.bounce }}
@@ -652,23 +802,30 @@ const Contact = () => {
             <HiSparkles size={14} /> Your Safari Starts Here
           </motion.div>
 
-          <motion.h1 className="cf-hero-h1"
-            initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }}
+          <motion.h1
+            className="cf-hero-h1"
+            initial={{ opacity: 0, y: 28 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.7 }}
           >
-            Let's Plan Your<br /><em>Dream Safari</em>
+            Let's Plan Your<br />
+            <em>Dream Safari</em>
           </motion.h1>
 
-          <motion.p className="cf-hero-p"
-            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+          <motion.p
+            className="cf-hero-p"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.55, duration: 0.65 }}
           >
             Connect with our expert team and let us craft an unforgettable
             African adventure tailored just for you.
           </motion.p>
 
-          <motion.div className="cf-hero-btns"
-            initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }}
+          <motion.div
+            className="cf-hero-btns"
+            initial={{ opacity: 0, y: 18 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.68, duration: 0.6 }}
           >
             <a href="#contact-form" className="cf-btn cf-btn--white">
@@ -680,14 +837,17 @@ const Contact = () => {
           </motion.div>
         </motion.div>
 
-        <motion.div className="cf-scroll-hint"
+        <motion.div
+          className="cf-scroll-hint"
           animate={{ y: [0, 9, 0] }}
           transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
         >
           <div className="cf-scroll-pill">
-            <motion.div className="cf-scroll-dot"
+            <motion.div
+              className="cf-scroll-dot"
               animate={{ y: [0, 13, 0], opacity: [1, 0.2, 1] }}
-              transition={{ duration: 1.7, repeat: Infinity }} />
+              transition={{ duration: 1.7, repeat: Infinity }}
+            />
           </div>
         </motion.div>
       </section>
@@ -716,10 +876,15 @@ const Contact = () => {
         <div className="cf-wrap">
           <ScrollReveal>
             <div className="cf-hdr">
-              <div className="cf-pill"><FiMessageSquare size={12} /> Get In Touch</div>
-              <h2 className="cf-h2">We'd Love to <em>Hear From You</em></h2>
+              <div className="cf-pill">
+                <FiMessageSquare size={12} /> Get In Touch
+              </div>
+              <h2 className="cf-h2">
+                We'd Love to <em>Hear From You</em>
+              </h2>
               <p className="cf-sub">
-                Our Africa travel experts are ready to help craft your perfect adventure.
+                Our Africa travel experts are ready to help craft your perfect
+                adventure.
               </p>
             </div>
           </ScrollReveal>
@@ -728,44 +893,65 @@ const Contact = () => {
             {/* ── Contact Info ── */}
             <ScrollReveal direction="left" delay={0.1}>
               <div className="cf-info">
-                {/* Auth user card */}
                 <AnimatePresence>
                   {isAuthenticated && user && (
-                    <motion.div className="cf-user-card"
-                      initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0 }} transition={{ duration: 0.45 }}
+                    <motion.div
+                      className="cf-user-card"
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.45 }}
                     >
                       <div className="cf-user-av">
-                        {user.avatar || user.avatarUrl
-                          ? <img src={user.avatar || user.avatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
-                          : <FiUser size={20} color="#fff" />
-                        }
+                        {user.avatar || user.avatarUrl ? (
+                          <img
+                            src={user.avatar || user.avatarUrl}
+                            alt=""
+                            style={{
+                              width: "100%", height: "100%",
+                              objectFit: "cover", borderRadius: "50%",
+                            }}
+                          />
+                        ) : (
+                          <FiUser size={20} color="#fff" />
+                        )}
                       </div>
                       <div className="cf-user-meta">
-                        <div className="cf-user-name">{user.fullName || user.name || "Traveler"}</div>
+                        <div className="cf-user-name">
+                          {user.fullName || user.name || "Traveler"}
+                        </div>
                         <div className="cf-user-email">{user.email}</div>
                       </div>
-                      <div className="cf-user-badge"><FiUserCheck size={11} /> Signed In</div>
+                      <div className="cf-user-badge">
+                        <FiUserCheck size={11} /> Signed In
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
 
                 <h3 className="cf-info-h3">Contact Information</h3>
-                <p className="cf-info-p">Reach us through any channel. We respond within 2 hours during working hours.</p>
+                <p className="cf-info-p">
+                  Reach us through any channel. We respond within 2 hours
+                  during working hours.
+                </p>
 
                 {CONTACT_CARDS.map((c, i) => (
                   <ScrollReveal key={i} delay={0.12 + i * 0.06}>
                     <a
                       href={c.href || "#"}
                       className="cf-card-link"
-                      onClick={!c.href ? e => e.preventDefault() : undefined}
+                      onClick={!c.href ? (e) => e.preventDefault() : undefined}
                     >
                       <div className="cf-card-icon"><c.icon size={19} /></div>
                       <div className="cf-card-body">
                         <div className="cf-card-title">{c.title}</div>
-                        {c.lines.map((l, j) => <div key={j} className="cf-card-line">{l}</div>)}
+                        {c.lines.map((l, j) => (
+                          <div key={j} className="cf-card-line">{l}</div>
+                        ))}
                       </div>
-                      {c.href && <FiExternalLink size={12} className="cf-card-ext" />}
+                      {c.href && (
+                        <FiExternalLink size={12} className="cf-card-ext" />
+                      )}
                     </a>
                   </ScrollReveal>
                 ))}
@@ -775,9 +961,12 @@ const Contact = () => {
                     <div className="cf-socials-title">Follow Our Adventures</div>
                     <div className="cf-socials-row">
                       {SOCIALS.map((s, i) => (
-                        <motion.a key={i} href={s.url} target="_blank" rel="noopener noreferrer"
+                        <motion.a
+                          key={i} href={s.url}
+                          target="_blank" rel="noopener noreferrer"
                           title={s.label} className="cf-social"
-                          whileHover={{ scale: 1.14, y: -3 }} whileTap={{ scale: 0.93 }}
+                          whileHover={{ scale: 1.14, y: -3 }}
+                          whileTap={{ scale: 0.93 }}
                         >
                           <s.icon />
                         </motion.a>
@@ -791,37 +980,57 @@ const Contact = () => {
             {/* ── Form Panel ── */}
             <ScrollReveal direction="right" delay={0.15}>
               <AnimatePresence mode="wait">
-                {/* SUCCESS STATE */}
                 {submitted ? (
-                  <motion.div key="success" className="cf-panel"
+                  /* ── SUCCESS STATE ── */
+                  <motion.div
+                    key="success" className="cf-panel"
                     initial={{ opacity: 0, scale: 0.92, y: 18 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.92 }}
                     transition={{ duration: 0.45, ease: EASE.snappy }}
                   >
                     <div className="cf-success">
-                      <motion.div className="cf-success-ring"
-                        initial={{ scale: 0 }} animate={{ scale: 1 }}
+                      <motion.div
+                        className="cf-success-ring"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
                         transition={{ delay: 0.15, duration: 0.5, ease: EASE.bounce }}
                       >
                         <FiCheckCircle size={50} color="#fff" />
                       </motion.div>
-                      <motion.h3 className="cf-success-h3"
-                        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.3 }}>
+                      <motion.h3
+                        className="cf-success-h3"
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                      >
                         Message Sent! 🎉
                       </motion.h3>
-                      <motion.p className="cf-success-p"
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }}>
+                      <motion.p
+                        className="cf-success-p"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.4 }}
+                      >
                         Our safari experts will respond within 24 hours.
                       </motion.p>
-                      <motion.div className="cf-success-tag"
-                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
+                      <motion.div
+                        className="cf-success-tag"
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                      >
                         <small>Confirmation sent to</small>
-                        <strong>{form.email || user?.email}</strong>
+                        <strong>
+                          {pendingFormRef.current?.email || user?.email || "your email"}
+                        </strong>
                       </motion.div>
-                      <motion.div className="cf-success-actions"
-                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 }}>
+                      <motion.div
+                        className="cf-success-actions"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.6 }}
+                      >
                         <button className="cf-btn cf-btn--green" onClick={resetForm}>
                           <FiSend size={14} /> Send Another
                         </button>
@@ -832,31 +1041,50 @@ const Contact = () => {
                     </div>
                   </motion.div>
                 ) : (
-                  /* FORM */
-                  <motion.form key="form" className="cf-panel"
+                  /* ── FORM ── */
+                  <motion.form
+                    key="form" className="cf-panel"
                     onSubmit={handleSubmit} autoComplete="off" noValidate
-                    initial={{ opacity: 1 }} exit={{ opacity: 0, scale: 0.96 }}
+                    initial={{ opacity: 1 }}
+                    exit={{ opacity: 0, scale: 0.96 }}
                   >
                     {/* Auto-fill banner */}
                     <AnimatePresence>
                       {showBanner && isAuthenticated && user && (
-                        <motion.div key="banner" className="cf-banner"
+                        <motion.div
+                          key="banner" className="cf-banner"
                           initial={{ opacity: 0, y: -10, scale: 0.97 }}
                           animate={{ opacity: 1, y: 0, scale: 1 }}
                           exit={{ opacity: 0, y: -10 }}
                           transition={{ duration: 0.38 }}
                         >
                           <div className="cf-banner-av">
-                            {user.avatar || user.avatarUrl
-                              ? <img src={user.avatar || user.avatarUrl} alt="" style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }} />
-                              : <FiUserCheck size={15} color="#fff" />
-                            }
+                            {user.avatar || user.avatarUrl ? (
+                              <img
+                                src={user.avatar || user.avatarUrl}
+                                alt=""
+                                style={{
+                                  width: "100%", height: "100%",
+                                  borderRadius: "50%", objectFit: "cover",
+                                }}
+                              />
+                            ) : (
+                              <FiUserCheck size={15} color="#fff" />
+                            )}
                           </div>
                           <div className="cf-banner-txt">
-                            <span className="cf-banner-name">Welcome back, {user.fullName || user.name || "there"}! 👋</span>
-                            <span className="cf-banner-sub">Your details have been auto-filled — just review and send.</span>
+                            <span className="cf-banner-name">
+                              Welcome back, {user.fullName || user.name || "there"}! 👋
+                            </span>
+                            <span className="cf-banner-sub">
+                              Your details have been auto-filled — just review and send.
+                            </span>
                           </div>
-                          <button type="button" className="cf-banner-close" onClick={() => setShowBanner(false)} aria-label="Dismiss">
+                          <button
+                            type="button" className="cf-banner-close"
+                            onClick={() => setShowBanner(false)}
+                            aria-label="Dismiss"
+                          >
                             <FiX size={14} />
                           </button>
                         </motion.div>
@@ -870,9 +1098,11 @@ const Contact = () => {
                         <span className="cf-prog-pct">{completion}%</span>
                       </div>
                       <div className="cf-prog-track">
-                        <motion.div className="cf-prog-fill"
+                        <motion.div
+                          className="cf-prog-fill"
                           animate={{ width: `${completion}%` }}
-                          transition={{ duration: 0.4 }} />
+                          transition={{ duration: 0.4 }}
+                        />
                       </div>
                     </div>
 
@@ -882,12 +1112,24 @@ const Contact = () => {
                         <React.Fragment key={i}>
                           <div
                             className={`cf-step${step === i ? " cf-step--active" : step > i ? " cf-step--done" : ""}`}
-                            onClick={() => { if (i < step || (i > step && validateStep(step))) { setDirection(i > step ? 1 : -1); setStep(i); } }}
+                            onClick={() => {
+                              if (i < step) {
+                                setDirection(-1);
+                                setStep(i);
+                              } else if (i > step && validateStep(step)) {
+                                setDirection(1);
+                                setStep(i);
+                              }
+                            }}
                             role="button" tabIndex={0}
                             aria-label={`Step ${i + 1}: ${cfg.label}`}
                           >
                             <div className="cf-step-circle">
-                              {step > i ? <FiCheckCircle size={17} /> : <cfg.icon size={17} />}
+                              {step > i ? (
+                                <FiCheckCircle size={17} />
+                              ) : (
+                                <cfg.icon size={17} />
+                              )}
                             </div>
                             <div className="cf-step-meta">
                               <span className="cf-step-num">Step {i + 1}</span>
@@ -895,7 +1137,9 @@ const Contact = () => {
                             </div>
                           </div>
                           {i < STEP_CONFIG.length - 1 && (
-                            <div className={`cf-step-line${step > i ? " cf-step-line--done" : ""}`} />
+                            <div
+                              className={`cf-step-line${step > i ? " cf-step-line--done" : ""}`}
+                            />
                           )}
                         </React.Fragment>
                       ))}
@@ -904,14 +1148,13 @@ const Contact = () => {
                     {/* Step body */}
                     <div className="cf-step-body">
                       <AnimatePresence mode="wait" custom={direction}>
-                        {/* STEP 0 — Personal Info */}
                         {step === 0 && (
-                          <motion.div key="s0"
-                            custom={direction}
+                          <motion.div
+                            key="s0" custom={direction}
                             variants={{
-                              enter: d => ({ opacity: 0, x: d * 40 }),
+                              enter: (d) => ({ opacity: 0, x: d * 40 }),
                               center: { opacity: 1, x: 0 },
-                              exit: d => ({ opacity: 0, x: d * -40 }),
+                              exit: (d) => ({ opacity: 0, x: d * -40 }),
                             }}
                             initial="enter" animate="center" exit="exit"
                             transition={{ duration: 0.32, ease: EASE.snappy }}
@@ -924,27 +1167,30 @@ const Contact = () => {
                               <FieldInput
                                 name="name" label="Full Name" icon={FiUser}
                                 placeholder="e.g. Jane Smith" required
-                                value={form.name} onChange={handleChange} onBlur={handleBlur}
+                                value={form.name} onChange={handleChange}
+                                onBlur={handleBlur}
                                 error={errors.name} touched={touched.name}
                                 autoFilled={autoFilledFields.has("name")}
                               />
                               <FieldInput
                                 name="email" label="Email Address" icon={FiMail}
                                 type="email" placeholder="you@example.com" required
-                                value={form.email} onChange={handleChange} onBlur={handleBlur}
+                                value={form.email} onChange={handleChange}
+                                onBlur={handleBlur}
                                 error={errors.email} touched={touched.email}
                                 autoFilled={autoFilledFields.has("email")}
                               />
                             </div>
                             <FieldInput
-                              name="phone" label="Phone Number (Optional)" icon={FiPhone}
-                              type="tel" placeholder="+250 700 000 000"
-                              value={form.phone} onChange={handleChange} onBlur={handleBlur}
+                              name="phone" label="Phone Number (Optional)"
+                              icon={FiPhone} type="tel"
+                              placeholder="+250 700 000 000"
+                              value={form.phone} onChange={handleChange}
+                              onBlur={handleBlur}
                               error={errors.phone} touched={touched.phone}
                               autoFilled={autoFilledFields.has("phone")}
                             />
 
-                            {/* Optional trip details */}
                             <div className="cf-optional-block">
                               <div className="cf-optional-lbl">
                                 <FiGlobe size={13} /> Optional Trip Details
@@ -953,32 +1199,37 @@ const Contact = () => {
                                 <FieldSelect
                                   name="tripType" label="Trip Type" icon={FiGlobe}
                                   placeholder="Select trip type" options={TRIP_TYPES}
-                                  value={form.tripType} onChange={handleChange} onBlur={handleBlur}
+                                  value={form.tripType} onChange={handleChange}
+                                  onBlur={handleBlur}
                                 />
                                 <FieldInput
-                                  name="travelDate" label="Travel Date" icon={FiClock}
-                                  type="date"
-                                  value={form.travelDate} onChange={handleChange} onBlur={handleBlur}
+                                  name="travelDate" label="Travel Date"
+                                  icon={FiClock} type="date"
+                                  value={form.travelDate} onChange={handleChange}
+                                  onBlur={handleBlur}
                                 />
                               </div>
                               <FieldSelect
-                                name="travelers" label="Number of Travelers" icon={FiUsers}
-                                placeholder="Select group size"
-                                options={["Solo", "2 — Couple", "3–4 — Small Group", "5–8 — Group", "9+ — Large Group"]}
-                                value={form.travelers} onChange={handleChange} onBlur={handleBlur}
+                                name="travelers" label="Number of Travelers"
+                                icon={FiUsers} placeholder="Select group size"
+                                options={[
+                                  "Solo", "2 — Couple", "3–4 — Small Group",
+                                  "5–8 — Group", "9+ — Large Group",
+                                ]}
+                                value={form.travelers} onChange={handleChange}
+                                onBlur={handleBlur}
                               />
                             </div>
                           </motion.div>
                         )}
 
-                        {/* STEP 1 — Message */}
                         {step === 1 && (
-                          <motion.div key="s1"
-                            custom={direction}
+                          <motion.div
+                            key="s1" custom={direction}
                             variants={{
-                              enter: d => ({ opacity: 0, x: d * 40 }),
+                              enter: (d) => ({ opacity: 0, x: d * 40 }),
                               center: { opacity: 1, x: 0 },
-                              exit: d => ({ opacity: 0, x: d * -40 }),
+                              exit: (d) => ({ opacity: 0, x: d * -40 }),
                             }}
                             initial="enter" animate="center" exit="exit"
                             transition={{ duration: 0.32, ease: EASE.snappy }}
@@ -988,26 +1239,47 @@ const Contact = () => {
                               <p>Tell us about your dream trip and any questions you have.</p>
                             </div>
                             <FieldInput
-                              name="subject" label="Subject" icon={FiMessageSquare}
-                              placeholder="e.g. 7-Day Gorilla Trekking Package" required
-                              value={form.subject} onChange={handleChange} onBlur={handleBlur}
+                              name="subject" label="Subject"
+                              icon={FiMessageSquare}
+                              placeholder="e.g. 7-Day Gorilla Trekking Package"
+                              required
+                              value={form.subject} onChange={handleChange}
+                              onBlur={handleBlur}
                               error={errors.subject} touched={touched.subject}
                             />
                             <FieldTextarea
                               name="message" label="Message" required
                               placeholder="Hi, I'm interested in booking a gorilla trekking experience for 2 people in October..."
-                              value={form.message} onChange={handleChange} onBlur={handleBlur}
+                              value={form.message} onChange={handleChange}
+                              onBlur={handleBlur}
                               error={errors.message} touched={touched.message}
                             />
 
-                            {/* Server error */}
+                            <div className="cf-emoji-row">
+                              <button
+                                type="button"
+                                className="cf-emoji-btn"
+                                onClick={() => setEmojiOpen((prev) => !prev)}
+                                aria-label="Toggle emoji picker"
+                              >
+                                <FiSmile size={15} /> Add emoji
+                              </button>
+                              {emojiOpen && (
+                                <div ref={emojiRef} className="cf-emoji-wrap">
+                                  <EmojiPicker
+                                    onSelect={handleEmojiSelect}
+                                    onClose={() => setEmojiOpen(false)}
+                                  />
+                                </div>
+                              )}
+                            </div>
+
                             {errors.submit && (
                               <div className="cf-srv-err">
                                 <FiAlertCircle size={15} /> {errors.submit}
                               </div>
                             )}
 
-                            {/* Submit button */}
                             <button
                               type="submit" className="cf-submit"
                               disabled={submitting}
@@ -1015,12 +1287,19 @@ const Contact = () => {
                             >
                               {submitting ? (
                                 <>
-                                  <svg className="cf-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <svg
+                                    className="cf-spin" width="18" height="18"
+                                    viewBox="0 0 24 24" fill="none"
+                                    stroke="currentColor" strokeWidth="2.5"
+                                  >
                                     <circle cx="12" cy="12" r="10" strokeOpacity=".25" />
                                     <path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" />
                                   </svg>
                                   Sending…
-                                  <div className="cf-submit-bar" style={{ width: `${submitProgress}%` }} />
+                                  <div
+                                    className="cf-submit-bar"
+                                    style={{ width: `${submitProgress}%` }}
+                                  />
                                 </>
                               ) : (
                                 <>
@@ -1030,7 +1309,8 @@ const Contact = () => {
                             </button>
 
                             <div className="cf-privacy">
-                              <FiShield size={12} /> Your information is encrypted and never shared.
+                              <FiShield size={12} /> Your information is
+                              encrypted and never shared.
                             </div>
                           </motion.div>
                         )}
@@ -1040,12 +1320,18 @@ const Contact = () => {
                     {/* Navigation */}
                     <div className="cf-nav">
                       {step > 0 ? (
-                        <button type="button" className="cf-nav-back" onClick={goPrev}>
+                        <button
+                          type="button" className="cf-nav-back"
+                          onClick={goPrev}
+                        >
                           <FiArrowLeft size={15} /> Back
                         </button>
                       ) : <div />}
                       {step < STEP_FIELDS.length - 1 && (
-                        <button type="button" className="cf-nav-next" onClick={goNext}>
+                        <button
+                          type="button" className="cf-nav-next"
+                          onClick={goNext}
+                        >
                           Next Step <FiArrowRight size={15} />
                         </button>
                       )}
@@ -1063,23 +1349,33 @@ const Contact = () => {
         <div className="cf-wrap cf-wrap--md">
           <ScrollReveal>
             <div className="cf-hdr">
-              <div className="cf-pill"><BiSupport size={13} /> Reach Us Instantly</div>
-              <h2 className="cf-h2">Prefer to <em>Talk Directly</em>?</h2>
-              <p className="cf-sub">Choose the channel that suits you best. We're always ready to help.</p>
+              <div className="cf-pill">
+                <BiSupport size={13} /> Reach Us Instantly
+              </div>
+              <h2 className="cf-h2">
+                Prefer to <em>Talk Directly</em>?
+              </h2>
+              <p className="cf-sub">
+                Choose the channel that suits you best. We're always ready to
+                help.
+              </p>
             </div>
           </ScrollReveal>
           <div className="cf-channels">
             {QUICK_CHANNELS.map((ch, i) => (
               <ScrollReveal key={i} delay={i * 0.1} direction="up">
-                <a href={ch.href} className="cf-ch-card" target="_blank" rel="noopener noreferrer"
-                  style={{ "--ch-color": ch.color }}>
-                  <div className="cf-ch-icon">
-                    <ch.icon size={26} />
-                  </div>
+                <a
+                  href={ch.href} className="cf-ch-card"
+                  target="_blank" rel="noopener noreferrer"
+                  style={{ "--ch-color": ch.color }}
+                >
+                  <div className="cf-ch-icon"><ch.icon size={26} /></div>
                   <div className="cf-ch-title">{ch.title}</div>
                   <div className="cf-ch-sub">{ch.subtitle}</div>
                   <div className="cf-ch-detail">{ch.detail}</div>
-                  <div className="cf-ch-arrow"><FiArrowRight size={16} /></div>
+                  <div className="cf-ch-arrow">
+                    <FiArrowRight size={16} />
+                  </div>
                 </a>
               </ScrollReveal>
             ))}
@@ -1092,9 +1388,15 @@ const Contact = () => {
         <div className="cf-wrap cf-wrap--sm">
           <ScrollReveal>
             <div className="cf-hdr">
-              <div className="cf-pill"><FiHelpCircle size={12} /> FAQ</div>
-              <h2 className="cf-h2">Got <em>Questions</em>?</h2>
-              <p className="cf-sub">Quick answers about our safaris and booking process.</p>
+              <div className="cf-pill">
+                <FiHelpCircle size={12} /> FAQ
+              </div>
+              <h2 className="cf-h2">
+                Got <em>Questions</em>?
+              </h2>
+              <p className="cf-sub">
+                Quick answers about our safaris and booking process.
+              </p>
             </div>
           </ScrollReveal>
 
@@ -1109,7 +1411,9 @@ const Contact = () => {
                 <FiAlertCircle size={22} /> {faqsError}
               </div>
             ) : faqs.length === 0 ? (
-              <div className="cf-faq-state">No FAQs available at the moment.</div>
+              <div className="cf-faq-state">
+                No FAQs available at the moment.
+              </div>
             ) : (
               faqs.map((faq, i) => {
                 const open = openFaqId === faq.id;
@@ -1121,9 +1425,12 @@ const Contact = () => {
                         onClick={() => setOpenFaqId(open ? null : faq.id)}
                         aria-expanded={open}
                       >
-                        <span className="cf-faq-num">{String(i + 1).padStart(2, "0")}</span>
+                        <span className="cf-faq-num">
+                          {String(i + 1).padStart(2, "0")}
+                        </span>
                         <span className="cf-faq-q">{faq.q}</span>
-                        <motion.span className="cf-faq-chev"
+                        <motion.span
+                          className="cf-faq-chev"
                           animate={{ rotate: open ? 180 : 0 }}
                           transition={{ duration: 0.3 }}
                         >
@@ -1158,16 +1465,25 @@ const Contact = () => {
         <div className="cf-wrap">
           <ScrollReveal>
             <div className="cf-cta-inner">
-              <div className="cf-cta-icon"><HiSparkles size={34} color="#6ee7b7" /></div>
-              <h2 className="cf-h2 cf-h2--white">Ready for Your <em>African Adventure</em>?</h2>
+              <div className="cf-cta-icon">
+                <HiSparkles size={34} color="#6ee7b7" />
+              </div>
+              <h2 className="cf-h2 cf-h2--white">
+                Ready for Your <em>African Adventure</em>?
+              </h2>
               <p className="cf-sub cf-sub--light">
-                Join thousands of happy travellers who trusted Altuvera to make their safari dreams a reality.
+                Join thousands of happy travellers who trusted Altuvera to make
+                their safari dreams a reality.
               </p>
               <div className="cf-cta-btns">
                 <a href="#contact-form" className="cf-btn cf-btn--white">
                   <FiSend size={15} /> Plan My Safari
                 </a>
-                <a href="https://wa.me/250792352409" target="_blank" rel="noopener noreferrer" className="cf-btn cf-btn--ghost">
+                <a
+                  href="https://wa.me/250792352409"
+                  target="_blank" rel="noopener noreferrer"
+                  className="cf-btn cf-btn--ghost"
+                >
                   <FaWhatsapp size={16} /> WhatsApp Us
                 </a>
               </div>
@@ -1180,8 +1496,7 @@ const Contact = () => {
       <AnimatePresence>
         {!chatOpen && (
           <motion.button
-            key="fab"
-            className="cf-fab"
+            key="fab" className="cf-fab"
             onClick={() => setChatOpen(true)}
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -1201,41 +1516,53 @@ const Contact = () => {
       <AnimatePresence>
         {chatOpen && (
           <motion.div
-            key="chat"
-            className="cf-chat"
+            key="chat" className="cf-chat"
             initial={{ opacity: 0, y: 24, scale: 0.94 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.94 }}
             transition={{ duration: 0.38, ease: EASE.snappy }}
           >
-            {/* Header */}
             <div className="cf-chat-head">
               <div className="cf-chat-head-l">
-                <div className="cf-chat-av"><BiSupport size={20} color="#fff" /></div>
+                <div className="cf-chat-av">
+                  <BiSupport size={20} color="#fff" />
+                </div>
                 <div>
                   <div className="cf-chat-name">Altuvera Support</div>
                   <div className="cf-chat-status">
-                    <span className={`cf-chat-dot${chatConnected ? " live" : ""}`} />
+                    <span
+                      className={`cf-chat-dot${chatConnected ? " live" : ""}`}
+                    />
                     {chatConnected ? "Online" : "Connecting…"}
                   </div>
                 </div>
               </div>
-              <button className="cf-chat-close" onClick={() => setChatOpen(false)} aria-label="Close chat">
+              <button
+                className="cf-chat-close"
+                onClick={() => setChatOpen(false)}
+                aria-label="Close chat"
+              >
                 <FiX size={17} />
               </button>
             </div>
 
-            {/* Body */}
             <div className="cf-chat-body" ref={chatBodyRef}>
               {chatMessages.length === 0 && (
                 <div className="cf-chat-welcome">
-                  <div className="cf-chat-welcome-icon"><BiSupport size={26} color={G[700]} /></div>
+                  <div className="cf-chat-welcome-icon">
+                    <BiSupport size={26} color={G[700]} />
+                  </div>
                   <p><strong>Hi there! 👋</strong></p>
                   <p>How can we help you plan your safari today?</p>
                   <div className="cf-chips">
-                    {["Gorilla Trekking", "Safari Packages", "Group Tours", "Pricing"].map(t => (
-                      <button key={t} className="cf-chip" type="button"
-                        onClick={() => { setChatInput(t); }}>
+                    {[
+                      "Gorilla Trekking", "Safari Packages",
+                      "Group Tours", "Pricing",
+                    ].map((t) => (
+                      <button
+                        key={t} className="cf-chip" type="button"
+                        onClick={() => setChatInput(t)}
+                      >
                         {t}
                       </button>
                     ))}
@@ -1243,16 +1570,27 @@ const Contact = () => {
                 </div>
               )}
               {chatMessages.map((msg, i) => {
-                const isUser = msg.sender === "user" || msg.role === "user";
+                const isUser =
+                  msg.sender === "user" || msg.role === "user";
                 return (
-                  <motion.div key={i} className={`cf-bubble${isUser ? " cf-bubble--user" : ""}`}
-                    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                  <motion.div
+                    key={i}
+                    className={`cf-bubble${isUser ? " cf-bubble--user" : ""}`}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.28 }}
                   >
-                    {!isUser && <span className="cf-bubble-who">Support</span>}
+                    {!isUser && (
+                      <span className="cf-bubble-who">Support</span>
+                    )}
                     <p>{msg.body || msg.message || msg.content}</p>
                     <span className="cf-bubble-time">
-                      {new Date(msg.createdAt || Date.now()).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      {new Date(
+                        msg.createdAt || Date.now()
+                      ).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </span>
                   </motion.div>
                 );
@@ -1260,17 +1598,23 @@ const Contact = () => {
             </div>
 
             {chatErr && (
-              <div className="cf-chat-err"><FiAlertCircle size={13} /> {chatErr}</div>
+              <div className="cf-chat-err">
+                <FiAlertCircle size={13} /> {chatErr}
+              </div>
             )}
 
-            {/* Input */}
             <div className="cf-chat-foot">
               <input
                 className="cf-chat-in"
                 placeholder="Type your message…"
                 value={chatInput}
-                onChange={e => setChatInput(e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleChatSend(); } }}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleChatSend();
+                  }
+                }}
                 disabled={chatSending}
                 aria-label="Chat message"
               />
@@ -1282,10 +1626,21 @@ const Contact = () => {
                 whileTap={{ scale: 0.93 }}
                 aria-label="Send message"
               >
-                {chatSending
-                  ? <svg className="cf-spin" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5"><circle cx="12" cy="12" r="10" strokeOpacity=".25" /><path d="M12 2a10 10 0 0 1 10 10" strokeLinecap="round" /></svg>
-                  : <RiSendPlaneFill size={16} color="#fff" />
-                }
+                {chatSending ? (
+                  <svg
+                    className="cf-spin" width="16" height="16"
+                    viewBox="0 0 24 24" fill="none" stroke="#fff"
+                    strokeWidth="2.5"
+                  >
+                    <circle cx="12" cy="12" r="10" strokeOpacity=".25" />
+                    <path
+                      d="M12 2a10 10 0 0 1 10 10"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                ) : (
+                  <RiSendPlaneFill size={16} color="#fff" />
+                )}
               </motion.button>
             </div>
           </motion.div>
@@ -1295,7 +1650,7 @@ const Contact = () => {
       {/* ══════════ VERIFICATION MODAL ══════════ */}
       <VerificationModal
         open={verOpen}
-        email={form.email}
+        email={verEmailRef.current || form.email}
         loading={verLoading}
         error={verErr}
         onClose={closeVer}
@@ -1767,6 +2122,18 @@ body{-webkit-font-smoothing:antialiased}
 .cf-char-track{flex:1;height:3px;background:#e2e8f0;border-radius:2px;overflow:hidden}
 .cf-char-fill{height:100%;border-radius:2px}
 .cf-char-cnt{font-size:11px;font-weight:500;color:#94a3b8;flex-shrink:0}
+
+/* Emoji picker */
+.cf-emoji-row{position:relative;display:flex;align-items:center;justify-content:flex-end;margin-top:8px}
+.cf-emoji-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 12px;border-radius:999px;
+  border:1px solid #d1fae5;background:#ecfdf5;color:#065f46;
+  font-size:12px;font-weight:700;cursor:pointer;
+  transition:all .2s ease;
+}
+.cf-emoji-btn:hover{background:#d1fae5;border-color:#a7f3d0}
+.cf-emoji-wrap{position:absolute;right:0;top:calc(100% + 8px);z-index:20}
 
 /* Server error */
 .cf-srv-err{

@@ -2,6 +2,7 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { JsonLd } from 'react-schemaorg';
 import { WebSite, Organization, BreadcrumbList, ListItem } from 'schema-dts';
+import { withBrand } from '../../utils/seo';
 
 const SEO = ({
   title,
@@ -24,7 +25,7 @@ const SEO = ({
   const defaultImage = 'https://altuvera.vercel.app/altuvera.png';
   const baseUrl = 'https://altuvera.vercel.app';
 
-  const fullTitle = title ? `${title} | ${siteName}` : siteName;
+  const fullTitle = withBrand(title || siteName);
   const fullDescription = description || defaultDescription;
   const fullImage = image ? (image.startsWith('http') ? image : `${baseUrl}${image}`) : defaultImage;
   const fullUrl = url ? (url.startsWith('http') ? url : `${baseUrl}${url}`) : baseUrl;

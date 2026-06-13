@@ -3,13 +3,15 @@
 // Simplified backend fetcher - NO MORE MULTI-BACKEND
 // ═══════════════════════════════════════════════════════════════
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://backend-jd8f.onrender.com/api';
+import { API_URL, toAbsoluteApiUrl } from './apiBase';
+
+const getStoredToken = () => localStorage.getItem('altuvera_auth_token') || localStorage.getItem('token');
 
 /**
  * Main fetch function - single backend only
  */
 export const multiBackendFetch = async (endpoint, options = {}) => {
-  const baseUrl = `${API_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
+  const baseUrl = toAbsoluteApiUrl(endpoint, API_URL);
   const params = options.params || {};
   const queryString = Object.keys(params).length ? `?${new URLSearchParams(params).toString()}` : "";
   const url = `${baseUrl}${queryString}`;
@@ -24,7 +26,7 @@ export const multiBackendFetch = async (endpoint, options = {}) => {
   };
 
   // Add auth token if available
-  const token = localStorage.getItem('token');
+  const token = getStoredToken();
   if (token) {
     defaultOptions.headers.Authorization = `Bearer ${token}`;
   }

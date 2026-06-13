@@ -6,8 +6,6 @@ import React, {
   useRef,
   useCallback,
   useMemo,
-  createContext,
-  useContext,
 } from "react";
 import {
   FiCheckCircle,
@@ -109,8 +107,181 @@ const COUNTRIES = [
 ];
 
 /* ═══════════════════════════════════════════════════════
-   GLOBAL CSS ANIMATIONS & UTILITIES
+   DESIGN SYSTEM — GREEN-WHITE PALETTE & RESPONSIVENESS
    ═══════════════════════════════════════════════════════ */
+const ds = {
+  color: {
+    brand: "#059669",
+    brandDark: "#064E3B",
+    brandLight: "#ECFDF5",
+    brandMid: "#D1FAE5",
+    success: "#10B981",
+    warning: "#F59E0B",
+    error: "#EF4444",
+    inkA: "#111827",
+    inkB: "#374151",
+    inkC: "#4B5563",
+    inkD: "#6B7280",
+    inkE: "#9CA3AF",
+    border: "#E5E7EB",
+    surface: "#ffffff",
+    background: "#FAFDF7",
+  },
+  radius: { sm: "10px", md: "18px", lg: "26px", xl: "32px", full: "9999px" },
+  shadow: {
+    inner: "0 0 0 1px rgba(2,44,34,0.05), inset 0 1px 0 rgba(255,255,255,.8)",
+    light: "0 1px 4px rgba(2,44,34,.04), 0 8px 28px rgba(2,44,34,.06)",
+    base: "0 2px 8px rgba(2,44,34,.05), 0 12px 36px rgba(2,44,34,.08)",
+    lifted: "0 4px 12px rgba(2,44,34,.06), 0 20px 48px rgba(2,44,34,.11)",
+    brand: "0 8px 28px rgba(5,150,105,.14)",
+  },
+  font: {
+    heading: "'Playfair Display', Georgia, serif",
+    body: "'Inter', system-ui, sans-serif",
+  },
+  section: {
+    wrapper: { maxWidth: "1200px", margin: "0 auto", padding: "clamp(24px, 4vw, 56px) clamp(14px, 2.5vw, 32px)", width: "100%" },
+    header: { display: "grid", placeItems: "center", textAlign: "center", marginBottom: "clamp(28px, 5vw, 48px)", gap: "12px" },
+    badge: { display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 14px", borderRadius: "999px", background: "#ECFDF5", border: "1px solid #D1FAE5", color: "#065F46", fontSize: "11px", fontWeight: "700", letterSpacing: ".06em", textTransform: "uppercase" },
+    label: { fontFamily: "'Playfair Display', Georgia, serif", fontSize: "clamp(24px, 3.2vw, 40px)", fontWeight: "700", color: "#111827", lineHeight: "1.25", letterSpacing: "-.02em", margin: 0 },
+    sub: { fontSize: "clamp(14px, 1.6vw, 16px)", color: "#4B5563", maxWidth: "560px", lineHeight: "1.65", margin: "0 auto" },
+  },
+  card: () => ({
+    background: "#fff",
+    border: "1px solid #E5E7EB",
+    borderRadius: ds.radius.lg,
+    padding: "clamp(20px, 2.6vw, 30px)",
+    boxShadow: ds.shadow.light,
+    transition: "box-shadow .35s cubic-bezier(.4,0,.2,1), border-color .35s cubic-bezier(.4,0,.2,1), transform .35s cubic-bezier(.4,0,.2,1)",
+  }),
+  hoverCard: (color = "#ECFDF5") => ({
+    borderColor: "#D1FAE5",
+    boxShadow: "0 2px 16px rgba(5,150,105,.08), 0 20px 44px rgba(2,44,34,.09)",
+    transform: "translateY(-3px)",
+  }),
+  btn: {
+    primary: {
+      background: "linear-gradient(135deg, #059669, #047857)",
+      color: "#fff",
+      border: "none",
+      borderRadius: ds.radius.full,
+      padding: "14px 28px",
+      fontWeight: "700",
+      fontSize: "15px",
+      cursor: "pointer",
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "10px",
+      transition: "transform .25s cubic-bezier(.4,0,.2,1), box-shadow .25s cubic-bezier(.4,0,.2,1), opacity .2s",
+      boxShadow: "0 8px 24px rgba(5,150,105,.18)",
+      fontFamily: ds.font.body,
+    },
+    success: {
+      background: "linear-gradient(135deg, #10B981, #059669)",
+      color: "#fff",
+      border: "none",
+      borderRadius: ds.radius.full,
+      padding: "14px 28px",
+      fontWeight: "700",
+      fontSize: "15px",
+      cursor: "pointer",
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "10px",
+      transition: "transform .25s cubic-bezier(.4,0,.2,1), box-shadow .25s cubic-bezier(.4,0,.2,1), opacity .2s",
+      boxShadow: "0 8px 26px rgba(16,185,129,.22)",
+      fontFamily: ds.font.body,
+    },
+    subtle: {
+      background: "#fff",
+      color: "#064E3B",
+      border: "2px solid #D1FAE5",
+      borderRadius: ds.radius.full,
+      padding: "14px 28px",
+      fontWeight: "600",
+      fontSize: "15px",
+      cursor: "pointer",
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "10px",
+      transition: "transform .25s cubic-bezier(.4,0,.2,1), background .25s cubic-bezier(.4,0,.2,1), border-color .25s cubic-bezier(.4,0,.2,1)",
+      fontFamily: ds.font.body,
+    },
+    ghost: {
+      background: "transparent",
+      color: "#064E3B",
+      border: "1px solid #E5E7EB",
+      borderRadius: ds.radius.md,
+      padding: "10px 18px",
+      fontWeight: "600",
+      fontSize: "13px",
+      cursor: "pointer",
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "8px",
+      transition: "transform .2s cubic-bezier(.4,0,.2,1), background .2s cubic-bezier(.4,0,.2,1), color .2s cubic-bezier(.4,0,.2,1), border-color .2s cubic-bezier(.4,0,.2,1)",
+      fontFamily: ds.font.body,
+    },
+  },
+  iconBox: {
+    width: "58px",
+    height: "58px",
+    borderRadius: "18px",
+    display: "grid",
+    placeItems: "center",
+    background: "#F6FDF9",
+    color: ds.color.brand,
+    border: "1px solid #D1FAE5",
+    transition: "transform .3s cubic-bezier(.4,0,.2,1), box-shadow .3s cubic-bezier(.4,0,.2,1), background .3s cubic-bezier(.4,0,.2,1), color .3s",
+  },
+  timelineLine: {
+    height: "3px",
+    borderRadius: "3px",
+    background: "#E5E7EB",
+    overflow: "hidden",
+    position: "relative",
+  },
+  input: {
+    background: "#FAFBFC",
+    border: "2px solid #E5E7EB",
+    color: ds.color.inkA,
+    fontFamily: ds.font.body,
+    fontSize: "15px",
+    lineHeight: "1.65",
+    outline: "none",
+    transition: "border-color .25s cubic-bezier(.4,0,.2,1), box-shadow .25s cubic-bezier(.4,0,.2,1), background .25s cubic-bezier(.4,0,.2,1)",
+  },
+  toolbar: {
+    display: "flex",
+    justifyContent: "center",
+    gap: "6px",
+    flexWrap: "wrap",
+    padding: "0 6px",
+    marginBottom: "24px",
+  },
+  pill: {
+    background: "#fff",
+    color: ds.color.inkD,
+    border: "none",
+    borderRadius: ds.radius.full,
+    padding: "9px 18px",
+    fontWeight: "600",
+    fontSize: "13px",
+    cursor: "pointer",
+    fontFamily: ds.font.body,
+    display: "inline-flex",
+    alignItems: "center",
+    gap: "7px",
+    transition: "background .25s cubic-bezier(.4,0,.2,1), color .25s cubic-bezier(.4,0,.2,1), box-shadow .25s cubic-bezier(.4,0,.2,1), transform .25s cubic-bezier(.4,0,.2,1)",
+  },
+  pillActive: {
+    background: ds.color.brandDark,
+    color: "#fff",
+    boxShadow: "0 4px 14px rgba(6,78,59,.18)",
+    transform: "translateY(-1px)",
+  },
+};
+
 const globalCSS = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800&display=swap');
 
@@ -138,23 +309,32 @@ const globalCSS = `
 
   .pt-root {
     background:
-      radial-gradient(circle at 15% 0%, rgba(16,185,129,0.08) 0%, transparent 34%),
+      radial-gradient(circle at 15% 0%, rgba(16,185,129,0.12) 0%, transparent 40%),
       radial-gradient(circle at 85% 12%, rgba(59,130,246,0.06) 0%, transparent 32%),
-      #fafdf7;
+      radial-gradient(circle at 50% 100%, rgba(5,150,105,0.04) 0%, transparent 40%),
+      linear-gradient(180deg, #FAFDF7 0%, #F6FCF9 35%, #F9FDFB 65%, #FAFDF7 100%);
+    background-attachment: fixed;
   }
 
   .pt-nav button {
-    backdrop-filter: saturate(130%) blur(6px);
+    backdrop-filter: saturate(180%) blur(16px);
+    -webkit-backdrop-filter: saturate(180%) blur(16px);
   }
 
   .pt-section-card {
-    border-radius: 24px;
-    border: 1px solid #eef2ef;
-    box-shadow: 0 12px 34px rgba(2, 44, 34, 0.08);
+    border-radius: 28px;
+    border: 1px solid #e6ede8;
+    box-shadow: 0 2px 8px rgba(2, 44, 34, 0.04), 0 12px 36px rgba(2, 44, 34, 0.07);
+    transition: box-shadow 0.4s var(--pt-transition), border-color 0.4s var(--pt-transition);
+  }
+
+  .pt-section-card:hover {
+    border-color: #d1eeE0;
+    box-shadow: 0 2px 12px rgba(2, 44, 34, 0.06), 0 20px 44px rgba(2, 44, 34, 0.09);
   }
 
   @keyframes pt-fadeUp {
-    from { opacity: 0; transform: translateY(28px); }
+    from { opacity: 0; transform: translateY(24px); }
     to   { opacity: 1; transform: translateY(0); }
   }
   @keyframes pt-fadeIn {
@@ -162,34 +342,34 @@ const globalCSS = `
     to   { opacity: 1; }
   }
   @keyframes pt-scaleIn {
-    from { opacity: 0; transform: scale(.88) translateY(20px); }
+    from { opacity: 0; transform: scale(.92) translateY(16px); }
     to   { opacity: 1; transform: scale(1) translateY(0); }
   }
   @keyframes pt-slideRight {
-    from { opacity: 0; transform: translateX(40px); }
+    from { opacity: 0; transform: translateX(36px); }
     to   { opacity: 1; transform: translateX(0); }
   }
   @keyframes pt-slideLeft {
-    from { opacity: 0; transform: translateX(-40px); }
+    from { opacity: 0; transform: translateX(-36px); }
     to   { opacity: 1; transform: translateX(0); }
   }
   @keyframes pt-backdropIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    from { opacity: 0; backdrop-filter: blur(8px); }
+    to   { opacity: 1; backdrop-filter: blur(12px); }
   }
   @keyframes pt-checkPop {
     0%   { transform: scale(0) rotate(-45deg); }
-    60%  { transform: scale(1.3) rotate(0deg); }
+    60%  { transform: scale(1.25) rotate(0deg); }
     100% { transform: scale(1) rotate(0deg); }
   }
   @keyframes pt-shake {
     0%, 100% { transform: translateX(0); }
-    15%, 55% { transform: translateX(-8px); }
-    35%, 75% { transform: translateX(8px); }
+    15%, 55% { transform: translateX(-6px); }
+    35%, 75% { transform: translateX(6px); }
   }
   @keyframes pt-pulse {
     0%, 100% { opacity: 1; transform: scale(1); }
-    50%      { opacity: .7; transform: scale(.97); }
+    50%      { opacity: .8; transform: scale(.98); }
   }
   @keyframes pt-shimmer {
     0%   { background-position: -200% 0; }
@@ -197,20 +377,20 @@ const globalCSS = `
   }
   @keyframes pt-successRing {
     0%   { transform: scale(0); opacity: 0; }
-    50%  { transform: scale(1.15); opacity: 1; }
+    40%  { transform: scale(1.2); opacity: 1; }
     100% { transform: scale(1); opacity: 1; }
   }
   @keyframes pt-confetti {
     0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
-    100% { transform: translateY(-60px) rotate(720deg); opacity: 0; }
+    100% { transform: translateY(-64px) rotate(720deg); opacity: 0; }
   }
   @keyframes pt-progressPulse {
-    0%, 100% { box-shadow: 0 0 0 0 rgba(5,150,105,.3); }
-    50%      { box-shadow: 0 0 0 8px rgba(5,150,105,0); }
+    0%, 100% { box-shadow: 0 0 0 0 rgba(5,150,105,.25); }
+    50%      { box-shadow: 0 0 0 10px rgba(5,150,105,.04); }
   }
   @keyframes pt-float {
     0%, 100% { transform: translateY(0); }
-    50%      { transform: translateY(-8px); }
+    50%      { transform: translateY(-10px); }
   }
   @keyframes pt-borderGlow {
     0%, 100% { border-color: rgba(5,150,105,.2); }
@@ -220,42 +400,429 @@ const globalCSS = `
     to { transform: rotate(360deg); }
   }
 
-  .pt-scroll::-webkit-scrollbar { height: 5px; }
-  .pt-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,.04); border-radius: 3px; }
-  .pt-scroll::-webkit-scrollbar-thumb { background: #059669; border-radius: 3px; }
+  /* ─── Sticky Nav ─────────────────────────────────────────── */
+  .pt-nav-item {
+    background: transparent;
+    color: #6B7280;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .25s cubic-bezier(.4,0,.2,1);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 16px;
+    border-radius: 999px;
+  }
+  .pt-nav-item:hover {
+    background: #F3F4F6;
+    color: #111827;
+  }
+  .pt-nav-item[aria-current="true"] {
+    background: #064E3B;
+    color: #fff;
+    box-shadow: 0 3px 12px rgba(6,78,59,.18);
+  }
 
-  .pt-field-valid   { border-color: #10B981 !important; }
-  .pt-field-invalid { border-color: #EF4444 !important; }
-  .pt-field-shake   { animation: pt-shake .45s ease !important; }
+  /* ─── Step Cards ─────────────────────────────────────────── */
+  .pt-step-card {
+    background: #FAFBFC;
+    border: 1px solid #E5E7EB;
+    border-radius: 22px;
+    padding: clamp(18px, 2.4vw, 26px);
+    text-align: center;
+    transition: all .32s cubic-bezier(.4,0,.2,1);
+    position: relative;
+    overflow: hidden;
+  }
+  .pt-step-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(52,211,153,.04), transparent);
+    opacity: 0;
+    transition: opacity .35s cubic-bezier(.4,0,.2,1);
+  }
+  .pt-step-card:hover::before { opacity: 1; }
+  .pt-step-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 2px 16px rgba(5,150,105,.08), 0 16px 38px rgba(2,44,34,.09);
+    border-color: #D1FAE5;
+  }
+
+  .pt-process-icon {
+    width: 76px;
+    height: 76px;
+    border-radius: 22px;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 18px;
+    position: relative;
+    transition: all .38s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ─── Term Cards ─────────────────────────────────────────── */
+  .pt-term-card {
+    background: #fff;
+    border: 1px solid #F3F4F6;
+    border-radius: 22px;
+    padding: clamp(22px, 2.6vw, 30px) clamp(18px, 2vw, 26px) clamp(44px, 5vw, 56px);
+    cursor: pointer;
+    transition: all .38s cubic-bezier(.4,0,.2,1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: var(--pt-shadow-md);
+  }
+  .pt-term-card:hover {
+    border-color: #C8EED8;
+    transform: translateY(-4px);
+    box-shadow: 0 2px 18px rgba(5,150,105,.06), 0 20px 46px rgba(2,44,34,.1);
+  }
+  .pt-term-card::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #059669, #10B981);
+    opacity: .6;
+    transition: opacity .35s cubic-bezier(.4,0,.2,1);
+  }
+  .pt-term-card:hover::after { opacity: 1; }
+
+  .pt-term-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: #F6FDF9;
+    color: #059669;
+    display: grid;
+    place-items: center;
+    margin-bottom: 16px;
+    transition: transform .3s cubic-bezier(.4,0,.2,1), background .3s cubic-bezier(.4,0,.2,1);
+  }
+  .pt-term-card:hover .pt-term-icon {
+    transform: scale(1.08) rotate(-3deg);
+    background: #ECFDF5;
+  }
+
+  .pt-term-title {
+    font-family: var(--font-heading);
+    font-size: clamp(17px, 2vw, 20px);
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.3;
+    margin-bottom: 10px;
+  }
+  .pt-term-desc {
+    font-size: 14px;
+    color: #4B5563;
+    line-height: 1.7;
+    transition: color .25s;
+  }
+  .pt-term-card:hover .pt-term-desc { color: #065F46; }
+
+  .pt-term-expanded {
+    margin-top: 14px;
+    padding: 14px 16px;
+    background: #F6FDF9;
+    border-radius: 14px;
+    border-left: 3px solid #059669;
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.75;
+    animation: pt-fadeUp .3s ease;
+  }
+
+  /* ─── Payment Methods ────────────────────────────────────── */
+  .pt-method-card {
+    background: #fff;
+    border: 2px solid #F3F4F6;
+    border-radius: 20px;
+    padding: 24px 20px;
+    cursor: pointer;
+    transition: all .35s cubic-bezier(.4,0,.2,1);
+    position: relative;
+    overflow: hidden;
+  }
+  .pt-method-card:hover {
+    border-color: #D1FAE5;
+    box-shadow: 0 2px 18px rgba(5,150,105,.08), 0 14px 36px rgba(2,44,34,.07);
+    transform: translateY(-3px);
+  }
+  .pt-method-card.is-selected {
+    background: #F0FDF4;
+    border-color: #059669;
+    box-shadow: 0 2px 20px rgba(5,150,105,.1), 0 14px 38px rgba(2,44,34,.08);
+  }
+
+  /* ─── Cancellation ───────────────────────────────────────── */
+  .pt-cancellation-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .pt-tier-card {
+    text-align: center;
+    padding: clamp(18px, 2.4vw, 24px) 16px;
+    border-radius: 18px;
+    border: 1.5px solid transparent;
+    background: linear-gradient(180deg, #fff 0%, #FAFBFC 100%);
+    transition: all .32s cubic-bezier(.4,0,.2,1);
+    position: relative;
+    overflow: hidden;
+  }
+  .pt-tier-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 28px rgba(2,44,34,.08);
+  }
+  .pt-tier-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    background: linear-gradient(180deg, rgba(52,211,153,.03), transparent);
+    transition: opacity .35s cubic-bezier(.4,0,.2,1);
+  }
+  .pt-tier-card:hover::before { opacity: 1; }
+
+  /* ─── Contact Bar ────────────────────────────────────────── */
+  .pt-contact-bar-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+  }
+  .pt-contact-bar-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    background: rgba(255,255,255,.07);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 18px;
+    transition: background .25s cubic-bezier(.4,0,.2,1), border-color .25s cubic-bezier(.4,0,.2,1);
+    cursor: default;
+  }
+  .pt-contact-bar-item.is-action:hover {
+    background: rgba(255,255,255,.14);
+    border-color: rgba(255,255,255,.16);
+    cursor: pointer;
+  }
+
+  /* ─── Trust Badges ───────────────────────────────────────── */
+  .pt-trust-card {
+    flex: 0 0 220px;
+    min-width: 200px;
+    scroll-snap-align: start;
+    background: #fff;
+    border: 1px solid #F3F4F6;
+    border-radius: 20px;
+    padding: 26px 20px;
+    text-align: center;
+    box-shadow: var(--pt-shadow-sm);
+    transition: all .35s cubic-bezier(.4,0,.2,1);
+    cursor: default;
+  }
+  .pt-trust-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 14px 34px rgba(5,150,105,.1);
+    border-color: #D1FAE5;
+  }
+  .pt-trust-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 16px;
+    background: #F0FDF4;
+    color: #059669;
+    display: grid;
+    place-items: center;
+    margin: 0 auto 12px;
+    transition: background .3s, transform .3s;
+  }
+  .pt-trust-card:hover .pt-trust-icon {
+    background: #ECFDF5;
+    transform: scale(1.05);
+  }
+
+  /* ─── FAQ ────────────────────────────────────────────────── */
+  .pt-faq-question {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: var(--font-heading);
+    font-size: 16px;
+    font-weight: 600;
+    color: #111827;
+    transition: color .25s;
+    line-height: 1.45;
+    gap: 14px;
+  }
+  .pt-faq-question:hover { color: #059669; }
+  .pt-faq-chevron {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #FAFBFC;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    color: #9CA3AF;
+    transition: all .3s;
+  }
+  .pt-faq-question[aria-expanded="true"] .pt-faq-chevron {
+    background: #ECFDF5;
+    color: #059669;
+    transform: rotate(180deg);
+  }
+
+  /* ─── CTA Banner ─────────────────────────────────────────── */
+  .pt-cta-banner {
+    margin-top: 56px;
+    padding: clamp(22px, 3vw, 34px) clamp(22px, 3vw, 40px);
+    background: linear-gradient(135deg, #064E3B, #047857, #10B981);
+    background-size: 200% 200%;
+    animation: pt-shimmer 4s ease-in-out infinite;
+    border-radius: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 28px;
+    color: #fff;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(4,120,87,.22);
+  }
+  .pt-cta-banner::before {
+    content: "";
+    position: absolute;
+    top: -70px;
+    right: -70px;
+    width: 220px;
+    height: 220px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.05);
+  }
+  .pt-cta-banner::after {
+    content: "";
+    position: absolute;
+    bottom: -50px;
+    left: -50px;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.035);
+  }
+  .pt-cta-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex: 1;
+    min-width: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ─── Action Buttons ─────────────────────────────────────── */
+  .pt-action-btn {
+    background: transparent;
+    color: #374151;
+    border: 1px solid #E5E7EB;
+    border-radius: 999px;
+    padding: 11px 20px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all .25s cubic-bezier(.4,0,.2,1);
+    font-family: var(--font-body);
+  }
+  .pt-action-btn:hover {
+    border-color: #059669;
+    color: #059669;
+    transform: translateY(-2px);
+    background: #F6FDF9;
+  }
 
   @media print { .no-print { display: none !important; } body { background: #fff !important; } }
 
-  @media (max-width: 1024px) {
-    .pt-g3 { grid-template-columns: repeat(2, 1fr) !important; }
+  @media (max-width: 768px) {
+    .pt-g2  { grid-template-columns: 1fr !important; }
+    .pt-g3  { grid-template-columns: 1fr !important; }
+    .pt-nav { position: relative !important; top: 0 !important; padding: 8px 0 !important; }
+    .pt-cbar { flex-direction: column !important; text-align: center !important; }
+    .pt-stats { grid-template-columns: 1fr 1fr !important; }
+    .pt-modal-inner { margin: 10px !important; max-height: 94vh !important; border-radius: 22px !important; }
+    .pt-hero-btns { flex-direction: column !important; align-items: center !important; }
+    .pt-process-grid { grid-template-columns: 1fr !important; }
+    .pt-cancellation-grid { grid-template-columns: 1fr !important; }
+    .pt-contact-bar { grid-template-columns: 1fr !important; }
+    .pt-trust-badge-card { flex: 0 0 180px !important; min-width: 160px !important; }
+    .pt-section-title { font-size: clamp(22px, 4vw, 32px) !important; }
+    .pt-step-card { padding: 20px !important; }
+    .pt-header-actions { flex-direction: column !important; gap: 8px !important; }
   }
   @media (max-width: 768px) {
     .pt-g2  { grid-template-columns: 1fr !important; }
     .pt-g3  { grid-template-columns: 1fr !important; }
     .pt-nav { position: relative !important; top: 0 !important; }
+    .pt-nav { padding: 8px 0 !important; }
     .pt-cbar { flex-direction: column !important; text-align: center !important; }
     .pt-stats { grid-template-columns: 1fr 1fr !important; }
-    .pt-modal-inner { margin: 12px !important; max-height: 94vh !important; border-radius: 20px !important; }
+    .pt-modal-inner { margin: 10px !important; max-height: 94vh !important; border-radius: 22px !important; }
     .pt-hero-btns { flex-direction: column !important; align-items: center !important; }
+    .pt-process-grid { grid-template-columns: 1fr !important; }
+    .pt-cancellation-grid { grid-template-columns: 1fr !important; }
+    .pt-contact-bar { grid-template-columns: 1fr !important; }
+    .pt-trust-badge-card { flex: 0 0 180px !important; min-width: 160px !important; }
+    .pt-section-title { font-size: clamp(22px, 4vw, 32px) !important; }
+    .pt-step-card { padding: 20px !important; }
+    .pt-header-actions { flex-direction: column !important; gap: 8px !important; }
+    .pt-contact-bar { grid-template-columns: 1fr !important; }
   }
   @media (max-width: 640px) {
-    .pt-nav { padding: 0 12px !important; }
-    .pt-nav button { padding: 9px 14px !important; font-size: 13px !important; }
-    .pt-stats { gap: 12px !important; }
+    .pt-nav { padding: 0 10px !important; }
+    .pt-nav button { padding: 8px 12px !important; font-size: 12px !important; }
+    .pt-stats { gap: 10px !important; padding: 0 4px !important; }
+    .pt-stats > div { padding: 14px 8px !important; }
+    .pt-stat-value { font-size: 24px !important; }
+    .pt-process-card { padding: 20px 16px !important; }
+    .pt-process-icon { width: 60px !important; height: 60px !important; }
+    .pt-term-card { padding: 22px 18px 48px !important; }
+    .pt-term-icon { width: 46px !important; height: 46px !important; }
+    .pt-term-title { font-size: 17px !important; }
+    .pt-faq-question { font-size: 15px !important; padding: 16px 0 !important; }
+    .pt-cta-banner { padding: 20px 18px !important; }
+    .pt-cta-banner-content { flex-direction: column !important; text-align: center !important; }
+    .pt-contact-bar-item { flex-direction: column !important; text-align: center !important; }
   }
   @media (max-width: 480px) {
     .pt-stats { grid-template-columns: 1fr !important; }
-    .pt-modal-inner { margin: 8px !important; border-radius: 16px !important; }
+    .pt-modal-inner { margin: 6px !important; border-radius: 18px !important; }
+    .pt-nav-buttons { gap: 4px !important; }
+    .pt-section-badge { font-size: 10px !important; padding: 4px 12px !important; }
+    .pt-trust-card { flex: 0 0 150px !important; min-width: 140px !important; padding: 20px 14px !important; }
+    .pt-trust-icon { width: 40px !important; height: 40px !important; }
+    .pt-trust-label { font-size: 13px !important; }
+    .pt-action-btn { padding: 10px 18px !important; font-size: 13px !important; }
   }
 
   /* Focus visible for accessibility */
   *:focus-visible {
     outline: 2px solid #059669;
-    outline-offset: 2px;
+    outline-offset: 3px;
+    border-radius: 4px;
   }
 `;
 
@@ -582,7 +1149,6 @@ const StepProgress = ({ currentStep, totalSteps, stepLabels }) => (
       const stepNum = i + 1;
       const isCompleted = stepNum < currentStep;
       const isCurrent = stepNum === currentStep;
-      const isUpcoming = stepNum > currentStep;
 
       return (
         <React.Fragment key={i}>
@@ -954,25 +1520,26 @@ const MultiStepContactModal = ({ isOpen, onClose, contextMessage }) => {
               width: "36px",
               height: "36px",
               borderRadius: "50%",
-              backgroundColor: "rgba(255,255,255,.12)",
-              border: "1px solid rgba(255,255,255,.15)",
+              backgroundColor: "rgba(255,255,255,.14)",
+              border: "1px solid rgba(255,255,255,.22)",
               cursor: "pointer",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               color: "#fff",
-              transition: "all 0.2s",
+              transition: "all 0.3s var(--pt-transition)",
+              backdropFilter: "blur(6px)",
             }}
             onMouseOver={(e) => {
-              e.currentTarget.style.backgroundColor = "rgba(255,255,255,.25)";
-              e.currentTarget.style.transform = "rotate(90deg)";
+              e.currentTarget.style.backgroundColor = "rgba(255,255,255,.28)";
+              e.currentTarget.style.transform = "rotate(90deg) scale(1.05)";
             }}
             onMouseOut={(e) => {
-              e.currentTarget.style.backgroundColor = "rgba(255,255,255,.12)";
-              e.currentTarget.style.transform = "rotate(0deg)";
+              e.currentTarget.style.backgroundColor = "rgba(255,255,255,.14)";
+              e.currentTarget.style.transform = "rotate(0deg) scale(1)";
             }}
           >
-            <FiX size={18} />
+            <FiX size={16} />
           </button>
 
           {step < 5 && (
@@ -1860,68 +2427,17 @@ const TermCard = React.memo(({ item, index }) => {
       tabIndex={0}
       aria-expanded={expanded}
       onKeyDown={(e) => e.key === "Enter" && setExpanded((p) => !p)}
-      style={{
-        position: "relative",
-        backgroundColor: "#fff",
-        borderRadius: "24px",
-        padding: "32px 28px 52px",
-        border: "1px solid #F3F4F6",
-        boxShadow: "var(--pt-shadow-md)",
-        cursor: "pointer",
-        transition: "all 0.4s var(--pt-transition)",
-        overflow: "hidden",
-      }}
-      onMouseOver={(e) => {
-        e.currentTarget.style.transform = "translateY(-6px)";
-        e.currentTarget.style.boxShadow = `0 20px 50px ${item.color}12`;
-        e.currentTarget.style.borderColor = `${item.color}30`;
-      }}
-      onMouseOut={(e) => {
-        e.currentTarget.style.transform = "translateY(0)";
-        e.currentTarget.style.boxShadow = "var(--pt-shadow-md)";
-        e.currentTarget.style.borderColor = "#F3F4F6";
-      }}
+      className="pt-term-card"
     >
-      {/* Top accent bar */}
-      <div
-        style={{
-          position: "absolute",
-          top: 0,
-          left: 0,
-          right: 0,
-          height: "4px",
-          background: `linear-gradient(90deg, ${item.color}, ${item.color}55)`,
-        }}
-      />
-
       {/* Icon */}
       <div
-        style={{
-          width: "56px",
-          height: "56px",
-          borderRadius: "18px",
-          backgroundColor: item.bgColor,
-          color: item.color,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          marginBottom: "20px",
-          transition: "transform 0.3s",
-        }}
+        className="pt-term-icon"
+        style={{ background: item.bgColor, color: item.color }}
       >
         <Icon size={26} />
       </div>
 
-      <h3
-        style={{
-          fontFamily: "'Playfair Display', serif",
-          fontSize: "20px",
-          fontWeight: "700",
-          color: "#111827",
-          marginBottom: "12px",
-          lineHeight: 1.3,
-        }}
-      >
+      <h3 className="pt-term-title">
         {item.title}
       </h3>
       <p
@@ -1937,16 +2453,7 @@ const TermCard = React.memo(({ item, index }) => {
 
       {expanded && (
         <div
-          style={{
-            padding: "16px 18px",
-            backgroundColor: "#F9FAFB",
-            borderRadius: "14px",
-            borderLeft: `3px solid ${item.color}`,
-            fontSize: "13px",
-            color: "#6B7280",
-            lineHeight: 1.7,
-            animation: "pt-fadeUp 0.3s ease",
-          }}
+          className="pt-term-expanded"
         >
           <FiInfo
             size={14}
@@ -1967,7 +2474,7 @@ const TermCard = React.memo(({ item, index }) => {
           fontSize: "12px",
           color: "#9CA3AF",
           fontWeight: "500",
-          transition: "color 0.2s",
+          transition: "color 0.3s cubic-bezier(.4,0,.2,1)",
         }}
       >
         {expanded ? <FiChevronUp size={14} /> : <FiChevronDown size={14} />}
@@ -1986,48 +2493,22 @@ const FaqItem = React.memo(({ faq, index, isOpen, onToggle }) => (
     <button
       onClick={() => onToggle(index)}
       aria-expanded={isOpen}
-      style={{
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        width: "100%",
-        padding: "22px 0",
-        background: "none",
-        border: "none",
-        cursor: "pointer",
-        textAlign: "left",
-        gap: "16px",
-        fontFamily: "'Inter', sans-serif",
-      }}
+      className="pt-faq-question"
     >
       <span
         style={{
-          fontFamily: "'Playfair Display', serif",
-          fontSize: "17px",
+          flex: 1,
+          lineHeight: 1.5,
+          fontFamily: ds.font.heading,
+          fontSize: "16px",
           fontWeight: "600",
           color: isOpen ? "#059669" : "#111827",
-          transition: "color 0.25s",
-          flex: 1,
-          lineHeight: 1.4,
+          transition: "color .25s",
         }}
       >
         {faq.question}
       </span>
-      <span
-        style={{
-          width: "34px",
-          height: "34px",
-          borderRadius: "50%",
-          backgroundColor: isOpen ? "#ECFDF5" : "#F9FAFB",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          flexShrink: 0,
-          color: isOpen ? "#059669" : "#9CA3AF",
-          transition: "all 0.3s",
-          transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-        }}
-      >
+      <span className="pt-faq-chevron">
         <FiChevronDown size={16} />
       </span>
     </button>
@@ -2035,10 +2516,10 @@ const FaqItem = React.memo(({ faq, index, isOpen, onToggle }) => (
       <div
         style={{
           paddingBottom: "22px",
-          paddingRight: "50px",
-          color: "#4B5563",
+          paddingRight: "40px",
+          color: "#374151",
           fontSize: "15px",
-          lineHeight: 1.8,
+          lineHeight: 1.75,
           animation: "pt-fadeUp 0.3s ease",
         }}
       >
@@ -2397,62 +2878,33 @@ const PaymentTerms = () => {
           position: "sticky",
           top: 0,
           zIndex: 50,
-          backgroundColor: "rgba(255,255,255,.92)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
-          borderBottom: "1px solid rgba(5,150,105,.08)",
-          padding: "0 24px",
+          backgroundColor: "rgba(255,255,255,.94)",
+          backdropFilter: "blur(18px)",
+          WebkitBackdropFilter: "blur(18px)",
+          borderBottom: "1px solid rgba(5,150,105,.1)",
+          padding: "0 20px",
         }}
       >
         <div
           style={{
-            maxWidth: "1480px",
+            maxWidth: "1400px",
             margin: "0 auto",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             gap: "6px",
-            padding: "12px 0",
+            padding: "10px 0",
             overflowX: "auto",
+            scrollbarWidth: "none",
           }}
         >
           {navItems.map((item) => (
             <button
               key={item.id}
               onClick={() => scrollTo(`pt-${item.id}`)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "7px",
-                padding: "10px 20px",
-                borderRadius: "40px",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "14px",
-                fontWeight: "600",
-                whiteSpace: "nowrap",
-                transition: "all 0.25s var(--pt-transition)",
-                backgroundColor:
-                  activeNav === item.id ? "#064E3B" : "transparent",
-                color: activeNav === item.id ? "#fff" : "#6B7280",
-                boxShadow:
-                  activeNav === item.id
-                    ? "0 4px 14px rgba(6,78,59,.2)"
-                    : "none",
-                fontFamily: "'Inter', sans-serif",
-              }}
-              onMouseOver={(e) => {
-                if (activeNav !== item.id) {
-                  e.currentTarget.style.backgroundColor = "#F3F4F6";
-                  e.currentTarget.style.color = "#111827";
-                }
-              }}
-              onMouseOut={(e) => {
-                if (activeNav !== item.id) {
-                  e.currentTarget.style.backgroundColor = "transparent";
-                  e.currentTarget.style.color = "#6B7280";
-                }
-              }}
+              aria-current={activeNav === item.id ? "true" : undefined}
+              className="pt-nav-item"
+              style={activeNav === item.id ? ds.pillActive : {}}
             >
               {item.icon}
               {item.label}
@@ -2638,9 +3090,9 @@ const PaymentTerms = () => {
                 style={{
                   display: "grid",
                   gridTemplateColumns: "repeat(4, 1fr)",
-                  gap: "20px",
+                  gap: "18px",
                   marginTop: "52px",
-                  maxWidth: "820px",
+                  maxWidth: "860px",
                   margin: "52px auto 0",
                 }}
               >
@@ -2655,26 +3107,27 @@ const PaymentTerms = () => {
                     style={{
                       textAlign: "center",
                       padding: "20px 12px",
-                      backgroundColor: "#fff",
-                      borderRadius: "18px",
+                      background: "#fff",
+                      borderRadius: "20px",
                       border: "1px solid #F3F4F6",
-                      transition: "all 0.3s",
+                      transition: "all .3s cubic-bezier(.4,0,.2,1)",
+                      boxShadow: "var(--pt-shadow-sm)",
                     }}
                     onMouseOver={(e) => {
                       e.currentTarget.style.transform = "translateY(-4px)";
-                      e.currentTarget.style.boxShadow =
-                        "0 8px 24px rgba(5,150,105,.08)";
+                      e.currentTarget.style.boxShadow = "0 8px 24px rgba(5,150,105,.08)";
                       e.currentTarget.style.borderColor = "#D1FAE5";
                     }}
                     onMouseOut={(e) => {
                       e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow = "none";
+                      e.currentTarget.style.boxShadow = "var(--pt-shadow-sm)";
                       e.currentTarget.style.borderColor = "#F3F4F6";
                     }}
                   >
                     <div
+                      className="pt-stat-value"
                       style={{
-                        fontFamily: "'Playfair Display', serif",
+                        fontFamily: "var(--font-heading)",
                         fontSize: "30px",
                         fontWeight: "800",
                         color: "#059669",
@@ -2747,7 +3200,7 @@ const PaymentTerms = () => {
               style={{
                 display: "grid",
                 gridTemplateColumns: "repeat(3, 1fr)",
-                gap: "24px",
+                gap: "22px",
                 marginBottom: "72px",
               }}
             >
@@ -2818,44 +3271,50 @@ const PaymentTerms = () => {
                 </div>
 
                 <div
+                  className="pt-process-grid"
                   style={{
                     display: "grid",
                     gridTemplateColumns:
-                      "repeat(auto-fit, minmax(200px, 1fr))",
+                      "repeat(auto-fit, minmax(190px, 1fr))",
                     gap: "32px",
                   }}
                 >
                   {processSteps.map((s, idx) => (
                     <div
+                      className="pt-step-card"
                       key={s.step}
                       style={{
                         textAlign: "center",
-                        animation: `pt-fadeUp 0.5s ease ${idx * 0.1}s both`,
+                        animation: `pt-fadeUp 0.55s ease ${idx * 0.1}s both`,
                       }}
                     >
-                      <div
-                        style={{
-                          width: "80px",
-                          height: "80px",
-                          borderRadius: "24px",
-                          background: `${s.color}10`,
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          margin: "0 auto 20px",
-                          color: s.color,
-                          position: "relative",
-                          transition: "all 0.35s var(--pt-transition)",
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.transform = "scale(1.1) translateY(-4px)";
-                          e.currentTarget.style.boxShadow = `0 12px 32px ${s.color}20`;
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.transform = "scale(1) translateY(0)";
-                          e.currentTarget.style.boxShadow = "none";
-                        }}
-                      >
+                        <div
+                          className="pt-process-icon"
+                          style={{
+                            width: "80px",
+                            height: "80px",
+                            borderRadius: "26px",
+                            background: `${s.color}12`,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            margin: "0 auto 20px",
+                            color: s.color,
+                            position: "relative",
+                            transition: "all 0.4s var(--pt-transition)",
+                            border: `1px solid ${s.color}18`,
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.transform = "scale(1.1) translateY(-4px)";
+                            e.currentTarget.style.boxShadow = `0 16px 36px ${s.color}22`;
+                            e.currentTarget.style.borderColor = `${s.color}40`;
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.transform = "scale(1) translateY(0)";
+                            e.currentTarget.style.boxShadow = "none";
+                            e.currentTarget.style.borderColor = `${s.color}18`;
+                          }}
+                        >
                         {s.icon}
                         <span
                           style={{
@@ -2904,25 +3363,56 @@ const PaymentTerms = () => {
 
                 {/* CTA Banner */}
                 <div
+                  className="pt-cta-banner"
                   style={{
-                    marginTop: "52px",
-                    padding: "28px 32px",
+                    marginTop: "56px",
+                    padding: "clamp(24px, 4vw, 36px) clamp(24px, 4vw, 40px)",
                     background:
-                      "linear-gradient(135deg, #064E3B, #047857)",
-                    borderRadius: "20px",
+                      "linear-gradient(135deg, #064E3B 0%, #047857 50%, #10B981 100%)",
+                    backgroundSize: "200% 200%",
+                    animation: "pt-shimmer 4s ease-in-out infinite",
+                    borderRadius: "26px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
-                    gap: "24px",
+                    gap: "28px",
                     flexWrap: "wrap",
                     color: "#fff",
+                    position: "relative",
+                    overflow: "hidden",
+                    boxShadow: "0 12px 40px rgba(4, 120, 87, 0.22)",
                   }}
                 >
                   <div
                     style={{
+                      position: "absolute",
+                      top: "-60px",
+                      right: "-60px",
+                      width: "180px",
+                      height: "180px",
+                      borderRadius: "50%",
+                      background: "rgba(255,255,255,.06)",
+                    }}
+                  />
+                  <div
+                    style={{
+                      position: "absolute",
+                      bottom: "-40px",
+                      left: "-40px",
+                      width: "140px",
+                      height: "140px",
+                      borderRadius: "50%",
+                      background: "rgba(255,255,255,.04)",
+                    }}
+                  />
+                  <div
+                    className="pt-cta-banner-content"
+                    style={{
                       display: "flex",
                       alignItems: "center",
-                      gap: "16px",
+                      gap: "18px",
+                      position: "relative",
+                      zIndex: 1,
                     }}
                   >
                     <div
@@ -3437,15 +3927,15 @@ const PaymentTerms = () => {
                   </p>
                 </div>
 
-                <div
-                  className="pt-g3"
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(3, 1fr)",
-                    gap: "16px",
-                    marginBottom: "36px",
-                  }}
-                >
+            <div
+              className="pt-g3"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(3, 1fr)",
+                gap: "18px",
+                marginBottom: "36px",
+              }}
+            >
                   {cancellationTiers.map((t, idx) => (
                     <div
                       key={t.period}
@@ -3747,14 +4237,14 @@ const PaymentTerms = () => {
                   display: "flex",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  marginBottom: "24px",
+                  marginBottom: "20px",
                   flexWrap: "wrap",
                   gap: "12px",
                 }}
               >
                 <h3
                   style={{
-                    fontFamily: "'Playfair Display', serif",
+                    fontFamily: ds.font.heading,
                     fontSize: "24px",
                     fontWeight: "700",
                     color: "#111827",
@@ -3764,14 +4254,8 @@ const PaymentTerms = () => {
                 </h3>
                 <div style={{ display: "flex", gap: "8px" }}>
                   {[
-                    {
-                      icon: <FiChevronLeft size={18} />,
-                      d: -280,
-                    },
-                    {
-                      icon: <FiChevronRight size={18} />,
-                      d: 280,
-                    },
+                    { icon: <FiChevronLeft size={18} />, d: -300 },
+                    { icon: <FiChevronRight size={18} />, d: 300 },
                   ].map((b, i) => (
                     <button
                       key={i}
@@ -3782,26 +4266,25 @@ const PaymentTerms = () => {
                         })
                       }
                       style={{
-                        width: "40px",
-                        height: "40px",
+                        width: "38px",
+                        height: "38px",
                         borderRadius: "12px",
-                        backgroundColor: "#fff",
+                        background: "#fff",
                         border: "1px solid #E5E7EB",
                         cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         color: "#374151",
-                        transition: "all 0.25s",
+                        transition: "all .25s",
                       }}
                       onMouseOver={(e) => {
-                        e.currentTarget.style.backgroundColor =
-                          "#059669";
+                        e.currentTarget.style.background = "#059669";
                         e.currentTarget.style.color = "#fff";
                         e.currentTarget.style.borderColor = "#059669";
                       }}
                       onMouseOut={(e) => {
-                        e.currentTarget.style.backgroundColor = "#fff";
+                        e.currentTarget.style.background = "#fff";
                         e.currentTarget.style.color = "#374151";
                         e.currentTarget.style.borderColor = "#E5E7EB";
                       }}
@@ -3811,6 +4294,7 @@ const PaymentTerms = () => {
                   ))}
                 </div>
               </div>
+
               <div
                 ref={trackRef}
                 className="pt-scroll"
@@ -3835,20 +4319,16 @@ const PaymentTerms = () => {
                       textAlign: "center",
                       border: "1px solid #F3F4F6",
                       boxShadow: "var(--pt-shadow-sm)",
-                      transition:
-                        "all 0.35s var(--pt-transition)",
+                      transition: "all 0.35s var(--pt-transition)",
                     }}
                     onMouseOver={(e) => {
-                      e.currentTarget.style.transform =
-                        "translateY(-6px)";
-                      e.currentTarget.style.boxShadow =
-                        "0 14px 36px rgba(5,150,105,.1)";
+                      e.currentTarget.style.transform = "translateY(-6px)";
+                      e.currentTarget.style.boxShadow = "0 14px 36px rgba(5,150,105,.1)";
                       e.currentTarget.style.borderColor = "#D1FAE5";
                     }}
                     onMouseOut={(e) => {
                       e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow =
-                        "var(--pt-shadow-sm)";
+                      e.currentTarget.style.boxShadow = "var(--pt-shadow-sm)";
                       e.currentTarget.style.borderColor = "#F3F4F6";
                     }}
                   >
@@ -3877,9 +4357,7 @@ const PaymentTerms = () => {
                     >
                       {b.label}
                     </div>
-                    <div
-                      style={{ fontSize: "13px", color: "#6B7280" }}
-                    >
+                    <div style={{ fontSize: "13px", color: "#6B7280" }}>
                       {b.sub}
                     </div>
                   </div>
@@ -3893,21 +4371,19 @@ const PaymentTerms = () => {
             <div
               className="pt-cbar"
               style={{
-                background:
-                  "linear-gradient(135deg, #064E3B 0%, #047857 100%)",
-                borderRadius: "28px",
-                padding: "36px 40px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: "24px",
+                background: "linear-gradient(135deg, #064E3B 0%, #047857 100%)",
+                borderRadius: "26px",
+                padding: "clamp(24px, 3vw, 40px)",
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: "16px",
                 color: "#fff",
+                boxShadow: "0 2px 20px rgba(4,120,87,.18)",
               }}
             >
               {[
                 {
-                  icon: <FaWhatsapp size={22} />,
+                  icon: <FaWhatsapp size={20} />,
                   label: "WhatsApp",
                   value: (
                     <span style={styles.contactText}>
@@ -3923,7 +4399,7 @@ const PaymentTerms = () => {
                   hl: true,
                 },
                 {
-                  icon: <FiPhone size={20} />,
+                  icon: <FiPhone size={18} />,
                   label: "Call",
                   value: (
                     <span style={styles.contactText}>
@@ -3934,50 +4410,48 @@ const PaymentTerms = () => {
                   ),
                 },
                 {
-                  icon: <FiMail size={20} />,
+                  icon: <FiMail size={18} />,
                   label: "Email",
                   value: ADMIN.email,
                 },
                 {
-                  icon: <FiMapPin size={20} />,
+                  icon: <FiMapPin size={18} />,
                   label: "Office",
                   value: ADMIN.office,
                 },
               ].map((c, i) => (
                 <div
                   key={i}
+                  className={`pt-contact-bar-item ${c.action ? "is-action" : ""}`}
                   onClick={c.action}
                   style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "14px",
                     cursor: c.action ? "pointer" : "default",
-                    padding: c.hl ? "10px 20px" : "0",
+                    padding: c.hl ? "12px 18px" : "0",
                     backgroundColor: c.hl
-                      ? "rgba(37,211,102,.2)"
+                      ? "rgba(37,211,102,.22)"
                       : "transparent",
                     borderRadius: c.hl ? "50px" : "0",
-                    transition: "all 0.25s",
+                    transition: "all .25s",
                   }}
                   onMouseOver={(e) => {
                     if (c.action)
                       e.currentTarget.style.backgroundColor =
-                        "rgba(37,211,102,.3)";
+                        "rgba(37,211,102,.32)";
                   }}
                   onMouseOut={(e) => {
                     if (c.action)
                       e.currentTarget.style.backgroundColor = c.hl
-                        ? "rgba(37,211,102,.2)"
+                        ? "rgba(37,211,102,.22)"
                         : "transparent";
                   }}
                 >
-                  <span style={{ opacity: 0.9 }}>{c.icon}</span>
+                  <span style={{ opacity: .9, display: "grid", placeItems: "center" }}>{c.icon}</span>
                   <div>
-                    <div style={{ fontSize: "12px", opacity: 0.7 }}>
+                    <div style={{ fontSize: "11px", opacity: .7, fontWeight: "500", textTransform: "uppercase", letterSpacing: ".4px" }}>
                       {c.label}
                     </div>
                     <div
-                      style={{ fontSize: "15px", fontWeight: "600" }}
+                      style={{ fontSize: "14px", fontWeight: "600", lineHeight: 1.5 }}
                     >
                       {c.value}
                     </div>

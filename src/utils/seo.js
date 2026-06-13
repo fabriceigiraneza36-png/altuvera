@@ -7,6 +7,12 @@ export const getSiteUrl = () => {
   return String(raw).replace(/\/+$/, "");
 };
 
+export const withBrand = (title) => {
+  const raw = String(title || "").trim();
+  if (!raw) return "Altuvera";
+  return /\baltuvera\b/i.test(raw) ? raw : `${raw} | Altuvera`;
+};
+
 export const toAbsoluteUrl = (path = "/") => {
   const p = String(path || "/");
   const normalized = p.startsWith("/") ? p : `/${p}`;

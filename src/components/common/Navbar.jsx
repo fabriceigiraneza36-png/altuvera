@@ -474,7 +474,10 @@ const Navbar = () => {
                 </div>
               </div>
             ) : (
-              <button className="nav__sign-btn" onClick={() => openModal("login")}>
+              <button
+                className="nav__sign-btn"
+                onClick={() => openModal("login", { skipNotLoggedInMessage: true })}
+              >
                 <span>Sign In</span>
               </button>
             )}
@@ -692,7 +695,10 @@ const Navbar = () => {
             ) : (
               <button
                 className="mm__sign"
-                onClick={() => { setIsMobileMenuOpen(false); openModal("login"); }}
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  openModal("login", { skipNotLoggedInMessage: true });
+                }}
               >
                 Sign In / Sign Up
               </button>

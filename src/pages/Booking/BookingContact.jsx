@@ -1,6 +1,5 @@
 // src/pages/Booking/BookingContact.jsx
 import React from "react";
-import { motion } from "framer-motion";
 import StepFour from "./components/StepFour";
 import TripSummary from "./components/TripSummary";
 import ProfileImageUpload from "./components/ProfileImageUpload";
@@ -70,7 +69,7 @@ const BookingContact = ({
           </div>
           <motion.button
             type="button"
-            onClick={() => openModal("login")}
+            onClick={() => openModal("login", { skipNotLoggedInMessage: true })}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             style={{

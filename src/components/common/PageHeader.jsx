@@ -19,7 +19,10 @@ const PageHeader = ({
   align = "center",
   children,
   parallax = true,
+  size = {},
 }) => {
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const isCompactMobile = isMobile && (!size?.mob || typeof size.mob !== "boolean" ? false : size.mob);
   const [scrollY, setScrollY] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -58,7 +61,7 @@ const PageHeader = ({
     header: {
       position: "relative",
       height: isMobile ? "auto" : height,
-      minHeight: isMobile ? "380px" : "450px",
+      minHeight: isMobile ? (isCompactMobile ? "280px" : "340px") : "450px",
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -115,7 +118,7 @@ const PageHeader = ({
       position: "relative",
       zIndex: 10,
       textAlign: align,
-      padding: isMobile ? "80px 20px 60px" : "0 32px",
+      padding: isMobile ? (isCompactMobile ? "64px 16px 48px" : "76px 18px 56px") : "0 32px",
       maxWidth: "960px",
       width: "100%",
       opacity: isVisible ? 1 : 0,
@@ -127,8 +130,8 @@ const PageHeader = ({
       display: "flex",
       alignItems: "center",
       justifyContent: align === "center" ? "center" : "flex-start",
-      gap: "6px",
-      marginBottom: "28px",
+      gap: "3px",
+      marginBottom: isCompactMobile ? "12px" : "20px",
       flexWrap: "wrap",
       opacity: isVisible ? 1 : 0,
       transform: isVisible ? "translateY(0)" : "translateY(20px)",
@@ -224,10 +227,10 @@ const PageHeader = ({
 
     title: {
       fontFamily: "'Playfair Display', Georgia, serif",
-      fontSize: isMobile ? "clamp(32px, 8vw, 42px)" : "clamp(40px, 5vw, 60px)",
+      fontSize: isMobile ? "clamp(24px, 6.8vw, 36px)" : "clamp(40px, 5vw, 60px)",
       fontWeight: 700,
       color: "#FFFFFF",
-      marginBottom: "20px",
+      marginBottom: isCompactMobile ? "10px" : "14px",
       lineHeight: 1.15,
       letterSpacing: "-0.02em",
       textShadow: "0 4px 30px rgba(0, 0, 0, 0.4)",
@@ -237,11 +240,11 @@ const PageHeader = ({
     },
 
     subtitle: {
-      fontSize: isMobile ? "15px" : "17px",
+      fontSize: isMobile ? "14px" : "17px",
       color: "rgba(255, 255, 255, 0.85)",
       maxWidth: "640px",
       margin: align === "center" ? "0 auto" : "0",
-      lineHeight: 1.75,
+      lineHeight: isCompactMobile ? 1.6 : 1.75,
       fontWeight: 400,
       opacity: isVisible ? 1 : 0,
       transform: isVisible ? "translateY(0)" : "translateY(20px)",

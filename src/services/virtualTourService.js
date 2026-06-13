@@ -32,7 +32,7 @@ class VirtualTourService {
     };
 
     // Attach auth token when available
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("altuvera_auth_token") || localStorage.getItem("token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

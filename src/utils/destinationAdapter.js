@@ -279,6 +279,8 @@ export const adaptDestination = (raw) => {
 
     // ── Classification ───────────────────────────────────────
     category:       raw.category        || "",
+    classification: raw.classification || raw.adventureCategory || raw.category || raw.destinationType || "Adventure",
+    adventureCategory: raw.adventureCategory || raw.classification || raw.category || raw.destinationType || "Adventure",
     difficulty:     raw.difficulty      || "moderate",
     destinationType:raw.destinationType || null,
 

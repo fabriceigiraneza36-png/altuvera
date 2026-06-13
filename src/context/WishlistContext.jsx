@@ -86,7 +86,7 @@ export function WishlistProvider({ children }) {
           "Sign in to save this destination to your wishlist.",
           { title: "Login required" },
         );
-        openModal("login");
+        openModal("login", { skipNotLoggedInMessage: true });
         return;
       }
 

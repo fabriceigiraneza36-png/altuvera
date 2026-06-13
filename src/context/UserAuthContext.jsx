@@ -722,7 +722,6 @@ export function UserAuthProvider({ children }) {
 
   const closeModal = useCallback(() => {
     setIsModalOpen(false);
-    setModalView("login");
     setPendingEmail("");
     setSocialAuthError("");
     setGoogleUser(null);

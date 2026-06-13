@@ -1169,7 +1169,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 14px 18px;
+  padding: 10px 12px;
   border-bottom: 1px solid var(--nav-brd);
   background: var(--nav-wh);
   flex-shrink: 0;
@@ -1239,7 +1239,7 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding: 8px 18px calc(28px + env(safe-area-inset-bottom, 0px));
+  padding: 6px 14px calc(24px + env(safe-area-inset-bottom, 0px));
 }
 
 /* ── Mobile nav items ─── */
@@ -1638,7 +1638,7 @@
   }
 }
 
-@media (max-width: 1180px) {
+@media (max-width: 1100px) {
   .nav__link {
     font-size: 13px;
     padding: 8px 10px;
@@ -1698,10 +1698,10 @@
     border-radius: 0;
   }
   .nav {
-    padding: 12px 0;
+    padding: 10px 0;
   }
   .nav--scrolled {
-    padding: 8px 0;
+    padding: 6px 0;
   }
   .nav__hamburger {
     width: 44px;
@@ -1731,19 +1731,51 @@
     height: 46px;
   }
   .nav__logo-img-wrapper {
-    width: 44px;
-    height: 44px;
-  }
-  .mm__body {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-  .mm__logo-img-wrapper {
     width: 42px;
     height: 42px;
   }
+  .mm__body {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .mm__logo-img-wrapper {
+    width: 40px;
+    height: 40px;
+  }
   .mm__logo-text {
-    font-size: 22px;
+    font-size: 20px;
+  }
+  .mm__item {
+    border-bottom: none;
+  }
+  .mm__link,
+  .mm__toggle {
+    font-size: 16px;
+    padding: 13px 2px;
+  }
+  .mm__sub {
+    margin: 0 0 8px;
+    padding: 0 6px;
+  }
+  .mm__sub--open {
+    padding: 8px;
+    margin: 0 0 10px;
+  }
+  .mm__sub-link {
+    padding: 11px 12px;
+    font-size: 14px;
+  }
+  .mm__sign {
+    padding: 13px;
+    font-size: 15px;
+  }
+  .mm__cta {
+    padding: 13px 18px;
+    font-size: 15px;
+  }
+  .mm__chat-btn {
+    padding: 13px 14px;
+    font-size: 14px;
   }
 }
 
@@ -1771,22 +1803,22 @@
     width: 42px;
     height: 42px;
   }
-  .mm__link,
-  .mm__toggle {
-    font-size: 17px;
-    padding: 14px 4px;
-  }
-  .mm__sub-link {
-    font-size: 15px;
-  }
-  .mm__auth-link,
-  .mm__out {
-    font-size: 15px;
-  }
-  .mm__cta {
-    font-size: 15px;
-    padding: 13px 18px;
-  }
+.mm__link,
+.mm__toggle {
+  font-size: 16px;
+  padding: 14px 4px;
+}
+.mm__sub-link {
+  font-size: 14px;
+}
+.mm__auth-link,
+.mm__out {
+  font-size: 14px;
+}
+.mm__cta {
+  font-size: 15px;
+  padding: 13px 18px;
+}
 }
 
 @media (max-width: 380px) {

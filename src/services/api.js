@@ -1,6 +1,8 @@
 import axios from 'axios';
+import { API_URL } from '../utils/apiBase';
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://backend-jd8f.onrender.com/api';
+const getStoredToken = () => localStorage.getItem('altuvera_auth_token') || localStorage.getItem('token');
+const getStoredRefreshToken = () => localStorage.getItem('altuvera_refresh_token') || localStorage.getItem('refreshToken');
 
 const api = axios.create({
   baseURL: API_URL,
@@ -14,7 +16,7 @@ const api = axios.create({
 // Request interceptor - add auth token
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
+    const token = getStoredToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -34,7 +36,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem('refreshToken');
+        const refreshToken = getStoredRefreshToken();
         if (refreshToken) {
           const { data } = await axios.post(
             `${API_URL}/users/refresh-token`,
@@ -42,6 +44,8 @@ api.interceptors.response.use(
           );
 
           if (data.success) {
+            localStorage.setItem('altuvera_auth_token', data.data.token);
+            localStorage.setItem('altuvera_refresh_token', data.data.refreshToken);
             localStorage.setItem('token', data.data.token);
             localStorage.setItem('refreshToken', data.data.refreshToken);
             originalRequest.headers.Authorization = `Bearer ${data.data.token}`;
@@ -49,6 +53,8 @@ api.interceptors.response.use(
           }
         }
       } catch (refreshError) {
+        localStorage.removeItem('altuvera_auth_token');
+        localStorage.removeItem('altuvera_refresh_token');
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
         window.location.href = '/';

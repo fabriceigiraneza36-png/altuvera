@@ -46,24 +46,20 @@ const NotFound = React.lazy(() => import("./pages/NotFound"));
 // ============================================================================
 
 const REDIRECT_MAP = {
-  "/home": "/",
+  "/home":         "/",
   "/destinations/": "/destinations",
-  "/tours": "/destinations",
-  "/safaris": "/destinations",
-  "/blog": "/posts",
-  "/articles": "/posts",
-  "/news": "/posts",
-  "/map": "/interactive-map",
-  "/contact-us": "/contact",
-  "/about-us": "/about",
-  "/our-team": "/team",
-  "/faqs": "/faq",
+  "/tours":        "/destinations",
+  "/safaris":      "/destinations",
+  "/blog":         "/posts",
+  "/articles":     "/posts",
+  "/news":         "/posts",
+  "/map":          "/interactive-map",
+  "/contact-us":   "/contact",
+  "/about-us":     "/about",
+  "/our-team":     "/team",
+  "/faqs":         "/faq",
 };
 
-/**
- * Resolves legacy/mistyped URLs to their canonical destination.
- * Returns null if no redirect is needed.
- */
 function getRedirectUrl(pathname) {
   if (!pathname) return null;
   const clean = pathname.toLowerCase().replace(/\/$/, "") || "/";
@@ -189,8 +185,7 @@ const publicRoutes = [
     component: React.lazy(() => import("./pages/Gallery")),
     meta: {
       title: "Gallery",
-      description:
-        "Browse photos from safaris and cultural experiences.",
+      description: "Browse photos from safaris and cultural experiences.",
     },
   },
   {
@@ -234,13 +229,6 @@ const publicRoutes = [
       description: "Altuvera terms of service.",
     },
   },
-  {
-    path: "/tailwind-test",
-    component: React.lazy(() =>
-      import("./components/common/TailwindTest")
-    ),
-    meta: { title: "Tailwind Test", description: "" },
-  },
 ];
 
 const protectedRoutes = [
@@ -272,13 +260,9 @@ const protectedRoutes = [
 ];
 
 // ============================================================================
-// Route Renderers  ← FIX: defined as named functions at module scope
-//                    so they are always in scope when JSX is evaluated
+// Route Renderers
 // ============================================================================
 
-/**
- * Renders a single public route wrapped in PageWrapper + Suspense.
- */
 function renderPublicRoute({ path, component: Component, meta = {} }) {
   return (
     <Route
@@ -299,9 +283,6 @@ function renderPublicRoute({ path, component: Component, meta = {} }) {
   );
 }
 
-/**
- * Renders a single protected route wrapped in ProtectedRoute + PageWrapper + Suspense.
- */
 function renderProtectedRoute({ path, component: Component, meta = {} }) {
   return (
     <Route
@@ -341,15 +322,15 @@ const GitHubCallbackPage = React.memo(() => {
   }, [githubLoading, isAuthenticated, socialAuthError]);
 
   const isError = Boolean(socialAuthError);
-  const isDone = !githubLoading && isAuthenticated;
+  const isDone  = !githubLoading && isAuthenticated;
 
   const statusMsg = isError
     ? "Sign-in failed. Redirecting…"
     : isDone
-      ? "Signed in! Redirecting…"
-      : githubLoading
-        ? "Verifying your GitHub account…"
-        : "Completing sign-in…";
+    ? "Signed in! Redirecting…"
+    : githubLoading
+    ? "Verifying your GitHub account…"
+    : "Completing sign-in…";
 
   return (
     <div style={cbStyles.page}>
@@ -359,16 +340,11 @@ const GitHubCallbackPage = React.memo(() => {
         <div
           style={{
             ...cbStyles.spinner,
-            borderTopColor: isError
-              ? "#ef4444"
-              : isDone
-                ? "#059669"
-                : "#059669",
+            borderTopColor: isError ? "#ef4444" : "#059669",
             animationDuration: isDone ? "2s" : "0.8s",
           }}
         />
 
-        {/* GitHub SVG mark */}
         <svg
           width="44"
           height="44"
@@ -450,6 +426,82 @@ const cbStyles = {
 };
 
 // ============================================================================
+// Celebration Feature Badges (SVG icons — no emoji)
+// ============================================================================
+
+/**
+ * Each badge renders an inline SVG icon + a label.
+ * Icons are pure SVG paths (no external fetch, no emoji).
+ */
+const FEATURE_BADGES = [
+  {
+    id: "explore",
+    label: "Explore",
+    // Map / globe icon
+    icon: (
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="10" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+      </svg>
+    ),
+  },
+  {
+    id: "book",
+    label: "Book",
+    // Calendar icon
+    icon: (
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+    ),
+  },
+  {
+    id: "save",
+    label: "Save",
+    // Heart icon
+    icon: (
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+      </svg>
+    ),
+  },
+];
+
+// ============================================================================
 // Celebration Overlay
 // ============================================================================
 
@@ -479,6 +531,9 @@ const CelebrationOverlay = React.memo(({ userName }) => {
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Welcome celebration"
       style={{
         position: "fixed",
         inset: 0,
@@ -502,7 +557,7 @@ const CelebrationOverlay = React.memo(({ userName }) => {
           padding: "40px 32px 36px",
           textAlign: "center",
           boxShadow:
-            "0 24px 48px -12px rgba(4, 47, 31, 0.15), 0 0 0 1px rgba(4, 47, 31, 0.05)",
+            "0 24px 48px -12px rgba(4,47,31,0.15), 0 0 0 1px rgba(4,47,31,0.05)",
           maxWidth: 400,
           width: "100%",
           position: "relative",
@@ -539,7 +594,7 @@ const CelebrationOverlay = React.memo(({ userName }) => {
           }}
         />
 
-        {/* Checkmark */}
+        {/* Checkmark circle */}
         <div
           style={{
             width: 64,
@@ -564,12 +619,12 @@ const CelebrationOverlay = React.memo(({ userName }) => {
             strokeWidth="3.5"
             strokeLinecap="round"
             strokeLinejoin="round"
+            aria-hidden="true"
           >
             <path d="M20 6L9 17l-5-5" />
           </svg>
         </div>
 
-        {/* Copy */}
         <h1
           style={{
             fontSize: "clamp(22px, 4.5vw, 28px)",
@@ -610,7 +665,7 @@ const CelebrationOverlay = React.memo(({ userName }) => {
           destinations, and explore East Africa.
         </p>
 
-        {/* Feature tags */}
+        {/* Feature badges — SVG icons only, no emoji */}
         <div
           style={{
             display: "flex",
@@ -620,10 +675,13 @@ const CelebrationOverlay = React.memo(({ userName }) => {
             marginBottom: 28,
           }}
         >
-          {["🗺️ Explore", "📅 Book", "❤️ Save"].map((item, i) => (
+          {FEATURE_BADGES.map(({ id, label, icon }) => (
             <span
-              key={i}
+              key={id}
               style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
                 padding: "6px 14px",
                 background: "#f0fdf4",
                 borderRadius: 99,
@@ -633,12 +691,12 @@ const CelebrationOverlay = React.memo(({ userName }) => {
                 fontWeight: 600,
               }}
             >
-              {item}
+              {icon}
+              {label}
             </span>
           ))}
         </div>
 
-        {/* CTA */}
         <a
           href="/destinations"
           style={{
@@ -670,6 +728,22 @@ const CelebrationOverlay = React.memo(({ userName }) => {
               "0 8px 20px rgba(4,120,87,0.15)";
           }}
         >
+          {/* Arrow-right icon inline */}
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ marginRight: 8 }}
+            aria-hidden="true"
+          >
+            <line x1="5" y1="12" x2="19" y2="12" />
+            <polyline points="12 5 19 12 12 19" />
+          </svg>
           Start Exploring
         </a>
       </div>
@@ -719,7 +793,6 @@ OverlayLayer.displayName = "OverlayLayer";
 
 const SmartRedirect = React.memo(() => {
   const { pathname } = useLocation();
-
   const redirectUrl = useMemo(() => getRedirectUrl(pathname), [pathname]);
 
   if (redirectUrl) {
@@ -751,7 +824,7 @@ function App() {
     showNotLoggedInMessage,
   } = useUserAuth();
 
-  const [prevAuth, setPrevAuth] = useState(false);
+  const [prevAuth, setPrevAuth]               = useState(false);
   const [showCelebration, setShowCelebration] = useState(false);
 
   // Clear loader on navigation (except home)
@@ -780,18 +853,17 @@ function App() {
     }
   }, [location.pathname]);
 
-  // Show celebration ONLY when auth transitions false → true (once per user)
+  // Show celebration only on first login per user
   useEffect(() => {
     if (isAuthenticated && !prevAuth && user) {
       try {
         const keyPrefix = "altuvera_welcome_shown:";
-        const email = (user?.email || "").toLowerCase();
-        const key = email ? `${keyPrefix}${email}` : null;
+        const email     = (user?.email || "").toLowerCase();
+        const key       = email ? `${keyPrefix}${email}` : null;
 
         if (!key || !localStorage.getItem(key)) {
           setShowCelebration(true);
           if (key) localStorage.setItem(key, Date.now().toString());
-
           const timer = setTimeout(() => setShowCelebration(false), 4000);
           return () => clearTimeout(timer);
         }
@@ -829,8 +901,6 @@ function App() {
         <Route element={<AppLayout />}>
           {publicRoutes.map(renderPublicRoute)}
           {protectedRoutes.map(renderProtectedRoute)}
-
-          {/* Catch-all: redirect legacy URLs or show 404 */}
           <Route path="*" element={<SmartRedirect />} />
         </Route>
 

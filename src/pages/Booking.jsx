@@ -1,6 +1,6 @@
 // src/pages/Booking.jsx
 import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import PageHeader from "../components/common/PageHeader";
 import AnimatedSection from "../components/common/AnimatedSection";
 import BookingSteps from "./Booking/BookingSteps";

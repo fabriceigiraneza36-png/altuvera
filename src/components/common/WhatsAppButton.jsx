@@ -678,6 +678,7 @@ const WhatsAppButton = () => {
   const [customMessage, setCustomMessage] = useState("");
   const [userName, setUserName] = useState("");
   const [isVisible, setIsVisible] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [windowWidth, setWindowWidth] = useState(
@@ -832,6 +833,8 @@ const WhatsAppButton = () => {
             {/* Main Button */}
             <motion.button
               onClick={openModal}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => setIsHovered(false)}
               style={S.mainBtn}
               animate={{ y: [0, -6, 0] }}
               transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut" }}
@@ -847,22 +850,26 @@ const WhatsAppButton = () => {
             </motion.button>
 
             {/* Tooltip */}
-            {!isMobile && (
-              <motion.div
-                style={S.tooltip}
-                initial={{ opacity: 0, x: -20, scale: 0.9 }}
-                animate={{ opacity: 1, x: 0, scale: 1 }}
-                transition={{ delay: 1.8, type: "spring", stiffness: 300 }}
-              >
-                <motion.span
-                  animate={{ scale: [1, 1.2, 1] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                  style={{ fontSize: 15 }}
+            {isHovered && !isMobile && (
+              <AnimatePresence>
+                <motion.div
+                  key="whatsapp-tooltip"
+                  style={S.tooltip}
+                  initial={{ opacity: 0, x: -20, scale: 0.9 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: -10, scale: 0.9 }}
+                  transition={{ type: "spring", stiffness: 300 }}
                 >
-                  💬
-                </motion.span>
-                <span>Chat with us!</span>
-              </motion.div>
+                  <motion.span
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 1.5, repeat: Infinity }}
+                    style={{ fontSize: 15 }}
+                  >
+                    💬
+                  </motion.span>
+                  <span>Chat with us!</span>
+                </motion.div>
+              </AnimatePresence>
             )}
           </motion.div>
         )}
