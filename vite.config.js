@@ -131,34 +131,6 @@ export default defineConfig(({ mode }) => {
 
       rollupOptions: {
         output: {
-          manualChunks(id) {
-            if (!id.includes("node_modules")) return;
-
-            if (
-              id.includes("/react/")       ||
-              id.includes("/react-dom/")   ||
-              id.includes("/react-router") ||
-              id.includes("/scheduler/")
-            ) return "react-core";
-
-            if (id.includes("/framer-motion/"))  return "animations";
-
-            if (
-              id.includes("/leaflet/")      ||
-              id.includes("/react-leaflet/")
-            ) return "maps";
-
-            if (id.includes("/react-icons/"))  return "icons";
-            if (id.includes("/lucide-react/")) return "lucide";
-
-            if (
-              id.includes("/@simplewebauthn/") ||
-              id.includes("/google-auth")
-            ) return "auth";
-
-            return "vendor";
-          },
-
           chunkFileNames: "assets/js/[name]-[hash].js",
           entryFileNames: "assets/js/[name]-[hash].js",
 
