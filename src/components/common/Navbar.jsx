@@ -76,7 +76,7 @@ const Navbar = () => {
     () => [
       { name: "Home",            path: "/" },
       { name: "Explore",         path: "/explore" },
-      { name: "Destinations",    path: "/destinations", dropdown: destinationsDropdown },
+      { name: "Destinations",    path: "/destinations" },
       { name: "Interactive Map", path: "/interactive-map" },
       { name: "Tips",            path: "/tips" },
       {

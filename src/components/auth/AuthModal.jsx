@@ -330,16 +330,6 @@ export default function AuthModal() {
     [selectedCareers, customCareers]
   );
 
-  const avatarSrc = useMemo(
-    () =>
-      form.avatarPreview ||
-      (googleUser?.picture && authMethod === "google"
-        ? googleUser.picture
-        : null) ||
-      initAvatar(form.fullName || form.email || "U", "#059669"),
-    [form.avatarPreview, form.fullName, form.email, googleUser?.picture, authMethod]
-  );
-
   /* ── Expiry Countdown ── */
   const startExpiryCountdown = useCallback((seconds = CODE_TTL_LOGIN_REGISTER) => {
     if (expiryTimerRef.current) clearInterval(expiryTimerRef.current);
@@ -372,7 +362,7 @@ export default function AuthModal() {
   }, []);
 
   /* ── Field Updater ── */
-  const set = useCallback((field, val) => {
+  const updateField = useCallback((field, val) => {
     setForm((p) => ({ ...p, [field]: val }));
     setError("");
     setSuccess("");
@@ -1113,7 +1103,7 @@ export default function AuthModal() {
           label="Email Address"
           icon={HiMail}
           value={form.email}
-          onChange={(v) => set("email", v)}
+          onChange={(v) => updateField("email", v)}
           placeholder="you@example.com"
           autoComplete="email"
           required
@@ -1127,7 +1117,7 @@ export default function AuthModal() {
           label="Full Name"
           icon={HiUser}
           value={form.fullName}
-          onChange={(v) => set("fullName", v)}
+          onChange={(v) => updateField("fullName", v)}
           placeholder="Your full name"
           autoComplete="name"
           required
@@ -1137,7 +1127,7 @@ export default function AuthModal() {
 
         <Checkbox
           checked={form.keepSignedIn}
-          onChange={() => set("keepSignedIn", !form.keepSignedIn)}
+          onChange={() => updateField("keepSignedIn", !form.keepSignedIn)}
         >
           Keep me signed in for 30 days
         </Checkbox>
@@ -1238,7 +1228,7 @@ export default function AuthModal() {
                 label="Email Address"
                 icon={HiMail}
                 value={form.email}
-                onChange={(v) => set("email", v)}
+                onChange={(v) => updateField("email", v)}
                 placeholder="traveler@example.com"
                 autoComplete="email"
                 required
@@ -1256,7 +1246,7 @@ export default function AuthModal() {
                 label="Full Name"
                 icon={HiUser}
                 value={form.fullName}
-                onChange={(v) => set("fullName", v)}
+                onChange={(v) => updateField("fullName", v)}
                 placeholder="Your full name"
                 autoComplete="name"
                 required
@@ -1321,7 +1311,7 @@ export default function AuthModal() {
               icon={HiPhone}
               type="tel"
               value={form.phone}
-              onChange={(v) => set("phone", formatPhone(v))}
+              onChange={(v) => updateField("phone", formatPhone(v))}
               placeholder="+1 (555) 000-0000"
               autoComplete="tel"
               fieldError={
@@ -1347,7 +1337,7 @@ export default function AuthModal() {
                 id="r-bio"
                 rows={3}
                 value={form.bio}
-                onChange={(e) => set("bio", e.target.value)}
+                onChange={(e) => updateField("bio", e.target.value)}
                 onFocus={() => setFocusedField("bio")}
                 onBlur={() => setFocusedField(null)}
                 placeholder="Tell us about your travel style…"
@@ -1576,7 +1566,7 @@ export default function AuthModal() {
 
           <Checkbox
             checked={form.keepSignedIn}
-            onChange={() => set("keepSignedIn", !form.keepSignedIn)}
+            onChange={() => updateField("keepSignedIn", !form.keepSignedIn)}
           >
             Keep me signed in for 30 days
           </Checkbox>

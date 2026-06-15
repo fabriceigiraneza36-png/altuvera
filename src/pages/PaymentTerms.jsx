@@ -4111,7 +4111,7 @@ const PaymentTerms = () => {
                     <FaqItem
                       key={i}
                       faq={f}
-                      index={i}
+                      index={i}z
                       isOpen={expandedFaq === i}
                       onToggle={toggleFaq}
                     />

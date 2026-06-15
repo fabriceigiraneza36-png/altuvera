@@ -192,7 +192,7 @@ function Stars({ rating, count }) {
         ))}
       </div>
       <span style={{ fontWeight: 700, color: "#111827", fontSize: 14 }}>
-        {rating ? rating.toFixed(1) : "New"}
+      {rating != null ? Number(rating).toFixed(1) : "New"}
       </span>
       {count > 0 && (
         <span style={{ color: "#9ca3af", fontSize: 12 }}>

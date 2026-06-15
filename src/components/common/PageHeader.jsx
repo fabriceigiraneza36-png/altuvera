@@ -21,11 +21,10 @@ const PageHeader = ({
   parallax = true,
   size = {},
 }) => {
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const [isMobile, setIsMobile] = useState(false);
   const isCompactMobile = isMobile && (!size?.mob || typeof size.mob !== "boolean" ? false : size.mob);
   const [scrollY, setScrollY] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
   const headerRef = useRef(null);
 
   // Responsive check

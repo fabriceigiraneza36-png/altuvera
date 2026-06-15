@@ -98,6 +98,14 @@ const publicRoutes = [
     },
   },
   {
+    path: "/adventures/:slug",
+    component: React.lazy(() => import("./pages/AdventureGuide")),
+    meta: {
+      title: "Adventure Guide",
+      description: "Explore complete adventure guides and matching destinations across East Africa.",
+    },
+  },
+  {
     path: "/country/:countryId",
     component: React.lazy(() => import("./pages/CountryPage")),
     meta: {

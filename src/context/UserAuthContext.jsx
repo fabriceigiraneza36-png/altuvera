@@ -1032,6 +1032,16 @@ export function UserAuthProvider({ children }) {
       triggerCongratulation("login");
       return data;
     } catch (err) {
+      // Handle re-verification required from backend
+      const errData = err?.data || {};
+      if (errData?.code === "REVERIFICATION_REQUIRED" || errData?.requiresReVerification) {
+        setPendingEmail(errData.email);
+        setSocialAuthError("");
+        setModalView("verify");
+        // Trigger OTP resend
+        try { await authFetch("/users/login", { method: "POST", body: JSON.stringify({ email: errData.email }) }); } catch {}
+        return { requiresVerification: true };
+      }
       const msg = err?.message || "Google sign-in failed.";
       setSocialAuthError(msg);
       throw new Error(msg);
@@ -1352,6 +1362,15 @@ export function UserAuthProvider({ children }) {
       triggerCongratulation("login");
       return data;
     } catch (err) {
+      // Handle re-verification required from backend
+      const errData = err?.data || {};
+      if (errData?.code === "REVERIFICATION_REQUIRED" || errData?.requiresReVerification) {
+        setPendingEmail(errData.email);
+        setSocialAuthError("");
+        setModalView("verify");
+        try { await authFetch("/users/login", { method: "POST", body: JSON.stringify({ email: errData.email }) }); } catch {}
+        return { requiresVerification: true };
+      }
       const msg = err?.message || "GitHub sign-in failed.";
       setSocialAuthError(msg);
       throw new Error(msg);

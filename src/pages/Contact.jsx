@@ -3,7 +3,7 @@ import React, {
   useState, useRef, useEffect, useCallback, useMemo,
 } from "react";
 import {
-  AnimatePresence, useInView, useScroll, useTransform,
+  AnimatePresence, useInView, useScroll, useTransform, motion,
 } from "framer-motion";
 import {
   FiMail, FiPhone, FiMapPin, FiClock, FiSend, FiMessageSquare,
