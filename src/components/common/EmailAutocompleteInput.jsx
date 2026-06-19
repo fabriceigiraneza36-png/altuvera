@@ -1,11 +1,4 @@
-import React, {
-  forwardRef,
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-} from "react";
+import React, { forwardRef, useCallback, useMemo, useRef, useId } from "react";
 
 const DEFAULT_DOMAINS = [
   "gmail.com",
@@ -17,32 +10,6 @@ const DEFAULT_DOMAINS = [
   "protonmail.com",
   "aol.com",
 ];
-
-const getCompletion = (value, domains) => {
-  const v = typeof value === "string" ? value : "";
-  const at = v.indexOf("@");
-  if (at < 0) return null;
-
-  const local = v.slice(0, at);
-  const domainPart = v.slice(at + 1);
-  if (!local) return null;
-
-  const typedDomain = domainPart.toLowerCase();
-  const candidates = domains;
-
-  const match =
-    typedDomain.length === 0
-      ? candidates[0]
-      : candidates.find((d) => d.startsWith(typedDomain));
-
-  if (!match) return null;
-
-  const completed = `${local}@${match}`;
-  if (completed.toLowerCase() === v.toLowerCase()) return null;
-  if (!completed.toLowerCase().startsWith(v.toLowerCase())) return null;
-
-  return completed;
-};
 
 const getSuggestions = (value, domains, limit = 6) => {
   const v = typeof value === "string" ? value : "";
@@ -74,9 +41,6 @@ export default forwardRef(function EmailAutocompleteInput(
     value,
     onValueChange,
     domains = DEFAULT_DOMAINS,
-    onBlur,
-    onFocus,
-    onKeyDown,
     name,
     autoComplete = "email",
     inputMode = "email",
@@ -90,7 +54,11 @@ export default forwardRef(function EmailAutocompleteInput(
   const normalizedDomains = useMemo(() => {
     const list = Array.isArray(domains) ? domains : DEFAULT_DOMAINS;
     return list
-      .map((d) => String(d || "").trim().toLowerCase())
+      .map((d) =>
+        String(d || "")
+          .trim()
+          .toLowerCase(),
+      )
       .filter(Boolean);
   }, [domains]);
 
@@ -106,29 +74,6 @@ export default forwardRef(function EmailAutocompleteInput(
     [onValueChange],
   );
 
-  const handleKeyDown = useCallback(
-    (e) => {
-      onKeyDown?.(e);
-      if (e.defaultPrevented) return;
-
-      if (e.key !== "ArrowRight" && e.key !== "Tab") return;
-
-      const el = innerRef.current;
-      if (!el) return;
-
-      const v = el.value || "";
-      const completed = getCompletion(v, normalizedDomains);
-      if (!completed) return;
-
-      if (e.key === "Tab") {
-        e.preventDefault();
-      }
-
-      onValueChange?.(completed);
-    },
-    [normalizedDomains, onKeyDown, onValueChange],
-  );
-
   return (
     <>
       <input
@@ -138,12 +83,8 @@ export default forwardRef(function EmailAutocompleteInput(
         type="email"
         inputMode={inputMode}
         autoComplete={autoComplete}
-        list={suggestions.length ? datalistId : undefined}
         value={value}
         onChange={handleChange}
-        onBlur={onBlur}
-        onFocus={onFocus}
-        onKeyDown={handleKeyDown}
         spellCheck={false}
         autoCapitalize="none"
         autoCorrect="off"

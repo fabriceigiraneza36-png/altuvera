@@ -577,8 +577,8 @@
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
-   USER MENU
-   ══════════════════════════════════════════════════════════════════════════ */
+    USER MENU
+    ══════════════════════════════════════════════════════════════════════════ */
 .nav__user {
   position: relative;
 }
@@ -586,11 +586,12 @@
 .nav__user-trigger {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 4px 12px 4px 4px;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   background: rgba(255, 255, 255, 0.15);
   border: 1.5px solid rgba(255, 255, 255, 0.35);
-  border-radius: 99px;
   cursor: pointer;
   box-shadow: 0 10px 22px rgba(5, 150, 105, 0.12);
   transition: all var(--nav-fast) var(--nav-smooth);
@@ -609,26 +610,23 @@
 }
 
 .nav__avatar-initials {
-  width: 34px;
-  height: 34px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   background: var(--nav-cg);
   color: var(--nav-wh);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 700;
   flex-shrink: 0;
-  box-shadow:
-    inset 0 0 0 2px rgba(255, 255, 255, 0.5),
-    0 4px 10px rgba(6, 78, 59, 0.2);
 }
 
 .nav__avatar-wrap {
   position: relative;
-  width: 34px;
-  height: 34px;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
@@ -662,45 +660,6 @@
   to {
     transform: rotate(360deg);
   }
-}
-
-.nav__user-info {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.15;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--nav-wh);
-  max-width: 110px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.nav__user-info small {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: 700;
-  margin-top: 1px;
-}
-.nav--scrolled .nav__user-info {
-  color: var(--nav-txt);
-}
-.nav--scrolled .nav__user-info small {
-  color: #6b7280;
-}
-
-.nav__user-chev {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
-  transition: transform 0.3s var(--nav-spring);
-}
-.nav--scrolled .nav__user-chev {
-  color: var(--nav-mute);
-}
-.nav__user-chev--open {
-  transform: rotate(180deg);
 }
 
 /* ── User dropdown panel ─── */

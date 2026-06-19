@@ -1595,14 +1595,14 @@ const About = () => {
   }));
 
   const galleryImages = [
-    { url: 'https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1200', caption: 'Majestic Elephant Herd', location: 'Amboseli, Rwanda', size: 'tall' },
-    { url: 'https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=1200', caption: 'The Great Migration', location: 'Serengeti, Tanzania', size: 'normal' },
-    { url: 'https://images.unsplash.com/photo-1518709766631-a6a7f45921c3?w=1200', caption: 'Sunset on the Savanna', location: 'Maasai Mara, Rwanda', size: 'normal' },
-    { url: 'https://images.unsplash.com/photo-1523805009345-7448845a9e53?w=1200', caption: 'Maasai Cultural Experience', location: 'Ngorongoro, Tanzania', size: 'wide' },
-    { url: 'https://images.unsplash.com/photo-1534177616064-ef548ae5e58e?w=1200', caption: 'Mountain Gorilla Encounter', location: 'Volcanoes NP, Rwanda', size: 'normal' },
-    { url: 'https://images.unsplash.com/photo-1549366021-9f761d450615?w=1200', caption: 'Cheetah at Dawn', location: 'Samburu, Rwanda', size: 'tall' },
-    { url: 'https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=1200', caption: 'Hot Air Balloon Safari', location: 'Maasai Mara, Rwanda', size: 'normal' },
-    { url: 'https://images.unsplash.com/photo-1516298773066-c48f8e9bd92b?w=1200', caption: 'Lion Pride Resting', location: 'Serengeti, Tanzania', size: 'normal' },
+    { url: 'https://i.pinimg.com/736x/08/9f/53/089f53e3f111b0813b6bca5cdd69cede.jpg', caption: 'Majestic Elephant Herd', location: 'Amboseli, Rwanda', size: 'tall' },
+    { url: 'https://i.pinimg.com/1200x/48/c9/f7/48c9f7d212a4a2933b84ec65c19e4628.jpg', caption: 'The Great Migration', location: 'Serengeti, Tanzania', size: 'normal' },
+    { url: 'https://i.pinimg.com/736x/4a/9d/29/4a9d29a741657c485053b0883aa0df29.jpg', caption: 'Sunset on the Savanna', location: 'Maasai Mara, Rwanda', size: 'normal' },
+    { url: 'https://i.pinimg.com/1200x/33/7b/76/337b768498fe758d5146b5b0fcbac0ad.jpg', caption: 'Maasai Cultural Experience', location: 'Ngorongoro, Tanzania', size: 'wide' },
+    { url: 'https://i.pinimg.com/736x/52/a6/89/52a689bd83f6a3a1c2dd75e822b70f39.jpg', caption: 'Mountain Gorilla Encounter', location: 'Volcanoes NP, Rwanda', size: 'normal' },
+    { url: 'https://i.pinimg.com/1200x/58/65/e8/5865e81ad2d36fea778a4ef2e998d566.jpg', caption: 'Cheetah at Dawn', location: 'Samburu, Rwanda', size: 'tall' },
+    { url: 'https://i.pinimg.com/736x/ab/ff/90/abff90dc1839b30b7ffbb22abdf09810.jpg', caption: 'Hot Air Balloon Safari', location: 'Maasai Mara, Rwanda', size: 'normal' },
+    { url: 'https://i.pinimg.com/1200x/f0/33/77/f033774e32b1ba127ac4b4e6900b89af.jpg', caption: 'Lion Pride Resting', location: 'Serengeti, Tanzania', size: 'normal' },
   ];
 
   const openLightbox = (index) => setLightbox({ isOpen: true, currentIndex: index });
@@ -2045,33 +2045,6 @@ const About = () => {
 
       {/* Evolution Timeline */}
       <EvolutionTimeline />
-
-      {/* Stats Section */}
-      <section style={{
-        padding: 'clamp(40px, 8vw, 80px) 24px',
-        background: '#fff'
-      }}>
-        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 'clamp(28px, 4vw, 44px)' }}>
-            <FadeInSection>
-              <span style={styles.label}>By the Numbers</span>
-              <h2 style={styles.h2}>
-                Our <span style={{ color: '#059669' }}>Impact</span> Since 2026
-              </h2>
-            </FadeInSection>
-          </div>
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
-            gap: 'clamp(20px, 3vw, 32px)'
-          }}>
-            {stats.map((stat, index) => (
-              <StatCard key={index} {...stat} />
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* Gallery Section */}
       <section style={{

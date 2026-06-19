@@ -495,7 +495,7 @@ function SectionLabel({ icon, text }) {
         display: 'inline-flex',
         alignItems: 'center',
         gap: 8,
-        padding: '10px 24px',
+        padding: '8px 18px',
         backgroundColor: G[50],
         borderRadius: 50,
         color: G[700],
@@ -503,7 +503,7 @@ function SectionLabel({ icon, text }) {
         fontWeight: 800,
         textTransform: 'uppercase',
         letterSpacing: 2.5,
-        marginBottom: 20,
+        marginBottom: 10,
         border: '1px solid ' + G[200],
       }}
     >
@@ -520,7 +520,7 @@ function SectionLabelDark({ icon, text }) {
         display: 'inline-flex',
         alignItems: 'center',
         gap: 8,
-        padding: '10px 24px',
+        padding: '8px 18px',
         backgroundColor: 'rgba(255,255,255,0.08)',
         borderRadius: 50,
         color: G[300],
@@ -528,7 +528,7 @@ function SectionLabelDark({ icon, text }) {
         fontWeight: 800,
         textTransform: 'uppercase',
         letterSpacing: 2.5,
-        marginBottom: 20,
+        marginBottom: 10,
         border: '1px solid rgba(255,255,255,0.1)',
       }}
     >
@@ -542,7 +542,7 @@ function SectionHeader({ icon, label, title, subtitle, align, dark }) {
   const a = align || 'center';
   const d = dark || false;
   return (
-    <header style={{ textAlign: a, marginBottom: 32 }}>
+    <header style={{ textAlign: a, marginBottom: 18 }}>
       {d ? (
         <SectionLabelDark icon={icon} text={label} />
       ) : (
@@ -554,7 +554,7 @@ function SectionHeader({ icon, label, title, subtitle, align, dark }) {
           fontSize: 'clamp(30px,5vw,52px)',
           fontWeight: 700,
           color: d ? W.pure : N[900],
-          marginBottom: subtitle ? 18 : 0,
+          marginBottom: subtitle ? 12 : 0,
           lineHeight: 1.15,
         }}
       >
@@ -567,7 +567,7 @@ function SectionHeader({ icon, label, title, subtitle, align, dark }) {
             color: d ? 'rgba(255,255,255,0.65)' : N[500],
             maxWidth: a === 'center' ? 660 : 'none',
             margin: a === 'center' ? '0 auto' : 0,
-            lineHeight: 1.8,
+            lineHeight: 1.65,
           }}
         >
           {subtitle}
@@ -810,7 +810,7 @@ function GalleryShowcase({ data }) {
             fontSize: 'clamp(26px,4vw,40px)',
             fontWeight: 700,
             color: W.pure,
-            marginBottom: 14,
+            marginBottom: 10,
             lineHeight: 1.2,
           }}
         >
@@ -820,9 +820,9 @@ function GalleryShowcase({ data }) {
           style={{
             fontSize: 16,
             color: 'rgba(255,255,255,0.75)',
-            lineHeight: 1.7,
+            lineHeight: 1.65,
             maxWidth: 560,
-            marginBottom: 24,
+            marginBottom: 18,
           }}
         >
           {data.description}
@@ -922,275 +922,6 @@ function GalleryShowcase({ data }) {
             }}
           />
         ))}
-      </div>
-    </div>
-  );
-}
-
-/* ---- Country Card ---- */
-
-function CountryCard({ country }) {
-  const [h, setH] = useState(false);
-  return (
-    <Link
-      to={'/country/' + country.id}
-      style={{
-        backgroundColor: W.pure,
-        borderRadius: 20,
-        padding: '36px 20px',
-        textAlign: 'center',
-        textDecoration: 'none',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        boxShadow: h
-          ? '0 18px 48px rgba(22,163,74,0.14)'
-          : '0 2px 12px rgba(0,0,0,0.04)',
-        transition: 'all 0.4s cubic-bezier(0.4,0,0.2,1)',
-        transform: h ? 'translateY(-8px)' : 'none',
-        border: '1px solid ' + (h ? G[200] : N[100]),
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-      onMouseEnter={() => setH(true)}
-      onMouseLeave={() => setH(false)}
-    >
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: 4,
-          background: 'linear-gradient(90deg,' + G[500] + ',' + G[400] + ')',
-          transform: h ? 'scaleX(1)' : 'scaleX(0)',
-          transition: 'transform 0.4s',
-          transformOrigin: 'center',
-        }}
-      />
-      <span
-        style={{
-          marginBottom: 14,
-          transition: 'transform 0.3s',
-          transform: h ? 'scale(1.15)' : 'scale(1)',
-          display: 'block',
-        }}
-      >
-        <span
-          className="av-flag"
-          data-av-flag-anim={String((((country?.name || "").length + 2) % 5) + 1)}
-          style={{ "--av-flag-size": "clamp(38px, 5vw, 50px)" }}
-        >
-          {country.flag}
-        </span>
-      </span>
-      <h3
-        style={{
-          fontFamily: "'Playfair Display', Georgia, serif",
-          fontSize: 20,
-          fontWeight: 700,
-          color: N[900],
-          marginBottom: 6,
-        }}
-      >
-        {country.name}
-      </h3>
-      <span
-        style={{
-          fontSize: 13,
-          color: G[600],
-          fontWeight: 600,
-          marginBottom: 16,
-        }}
-      >
-        {country.tagline}
-      </span>
-      <span
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 6,
-          padding: '8px 20px',
-          backgroundColor: h ? G[600] : G[50],
-          color: h ? W.pure : G[700],
-          borderRadius: 30,
-          fontSize: 13,
-          fontWeight: 600,
-          transition: 'all 0.3s',
-        }}
-      >
-        Explore <FiArrowRight size={13} />
-      </span>
-    </Link>
-  );
-}
-
-/* ---- Category Card ---- */
-
-function CategoryCard({ cat }) {
-  const [h, setH] = useState(false);
-  return (
-    <Link to={cat.path} style={{ textDecoration: 'none' }}>
-      <article
-        style={{
-          borderRadius: 24,
-          overflow: 'hidden',
-          transition: 'all 0.45s cubic-bezier(0.4,0,0.2,1)',
-          transform: h ? 'translateY(-8px)' : 'none',
-          boxShadow: h
-            ? '0 24px 56px rgba(22,163,74,0.18)'
-            : '0 6px 24px rgba(0,0,0,0.06)',
-          border: '1px solid ' + (h ? G[200] : 'transparent'),
-        }}
-        onMouseEnter={() => setH(true)}
-        onMouseLeave={() => setH(false)}
-      >
-        <SlideshowCard
-          images={cat.images}
-          height={360}
-          borderRadius={0}
-        >
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background:
-                'linear-gradient(180deg, rgba(5,46,22,0.15) 0%, rgba(5,46,22,0.88) 100%)',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'flex-end',
-              padding: 32,
-            }}
-          >
-            <div
-              style={{
-                width: 64,
-                height: 64,
-                borderRadius: '50%',
-                backgroundColor: 'rgba(255,255,255,0.12)',
-                backdropFilter: 'blur(8px)',
-                border: '1.5px solid rgba(255,255,255,0.2)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: 18,
-                fontSize: 30,
-                transition: 'transform 0.3s',
-                transform: h ? 'scale(1.12)' : 'none',
-              }}
-            >
-              {cat.icon}
-            </div>
-            <h3
-              style={{
-                fontFamily: "'Playfair Display', Georgia, serif",
-                fontSize: 26,
-                fontWeight: 700,
-                color: W.pure,
-                marginBottom: 8,
-              }}
-            >
-              {cat.title}
-            </h3>
-            <p
-              style={{
-                fontSize: 14,
-                color: 'rgba(255,255,255,0.75)',
-                lineHeight: 1.6,
-                marginBottom: 16,
-                maxWidth: 340,
-              }}
-            >
-              {cat.description}
-            </p>
-            <span
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 22px',
-                backgroundColor: h
-                  ? G[600]
-                  : 'rgba(255,255,255,0.12)',
-                backdropFilter: 'blur(8px)',
-                borderRadius: 30,
-                fontSize: 14,
-                color: W.pure,
-                fontWeight: 600,
-                border:
-                  '1px solid ' +
-                  (h ? G[500] : 'rgba(255,255,255,0.2)'),
-                transition: 'all 0.3s',
-                width: 'fit-content',
-              }}
-            >
-              {cat.count}+ Trips <FiArrowRight size={14} />
-            </span>
-          </div>
-        </SlideshowCard>
-      </article>
-    </Link>
-  );
-}
-
-/* ---- Stat ---- */
-
-function StatItem({ stat }) {
-  const [h, setH] = useState(false);
-  return (
-    <div
-      style={{
-        textAlign: 'center',
-        padding: '36px 20px',
-        borderRadius: 20,
-        backgroundColor: 'rgba(255,255,255,0.07)',
-        backdropFilter: 'blur(8px)',
-        border:
-          '1px solid rgba(255,255,255,' + (h ? '0.18' : '0.08') + ')',
-        transition: 'all 0.35s',
-        transform: h ? 'translateY(-6px)' : 'none',
-      }}
-      onMouseEnter={() => setH(true)}
-      onMouseLeave={() => setH(false)}
-    >
-      <div
-        style={{
-          width: 52,
-          height: 52,
-          borderRadius: '50%',
-          background: 'rgba(34,197,94,0.2)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: '0 auto 16px',
-          fontSize: 22,
-          color: G[300],
-        }}
-      >
-        {stat.icon}
-      </div>
-      <div
-        style={{
-          fontFamily: "'Playfair Display', Georgia, serif",
-          fontSize: 38,
-          fontWeight: 800,
-          color: W.pure,
-          marginBottom: 6,
-          lineHeight: 1,
-        }}
-      >
-        {stat.value}
-      </div>
-      <div
-        style={{
-          fontSize: 13,
-          color: 'rgba(255,255,255,0.6)',
-          fontWeight: 600,
-          textTransform: 'uppercase',
-          letterSpacing: 1.5,
-        }}
-      >
-        {stat.label}
       </div>
     </div>
   );
@@ -1391,7 +1122,7 @@ function Explore() {
      [backendCountries]
    );
 
-   const pad = 'clamp(24px,4vw,42px) clamp(16px,5vw,32px)';
+   const pad = 'clamp(18px,3vw,32px) clamp(16px,5vw,32px)';
    const box = { maxWidth: 1400, margin: '0 auto' };
 
    return (
@@ -1418,7 +1149,7 @@ function Explore() {
       {/* ============ INTRO EDITORIAL ============ */}
       <section
         style={{
-          padding: 'clamp(24px,4vw,42px) clamp(16px,5vw,36px)',
+          padding: 'clamp(18px,3vw,32px) clamp(16px,5vw,36px)',
           backgroundColor: W.off,
         }}
       >
@@ -1435,7 +1166,7 @@ function Explore() {
                 fontWeight: 700,
                 color: N[900],
                 lineHeight: 1.25,
-                marginBottom: 24,
+                marginBottom: 12,
               }}
             >
               Where the Wild Heart of Africa Beats Loudest
@@ -1444,8 +1175,8 @@ function Explore() {
               style={{
                 fontSize: 17,
                 color: N[500],
-                lineHeight: 1.9,
-                marginBottom: 20,
+                lineHeight: 1.65,
+                marginBottom: 10,
               }}
             >
               East Africa is a land of superlatives — home to the
@@ -1493,8 +1224,8 @@ function Explore() {
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
-              gap: 28,
-              marginBottom: 28,
+              gap: 18,
+              marginBottom: 18,
             }}
           >
             <AnimatedSection animation="fadeInUp" delay={0}>
@@ -1517,7 +1248,7 @@ function Explore() {
             className="e-why-split"
             style={{
               display: 'flex',
-              gap: 'clamp(32px,5vw,80px)',
+              gap: 'clamp(20px,5vw,48px)',
               alignItems: 'center',
             }}
           >
@@ -1534,7 +1265,7 @@ function Explore() {
                   style={{
                     display: 'grid',
                     gridTemplateColumns: '1fr',
-                    gap: 20,
+                    gap: 12,
                   }}
                 >
                   {WHY_ITEMS.map((item, i) => (
@@ -1548,8 +1279,8 @@ function Explore() {
                     >
                       <div
                         style={{
-                          width: 48,
-                          height: 48,
+                          width: 44,
+                          height: 44,
                           borderRadius: 14,
                           backgroundColor: W.pure,
                           border: '1px solid ' + G[200],
@@ -1568,7 +1299,7 @@ function Explore() {
                             fontWeight: 700,
                             fontSize: 16,
                             color: N[900],
-                            marginBottom: 4,
+                            marginBottom: 2,
                           }}
                         >
                           {item.title}
@@ -1637,403 +1368,10 @@ function Explore() {
                 marginBottom: 32,
                 overflowX: 'auto',
                 paddingBottom: 4,
+                marginBottom: 16,
               }}
             >
-              {EXPERIENCE_FILTERS.map((f) => {
-                const active = filter === f.id;
-                return (
-                  <button
-                    key={f.id}
-                    onClick={() => setFilter(f.id)}
-                    aria-pressed={active}
-                    style={{
-                      padding: '12px 26px',
-                      borderRadius: 50,
-                      border: active
-                        ? 'none'
-                        : '1.5px solid ' + N[200],
-                      fontSize: 14,
-                      fontWeight: 600,
-                      cursor: 'pointer',
-                      backgroundColor: active ? G[600] : W.pure,
-                      color: active ? W.pure : N[700],
-                      boxShadow: active
-                        ? '0 4px 14px rgba(22,163,74,0.3)'
-                        : '0 1px 4px rgba(0,0,0,0.04)',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
-                      transition: 'all 0.3s',
-                      outline: 'none',
-                    }}
-                  >
-                    <span style={{ fontSize: 16 }}>{f.icon}</span>{' '}
-                    {f.name}
-                  </button>
-                );
-              })}
             </nav>
-          </AnimatedSection>
-
-          <p style={{ fontSize: 15, color: N[500], marginBottom: 28 }}>
-            Showing{' '}
-            <strong style={{ color: N[900] }}>{filtered.length}</strong>{' '}
-            experience{filtered.length !== 1 ? 's' : ''}
-          </p>
-
-          <div
-            className="e-exp-grid"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3,1fr)',
-              gap: 28,
-            }}
-          >
-            {filtered.map((exp, i) => (
-              <AnimatedSection
-                key={exp.id}
-                animation="fadeInUp"
-                delay={i * 0.08}
-              >
-                <ExperienceCard experience={exp} />
-              </AnimatedSection>
-            ))}
-          </div>
-
-          {filtered.length === 0 && (
-            <AnimatedSection animation="fadeIn">
-              <div
-                style={{
-                  textAlign: 'center',
-                  padding: '80px 20px',
-                  color: N[500],
-                }}
-              >
-                <div style={{ fontSize: 56, marginBottom: 16 }}>
-                  🌿
-                </div>
-                <h3
-                  style={{
-                    fontFamily: "'Playfair Display', Georgia, serif",
-                    fontSize: 24,
-                    color: N[800],
-                    marginBottom: 10,
-                  }}
-                >
-                  No experiences found
-                </h3>
-                <p style={{ fontSize: 16, marginBottom: 24 }}>
-                  Try a different category to discover more adventures.
-                </p>
-                <button
-                  onClick={() => setFilter('all')}
-                  style={{
-                    padding: '12px 28px',
-                    borderRadius: 50,
-                    border: 'none',
-                    background:
-                      'linear-gradient(135deg,' +
-                      G[600] +
-                      ',' +
-                      G[500] +
-                      ')',
-                    color: W.pure,
-                    fontSize: 14,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Show All
-                </button>
-              </div>
-            </AnimatedSection>
-          )}
-
-          <AnimatedSection animation="fadeInUp">
-        <div style={{ textAlign: 'center', marginTop: 28 }}>
-              <Button
-                to="/destinations"
-                variant="primary"
-                size="large"
-                icon={<FiArrowRight size={18} />}
-              >
-                Browse All Experiences
-              </Button>
-            </div>
-          </AnimatedSection>
-        </div>
-      </section>
-
-      {/* ============ PHOTO MOSAIC ============ */}
-      <section style={{ padding: pad, backgroundColor: G[50] }}>
-        <div style={box}>
-          <AnimatedSection animation="fadeInUp">
-            <SectionHeader
-              icon={<FiCamera size={14} />}
-              label="Visual Journey"
-              title="A Glimpse Into the Wild"
-              subtitle="Every photograph tells a story of untamed beauty, ancient traditions, and the raw power of nature. These moments await you."
-            />
-          </AnimatedSection>
-
-          <div
-            className="e-mosaic"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3,1fr)',
-              gap: 16,
-              gridAutoRows: 220,
-            }}
-          >
-            {PHOTO_MOSAIC.map((p, i) => {
-              const spanStyle =
-                p.span === 'large'
-                  ? { gridColumn: 'span 2', gridRow: 'span 2' }
-                  : p.span === 'medium'
-                  ? { gridColumn: 'span 1', gridRow: 'span 2' }
-                  : {};
-              return (
-                <AnimatedSection
-                  key={i}
-                  animation="fadeInUp"
-                  delay={i * 0.08}
-                >
-                  <div
-                    style={{
-                      ...spanStyle,
-                      borderRadius: 20,
-                      overflow: 'hidden',
-                      height: '100%',
-                    }}
-                  >
-                    <img
-                      src={p.src}
-                      alt={p.alt}
-                      loading="lazy"
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        transition: 'transform 0.6s',
-                        display: 'block',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform =
-                          'scale(1.05)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }}
-                    />
-                  </div>
-                </AnimatedSection>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-       {/* ============ COUNTRIES ============ */}
-       <section style={{ padding: pad }}>
-         <div style={box}>
-            <AnimatedSection animation="fadeInUp">
-              <SectionHeader
-                label="🌍 Destinations"
-                title="Explore by Country"
-                subtitle="Each East African nation offers a distinct mosaic of landscapes, cultures, and wildlife. Click on a country to explore its unique treasures."
-              />
-            </AnimatedSection>
-
-           <div
-             className="e-country-grid"
-             style={{
-               display: 'grid',
-               gridTemplateColumns:
-                 'repeat(auto-fill, minmax(200px, 1fr))',
-               gap: 22,
-             }}
-           >
-             <style>{`
-               @keyframes shimmer {
-                 0% { background-position: 200% 0; }
-                 100% { background-position: -200% 0; }
-               }
-             `}</style>
-              {loading ? (
-                // Loading skeleton
-                [...Array(6)].map((_, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      background: 'linear-gradient(90deg, #f5f5f5 25%, #e0e0e0 50%, #f5f5f5 75%)',
-                      backgroundSize: '200% 100%',
-                      animation: 'shimmer 1.5s infinite',
-                      borderRadius: '12px',
-                      height: '280px',
-                    }}
-                  />
-                ))
-              ) : error ? (
-                // Error state
-                <div style={{
-                  gridColumn: '1 / -1',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '16px',
-                  padding: '60px 20px',
-                  color: '#6B7280',
-                  textAlign: 'center',
-                }}>
-                  <FiWifiOff size={48} style={{ color: '#9CA3AF' }} />
-                  <p>Unable to load countries</p>
-                  <button
-                    onClick={refetch}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '10px 20px',
-                      background: '#059669',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
-                      cursor: 'pointer',
-                      fontWeight: 600,
-                    }}
-                  >
-                    <FiRefreshCw size={14} />
-                    Retry
-                  </button>
-                </div>
-              ) : displayedCountries.map((c, i) => (
-               <AnimatedSection
-                 key={c.id}
-                 animation="fadeInUp"
-                 delay={i * 0.07}
-               >
-                 <CountryCard country={c} />
-               </AnimatedSection>
-             ))}
-           </div>
-
-          <AnimatedSection animation="fadeInUp">
-            <div style={{ textAlign: 'center', marginTop: 24 }}>
-              <Button
-                to="/destinations"
-                variant="primary"
-                icon={<FiArrowRight size={18} />}
-              >
-                View All Countries
-              </Button>
-            </div>
-          </AnimatedSection>
-        </div>
-      </section>
-
-      {/* ============ CATEGORIES ============ */}
-      <section
-        style={{ padding: pad, backgroundColor: G[950] }}
-      >
-        <div style={box}>
-          <AnimatedSection animation="fadeInUp">
-            <SectionHeader
-              icon={<FiTarget size={14} />}
-              label="Ways to Travel"
-              title="Choose Your Adventure"
-              subtitle="Whether you crave the adrenaline of a summit push or the gentle rhythm of a beach hammock, we have the perfect experience for you."
-              dark
-            />
-          </AnimatedSection>
-
-          <div
-            className="e-cat-grid"
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2,1fr)',
-              gap: 28,
-            }}
-          >
-            {EXPERIENCE_CATEGORIES.map((cat, i) => (
-              <AnimatedSection
-                key={cat.id}
-                animation="fadeInUp"
-                delay={i * 0.1}
-              >
-                <CategoryCard cat={cat} />
-              </AnimatedSection>
-            ))}
-          </div>
-        </div>
-      </section>
-      {/* ============ EDITORIAL — RESPONSIBLE TRAVEL ============ */}
-      <section style={{ padding: pad }}>
-        <div style={{ ...box, maxWidth: 900, textAlign: 'center' }}>
-          <AnimatedSection animation="fadeInUp">
-            <SectionLabel
-              icon={<FiBookOpen size={13} />}
-              text="Travel Insights"
-            />
-            <h2
-              style={{
-                fontFamily: "'Playfair Display', Georgia, serif",
-                fontSize: 'clamp(28px,4vw,42px)',
-                fontWeight: 700,
-                color: N[900],
-                lineHeight: 1.25,
-                marginBottom: 24,
-              }}
-            >
-              Responsible Travel, Extraordinary Impact
-            </h2>
-            <p
-              style={{
-                fontSize: 17,
-                color: N[500],
-                lineHeight: 1.9,
-                marginBottom: 20,
-              }}
-            >
-              We believe that the best travel experiences leave a
-              positive footprint. Every safari we operate, every lodge we
-              partner with, and every community we visit is chosen for
-              its commitment to conservation and sustainable tourism.
-              When you travel with us, a portion of your trip directly
-              funds anti-poaching patrols, community schools, and
-              wildlife rehabilitation programs.
-            </p>
-            <p
-              style={{
-                fontSize: 17,
-                color: N[500],
-                lineHeight: 1.9,
-                marginBottom: 20,
-              }}
-            >
-              Our guides are not just experts in tracking the Big Five —
-              they are conservationists, storytellers, and ambassadors
-              for their communities. They will share the science behind
-              migration patterns, the challenges facing endangered
-              species, and the innovative solutions being pioneered
-              right here in East Africa.
-            </p>
-            <p
-              style={{
-                fontSize: 17,
-                color: N[500],
-                lineHeight: 1.9,
-                marginBottom: 32,
-              }}
-            >
-              From carbon-offset flights to solar-powered lodges, from
-              locally sourced meals to fair-trade handicrafts — every
-              detail of your journey supports the people and places that
-              make East Africa so extraordinary. Travel should be a
-              force for good, and together, we are making sure it is.
-            </p>
             <div
               style={{
                 display: 'flex',

@@ -48,8 +48,8 @@
   --shadow-xl: 0 40px 80px rgba(2, 44, 34, 0.18);
 
   --font-heading: "Playfair Display", Georgia, serif;
-  --font-body:    "Inter", "Segoe UI", system-ui, -apple-system,
-                  BlinkMacSystemFont, Roboto, sans-serif;
+  --font-body:    "Playfair Display", "Inter", "Segoe UI", system-ui,
+                  -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
 
   --ui-primary:   var(--clr-primary);
   --ui-primary-2: var(--clr-primary-2);
@@ -80,10 +80,17 @@ body {
   font-family:             var(--font-body);
   background-color:        var(--clr-surface);
   color:                   var(--clr-ink);
-  line-height:             1.6;
+  line-height:             1.55;
   overflow-x:              hidden;
   -webkit-font-smoothing:  antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+input,
+textarea,
+select {
+  font-family: inherit;
 }
 
 h1, h2, h3, h4, h5, h6,

@@ -1,5 +1,4 @@
-// AuthModal.jsx — Full Premium Version
-// Green/White · Mobile Bottom Sheet · Career Multi-Select · Smooth Validation
+// AuthModal.jsx — Premium Split-Layout Auth with Tailwind CSS v4
 import React, {
   useEffect,
   useMemo,
@@ -14,6 +13,7 @@ import {
   HiLockClosed,
   HiMail,
   HiPhone,
+  HiPhotograph,
   HiRefresh,
   HiSparkles,
   HiUser,
@@ -25,16 +25,8 @@ import {
   HiInformationCircle,
   HiChevronLeft,
   HiChevronRight,
-  HiPhotograph,
-  HiPencilAlt,
-  HiAcademicCap,
-  HiColorSwatch,
-  HiCode,
-  HiSun,
-  HiPlus,
-  HiTag,
 } from "react-icons/hi";
-import { FiGithub, FiZap, FiCamera } from "react-icons/fi";
+import { FiGithub, FiZap } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import { MdVerified, MdOutlineSecurityUpdateGood } from "react-icons/md";
 import { RiShieldKeyholeLine } from "react-icons/ri";
@@ -42,116 +34,122 @@ import { useUserAuth } from "../../context/UserAuthContext";
 import { useAuthStats } from "../../hooks/useAuthStats";
 import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 import EmailAutocompleteInput from "../common/EmailAutocompleteInput";
+// ✅ DO NOT import index.css here — it's already imported in main.jsx
+// ✅ Only import the component-scoped CSS
 import "./AuthModal.css";
 
-/* ════════════════════════════════════════════════════════════
-   GALLERY
-════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   GALLERY IMAGES
+═══════════════════════════════════════════════════════════════ */
 const GALLERY = [
   {
     src: "https://i.pinimg.com/736x/7a/e8/6f/7ae86f7fb7eddaceb8ed5ba212c19a0e.jpg",
-    alt: "Majestic lion in golden savanna",
+    alt: "Majestic male lion in golden savanna",
     caption: "Serengeti, Tanzania",
     subtitle: "Where the wild roams free",
-    color: "#059669",
   },
   {
     src: "https://i.pinimg.com/736x/81/3c/12/813c12e76fbd4fc43517b90804423d90.jpg",
-    alt: "Turquoise waters and white sand",
+    alt: "Crystal turquoise waters and white sand",
     caption: "Zanzibar, Tanzania",
     subtitle: "Paradise found",
-    color: "#10B981",
   },
   {
     src: "https://i.pinimg.com/1200x/34/da/8e/34da8ee9bedf86bde3797e5b37884910.jpg",
-    alt: "Snow-capped Kilimanjaro",
+    alt: "Snow-capped Kilimanjaro above clouds",
     caption: "Kilimanjaro, Tanzania",
     subtitle: "Touch the sky",
-    color: "#059669",
   },
   {
     src: "https://i.pinimg.com/736x/74/23/d3/7423d340555f9ae1eeba5a9528a94715.jpg",
     alt: "Mountain gorilla in misty forest",
     caption: "Volcanoes NP, Rwanda",
     subtitle: "Meet our closest relatives",
-    color: "#10B981",
   },
   {
     src: "https://i.pinimg.com/736x/30/f1/ad/30f1ada2ba80044e4b1db79ac0e95768.jpg",
     alt: "Giraffes at sunset",
     caption: "Maasai Mara, Kenya",
     subtitle: "Golden hour magic",
-    color: "#047857",
   },
   {
     src: "https://i.pinimg.com/736x/3d/f5/f7/3df5f7a59bdb7704087eec05f6ee4476.jpg",
     alt: "Ngorongoro Crater panorama",
     caption: "Ngorongoro, Tanzania",
     subtitle: "Nature's amphitheatre",
+  },
+];
+
+/* ═══════════════════════════════════════════════════════════════
+   CONSTANTS
+═══════════════════════════════════════════════════════════════ */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_RE = /^[+\d][\d\s\-()]{6,}$/;
+const MAX_BIO = 300;
+const MAX_FILE = 10 * 1024 * 1024;
+const CODE_TTL_LOGIN_REGISTER = 10 * 60;
+const CODE_TTL_RESEND = 15 * 60;
+
+const ROLES = [
+  {
+    value: "user",
+    label: "Traveler",
+    icon: HiGlobe,
+    desc: "Explore & discover",
+    color: "#3b82f6",
+  },
+  {
+    value: "photographer",
+    label: "Photographer",
+    icon: HiPhotograph,
+    desc: "Capture moments",
+    color: "#8b5cf6",
+  },
+  {
+    value: "planner",
+    label: "Planner",
+    icon: HiSparkles,
+    desc: "Craft itineraries",
     color: "#059669",
   },
 ];
 
-/* ════════════════════════════════════════════════════════════
-   CONSTANTS
-════════════════════════════════════════════════════════════ */
-const EMAIL_RE                = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const PHONE_RE                = /^[+\d][\d\s\-()]{6,}$/;
-const MAX_BIO                 = 300;
-const MAX_FILE                = 10 * 1024 * 1024;
-const CODE_TTL_LOGIN_REGISTER = 10 * 60;
-const CODE_TTL_RESEND         = 15 * 60;
-
-/* ── Preset Careers ── */
-const PRESET_CAREERS = [
-  { id: "traveler",     label: "Traveler",     Icon: HiGlobe       },
-  { id: "photographer", label: "Photographer", Icon: HiPhotograph  },
-  { id: "planner",      label: "Planner",      Icon: HiSparkles    },
-  { id: "farmer",       label: "Farmer",       Icon: HiSun         },
-  { id: "developer",    label: "Developer",    Icon: HiCode        },
-  { id: "designer",     label: "Designer",     Icon: HiColorSwatch },
-  { id: "writer",       label: "Writer",       Icon: HiPencilAlt   },
-  { id: "student",      label: "Student",      Icon: HiAcademicCap },
-];
-
-const TRUST_BADGES = [
-  { Icon: RiShieldKeyholeLine,         text: "256-bit SSL"  },
-  { Icon: MdVerified,                  text: "Verified"     },
-  { Icon: MdOutlineSecurityUpdateGood, text: "GDPR"         },
-];
-
-/* ════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    UTILITIES
-════════════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════════════════ */
 const emptyCode = () => ["", "", "", "", "", ""];
 
 const getInitials = (v = "") =>
-  v.trim().split(/\s+/).filter(Boolean).slice(0, 2)
-    .map((p) => p[0]?.toUpperCase()).join("") || "U";
+  v
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0]?.toUpperCase())
+    .join("") || "U";
 
 const toBase64 = (s) => {
   try {
     return window.btoa(
-      encodeURIComponent(s).replace(
-        /%([0-9A-F]{2})/g,
-        (_, h) => String.fromCharCode(parseInt(h, 16))
-      )
+      encodeURIComponent(s).replace(/%([0-9A-F]{2})/g, (_, h) =>
+        String.fromCharCode(parseInt(h, 16)),
+      ),
     );
-  } catch { return ""; }
+  } catch {
+    return "";
+  }
 };
 
 const initAvatar = (name, color = "#059669") => {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128">
-    <defs>
-      <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%"   stop-color="${color}"/>
-        <stop offset="100%" stop-color="${color}88"/>
-      </linearGradient>
-    </defs>
-    <rect width="128" height="128" rx="32" fill="url(#g)"/>
+    <defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="${color}"/>
+      <stop offset="100%" stop-color="${color}cc"/>
+    </linearGradient></defs>
+    <rect width="128" height="128" rx="28" fill="url(#g)"/>
     <text x="50%" y="54%" dominant-baseline="middle" text-anchor="middle"
-      font-family="Inter,system-ui,sans-serif" font-size="52" font-weight="800"
-      fill="#ffffff">${getInitials(name)}</text>
+      font-family="Inter,sans-serif" font-size="52" font-weight="700"
+      fill="#fff">${getInitials(name)}</text>
   </svg>`;
   return `data:image/svg+xml;base64,${toBase64(svg)}`;
 };
@@ -159,194 +157,333 @@ const initAvatar = (name, color = "#059669") => {
 const readFile = (file) =>
   new Promise((res, rej) => {
     const r = new FileReader();
-    r.onload  = () => res(r.result);
+    r.onload = () => res(r.result);
     r.onerror = () => rej(new Error("Cannot read file"));
     r.readAsDataURL(file);
   });
 
-const formatPhone  = (v) => String(v || "").replace(/[^\d+\s\-()]/g, "");
-const formatExpiry = (s) => {
-  const t = Math.max(0, s);
-  return `${Math.floor(t / 60).toString().padStart(2, "0")}:${(t % 60)
-    .toString().padStart(2, "0")}`;
+const formatPhone = (v) => String(v || "").replace(/[^\d+]/g, "");
+
+const formatExpiry = (seconds) => {
+  const s = Math.max(0, seconds);
+  return `${Math.floor(s / 60)
+    .toString()
+    .padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
 };
 
 const isDismissalError = (msg = "") => {
   const m = msg.toLowerCase();
   return (
-    m.includes("dismiss")   || m.includes("cancel")  ||
-    m.includes("closed")    || m.includes("skipped") ||
+    m.includes("dismiss") ||
+    m.includes("cancel") ||
+    m.includes("closed") ||
     m.includes("credential_cancelled") ||
-    m.includes("popup_closed")         ||
-    m.includes("not_displayed")        ||
+    m.includes("popup_closed") ||
+    m.includes("skipped") ||
+    m.includes("not_displayed") ||
     m.includes("google button")
   );
 };
 
-const capitalize = (s = "") =>
-  s.trim().charAt(0).toUpperCase() + s.trim().slice(1).toLowerCase();
-
-/* ════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    GALLERY SLIDESHOW
-════════════════════════════════════════════════════════════ */
-const GallerySlideshow = React.memo(({ intervalMs = 10000 }) => {
+═══════════════════════════════════════════════════════════════ */
+const GallerySlideshow = ({ intervalMs = 5000 }) => {
   const [current, setCurrent] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
   const timerRef = useRef(null);
 
+  const advance = useCallback(
+    (dir = 1) => setCurrent((i) => (i + dir + GALLERY.length) % GALLERY.length),
+    [],
+  );
+
   useEffect(() => {
-    timerRef.current = setInterval(() => {
-      setCurrent((i) => (i + 1) % GALLERY.length);
-    }, intervalMs);
+    if (isPaused) return;
+    timerRef.current = setInterval(() => advance(1), intervalMs);
     return () => clearInterval(timerRef.current);
-  }, [intervalMs]);
+  }, [advance, intervalMs, isPaused]);
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = GALLERY[(current + 1) % GALLERY.length].src;
+  }, [current]);
 
   const slide = GALLERY[current];
 
   return (
-    <div className="am-gallery-inner" aria-hidden="true">
+    <div
+      className="relative h-full w-full overflow-hidden group"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
+      aria-hidden="true"
+    >
+      {/* Slides */}
       {GALLERY.map((item, i) => (
         <div
           key={i}
-          className="am-gallery-slide"
           style={{
+            position: "absolute",
+            inset: 0,
+            transition:
+              "opacity 1200ms ease-in-out, transform 1200ms ease-in-out",
             opacity: i === current ? 1 : 0,
-            transform: i === current ? "scale(1.0)" : "scale(1.04)",
-            transition: "opacity 1200ms ease-in-out, transform 1400ms ease-in-out",
-            zIndex: i === current ? 1 : 0,
+            transform: i === current ? "scale(1)" : "scale(1.05)",
           }}
         >
-          <img src={item.src} alt={item.alt} loading={i <= 1 ? "eager" : "lazy"} decoding="async" />
+          {/* ✅ Use style prop for h-full w-full on img to avoid global CSS override */}
+          <img
+            src={item.src}
+            alt={item.alt}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              display: "block",
+            }}
+            loading={i <= 1 ? "eager" : "lazy"}
+            decoding="async"
+          />
         </div>
       ))}
 
-      <div className="am-gallery-overlay-t" />
-      <div className="am-gallery-overlay-r" />
+      {/* Gradient overlays */}
+      <div
+        style={{ position: "absolute", inset: 0, zIndex: 10 }}
+        className="bg-gradient-to-t from-black/70 via-black/20 to-black/30"
+      />
+      <div
+        style={{ position: "absolute", inset: 0, zIndex: 10 }}
+        className="bg-gradient-to-r from-black/20 to-transparent"
+      />
 
-      <div className="am-gallery-content">
-        <div className="am-gallery-logo">
-          <div className="am-gallery-logo-icon">
-            <img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT} loading="eager" />
+      {/* Content */}
+      <div
+        style={{ position: "absolute", inset: 0, zIndex: 20 }}
+        className="flex flex-col justify-between p-6 sm:p-8"
+      >
+        {/* Logo */}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md p-1.5 ring-1 ring-white/20 flex items-center justify-center">
+            <img
+              src={getBrandLogoUrl()}
+              alt={BRAND_LOGO_ALT}
+              style={{
+                width: "100%",
+                height: "100%",
+                objectFit: "contain",
+                display: "block",
+              }}
+              loading="eager"
+            />
           </div>
           <div>
-            <div className="am-gallery-logo-name">Altuvera</div>
-            <div className="am-gallery-logo-tag">Premium Adventures</div>
+            <h3 className="text-white font-bold text-lg leading-tight tracking-tight">
+              Altuvera
+            </h3>
+            <p className="text-white/60 text-[10px] uppercase tracking-widest font-medium">
+              Premium Adventures
+            </p>
           </div>
         </div>
 
-        <div className="am-gallery-bottom">
-          <div key={current} className="am-gallery-caption">
-            <div className="am-gallery-caption-tag">
-              <div className="am-gallery-caption-dot" style={{ backgroundColor: slide.color }} />
-              <span className="am-gallery-caption-location" style={{ color: slide.color }}>
-                {slide.caption}
-              </span>
+        {/* Caption + nav */}
+        <div className="space-y-5">
+          <div key={current} className="transition-all duration-500">
+            <p className="text-emerald-400 text-xs font-semibold uppercase tracking-widest mb-1">
+              {slide.caption}
+            </p>
+            <h4
+              className="text-white text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight"
+              style={{ animation: "fadeSlideUp 600ms ease-out both" }}
+            >
+              {slide.subtitle}
+            </h4>
+          </div>
+
+          {/* Dots + arrows */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {GALLERY.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setCurrent(i)}
+                  style={{
+                    transition: "all 300ms",
+                    borderRadius: "9999px",
+                    width: i === current ? "2rem" : "0.5rem",
+                    height: i === current ? "0.5rem" : "0.5rem",
+                    backgroundColor:
+                      i === current
+                        ? "rgb(52 211 153)"
+                        : "rgba(255,255,255,0.4)",
+                    border: "none",
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                  aria-label={`Slide ${i + 1}`}
+                />
+              ))}
             </div>
-            <h4 className="am-gallery-caption-title">{slide.subtitle}</h4>
+
+            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <button
+                onClick={() => advance(-1)}
+                className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+                aria-label="Previous slide"
+              >
+                <HiChevronLeft className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => advance(1)}
+                className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+                aria-label="Next slide"
+              >
+                <HiChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="w-full h-0.5 bg-white/10 rounded-full overflow-hidden">
+            <div
+              key={`prog-${current}`}
+              className="h-full bg-gradient-to-r from-emerald-400 to-emerald-300 rounded-full"
+              style={{
+                animation: !isPaused
+                  ? `progressBar ${intervalMs}ms linear forwards`
+                  : "none",
+              }}
+            />
           </div>
         </div>
       </div>
     </div>
   );
-});
-GallerySlideshow.displayName = "GallerySlideshow";
+};
 
-/* ════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    MAIN COMPONENT
-════════════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════════════════ */
 export default function AuthModal() {
   const {
-    isModalOpen, modalView, setModalView, closeModal,
-    login, register, verifyCode, resendCode,
-    pendingEmail, persistSession, setSessionPreference,
-    googleUser, googleLoaded, googleLoading, githubLoading,
-    hasGooglePending, promptGoogleAuth, startGithubAuth,
-    completeGoogleSignUp, clearGooglePending,
-    socialAuthError, clearSocialAuthError, uploadAvatar,
+    isModalOpen,
+    modalView,
+    setModalView,
+    closeModal,
+    login,
+    register,
+    verifyCode,
+    resendCode,
+    pendingEmail,
+    persistSession,
+    setSessionPreference,
+    googleUser,
+    googleLoaded,
+    googleLoading,
+    githubLoading,
+    hasGooglePending,
+    promptGoogleAuth,
+    startGithubAuth,
+    completeGoogleSignUp,
+    clearGooglePending,
+    socialAuthError,
+    clearSocialAuthError,
+    uploadAvatar,
   } = useUserAuth();
 
   useAuthStats();
 
-  /* ── Form State ── */
+  /* ── State ── */
   const [form, setForm] = useState({
-    email:        "",
-    fullName:     "",
-    phone:        "",
-    bio:          "",
+    email: "",
+    fullName: "",
+    phone: "",
+    bio: "",
+    role: "user",
     keepSignedIn: persistSession,
-    avatarFile:   null,
-    avatarPreview:"",
+    avatarFile: null,
+    avatarPreview: "",
   });
-
-  /* ── Career State ── */
-  const [selectedCareers, setSelectedCareers] = useState([]);
-  const [customCareerInput, setCustomCareerInput] = useState("");
-  const [customCareers, setCustomCareers] = useState([]);
-  const [showCustomInput, setShowCustomInput] = useState(false);
-  const customCareerRef = useRef(null);
-
-  /* ── UI State ── */
-  const [signUpStep,      setSignUpStep]      = useState(1);
-  const [stepDir,         setStepDir]         = useState("forward");
-  const [agreeTerms,      setAgreeTerms]      = useState(false);
-  const [loading,         setLoading]         = useState(false);
+  const [signUpStep, setSignUpStep] = useState(1);
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
-  const [error,           setError]           = useState("");
-  const [success,         setSuccess]         = useState("");
-  const [code,            setCode]            = useState(emptyCode());
-  const [resendTimer,     setResendTimer]     = useState(0);
-  const [verifySource,    setVerifySource]    = useState("login");
-  const [authMethod,      setAuthMethod]      = useState("email");
-  const [codeState,       setCodeState]       = useState("");
-  const [codeExpiry,      setCodeExpiry]      = useState(CODE_TTL_LOGIN_REGISTER);
-  const [codeExpired,     setCodeExpired]     = useState(false);
-  const [avatarDragOver,  setAvatarDragOver]  = useState(false);
-  const [focusedField,    setFocusedField]    = useState(null);
-
-  /* ── Touched State ── */
-  const [touched, setTouched] = useState({
-    email: false, fullName: false, phone: false,
-  });
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [code, setCode] = useState(emptyCode());
+  const [resendTimer, setResendTimer] = useState(0);
+  const [verifySource, setVerifySource] = useState("login");
+  const [authMethod, setAuthMethod] = useState("email");
+  const [codeState, setCodeState] = useState("");
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [nameTouched, setNameTouched] = useState(false);
+  const [codeExpiry, setCodeExpiry] = useState(CODE_TTL_LOGIN_REGISTER);
+  const [codeExpired, setCodeExpired] = useState(false);
 
   /* ── Refs ── */
-  const codeRefs       = useRef([]);
-  const firstInputRef  = useRef(null);
+  const codeRefs = useRef([]);
+  const firstInputRef = useRef(null);
   const expiryTimerRef = useRef(null);
-  const fileInputRef   = useRef(null);
 
   /* ── Derived ── */
-  const isLogin    = modalView === "login";
+  const isLogin = modalView === "login";
   const isRegister = modalView === "register";
-  const isVerify   = modalView === "verify";
+  const isVerify = modalView === "verify";
+  const activeEmail = (
+    pendingEmail ||
+    form.email ||
+    googleUser?.email ||
+    ""
+  ).trim();
+  const emailOk = EMAIL_RE.test(form.email.trim());
+  const nameOk = form.fullName.trim().length >= 2;
+  const phoneOk = !form.phone.trim() || PHONE_RE.test(form.phone.trim());
+  const bioOk = form.bio.trim().length <= MAX_BIO;
+  const isBusy = googleLoading || githubLoading || loading;
 
-  const activeEmail = (pendingEmail || form.email || googleUser?.email || "").trim();
-  const emailOk     = EMAIL_RE.test(form.email.trim());
-  const nameOk      = form.fullName.trim().length >= 2;
-  const phoneOk     = !form.phone.trim() || PHONE_RE.test(form.phone.trim());
-  const bioOk       = form.bio.trim().length <= MAX_BIO;
-  const isBusy      = googleLoading || githubLoading || loading;
-
-  const allCareers = useMemo(
-    () => [...selectedCareers, ...customCareers],
-    [selectedCareers, customCareers]
+  const currentRole = useMemo(
+    () => ROLES.find((r) => r.value === form.role) || ROLES[0],
+    [form.role],
   );
 
-  /* ── Expiry Countdown ── */
-  const startExpiryCountdown = useCallback((seconds = CODE_TTL_LOGIN_REGISTER) => {
-    if (expiryTimerRef.current) clearInterval(expiryTimerRef.current);
-    setCodeExpiry(seconds);
-    setCodeExpired(false);
-    expiryTimerRef.current = setInterval(() => {
-      setCodeExpiry((prev) => {
-        if (prev <= 1) {
-          clearInterval(expiryTimerRef.current);
-          expiryTimerRef.current = null;
-          setCodeExpired(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, []);
+  const avatarSrc = useMemo(
+    () =>
+      form.avatarPreview ||
+      (googleUser?.picture && authMethod === "google"
+        ? googleUser.picture
+        : null) ||
+      initAvatar(form.fullName || form.email || "U", currentRole?.color),
+    [
+      form.avatarPreview,
+      form.fullName,
+      form.email,
+      googleUser?.picture,
+      authMethod,
+      currentRole?.color,
+    ],
+  );
+
+  /* ── Expiry countdown ── */
+  const startExpiryCountdown = useCallback(
+    (seconds = CODE_TTL_LOGIN_REGISTER) => {
+      if (expiryTimerRef.current) clearInterval(expiryTimerRef.current);
+      setCodeExpiry(seconds);
+      setCodeExpired(false);
+      expiryTimerRef.current = setInterval(() => {
+        setCodeExpiry((prev) => {
+          if (prev <= 1) {
+            clearInterval(expiryTimerRef.current);
+            expiryTimerRef.current = null;
+            setCodeExpired(true);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    },
+    [],
+  );
 
   const stopExpiryCountdown = useCallback(() => {
     if (expiryTimerRef.current) {
@@ -357,1613 +494,1637 @@ export default function AuthModal() {
     setCodeExpired(false);
   }, []);
 
-  useEffect(() => () => {
-    if (expiryTimerRef.current) clearInterval(expiryTimerRef.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (expiryTimerRef.current) clearInterval(expiryTimerRef.current);
+    },
+    [],
+  );
 
-  /* ── Field Updater ── */
-  const updateField = useCallback((field, val) => {
-    setForm((p) => ({ ...p, [field]: val }));
-    setError("");
-    setSuccess("");
-    clearSocialAuthError?.();
-  }, [clearSocialAuthError]);
+  /* ── Field updater ── */
+  const set = useCallback(
+    (field, val) => {
+      setForm((p) => ({ ...p, [field]: val }));
+      setError("");
+      setSuccess("");
+      clearSocialAuthError?.();
+    },
+    [clearSocialAuthError],
+  );
 
-  const touch = useCallback((field) => {
-    setTouched((p) => ({ ...p, [field]: true }));
-  }, []);
+  const switchView = useCallback(
+    (view) => {
+      if (loading) return;
+      stopExpiryCountdown();
+      setModalView(view);
+      setError("");
+      setSuccess("");
+      setCode(emptyCode());
+      setAuthMethod("email");
+      setEmailTouched(false);
+      setNameTouched(false);
+      clearSocialAuthError?.();
+      if (view === "login") clearGooglePending?.();
+    },
+    [
+      clearGooglePending,
+      clearSocialAuthError,
+      loading,
+      setModalView,
+      stopExpiryCountdown,
+    ],
+  );
 
-  const goStep = useCallback((n) => {
-    setStepDir(n > signUpStep ? "forward" : "back");
-    setSignUpStep(n);
-  }, [signUpStep]);
-
-  const navigateStep = useCallback((n) => {
-    if (loading) return;
-    setError("");
-    goStep(n);
-  }, [goStep, loading]);
-
-  const switchView = useCallback((view) => {
-    if (loading) return;
-    setModalView(view);
-    setSignUpStep(1);
-    setStepDir("forward");
-    setError("");
-    setSuccess("");
-    setCode(emptyCode());
-    setAuthMethod("email");
-    setTouched({ email: false, fullName: false, phone: false });
-    setFocusedField(null);
-    clearSocialAuthError?.();
-    if (view === "login") clearGooglePending?.();
-  }, [clearGooglePending, clearSocialAuthError, loading, setModalView]);
-
-  /* ── Reset on open ── */
-  const justOpenedRef = useRef(false);
+  /* ── Effects ── */
   useEffect(() => {
-    if (!isModalOpen) { justOpenedRef.current = false; return; }
-    if (justOpenedRef.current) return;
-    justOpenedRef.current = true;
-    stopExpiryCountdown();
-    setError(""); setSuccess(""); setCode(emptyCode());
-    setResendTimer(0); setAuthMethod("email"); setCodeState("");
-    setTouched({ email: false, fullName: false, phone: false });
-    setFocusedField(null);
-    setAgreeTerms(false);
-    setSelectedCareers([]);
-    setCustomCareers([]);
-    setCustomCareerInput("");
-    setShowCustomInput(false);
-    setForm((p) => ({ email: "", fullName: "", phone: "", bio: "", keepSignedIn: persistSession, avatarFile: null, avatarPreview: "" }));
-    setTimeout(() => firstInputRef.current?.focus(), 400);
-    const t = setTimeout(() => { justOpenedRef.current = false; }, 600);
-    return () => clearTimeout(t);
-  }, [isModalOpen, persistSession, stopExpiryCountdown]);
+    if (isModalOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
 
-  /* ── Body scroll lock ── */
-  useEffect(() => {
-    document.body.style.overflow = isModalOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isModalOpen]);
 
-  /* ── ESC close ── */
   useEffect(() => {
     if (!isModalOpen) return;
-    const h = (e) => { if (e.key === "Escape") closeModal(); };
+    const h = (e) => {
+      if (e.key === "Escape") closeModal();
+    };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
   }, [closeModal, isModalOpen]);
 
-  /* ── Social auth error ── */
+  useEffect(() => {
+    if (!isModalOpen) return;
+    stopExpiryCountdown();
+    setError("");
+    setSuccess("");
+    setCode(emptyCode());
+    setResendTimer(0);
+    setAuthMethod("email");
+    setCodeState("");
+    setEmailTouched(false);
+    setNameTouched(false);
+    if (isRegister && !hasGooglePending) setSignUpStep(1);
+    setForm((p) => ({ ...p, keepSignedIn: persistSession }));
+    setTimeout(() => firstInputRef.current?.focus(), 350);
+  }, [
+    isLogin,
+    isModalOpen,
+    isRegister,
+    persistSession,
+    hasGooglePending,
+    stopExpiryCountdown,
+  ]);
+
   useEffect(() => {
     if (!socialAuthError) return;
-    if (isDismissalError(socialAuthError)) { clearSocialAuthError?.(); return; }
+    if (isDismissalError(socialAuthError)) {
+      clearSocialAuthError?.();
+      return;
+    }
     setError(socialAuthError);
   }, [socialAuthError, clearSocialAuthError]);
 
-   /* ── Google user prefill + step setup ── */
-  const googleSetupDoneRef = useRef(false);
   useEffect(() => {
-    if (!googleUser || !isRegister) {
-      googleSetupDoneRef.current = false;
-      return;
+    if (googleUser && isRegister) {
+      setForm((p) => ({
+        ...p,
+        email: googleUser.email || p.email,
+        fullName: googleUser.name || p.fullName,
+        avatarPreview: googleUser.picture || p.avatarPreview,
+      }));
+      setSignUpStep(2);
+      setAuthMethod("google");
+      setSuccess("Google account connected! Complete your profile.");
     }
-    if (googleSetupDoneRef.current) return;
-    googleSetupDoneRef.current = true;
-    setForm((p) => ({
-      ...p,
-      email:         googleUser.email   || p.email,
-      fullName:      googleUser.name    || p.fullName,
-      avatarPreview: googleUser.picture || p.avatarPreview,
-    }));
-    navigateStep(2);
-    setAuthMethod("google");
-    setSuccess("Google account connected! Complete your profile below.");
-  }, [googleUser, isRegister, navigateStep]);
+  }, [googleUser, isRegister]);
 
-  /* ── Resend countdown ── */
   useEffect(() => {
     if (resendTimer <= 0) return;
     const t = setInterval(
       () => setResendTimer((p) => Math.max(0, p - 1)),
-      1000
+      1000,
     );
     return () => clearInterval(t);
   }, [resendTimer]);
 
-  /* ── Career helpers ── */
-  const togglePresetCareer = useCallback((id) => {
-    setSelectedCareers((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
-    );
-    setError("");
-  }, []);
-
-  const addCustomCareer = useCallback(() => {
-    const val = capitalize(customCareerInput);
-    if (!val) return;
-    const normalised = val.toLowerCase();
-    const alreadyPreset = PRESET_CAREERS.some(
-      (c) => c.label.toLowerCase() === normalised
-    );
-    if (alreadyPreset) {
-      const preset = PRESET_CAREERS.find(
-        (c) => c.label.toLowerCase() === normalised
-      );
-      if (preset && !selectedCareers.includes(preset.id)) {
-        setSelectedCareers((p) => [...p, preset.id]);
+  /* ── Social auth ── */
+  const handleGoogleAuth = useCallback(
+    async (mode = "signin") => {
+      if (!googleLoaded || isBusy) return;
+      clearSocialAuthError?.();
+      setError("");
+      setSuccess("");
+      try {
+        const result = await promptGoogleAuth({ mode });
+        if (result?.dismissed) return;
+        if (mode === "signup" && result)
+          setSuccess("Google connected! Complete your profile.");
+      } catch (err) {
+        const msg = err?.message || "";
+        if (isDismissalError(msg)) return;
+        setError(msg || "Google authentication failed.");
       }
-      setCustomCareerInput("");
-      return;
-    }
-    if (customCareers.includes(val)) {
-      setCustomCareerInput("");
-      return;
-    }
-    setCustomCareers((p) => [...p, val]);
-    setCustomCareerInput("");
-  }, [customCareerInput, customCareers, selectedCareers]);
+    },
+    [clearSocialAuthError, googleLoaded, isBusy, promptGoogleAuth],
+  );
 
-  const removeCustomCareer = useCallback((career) => {
-    setCustomCareers((p) => p.filter((c) => c !== career));
-  }, []);
-
-  const removePresetCareer = useCallback((id) => {
-    setSelectedCareers((p) => p.filter((c) => c !== id));
-  }, []);
-
-  /* ── Social Auth ── */
-  const handleGoogleAuth = useCallback(async (mode = "signin") => {
-    if (!googleLoaded || isBusy) return;
-    clearSocialAuthError?.();
-    setError(""); setSuccess("");
-    try {
-      const result = await promptGoogleAuth({ mode });
-      if (result?.dismissed) return;
-      if (mode === "signup" && result)
-        setSuccess("Google connected! Complete your profile.");
-    } catch (err) {
-      const msg = err?.message || "";
-      if (isDismissalError(msg)) return;
-      setError(msg || "Google authentication failed. Please try again.");
-    }
-  }, [clearSocialAuthError, googleLoaded, isBusy, promptGoogleAuth]);
-
-  const handleGithubAuth = useCallback((mode = "signin") => {
-    if (isBusy) return;
-    clearSocialAuthError?.();
-    setError(""); setSuccess("");
-    try { startGithubAuth(mode); }
-    catch (err) { setError(err?.message || "GitHub authentication failed."); }
-  }, [clearSocialAuthError, isBusy, startGithubAuth]);
+  const handleGithubAuth = useCallback(
+    (mode = "signin") => {
+      if (isBusy) return;
+      clearSocialAuthError?.();
+      setError("");
+      setSuccess("");
+      try {
+        startGithubAuth(mode);
+      } catch (err) {
+        setError(err?.message || "GitHub authentication failed.");
+      }
+    },
+    [clearSocialAuthError, isBusy, startGithubAuth],
+  );
 
   /* ── Avatar ── */
-  const processAvatarFile = useCallback(async (file) => {
+  const handleAvatarChange = useCallback(async (e) => {
+    const file = e.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
-      setError("Select a valid image file."); return;
+      setError("Please select a valid image.");
+      return;
     }
     if (file.size > MAX_FILE) {
-      setError("Image must be 10 MB or smaller."); return;
+      setError("Image must be 10 MB or less.");
+      return;
     }
     try {
       const preview = await readFile(file);
       setForm((p) => ({ ...p, avatarFile: file, avatarPreview: preview }));
       setError("");
-    } catch { setError("Unable to preview this image."); }
+    } catch {
+      setError("Unable to preview this image.");
+    }
   }, []);
-
-  const handleAvatarChange = useCallback(
-    (e) => processAvatarFile(e.target.files?.[0]),
-    [processAvatarFile]
-  );
-  const handleAvatarDrop = useCallback((e) => {
-    e.preventDefault();
-    setAvatarDragOver(false);
-    processAvatarFile(e.dataTransfer.files?.[0]);
-  }, [processAvatarFile]);
 
   const resolveAvatar = useCallback(async () => {
     if (googleUser?.picture && !form.avatarFile) return googleUser.picture;
     const fallback =
-      form.avatarPreview || initAvatar(form.fullName || form.email, "#059669");
+      form.avatarPreview ||
+      initAvatar(form.fullName || form.email, currentRole?.color);
     if (!form.avatarFile) return fallback;
     setAvatarUploading(true);
-    try { return await uploadAvatar(form.avatarFile); }
-    catch { setSuccess("Using placeholder — update anytime."); return fallback; }
-    finally { setAvatarUploading(false); }
-  }, [form, googleUser?.picture, uploadAvatar]);
+    try {
+      return await uploadAvatar(form.avatarFile);
+    } catch {
+      setSuccess("Using placeholder — update anytime.");
+      return fallback;
+    } finally {
+      setAvatarUploading(false);
+    }
+  }, [
+    currentRole?.color,
+    form.avatarFile,
+    form.avatarPreview,
+    form.email,
+    form.fullName,
+    googleUser?.picture,
+    uploadAvatar,
+  ]);
 
   /* ── Sign In ── */
-  const handleSignIn = useCallback(async (e) => {
-    e.preventDefault();
-    setTouched({ email: true, fullName: true, phone: false });
-    if (!emailOk) { setError("Enter a valid email address."); return; }
-    if (!nameOk)  { setError("Enter your full name.");        return; }
-    try {
-      setLoading(true); setError(""); setSuccess("");
-      setVerifySource("login"); setAuthMethod("email");
-      setSessionPreference(form.keepSignedIn);
-      await login({
-        email:          form.email.trim(),
-        fullName:       form.fullName.trim(),
-        persistSession: form.keepSignedIn,
-      });
-      startExpiryCountdown(CODE_TTL_LOGIN_REGISTER);
-      setSuccess("Verification code sent! Check your inbox.");
-    } catch (err) {
-      setError(err?.message || "Sign in failed. Please try again.");
-    } finally { setLoading(false); }
-  }, [emailOk, nameOk, form, login, setSessionPreference, startExpiryCountdown]);
+  const handleSignIn = useCallback(
+    async (e) => {
+      e.preventDefault();
+      setEmailTouched(true);
+      setNameTouched(true);
+      if (!emailOk) {
+        setError("Please enter a valid email.");
+        return;
+      }
+      if (!nameOk) {
+        setError("Please enter your full name.");
+        return;
+      }
+      try {
+        setLoading(true);
+        setError("");
+        setSuccess("");
+        setVerifySource("login");
+        setAuthMethod("email");
+        setSessionPreference(form.keepSignedIn);
+        await login({
+          email: form.email.trim(),
+          fullName: form.fullName.trim(),
+          persistSession: form.keepSignedIn,
+        });
+        startExpiryCountdown(CODE_TTL_LOGIN_REGISTER);
+        setSuccess("Verification code sent! Check your inbox.");
+      } catch (err) {
+        setError(err?.message || "Sign in failed.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      emailOk,
+      nameOk,
+      form.email,
+      form.fullName,
+      form.keepSignedIn,
+      login,
+      setSessionPreference,
+      startExpiryCountdown,
+    ],
+  );
 
   /* ── Verify ── */
-  const doVerify = useCallback(async (val) => {
-    if (!activeEmail)    { setError("Missing email. Please restart."); return; }
-    if (val.length !== 6){ setError("Enter the full 6-digit code.");   return; }
-    if (codeExpired)     { setError("Code has expired. Request a new one."); return; }
-    try {
-      setLoading(true); setCodeState("verifying"); setError("");
-      await verifyCode(activeEmail, val);
-      setCodeState("success");
-      stopExpiryCountdown();
-    } catch (err) {
-      setCodeState("error");
-      setError(err?.message || "Verification failed. Please try again.");
-      setTimeout(() => {
-        setCodeState(""); setCode(emptyCode());
-        codeRefs.current[0]?.focus();
-      }, 800);
-    } finally { setLoading(false); }
-  }, [activeEmail, codeExpired, verifyCode, stopExpiryCountdown]);
+  const doVerify = useCallback(
+    async (val) => {
+      if (!activeEmail) {
+        setError("Missing email. Please restart.");
+        return;
+      }
+      if (val.length !== 6) {
+        setError("Enter the full 6-digit code.");
+        return;
+      }
+      if (codeExpired) {
+        setError("Code expired. Request a new one.");
+        return;
+      }
+      try {
+        setLoading(true);
+        setCodeState("verifying");
+        setError("");
+        await verifyCode(activeEmail, val);
+        setCodeState("success");
+        stopExpiryCountdown();
+      } catch (err) {
+        setCodeState("error");
+        setError(err?.message || "Verification failed.");
+        setTimeout(() => {
+          setCodeState("");
+          setCode(emptyCode());
+          codeRefs.current[0]?.focus();
+        }, 700);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [activeEmail, codeExpired, verifyCode, stopExpiryCountdown],
+  );
 
   useEffect(() => {
     const val = code.join("");
     if (
-      val.length === 6 && isVerify && !loading &&
-      codeState !== "verifying" && codeState !== "success" && !codeExpired
+      val.length === 6 &&
+      isVerify &&
+      !loading &&
+      codeState !== "verifying" &&
+      codeState !== "success" &&
+      !codeExpired
     ) {
-      const t = setTimeout(() => doVerify(val), 350);
+      const t = setTimeout(() => doVerify(val), 400);
       return () => clearTimeout(t);
     }
   }, [code, isVerify, loading, codeState, codeExpired, doVerify]);
 
   /* ── Sign Up ── */
-  const handleSignUp = useCallback(async (e) => {
-    e.preventDefault();
-    if (!agreeTerms) {
-      setError("Please accept the Terms and Privacy Policy."); return;
-    }
-    if (authMethod === "google" && !hasGooglePending) {
-      setError("Google authentication required first."); return;
-    }
-    try {
-      setLoading(true); setError(""); setSuccess("");
-      setVerifySource("register");
-      setSessionPreference(form.keepSignedIn);
-      const avatar = await resolveAvatar();
-      const payload = {
-        fullName: form.fullName.trim(),
-        phone:    form.phone.trim(),
-        bio:      form.bio.trim(),
-        careers:  allCareers,
-        role:     allCareers[0] || "traveler",
-        avatar,
-      };
-      if (authMethod === "google") {
-        await completeGoogleSignUp(payload);
-        setSuccess("Account created! Welcome to Altuvera.");
-      } else {
-        await register({
-          ...payload,
-          email:          form.email.trim(),
-          persistSession: form.keepSignedIn,
-        });
-        startExpiryCountdown(CODE_TTL_LOGIN_REGISTER);
-        setSuccess("Verification code sent to your inbox!");
+  const handleSignUp = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (!agreeTerms) {
+        setError("Please accept the Terms and Privacy Policy.");
+        return;
       }
-    } catch (err) {
-      setError(err?.message || "Sign up failed. Please try again.");
-    } finally { setLoading(false); }
-  }, [
-    agreeTerms, authMethod, hasGooglePending,
-    form, allCareers, resolveAvatar, completeGoogleSignUp,
-    register, setSessionPreference, startExpiryCountdown,
-  ]);
+      if (authMethod === "google" && !hasGooglePending) {
+        setError("Google auth required first.");
+        return;
+      }
+      try {
+        setLoading(true);
+        setError("");
+        setSuccess("");
+        setVerifySource("register");
+        setSessionPreference(form.keepSignedIn);
+        const avatar = await resolveAvatar();
+        if (authMethod === "google") {
+          await completeGoogleSignUp({
+            fullName: form.fullName.trim(),
+            phone: form.phone.trim(),
+            bio: form.bio.trim(),
+            role: form.role,
+            avatar,
+          });
+          setSuccess("Account created! Welcome to Altuvera.");
+        } else {
+          await register({
+            email: form.email.trim(),
+            fullName: form.fullName.trim(),
+            phone: form.phone.trim(),
+            bio: form.bio.trim(),
+            role: form.role,
+            avatar,
+            persistSession: form.keepSignedIn,
+          });
+          startExpiryCountdown(CODE_TTL_LOGIN_REGISTER);
+          setSuccess("Verification code sent.");
+        }
+      } catch (err) {
+        setError(err?.message || "Sign up failed.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      agreeTerms,
+      authMethod,
+      completeGoogleSignUp,
+      form,
+      hasGooglePending,
+      register,
+      resolveAvatar,
+      setSessionPreference,
+      startExpiryCountdown,
+    ],
+  );
 
-  /* ── OTP Handlers ── */
+  /* ── Code handlers ── */
   const handleCodeChange = useCallback((i, val) => {
     if (!/^[0-9]?$/.test(val)) return;
-    setCode((p) => { const n = [...p]; n[i] = val; return n; });
-    setError(""); setCodeState("");
+    setCode((p) => {
+      const n = [...p];
+      n[i] = val;
+      return n;
+    });
+    setError("");
+    setCodeState("");
     if (val && i < 5) codeRefs.current[i + 1]?.focus();
   }, []);
 
-  const handleCodeKey = useCallback((i, e) => {
-    if (e.key === "Backspace"  && !code[i] && i > 0) codeRefs.current[i - 1]?.focus();
-    if (e.key === "ArrowLeft"  && i > 0)             codeRefs.current[i - 1]?.focus();
-    if (e.key === "ArrowRight" && i < 5)             codeRefs.current[i + 1]?.focus();
-  }, [code]);
+  const handleCodeKey = useCallback(
+    (i, e) => {
+      if (e.key === "Backspace" && !code[i] && i > 0)
+        codeRefs.current[i - 1]?.focus();
+    },
+    [code],
+  );
 
   const handleCodePaste = useCallback((e) => {
     e.preventDefault();
-    const digits = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    const digits = e.clipboardData
+      .getData("text")
+      .replace(/\D/g, "")
+      .slice(0, 6);
     if (!digits) return;
     const next = emptyCode();
-    digits.split("").forEach((d, idx) => { next[idx] = d; });
-    setCode(next); setCodeState("");
+    digits.split("").forEach((d, i) => {
+      next[i] = d;
+    });
+    setCode(next);
+    setCodeState("");
     codeRefs.current[Math.min(digits.length, 5)]?.focus();
   }, []);
 
   const handleResend = useCallback(async () => {
     if (!activeEmail || resendTimer > 0 || loading) return;
     try {
-      setLoading(true); setError(""); setSuccess("");
+      setLoading(true);
+      setError("");
+      setSuccess("");
       await resendCode(activeEmail);
       startExpiryCountdown(CODE_TTL_RESEND);
-      setResendTimer(60); setCode(emptyCode()); setCodeState("");
-      setSuccess(`New code sent to ${activeEmail}. Valid for 15 minutes.`);
+      setResendTimer(60);
+      setCode(emptyCode());
+      setCodeState("");
+      setSuccess(`New code sent to ${activeEmail}. Valid for 15 min.`);
       codeRefs.current[0]?.focus();
     } catch (err) {
-      setError(err?.message || "Unable to resend. Please try again.");
-    } finally { setLoading(false); }
+      setError(err?.message || "Unable to resend.");
+    } finally {
+      setLoading(false);
+    }
   }, [activeEmail, loading, resendCode, resendTimer, startExpiryCountdown]);
 
   const handleBackFromVerify = useCallback(() => {
     stopExpiryCountdown();
-    setSignUpStep(1);
-    setStepDir("forward");
-    setCode(emptyCode()); setError(""); setSuccess("");
+    setCode(emptyCode());
+    setError("");
+    setSuccess("");
     setModalView(verifySource);
   }, [setModalView, stopExpiryCountdown, verifySource]);
 
   if (!isModalOpen) return null;
 
-  /* ════════════════════════════════════════════════════════
-     SHARED UI COMPONENTS
-  ════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════════
+     RENDER HELPERS
+  ═══════════════════════════════════════════════════════════ */
 
-  const Spinner = ({ size = "sm" }) => (
-    <span className={`am-spinner am-spinner--${size}`} />
+  const Spinner = ({ className = "" }) => (
+    <div
+      className={`w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin ${className}`}
+    />
   );
 
   const InputField = ({
-    id, label, icon: Icon, type = "text", value, onChange, onBlur,
-    placeholder, fieldError, valid, required, autoComplete,
-    refProp, isEmail = false, hint,
-  }) => {
-    const isFocused = focusedField === id;
-    const iconClass = fieldError
-      ? "am-input-icon--error"
-      : valid
-      ? "am-input-icon--valid"
-      : isFocused
-      ? "am-input-icon--focus"
-      : "am-input-icon--default";
-
-    return (
-      <div className="am-form-group">
-        <label htmlFor={id} className="am-label">
-          <span>
-            {label}
-            {!required && (
-              <span className="am-label-optional"> — Optional</span>
-            )}
+    id,
+    label,
+    icon: IconComponent,
+    type = "text",
+    value,
+    onChange,
+    onBlur,
+    placeholder,
+    error: fieldError,
+    valid,
+    required,
+    autoComplete,
+    refProp,
+    isEmail = false,
+    ...props
+  }) => (
+    <div className="space-y-1.5">
+      <label htmlFor={id} className="block text-sm font-semibold text-gray-700">
+        {label}
+        {!required && (
+          <span className="text-gray-400 font-normal text-xs ml-1">
+            — Optional
           </span>
-          {hint && <span className="am-label-hint">{hint}</span>}
-        </label>
-        <div className="am-input-wrap">
-          <div className={`am-input-icon ${iconClass}`}>
-            <Icon />
-          </div>
-
-          {isEmail ? (
-            <EmailAutocompleteInput
-              id={id}
-              ref={refProp}
-              value={value}
-              onValueChange={onChange}
-              onBlur={() => { touch(id.split("-").pop()); onBlur?.(); setFocusedField(null); }}
-              onFocus={() => setFocusedField(id)}
-              placeholder={placeholder}
-              autoComplete={autoComplete || "email"}
-              required={required}
-              className={`am-input ${
-                fieldError ? "am-input--error"
-                : valid    ? "am-input--valid"
-                : ""
-              }`}
-            />
-          ) : (
-            <input
-              id={id}
-              ref={refProp}
-              type={type}
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              onBlur={() => {
-                touch(id.split("-").pop());
-                onBlur?.();
-                setFocusedField(null);
-              }}
-              onFocus={() => setFocusedField(id)}
-              placeholder={placeholder}
-              autoComplete={autoComplete}
-              required={required}
-              className={`am-input ${
-                fieldError ? "am-input--error"
-                : valid    ? "am-input--valid"
-                : ""
-              }`}
-            />
-          )}
-
-          {valid && !fieldError && (
-            <div className="am-input-status am-input-status--valid am-scaleIn">
-              <HiCheckCircle />
-            </div>
-          )}
-          {fieldError && (
-            <div className="am-input-status am-input-status--error">
-              <HiExclamationCircle />
-            </div>
-          )}
+        )}
+      </label>
+      <div className="relative">
+        <div className="absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
+          <IconComponent
+            className={`w-[18px] h-[18px] transition-colors duration-200 ${
+              fieldError
+                ? "text-red-400"
+                : valid
+                  ? "text-emerald-500"
+                  : "text-gray-400"
+            }`}
+          />
         </div>
-        {fieldError && (
-          <p className="am-field-error">
-            <HiExclamationCircle /> {fieldError}
-          </p>
+        {isEmail ? (
+          <EmailAutocompleteInput
+            id={id}
+            ref={refProp}
+            value={value}
+            onValueChange={onChange}
+            placeholder={placeholder}
+            autoComplete={autoComplete || "email"}
+            required={required}
+            className={`w-full h-12 pl-11 pr-10 rounded-xl border-2 bg-gray-50/50 text-gray-900 text-sm placeholder:text-gray-400 outline-none transition-all duration-200 ${
+              fieldError
+                ? "border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-100"
+                : valid
+                  ? "border-emerald-300 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                  : "border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 hover:border-gray-300"
+            }`}
+            {...props}
+          />
+        ) : (
+          <input
+            id={id}
+            ref={refProp}
+            type={type}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onBlur={onBlur}
+            placeholder={placeholder}
+            autoComplete={autoComplete}
+            required={required}
+            className={`w-full h-12 pl-11 pr-10 rounded-xl border-2 bg-gray-50/50 text-gray-900 text-sm placeholder:text-gray-400 outline-none transition-all duration-200 ${
+              fieldError
+                ? "border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-100"
+                : valid
+                  ? "border-emerald-300 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
+                  : "border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 hover:border-gray-300"
+            }`}
+            {...props}
+          />
+        )}
+        {valid && (
+          <HiCheckCircle className="absolute right-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500 animate-scaleIn" />
         )}
       </div>
-    );
-  };
-
-  const Checkbox = ({ checked, onChange, children }) => (
-    <label className="am-checkbox-label">
-      <div
-        className={`am-checkbox-box ${checked ? "checked" : ""}`}
-        onClick={onChange}
-      >
-        {checked && <HiCheck />}
-      </div>
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={onChange}
-        style={{ display: "none" }}
-      />
-      <span className="am-checkbox-text">{children}</span>
-    </label>
+      {fieldError && (
+        <p className="text-xs text-red-500 flex items-center gap-1 animate-slideDown">
+          <HiExclamationCircle className="w-3.5 h-3.5 flex-shrink-0" />
+          {fieldError}
+        </p>
+      )}
+    </div>
   );
 
-  const Alert = ({ type, message, onClose }) => {
-    if (!message) return null;
-    return (
-      <div className={`am-alert am-alert--${type} am-slideDown`}>
-        <span className="am-alert-icon">
-          {type === "error"
-            ? <HiExclamationCircle />
-            : <HiCheckCircle />}
-        </span>
-        <p className="am-alert-text">
-          {typeof message === "string" ? message : "An error occurred."}
-        </p>
-        {onClose && (
-          <button
-            className="am-alert-close"
-            onClick={onClose}
-            aria-label="Dismiss"
-          >
-            <HiX />
-          </button>
-        )}
-      </div>
-    );
-  };
-
   const SocialButtons = ({ mode }) => (
-    <div className="am-social-row">
+    <div className="grid grid-cols-2 gap-3">
       <button
         type="button"
         onClick={() => handleGoogleAuth(mode)}
         disabled={!googleLoaded || googleLoading || loading}
-        className="am-social-btn am-social-btn--google"
+        className="flex items-center justify-center gap-2.5 h-12 rounded-xl border-2 border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
       >
-        {googleLoading ? <Spinner /> : <FcGoogle />}
+        {googleLoading ? <Spinner /> : <FcGoogle className="w-5 h-5" />}
         <span>
           {!googleLoaded
             ? "Loading…"
             : googleLoading
-            ? "Connecting…"
-            : "Google"}
+              ? "Connecting…"
+              : "Google"}
         </span>
       </button>
       <button
         type="button"
         onClick={() => handleGithubAuth(mode)}
         disabled={githubLoading || loading}
-        className="am-social-btn am-social-btn--github"
+        className="flex items-center justify-center gap-2.5 h-12 rounded-xl bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
       >
-        {githubLoading ? <Spinner /> : <FiGithub />}
+        {githubLoading ? <Spinner /> : <FiGithub className="w-5 h-5" />}
         <span>{githubLoading ? "Connecting…" : "GitHub"}</span>
       </button>
     </div>
   );
 
-  const Divider = ({ label = "or continue with" }) => (
-    <div className="am-divider">
-      <div className="am-divider-line" />
-      <span className="am-divider-text">{label}</span>
-      <div className="am-divider-line right" />
-    </div>
-  );
+  /* ═══════════════════════════════════════════════════════════
+     JSX
+  ═══════════════════════════════════════════════════════════ */
+  return (
+    <>
+      {/* ── Animation keyframes injected once at runtime ── */}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to   { opacity: 1; }
+        }
+        @keyframes modalIn {
+          from { opacity: 0; transform: scale(0.95) translateY(20px); }
+          to   { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes viewIn {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes stepIn {
+          from { opacity: 0; transform: translateX(16px); }
+          to   { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-8px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes scaleIn {
+          from { transform: scale(0); }
+          50%  { transform: scale(1.15); }
+          to   { transform: scale(1); }
+        }
+        @keyframes scaleX {
+          from { transform: scaleX(0); }
+          to   { transform: scaleX(1); }
+        }
+        @keyframes fadeSlideUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes progressBar {
+          from { width: 0%; }
+          to   { width: 100%; }
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          20%      { transform: translateX(-6px); }
+          40%      { transform: translateX(6px); }
+          60%      { transform: translateX(-4px); }
+          80%      { transform: translateX(4px); }
+        }
 
-  const Stepper = ({ current: cur }) => (
-    <div className="am-stepper">
-      {["Method", "Profile", "Confirm"].map((label, i) => {
-        const n        = i + 1;
-        const isDone   = cur > n;
-        const isActive = cur === n;
-        return (
-          <React.Fragment key={n}>
-            <div className="am-step">
-              <div
-                className={`am-step-circle ${
-                  isDone   ? "am-step-circle--done"
-                  : isActive ? "am-step-circle--active"
-                  : "am-step-circle--pending"
-                }`}
-              >
-                {isDone
-                  ? <HiCheck />
-                  : <span>{n}</span>}
-                {isActive && <span className="am-step-ping am-ping" />}
-              </div>
-              <span
-                className={`am-step-label ${
-                  isActive ? "am-step-label--active"
-                  : isDone ? "am-step-label--done"
-                  : "am-step-label--pending"
-                }`}
-              >
-                {label}
-              </span>
-            </div>
-            {i < 2 && (
-              <div className="am-step-connector">
-                <div
-                  className="am-step-connector-fill"
-                  style={{ width: cur > n ? "100%" : "0%" }}
-                />
-              </div>
-            )}
-          </React.Fragment>
-        );
-      })}
-    </div>
-  );
+        /* Animation utility classes used by this modal only */
+        .am-fadeIn     { animation: fadeIn     300ms ease-out both; }
+        .am-modalIn    { animation: modalIn    450ms cubic-bezier(0.34,1.56,0.64,1) both 80ms; }
+        .am-viewIn     { animation: viewIn     350ms ease-out both; }
+        .am-stepIn     { animation: stepIn     350ms ease-out both; }
+        .am-slideDown  { animation: slideDown  300ms ease-out both; }
+        .am-scaleIn    { animation: scaleIn    300ms ease-out both; }
+        .am-scaleX     { animation: scaleX     250ms ease-out both; }
+        .am-shake      { animation: shake      500ms ease-in-out; }
 
-  /* ── Career Selector ── */
-  const CareerSelector = () => (
-    <div className="am-career-section">
-      <div className="am-form-label-row">
-        <HiTag />
-        <span className="am-career-label">
-          Your Career(s)
-          <span className="am-career-label-hint">
-            — select all that apply
-          </span>
-        </span>
-      </div>
+        /* Scrollbar for the form panel */
+        .auth-form-scroll::-webkit-scrollbar       { width: 5px; }
+        .auth-form-scroll::-webkit-scrollbar-track { background: transparent; }
+        .auth-form-scroll::-webkit-scrollbar-thumb { background: #e5e7eb; border-radius: 3px; }
+        .auth-form-scroll::-webkit-scrollbar-thumb:hover { background: #d1d5db; }
 
-      {/* Selected tags row */}
-      {allCareers.length > 0 && (
-        <div className="am-career-tags">
-          {selectedCareers.map((id) => {
-            const preset = PRESET_CAREERS.find((c) => c.id === id);
-            if (!preset) return null;
-            return (
-              <span key={id} className="am-career-tag am-tagPop">
-                <preset.Icon style={{ width: 11, height: 11 }} />
-                {preset.label}
-                <button
-                  type="button"
-                  className="am-career-tag-remove"
-                  onClick={() => removePresetCareer(id)}
-                  aria-label={`Remove ${preset.label}`}
-                >
-                  <HiX />
-                </button>
-              </span>
-            );
-          })}
-          {customCareers.map((career) => (
-            <span key={career} className="am-career-tag am-tagPop">
-              <HiUser style={{ width: 11, height: 11 }} />
-              {career}
-              <button
-                type="button"
-                className="am-career-tag-remove"
-                onClick={() => removeCustomCareer(career)}
-                aria-label={`Remove ${career}`}
-              >
-                <HiX />
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
+        @media (prefers-reduced-motion: reduce) {
+          *, *::before, *::after {
+            animation-duration: 0.01ms !important;
+            transition-duration: 0.01ms !important;
+          }
+        }
+      `}</style>
 
-      {/* Preset chips */}
-      <div className="am-career-grid">
-        {PRESET_CAREERS.map(({ id, label, Icon }) => {
-          const isSelected = selectedCareers.includes(id);
-          return (
-            <button
-              key={id}
-              type="button"
-              onClick={() => togglePresetCareer(id)}
-              className={`am-career-chip ${
-                isSelected ? "am-career-chip--selected" : ""
-              }`}
-            >
-              <Icon />
-              <span>{label}</span>
-              {isSelected && (
-                <span className="am-career-chip-check am-scaleIn">
-                  <HiCheck />
-                </span>
-              )}
-            </button>
-          );
-        })}
-
-        {/* "Others" chip */}
-        <button
-          type="button"
-          onClick={() => {
-            setShowCustomInput((v) => !v);
-            setTimeout(() => customCareerRef.current?.focus(), 100);
-          }}
-          className={`am-career-chip ${showCustomInput ? "am-career-chip--selected" : ""}`}
-        >
-          <HiPlus />
-          <span>Others</span>
-        </button>
-      </div>
-
-      {/* Custom input box */}
-      {showCustomInput && (
-        <div className="am-slideDown">
-          <div className="am-career-custom">
-            <div className="am-career-custom-input-wrap">
-              <input
-                ref={customCareerRef}
-                type="text"
-                value={customCareerInput}
-                onChange={(e) => setCustomCareerInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addCustomCareer();
-                  }
-                }}
-                placeholder="e.g. Musician, Chef, Architect…"
-                className="am-career-custom-input"
-                maxLength={40}
-              />
-            </div>
-            <button
-              type="button"
-              onClick={addCustomCareer}
-              className="am-btn-primary"
-              style={{ width: "auto", height: 44, padding: "0 18px", borderRadius: 12 }}
-              disabled={!customCareerInput.trim()}
-            >
-              Add
-            </button>
-          </div>
-          <p className="am-career-custom-hint">
-            <HiInformationCircle />
-            Press <kbd>Enter</kbd> or click <strong>Add</strong> — you can
-            add multiple careers
-          </p>
-        </div>
-      )}
-    </div>
-  );
-
-  /* ── Expiry pill class ── */
-  const expiryClass = codeExpired
-    ? "am-expiry-pill--expired"
-    : codeExpiry <= 30
-    ? "am-expiry-pill--urgent"
-    : codeExpiry <= 120
-    ? "am-expiry-pill--warn"
-    : "am-expiry-pill--normal";
-
-  /* ════════════════════════════════════════════════════════
-     VIEWS (shared between desktop & mobile)
-  ════════════════════════════════════════════════════════ */
-
-  /* ── LOGIN VIEW ── */
-  const LoginView = () => (
-    <div className="am-viewIn">
-      <div className="am-view-head">
-        <div className="am-view-icon-wrap am-view-icon-wrap--green">
-          <HiShieldCheck />
-        </div>
-        <h2 className="am-view-title">Welcome Back</h2>
-        <p className="am-view-subtitle">Sign in to continue your adventure</p>
-      </div>
-
-      <form onSubmit={handleSignIn} noValidate className="am-form">
-        <InputField
-          id="l-email"
-          label="Email Address"
-          icon={HiMail}
-          value={form.email}
-          onChange={(v) => updateField("email", v)}
-          placeholder="you@example.com"
-          autoComplete="email"
-          required
-          isEmail
-          refProp={firstInputRef}
-          fieldError={touched.email && !emailOk ? "Enter a valid email address." : ""}
-          valid={touched.email && emailOk}
-        />
-        <InputField
-          id="l-fullName"
-          label="Full Name"
-          icon={HiUser}
-          value={form.fullName}
-          onChange={(v) => updateField("fullName", v)}
-          placeholder="Your full name"
-          autoComplete="name"
-          required
-          fieldError={touched.fullName && !nameOk ? "At least 2 characters required." : ""}
-          valid={touched.fullName && nameOk}
-        />
-
-        <Checkbox
-          checked={form.keepSignedIn}
-          onChange={() => updateField("keepSignedIn", !form.keepSignedIn)}
-        >
-          Keep me signed in for 30 days
-        </Checkbox>
-
-        <button
-          type="submit"
-          disabled={loading || isBusy}
-          className="am-btn-primary"
-        >
-          {loading
-            ? <><Spinner /><span>Signing In…</span></>
-            : <><span>Continue with Email</span><HiArrowRight /></>}
-        </button>
-
-        <Divider />
-        <SocialButtons mode="signin" />
-      </form>
-
-      <div className="am-trust-row">
-        {TRUST_BADGES.map(({ Icon, text }) => (
-          <div key={text} className="am-trust-badge">
-            <Icon /> <span>{text}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className="am-switch-row">
-        <p className="am-switch-text">
-          New here?{" "}
-          <button
-            className="am-btn-link"
-            onClick={() => switchView("register")}
-          >
-            Create an account <HiArrowRight />
-          </button>
-        </p>
-      </div>
-    </div>
-  );
-
-  /* ── REGISTER VIEW ── */
-  const RegisterView = () => (
-    <div className="am-viewIn">
-      <div className="am-view-head">
+      {/* ── Backdrop ── */}
+      <div
+        className="am-fadeIn fixed inset-0 z-[9990] flex items-center justify-center p-4 sm:p-6 bg-black/50 backdrop-blur-sm"
+        onClick={closeModal}
+      >
+        {/* ── Modal shell ── */}
         <div
-          className={`am-view-icon-wrap ${
-            signUpStep === 1 ? "am-view-icon-wrap--blue"
-            : signUpStep === 2 ? "am-view-icon-wrap--green"
-            : "am-view-icon-wrap--violet"
-          }`}
+          className="am-modalIn relative w-full max-w-[1040px] bg-white rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row"
+          style={{ maxHeight: "92vh" }}
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="auth-title"
         >
-          {signUpStep === 1
-            ? <HiGlobe />
-            : signUpStep === 2
-            ? <HiUser />
-            : <HiCheckCircle />}
-        </div>
-        <h2 className="am-view-title">
-          {["Choose Method", "Your Profile", "Confirm & Launch"][signUpStep - 1]}
-        </h2>
-        <p className="am-view-subtitle">
-          {[
-            "How would you like to join?",
-            "Tell us about yourself",
-            "Review and finalize your account",
-          ][signUpStep - 1]}
-        </p>
-      </div>
+          {/* Top accent bar */}
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-400 z-50" />
 
-      <Stepper current={signUpStep} />
+          {/* ── LEFT: Gallery (desktop) ── */}
+          <div className="hidden lg:block lg:w-[48%] xl:w-[50%] relative bg-gray-900 flex-shrink-0">
+            <GallerySlideshow />
+          </div>
 
-      {/* ─── STEP 1 ─── */}
-      {signUpStep === 1 && (
-        <div className={`${isStepLocked ? "am-stepIn--locked" : stepDir === "forward" ? "am-stepIn" : "am-stepBack"}`}>
-          {hasGooglePending ? (
-            <div className="am-google-connected">
-              <div className="am-google-connected-icon">
-                <HiCheckCircle />
-              </div>
-              <h3 className="am-google-connected-title">Google Connected!</h3>
-              <p className="am-google-connected-text">
-                Your Google account is linked. Let's set up your profile.
-              </p>
-              <button
-                className="am-btn-primary"
-                onClick={() => navigateStep(2)}
-              >
-                <span>Set Up Profile</span>
-                <HiArrowRight />
-              </button>
-            </div>
-          ) : (
-              <div
-                className={`${isStepLocked ? "am-stepIn--locked" : "am-stepIn"} am-form`}
-              >
-              <InputField
-                id="r-email"
-                label="Email Address"
-                icon={HiMail}
-                value={form.email}
-                onChange={(v) => updateField("email", v)}
-                placeholder="traveler@example.com"
-                autoComplete="email"
-                required
-                isEmail
-                refProp={firstInputRef}
-                fieldError={
-                  touched.email && !emailOk
-                    ? "Enter a valid email address."
-                    : ""
-                }
-                valid={touched.email && emailOk}
-              />
-              <InputField
-                id="r-fullName"
-                label="Full Name"
-                icon={HiUser}
-                value={form.fullName}
-                onChange={(v) => updateField("fullName", v)}
-                placeholder="Your full name"
-                autoComplete="name"
-                required
-                fieldError={
-                  touched.fullName && !nameOk
-                    ? "At least 2 characters required."
-                    : ""
-                }
-                valid={touched.fullName && nameOk}
-              />
+          {/* ── LEFT: Gallery (mobile collapsed) ── */}
+          <div
+            className="lg:hidden relative bg-gray-900 flex-shrink-0"
+            style={{ height: "10rem" }}
+          >
+            <GallerySlideshow intervalMs={6000} />
+          </div>
 
-              <button
-                type="button"
-                className="am-btn-primary"
-                disabled={isBusy}
-                onClick={() => {
-                  setTouched((p) => ({ ...p, email: true, fullName: true }));
-                  if (emailOk && nameOk) {
-                    setAuthMethod("email");
-                    navigateStep(2);
-                  } else {
-                    setError("Enter a valid email and full name.");
-                  }
-                }}
-              >
-                <FiZap />
-                <span>Continue with Email</span>
-                <HiArrowRight />
-              </button>
-
-              <Divider label="or sign up with" />
-              <SocialButtons mode="signup" />
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ─── STEP 2 ─── */}
-      {signUpStep === 2 && (
-        <div className={`${isStepLocked ? "am-stepIn--locked" : stepDir === "forward" ? "am-stepIn" : "am-stepBack"}`}>
-          <div className="am-form">
-            {googleUser && (
-              <div className="am-google-user">
-                <img
-                  src={googleUser.picture || initAvatar(googleUser.name)}
-                  alt="Google profile"
-                  className="am-google-user-img"
-                />
-                <div className="am-google-user-info">
-                  <p className="am-google-user-name">{googleUser.name}</p>
-                  <p className="am-google-user-email">{googleUser.email}</p>
+          {/* ── RIGHT: Form panel ── */}
+          <div className="flex-1 flex flex-col min-w-0 bg-white overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 sm:px-7 py-4 border-b border-gray-100 flex-shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 lg:hidden">
+                  <img
+                    src={getBrandLogoUrl()}
+                    alt={BRAND_LOGO_ALT}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "contain",
+                      display: "block",
+                    }}
+                  />
                 </div>
-                <div className="am-google-user-badge">
-                  <MdVerified /> Google
+                <div className="hidden lg:block">
+                  <h3 className="text-base font-bold text-gray-900 tracking-tight">
+                    Altuvera
+                  </h3>
                 </div>
               </div>
-            )}
+              <button
+                onClick={closeModal}
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all duration-200"
+                aria-label="Close"
+              >
+                <HiX className="w-5 h-5" />
+              </button>
+            </div>
 
-            <InputField
-              id="r-phone"
-              label="Phone Number"
-              icon={HiPhone}
-              type="tel"
-              value={form.phone}
-              onChange={(v) => updateField("phone", formatPhone(v))}
-              placeholder="+1 (555) 000-0000"
-              autoComplete="tel"
-              fieldError={
-                touched.phone && form.phone && !phoneOk
-                  ? "Enter a valid phone number."
-                  : ""
-              }
-              valid={form.phone.length > 0 && phoneOk}
-            />
-
-            {/* Career multi-select */}
-            <CareerSelector />
-
-            {/* Bio */}
-            <div className="am-form-group">
-              <label htmlFor="r-bio" className="am-label">
-                <span>
-                  Short Bio
-                  <span className="am-label-optional"> — Optional</span>
-                </span>
-              </label>
-              <textarea
-                id="r-bio"
-                rows={3}
-                value={form.bio}
-                onChange={(e) => updateField("bio", e.target.value)}
-                onFocus={() => setFocusedField("bio")}
-                onBlur={() => setFocusedField(null)}
-                placeholder="Tell us about your travel style…"
-                maxLength={MAX_BIO + 20}
-                className={`am-textarea ${
-                  form.bio.length > MAX_BIO ? "am-textarea--error" : ""
-                }`}
-              />
-              <div className="am-bio-footer">
-                <p className="am-bio-hint">
-                  <HiInformationCircle />
-                  Shown on your public profile
-                </p>
-                <div className="am-bio-counter">
-                  <div className="am-bio-bar-track">
-                    <div
-                      className="am-bio-bar-fill"
-                      style={{
-                        width: `${Math.min(
-                          (form.bio.length / MAX_BIO) * 100,
-                          100
-                        )}%`,
-                        backgroundColor:
-                          form.bio.length > MAX_BIO
-                            ? "#ef4444"
-                            : form.bio.length > MAX_BIO * 0.85
-                            ? "#f59e0b"
-                            : "#22c55e",
-                      }}
-                    />
-                  </div>
-                  <span
-                    className={`am-bio-count ${
-                      form.bio.length > MAX_BIO
-                        ? "am-bio-count--over"
-                        : form.bio.length > MAX_BIO * 0.85
-                        ? "am-bio-count--warn"
-                        : ""
+            {/* Tabs */}
+            {!isVerify && (
+              <div className="flex border-b border-gray-100 px-5 sm:px-7 flex-shrink-0">
+                {[
+                  { view: "login", label: "Sign In", icon: HiLockClosed },
+                  {
+                    view: "register",
+                    label: "Create Account",
+                    icon: HiSparkles,
+                  },
+                ].map(({ view, label, icon: TabIcon }) => (
+                  <button
+                    key={view}
+                    onClick={() => switchView(view)}
+                    disabled={loading}
+                    className={`relative flex items-center gap-2 px-4 py-3.5 text-sm font-semibold transition-all duration-200 ${
+                      modalView === view
+                        ? "text-emerald-600"
+                        : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
-                    {form.bio.length}/{MAX_BIO}
-                  </span>
-                </div>
+                    <TabIcon className="w-4 h-4" />
+                    <span>{label}</span>
+                    {modalView === view && (
+                      <span className="am-scaleX absolute bottom-0 left-3 right-3 h-0.5 bg-emerald-500 rounded-full" />
+                    )}
+                  </button>
+                ))}
               </div>
-            </div>
+            )}
 
-            <div className="am-btn-row">
-              <button
-                type="button"
-                className="am-btn-secondary"
-                onClick={() => {
-                  clearGooglePending?.();
-                  navigateStep(1);
-                }}
-                disabled={isStepLocked}
-              >
-                <HiArrowLeft /> Back
-              </button>
-              <button
-                type="button"
-                className="am-btn-primary"
-                disabled={!bioOk}
-                onClick={() => {
-                  setTouched((p) => ({ ...p, phone: true }));
-                  if (!phoneOk) {
-                    setError("Enter a valid phone number.");
-                    return;
-                  }
-                  if (!bioOk) {
-                    setError(`Bio must be ${MAX_BIO} characters or less.`);
-                    return;
-                  }
-                  setError("");
-                  navigateStep(3);
-                }}
-              >
-                <span>Continue</span>
-                <HiArrowRight />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ─── STEP 3 ─── */}
-      {signUpStep === 3 && (
-        <form
-          onSubmit={handleSignUp}
-          noValidate
-          className={`am-form ${isStepLocked ? "am-stepIn--locked" : stepDir === "forward" ? "am-stepIn" : "am-stepBack"}`}
-        >
-          {/* Avatar card */}
-          <div
-            className={`am-avatar-card ${
-              avatarDragOver ? "am-avatar-card--drag" : ""
-            }`}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setAvatarDragOver(true);
-            }}
-            onDragLeave={() => setAvatarDragOver(false)}
-            onDrop={handleAvatarDrop}
-          >
-            <div className="am-avatar-card-inner">
-              <div className="am-avatar-wrap">
-                <div className="am-avatar-ring">
-                  <img
-                    src={avatarSrc}
-                    alt="Your avatar"
-                    className="am-avatar-img"
-                  />
+            {/* Scrollable form body */}
+            <div className="auth-form-scroll flex-1 overflow-y-auto overflow-x-hidden px-5 sm:px-7 py-6">
+              {/* ── Alerts ── */}
+              {error && (
+                <div className="am-slideDown mb-5 flex items-start gap-3 p-3.5 rounded-xl bg-red-50 border border-red-200">
+                  <HiExclamationCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
+                  <p className="flex-1 text-sm text-red-700">
+                    {typeof error === "string" ? error : "An error occurred."}
+                  </p>
+                  <button
+                    onClick={() => setError("")}
+                    className="text-red-400 hover:text-red-600 p-0.5 rounded transition-colors"
+                  >
+                    <HiX className="w-4 h-4" />
+                  </button>
                 </div>
-                <label
-                  className={`am-avatar-upload-btn ${
-                    avatarUploading ? "am-avatar-upload-btn--busy" : ""
-                  }`}
-                >
-                  {avatarUploading ? (
-                    <HiRefresh
-                      style={{
-                        width: 13,
-                        height: 13,
-                        animation: "am-spin 700ms linear infinite",
-                      }}
+              )}
+              {success && (
+                <div className="am-slideDown mb-5 flex items-start gap-3 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200">
+                  <HiCheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                  <p className="flex-1 text-sm text-emerald-700">{success}</p>
+                </div>
+              )}
+
+              {/* ════════════ LOGIN ════════════ */}
+              {isLogin && (
+                <div className="am-viewIn">
+                  <div className="text-center mb-7">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 mb-4">
+                      <HiShieldCheck className="w-7 h-7 text-emerald-600" />
+                    </div>
+                    <h2
+                      id="auth-title"
+                      className="text-2xl font-extrabold text-gray-900 tracking-tight"
+                    >
+                      Welcome Back
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Sign in to your travel dashboard
+                    </p>
+                  </div>
+
+                  <form
+                    onSubmit={handleSignIn}
+                    noValidate
+                    className="space-y-4"
+                  >
+                    <InputField
+                      id="login-email"
+                      label="Email Address"
+                      icon={HiMail}
+                      value={form.email}
+                      onChange={(v) => set("email", v)}
+                      onBlur={() => setEmailTouched(true)}
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                      required
+                      isEmail
+                      refProp={firstInputRef}
+                      error={
+                        emailTouched && !emailOk
+                          ? "Please enter a valid email."
+                          : ""
+                      }
+                      valid={emailTouched && emailOk}
                     />
-                  ) : (
-                    <FiCamera />
-                  )}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarChange}
-                    disabled={avatarUploading}
-                    style={{ display: "none" }}
-                  />
-                </label>
-              </div>
+                    <InputField
+                      id="login-name"
+                      label="Full Name"
+                      icon={HiUser}
+                      value={form.fullName}
+                      onChange={(v) => set("fullName", v)}
+                      onBlur={() => setNameTouched(true)}
+                      placeholder="Your full name"
+                      autoComplete="name"
+                      required
+                      error={
+                        nameTouched && !nameOk
+                          ? "At least 2 characters required."
+                          : ""
+                      }
+                      valid={nameTouched && nameOk}
+                    />
 
-              <div className="am-avatar-info">
-                <p className="am-avatar-name">
-                  {form.fullName || googleUser?.name || "Your Name"}
-                </p>
-                <p className="am-avatar-email">
-                  {form.email || googleUser?.email}
-                </p>
-                {allCareers.length > 0 && (
-                  <div className="am-avatar-careers">
-                    {allCareers.slice(0, 3).map((c) => {
-                      const preset = PRESET_CAREERS.find(
-                        (p) => p.id === c || p.label === c
-                      );
-                      return (
-                        <span key={c} className="am-avatar-career-chip">
-                          {preset ? (
-                            <preset.Icon
-                              style={{ width: 10, height: 10 }}
-                            />
-                          ) : (
-                            <HiUser style={{ width: 10, height: 10 }} />
-                          )}
-                          {preset ? preset.label : c}
-                        </span>
-                      );
-                    })}
-                    {allCareers.length > 3 && (
-                      <span className="am-avatar-career-chip">
-                        +{allCareers.length - 3} more
+                    {/* Keep signed in */}
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <div
+                        className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all duration-200 ${
+                          form.keepSignedIn
+                            ? "bg-emerald-500 border-emerald-500"
+                            : "border-gray-300 group-hover:border-gray-400"
+                        }`}
+                      >
+                        {form.keepSignedIn && (
+                          <HiCheck className="w-3 h-3 text-white" />
+                        )}
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={form.keepSignedIn}
+                        onChange={(e) => set("keepSignedIn", e.target.checked)}
+                        className="sr-only"
+                      />
+                      <span className="text-sm text-gray-600">
+                        Keep me signed in
                       </span>
+                    </label>
+
+                    {/* Submit */}
+                    <button
+                      type="submit"
+                      disabled={loading || isBusy}
+                      className="w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                    >
+                      {loading ? (
+                        <>
+                          <Spinner />
+                          <span>Signing In…</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Continue with Email</span>
+                          <HiArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+
+                    {/* Divider */}
+                    <div className="flex items-center gap-4 my-1">
+                      <div className="flex-1 h-px bg-gray-200" />
+                      <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">
+                        or continue with
+                      </span>
+                      <div className="flex-1 h-px bg-gray-200" />
+                    </div>
+
+                    <SocialButtons mode="signin" />
+                  </form>
+
+                  {/* Trust badges */}
+                  <div className="flex items-center justify-center gap-5 mt-6 flex-wrap">
+                    {[
+                      { icon: RiShieldKeyholeLine, text: "256-bit Encrypted" },
+                      { icon: MdVerified, text: "Verified" },
+                      { icon: MdOutlineSecurityUpdateGood, text: "GDPR" },
+                    ].map(({ icon: BadgeIcon, text }) => (
+                      <div
+                        key={text}
+                        className="flex items-center gap-1.5 text-[11px] text-gray-400"
+                      >
+                        <BadgeIcon className="w-3.5 h-3.5 text-emerald-500" />
+                        <span>{text}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Switch to register */}
+                  <div className="text-center mt-6 pt-5 border-t border-gray-100">
+                    <span className="text-sm text-gray-500">New here? </span>
+                    <button
+                      onClick={() => switchView("register")}
+                      className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1"
+                    >
+                      Create an account <HiArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ════════════ REGISTER ════════════ */}
+              {isRegister && (
+                <div className="am-viewIn">
+                  <div className="text-center mb-6">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-100 to-blue-50 mb-4">
+                      <HiGlobe className="w-7 h-7 text-blue-600" />
+                    </div>
+                    <h2
+                      id="auth-title"
+                      className="text-2xl font-extrabold text-gray-900 tracking-tight"
+                    >
+                      {
+                        ["Choose Method", "Your Profile", "Confirm"][
+                          signUpStep - 1
+                        ]
+                      }
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {
+                        [
+                          "Pick how you'd like to join",
+                          "Tell us about yourself",
+                          "Review and create your account",
+                        ][signUpStep - 1]
+                      }
+                    </p>
+                  </div>
+
+                  {/* Stepper */}
+                  <div className="flex items-center justify-center mb-7 px-4">
+                    {[
+                      { n: 1, l: "Method" },
+                      { n: 2, l: "Profile" },
+                      { n: 3, l: "Confirm" },
+                    ].map(({ n, l }, i) => (
+                      <React.Fragment key={n}>
+                        <div className="flex flex-col items-center gap-1.5">
+                          <div
+                            className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                              signUpStep > n
+                                ? "bg-emerald-500 text-white"
+                                : signUpStep === n
+                                  ? "bg-emerald-100 text-emerald-600 ring-4 ring-emerald-50"
+                                  : "bg-gray-100 text-gray-400"
+                            }`}
+                          >
+                            {signUpStep > n ? (
+                              <HiCheck className="w-4 h-4" />
+                            ) : (
+                              n
+                            )}
+                          </div>
+                          <span
+                            className={`text-[11px] font-medium transition-colors duration-300 ${
+                              signUpStep >= n
+                                ? "text-emerald-600"
+                                : "text-gray-400"
+                            }`}
+                          >
+                            {l}
+                          </span>
+                        </div>
+                        {i < 2 && (
+                          <div className="flex-1 h-0.5 mx-3 mb-5 rounded-full bg-gray-100 overflow-hidden">
+                            <div
+                              className={`h-full bg-emerald-500 rounded-full transition-all duration-500 ${
+                                signUpStep > n ? "w-full" : "w-0"
+                              }`}
+                            />
+                          </div>
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
+
+                  {/* ── Step 1 ── */}
+                  {signUpStep === 1 && (
+                    <div className="space-y-4 am-stepIn">
+                      {hasGooglePending ? (
+                        <div className="text-center py-8 px-6 rounded-2xl bg-emerald-50 border border-emerald-200">
+                          <div className="w-14 h-14 rounded-full bg-emerald-500 flex items-center justify-center mx-auto mb-4">
+                            <HiCheckCircle className="w-7 h-7 text-white" />
+                          </div>
+                          <h3 className="text-lg font-bold text-gray-900 mb-2">
+                            Google Connected
+                          </h3>
+                          <p className="text-sm text-gray-600 mb-5">
+                            Click Continue to set up your profile.
+                          </p>
+                          <button
+                            onClick={() => setSignUpStep(2)}
+                            className="w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all"
+                          >
+                            Continue <HiArrowRight className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <InputField
+                            id="reg-email"
+                            label="Email Address"
+                            icon={HiMail}
+                            value={form.email}
+                            onChange={(v) => set("email", v)}
+                            onBlur={() => setEmailTouched(true)}
+                            placeholder="traveler@example.com"
+                            autoComplete="email"
+                            required
+                            isEmail
+                            refProp={firstInputRef}
+                            error={
+                              emailTouched && !emailOk
+                                ? "Enter a valid email."
+                                : ""
+                            }
+                            valid={emailTouched && emailOk}
+                          />
+                          <InputField
+                            id="reg-name"
+                            label="Full Name"
+                            icon={HiUser}
+                            value={form.fullName}
+                            onChange={(v) => set("fullName", v)}
+                            onBlur={() => setNameTouched(true)}
+                            placeholder="Your full name"
+                            autoComplete="name"
+                            required
+                            error={
+                              nameTouched && !nameOk
+                                ? "At least 2 characters."
+                                : ""
+                            }
+                            valid={nameTouched && nameOk}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEmailTouched(true);
+                              setNameTouched(true);
+                              if (emailOk && nameOk) {
+                                setAuthMethod("email");
+                                setSignUpStep(2);
+                              } else {
+                                setError("Enter a valid email and name.");
+                              }
+                            }}
+                            disabled={isBusy}
+                            className="w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-200 disabled:opacity-50 transition-all duration-200"
+                          >
+                            <FiZap className="w-4 h-4" />
+                            Continue with Email
+                            <HiArrowRight className="w-4 h-4" />
+                          </button>
+                          <div className="flex items-center gap-4 my-1">
+                            <div className="flex-1 h-px bg-gray-200" />
+                            <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">
+                              or
+                            </span>
+                            <div className="flex-1 h-px bg-gray-200" />
+                          </div>
+                          <SocialButtons mode="signup" />
+                        </>
+                      )}
+                    </div>
+                  )}
+
+                  {/* ── Step 2 ── */}
+                  {signUpStep === 2 && (
+                    <div className="space-y-4 am-stepIn">
+                      {googleUser && (
+                        <div className="flex items-center gap-3 p-3.5 rounded-xl bg-gray-50 border border-gray-200">
+                          <img
+                            src={
+                              googleUser.picture || initAvatar(googleUser.name)
+                            }
+                            alt=""
+                            style={{
+                              width: "2.5rem",
+                              height: "2.5rem",
+                              borderRadius: "9999px",
+                              objectFit: "cover",
+                              display: "block",
+                              border: "2px solid #e5e7eb",
+                              flexShrink: 0,
+                            }}
+                          />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 truncate">
+                              {googleUser.name}
+                            </p>
+                            <p className="text-xs text-gray-500 truncate">
+                              {googleUser.email}
+                            </p>
+                          </div>
+                          <MdVerified className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                        </div>
+                      )}
+
+                      <InputField
+                        id="reg-phone"
+                        label="Phone Number"
+                        icon={HiPhone}
+                        type="tel"
+                        value={form.phone}
+                        onChange={(v) => set("phone", formatPhone(v))}
+                        placeholder="+1 (555) 000-0000"
+                        autoComplete="tel"
+                        error={
+                          form.phone && !phoneOk
+                            ? "Enter a valid phone number."
+                            : ""
+                        }
+                        valid={form.phone && phoneOk}
+                      />
+
+                      {/* Role selector */}
+                      <div className="space-y-2">
+                        <span className="block text-sm font-semibold text-gray-700">
+                          I am a…
+                        </span>
+                        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                          {ROLES.map(
+                            ({ value, label, icon: RIcon, desc, color }) => (
+                              <button
+                                key={value}
+                                type="button"
+                                onClick={() => set("role", value)}
+                                className={`relative flex flex-col items-center text-center p-3 sm:p-4 rounded-xl border-2 transition-all duration-200 ${
+                                  form.role === value
+                                    ? "border-emerald-400 bg-emerald-50/80 shadow-sm shadow-emerald-100"
+                                    : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50"
+                                }`}
+                              >
+                                <div
+                                  className={`w-9 h-9 rounded-xl flex items-center justify-center mb-2 transition-all duration-200 ${
+                                    form.role === value
+                                      ? "bg-emerald-500 text-white"
+                                      : "bg-gray-100 text-gray-500"
+                                  }`}
+                                >
+                                  <RIcon className="w-[18px] h-[18px]" />
+                                </div>
+                                <span className="text-xs sm:text-sm font-semibold text-gray-800">
+                                  {label}
+                                </span>
+                                <span className="text-[10px] sm:text-xs text-gray-400 mt-0.5 leading-tight">
+                                  {desc}
+                                </span>
+                                {form.role === value && (
+                                  <div className="am-scaleIn absolute top-1.5 right-1.5 w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center">
+                                    <HiCheck className="w-3 h-3 text-white" />
+                                  </div>
+                                )}
+                              </button>
+                            ),
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Bio */}
+                      <div className="space-y-1.5">
+                        <label
+                          htmlFor="reg-bio"
+                          className="block text-sm font-semibold text-gray-700"
+                        >
+                          Short Bio{" "}
+                          <span className="text-gray-400 font-normal text-xs">
+                            — Optional
+                          </span>
+                        </label>
+                        <textarea
+                          id="reg-bio"
+                          rows={3}
+                          value={form.bio}
+                          onChange={(e) => set("bio", e.target.value)}
+                          placeholder="Tell us about your travel style…"
+                          maxLength={MAX_BIO + 20}
+                          className="w-full rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 text-sm p-3.5 placeholder:text-gray-400 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 hover:border-gray-300 resize-none transition-all duration-200"
+                        />
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-gray-400 flex items-center gap-1">
+                            <HiInformationCircle className="w-3.5 h-3.5" />
+                            Shown on your public profile
+                          </p>
+                          <span
+                            className={`text-xs tabular-nums ${
+                              form.bio.length > MAX_BIO * 0.85
+                                ? form.bio.length > MAX_BIO
+                                  ? "text-red-500 font-semibold"
+                                  : "text-amber-500"
+                                : "text-gray-400"
+                            }`}
+                          >
+                            {form.bio.length}/{MAX_BIO}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Nav */}
+                      <div className="flex gap-3 pt-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSignUpStep(1);
+                            clearGooglePending?.();
+                          }}
+                          className="flex items-center gap-2 px-5 h-11 rounded-xl text-gray-600 font-medium text-sm hover:bg-gray-100 transition-all"
+                        >
+                          <HiArrowLeft className="w-4 h-4" /> Back
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (!phoneOk) {
+                              setError("Invalid phone.");
+                              return;
+                            }
+                            if (!bioOk) {
+                              setError(`Bio max ${MAX_BIO} chars.`);
+                              return;
+                            }
+                            setError("");
+                            setSignUpStep(3);
+                          }}
+                          disabled={!phoneOk || !bioOk}
+                          className="flex-1 h-11 rounded-xl bg-emerald-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-700 disabled:opacity-50 transition-all"
+                        >
+                          Continue <HiArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── Step 3 ── */}
+                  {signUpStep === 3 && (
+                    <form
+                      onSubmit={handleSignUp}
+                      noValidate
+                      className="space-y-5 am-stepIn"
+                    >
+                      {/* Avatar card */}
+                      <div className="flex items-center gap-5 p-5 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-200">
+                        <div className="relative flex-shrink-0">
+                          <div
+                            className="rounded-full bg-gradient-to-br from-emerald-400 to-teal-500"
+                            style={{
+                              width: "72px",
+                              height: "72px",
+                              padding: "3px",
+                            }}
+                          >
+                            <img
+                              src={avatarSrc}
+                              alt="Avatar"
+                              style={{
+                                width: "100%",
+                                height: "100%",
+                                borderRadius: "9999px",
+                                objectFit: "cover",
+                                display: "block",
+                                border: "2px solid white",
+                              }}
+                            />
+                          </div>
+                          <label
+                            className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center cursor-pointer hover:bg-emerald-600 hover:scale-110 transition-all ${
+                              avatarUploading ? "cursor-wait" : ""
+                            }`}
+                          >
+                            {avatarUploading ? (
+                              <HiRefresh className="w-3.5 h-3.5 text-white animate-spin" />
+                            ) : (
+                              <HiPhotograph className="w-3.5 h-3.5 text-white" />
+                            )}
+                            <input
+                              type="file"
+                              accept="image/*"
+                              onChange={handleAvatarChange}
+                              disabled={avatarUploading}
+                              className="sr-only"
+                            />
+                          </label>
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="text-base font-bold text-gray-900 truncate">
+                            {form.fullName || googleUser?.name || "Your Name"}
+                          </h4>
+                          <p className="text-xs text-gray-500 truncate">
+                            {form.email || googleUser?.email}
+                          </p>
+                          <span className="inline-flex items-center gap-1.5 mt-1.5 text-xs font-semibold text-emerald-600">
+                            {React.createElement(currentRole?.icon || HiGlobe, {
+                              className: "w-3.5 h-3.5",
+                            })}
+                            {currentRole?.label}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Summary */}
+                      <div className="rounded-xl bg-gray-50 border border-gray-200 p-4">
+                        <h4 className="text-sm font-bold text-gray-800 mb-3">
+                          Account Summary
+                        </h4>
+                        <dl className="space-y-2.5">
+                          {[
+                            ["Email", form.email || googleUser?.email],
+                            ["Phone", form.phone || "Not provided"],
+                            ["Role", currentRole?.label],
+                            [
+                              "Auth",
+                              authMethod === "google" ? "Google" : "Email OTP",
+                            ],
+                          ].map(([dt, dd]) => (
+                            <div
+                              key={dt}
+                              className="flex justify-between text-sm"
+                            >
+                              <dt className="text-gray-500">{dt}</dt>
+                              <dd className="font-medium text-gray-800 text-right truncate ml-4 max-w-[180px]">
+                                {dd}
+                              </dd>
+                            </div>
+                          ))}
+                        </dl>
+                      </div>
+
+                      {/* Keep signed in */}
+                      <label className="flex items-center gap-3 cursor-pointer group">
+                        <div
+                          className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                            form.keepSignedIn
+                              ? "bg-emerald-500 border-emerald-500"
+                              : "border-gray-300 group-hover:border-gray-400"
+                          }`}
+                        >
+                          {form.keepSignedIn && (
+                            <HiCheck className="w-3 h-3 text-white" />
+                          )}
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={form.keepSignedIn}
+                          onChange={(e) =>
+                            set("keepSignedIn", e.target.checked)
+                          }
+                          className="sr-only"
+                        />
+                        <span className="text-sm text-gray-600">
+                          Keep me signed in
+                        </span>
+                      </label>
+
+                      {/* Terms */}
+                      <label className="flex items-start gap-3 cursor-pointer p-4 rounded-xl bg-gray-50 border border-gray-200 group">
+                        <div
+                          className={`w-5 h-5 mt-0.5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                            agreeTerms
+                              ? "bg-emerald-500 border-emerald-500"
+                              : "border-gray-300 group-hover:border-gray-400"
+                          }`}
+                        >
+                          {agreeTerms && (
+                            <HiCheck className="w-3 h-3 text-white" />
+                          )}
+                        </div>
+                        <input
+                          type="checkbox"
+                          checked={agreeTerms}
+                          onChange={(e) => setAgreeTerms(e.target.checked)}
+                          required
+                          className="sr-only"
+                        />
+                        <span className="text-sm text-gray-600 leading-relaxed">
+                          I agree to the{" "}
+                          <a
+                            href="/terms"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-emerald-600 font-medium underline underline-offset-2 hover:text-emerald-700"
+                          >
+                            Terms
+                          </a>{" "}
+                          and{" "}
+                          <a
+                            href="/privacy"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-emerald-600 font-medium underline underline-offset-2 hover:text-emerald-700"
+                          >
+                            Privacy Policy
+                          </a>
+                        </span>
+                      </label>
+
+                      {/* Nav */}
+                      <div className="flex gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setSignUpStep(2)}
+                          disabled={loading || avatarUploading}
+                          className="flex items-center gap-2 px-5 h-11 rounded-xl text-gray-600 font-medium text-sm hover:bg-gray-100 transition-all"
+                        >
+                          <HiArrowLeft className="w-4 h-4" /> Back
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={loading || avatarUploading || !agreeTerms}
+                          className="flex-1 h-12 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:from-emerald-700 hover:to-emerald-600 hover:shadow-lg hover:shadow-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-all duration-200"
+                        >
+                          {loading || avatarUploading ? (
+                            <>
+                              <Spinner />
+                              <span>Creating…</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>Create Account</span>
+                              <HiCheck className="w-4 h-4" />
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* Switch to login */}
+                  <div className="text-center mt-6 pt-5 border-t border-gray-100">
+                    <span className="text-sm text-gray-500">
+                      Already have an account?{" "}
+                    </span>
+                    <button
+                      onClick={() => switchView("login")}
+                      className="text-sm font-semibold text-emerald-600 hover:text-emerald-700 hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1"
+                    >
+                      Sign in <HiArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* ════════════ VERIFY ════════════ */}
+              {isVerify && (
+                <div className="am-viewIn">
+                  <div className="text-center mb-7">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-100 to-indigo-50 mb-4">
+                      <HiMail className="w-7 h-7 text-indigo-600" />
+                    </div>
+                    <h2
+                      id="auth-title"
+                      className="text-2xl font-extrabold text-gray-900 tracking-tight"
+                    >
+                      Check Your Inbox
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                      We sent a 6-digit code to:
+                    </p>
+                    <div className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-full bg-gray-100 border border-gray-200 text-sm font-semibold text-gray-800">
+                      <HiMail className="w-4 h-4 text-emerald-500" />
+                      <span className="break-all">
+                        {activeEmail || "No email"}
+                      </span>
+                    </div>
+
+                    {/* Expiry badge */}
+                    {codeState !== "success" && (
+                      <div
+                        className={`inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                          codeExpired
+                            ? "bg-red-50 text-red-600 border border-red-200"
+                            : codeExpiry <= 30
+                              ? "bg-red-50 text-red-600 border border-red-200 animate-pulse"
+                              : codeExpiry <= 120
+                                ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                : "bg-gray-50 text-gray-600 border border-gray-200"
+                        }`}
+                      >
+                        {codeExpired ? (
+                          <>
+                            <HiExclamationCircle className="w-4 h-4" />
+                            <span>Code expired — request a new one</span>
+                          </>
+                        ) : (
+                          <>
+                            <HiInformationCircle className="w-4 h-4" />
+                            <span>
+                              Expires in{" "}
+                              <strong className="tabular-nums font-bold">
+                                {formatExpiry(codeExpiry)}
+                              </strong>
+                            </span>
+                          </>
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-                <p className="am-avatar-drag-hint">
-                  Drag & drop or click to upload
-                </p>
-              </div>
-            </div>
-          </div>
 
-          {/* Summary */}
-          <div className="am-summary-card">
-            <div className="am-summary-head">
-              <h4 className="am-summary-title">
-                <HiInformationCircle />
-                Account Summary
-              </h4>
-            </div>
-            <div className="am-summary-body">
-              {[
-                {
-                  label: "Email",
-                  value: form.email || googleUser?.email,
-                },
-                { label: "Phone", value: form.phone || "Not provided" },
-                {
-                  label: "Careers",
-                  value:
-                    allCareers.length > 0
-                      ? allCareers
-                          .slice(0, 3)
-                          .map((c) => {
-                            const p = PRESET_CAREERS.find(
-                              (pr) => pr.id === c
-                            );
-                            return p ? p.label : c;
-                          })
-                          .join(", ") +
-                        (allCareers.length > 3
-                          ? ` +${allCareers.length - 3}`
-                          : "")
-                      : "Not specified",
-                },
-                {
-                  label: "Auth",
-                  value:
-                    authMethod === "google" ? "Google OAuth" : "Email OTP",
-                },
-              ].map(({ label, value }) => (
-                <div key={label} className="am-summary-row">
-                  <span className="am-summary-label">{label}</span>
-                  <span className="am-summary-value">{value}</span>
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      doVerify(code.join(""));
+                    }}
+                    noValidate
+                    className="space-y-5"
+                  >
+                    {/* OTP inputs */}
+                    <div
+                      className={`flex justify-center gap-2.5 sm:gap-3 ${
+                        codeState === "verifying" ? "animate-pulse" : ""
+                      } ${codeState === "error" ? "am-shake" : ""}`}
+                      onPaste={handleCodePaste}
+                      role="group"
+                      aria-label="Verification code"
+                    >
+                      {code.map((digit, i) => (
+                        <input
+                          key={i}
+                          ref={(el) => {
+                            codeRefs.current[i] = el;
+                          }}
+                          type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]"
+                          maxLength={1}
+                          value={digit}
+                          onChange={(e) => handleCodeChange(i, e.target.value)}
+                          onKeyDown={(e) => handleCodeKey(i, e)}
+                          disabled={
+                            codeState === "verifying" ||
+                            codeState === "success" ||
+                            codeExpired
+                          }
+                          className={`text-center text-2xl font-bold font-mono rounded-xl border-2 outline-none transition-all duration-200 ${
+                            codeExpired
+                              ? "border-red-200 bg-red-50/50 text-red-300 cursor-not-allowed"
+                              : codeState === "success"
+                                ? "border-emerald-400 bg-emerald-50 text-emerald-600"
+                                : codeState === "error"
+                                  ? "border-red-300 bg-red-50"
+                                  : digit
+                                    ? "border-emerald-400 bg-emerald-50/50 text-gray-900"
+                                    : "border-gray-200 bg-gray-50/50 text-gray-900 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                          }`}
+                          style={{ width: "3rem", height: "3.5rem" }}
+                          aria-label={`Digit ${i + 1}`}
+                          autoComplete={i === 0 ? "one-time-code" : "off"}
+                        />
+                      ))}
+                    </div>
+
+                    {/* Status banners */}
+                    {codeState === "verifying" && (
+                      <div className="am-slideDown flex items-center justify-center gap-2 p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-sm font-medium">
+                        <Spinner /> Verifying…
+                      </div>
+                    )}
+                    {codeState === "success" && (
+                      <div className="am-slideDown flex items-center justify-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium">
+                        <HiCheckCircle className="w-5 h-5" /> Verified!
+                        Redirecting…
+                      </div>
+                    )}
+
+                    {/* Submit */}
+                    <button
+                      type="submit"
+                      disabled={
+                        loading ||
+                        code.join("").length !== 6 ||
+                        codeState === "verifying" ||
+                        codeState === "success" ||
+                        codeExpired
+                      }
+                      className="w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                    >
+                      {loading || codeState === "verifying" ? (
+                        <>
+                          <Spinner />
+                          <span>Verifying…</span>
+                        </>
+                      ) : codeState === "success" ? (
+                        <>
+                          <HiCheckCircle className="w-5 h-5" />
+                          <span>Verified!</span>
+                        </>
+                      ) : codeExpired ? (
+                        <>
+                          <HiExclamationCircle className="w-5 h-5" />
+                          <span>Code Expired</span>
+                        </>
+                      ) : (
+                        <>
+                          <span>Verify & Continue</span>
+                          <HiArrowRight className="w-4 h-4" />
+                        </>
+                      )}
+                    </button>
+
+                    {/* Back + Resend */}
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <button
+                        type="button"
+                        onClick={handleBackFromVerify}
+                        disabled={loading}
+                        className="flex items-center justify-center gap-2 px-5 h-11 rounded-xl text-gray-600 font-medium text-sm border border-gray-200 hover:bg-gray-50 transition-all sm:w-auto w-full"
+                      >
+                        <HiArrowLeft className="w-4 h-4" /> Back
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleResend}
+                        disabled={resendTimer > 0 || loading}
+                        className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-emerald-600 font-semibold text-sm border-2 border-emerald-200 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      >
+                        <HiRefresh
+                          className={`w-4 h-4 ${
+                            resendTimer > 0 || loading ? "animate-spin" : ""
+                          }`}
+                        />
+                        {resendTimer > 0
+                          ? `Resend in ${resendTimer}s`
+                          : "Resend Code"}
+                      </button>
+                    </div>
+                  </form>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          <Checkbox
-            checked={form.keepSignedIn}
-            onChange={() => updateField("keepSignedIn", !form.keepSignedIn)}
-          >
-            Keep me signed in for 30 days
-          </Checkbox>
-
-          <div className={`am-terms-wrap ${agreeTerms ? "checked" : ""}`}>
-            <Checkbox
-              checked={agreeTerms}
-              onChange={() => setAgreeTerms((v) => !v)}
-            >
-              I agree to the{" "}
-              <a
-                href="/terms"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="am-terms-link"
-              >
-                Terms of Service
-              </a>{" "}
-              and{" "}
-              <a
-                href="/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="am-terms-link"
-              >
-                Privacy Policy
-              </a>
-            </Checkbox>
-          </div>
-
-          <div className="am-btn-row">
-              <button
-                type="button"
-                className="am-btn-secondary"
-                disabled={loading || avatarUploading}
-                onClick={() => navigateStep(2)}
-              >
-                <HiArrowLeft /> Back
-              </button>
-            <button
-              type="submit"
-              className="am-btn-primary"
-              disabled={loading || avatarUploading || !agreeTerms}
-            >
-              {loading || avatarUploading ? (
-                <><Spinner /><span>Creating Account…</span></>
-              ) : (
-                <><span>Create Account</span><HiSparkles /></>
               )}
-            </button>
-          </div>
-        </form>
-      )}
-
-      <div className="am-switch-row">
-        <p className="am-switch-text">
-          Already have an account?{" "}
-          <button
-            className="am-btn-link"
-            onClick={() => switchView("login")}
-          >
-            Sign in <HiArrowRight />
-          </button>
-        </p>
-      </div>
-    </div>
-  );
-
-  /* ── VERIFY VIEW ── */
-  const VerifyView = () => (
-    <div className="am-viewIn">
-      <div className="am-view-head">
-        <div className="am-view-icon-wrap am-view-icon-wrap--indigo">
-          <HiMail />
-        </div>
-        <h2 className="am-view-title">Check Your Inbox</h2>
-        <p className="am-view-subtitle">
-          We sent a 6-digit verification code to:
-        </p>
-        <div className="am-email-chip">
-          <HiMail />
-          {activeEmail || "No email provided"}
-        </div>
-        {codeState !== "success" && (
-          <div className={`am-expiry-pill ${expiryClass}`}>
-            {codeExpired ? (
-              <>
-                <HiExclamationCircle />
-                <span>Code expired — request a new one</span>
-              </>
-            ) : (
-              <>
-                <HiInformationCircle />
-                <span>
-                  Expires in{" "}
-                  <strong className="am-expiry-mono">
-                    {formatExpiry(codeExpiry)}
-                  </strong>
-                </span>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          doVerify(code.join(""));
-        }}
-        noValidate
-        className="am-form"
-      >
-        <div
-          className={`am-otp-row ${
-            codeState === "verifying" ? "am-otp-row--verifying" : ""
-          } ${codeState === "error" ? "am-otp-row--shake" : ""}`}
-          onPaste={handleCodePaste}
-          role="group"
-          aria-label="6-digit verification code"
-        >
-          {code.map((digit, i) => (
-            <input
-              key={i}
-              ref={(el) => { codeRefs.current[i] = el; }}
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]"
-              maxLength={1}
-              value={digit}
-              onChange={(e) => handleCodeChange(i, e.target.value)}
-              onKeyDown={(e) => handleCodeKey(i, e)}
-              onFocus={(e) => e.target.select()}
-              disabled={
-                codeState === "verifying" ||
-                codeState === "success" ||
-                codeExpired
-              }
-              className={`am-otp-input ${
-                codeExpired
-                  ? "am-otp-input--expired"
-                  : codeState === "success"
-                  ? "am-otp-input--success"
-                  : codeState === "error"
-                  ? "am-otp-input--error"
-                  : digit
-                  ? "am-otp-input--filled"
-                  : ""
-              }`}
-              aria-label={`Digit ${i + 1} of 6`}
-              autoComplete={i === 0 ? "one-time-code" : "off"}
-            />
-          ))}
-        </div>
-
-        {codeState === "verifying" && (
-          <div className="am-code-banner am-code-banner--verifying am-slideDown">
-            <Spinner /> <span>Verifying your code…</span>
-          </div>
-        )}
-        {codeState === "success" && (
-          <div className="am-code-banner am-code-banner--success am-slideDown">
-            <HiCheckCircle /> <span>Verified! Signing you in…</span>
-          </div>
-        )}
-
-        <button
-          type="submit"
-          className="am-btn-primary"
-          disabled={
-            loading ||
-            code.join("").length !== 6 ||
-            codeState === "verifying" ||
-            codeState === "success" ||
-            codeExpired
-          }
-        >
-          {loading || codeState === "verifying" ? (
-            <><Spinner /><span>Verifying…</span></>
-          ) : codeState === "success" ? (
-            <><HiCheckCircle /><span>Verified!</span></>
-          ) : codeExpired ? (
-            <><HiExclamationCircle /><span>Code Expired</span></>
-          ) : (
-            <><span>Verify & Continue</span><HiArrowRight /></>
-          )}
-        </button>
-
-        <div className="am-verify-actions">
-          <button
-            type="button"
-            className="am-btn-secondary"
-            disabled={loading || codeState === "verifying"}
-            onClick={handleBackFromVerify}
-          >
-            <HiArrowLeft /> Back
-          </button>
-          <button
-            type="button"
-            className="am-btn-ghost-green"
-            disabled={resendTimer > 0 || loading || codeState === "verifying"}
-            onClick={handleResend}
-          >
-            <HiRefresh
-              style={{
-                animation:
-                  resendTimer > 0 || loading
-                    ? "am-spin 700ms linear infinite"
-                    : "none",
-              }}
-            />
-            {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend Code"}
-          </button>
-        </div>
-
-        <p className="am-spam-hint">
-          <HiInformationCircle />
-          Check your spam folder if you don't see it
-        </p>
-      </form>
-    </div>
-  );
-
-  /* ════════════════════════════════════════════════════════
-     RENDER
-  ════════════════════════════════════════════════════════ */
-  return (
-    <div className={`am-backdrop am-fadeIn ${isBusy ? "am-backdrop--busy" : ""}`} onClick={isBusy ? undefined : closeModal}>
-
-      {/* ══════════════════════════════════════════
-          MOBILE BOTTOM SHEET  (< 640px)
-      ══════════════════════════════════════════ */}
-      <div
-        className="am-modal-mobile am-mobileIn"
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="am-title-mobile"
-      >
-        {/* Drag handle */}
-        <div className="am-mobile-handle">
-          <div className="am-mobile-handle-bar" />
-        </div>
-
-        {/* Mobile Header */}
-        <div className="am-mobile-header">
-          <div className="am-mobile-header-brand">
-            <div className="am-mobile-header-logo">
-              <img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT} />
             </div>
-            <span className="am-mobile-header-name">Altuvera</span>
-          </div>
-          <button
-            className="am-mobile-close"
-            onClick={closeModal}
-            aria-label="Close"
-          >
-            <HiX />
-          </button>
-        </div>
 
-        {/* Mobile Tabs */}
-        {!isVerify && (
-          <div className="am-mobile-tabs">
-            {[
-              { view: "login",    label: "Sign In",  Icon: HiLockClosed },
-              { view: "register", label: "Sign Up",  Icon: HiSparkles   },
-            ].map(({ view, label, Icon }) => (
-              <button
-                key={view}
-                className={`am-mobile-tab ${modalView === view ? "active" : ""}`}
-                onClick={() => switchView(view)}
-                disabled={loading}
-              >
-                <Icon />
-                <span>{label}</span>
-                {modalView === view && (
-                  <span className="am-mobile-tab-indicator am-scaleX" />
-                )}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* Mobile Body */}
-        <div className="am-mobile-body">
-          <Alert
-            type="error"
-            message={error}
-            onClose={() => setError("")}
-          />
-          <Alert type="success" message={success} />
-
-          {isLogin    && <LoginView    />}
-          {isRegister && <RegisterView />}
-          {isVerify   && <VerifyView   />}
-        </div>
-
-        {/* Mobile Footer */}
-        <div className="am-mobile-footer">
-          <p className="am-mobile-footer-text">
-            <RiShieldKeyholeLine />
-            <span>256-bit SSL • We never share your data</span>
-          </p>
-        </div>
-      </div>
-
-      {/* ══════════════════════════════════════════
-          DESKTOP MODAL  (≥ 640px)
-      ══════════════════════════════════════════ */}
-      <div
-        className="am-modal am-modalIn"
-        onMouseDown={(e) => e.stopPropagation()}
-        onClick={(e) => e.stopPropagation()}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="am-title"
-      >
-        {/* Gallery Panel */}
-        <div className="am-gallery-panel">
-          <GallerySlideshow />
-        </div>
-
-        {/* Form Panel */}
-        <div className="am-form-panel">
-
-          {/* Desktop Header */}
-          <div className="am-header">
-            <div className="am-header-brand">
-              <div className="am-header-logo">
-                <img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT} />
-              </div>
-              <div className="am-header-wordmark">
-                <span className="am-header-name">Altuvera</span>
-                <span className="am-header-badge">Premium</span>
-              </div>
+            {/* Footer */}
+            <div className="px-5 sm:px-7 py-3.5 border-t border-gray-100 bg-gray-50/50 flex-shrink-0">
+              <p className="text-center text-[11px] text-gray-400 flex items-center justify-center gap-1.5">
+                <RiShieldKeyholeLine className="w-3.5 h-3.5 text-emerald-500" />
+                256-bit SSL encryption • We never share your data
+              </p>
             </div>
-            <button
-              className="am-close-btn"
-              onClick={closeModal}
-              aria-label="Close"
-            >
-              <HiX />
-            </button>
-          </div>
-
-          {/* Desktop Tabs */}
-          {!isVerify && (
-            <div className="am-tabs" role="tablist">
-              {[
-                { view: "login",    label: "Sign In",        Icon: HiLockClosed },
-                { view: "register", label: "Create Account", Icon: HiSparkles   },
-              ].map(({ view, label, Icon }) => (
-                <button
-                  key={view}
-                  role="tab"
-                  aria-selected={modalView === view}
-                  onClick={() => switchView(view)}
-                  disabled={loading}
-                  className={`am-tab ${modalView === view ? "active" : ""}`}
-                >
-                  <Icon />
-                  <span>{label}</span>
-                  {modalView === view && (
-                    <span className="am-tab-indicator am-scaleX" />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {/* Desktop Scrollable Body */}
-          <div className="am-body">
-            <Alert
-              type="error"
-              message={error}
-              onClose={() => setError("")}
-            />
-            <Alert type="success" message={success} />
-
-            {isLogin    && <LoginView    />}
-            {isRegister && <RegisterView />}
-            {isVerify   && <VerifyView   />}
-          </div>
-
-          {/* Desktop Footer */}
-          <div className="am-footer">
-            <p className="am-footer-text">
-              <RiShieldKeyholeLine />
-              <span>256-bit SSL encryption</span>
-              <span className="am-footer-sep">•</span>
-              <span>We never sell or share your data</span>
-            </p>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

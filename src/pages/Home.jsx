@@ -3,8 +3,7 @@ import React, { useState, useEffect, useRef, useMemo, useCallback } from "react"
 import { Link, useNavigate } from "react-router-dom";
 
 import { HiOutlineArrowRight, HiOutlineSparkles } from "react-icons/hi2";
-import { FaStar, FaRegStar, FaQuoteLeft } from "react-icons/fa6";
-import { BiSolidQuoteAltLeft } from "react-icons/bi";
+import { FaStar, FaRegStar } from "react-icons/fa6";
 import {
   MdOutlineArticle,
   MdOutlineDateRange,
@@ -35,7 +34,6 @@ import SEO from "../components/common/SEO";
 
 import { useApp } from "../context/AppContext";
 import { useDestinations } from "../hooks/useDestinations";
-import { useTestimonials } from "../hooks/useTestimonials";
 import { usePosts } from "../hooks/usePosts";
 import { useWishlist } from "../hooks/useWishlist";
 
@@ -477,86 +475,151 @@ const FeatureBlock = ({ data, index }) => {
 };
 
 /* ═══════════════════════════════════════════
-   TESTIMONIAL SLIDER — FULL WIDTH
+   TESTIMONIAL SLIDER — COMPACT
    ═══════════════════════════════════════════ */
-const TestimonialSlider = ({ items }) => {
-  const [active, setActive] = useState(0);
+const TESTIMONIAL_SLIDES = [
+  {
+    quote:
+      "The canopy walkway was magical. Standing high above the ancient trees with the sounds of the forest all around us was unforgettable.",
+    name: "Sarah Thompson",
+    meta: "United Kingdom • June 2025",
+    image: "https://picsum.photos/id/64/120/120",
+    alt: "Sarah Thompson",
+  },
+  {
+    quote:
+      "Tracking chimpanzees in Nyungwe was the highlight of our Rwanda trip. Professional guides made the experience educational and deeply moving.",
+    name: "Michael Okoro",
+    meta: "Nigeria • Photographer",
+    image: "https://picsum.photos/id/201/120/120",
+    alt: "Michael Okoro",
+  },
+  {
+    quote:
+      "A perfect blend of adventure and serenity. The waterfalls and biodiversity left us speechless. Highly recommend for nature lovers.",
+    name: "Amina & Khalid Hassan",
+    meta: "Kenya • Honeymoon",
+    image: "https://picsum.photos/id/1005/120/120",
+    alt: "Amina Hassan",
+  },
+];
+
+const TestimonialSlider = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [slideDir, setSlideDir] = useState("next");
+  const slidesRef = useRef(null);
+
+  const goToSlide = useCallback((index) => {
+    setCurrentSlide(index);
+  }, []);
+
+  const nextSlide = useCallback(() => {
+    setCurrentSlide((current) => (current + 1) % TESTIMONIAL_SLIDES.length);
+  }, []);
+
+  const prevSlide = useCallback(() => {
+    setCurrentSlide(
+      (current) => (current - 1 + TESTIMONIAL_SLIDES.length) % TESTIMONIAL_SLIDES.length
+    );
+  }, []);
 
   useEffect(() => {
-    if (paused || items.length <= 1) return;
-    const iv = setInterval(() => {
-      setSlideDir("next");
-      setActive((p) => (p + 1) % items.length);
-    }, 7500);
-    return () => clearInterval(iv);
-  }, [paused, items.length]);
+    if (slidesRef.current) {
+      slidesRef.current.style.transform = `translateX(-${currentSlide * 100}%)`;
+    }
+  }, [currentSlide]);
 
-  const next = () => { setSlideDir("next"); setActive((p) => (p + 1) % items.length); };
-  const prev = () => { setSlideDir("prev"); setActive((p) => (p - 1 + items.length) % items.length); };
+  useEffect(() => {
+    if (paused) return undefined;
+    const autoInterval = setInterval(nextSlide, 5000);
+    return () => clearInterval(autoInterval);
+  }, [nextSlide, paused]);
 
-  if (!items?.length) return null;
-  const t = items[active];
+  useEffect(() => {
+    const handleKey = (event) => {
+      if (event.key === "ArrowRight") nextSlide();
+      if (event.key === "ArrowLeft") prevSlide();
+    };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [nextSlide, prevSlide]);
 
   return (
-    <div className="testimonial-full" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-      <div className="testimonial-full-inner">
-        {/* Left: decorative */}
-        <div className="testimonial-full-decor">
-          <div className="testimonial-full-quote-mark">
-            <BiSolidQuoteAltLeft />
-          </div>
-          <div className="testimonial-full-stars">
-            {Array.from({ length: 5 }).map((_, i) =>
-              i < (t.stars || t.rating || 5) ? <FaStar key={i} className="tstar filled" /> : <FaRegStar key={i} className="tstar" />
-            )}
-          </div>
+    <section className="testimonial-compact-section">
+      <div className="home-container">
+        <div className="section-header">
+          <span className="testimonial-compact-label">TESTIMONIALS</span>
+          <h2 className="section-title">What Our Guests Say</h2>
         </div>
 
-        {/* Center: quote */}
-        <div className="testimonial-full-content" key={active}>
-          <blockquote className={`testimonial-full-text testimonial-slide--${slideDir}`}>
-            {t.quote || t.content || t.text || t.testimonial_text || "An unforgettable experience that exceeded all expectations."}
-          </blockquote>
-
-          <div className={`testimonial-full-author testimonial-slide--${slideDir}`}>
-            <div className="testimonial-full-avatar">
-              {t.image || t.avatar
-                ? <img src={t.image || t.avatar} alt={t.name || "Traveler"} />
-                : <span>{(t.name || "T").charAt(0)}</span>
-              }
-            </div>
-            <div className="testimonial-full-meta">
-              <strong>{t.name || "Happy Traveler"}</strong>
-              <span>{t.role || t.country || t.location || "East Africa"}</span>
-            </div>
+        <div
+          className="testimonial-compact-slider"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+        >
+          <div ref={slidesRef} className="testimonial-compact-slides">
+            {TESTIMONIAL_SLIDES.map((slide, index) => (
+              <div key={index} className="testimonial-compact-slide">
+                <div className="testimonial-compact-inner">
+                  <div className="testimonial-compact-quote">“</div>
+                  <p className="testimonial-compact-text">{slide.quote}</p>
+                  <div className="testimonial-compact-person">
+                    <img
+                      src={slide.image}
+                      alt={slide.alt}
+                      className="testimonial-compact-avatar"
+                    />
+                    <div>
+                      <div className="testimonial-compact-name">{slide.name}</div>
+                      <div className="testimonial-compact-meta">{slide.meta}</div>
+                    </div>
+                    <div className="testimonial-compact-stars">★★★★★</div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
 
-        {/* Right: navigation */}
-        <div className="testimonial-full-nav">
-          <button className="testimonial-full-nav-btn" onClick={prev} aria-label="Previous">
+          <button
+            type="button"
+            className="testimonial-compact-arrow testimonial-compact-arrow--left"
+            onClick={prevSlide}
+            aria-label="Previous testimonial"
+          >
             <IoChevronBack />
           </button>
-          <div className="testimonial-full-counter">
-            <span className="testimonial-full-current">{String(active + 1).padStart(2, "0")}</span>
-            <span className="testimonial-full-divider">/</span>
-            <span className="testimonial-full-total">{String(items.length).padStart(2, "0")}</span>
-          </div>
-          <button className="testimonial-full-nav-btn" onClick={next} aria-label="Next">
+          <button
+            type="button"
+            className="testimonial-compact-arrow testimonial-compact-arrow--right"
+            onClick={nextSlide}
+            aria-label="Next testimonial"
+          >
             <IoChevronForward />
           </button>
+
+          <div className="testimonial-compact-dots">
+            {TESTIMONIAL_SLIDES.map((_, index) => (
+              <button
+                key={index}
+                type="button"
+                className={`testimonial-compact-dot ${index === currentSlide ? "active" : ""}`}
+                onClick={() => goToSlide(index)}
+                aria-label={`Testimonial ${index + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="testimonial-compact-trust">
+          <div className="testimonial-compact-trust-item">
+            <FaStar size={12} />
+            <span>Verified</span>
+          </div>
+          <div>TripAdvisor • 4.9/5</div>
+          <div>2000+ Happy Visitors</div>
         </div>
       </div>
-
-      {/* Bottom dots */}
-      <div className="testimonial-full-dots">
-        {items.map((_, i) => (
-          <button key={i} className={`testimonial-full-dot ${i === active ? "active" : ""}`} onClick={() => { setSlideDir(i > active ? "next" : "prev"); setActive(i); }} aria-label={`Testimonial ${i + 1}`} />
-        ))}
-      </div>
-    </div>
+    </section>
   );
 };
 
@@ -621,7 +684,6 @@ const Home = () => {
   const { setIsLoading } = useApp();
   const hasCompletedRef = useRef(false);
   const { destinations: allDest = [], loading: destLoading } = useDestinations({ limit: 100, sort: "-featured" });
-  const { testimonials: allTestimonials = [], loading: testimonialsLoading } = useTestimonials();
   const { posts = [], loading: postsLoading } = usePosts({ limit: 12, sort: "created" });
   const { loadWishlist, toggleWishlist, isWishlisted } = useWishlist();
 
@@ -763,22 +825,8 @@ const featureBlocks = useMemo(() => [
         </div>
       </section>
 
-      {/* TESTIMONIALS — full width */}
-      <section className="home-section testimonials-section">
-        <div className="home-container">
-          <div className="section-header">
-            <h2 className="section-title">Voices of Our <span className="text-gradient">Travelers</span></h2>
-            <p className="section-subtitle">Real stories from adventurers who've experienced East Africa with Altuvera.</p>
-          </div>
-        </div>
-        {testimonialsLoading ? (
-          <div className="home-container"><div className="skeleton-shimmer" style={{ height: 240, borderRadius: 16 }} /></div>
-        ) : allTestimonials.length > 0 ? (
-          <TestimonialSlider items={allTestimonials} />
-        ) : (
-          <div className="home-container"><div className="testimonial-empty"><FaQuoteLeft /><p>Reviews coming soon.</p></div></div>
-        )}
-      </section>
+      {/* TESTIMONIALS — compact slider */}
+      <TestimonialSlider />
 
       {/* BLOG */}
       <section className="home-section posts-section">

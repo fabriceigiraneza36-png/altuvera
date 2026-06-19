@@ -4,7 +4,6 @@ import SEO from '../components/common/SEO';
 import PageHeader from '../components/common/PageHeader';
 import AnimatedSection from '../components/common/AnimatedSection';
 import Button from '../components/common/Button';
-import { toAbsoluteUrl } from '../utils/seo';
 
 const FAQ = () => {
   const [searchQuery, setSearchQuery] = useState('');

@@ -3,8 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
-  "scripts": {
+"scripts": {
     "dev": "vite",
+    "dev:test": "vite --open /tailwind-test",
     "seo:generate": "node scripts/generate-seo.mjs",
     "build": "npm run seo:generate && vite build",
     "lint": "eslint \"src/**/*.{js,jsx}\" --report-unused-disable-directives --max-warnings 1000",
