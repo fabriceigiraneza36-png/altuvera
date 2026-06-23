@@ -1,132 +1,135 @@
-// admin/src/api/packages.js
+﻿// src/api/packages.js
 // ─────────────────────────────────────────────────────────────────────────────
-// Packages API — self-contained, no cross-module re-export
-// Uses the same apiClient instance as all other admin API files
+// Frontend packages API — uses fetch directly (no axios, no ./client)
+// API_BASE auto-resolves: never doubles /api
 // ─────────────────────────────────────────────────────────────────────────────
 
-import apiClient from './client'
-
-const BASE = '/packages'
-
-// ══════════════════════════════════════════════════════════════════════════════
-// ERROR MESSAGE EXTRACTOR
-// Defined here directly — avoids rolldown re-export resolution failures.
-// Mirrors the implementation in client.js exactly.
-// ══════════════════════════════════════════════════════════════════════════════
-
-export const getErrorMessage = (error) => {
-  if (!error) return 'An error occurred'
-
-  // ── Axios response error ──────────────────────────────────────────────────
-  if (error.response?.data) {
-    const d = error.response.data
-    if (typeof d.error   === 'string') return d.error
-    if (typeof d.message === 'string') return d.message
-    if (typeof d.msg     === 'string') return d.msg
-    if (Array.isArray(d.errors) && typeof d.errors[0] === 'string') return d.errors[0]
-    if (typeof d         === 'string') return d
-  }
-
-  // ── HTTP status code fallbacks ────────────────────────────────────────────
-  const status = error.response?.status
-  if (status === 400) return 'Bad request — check your input'
-  if (status === 401) return 'Unauthorized — please log in again'
-  if (status === 403) return 'Access denied'
-  if (status === 404) return 'Resource not found'
-  if (status === 409) return 'Conflict — this record already exists'
-  if (status === 422) return 'Validation error — check your input'
-  if (status === 429) return 'Too many requests — please wait a moment'
-  if (status >= 500)  return 'Server error — please try again later'
-
-  // ── Network / timeout ─────────────────────────────────────────────────────
-  if (error.code === 'ECONNABORTED')  return 'Request timed out — please try again'
-  if (error.message === 'Network Error') return 'Network error — check your connection'
-
-  // ── Generic ───────────────────────────────────────────────────────────────
-  if (typeof error.message === 'string') return error.message
-  if (typeof error         === 'string') return error
-
-  return 'An unexpected error occurred'
+const resolveBase = () => {
+  const raw  = import.meta.env.VITE_API_URL || 'https://backend-jd8f.onrender.com'
+  const base = raw.replace(/\/+$/, '')
+  return base.endsWith('/api') ? base : `${base}/api`
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// PACKAGES API
-// ══════════════════════════════════════════════════════════════════════════════
+const API_BASE = resolveBase()
+
+const getToken = () =>
+  localStorage.getItem('altuvera_token') ||
+  localStorage.getItem('altuvera_auth_token') ||
+  localStorage.getItem('token') ||
+  null
+
+// ── Core fetch wrapper ────────────────────────────────────────────────────────
+
+const request = async (method, path, body = null, params = null) => {
+  // Prevent /api/api doubling — strip leading /api from path if present
+  const safePath = path.startsWith('/api/')
+    ? path.slice(4)
+    : path.startsWith('/api')
+    ? '/'
+    : path
+
+  let url = `${API_BASE}${safePath}`
+
+  if (params) {
+    const qs = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== null && v !== '')
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+      .join('&')
+    if (qs) url += `?${qs}`
+  }
+
+  const token   = getToken()
+  const headers = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const res = await fetch(url, {
+    method,
+    headers,
+    ...(body && method !== 'GET' ? { body: JSON.stringify(body) } : {}),
+  })
+
+  // Always parse JSON body for error details
+  const data = await res.json().catch(() => ({}))
+
+  if (!res.ok) {
+    const message =
+      data?.error   ||
+      data?.message ||
+      (Array.isArray(data?.errors) ? data.errors[0] : null) ||
+      `Request failed (${res.status})`
+
+    const err = new Error(typeof message === 'string' ? message : JSON.stringify(message))
+    err.status = res.status
+    err.data   = data
+    throw err
+  }
+
+  return data
+}
+
+// ── Convenience methods ───────────────────────────────────────────────────────
+
+const get   = (path, params) => request('GET',    path, null, params)
+const post  = (path, body)   => request('POST',   path, body)
+const put   = (path, body)   => request('PUT',    path, body)
+const patch = (path, body)   => request('PATCH',  path, body)
+const del   = (path)         => request('DELETE', path)
+
+// ── Packages API ──────────────────────────────────────────────────────────────
 
 export const packagesAPI = {
 
-  // ── Admin listing ─────────────────────────────────────────────────────────
-  // Admin endpoint returns ALL packages including unpublished drafts
-  getAll: (params) =>
-    apiClient.get(`${BASE}/admin/all`, { params }),
+  // ── Public listing ────────────────────────────────────────────────────────
+  getAll:        (params)     => get('/packages', params),
+  getById:       (id)         => get(`/packages/${id}`),
+  getBySlug:     (slug)       => get(`/packages/slug/${slug}`),
+  getFeatured:   (params)     => get('/packages/featured', params),
+  getCategories: ()           => get('/packages/categories'),
+  incrementView: (id)         => post(`/packages/${id}/view`),
 
-  getById: (id) =>
-    apiClient.get(`${BASE}/${id}`),
+  // ── CRUD (admin) ──────────────────────────────────────────────────────────
+  create:        (data)       => post('/packages', data),
+  update:        (id, data)   => patch(`/packages/${id}`, data),
+  remove:        (id)         => del(`/packages/${id}`),
 
-  getStats: () =>
-    apiClient.get(`${BASE}/stats`),
+  // ── Publish ───────────────────────────────────────────────────────────────
+  publish:       (id)         => post(`/packages/${id}/publish`),
+  unpublish:     (id)         => post(`/packages/${id}/unpublish`),
 
-  getBookingStats: () =>
-    apiClient.get(`${BASE}/bookings/stats`),
-
-  // ── CRUD ──────────────────────────────────────────────────────────────────
-  create: (data) =>
-    apiClient.post(BASE, data),
-
-  update: (id, data) =>
-    apiClient.patch(`${BASE}/${id}`, data),
-
-  remove: (id) =>
-    apiClient.delete(`${BASE}/${id}`),
-
-  // ── Publish / Unpublish ───────────────────────────────────────────────────
-  publish: (id) =>
-    apiClient.post(`${BASE}/${id}/publish`),
-
-  unpublish: (id) =>
-    apiClient.post(`${BASE}/${id}/unpublish`),
-
-  // ── Package Messages ──────────────────────────────────────────────────────
-  getMessages: (id, params) =>
-    apiClient.get(`${BASE}/${id}/messages`, { params }),
-
-  adminReply: (id, data) =>
-    apiClient.post(`${BASE}/${id}/messages/admin-reply`, data),
-
-  deleteMessage: (id, msgId) =>
-    apiClient.delete(`${BASE}/${id}/messages/${msgId}`),
-
-  markRead: (id) =>
-    apiClient.post(`${BASE}/${id}/messages/mark-read`),
+  // ── Messages ──────────────────────────────────────────────────────────────
+  getMessages:   (id, params) => get(`/packages/${id}/messages`, params),
+  sendMessage:   (id, data)   => post(`/packages/${id}/messages`, data),
+  adminReply:    (id, data)   => post(`/packages/${id}/messages/admin-reply`, data),
+  deleteMessage: (id, msgId)  => del(`/packages/${id}/messages/${msgId}`),
+  markRead:      (id)         => post(`/packages/${id}/messages/mark-read`),
 
   // ── Bookings ──────────────────────────────────────────────────────────────
-  getBookings: (id, params) =>
-    apiClient.get(`${BASE}/${id}/bookings`, { params }),
+  getBookings:    (id, params)     => get(`/packages/${id}/bookings`, params),
+  getAllBookings:  (params)         => get('/packages/bookings/all', params),
+  createBooking:  (id, data)       => post(`/packages/${id}/book`, data),
+  updateBooking:  (id, bId, data)  => patch(`/packages/${id}/bookings/${bId}`, data),
+  confirmBooking: (id, bId)        => post(`/packages/${id}/bookings/${bId}/confirm`),
+  cancelBooking:  (id, bId, data)  => post(`/packages/${id}/bookings/${bId}/cancel`, data),
 
-  getAllBookings: (params) =>
-    apiClient.get(`${BASE}/bookings/all`, { params }),
+  // ── Info Requests ─────────────────────────────────────────────────────────
+  getInfoRequests:    (id)         => get(`/packages/${id}/info-requests`),
+  createInfoRequest:  (id, data)   => post(`/packages/${id}/info-requests`, data),
+  updateInfoRequest:  (id, rId, d) => patch(`/packages/${id}/info-requests/${rId}`, d),
+  deleteInfoRequest:  (id, rId)    => del(`/packages/${id}/info-requests/${rId}`),
+  submitInfoResponse: (id, rId, d) => post(`/packages/${id}/info-requests/${rId}/respond`, d),
 
-  updateBooking: (id, bId, data) =>
-    apiClient.patch(`${BASE}/${id}/bookings/${bId}`, data),
+  // ── Chat preferences ──────────────────────────────────────────────────────
+  getChatPreferences:  ()     => get('/packages/preferences/chat'),
+  saveChatPreferences: (data) => put('/packages/preferences/chat', data),
 
-  confirmBooking: (id, bId) =>
-    apiClient.post(`${BASE}/${id}/bookings/${bId}/confirm`),
+  // ── User's own data ───────────────────────────────────────────────────────
+  getMyMessages: (params) => get('/packages/my/messages', params),
+  getMyBookings: (params) => get('/packages/my/bookings', params),
+  getMyInfoReqs: (params) => get('/packages/my/info-requests', params),
 
-  cancelBooking: (id, bId, data) =>
-    apiClient.post(`${BASE}/${id}/bookings/${bId}/cancel`, data),
-
-  // ── Info Requests ──────────────────────────────────────────────────────────
-  getInfoRequests: (id) =>
-    apiClient.get(`${BASE}/${id}/info-requests`),
-
-  createInfoRequest: (id, data) =>
-    apiClient.post(`${BASE}/${id}/info-requests`, data),
-
-  updateInfoRequest: (id, rId, data) =>
-    apiClient.patch(`${BASE}/${id}/info-requests/${rId}`, data),
-
-  deleteInfoRequest: (id, rId) =>
-    apiClient.delete(`${BASE}/${id}/info-requests/${rId}`),
+  // ── Stats ─────────────────────────────────────────────────────────────────
+  getStats:        () => get('/packages/stats'),
+  getBookingStats: () => get('/packages/bookings/stats'),
 }
 
 export default packagesAPI

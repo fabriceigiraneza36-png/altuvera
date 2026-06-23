@@ -1,21 +1,28 @@
-// src/utils/sendMessage.js  (or src/services/contactService.js)
+// src/utils/sendMessage.js
 // ─────────────────────────────────────────────────────────────────────────────
 // Sends booking/contact form data to backend
 // Backend expects: name OR full_name, email, message (required)
+// Auto-resolves API base URL — never doubles /api
 // ─────────────────────────────────────────────────────────────────────────────
 
-const API_BASE =
-  import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
+const resolveApiBase = () => {
+  const raw = import.meta.env.VITE_API_URL || 'https://backend-jd8f.onrender.com'
+  const base = raw.replace(/\/+$/, '')
+  return base.endsWith('/api') ? base : `${base}/api`
+}
+
+const API_BASE = resolveApiBase()
 
 /**
- * Send a contact/booking message to the backend
- * Handles all field name variations automatically
+ * Send a contact/booking message to the backend.
+ * Handles all field name variations automatically.
  */
 export const sendMessage = async (formData) => {
-  // ✅ Normalize ALL possible field name variations
+
+  // ── Normalize all possible field name variations ──────────────────────────
   const payload = {
-    // ── Required fields ──────────────────────────────────────────────────────
-    // Backend accepts: name OR full_name
+
+    // Required
     name:
       formData.name ||
       formData.fullName ||
@@ -24,17 +31,17 @@ export const sendMessage = async (formData) => {
       formData.contact_name ||
       (formData.firstName || formData.first_name
         ? `${formData.firstName || formData.first_name} ${
-            formData.lastName || formData.last_name || ""
+            formData.lastName || formData.last_name || ''
           }`.trim()
-        : "") ||
-      "",
+        : '') ||
+      '',
 
     email:
       formData.email ||
       formData.userEmail ||
       formData.user_email ||
       formData.contactEmail ||
-      "",
+      '',
 
     message:
       formData.message ||
@@ -45,9 +52,9 @@ export const sendMessage = async (formData) => {
       formData.details ||
       formData.specialRequests ||
       formData.special_requests ||
-      "",
+      '',
 
-    // ── Optional fields ───────────────────────────────────────────────────────
+    // Optional
     subject:
       formData.subject ||
       formData.topic ||
@@ -58,7 +65,7 @@ export const sendMessage = async (formData) => {
       (formData.destinationName
         ? `Booking Inquiry - ${formData.destinationName}`
         : null) ||
-      "Booking Inquiry",
+      'Booking Inquiry',
 
     phone:
       formData.phone ||
@@ -67,7 +74,7 @@ export const sendMessage = async (formData) => {
       formData.telephone ||
       null,
 
-    // ── Booking-specific ──────────────────────────────────────────────────────
+    // Booking-specific
     trip_type:
       formData.trip_type ||
       formData.tripType ||
@@ -96,70 +103,75 @@ export const sendMessage = async (formData) => {
       formData.adults ||
       null,
 
-    source: formData.source || "website",
-  };
+    source: formData.source || 'website',
+  }
 
-  // Generate a fallback message for bookings when no explicit message field exists
+  // ── Generate fallback message for booking forms ───────────────────────────
   if (!payload.message?.trim()) {
-    const details = [];
-    if (formData.destinationName) details.push(`Destination: ${formData.destinationName}`);
-    if (formData.destination) details.push(`Destination ID: ${formData.destination}`);
-    if (formData.tripType) details.push(`Trip Type: ${formData.tripType}`);
-    if (formData.startDate) details.push(`Start Date: ${formData.startDate}`);
-    if (formData.endDate) details.push(`End Date: ${formData.endDate}`);
+    const details = []
+    if (formData.destinationName)
+      details.push(`Destination: ${formData.destinationName}`)
+    if (formData.destination)
+      details.push(`Destination ID: ${formData.destination}`)
+    if (formData.tripType)
+      details.push(`Trip Type: ${formData.tripType}`)
+    if (formData.startDate)
+      details.push(`Start Date: ${formData.startDate}`)
+    if (formData.endDate)
+      details.push(`End Date: ${formData.endDate}`)
     if (formData.adults || formData.children) {
-      const children = formData.children || 0;
-      details.push(`Travelers: ${formData.adults || 0} adults, ${children} children`);
+      const children = formData.children || 0
+      details.push(
+        `Travelers: ${formData.adults || 0} adults, ${children} children`
+      )
     }
-    if (formData.specialRequests) details.push(`Special Requests: ${formData.specialRequests}`);
-    if (details.length > 0) {
-      payload.message = details.join("\n");
-    }
+    if (formData.specialRequests)
+      details.push(`Special Requests: ${formData.specialRequests}`)
+    if (details.length > 0)
+      payload.message = details.join('\n')
   }
 
-  // ✅ Debug log in development
+  // ── Dev logging ───────────────────────────────────────────────────────────
   if (import.meta.env.DEV) {
-    console.log("[Contact] Sending payload:", payload);
-    console.log("[Contact] Original form data:", formData);
+    console.log('[Contact] API_BASE:', API_BASE)
+    console.log('[Contact] Sending payload:', payload)
+    console.log('[Contact] Original form data:', formData)
   }
 
-  // ✅ Client-side validation before sending
-  const errors = [];
-  if (!payload.name?.trim()) errors.push("Name is required");
-  if (!payload.email?.trim()) errors.push("Email is required");
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email?.trim() || "")) {
-    errors.push("Valid email is required");
-  }
-  if (!payload.message?.trim()) errors.push("Message is required");
-  if (payload.message?.trim().length < 20) {
-    errors.push("Message must be at least 20 characters");
-  }
+  // ── Client-side validation ────────────────────────────────────────────────
+  const errors = []
+  if (!payload.name?.trim())
+    errors.push('Name is required')
+  if (!payload.email?.trim())
+    errors.push('Email is required')
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email?.trim() || ''))
+    errors.push('Valid email is required')
+  if (!payload.message?.trim())
+    errors.push('Message is required')
+  if (payload.message?.trim().length < 20)
+    errors.push('Message must be at least 20 characters')
 
-  if (errors.length > 0) {
-    throw new Error(errors[0]);
-  }
+  if (errors.length > 0) throw new Error(errors[0])
 
-  // ✅ Send to backend
+  // ── Send to backend ───────────────────────────────────────────────────────
   const response = await fetch(`${API_BASE}/contact`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-  });
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(payload),
+  })
 
-  const data = await response.json().catch(() => ({}));
+  const data = await response.json().catch(() => ({}))
 
   if (!response.ok) {
-    // ✅ Always extract string error - prevents [object Object]
     const errorMessage =
       data?.error ||
       data?.message ||
       data?.errors?.[0] ||
-      `Request failed (${response.status})`;
-
-    throw new Error(errorMessage);
+      `Request failed (${response.status})`
+    throw new Error(errorMessage)
   }
 
-  return data;
-};
+  return data
+}
 
-export default sendMessage;
+export default sendMessage
