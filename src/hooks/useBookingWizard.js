@@ -6,7 +6,7 @@ import { useDestinations } from "./useDestinations";
 import { useCountries } from "./useCountries";
 import { INITIAL_FORM, STEPS } from "../pages/Booking/BookingShared";
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 /* ── Validators ── */
 const required = (v) => (v ? "" : "This field is required");
@@ -55,7 +55,6 @@ export const useBookingWizard = () => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [formData, setFormData] = useState(() => {
     const base = { ...INITIAL_FORM };
-    // Pre-fill from URL params
     const dest = searchParams.get("destination");
     const country = searchParams.get("country");
     if (dest) base.destinationId = dest;
@@ -73,8 +72,16 @@ export const useBookingWizard = () => {
     if (user && isAuthenticated) {
       setFormData((prev) => ({
         ...prev,
-        firstName: prev.firstName || user.firstName || user.full_name?.split(" ")[0] || "",
-        lastName: prev.lastName || user.lastName || user.full_name?.split(" ").slice(1).join(" ") || "",
+        firstName:
+          prev.firstName ||
+          user.firstName ||
+          user.full_name?.split(" ")[0] ||
+          "",
+        lastName:
+          prev.lastName ||
+          user.lastName ||
+          user.full_name?.split(" ").slice(1).join(" ") ||
+          "",
         email: prev.email || user.email || "",
         phone: prev.phone || user.phone || "",
       }));
@@ -82,8 +89,10 @@ export const useBookingWizard = () => {
   }, [user, isAuthenticated]);
 
   /* ── Data loading ── */
-  const { destinations: rawDests = [], loading: loadingDests } = useDestinations?.({ limit: 200 }) || {};
-  const { countries: rawCountries = [], loading: loadingCountries } = useCountries?.({ limit: 100 }) || {};
+  const { destinations: rawDests = [], loading: loadingDests } =
+    useDestinations?.({ limit: 200 }) || {};
+  const { countries: rawCountries = [], loading: loadingCountries } =
+    useCountries?.({ limit: 100 }) || {};
   const [servicesData, setServicesData] = useState([]);
   const [loadingServices, setLoadingServices] = useState(false);
 
@@ -91,6 +100,7 @@ export const useBookingWizard = () => {
 
   useEffect(() => {
     setLoadingServices(true);
+    // ✅ API already contains /api — just append the endpoint
     fetch(`${API}/services`)
       .then((r) => r.json())
       .then((d) => setServicesData(d.data || d.services || d || []))
@@ -147,7 +157,8 @@ export const useBookingWizard = () => {
     return "";
   }, [formData.destinationId, formData.countryId, destinationsList, countriesList]);
 
-  const displayName = user?.firstName || user?.full_name?.split(" ")[0] || "";
+  const displayName =
+    user?.firstName || user?.full_name?.split(" ")[0] || "";
 
   /* ── Handlers ── */
   const handleChange = useCallback((e) => {
@@ -286,19 +297,28 @@ export const useBookingWizard = () => {
         };
 
         const headers = { "Content-Type": "application/json" };
-        const token = localStorage.getItem("authToken") || localStorage.getItem("token");
+        const token =
+          localStorage.getItem("authToken") ||
+          localStorage.getItem("token");
         if (token) headers.Authorization = `Bearer ${token}`;
 
-        const res = await fetch(`${API}/api/bookings`, {
+        // ✅ API already contains /api — just append /bookings
+        const res = await fetch(`${API}/bookings`, {
           method: "POST",
           headers,
           body: JSON.stringify(payload),
         });
 
         const data = await res.json();
-        if (!res.ok) throw new Error(data.message || data.error || "Booking failed");
+        if (!res.ok)
+          throw new Error(data.message || data.error || "Booking failed");
 
-        setSubmissionRef(data.data?.referenceNumber || data.data?.id || data.referenceNumber || "");
+        setSubmissionRef(
+          data.data?.referenceNumber ||
+            data.data?.id ||
+            data.referenceNumber ||
+            ""
+        );
         setIsSubmitted(true);
       } catch (err) {
         setErrors({ submit: err.message });
@@ -344,7 +364,7 @@ export const useBookingWizard = () => {
     prevStep,
     handleStepClick,
     handleSubmit,
-    // Static data (passed through)
+    // Static data
     groupTypes: [
       { value: "solo", label: "Solo Adventure", icon: "🧳" },
       { value: "couple", label: "Couple", icon: "💑" },
