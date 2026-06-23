@@ -52,6 +52,7 @@ const AltuveraPaymentTermsContent = () => {
       marginBottom: "10px",
     },
     subtitle: {
+      fontFamily: "'Playfair Display', Georgia, serif",
       color: "#4B5563",
       fontSize: "16px",
       maxWidth: "760px",
@@ -130,6 +131,7 @@ const AltuveraPaymentTermsContent = () => {
       lineHeight: "1.7",
     },
     paragraph: {
+      fontFamily: "'Playfair Display', Georgia, serif",
       marginBottom: "20px",
     },
     list: {

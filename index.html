@@ -367,5 +367,16 @@
     </noscript>
 
     <script type="module" src="/src/main.jsx"></script>
+
+    <script>
+      window._ytApiKey = "AIzaSyCmpTFnUrkZaooRIVNWkaCO3Mf0mu_u1KQ";
+      window._ytApiReady = false;
+      window._ytApiReadyCb = [];
+      window.onYouTubeIframeAPIReady = function() {
+        window._ytApiReady = true;
+        window._ytApiReadyCb.forEach(function(cb) { cb(); });
+      };
+    </script>
+    <script src="https://www.youtube.com/iframe_api"></script>
   </body>
 </html>

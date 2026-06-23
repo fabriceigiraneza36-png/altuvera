@@ -384,6 +384,7 @@ const Hero = () => {
       maxWidth: "900px",
     },
     subtitle: {
+      fontFamily: "'Inter', sans-serif",
       fontSize: "clamp(16px, 2vw, 20px)",
       color: "rgba(255, 255, 255, 0.9)",
       marginBottom: "16px",

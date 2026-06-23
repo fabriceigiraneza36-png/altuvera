@@ -40,7 +40,7 @@
 /* ── SECTION HEADERS ── */
 .section-header { text-align: center; margin-bottom: clamp(0.75rem, 1.8vw, 1.25rem); max-width: 720px; margin-left: auto; margin-right: auto; }
 .section-title { font-size: clamp(1.75rem, 4vw, 3rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.15; margin: 0 0 0.55rem; color: var(--text-primary); }
-.section-subtitle { font-size: clamp(0.9rem, 1.4vw, 1.08rem); color: var(--text-secondary); line-height: 1.55; margin: 0; }
+.section-subtitle { font-family: 'Inter', sans-serif; font-size: clamp(0.9rem, 1.4vw, 1.08rem); color: var(--text-secondary); line-height: 1.55; margin: 0; }
 .section-cta { display: flex; justify-content: center; margin-top: clamp(1.5rem, 3vw, 2.5rem); }
 
 /* ── SKELETON ── */
@@ -57,7 +57,7 @@
 .intro-badge { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.45rem 1rem; background: var(--primary-soft); border: 1px solid var(--border-color); border-radius: 100px; font-size: 0.76rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--primary); margin-bottom: 0.75rem; }
 .intro-heading { font-size: clamp(1.65rem, 3.2vw, 2.5rem); font-weight: 700; letter-spacing: -0.03em; line-height: 1.15; margin: 0 0 0.45rem; }
 .intro-divider { width: 54px; height: 2px; background: linear-gradient(90deg, var(--primary), transparent); margin-bottom: 0.75rem; }
-.intro-paragraph { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(1rem, 1.6vw, 1.25rem); font-style: italic; font-weight: 400; color: var(--text-secondary); line-height: 1.55; margin: 0; }
+.intro-paragraph { font-family: 'Inter', sans-serif; font-size: clamp(1rem, 1.6vw, 1.25rem); font-style: italic; font-weight: 400; color: var(--text-secondary); line-height: 1.55; margin: 0; }
 
 /* ── INTRO MEDIA PANEL ── */
 .intro-media-panel {
@@ -78,9 +78,28 @@
 .intro-main-card-img {
   position: absolute; inset: 0; width: 100%; height: 100%;
   object-fit: cover; display: block;
-  transition: transform 0.6s ease, filter 0.4s ease;
+  transition: transform 0.6s ease, filter 0.4s ease, opacity 0.8s ease;
 }
 .intro-main-card:hover .intro-main-card-img { transform: scale(1.05); filter: brightness(0.85); }
+
+.intro-yt-bg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  pointer-events: none;
+}
+.intro-yt-bg iframe,
+.intro-yt-bg > div {
+  width: 100% !important;
+  height: 100% !important;
+  position: absolute; inset: 0;
+}
+.intro-yt-fallback {
+  position: absolute; inset: 0;
+  z-index: 0;
+}
+.intro-yt-fallback img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
 
 .intro-main-card-overlay {
   position: absolute; inset: 0;
@@ -169,83 +188,233 @@
   background: #000; flex-shrink: 0;
 }
 .vmodal-video { width: 100%; height: 100%; object-fit: contain; display: block; }
+
+.vmodal-yt-player {
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  inset: 0;
+}
+
 .vmodal-center-control {
   position: absolute; inset: 0; display: flex; align-items: center;
   justify-content: center; cursor: pointer; z-index: 2;
+  background: rgba(0,0,0,0.15);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.vmodal-center-control:hover {
+  opacity: 1;
 }
 .vmodal-big-play {
   width: 72px; height: 72px; border-radius: 50%;
-  background: rgba(46,125,50,0.7); color: #fff;
+  background: rgba(46,125,50,0.9); color: #fff;
   display: flex; align-items: center; justify-content: center;
-  backdrop-filter: blur(6px); box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
   animation: vmodalPulse 2s ease infinite;
 }
 @keyframes vmodalPulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.06); } }
 
-.vmodal-controls { background: #1a1a1a; padding: 0; flex-shrink: 0; }
+.vmodal-loading {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 16px; background: #111;
+  color: rgba(255,255,255,0.7);
+  font-family: 'Inter', sans-serif;
+  font-size: 14px; font-weight: 500;
+  letter-spacing: 0.02em;
+  z-index: 5;
+}
+.vmodal-loading-spinner {
+  width: 44px; height: 44px;
+  border: 3px solid rgba(255,255,255,0.12);
+  border-top-color: #10B981;
+  border-radius: 50%;
+  animation: vmodalSpin 0.8s linear infinite;
+}
+@keyframes vmodalSpin { to { transform: rotate(360deg); } }
+
+.vmodal-error-state {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 14px; background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  color: #fff; text-align: center;
+  padding: 40px 32px; z-index: 5;
+}
+.vmodal-error-icon {
+  width: 72px; height: 72px; border-radius: 50%;
+  background: rgba(239,68,68,0.15);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 8px;
+}
+.vmodal-error-icon svg { color: #ef4444; }
+.vmodal-error-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 20px; font-weight: 700;
+  color: #fff; margin: 0;
+  letter-spacing: -0.01em;
+}
+.vmodal-error-message {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px; color: rgba(255,255,255,0.65);
+  line-height: 1.65; max-width: 400px;
+  margin: 0;
+}
+.vmodal-error-actions {
+  display: flex; gap: 12px;
+  margin-top: 10px; flex-wrap: wrap;
+  justify-content: center;
+}
+.vmodal-error-retry,
+.vmodal-error-skip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 11px 22px; border-radius: 50px;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.25s ease;
+  border: none; font-family: 'Inter', sans-serif;
+}
+.vmodal-error-retry {
+  background: #10B981; color: #fff;
+}
+.vmodal-error-retry:hover {
+  background: #059669; transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16,185,129,0.35);
+}
+.vmodal-error-skip {
+  background: rgba(255,255,255,0.1); color: #fff;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.vmodal-error-skip:hover {
+  background: rgba(255,255,255,0.18);
+  transform: translateY(-2px);
+}
+
+.vmodal-controls { background: #1a1a1a; padding: 0; flex-shrink: 0; border-top: 1px solid rgba(255,255,255,0.06); }
 .vmodal-progress {
-  height: 4px; background: #333; cursor: pointer;
+  height: 4px; background: rgba(255,255,255,0.1); cursor: pointer;
   position: relative; transition: height 0.2s;
 }
 .vmodal-progress:hover { height: 6px; }
 .vmodal-progress-fill {
-  height: 100%; background: linear-gradient(90deg, var(--primary), var(--primary-light));
-  border-radius: 0 2px 2px 0; transition: width 0.1s linear;
+  height: 100%;
+  background: linear-gradient(90deg, #059669, #10B981, #34D399);
+  border-radius: 0 2px 2px 0;
+  transition: width 0.15s linear;
+  position: relative;
 }
+.vmodal-progress-fill::after {
+  content: '';
+  position: absolute; right: -4px; top: 50%;
+  transform: translateY(-50%);
+  width: 10px; height: 10px;
+  background: #10B981; border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.2s;
+  box-shadow: 0 0 8px rgba(16,185,129,0.5);
+}
+.vmodal-progress:hover .vmodal-progress-fill::after { opacity: 1; }
 
 .vmodal-controls-row {
-  display: flex; align-items: center; padding: 10px 16px; gap: 12px;
+  display: flex; align-items: center; padding: 12px 18px; gap: 10px;
 }
 .vmodal-controls-left { display: flex; align-items: center; gap: 4px; }
 .vmodal-btn {
-  width: 36px; height: 36px; border-radius: 50%;
-  background: transparent; border: none; color: rgba(255,255,255,0.7);
+  width: 38px; height: 38px; border-radius: 50%;
+  background: transparent; border: none;
+  color: rgba(255,255,255,0.75);
   display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: color 0.2s, background 0.2s;
+  cursor: pointer; transition: all 0.2s ease;
 }
-.vmodal-btn:hover { color: #fff; background: rgba(255,255,255,0.1); }
-.vmodal-btn--play { color: #fff; }
-.vmodal-btn--playlist.active { color: var(--primary-light); }
+.vmodal-btn:hover { color: #fff; background: rgba(255,255,255,0.1); transform: scale(1.05); }
+.vmodal-btn--play {
+  color: #fff;
+  background: rgba(16,185,129,0.2);
+}
+.vmodal-btn--play:hover {
+  background: rgba(16,185,129,0.35);
+  color: #34D399;
+}
+.vmodal-btn--playlist.active { color: #10B981; background: rgba(16,185,129,0.15); }
 
-.vmodal-track-info { flex: 1; min-width: 0; }
-.vmodal-track-title { display: block; font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.vmodal-track-sub { display: block; font-size: 11px; color: rgba(255,255,255,0.5); }
+.vmodal-track-info { flex: 1; min-width: 0; padding: 0 8px; }
+.vmodal-track-title {
+  display: block; font-size: 13px; font-weight: 600;
+  color: #fff; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+  font-family: 'Playfair Display', Georgia, serif;
+}
+.vmodal-track-sub {
+  display: block; font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  font-family: 'Inter', sans-serif;
+  margin-top: 2px;
+}
 
 /* Playlist */
 .vmodal-playlist {
-  background: #1a1a1a; border-top: 1px solid #2a2a2a;
-  max-height: 260px; overflow-y: auto; flex-shrink: 0;
+  background: #161616;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  max-height: 320px;
+  overflow-y: auto;
+  animation: vmodalSlideUp 0.3s ease;
 }
-.vmodal-playlist::-webkit-scrollbar { width: 3px; }
-.vmodal-playlist::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+@keyframes vmodalSlideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.vmodal-playlist::-webkit-scrollbar { width: 5px; }
+.vmodal-playlist::-webkit-scrollbar-track { background: transparent; }
+.vmodal-playlist::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.12);
+  border-radius: 10px;
+}
+.vmodal-playlist::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
 .vmodal-playlist-header {
-  display: flex; align-items: center; gap: 6px;
-  padding: 10px 16px; font-size: 12px; font-weight: 700;
-  color: rgba(255,255,255,0.5); text-transform: uppercase; letter-spacing: 0.08em;
-  border-bottom: 1px solid #2a2a2a; position: sticky; top: 0; background: #1a1a1a; z-index: 1;
+  display: flex; align-items: center; gap: 8px;
+  padding: 14px 18px;
+  font-size: 11px; font-weight: 700;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  position: sticky; top: 0;
+  background: #161616; z-index: 1;
 }
+.vmodal-playlist-header svg { color: #10B981; }
 
 .vmodal-playlist-item {
-  display: flex; align-items: center; gap: 12px;
-  padding: 10px 16px; border: none; background: transparent;
-  width: 100%; cursor: pointer; transition: background 0.2s;
+  display: flex; align-items: center; gap: 14px;
+  padding: 12px 18px; border: none;
+  background: transparent; width: 100%;
+  cursor: pointer; transition: all 0.2s ease;
   text-align: left; font-family: inherit;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
 }
-.vmodal-playlist-item:hover { background: rgba(255,255,255,0.05); }
-.vmodal-playlist-item.active { background: rgba(46,125,50,0.15); }
-
+.vmodal-playlist-item:last-child { border-bottom: none; }
+.vmodal-playlist-item:hover { background: rgba(255,255,255,0.04); }
+.vmodal-playlist-item.active {
+  background: rgba(16,185,129,0.08);
+  border-left: 3px solid #10B981;
+  padding-left: 15px;
+}
 .vmodal-playlist-thumb {
-  width: 52px; height: 36px; border-radius: 6px; overflow: hidden;
-  flex-shrink: 0; position: relative; background: #333;
+  width: 100px; height: 56px;
+  border-radius: 8px; overflow: hidden;
+  flex-shrink: 0; position: relative;
+  background: #222;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
 }
-.vmodal-playlist-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.vmodal-playlist-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .vmodal-playlist-playing {
   position: absolute; inset: 0;
-  background: rgba(46,125,50,0.5);
-  display: flex; align-items: center; justify-content: center; gap: 2px;
+  background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center; gap: 3px;
 }
 .vmodal-playlist-playing span {
-  width: 3px; border-radius: 3px; background: #fff;
+  width: 3px; border-radius: 3px;
+  background: #10B981;
   animation: eqBar 0.8s ease infinite alternate;
 }
 .vmodal-playlist-playing span:nth-child(1) { height: 10px; animation-delay: 0s; }
@@ -254,9 +423,35 @@
 @keyframes eqBar { 0% { height: 4px; } 100% { height: 18px; } }
 
 .vmodal-playlist-meta { flex: 1; min-width: 0; }
-.vmodal-playlist-name { display: block; font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.vmodal-playlist-desc { display: block; font-size: 11px; color: rgba(255,255,255,0.4); }
-.vmodal-playlist-num { font-size: 11px; color: rgba(255,255,255,0.2); font-weight: 700; flex-shrink: 0; }
+.vmodal-playlist-name {
+  display: block; font-size: 13px; font-weight: 600;
+  color: #fff; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis;
+  font-family: 'Playfair Display', Georgia, serif;
+}
+.vmodal-playlist-item.active .vmodal-playlist-name { color: #10B981; }
+.vmodal-playlist-desc {
+  display: block; font-size: 11px;
+  color: rgba(255,255,255,0.4);
+  font-family: 'Inter', sans-serif;
+  margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vmodal-playlist-num {
+  font-size: 11px; color: rgba(255,255,255,0.2);
+  font-weight: 700; flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.vmodal-playlist-item.active .vmodal-playlist-num { color: #10B981; }
+
+.vmodal-playlist-now-playing {
+  font-size: 10px; font-weight: 700;
+  color: #10B981; text-transform: uppercase;
+  letter-spacing: 0.06em;
+  display: flex; align-items: center; gap: 5px;
+}
 
 /* ═══════════════════════════════════════════
    DESTINATIONS
@@ -448,7 +643,7 @@
 .testimonial-full-content { text-align: center; min-width: 0; }
 
 .testimonial-full-text {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', sans-serif;
   font-size: clamp(1.05rem, 1.8vw, 1.35rem);
   font-style: italic;
   color: rgba(255,255,255,0.88);
@@ -575,7 +770,7 @@
 }
 
 .testimonial-compact-text {
-  font-family: "Playfair Display", Georgia, serif;
+  font-family: "Inter", sans-serif;
   font-size: clamp(1.05rem, 1.8vw, 1.25rem);
   line-height: 1.75;
   color: #374151;

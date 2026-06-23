@@ -49,7 +49,7 @@ const safeString = (value) => {
 
 const SubscriptionForm = ({
   title         = 'Get Exclusive Travel Inspiration',
-  description   = 'Join 25,000+ adventurers receiving hand-picked destination stories, insider tips, and members-only offers every week.',
+  description   = 'Join 10+ adventurers receiving hand-picked destination stories, insider tips, and members-only offers every week.',
   buttonText    = 'Subscribe',
   disclaimer    = 'No spam. Unsubscribe anytime.',
   theme         = 'dark',       // "dark" | "light"

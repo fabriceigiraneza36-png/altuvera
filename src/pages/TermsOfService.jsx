@@ -931,6 +931,7 @@ const styles = {
     paddingTop: 20,
   },
   paragraph: {
+    fontFamily: "'Playfair Display', Georgia, serif",
     fontSize: 15,
     color: BRAND.slate700,
     lineHeight: 1.8,

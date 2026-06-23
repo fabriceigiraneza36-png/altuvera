@@ -47,56 +47,58 @@ const VIDEO_PLAYLIST = [
     id: 1,
     title: "Serengeti Great Migration",
     subtitle: "Tanzania's endless plains",
-    src: "https://www.youtube.com/watch?v=oTw4XnLnSmU",
+    videoId: "jIwyy2D5iag",
     poster: "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=800&q=80",
   },
   {
     id: 2,
     title: "Mountain Gorillas of Rwanda",
     subtitle: "Volcanoes National Park",
-    src: "https://www.youtube.com/watch?v=GCi2-dChYt8",
+    videoId: "b1V4pzuncg",
     poster: "https://images.unsplash.com/photo-1602491453631-e2a5ad90a131?auto=format&fit=crop&w=800&q=80",
   },
   {
     id: 3,
     title: "Zanzibar Paradise",
     subtitle: "Indian Ocean coastline",
-    src: "https://www.youtube.com/watch?v=068mRPmbThE",
+    videoId: "DZnw2TeLuEU",
     poster: "https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?auto=format&fit=crop&w=800&q=80",
   },
   {
     id: 4,
     title: "Masai Mara Sunset",
     subtitle: "Kenya's golden hour",
-    src: "https://www.youtube.com/watch?v=f2tmwZEeqCY",
+    videoId: "--rk-kMATUc",
     poster: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=800&q=80",
   },
 ];
 
 const INTRO_SIDE_IMAGES = [
   {
-    src: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1920&q=100",
+    src: "https://i.pinimg.com/736x/8b/8b/61/8b8b61c3e5aa4d7e96b4bc15e26aba78.jpg",
     alt: "African Culture",
   },
   {
-    src: "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1920&q=100",
+    src: "https://i.pinimg.com/1200x/33/b4/bc/33b4bc7083952ab04349188419bbcdcb.jpg",
     alt: "Safari Landscape",
   },
 ];
 
 /* ═══════════════════════════════════════════
-   VIDEO PLAYER MODAL
+   VIDEO PLAYER MODAL (YouTube Embed Playlist)
    ═══════════════════════════════════════════ */
 const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
   const [currentIdx, setCurrentIdx] = useState(startIndex);
-  const [isPlaying, setIsPlaying] = useState(true);
   const [showPlaylist, setShowPlaylist] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const videoRef = useRef(null);
-  const progressRef = useRef(null);
+  const [videoError, setVideoError] = useState(false);
+  const [isReady, setIsReady] = useState(false);
+  const playerRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     setCurrentIdx(startIndex);
+    setVideoError(false);
+    setIsReady(false);
   }, [startIndex]);
 
   useEffect(() => {
@@ -110,46 +112,93 @@ const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
     };
   }, [isOpen, onClose]);
 
-  useEffect(() => {
-    if (videoRef.current && isOpen) {
-      videoRef.current.load();
-      if (isPlaying) videoRef.current.play().catch(() => {});
+   useEffect(() => {
+    if (!isOpen || !window.YT) return;
+    if (playerRef.current) {
+      playerRef.current.destroy();
+      playerRef.current = null;
     }
-  }, [currentIdx, isOpen]);
+    setIsReady(false);
+    setVideoError(false);
 
-  const handleTimeUpdate = () => {
-    if (!videoRef.current) return;
-    const pct = (videoRef.current.currentTime / videoRef.current.duration) * 100;
-    setProgress(isNaN(pct) ? 0 : pct);
+    const handleEnded = () => {
+      setCurrentIdx((p) => (p + 1) % playlist.length);
+    };
+
+    const handleStateChange = (e) => {
+      if (e.data === window.YT.PlayerState.ENDED) {
+        handleEnded();
+      }
+      if (e.data === window.YT.PlayerState.PLAYING) {
+        setVideoError(false);
+      }
+    };
+
+    const initPlayer = () => {
+      if (!containerRef.current) return;
+      try {
+        playerRef.current = new window.YT.Player(containerRef.current, {
+          height: "100%",
+          width: "100%",
+          videoId: playlist[currentIdx]?.videoId,
+          playerVars: {
+            autoplay: 1,
+            modestbranding: 1,
+            rel: 0,
+            fs: 1,
+            enablejsapi: 1,
+            origin: window.location.origin,
+            key: window._ytApiKey,
+          },
+          events: {
+            onReady: () => setIsReady(true),
+            onStateChange: handleStateChange,
+            onError: () => {
+              setVideoError(true);
+            },
+          },
+        });
+      } catch (err) {
+        setVideoError(true);
+      }
+    };
+
+    const timer = setTimeout(initPlayer, 300);
+    return () => {
+      clearTimeout(timer);
+      if (playerRef.current) {
+        try { playerRef.current.destroy(); } catch (e) {}
+        playerRef.current = null;
+      }
+    };
+  }, [isOpen, currentIdx, playlist]);
+
+  const playNext = useCallback(() => {
+    setCurrentIdx((p) => (p + 1) % playlist.length);
+  }, [playlist.length]);
+
+  const playPrev = useCallback(() => {
+    setCurrentIdx((p) => (p - 1 + playlist.length) % playlist.length);
+  }, [playlist.length]);
+
+  const playTrack = (index) => {
+    setCurrentIdx(index);
+    setVideoError(false);
+    setTimeout(() => {
+      if (playerRef.current && window.YT) {
+        try { playerRef.current.loadVideoById(playlist[index].videoId); } catch (e) {}
+      }
+    }, 300);
   };
 
-  const handleEnded = () => {
-    if (currentIdx < playlist.length - 1) {
-      setCurrentIdx((p) => p + 1);
-    } else {
-      setCurrentIdx(0);
-    }
-  };
-
-  const togglePlay = () => {
-    if (!videoRef.current) return;
-    if (videoRef.current.paused) {
-      videoRef.current.play().catch(() => {});
-      setIsPlaying(true);
-    } else {
-      videoRef.current.pause();
-      setIsPlaying(false);
-    }
-  };
-
-  const playNext = () => setCurrentIdx((p) => (p + 1) % playlist.length);
-  const playPrev = () => setCurrentIdx((p) => (p - 1 + playlist.length) % playlist.length);
-
-  const seekTo = (e) => {
-    if (!videoRef.current || !progressRef.current) return;
-    const rect = progressRef.current.getBoundingClientRect();
-    const pct = (e.clientX - rect.left) / rect.width;
-    videoRef.current.currentTime = pct * videoRef.current.duration;
+  const handleRetry = () => {
+    setVideoError(false);
+    setIsReady(false);
+    setTimeout(() => {
+      if (playerRef.current && window.YT) {
+        try { playerRef.current.loadVideoById(playlist[currentIdx].videoId); } catch (e) {}
+      }
+    }, 300);
   };
 
   if (!isOpen) return null;
@@ -165,40 +214,61 @@ const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
 
         {/* Video Area */}
         <div className="vmodal-video-area">
-          <video
-            ref={videoRef}
-            src={current.src}
-            poster={current.poster}
-            onTimeUpdate={handleTimeUpdate}
-            onEnded={handleEnded}
-            playsInline
-            className="vmodal-video"
-          />
-
-          {/* Center play/pause overlay */}
-          <div className="vmodal-center-control" onClick={togglePlay}>
-            {!isPlaying && (
-              <div className="vmodal-big-play">
-                <MdPlayArrow size={48} />
+          {videoError ? (
+            <div className="vmodal-error-state">
+              <div className="vmodal-error-icon">
+                <MdCloseCircle size={48} />
               </div>
-            )}
-          </div>
+              <h3 className="vmodal-error-title">Unable to Play Video</h3>
+              <p className="vmodal-error-message">
+                This video is temporarily unavailable. Please try another video from the playlist or check your connection.
+              </p>
+              <div className="vmodal-error-actions">
+                <button className="vmodal-error-retry" onClick={handleRetry}>
+                  <MdPlayArrow size={18} />
+                  Retry This Video
+                </button>
+                {playlist.length > 1 && (
+                  <button className="vmodal-error-skip" onClick={playNext}>
+                    <MdSkipNext size={18} />
+                    Play Next Video
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div ref={containerRef} className="vmodal-yt-player" />
+          )}
+
+          {!videoError && !isReady && (
+            <div className="vmodal-loading">
+              <div className="vmodal-loading-spinner" />
+              <p>Loading video…</p>
+            </div>
+          )}
         </div>
 
         {/* Controls Bar */}
         <div className="vmodal-controls">
-          {/* Progress bar */}
-          <div className="vmodal-progress" ref={progressRef} onClick={seekTo}>
-            <div className="vmodal-progress-fill" style={{ width: `${progress}%` }} />
-          </div>
-
           <div className="vmodal-controls-row">
             <div className="vmodal-controls-left">
               <button className="vmodal-btn" onClick={playPrev} aria-label="Previous">
                 <MdSkipPrevious size={22} />
               </button>
-              <button className="vmodal-btn vmodal-btn--play" onClick={togglePlay}>
-                {isPlaying ? <MdPause size={22} /> : <MdPlayArrow size={22} />}
+              <button
+                className="vmodal-btn vmodal-btn--play"
+                onClick={() => {
+                  if (!playerRef.current || !window.YT) return;
+                  const state = playerRef.current.getPlayerState();
+                  if (state === window.YT.PlayerState.PLAYING) {
+                    playerRef.current.pauseVideo();
+                  } else {
+                    playerRef.current.playVideo();
+                  }
+                }}
+                aria-label="Play/Pause"
+              >
+                <MdPlayArrow size={22} />
               </button>
               <button className="vmodal-btn" onClick={playNext} aria-label="Next">
                 <MdSkipNext size={22} />
@@ -231,11 +301,11 @@ const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
               <button
                 key={item.id}
                 className={`vmodal-playlist-item ${i === currentIdx ? "active" : ""}`}
-                onClick={() => { setCurrentIdx(i); setIsPlaying(true); }}
+                onClick={() => playTrack(i)}
               >
                 <div className="vmodal-playlist-thumb">
                   <img src={item.poster} alt={item.title} />
-                  {i === currentIdx && isPlaying && (
+                  {i === currentIdx && isReady && (
                     <div className="vmodal-playlist-playing">
                       <span /><span /><span />
                     </div>
@@ -252,7 +322,7 @@ const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
         )}
       </div>
     </div>
-  );
+   );
 };
 
 /* ═══════════════════════════════════════════
@@ -260,25 +330,25 @@ const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
    ═══════════════════════════════════════════ */
 const IntroMediaPanel = () => {
   const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const firstVideo = VIDEO_PLAYLIST[0];
 
   return (
     <>
       <div className="intro-media-panel">
-        {/* Main Card — hero image, click to open video modal */}
-        <div className="intro-main-card" onClick={() => setVideoModalOpen(true)}>
-          <img
-            src={VIDEO_PLAYLIST[0].poster}
-            alt="East Africa Safari"
-            className="intro-main-card-img"
-          />
+        {/* Main Card — YouTube bg, click to open video modal */}
+        <div
+          className="intro-main-card"
+          onClick={() => setVideoModalOpen(true)}
+        >
+        
           <div className="intro-main-card-overlay" />
           <div className="intro-main-card-play">
             <IoPlayCircle size={56} />
           </div>
           <div className="intro-main-card-label">
             <span className="intro-main-card-badge">▶ Watch Reel</span>
-            <h3 className="intro-main-card-title">{VIDEO_PLAYLIST[0].title}</h3>
-            <p className="intro-main-card-sub">{VIDEO_PLAYLIST[0].subtitle}</p>
+            <h3 className="intro-main-card-title">{firstVideo?.title}</h3>
+            <p className="intro-main-card-sub">{firstVideo?.subtitle}</p>
           </div>
         </div>
 
@@ -502,6 +572,54 @@ const TESTIMONIAL_SLIDES = [
     image: "https://picsum.photos/id/1005/120/120",
     alt: "Amina Hassan",
   },
+  {
+    quote:
+      "The canopy walkway was magical. Standing high above the ancient trees with the sounds of the forest all around us was unforgettable.",
+    name: "Sarah Thompson",
+    meta: "United Kingdom • June 2025",
+    image: "https://picsum.photos/id/64/120/120",
+    alt: "Sarah Thompson",
+  },
+  {
+    quote:
+      "Tracking chimpanzees in Nyungwe was the highlight of our Rwanda trip. Professional guides made the experience educational and deeply moving.",
+    name: "Michael Okoro",
+    meta: "Nigeria • Photographer",
+    image: "https://picsum.photos/id/201/120/120",
+    alt: "Michael Okoro",
+  },
+  {
+    quote:
+      "A perfect blend of adventure and serenity. The waterfalls and biodiversity left us speechless. Highly recommend for nature lovers.",
+    name: "Amina & Khalid Hassan",
+    meta: "Kenya • Honeymoon",
+    image: "https://picsum.photos/id/1005/120/120",
+    alt: "Amina Hassan",
+  },
+  {
+    quote:
+      "The canopy walkway was magical. Standing high above the ancient trees with the sounds of the forest all around us was unforgettable.",
+    name: "Sarah Thompson",
+    meta: "United Kingdom • June 2025",
+    image: "https://picsum.photos/id/64/120/120",
+    alt: "Sarah Thompson",
+  },
+  {
+    quote:
+      "Tracking chimpanzees in Nyungwe was the highlight of our Rwanda trip. Professional guides made the experience educational and deeply moving.",
+    name: "Michael Okoro",
+    meta: "Nigeria • Photographer",
+    image: "https://picsum.photos/id/201/120/120",
+    alt: "Michael Okoro",
+  },
+  {
+    quote:
+      "A perfect blend of adventure and serenity. The waterfalls and biodiversity left us speechless. Highly recommend for nature lovers.",
+    name: "Amina & Khalid Hassan",
+    meta: "Kenya • Honeymoon",
+    image: "https://picsum.photos/id/1005/120/120",
+    alt: "Amina Hassan",
+  },
 ];
 
 const TestimonialSlider = () => {
@@ -616,7 +734,7 @@ const TestimonialSlider = () => {
             <span>Verified</span>
           </div>
           <div>TripAdvisor • 4.9/5</div>
-          <div>2000+ Happy Visitors</div>
+          <div>10+ Happy Visitors</div>
         </div>
       </div>
     </section>

@@ -511,6 +511,7 @@ const Navbar = () => {
               </span>
             </Link>
 
+
             {/* ── LIVE CHAT BUTTON ── */}
             <button
               className={chatBtnClass}

@@ -17,27 +17,27 @@ import {
   Navigate,
   Outlet,
 } from "react-router-dom";
-import { useApp } from "./context/AppContext";
-import GoogleCallbackPage from "./pages/GoogleCallbackPage";
-import { useUserAuth } from "./context/UserAuthContext";
+import { useApp }          from "./context/AppContext";
+import GoogleCallbackPage  from "./pages/GoogleCallbackPage";
+import { useUserAuth }     from "./context/UserAuthContext";
 import { MessagingProvider } from "./context/MessagingContext";
-import ErrorBoundary from "./components/common/ErrorBoundary";
-import countryService from "./services/countryService";
-import NewsletterPopup from "./components/common/NewsletterPopup";
-import AutoSubscribeModal from "./components/common/AutoSubscribeModal";
+import ErrorBoundary       from "./components/common/ErrorBoundary";
+import countryService      from "./services/countryService";
+import NewsletterPopup     from "./components/common/NewsletterPopup";
+import AutoSubscribeModal  from "./components/common/AutoSubscribeModal";
 
 // ── Eager imports ─────────────────────────────────────────────────────────────
-import Navbar from "./components/common/Navbar";
-import Footer from "./components/common/Footer";
-import ScrollToTop from "./components/common/ScrollToTop";
-import Loader from "./components/common/Loader";
-import CookieConsent from "./components/common/CookieConsent";
-import AuthModal from "./components/auth/AuthModal";
+import Navbar           from "./components/common/Navbar";
+import Footer           from "./components/common/Footer";
+import ScrollToTop      from "./components/common/ScrollToTop";
+import Loader           from "./components/common/Loader";
+import CookieConsent    from "./components/common/CookieConsent";
+import AuthModal        from "./components/auth/AuthModal";
 import CongratulationWindow from "./components/auth/CongratulationWindow";
-import NotLoggedInMessage from "./components/auth/NotLoggedInMessage";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import PageWrapper from "./components/common/PageWrapper";
-import WhatsAppButton from "./components/common/WhatsAppButton";
+import NotLoggedInMessage   from "./components/auth/NotLoggedInMessage";
+import ProtectedRoute   from "./components/auth/ProtectedRoute";
+import PageWrapper      from "./components/common/PageWrapper";
+import WhatsAppButton   from "./components/common/WhatsAppButton";
 
 // ── Lazy imports ──────────────────────────────────────────────────────────────
 const PersistentVideoPlayer = React.lazy(() =>
@@ -52,9 +52,9 @@ const NotFound = React.lazy(() => import("./pages/NotFound"));
 // CONSTANTS
 // ============================================================================
 
-const WELCOME_KEY_PREFIX         = "altuvera_welcome_shown:";
-const CELEBRATION_DURATION_MS    = 4200;
-const CALLBACK_REDIRECT_DELAY_MS = 1800;
+const WELCOME_KEY_PREFIX              = "altuvera_welcome_shown:";
+const CELEBRATION_DURATION_MS         = 4200;
+const CALLBACK_REDIRECT_DELAY_MS      = 1800;
 const CALLBACK_ERROR_REDIRECT_DELAY_MS = 1200;
 
 // ============================================================================
@@ -64,8 +64,8 @@ const CALLBACK_ERROR_REDIRECT_DELAY_MS = 1200;
 const REDIRECT_MAP = {
   "/home":          "/",
   "/destinations/": "/destinations",
-  "/tours":         "/destinations",
-  "/safaris":       "/destinations",
+  "/tours":         "/packages",
+  "/safaris":       "/packages",
   "/blog":          "/posts",
   "/articles":      "/posts",
   "/news":          "/posts",
@@ -74,6 +74,7 @@ const REDIRECT_MAP = {
   "/about-us":      "/about",
   "/our-team":      "/team",
   "/faqs":          "/faq",
+  "/packages/":     "/packages",
 };
 
 const getRedirectUrl = (pathname) => {
@@ -87,7 +88,7 @@ const getRedirectUrl = (pathname) => {
 // ============================================================================
 
 const publicRoutes = [
-  // ── Home ──────────────────────────────────────────────────────────────────
+  // ── Home ───────────────────────────────────────────────────────────────────
   {
     path: "/",
     component: React.lazy(() => import("./pages/Home")),
@@ -98,7 +99,7 @@ const publicRoutes = [
     },
   },
 
-  // ── Dev / Test ─────────────────────────────────────────────────────────────
+  // ── Dev / Test ──────────────────────────────────────────────────────────────
   {
     path: "/tailwind-test",
     component: React.lazy(() => import("./pages/TailwindTest")),
@@ -108,7 +109,7 @@ const publicRoutes = [
     },
   },
 
-  // ── Destinations ───────────────────────────────────────────────────────────
+  // ── Destinations ────────────────────────────────────────────────────────────
   {
     path: "/destinations",
     component: React.lazy(() => import("./pages/Destinations")),
@@ -127,7 +128,7 @@ const publicRoutes = [
     },
   },
 
-  // ── Adventures ─────────────────────────────────────────────────────────────
+  // ── Adventures ──────────────────────────────────────────────────────────────
   {
     path: "/adventures/:slug",
     component: React.lazy(() => import("./pages/AdventureGuide")),
@@ -138,15 +139,12 @@ const publicRoutes = [
     },
   },
 
-  // ── Countries ──────────────────────────────────────────────────────────────
-  //
-  //  CountryPage lives at:  src/pages/CountryPage/index.jsx
-  //  CountryPage.css lives at: src/pages/CountryPage/CountryPage.css
-  //  (import './CountryPage.css' is inside CountryPage/index.jsx)
-  //
+  // ── Countries ───────────────────────────────────────────────────────────────
   {
     path: "/country/:countryId",
-    component: React.lazy(() => import("./pages/CountryPage/CountryPage.jsx")),
+    component: React.lazy(() =>
+      import("./pages/CountryPage/CountryPage.jsx")
+    ),
     meta: {
       title: "Country Guide",
       description:
@@ -162,7 +160,7 @@ const publicRoutes = [
     },
   },
 
-  // ── Content pages ──────────────────────────────────────────────────────────
+  // ── Content pages ────────────────────────────────────────────────────────────
   {
     path: "/tips",
     component: React.lazy(() => import("./pages/Tips")),
@@ -184,9 +182,8 @@ const publicRoutes = [
     path: "/posts",
     component: React.lazy(() => import("./pages/Posts")),
     meta: {
-      title: "Journal",
-      description:
-        "Travel guides, safari tips, and stories from East Africa.",
+      title: "Posts Journal",
+      description: "Travel guides, safari tips, and stories from East Africa.",
     },
   },
   {
@@ -198,7 +195,27 @@ const publicRoutes = [
     },
   },
 
-  // ── Map ────────────────────────────────────────────────────────────────────
+  // ── Packages ─────────────────────────────────────────────────────────────────
+  {
+    path: "/packages",
+    component: React.lazy(() => import("./pages/Packages")),
+    meta: {
+      title: "Travel Packages",
+      description:
+        "Browse curated East Africa safari and travel packages with transparent pricing.",
+    },
+  },
+  {
+    path: "/packages/:slug",
+    component: React.lazy(() => import("./pages/PackageDetail")),
+    meta: {
+      title: "Package Details",
+      description:
+        "Full package details, itinerary, inclusions, pricing and booking.",
+    },
+  },
+
+  // ── Map ───────────────────────────────────────────────────────────────────────
   {
     path: "/interactive-map",
     component: React.lazy(() => import("./pages/InteractiveMap")),
@@ -208,7 +225,7 @@ const publicRoutes = [
     },
   },
 
-  // ── Info pages ─────────────────────────────────────────────────────────────
+  // ── Info pages ────────────────────────────────────────────────────────────────
   {
     path: "/services",
     component: React.lazy(() => import("./pages/Services")),
@@ -238,8 +255,7 @@ const publicRoutes = [
     component: React.lazy(() => import("./pages/Gallery")),
     meta: {
       title: "Gallery",
-      description:
-        "Browse photos from safaris and cultural experiences.",
+      description: "Browse photos from safaris and cultural experiences.",
     },
   },
   {
@@ -247,8 +263,7 @@ const publicRoutes = [
     component: React.lazy(() => import("./pages/FAQ")),
     meta: {
       title: "FAQ",
-      description:
-        "Answers to common questions about booking and safaris.",
+      description: "Answers to common questions about booking and safaris.",
     },
   },
   {
@@ -260,7 +275,7 @@ const publicRoutes = [
     },
   },
 
-  // ── Legal pages ────────────────────────────────────────────────────────────
+  // ── Legal pages ───────────────────────────────────────────────────────────────
   {
     path: "/payment-terms",
     component: React.lazy(() => import("./pages/PaymentTerms")),
@@ -463,6 +478,10 @@ const APP_STYLES = `
   @keyframes ghSpin {
     to { transform: rotate(360deg); }
   }
+  @keyframes appReveal {
+    from { width: 0; }
+    to   { width: 100%; }
+  }
 
   .app-shell {
     min-height: 100vh;
@@ -470,10 +489,10 @@ const APP_STYLES = `
     flex-direction: column;
     position: relative;
     isolation: isolate;
-    font-family: 'Playfair Display', 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
 
-  /* ── Celebration card ── */
+  /* ── Celebration card ──────────────────────────────────────────────────── */
   .cel-backdrop {
     position: fixed;
     inset: 0;
@@ -630,14 +649,14 @@ const APP_STYLES = `
   }
   .cel-cta:active { transform: translateY(0); }
 
-  /* ── GitHub callback page ── */
+  /* ── GitHub callback page ──────────────────────────────────────────────── */
   .gh-page {
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
     background: linear-gradient(145deg, #f0fdf4 0%, #f8fafc 100%);
-    font-family: 'Playfair Display', 'Inter', -apple-system, sans-serif;
+    font-family: 'Inter', -apple-system, sans-serif;
     padding: 20px;
   }
   .gh-card {
@@ -704,10 +723,6 @@ const APP_STYLES = `
     border-radius: 2px;
     animation: appReveal 1.6s ease-out both;
   }
-  @keyframes appReveal {
-    from { width: 0; }
-    to   { width: 100%; }
-  }
 `;
 
 let stylesInjected = false;
@@ -727,9 +742,9 @@ function injectAppStyles() {
 // ============================================================================
 
 const FEATURE_BADGES = [
-  { id: "explore", label: "Explore",  icon: <GlobeIcon    size={13} /> },
-  { id: "book",    label: "Book",     icon: <CalendarIcon size={13} /> },
-  { id: "save",    label: "Wishlist", icon: <HeartIcon    size={13} /> },
+  { id: "explore",  label: "Explore",  icon: <GlobeIcon    size={13} /> },
+  { id: "book",     label: "Book",     icon: <CalendarIcon size={13} /> },
+  { id: "wishlist", label: "Wishlist", icon: <HeartIcon    size={13} /> },
 ];
 
 // ============================================================================
@@ -755,7 +770,7 @@ const GitHubCallbackPage = React.memo(() => {
     : isDone
     ? "gh-status--done"
     : "gh-status--default";
-  const statusMsg   = isError
+  const statusMsg = isError
     ? "Sign-in failed. Redirecting…"
     : isDone
     ? "Signed in successfully! Redirecting…"
@@ -831,9 +846,9 @@ const CelebrationOverlay = React.memo(({ userName, onDismiss }) => {
             </span>
           ))}
         </div>
-        <a href="/destinations" className="cel-cta">
+        <a href="/packages" className="cel-cta">
           <ArrowRightIcon size={16} />
-          Start Exploring
+          Explore Packages
         </a>
       </div>
     </div>
@@ -917,7 +932,7 @@ SmartRedirect.displayName = "SmartRedirect";
 function useCelebration({ isAuthenticated, user }) {
   const [showCelebration, setShowCelebration] = useState(false);
   const prevAuthRef = useRef(false);
-  const dismiss = useCallback(() => setShowCelebration(false), []);
+  const dismiss     = useCallback(() => setShowCelebration(false), []);
 
   useEffect(() => {
     const wasAuthenticated = prevAuthRef.current;

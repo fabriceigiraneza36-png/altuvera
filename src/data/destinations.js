@@ -223,7 +223,7 @@ export const destinations = {
         "The world's largest intact caldera, often called Africa's Garden of Eden.",
       fullDescription: `Ngorongoro Crater is the world's largest intact volcanic caldera, a natural amphitheater 19 kilometers wide that shelters one of Africa's highest wildlife densities. This UNESCO World Heritage Site is often called the "Eighth Wonder of the World."
 
-      The crater floor supports approximately 25,000 large animals, including one of the last populations of black rhinos and unusually high densities of lions. The enclosed nature means animals are present year-round – there's no migration here.
+      The crater floor supports approximately 10 large animals, including one of the last populations of black rhinos and unusually high densities of lions. The enclosed nature means animals are present year-round – there's no migration here.
 
       The crater rim, rising 600 meters above the floor, offers spectacular views and cooler temperatures. The surrounding conservation area includes Oldupai Gorge, where crucial human evolution discoveries were made, and traditional Maasai villages.`,
       highlights: [

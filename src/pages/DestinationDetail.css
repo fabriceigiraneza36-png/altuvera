@@ -132,7 +132,7 @@
   font-size: clamp(1.85rem, 3.8vw, 2.85rem);
   font-weight: 700; color: #052e16; line-height: 1.1; margin-top: 6px;
 }
-.d-sh__s { font-size: .96rem; color: #4b5563; margin-top: 8px; max-width: 520px; line-height: 1.65; }
+.d-sh__s { font-family: 'Inter', sans-serif; font-size: .96rem; color: #4b5563; margin-top: 8px; max-width: 520px; line-height: 1.65; }
 .d-sh--c .d-sh__s { margin: 8px auto 0; }
 .d-sec--dark .d-sh__s { color: #86efac; }
 .d-sh__bar { width: 72px; height: 3px; margin-top: 12px; background: linear-gradient(90deg, #166534, #4ade80); border-radius: 4px; }
@@ -199,9 +199,12 @@
   text-shadow: 0 4px 32px rgba(5,46,22,.35);
 }
 .d-hero__sub {
+  font-family: 'Inter', sans-serif;
   font-size: clamp(.98rem, 2.2vw, 1.28rem);
-  color: rgba(187,247,208,.9); max-width: 600px;
-  margin: 0 auto 28px; line-height: 1.6;
+  color: rgba(187,247,208,.9);
+  max-width: 600px;
+  margin: 0 auto 28px;
+  line-height: 1.6;
 }
 .d-hero__ctas { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; }
 .d-hero__stats {
@@ -237,7 +240,7 @@
   font-size: clamp(1.9rem, 4vw, 3rem);
   font-weight: 700; color: #052e16; line-height: 1.08; margin-bottom: 22px;
 }
-.d-prose { color: #4b5563; line-height: 1.82; }
+.d-prose { font-family: 'Inter', sans-serif; color: #4b5563; line-height: 1.82; }
 .d-prose p { margin-bottom: 16px; font-size: .96rem; }
 
 .d-about__stats-grid {

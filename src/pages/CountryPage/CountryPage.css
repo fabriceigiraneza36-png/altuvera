@@ -103,7 +103,7 @@
   font-weight:700;color:#052e16;line-height:1.1;margin-top:6px;
 }
 .cp-sh--light .cp-sh__t { color:#fff; }
-.cp-sh__s { font-size:.96rem;color:#4b5563;margin-top:8px;max-width:520px;line-height:1.65; }
+.cp-sh__s { font-family: 'Inter', sans-serif; font-size:.96rem;color:#4b5563;margin-top:8px;max-width:520px;line-height:1.65; }
 .cp-sh--c .cp-sh__s { margin:8px auto 0; }
 .cp-sec--dark .cp-sh__s { color:#86efac; }
 .cp-sh__bar { width:72px;height:3px;margin-top:12px;background:linear-gradient(90deg,#166534,#4ade80);border-radius:4px; }
@@ -162,8 +162,10 @@
   margin-bottom:18px;text-shadow:0 4px 32px rgba(5,46,22,.35);
 }
 .cp-hero__sub {
-  font-size:clamp(.98rem,2.2vw,1.28rem);color:rgba(187,247,208,.9);
-  max-width:600px;margin:0 auto 28px;line-height:1.6;
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(.98rem, 2.2vw, 1.28rem);
+  color: rgba(187,247,208,.9);
+  max-width: 600px; margin: 0 auto 28px; line-height: 1.6;
 }
 .cp-hero__ctas { display:flex;flex-wrap:wrap;gap:12px;justify-content:center; }
 .cp-hero__stats {
@@ -251,7 +253,7 @@
   font-size:.96rem;line-height:1.78;color:#374151;
   font-style:italic;padding-top:18px;
 }
-.cp-prose { color:#4b5563;line-height:1.82; }
+.cp-prose { font-family: 'Inter', sans-serif; color:#4b5563;line-height:1.82; }
 .cp-prose p { margin-bottom:16px;font-size:.96rem; }
 .cp-about__actions { display:flex;gap:10px;flex-wrap:wrap;margin-top:28px; }
 

@@ -44,6 +44,7 @@ const FeaturedCountries = () => {
       marginBottom: "16px",
     },
     subtitle: {
+      fontFamily: "'Playfair Display', Georgia, serif",
       fontSize: "18px",
       color: "#6B7280",
       maxWidth: "600px",

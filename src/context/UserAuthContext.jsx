@@ -23,6 +23,12 @@ const GITHUB_CLIENT_ID = import.meta.env.VITE_GITHUB_CLIENT_ID || "";
 const GITHUB_SCOPE =
   import.meta.env.VITE_GITHUB_SCOPE || "read:user user:email";
 
+// ── Re-verification threshold — must match backend REVERIFICATION_THRESHOLD ──
+// Backend: after THRESHOLD logins, user must re-verify via email OTP.
+// Counter resets to 1 after successful re-verification (not 0, since
+// the re-verification itself counts as one login).
+const REVERIFICATION_THRESHOLD = 3;
+
 const resolveGithubRedirectUri = () => {
   if (import.meta.env.VITE_GITHUB_REDIRECT_URI)
     return import.meta.env.VITE_GITHUB_REDIRECT_URI;
@@ -33,9 +39,9 @@ const resolveGithubRedirectUri = () => {
 
 if (import.meta.env.DEV) {
   const vars = {
-    VITE_API_URL: import.meta.env.VITE_API_URL,
-    VITE_GOOGLE_CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-    VITE_GITHUB_CLIENT_ID: import.meta.env.VITE_GITHUB_CLIENT_ID,
+    VITE_API_URL:            import.meta.env.VITE_API_URL,
+    VITE_GOOGLE_CLIENT_ID:   import.meta.env.VITE_GOOGLE_CLIENT_ID,
+    VITE_GITHUB_CLIENT_ID:   import.meta.env.VITE_GITHUB_CLIENT_ID,
     VITE_GITHUB_REDIRECT_URI: import.meta.env.VITE_GITHUB_REDIRECT_URI,
   };
   Object.entries(vars).forEach(([k, v]) => {
@@ -48,17 +54,17 @@ if (import.meta.env.DEV) {
 // ============================================================================
 
 const KEYS = {
-  TOKEN: "altuvera_auth_token",
-  REFRESH: "altuvera_refresh_token",
-  SESSION_PREF: "altuvera_persist_session",
-  PROFILE_CACHE: "altuvera_profile_cache",
-  GOOGLE_PENDING: "altuvera_google_pending",
-  GOOGLE_POPUP_STATE: "altuvera_google_popup_state",
-  GITHUB_STATE: "altuvera_github_state",
-  GITHUB_INTENT: "altuvera_github_intent",
-  LOGIN_COUNTER: "altuvera_login_counter",
-  LAST_LOGOUT: "altuvera_last_logout",
-  WELCOME_SHOWN_PREFIX: "altuvera_welcome_shown:",
+  TOKEN:               "altuvera_auth_token",
+  REFRESH:             "altuvera_refresh_token",
+  SESSION_PREF:        "altuvera_persist_session",
+  PROFILE_CACHE:       "altuvera_profile_cache",
+  GOOGLE_PENDING:      "altuvera_google_pending",
+  GOOGLE_POPUP_STATE:  "altuvera_google_popup_state",
+  GITHUB_STATE:        "altuvera_github_state",
+  GITHUB_INTENT:       "altuvera_github_intent",
+  LOGIN_COUNTER:       "altuvera_login_counter",
+  LAST_LOGOUT:         "altuvera_last_logout",
+  WELCOME_SHOWN_PREFIX:"altuvera_welcome_shown:",
 };
 
 // ============================================================================
@@ -75,9 +81,7 @@ const store = {
   get: (key) => {
     try {
       return localStorage.getItem(key) || sessionStorage.getItem(key);
-    } catch {
-      return null;
-    }
+    } catch { return null; }
   },
   set: (key, val, persist) => {
     try {
@@ -100,15 +104,12 @@ const store = {
     try {
       const raw = sessionStorage.getItem(key) || localStorage.getItem(key);
       return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
+    } catch { return null; }
   },
   setJSON: (key, val, useSession = true) => {
     try {
       (useSession ? sessionStorage : localStorage).setItem(
-        key,
-        JSON.stringify(val),
+        key, JSON.stringify(val),
       );
     } catch { /* storage full */ }
   },
@@ -116,27 +117,26 @@ const store = {
     try {
       const v = localStorage.getItem(KEYS.SESSION_PREF);
       return v === null ? true : v === "true";
-    } catch {
-      return true;
-    }
+    } catch { return true; }
   },
   getLoginCounter: () => {
     try {
       return parseInt(localStorage.getItem(KEYS.LOGIN_COUNTER) || "0", 10);
-    } catch {
-      return 0;
-    }
+    } catch { return 0; }
   },
   setLoginCounter: (n) => {
-    try { localStorage.setItem(KEYS.LOGIN_COUNTER, String(n)); } catch { /* ignore */ }
+    try { localStorage.setItem(KEYS.LOGIN_COUNTER, String(n)); }
+    catch { /* ignore */ }
   },
   clearAuth: () => {
     [KEYS.TOKEN, KEYS.REFRESH].forEach((k) => {
       try { localStorage.removeItem(k); sessionStorage.removeItem(k); }
       catch { /* ignore */ }
     });
-    [KEYS.GOOGLE_PENDING, KEYS.GOOGLE_POPUP_STATE,
-      KEYS.GITHUB_STATE, KEYS.GITHUB_INTENT].forEach((k) => {
+    [
+      KEYS.GOOGLE_PENDING, KEYS.GOOGLE_POPUP_STATE,
+      KEYS.GITHUB_STATE,   KEYS.GITHUB_INTENT,
+    ].forEach((k) => {
       try { sessionStorage.removeItem(k); } catch { /* ignore */ }
     });
   },
@@ -157,13 +157,16 @@ const pick = (...vals) => {
 };
 
 const normalizeUser = (raw, {
-  fallbackEmail = "", fallbackName = "",
-  fallbackAvatar = "", cache = {},
+  fallbackEmail  = "",
+  fallbackName   = "",
+  fallbackAvatar = "",
+  cache          = {},
 } = {}) => {
   if (!raw || typeof raw !== "object") return null;
 
-  const email = pick(raw.email, raw.userEmail, raw.user_email, fallbackEmail);
+  const email  = pick(raw.email, raw.userEmail, raw.user_email, fallbackEmail);
   const cached = email ? (cache[email.toLowerCase()] ?? null) : null;
+
   const fullName = pick(
     raw.fullName, raw.full_name, raw.name, raw.displayName,
     raw.username, cached?.fullName, fallbackName,
@@ -175,51 +178,60 @@ const normalizeUser = (raw, {
   );
 
   return {
-    id: raw.id || raw._id || raw.userId || null,
+    id:           raw.id || raw._id || raw.userId || null,
     email,
     fullName,
-    name: fullName,
-    avatar: avatar || null,
-    phone: pick(raw.phone, raw.phoneNumber, raw.phone_number),
-    bio: pick(raw.bio, raw.biography, raw.about),
-    role: pick(raw.role, raw.userRole, "user"),
+    name:         fullName,
+    avatar:       avatar || null,
+    phone:        pick(raw.phone, raw.phoneNumber, raw.phone_number),
+    bio:          pick(raw.bio,   raw.biography,   raw.about),
+    role:         pick(raw.role,  raw.userRole,    "user"),
     authProvider: pick(raw.authProvider, raw.auth_provider, raw.provider, "email"),
-    isVerified: Boolean(raw.isVerified || raw.is_verified || raw.emailVerified || raw.verified),
-    emailVerified: Boolean(raw.emailVerified || raw.email_verified || raw.isVerified),
-    isActive: typeof raw.isActive === "boolean" ? raw.isActive
-      : typeof raw.is_active === "boolean" ? raw.is_active : true,
+    isVerified:   Boolean(
+      raw.isVerified || raw.is_verified || raw.emailVerified || raw.verified,
+    ),
+    emailVerified: Boolean(
+      raw.emailVerified || raw.email_verified || raw.isVerified,
+    ),
+    isActive: typeof raw.isActive  === "boolean" ? raw.isActive
+            : typeof raw.is_active === "boolean" ? raw.is_active
+            : true,
     preferences: (raw.preferences && typeof raw.preferences === "object")
       ? raw.preferences : {},
-    lastLogin: raw.lastLogin || raw.last_login || null,
-    createdAt: raw.createdAt || raw.created_at || null,
-    subscribed: Boolean(raw.subscribed ?? raw.isSubscribed ?? false),
+    lastLogin:    raw.lastLogin  || raw.last_login  || null,
+    createdAt:    raw.createdAt  || raw.created_at  || null,
+    loginCounter: typeof raw.loginCounter  === "number" ? raw.loginCounter
+                : typeof raw.login_counter === "number" ? raw.login_counter
+                : 0,
+    subscribed:   Boolean(raw.subscribed ?? raw.isSubscribed ?? false),
   };
 };
 
 const extractPayload = (data) => {
   const d = data?.data || data || {};
   return {
-    token: d.token || d.accessToken || d.access_token || data?.token || null,
-    refreshToken: d.refreshToken || d.refresh_token || data?.refreshToken || null,
-    user: d.user || data?.user || d || null,
-    isNewUser: Boolean(d.isNewUser || d.is_new_user || data?.isNewUser),
+    token:        d.token        || d.accessToken  || d.access_token  || data?.token        || null,
+    refreshToken: d.refreshToken || d.refresh_token                   || data?.refreshToken || null,
+    user:         d.user         || data?.user      || d               || null,
+    isNewUser:    Boolean(d.isNewUser         || d.is_new_user    || data?.isNewUser),
     requiresProfile: Boolean(d.requiresProfile || d.requires_profile || data?.requiresProfile),
+    loginCounter: d.loginCounter ?? d.login_counter ?? data?.loginCounter ?? null,
+    wasReverification: Boolean(d.wasReverification ?? data?.wasReverification),
   };
 };
 
 const decodeJWT = (credential) => {
   if (!credential) return null;
   try {
-    const b64 = credential.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const b64  = credential.split(".")[1]
+      .replace(/-/g, "+").replace(/_/g, "/");
     const json = decodeURIComponent(
       atob(b64).split("").map((c) =>
-        "%" + c.charCodeAt(0).toString(16).padStart(2, "0")
+        "%" + c.charCodeAt(0).toString(16).padStart(2, "0"),
       ).join(""),
     );
     return JSON.parse(json);
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 };
 
 const randomState = () => {
@@ -239,106 +251,74 @@ const readProfileCache = () => {
   } catch { return {}; }
 };
 
-const isNewUserCheck = (userData) => {
-  if (!userData?.createdAt || !userData?.updatedAt) return false;
-  try {
-    return Math.abs(
-      new Date(userData.createdAt).getTime() -
-      new Date(userData.updatedAt).getTime()
-    ) < 1000;
-  } catch { return false; }
-};
-
 // ─── Error classifiers ────────────────────────────────────────────────────────
 
 const isDismissalError = (msg = "") => {
   const m = msg.toLowerCase();
   return (
-    m.includes("dismiss") || m.includes("cancel") ||
-    m.includes("closed") || m.includes("credential_cancelled") ||
-    m.includes("popup_closed") || m.includes("skipped") ||
-    m.includes("not_displayed") || m.includes("access_denied")
+    m.includes("dismiss")            || m.includes("cancel")      ||
+    m.includes("closed")             || m.includes("credential_cancelled") ||
+    m.includes("popup_closed")       || m.includes("skipped")     ||
+    m.includes("not_displayed")      || m.includes("access_denied")
   );
 };
 
 // ─── COOP-safe popup closed check ────────────────────────────────────────────
-// window.closed throws under strict COOP — wrap every access
 const isPopupClosed = (popup) => {
-  try {
-    return !popup || popup.closed;
-  } catch {
-    // COOP blocked the read → assume still open, let timeout handle it
-    return false;
-  }
+  try { return !popup || popup.closed; }
+  catch { return false; } // COOP blocked — assume still open
 };
 
 // ─── FedCM-safe One Tap notification classifier ───────────────────────────────
 const classifyOneTapNotification = (notification) => {
-  // ✅ FedCM migration: wrap EVERY method call individually
-  // These methods are deprecated under FedCM but still work during transition
   try {
-    let displayed = false;
-    let skipped = false;
-    let dismissed = false;
+    let displayed   = false;
+    let skipped     = false;
+    let dismissed   = false;
     let notDisplayed = false;
 
-    try { displayed = Boolean(notification.isDisplayMoment?.()); } catch { /* FedCM deprecated */ }
-    try { skipped = Boolean(notification.isSkippedMoment?.()); } catch { /* FedCM deprecated */ }
-    try { dismissed = Boolean(notification.isDismissedMoment?.()); } catch { /* FedCM deprecated */ }
-    try { notDisplayed = Boolean(notification.isNotDisplayed?.()); } catch { /* FedCM deprecated */ }
+    try { displayed    = Boolean(notification.isDisplayMoment?.());  } catch { /* FedCM */ }
+    try { skipped      = Boolean(notification.isSkippedMoment?.());  } catch { /* FedCM */ }
+    try { dismissed    = Boolean(notification.isDismissedMoment?.()); } catch { /* FedCM */ }
+    try { notDisplayed = Boolean(notification.isNotDisplayed?.());   } catch { /* FedCM */ }
 
-    if (displayed) return "success";
-    if (skipped || dismissed) return "dismissed";
-    if (notDisplayed) return "unavailable";
-    return "dismissed"; // safe fallback
-  } catch {
+    if (displayed)               return "success";
+    if (skipped || dismissed)    return "dismissed";
+    if (notDisplayed)            return "unavailable";
     return "dismissed";
-  }
+  } catch { return "dismissed"; }
 };
 
 // ============================================================================
-// Google OAuth2 Popup — COOP-safe implementation
+// Google OAuth2 Popup — COOP-safe
 // ============================================================================
 
 const GOOGLE_OAUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth";
 
-/**
- * Opens a Google OAuth2 popup and resolves with an id_token.
- *
- * COOP-safe strategies used:
- *  1. postMessage from /auth/google/callback page (primary)
- *  2. Poll popup.location with try/catch (fallback, works when COOP = same-origin-allow-popups)
- *  3. BroadcastChannel (works even under strict COOP, same-origin only)
- *
- * Requires: COOP header = "same-origin-allow-popups" (NOT "same-origin")
- */
 const openGooglePopup = (clientId, mode = "signin") =>
   new Promise((resolve, reject) => {
-    if (!clientId) {
+    if (!clientId)
       return reject(new Error("Google Sign-In is not configured."));
-    }
 
-    const state = randomState();
-    const nonce = randomState();
+    const state       = randomState();
+    const nonce       = randomState();
     const redirectUri = `${window.location.origin}/auth/google/callback`;
 
-    try {
-      sessionStorage.setItem(KEYS.GOOGLE_POPUP_STATE, state);
-    } catch { /* ignore */ }
+    try { sessionStorage.setItem(KEYS.GOOGLE_POPUP_STATE, state); }
+    catch { /* ignore */ }
 
     const params = new URLSearchParams({
-      client_id: clientId,
-      redirect_uri: redirectUri,
+      client_id:     clientId,
+      redirect_uri:  redirectUri,
       response_type: "id_token token",
-      scope: "openid email profile",
+      scope:         "openid email profile",
       state,
       nonce,
       prompt: mode === "signup" ? "select_account consent" : "select_account",
     });
 
-    // Popup dimensions & position
     const W = 500, H = 640;
-    const left = Math.round((window.screen.width - W) / 2);
+    const left = Math.round((window.screen.width  - W) / 2);
     const top  = Math.round((window.screen.height - H) / 2);
     const features = [
       `width=${W}`, `height=${H}`,
@@ -363,17 +343,17 @@ const openGooglePopup = (clientId, mode = "signin") =>
       ));
     }
 
-    let settled = false;
-    let pollTimer = null;
-    let msgHandler = null;
-    let bcHandler = null;
+    let settled      = false;
+    let pollTimer    = null;
+    let msgHandler   = null;
+    let bcHandler    = null;
     let watchdogTimer = null;
-    let bc = null;
+    let bc           = null;
 
     const cleanup = () => {
       settled = true;
-      if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
-      if (watchdogTimer) { clearTimeout(watchdogTimer); watchdogTimer = null; }
+      if (pollTimer)    { clearInterval(pollTimer);   pollTimer    = null; }
+      if (watchdogTimer){ clearTimeout(watchdogTimer); watchdogTimer = null; }
       if (msgHandler) {
         window.removeEventListener("message", msgHandler);
         msgHandler = null;
@@ -383,9 +363,8 @@ const openGooglePopup = (clientId, mode = "signin") =>
         bc = null;
       }
       try { sessionStorage.removeItem(KEYS.GOOGLE_POPUP_STATE); } catch { /* ignore */ }
-      try {
-        if (!isPopupClosed(popup)) popup.close();
-      } catch { /* COOP may block this — popup will close itself */ }
+      try { if (!isPopupClosed(popup)) popup.close(); }
+      catch { /* COOP may block — popup closes itself */ }
     };
 
     const settle = (fn, val) => {
@@ -394,81 +373,66 @@ const openGooglePopup = (clientId, mode = "signin") =>
       fn(val);
     };
 
-    // ── Strategy 1: postMessage from /auth/google/callback ───────────────────
-    msgHandler = (event) => {
+    const getSavedState = () => {
+      try { return sessionStorage.getItem(KEYS.GOOGLE_POPUP_STATE); }
+      catch { return state; }
+    };
+
+    const handleMessage = (event) => {
       if (settled) return;
       if (event.origin !== window.location.origin) return;
-      const { type, credential, idToken, error, state: retState } =
-        event.data || {};
+      const { type, credential, idToken, error, state: retState } = event.data || {};
       if (type !== "google_auth_callback") return;
 
-      const savedState = (() => {
-        try { return sessionStorage.getItem(KEYS.GOOGLE_POPUP_STATE); }
-        catch { return state; }
-      })();
-
-      if (retState && savedState && retState !== savedState) {
+      if (retState && getSavedState() && retState !== getSavedState())
         return settle(reject, new Error("Security check failed. Please try again."));
-      }
 
       if (error) {
-        if (isDismissalError(error)) {
+        if (isDismissalError(error))
           return settle(resolve, { dismissed: true, reason: "popup_closed" });
-        }
         return settle(reject, new Error(error));
       }
 
       const token = credential || idToken;
-      if (!token) {
+      if (!token)
         return settle(resolve, { dismissed: true, reason: "no_credential" });
-      }
 
       settle(resolve, token);
     };
+
+    // Strategy 1: postMessage
+    msgHandler = handleMessage;
     window.addEventListener("message", msgHandler);
 
-    // ── Strategy 2: BroadcastChannel (COOP-safe, same-origin) ───────────────
+    // Strategy 2: BroadcastChannel
     try {
       bc = new BroadcastChannel("google_auth_popup");
       bc.onmessage = (event) => {
         if (settled) return;
-        const { type, credential, idToken, error, state: retState } =
-          event.data || {};
+        const { type, credential, idToken, error, state: retState } = event.data || {};
         if (type !== "google_auth_callback") return;
 
-        const savedState = (() => {
-          try { return sessionStorage.getItem(KEYS.GOOGLE_POPUP_STATE); }
-          catch { return state; }
-        })();
-
-        if (retState && savedState && retState !== savedState) {
+        if (retState && getSavedState() && retState !== getSavedState())
           return settle(reject, new Error("Security check failed."));
-        }
 
         if (error) {
-          if (isDismissalError(error)) {
+          if (isDismissalError(error))
             return settle(resolve, { dismissed: true, reason: "popup_closed" });
-          }
           return settle(reject, new Error(error));
         }
 
         const token = credential || idToken;
         if (token) settle(resolve, token);
       };
-    } catch {
-      // BroadcastChannel not supported — fall through to polling
-    }
+    } catch { /* BroadcastChannel not supported */ }
 
-    // ── Strategy 3: Poll popup URL (works with same-origin-allow-popups) ─────
+    // Strategy 3: Poll popup URL
     pollTimer = setInterval(() => {
       if (settled) { clearInterval(pollTimer); return; }
 
-      // COOP-safe closed check
       if (isPopupClosed(popup)) {
         clearInterval(pollTimer);
-        if (!settled) {
-          settle(resolve, { dismissed: true, reason: "popup_closed" });
-        }
+        if (!settled) settle(resolve, { dismissed: true, reason: "popup_closed" });
         return;
       }
 
@@ -480,44 +444,36 @@ const openGooglePopup = (clientId, mode = "signin") =>
         const query = new URLSearchParams(popup.location.search);
 
         const idToken =
-          hash.get("id_token") || hash.get("credential") ||
-          query.get("id_token") || query.get("credential");
+          hash.get("id_token")   || hash.get("credential")   ||
+          query.get("id_token")  || query.get("credential");
 
-        const errParam = hash.get("error") || query.get("error");
-        const retState = hash.get("state") || query.get("state");
+        const errParam = hash.get("error")  || query.get("error");
+        const retState = hash.get("state")  || query.get("state");
 
         if (errParam) {
           clearInterval(pollTimer);
-          if (isDismissalError(errParam) || errParam === "access_denied") {
+          if (isDismissalError(errParam) || errParam === "access_denied")
             return settle(resolve, { dismissed: true, reason: errParam });
-          }
           return settle(reject, new Error(`Google error: ${errParam}`));
         }
 
         if (idToken) {
-          const savedState = (() => {
-            try { return sessionStorage.getItem(KEYS.GOOGLE_POPUP_STATE); }
-            catch { return state; }
-          })();
-
+          const savedState = getSavedState();
           if (retState && savedState && retState !== savedState) {
             clearInterval(pollTimer);
             return settle(reject, new Error("Security check failed."));
           }
-
           clearInterval(pollTimer);
           settle(resolve, idToken);
         }
       } catch {
-        // Cross-origin read — popup still on Google's domain, keep polling
+        // Cross-origin read — still on Google's domain, keep polling
       }
     }, 400);
 
-    // ── Watchdog: 5-minute timeout ────────────────────────────────────────────
+    // Watchdog: 5-minute timeout
     watchdogTimer = setTimeout(() => {
-      if (!settled) {
-        settle(resolve, { dismissed: true, reason: "timeout" });
-      }
+      if (!settled) settle(resolve, { dismissed: true, reason: "timeout" });
     }, 5 * 60 * 1000);
   });
 
@@ -527,85 +483,83 @@ const openGooglePopup = (clientId, mode = "signin") =>
 
 export function UserAuthProvider({ children }) {
   // ── Core state ──────────────────────────────────────────────────────────────
-  const [user, setUser]                 = useState(null);
-  const [token, setToken]               = useState(() => store.get(KEYS.TOKEN));
-  const [authLoading, setAuthLoading]   = useState(true);
+  const [user, setUser]                     = useState(null);
+  const [token, setToken]                   = useState(() => store.get(KEYS.TOKEN));
+  const [authLoading, setAuthLoading]       = useState(true);
   const [persistSession, setPersistSession] = useState(() => store.getPersist());
 
-  // ── Modal ────────────────────────────────────────────────────────────────────
+  // ── Modal ─────────────────────────────────────────────────────────────────
   const [isModalOpen, setIsModalOpen]   = useState(false);
-  const [modalView, setModalView]       = useState("login");
+  const [modalView,   setModalView]     = useState("login");
   const [pendingEmail, setPendingEmail] = useState("");
 
-  // ── Re-verification ──────────────────────────────────────────────────────────
+  // ── Re-verification ───────────────────────────────────────────────────────
   const [requiresLoginVerification, setRequiresLoginVerification] = useState(false);
   const [pendingSocialAuth, setPendingSocialAuth] = useState(null);
+
+  // ── Login counter (synced from server) ────────────────────────────────────
   const [loginCounter, setLoginCounter] = useState(() => store.getLoginCounter());
 
-  // ── Notifications ────────────────────────────────────────────────────────────
-  const [showCongratulation, setShowCongratulation]   = useState(false);
-  const [congratulationType, setCongratulationType]   = useState("");
+  // ── Notifications ─────────────────────────────────────────────────────────
+  const [showCongratulation,    setShowCongratulation]    = useState(false);
+  const [congratulationType,    setCongratulationType]    = useState("");
   const [showNotLoggedInMessage, setShowNotLoggedInMessage] = useState(false);
 
-  // ── Social auth ──────────────────────────────────────────────────────────────
-  const [googleUser, setGoogleUser]       = useState(() => store.getJSON(KEYS.GOOGLE_PENDING));
-  const [googleLoaded, setGoogleLoaded]   = useState(false);
+  // ── Social auth ───────────────────────────────────────────────────────────
+  const [googleUser,    setGoogleUser]    = useState(() => store.getJSON(KEYS.GOOGLE_PENDING));
+  const [googleLoaded,  setGoogleLoaded]  = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);
   const [socialAuthError, setSocialAuthError] = useState("");
 
-  // ── Refs ─────────────────────────────────────────────────────────────────────
-  const fetchingRef       = useRef(false);
-  const pendingRef        = useRef(null);
-  const googleInitRef     = useRef(false);
-  const refreshRef        = useRef(null);
-  const googleCbRef       = useRef(null);
-  const profileCacheRef   = useRef(null);
-  const congratTimerRef   = useRef(null);
-  const notLoggedInRef    = useRef(null);
+  // ── Refs ──────────────────────────────────────────────────────────────────
+  const fetchingRef     = useRef(false);
+  const pendingRef      = useRef(null);
+  const googleInitRef   = useRef(false);
+  const refreshRef      = useRef(null);
+  const googleCbRef     = useRef(null);
+  const profileCacheRef = useRef(null);
+  const congratTimerRef = useRef(null);
+  const notLoggedInRef  = useRef(null);
 
-  // ── Computed ─────────────────────────────────────────────────────────────────
+  // ── Computed ──────────────────────────────────────────────────────────────
   const isAuthenticated = useMemo(() => !!user && !!token, [user, token]);
   const hasGooglePending = useMemo(
     () => !!googleUser?.email && !!googleUser?.credential,
     [googleUser],
   );
 
-  // ── Init profile cache ───────────────────────────────────────────────────────
+  // ── Init profile cache ────────────────────────────────────────────────────
   useEffect(() => {
-    if (profileCacheRef.current === null) {
+    if (profileCacheRef.current === null)
       profileCacheRef.current = readProfileCache();
-    }
   }, []);
 
-  // ── Cleanup ──────────────────────────────────────────────────────────────────
-  useEffect(() => {
-    return () => {
-      document.body.style.overflow = "";
-      if (congratTimerRef.current) clearTimeout(congratTimerRef.current);
-      if (notLoggedInRef.current)  clearTimeout(notLoggedInRef.current);
-    };
+  // ── Cleanup ───────────────────────────────────────────────────────────────
+  useEffect(() => () => {
+    document.body.style.overflow = "";
+    if (congratTimerRef.current) clearTimeout(congratTimerRef.current);
+    if (notLoggedInRef.current)  clearTimeout(notLoggedInRef.current);
   }, []);
 
   const getCache = useCallback(() => profileCacheRef.current ?? {}, []);
+
+  // ── Sync loginCounter to storage whenever it changes ─────────────────────
+  useEffect(() => { store.setLoginCounter(loginCounter); }, [loginCounter]);
 
   // ============================================================================
   // Helpers
   // ============================================================================
 
   const triggerCongratulation = useCallback((type) => {
-    // Only show the full congratulations welcome modal for a true signup,
-    // and only once per user/email. Prevents repeated popups on every login.
     try {
       if (type !== "signup") return;
       const email = (user?.email || pendingRef.current?.email || "").toLowerCase();
       if (!email) return;
       const key = `${KEYS.WELCOME_SHOWN_PREFIX}${email}`;
-      if (localStorage.getItem(key)) return; // already shown for this user
+      if (localStorage.getItem(key)) return;
       localStorage.setItem(key, Date.now().toString());
-    } catch (err) {
-      // storage may be unavailable — fall back to still showing the modal
-    }
+    } catch { /* storage unavailable */ }
 
     if (congratTimerRef.current) clearTimeout(congratTimerRef.current);
     setCongratulationType(type);
@@ -628,7 +582,7 @@ export function UserAuthProvider({ children }) {
       [email.toLowerCase()]: {
         email,
         fullName: trim(profile?.fullName || profile?.name),
-        avatar: trim(profile?.avatar),
+        avatar:   trim(profile?.avatar),
       },
     };
     profileCacheRef.current = next;
@@ -648,6 +602,8 @@ export function UserAuthProvider({ children }) {
     pendingRef.current = null;
     setRequiresLoginVerification(false);
     setPendingSocialAuth(null);
+    setLoginCounter(0);
+    store.setLoginCounter(0);
     try { localStorage.setItem(KEYS.LAST_LOGOUT, Date.now().toString()); }
     catch { /* ignore */ }
   }, []);
@@ -655,8 +611,7 @@ export function UserAuthProvider({ children }) {
   const setSessionPreference = useCallback((persist) => {
     const next = Boolean(persist);
     setPersistSession(next);
-    try { localStorage.setItem(KEYS.SESSION_PREF, String(next)); }
-    catch { /* ignore */ }
+    try { localStorage.setItem(KEYS.SESSION_PREF, String(next)); } catch { /* ignore */ }
     const t = token || store.get(KEYS.TOKEN);
     if (t) store.set(KEYS.TOKEN, t, next);
     const r = store.get(KEYS.REFRESH);
@@ -664,23 +619,33 @@ export function UserAuthProvider({ children }) {
   }, [token]);
 
   const saveAuth = useCallback((data, opts = {}) => {
-    const { token: tok, refreshToken: ref, user: raw } = extractPayload(data);
+    const {
+      token: tok, refreshToken: ref, user: raw,
+      loginCounter: serverCounter,
+    } = extractPayload(data);
+
     const persist = typeof opts.persist === "boolean" ? opts.persist : persistSession;
 
     if (tok) { store.set(KEYS.TOKEN, tok, persist); setToken(tok); }
-    if (ref)  store.set(KEYS.REFRESH, ref, persist);
+    if (ref)   store.set(KEYS.REFRESH, ref, persist);
+
+    // Sync counter from server response if present
+    if (typeof serverCounter === "number") {
+      setLoginCounter(serverCounter);
+      store.setLoginCounter(serverCounter);
+    }
 
     const fallback = {
-      email:  pendingRef.current?.email  || googleUser?.email   || "",
-      name:   pendingRef.current?.fullName || googleUser?.name  || "",
-      avatar: pendingRef.current?.avatar  || googleUser?.picture || "",
+      email:  pendingRef.current?.email   || googleUser?.email   || "",
+      name:   pendingRef.current?.fullName || googleUser?.name   || "",
+      avatar: pendingRef.current?.avatar   || googleUser?.picture || "",
     };
 
     const normalized = normalizeUser(raw, {
-      fallbackEmail: fallback.email,
-      fallbackName:  fallback.name,
+      fallbackEmail:  fallback.email,
+      fallbackName:   fallback.name,
       fallbackAvatar: fallback.avatar,
-      cache: getCache(),
+      cache:          getCache(),
     });
 
     if (normalized) { setUser(normalized); cacheProfile(normalized); }
@@ -691,9 +656,6 @@ export function UserAuthProvider({ children }) {
 
     return data;
   }, [cacheProfile, getCache, googleUser, persistSession]);
-
-  // ── Persist login counter ────────────────────────────────────────────────────
-  useEffect(() => { store.setLoginCounter(loginCounter); }, [loginCounter]);
 
   // ============================================================================
   // Modal
@@ -761,9 +723,9 @@ export function UserAuthProvider({ children }) {
         try {
           if (!refreshRef.current) {
             refreshRef.current = fetch(`${API_BASE}/users/refresh-token`, {
-              method: "POST",
+              method:  "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ refreshToken: rt }),
+              body:    JSON.stringify({ refreshToken: rt }),
             })
               .then(async (r) => {
                 const d = await r.json().catch(() => ({}));
@@ -774,7 +736,9 @@ export function UserAuthProvider({ children }) {
               .finally(() => { refreshRef.current = null; });
           }
           const newTok = await refreshRef.current;
-          res = await fetch(url, { ...opts, _retry: true, headers: makeHeaders(newTok) });
+          res = await fetch(url, {
+            ...opts, _retry: true, headers: makeHeaders(newTok),
+          });
         } catch {
           clearAuth();
           throw new Error("Session expired. Please sign in again.");
@@ -800,9 +764,9 @@ export function UserAuthProvider({ children }) {
       const msg =
         data?.message || data?.error || data?.data?.message ||
         `Request failed (${res.status})`;
-      const err   = new Error(msg);
-      err.status  = res.status;
-      err.data    = data;
+      const err  = new Error(msg);
+      err.status = res.status;
+      err.data   = data;
       throw err;
     }
 
@@ -823,7 +787,15 @@ export function UserAuthProvider({ children }) {
       const data = await authFetch("/users/me");
       const raw  = data?.data?.user || data?.data || data?.user || data;
       const norm = normalizeUser(raw, { cache: getCache() });
-      if (norm) { setUser(norm); cacheProfile(norm); }
+      if (norm) {
+        setUser(norm);
+        cacheProfile(norm);
+        // Sync counter from server
+        if (typeof norm.loginCounter === "number") {
+          setLoginCounter(norm.loginCounter);
+          store.setLoginCounter(norm.loginCounter);
+        }
+      }
     } catch (err) {
       console.warn("[Auth] Session restore failed:", err.message);
       clearAuth();
@@ -843,14 +815,12 @@ export function UserAuthProvider({ children }) {
     if (!email) throw new Error("Email is required.");
     if (typeof p.persistSession === "boolean") setSessionPreference(p.persistSession);
 
-    // Store pending ref immediately so verifyCode always has it
     pendingRef.current = { email, fullName: trim(p.fullName) || "" };
 
     const data = await authFetch("/users/login", {
       method: "POST",
-      body: JSON.stringify({
+      body:   JSON.stringify({
         email,
-        // Send fullName so backend can store it for new users
         fullName: trim(p.fullName) || undefined,
       }),
     }).catch((err) => {
@@ -858,7 +828,6 @@ export function UserAuthProvider({ children }) {
       throw new Error(err?.message || "Failed to send verification code.");
     });
 
-    // Set pendingEmail BEFORE switching view — prevents race condition
     setPendingEmail(email);
     setRequiresLoginVerification(false);
     setModalView("verify");
@@ -880,7 +849,7 @@ export function UserAuthProvider({ children }) {
 
     const data = await authFetch("/users/register", {
       method: "POST",
-      body: JSON.stringify({
+      body:   JSON.stringify({
         email,
         fullName: trim(p.fullName) || undefined,
         phone:    trim(p.phone)    || undefined,
@@ -892,7 +861,6 @@ export function UserAuthProvider({ children }) {
       throw new Error(err?.message || "Failed to send verification code.");
     });
 
-    // Set pendingEmail BEFORE switching view
     setPendingEmail(email);
     setModalView("verify");
 
@@ -907,25 +875,27 @@ export function UserAuthProvider({ children }) {
 
     const data = await authFetch("/users/verify-code", {
       method: "POST",
-      body: JSON.stringify({ email: e, code: c }),
+      body:   JSON.stringify({ email: e, code: c }),
     });
 
-    // Backend returns the authoritative loginCounter — use it directly
-    const serverCounter = data?.data?.loginCounter ?? data?.loginCounter ?? 0;
+    // Always use server's counter — single source of truth
+    const { loginCounter: serverCounter } = extractPayload(data);
+    const newCounter = serverCounter ?? (data?.data?.loginCounter ?? data?.loginCounter ?? 0);
 
     if (requiresLoginVerification) {
-      if (pendingSocialAuth) saveAuth(pendingSocialAuth, { persist: persistSession });
-      else saveAuth(data, { persist: persistSession });
+      // Re-verification path: we had a pending social auth or just needed re-verify
+      if (pendingSocialAuth?.data) {
+        saveAuth(pendingSocialAuth.data, { persist: persistSession });
+      } else {
+        saveAuth(data, { persist: persistSession });
+      }
 
-      // Sync counter from server
-      setLoginCounter(serverCounter);
-      store.setLoginCounter(serverCounter);
-
+      setLoginCounter(newCounter);
+      store.setLoginCounter(newCounter);
       setRequiresLoginVerification(false);
       setPendingSocialAuth(null);
       setPendingEmail("");
       closeModal();
-      const userData = pendingSocialAuth?.user || data?.data?.user || data?.user;
       triggerCongratulation(
         data?.data?.isNewUser || data?.isNewUser ? "signup" : "login",
       );
@@ -936,9 +906,8 @@ export function UserAuthProvider({ children }) {
     setPendingEmail("");
     closeModal();
 
-    // Use server's counter — don't increment locally
-    setLoginCounter(serverCounter);
-    store.setLoginCounter(serverCounter);
+    setLoginCounter(newCounter);
+    store.setLoginCounter(newCounter);
 
     triggerCongratulation(
       data?.data?.isNewUser || data?.isNewUser ? "signup" : "login",
@@ -954,7 +923,7 @@ export function UserAuthProvider({ children }) {
     if (!e) throw new Error("Email is required.");
     return authFetch("/users/resend-code", {
       method: "POST",
-      body: JSON.stringify({ email: e }),
+      body:   JSON.stringify({ email: e }),
     });
   }, [authFetch, pendingEmail]);
 
@@ -964,7 +933,7 @@ export function UserAuthProvider({ children }) {
     try {
       const d = await authFetch("/users/check-email", {
         method: "POST",
-        body: JSON.stringify({ email: e }),
+        body:   JSON.stringify({ email: e }),
       });
       return d?.data || { exists: false };
     } catch { return { exists: false }; }
@@ -980,40 +949,22 @@ export function UserAuthProvider({ children }) {
     setSocialAuthError("");
 
     try {
-      const decoded    = decodeJWT(credential);
-      const userEmail  = decoded?.email || "";
-
-      // Re-verification path
-      if (loginCounter >= 2 && userEmail) {
-        setPendingEmail(userEmail);
-        setRequiresLoginVerification(true);
-        setPendingSocialAuth({ credential, extra, userEmail });
-        try {
-          await authFetch("/users/login", {
-            method: "POST",
-            body: JSON.stringify({ email: userEmail }),
-          });
-        } catch { /* user can resend */ }
-        setModalView("verify");
-        return { requiresVerification: true };
-      }
-
       const data = await authFetch("/users/google", {
         method: "POST",
-        body: JSON.stringify({
-          // ✅ Send BOTH credential (id_token) and idToken
-          // so your backend can accept either field name
+        body:   JSON.stringify({
           credential,
-          idToken: credential,
-          phone:   trim(extra.phone),
-          bio:     trim(extra.bio),
-          avatar:  trim(extra.avatar),
+          idToken:  credential,
+          phone:    trim(extra.phone),
+          bio:      trim(extra.bio),
+          avatar:   trim(extra.avatar),
         }),
       });
 
       const { isNewUser, requiresProfile } = extractPayload(data);
 
+      // New user needs to complete profile
       if (isNewUser || requiresProfile) {
+        const decoded = decodeJWT(credential);
         const pending = {
           credential,
           email:   decoded?.email   || "",
@@ -1032,45 +983,51 @@ export function UserAuthProvider({ children }) {
       triggerCongratulation("login");
       return data;
     } catch (err) {
-      // Handle re-verification required from backend
+      // Re-verification required from backend
       const errData = err?.data || {};
-      if (errData?.code === "REVERIFICATION_REQUIRED" || errData?.requiresReVerification) {
-        setPendingEmail(errData.email);
+      if (
+        errData?.code === "REVERIFICATION_REQUIRED" ||
+        errData?.requiresReVerification
+      ) {
+        const revEmail = errData.email || "";
+        setPendingEmail(revEmail);
         setSocialAuthError("");
+        setRequiresLoginVerification(true);
+        // Backend already sent the OTP — just show the verify view
         setModalView("verify");
-        // Trigger OTP resend
-        try { await authFetch("/users/login", { method: "POST", body: JSON.stringify({ email: errData.email }) }); } catch {}
         return { requiresVerification: true };
       }
+
       const msg = err?.message || "Google sign-in failed.";
       setSocialAuthError(msg);
       throw new Error(msg);
     } finally {
       setGoogleLoading(false);
     }
-  }, [authFetch, closeModal, loginCounter, persistSession, saveAuth, triggerCongratulation]);
+  }, [authFetch, closeModal, persistSession, saveAuth, triggerCongratulation]);
 
   // ============================================================================
   // One Tap Response Handler
   // ============================================================================
 
   const handleGoogleResponse = useCallback(async (response) => {
-    if (!response?.credential) {
-      setGoogleLoading(false);
-      return;
-    }
+    if (!response?.credential) { setGoogleLoading(false); return; }
+
+    // If a manual callback is registered (from promptGoogleAuth), use it
     if (googleCbRef.current) {
       const cb = googleCbRef.current;
       googleCbRef.current = null;
       cb(response.credential);
       return;
     }
+
     try {
       setGoogleLoading(true);
       await googleSignIn(response.credential);
     } catch (err) {
       const msg = err?.message || "";
-      if (!isDismissalError(msg)) setSocialAuthError(msg || "Google sign-in failed.");
+      if (!isDismissalError(msg))
+        setSocialAuthError(msg || "Google sign-in failed.");
     } finally {
       setGoogleLoading(false);
     }
@@ -1087,13 +1044,12 @@ export function UserAuthProvider({ children }) {
       if (!window.google?.accounts?.id) return;
       try {
         window.google.accounts.id.initialize({
-          client_id: GOOGLE_CLIENT_ID,
-          callback: handleGoogleResponse,
-          auto_select: false,
+          client_id:             GOOGLE_CLIENT_ID,
+          callback:              handleGoogleResponse,
+          auto_select:           false,
           cancel_on_tap_outside: true,
-          // ✅ Opt in to FedCM — suppresses GSI_LOGGER warning
-          use_fedcm_for_prompt: true,
-          itp_support: true,
+          use_fedcm_for_prompt:  true, // suppress FedCM migration warning
+          itp_support:           true,
         });
         setGoogleLoaded(true);
         googleInitRef.current = true;
@@ -1109,17 +1065,18 @@ export function UserAuthProvider({ children }) {
       'script[src="https://accounts.google.com/gsi/client"]',
     );
     if (existing) {
-      existing.dataset.loaded === "true" ? setup()
+      existing.dataset.loaded === "true"
+        ? setup()
         : existing.addEventListener("load", setup, { once: true });
       return;
     }
 
-    const s    = document.createElement("script");
-    s.src      = "https://accounts.google.com/gsi/client";
-    s.async    = true;
-    s.defer    = true;
-    s.onload   = () => { s.dataset.loaded = "true"; setup(); };
-    s.onerror  = () => {
+    const s   = document.createElement("script");
+    s.src     = "https://accounts.google.com/gsi/client";
+    s.async   = true;
+    s.defer   = true;
+    s.onload  = () => { s.dataset.loaded = "true"; setup(); };
+    s.onerror = () => {
       console.warn("[Auth] Failed to load Google SDK.");
       setGoogleLoaded(false);
     };
@@ -1133,9 +1090,8 @@ export function UserAuthProvider({ children }) {
   const promptGoogleAuth = useCallback(
     (opts = {}) =>
       new Promise((resolve, reject) => {
-        if (!GOOGLE_CLIENT_ID) {
+        if (!GOOGLE_CLIENT_ID)
           return reject(new Error("Google Sign-In is not configured."));
-        }
 
         setSocialAuthError("");
         setGoogleLoading(true);
@@ -1149,17 +1105,22 @@ export function UserAuthProvider({ children }) {
           fn(val);
         };
 
-        // ── Button render path ──────────────────────────────────────────────
+        // ── Button render path ────────────────────────────────────────────
         if (opts.container) {
           if (!googleLoaded || !window.google?.accounts?.id) {
-            return settle(reject, new Error("Google Sign-In is loading. Please try again."));
+            return settle(
+              reject,
+              new Error("Google Sign-In is loading. Please try again."),
+            );
           }
           try {
             opts.container.innerHTML = "";
             window.google.accounts.id.renderButton(opts.container, {
-              theme: "outline", size: "large", shape: "pill",
-              width: opts.buttonWidth || 320,
-              text: opts.mode === "signup" ? "signup_with" : "signin_with",
+              theme:          "outline",
+              size:           "large",
+              shape:          "pill",
+              width:          opts.buttonWidth || 320,
+              text:           opts.mode === "signup" ? "signup_with" : "signin_with",
               logo_alignment: "left",
             });
             settled = true;
@@ -1170,23 +1131,23 @@ export function UserAuthProvider({ children }) {
           }
         }
 
-        // ── Helper: run popup fallback ──────────────────────────────────────
+        // ── Helper: run popup fallback ────────────────────────────────────
         const runPopup = async (reason) => {
           if (settled) return;
-          if (import.meta.env.DEV) {
+          if (import.meta.env.DEV)
             console.info(`[Auth] One Tap ${reason} → popup fallback`);
-          }
+
           setGoogleLoading(true);
-
           try {
-            const result = await openGooglePopup(GOOGLE_CLIENT_ID, opts.mode || "signin");
+            const result = await openGooglePopup(
+              GOOGLE_CLIENT_ID, opts.mode || "signin",
+            );
 
-            // User closed popup — resolve silently
-            if (result?.dismissed) {
+            if (result?.dismissed)
               return settle(resolve, result);
-            }
 
-            const credential = result; // result is the id_token string
+            // result is the id_token string
+            const credential = result;
 
             if (opts.mode === "signup") {
               const decoded = decodeJWT(credential);
@@ -1206,16 +1167,14 @@ export function UserAuthProvider({ children }) {
             settle(resolve, authResult);
           } catch (err) {
             const msg = err?.message || "";
-            if (isDismissalError(msg)) {
+            if (isDismissalError(msg))
               return settle(resolve, { dismissed: true, reason: "popup_closed" });
-            }
             settle(reject, err);
           }
         };
 
-        // ── Try One Tap first ───────────────────────────────────────────────
+        // ── Try One Tap first ─────────────────────────────────────────────
         if (!googleLoaded || !window.google?.accounts?.id) {
-          // SDK not ready → go straight to popup
           runPopup("sdk_not_ready");
           return;
         }
@@ -1256,7 +1215,7 @@ export function UserAuthProvider({ children }) {
             if (outcome === "dismissed" || outcome === "unavailable") {
               clearTimeout(oneTapTimeout);
               googleCbRef.current = null;
-              // ✅ Never reject — silently fall back to popup
+              // Never reject — silently fall back to popup
               runPopup(outcome);
             }
             // outcome === "success" → wait for credential callback
@@ -1281,38 +1240,56 @@ export function UserAuthProvider({ children }) {
         "Google authentication required. Please sign in with Google first.",
       );
     }
+
     const fullName = trim(profileData?.fullName || pending.name);
     const avatar   = trim(profileData?.avatar   || pending.picture);
     pendingRef.current = { email: pending.email, fullName, avatar };
 
     let data;
     try {
-      data = await googleSignIn(pending.credential, {
-        phone:  trim(profileData?.phone),
-        bio:    trim(profileData?.bio),
-        avatar,
+      data = await authFetch("/users/google", {
+        method: "POST",
+        body:   JSON.stringify({
+          credential: pending.credential,
+          idToken:    pending.credential,
+          phone:      trim(profileData?.phone),
+          bio:        trim(profileData?.bio),
+          avatar,
+        }),
       });
     } catch (err) {
+      // Re-verification required
+      const errData = err?.data || {};
+      if (
+        errData?.code === "REVERIFICATION_REQUIRED" ||
+        errData?.requiresReVerification
+      ) {
+        setPendingEmail(errData.email || pending.email);
+        setRequiresLoginVerification(true);
+        setModalView("verify");
+        pendingRef.current = null;
+        return { requiresVerification: true };
+      }
       pendingRef.current = null;
       throw err;
     }
 
-    // extractPayload looks at data.data.token and data.token
     const extracted = extractPayload(data);
 
-    // If backend says it STILL needs profile (shouldn't happen but guard it)
     if (extracted.requiresProfile && !extracted.token) {
       throw new Error(
         "Account setup incomplete. Please ensure all required fields are filled.",
       );
     }
 
-    // googleSignIn already called saveAuth + closeModal + triggerCongratulation
-    // so nothing more needed here
-    return data;
-  }, [googleSignIn, googleUser]);
+    saveAuth(data, { persist: persistSession });
+    closeModal();
+    triggerCongratulation("signup");
 
-  const clearGooglePending   = useCallback(() => {
+    return data;
+  }, [authFetch, closeModal, googleUser, persistSession, saveAuth, triggerCongratulation]);
+
+  const clearGooglePending = useCallback(() => {
     setGoogleUser(null);
     store.remove(KEYS.GOOGLE_PENDING);
   }, []);
@@ -1331,7 +1308,7 @@ export function UserAuthProvider({ children }) {
     try {
       const data = await authFetch("/users/github", {
         method: "POST",
-        body: JSON.stringify({
+        body:   JSON.stringify({
           code,
           phone: trim(profileData?.phone),
           bio:   trim(profileData?.bio),
@@ -1339,45 +1316,36 @@ export function UserAuthProvider({ children }) {
       });
 
       const { token: tok } = extractPayload(data);
-      if (!tok) throw new Error("GitHub authentication did not return a valid session.");
-
-      const userEmail = data?.user?.email || data?.data?.user?.email || "";
-      if (loginCounter >= 2 && userEmail) {
-        setPendingSocialAuth(data);
-        setRequiresLoginVerification(true);
-        setPendingEmail(userEmail);
-        try {
-          await authFetch("/users/login", {
-            method: "POST",
-            body: JSON.stringify({ email: userEmail }),
-          });
-        } catch { /* user can resend */ }
-        setModalView("verify");
-        return { requiresVerification: true };
-      }
+      if (!tok)
+        throw new Error("GitHub authentication did not return a valid session.");
 
       saveAuth(data, { persist: persistSession });
-      setLoginCounter((p) => p + 1);
       closeModal();
       triggerCongratulation("login");
       return data;
     } catch (err) {
-      // Handle re-verification required from backend
+      // Re-verification required
       const errData = err?.data || {};
-      if (errData?.code === "REVERIFICATION_REQUIRED" || errData?.requiresReVerification) {
-        setPendingEmail(errData.email);
+      if (
+        errData?.code === "REVERIFICATION_REQUIRED" ||
+        errData?.requiresReVerification
+      ) {
+        const revEmail = errData.email || "";
+        setPendingEmail(revEmail);
         setSocialAuthError("");
+        setRequiresLoginVerification(true);
+        // Backend already sent OTP — show verify view
         setModalView("verify");
-        try { await authFetch("/users/login", { method: "POST", body: JSON.stringify({ email: errData.email }) }); } catch {}
         return { requiresVerification: true };
       }
+
       const msg = err?.message || "GitHub sign-in failed.";
       setSocialAuthError(msg);
       throw new Error(msg);
     } finally {
       setGithubLoading(false);
     }
-  }, [authFetch, closeModal, loginCounter, persistSession, saveAuth, triggerCongratulation]);
+  }, [authFetch, closeModal, persistSession, saveAuth, triggerCongratulation]);
 
   const startGithubAuth = useCallback((mode = "signin") => {
     if (!GITHUB_CLIENT_ID) {
@@ -1392,7 +1360,7 @@ export function UserAuthProvider({ children }) {
     const redirectUri = resolveGithubRedirectUri();
     const state       = randomState();
 
-    sessionStorage.setItem(KEYS.GITHUB_STATE, state);
+    sessionStorage.setItem(KEYS.GITHUB_STATE,  state);
     sessionStorage.setItem(KEYS.GITHUB_INTENT, mode);
 
     const url = new URL("https://github.com/login/oauth/authorize");
@@ -1406,18 +1374,19 @@ export function UserAuthProvider({ children }) {
   }, []);
 
   const consumeGithubCallback = useCallback(async () => {
-    const url      = new URL(window.location.href);
-    const code     = url.searchParams.get("code");
-    const state    = url.searchParams.get("state");
-    const oauthErr = url.searchParams.get("error");
-    const errDesc  = url.searchParams.get("error_description");
-    const provider = url.searchParams.get("auth_provider");
+    const url       = new URL(window.location.href);
+    const code      = url.searchParams.get("code");
+    const state     = url.searchParams.get("state");
+    const oauthErr  = url.searchParams.get("error");
+    const errDesc   = url.searchParams.get("error_description");
+    const provider  = url.searchParams.get("auth_provider");
 
     if (!code && !oauthErr) return;
     if (provider && provider !== "github") return;
 
     const expectedState = sessionStorage.getItem(KEYS.GITHUB_STATE);
 
+    // Clean URL immediately
     const clean = new URL(window.location.href);
     ["code", "state", "error", "error_description", "auth_provider"]
       .forEach((p) => clean.searchParams.delete(p));
@@ -1431,7 +1400,9 @@ export function UserAuthProvider({ children }) {
 
     try {
       if (oauthErr) {
-        throw new Error(errDesc ? decodeURIComponent(errDesc) : "GitHub sign-in was cancelled.");
+        throw new Error(
+          errDesc ? decodeURIComponent(errDesc) : "GitHub sign-in was cancelled.",
+        );
       }
       if (!code || !state || !expectedState || expectedState !== state) {
         throw new Error("GitHub sign-in could not be verified. Please try again.");
@@ -1454,22 +1425,26 @@ export function UserAuthProvider({ children }) {
   const updateProfile = useCallback(async (updates) => {
     const data = await authFetch("/users/profile", {
       method: "PUT",
-      body: JSON.stringify(updates),
+      body:   JSON.stringify(updates),
     });
     const raw  = data?.data?.user || data?.data || data?.user || data;
-    const norm = normalizeUser({ ...(user || {}), ...(raw || {}) }, { cache: getCache() });
+    const norm = normalizeUser(
+      { ...(user || {}), ...(raw || {}) },
+      { cache: getCache() },
+    );
     if (norm) { setUser(norm); cacheProfile(norm); }
     return data;
   }, [authFetch, cacheProfile, getCache, user]);
 
   const uploadAvatar = useCallback(async (file) => {
-    if (!(file instanceof File)) throw new Error("Please select a valid image file.");
-    if (file.size > 10 * 1024 * 1024) throw new Error("Image must be 10MB or less.");
+    if (!(file instanceof File))
+      throw new Error("Please select a valid image file.");
+    if (file.size > 10 * 1024 * 1024)
+      throw new Error("Image must be 10MB or less.");
 
     const allowed = ["image/jpeg", "image/png", "image/gif", "image/webp", "image/avif"];
-    if (!allowed.includes(file.type)) {
+    if (!allowed.includes(file.type))
       throw new Error("Please upload a JPEG, PNG, GIF, WebP, or AVIF image.");
-    }
 
     const form = new FormData();
     form.append("image", file);
@@ -1478,9 +1453,13 @@ export function UserAuthProvider({ children }) {
     const data      = await authFetch("/uploads/image", { method: "POST", body: form });
     const p         = data?.data || data || {};
     const avatarUrl = p.url || p.imageUrl || p.avatar || p.avatarUrl;
-    if (!avatarUrl) throw new Error("Upload succeeded but no image URL was returned.");
+    if (!avatarUrl)
+      throw new Error("Upload succeeded but no image URL was returned.");
 
-    const norm = normalizeUser({ ...(user || {}), avatar: avatarUrl }, { cache: getCache() });
+    const norm = normalizeUser(
+      { ...(user || {}), avatar: avatarUrl },
+      { cache: getCache() },
+    );
     if (norm) { setUser(norm); cacheProfile(norm); }
 
     try { await updateProfile({ avatar: avatarUrl }); }
@@ -1511,11 +1490,11 @@ export function UserAuthProvider({ children }) {
     try {
       const data = await authFetch("/users/refresh-token", {
         method: "POST",
-        body: JSON.stringify({ refreshToken: rt }),
+        body:   JSON.stringify({ refreshToken: rt }),
       });
       const { token: tok, refreshToken: ref } = extractPayload(data);
       if (tok) { store.set(KEYS.TOKEN, tok, persistSession); setToken(tok); }
-      if (ref)  store.set(KEYS.REFRESH, ref, persistSession);
+      if (ref)   store.set(KEYS.REFRESH, ref, persistSession);
       return true;
     } catch { return false; }
   }, [authFetch, persistSession]);
@@ -1531,9 +1510,9 @@ export function UserAuthProvider({ children }) {
   // Bootstrap
   // ============================================================================
 
-  useEffect(() => { fetchUser(); },            [fetchUser]);
-  useEffect(() => { initGoogleSdk(); },        [initGoogleSdk]);
-  useEffect(() => { consumeGithubCallback(); }, [consumeGithubCallback]);
+  useEffect(() => { fetchUser(); },             [fetchUser]);
+  useEffect(() => { initGoogleSdk(); },         [initGoogleSdk]);
+  useEffect(() => { consumeGithubCallback(); },  [consumeGithubCallback]);
 
   // ============================================================================
   // Context Value

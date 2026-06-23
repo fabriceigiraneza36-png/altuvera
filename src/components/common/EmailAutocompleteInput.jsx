@@ -15,17 +15,14 @@ const getSuggestions = (value, domains, limit = 6) => {
   const v = typeof value === "string" ? value : "";
   const at = v.indexOf("@");
   if (at < 0) return [];
-
   const local = v.slice(0, at);
   const domainPart = v.slice(at + 1);
   if (!local) return [];
-
   const typedDomain = domainPart.toLowerCase();
   const matches =
     typedDomain.length === 0
       ? domains
       : domains.filter((d) => d.startsWith(typedDomain));
-
   return matches.slice(0, limit).map((d) => `${local}@${d}`);
 };
 
@@ -44,6 +41,7 @@ export default forwardRef(function EmailAutocompleteInput(
     name,
     autoComplete = "email",
     inputMode = "email",
+    className = "",
     ...props
   },
   ref,
@@ -85,9 +83,11 @@ export default forwardRef(function EmailAutocompleteInput(
         autoComplete={autoComplete}
         value={value}
         onChange={handleChange}
+        list={suggestions.length > 0 ? datalistId : undefined}
         spellCheck={false}
         autoCapitalize="none"
         autoCorrect="off"
+        className={className}
       />
       {suggestions.length > 0 && (
         <datalist id={datalistId}>

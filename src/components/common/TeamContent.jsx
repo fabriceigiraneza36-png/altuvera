@@ -999,6 +999,7 @@ const TeamContent = () => {
     },
     titleHighlight: { color: "#059669", position: "relative" },
     subtitle: {
+      fontFamily: "'Playfair Display', Georgia, serif",
       color: "#4B5563",
       fontSize: "18px",
       lineHeight: "1.8",

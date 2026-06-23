@@ -739,6 +739,7 @@
   letter-spacing: -0.025em; margin: 0 0 6px; line-height: 1.2;
 }
 .am-view-subtitle {
+  font-family: "Inter", Georgia, sans-serif;
   font-size: 14px; color: var(--am-gray-500);
   margin: 0; line-height: 1.5;
 }

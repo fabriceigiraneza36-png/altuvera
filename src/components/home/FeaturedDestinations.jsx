@@ -62,6 +62,7 @@ const FeaturedDestinations = () => {
       lineHeight: "1.1",
     },
     subtitle: {
+      fontFamily: "'Playfair Display', Georgia, serif",
       fontSize: "clamp(16px, 2vw, 20px)",
       color: "#6B7280",
       maxWidth: "750px",

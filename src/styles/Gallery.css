@@ -135,7 +135,7 @@
 }
 
 .gl-hero p {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', Georgia, sans-serif;
   font-size: clamp(1rem, 2vw, 1.4rem);
   font-weight: 300;
   margin-bottom: 24px;

@@ -239,6 +239,7 @@ const PageHeader = ({
     },
 
     subtitle: {
+      fontFamily: "'Inter', sans-serif",
       fontSize: isMobile ? "14px" : "17px",
       color: "rgba(255, 255, 255, 0.85)",
       maxWidth: "640px",

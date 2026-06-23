@@ -48,7 +48,7 @@
   --shadow-xl: 0 40px 80px rgba(2, 44, 34, 0.18);
 
   --font-heading: "Playfair Display", Georgia, serif;
-  --font-body:    "Playfair Display", "Inter", "Segoe UI", system-ui,
+  --font-body:    "Inter", "Playfair Display", "Segoe UI", system-ui,
                   -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
 
   --ui-primary:   var(--clr-primary);
@@ -295,6 +295,7 @@ h1, h2, h3, h4, h5, h6,
 }
 .text-subheading {
   font-size:   clamp(1rem, 2vw, 1.3rem);
+  font-family: "Inter", sans-serif;
   font-weight: 500;
   color:       var(--clr-ink-muted);
   line-height: 1.6;

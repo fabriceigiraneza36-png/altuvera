@@ -583,7 +583,7 @@ const SectionHeader = ({ label, title, subtitle, center = true, light = false })
       animate={visible ? "visible" : "hidden"}
       style={{
         textAlign: center ? "center" : "left",
-        marginBottom: "clamp(36px,5.5vw,68px)",
+        marginBottom: "clamp(24px,4vw,44px)",
         maxWidth: center ? "760px" : "none",
         marginLeft: center ? "auto" : undefined,
         marginRight: center ? "auto" : undefined,
@@ -1248,7 +1248,7 @@ const TestiCard = ({ testimonial }) => {
       style={{
         background: T.white,
         borderRadius: "18px",
-        padding: "clamp(20px,4vw,30px)",
+        padding: "clamp(14px,2.5vw,22px)",
         boxShadow: T.shadowCard,
         border: `1px solid ${T.border}`,
         display: "flex",
@@ -1912,11 +1912,7 @@ const Services = () => {
   const open = useCallback((svc) => setSelected(svc), []);
   const close = useCallback(() => setSelected(null), []);
 
-  const pad = isSmall
-    ? "36px 14px"
-    : isMobile
-    ? "48px 16px"
-    : "76px 36px";
+  const pad = "42px 24px";
 
   return (
     <>
