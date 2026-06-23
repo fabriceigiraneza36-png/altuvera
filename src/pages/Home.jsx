@@ -1,32 +1,24 @@
 // src/pages/Home.jsx
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, {
+  useState, useEffect, useRef, useMemo, useCallback,
+} from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { HiOutlineArrowRight, HiOutlineSparkles } from "react-icons/hi2";
 import { FaStar, FaRegStar } from "react-icons/fa6";
 import {
-  MdOutlineArticle,
-  MdOutlineDateRange,
-  MdOutlineVisibility,
-  MdClose,
-  MdOutlineLocationOn,
-  MdOutlineExplore,
-  MdPlayArrow,
-  MdPause,
-  MdSkipNext,
-  MdSkipPrevious,
-  MdPlaylistPlay,
+  MdOutlineArticle, MdOutlineDateRange, MdOutlineVisibility,
+  MdClose, MdOutlineLocationOn, MdOutlineExplore, MdPlayArrow,
+  MdSkipNext, MdSkipPrevious, MdPlaylistPlay,
 } from "react-icons/md";
 import {
-  IoChevronBack,
-  IoChevronForward,
-  IoCompassOutline,
-  IoEarthOutline,
-  IoHeartOutline,
-  IoHeart,
-  IoPlayCircle,
-  IoCloseCircle,
+  IoChevronBack, IoChevronForward, IoCompassOutline, IoEarthOutline,
+  IoHeartOutline, IoHeart, IoPlayCircle,
 } from "react-icons/io5";
+import {
+  Clock, Users, MapPin, ArrowRight, Package, Heart,
+  Sparkles, TrendingUp, Star, Zap, DollarSign, Globe,
+} from "lucide-react";
 
 import Hero, { HERO_SLIDES } from "../components/home/Hero";
 import Button from "../components/common/Button";
@@ -40,6 +32,528 @@ import { useWishlist } from "../hooks/useWishlist";
 import "../styles/Home.css";
 
 /* ═══════════════════════════════════════════
+   PACKAGES API
+   ═══════════════════════════════════════════ */
+const API_BASE =
+  import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
+
+const apiGet = async (path, params = null) => {
+  let url = `${API_BASE}${path}`;
+  if (params) {
+    const qs = Object.entries(params)
+      .filter(([, v]) => v !== undefined && v !== null && v !== "")
+      .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+      .join("&");
+    if (qs) url += `?${qs}`;
+  }
+  const token =
+    localStorage.getItem("altuvera_token") ||
+    localStorage.getItem("token") ||
+    null;
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(url, { method: "GET", headers });
+  if (!res.ok) throw new Error(`Server error (${res.status})`);
+  return res.json();
+};
+
+/* ═══════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════ */
+const fmtPrice = (price, currency = "USD") => {
+  if (!price && price !== 0) return "Contact Us";
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency", currency, maximumFractionDigits: 0,
+    }).format(price);
+  } catch {
+    return `$${Number(price).toLocaleString()}`;
+  }
+};
+
+const fmtDuration = (days, nights) => {
+  if (!days) return null;
+  const n = nights ?? days - 1;
+  return `${days}D / ${n}N`;
+};
+
+const parseJsonField = (val, fallback = []) => {
+  if (!val) return fallback;
+  if (Array.isArray(val)) return val;
+  try { return JSON.parse(val); } catch { return fallback; }
+};
+
+const THEME = {
+  default: {
+    price: "text-emerald-600",
+    btn: "from-emerald-500 to-emerald-700",
+    tag: "bg-emerald-50 text-emerald-700 ring-emerald-100",
+    accent: "#059669",
+  },
+  dark: {
+    price: "text-amber-400",
+    btn: "from-slate-700 to-slate-900",
+    tag: "bg-slate-100 text-slate-700 ring-slate-200",
+    accent: "#f59e0b",
+  },
+  earth: {
+    price: "text-amber-700",
+    btn: "from-amber-600 to-amber-800",
+    tag: "bg-amber-50 text-amber-700 ring-amber-100",
+    accent: "#d97706",
+  },
+  ocean: {
+    price: "text-blue-600",
+    btn: "from-blue-500 to-blue-700",
+    tag: "bg-blue-50 text-blue-700 ring-blue-100",
+    accent: "#2563eb",
+  },
+  sunset: {
+    price: "text-orange-600",
+    btn: "from-orange-500 to-red-600",
+    tag: "bg-orange-50 text-orange-700 ring-orange-100",
+    accent: "#ea580c",
+  },
+  minimal: {
+    price: "text-slate-800",
+    btn: "from-slate-700 to-slate-900",
+    tag: "bg-slate-100 text-slate-600 ring-slate-200",
+    accent: "#334155",
+  },
+};
+
+/* ═══════════════════════════════════════════
+   INJECTED STYLES
+   ═══════════════════════════════════════════ */
+const HOME_PKG_STYLES = `
+  /* ── Horizontal scroll row ── */
+  .mixed-scroll-row {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    padding-bottom: 1.25rem;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .mixed-scroll-row::-webkit-scrollbar { display: none; }
+
+  .mixed-scroll-row > * {
+    scroll-snap-align: start;
+    flex-shrink: 0;
+  }
+
+  /* ── Scroll nav arrows ── */
+  .scroll-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.95);
+    backdrop-filter: blur(8px);
+    border: 1.5px solid rgba(16,185,129,0.2);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+    color: #059669;
+  }
+  .scroll-nav-btn:hover {
+    background: #059669;
+    color: #fff;
+    border-color: #059669;
+    box-shadow: 0 6px 24px rgba(5,150,105,0.35);
+    transform: translateY(-50%) scale(1.1);
+  }
+  .scroll-nav-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    transform: translateY(-50%) scale(1);
+  }
+  .scroll-nav-btn--left  { left: -1.25rem; }
+  .scroll-nav-btn--right { right: -1.25rem; }
+
+  /* ── Package card (horizontal row variant) ── */
+  .hpkg-card {
+    width: 300px;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    background: #fff;
+    border: 1.5px solid #f1f5f9;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    transition:
+      transform 0.35s cubic-bezier(0.34,1.56,0.64,1),
+      box-shadow 0.35s ease,
+      border-color 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+    position: relative;
+  }
+  .hpkg-card:hover {
+    transform: translateY(-8px) scale(1.015);
+    box-shadow: 0 24px 56px rgba(0,0,0,0.14), 0 4px 16px rgba(5,150,105,0.1);
+    border-color: rgba(16,185,129,0.3);
+  }
+  .hpkg-card:hover .hpkg-img {
+    transform: scale(1.08);
+  }
+  .hpkg-img-wrap {
+    position: relative;
+    height: 190px;
+    overflow: hidden;
+    background: #e2e8f0;
+  }
+  .hpkg-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.65s cubic-bezier(0.25,0.46,0.45,0.94);
+  }
+  .hpkg-img-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.55) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hpkg-body {
+    padding: 1.1rem 1.2rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 0.5rem;
+  }
+  .hpkg-category {
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #059669;
+  }
+  .hpkg-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.35;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color 0.2s;
+  }
+  .hpkg-card:hover .hpkg-title { color: #059669; }
+  .hpkg-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    font-size: 0.72rem;
+    color: #94a3b8;
+  }
+  .hpkg-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+  .hpkg-desc {
+    font-size: 0.8rem;
+    color: #64748b;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+  }
+  .hpkg-footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-top: 0.5rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid #f1f5f9;
+    gap: 0.5rem;
+  }
+  .hpkg-price {
+    font-size: 1.35rem;
+    font-weight: 900;
+    line-height: 1;
+    color: #059669;
+  }
+  .hpkg-price-label {
+    font-size: 0.65rem;
+    color: #94a3b8;
+    margin-top: 0.2rem;
+  }
+  .hpkg-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #fff;
+    padding: 0.55rem 1rem;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    box-shadow: 0 4px 14px rgba(5,150,105,0.3);
+    transition: all 0.25s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .hpkg-card:hover .hpkg-cta {
+    box-shadow: 0 8px 22px rgba(5,150,105,0.45);
+    transform: scale(1.04);
+  }
+  .hpkg-badge {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    font-size: 0.6rem;
+    font-weight: 900;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 0.3rem 0.6rem;
+    border-radius: 99px;
+    color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  .hpkg-discount {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    font-size: 0.6rem;
+    font-weight: 900;
+    background: #ef4444;
+    color: #fff;
+    padding: 0.25rem 0.5rem;
+    border-radius: 99px;
+  }
+  .hpkg-duration-pill {
+    position: absolute;
+    bottom: 0.75rem;
+    right: 0.75rem;
+    font-size: 0.65rem;
+    font-weight: 700;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    padding: 0.3rem 0.65rem;
+    border-radius: 99px;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+  .hpkg-wish {
+    position: absolute;
+    top: 0.75rem;
+    right: 0.75rem;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), background 0.2s;
+  }
+  .hpkg-wish:hover { transform: scale(1.18); background: #fff; }
+
+  /* ── Story (post) card ── */
+  .hpost-card {
+    width: 280px;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    background: #fff;
+    border: 1.5px solid #f1f5f9;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    display: flex;
+    flex-direction: column;
+    transition:
+      transform 0.35s cubic-bezier(0.34,1.56,0.64,1),
+      box-shadow 0.35s ease,
+      border-color 0.25s ease;
+    cursor: pointer;
+    text-decoration: none;
+    color: inherit;
+  }
+  .hpost-card:hover {
+    transform: translateY(-6px) scale(1.012);
+    box-shadow: 0 20px 48px rgba(0,0,0,0.12);
+    border-color: rgba(16,185,129,0.25);
+  }
+  .hpost-card:hover .hpost-img { transform: scale(1.07); }
+  .hpost-img-wrap {
+    position: relative;
+    height: 170px;
+    overflow: hidden;
+    background: #e2e8f0;
+    flex-shrink: 0;
+  }
+  .hpost-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94);
+  }
+  .hpost-category {
+    position: absolute;
+    top: 0.75rem;
+    left: 0.75rem;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    padding: 0.3rem 0.65rem;
+    border-radius: 99px;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .hpost-body {
+    padding: 1rem 1.1rem 1.2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    flex: 1;
+  }
+  .hpost-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.68rem;
+    color: #94a3b8;
+    flex-wrap: wrap;
+  }
+  .hpost-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1e293b;
+    line-height: 1.38;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    transition: color 0.2s;
+  }
+  .hpost-card:hover .hpost-title { color: #059669; }
+  .hpost-excerpt {
+    font-size: 0.78rem;
+    color: #64748b;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+  }
+  .hpost-readmore {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: #059669;
+    margin-top: 0.25rem;
+    transition: gap 0.2s;
+  }
+  .hpost-card:hover .hpost-readmore { gap: 0.55rem; }
+
+  /* ── Section label pill ── */
+  .mixed-section-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 0.35rem 0.9rem;
+    border-radius: 99px;
+  }
+  .mixed-section-pill--pkg {
+    background: rgba(5,150,105,0.1);
+    color: #059669;
+    border: 1px solid rgba(5,150,105,0.2);
+  }
+  .mixed-section-pill--story {
+    background: rgba(99,102,241,0.08);
+    color: #6366f1;
+    border: 1px solid rgba(99,102,241,0.18);
+  }
+
+  /* ── Skeleton shimmer ── */
+  .hpkg-skeleton {
+    width: 300px;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    background: #fff;
+    border: 1.5px solid #f1f5f9;
+    flex-shrink: 0;
+    animation: hSkeletonPulse 1.6s ease-in-out infinite;
+  }
+  .hpost-skeleton {
+    width: 280px;
+    border-radius: 1.5rem;
+    overflow: hidden;
+    background: #fff;
+    border: 1.5px solid #f1f5f9;
+    flex-shrink: 0;
+    animation: hSkeletonPulse 1.6s ease-in-out infinite;
+  }
+  @keyframes hSkeletonPulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.55; }
+  }
+  .h-skel { background: #e2e8f0; border-radius: 0.5rem; }
+
+  /* ── Reveal animation ── */
+  .mixed-card-reveal {
+    animation: mixedReveal 0.55s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  @keyframes mixedReveal {
+    from { opacity: 0; transform: translateY(24px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* ── Progress bar ── */
+  .scroll-progress-bar {
+    height: 3px;
+    border-radius: 99px;
+    background: #e2e8f0;
+    overflow: hidden;
+    margin-top: 1rem;
+  }
+  .scroll-progress-fill {
+    height: 100%;
+    border-radius: 99px;
+    background: linear-gradient(90deg, #059669, #34d399);
+    transition: width 0.2s ease;
+  }
+`;
+
+let homeStylesInjected = false;
+function injectHomeStyles() {
+  if (homeStylesInjected || typeof document === "undefined") return;
+  const el = document.getElementById("home-pkg-styles");
+  if (el) { homeStylesInjected = true; return; }
+  const s = document.createElement("style");
+  s.id = "home-pkg-styles";
+  s.textContent = HOME_PKG_STYLES;
+  document.head.appendChild(s);
+  homeStylesInjected = true;
+}
+
+/* ═══════════════════════════════════════════
    VIDEO PLAYLIST DATA
    ═══════════════════════════════════════════ */
 const VIDEO_PLAYLIST = [
@@ -48,28 +562,32 @@ const VIDEO_PLAYLIST = [
     title: "Serengeti Great Migration",
     subtitle: "Tanzania's endless plains",
     videoId: "jIwyy2D5iag",
-    poster: "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=800&q=80",
+    poster:
+      "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=800&q=80",
   },
   {
     id: 2,
     title: "Mountain Gorillas of Rwanda",
     subtitle: "Volcanoes National Park",
     videoId: "b1V4pzuncg",
-    poster: "https://images.unsplash.com/photo-1602491453631-e2a5ad90a131?auto=format&fit=crop&w=800&q=80",
+    poster:
+      "https://images.unsplash.com/photo-1602491453631-e2a5ad90a131?auto=format&fit=crop&w=800&q=80",
   },
   {
     id: 3,
     title: "Zanzibar Paradise",
     subtitle: "Indian Ocean coastline",
     videoId: "DZnw2TeLuEU",
-    poster: "https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?auto=format&fit=crop&w=800&q=80",
+    poster:
+      "https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?auto=format&fit=crop&w=800&q=80",
   },
   {
     id: 4,
     title: "Masai Mara Sunset",
     subtitle: "Kenya's golden hour",
     videoId: "--rk-kMATUc",
-    poster: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=800&q=80",
+    poster:
+      "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=800&q=80",
   },
 ];
 
@@ -85,7 +603,7 @@ const INTRO_SIDE_IMAGES = [
 ];
 
 /* ═══════════════════════════════════════════
-   VIDEO PLAYER MODAL (YouTube Embed Playlist)
+   VIDEO PLAYER MODAL
    ═══════════════════════════════════════════ */
 const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
   const [currentIdx, setCurrentIdx] = useState(startIndex);
@@ -112,7 +630,7 @@ const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
     };
   }, [isOpen, onClose]);
 
-   useEffect(() => {
+  useEffect(() => {
     if (!isOpen || !window.YT) return;
     if (playerRef.current) {
       playerRef.current.destroy();
@@ -121,84 +639,49 @@ const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
     setIsReady(false);
     setVideoError(false);
 
-    const handleEnded = () => {
-      setCurrentIdx((p) => (p + 1) % playlist.length);
-    };
-
     const handleStateChange = (e) => {
-      if (e.data === window.YT.PlayerState.ENDED) {
-        handleEnded();
-      }
-      if (e.data === window.YT.PlayerState.PLAYING) {
-        setVideoError(false);
-      }
+      if (e.data === window.YT.PlayerState.ENDED)
+        setCurrentIdx((p) => (p + 1) % playlist.length);
+      if (e.data === window.YT.PlayerState.PLAYING) setVideoError(false);
     };
 
     const initPlayer = () => {
       if (!containerRef.current) return;
       try {
         playerRef.current = new window.YT.Player(containerRef.current, {
-          height: "100%",
-          width: "100%",
+          height: "100%", width: "100%",
           videoId: playlist[currentIdx]?.videoId,
-          playerVars: {
-            autoplay: 1,
-            modestbranding: 1,
-            rel: 0,
-            fs: 1,
-            enablejsapi: 1,
-            origin: window.location.origin,
-            key: window._ytApiKey,
-          },
+          playerVars: { autoplay: 1, modestbranding: 1, rel: 0, fs: 1, enablejsapi: 1 },
           events: {
             onReady: () => setIsReady(true),
             onStateChange: handleStateChange,
-            onError: () => {
-              setVideoError(true);
-            },
+            onError: () => setVideoError(true),
           },
         });
-      } catch (err) {
-        setVideoError(true);
-      }
+      } catch { setVideoError(true); }
     };
 
     const timer = setTimeout(initPlayer, 300);
     return () => {
       clearTimeout(timer);
       if (playerRef.current) {
-        try { playerRef.current.destroy(); } catch (e) {}
+        try { playerRef.current.destroy(); } catch {}
         playerRef.current = null;
       }
     };
   }, [isOpen, currentIdx, playlist]);
 
-  const playNext = useCallback(() => {
-    setCurrentIdx((p) => (p + 1) % playlist.length);
-  }, [playlist.length]);
-
-  const playPrev = useCallback(() => {
-    setCurrentIdx((p) => (p - 1 + playlist.length) % playlist.length);
-  }, [playlist.length]);
-
+  const playNext = useCallback(
+    () => setCurrentIdx((p) => (p + 1) % playlist.length),
+    [playlist.length]
+  );
+  const playPrev = useCallback(
+    () => setCurrentIdx((p) => (p - 1 + playlist.length) % playlist.length),
+    [playlist.length]
+  );
   const playTrack = (index) => {
     setCurrentIdx(index);
     setVideoError(false);
-    setTimeout(() => {
-      if (playerRef.current && window.YT) {
-        try { playerRef.current.loadVideoById(playlist[index].videoId); } catch (e) {}
-      }
-    }, 300);
-  };
-
-  const handleRetry = () => {
-    setVideoError(false);
-    setIsReady(false);
-    setTimeout(() => {
-      if (playerRef.current && window.YT) {
-        try { playerRef.current.loadVideoById(playlist[currentIdx].videoId); } catch (e) {}
-      }
-    }, 300);
   };
 
   if (!isOpen) return null;
@@ -207,31 +690,20 @@ const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
   return (
     <div className="vmodal-overlay" onClick={onClose}>
       <div className="vmodal-container" onClick={(e) => e.stopPropagation()}>
-        {/* Close */}
         <button className="vmodal-close" onClick={onClose} aria-label="Close">
           <MdClose size={22} />
         </button>
-
-        {/* Video Area */}
         <div className="vmodal-video-area">
           {videoError ? (
             <div className="vmodal-error-state">
-              <div className="vmodal-error-icon">
-                <MdCloseCircle size={48} />
-              </div>
               <h3 className="vmodal-error-title">Unable to Play Video</h3>
-              <p className="vmodal-error-message">
-                This video is temporarily unavailable. Please try another video from the playlist or check your connection.
-              </p>
               <div className="vmodal-error-actions">
-                <button className="vmodal-error-retry" onClick={handleRetry}>
-                  <MdPlayArrow size={18} />
-                  Retry This Video
+                <button className="vmodal-error-retry" onClick={() => { setVideoError(false); setCurrentIdx((p) => p); }}>
+                  <MdPlayArrow size={18} /> Retry
                 </button>
                 {playlist.length > 1 && (
                   <button className="vmodal-error-skip" onClick={playNext}>
-                    <MdSkipNext size={18} />
-                    Play Next Video
+                    <MdSkipNext size={18} /> Next
                   </button>
                 )}
               </div>
@@ -239,7 +711,6 @@ const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
           ) : (
             <div ref={containerRef} className="vmodal-yt-player" />
           )}
-
           {!videoError && !isReady && (
             <div className="vmodal-loading">
               <div className="vmodal-loading-spinner" />
@@ -247,68 +718,42 @@ const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
             </div>
           )}
         </div>
-
-        {/* Controls Bar */}
         <div className="vmodal-controls">
           <div className="vmodal-controls-row">
             <div className="vmodal-controls-left">
-              <button className="vmodal-btn" onClick={playPrev} aria-label="Previous">
-                <MdSkipPrevious size={22} />
-              </button>
-              <button
-                className="vmodal-btn vmodal-btn--play"
-                onClick={() => {
-                  if (!playerRef.current || !window.YT) return;
-                  const state = playerRef.current.getPlayerState();
-                  if (state === window.YT.PlayerState.PLAYING) {
-                    playerRef.current.pauseVideo();
-                  } else {
-                    playerRef.current.playVideo();
-                  }
-                }}
-                aria-label="Play/Pause"
-              >
-                <MdPlayArrow size={22} />
-              </button>
-              <button className="vmodal-btn" onClick={playNext} aria-label="Next">
-                <MdSkipNext size={22} />
-              </button>
+              <button className="vmodal-btn" onClick={playPrev}><MdSkipPrevious size={22} /></button>
+              <button className="vmodal-btn vmodal-btn--play" onClick={() => {
+                if (!playerRef.current || !window.YT) return;
+                const s = playerRef.current.getPlayerState();
+                s === window.YT.PlayerState.PLAYING
+                  ? playerRef.current.pauseVideo()
+                  : playerRef.current.playVideo();
+              }}><MdPlayArrow size={22} /></button>
+              <button className="vmodal-btn" onClick={playNext}><MdSkipNext size={22} /></button>
             </div>
-
             <div className="vmodal-track-info">
               <span className="vmodal-track-title">{current.title}</span>
               <span className="vmodal-track-sub">{current.subtitle}</span>
             </div>
-
-            <button
-              className={`vmodal-btn vmodal-btn--playlist ${showPlaylist ? "active" : ""}`}
-              onClick={() => setShowPlaylist((p) => !p)}
-              aria-label="Toggle playlist"
-            >
+            <button className={`vmodal-btn ${showPlaylist ? "active" : ""}`}
+              onClick={() => setShowPlaylist((p) => !p)}>
               <MdPlaylistPlay size={22} />
             </button>
           </div>
         </div>
-
-        {/* Playlist Panel */}
         {showPlaylist && (
           <div className="vmodal-playlist">
             <div className="vmodal-playlist-header">
-              <MdPlaylistPlay size={18} />
-              <span>Playlist ({playlist.length})</span>
+              <MdPlaylistPlay size={18} /><span>Playlist ({playlist.length})</span>
             </div>
             {playlist.map((item, i) => (
-              <button
-                key={item.id}
+              <button key={item.id}
                 className={`vmodal-playlist-item ${i === currentIdx ? "active" : ""}`}
-                onClick={() => playTrack(i)}
-              >
+                onClick={() => playTrack(i)}>
                 <div className="vmodal-playlist-thumb">
                   <img src={item.poster} alt={item.title} />
                   {i === currentIdx && isReady && (
-                    <div className="vmodal-playlist-playing">
-                      <span /><span /><span />
-                    </div>
+                    <div className="vmodal-playlist-playing"><span /><span /><span /></div>
                   )}
                 </div>
                 <div className="vmodal-playlist-meta">
@@ -322,7 +767,7 @@ const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
         )}
       </div>
     </div>
-   );
+  );
 };
 
 /* ═══════════════════════════════════════════
@@ -331,28 +776,18 @@ const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
 const IntroMediaPanel = () => {
   const [videoModalOpen, setVideoModalOpen] = useState(false);
   const firstVideo = VIDEO_PLAYLIST[0];
-
   return (
     <>
       <div className="intro-media-panel">
-        {/* Main Card — YouTube bg, click to open video modal */}
-        <div
-          className="intro-main-card"
-          onClick={() => setVideoModalOpen(true)}
-        >
-        
+        <div className="intro-main-card" onClick={() => setVideoModalOpen(true)}>
           <div className="intro-main-card-overlay" />
-          <div className="intro-main-card-play">
-            <IoPlayCircle size={56} />
-          </div>
+          <div className="intro-main-card-play"><IoPlayCircle size={56} /></div>
           <div className="intro-main-card-label">
             <span className="intro-main-card-badge">▶ Watch Reel</span>
             <h3 className="intro-main-card-title">{firstVideo?.title}</h3>
             <p className="intro-main-card-sub">{firstVideo?.subtitle}</p>
           </div>
         </div>
-
-        {/* Side column — 2 smaller cards */}
         <div className="intro-side-col">
           {INTRO_SIDE_IMAGES.map((img, i) => (
             <div key={i} className="intro-side-card">
@@ -362,7 +797,6 @@ const IntroMediaPanel = () => {
           ))}
         </div>
       </div>
-
       <VideoPlayerModal
         isOpen={videoModalOpen}
         onClose={() => setVideoModalOpen(false)}
@@ -378,19 +812,16 @@ const IntroMediaPanel = () => {
    ═══════════════════════════════════════════ */
 const DestinationModal = ({ destination, isOpen, onClose, isWishlisted, onWishlistToggle }) => {
   const navigate = useNavigate();
-
   useEffect(() => {
     if (isOpen) document.body.style.overflow = "hidden";
     else document.body.style.overflow = "";
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
-
   useEffect(() => {
     const handleEsc = (e) => { if (e.key === "Escape") onClose(); };
     if (isOpen) window.addEventListener("keydown", handleEsc);
     return () => window.removeEventListener("keydown", handleEsc);
   }, [isOpen, onClose]);
-
   if (!isOpen || !destination) return null;
 
   const name = destination?.name || destination?.title || "Destination";
@@ -415,7 +846,8 @@ const DestinationModal = ({ destination, isOpen, onClose, isWishlisted, onWishli
             {category && <span className="dest-modal-badge">{category}</span>}
             {price && <span className="dest-modal-badge dest-modal-badge--price">From ${typeof price === "number" ? price.toLocaleString() : price}</span>}
           </div>
-          <button className={`dest-modal-wishlist ${isWishlisted ? "active" : ""}`} onClick={(e) => { e.stopPropagation(); onWishlistToggle(destination?._id || destination?.id || destination?.slug); }}>
+          <button className={`dest-modal-wishlist ${isWishlisted ? "active" : ""}`}
+            onClick={(e) => { e.stopPropagation(); onWishlistToggle(destination?._id || destination?.id || destination?.slug); }}>
             {isWishlisted ? <IoHeart /> : <IoHeartOutline />}
           </button>
           <div className="dest-modal-image-content">
@@ -426,16 +858,24 @@ const DestinationModal = ({ destination, isOpen, onClose, isWishlisted, onWishli
         <div className="dest-modal-body">
           {rating > 0 && (
             <div className="dest-modal-rating">
-              {Array.from({ length: 5 }).map((_, i) => i < Math.round(rating) ? <FaStar key={i} className="dest-modal-star filled" /> : <FaRegStar key={i} className="dest-modal-star" />)}
+              {Array.from({ length: 5 }).map((_, i) =>
+                i < Math.round(rating)
+                  ? <FaStar key={i} className="dest-modal-star filled" />
+                  : <FaRegStar key={i} className="dest-modal-star" />
+              )}
               <span className="dest-modal-rating-text">{rating.toFixed(1)}</span>
             </div>
           )}
           {duration && <div className="dest-modal-duration"><MdOutlineExplore /><span>{duration}</span></div>}
-          <p className="dest-modal-description">{description.length > 280 ? description.substring(0, 280) + "…" : description}</p>
+          <p className="dest-modal-description">
+            {description.length > 280 ? description.substring(0, 280) + "…" : description}
+          </p>
           {highlights.length > 0 && (
             <div className="dest-modal-highlights">
               <h4>Highlights</h4>
-              <ul>{highlights.slice(0, 4).map((h, i) => <li key={i}><span className="dest-modal-highlight-dot" />{typeof h === "string" ? h : h.text || h.title || ""}</li>)}</ul>
+              <ul>{highlights.slice(0, 4).map((h, i) => (
+                <li key={i}><span className="dest-modal-highlight-dot" />{typeof h === "string" ? h : h.text || h.title || ""}</li>
+              ))}</ul>
             </div>
           )}
           <div className="dest-modal-actions">
@@ -459,13 +899,17 @@ const DestinationTile = ({ destination, index, isWishlisted, onWishlistToggle })
   const country = destination?.country || destination?.countryObj?.name || "";
   const img = destination?.heroImage || destination?.imageUrl || destination?.image_url || destination?.image || (Array.isArray(destination?.images) ? destination.images[0] : "") || (Array.isArray(destination?.gallery) ? destination.gallery[0]?.imageUrl : "");
   const category = destination?.category || destination?.type || "";
-
   return (
     <>
-      <div className="dest-mystery-card" onClick={() => setModalOpen(true)} role="button" tabIndex={0} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setModalOpen(true)} aria-label={`View ${name}`}>
+      <div className="dest-mystery-card" onClick={() => setModalOpen(true)}
+        role="button" tabIndex={0}
+        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && setModalOpen(true)}
+        aria-label={`View ${name}`}>
         <div className="dest-mystery-card-inner">
           <div className="dest-mystery-image-wrap">
-            {img ? <img src={img} alt={name} className="dest-mystery-image" loading="lazy" /> : <div className="dest-mystery-placeholder"><IoEarthOutline /></div>}
+            {img
+              ? <img src={img} alt={name} className="dest-mystery-image" loading="lazy" />
+              : <div className="dest-mystery-placeholder"><IoEarthOutline /></div>}
             <div className="dest-mystery-gradient" />
             <div className="dest-mystery-border-glow" />
           </div>
@@ -478,7 +922,9 @@ const DestinationTile = ({ destination, index, isWishlisted, onWishlistToggle })
           <div className="dest-mystery-number">{String(index + 1).padStart(2, "0")}</div>
         </div>
       </div>
-      <DestinationModal destination={destination} isOpen={modalOpen} onClose={() => setModalOpen(false)} isWishlisted={isWishlisted} onWishlistToggle={onWishlistToggle} />
+      <DestinationModal destination={destination} isOpen={modalOpen}
+        onClose={() => setModalOpen(false)} isWishlisted={isWishlisted}
+        onWishlistToggle={onWishlistToggle} />
     </>
   );
 };
@@ -508,20 +954,19 @@ const FeatureBlock = ({ data, index }) => {
       <div className="feature-block-media">
         <div className="feature-block-img-wrap">
           {data.images.map((src, i) => (
-            <img
-              key={i}
-              src={src}
-              alt={`${data.title} ${i + 1}`}
+            <img key={i} src={src} alt={`${data.title} ${i + 1}`}
               className={`feature-block-img ${i === curImg ? "feature-block-img--active" : ""} ${isTransitioning && i === curImg ? "feature-block-img--exiting" : ""}`}
-              loading="lazy"
-            />
+              loading="lazy" />
           ))}
           <div className="feature-block-img-overlay" />
         </div>
         {data.images.length > 1 && (
           <div className="feature-block-dots">
             {data.images.map((_, i) => (
-              <button key={i} className={`feature-block-dot ${i === curImg ? "active" : ""}`} onClick={() => { setIsTransitioning(false); setCurImg(i); }} aria-label={`Image ${i + 1}`} />
+              <button key={i}
+                className={`feature-block-dot ${i === curImg ? "active" : ""}`}
+                onClick={() => { setIsTransitioning(false); setCurImg(i); }}
+                aria-label={`Image ${i + 1}`} />
             ))}
           </div>
         )}
@@ -531,13 +976,19 @@ const FeatureBlock = ({ data, index }) => {
           <span className="feature-block-eyebrow">{data.eyebrow}</span>
           <h3 className="feature-block-title">{data.title}</h3>
           <div className="feature-block-divider" />
-          <p className="feature-block-desc">{data.descriptions ? data.descriptions[0] : data.description}</p>
+          <p className="feature-block-desc">
+            {data.descriptions ? data.descriptions[0] : data.description}
+          </p>
           {data.bullets && (
             <ul className="feature-block-bullets">
-              {data.bullets.map((b, i) => <li key={i}><span className="feature-block-bullet-mark" /><span>{b}</span></li>)}
+              {data.bullets.map((b, i) => (
+                <li key={i}><span className="feature-block-bullet-mark" /><span>{b}</span></li>
+              ))}
             </ul>
           )}
-          <Link to={data.link} className="feature-block-cta"><span>{data.ctaLabel}</span><HiOutlineArrowRight /></Link>
+          <Link to={data.link} className="feature-block-cta">
+            <span>{data.ctaLabel}</span><HiOutlineArrowRight />
+          </Link>
         </div>
       </div>
     </section>
@@ -545,81 +996,15 @@ const FeatureBlock = ({ data, index }) => {
 };
 
 /* ═══════════════════════════════════════════
-   TESTIMONIAL SLIDER — COMPACT
+   TESTIMONIAL SLIDER
    ═══════════════════════════════════════════ */
 const TESTIMONIAL_SLIDES = [
-  {
-    quote:
-      "The canopy walkway was magical. Standing high above the ancient trees with the sounds of the forest all around us was unforgettable.",
-    name: "Sarah Thompson",
-    meta: "United Kingdom • June 2025",
-    image: "https://picsum.photos/id/64/120/120",
-    alt: "Sarah Thompson",
-  },
-  {
-    quote:
-      "Tracking chimpanzees in Nyungwe was the highlight of our Rwanda trip. Professional guides made the experience educational and deeply moving.",
-    name: "Michael Okoro",
-    meta: "Nigeria • Photographer",
-    image: "https://picsum.photos/id/201/120/120",
-    alt: "Michael Okoro",
-  },
-  {
-    quote:
-      "A perfect blend of adventure and serenity. The waterfalls and biodiversity left us speechless. Highly recommend for nature lovers.",
-    name: "Amina & Khalid Hassan",
-    meta: "Kenya • Honeymoon",
-    image: "https://picsum.photos/id/1005/120/120",
-    alt: "Amina Hassan",
-  },
-  {
-    quote:
-      "The canopy walkway was magical. Standing high above the ancient trees with the sounds of the forest all around us was unforgettable.",
-    name: "Sarah Thompson",
-    meta: "United Kingdom • June 2025",
-    image: "https://picsum.photos/id/64/120/120",
-    alt: "Sarah Thompson",
-  },
-  {
-    quote:
-      "Tracking chimpanzees in Nyungwe was the highlight of our Rwanda trip. Professional guides made the experience educational and deeply moving.",
-    name: "Michael Okoro",
-    meta: "Nigeria • Photographer",
-    image: "https://picsum.photos/id/201/120/120",
-    alt: "Michael Okoro",
-  },
-  {
-    quote:
-      "A perfect blend of adventure and serenity. The waterfalls and biodiversity left us speechless. Highly recommend for nature lovers.",
-    name: "Amina & Khalid Hassan",
-    meta: "Kenya • Honeymoon",
-    image: "https://picsum.photos/id/1005/120/120",
-    alt: "Amina Hassan",
-  },
-  {
-    quote:
-      "The canopy walkway was magical. Standing high above the ancient trees with the sounds of the forest all around us was unforgettable.",
-    name: "Sarah Thompson",
-    meta: "United Kingdom • June 2025",
-    image: "https://picsum.photos/id/64/120/120",
-    alt: "Sarah Thompson",
-  },
-  {
-    quote:
-      "Tracking chimpanzees in Nyungwe was the highlight of our Rwanda trip. Professional guides made the experience educational and deeply moving.",
-    name: "Michael Okoro",
-    meta: "Nigeria • Photographer",
-    image: "https://picsum.photos/id/201/120/120",
-    alt: "Michael Okoro",
-  },
-  {
-    quote:
-      "A perfect blend of adventure and serenity. The waterfalls and biodiversity left us speechless. Highly recommend for nature lovers.",
-    name: "Amina & Khalid Hassan",
-    meta: "Kenya • Honeymoon",
-    image: "https://picsum.photos/id/1005/120/120",
-    alt: "Amina Hassan",
-  },
+  { quote: "The canopy walkway was magical. Standing high above the ancient trees with the sounds of the forest all around us was unforgettable.", name: "Sarah Thompson", meta: "United Kingdom • June 2025", image: "https://picsum.photos/id/64/120/120", alt: "Sarah Thompson" },
+  { quote: "Tracking chimpanzees in Nyungwe was the highlight of our Rwanda trip. Professional guides made the experience educational and deeply moving.", name: "Michael Okoro", meta: "Nigeria • Photographer", image: "https://picsum.photos/id/201/120/120", alt: "Michael Okoro" },
+  { quote: "A perfect blend of adventure and serenity. The waterfalls and biodiversity left us speechless. Highly recommend for nature lovers.", name: "Amina & Khalid Hassan", meta: "Kenya • Honeymoon", image: "https://picsum.photos/id/1005/120/120", alt: "Amina Hassan" },
+  { quote: "The canopy walkway was magical. Standing high above the ancient trees with the sounds of the forest all around us was unforgettable.", name: "Sarah Thompson", meta: "United Kingdom • June 2025", image: "https://picsum.photos/id/64/120/120", alt: "Sarah Thompson" },
+  { quote: "Tracking chimpanzees in Nyungwe was the highlight of our Rwanda trip. Professional guides made the experience educational and deeply moving.", name: "Michael Okoro", meta: "Nigeria • Photographer", image: "https://picsum.photos/id/201/120/120", alt: "Michael Okoro" },
+  { quote: "A perfect blend of adventure and serenity. The waterfalls and biodiversity left us speechless. Highly recommend for nature lovers.", name: "Amina & Khalid Hassan", meta: "Kenya • Honeymoon", image: "https://picsum.photos/id/1005/120/120", alt: "Amina Hassan" },
 ];
 
 const TestimonialSlider = () => {
@@ -627,36 +1012,24 @@ const TestimonialSlider = () => {
   const [paused, setPaused] = useState(false);
   const slidesRef = useRef(null);
 
-  const goToSlide = useCallback((index) => {
-    setCurrentSlide(index);
-  }, []);
-
-  const nextSlide = useCallback(() => {
-    setCurrentSlide((current) => (current + 1) % TESTIMONIAL_SLIDES.length);
-  }, []);
-
-  const prevSlide = useCallback(() => {
-    setCurrentSlide(
-      (current) => (current - 1 + TESTIMONIAL_SLIDES.length) % TESTIMONIAL_SLIDES.length
-    );
-  }, []);
+  const nextSlide = useCallback(() => setCurrentSlide((c) => (c + 1) % TESTIMONIAL_SLIDES.length), []);
+  const prevSlide = useCallback(() => setCurrentSlide((c) => (c - 1 + TESTIMONIAL_SLIDES.length) % TESTIMONIAL_SLIDES.length), []);
 
   useEffect(() => {
-    if (slidesRef.current) {
+    if (slidesRef.current)
       slidesRef.current.style.transform = `translateX(-${currentSlide * 100}%)`;
-    }
   }, [currentSlide]);
 
   useEffect(() => {
-    if (paused) return undefined;
-    const autoInterval = setInterval(nextSlide, 5000);
-    return () => clearInterval(autoInterval);
+    if (paused) return;
+    const iv = setInterval(nextSlide, 5000);
+    return () => clearInterval(iv);
   }, [nextSlide, paused]);
 
   useEffect(() => {
-    const handleKey = (event) => {
-      if (event.key === "ArrowRight") nextSlide();
-      if (event.key === "ArrowLeft") prevSlide();
+    const handleKey = (e) => {
+      if (e.key === "ArrowRight") nextSlide();
+      if (e.key === "ArrowLeft") prevSlide();
     };
     document.addEventListener("keydown", handleKey);
     return () => document.removeEventListener("keydown", handleKey);
@@ -669,24 +1042,17 @@ const TestimonialSlider = () => {
           <span className="testimonial-compact-label">TESTIMONIALS</span>
           <h2 className="section-title">What Our Guests Say</h2>
         </div>
-
-        <div
-          className="testimonial-compact-slider"
+        <div className="testimonial-compact-slider"
           onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
-        >
+          onMouseLeave={() => setPaused(false)}>
           <div ref={slidesRef} className="testimonial-compact-slides">
             {TESTIMONIAL_SLIDES.map((slide, index) => (
               <div key={index} className="testimonial-compact-slide">
                 <div className="testimonial-compact-inner">
-                  <div className="testimonial-compact-quote">“</div>
+                  <div className="testimonial-compact-quote">"</div>
                   <p className="testimonial-compact-text">{slide.quote}</p>
                   <div className="testimonial-compact-person">
-                    <img
-                      src={slide.image}
-                      alt={slide.alt}
-                      className="testimonial-compact-avatar"
-                    />
+                    <img src={slide.image} alt={slide.alt} className="testimonial-compact-avatar" />
                     <div>
                       <div className="testimonial-compact-name">{slide.name}</div>
                       <div className="testimonial-compact-meta">{slide.meta}</div>
@@ -697,42 +1063,19 @@ const TestimonialSlider = () => {
               </div>
             ))}
           </div>
-
-          <button
-            type="button"
-            className="testimonial-compact-arrow testimonial-compact-arrow--left"
-            onClick={prevSlide}
-            aria-label="Previous testimonial"
-          >
-            <IoChevronBack />
-          </button>
-          <button
-            type="button"
-            className="testimonial-compact-arrow testimonial-compact-arrow--right"
-            onClick={nextSlide}
-            aria-label="Next testimonial"
-          >
-            <IoChevronForward />
-          </button>
-
+          <button type="button" className="testimonial-compact-arrow testimonial-compact-arrow--left" onClick={prevSlide} aria-label="Previous testimonial"><IoChevronBack /></button>
+          <button type="button" className="testimonial-compact-arrow testimonial-compact-arrow--right" onClick={nextSlide} aria-label="Next testimonial"><IoChevronForward /></button>
           <div className="testimonial-compact-dots">
             {TESTIMONIAL_SLIDES.map((_, index) => (
-              <button
-                key={index}
-                type="button"
+              <button key={index} type="button"
                 className={`testimonial-compact-dot ${index === currentSlide ? "active" : ""}`}
-                onClick={() => goToSlide(index)}
-                aria-label={`Testimonial ${index + 1}`}
-              />
+                onClick={() => setCurrentSlide(index)}
+                aria-label={`Testimonial ${index + 1}`} />
             ))}
           </div>
         </div>
-
         <div className="testimonial-compact-trust">
-          <div className="testimonial-compact-trust-item">
-            <FaStar size={12} />
-            <span>Verified</span>
-          </div>
+          <div className="testimonial-compact-trust-item"><FaStar size={12} /><span>Verified</span></div>
           <div>TripAdvisor • 4.9/5</div>
           <div>10+ Happy Visitors</div>
         </div>
@@ -742,55 +1085,423 @@ const TestimonialSlider = () => {
 };
 
 /* ═══════════════════════════════════════════
-   POST CARD
+   HORIZONTAL PACKAGE CARD
    ═══════════════════════════════════════════ */
-const PostCard = ({ post }) => {
-  const date = post.published_at || post.created_at;
-  const formatted = date ? new Date(date).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "";
+const HorizontalPackageCard = React.memo(function HorizontalPackageCard({
+  pkg, index, wishlist, onWishlist,
+}) {
+  const t = THEME[pkg.card_theme] || THEME.default;
+  const isWish = wishlist?.has(pkg.id);
+  const accent = pkg.accent_color || t.accent || "#059669";
+  const hasDisc = Number(pkg.discount_percent) > 0;
+  const cover = pkg.cover_image_url || pkg.thumbnail_url || null;
+  const feats = useMemo(() => parseJsonField(pkg.features).slice(0, 2), [pkg.features]);
+  const to = `/packages/${pkg.slug || pkg.id}`;
+
+  const handleWish = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onWishlist?.(pkg.id);
+  };
 
   return (
-    <article className="post-card-pro">
-      <Link to={`/blog/${post.slug}`} className="post-card-pro-link">
-        <div className="post-card-pro-image-wrap">
-          {post.image_url ? <img src={post.image_url} alt={post.title} className="post-card-pro-image" loading="lazy" /> : <div className="post-card-pro-placeholder"><MdOutlineArticle /></div>}
-          {post.category && <span className="post-card-pro-category">{post.category}</span>}
-        </div>
-        <div className="post-card-pro-content">
-          <div className="post-card-pro-meta">
-            <span><MdOutlineDateRange /> {formatted}</span>
-            {post.read_time > 0 && <span>• {post.read_time} min read</span>}
-            {post.view_count > 0 && <span><MdOutlineVisibility /> {post.view_count}</span>}
+    <Link
+      to={to}
+      className="hpkg-card mixed-card-reveal"
+      style={{ animationDelay: `${index * 80}ms` }}
+    >
+      {/* Image */}
+      <div className="hpkg-img-wrap">
+        {cover
+          ? <img src={cover} alt={pkg.title} className="hpkg-img" loading="lazy" />
+          : (
+            <div style={{
+              width: "100%", height: "100%",
+              background: `linear-gradient(145deg, ${accent}33, ${accent}77)`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <Package size={40} style={{ color: accent, opacity: 0.4 }} />
+            </div>
+          )
+        }
+        <div className="hpkg-img-gradient" />
+
+        {/* Badge */}
+        {pkg.badge_label && (
+          <span className="hpkg-badge"
+            style={{ backgroundColor: pkg.badge_color || accent }}>
+            {pkg.badge_label}
+          </span>
+        )}
+        {!pkg.badge_label && pkg.is_featured && (
+          <span className="hpkg-badge" style={{ backgroundColor: "#f59e0b" }}>
+            ⭐ Featured
+          </span>
+        )}
+
+        {/* Discount */}
+        {hasDisc && (
+          <span className="hpkg-discount">-{pkg.discount_percent}% OFF</span>
+        )}
+
+        {/* Wishlist — replaces discount position if no discount */}
+        {!hasDisc && (
+          <button className="hpkg-wish" onClick={handleWish} aria-label="Wishlist">
+            <Heart
+              size={14}
+              style={{
+                fill: isWish ? "#ef4444" : "none",
+                color: isWish ? "#ef4444" : "#64748b",
+              }}
+            />
+          </button>
+        )}
+
+        {/* Duration */}
+        {pkg.duration_days && (
+          <div className="hpkg-duration-pill">
+            <Clock size={10} />
+            {fmtDuration(pkg.duration_days, pkg.duration_nights)}
           </div>
-          <h3 className="post-card-pro-title">{post.title}</h3>
-          {post.excerpt && <p className="post-card-pro-excerpt">{post.excerpt.length > 140 ? post.excerpt.substring(0, 140) + "…" : post.excerpt}</p>}
-          <span className="post-card-pro-readmore">Read article <HiOutlineArrowRight /></span>
+        )}
+
+        {/* Sold out overlay */}
+        {pkg.is_sold_out && (
+          <div style={{
+            position: "absolute", inset: 0,
+            background: "rgba(0,0,0,0.6)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <span style={{
+              color: "#fff", fontWeight: 900, fontSize: "0.75rem",
+              letterSpacing: "0.1em", textTransform: "uppercase",
+              border: "1px solid rgba(255,255,255,0.4)",
+              padding: "0.4rem 1rem", borderRadius: "99px",
+              backdropFilter: "blur(6px)",
+            }}>Sold Out</span>
+          </div>
+        )}
+      </div>
+
+      {/* Body */}
+      <div className="hpkg-body">
+        {pkg.category && (
+          <span className="hpkg-category">{pkg.category}</span>
+        )}
+        <h3 className="hpkg-title">{pkg.title}</h3>
+
+        <div className="hpkg-meta">
+          {(pkg.destination || pkg.country) && (
+            <span className="hpkg-meta-item">
+              <MapPin size={10} style={{ color: "#059669", flexShrink: 0 }} />
+              {[pkg.destination, pkg.country].filter(Boolean).join(", ")}
+            </span>
+          )}
+          {pkg.max_travelers && (
+            <span className="hpkg-meta-item">
+              <Users size={10} style={{ color: "#059669" }} />
+              Max {pkg.max_travelers}
+            </span>
+          )}
         </div>
-      </Link>
-    </article>
+
+        {pkg.short_description && (
+          <p className="hpkg-desc">{pkg.short_description}</p>
+        )}
+
+        {feats.length > 0 && (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "0.4rem" }}>
+            {feats.map((f, i) => (
+              <span key={i} style={{
+                fontSize: "0.65rem", fontWeight: 700,
+                padding: "0.2rem 0.6rem", borderRadius: "99px",
+                background: `${accent}15`, color: accent,
+                border: `1px solid ${accent}30`,
+              }}>{f}</span>
+            ))}
+          </div>
+        )}
+
+        <div className="hpkg-footer">
+          <div>
+            {hasDisc && (() => {
+              const orig = Number(pkg.price) / (1 - Number(pkg.discount_percent) / 100);
+              return (
+                <p style={{ fontSize: "0.7rem", color: "#94a3b8", textDecoration: "line-through", lineHeight: 1, marginBottom: "0.15rem" }}>
+                  {fmtPrice(orig, pkg.currency)}
+                </p>
+              );
+            })()}
+            <p className="hpkg-price" style={{ color: accent }}>
+              {pkg.is_price_visible !== false
+                ? fmtPrice(pkg.price, pkg.currency)
+                : "POA"}
+            </p>
+            <p className="hpkg-price-label">{pkg.price_label || "per person"}</p>
+          </div>
+          <span className="hpkg-cta">
+            Explore <ArrowRight size={12} />
+          </span>
+        </div>
+      </div>
+    </Link>
   );
-};
+});
 
 /* ═══════════════════════════════════════════
-   POSTS GRID
+   HORIZONTAL POST CARD
    ═══════════════════════════════════════════ */
-const PostsGrid = ({ posts }) => {
-  const [page, setPage] = useState(0);
-  const perPage = 6;
-  const totalPages = Math.max(1, Math.ceil(posts.length / perPage));
-  const displayed = posts.slice(page * perPage, page * perPage + perPage);
+const HorizontalPostCard = React.memo(function HorizontalPostCard({ post, index }) {
+  const date = post.published_at || post.created_at;
+  const formatted = date
+    ? new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })
+    : "";
 
   return (
-    <div className="posts-grid-wrapper">
-      <div className="posts-grid">
-        {displayed.map((p, i) => <PostCard key={p.id || p.slug || i} post={p} />)}
+    <Link
+      to={`/blog/${post.slug}`}
+      className="hpost-card mixed-card-reveal"
+      style={{ animationDelay: `${index * 80}ms` }}
+    >
+      <div className="hpost-img-wrap">
+        {post.image_url
+          ? <img src={post.image_url} alt={post.title} className="hpost-img" loading="lazy" />
+          : (
+            <div style={{
+              width: "100%", height: "100%", background: "linear-gradient(135deg, #e2e8f0, #f1f5f9)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+            }}>
+              <MdOutlineArticle size={36} style={{ color: "#94a3b8" }} />
+            </div>
+          )
+        }
+        {post.category && (
+          <span className="hpost-category">{post.category}</span>
+        )}
       </div>
-      {totalPages > 1 && (
-        <div className="posts-grid-pagination">
-          <button className="posts-grid-page-btn" onClick={() => setPage((p) => Math.max(0, p - 1))} disabled={page === 0}><IoChevronBack /> Prev</button>
-          <span className="posts-grid-page-info">{page + 1} / {totalPages}</span>
-          <button className="posts-grid-page-btn" onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))} disabled={page >= totalPages - 1}>Next <IoChevronForward /></button>
+      <div className="hpost-body">
+        <div className="hpost-meta">
+          {formatted && (
+            <span style={{ display: "flex", alignItems: "center", gap: "0.2rem" }}>
+              <MdOutlineDateRange size={11} /> {formatted}
+            </span>
+          )}
+          {post.read_time > 0 && <span>· {post.read_time} min</span>}
+          {post.view_count > 0 && (
+            <span style={{ display: "flex", alignItems: "center", gap: "0.2rem" }}>
+              <MdOutlineVisibility size={11} /> {post.view_count}
+            </span>
+          )}
         </div>
-      )}
+        <h3 className="hpost-title">{post.title}</h3>
+        {post.excerpt && (
+          <p className="hpost-excerpt">
+            {post.excerpt.length > 120 ? post.excerpt.substring(0, 120) + "…" : post.excerpt}
+          </p>
+        )}
+        <span className="hpost-readmore">
+          Read article <HiOutlineArrowRight size={13} />
+        </span>
+      </div>
+    </Link>
+  );
+});
+
+/* ═══════════════════════════════════════════
+   PACKAGE SKELETON
+   ═══════════════════════════════════════════ */
+const PackageSkeleton = () => (
+  <div className="hpkg-skeleton">
+    <div className="h-skel" style={{ height: 190 }} />
+    <div style={{ padding: "1.1rem 1.2rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+      <div className="h-skel" style={{ height: 10, width: "40%" }} />
+      <div className="h-skel" style={{ height: 18, width: "85%" }} />
+      <div className="h-skel" style={{ height: 10, width: "60%" }} />
+      <div className="h-skel" style={{ height: 32, width: "100%" }} />
+      <div style={{ display: "flex", gap: "0.5rem" }}>
+        <div className="h-skel" style={{ height: 22, width: 60, borderRadius: 99 }} />
+        <div className="h-skel" style={{ height: 22, width: 50, borderRadius: 99 }} />
+      </div>
+      <div style={{ display: "flex", justifyContent: "space-between", paddingTop: "0.5rem", borderTop: "1px solid #f1f5f9" }}>
+        <div className="h-skel" style={{ height: 28, width: 80 }} />
+        <div className="h-skel" style={{ height: 34, width: 90, borderRadius: 10 }} />
+      </div>
+    </div>
+  </div>
+);
+
+const PostSkeleton = () => (
+  <div className="hpost-skeleton">
+    <div className="h-skel" style={{ height: 170 }} />
+    <div style={{ padding: "1rem 1.1rem", display: "flex", flexDirection: "column", gap: "0.65rem" }}>
+      <div className="h-skel" style={{ height: 10, width: "50%" }} />
+      <div className="h-skel" style={{ height: 16, width: "90%" }} />
+      <div className="h-skel" style={{ height: 14, width: "70%" }} />
+      <div className="h-skel" style={{ height: 28, width: "100%" }} />
+      <div className="h-skel" style={{ height: 12, width: "40%" }} />
+    </div>
+  </div>
+);
+
+/* ═══════════════════════════════════════════
+   MIXED SCROLL ROW  ← core new section
+   ═══════════════════════════════════════════ */
+const MixedScrollRow = ({ packages, posts, loadingPkgs, loadingPosts, wishlist, onWishlist }) => {
+  const rowRef = useRef(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(true);
+
+  /* Build interleaved items: 2 packages → 1 post → 2 packages → 1 post … */
+  const items = useMemo(() => {
+    const result = [];
+    const pkgs = packages.slice(0, 12);
+    const strs = posts.slice(0, 6);
+    let pi = 0, si = 0;
+    while (pi < pkgs.length || si < strs.length) {
+      // 2 packages
+      for (let k = 0; k < 2 && pi < pkgs.length; k++, pi++) {
+        result.push({ type: "pkg", data: pkgs[pi], idx: pi });
+      }
+      // 1 story
+      if (si < strs.length) {
+        result.push({ type: "post", data: strs[si], idx: si });
+        si++;
+      }
+    }
+    return result;
+  }, [packages, posts]);
+
+  const updateScrollState = useCallback(() => {
+    const el = rowRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    const pct = max > 0 ? el.scrollLeft / max : 0;
+    setScrollProgress(pct * 100);
+    setCanScrollLeft(el.scrollLeft > 4);
+    setCanScrollRight(el.scrollLeft < max - 4);
+  }, []);
+
+  useEffect(() => {
+    const el = rowRef.current;
+    if (!el) return;
+    el.addEventListener("scroll", updateScrollState, { passive: true });
+    updateScrollState();
+    return () => el.removeEventListener("scroll", updateScrollState);
+  }, [updateScrollState, items]);
+
+  const scroll = useCallback((dir) => {
+    const el = rowRef.current;
+    if (!el) return;
+    const amount = dir === "left" ? -360 : 360;
+    el.scrollBy({ left: amount, behavior: "smooth" });
+  }, []);
+
+  const isLoading = loadingPkgs || loadingPosts;
+
+  return (
+    <div>
+      {/* Row header */}
+      <div style={{
+        display: "flex", alignItems: "center", justifyContent: "space-between",
+        marginBottom: "1.5rem", flexWrap: "wrap", gap: "0.75rem",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
+          <span className="mixed-section-pill mixed-section-pill--pkg">
+            <Package size={11} /> Packages
+          </span>
+          <span style={{ color: "#94a3b8", fontSize: "0.85rem", fontWeight: 500 }}>+</span>
+          <span className="mixed-section-pill mixed-section-pill--story">
+            <MdOutlineArticle size={11} /> Stories
+          </span>
+        </div>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <Link to="/packages" style={{
+            fontSize: "0.78rem", fontWeight: 700, color: "#059669",
+            textDecoration: "none", display: "flex", alignItems: "center",
+            gap: "0.3rem", padding: "0.4rem 0.85rem",
+            border: "1.5px solid rgba(5,150,105,0.25)",
+            borderRadius: "99px", background: "rgba(5,150,105,0.05)",
+            transition: "all 0.2s",
+          }}>
+            All Packages <ArrowRight size={12} />
+          </Link>
+          <Link to="/blog" style={{
+            fontSize: "0.78rem", fontWeight: 700, color: "#6366f1",
+            textDecoration: "none", display: "flex", alignItems: "center",
+            gap: "0.3rem", padding: "0.4rem 0.85rem",
+            border: "1.5px solid rgba(99,102,241,0.2)",
+            borderRadius: "99px", background: "rgba(99,102,241,0.04)",
+            transition: "all 0.2s",
+          }}>
+            All Stories <ArrowRight size={12} />
+          </Link>
+        </div>
+      </div>
+
+      {/* Scrollable row */}
+      <div style={{ position: "relative" }}>
+        {/* Left arrow */}
+        <button
+          className="scroll-nav-btn scroll-nav-btn--left"
+          onClick={() => scroll("left")}
+          disabled={!canScrollLeft}
+          aria-label="Scroll left"
+        >
+          <IoChevronBack size={18} />
+        </button>
+
+        {/* The row */}
+        <div
+          ref={rowRef}
+          className="mixed-scroll-row"
+          style={{ padding: "0.5rem 0.25rem 1.25rem" }}
+        >
+          {isLoading
+            ? Array.from({ length: 9 }).map((_, i) =>
+                i % 3 === 2
+                  ? <PostSkeleton key={i} />
+                  : <PackageSkeleton key={i} />
+              )
+            : items.map((item, i) =>
+                item.type === "pkg"
+                  ? (
+                    <HorizontalPackageCard
+                      key={`pkg-${item.data.id || i}`}
+                      pkg={item.data}
+                      index={i}
+                      wishlist={wishlist}
+                      onWishlist={onWishlist}
+                    />
+                  ) : (
+                    <HorizontalPostCard
+                      key={`post-${item.data.id || item.data.slug || i}`}
+                      post={item.data}
+                      index={i}
+                    />
+                  )
+              )
+          }
+        </div>
+
+        {/* Right arrow */}
+        <button
+          className="scroll-nav-btn scroll-nav-btn--right"
+          onClick={() => scroll("right")}
+          disabled={!canScrollRight}
+          aria-label="Scroll right"
+        >
+          <IoChevronForward size={18} />
+        </button>
+      </div>
+
+      {/* Progress bar */}
+      <div className="scroll-progress-bar">
+        <div
+          className="scroll-progress-fill"
+          style={{ width: `${scrollProgress}%` }}
+        />
+      </div>
     </div>
   );
 };
@@ -799,19 +1510,50 @@ const PostsGrid = ({ posts }) => {
    MAIN HOME
    ═══════════════════════════════════════════ */
 const Home = () => {
+  useEffect(injectHomeStyles, []);
+
   const { setIsLoading } = useApp();
   const hasCompletedRef = useRef(false);
   const { destinations: allDest = [], loading: destLoading } = useDestinations({ limit: 100, sort: "-featured" });
   const { posts = [], loading: postsLoading } = usePosts({ limit: 12, sort: "created" });
   const { loadWishlist, toggleWishlist, isWishlisted } = useWishlist();
 
+  /* Packages state */
+  const [packages, setPackages] = useState([]);
+  const [loadingPkgs, setLoadingPkgs] = useState(true);
+  const [pkgWishlist, setPkgWishlist] = useState(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem("altuvera_wishlist") || "[]"));
+    } catch { return new Set(); }
+  });
+
+  /* Load packages */
+  useEffect(() => {
+    setLoadingPkgs(true);
+    apiGet("/packages", { limit: 12, sortBy: "sort_order", order: "asc", is_active: true })
+      .then((data) => setPackages(data.data || []))
+      .catch(() => setPackages([]))
+      .finally(() => setLoadingPkgs(false));
+  }, []);
+
+  const handlePkgWishlist = useCallback((id) => {
+    setPkgWishlist((prev) => {
+      const n = new Set(prev);
+      n.has(id) ? n.delete(id) : n.add(id);
+      try { localStorage.setItem("altuvera_wishlist", JSON.stringify([...n])); } catch {}
+      return n;
+    });
+  }, []);
+
   useEffect(() => { loadWishlist(); }, [loadWishlist]);
 
+  /* Preload hero images */
   useEffect(() => {
     if (hasCompletedRef.current) return;
     if (destLoading) { setIsLoading(true); return; }
     let cancelled = false;
-    const preload = (src) => new Promise((r) => { const img = new Image(); img.onload = r; img.onerror = r; img.src = src; });
+    const preload = (src) =>
+      new Promise((r) => { const img = new Image(); img.onload = r; img.onerror = r; img.src = src; });
     const run = async () => {
       setIsLoading(true);
       await new Promise((r) => requestAnimationFrame(r));
@@ -824,67 +1566,47 @@ const Home = () => {
     return () => { cancelled = true; };
   }, [destLoading, setIsLoading]);
 
-const featureBlocks = useMemo(() => [
-  {
-    eyebrow: "DISCOVER RWANDA",
-    title: "Encounter Mountain Gorillas & Explore the Land of a Thousand Hills",
-    description:
-      "Rwanda offers one of Africa's most exclusive wildlife experiences. Trek through the misty forests of Volcanoes National Park to meet endangered mountain gorillas, walk above the rainforest canopy in Nyungwe, enjoy Big Five safaris in Akagera, and immerse yourself in Kigali's vibrant culture.",
-    bullets: [
-      "World-famous mountain gorilla trekking",
-      "Nyungwe Forest canopy walk & chimpanzee tracking",
-      "Big Five safaris in Akagera National Park",
-      "Luxury eco-lodges with expert local guides"
-    ],
-    ctaLabel: "Explore Rwanda",
-    link: "/destinations/rwanda",
-    images: [
-      "https://i.pinimg.com/1200x/04/f3/52/04f3527e8135a4ab914b6257147bf044.jpg",
-      "https://i.pinimg.com/1200x/47/49/a6/4749a673fd707e5f24b78d530ec65265.jpg",
-      "https://i.pinimg.com/1200x/17/5b/7d/175b7d6895318e3ac0f3f1c5412dc7a6.jpg",
-    ],
-  },
-
-  {
-    eyebrow: "EXPLORE TANZANIA",
-    title: "Witness the Great Migration & Conquer Africa's Highest Peak",
-    description:
-      "From the endless plains of the Serengeti to the snow-capped summit of Mount Kilimanjaro, Tanzania delivers bucket-list adventures. Experience the Great Migration, descend into the Ngorongoro Crater, discover abundant wildlife, and unwind on the turquoise beaches of Zanzibar.",
-    bullets: [
-      "The Great Wildebeest Migration in Serengeti",
-      "Mount Kilimanjaro climbing expeditions",
-      "Ngorongoro Crater Big Five safaris",
-      "Zanzibar beach escapes & cultural tours"
-    ],
-    ctaLabel: "Explore Tanzania",
-    link: "/destinations/tanzania",
-    images: [
-      "https://i.pinimg.com/736x/7a/22/e2/7a22e2fbb7beb766a834c4380853cd39.jpg",
-      "https://i.pinimg.com/1200x/83/18/87/8318877539f07b4befe950cc66c78750.jpg",
-      "https://i.pinimg.com/736x/57/d3/24/57d324e0621e2c7e4906873e8ebd73d5.jpg",
-    ],
-  },
-
-  {
-    eyebrow: "DISCOVER KENYA",
-    title: "Experience Legendary Safaris & Coastal Paradise",
-    description:
-      "Kenya combines iconic wildlife encounters with spectacular landscapes and pristine Indian Ocean beaches. Witness the Great Migration in the Maasai Mara, photograph elephants beneath Mount Kilimanjaro in Amboseli, soar over the savannah in a hot-air balloon, or relax along the white sands of Diani Beach.",
-    bullets: [
-      "Maasai Mara Great Migration safaris",
-      "Amboseli elephant encounters with Kilimanjaro views",
-      "Sunrise hot-air balloon adventures",
-      "Diani Beach & Swahili coastal experiences"
-    ],
-    ctaLabel: "Explore Kenya",
-    link: "/destinations/kenya",
-    images: [
-      "https://i.pinimg.com/736x/1f/fb/71/1ffb71af6d57f558303acce6ae0fc8af.jpg",
-      "https://i.pinimg.com/736x/7e/9a/00/7e9a0089e1c1f9793fcb60ba776fb790.jpg",
-      "https://i.pinimg.com/736x/3c/4a/7a/3c4a7aca8019008379987d991b7e012b.jpg",
-    ],
-  },
-], []);
+  const featureBlocks = useMemo(() => [
+    {
+      eyebrow: "DISCOVER RWANDA",
+      title: "Encounter Mountain Gorillas & Explore the Land of a Thousand Hills",
+      description: "Rwanda offers one of Africa's most exclusive wildlife experiences. Trek through the misty forests of Volcanoes National Park to meet endangered mountain gorillas, walk above the rainforest canopy in Nyungwe, enjoy Big Five safaris in Akagera, and immerse yourself in Kigali's vibrant culture.",
+      bullets: ["World-famous mountain gorilla trekking", "Nyungwe Forest canopy walk & chimpanzee tracking", "Big Five safaris in Akagera National Park", "Luxury eco-lodges with expert local guides"],
+      ctaLabel: "Explore Rwanda",
+      link: "/destinations/rwanda",
+      images: [
+        "https://i.pinimg.com/1200x/04/f3/52/04f3527e8135a4ab914b6257147bf044.jpg",
+        "https://i.pinimg.com/1200x/47/49/a6/4749a673fd707e5f24b78d530ec65265.jpg",
+        "https://i.pinimg.com/1200x/17/5b/7d/175b7d6895318e3ac0f3f1c5412dc7a6.jpg",
+      ],
+    },
+    {
+      eyebrow: "EXPLORE TANZANIA",
+      title: "Witness the Great Migration & Conquer Africa's Highest Peak",
+      description: "From the endless plains of the Serengeti to the snow-capped summit of Mount Kilimanjaro, Tanzania delivers bucket-list adventures. Experience the Great Migration, descend into the Ngorongoro Crater, discover abundant wildlife, and unwind on the turquoise beaches of Zanzibar.",
+      bullets: ["The Great Wildebeest Migration in Serengeti", "Mount Kilimanjaro climbing expeditions", "Ngorongoro Crater Big Five safaris", "Zanzibar beach escapes & cultural tours"],
+      ctaLabel: "Explore Tanzania",
+      link: "/destinations/tanzania",
+      images: [
+        "https://i.pinimg.com/736x/7a/22/e2/7a22e2fbb7beb766a834c4380853cd39.jpg",
+        "https://i.pinimg.com/1200x/83/18/87/8318877539f07b4befe950cc66c78750.jpg",
+        "https://i.pinimg.com/736x/57/d3/24/57d324e0621e2c7e4906873e8ebd73d5.jpg",
+      ],
+    },
+    {
+      eyebrow: "DISCOVER KENYA",
+      title: "Experience Legendary Safaris & Coastal Paradise",
+      description: "Kenya combines iconic wildlife encounters with spectacular landscapes and pristine Indian Ocean beaches. Witness the Great Migration in the Maasai Mara, photograph elephants beneath Mount Kilimanjaro in Amboseli, soar over the savannah in a hot-air balloon, or relax along the white sands of Diani Beach.",
+      bullets: ["Maasai Mara Great Migration safaris", "Amboseli elephant encounters with Kilimanjaro views", "Sunrise hot-air balloon adventures", "Diani Beach & Swahili coastal experiences"],
+      ctaLabel: "Explore Kenya",
+      link: "/destinations/kenya",
+      images: [
+        "https://i.pinimg.com/736x/1f/fb/71/1ffb71af6d57f558303acce6ae0fc8af.jpg",
+        "https://i.pinimg.com/736x/7e/9a/00/7e9a0089e1c1f9793fcb60ba776fb790.jpg",
+        "https://i.pinimg.com/736x/3c/4a/7a/3c4a7aca8019008379987d991b7e012b.jpg",
+      ],
+    },
+  ], []);
 
   return (
     <div className="home-root">
@@ -897,7 +1619,9 @@ const featureBlocks = useMemo(() => [
           <div className="intro-layout">
             <div className="intro-text">
               <div className="intro-badge"><HiOutlineSparkles /><span>Welcome to Altuvera</span></div>
-              <h2 className="intro-heading">Your Gateway to <span className="text-gradient">East Africa</span></h2>
+              <h2 className="intro-heading">
+                Your Gateway to <span className="text-gradient">East Africa</span>
+              </h2>
               <div className="intro-divider" />
               <p className="intro-paragraph">
                 From the thundering hooves of the Great Migration across the Serengeti, to the quiet wonder of a silverback gorilla's gaze in Bwindi, to the warm hospitality of Maasai elders beneath star-filled skies — Altuvera transforms wanderlust into life-defining adventures.
@@ -912,20 +1636,36 @@ const featureBlocks = useMemo(() => [
       <section className="home-section destinations-section">
         <div className="home-container">
           <div className="section-header">
-            <h2 className="section-title">Handpicked <span className="text-gradient">Destinations</span></h2>
+            <h2 className="section-title">
+              Handpicked <span className="text-gradient">Destinations</span>
+            </h2>
             <p className="section-subtitle">Click any destination to unveil its secrets.</p>
           </div>
           {destLoading ? (
             <div className="dest-mystery-grid">
-              {Array.from({ length: 6 }).map((_, i) => <div key={i} className="dest-mystery-card dest-mystery-card--skeleton"><div className="skeleton-shimmer" /></div>)}
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="dest-mystery-card dest-mystery-card--skeleton">
+                  <div className="skeleton-shimmer" />
+                </div>
+              ))}
             </div>
           ) : (
             <div className="dest-mystery-grid">
-              {allDest.slice(0, 8).map((d, i) => <DestinationTile key={d?._id || d?.slug || i} destination={d} index={i} isWishlisted={isWishlisted(d?._id || d?.id || d?.slug)} onWishlistToggle={toggleWishlist} />)}
+              {allDest.slice(0, 8).map((d, i) => (
+                <DestinationTile
+                  key={d?._id || d?.slug || i}
+                  destination={d}
+                  index={i}
+                  isWishlisted={isWishlisted(d?._id || d?.id || d?.slug)}
+                  onWishlistToggle={toggleWishlist}
+                />
+              ))}
             </div>
           )}
           <div className="section-cta">
-            <Button to="/destinations" variant="primary" size="large" icon={<HiOutlineArrowRight size={18} />}>View All Destinations</Button>
+            <Button to="/destinations" variant="primary" size="large" icon={<HiOutlineArrowRight size={18} />}>
+              View All Destinations
+            </Button>
           </div>
         </div>
       </section>
@@ -934,48 +1674,45 @@ const featureBlocks = useMemo(() => [
       <section className="home-section feature-blocks-section">
         <div className="home-container">
           <div className="section-header">
-            <h2 className="section-title">What Makes Us <span className="text-gradient">Different</span></h2>
+            <h2 className="section-title">
+              What Makes Us <span className="text-gradient">Different</span>
+            </h2>
             <p className="section-subtitle">Three pillars of the Altuvera experience.</p>
           </div>
         </div>
         <div className="feature-blocks-stack">
-          {featureBlocks.map((block, i) => <FeatureBlock key={block.title} data={block} index={i} />)}
+          {featureBlocks.map((block, i) => (
+            <FeatureBlock key={block.title} data={block} index={i} />
+          ))}
         </div>
       </section>
 
-      {/* TESTIMONIALS — compact slider */}
+      {/* TESTIMONIALS */}
       <TestimonialSlider />
 
-      {/* BLOG */}
+      {/* ══════════════════════════════════════════
+          MIXED PACKAGES + STORIES HORIZONTAL ROW
+          ══════════════════════════════════════════ */}
       <section className="home-section posts-section">
         <div className="home-container">
-          <div className="section-header">
-            <h2 className="section-title">Stories from the <span className="text-gradient">Wild</span></h2>
-            <p className="section-subtitle">Insights, guides, and behind-the-scenes tales.</p>
+          <div className="section-header" style={{ marginBottom: "0.5rem" }}>
+            <h2 className="section-title">
+              Explore Packages &{" "}
+              <span className="text-gradient">Stories</span>
+            </h2>
+            <p className="section-subtitle">
+              Curated adventures and field notes — scroll to discover.
+            </p>
           </div>
-          {postsLoading ? (
-            <div className="posts-grid">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="post-card-pro post-card-pro--skeleton">
-                  <div className="skeleton-shimmer" style={{ height: 200 }} />
-                  <div style={{ padding: "1.25rem" }}>
-                    <div className="skeleton-line" style={{ width: "60%", marginBottom: 8 }} />
-                    <div className="skeleton-line" style={{ width: "90%", marginBottom: 6 }} />
-                    <div className="skeleton-line" style={{ width: "75%" }} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : posts.length > 0 ? (
-            <>
-              <PostsGrid posts={posts} />
-              <div className="section-cta">
-                <Button to="/blog" variant="outline" size="large" icon={<HiOutlineArrowRight size={18} />}>Read All Articles</Button>
-              </div>
-            </>
-          ) : (
-            <div className="posts-empty"><MdOutlineArticle /><p>New stories coming soon.</p></div>
-          )}
+
+          <MixedScrollRow
+            packages={packages}
+            posts={posts}
+            loadingPkgs={loadingPkgs}
+            loadingPosts={postsLoading}
+            wishlist={pkgWishlist}
+            onWishlist={handlePkgWishlist}
+          />
         </div>
       </section>
     </div>

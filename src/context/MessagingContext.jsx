@@ -17,12 +17,18 @@ const genSessionId = () =>
 const getStoredSession = () => localStorage.getItem(SESSION_KEY) || null
 const saveSession = (sid) => localStorage.setItem(SESSION_KEY, sid)
 
+/* ── Connection stability tracking ─────────────────────────────────────── */
+const CONNECTION_DEBOUNCE_MS = 1500
+const FLICKER_PREVENTION_MS = 5000
+
 export function MessagingProvider({ children }) {
   const { user, isAuthenticated } = useUserAuth()
 
   const socketRef = useRef(null)
   const typingTimer = useRef(null)
   const reconnectRef = useRef(null)
+  const disconnectTimeoutRef = useRef(null)
+  const lastDisconnectRef = useRef(0)
 
   const [connected, setConnected] = useState(false)
   const [isOpen, setIsOpen] = useState(false)
@@ -49,7 +55,7 @@ export function MessagingProvider({ children }) {
 
     const socket = io(SOCKET_URL, {
       auth: { token },
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'], // polling first for cold-start compatibility
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionAttempts: 15,
@@ -67,11 +73,15 @@ export function MessagingProvider({ children }) {
     })
 
     socket.on('disconnect', (reason) => {
+      lastDisconnectRef.current = Date.now()
       setConnected(false)
-      setAdminOnline(false)
       setConnectionState(
         reason === 'io server disconnect' ? 'disconnected' : 'reconnecting'
       )
+      clearTimeout(disconnectTimeoutRef.current)
+      disconnectTimeoutRef.current = setTimeout(() => {
+        setAdminOnline(false)
+      }, CONNECTION_DEBOUNCE_MS)
     })
 
     socket.on('connect_error', () => {
@@ -298,6 +308,7 @@ export function MessagingProvider({ children }) {
     return () => {
       disconnect()
       clearTimeout(typingTimer.current)
+      clearTimeout(disconnectTimeoutRef.current)
     }
   }, [disconnect])
 
