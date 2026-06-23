@@ -91,7 +91,7 @@ export const useBookingWizard = () => {
 
   useEffect(() => {
     setLoadingServices(true);
-    fetch(`${API}/api/services`)
+    fetch(`${API}/services`)
       .then((r) => r.json())
       .then((d) => setServicesData(d.data || d.services || d || []))
       .catch(() => setServicesData([]))
