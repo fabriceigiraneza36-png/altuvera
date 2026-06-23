@@ -888,7 +888,7 @@ const featureBlocks = useMemo(() => [
 
   return (
     <div className="home-root">
-      <SEO title="Altuvera Travel — True Adventures in East Africa" />
+      <SEO title="Altuvera Travel — True Adventures in High Places & Deep Culture" />
       <Hero />
 
       {/* INTRO */}
