@@ -1,7 +1,9 @@
 /**
  * MessagingContext.jsx
- * Single persistent socket — connects once, stays alive across portal open/close
- * Reconnects automatically on disconnect, never creates duplicate sockets
+ * 
+ * SINGLE SOCKET — connects on app mount, stays alive for entire session.
+ * Portal open/close is purely visual — no reconnection ever.
+ * Supports both plain messages and package-context messages.
  */
 
 import React, {
@@ -20,8 +22,7 @@ const genSessionId = () =>
   `guest-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
 const getStoredSession = () => {
-  try { return localStorage.getItem(SESSION_KEY) || null }
-  catch { return null }
+  try { return localStorage.getItem(SESSION_KEY) || null } catch { return null }
 }
 const saveSession = (sid) => {
   try { localStorage.setItem(SESSION_KEY, sid) } catch {}
@@ -42,35 +43,34 @@ const normalizeMsg = (msg) => ({
 export function MessagingProvider({ children }) {
   const { user, isAuthenticated } = useUserAuth()
 
-  /* ── Refs — persist across renders without causing re-mount ── */
-  const socketRef            = useRef(null)   // THE single socket
-  const socketIdRef          = useRef(null)   // track socket.id for logging
-  const typingTimerRef       = useRef(null)
-  const disconnectDebounce   = useRef(null)
-  const hasRegisteredRef     = useRef(false)
-  const isConnectingRef      = useRef(false)
-  const mountedRef           = useRef(true)
-  const userRef              = useRef(user)   // track latest user without re-connecting
+  // ── Refs that persist across renders ────────────────────────────────
+  const socketRef          = useRef(null)
+  const typingTimerRef     = useRef(null)
+  const disconnectDebounce = useRef(null)
+  const mountedRef         = useRef(true)
+  const userRef            = useRef(user)
+  const hasConnectedRef    = useRef(false)  // true after first connect
+  const hasRegisteredRef   = useRef(false)
 
-  /* ── State ── */
-  const [connected,                   setConnected]                   = useState(false)
-  const [connectionState,             setConnectionState]             = useState('disconnected')
-  const [isOpen,                      setIsOpen]                      = useState(false)
-  const [messages,                    setMessages]                    = useState([])
-  const [conversationId,              setConversationId]              = useState(null)
-  const [sessionId,                   setSessionId]                   = useState(() => getStoredSession())
-  const [isTyping,                    setIsTyping]                    = useState(false)
-  const [adminOnline,                 setAdminOnline]                 = useState(false)
-  const [unreadCount,                 setUnreadCount]                 = useState(0)
-  const [sendingMsg,                  setSendingMsg]                  = useState(false)
-  const [registered,                  setRegistered]                  = useState(false)
-  const [newConversationNotification, setNewConversationNotification] = useState(null)
-  const [packageContext,              setPackageContext]              = useState(null)
+  // ── State ───────────────────────────────────────────────────────────
+  const [connected,       setConnected]       = useState(false)
+  const [connectionState, setConnectionState] = useState('disconnected')
+  const [isOpen,          setIsOpen]          = useState(false)
+  const [messages,        setMessages]        = useState([])
+  const [conversationId,  setConversationId]  = useState(null)
+  const [sessionId,       setSessionId]       = useState(() => getStoredSession())
+  const [isTyping,        setIsTyping]        = useState(false)
+  const [adminOnline,     setAdminOnline]     = useState(false)
+  const [unreadCount,     setUnreadCount]     = useState(0)
+  const [sendingMsg,      setSendingMsg]      = useState(false)
+  const [registered,      setRegistered]      = useState(false)
+  const [notification,    setNotification]    = useState(null)
+  const [packageContext,  setPackageContext]  = useState(null)
 
-  /* Keep userRef in sync */
+  // Keep userRef synced
   useEffect(() => { userRef.current = user }, [user])
 
-  /* ── Deduplicated message add ── */
+  // ── Helpers ─────────────────────────────────────────────────────────
   const addMessage = useCallback((msg) => {
     if (!mountedRef.current) return
     const n = normalizeMsg(msg)
@@ -80,55 +80,43 @@ export function MessagingProvider({ children }) {
     })
   }, [])
 
-  /* ── Register session (idempotent — safe to call on reconnect) ── */
-  const registerSession = useCallback((socket, sid) => {
+  const registerSession = useCallback((socket) => {
     if (!socket?.connected) return
     hasRegisteredRef.current = true
 
-    const resolvedSid = sid || sessionId || genSessionId()
-    saveSession(resolvedSid)
-    setSessionId(resolvedSid)
+    const sid = getStoredSession() || genSessionId()
+    saveSession(sid)
+    setSessionId(sid)
 
     const u = userRef.current
 
     socket.emit('msg:register', {
-      sessionId:  resolvedSid,
-      userId:     u?.id         || null,
-      name:       u?.fullName   || u?.name  || null,
-      email:      u?.email      || null,
-      guestName:  u?.fullName   || u?.name  || null,
-      guestEmail: u?.email      || null,
+      sessionId:  sid,
+      userId:     u?.id       || null,
+      name:       u?.fullName || u?.name || null,
+      email:      u?.email    || null,
+      guestName:  u?.fullName || u?.name || null,
+      guestEmail: u?.email    || null,
     }, (res) => {
       if (!res?.success || !mountedRef.current) return
-      if (res.conversationId)  setConversationId(res.conversationId)
-      if (res.sessionId) {
-        setSessionId(res.sessionId)
-        saveSession(res.sessionId)
-      }
+      if (res.conversationId) setConversationId(res.conversationId)
+      if (res.sessionId) { setSessionId(res.sessionId); saveSession(res.sessionId) }
       if (Array.isArray(res.messages) && res.messages.length > 0)
         setMessages(res.messages.map(normalizeMsg))
       if (typeof res.adminOnline === 'boolean') setAdminOnline(res.adminOnline)
       setRegistered(true)
     })
-  }, [sessionId])
+  }, [])
 
-  /* ══════════════════════════════════════════════════════════════════════
-     CONNECT — called ONCE, socket persists for entire app lifetime
-     ══════════════════════════════════════════════════════════════════════ */
-  const ensureSocket = useCallback(() => {
-    // Already connected or connecting — skip
-    if (socketRef.current?.connected) return socketRef.current
-    if (isConnectingRef.current) return socketRef.current
+  // ══════════════════════════════════════════════════════════════════════
+  // CREATE SOCKET — runs ONCE on provider mount, never again
+  // ══════════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    mountedRef.current = true
 
-    // Socket exists but disconnected — reconnect
-    if (socketRef.current && !socketRef.current.connected) {
-      socketRef.current.connect()
-      return socketRef.current
-    }
-
-    // No socket yet — create ONE
-    isConnectingRef.current = true
-    setConnectionState('connecting')
+    // Guard: only create one socket ever
+    if (hasConnectedRef.current && socketRef.current) return
+    hasConnectedRef.current = true
 
     const token =
       localStorage.getItem('altuvera_auth_token') ||
@@ -137,36 +125,34 @@ export function MessagingProvider({ children }) {
 
     const u = userRef.current
 
+    setConnectionState('connecting')
+
     const socket = io(SOCKET_URL, {
       auth:                 { token },
       transports:           ['polling', 'websocket'],
       reconnection:         true,
       reconnectionDelay:    1000,
-      reconnectionDelayMax: 8000,
-      reconnectionAttempts: Infinity,  // never give up
-      timeout:              15000,
+      reconnectionDelayMax: 10000,
+      reconnectionAttempts: Infinity,
+      timeout:              20000,
       withCredentials:      true,
       query:                u?.id ? { userId: u.id } : {},
     })
 
-    /* ── Socket events — attached ONCE ── */
+    socketRef.current = socket
 
+    // ── connect ────────────────────────────────────────────────────
     socket.on('connect', () => {
       if (!mountedRef.current) return
-      isConnectingRef.current = false
-      socketIdRef.current = socket.id
       setConnected(true)
       setConnectionState('connected')
       clearTimeout(disconnectDebounce.current)
-
-      // Always re-register on connect/reconnect (idempotent)
-      const sid = getStoredSession() || genSessionId()
-      registerSession(socket, sid)
+      registerSession(socket)
     })
 
+    // ── disconnect ─────────────────────────────────────────────────
     socket.on('disconnect', (reason) => {
       if (!mountedRef.current) return
-      isConnectingRef.current = false
       setConnected(false)
       hasRegisteredRef.current = false
       setConnectionState(
@@ -175,16 +161,15 @@ export function MessagingProvider({ children }) {
       clearTimeout(disconnectDebounce.current)
       disconnectDebounce.current = setTimeout(() => {
         if (mountedRef.current) setAdminOnline(false)
-      }, 4000)
+      }, 5000)
     })
 
     socket.on('connect_error', () => {
       if (!mountedRef.current) return
-      isConnectingRef.current = false
       setConnectionState('reconnecting')
     })
 
-    /* Session data (from server on register) */
+    // ── session data ───────────────────────────────────────────────
     socket.on('msg:session', (data) => {
       if (!mountedRef.current) return
       if (data.conversationId) setConversationId(data.conversationId)
@@ -195,15 +180,14 @@ export function MessagingProvider({ children }) {
       setRegistered(true)
     })
 
-    /* Incoming message */
+    // ── incoming message ───────────────────────────────────────────
     socket.on('msg:message', (msg) => {
       if (!mountedRef.current) return
       addMessage(msg)
-      const type = msg.senderType || msg.sender_type
-      if (type === 'admin') {
+      if ((msg.senderType || msg.sender_type) === 'admin') {
         setIsTyping(false)
         clearTimeout(typingTimerRef.current)
-        // Increment unread only if portal is closed
+        // Only count unread when portal is closed
         setIsOpen((open) => {
           if (!open) setUnreadCount((c) => c + 1)
           return open
@@ -211,7 +195,7 @@ export function MessagingProvider({ children }) {
       }
     })
 
-    /* Typing */
+    // ── typing ─────────────────────────────────────────────────────
     socket.on('msg:typing', (data) => {
       if (!mountedRef.current) return
       if ((data.senderType || data.sender_type) !== 'admin') return
@@ -224,20 +208,18 @@ export function MessagingProvider({ children }) {
       }
     })
 
-    /* Read receipts */
+    // ── read receipts ──────────────────────────────────────────────
     socket.on('msg:read', (data) => {
       if (!mountedRef.current) return
       if ((data.readBy || data.read_by) !== 'admin') return
       setMessages((prev) =>
         prev.map((m) =>
-          m.senderType === 'user' && !m.isRead
-            ? { ...m, isRead: true }
-            : m,
+          m.senderType === 'user' && !m.isRead ? { ...m, isRead: true } : m,
         ),
       )
     })
 
-    /* Admin online/offline */
+    // ── admin online ───────────────────────────────────────────────
     socket.on('msg:admin-online', (data) => {
       if (!mountedRef.current) return
       setAdminOnline(typeof data === 'object' ? data.online : Boolean(data))
@@ -245,77 +227,61 @@ export function MessagingProvider({ children }) {
     socket.on('admin:online',  () => mountedRef.current && setAdminOnline(true))
     socket.on('admin:offline', () => mountedRef.current && setAdminOnline(false))
 
-    /* New conversation notification */
+    // ── new conversation ───────────────────────────────────────────
     socket.on('msg:new-conversation', (data) => {
       if (!mountedRef.current) return
-      setNewConversationNotification(data)
+      setNotification(data)
       if (data.conversationId) setConversationId(data.conversationId)
       if (data.sessionId) { setSessionId(data.sessionId); saveSession(data.sessionId) }
       setRegistered(true)
-      setTimeout(() => {
-        if (mountedRef.current) setNewConversationNotification(null)
-      }, 5000)
+      setTimeout(() => { if (mountedRef.current) setNotification(null) }, 5000)
     })
 
-    /* Conversation status changes */
-    socket.on('msg:conversation-updated', () => { /* handle if needed */ })
-
-    socketRef.current = socket
-    return socket
-  }, [addMessage, registerSession])
-
-  /* ── Connect on mount — ONCE ── */
-  useEffect(() => {
-    mountedRef.current = true
-    ensureSocket()
-
+    // ── cleanup: only on full app unmount ──────────────────────────
     return () => {
       mountedRef.current = false
       clearTimeout(typingTimerRef.current)
       clearTimeout(disconnectDebounce.current)
-      // Don't disconnect on unmount — let socket persist
-      // It will auto-disconnect when tab closes
+      socket.removeAllListeners()
+      socket.disconnect()
+      socketRef.current = null
+      hasConnectedRef.current = false
     }
-  }, []) // eslint-disable-line — intentionally empty deps
+  }, []) // eslint-disable-line — MUST be empty, runs once
 
-  /* ── Re-register when user logs in/out (without reconnecting socket) ── */
+  // ── Re-register when user auth changes (no new socket) ─────────
   useEffect(() => {
-    if (!isAuthenticated) return
     const socket = socketRef.current
-    if (socket?.connected && !hasRegisteredRef.current) {
-      const sid = getStoredSession() || genSessionId()
-      registerSession(socket, sid)
-    } else if (socket?.connected) {
-      // User changed (e.g. logged in) — re-register with new user info
-      const sid = getStoredSession() || genSessionId()
-      registerSession(socket, sid)
-    }
-  }, [isAuthenticated, registerSession])
+    if (!socket?.connected) return
+    // Re-register with updated user info
+    registerSession(socket)
+  }, [isAuthenticated, user?.id, registerSession])
 
-  /* ── Open portal — reuses existing socket, never creates new one ── */
+  // ══════════════════════════════════════════════════════════════════
+  // PUBLIC API
+  // ══════════════════════════════════════════════════════════════════
+
+  /** Open chat portal — optionally with package context */
   const openPortal = useCallback((pkgCtx = null) => {
     if (pkgCtx) setPackageContext(pkgCtx)
     setIsOpen(true)
     setUnreadCount(0)
-    setNewConversationNotification(null)
-
-    // Ensure socket is connected (reconnect if needed, but never duplicate)
-    const socket = socketRef.current
-    if (socket && !socket.connected) {
-      socket.connect()
-    } else if (!socket) {
-      ensureSocket()
-    }
-  }, [ensureSocket])
-
-  const closePortal = useCallback(() => {
-    setIsOpen(false)
-    // Socket stays alive — no disconnect on close
+    setNotification(null)
+    // No socket work — it's already connected
   }, [])
 
-  const clearPackageContext = useCallback(() => setPackageContext(null), [])
+  /** Close chat portal — socket stays alive */
+  const closePortal = useCallback(() => {
+    setIsOpen(false)
+    // Socket stays connected, messages persist
+  }, [])
 
-  /* ── Send message ── */
+  /** Clear package context (go back to plain chat) */
+  const clearPackageContext = useCallback(() => {
+    setPackageContext(null)
+  }, [])
+
+  /** Send a message — works with or without package context */
   const sendMessage = useCallback((body, metadata = {}) => {
     const socket = socketRef.current
     if (!body?.trim() || !socket?.connected) return false
@@ -323,22 +289,29 @@ export function MessagingProvider({ children }) {
     setSendingMsg(true)
     const sid = getStoredSession() || genSessionId()
     const u   = userRef.current
+    const pkg = packageContext
 
-    // Optimistic message
-    const optimisticId = `opt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
-    const senderName   = u?.fullName || u?.name || metadata.guestName || 'You'
-    const optimisticMsg = normalizeMsg({
-      id:           optimisticId,
-      body:         body.trim(),
-      senderType:   'user',
+    // Optimistic
+    const optId      = `opt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+    const senderName = u?.fullName || u?.name || metadata.guestName || 'You'
+
+    const optMsg = normalizeMsg({
+      id:             optId,
+      body:           body.trim(),
+      senderType:     'user',
       senderName,
-      senderEmail:  u?.email || metadata.guestEmail || null,
-      createdAt:    new Date().toISOString(),
-      isRead:       false,
-      isOptimistic: true,
-      packageContext: packageContext || undefined,
+      senderEmail:    u?.email || metadata.guestEmail || null,
+      createdAt:      new Date().toISOString(),
+      isRead:         false,
+      isOptimistic:   true,
+      // Only attach package context if it exists
+      ...(pkg ? { packageContext: {
+        id: pkg.id, title: pkg.title, slug: pkg.slug,
+        price: pkg.price, image: pkg.image,
+      }} : {}),
     })
-    setMessages((prev) => [...prev, optimisticMsg])
+
+    setMessages((prev) => [...prev, optMsg])
 
     socket.emit('msg:send', {
       body:           body.trim(),
@@ -349,15 +322,13 @@ export function MessagingProvider({ children }) {
       userId:         u?.id       || null,
       metadata: {
         ...metadata,
-        packageContext: packageContext
-          ? {
-              id:    packageContext.id,
-              title: packageContext.title,
-              slug:  packageContext.slug,
-              price: packageContext.price,
-              image: packageContext.image,
-            }
-          : undefined,
+        // Only include package context if it exists — plain messages have none
+        ...(pkg ? {
+          packageContext: {
+            id: pkg.id, title: pkg.title, slug: pkg.slug,
+            price: pkg.price, image: pkg.image,
+          },
+        } : {}),
       },
     }, (res) => {
       if (!mountedRef.current) return
@@ -365,25 +336,21 @@ export function MessagingProvider({ children }) {
       if (res?.success && res.message) {
         setMessages((prev) =>
           prev
-            .filter((m) => m.id !== optimisticId)
-            .concat(
-              prev.some((m) => m.id === res.message.id)
-                ? []
-                : [normalizeMsg(res.message)],
-            ),
+            .filter((m) => m.id !== optId)
+            .concat(prev.some((m) => m.id === res.message.id)
+              ? [] : [normalizeMsg(res.message)])
         )
         if (res.conversationId && !conversationId)
           setConversationId(res.conversationId)
       } else {
-        // Remove optimistic on failure
-        setMessages((prev) => prev.filter((m) => m.id !== optimisticId))
+        setMessages((prev) => prev.filter((m) => m.id !== optId))
       }
     })
 
     return true
   }, [conversationId, packageContext])
 
-  /* ── Typing emitter ── */
+  /** Emit typing indicator */
   const emitTyping = useCallback((isTypingNow) => {
     const socket = socketRef.current
     if (!socket?.connected || !conversationId) return
@@ -396,22 +363,24 @@ export function MessagingProvider({ children }) {
     })
   }, [conversationId])
 
-  /* ── Context value ── */
+  // ── Context value ──────────────────────────────────────────────────
   const value = useMemo(() => ({
+    // State
     connected, connectionState, isOpen, messages,
     conversationId, sessionId, isTyping, adminOnline,
     unreadCount, sendingMsg, registered,
-    newConversationNotification, packageContext,
+    newConversationNotification: notification,
+    packageContext,
+    // Actions
     openPortal, closePortal, sendMessage, emitTyping,
     clearPackageContext,
     clearUnread: () => setUnreadCount(0),
   }), [
     connected, connectionState, isOpen, messages,
     conversationId, sessionId, isTyping, adminOnline,
-    unreadCount, sendingMsg, registered,
-    newConversationNotification, packageContext,
-    openPortal, closePortal, sendMessage, emitTyping,
-    clearPackageContext,
+    unreadCount, sendingMsg, registered, notification,
+    packageContext, openPortal, closePortal, sendMessage,
+    emitTyping, clearPackageContext,
   ])
 
   return (
