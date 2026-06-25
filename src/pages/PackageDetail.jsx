@@ -1,5 +1,5 @@
 // ============================================================================
-// src/pages/PackageDetail.jsx — Full Package Detail + Chat/Booking/InfoForms
+// src/pages/PackageDetail.jsx — Green/White, no separate chat, uses portal
 // ============================================================================
 
 import React, {
@@ -8,160 +8,23 @@ import React, {
 import { useParams, Link } from 'react-router-dom'
 import {
   MapPin, Clock, Users, Star, ChevronLeft, ChevronRight,
-  ChevronDown, Check, X, Send, MessageSquare, BookOpen,
-  Heart, Share2, Loader2, Package, Phone, Mail, User,
-  Sparkles, Shield, CheckCircle, XCircle, AlertCircle,
-  Info, Palette, RefreshCw, FileText, Camera,
+  ChevronDown, Check, X, BookOpen, Heart, Share2, Loader2,
+  Package, Phone, Mail, User, Sparkles, Shield, CheckCircle,
+  XCircle, AlertCircle, Info, Camera, MessageCircle,
+  ArrowRight, Zap, Globe, Calendar,
 } from 'lucide-react'
 import { packagesAPI } from '../api/packages'
-import { useUserAuth } from '../context/UserAuthContext'
+import { useUserAuth }  from '../context/UserAuthContext'
+import { useMessaging } from '../context/MessagingContext'
 
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-const CHAT_THEMES = {
-  light: {
-    wrap:        'bg-slate-50',
-    header:      'bg-white border-b border-slate-100',
-    messages:    'bg-slate-50',
-    userBubble:  'bg-emerald-600 text-white',
-    adminBubble: 'bg-white text-slate-800 border border-slate-200 shadow-sm',
-    input:       'bg-white border border-slate-200',
-    inputText:   'text-slate-700 placeholder-slate-400',
-    sendBtn:     'bg-emerald-600 hover:bg-emerald-700 text-white',
-    timestamp:   'text-slate-400',
-    name:        'text-slate-600',
-  },
-  dark: {
-    wrap:        'bg-slate-900',
-    header:      'bg-slate-800 border-b border-slate-700',
-    messages:    'bg-slate-900',
-    userBubble:  'bg-emerald-500 text-white',
-    adminBubble: 'bg-slate-700 text-slate-100 border border-slate-600',
-    input:       'bg-slate-800 border border-slate-600',
-    inputText:   'text-slate-200 placeholder-slate-500',
-    sendBtn:     'bg-emerald-500 hover:bg-emerald-600 text-white',
-    timestamp:   'text-slate-500',
-    name:        'text-slate-400',
-  },
-  nature: {
-    wrap:        'bg-green-50',
-    header:      'bg-emerald-800 border-b border-emerald-700',
-    messages:    'bg-green-50',
-    userBubble:  'bg-emerald-700 text-white',
-    adminBubble: 'bg-white text-slate-800 border border-emerald-100 shadow-sm',
-    input:       'bg-white border border-emerald-200',
-    inputText:   'text-slate-700 placeholder-emerald-300',
-    sendBtn:     'bg-emerald-700 hover:bg-emerald-800 text-white',
-    timestamp:   'text-emerald-500',
-    name:        'text-emerald-700',
-  },
-  ocean: {
-    wrap:        'bg-blue-50',
-    header:      'bg-blue-900 border-b border-blue-800',
-    messages:    'bg-blue-50',
-    userBubble:  'bg-blue-600 text-white',
-    adminBubble: 'bg-white text-slate-800 border border-blue-100 shadow-sm',
-    input:       'bg-white border border-blue-200',
-    inputText:   'text-slate-700 placeholder-blue-300',
-    sendBtn:     'bg-blue-600 hover:bg-blue-700 text-white',
-    timestamp:   'text-blue-400',
-    name:        'text-blue-600',
-  },
-  sunset: {
-    wrap:        'bg-orange-50',
-    header:      'bg-orange-800 border-b border-orange-700',
-    messages:    'bg-orange-50',
-    userBubble:  'bg-orange-600 text-white',
-    adminBubble: 'bg-white text-slate-800 border border-orange-100 shadow-sm',
-    input:       'bg-white border border-orange-200',
-    inputText:   'text-slate-700 placeholder-orange-300',
-    sendBtn:     'bg-orange-600 hover:bg-orange-700 text-white',
-    timestamp:   'text-orange-400',
-    name:        'text-orange-600',
-  },
-}
-
-const BG_PRESETS = [
-  { id: 'none',     label: 'None',     value: '' },
-  { id: 'savanna',  label: 'Savanna',  value: 'linear-gradient(145deg,rgba(120,53,15,.15),rgba(28,25,23,.1))' },
-  { id: 'forest',   label: 'Forest',   value: 'linear-gradient(145deg,rgba(20,83,45,.12),rgba(5,46,22,.08))' },
-  { id: 'ocean',    label: 'Ocean',    value: 'linear-gradient(145deg,rgba(12,74,110,.12),rgba(15,23,42,.08))' },
-  { id: 'desert',   label: 'Desert',   value: 'linear-gradient(145deg,rgba(146,64,14,.12),rgba(69,26,3,.08))' },
-  { id: 'mountain', label: 'Mountain', value: 'linear-gradient(145deg,rgba(30,58,95,.15),rgba(15,23,42,.1))' },
-]
-
-const BG_IMAGES = [
-  { id: 'safari1', label: 'Savanna',     url: 'https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=800&q=60' },
-  { id: 'safari2', label: 'Elephants',   url: 'https://images.unsplash.com/photo-1577717903315-1691ae25ab3f?w=800&q=60' },
-  { id: 'beach',   label: 'Beach',       url: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=800&q=60' },
-  { id: 'mtn',     label: 'Kilimanjaro', url: 'https://images.unsplash.com/photo-1595435934249-5df7ed86e1c0?w=800&q=60' },
-  { id: 'jungle',  label: 'Jungle',      url: 'https://images.unsplash.com/photo-1448375240586-882707db888b?w=800&q=60' },
-  { id: 'stars',   label: 'Night Sky',   url: 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=800&q=60' },
-]
-
-const MSG_TYPES = [
-  { value: 'inquiry',         label: 'General Inquiry' },
-  { value: 'question',        label: 'Question'        },
-  { value: 'booking_request', label: 'Booking Request' },
-  { value: 'wish',            label: 'Special Wish'    },
-]
-
-const INFO_REQUEST_THEME_STYLES = {
-  default: {
-    header: 'bg-gradient-to-r from-emerald-600 to-emerald-700',
-    accent: '#059669',
-    input:  'border-slate-200 focus:border-emerald-400 focus:ring-emerald-100',
-    btn:    'bg-emerald-600 hover:bg-emerald-700 text-white',
-    wrap:   'bg-white border border-emerald-100',
-  },
-  elegant: {
-    header: 'bg-gradient-to-r from-slate-800 to-slate-900',
-    accent: '#334155',
-    input:  'border-slate-300 focus:border-slate-500 focus:ring-slate-100',
-    btn:    'bg-slate-800 hover:bg-slate-900 text-white',
-    wrap:   'bg-white border border-slate-200',
-  },
-  nature: {
-    header: 'bg-gradient-to-r from-green-700 to-emerald-800',
-    accent: '#15803d',
-    input:  'border-green-200 focus:border-green-400 focus:ring-green-100',
-    btn:    'bg-green-700 hover:bg-green-800 text-white',
-    wrap:   'bg-green-50 border border-green-200',
-  },
-  ocean: {
-    header: 'bg-gradient-to-r from-blue-700 to-blue-900',
-    accent: '#1d4ed8',
-    input:  'border-blue-200 focus:border-blue-400 focus:ring-blue-100',
-    btn:    'bg-blue-700 hover:bg-blue-800 text-white',
-    wrap:   'bg-blue-50 border border-blue-200',
-  },
-  sunset: {
-    header: 'bg-gradient-to-r from-orange-600 to-red-700',
-    accent: '#ea580c',
-    input:  'border-orange-200 focus:border-orange-400 focus:ring-orange-100',
-    btn:    'bg-orange-600 hover:bg-orange-700 text-white',
-    wrap:   'bg-orange-50 border border-orange-200',
-  },
-}
-
-const PREFS_KEY = 'altuvera_pkg_chat_prefs'
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
+/* ── helpers ─────────────────────────────────────────────────────────── */
 const fmtPrice = (price, currency = 'USD') => {
   if (!price && price !== 0) return 'Contact Us'
   try {
     return new Intl.NumberFormat('en-US', {
       style: 'currency', currency, maximumFractionDigits: 0,
     }).format(price)
-  } catch {
-    return `$${Number(price).toLocaleString()}`
-  }
-}
-
-const fmtTime = (iso) => {
-  if (!iso) return ''
-  return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  } catch { return `$${Number(price).toLocaleString()}` }
 }
 
 const fmtDate = (iso) => {
@@ -174,79 +37,74 @@ const fmtDate = (iso) => {
 const parseJson = (val, fallback = []) => {
   if (!val) return fallback
   if (Array.isArray(val)) return val
-  if (typeof val === 'string') {
-    try { return JSON.parse(val) } catch { return fallback }
-  }
+  if (typeof val === 'string') { try { return JSON.parse(val) } catch { return fallback } }
   return fallback
 }
 
-const loadLocalPrefs = () => {
-  try { return JSON.parse(localStorage.getItem(PREFS_KEY) || '{}') }
-  catch { return {} }
-}
-
-const saveLocalPrefs = (prefs) => {
-  try { localStorage.setItem(PREFS_KEY, JSON.stringify(prefs)) } catch {}
-}
-
-// ── IMAGE GALLERY ─────────────────────────────────────────────────────────────
-
+/* ── Image Gallery ────────────────────────────────────────────────────── */
 function ImageGallery({ images = [], cover, title }) {
   const [idx, setIdx] = useState(0)
+  const [zoomed, setZoomed] = useState(false)
 
   const all = useMemo(() => {
     const parsed = parseJson(images)
-    return cover
-      ? [cover, ...parsed.filter(i => i !== cover)]
-      : parsed
+    return cover ? [cover, ...parsed.filter(i => i !== cover)] : parsed
   }, [images, cover])
 
   if (!all.length) {
     return (
-      <div className="h-80 sm:h-[480px] bg-gradient-to-br from-emerald-800
-        to-emerald-950 flex items-center justify-center rounded-3xl">
-        <Package size={64} className="text-emerald-300 opacity-50" />
+      <div className="h-72 sm:h-[460px] bg-gradient-to-br from-green-800 to-green-950
+        flex items-center justify-center rounded-2xl sm:rounded-3xl">
+        <Package size={64} className="text-green-300 opacity-40" />
       </div>
     )
   }
 
   return (
     <div className="space-y-3">
-      <div className="relative h-80 sm:h-[480px] rounded-3xl overflow-hidden group">
+      {/* Main image */}
+      <div
+        className="relative h-72 sm:h-[460px] rounded-2xl sm:rounded-3xl overflow-hidden group cursor-zoom-in"
+        onClick={() => setZoomed(true)}
+      >
         <img
           src={all[idx]}
           alt={`${title} ${idx + 1}`}
-          className="w-full h-full object-cover transition-transform duration-700
-            group-hover:scale-105"
+          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
         />
+
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 
         {all.length > 1 && (
           <>
             <button
-              onClick={() => setIdx(i => (i - 1 + all.length) % all.length)}
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full
-                bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white
-                flex items-center justify-center transition-all
-                opacity-0 group-hover:opacity-100"
+              onClick={(e) => { e.stopPropagation(); setIdx(i => (i - 1 + all.length) % all.length) }}
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11
+                rounded-full bg-white/90 hover:bg-white text-green-800
+                flex items-center justify-center shadow-lg transition-all
+                opacity-0 group-hover:opacity-100 backdrop-blur-sm"
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft size={18} />
             </button>
             <button
-              onClick={() => setIdx(i => (i + 1) % all.length)}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full
-                bg-black/40 hover:bg-black/60 backdrop-blur-sm text-white
-                flex items-center justify-center transition-all
-                opacity-0 group-hover:opacity-100"
+              onClick={(e) => { e.stopPropagation(); setIdx(i => (i + 1) % all.length) }}
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-11 sm:h-11
+                rounded-full bg-white/90 hover:bg-white text-green-800
+                flex items-center justify-center shadow-lg transition-all
+                opacity-0 group-hover:opacity-100 backdrop-blur-sm"
             >
-              <ChevronRight size={20} />
+              <ChevronRight size={18} />
             </button>
+
+            {/* Dots */}
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5">
-              {all.map((_, i) => (
+              {all.slice(0, 8).map((_, i) => (
                 <button
                   key={i}
-                  onClick={() => setIdx(i)}
+                  onClick={(e) => { e.stopPropagation(); setIdx(i) }}
                   className={`rounded-full transition-all ${
-                    i === idx ? 'w-6 h-2 bg-white' : 'w-2 h-2 bg-white/50'
+                    i === idx ? 'w-5 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/50 hover:bg-white/80'
                   }`}
                 />
               ))}
@@ -254,25 +112,33 @@ function ImageGallery({ images = [], cover, title }) {
           </>
         )}
 
-        <div className="absolute top-4 right-4 bg-black/40 backdrop-blur-sm
-          text-white text-xs font-semibold px-3 py-1.5 rounded-full
-          flex items-center gap-1">
-          <Camera size={12} /> {idx + 1} / {all.length}
+        {/* Counter */}
+        <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-sm
+          text-white text-xs font-semibold px-2.5 py-1.5 rounded-full
+          flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Camera size={11} /> {idx + 1}/{all.length}
+        </div>
+
+        {/* Title overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
+          <p className="text-white font-black text-lg sm:text-2xl drop-shadow-lg line-clamp-2">
+            {title}
+          </p>
         </div>
       </div>
 
+      {/* Thumbnails */}
       {all.length > 1 && (
-        <div className="flex gap-2 overflow-x-auto pb-1"
-          style={{ scrollbarWidth: 'none' }}>
+        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
           {all.map((src, i) => (
             <button
               key={i}
               onClick={() => setIdx(i)}
-              className={`relative shrink-0 w-20 h-16 rounded-xl overflow-hidden
+              className={`relative shrink-0 w-16 h-12 sm:w-20 sm:h-16 rounded-xl overflow-hidden
                 transition-all duration-200 ${
                 i === idx
-                  ? 'ring-2 ring-emerald-500 ring-offset-1'
-                  : 'opacity-70 hover:opacity-100'
+                  ? 'ring-2 ring-green-500 ring-offset-2 opacity-100'
+                  : 'opacity-60 hover:opacity-90'
               }`}
             >
               <img src={src} alt="" className="w-full h-full object-cover" />
@@ -280,335 +146,65 @@ function ImageGallery({ images = [], cover, title }) {
           ))}
         </div>
       )}
-    </div>
-  )
-}
 
-// ── INFO REQUEST FORM ─────────────────────────────────────────────────────────
-
-function InfoRequestForm({ infoRequest, pkg, user, onSubmit }) {
-  const theme  = infoRequest.theme || 'default'
-  const styles = INFO_REQUEST_THEME_STYLES[theme] || INFO_REQUEST_THEME_STYLES.default
-  const accent = infoRequest.accent_color || styles.accent
-  const fields = parseJson(infoRequest.fields || infoRequest.info_request_fields, [])
-
-  const [values,  setValues]  = useState({})
-  const [errors,  setErrors]  = useState({})
-  const [sending, setSending] = useState(false)
-  const [done,    setDone]    = useState(false)
-
-  // Auto-fill logged-in user credentials
-  useEffect(() => {
-    if (!user) return
-    const fill = {}
-    fields.forEach(f => {
-      const label = (f.label || '').toLowerCase()
-      if (label.includes('name') || f.type === 'text') {
-        fill[f.id] = fill[f.id] || user.fullName || user.full_name || user.name || ''
-      }
-      if (label.includes('email') || f.type === 'email') {
-        fill[f.id] = user.email || ''
-      }
-      if (label.includes('phone') || f.type === 'tel') {
-        fill[f.id] = user.phone || ''
-      }
-    })
-    setValues(prev => ({ ...fill, ...prev }))
-  }, [user, fields.length]) // eslint-disable-line
-
-  const change = (id, val) => {
-    setValues(p => ({ ...p, [id]: val }))
-    setErrors(p => ({ ...p, [id]: '' }))
-  }
-
-  const validate = () => {
-    const errs = {}
-    fields.forEach(f => {
-      if (f.required && !values[f.id]?.toString().trim())
-        errs[f.id] = `${f.label} is required`
-      if (f.type === 'email' && values[f.id] &&
-        !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values[f.id]))
-        errs[f.id] = 'Invalid email address'
-    })
-    return errs
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    const errs = validate()
-    if (Object.keys(errs).length) { setErrors(errs); return }
-    setSending(true)
-    try {
-      const reqId = infoRequest.info_request_id || infoRequest.id
-      // packagesAPI.submitInfoResponse returns body directly (fetch-based)
-      await packagesAPI.submitInfoResponse(pkg.id, reqId, values)
-      setDone(true)
-      onSubmit?.()
-    } catch (err) {
-      setErrors({ _form: err?.message || 'Failed to submit. Please try again.' })
-    } finally {
-      setSending(false)
-    }
-  }
-
-  if (done) {
-    return (
-      <div className={`rounded-2xl overflow-hidden shadow-lg ${styles.wrap}`}>
-        <div className={`${styles.header} p-5 text-white text-center`}>
-          <CheckCircle size={32} className="mx-auto mb-2" />
-          <h4 className="font-bold text-lg">Information Submitted!</h4>
-        </div>
-        <div className="p-6 text-center">
-          <p className="text-slate-600">
-            Thank you! We've received your information and will process your
-            request shortly.
-          </p>
-        </div>
-      </div>
-    )
-  }
-
-  const renderField = (field) => {
-    const base = `w-full px-4 py-3 rounded-xl border text-sm outline-none
-      transition-all focus:ring-2 focus:ring-opacity-20 ${styles.input}`
-    const err = errors[field.id]
-    const val = values[field.id] ?? ''
-
-    switch (field.type) {
-      case 'textarea':
-        return (
-          <textarea
-            rows={4} value={val} placeholder={field.placeholder}
-            onChange={e => change(field.id, e.target.value)}
-            className={`${base} resize-none ${err ? 'border-red-400' : ''}`}
-          />
-        )
-      case 'select':
-        return (
-          <select value={val} onChange={e => change(field.id, e.target.value)}
-            className={`${base} ${err ? 'border-red-400' : ''}`}>
-            <option value="">Choose an option…</option>
-            {(field.options || []).map(o => (
-              <option key={o} value={o}>{o}</option>
-            ))}
-          </select>
-        )
-      case 'radio':
-        return (
-          <div className="space-y-2">
-            {(field.options || []).map(o => (
-              <label key={o} className="flex items-center gap-3 cursor-pointer">
-                <div
-                  className={`w-5 h-5 rounded-full border-2 flex items-center
-                    justify-center transition-colors ${
-                    val === o ? 'border-current bg-current' : 'border-slate-300'
-                  }`}
-                  style={val === o
-                    ? { borderColor: accent, backgroundColor: accent }
-                    : {}}
-                >
-                  {val === o && <div className="w-2 h-2 rounded-full bg-white" />}
-                </div>
-                <input type="radio" className="sr-only"
-                  checked={val === o} onChange={() => change(field.id, o)} />
-                <span className="text-sm text-slate-700">{o}</span>
-              </label>
-            ))}
-          </div>
-        )
-      case 'checkbox':
-        return (
-          <label className="flex items-center gap-3 cursor-pointer">
-            <div
-              onClick={() => change(field.id, !val)}
-              className={`w-5 h-5 rounded border-2 flex items-center justify-center
-                cursor-pointer transition-all ${
-                val ? 'border-current' : 'border-slate-300'
-              }`}
-              style={val ? { borderColor: accent, backgroundColor: accent } : {}}
-            >
-              {val && <Check size={12} className="text-white" />}
-            </div>
-            <span className="text-sm text-slate-700">{field.label}</span>
-          </label>
-        )
-      case 'date':
-        return (
-          <input type="date" value={val}
-            onChange={e => change(field.id, e.target.value)}
-            className={`${base} ${err ? 'border-red-400' : ''}`} />
-        )
-      default:
-        return (
-          <input
-            type={field.type || 'text'} value={val}
-            placeholder={field.placeholder}
-            onChange={e => change(field.id, e.target.value)}
-            className={`${base} ${err ? 'border-red-400' : ''}`}
-          />
-        )
-    }
-  }
-
-  return (
-    <div className={`rounded-2xl overflow-hidden shadow-lg ${styles.wrap}`}>
-      <div className={`${styles.header} p-5 text-white`}>
-        {infoRequest.header_image && (
-          <img src={infoRequest.header_image} alt=""
-            className="w-full h-24 object-cover rounded-xl mb-4" />
-        )}
-        <div className="flex items-start gap-3">
-          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center
-            justify-center shrink-0">
-            <FileText size={20} />
-          </div>
-          <div>
-            <h4 className="font-bold text-lg leading-tight">{infoRequest.title}</h4>
-            {infoRequest.description && (
-              <p className="text-white/80 text-sm mt-1">{infoRequest.description}</p>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <form onSubmit={handleSubmit} className="p-5 space-y-4">
-        {errors._form && (
-          <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200
-            rounded-xl text-sm text-red-600">
-            <AlertCircle size={15} /> {errors._form}
-          </div>
-        )}
-        {fields.map(field => (
-          <div key={field.id}>
-            {field.type !== 'checkbox' && (
-              <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                {field.label}
-                {field.required && <span className="text-red-500 ml-1">*</span>}
-              </label>
-            )}
-            {renderField(field)}
-            {errors[field.id] && (
-              <p className="text-xs text-red-500 mt-1">{errors[field.id]}</p>
-            )}
-          </div>
-        ))}
-        <button
-          type="submit" disabled={sending}
-          className={`w-full py-3.5 rounded-xl font-bold text-sm flex items-center
-            justify-center gap-2 transition-all ${styles.btn}
-            ${sending ? 'opacity-70 cursor-not-allowed' : ''}`}
+      {/* Lightbox */}
+      {zoomed && (
+        <div
+          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+          onClick={() => setZoomed(false)}
         >
-          {sending
-            ? <><Loader2 size={16} className="animate-spin" /> Submitting…</>
-            : <><Send size={15} /> Submit Information</>}
-        </button>
-      </form>
+          <img
+            src={all[idx]}
+            alt={title}
+            className="max-w-full max-h-full object-contain rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10
+              hover:bg-white/20 text-white flex items-center justify-center"
+            onClick={() => setZoomed(false)}
+          >
+            <X size={20} />
+          </button>
+        </div>
+      )}
     </div>
   )
 }
 
-// ── CHAT PREFERENCES PANEL ────────────────────────────────────────────────────
-
-function ChatPrefsPanel({ prefs, onChange, onClose, isAuthenticated }) {
+/* ── FAQ Item ─────────────────────────────────────────────────────────── */
+function FaqItem({ faq, accent = '#16a34a' }) {
+  const [open, setOpen] = useState(false)
   return (
-    <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-2xl
-      shadow-2xl border border-slate-100 z-30 overflow-hidden">
-      <div className="bg-gradient-to-r from-emerald-600 to-emerald-700
-        px-4 py-3 text-white flex items-center justify-between">
-        <h4 className="font-bold text-sm flex items-center gap-2">
-          <Palette size={14} /> Chat Theme
-        </h4>
-        <button onClick={onClose}><X size={14} /></button>
-      </div>
-
-      <div className="p-4 space-y-4">
-        {/* Color theme */}
-        <div>
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-            Color Theme
-          </p>
-          <div className="grid grid-cols-5 gap-1.5">
-            {Object.keys(CHAT_THEMES).map(t => (
-              <button key={t} onClick={() => onChange('theme', t)}
-                className={`flex flex-col items-center gap-1 p-2 rounded-xl border
-                  transition-all ${
-                  prefs.theme === t
-                    ? 'border-emerald-400 bg-emerald-50'
-                    : 'border-transparent hover:bg-slate-50'
-                }`}>
-                <div className={`w-6 h-6 rounded-full ${{
-                  light: 'bg-slate-200', dark: 'bg-slate-800',
-                  nature: 'bg-green-600', ocean: 'bg-blue-600', sunset: 'bg-orange-500',
-                }[t]}`} />
-                <span className="text-[9px] font-semibold text-slate-500 capitalize">{t}</span>
-              </button>
-            ))}
-          </div>
+    <div className={`border rounded-2xl overflow-hidden transition-all duration-200 ${
+      open ? 'border-green-200 shadow-sm' : 'border-gray-100'
+    }`}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between px-5 py-4
+          hover:bg-green-50/50 transition-colors text-left gap-3"
+      >
+        <span className="font-semibold text-gray-800 text-sm leading-relaxed">
+          {faq.question || faq.title}
+        </span>
+        <ChevronDown
+          size={16}
+          className={`text-green-500 shrink-0 transition-transform duration-200 ${
+            open ? 'rotate-180' : ''
+          }`}
+        />
+      </button>
+      {open && (
+        <div className="px-5 pb-4 pt-1 text-sm text-gray-600 leading-relaxed
+          border-t border-green-100">
+          {faq.answer || faq.content}
         </div>
-
-        {/* BG gradient */}
-        <div>
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-            Background Gradient
-          </p>
-          <div className="grid grid-cols-3 gap-1.5">
-            {BG_PRESETS.map(bg => (
-              <button key={bg.id} onClick={() => onChange('bg_preset', bg.id)}
-                className={`relative h-12 rounded-xl border overflow-hidden transition-all ${
-                  prefs.bg_preset === bg.id
-                    ? 'ring-2 ring-emerald-400'
-                    : 'hover:ring-1 ring-slate-200'
-                }`}
-                style={bg.value ? { background: bg.value } : { background: '#f8fafc' }}>
-                <span className="absolute inset-0 flex items-center justify-center
-                  text-[9px] font-bold text-slate-700 bg-white/40 backdrop-blur-sm">
-                  {bg.label}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* BG image */}
-        <div>
-          <p className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-            Background Image
-          </p>
-          <div className="grid grid-cols-3 gap-1.5">
-            {[{ id: 'none-img', label: 'None', url: '' }, ...BG_IMAGES].map(img => (
-              <button key={img.id} onClick={() => onChange('bg_image', img.url)}
-                className={`relative h-14 rounded-xl border overflow-hidden transition-all ${
-                  prefs.bg_image === img.url
-                    ? 'ring-2 ring-emerald-400'
-                    : 'hover:ring-1 ring-slate-200'
-                }`}
-                style={img.url
-                  ? { backgroundImage: `url(${img.url})`, backgroundSize: 'cover',
-                      backgroundPosition: 'center' }
-                  : { background: '#f1f5f9' }
-                }>
-                <span className="absolute inset-0 flex items-center justify-center
-                  text-[9px] font-bold text-white bg-black/30">
-                  {img.label}
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {!isAuthenticated && (
-          <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200
-            rounded-lg px-3 py-2 text-center">
-            Sign in to save your theme preferences
-          </p>
-        )}
-      </div>
+      )}
     </div>
   )
 }
 
-// ── BOOKING PANEL ─────────────────────────────────────────────────────────────
-
+/* ── Booking Panel ────────────────────────────────────────────────────── */
 function BookingPanel({ pkg, user, onSuccess }) {
   const [form, setForm] = useState({
     guest_name:       user?.fullName || user?.full_name || user?.name || '',
@@ -620,22 +216,19 @@ function BookingPanel({ pkg, user, onSuccess }) {
     travel_date:      '',
     end_date:         '',
     special_requests: '',
-    dietary_needs:    '',
-    pickup_location:  '',
   })
   const [sending,    setSending]    = useState(false)
   const [errors,     setErrors]     = useState({})
   const [success,    setSuccess]    = useState(false)
   const [bookingRef, setBookingRef] = useState('')
 
-  // Sync user if they log in after mount
   useEffect(() => {
     if (!user) return
     setForm(p => ({
       ...p,
       guest_name:  p.guest_name  || user.fullName || user.full_name || user.name || '',
-      guest_email: p.guest_email || user.email  || '',
-      guest_phone: p.guest_phone || user.phone  || '',
+      guest_email: p.guest_email || user.email || '',
+      guest_phone: p.guest_phone || user.phone || '',
     }))
   }, [user?.id]) // eslint-disable-line
 
@@ -644,8 +237,8 @@ function BookingPanel({ pkg, user, onSuccess }) {
     setErrors(p => ({ ...p, [k]: '' }))
   }
 
-  const totalTravelers = (parseInt(form.adults) || 1) + (parseInt(form.children) || 0)
-  const estimatedPrice = Number(pkg.price) * totalTravelers
+  const totalTravelers  = (parseInt(form.adults) || 1) + (parseInt(form.children) || 0)
+  const estimatedPrice  = Number(pkg.price) * totalTravelers
 
   const validate = () => {
     const e = {}
@@ -663,11 +256,9 @@ function BookingPanel({ pkg, user, onSuccess }) {
     if (Object.keys(errs).length) { setErrors(errs); return }
     setSending(true)
     try {
-      // packagesAPI.createBooking returns body directly (fetch-based)
       const body = await packagesAPI.createBooking(pkg.id, {
-        ...form,
-        travelers_count: totalTravelers,
-        total_price:     estimatedPrice,
+        ...form, travelers_count: totalTravelers,
+        total_price: estimatedPrice,
       })
       setSuccess(true)
       setBookingRef(body?.data?.booking_ref || '')
@@ -682,25 +273,23 @@ function BookingPanel({ pkg, user, onSuccess }) {
   if (success) {
     return (
       <div className="text-center py-8 px-4">
-        <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center
           justify-center mx-auto mb-4">
-          <CheckCircle size={32} className="text-emerald-600" />
+          <CheckCircle size={32} className="text-green-600" />
         </div>
-        <h3 className="text-xl font-bold text-slate-800 mb-2">
-          Booking Request Sent!
-        </h3>
+        <h3 className="text-xl font-bold text-gray-800 mb-2">Booking Request Sent!</h3>
         {bookingRef && (
-          <p className="text-sm font-mono bg-emerald-50 text-emerald-700
+          <p className="text-sm font-mono bg-green-50 text-green-700
             px-4 py-2 rounded-xl inline-block mb-3">
             Ref: {bookingRef}
           </p>
         )}
-        <p className="text-slate-500 text-sm mb-6">
+        <p className="text-gray-500 text-sm mb-5">
           We'll review your request and get back to you within 24 hours.
         </p>
         <button
           onClick={() => { setSuccess(false); setBookingRef('') }}
-          className="text-sm text-emerald-600 hover:underline font-semibold"
+          className="text-sm text-green-600 hover:underline font-semibold"
         >
           Make another request
         </button>
@@ -709,7 +298,7 @@ function BookingPanel({ pkg, user, onSuccess }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-3.5">
       {errors._form && (
         <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200
           rounded-xl text-sm text-red-600">
@@ -717,629 +306,164 @@ function BookingPanel({ pkg, user, onSuccess }) {
         </div>
       )}
 
-      {/* Name & Email */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="text-xs font-semibold text-slate-600 mb-1 block">
-            Full Name *
-          </label>
+          <label className="text-xs font-semibold text-gray-600 mb-1 block">Full Name *</label>
           <div className="relative">
-            <User size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <User size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               value={form.guest_name}
               onChange={e => upd('guest_name', e.target.value)}
               placeholder="Your name"
-              className={`w-full pl-9 pr-4 py-2.5 rounded-xl border text-sm outline-none
-                focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 transition-all
-                ${errors.guest_name ? 'border-red-400' : 'border-slate-200'}`}
+              className={`w-full pl-8 pr-3 py-2.5 rounded-xl border text-sm outline-none
+                focus:ring-2 focus:ring-green-100 focus:border-green-400 transition-all
+                ${errors.guest_name ? 'border-red-400' : 'border-gray-200'}`}
             />
           </div>
-          {errors.guest_name && (
-            <p className="text-xs text-red-500 mt-1">{errors.guest_name}</p>
-          )}
+          {errors.guest_name && <p className="text-xs text-red-500 mt-1">{errors.guest_name}</p>}
         </div>
         <div>
-          <label className="text-xs font-semibold text-slate-600 mb-1 block">
-            Email *
-          </label>
+          <label className="text-xs font-semibold text-gray-600 mb-1 block">Email *</label>
           <div className="relative">
-            <Mail size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Mail size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="email" value={form.guest_email}
               onChange={e => upd('guest_email', e.target.value)}
               placeholder="you@email.com"
-              className={`w-full pl-9 pr-4 py-2.5 rounded-xl border text-sm outline-none
-                focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 transition-all
-                ${errors.guest_email ? 'border-red-400' : 'border-slate-200'}`}
+              className={`w-full pl-8 pr-3 py-2.5 rounded-xl border text-sm outline-none
+                focus:ring-2 focus:ring-green-100 focus:border-green-400 transition-all
+                ${errors.guest_email ? 'border-red-400' : 'border-gray-200'}`}
             />
           </div>
-          {errors.guest_email && (
-            <p className="text-xs text-red-500 mt-1">{errors.guest_email}</p>
-          )}
+          {errors.guest_email && <p className="text-xs text-red-500 mt-1">{errors.guest_email}</p>}
         </div>
       </div>
 
-      {/* Phone */}
       <div>
-        <label className="text-xs font-semibold text-slate-600 mb-1 block">Phone</label>
+        <label className="text-xs font-semibold text-gray-600 mb-1 block">Phone</label>
         <div className="relative">
-          <Phone size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Phone size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="tel" value={form.guest_phone}
             onChange={e => upd('guest_phone', e.target.value)}
             placeholder="+1 234 567 8900"
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-slate-200
-              text-sm outline-none focus:ring-2 focus:ring-emerald-100
-              focus:border-emerald-400 transition-all"
+            className="w-full pl-8 pr-3 py-2.5 rounded-xl border border-gray-200
+              text-sm outline-none focus:ring-2 focus:ring-green-100
+              focus:border-green-400 transition-all"
           />
         </div>
       </div>
 
-      {/* Dates */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-xs font-semibold text-slate-600 mb-1 block">
-            Travel Date *
-          </label>
+          <label className="text-xs font-semibold text-gray-600 mb-1 block">Travel Date *</label>
           <input
             type="date" value={form.travel_date}
             onChange={e => upd('travel_date', e.target.value)}
             min={new Date().toISOString().split('T')[0]}
             className={`w-full px-3 py-2.5 rounded-xl border text-sm outline-none
-              focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400 transition-all
-              ${errors.travel_date ? 'border-red-400' : 'border-slate-200'}`}
+              focus:ring-2 focus:ring-green-100 focus:border-green-400 transition-all
+              ${errors.travel_date ? 'border-red-400' : 'border-gray-200'}`}
           />
-          {errors.travel_date && (
-            <p className="text-xs text-red-500 mt-1">{errors.travel_date}</p>
-          )}
+          {errors.travel_date && <p className="text-xs text-red-500 mt-1">{errors.travel_date}</p>}
         </div>
         <div>
-          <label className="text-xs font-semibold text-slate-600 mb-1 block">
-            Return Date
-          </label>
+          <label className="text-xs font-semibold text-gray-600 mb-1 block">Return Date</label>
           <input
             type="date" value={form.end_date}
             onChange={e => upd('end_date', e.target.value)}
             min={form.travel_date || new Date().toISOString().split('T')[0]}
-            className="w-full px-3 py-2.5 rounded-xl border border-slate-200
-              text-sm outline-none focus:ring-2 focus:ring-emerald-100
-              focus:border-emerald-400 transition-all"
+            className="w-full px-3 py-2.5 rounded-xl border border-gray-200
+              text-sm outline-none focus:ring-2 focus:ring-green-100
+              focus:border-green-400 transition-all"
           />
         </div>
       </div>
 
-      {/* Travelers */}
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="text-xs font-semibold text-slate-600 mb-1 block">Adults</label>
+          <label className="text-xs font-semibold text-gray-600 mb-1 block">Adults</label>
           <input
             type="number" min="1" max={pkg.max_travelers || 99}
             value={form.adults}
             onChange={e => upd('adults', e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm
-              outline-none focus:ring-2 focus:ring-emerald-100
-              focus:border-emerald-400 transition-all"
+            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm
+              outline-none focus:ring-2 focus:ring-green-100 focus:border-green-400 transition-all"
           />
         </div>
         <div>
-          <label className="text-xs font-semibold text-slate-600 mb-1 block">Children</label>
+          <label className="text-xs font-semibold text-gray-600 mb-1 block">Children</label>
           <input
             type="number" min="0" value={form.children}
             onChange={e => upd('children', e.target.value)}
-            className="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-sm
-              outline-none focus:ring-2 focus:ring-emerald-100
-              focus:border-emerald-400 transition-all"
+            className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm
+              outline-none focus:ring-2 focus:ring-green-100 focus:border-green-400 transition-all"
           />
         </div>
       </div>
 
-      {/* Special requests */}
       <div>
-        <label className="text-xs font-semibold text-slate-600 mb-1 block">
-          Special Requests
-        </label>
+        <label className="text-xs font-semibold text-gray-600 mb-1 block">Special Requests</label>
         <textarea
           rows={3} value={form.special_requests}
           onChange={e => upd('special_requests', e.target.value)}
-          placeholder="Dietary needs, accessibility, preferred room type…"
-          className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm
-            outline-none focus:ring-2 focus:ring-emerald-100
-            focus:border-emerald-400 transition-all resize-none"
+          placeholder="Dietary needs, accessibility, preferences…"
+          className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm outline-none
+            focus:ring-2 focus:ring-green-100 focus:border-green-400 transition-all resize-none"
         />
       </div>
 
-      {/* Price estimate */}
       {pkg.is_price_visible !== false && Number(pkg.price) > 0 && (
-        <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4">
+        <div className="bg-green-50 border border-green-100 rounded-xl p-3.5">
           <div className="flex justify-between text-sm">
-            <span className="text-slate-500">
-              {fmtPrice(pkg.price, pkg.currency)} ×{' '}
-              {totalTravelers} traveler{totalTravelers > 1 ? 's' : ''}
+            <span className="text-gray-500">
+              {fmtPrice(pkg.price, pkg.currency)} × {totalTravelers} traveler{totalTravelers > 1 ? 's' : ''}
             </span>
-            <span className="font-bold text-emerald-700">
+            <span className="font-bold text-green-700">
               {fmtPrice(estimatedPrice, pkg.currency)}
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-1">
-            *Estimated total. Final price confirmed by our team.
+          <p className="text-xs text-gray-400 mt-1">
+            *Estimated. Final price confirmed by our team.
           </p>
         </div>
       )}
 
       <button
         type="submit" disabled={sending}
-        className={`w-full py-4 rounded-xl font-bold text-sm text-white
+        className={`w-full py-3.5 rounded-xl font-bold text-sm text-white
           flex items-center justify-center gap-2 transition-all
-          bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-100
+          bg-green-600 hover:bg-green-700 shadow-lg shadow-green-100
           ${sending ? 'opacity-70 cursor-not-allowed' : 'hover:-translate-y-0.5 hover:shadow-xl'}`}
       >
         {sending
-          ? <><Loader2 size={16} className="animate-spin" /> Sending Request…</>
+          ? <><Loader2 size={15} className="animate-spin" /> Sending…</>
           : <><BookOpen size={15} /> Request Booking</>}
       </button>
 
-      <p className="text-center text-xs text-slate-400">
+      <p className="text-center text-xs text-gray-400">
         <Shield size={10} className="inline mr-1" />
-        No payment required now. We'll confirm availability first.
+        No payment required. We'll confirm availability first.
       </p>
     </form>
   )
 }
 
-// ── PACKAGE CHAT ──────────────────────────────────────────────────────────────
-
-function PackageChat({ pkg, user, isAuthenticated }) {
-  const messagesEndRef = useRef(null)
-  const textareaRef    = useRef(null)
-
-  const [prefs, setPrefs] = useState(() => ({
-    theme: 'light', bg_preset: 'none', bg_image: '', ...loadLocalPrefs(),
-  }))
-  const [prefsOpen, setPrefsOpen] = useState(false)
-
-  const [messages,   setMessages]   = useState([])
-  const [loading,    setLoading]    = useState(false)
-  const [sending,    setSending]    = useState(false)
-  const [body,       setBody]       = useState('')
-  const [msgType,    setMsgType]    = useState('inquiry')
-  const [guestName,  setGuestName]  = useState('')
-  const [guestEmail, setGuestEmail] = useState('')
-  const [showIntro,  setShowIntro]  = useState(true)
-  const [infoResponded, setInfoResponded] = useState(new Set())
-
-  const themeStyles = CHAT_THEMES[prefs.theme] || CHAT_THEMES.light
-
-  const chatBgStyle = useMemo(() => {
-    if (prefs.bg_image) {
-      return {
-        backgroundImage:    `url(${prefs.bg_image})`,
-        backgroundSize:     'cover',
-        backgroundPosition: 'center',
-      }
-    }
-    const preset = BG_PRESETS.find(b => b.id === prefs.bg_preset)
-    return preset?.value ? { background: preset.value } : {}
-  }, [prefs.bg_image, prefs.bg_preset])
-
-  const handlePrefChange = useCallback((key, val) => {
-    setPrefs(p => {
-      const next = { ...p, [key]: val }
-      saveLocalPrefs(next)
-      if (isAuthenticated) {
-        packagesAPI.saveChatPreferences(next).catch(() => {})
-      }
-      return next
-    })
-  }, [isAuthenticated])
-
-  // Load message history (authenticated users only)
-  const loadMessages = useCallback(async () => {
-    if (!isAuthenticated || !pkg?.id) return
-    setLoading(true)
-    try {
-      // packagesAPI.getMessages returns body directly
-      const body = await packagesAPI.getMessages(pkg.id)
-      setMessages(body?.data || [])
-    } catch (e) {
-      console.error('[Chat] load messages error:', e)
-    } finally {
-      setLoading(false)
-    }
-  }, [pkg?.id, isAuthenticated])
-
-  useEffect(() => {
-    loadMessages()
-    if (isAuthenticated) {
-      packagesAPI.getChatPreferences()
-        .then(body => {
-          if (body?.data) {
-            const serverPrefs = body.data
-            setPrefs(p => {
-              const merged = { ...p, ...serverPrefs }
-              saveLocalPrefs(merged)
-              return merged
-            })
-          }
-        })
-        .catch(() => {})
-    }
-  }, [loadMessages, isAuthenticated])
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  const handleSend = async () => {
-    const trimmed = body.trim()
-    if (!trimmed) return
-
-    if (!isAuthenticated) {
-      if (!guestName.trim()) { alert('Please enter your name.'); return }
-      if (!guestEmail.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(guestEmail)) {
-        alert('Please enter a valid email.'); return
-      }
-    }
-
-    setSending(true)
-    try {
-      // packagesAPI.sendMessage returns body directly (fetch-based)
-      const res = await packagesAPI.sendMessage(pkg.id, {
-        body:         trimmed,
-        message_type: msgType,
-        sender_name:  guestName  || user?.fullName || user?.name,
-        sender_email: guestEmail || user?.email,
-      })
-
-      const newMsg = res?.data
-      if (newMsg) {
-        setMessages(prev => {
-          if (prev.some(m => m.id === newMsg.id)) return prev
-          return [...prev, newMsg]
-        })
-      }
-      setBody('')
-      setShowIntro(false)
-    } catch (err) {
-      alert(err?.message || 'Failed to send message.')
-    } finally {
-      setSending(false)
-    }
-  }
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() }
-  }
-
-  const handleInfoResponded = (reqId) => {
-    setInfoResponded(prev => new Set([...prev, reqId]))
-    loadMessages()
-  }
-
-  // ── Message bubble ──────────────────────────────────────────────────────────
-  const MessageBubble = useCallback(({ msg }) => {
-    const isUser   = msg.sender_type === 'user' || msg.sender_type === 'guest'
-    const isAdmin  = msg.sender_type === 'admin'
-    const isInfo   = msg.message_type === 'info_request'
-    const isInfoRs = msg.message_type === 'info_response'
-    const reqId    = msg.metadata?.info_request_id || null
-    const responded = reqId && infoResponded.has(String(reqId))
-
-    return (
-      <div className={`flex gap-2.5 mb-3 ${isUser ? 'flex-row-reverse' : 'flex-row'}`}>
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center
-          text-xs font-bold shrink-0 self-end ${
-          isAdmin ? 'bg-emerald-500 text-white' : 'bg-slate-200 text-slate-600'
-        }`}>
-          {isAdmin ? 'A' : (msg.sender_name?.[0] || 'U').toUpperCase()}
-        </div>
-
-        <div className={`flex flex-col max-w-[75%] ${isUser ? 'items-end' : 'items-start'}`}>
-          <div className={`flex items-center gap-2 mb-1 ${isUser ? 'flex-row-reverse' : ''}`}>
-            <span className={`text-[11px] font-semibold ${themeStyles.name}`}>
-              {isAdmin ? 'Altuvera Team' : msg.sender_name || 'You'}
-            </span>
-            <span className={`text-[10px] ${themeStyles.timestamp}`}>
-              {fmtTime(msg.created_at)}
-            </span>
-          </div>
-
-          {isInfo && (
-            <div className="w-full max-w-sm">
-              {responded || msg.info_request_status === 'responded' ? (
-                <div className="flex items-center gap-2 p-3 bg-emerald-50
-                  border border-emerald-200 rounded-2xl text-sm text-emerald-700">
-                  <CheckCircle size={16} /> Information submitted successfully
-                </div>
-              ) : (
-                <InfoRequestForm
-                  infoRequest={{
-                    ...msg,
-                    info_request_id: reqId,
-                    fields:          msg.info_request_fields,
-                    theme:           msg.info_request_theme || 'default',
-                    accent_color:    msg.info_request_accent,
-                    status:          msg.info_request_status,
-                  }}
-                  pkg={pkg}
-                  user={user}
-                  onSubmit={() => handleInfoResponded(String(reqId))}
-                />
-              )}
-            </div>
-          )}
-
-          {isInfoRs && (
-            <div className={`px-4 py-3 rounded-2xl text-sm ${
-              isUser ? themeStyles.userBubble : themeStyles.adminBubble
-            }`}>
-              <div className="flex items-center gap-2 mb-1">
-                <CheckCircle size={14} className="text-emerald-400" />
-                <span className="font-semibold text-xs opacity-80">
-                  Information Submitted
-                </span>
-              </div>
-              <p className="opacity-90">{msg.body}</p>
-            </div>
-          )}
-
-          {!isInfo && !isInfoRs && (
-            <div className={`px-4 py-3 rounded-2xl text-sm whitespace-pre-wrap ${
-              isUser ? themeStyles.userBubble : themeStyles.adminBubble
-            }`}>
-              {msg.message_type && msg.message_type !== 'reply' && (
-                <span className={`inline-block text-[9px] font-black uppercase
-                  tracking-widest opacity-70 mb-1.5 ${isUser ? 'text-white/80' : ''}`}>
-                  {MSG_TYPES.find(t => t.value === msg.message_type)?.label ||
-                    msg.message_type}
-                </span>
-              )}
-              <p>{msg.body}</p>
-            </div>
-          )}
-
-          <span className={`text-[10px] mt-1 ${themeStyles.timestamp}`}>
-            {fmtDate(msg.created_at)}
-          </span>
-        </div>
-      </div>
-    )
-  }, [themeStyles, infoResponded, pkg, user]) // eslint-disable-line
-
-  return (
-    <div
-      className={`flex flex-col rounded-3xl overflow-hidden shadow-xl
-        border border-slate-200 ${themeStyles.wrap}`}
-      style={{ height: '600px' }}
-    >
-      {/* Header */}
-      <div className={`px-5 py-4 flex items-center justify-between shrink-0
-        ${themeStyles.header}`}>
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-emerald-500 rounded-xl flex items-center
-            justify-center">
-            <MessageSquare size={16} className="text-white" />
-          </div>
-          <div>
-            <h4 className="font-bold text-sm text-slate-800">
-              Ask About This Package
-            </h4>
-            <p className="text-xs text-slate-500">
-              We typically reply within a few hours
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          {isAuthenticated && (
-            <button onClick={loadMessages}
-              className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center
-                justify-center text-slate-500 transition-colors">
-              <RefreshCw size={13} />
-            </button>
-          )}
-          <div className="relative">
-            <button onClick={() => setPrefsOpen(p => !p)}
-              className="w-7 h-7 rounded-lg hover:bg-slate-100 flex items-center
-                justify-center text-slate-500 transition-colors">
-              <Palette size={13} />
-            </button>
-            {prefsOpen && (
-              <ChatPrefsPanel
-                prefs={prefs}
-                onChange={handlePrefChange}
-                onClose={() => setPrefsOpen(false)}
-                isAuthenticated={isAuthenticated}
-              />
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Messages */}
-      <div
-        className={`flex-1 overflow-y-auto p-4 ${themeStyles.messages}`}
-        style={chatBgStyle}
-      >
-        {/* Welcome intro */}
-        {showIntro && !messages.length && !loading && (
-          <div className="flex gap-2.5 mb-4">
-            <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center
-              justify-center text-xs font-bold text-white shrink-0">
-              A
-            </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-[11px] font-semibold text-slate-600">
-                  Altuvera Team
-                </span>
-              </div>
-              <div className={`px-4 py-3 rounded-2xl text-sm ${themeStyles.adminBubble}`}>
-                <p className="font-semibold mb-1">👋 Hi there!</p>
-                <p>
-                  Welcome to the <strong>{pkg.title}</strong> package page.
-                  Feel free to ask any questions, request a booking, or share your
-                  travel wishes — we're here to help!
-                </p>
-                <div className="flex flex-wrap gap-1.5 mt-3">
-                  {MSG_TYPES.map(t => (
-                    <button key={t.value} onClick={() => setMsgType(t.value)}
-                      className={`text-[11px] font-bold px-2.5 py-1 rounded-full
-                        border transition-all ${
-                        msgType === t.value
-                          ? 'bg-emerald-500 text-white border-emerald-500'
-                          : 'border-slate-200 text-slate-500 hover:border-emerald-300'
-                      }`}>
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {loading && (
-          <div className="flex justify-center py-6">
-            <Loader2 size={20} className="animate-spin text-emerald-500" />
-          </div>
-        )}
-
-        {messages.map(msg => (
-          <MessageBubble key={msg.id} msg={msg} />
-        ))}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Guest credentials (unauthenticated only) */}
-      {!isAuthenticated && (
-        <div className={`px-4 pt-3 pb-0 border-t ${
-          prefs.theme === 'dark' ? 'border-slate-700' : 'border-slate-100'
-        }`}>
-          <div className="grid grid-cols-2 gap-2">
-            <input
-              value={guestName}
-              onChange={e => setGuestName(e.target.value)}
-              placeholder="Your name *"
-              className={`px-3 py-2 rounded-xl border text-xs outline-none
-                ${themeStyles.input} ${themeStyles.inputText}`}
-            />
-            <input
-              type="email"
-              value={guestEmail}
-              onChange={e => setGuestEmail(e.target.value)}
-              placeholder="Email *"
-              className={`px-3 py-2 rounded-xl border text-xs outline-none
-                ${themeStyles.input} ${themeStyles.inputText}`}
-            />
-          </div>
-        </div>
-      )}
-
-      {/* Message type selector */}
-      <div className={`px-4 pt-3 flex gap-1.5 overflow-x-auto border-t ${
-        prefs.theme === 'dark' ? 'border-slate-700' : 'border-slate-100'
-      }`} style={{ scrollbarWidth: 'none' }}>
-        {MSG_TYPES.map(t => (
-          <button key={t.value} onClick={() => setMsgType(t.value)}
-            className={`shrink-0 text-[10px] font-bold px-3 py-1.5 rounded-full
-              border transition-all ${
-              msgType === t.value
-                ? 'bg-emerald-500 text-white border-emerald-500 shadow-sm'
-                : `border-slate-200 ${
-                    prefs.theme === 'dark'
-                      ? 'text-slate-400 border-slate-600'
-                      : 'text-slate-500'
-                  } hover:border-emerald-300`
-            }`}>
-            {t.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Input */}
-      <div className="px-4 pb-4 pt-2 flex items-end gap-2 shrink-0">
-        <textarea
-          ref={textareaRef}
-          rows={2}
-          value={body}
-          onChange={e => setBody(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={
-            msgType === 'booking_request' ? 'Describe your ideal trip dates, group size…' :
-            msgType === 'question'        ? 'What would you like to know?' :
-            msgType === 'wish'            ? 'Share your special request or wish…' :
-                                           'Type your message…'
-          }
-          className={`flex-1 px-4 py-3 rounded-2xl border text-sm outline-none
-            focus:ring-2 focus:ring-emerald-100 focus:border-emerald-400
-            transition-all resize-none ${themeStyles.input} ${themeStyles.inputText}`}
-        />
-        <button
-          onClick={handleSend}
-          disabled={sending || !body.trim()}
-          className={`w-10 h-10 rounded-2xl flex items-center justify-center
-            transition-all shrink-0 ${themeStyles.sendBtn} ${
-            !body.trim() || sending
-              ? 'opacity-50 cursor-not-allowed'
-              : 'hover:scale-105'
-          }`}
-        >
-          {sending
-            ? <Loader2 size={16} className="animate-spin" />
-            : <Send size={16} />}
-        </button>
-      </div>
-    </div>
-  )
-}
-
-// ── FAQ ITEM ──────────────────────────────────────────────────────────────────
-
-function FaqItem({ faq, accent }) {
-  const [open, setOpen] = useState(false)
-  return (
-    <div className="border border-slate-200 rounded-2xl overflow-hidden">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-5 py-4
-          hover:bg-slate-50 transition-colors text-left gap-3"
-      >
-        <span className="font-semibold text-slate-800 text-sm">
-          {faq.question || faq.title}
-        </span>
-        <ChevronDown size={16} className={`text-slate-400 shrink-0 transition-transform ${
-          open ? 'rotate-180' : ''
-        }`} />
-      </button>
-      {open && (
-        <div
-          className="px-5 pb-4 pt-3 text-sm text-slate-600 leading-relaxed
-            border-t border-slate-100"
-          style={{ borderColor: `${accent}20` }}
-        >
-          {faq.answer || faq.content}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// MAIN PAGE
-// ══════════════════════════════════════════════════════════════════════════════
-
+/* ══════════════════════════════════════════════════════════════════════════
+   MAIN PAGE
+   ══════════════════════════════════════════════════════════════════════════ */
 export default function PackageDetail() {
   const { slug }                  = useParams()
   const { user, isAuthenticated } = useUserAuth()
+  const { openPortal }            = useMessaging()
 
   const [pkg,       setPkg]       = useState(null)
   const [loading,   setLoading]   = useState(true)
   const [error,     setError]     = useState(null)
   const [activeTab, setActiveTab] = useState('overview')
-  const [sidePanel, setSidePanel] = useState('chat')
+  const [sidePanel, setSidePanel] = useState('booking')
   const [wishlist,  setWishlist]  = useState(false)
 
-  // Derived data
   const images       = useMemo(() => parseJson(pkg?.images),        [pkg?.images])
   const features     = useMemo(() => parseJson(pkg?.features),      [pkg?.features])
   const inclusions   = useMemo(() => parseJson(pkg?.inclusions),    [pkg?.inclusions])
@@ -1353,26 +477,17 @@ export default function PackageDetail() {
     ? Number(pkg.price) / (1 - Number(pkg.discount_percent) / 100)
     : null
 
-  // ── Load package ────────────────────────────────────────────────────────────
+  /* Load package */
   useEffect(() => {
     if (!slug) return
-    setLoading(true)
-    setError(null)
-
-    // packagesAPI returns body directly (fetch-based, not axios)
-    // Response shape: { success: true, data: { id, title, ... } }
+    setLoading(true); setError(null)
     const fn = /^\d+$/.test(slug)
       ? () => packagesAPI.getById(slug)
       : () => packagesAPI.getBySlug(slug)
-
     fn()
       .then(body => {
-        // body is raw JSON: { success, data: pkgObject }
         const pkgData = body?.data || body
-        if (!pkgData?.id) {
-          setError('Package not found')
-          return
-        }
+        if (!pkgData?.id) { setError('Package not found'); return }
         setPkg(pkgData)
         try {
           const saved = JSON.parse(localStorage.getItem('altuvera_wishlist') || '[]')
@@ -1386,7 +501,21 @@ export default function PackageDetail() {
       .finally(() => setLoading(false))
   }, [slug])
 
-  // ── Wishlist ─────────────────────────────────────────────────────────────────
+  /* Open chat with package context */
+  const handleAskSupport = useCallback(() => {
+    if (!pkg) return
+    openPortal({
+      id:          pkg.id,
+      title:       pkg.title,
+      slug:        pkg.slug,
+      image:       pkg.cover_image_url || pkg.thumbnail_url || null,
+      destination: pkg.destination || null,
+      price:       Number(pkg.price) || null,
+      priceLabel:  pkg.price_label  || 'per person',
+      currency:    pkg.currency     || 'USD',
+    })
+  }, [pkg, openPortal])
+
   const toggleWishlist = () => {
     if (!pkg) return
     setWishlist(w => {
@@ -1402,24 +531,27 @@ export default function PackageDetail() {
     })
   }
 
-  // ── Share ────────────────────────────────────────────────────────────────────
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({ title: pkg.title, url: window.location.href }).catch(() => {})
     } else {
       navigator.clipboard.writeText(window.location.href)
-        .then(() => alert('Link copied to clipboard!'))
+        .then(() => alert('Link copied!'))
         .catch(() => {})
     }
   }
 
-  // ── Loading ──────────────────────────────────────────────────────────────────
+  /* Loading */
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-green-50/30 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 size={40} className="animate-spin text-emerald-500 mx-auto mb-4" />
-          <p className="text-slate-500 font-medium">Loading package details…</p>
+          <div className="w-16 h-16 rounded-2xl bg-green-100 flex items-center
+            justify-center mx-auto mb-4 animate-pulse">
+            <Package size={32} className="text-green-600" />
+          </div>
+          <Loader2 size={24} className="animate-spin text-green-500 mx-auto mb-3" />
+          <p className="text-gray-500 font-medium text-sm">Loading package details…</p>
         </div>
       </div>
     )
@@ -1427,55 +559,49 @@ export default function PackageDetail() {
 
   if (error || !pkg) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-green-50/30 flex items-center justify-center">
         <div className="text-center max-w-md px-4">
-          <Package size={64} className="text-slate-200 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-slate-700 mb-2">
-            {error || 'Package not found'}
-          </h2>
-          <p className="text-slate-400 mb-6">
+          <Package size={56} className="text-green-200 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-700 mb-2">{error || 'Package not found'}</h2>
+          <p className="text-gray-400 mb-6 text-sm">
             The package you're looking for doesn't exist or is unavailable.
           </p>
           <Link
             to="/packages"
-            className="px-6 py-3 bg-emerald-600 text-white font-semibold
-              rounded-xl hover:bg-emerald-700 transition-colors
-              inline-flex items-center gap-2"
+            className="px-6 py-3 bg-green-600 text-white font-semibold
+              rounded-xl hover:bg-green-700 transition-colors inline-flex items-center gap-2"
           >
-            <ChevronLeft size={16} /> Back to Packages
+            <ChevronLeft size={16} /> Browse Packages
           </Link>
         </div>
       </div>
     )
   }
 
-  const accent = pkg.accent_color || '#047857'
+  const accent = pkg.accent_color || '#16a34a'
 
-  // ── Render ────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gray-50">
 
       {/* Breadcrumb */}
-      <div className="bg-white border-b border-slate-100">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-2
-          text-sm text-slate-500">
-          <Link to="/" className="hover:text-emerald-600 transition-colors">Home</Link>
-          <ChevronLeft size={14} className="rotate-180" />
-          <Link to="/packages" className="hover:text-emerald-600 transition-colors">
+      <div className="bg-white border-b border-green-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center gap-2
+          text-sm text-gray-500 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          <Link to="/" className="hover:text-green-600 transition-colors shrink-0">Home</Link>
+          <ChevronRight size={14} className="text-gray-300 shrink-0" />
+          <Link to="/packages" className="hover:text-green-600 transition-colors shrink-0">
             Packages
           </Link>
-          <ChevronLeft size={14} className="rotate-180" />
-          <span className="text-slate-800 font-medium truncate max-w-[200px]">
-            {pkg.title}
-          </span>
+          <ChevronRight size={14} className="text-gray-300 shrink-0" />
+          <span className="text-gray-800 font-medium truncate max-w-[200px]">{pkg.title}</span>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 xl:gap-8">
 
           {/* ── LEFT: Main content ── */}
-          <div className="lg:col-span-2 space-y-8">
+          <div className="xl:col-span-2 space-y-6">
 
             {/* Gallery */}
             <ImageGallery
@@ -1485,12 +611,14 @@ export default function PackageDetail() {
             />
 
             {/* Title block */}
-            <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100">
-              {/* Badges */}
+            <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8
+              shadow-sm border border-green-50">
+
+              {/* Badges row */}
               <div className="flex flex-wrap items-center gap-2 mb-4">
                 {pkg.category && (
                   <span
-                    className="text-xs font-bold uppercase tracking-widest
+                    className="text-[11px] font-bold uppercase tracking-widest
                       px-3 py-1 rounded-full"
                     style={{ backgroundColor: `${accent}15`, color: accent }}
                   >
@@ -1499,88 +627,101 @@ export default function PackageDetail() {
                 )}
                 {pkg.badge_label && (
                   <span
-                    className="text-xs font-black uppercase tracking-wider
-                      px-3 py-1 rounded-full text-white"
+                    className="text-[11px] font-black uppercase tracking-wider
+                      px-3 py-1 rounded-full text-white shadow-sm"
                     style={{ backgroundColor: pkg.badge_color || accent }}
                   >
                     {pkg.badge_label}
                   </span>
                 )}
                 {pkg.is_featured && (
-                  <span className="flex items-center gap-1 text-xs font-bold
-                    text-amber-600 bg-amber-50 px-3 py-1 rounded-full
-                    border border-amber-200">
-                    <Star size={11} className="fill-amber-500" /> Featured
+                  <span className="flex items-center gap-1 text-[11px] font-bold
+                    text-amber-600 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+                    <Star size={10} className="fill-amber-500" /> Featured
                   </span>
                 )}
                 {pkg.is_sold_out && (
-                  <span className="text-xs font-bold text-red-600 bg-red-50
+                  <span className="text-[11px] font-bold text-red-600 bg-red-50
                     px-3 py-1 rounded-full border border-red-200">
                     Sold Out
                   </span>
                 )}
               </div>
 
-              <h1 className="text-3xl sm:text-4xl font-black text-slate-800
-                leading-tight mb-3">
+              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black text-gray-900
+                leading-tight mb-4">
                 {pkg.title}
               </h1>
 
-              {/* Meta */}
-              <div className="flex flex-wrap items-center gap-4 text-sm
-                text-slate-500 mb-5">
+              {/* Meta pills */}
+              <div className="flex flex-wrap items-center gap-3 mb-5">
                 {pkg.destination && (
-                  <span className="flex items-center gap-1.5">
-                    <MapPin size={14} className="text-emerald-500" />
-                    {pkg.destination}
-                  </span>
-                )}
-                {pkg.country && (
-                  <span className="flex items-center gap-1.5">
-                    <span className="text-slate-300">·</span> {pkg.country}
-                  </span>
+                  <div className="flex items-center gap-1.5 bg-green-50
+                    border border-green-100 px-3 py-1.5 rounded-full">
+                    <MapPin size={12} className="text-green-600" />
+                    <span className="text-xs font-semibold text-green-800">
+                      {pkg.destination}
+                    </span>
+                  </div>
                 )}
                 {pkg.duration_days && (
-                  <span className="flex items-center gap-1.5">
-                    <Clock size={14} className="text-emerald-500" />
-                    {pkg.duration_days} days
-                    {pkg.duration_nights && ` / ${pkg.duration_nights} nights`}
-                  </span>
+                  <div className="flex items-center gap-1.5 bg-green-50
+                    border border-green-100 px-3 py-1.5 rounded-full">
+                    <Clock size={12} className="text-green-600" />
+                    <span className="text-xs font-semibold text-green-800">
+                      {pkg.duration_days} days
+                      {pkg.duration_nights ? ` / ${pkg.duration_nights} nights` : ''}
+                    </span>
+                  </div>
                 )}
                 {pkg.max_travelers && (
-                  <span className="flex items-center gap-1.5">
-                    <Users size={14} className="text-emerald-500" />
-                    Max {pkg.max_travelers} travelers
-                  </span>
+                  <div className="flex items-center gap-1.5 bg-green-50
+                    border border-green-100 px-3 py-1.5 rounded-full">
+                    <Users size={12} className="text-green-600" />
+                    <span className="text-xs font-semibold text-green-800">
+                      Max {pkg.max_travelers}
+                    </span>
+                  </div>
                 )}
               </div>
 
-              {/* Actions */}
-              <div className="flex items-center gap-3">
+              {/* Action buttons */}
+              <div className="flex flex-wrap items-center gap-2.5 mb-5">
                 <button
                   onClick={toggleWishlist}
                   className={`flex items-center gap-1.5 text-sm font-semibold
                     px-4 py-2 rounded-xl border transition-all ${
                     wishlist
                       ? 'bg-red-50 border-red-200 text-red-500'
-                      : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                      : 'border-gray-200 text-gray-500 hover:bg-gray-50'
                   }`}
                 >
-                  <Heart size={15} className={wishlist ? 'fill-red-500' : ''} />
+                  <Heart size={14} className={wishlist ? 'fill-red-500' : ''} />
                   {wishlist ? 'Saved' : 'Save'}
                 </button>
                 <button
                   onClick={handleShare}
                   className="flex items-center gap-1.5 text-sm font-semibold
-                    px-4 py-2 rounded-xl border border-slate-200 text-slate-500
-                    hover:bg-slate-50 transition-colors"
+                    px-4 py-2 rounded-xl border border-gray-200 text-gray-500
+                    hover:bg-gray-50 transition-colors"
                 >
-                  <Share2 size={15} /> Share
+                  <Share2 size={14} /> Share
+                </button>
+
+                {/* Ask Support — opens chat portal with package context */}
+                <button
+                  onClick={handleAskSupport}
+                  className="flex items-center gap-1.5 text-sm font-semibold
+                    px-4 py-2 rounded-xl bg-green-600 hover:bg-green-700
+                    text-white transition-all shadow-sm shadow-green-200
+                    hover:shadow-md hover:-translate-y-0.5"
+                >
+                  <MessageCircle size={14} /> Ask Support
                 </button>
               </div>
 
               {pkg.short_description && (
-                <p className="mt-5 text-slate-600 leading-relaxed text-base">
+                <p className="text-gray-600 leading-relaxed text-sm sm:text-base">
                   {pkg.short_description}
                 </p>
               )}
@@ -1588,21 +729,25 @@ export default function PackageDetail() {
 
             {/* Highlights */}
             {highlights.length > 0 && (
-              <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100">
-                <h2 className="text-xl font-bold text-slate-800 mb-4 flex items-center gap-2">
-                  <Sparkles size={18} style={{ color: accent }} /> Highlights
+              <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8
+                shadow-sm border border-green-50">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4
+                  flex items-center gap-2">
+                  <Sparkles size={18} style={{ color: accent }} />
+                  Highlights
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {highlights.map((h, i) => (
-                    <div key={i} className="flex items-start gap-3">
+                    <div key={i} className="flex items-start gap-3
+                      p-3 rounded-xl bg-green-50/50 border border-green-100">
                       <div
-                        className="w-6 h-6 rounded-full flex items-center justify-center
+                        className="w-5 h-5 rounded-full flex items-center justify-center
                           shrink-0 mt-0.5"
-                        style={{ backgroundColor: `${accent}15` }}
+                        style={{ backgroundColor: `${accent}20` }}
                       >
-                        <Check size={12} style={{ color: accent }} />
+                        <Check size={11} style={{ color: accent }} />
                       </div>
-                      <span className="text-sm text-slate-700">{h}</span>
+                      <span className="text-sm text-gray-700 leading-relaxed">{h}</span>
                     </div>
                   ))}
                 </div>
@@ -1611,23 +756,24 @@ export default function PackageDetail() {
 
             {/* Features */}
             {features.length > 0 && (
-              <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-sm border border-slate-100">
-                <h2 className="text-xl font-bold text-slate-800 mb-4">
+              <div className="bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-8
+                shadow-sm border border-green-50">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-4">
                   Package Features
                 </h2>
                 <div className="flex flex-wrap gap-2">
                   {features.map((f, i) => (
                     <span
                       key={i}
-                      className="flex items-center gap-2 text-sm font-medium
-                        px-4 py-2 rounded-full border"
+                      className="flex items-center gap-2 text-sm font-semibold
+                        px-3.5 py-2 rounded-full border"
                       style={{
                         borderColor:     `${accent}30`,
                         color:           accent,
                         backgroundColor: `${accent}08`,
                       }}
                     >
-                      <Check size={13} /> {f}
+                      <Check size={12} /> {f}
                     </span>
                   ))}
                 </div>
@@ -1635,28 +781,25 @@ export default function PackageDetail() {
             )}
 
             {/* Content tabs */}
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-              <div className="flex overflow-x-auto border-b border-slate-100">
+            <div className="bg-white rounded-2xl sm:rounded-3xl shadow-sm
+              border border-green-50 overflow-hidden">
+              {/* Tab nav */}
+              <div className="flex overflow-x-auto border-b border-gray-100"
+                style={{ scrollbarWidth: 'none' }}>
                 {[
-                  { id: 'overview',   label: 'Overview' },
-                  {
-                    id: 'itinerary',
-                    label: `Itinerary${itinerary.length ? ` (${itinerary.length})` : ''}`,
-                  },
-                  { id: 'inclusions', label: "What's Included" },
-                  {
-                    id: 'faqs',
-                    label: `FAQs${faqs.length ? ` (${faqs.length})` : ''}`,
-                  },
+                  { id: 'overview',   label: 'Overview'   },
+                  { id: 'itinerary',  label: `Itinerary${itinerary.length ? ` (${itinerary.length})` : ''}` },
+                  { id: 'inclusions', label: "Included"   },
+                  { id: 'faqs',       label: `FAQs${faqs.length ? ` (${faqs.length})` : ''}` },
                 ].map(tab => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`shrink-0 px-6 py-4 text-sm font-semibold border-b-2
-                      transition-colors ${
+                    className={`shrink-0 px-5 py-3.5 text-sm font-semibold border-b-2
+                      transition-colors whitespace-nowrap ${
                       activeTab === tab.id
-                        ? 'border-emerald-500 text-emerald-600 bg-emerald-50/50'
-                        : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+                        ? 'border-green-500 text-green-700 bg-green-50/60'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
                     }`}
                   >
                     {tab.label}
@@ -1664,15 +807,17 @@ export default function PackageDetail() {
                 ))}
               </div>
 
-              <div className="p-6 sm:p-8">
+              <div className="p-5 sm:p-8">
                 {/* Overview */}
                 {activeTab === 'overview' && (
-                  <div className="prose prose-slate max-w-none">
+                  <div className="prose prose-sm sm:prose-base max-w-none
+                    prose-headings:text-gray-800 prose-p:text-gray-600
+                    prose-strong:text-gray-800 prose-a:text-green-600">
                     {pkg.description
                       ? <div dangerouslySetInnerHTML={{ __html: pkg.description }} />
                       : pkg.content
                       ? <div dangerouslySetInnerHTML={{ __html: pkg.content }} />
-                      : <p className="text-slate-400 italic">No description available.</p>
+                      : <p className="text-gray-400 italic text-center py-8">No description available.</p>
                     }
                   </div>
                 )}
@@ -1681,27 +826,31 @@ export default function PackageDetail() {
                 {activeTab === 'itinerary' && (
                   <div className="space-y-4">
                     {!itinerary.length && (
-                      <p className="text-slate-400 italic text-center py-6">
-                        No itinerary added yet.
-                      </p>
+                      <div className="text-center py-12">
+                        <Calendar size={36} className="text-green-200 mx-auto mb-3" />
+                        <p className="text-gray-400 italic">No itinerary added yet.</p>
+                      </div>
                     )}
                     {itinerary.map((day, i) => (
                       <div key={i} className="flex gap-4">
                         <div className="shrink-0 flex flex-col items-center">
                           <div
-                            className="w-10 h-10 rounded-xl font-black text-sm
-                              flex items-center justify-center text-white"
-                            style={{ backgroundColor: accent }}
+                            className="w-10 h-10 rounded-2xl font-black text-sm
+                              flex items-center justify-center text-white shadow-md"
+                            style={{ background: `linear-gradient(135deg,${accent},#15803d)` }}
                           >
                             {day.day || i + 1}
                           </div>
                           {i < itinerary.length - 1 && (
-                            <div className="w-0.5 flex-1 my-2 bg-slate-200" />
+                            <div className="w-0.5 flex-1 my-2"
+                              style={{ background: `${accent}30` }} />
                           )}
                         </div>
-                        <div className="pb-4 flex-1">
-                          <h4 className="font-bold text-slate-800 mb-1">{day.title}</h4>
-                          <p className="text-sm text-slate-600 leading-relaxed">
+                        <div className={`flex-1 pb-4 ${i < itinerary.length - 1 ? 'border-b border-green-50' : ''}`}>
+                          <h4 className="font-bold text-gray-800 mb-1.5 text-sm sm:text-base">
+                            {day.title}
+                          </h4>
+                          <p className="text-sm text-gray-600 leading-relaxed">
                             {day.description}
                           </p>
                         </div>
@@ -1714,36 +863,40 @@ export default function PackageDetail() {
                 {activeTab === 'inclusions' && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                     <div>
-                      <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <CheckCircle size={18} className="text-emerald-500" /> Included
+                      <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2
+                        text-sm sm:text-base">
+                        <CheckCircle size={16} className="text-green-500" /> Included
                       </h3>
-                      {!inclusions.length && (
-                        <p className="text-slate-400 italic text-sm">Not specified</p>
-                      )}
-                      <ul className="space-y-2">
-                        {inclusions.map((item, i) => (
-                          <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700">
-                            <Check size={14} className="text-emerald-500 mt-0.5 shrink-0" />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
+                      {!inclusions.length
+                        ? <p className="text-gray-400 italic text-sm">Not specified</p>
+                        : (
+                          <ul className="space-y-2.5">
+                            {inclusions.map((item, i) => (
+                              <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
+                                <Check size={13} className="text-green-500 mt-0.5 shrink-0" />
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                     </div>
                     <div>
-                      <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-                        <XCircle size={18} className="text-red-400" /> Not Included
+                      <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2
+                        text-sm sm:text-base">
+                        <XCircle size={16} className="text-red-400" /> Not Included
                       </h3>
-                      {!exclusions.length && (
-                        <p className="text-slate-400 italic text-sm">Not specified</p>
-                      )}
-                      <ul className="space-y-2">
-                        {exclusions.map((item, i) => (
-                          <li key={i} className="flex items-start gap-2.5 text-sm text-slate-700">
-                            <X size={14} className="text-red-400 mt-0.5 shrink-0" />
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
+                      {!exclusions.length
+                        ? <p className="text-gray-400 italic text-sm">Not specified</p>
+                        : (
+                          <ul className="space-y-2.5">
+                            {exclusions.map((item, i) => (
+                              <li key={i} className="flex items-start gap-2.5 text-sm text-gray-700">
+                                <X size={13} className="text-red-400 mt-0.5 shrink-0" />
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
                     </div>
                   </div>
                 )}
@@ -1751,14 +904,16 @@ export default function PackageDetail() {
                 {/* FAQs */}
                 {activeTab === 'faqs' && (
                   <div className="space-y-3">
-                    {!faqs.length && (
-                      <p className="text-slate-400 italic text-center py-6">
-                        No FAQs added yet.
-                      </p>
-                    )}
-                    {faqs.map((faq, i) => (
-                      <FaqItem key={i} faq={faq} accent={accent} />
-                    ))}
+                    {!faqs.length
+                      ? (
+                        <div className="text-center py-12">
+                          <Info size={36} className="text-green-200 mx-auto mb-3" />
+                          <p className="text-gray-400 italic">No FAQs added yet.</p>
+                        </div>
+                      )
+                      : faqs.map((faq, i) => (
+                        <FaqItem key={i} faq={faq} accent={accent} />
+                      ))}
                   </div>
                 )}
               </div>
@@ -1766,54 +921,54 @@ export default function PackageDetail() {
           </div>
 
           {/* ── RIGHT: Sidebar ── */}
-          <div className="space-y-6">
-            <div className="sticky top-24 space-y-4">
+          <div className="space-y-4">
+            <div className="xl:sticky xl:top-24 space-y-4">
 
-              {/* Pricing card */}
-              <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-6">
+              {/* Price card */}
+              <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg
+                border border-green-100 p-5 sm:p-6">
+
                 {pkg.is_price_visible !== false ? (
                   <>
                     {hasDisc && (
-                      <p className="text-sm text-slate-400 line-through">
+                      <p className="text-sm text-gray-400 line-through leading-none mb-1">
                         {fmtPrice(origPrice, pkg.currency)}
                       </p>
                     )}
-                    <div className="flex items-baseline gap-2 mb-1">
-                      <span className="text-4xl font-black" style={{ color: accent }}>
+                    <div className="flex items-end gap-2 mb-1">
+                      <span className="text-3xl sm:text-4xl font-black" style={{ color: accent }}>
                         {fmtPrice(pkg.price, pkg.currency)}
                       </span>
                       {hasDisc && (
-                        <span className="text-sm font-bold text-red-500
-                          bg-red-50 px-2 py-0.5 rounded-full">
+                        <span className="text-xs font-bold text-red-500 bg-red-50
+                          px-2 py-1 rounded-full mb-1">
                           -{pkg.discount_percent}%
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-slate-400">
-                      {pkg.price_label || 'per person'}
-                    </p>
+                    <p className="text-xs text-gray-400">{pkg.price_label || 'per person'}</p>
                   </>
                 ) : (
                   <div className="text-center py-2">
-                    <p className="text-2xl font-black text-slate-700">Price on Request</p>
-                    <p className="text-xs text-slate-400 mt-1">Contact us for pricing</p>
+                    <p className="text-xl font-black text-gray-700">Price on Request</p>
+                    <p className="text-xs text-gray-400 mt-1">Contact us for pricing</p>
                   </div>
                 )}
 
                 {/* Pricing tiers */}
                 {pricingTiers.filter(t => t.label || t.price).length > 0 && (
                   <div className="mt-4 space-y-2">
-                    <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Pricing Options
                     </p>
                     {pricingTiers.filter(t => t.label || t.price).map((tier, i) => (
                       <div key={i}
                         className="flex items-center justify-between px-3 py-2.5
-                          bg-slate-50 rounded-xl border border-slate-100">
+                          bg-green-50 rounded-xl border border-green-100">
                         <div>
-                          <p className="text-sm font-bold text-slate-700">{tier.label}</p>
+                          <p className="text-sm font-bold text-gray-700">{tier.label}</p>
                           {tier.description && (
-                            <p className="text-xs text-slate-400">{tier.description}</p>
+                            <p className="text-xs text-gray-400">{tier.description}</p>
                           )}
                         </div>
                         <span className="text-sm font-black" style={{ color: accent }}>
@@ -1825,19 +980,21 @@ export default function PackageDetail() {
                 )}
 
                 {/* Quick stats */}
-                <div className="grid grid-cols-2 gap-3 mt-5 pt-4 border-t border-slate-100">
+                <div className="grid grid-cols-2 gap-3 mt-5 pt-4 border-t border-green-100">
                   {pkg.duration_days && (
-                    <div className="text-center p-3 bg-slate-50 rounded-2xl">
-                      <Clock size={18} className="mx-auto mb-1" style={{ color: accent }} />
-                      <p className="text-lg font-black text-slate-800">{pkg.duration_days}</p>
-                      <p className="text-xs text-slate-400">Days</p>
+                    <div className="text-center p-3 bg-green-50 rounded-2xl
+                      border border-green-100">
+                      <Clock size={16} className="mx-auto mb-1" style={{ color: accent }} />
+                      <p className="text-xl font-black text-gray-800">{pkg.duration_days}</p>
+                      <p className="text-xs text-gray-400">Days</p>
                     </div>
                   )}
                   {pkg.max_travelers && (
-                    <div className="text-center p-3 bg-slate-50 rounded-2xl">
-                      <Users size={18} className="mx-auto mb-1" style={{ color: accent }} />
-                      <p className="text-lg font-black text-slate-800">{pkg.max_travelers}</p>
-                      <p className="text-xs text-slate-400">Max People</p>
+                    <div className="text-center p-3 bg-green-50 rounded-2xl
+                      border border-green-100">
+                      <Users size={16} className="mx-auto mb-1" style={{ color: accent }} />
+                      <p className="text-xl font-black text-gray-800">{pkg.max_travelers}</p>
+                      <p className="text-xs text-gray-400">Max People</p>
                     </div>
                   )}
                 </div>
@@ -1846,58 +1003,61 @@ export default function PackageDetail() {
                 {pkg.availability_note && (
                   <div className="mt-4 flex items-start gap-2 p-3 bg-amber-50
                     border border-amber-100 rounded-xl">
-                    <Info size={14} className="text-amber-500 mt-0.5 shrink-0" />
+                    <Info size={13} className="text-amber-500 mt-0.5 shrink-0" />
                     <p className="text-xs text-amber-700">{pkg.availability_note}</p>
                   </div>
                 )}
 
+                {/* Ask Support CTA */}
+                <button
+                  onClick={handleAskSupport}
+                  className="w-full mt-5 flex items-center justify-center gap-2
+                    py-3 rounded-xl border-2 border-green-200 text-green-700
+                    font-semibold text-sm hover:bg-green-50 hover:border-green-400
+                    transition-all group"
+                >
+                  <MessageCircle size={16}
+                    className="group-hover:scale-110 transition-transform" />
+                  Ask about this package
+                </button>
+
                 {/* Panel toggle */}
-                <div className="flex mt-5 bg-slate-100 rounded-2xl p-1">
+                <div className="flex mt-3 bg-green-50 rounded-2xl p-1 border border-green-100">
                   {[
-                    { id: 'chat',    label: 'Ask Us',   icon: MessageSquare },
-                    { id: 'booking', label: 'Book Now', icon: BookOpen      },
+                    { id: 'booking', label: 'Book Now',  icon: BookOpen    },
                   ].map(tab => (
                     <button key={tab.id} onClick={() => setSidePanel(tab.id)}
-                      className={`flex-1 flex items-center justify-center gap-2
-                        text-sm font-bold py-2.5 rounded-xl transition-all ${
-                        sidePanel === tab.id
-                          ? 'bg-white shadow-md text-slate-800'
-                          : 'text-slate-500 hover:text-slate-700'
-                      }`}>
+                      className="flex-1 flex items-center justify-center gap-2
+                        text-sm font-bold py-2.5 rounded-xl transition-all
+                        bg-white shadow-sm text-gray-800"
+                    >
                       <tab.icon size={14} /> {tab.label}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* Chat panel */}
-              {sidePanel === 'chat' && (
-                <PackageChat
-                  pkg={pkg}
-                  user={user}
-                  isAuthenticated={isAuthenticated}
-                />
-              )}
-
               {/* Booking panel */}
               {sidePanel === 'booking' && (
-                <div className="bg-white rounded-3xl shadow-lg border border-slate-100 p-6">
-                  <h3 className="font-bold text-slate-800 mb-5 flex items-center gap-2">
-                    <BookOpen size={18} style={{ color: accent }} />
+                <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg
+                  border border-green-100 p-5 sm:p-6">
+                  <h3 className="font-bold text-gray-800 mb-5 flex items-center gap-2 text-base">
+                    <BookOpen size={17} style={{ color: accent }} />
                     Request Booking
                   </h3>
                   {pkg.is_sold_out ? (
                     <div className="text-center py-6">
-                      <XCircle size={40} className="text-red-400 mx-auto mb-3" />
-                      <p className="font-bold text-slate-700">This package is sold out</p>
-                      <p className="text-sm text-slate-400 mt-1">
+                      <XCircle size={36} className="text-red-400 mx-auto mb-3" />
+                      <p className="font-bold text-gray-700 text-sm">This package is sold out</p>
+                      <p className="text-xs text-gray-400 mt-1 mb-4">
                         Contact us to join the waitlist.
                       </p>
                       <button
-                        onClick={() => setSidePanel('chat')}
-                        className="mt-4 text-sm font-semibold text-emerald-600 hover:underline"
+                        onClick={handleAskSupport}
+                        className="text-sm font-semibold text-green-600
+                          hover:underline flex items-center gap-1 mx-auto"
                       >
-                        Chat with us →
+                        <MessageCircle size={14} /> Chat with us
                       </button>
                     </div>
                   ) : (
@@ -1907,17 +1067,18 @@ export default function PackageDetail() {
               )}
 
               {/* Trust badges */}
-              <div className="bg-white rounded-2xl border border-slate-100 p-4">
+              <div className="bg-white rounded-2xl border border-green-100 p-4 shadow-sm">
                 <div className="grid grid-cols-2 gap-3 text-center">
                   {[
-                    { icon: Shield,      text: 'Secure Booking'     },
-                    { icon: CheckCircle, text: 'Verified Packages'  },
-                    { icon: Users,       text: 'Expert Guides'      },
-                    { icon: Star,        text: '5-Star Rated'       },
+                    { icon: Shield,      text: 'Secure Booking'    },
+                    { icon: CheckCircle, text: 'Verified Packages' },
+                    { icon: Users,       text: 'Expert Guides'     },
+                    { icon: Star,        text: '5-Star Rated'      },
                   ].map(({ icon: Ic, text }) => (
-                    <div key={text} className="flex flex-col items-center gap-1.5 p-2">
-                      <Ic size={18} style={{ color: accent }} />
-                      <span className="text-xs font-semibold text-slate-600">{text}</span>
+                    <div key={text} className="flex flex-col items-center gap-1.5 p-2
+                      rounded-xl hover:bg-green-50 transition-colors">
+                      <Ic size={16} style={{ color: accent }} />
+                      <span className="text-xs font-semibold text-gray-600">{text}</span>
                     </div>
                   ))}
                 </div>

@@ -1,149 +1,199 @@
-/* ── Emoji Picker ─────────────────────────────────────────────────────────── */
+/* EmojiPicker.css — green/white theme */
+
 .ep {
+  width: 300px;
+  max-width: calc(100vw - 32px);
+  height: 340px;
   display: flex;
   flex-direction: column;
-  background: #fff;
-  border-radius: 20px;
+  background: #ffffff;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 16px;
   box-shadow:
-    0 20px 60px rgba(5, 150, 105, 0.18),
-    0 0 0 1px rgba(5, 150, 105, 0.1);
-  width: 340px;
-  max-height: 420px;
+    0 16px 48px rgba(22, 163, 74, 0.18),
+    0 4px 16px rgba(0, 0, 0, 0.08);
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  animation: epIn 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  font-family: inherit;
 }
 
-@keyframes epIn {
-  from { opacity: 0; transform: scale(0.9) translateY(8px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
-}
-
-/* Search */
-.ep__search-wrap {
+/* Search row */
+.ep__search-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 10px 12px;
-  border-bottom: 1px solid #f0fdf4;
+  gap: 6px;
+  padding: 8px 10px;
+  background: #f0fdf4;
+  border-bottom: 1px solid #dcfce7;
   flex-shrink: 0;
 }
-.ep__search-icon { font-size: 14px; flex-shrink: 0; }
+
+.ep__search-icon {
+  font-size: 13px;
+  flex-shrink: 0;
+  opacity: 0.6;
+}
+
 .ep__search {
   flex: 1;
-  border: none;
-  outline: none;
-  font-size: 13px;
-  color: #1a1a1a;
-  background: transparent;
-}
-.ep__search::placeholder { color: #9ca3af; }
-.ep__search-clear {
-  border: none;
-  background: #f1f5f9;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  font-size: 11px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #6b7280;
-  flex-shrink: 0;
-  transition: all 0.15s;
-}
-.ep__search-clear:hover { background: #fee2e2; color: #dc2626; }
-
-/* Category tabs */
-.ep__cats {
-  display: flex;
-  gap: 2px;
-  padding: 8px 10px 4px;
-  overflow-x: auto;
-  scrollbar-width: none;
-  flex-shrink: 0;
-}
-.ep__cats::-webkit-scrollbar { display: none; }
-.ep__cat-btn {
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  border: none;
-  background: transparent;
+  min-width: 0;
+  border: 1.5px solid #bbf7d0;
   border-radius: 8px;
-  font-size: 18px;
+  padding: 5px 8px;
+  font-size: 12px;
+  color: #14532d;
+  background: #ffffff;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.ep__search::placeholder { color: #86efac; }
+
+.ep__search:focus {
+  border-color: #16a34a;
+  box-shadow: 0 0 0 2px rgba(22, 163, 74, 0.12);
+}
+
+.ep__search-clear,
+.ep__close-btn {
+  border: none;
+  background: transparent;
+  color: #4ade80;
   cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, transform 0.15s;
+  font-size: 11px;
+  padding: 3px 5px;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: color 0.12s, background 0.12s;
   line-height: 1;
 }
-.ep__cat-btn:hover { background: #f0fdf4; transform: scale(1.1); }
-.ep__cat-btn--active { background: #dcfce7; }
 
-/* Category label */
-.ep__cat-label {
-  padding: 2px 14px 4px;
-  font-size: 10px;
-  font-weight: 700;
-  color: #9ca3af;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+.ep__search-clear:hover,
+.ep__close-btn:hover {
+  color: #16a34a;
+  background: #dcfce7;
+}
+
+.ep__close-btn {
+  font-size: 12px;
+  padding: 3px 6px;
+}
+
+/* Category tabs */
+.ep__tabs {
+  display: flex;
+  gap: 2px;
+  padding: 5px 8px;
+  background: #f0fdf4;
+  border-bottom: 1px solid #dcfce7;
+  overflow-x: auto;
   flex-shrink: 0;
+  scrollbar-width: none;
+}
+
+.ep__tabs::-webkit-scrollbar { display: none; }
+
+.ep__tab {
+  border: none;
+  background: transparent;
+  font-size: 16px;
+  padding: 4px 6px;
+  border-radius: 8px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.12s, transform 0.1s;
+  line-height: 1;
+}
+
+.ep__tab:hover {
+  background: #dcfce7;
+  transform: scale(1.1);
+}
+
+.ep__tab--active {
+  background: #16a34a;
+  transform: scale(1.05);
+}
+
+/* Body */
+.ep__body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 6px 8px 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #bbf7d0 transparent;
+}
+
+.ep__body::-webkit-scrollbar { width: 4px; }
+.ep__body::-webkit-scrollbar-track { background: transparent; }
+.ep__body::-webkit-scrollbar-thumb {
+  background: #bbf7d0;
+  border-radius: 4px;
+}
+
+/* Section */
+.ep__section { margin-bottom: 10px; }
+
+.ep__section-label {
+  font-size: 9px;
+  font-weight: 700;
+  color: #4ade80;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin: 0 0 5px 2px;
+  padding-top: 4px;
 }
 
 /* Grid */
 .ep__grid {
-  flex: 1;
-  overflow-y: auto;
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   gap: 1px;
-  padding: 4px 8px 8px;
-  scrollbar-width: thin;
-  scrollbar-color: #d1fae5 transparent;
 }
-.ep__grid::-webkit-scrollbar { width: 4px; }
-.ep__grid::-webkit-scrollbar-thumb { background: #d1fae5; border-radius: 4px; }
 
-.ep__emoji {
+/* Emoji button */
+.ep__emoji-btn {
   border: none;
   background: transparent;
-  border-radius: 8px;
-  font-size: 20px;
+  font-size: 18px;
+  padding: 3px;
+  border-radius: 6px;
   cursor: pointer;
+  line-height: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  padding: 0;
-  transition: background 0.1s, transform 0.1s;
-  line-height: 1;
+  transition: background 0.08s, transform 0.08s;
+  aspect-ratio: 1;
+  width: 100%;
 }
-.ep__emoji:hover {
-  background: #f0fdf4;
+
+.ep__emoji-btn:hover {
+  background: #dcfce7;
   transform: scale(1.2);
 }
-.ep__emoji:active { transform: scale(0.95); }
 
-.ep__empty {
-  grid-column: 1 / -1;
-  text-align: center;
-  color: #9ca3af;
-  font-size: 13px;
-  padding: 24px;
+.ep__emoji-btn:active {
+  transform: scale(1.05);
 }
 
 /* Footer */
 .ep__footer {
-  padding: 6px 12px 8px;
-  border-top: 1px solid #f0fdf4;
   flex-shrink: 0;
+  text-align: center;
+  font-size: 9px;
+  color: #86efac;
+  padding: 4px 8px 5px;
+  border-top: 1px solid #f0fdf4;
+  background: #fafffe;
 }
-.ep__footer-tip {
-  font-size: 10px;
-  color: #d1d5db;
+
+/* Mobile */
+@media (max-width: 400px) {
+  .ep {
+    width: calc(100vw - 24px);
+    height: 300px;
+  }
+  .ep__grid { grid-template-columns: repeat(7, 1fr); }
+  .ep__emoji-btn { font-size: 16px; }
 }
