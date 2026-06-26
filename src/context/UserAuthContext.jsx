@@ -867,56 +867,62 @@ export function UserAuthProvider({ children }) {
     return data;
   }, [authFetch, setSessionPreference]);
 
-  const verifyCode = useCallback(async (email, code) => {
-    const e = trim(email || pendingEmail);
-    const c = trim(String(code || ""));
-    if (!e) throw new Error("Email is required.");
-    if (!c) throw new Error("Verification code is required.");
+  // In UserAuthContext.jsx — replace verifyCode only
 
-    const data = await authFetch("/users/verify-code", {
-      method: "POST",
-      body:   JSON.stringify({ email: e, code: c }),
-    });
+const verifyCode = useCallback(async (email, code) => {
+  // Resolve email: argument takes priority, then pendingEmail state,
+  // then pendingRef (set synchronously in login/register before state updates)
+  const e = trim(email)
+    || trim(pendingEmail)
+    || trim(pendingRef.current?.email)
+    || "";
+  const c = trim(String(code || ""));
 
-    // Always use server's counter — single source of truth
-    const { loginCounter: serverCounter } = extractPayload(data);
-    const newCounter = serverCounter ?? (data?.data?.loginCounter ?? data?.loginCounter ?? 0);
+  if (!e) throw new Error("Email is required. Please restart the sign-in flow.");
+  if (!c) throw new Error("Verification code is required.");
 
-    if (requiresLoginVerification) {
-      // Re-verification path: we had a pending social auth or just needed re-verify
-      if (pendingSocialAuth?.data) {
-        saveAuth(pendingSocialAuth.data, { persist: persistSession });
-      } else {
-        saveAuth(data, { persist: persistSession });
-      }
+  const data = await authFetch("/users/verify-code", {
+    method: "POST",
+    body:   JSON.stringify({ email: e, code: c }),
+  });
 
-      setLoginCounter(newCounter);
-      store.setLoginCounter(newCounter);
-      setRequiresLoginVerification(false);
-      setPendingSocialAuth(null);
-      setPendingEmail("");
-      closeModal();
-      triggerCongratulation(
-        data?.data?.isNewUser || data?.isNewUser ? "signup" : "login",
-      );
-      return data;
+  const payload    = extractPayload(data);
+  const newCounter = payload.loginCounter
+    ?? data?.data?.loginCounter
+    ?? data?.loginCounter
+    ?? 0;
+
+  if (requiresLoginVerification) {
+    if (pendingSocialAuth?.data) {
+      saveAuth(pendingSocialAuth.data, { persist: persistSession });
+    } else {
+      saveAuth(data, { persist: persistSession });
     }
-
-    saveAuth(data, { persist: persistSession });
-    setPendingEmail("");
-    closeModal();
-
     setLoginCounter(newCounter);
     store.setLoginCounter(newCounter);
-
+    setRequiresLoginVerification(false);
+    setPendingSocialAuth(null);
+    setPendingEmail("");
+    closeModal();
     triggerCongratulation(
       data?.data?.isNewUser || data?.isNewUser ? "signup" : "login",
     );
     return data;
-  }, [
-    authFetch, closeModal, pendingEmail, pendingSocialAuth,
-    persistSession, requiresLoginVerification, saveAuth, triggerCongratulation,
-  ]);
+  }
+
+  saveAuth(data, { persist: persistSession });
+  setPendingEmail("");
+  setLoginCounter(newCounter);
+  store.setLoginCounter(newCounter);
+  closeModal();
+  triggerCongratulation(
+    data?.data?.isNewUser || data?.isNewUser ? "signup" : "login",
+  );
+  return data;
+}, [
+  authFetch, closeModal, pendingEmail, pendingSocialAuth,
+  persistSession, requiresLoginVerification, saveAuth, triggerCongratulation,
+]);
 
   const resendCode = useCallback(async (email) => {
     const e = trim(email || pendingEmail);

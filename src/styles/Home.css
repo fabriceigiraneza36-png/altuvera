@@ -1008,3 +1008,7 @@
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
+
+.testimonial-compact-trust {
+  gap: clamp(1rem, 3vw, 2rem);
+}

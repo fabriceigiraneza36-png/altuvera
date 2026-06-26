@@ -1,12 +1,25 @@
 // src/pages/Booking/components/ProgressStepper.jsx
 import React from "react";
+import {
+  FiMap, FiUsers, FiStar, FiClipboard, FiMail, FiCheck,
+} from "react-icons/fi";
+
+/* Map step keys → icons */
+const STEP_ICONS = {
+  trip:        FiMap,
+  travelers:   FiUsers,
+  preferences: FiStar,
+  review:      FiClipboard,
+  contact:     FiMail,
+};
 
 const ProgressStepper = ({ steps, currentStep, onStepClick, isMobile }) => (
   <div className="bk-stepper" role="navigation" aria-label="Booking steps">
     {steps.map((step, idx) => {
-      const isDone = idx < currentStep;
+      const isDone   = idx < currentStep;
       const isActive = idx === currentStep;
-      const state = isDone ? "done" : isActive ? "active" : "pending";
+      const state    = isDone ? "done" : isActive ? "active" : "pending";
+      const StepIcon = STEP_ICONS[step.key] || FiMap;
 
       return (
         <React.Fragment key={step.id}>
@@ -18,8 +31,13 @@ const ProgressStepper = ({ steps, currentStep, onStepClick, isMobile }) => (
             title={step.label}
           >
             <div className={`bk-step__bubble bk-step__bubble--${state}`}>
-              {isDone ? "✓" : step.icon}
+              {isDone
+                ? <FiCheck size={16} strokeWidth={2.5} />
+                : <StepIcon size={16} strokeWidth={2} />
+              }
             </div>
+
+            {/* Desktop: always show label */}
             {!isMobile && (
               <div className="bk-step__label">
                 <span className={`bk-step__name bk-step__name--${state}`}>
@@ -28,6 +46,8 @@ const ProgressStepper = ({ steps, currentStep, onStepClick, isMobile }) => (
                 <span className="bk-step__desc">{step.description}</span>
               </div>
             )}
+
+            {/* Mobile: only show active label */}
             {isMobile && isActive && (
               <div className="bk-step__label">
                 <span className={`bk-step__name bk-step__name--${state}`}>
@@ -36,6 +56,7 @@ const ProgressStepper = ({ steps, currentStep, onStepClick, isMobile }) => (
               </div>
             )}
           </button>
+
           {idx < steps.length - 1 && (
             <div
               className={`bk-step-line bk-step-line--${idx < currentStep ? "done" : "pending"}`}

@@ -1,56 +1,282 @@
-// src/pages/Booking.jsx  (final — clean, no motion import errors)
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import PageHeader from "../components/common/PageHeader";
-import AnimatedSection from "../components/common/AnimatedSection";
-import BookingSteps from "./Booking/BookingSteps";
-import BookingContact from "./Booking/BookingContact";
-import GlobalStyles from "./Booking/GlobalStyles";
-import FloatingParticles from "./Booking/components/FloatingParticles";
-import GlassCard from "./Booking/components/GlassCard";
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * BOOKING PAGE v2.0
+ * ═══════════════════════════════════════════════════════════════════════════════
+ *
+ * Changes from v1:
+ *   - ErrorBanner integrated for submit/validation error display
+ *   - Window resize listener uses passive option + cleanup guard
+ *   - Loading state uses CSS animation (no Framer dependency)
+ *   - Responsive breakpoints memoized with useMemo
+ *   - Trust badge animation delay is data-driven
+ *   - All prop types explicitly passed to BookingSteps/BookingContact
+ *   - Submit error persists until dismissed or next successful submit
+ * ═══════════════════════════════════════════════════════════════════════════════
+ */
+
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+import PageHeader         from "../components/common/PageHeader";
+import AnimatedSection    from "../components/common/AnimatedSection";
+import BookingSteps       from "./Booking/BookingSteps";
+import BookingContact     from "./Booking/BookingContact";
+import GlobalStyles       from "./Booking/GlobalStyles";
+import FloatingParticles  from "./Booking/components/FloatingParticles";
+import GlassCard          from "./Booking/components/GlassCard";
 import ConfettiCelebration from "./Booking/components/ConfettiCelebration";
-import ProgressStepper from "./Booking/components/ProgressStepper";
+import ProgressStepper    from "./Booking/components/ProgressStepper";
 import WhatsAppContactBanner from "./Booking/components/WhatsAppContactBanner";
-import SuccessScreen from "./Booking/components/SuccessScreen";
+import SuccessScreen      from "./Booking/components/SuccessScreen";
+
 import { useBookingWizard } from "../hooks/useBookingWizard";
-import { STEPS } from "./Booking/BookingShared";
+import { STEPS }            from "./Booking/BookingShared";
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const HERO_IMAGE =
+  "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1920&q=80";
 
 const TRUST_ITEMS = [
-  { icon: "🛡️", text: "Secure & Verified" },
-  { icon: "🏆", text: "Expert Guidance" },
+  { icon: "🛡️", text: "Secure & Verified"    },
+  { icon: "🏆", text: "Expert Guidance"       },
   { icon: "🎧", text: "24/7 WhatsApp Support" },
 ];
 
 const BG_PATTERN = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23059669' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`;
 
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+/**
+ * Inline error banner — shown above the form when submission fails.
+ * Dismissed by clicking ×, or automatically on next successful submit.
+ */
+const ErrorBanner = ({ error, onDismiss, onRetry, retryCount }) => {
+  if (!error) return null;
+  const canRetry = typeof onRetry === "function" && retryCount < 3;
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        key="booking-error"
+        initial={{ opacity: 0, y: -10, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0,   scale: 1    }}
+        exit={{    opacity: 0, y: -10, scale: 0.98 }}
+        transition={{ duration: 0.2 }}
+        role="alert"
+        aria-live="assertive"
+        style={{
+          background:   "#FEF2F2",
+          border:       "1.5px solid #FECACA",
+          borderRadius: 16,
+          padding:      "16px 18px",
+          marginBottom: 24,
+          display:      "flex",
+          gap:          12,
+          alignItems:   "flex-start",
+        }}
+      >
+        {/* Icon */}
+        <span style={{ fontSize: 22, flexShrink: 0, marginTop: 1 }}>⚠️</span>
+
+        {/* Message */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{
+            margin:     "0 0 8px",
+            fontWeight: 700,
+            color:      "#991B1B",
+            fontSize:   15,
+            lineHeight: 1.4,
+          }}>
+            {error}
+          </p>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 4 }}>
+            {canRetry && (
+              <button
+                type="button"
+                onClick={onRetry}
+                style={{
+                  background:   "#DC2626",
+                  color:        "#fff",
+                  border:       "none",
+                  borderRadius: 8,
+                  padding:      "6px 14px",
+                  fontSize:     13,
+                  fontWeight:   600,
+                  cursor:       "pointer",
+                }}
+              >
+                Try Again
+              </button>
+            )}
+            <a
+              href="https://wa.me/250788000000"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                background:     "#25D366",
+                color:          "#fff",
+                borderRadius:   8,
+                padding:        "6px 14px",
+                fontSize:       13,
+                fontWeight:     600,
+                textDecoration: "none",
+                display:        "inline-flex",
+                alignItems:     "center",
+                gap:            5,
+              }}
+            >
+              💬 Contact on WhatsApp
+            </a>
+          </div>
+        </div>
+
+        {/* Dismiss */}
+        <button
+          type="button"
+          onClick={onDismiss}
+          aria-label="Dismiss error"
+          style={{
+            background: "transparent",
+            border:     "none",
+            color:      "#9CA3AF",
+            fontSize:   20,
+            cursor:     "pointer",
+            padding:    "0 4px",
+            lineHeight: 1,
+            flexShrink: 0,
+          }}
+        >
+          ×
+        </button>
+      </motion.div>
+    </AnimatePresence>
+  );
+};
+
+/**
+ * Spinner shown during initial data load.
+ * Uses CSS keyframe animation — no Framer dependency.
+ */
+const LoadingSpinner = () => (
+  <div style={{ textAlign: "center" }}>
+    <style>{`
+      @keyframes bk-spin {
+        from { transform: rotate(0deg); }
+        to   { transform: rotate(360deg); }
+      }
+    `}</style>
+    <div
+      style={{
+        width:       52,
+        height:      52,
+        borderRadius: "50%",
+        border:      "4px solid #E5E7EB",
+        borderTopColor: "#059669",
+        animation:   "bk-spin 1.1s linear infinite",
+        margin:      "0 auto 16px",
+      }}
+    />
+    <p style={{ color: "#6B7280", fontSize: 15, fontWeight: 500, margin: 0 }}>
+      Loading booking details…
+    </p>
+  </div>
+);
+
+// ── Decorative blob configs ───────────────────────────────────────────────────
+
+const BLOB_1 = {
+  animate:    { scale: [1, 1.08, 1], rotate: [0, 4, 0] },
+  transition: { duration: 18, repeat: Infinity, ease: "easeInOut" },
+  style: {
+    position:    "absolute",
+    top:         -180,
+    right:       -180,
+    width:       450,
+    height:      450,
+    borderRadius: "60% 40% 30% 70% / 60% 30% 70% 40%",
+    background:  "linear-gradient(135deg, rgba(5,150,105,0.06), rgba(16,185,129,0.03))",
+    filter:      "blur(50px)",
+    pointerEvents: "none",
+    zIndex:      0,
+  },
+};
+
+const BLOB_2 = {
+  animate:    { scale: [1, 1.12, 1], rotate: [0, -4, 0] },
+  transition: { duration: 22, repeat: Infinity, ease: "easeInOut", delay: 3 },
+  style: {
+    position:    "absolute",
+    bottom:      -130,
+    left:        -130,
+    width:       380,
+    height:      380,
+    borderRadius: "40% 60% 70% 30% / 40% 50% 60% 50%",
+    background:  "linear-gradient(135deg, rgba(16,185,129,0.05), rgba(52,211,153,0.02))",
+    filter:      "blur(50px)",
+    pointerEvents: "none",
+    zIndex:      0,
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ═══════════════════════════════════════════════════════════════════════════════
+
 const Booking = () => {
   const wizard = useBookingWizard();
+
+  // ── Responsive breakpoints ─────────────────────────────────────────────────
   const [windowWidth, setWindowWidth] = useState(
-    typeof window !== "undefined" ? window.innerWidth : 1200
+    typeof window !== "undefined" ? window.innerWidth : 1200,
   );
+
+  useEffect(() => {
+    let rafId;
+    const onResize = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => setWindowWidth(window.innerWidth));
+    };
+    window.addEventListener("resize", onResize, { passive: true });
+    return () => {
+      cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
 
   const isMobile = windowWidth < 640;
   const isTablet = windowWidth >= 640 && windowWidth < 1024;
 
-  useEffect(() => {
-    const fn = () => setWindowWidth(window.innerWidth);
-    window.addEventListener("resize", fn);
-    return () => window.removeEventListener("resize", fn);
-  }, []);
+  const sectionPadding = useMemo(
+    () => isMobile ? "40px 16px 100px" : isTablet ? "50px 24px 120px" : "80px 24px 140px",
+    [isMobile, isTablet],
+  );
 
-  const sectionPadding = isMobile
-    ? "40px 16px 100px"
-    : isTablet
-    ? "50px 24px 120px"
-    : "80px 24px 140px";
+  const cardPadding = useMemo(
+    () => isMobile ? "28px 20px" : isTablet ? "44px 34px" : "54px 68px",
+    [isMobile, isTablet],
+  );
 
-  const cardPadding = isMobile
-    ? "28px 20px"
-    : isTablet
-    ? "44px 34px"
-    : "54px 68px";
+  // ── Dismiss submit error ───────────────────────────────────────────────────
+  const handleDismissError = useCallback(
+    () => wizard.setSubmitError(null),
+    [wizard],
+  );
 
-  /* ── Loading ── */
+  // ── Retry submit ───────────────────────────────────────────────────────────
+  const handleRetrySubmit = useCallback(
+    () => {
+      wizard.setSubmitError(null);
+      wizard.handleSubmit();
+    },
+    [wizard],
+  );
+
+  // ═════════════════════════════════════════════════════════════════════════════
+  // LOADING STATE
+  // ═════════════════════════════════════════════════════════════════════════════
+
   if (wizard.loadingData) {
     return (
       <>
@@ -58,41 +284,29 @@ const Booking = () => {
         <PageHeader
           title="Book Your Adventure"
           subtitle="Start planning your East African adventure today."
-          backgroundImage="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1920"
+          backgroundImage={HERO_IMAGE}
           breadcrumbs={[{ label: "Booking" }]}
         />
         <section
           style={{
-            padding: "70px 24px",
+            padding:         "70px 24px",
             backgroundColor: "#F0FDF4",
-            minHeight: "60vh",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexDirection: "column",
-            gap: 16,
+            minHeight:       "60vh",
+            display:         "flex",
+            alignItems:      "center",
+            justifyContent:  "center",
           }}
         >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1.1, repeat: Infinity, ease: "linear" }}
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: "50%",
-              border: "4px solid #E5E7EB",
-              borderTopColor: "#059669",
-            }}
-          />
-          <p style={{ color: "#6B7280", fontSize: 15, fontWeight: 500 }}>
-            Loading booking details…
-          </p>
+          <LoadingSpinner />
         </section>
       </>
     );
   }
 
-  /* ── Success ── */
+  // ═════════════════════════════════════════════════════════════════════════════
+  // SUCCESS STATE
+  // ═════════════════════════════════════════════════════════════════════════════
+
   if (wizard.isSubmitted) {
     return (
       <>
@@ -101,24 +315,24 @@ const Booking = () => {
         <PageHeader
           title="Booking Submitted!"
           subtitle="Your adventure awaits!"
-          backgroundImage="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1920"
+          backgroundImage={HERO_IMAGE}
           breadcrumbs={[{ label: "Booking" }]}
         />
         <section
           style={{
-            padding: isMobile ? "30px 16px 75px" : "60px 24px 100px",
+            padding:         isMobile ? "30px 16px 75px" : "60px 24px 100px",
             backgroundColor: "#F0FDF4",
-            minHeight: "70vh",
-            position: "relative",
+            minHeight:       "70vh",
+            position:        "relative",
           }}
         >
           <FloatingParticles />
           <div
             style={{
-              maxWidth: 760,
-              margin: "0 auto",
-              position: "relative",
-              zIndex: 1,
+              maxWidth:  760,
+              margin:    "0 auto",
+              position:  "relative",
+              zIndex:    1,
             }}
           >
             <GlassCard
@@ -137,14 +351,18 @@ const Booking = () => {
     );
   }
 
-  /* ── Main ── */
+  // ═════════════════════════════════════════════════════════════════════════════
+  // MAIN BOOKING FORM
+  // ═════════════════════════════════════════════════════════════════════════════
+
   return (
     <>
       <GlobalStyles />
+
       <PageHeader
         title="Book Your Adventure"
         subtitle="Start planning your East African adventure today."
-        backgroundImage="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1920"
+        backgroundImage={HERO_IMAGE}
         breadcrumbs={[{ label: "Booking" }]}
         height="420px"
       />
@@ -152,68 +370,49 @@ const Booking = () => {
       <section
         className="bk-section"
         style={{
-          padding: sectionPadding,
+          padding:         sectionPadding,
           backgroundColor: "#F0FDF4",
-          minHeight: "100vh",
-          position: "relative",
-          overflow: "hidden",
+          minHeight:       "100vh",
+          position:        "relative",
+          overflow:        "hidden",
         }}
       >
         {/* Background pattern */}
         <div
+          aria-hidden="true"
           style={{
-            position: "absolute",
-            inset: 0,
+            position:        "absolute",
+            inset:           0,
             backgroundImage: BG_PATTERN,
-            pointerEvents: "none",
-            zIndex: 0,
+            pointerEvents:   "none",
+            zIndex:          0,
           }}
         />
+
         <FloatingParticles />
 
         {/* Decorative blobs */}
         <motion.div
-          animate={{ scale: [1, 1.08, 1], rotate: [0, 4, 0] }}
-          transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
-          style={{
-            position: "absolute",
-            top: -180,
-            right: -180,
-            width: 450,
-            height: 450,
-            borderRadius: "60% 40% 30% 70% / 60% 30% 70% 40%",
-            background:
-              "linear-gradient(135deg, rgba(5,150,105,0.06), rgba(16,185,129,0.03))",
-            filter: "blur(50px)",
-            pointerEvents: "none",
-            zIndex: 0,
-          }}
+          aria-hidden="true"
+          animate={BLOB_1.animate}
+          transition={BLOB_1.transition}
+          style={BLOB_1.style}
         />
         <motion.div
-          animate={{ scale: [1, 1.12, 1], rotate: [0, -4, 0] }}
-          transition={{
-            duration: 22,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: 3,
-          }}
-          style={{
-            position: "absolute",
-            bottom: -130,
-            left: -130,
-            width: 380,
-            height: 380,
-            borderRadius: "40% 60% 70% 30% / 40% 50% 60% 50%",
-            background:
-              "linear-gradient(135deg, rgba(16,185,129,0.05), rgba(52,211,153,0.02))",
-            filter: "blur(50px)",
-            pointerEvents: "none",
-            zIndex: 0,
-          }}
+          aria-hidden="true"
+          animate={BLOB_2.animate}
+          transition={BLOB_2.transition}
+          style={BLOB_2.style}
         />
 
+        {/* Content */}
         <div
-          style={{ maxWidth: 1000, margin: "0 auto", position: "relative", zIndex: 1 }}
+          style={{
+            maxWidth: 1000,
+            margin:   "0 auto",
+            position: "relative",
+            zIndex:   1,
+          }}
         >
           {/* WhatsApp Banner */}
           <AnimatedSection animation="fadeInUp">
@@ -235,14 +434,21 @@ const Booking = () => {
             <GlassCard
               glow
               style={{
-                padding: cardPadding,
-                opacity: wizard.isAnimating ? 0 : 1,
-                transform: wizard.isAnimating
-                  ? "translateY(14px)"
-                  : "translateY(0)",
+                padding:    cardPadding,
+                opacity:    wizard.isAnimating ? 0   : 1,
+                transform:  wizard.isAnimating ? "translateY(14px)" : "translateY(0)",
                 transition: "opacity 0.22s ease, transform 0.22s ease",
               }}
             >
+              {/* ── Error Banner ── */}
+              <ErrorBanner
+                error={wizard.submitError}
+                onDismiss={handleDismissError}
+                onRetry={handleRetrySubmit}
+                retryCount={wizard.submitRetryCount || 0}
+              />
+
+              {/* ── Form ── */}
               <form onSubmit={wizard.handleSubmit} noValidate>
                 {wizard.currentStep < 4 ? (
                   <BookingSteps
@@ -293,40 +499,47 @@ const Booking = () => {
                     onSubmit={wizard.handleSubmit}
                     prevStep={wizard.prevStep}
                     isMobile={isMobile}
+                    submitError={wizard.submitError}
                   />
                 )}
               </form>
             </GlassCard>
           </AnimatedSection>
 
-          {/* Trust badges */}
+          {/* Trust Badges */}
           <AnimatedSection animation="fadeInUp" delay={0.25}>
             <div
               style={{
-                display: "flex",
+                display:        "flex",
                 justifyContent: "center",
-                alignItems: "center",
-                gap: isMobile ? 20 : 48,
-                marginTop: isMobile ? 36 : 52,
-                flexWrap: "wrap",
+                alignItems:     "center",
+                gap:            isMobile ? 20 : 48,
+                marginTop:      isMobile ? 36 : 52,
+                flexWrap:       "wrap",
               }}
             >
               {TRUST_ITEMS.map((item, i) => (
                 <motion.div
                   key={item.text}
                   initial={{ opacity: 0, y: 14 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  animate={{ opacity: 1, y: 0  }}
                   transition={{ delay: 0.35 + i * 0.09 }}
                   style={{
-                    display: "flex",
+                    display:    "flex",
                     alignItems: "center",
-                    gap: 8,
-                    color: "#6B7280",
-                    fontSize: isMobile ? 12 : 14,
+                    gap:        8,
+                    color:      "#6B7280",
+                    fontSize:   isMobile ? 12 : 14,
                     fontWeight: 600,
                   }}
                 >
-                  <span style={{ fontSize: 20 }}>{item.icon}</span>
+                  <span
+                    style={{ fontSize: 20 }}
+                    role="img"
+                    aria-label={item.text}
+                  >
+                    {item.icon}
+                  </span>
                   {item.text}
                 </motion.div>
               ))}

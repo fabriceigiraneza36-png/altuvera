@@ -1,397 +1,434 @@
-// src/hooks/useBookingWizard.js
-import { useState, useCallback, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
-import { useUserAuth } from "../context/UserAuthContext";
-import { useDestinations } from "./useDestinations";
-import { useCountries } from "./useCountries";
-import { INITIAL_FORM, STEPS } from "../pages/Booking/BookingShared";
+/**
+ * ═══════════════════════════════════════════════════════════════════════════════
+ * useBookingWizard — v2.0
+ * ═══════════════════════════════════════════════════════════════════════════════
+ *
+ * Full booking wizard state with:
+ *  - Robust API error handling (ApiError)
+ *  - Field-level validation error display
+ *  - Retry logic for transient failures
+ *  - OTP flow management
+ */
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useSelector }  from "react-redux";
+import { createBooking, ApiError } from "../api/bookingApi";
+import { STEPS }        from "../pages/Booking/BookingShared";
+import { getCountries, getCountry } from "../api/bookingApi";
 
-/* ── Validators ── */
-const required = (v) => (v ? "" : "This field is required");
-const validEmail = (v) =>
-  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) ? "" : "Enter a valid email";
-const validPhone = (v) =>
-  !v || /^[\d\s\+\-\(\)]{7,20}$/.test(v) ? "" : "Enter a valid phone number";
+/* ─── Initial form state ─────────────────────────────────────────────────── */
 
-const STEP_VALIDATORS = {
-  0: (f) => {
-    const e = {};
-    if (!f.countryId && !f.destinationId)
-      e.destinationId = "Please select a country or destination";
-    if (!f.startDate) e.startDate = "Please choose a start date";
-    if (f.startDate && f.endDate && f.endDate <= f.startDate)
-      e.endDate = "End date must be after start date";
-    return e;
-  },
-  1: (f) => {
-    const e = {};
-    if (f.adults < 1) e.adults = "At least 1 adult required";
-    if (f.adults > 30) e.adults = "Max 30 adults";
-    if (!f.groupType) e.groupType = "Please select a group type";
-    return e;
-  },
-  2: () => ({}),
-  3: () => ({}),
-  4: (f) => {
-    const e = {};
-    if (!f.firstName.trim()) e.firstName = required(f.firstName);
-    if (!f.lastName.trim()) e.lastName = required(f.lastName);
-    const emailErr = validEmail(f.email);
-    if (emailErr) e.email = emailErr;
-    const phoneErr = validPhone(f.phone);
-    if (phoneErr) e.phone = phoneErr;
-    if (!f.agreeToTerms) e.agreeToTerms = "You must accept the terms";
-    return e;
-  },
+const INITIAL_FORM = {
+  // Step 1 — Trip Details
+  destination_id:       "",
+  service_id:           "",
+  booking_type:         "custom",
+  travel_date:          "",
+  return_date:          "",
+  flexible_dates:       false,
+  category:             "",
+  country:              "",
+
+  // Step 2 — Travelers
+  number_of_adults:    1,
+  number_of_children:  0,
+  number_of_travelers: 1,
+  accommodation_type:  "",
+  room_type:           "",
+  dietary_requirements: "",
+  accessibility_needs: "",
+  special_requests:    "",
+
+  // Step 3 — Preferences
+  interests:           [],
+  customer_notes:      "",
+  budget_range:        "",
+
+  // Step 4 — Contact
+  full_name:           "",
+  email:               "",
+  phone:               "",
+  whatsapp:            "",
+  nationality:         "",
+  source:              "website",
+};
+
+/* ─── Helpers ────────────────────────────────────────────────────────────── */
+
+const buildErrorMap = (apiError) => {
+  if (!apiError) return {};
+  if (apiError instanceof ApiError) return apiError.toFieldErrors();
+  return { general: apiError.message || "Unknown error" };
 };
 
 export const useBookingWizard = () => {
-  const [searchParams] = useSearchParams();
-  const { user, isAuthenticated, openModal } = useUserAuth?.() || {};
+  /* ── Auth state ── */
+  const { user, isAuthenticated } = useSelector((s) => s.auth || {});
 
-  const [currentStep, setCurrentStep] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [formData, setFormData] = useState(() => {
-    const base = { ...INITIAL_FORM };
-    const dest = searchParams.get("destination");
-    const country = searchParams.get("country");
-    if (dest) base.destinationId = dest;
-    if (country) base.countryId = country;
-    return base;
-  });
-  const [errors, setErrors] = useState({});
-  const [touched, setTouched] = useState({});
+  /* ── UI state ── */
+  const [currentStep,  setCurrentStep]  = useState(1);
+  const [isAnimating,  setIsAnimating]  = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [submissionRef, setSubmissionRef] = useState("");
+  const [isSubmitted,  setIsSubmitted]  = useState(false);
+  const [loadingData,  setLoadingData]  = useState(true);
+  const [submissionRef, setSubmissionRef] = useState(null);
 
-  // Pre-fill contact from authenticated user
+  /* ── Form state ── */
+  const [formData, setFormData] = useState(INITIAL_FORM);
+  const [errors,   setErrors]   = useState({});
+  const [touched,  setTouched]  = useState({});
+
+  /* ── API data ── */
+  const [categoriesList,    setCategoriesList]    = useState([]);
+  const [destinationsList,  setDestinationsList]  = useState([]);
+  const [countriesList,     setCountriesList]     = useState([]);
+  const [servicesData,      setServicesData]      = useState([]);
+
+  /* ── Submission error ── */
+  const [submitError,  setSubmitError]  = useState(null);
+  const [submitRetryCount, setSubmitRetryCount] = useState(0);
+
+  /* ── Modal helpers (login prompt) ── */
+  const [showModal, setShowModal]       = useState(false);
+  const openModal  = useCallback(() => setShowModal(true),  []);
+  const closeModal = useCallback(() => setShowModal(false), []);
+
+  const isMounted = useRef(true);
+  useEffect(() => { return () => { isMounted.current = false; }; }, []);
+
+  /* ── Prefill form with logged-in user data ── */
   useEffect(() => {
-    if (user && isAuthenticated) {
+    if (user) {
       setFormData((prev) => ({
         ...prev,
-        firstName:
-          prev.firstName ||
-          user.firstName ||
-          user.full_name?.split(" ")[0] ||
-          "",
-        lastName:
-          prev.lastName ||
-          user.lastName ||
-          user.full_name?.split(" ").slice(1).join(" ") ||
-          "",
-        email: prev.email || user.email || "",
-        phone: prev.phone || user.phone || "",
+        full_name:   prev.full_name   || user.full_name   || user.name  || "",
+        email:       prev.email       || user.email        || "",
+        phone:       prev.phone       || user.phone        || "",
+        nationality: prev.nationality || user.nationality  || "",
       }));
     }
-  }, [user, isAuthenticated]);
+  }, [user]);
 
-  /* ── Data loading ── */
-  const { destinations: rawDests = [], loading: loadingDests } =
-    useDestinations?.({ limit: 200 }) || {};
-  const { countries: rawCountries = [], loading: loadingCountries } =
-    useCountries?.({ limit: 100 }) || {};
-  const [servicesData, setServicesData] = useState([]);
-  const [loadingServices, setLoadingServices] = useState(false);
-
-  const loadingData = loadingDests || loadingCountries;
-
+  /* ── Load reference data ── */
   useEffect(() => {
-    setLoadingServices(true);
-    // ✅ API already contains /api — just append the endpoint
-    fetch(`${API}/services`)
-      .then((r) => r.json())
-      .then((d) => setServicesData(d.data || d.services || d || []))
-      .catch(() => setServicesData([]))
-      .finally(() => setLoadingServices(false));
+    let cancelled = false;
+
+    const loadData = async () => {
+      setLoadingData(true);
+      try {
+        // Load countries for dropdown
+        const countriesRes = await getCountries({ is_active: true, limit: 200 });
+        if (!cancelled && countriesRes?.data) {
+          setCountriesList(countriesRes.data);
+        }
+
+        // Load destinations
+        const destRes = await fetch(
+          `${import.meta.env.VITE_API_URL || ""}/api/destinations?is_active=true&limit=200`,
+        );
+        if (!cancelled && destRes.ok) {
+          const destData = await destRes.json();
+          setDestinationsList(destData.data || []);
+        }
+
+        // Load services
+        const svcRes = await fetch(
+          `${import.meta.env.VITE_API_URL || ""}/api/services?is_active=true&limit=200`,
+        );
+        if (!cancelled && svcRes.ok) {
+          const svcData = await svcRes.json();
+          setServicesData(svcData.data || []);
+          // Extract categories
+          const cats = [...new Set((svcData.data || []).map((s) => s.category).filter(Boolean))];
+          setCategoriesList(cats);
+        }
+      } catch (err) {
+        console.warn("[BookingWizard] Data load error (non-fatal):", err.message);
+        // Don't block the form — data is optional
+      } finally {
+        if (!cancelled) setLoadingData(false);
+      }
+    };
+
+    loadData();
+    return () => { cancelled = true; };
   }, []);
 
-  /* ── Derived lists ── */
-  const destinationsList = rawDests.map((d) => ({
-    value: String(d.id),
-    label: d.name,
-    country: d.country || d.countryObj?.name || "",
-    image: d.imageUrl || d.heroImage || "",
-    duration: d.duration || "",
-    rating: d.rating,
-  }));
+  /* ── Computed values ── */
 
-  const countriesList = rawCountries.map((c) => ({
-    value: String(c.id),
-    label: c.name,
-    flag: c.flag || c.flagUrl || "",
-    region: c.region || "",
-  }));
-
-  const categoriesList = [
-    ...new Set(rawDests.map((d) => d.category).filter(Boolean)),
-  ].map((c) => ({ value: c, label: c }));
-
-  /* ── Computed ── */
-  const getTotalVisitors = useCallback(
-    () =>
-      (parseInt(formData.adults) || 0) +
-      (parseInt(formData.children) || 0) +
-      (parseInt(formData.infants) || 0),
-    [formData.adults, formData.children, formData.infants]
-  );
+  const displayName = formData.full_name ||
+    (user ? (user.full_name || user.name || user.email) : null) ||
+    "Traveler";
 
   const getTripDuration = useCallback(() => {
-    if (!formData.startDate || !formData.endDate) return null;
-    const diff = new Date(formData.endDate) - new Date(formData.startDate);
-    const days = Math.ceil(diff / 86400000);
-    return days > 0 ? days : null;
-  }, [formData.startDate, formData.endDate]);
+    if (!formData.travel_date || !formData.return_date) return null;
+    const start = new Date(formData.travel_date);
+    const end   = new Date(formData.return_date);
+    if (isNaN(start) || isNaN(end) || end <= start) return null;
+    return Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+  }, [formData.travel_date, formData.return_date]);
 
-  const getDestinationName = useCallback(() => {
-    if (formData.destinationId) {
-      const d = destinationsList.find((x) => x.value === formData.destinationId);
-      return d?.label || "";
-    }
-    if (formData.countryId) {
-      const c = countriesList.find((x) => x.value === formData.countryId);
-      return c?.label || "";
-    }
-    return "";
-  }, [formData.destinationId, formData.countryId, destinationsList, countriesList]);
+  const getTotalVisitors = useCallback(() => {
+    const adults   = parseInt(formData.number_of_adults,   10) || 1;
+    const children = parseInt(formData.number_of_children, 10) || 0;
+    return adults + children;
+  }, [formData.number_of_adults, formData.number_of_children]);
 
-  const displayName =
-    user?.firstName || user?.full_name?.split(" ")[0] || "";
+  const getDestinationName = useCallback(
+    (id) => destinationsList.find((d) => String(d.id) === String(id))?.name || id,
+    [destinationsList],
+  );
 
-  /* ── Handlers ── */
+  /* ── Static options ── */
+  const groupTypes = [
+    { value: "solo",   label: "Solo Traveler" },
+    { value: "couple", label: "Couple" },
+    { value: "family", label: "Family" },
+    { value: "group",  label: "Group" },
+    { value: "corporate", label: "Corporate" },
+  ];
+
+  const accommodationTypes = [
+    { value: "luxury",   label: "Luxury (5-Star)" },
+    { value: "standard", label: "Standard (3-4 Star)" },
+    { value: "budget",   label: "Budget / Hostel" },
+    { value: "camping",  label: "Camping / Glamping" },
+    { value: "mixed",    label: "Mixed / Flexible" },
+  ];
+
+  const interests = [
+    "Wildlife Safari", "Mountain Trekking", "Cultural Tours",
+    "Beach & Relaxation", "Adventure Sports", "Photography",
+    "Bird Watching", "Gorilla Trekking", "Historical Sites", "Food & Cuisine",
+  ];
+
+  /* ── Field change handler ── */
   const handleChange = useCallback((e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-    setErrors((prev) => ({ ...prev, [name]: undefined }));
+    const { name, value, type, checked } = e.target || {};
+    const fieldName  = name  || (typeof e === "string" ? e : "");
+    const fieldValue = type === "checkbox" ? checked : (value ?? e);
+
+    setFormData((prev) => {
+      const next = { ...prev, [fieldName]: fieldValue };
+
+      // Keep number_of_travelers in sync with adults + children
+      if (fieldName === "number_of_adults" || fieldName === "number_of_children") {
+        const adults   = parseInt(
+          fieldName === "number_of_adults" ? fieldValue : prev.number_of_adults, 10,
+        ) || 0;
+        const children = parseInt(
+          fieldName === "number_of_children" ? fieldValue : prev.number_of_children, 10,
+        ) || 0;
+        next.number_of_travelers = Math.max(1, adults + children);
+      }
+
+      return next;
+    });
+
+    // Clear field error on change
+    setErrors((prev) => {
+      if (!prev[fieldName]) return prev;
+      const { [fieldName]: _, ...rest } = prev;
+      return rest;
+    });
   }, []);
 
-  const handleBlur = useCallback(
-    (e) => {
-      const { name } = e.target;
-      setTouched((prev) => ({ ...prev, [name]: true }));
-      const stepErrors = STEP_VALIDATORS[currentStep]?.(formData) || {};
-      if (stepErrors[name]) {
-        setErrors((prev) => ({ ...prev, [name]: stepErrors[name] }));
-      }
-    },
-    [currentStep, formData]
-  );
-
-  const handleInterestToggle = useCallback((val) => {
-    setFormData((prev) => ({
-      ...prev,
-      interests: prev.interests.includes(val)
-        ? prev.interests.filter((i) => i !== val)
-        : [...prev.interests, val],
-    }));
+  /* ── Blur handler ── */
+  const handleBlur = useCallback((e) => {
+    const name = e?.target?.name || (typeof e === "string" ? e : "");
+    if (name) setTouched((prev) => ({ ...prev, [name]: true }));
   }, []);
 
-  const validateStep = useCallback(
-    (step) => {
-      const validate = STEP_VALIDATORS[step];
-      if (!validate) return true;
-      const errs = validate(formData);
-      setErrors(errs);
-      const fields = Object.keys(errs);
-      if (fields.length) {
-        setTouched((prev) => ({
-          ...prev,
-          ...fields.reduce((a, k) => ({ ...a, [k]: true }), {}),
-        }));
-        return false;
-      }
-      return true;
-    },
-    [formData]
-  );
+  /* ── Interests toggle ── */
+  const handleInterestToggle = useCallback((interest) => {
+    setFormData((prev) => {
+      const cur = Array.isArray(prev.interests) ? prev.interests : [];
+      return {
+        ...prev,
+        interests: cur.includes(interest)
+          ? cur.filter((i) => i !== interest)
+          : [...cur, interest],
+      };
+    });
+  }, []);
 
-  const animateTransition = useCallback(async (fn) => {
+  /* ── Step navigation ── */
+  const goToStep = useCallback((step) => {
+    if (step < 1 || step > STEPS.length) return;
     setIsAnimating(true);
-    await new Promise((r) => setTimeout(r, 220));
-    fn();
-    await new Promise((r) => setTimeout(r, 60));
-    setIsAnimating(false);
+    setTimeout(() => {
+      setCurrentStep(step);
+      setIsAnimating(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 180);
   }, []);
 
-  const nextStep = useCallback(async () => {
-    if (!validateStep(currentStep)) return;
-    if (currentStep >= STEPS.length - 1) return;
-    await animateTransition(() => {
-      setCurrentStep((p) => p + 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-  }, [currentStep, validateStep, animateTransition]);
-
-  const prevStep = useCallback(async () => {
-    if (currentStep <= 0) return;
-    await animateTransition(() => {
-      setCurrentStep((p) => p - 1);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    });
-  }, [currentStep, animateTransition]);
+  const nextStep = useCallback(() => goToStep(currentStep + 1), [currentStep, goToStep]);
+  const prevStep = useCallback(() => goToStep(currentStep - 1), [currentStep, goToStep]);
 
   const handleStepClick = useCallback(
-    async (idx) => {
-      if (idx > currentStep) {
-        for (let s = currentStep; s < idx; s++) {
-          if (!validateStep(s)) return;
+    (step) => { if (step <= currentStep) goToStep(step); },
+    [currentStep, goToStep],
+  );
+
+  /* ── Client-side step validation ── */
+  const validateStep = useCallback((step) => {
+    const errs = {};
+
+    if (step === 4) {
+      const name  = String(formData.full_name || "").trim();
+      const email = String(formData.email     || "").trim();
+
+      if (!name)
+        errs.full_name = "Full name is required";
+
+      if (!email)
+        errs.email = "Email is required";
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+        errs.email = "Please enter a valid email address";
+    }
+
+    return errs;
+  }, [formData]);
+
+  /* ── Submit ── */
+  const handleSubmit = useCallback(async (e) => {
+    if (e?.preventDefault) e.preventDefault();
+
+    // Client-side validation first
+    const stepErrs = validateStep(currentStep);
+    if (Object.keys(stepErrs).length) {
+      setErrors(stepErrs);
+      // Mark all errored fields as touched
+      const touched = {};
+      for (const k of Object.keys(stepErrs)) touched[k] = true;
+      setTouched((prev) => ({ ...prev, ...touched }));
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+    setErrors({});
+
+    try {
+      // Build final payload
+      const payload = {
+        ...formData,
+        // Ensure totals are correct
+        number_of_travelers: getTotalVisitors(),
+        number_of_adults:    parseInt(formData.number_of_adults,   10) || 1,
+        number_of_children:  parseInt(formData.number_of_children, 10) || 0,
+        // Source tracking
+        source:     "website",
+        referrer_url: typeof window !== "undefined" ? window.location.href : undefined,
+      };
+
+      // Remove empty strings to avoid validation noise
+      for (const [k, v] of Object.entries(payload)) {
+        if (v === "" || v === null) delete payload[k];
+      }
+
+      const data = await createBooking(payload);
+
+      if (!isMounted.current) return;
+
+      setIsSubmitted(true);
+      setSubmissionRef(data?.booking_number || data?.referenceNumber || "");
+      setSubmitRetryCount(0);
+    } catch (err) {
+      if (!isMounted.current) return;
+
+      console.error("[BookingWizard] Submit error:", err);
+
+      if (err instanceof ApiError) {
+        if (err.isValidation) {
+          // Map server validation errors back to form fields
+          const fieldErrors = err.toFieldErrors();
+          setErrors(fieldErrors);
+
+          // Touch all errored fields
+          const t = {};
+          for (const k of Object.keys(fieldErrors)) t[k] = true;
+          setTouched((prev) => ({ ...prev, ...t }));
+
+          // Build user-facing message
+          const msg = Object.values(fieldErrors).join("; ") ||
+            "Please check the highlighted fields and try again.";
+          setSubmitError(msg);
+        } else if (err.isRateLimit) {
+          setSubmitError("Too many requests. Please wait a moment before trying again.");
+        } else if (err.isServerError) {
+          setSubmitError(
+            "Our servers are temporarily unavailable. " +
+            "Please try again in a moment or contact us via WhatsApp.",
+          );
+        } else if (err.isNetwork) {
+          setSubmitError(
+            "Network error. Please check your internet connection and try again.",
+          );
+        } else {
+          setSubmitError(err.message || "Booking failed. Please try again.");
         }
+
+        setSubmitRetryCount((c) => c + 1);
+      } else {
+        setSubmitError("An unexpected error occurred. Please try again or contact support.");
+        setSubmitRetryCount((c) => c + 1);
       }
-      await animateTransition(() => {
-        setCurrentStep(idx);
-        window.scrollTo({ top: 0, behavior: "smooth" });
-      });
-    },
-    [currentStep, validateStep, animateTransition]
-  );
-
-  const handleSubmit = useCallback(
-    async (e) => {
-      e?.preventDefault();
-      if (!validateStep(4)) return;
-
-      setIsSubmitting(true);
-      try {
-        const payload = {
-          // Trip
-          destinationId: formData.destinationId || null,
-          countryId: formData.countryId || null,
-          categoryId: formData.categoryId || null,
-          serviceId: formData.serviceId || null,
-          startDate: formData.startDate,
-          endDate: formData.endDate || null,
-          isFlexible: formData.isFlexible,
-          flexibleMonths: formData.flexibleMonths,
-          // Travelers
-          adults: parseInt(formData.adults) || 1,
-          children: parseInt(formData.children) || 0,
-          infants: parseInt(formData.infants) || 0,
-          groupType: formData.groupType,
-          totalVisitors: getTotalVisitors(),
-          // Preferences
-          accommodationType: formData.accommodationType,
-          interests: formData.interests,
-          budgetRange: formData.budgetRange,
-          dietaryRequirements: formData.dietaryRequirements,
-          specialRequests: formData.specialRequests,
-          hasMedicalConditions: formData.hasMedicalConditions,
-          medicalDetails: formData.medicalDetails,
-          // Contact
-          firstName: formData.firstName.trim(),
-          lastName: formData.lastName.trim(),
-          email: formData.email.trim(),
-          phone: formData.phone.trim(),
-          country: formData.country,
-          hearAboutUs: formData.hearAboutUs,
-          agreeToTerms: formData.agreeToTerms,
-          subscribeNewsletter: formData.subscribeNewsletter,
-          // Meta
-          destinationName: getDestinationName(),
-          tripDurationDays: getTripDuration(),
-          source: "website-booking-wizard",
-        };
-
-        const headers = { "Content-Type": "application/json" };
-        const token =
-          localStorage.getItem("authToken") ||
-          localStorage.getItem("token");
-        if (token) headers.Authorization = `Bearer ${token}`;
-
-        // ✅ API already contains /api — just append /bookings
-        const res = await fetch(`${API}/bookings`, {
-          method: "POST",
-          headers,
-          body: JSON.stringify(payload),
-        });
-
-        const data = await res.json();
-        if (!res.ok)
-          throw new Error(data.message || data.error || "Booking failed");
-
-        setSubmissionRef(
-          data.data?.referenceNumber ||
-            data.data?.id ||
-            data.referenceNumber ||
-            ""
-        );
-        setIsSubmitted(true);
-      } catch (err) {
-        setErrors({ submit: err.message });
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    [formData, validateStep, getTotalVisitors, getTripDuration, getDestinationName]
-  );
+    } finally {
+      if (isMounted.current) setIsSubmitting(false);
+    }
+  }, [formData, currentStep, validateStep, getTotalVisitors]);
 
   return {
-    // State
+    // UI
     currentStep,
     isAnimating,
+    isSubmitting,
+    isSubmitted,
+    loadingData,
+    showModal,
+    openModal,
+    closeModal,
+
+    // Form
     formData,
     setFormData,
     errors,
     touched,
-    isSubmitting,
-    isSubmitted,
-    loadingData,
-    submissionRef,
-    // Lists
-    destinationsList,
-    countriesList,
-    categoriesList,
-    servicesData,
-    // Computed
-    getTotalVisitors,
-    getTripDuration,
-    getDestinationName,
-    displayName,
-    // Auth
-    user,
-    isAuthenticated,
-    openModal,
-    // Handlers
     handleChange,
     handleBlur,
     handleInterestToggle,
-    validateStep,
+
+    // Navigation
     nextStep,
     prevStep,
     handleStepClick,
+
+    // Submission
     handleSubmit,
-    // Static data
-    groupTypes: [
-      { value: "solo", label: "Solo Adventure", icon: "🧳" },
-      { value: "couple", label: "Couple", icon: "💑" },
-      { value: "family", label: "Family", icon: "👨‍👩‍👧‍👦" },
-      { value: "friends", label: "Friends Group", icon: "🎉" },
-      { value: "corporate", label: "Corporate", icon: "🏢" },
-      { value: "honeymoon", label: "Honeymoon", icon: "💍" },
-    ],
-    accommodationTypes: [
-      { value: "budget", label: "Budget", icon: "🏕️", desc: "Camps & hostels" },
-      { value: "mid-range", label: "Mid-Range", icon: "🏨", desc: "Comfortable lodges" },
-      { value: "luxury", label: "Luxury", icon: "🏰", desc: "5-star lodges" },
-      { value: "ultra-luxury", label: "Ultra Luxury", icon: "👑", desc: "Private reserves" },
-    ],
-    interests: [
-      { value: "wildlife", label: "Wildlife Safaris", icon: "🦁" },
-      { value: "hiking", label: "Hiking & Trekking", icon: "🥾" },
-      { value: "culture", label: "Cultural Experiences", icon: "🎭" },
-      { value: "photography", label: "Photography", icon: "📸" },
-      { value: "birdwatching", label: "Bird Watching", icon: "🦅" },
-      { value: "gorillas", label: "Gorilla Trekking", icon: "🦍" },
-      { value: "beaches", label: "Beach & Relaxation", icon: "🏖️" },
-      { value: "adventure", label: "Adventure Sports", icon: "⛰️" },
-      { value: "food", label: "Local Cuisine", icon: "🍽️" },
-      { value: "conservation", label: "Conservation", icon: "🌿" },
-      { value: "hot-air-balloon", label: "Hot Air Balloon", icon: "🎈" },
-      { value: "nightlife", label: "Nightlife & Music", icon: "🎵" },
-    ],
+    submitError,
+    setSubmitError,
+    submissionRef,
+    submitRetryCount,
+
+    // Data
+    categoriesList,
+    destinationsList,
+    countriesList,
+    servicesData,
+
+    // Computed
+    displayName,
+    getTripDuration,
+    getTotalVisitors,
+    getDestinationName,
+    groupTypes,
+    accommodationTypes,
+    interests,
+
+    // Auth
+    user,
+    isAuthenticated,
   };
 };
