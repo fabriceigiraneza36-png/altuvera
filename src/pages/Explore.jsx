@@ -1064,24 +1064,20 @@ function Explore() {
           backgroundColor: W.off,
         }}
       >
-        <div style={{ ...box, maxWidth: 900, textAlign: 'center' }}>
-          <AnimatedSection animation="fadeInUp">
-            <SectionLabel
-              icon={<FiCompass size={13} />}
-              text="Our Story"
-            />
-            <h2
-              style={{
-                fontFamily: "'Playfair Display', Georgia, serif",
-                fontSize: 'clamp(28px,4vw,42px)',
-                fontWeight: 700,
-                color: N[900],
-                lineHeight: 1.25,
-                marginBottom: 12,
-              }}
-            >
-              Where the Wild Heart of Africa Beats Loudest
-            </h2>
+<div style={{ ...box, maxWidth: 900, textAlign: 'center' }}>
+           <AnimatedSection animation="fadeInUp">
+             <h2
+               style={{
+                 fontFamily: "'Playfair Display', Georgia, serif",
+                 fontSize: 'clamp(28px,4vw,42px)',
+                 fontWeight: 700,
+                 color: N[900],
+                 lineHeight: 1.25,
+                 marginBottom: 12,
+               }}
+             >
+               Where the Wild Heart of Africa Beats Loudest
+             </h2>
             <p
               style={{
                 fontSize: 17,
