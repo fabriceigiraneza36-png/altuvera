@@ -22,7 +22,7 @@ import {
 import Hero, { HERO_SLIDES }   from "../components/home/Hero";
 import Button                  from "../components/common/Button";
 import SEO                     from "../components/common/SEO";
-import ReviewSubmitSection     from "../components/home/ReviewSubmitSection";
+import ReviewFAB from "../components/home/ReviewFAB";
 
 import { useApp }           from "../context/AppContext";
 import { useUserAuth }      from "../context/UserAuthContext";
@@ -1542,7 +1542,7 @@ const Home = () => {
           — When logged out: component is not in the DOM at all.
           — No empty space, no layout shift, no placeholder.
           ════════════════════════════════════════════ */}
-      {isAuthenticated && <ReviewSubmitSection />}
+      {isAuthenticated && <ReviewFAB />}
 
     </div>
   );
