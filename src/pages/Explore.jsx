@@ -1252,15 +1252,14 @@ function Explore() {
         </div>
       </section>
 
-      {/* ============ FEATURED EXPERIENCES ============ */}
-      <section style={{ padding: pad }}>
-        <div style={box}>
-          <AnimatedSection animation="fadeInUp">
-            <SectionHeader
-              icon={<FiCompass size={14} />}
-              label="Featured Experiences"
-              title="Unforgettable Adventures Await"
-              subtitle="Hand-picked experiences that showcase the very best of East Africa — from heart-pounding safaris and gorilla encounters to tropical retreats and cultural immersions."
+{/* ============ FEATURED EXPERIENCES ============ */}
+       <section style={{ padding: pad }}>
+         <div style={box}>
+           <AnimatedSection animation="fadeInUp">
+             <SectionHeader
+               title="Unforgettable Adventures Await"
+               subtitle="Hand-picked experiences that showcase the very best of East Africa — from heart-pounding safaris and gorilla encounters to tropical retreats and cultural immersions."
+             />
             />
           </AnimatedSection>
 
@@ -1328,15 +1327,14 @@ function Explore() {
         </div>
       </section>
 
-      {/* ============ TESTIMONIALS ============ */}
-      <section style={{ padding: pad, backgroundColor: G[50] }}>
-        <div style={box}>
-          <AnimatedSection animation="fadeInUp">
-            <SectionHeader
-              icon={<FiStar size={14} />}
-              label="Traveler Stories"
-              title="Voices of Our Community"
-              subtitle="Real stories from real travelers who experienced the magic of East Africa with us — and came back transformed."
+{/* ============ TESTIMONIALS ============ */}
+       <section style={{ padding: pad, backgroundColor: G[50] }}>
+         <div style={box}>
+           <AnimatedSection animation="fadeInUp">
+             <SectionHeader
+               title="Voices of Our Community"
+               subtitle="Real stories from real travelers who experienced the magic of East Africa with us — and came back transformed."
+             />
             />
           </AnimatedSection>
 
@@ -1502,10 +1500,6 @@ function Explore() {
 
         <div style={{ ...box, position: 'relative', zIndex: 1 }}>
           <AnimatedSection animation="scaleIn">
-            <SectionLabelDark
-              icon={<FiCompass size={14} />}
-              text="Begin Your Story"
-            />
             <h2
               style={{
                 fontFamily: "'Playfair Display', Georgia, serif",
