@@ -34,6 +34,7 @@ import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput"
 import SubscriptionForm from "../components/common/SubscriptionForm";
 import ExperienceCard from '../components/common/ExperienceCard';
 import { useCountries } from '../hooks/useCountries';
+import { useFeaturedTestimonials } from '../hooks/useTestimonials';
 
 /* ===================================================================
    DESIGN TOKENS — GREEN & WHITE PALETTE
