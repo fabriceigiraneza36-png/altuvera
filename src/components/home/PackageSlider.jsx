@@ -217,12 +217,11 @@ export default function PackageSlider({ limit = 8 }) {
   return (
     <section className="pkg-slider-section">
       <div className="home-container">
-        <div className="section-header">
-          <span className="testimonial-compact-label">PACKAGE DEALS</span>
-          <h2 className="section-title">
-            Curated <span className="text-gradient">Packages</span>
-          </h2>
-        </div>
+<div className="section-header">
+           <h2 className="section-title">
+             Curated <span className="text-gradient">Packages</span>
+           </h2>
+         </div>
 
         <div
           className="pkg-slider-container"
