@@ -4,7 +4,7 @@ import React, {
 } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
-import { HiOutlineArrowRight, HiOutlineSparkles } from "react-icons/hi2";
+import { HiOutlineArrowRight } from "react-icons/hi2";
 import { HiPlus }                                  from "react-icons/hi";
 import { FaStar, FaRegStar }                        from "react-icons/fa6";
 import {

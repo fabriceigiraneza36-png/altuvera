@@ -3,32 +3,30 @@ import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom';
 import SEO from '../components/common/SEO';
 import {
-  FiArrowRight,
-  FiMapPin,
-  FiCompass,
-  FiCamera,
-  FiClock,
-  FiStar,
-  FiHeart,
-  FiUsers,
-  FiAward,
-  FiTrendingUp,
-  FiGlobe,
-  FiCalendar,
-  FiChevronLeft,
-  FiChevronRight,
-  FiShield,
-  FiPhone,
-  FiMail,
-  FiCheck,
-  FiSun,
-  FiTarget,
-  FiFeather,
-  FiBookOpen,
-  FiArrowUpRight,
-  FiRefreshCw,
-  FiWifiOff
-} from 'react-icons/fi';
+   FiArrowRight,
+   FiMapPin,
+   FiCompass,
+   FiClock,
+   FiStar,
+   FiHeart,
+   FiUsers,
+   FiAward,
+   FiTrendingUp,
+   FiGlobe,
+   FiCalendar,
+   FiChevronLeft,
+   FiChevronRight,
+   FiShield,
+   FiPhone,
+   FiMail,
+   FiCheck,
+   FiTarget,
+   FiFeather,
+   FiBookOpen,
+   FiArrowUpRight,
+   FiRefreshCw,
+   FiWifiOff
+ } from 'react-icons/fi';
 import PageHeader from '../components/common/PageHeader';
 import AnimatedSection from '../components/common/AnimatedSection';
 import Button from '../components/common/Button';
@@ -1117,13 +1115,12 @@ function Explore() {
 {/* ============ GALLERY SHOWCASES ============ */}
        <section style={{ padding: pad }}>
          <div style={box}>
-           <AnimatedSection animation="fadeInUp">
-             <SectionHeader
-               title="Places That Take Your Breath Away"
-               subtitle="Explore our most beloved destinations through stunning photography and vivid storytelling. Each location delivers moments you will remember forever."
-             />
-            />
-          </AnimatedSection>
+<AnimatedSection animation="fadeInUp">
+              <SectionHeader
+                title="Places That Take Your Breath Away"
+                subtitle="Explore our most beloved destinations through stunning photography and vivid storytelling. Each location delivers moments you will remember forever."
+              />
+            </AnimatedSection>
 
           <div
             className="e-gallery-pair"
