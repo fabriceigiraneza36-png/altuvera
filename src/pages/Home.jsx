@@ -879,7 +879,7 @@ const DestinationModal = ({ destination, isOpen, onClose, isWishlisted, onWishli
             </div>
           )}
           <div className="dest-modal-actions">
-            <button className="dest-modal-cta" onClick={() => { onClose(); if (slug) navigate(`/destinations/${slug}`); }}>
+            <button className="dest-modal-cta" onClick={() => { onClose(); if (slug) navigate(`/country/${slug}`); }}>
               <span>Explore Destination</span><HiOutlineArrowRight />
             </button>
           </div>
@@ -1573,7 +1573,7 @@ const Home = () => {
       description: "Rwanda offers one of Africa's most exclusive wildlife experiences. Trek through the misty forests of Volcanoes National Park to meet endangered mountain gorillas, walk above the rainforest canopy in Nyungwe, enjoy Big Five safaris in Akagera, and immerse yourself in Kigali's vibrant culture.",
       bullets: ["World-famous mountain gorilla trekking", "Nyungwe Forest canopy walk & chimpanzee tracking", "Big Five safaris in Akagera National Park", "Luxury eco-lodges with expert local guides"],
       ctaLabel: "Explore Rwanda",
-      link: "/destinations/rwanda",
+      link: "/country/rwanda",
       images: [
         "https://i.pinimg.com/1200x/04/f3/52/04f3527e8135a4ab914b6257147bf044.jpg",
         "https://i.pinimg.com/1200x/47/49/a6/4749a673fd707e5f24b78d530ec65265.jpg",
@@ -1586,7 +1586,7 @@ const Home = () => {
       description: "From the endless plains of the Serengeti to the snow-capped summit of Mount Kilimanjaro, Tanzania delivers bucket-list adventures. Experience the Great Migration, descend into the Ngorongoro Crater, discover abundant wildlife, and unwind on the turquoise beaches of Zanzibar.",
       bullets: ["The Great Wildebeest Migration in Serengeti", "Mount Kilimanjaro climbing expeditions", "Ngorongoro Crater Big Five safaris", "Zanzibar beach escapes & cultural tours"],
       ctaLabel: "Explore Tanzania",
-      link: "/destinations/tanzania",
+      link: "/country/tanzania",
       images: [
         "https://i.pinimg.com/736x/7a/22/e2/7a22e2fbb7beb766a834c4380853cd39.jpg",
         "https://i.pinimg.com/1200x/83/18/87/8318877539f07b4befe950cc66c78750.jpg",
@@ -1599,7 +1599,7 @@ const Home = () => {
       description: "Kenya combines iconic wildlife encounters with spectacular landscapes and pristine Indian Ocean beaches. Witness the Great Migration in the Maasai Mara, photograph elephants beneath Mount Kilimanjaro in Amboseli, soar over the savannah in a hot-air balloon, or relax along the white sands of Diani Beach.",
       bullets: ["Maasai Mara Great Migration safaris", "Amboseli elephant encounters with Kilimanjaro views", "Sunrise hot-air balloon adventures", "Diani Beach & Swahili coastal experiences"],
       ctaLabel: "Explore Kenya",
-      link: "/destinations/kenya",
+      link: "/country/kenya",
       images: [
         "https://i.pinimg.com/736x/1f/fb/71/1ffb71af6d57f558303acce6ae0fc8af.jpg",
         "https://i.pinimg.com/736x/7e/9a/00/7e9a0089e1c1f9793fcb60ba776fb790.jpg",
