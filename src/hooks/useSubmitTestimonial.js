@@ -1,221 +1,300 @@
 /**
- * ═══════════════════════════════════════════════════════════════════════════════
- * useSubmitTestimonial v2.3
- * ═══════════════════════════════════════════════════════════════════════════════
- *
- * Critical fix: /api/api/testimonials/submit double-prefix bug.
- *
- * Root cause:
- *   VITE_API_URL = "https://backend-jd8f.onrender.com"  (no /api suffix)
- *   But some projects set it to "https://backend-jd8f.onrender.com/api"
- *   In that case: API_BASE + "/api/testimonials/submit"
- *               = "https://…/api" + "/api/testimonials/submit"
- *               = "https://…/api/api/testimonials/submit"  ← 404!
- *
- * Fix: Strip any trailing /api from API_BASE before constructing paths,
- *      then always use the full path including /api.
+ * ═══════════════════════════════════════════════════════════════════════════
+ * useSubmitTestimonial v3.0
+ * ═══════════════════════════════════════════════════════════════════════════
+ * - Reads auth token using the EXACT same keys as UserAuthContext (KEYS.TOKEN)
+ * - Guaranteed string | null error state — never [object Object]
+ * - Correct API_BASE normalisation (no double /api prefix)
+ * - 20s timeout with AbortController
+ * - Full dev logging
+ * ═══════════════════════════════════════════════════════════════════════════
  */
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef } from "react";
 
-// ── Normalise base URL — strip trailing /api and trailing slash ───────────────
+// ── Mirror the exact storage keys used by UserAuthContext ─────────────────
+// UserAuthContext uses: localStorage.setItem("altuvera_auth_token", tok)
+const TOKEN_KEYS = [
+  "altuvera_auth_token",   // primary — matches UserAuthContext KEYS.TOKEN
+  "altuvera_refresh_token",// skip — but keep list for fallback
+  "token",
+  "authToken",
+  "auth_token",
+  "accessToken",
+  "access_token",
+  "jwt",
+];
+
+// ── Normalise base URL — strip trailing slash AND trailing /api ───────────
 const rawBase = (
-  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_URL  ||
   import.meta.env.VITE_BACKEND_URL ||
-  ''
-).replace(/\/$/, '')               // remove trailing slash
+  "https://backend-jd8f.onrender.com"
+).replace(/\/+$/, "");
 
-// If the base already ends with /api, strip it so we always add it ourselves
-const API_BASE = rawBase.endsWith('/api')
-  ? rawBase.slice(0, -4)           // remove the "/api" suffix
-  : rawBase
+// If someone set VITE_API_URL="https://…/api" strip the /api suffix
+// so we always construct paths ourselves
+const API_BASE = rawBase.endsWith("/api")
+  ? rawBase.slice(0, -4)
+  : rawBase;
 
-const IS_DEV = import.meta.env.DEV
+// Full endpoint — always /api/testimonials/submit
+const SUBMIT_ENDPOINT = `${API_BASE}/api/testimonials/submit`;
 
-/* ─── Always returns a plain string ─────────────────────────────────────── */
+const IS_DEV = import.meta.env.DEV;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════
+
+/** Always returns a plain string — never throws, never returns an object */
 const toStr = (val) => {
-  if (val === null || val === undefined) return ''
-  if (typeof val === 'string') return val
-  if (val instanceof Error)   return val.message || 'An error occurred.'
-  if (typeof val === 'object') {
-    if (typeof val.error   === 'string' && val.error)   return val.error
-    if (typeof val.message === 'string' && val.message) return val.message
-    if (Array.isArray(val.errors))  return val.errors.map(e => e.msg || e.message || String(e)).filter(Boolean).join('. ')
-    if (Array.isArray(val.details)) return val.details.map(d => d.message || d.msg || String(d)).filter(Boolean).join('. ')
-    try { return JSON.stringify(val) } catch { return 'An error occurred.' }
+  if (val === null || val === undefined) return "";
+  if (typeof val === "string")           return val;
+  if (val instanceof Error)              return val.message || "An error occurred.";
+  if (typeof val === "object") {
+    if (typeof val.error   === "string" && val.error)   return val.error;
+    if (typeof val.message === "string" && val.message) return val.message;
+    if (Array.isArray(val.errors))
+      return val.errors
+        .map((e) => e.msg || e.message || String(e))
+        .filter(Boolean)
+        .join(". ");
+    if (Array.isArray(val.details))
+      return val.details
+        .map((d) => d.message || d.msg || String(d))
+        .filter(Boolean)
+        .join(". ");
+    try { return JSON.stringify(val); } catch { return "An error occurred."; }
   }
-  return String(val)
-}
+  return String(val);
+};
 
-/* ─── Parse server error body ────────────────────────────────────────────── */
-const parseServerError = (body, status) => {
-  if (!body) return `Request failed (${status}). Please try again.`
-  const msg = toStr(body)
-  if (msg.startsWith('{')) return `Server error (${status}). Please try again.`
-  return msg || `Request failed (${status}). Please try again.`
-}
-
-/* ─── Find auth token from any common storage key ────────────────────────── */
+/** Read token — checks localStorage then sessionStorage for each key */
 const getAuthToken = () => {
-  const keys = [
-    'token', 'authToken', 'auth_token',
-    'accessToken', 'access_token',
-    'userToken', 'user_token',
-    'jwt', 'JWT',
-  ]
-  for (const key of keys) {
-    const val = localStorage.getItem(key) || sessionStorage.getItem(key)
-    if (val && val !== 'null' && val !== 'undefined') return val
+  for (const key of TOKEN_KEYS) {
+    // Skip non-token keys
+    if (key === "altuvera_refresh_token") continue;
+    try {
+      const ls = localStorage.getItem(key);
+      if (ls && ls !== "null" && ls !== "undefined") return ls;
+      const ss = sessionStorage.getItem(key);
+      if (ss && ss !== "null" && ss !== "undefined") return ss;
+    } catch { /* storage unavailable */ }
   }
-  return null
-}
+  return null;
+};
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   HOOK
-═══════════════════════════════════════════════════════════════════════════ */
+/** Parse error from a failed response body */
+const parseServerError = (body, status) => {
+  if (!body) return `Request failed (${status}). Please try again.`;
+  const msg = toStr(body);
+  // Avoid surfacing raw JSON strings to users
+  if (msg.startsWith("{") || msg.startsWith("["))
+    return `Server error (${status}). Please try again.`;
+  return msg || `Request failed (${status}). Please try again.`;
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// HOOK
+// ═══════════════════════════════════════════════════════════════════════════
 
 export const useSubmitTestimonial = () => {
-  const [submitting, setSubmitting] = useState(false)
-  const [submitted,  setSubmitted]  = useState(false)
-  const [error,      setError]      = useState(null)   // ALWAYS string | null
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted,  setSubmitted]  = useState(false);
+  const [error,      setError]      = useState(null); // string | null ONLY
 
-  const abortRef = useRef(null)
+  const abortRef = useRef(null);
 
-  /* ── reset ───────────────────────────────────────────────────────────── */
-  const reset = useCallback(() => {
-    if (abortRef.current) {
-      abortRef.current.abort()
-      abortRef.current = null
-    }
-    setSubmitting(false)
-    setSubmitted(false)
-    setError(null)
-  }, [])
-
-  /* ── setErrorSafe ────────────────────────────────────────────────────── */
+  // ── setErrorSafe — guarantees string ─────────────────────────────────────
   const setErrorSafe = useCallback((val) => {
-    const msg = toStr(val)
-    setError(msg || 'An unexpected error occurred. Please try again.')
-  }, [])
+    const msg = toStr(val);
+    setError(msg || "An unexpected error occurred. Please try again.");
+  }, []);
 
-  /* ── submit ──────────────────────────────────────────────────────────── */
+  // ── reset ─────────────────────────────────────────────────────────────────
+  const reset = useCallback(() => {
+    try {
+      if (abortRef.current) {
+        abortRef.current.abort();
+        abortRef.current = null;
+      }
+    } catch { /* ignore */ }
+    setSubmitting(false);
+    setSubmitted(false);
+    setError(null);
+  }, []);
+
+  // ── submit ────────────────────────────────────────────────────────────────
   const submit = useCallback(async (formData = {}) => {
-    if (abortRef.current) abortRef.current.abort()
-    const controller = new AbortController()
-    abortRef.current = controller
+    // Cancel any in-flight request
+    try {
+      if (abortRef.current) abortRef.current.abort();
+    } catch { /* ignore */ }
 
-    setSubmitting(true)
-    setError(null)
+    const controller  = new AbortController();
+    abortRef.current  = controller;
 
-    // ── Payload ────────────────────────────────────────────────────────────
-    const text     = String(formData.testimonial_text || formData.review || '').trim()
-    const rating   = Math.min(5, Math.max(1, parseInt(formData.rating, 10) || 5))
-    const trip     = String(formData.trip     || '').trim()
-    const location = String(formData.location || '').trim()
+    setSubmitting(true);
+    setSubmitted(false);
+    setError(null);
 
-    const payload = { testimonial_text: text, rating }
-    if (trip)     payload.trip     = trip
-    if (location) payload.location = location
+    // ── Build payload ───────────────────────────────────────────────────────
+    const text     = String(formData.testimonial_text || formData.review || "").trim();
+    const rating   = Math.min(5, Math.max(1, parseInt(String(formData.rating || "5"), 10) || 5));
+    const trip     = String(formData.trip     || "").trim();
+    const location = String(formData.location || "").trim();
 
-    // ── Auth header ────────────────────────────────────────────────────────
-    const token   = getAuthToken()
-    const headers = { 'Content-Type': 'application/json' }
-    if (token) headers['Authorization'] = `Bearer ${token}`
-
-    // ── Endpoint — always /api/testimonials/submit ─────────────────────────
-    // API_BASE is guaranteed to NOT end with /api (normalised above)
-    const endpoint = `${API_BASE}/api/testimonials/submit`
-
-    if (IS_DEV) {
-      console.group(`%c[useSubmitTestimonial] POST ${endpoint}`, 'color:#16a34a;font-weight:bold')
-      console.log('API_BASE :', API_BASE)
-      console.log('endpoint :', endpoint)
-      console.log('payload  :', payload)
-      console.log('token    :', token ? `${token.slice(0, 20)}…` : 'NONE ⚠️')
-      console.groupEnd()
+    if (!text) {
+      setErrorSafe("Review text is required.");
+      setSubmitting(false);
+      return;
     }
 
-    const timeoutId = setTimeout(() => controller.abort(), 20_000)
+    const payload = { testimonial_text: text, rating };
+    if (trip)     payload.trip     = trip;
+    if (location) payload.location = location;
+
+    // ── Auth header ─────────────────────────────────────────────────────────
+    const token   = getAuthToken();
+    const headers = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    // ── Dev logging ─────────────────────────────────────────────────────────
+    if (IS_DEV) {
+      console.group(
+        "%c[useSubmitTestimonial] POST " + SUBMIT_ENDPOINT,
+        "color:#16a34a;font-weight:bold",
+      );
+      console.log("API_BASE :", API_BASE);
+      console.log("endpoint :", SUBMIT_ENDPOINT);
+      console.log("payload  :", payload);
+      console.log(
+        "token    :",
+        token ? `${token.slice(0, 25)}…` : "NONE ⚠️  (user may not be logged in)",
+      );
+      console.groupEnd();
+    }
+
+    // ── 20-second timeout ───────────────────────────────────────────────────
+    const timeoutId = setTimeout(() => {
+      try { controller.abort(); } catch { /* ignore */ }
+    }, 20_000);
 
     try {
-      const response = await fetch(endpoint, {
-        method:  'POST',
+      const response = await fetch(SUBMIT_ENDPOINT, {
+        method:  "POST",
         headers,
         body:    JSON.stringify(payload),
         signal:  controller.signal,
-      })
+      });
 
-      clearTimeout(timeoutId)
+      clearTimeout(timeoutId);
 
-      // ── Parse body ────────────────────────────────────────────────────────
-      const contentType = response.headers.get('content-type') || ''
-      let body = null
+      // ── Parse response body ───────────────────────────────────────────────
+      const contentType = response.headers.get("content-type") || "";
+      let body = null;
 
-      if (contentType.includes('application/json')) {
-        try   { body = await response.json() }
-        catch { body = null }
-      } else {
-        try   { body = { message: await response.text() } }
-        catch { body = null }
-      }
+      try {
+        if (contentType.includes("application/json")) {
+          body = await response.json();
+        } else {
+          const raw = await response.text();
+          body = raw ? { message: raw } : null;
+        }
+      } catch { body = null; }
 
       if (IS_DEV) {
-        console.log('[useSubmitTestimonial] status:', response.status, '| body:', body)
+        console.log(
+          "[useSubmitTestimonial] status:", response.status,
+          "| body:", body,
+        );
       }
 
-      // ── Handle errors ──────────────────────────────────────────────────────
+      // ── Error responses ───────────────────────────────────────────────────
       if (!response.ok) {
-        let msg
+        let msg;
 
-        if (response.status === 404) {
-          msg = IS_DEV
-            ? `404: Route not found.\nEndpoint tried: ${endpoint}\n` +
-              `Check that VITE_API_URL="${rawBase}" is correct and does NOT include /api.`
-            : 'The review service is temporarily unavailable. Please try again or contact us via WhatsApp.'
-        } else if (response.status === 401) {
-          msg = 'Please log in to submit a review.'
-        } else if (response.status === 403) {
-          msg = 'You do not have permission to submit reviews.'
-        } else if (response.status === 429) {
-          const base = toStr(body) || 'You have already submitted a review recently.'
-          const wait = body?.retryAfter
-          msg = wait
-            ? `${base} Please try again in ${Math.ceil(Number(wait) / 3600)} hour(s).`
-            : base
-        } else {
-          msg = parseServerError(body, response.status)
+        switch (response.status) {
+          case 400:
+            msg = toStr(body) || "Invalid submission. Please check your input.";
+            break;
+
+          case 401:
+            msg = "Please log in to submit a review.";
+            break;
+
+          case 403:
+            msg = "You do not have permission to submit reviews.";
+            break;
+
+          case 404:
+            msg = IS_DEV
+              ? `404 — Route not found.\n` +
+                `Endpoint: ${SUBMIT_ENDPOINT}\n` +
+                `Check VITE_API_URL="${rawBase}" is correct and the ` +
+                `/api/testimonials/submit route is registered in your Express app.`
+              : "The review service is temporarily unavailable. Please try again later.";
+            break;
+
+          case 429: {
+            const base    = toStr(body) || "You have already submitted a review recently.";
+            const waitSec = body?.retryAfter ? Number(body.retryAfter) : null;
+            msg = waitSec
+              ? `${base} Please try again in ${Math.ceil(waitSec / 3600)} hour(s).`
+              : base;
+            break;
+          }
+
+          case 500:
+          case 502:
+          case 503:
+            msg = "The server encountered an error. Please try again in a moment.";
+            break;
+
+          default:
+            msg = parseServerError(body, response.status);
         }
 
-        setErrorSafe(msg)
-        setSubmitting(false)
-        return
+        setErrorSafe(msg);
+        setSubmitting(false);
+        return;
       }
 
-      // ── Success ────────────────────────────────────────────────────────────
-      setSubmitted(true)
-      setError(null)
+      // ── Success ───────────────────────────────────────────────────────────
+      if (IS_DEV) {
+        console.log("[useSubmitTestimonial] ✅ Submitted successfully:", body);
+      }
+      setSubmitted(true);
+      setError(null);
 
     } catch (err) {
-      clearTimeout(timeoutId)
+      clearTimeout(timeoutId);
 
-      if (IS_DEV) console.error('[useSubmitTestimonial] caught:', err)
+      if (IS_DEV) console.error("[useSubmitTestimonial] caught:", err);
 
-      if (err.name === 'AbortError') {
-        setErrorSafe('Request timed out. Please check your connection and try again.')
+      if (err.name === "AbortError") {
+        setErrorSafe(
+          "Request timed out. Please check your connection and try again.",
+        );
+      } else if (err.message?.toLowerCase().includes("failed to fetch")) {
+        setErrorSafe(
+          "Unable to reach the server. Please check your internet connection.",
+        );
       } else {
-        setErrorSafe(err.message || 'Failed to submit. Please try again.')
+        setErrorSafe(err.message || "Failed to submit. Please try again.");
       }
     } finally {
-      setSubmitting(false)
-      abortRef.current = null
+      setSubmitting(false);
+      abortRef.current = null;
     }
-  }, [setErrorSafe])
+  }, [setErrorSafe]);
 
   return {
     submit,
     submitting,
     submitted,
-    error,    // guaranteed: string | null
+    error,  // guaranteed: string | null — safe to render directly in JSX
     reset,
-  }
-}
+  };
+};
