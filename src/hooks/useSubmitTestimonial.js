@@ -1,67 +1,66 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════
- * useSubmitTestimonial v2.1
+ * useSubmitTestimonial v2.2
  * ═══════════════════════════════════════════════════════════════════════════════
  *
- * Fix: error state is ALWAYS a string | null — never an Error object.
- *      Previously setError(err) was called with an Error instance, which
- *      React renders as "[object Object]".
- *
- * Other fixes:
- *  - extractErrorMessage() normalises any thrown value to a string
- *  - Timeout uses AbortController (not setTimeout-only)
- *  - 401 detected before generic error path
- *  - reset() also aborts any in-flight request
- *  - DEV logging so you can see exactly what the server returned
+ * Fixes:
+ *  - error state is ALWAYS string | null  (never Error object → no [object Object])
+ *  - Full debug logging so you can see exact URL, status, body in DevTools
+ *  - 404 surfaces as "Route not found" + debug info in development
+ *  - Token lookup covers all common storage key names
+ *  - AbortController + 20s timeout
+ *  - parseServerError() walks every known server error shape
  */
 
 import { useState, useCallback, useRef } from 'react'
 
-const API_BASE = import.meta.env.VITE_API_URL || ''
+const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
 const IS_DEV   = import.meta.env.DEV
 
-// ── Always returns a plain string, never an object ───────────────────────────
-const extractErrorMessage = (err) => {
-  if (!err) return 'An unexpected error occurred.'
-
-  // Plain string
-  if (typeof err === 'string') return err
-
-  // AbortError (timeout)
-  if (err.name === 'AbortError') return 'Request timed out. Please check your connection and try again.'
-
-  // Error object
-  if (err instanceof Error) return err.message || 'An unexpected error occurred.'
-
-  // Anything else — coerce safely
-  try { return String(err) } catch { return 'An unexpected error occurred.' }
+/* ─── Always returns a plain string ─────────────────────────────────────── */
+const toStr = (val) => {
+  if (val === null || val === undefined) return ''
+  if (typeof val === 'string') return val
+  if (val instanceof Error)   return val.message || 'An error occurred.'
+  if (typeof val === 'object') {
+    // Common server shapes
+    if (typeof val.error   === 'string' && val.error)   return val.error
+    if (typeof val.message === 'string' && val.message) return val.message
+    // Validation arrays
+    if (Array.isArray(val.errors))  return val.errors.map(e => e.msg || e.message || String(e)).filter(Boolean).join('. ')
+    if (Array.isArray(val.details)) return val.details.map(d => d.message || d.msg || String(d)).filter(Boolean).join('. ')
+    try { return JSON.stringify(val) } catch { return 'An error occurred.' }
+  }
+  return String(val)
 }
 
-// ── Parse the server JSON body into a user-facing string ─────────────────────
+/* ─── Parse server response body into user-facing string ─────────────────── */
 const parseServerError = (body, status) => {
-  if (!body || typeof body !== 'object') {
-    return `Server error (${status}). Please try again.`
-  }
-
-  // Most common server shapes:
-  //   { error: "string" }
-  //   { message: "string" }
-  //   { errors: [{msg:"..."}, ...] }
-  //   { details: [{message:"..."}, ...] }
-
-  if (typeof body.error === 'string'   && body.error)   return body.error
-  if (typeof body.message === 'string' && body.message) return body.message
-
-  if (Array.isArray(body.errors) && body.errors.length) {
-    return body.errors.map(e => e.msg || e.message || String(e)).filter(Boolean).join('. ')
-  }
-
-  if (Array.isArray(body.details) && body.details.length) {
-    return body.details.map(d => d.message || d.msg || String(d)).filter(Boolean).join('. ')
-  }
-
-  return `Request failed (${status}). Please try again.`
+  if (!body) return `Request failed (${status}). Please try again.`
+  const msg = toStr(body)
+  // If toStr returned the raw JSON (object coercion), make it friendlier
+  if (msg.startsWith('{')) return `Server error (${status}). Please try again.`
+  return msg || `Request failed (${status}). Please try again.`
 }
+
+/* ─── Find auth token from any common storage location ───────────────────── */
+const getAuthToken = () => {
+  const keys = [
+    'token', 'authToken', 'auth_token',
+    'accessToken', 'access_token',
+    'userToken', 'user_token',
+    'jwt', 'JWT',
+  ]
+  for (const key of keys) {
+    const val = localStorage.getItem(key) || sessionStorage.getItem(key)
+    if (val && val !== 'null' && val !== 'undefined') return val
+  }
+  return null
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HOOK
+═══════════════════════════════════════════════════════════════════════════ */
 
 export const useSubmitTestimonial = () => {
   const [submitting, setSubmitting] = useState(false)
@@ -70,7 +69,7 @@ export const useSubmitTestimonial = () => {
 
   const abortRef = useRef(null)
 
-  // ── reset — clears all state ───────────────────────────────────────────────
+  /* ── reset ──────────────────────────────────────────────────────────────── */
   const reset = useCallback(() => {
     if (abortRef.current) {
       abortRef.current.abort()
@@ -81,51 +80,54 @@ export const useSubmitTestimonial = () => {
     setError(null)
   }, [])
 
-  // ── submit ─────────────────────────────────────────────────────────────────
+  /* ── setErrorSafe — guarantees string ────────────────────────────────────── */
+  const setErrorSafe = useCallback((val) => {
+    const msg = toStr(val)
+    setError(msg || 'An unexpected error occurred. Please try again.')
+  }, [])
+
+  /* ── submit ─────────────────────────────────────────────────────────────── */
   const submit = useCallback(async (formData = {}) => {
     // Cancel any previous in-flight request
-    if (abortRef.current) {
-      abortRef.current.abort()
-    }
+    if (abortRef.current) abortRef.current.abort()
     const controller = new AbortController()
     abortRef.current = controller
 
     setSubmitting(true)
     setError(null)
 
-    // ── Auth token ───────────────────────────────────────────────────────────
-    const token =
-      localStorage.getItem('token')     ||
-      localStorage.getItem('authToken') ||
-      sessionStorage.getItem('token')   ||
-      null
-
-    const headers = { 'Content-Type': 'application/json' }
-    if (token) headers['Authorization'] = `Bearer ${token}`
-
-    // ── Payload — always plain strings/numbers, never undefined ─────────────
-    const payload = {
-      testimonial_text: String(formData.testimonial_text || formData.review || '').trim(),
-      rating:           Math.min(5, Math.max(1, parseInt(formData.rating, 10) || 5)),
-    }
-
+    // ── Build payload ──────────────────────────────────────────────────────
+    const text     = String(formData.testimonial_text || formData.review || '').trim()
+    const rating   = Math.min(5, Math.max(1, parseInt(formData.rating, 10) || 5))
     const trip     = String(formData.trip     || '').trim()
     const location = String(formData.location || '').trim()
+
+    const payload = { testimonial_text: text, rating }
     if (trip)     payload.trip     = trip
     if (location) payload.location = location
 
+    // ── Build headers ──────────────────────────────────────────────────────
+    const token   = getAuthToken()
+    const headers = { 'Content-Type': 'application/json' }
+    if (token) headers['Authorization'] = `Bearer ${token}`
+
+    const endpoint = `${API_BASE}/api/testimonials/submit`
+
+    // ── DevTools logging ───────────────────────────────────────────────────
     if (IS_DEV) {
-      console.group('[useSubmitTestimonial] submit()')
-      console.log('endpoint:', `${API_BASE}/api/testimonials/submit`)
-      console.log('payload:', payload)
-      console.log('token present:', !!token)
+      console.group(`%c[useSubmitTestimonial] POST ${endpoint}`, 'color:#16a34a;font-weight:bold')
+      console.log('payload  :', payload)
+      console.log('token    :', token ? `${token.slice(0, 20)}…` : 'NONE ⚠️')
+      console.log('headers  :', headers)
     }
 
-    // ── Timeout: 20 seconds ──────────────────────────────────────────────────
-    const timeoutId = setTimeout(() => controller.abort(), 20_000)
+    // ── 20-second timeout ──────────────────────────────────────────────────
+    const timeoutId = setTimeout(() => {
+      controller.abort()
+    }, 20_000)
 
     try {
-      const response = await fetch(`${API_BASE}/api/testimonials/submit`, {
+      const response = await fetch(endpoint, {
         method:  'POST',
         headers,
         body:    JSON.stringify(payload),
@@ -134,58 +136,53 @@ export const useSubmitTestimonial = () => {
 
       clearTimeout(timeoutId)
 
-      // ── Parse body safely ────────────────────────────────────────────────
-      let body = null
+      // ── Parse body ────────────────────────────────────────────────────────
       const contentType = response.headers.get('content-type') || ''
+      let body = null
 
       if (contentType.includes('application/json')) {
-        try { body = await response.json() }
+        try   { body = await response.json() }
         catch { body = null }
       } else {
-        try { body = { message: await response.text() } }
+        try   { body = { message: await response.text() } }
         catch { body = null }
       }
 
       if (IS_DEV) {
-        console.log('response status:', response.status)
-        console.log('response body:', body)
+        console.log('status   :', response.status, response.statusText)
+        console.log('body     :', body)
         console.groupEnd()
       }
 
-      // ── Handle non-OK responses ──────────────────────────────────────────
+      // ── Handle errors by status ──────────────────────────────────────────
       if (!response.ok) {
         let msg
 
-        switch (response.status) {
-          case 401:
-            msg = 'Please log in to submit a review.'
-            break
-          case 403:
-            msg = 'You do not have permission to submit reviews.'
-            break
-          case 429: {
-            // Prefer server message for rate-limit (it's descriptive)
-            const base = body?.error || body?.message || 'You have already submitted a review recently.'
-            const wait = body?.retryAfter
-            msg = wait
-              ? `${base} Please try again in ${Math.ceil(wait / 3600)} hour(s).`
-              : base
-            break
-          }
-          case 400:
-            msg = parseServerError(body, response.status)
-            break
-          default:
-            msg = parseServerError(body, response.status)
+        if (response.status === 404) {
+          // 404 almost always means route not found — give actionable message
+          msg = IS_DEV
+            ? `404: Route not found. Check that POST ${endpoint} is registered in your router BEFORE any /:id wildcard.`
+            : 'The review service is temporarily unavailable. Please try again or contact us via WhatsApp.'
+        } else if (response.status === 401) {
+          msg = 'Please log in to submit a review.'
+        } else if (response.status === 403) {
+          msg = 'You do not have permission to submit reviews.'
+        } else if (response.status === 429) {
+          const base = toStr(body) || 'You have already submitted a review recently.'
+          const wait = body?.retryAfter
+          msg = wait
+            ? `${base} Please try again in ${Math.ceil(Number(wait) / 3600)} hour(s).`
+            : base
+        } else {
+          msg = parseServerError(body, response.status)
         }
 
-        // Guarantee msg is a plain string
-        setError(typeof msg === 'string' ? msg : 'Submission failed. Please try again.')
+        setErrorSafe(msg)
         setSubmitting(false)
         return
       }
 
-      // ── Success ──────────────────────────────────────────────────────────
+      // ── Success ───────────────────────────────────────────────────────────
       setSubmitted(true)
       setError(null)
 
@@ -193,25 +190,26 @@ export const useSubmitTestimonial = () => {
       clearTimeout(timeoutId)
 
       if (IS_DEV) {
-        console.error('[useSubmitTestimonial] caught error:', err)
+        console.error('[useSubmitTestimonial] caught:', err)
         console.groupEnd()
       }
 
-      // extractErrorMessage ALWAYS returns a string — never an object
-      const msg = extractErrorMessage(err)
-      setError(msg)
-
+      if (err.name === 'AbortError') {
+        setErrorSafe('Request timed out. Please check your connection and try again.')
+      } else {
+        setErrorSafe(err.message || 'Failed to submit. Please try again.')
+      }
     } finally {
       setSubmitting(false)
       abortRef.current = null
     }
-  }, [])
+  }, [setErrorSafe])
 
   return {
     submit,
     submitting,
     submitted,
-    error,   // guaranteed: string | null
+    error,    // guaranteed: string | null
     reset,
   }
 }

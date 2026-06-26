@@ -488,95 +488,6 @@ function useSlideshow(images, interval) {
    SUB-COMPONENTS
    =================================================================== */
 
-function SectionLabel({ icon, text }) {
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 8,
-        padding: '8px 18px',
-        backgroundColor: G[50],
-        borderRadius: 50,
-        color: G[700],
-        fontSize: 12,
-        fontWeight: 800,
-        textTransform: 'uppercase',
-        letterSpacing: 2.5,
-        marginBottom: 10,
-        border: '1px solid ' + G[200],
-      }}
-    >
-      {icon && <span style={{ display: 'flex' }}>{icon}</span>}
-      {text}
-    </span>
-  );
-}
-
-function SectionLabelDark({ icon, text }) {
-  return (
-    <span
-      style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        gap: 8,
-        padding: '8px 18px',
-        backgroundColor: 'rgba(255,255,255,0.08)',
-        borderRadius: 50,
-        color: G[300],
-        fontSize: 12,
-        fontWeight: 800,
-        textTransform: 'uppercase',
-        letterSpacing: 2.5,
-        marginBottom: 10,
-        border: '1px solid rgba(255,255,255,0.1)',
-      }}
-    >
-      {icon && <span style={{ display: 'flex' }}>{icon}</span>}
-      {text}
-    </span>
-  );
-}
-
-function SectionHeader({ icon, label, title, subtitle, align, dark }) {
-  const a = align || 'center';
-  const d = dark || false;
-  return (
-    <header style={{ textAlign: a, marginBottom: 18 }}>
-      {d ? (
-        <SectionLabelDark icon={icon} text={label} />
-      ) : (
-        <SectionLabel icon={icon} text={label} />
-      )}
-      <h2
-        style={{
-          fontFamily: "'Playfair Display', Georgia, serif",
-          fontSize: 'clamp(30px,5vw,52px)',
-          fontWeight: 700,
-          color: d ? W.pure : N[900],
-          marginBottom: subtitle ? 12 : 0,
-          lineHeight: 1.15,
-        }}
-      >
-        {title}
-      </h2>
-      {subtitle && (
-        <p
-          style={{
-            fontSize: 17,
-            color: d ? 'rgba(255,255,255,0.65)' : N[500],
-            maxWidth: a === 'center' ? 660 : 'none',
-            margin: a === 'center' ? '0 auto' : 0,
-            lineHeight: 1.65,
-          }}
-        >
-          {subtitle}
-        </p>
-      )}
-    </header>
-  );
-}
-
 /* ---- Slideshow Container ---- */
 
 function SlideshowCard({ images, height, borderRadius, children, overlay }) {
@@ -1207,15 +1118,14 @@ function Explore() {
         </div>
       </section>
 
-      {/* ============ GALLERY SHOWCASES ============ */}
-      <section style={{ padding: pad }}>
-        <div style={box}>
-          <AnimatedSection animation="fadeInUp">
-            <SectionHeader
-              icon={<FiCamera size={14} />}
-              label="Iconic Destinations"
-              title="Places That Take Your Breath Away"
-              subtitle="Explore our most beloved destinations through stunning photography and vivid storytelling. Each location delivers moments you will remember forever."
+{/* ============ GALLERY SHOWCASES ============ */}
+       <section style={{ padding: pad }}>
+         <div style={box}>
+           <AnimatedSection animation="fadeInUp">
+             <SectionHeader
+               title="Places That Take Your Breath Away"
+               subtitle="Explore our most beloved destinations through stunning photography and vivid storytelling. Each location delivers moments you will remember forever."
+             />
             />
           </AnimatedSection>
 
@@ -1253,14 +1163,12 @@ function Explore() {
             }}
           >
             <div style={{ width: '45%', flexShrink: 0 }}>
-              <AnimatedSection animation="fadeInUp">
-                <SectionHeader
-                  icon={<FiSun size={14} />}
-                  label="Why East Africa"
-                  title="A Region Like No Other"
-                  subtitle="East Africa offers something no other destination can — an unfiltered connection with nature at its most raw and magnificent."
-                  align="left"
-                />
+<AnimatedSection animation="fadeInUp">
+                 <SectionHeader
+                   title="A Region Like No Other"
+                   subtitle="East Africa offers something no other destination can — an unfiltered connection with nature at its most raw and magnificent."
+                   align="left"
+                 />
                 <div
                   style={{
                     display: 'grid',
