@@ -1248,13 +1248,12 @@ function Explore() {
 {/* ============ FEATURED EXPERIENCES ============ */}
        <section style={{ padding: pad }}>
          <div style={box}>
-           <AnimatedSection animation="fadeInUp">
-             <SectionHeader
-               title="Unforgettable Adventures Await"
-               subtitle="Hand-picked experiences that showcase the very best of East Africa — from heart-pounding safaris and gorilla encounters to tropical retreats and cultural immersions."
-             />
-            />
-          </AnimatedSection>
+<AnimatedSection animation="fadeInUp">
+              <SectionHeader
+                title="Unforgettable Adventures Await"
+                subtitle="Hand-picked experiences that showcase the very best of East Africa — from heart-pounding safaris and gorilla encounters to tropical retreats and cultural immersions."
+              />
+            </AnimatedSection>
 
           <AnimatedSection animation="fadeInUp">
             <nav
@@ -1323,13 +1322,12 @@ function Explore() {
 {/* ============ TESTIMONIALS ============ */}
        <section style={{ padding: pad, backgroundColor: G[50] }}>
          <div style={box}>
-           <AnimatedSection animation="fadeInUp">
-             <SectionHeader
-               title="Voices of Our Community"
-               subtitle="Real stories from real travelers who experienced the magic of East Africa with us — and came back transformed."
-             />
-            />
-          </AnimatedSection>
+<AnimatedSection animation="fadeInUp">
+              <SectionHeader
+                title="Voices of Our Community"
+                subtitle="Real stories from real travelers who experienced the magic of East Africa with us — and came back transformed."
+              />
+            </AnimatedSection>
 
           <div
             className="e-test-grid"

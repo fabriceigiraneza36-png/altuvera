@@ -1,21 +1,36 @@
 /**
  * ═══════════════════════════════════════════════════════════════════════════════
- * useSubmitTestimonial v2.2
+ * useSubmitTestimonial v2.3
  * ═══════════════════════════════════════════════════════════════════════════════
  *
- * Fixes:
- *  - error state is ALWAYS string | null  (never Error object → no [object Object])
- *  - Full debug logging so you can see exact URL, status, body in DevTools
- *  - 404 surfaces as "Route not found" + debug info in development
- *  - Token lookup covers all common storage key names
- *  - AbortController + 20s timeout
- *  - parseServerError() walks every known server error shape
+ * Critical fix: /api/api/testimonials/submit double-prefix bug.
+ *
+ * Root cause:
+ *   VITE_API_URL = "https://backend-jd8f.onrender.com"  (no /api suffix)
+ *   But some projects set it to "https://backend-jd8f.onrender.com/api"
+ *   In that case: API_BASE + "/api/testimonials/submit"
+ *               = "https://…/api" + "/api/testimonials/submit"
+ *               = "https://…/api/api/testimonials/submit"  ← 404!
+ *
+ * Fix: Strip any trailing /api from API_BASE before constructing paths,
+ *      then always use the full path including /api.
  */
 
 import { useState, useCallback, useRef } from 'react'
 
-const API_BASE = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '')
-const IS_DEV   = import.meta.env.DEV
+// ── Normalise base URL — strip trailing /api and trailing slash ───────────────
+const rawBase = (
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_BACKEND_URL ||
+  ''
+).replace(/\/$/, '')               // remove trailing slash
+
+// If the base already ends with /api, strip it so we always add it ourselves
+const API_BASE = rawBase.endsWith('/api')
+  ? rawBase.slice(0, -4)           // remove the "/api" suffix
+  : rawBase
+
+const IS_DEV = import.meta.env.DEV
 
 /* ─── Always returns a plain string ─────────────────────────────────────── */
 const toStr = (val) => {
@@ -23,10 +38,8 @@ const toStr = (val) => {
   if (typeof val === 'string') return val
   if (val instanceof Error)   return val.message || 'An error occurred.'
   if (typeof val === 'object') {
-    // Common server shapes
     if (typeof val.error   === 'string' && val.error)   return val.error
     if (typeof val.message === 'string' && val.message) return val.message
-    // Validation arrays
     if (Array.isArray(val.errors))  return val.errors.map(e => e.msg || e.message || String(e)).filter(Boolean).join('. ')
     if (Array.isArray(val.details)) return val.details.map(d => d.message || d.msg || String(d)).filter(Boolean).join('. ')
     try { return JSON.stringify(val) } catch { return 'An error occurred.' }
@@ -34,16 +47,15 @@ const toStr = (val) => {
   return String(val)
 }
 
-/* ─── Parse server response body into user-facing string ─────────────────── */
+/* ─── Parse server error body ────────────────────────────────────────────── */
 const parseServerError = (body, status) => {
   if (!body) return `Request failed (${status}). Please try again.`
   const msg = toStr(body)
-  // If toStr returned the raw JSON (object coercion), make it friendlier
   if (msg.startsWith('{')) return `Server error (${status}). Please try again.`
   return msg || `Request failed (${status}). Please try again.`
 }
 
-/* ─── Find auth token from any common storage location ───────────────────── */
+/* ─── Find auth token from any common storage key ────────────────────────── */
 const getAuthToken = () => {
   const keys = [
     'token', 'authToken', 'auth_token',
@@ -69,7 +81,7 @@ export const useSubmitTestimonial = () => {
 
   const abortRef = useRef(null)
 
-  /* ── reset ──────────────────────────────────────────────────────────────── */
+  /* ── reset ───────────────────────────────────────────────────────────── */
   const reset = useCallback(() => {
     if (abortRef.current) {
       abortRef.current.abort()
@@ -80,15 +92,14 @@ export const useSubmitTestimonial = () => {
     setError(null)
   }, [])
 
-  /* ── setErrorSafe — guarantees string ────────────────────────────────────── */
+  /* ── setErrorSafe ────────────────────────────────────────────────────── */
   const setErrorSafe = useCallback((val) => {
     const msg = toStr(val)
     setError(msg || 'An unexpected error occurred. Please try again.')
   }, [])
 
-  /* ── submit ─────────────────────────────────────────────────────────────── */
+  /* ── submit ──────────────────────────────────────────────────────────── */
   const submit = useCallback(async (formData = {}) => {
-    // Cancel any previous in-flight request
     if (abortRef.current) abortRef.current.abort()
     const controller = new AbortController()
     abortRef.current = controller
@@ -96,7 +107,7 @@ export const useSubmitTestimonial = () => {
     setSubmitting(true)
     setError(null)
 
-    // ── Build payload ──────────────────────────────────────────────────────
+    // ── Payload ────────────────────────────────────────────────────────────
     const text     = String(formData.testimonial_text || formData.review || '').trim()
     const rating   = Math.min(5, Math.max(1, parseInt(formData.rating, 10) || 5))
     const trip     = String(formData.trip     || '').trim()
@@ -106,25 +117,25 @@ export const useSubmitTestimonial = () => {
     if (trip)     payload.trip     = trip
     if (location) payload.location = location
 
-    // ── Build headers ──────────────────────────────────────────────────────
+    // ── Auth header ────────────────────────────────────────────────────────
     const token   = getAuthToken()
     const headers = { 'Content-Type': 'application/json' }
     if (token) headers['Authorization'] = `Bearer ${token}`
 
+    // ── Endpoint — always /api/testimonials/submit ─────────────────────────
+    // API_BASE is guaranteed to NOT end with /api (normalised above)
     const endpoint = `${API_BASE}/api/testimonials/submit`
 
-    // ── DevTools logging ───────────────────────────────────────────────────
     if (IS_DEV) {
       console.group(`%c[useSubmitTestimonial] POST ${endpoint}`, 'color:#16a34a;font-weight:bold')
+      console.log('API_BASE :', API_BASE)
+      console.log('endpoint :', endpoint)
       console.log('payload  :', payload)
       console.log('token    :', token ? `${token.slice(0, 20)}…` : 'NONE ⚠️')
-      console.log('headers  :', headers)
+      console.groupEnd()
     }
 
-    // ── 20-second timeout ──────────────────────────────────────────────────
-    const timeoutId = setTimeout(() => {
-      controller.abort()
-    }, 20_000)
+    const timeoutId = setTimeout(() => controller.abort(), 20_000)
 
     try {
       const response = await fetch(endpoint, {
@@ -149,19 +160,17 @@ export const useSubmitTestimonial = () => {
       }
 
       if (IS_DEV) {
-        console.log('status   :', response.status, response.statusText)
-        console.log('body     :', body)
-        console.groupEnd()
+        console.log('[useSubmitTestimonial] status:', response.status, '| body:', body)
       }
 
-      // ── Handle errors by status ──────────────────────────────────────────
+      // ── Handle errors ──────────────────────────────────────────────────────
       if (!response.ok) {
         let msg
 
         if (response.status === 404) {
-          // 404 almost always means route not found — give actionable message
           msg = IS_DEV
-            ? `404: Route not found. Check that POST ${endpoint} is registered in your router BEFORE any /:id wildcard.`
+            ? `404: Route not found.\nEndpoint tried: ${endpoint}\n` +
+              `Check that VITE_API_URL="${rawBase}" is correct and does NOT include /api.`
             : 'The review service is temporarily unavailable. Please try again or contact us via WhatsApp.'
         } else if (response.status === 401) {
           msg = 'Please log in to submit a review.'
@@ -182,17 +191,14 @@ export const useSubmitTestimonial = () => {
         return
       }
 
-      // ── Success ───────────────────────────────────────────────────────────
+      // ── Success ────────────────────────────────────────────────────────────
       setSubmitted(true)
       setError(null)
 
     } catch (err) {
       clearTimeout(timeoutId)
 
-      if (IS_DEV) {
-        console.error('[useSubmitTestimonial] caught:', err)
-        console.groupEnd()
-      }
+      if (IS_DEV) console.error('[useSubmitTestimonial] caught:', err)
 
       if (err.name === 'AbortError') {
         setErrorSafe('Request timed out. Please check your connection and try again.')
