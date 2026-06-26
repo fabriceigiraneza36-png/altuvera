@@ -19,6 +19,7 @@
     "axios": "^1.16.0",
     "canvas-confetti": "^1.9.4",
     "framer-motion": "^10.18.0",
+    "googleapis": "^173.0.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",
     "leaflet": "^1.9.4",
