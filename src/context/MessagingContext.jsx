@@ -1,643 +1,692 @@
 /**
- * MessagingContext.jsx
+ * MessagingContext.jsx v2.0
  *
- * SINGLE SOCKET — connects on app mount, stays alive for entire session.
- * Features: reply, forward, edit, delete, pin, reactions, read receipts,
- * typing indicators, background themes, and more.
+ * Fixes vs v1:
+ * - unreadCount exposed (Navbar uses it)
+ * - Single socket.on/off per event (no duplicate listeners)
+ * - Registration guarded with ref (no re-register storms)
+ * - Socket connects ONLY when portal opens (lazy)
+ * - All Navbar-consumed fields present and stable
  */
 
 import React, {
-  createContext, useContext, useEffect, useRef,
-  useState, useCallback, useMemo,
+  createContext, useContext, useState,
+  useEffect, useCallback, useRef, useMemo,
 } from 'react'
-import { io } from 'socket.io-client'
+import {
+  getSocket, connectSocket, disconnectSocket, updateSocketAuth,
+} from '../utils/socket'
 import { useUserAuth } from './UserAuthContext'
 
-const MessagingContext = createContext(null)
-
-const SOCKET_URL  = import.meta.env.VITE_SOCKET_URL || 'https://backend-jd8f.onrender.com'
-const SESSION_KEY = 'altuvera_msg_session'
-const BG_KEY      = 'altuvera_chat_bg'
-const PINS_KEY    = 'altuvera_chat_pins'
-
-/* ── Session helpers ────────────────────────────────────────────────────── */
-const genSessionId  = () => `guest-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
-const getStoredSession = () => { try { return localStorage.getItem(SESSION_KEY) || null } catch { return null } }
-const saveSession   = (sid) => { try { localStorage.setItem(SESSION_KEY, sid) } catch {} }
-const getStoredBg   = () => { try { return JSON.parse(localStorage.getItem(BG_KEY) || 'null') } catch { return null } }
-const saveBg        = (bg) => { try { localStorage.setItem(BG_KEY, JSON.stringify(bg)) } catch {} }
-const getStoredPins = () => { try { return JSON.parse(localStorage.getItem(PINS_KEY) || '[]') } catch { return [] } }
-const savePins      = (pins) => { try { localStorage.setItem(PINS_KEY, JSON.stringify(pins)) } catch {} }
-
-/* ── Normalize message ──────────────────────────────────────────────────── */
-const normalizeMsg = (msg) => ({
-  ...msg,
-  id:             msg.id,
-  body:           msg.body,
-  createdAt:      msg.createdAt    || msg.created_at    || new Date().toISOString(),
-  updatedAt:      msg.updatedAt    || msg.updated_at    || null,
-  senderType:     msg.senderType   || msg.sender_type   || 'user',
-  senderName:     msg.senderName   || msg.sender_name   || null,
-  senderEmail:    msg.senderEmail  || msg.sender_email  || null,
-  senderAvatar:   msg.senderAvatar || msg.sender_avatar || null,
-  isRead:         msg.isRead !== undefined ? msg.isRead : (msg.is_read || false),
-  isEdited:       msg.isEdited     || msg.is_edited     || false,
-  isDeleted:      msg.isDeleted    || msg.is_deleted    || false,
-  isPinned:       msg.isPinned     || msg.is_pinned     || false,
-  replyTo:        msg.replyTo      || msg.reply_to      || null,
-  reactions:      msg.reactions    || {},
-  forwardedFrom:  msg.forwardedFrom || msg.forwarded_from || null,
-  metadata:       msg.metadata     || {},
-})
-
-/* ── Chat background presets ────────────────────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════════
+   CHAT BACKGROUNDS
+═══════════════════════════════════════════════════════════════ */
 export const CHAT_BACKGROUNDS = [
-  { id: 'default',    label: 'Default',       type: 'solid',    value: '#f0fdf4' },
-  { id: 'white',      label: 'Clean White',   type: 'solid',    value: '#ffffff' },
-  { id: 'dark',       label: 'Dark Forest',   type: 'solid',    value: '#052e16' },
-  { id: 'gradient1',  label: 'Emerald Mist',  type: 'gradient', value: 'linear-gradient(135deg,#f0fdf4 0%,#dcfce7 50%,#bbf7d0 100%)' },
-  { id: 'gradient2',  label: 'Deep Ocean',    type: 'gradient', value: 'linear-gradient(135deg,#052e16 0%,#14532d 50%,#166534 100%)' },
-  { id: 'gradient3',  label: 'Sunrise',       type: 'gradient', value: 'linear-gradient(135deg,#fefce8 0%,#fef9c3 50%,#fef08a 100%)' },
-  { id: 'pattern1',   label: 'Leaf Pattern',  type: 'pattern',  value: 'url("data:image/svg+xml,%3Csvg width=\'40\' height=\'40\' viewBox=\'0 0 40 40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'%2316a34a\' fill-opacity=\'0.06\'%3E%3Cpath d=\'M20 20c0-11 9-20 20-20v20H20z\'/%3E%3C/g%3E%3C/svg%3E"),linear-gradient(135deg,#f0fdf4,#ecfdf5)' },
-  { id: 'pattern2',   label: 'Dots',          type: 'pattern',  value: 'radial-gradient(circle,#16a34a 1px,transparent 1px),#f0fdf4', size: '20px 20px' },
-  { id: 'pattern3',   label: 'Waves',         type: 'pattern',  value: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'100\' height=\'20\'%3E%3Cpath d=\'M0 10c25-20 75 20 100 0\' stroke=\'%2316a34a\' stroke-opacity=\'0.1\' fill=\'none\' stroke-width=\'2\'/%3E%3C/svg%3E"),#ffffff' },
-  { id: 'nature1',    label: 'Safari Tan',    type: 'solid',    value: '#fef3c7' },
-  { id: 'nature2',    label: 'Twilight',      type: 'gradient', value: 'linear-gradient(135deg,#1e1b4b 0%,#312e81 50%,#1d4ed8 100%)' },
+  { id: 'white',     label: 'Clean White',    type: 'solid',    value: '#ffffff' },
+  { id: 'soft',      label: 'Soft Green',     type: 'solid',    value: '#f0fdf4' },
+  { id: 'mint',      label: 'Mint',           type: 'solid',    value: '#ecfdf5' },
+  { id: 'dark',      label: 'Dark Forest',    type: 'solid',    value: '#0a1f14' },
+  {
+    id: 'gradient1', label: 'Forest Gradient', type: 'gradient',
+    value: 'linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%)',
+  },
+  {
+    id: 'gradient2', label: 'Deep Green',      type: 'gradient',
+    value: 'linear-gradient(135deg,#052e16 0%,#14532d 100%)',
+  },
+  {
+    id: 'gradient3', label: 'Dawn',            type: 'gradient',
+    value: 'linear-gradient(135deg,#fef9c3 0%,#f0fdf4 100%)',
+  },
+  {
+    id: 'pattern1',  label: 'Dots',            type: 'pattern',
+    value: 'radial-gradient(#16a34a22 1px,transparent 1px)',
+    size:  '20px 20px',
+  },
+  {
+    id: 'pattern2',  label: 'Grid',            type: 'pattern',
+    value: 'linear-gradient(#16a34a11 1px,transparent 1px),linear-gradient(90deg,#16a34a11 1px,transparent 1px)',
+    size:  '24px 24px',
+  },
+  { id: 'nature1',   label: 'Safari Sand',    type: 'solid',    value: '#fef3c7' },
+  {
+    id: 'nature2',   label: 'Night Safari',   type: 'gradient',
+    value: 'linear-gradient(160deg,#0a1628 0%,#0d2a1c 100%)',
+  },
+  {
+    id: 'blue',      label: 'Ocean',           type: 'gradient',
+    value: 'linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%)',
+  },
 ]
 
-/* ══════════════════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
+   STORAGE HELPERS
+═══════════════════════════════════════════════════════════════ */
+const SESSION_KEY = 'altuvera_chat_session_id'
+const BG_KEY      = 'altuvera_chat_bg'
+const PINNED_KEY  = 'altuvera_chat_pinned'
+
+const ss = {
+  get: (k)      => { try { return localStorage.getItem(k) || '' }          catch { return '' } },
+  set: (k, v)   => { try { localStorage.setItem(k, v) }                    catch { /* ignore */ } },
+  getJSON: (k)  => { try { return JSON.parse(localStorage.getItem(k) || '[]') } catch { return [] } },
+  setJSON: (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) }  catch { /* ignore */ } },
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MESSAGE NORMALIZER
+═══════════════════════════════════════════════════════════════ */
+const normalizeMsg = (raw) => {
+  if (!raw) return null
+  return {
+    id:             raw.id,
+    body:           raw.body            || '',
+    senderType:     raw.senderType      || raw.sender_type      || 'user',
+    senderName:     raw.senderName      || raw.sender_name      || '',
+    senderEmail:    raw.senderEmail     || raw.sender_email     || null,
+    senderAvatar:   raw.senderAvatar    || raw.sender_avatar    || null,
+    isRead:         raw.isRead          ?? raw.is_read          ?? false,
+    isEdited:       raw.isEdited        ?? raw.edited           ?? false,
+    isDeleted:      raw.isDeleted       ?? raw.deleted          ?? false,
+    isPinned:       raw.isPinned        ?? false,
+    isOptimistic:   raw.isOptimistic    ?? false,
+    reactions:      raw.reactions       || {},
+    metadata:       raw.metadata        || {},
+    replyTo:        raw.replyTo         || raw.reply_to         || raw.metadata?.replyTo       || null,
+    forwardedFrom:  raw.forwardedFrom   || raw.forwarded_from   || raw.metadata?.forwardedFrom || null,
+    packageContext: raw.packageContext  || raw.package_context  || raw.metadata?.packageContext || null,
+    createdAt:      raw.createdAt       || raw.created_at       || new Date().toISOString(),
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CONTEXT
+═══════════════════════════════════════════════════════════════ */
+const MessagingContext = createContext(null)
+
+export const useMessaging = () => {
+  const ctx = useContext(MessagingContext)
+  if (!ctx) throw new Error('useMessaging must be inside MessagingProvider')
+  return ctx
+}
+
+/* ═══════════════════════════════════════════════════════════════
    PROVIDER
-   ══════════════════════════════════════════════════════════════════════════ */
+═══════════════════════════════════════════════════════════════ */
 export function MessagingProvider({ children }) {
-  const { user, isAuthenticated } = useUserAuth()
+  const { user, token } = useUserAuth()
 
-  /* ── Refs ─────────────────────────────────────────────────────────────── */
-  const socketRef          = useRef(null)
-  const typingTimerRef     = useRef(null)
-  const typingEmitRef      = useRef(false)
-  const typingEmitTimer    = useRef(null)
-  const disconnectDebounce = useRef(null)
-  const mountedRef         = useRef(true)
-  const userRef            = useRef(user)
-  const hasConnectedRef    = useRef(false)
-  const hasRegisteredRef   = useRef(false)
+  /* ── Portal ─────────────────────────────────────────────── */
+  const [isOpen,   setIsOpen]   = useState(false)
 
-  /* ── State ────────────────────────────────────────────────────────────── */
+  /* ── Connection ─────────────────────────────────────────── */
   const [connected,       setConnected]       = useState(false)
   const [connectionState, setConnectionState] = useState('disconnected')
-  const [isOpen,          setIsOpen]          = useState(false)
-  const [messages,        setMessages]        = useState([])
-  const [conversationId,  setConversationId]  = useState(null)
-  const [sessionId,       setSessionId]       = useState(() => getStoredSession())
-  const [isTyping,        setIsTyping]        = useState(false)
   const [adminOnline,     setAdminOnline]     = useState(false)
-  const [unreadCount,     setUnreadCount]     = useState(0)
-  const [sendingMsg,      setSendingMsg]      = useState(false)
   const [registered,      setRegistered]      = useState(false)
-  const [notification,    setNotification]    = useState(null)
-  const [packageContext,  setPackageContext]  = useState(null)
+  const [sendingMsg,      setSendingMsg]      = useState(false)
 
-  /* ── New feature state ────────────────────────────────────────────────── */
-  const [replyingTo,      setReplyingTo]      = useState(null)   // { id, body, senderName }
-  const [editingMsg,      setEditingMsg]      = useState(null)   // { id, body }
-  const [forwardingMsg,   setForwardingMsg]   = useState(null)   // message object
-  const [pinnedMessages,  setPinnedMessages]  = useState(() => getStoredPins())
-  const [chatBackground,  setChatBackground]  = useState(() => getStoredBg() || CHAT_BACKGROUNDS[0])
-  const [showPinned,      setShowPinned]      = useState(false)
-  const [searchQuery,     setSearchQuery]     = useState('')
-  const [highlightedMsg,  setHighlightedMsg]  = useState(null)
+  /* ── Messages ───────────────────────────────────────────── */
+  const [messages,          setMessages]          = useState([])
+  const [filteredMessages,  setFilteredMessages]  = useState([])
+  const [isTyping,          setIsTyping]          = useState(false)
+  const [unreadCount,       setUnreadCount]       = useState(0)
 
-  /* Keep userRef synced */
+  /* ── Notification badge (for Navbar) ────────────────────── */
+  const [newConversationNotification, setNewConversationNotification] = useState(false)
+
+  /* ── Search ─────────────────────────────────────────────── */
+  const [searchQuery, setSearchQuery] = useState('')
+
+  /* ── Interaction state ──────────────────────────────────── */
+  const [replyingTo,    setReplyingTo]    = useState(null)
+  const [editingMsg,    setEditingMsg]    = useState(null)
+  const [forwardingMsg, setForwardingMsg] = useState(null)
+  const [highlightedMsg,setHighlightedMsg]= useState(null)
+  const [submitError,   setSubmitError]   = useState(null)
+  const submitRetryCount = useRef(0)
+
+  /* ── Pinned ─────────────────────────────────────────────── */
+  const [pinnedMessages, setPinnedMessages] = useState(() => ss.getJSON(PINNED_KEY))
+  const [showPinned,     setShowPinned]     = useState(false)
+
+  /* ── Background ─────────────────────────────────────────── */
+  const [chatBackground, setChatBackground] = useState(() => {
+    const saved = ss.get(BG_KEY)
+    return CHAT_BACKGROUNDS.find(b => b.id === saved) || CHAT_BACKGROUNDS[0]
+  })
+
+  /* ── Package context ────────────────────────────────────── */
+  const [packageContext, setPackageContext] = useState(null)
+
+  /* ── Stable refs ────────────────────────────────────────── */
+  const sessionIdRef    = useRef(ss.get(SESSION_KEY))
+  const convIdRef       = useRef(null)
+  const registeredRef   = useRef(false)
+  const isOpenRef       = useRef(false)
+  const mountedRef      = useRef(true)
+  const typingTimerRef  = useRef(null)
+  const registerTimerRef= useRef(null)
+  const userRef         = useRef(user)
+
+  /* Keep userRef current */
   useEffect(() => { userRef.current = user }, [user])
 
-  /* ── Helpers ──────────────────────────────────────────────────────────── */
-  const addMessage = useCallback((msg) => {
-    if (!mountedRef.current) return
-    const n = normalizeMsg(msg)
-    setMessages((prev) => {
-      if (prev.some((m) => m.id === n.id)) return prev
-      return [...prev, n]
-    })
-  }, [])
+  /* Keep isOpenRef current */
+  useEffect(() => { isOpenRef.current = isOpen }, [isOpen])
 
-  const updateMessage = useCallback((id, patch) => {
-    setMessages((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, ...patch } : m))
-    )
-  }, [])
-
-  const registerSession = useCallback((socket) => {
-    if (!socket?.connected) return
-    hasRegisteredRef.current = true
-    const sid = getStoredSession() || genSessionId()
-    saveSession(sid)
-    setSessionId(sid)
-    const u = userRef.current
-    socket.emit('msg:register', {
-      sessionId:  sid,
-      userId:     u?.id       || null,
-      name:       u?.fullName || u?.name || null,
-      email:      u?.email    || null,
-      guestName:  u?.fullName || u?.name || null,
-      guestEmail: u?.email    || null,
-    }, (res) => {
-      if (!res?.success || !mountedRef.current) return
-      if (res.conversationId) setConversationId(res.conversationId)
-      if (res.sessionId) { setSessionId(res.sessionId); saveSession(res.sessionId) }
-      if (Array.isArray(res.messages) && res.messages.length > 0)
-        setMessages(res.messages.map(normalizeMsg))
-      if (typeof res.adminOnline === 'boolean') setAdminOnline(res.adminOnline)
-      setRegistered(true)
-    })
-  }, [])
-
-  /* ══════════════════════════════════════════════════════════════════════
-     SOCKET — created ONCE
-     ══════════════════════════════════════════════════════════════════════ */
+  /* Cleanup on unmount */
   useEffect(() => {
     mountedRef.current = true
-    if (hasConnectedRef.current && socketRef.current) return
-    hasConnectedRef.current = true
-
-    const token =
-      localStorage.getItem('altuvera_auth_token') ||
-      sessionStorage.getItem('altuvera_auth_token') ||
-      localStorage.getItem('token') || null
-
-    const u = userRef.current
-    setConnectionState('connecting')
-
-    const socket = io(SOCKET_URL, {
-      auth:                 { token },
-      transports:           ['polling', 'websocket'],
-      reconnection:         true,
-      reconnectionDelay:    1000,
-      reconnectionDelayMax: 10000,
-      reconnectionAttempts: Infinity,
-      timeout:              20000,
-      withCredentials:      true,
-      query:                u?.id ? { userId: u.id } : {},
-    })
-
-    socketRef.current = socket
-
-    socket.on('connect', () => {
-      if (!mountedRef.current) return
-      setConnected(true)
-      setConnectionState('connected')
-      clearTimeout(disconnectDebounce.current)
-      registerSession(socket)
-    })
-
-    socket.on('disconnect', (reason) => {
-      if (!mountedRef.current) return
-      setConnected(false)
-      hasRegisteredRef.current = false
-      setConnectionState(reason === 'io server disconnect' ? 'disconnected' : 'reconnecting')
-      clearTimeout(disconnectDebounce.current)
-      disconnectDebounce.current = setTimeout(() => {
-        if (mountedRef.current) setAdminOnline(false)
-      }, 5000)
-    })
-
-    socket.on('connect_error', () => {
-      if (!mountedRef.current) return
-      setConnectionState('reconnecting')
-    })
-
-    socket.on('msg:session', (data) => {
-      if (!mountedRef.current) return
-      if (data.conversationId) setConversationId(data.conversationId)
-      if (data.sessionId) { setSessionId(data.sessionId); saveSession(data.sessionId) }
-      if (Array.isArray(data.messages) && data.messages.length > 0)
-        setMessages(data.messages.map(normalizeMsg))
-      if (typeof data.adminOnline === 'boolean') setAdminOnline(data.adminOnline)
-      setRegistered(true)
-    })
-
-    socket.on('msg:message', (msg) => {
-      if (!mountedRef.current) return
-      addMessage(msg)
-      if ((msg.senderType || msg.sender_type) === 'admin') {
-        setIsTyping(false)
-        clearTimeout(typingTimerRef.current)
-        setIsOpen((open) => {
-          if (!open) setUnreadCount((c) => c + 1)
-          return open
-        })
-      }
-    })
-
-    /* ── Edit ─────────────────────────────────────────────────────────── */
-    socket.on('msg:edited', (data) => {
-      if (!mountedRef.current) return
-      updateMessage(data.id, {
-        body:      data.body,
-        isEdited:  true,
-        updatedAt: data.updatedAt || new Date().toISOString(),
-      })
-    })
-
-    /* ── Delete ───────────────────────────────────────────────────────── */
-    socket.on('msg:deleted', (data) => {
-      if (!mountedRef.current) return
-      updateMessage(data.id, { isDeleted: true, body: 'This message was deleted.' })
-    })
-
-    /* ── Reaction ─────────────────────────────────────────────────────── */
-    socket.on('msg:reaction', (data) => {
-      if (!mountedRef.current) return
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.id === data.messageId
-            ? { ...m, reactions: data.reactions || {} }
-            : m
-        )
-      )
-    })
-
-    /* ── Pin ──────────────────────────────────────────────────────────── */
-    socket.on('msg:pinned', (data) => {
-      if (!mountedRef.current) return
-      updateMessage(data.id, { isPinned: data.isPinned })
-      if (data.isPinned) {
-        setPinnedMessages((prev) => {
-          const n = [...prev.filter((m) => m.id !== data.id), normalizeMsg(data.message || { id: data.id, ...data })]
-          savePins(n)
-          return n
-        })
-      } else {
-        setPinnedMessages((prev) => {
-          const n = prev.filter((m) => m.id !== data.id)
-          savePins(n)
-          return n
-        })
-      }
-    })
-
-    /* ── Typing ───────────────────────────────────────────────────────── */
-    socket.on('msg:typing', (data) => {
-      if (!mountedRef.current) return
-      if ((data.senderType || data.sender_type) !== 'admin') return
-      setIsTyping(data.isTyping)
-      if (data.isTyping) {
-        clearTimeout(typingTimerRef.current)
-        typingTimerRef.current = setTimeout(() => {
-          if (mountedRef.current) setIsTyping(false)
-        }, 6000)
-      }
-    })
-
-    socket.on('msg:read', (data) => {
-      if (!mountedRef.current) return
-      if ((data.readBy || data.read_by) !== 'admin') return
-      setMessages((prev) =>
-        prev.map((m) =>
-          m.senderType === 'user' && !m.isRead ? { ...m, isRead: true } : m
-        )
-      )
-    })
-
-    socket.on('msg:admin-online', (data) => {
-      if (!mountedRef.current) return
-      setAdminOnline(typeof data === 'object' ? data.online : Boolean(data))
-    })
-    socket.on('admin:online',  () => mountedRef.current && setAdminOnline(true))
-    socket.on('admin:offline', () => mountedRef.current && setAdminOnline(false))
-
-    socket.on('msg:new-conversation', (data) => {
-      if (!mountedRef.current) return
-      setNotification(data)
-      if (data.conversationId) setConversationId(data.conversationId)
-      if (data.sessionId) { setSessionId(data.sessionId); saveSession(data.sessionId) }
-      setRegistered(true)
-      setTimeout(() => { if (mountedRef.current) setNotification(null) }, 5000)
-    })
-
     return () => {
       mountedRef.current = false
       clearTimeout(typingTimerRef.current)
-      clearTimeout(typingEmitTimer.current)
-      clearTimeout(disconnectDebounce.current)
-      typingEmitRef.current = false
-      socket.removeAllListeners()
-      socket.disconnect()
-      socketRef.current = null
-      hasConnectedRef.current = false
+      clearTimeout(registerTimerRef.current)
     }
-  }, []) // eslint-disable-line
+  }, [])
 
-  /* Re-register on auth change */
+  /* ── Update unreadCount from messages ────────────────────── */
   useEffect(() => {
-    const socket = socketRef.current
-    if (!socket?.connected) return
-    registerSession(socket)
-  }, [isAuthenticated, user?.id, registerSession])
+    const count = messages.filter(
+      m => m.senderType !== 'user' && !m.isRead && !m.isDeleted
+    ).length
+    setUnreadCount(count)
 
-  /* ══════════════════════════════════════════════════════════════════════
-     PUBLIC API
-     ══════════════════════════════════════════════════════════════════════ */
+    /* Badge for Navbar */
+    if (count > 0 && !isOpenRef.current) {
+      setNewConversationNotification(true)
+    }
+  }, [messages])
 
+  /* ═══════════════════════════════════════════════════════════
+     SOCKET SETUP — single effect, single socket
+  ═══════════════════════════════════════════════════════════ */
+  useEffect(() => {
+    const socket = getSocket()
+
+    /* ── Helpers ── */
+    const safe = (fn) => (...args) => {
+      if (mountedRef.current) fn(...args)
+    }
+
+    /* ── Handlers ── */
+    const onConnect = safe(() => {
+      setConnected(true)
+      setConnectionState('connected')
+    })
+
+    const onDisconnect = safe((reason) => {
+      setConnected(false)
+      setConnectionState(
+        reason === 'io server disconnect' ? 'disconnected' : 'reconnecting'
+      )
+      setAdminOnline(false)
+      /*
+       * Don't reset registeredRef here — we'll check on reconnect
+       * so that we don't spam register calls.
+       */
+    })
+
+    const onConnectError = safe(() => {
+      setConnected(false)
+      setConnectionState('reconnecting')
+    })
+
+    const onReconnecting = safe(() => {
+      setConnectionState('reconnecting')
+    })
+
+    const onReconnect = safe(() => {
+      setConnected(true)
+      setConnectionState('connected')
+      /*
+       * Server may have dropped the session — re-register
+       * only if the portal is open.
+       */
+      registeredRef.current = false
+      if (isOpenRef.current) scheduleRegister(600)
+    })
+
+    const onAdminOnline = safe((data) => {
+      setAdminOnline(Boolean(data?.online ?? data?.isOnline))
+    })
+
+    const onSession = safe((data) => {
+      if (!data) return
+      if (data.sessionId) {
+        sessionIdRef.current = data.sessionId
+        ss.set(SESSION_KEY, data.sessionId)
+      }
+      if (data.conversationId) convIdRef.current = data.conversationId
+      if (Array.isArray(data.messages)) {
+        setMessages(data.messages.map(normalizeMsg).filter(Boolean))
+      }
+      setAdminOnline(Boolean(data.adminOnline))
+      setRegistered(true)
+      registeredRef.current = true
+    })
+
+    const onMessage = safe((raw) => {
+      if (!raw) return
+      const msg = normalizeMsg(raw)
+      if (!msg) return
+
+      setMessages(prev => {
+        /* Replace matching optimistic message */
+        const optIdx = prev.findIndex(
+          m => m.isOptimistic &&
+               m.body === msg.body &&
+               m.senderType === msg.senderType
+        )
+        if (optIdx !== -1) {
+          const next = [...prev]
+          next[optIdx] = msg
+          return next
+        }
+        /* Deduplicate by id */
+        if (prev.some(m => m.id === msg.id)) return prev
+        return [...prev, msg]
+      })
+
+      /* Unread bump for non-user messages when portal closed */
+      if (msg.senderType !== 'user' && !isOpenRef.current) {
+        setNewConversationNotification(true)
+      }
+    })
+
+    const onTyping = safe((data) => {
+      if (data?.senderType !== 'user') {
+        /* Admin is typing — show indicator */
+        setIsTyping(Boolean(data?.isTyping))
+        clearTimeout(typingTimerRef.current)
+        if (data?.isTyping) {
+          typingTimerRef.current = setTimeout(() => {
+            if (mountedRef.current) setIsTyping(false)
+          }, 5_000)
+        }
+      }
+    })
+
+    const onRead = safe((data) => {
+      if (!data?.conversationId) return
+      setMessages(prev =>
+        prev.map(m => ({
+          ...m,
+          isRead: data.readBy === 'admin' && m.senderType === 'user'
+            ? true
+            : m.isRead,
+        }))
+      )
+    })
+
+    /* ── Attach listeners ── */
+    socket.on('connect',              onConnect)
+    socket.on('disconnect',           onDisconnect)
+    socket.on('connect_error',        onConnectError)
+    socket.io.on('reconnect_attempt', onReconnecting)
+    socket.io.on('reconnect',         onReconnect)
+
+    /* New messaging protocol */
+    socket.on('msg:admin-online',     onAdminOnline)
+    socket.on('msg:session',          onSession)
+    socket.on('msg:message',          onMessage)
+    socket.on('msg:typing',           onTyping)
+    socket.on('msg:read',             onRead)
+
+    /* Legacy chat protocol fallback */
+    socket.on('chat:session',         onSession)
+    socket.on('chat:message',         onMessage)
+    socket.on('chat:typing',          onTyping)
+
+    /* ── Connect only if open OR already connected ── */
+    if (socket.connected) {
+      setConnected(true)
+      setConnectionState('connected')
+    }
+    /* Socket connects lazily when portal opens (see openPortal) */
+
+    /* ── Cleanup — remove only OUR listeners ── */
+    return () => {
+      socket.off('connect',              onConnect)
+      socket.off('disconnect',           onDisconnect)
+      socket.off('connect_error',        onConnectError)
+      socket.io.off('reconnect_attempt', onReconnecting)
+      socket.io.off('reconnect',         onReconnect)
+
+      socket.off('msg:admin-online',     onAdminOnline)
+      socket.off('msg:session',          onSession)
+      socket.off('msg:message',          onMessage)
+      socket.off('msg:typing',           onTyping)
+      socket.off('msg:read',             onRead)
+
+      socket.off('chat:session',         onSession)
+      socket.off('chat:message',         onMessage)
+      socket.off('chat:typing',          onTyping)
+    }
+  }, []) // ← EMPTY DEPS — runs once, singleton socket
+
+  /* ── Update socket auth when token changes ─────────────── */
+  useEffect(() => {
+    if (token) updateSocketAuth(token)
+  }, [token])
+
+  /* ═══════════════════════════════════════════════════════════
+     REGISTRATION
+  ═══════════════════════════════════════════════════════════ */
+  const scheduleRegister = useCallback((delayMs = 200) => {
+    clearTimeout(registerTimerRef.current)
+    registerTimerRef.current = setTimeout(() => {
+      if (!mountedRef.current)   return
+      if (registeredRef.current) return
+
+      const socket = getSocket()
+      if (!socket.connected)     return
+
+      const u    = userRef.current
+      const sid  = sessionIdRef.current || undefined
+      const name = u?.fullName || u?.name || ''
+      const email= u?.email    || ''
+
+      socket.emit(
+        'msg:register',
+        { sessionId: sid, name, email },
+        (res) => {
+          if (!mountedRef.current) return
+          if (!res?.success) return
+
+          if (res.sessionId) {
+            sessionIdRef.current = res.sessionId
+            ss.set(SESSION_KEY, res.sessionId)
+          }
+          if (res.conversationId) convIdRef.current = res.conversationId
+          if (Array.isArray(res.messages)) {
+            setMessages(res.messages.map(normalizeMsg).filter(Boolean))
+          }
+          setAdminOnline(Boolean(res.adminOnline))
+          setRegistered(true)
+          registeredRef.current = true
+        }
+      )
+    }, delayMs)
+  }, [])
+
+  /* ── Register when portal opens + socket connected ─────── */
+  useEffect(() => {
+    if (!isOpen)   return
+    if (!connected) return
+    if (registeredRef.current) return
+    scheduleRegister(200)
+  }, [isOpen, connected, scheduleRegister])
+
+  /* ── Reset registration when user changes ───────────────── */
+  useEffect(() => {
+    registeredRef.current = false
+    setRegistered(false)
+    if (isOpen && connected) scheduleRegister(400)
+  }, [user?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* ═══════════════════════════════════════════════════════════
+     PORTAL CONTROLS
+  ═══════════════════════════════════════════════════════════ */
   const openPortal = useCallback((pkgCtx = null) => {
     if (pkgCtx) setPackageContext(pkgCtx)
     setIsOpen(true)
-    setUnreadCount(0)
-    setNotification(null)
-  }, [])
+    setNewConversationNotification(false)
+
+    /* Connect socket lazily on first open */
+    connectSocket(token || undefined)
+  }, [token])
 
   const closePortal = useCallback(() => {
     setIsOpen(false)
-    setReplyingTo(null)
-    setEditingMsg(null)
-    setForwardingMsg(null)
   }, [])
 
-  const clearPackageContext = useCallback(() => setPackageContext(null), [])
+  /* ═══════════════════════════════════════════════════════════
+     SEND MESSAGE
+  ═══════════════════════════════════════════════════════════ */
+  const sendMessage = useCallback((body, options = {}) => {
+    const text = String(body || '').trim()
+    if (!text) return
 
-  /* ── Send (supports reply, forward, edit) ───────────────────────────── */
-  const sendMessage = useCallback((body, metadata = {}) => {
-    const socket = socketRef.current
-    if (!body?.trim() || !socket?.connected) return false
+    const socket = getSocket()
+    if (!socket.connected) {
+      console.warn('[Messaging] Cannot send — socket not connected')
+      return
+    }
 
-    setSendingMsg(true)
-    const sid = getStoredSession() || genSessionId()
-    const u   = userRef.current
-    const pkg = packageContext
-    const rep = replyingTo
-    const fwd = forwardingMsg
-
-    const optId      = `opt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
-    const senderName = u?.fullName || u?.name || metadata.guestName || 'You'
-
-    const optMsg = normalizeMsg({
+    /* Optimistic */
+    const optId    = `opt-${Date.now()}`
+    const u        = userRef.current
+    const optimistic = normalizeMsg({
       id:            optId,
-      body:          body.trim(),
+      body:          text,
       senderType:    'user',
-      senderName,
-      senderEmail:   u?.email || metadata.guestEmail || null,
-      createdAt:     new Date().toISOString(),
-      isRead:        false,
+      senderName:    options.guestName  || u?.fullName || u?.name || 'Guest',
+      senderEmail:   options.guestEmail || u?.email    || null,
       isOptimistic:  true,
-      replyTo:       rep || null,
-      forwardedFrom: fwd ? { id: fwd.id, body: fwd.body, senderName: fwd.senderName } : null,
-      ...(pkg ? { packageContext: { id: pkg.id, title: pkg.title, slug: pkg.slug, price: pkg.price, image: pkg.image } } : {}),
+      isRead:        false,
+      createdAt:     new Date().toISOString(),
+      metadata: {
+        replyTo:        replyingTo    || undefined,
+        forwardedFrom:  forwardingMsg || undefined,
+        packageContext: packageContext || undefined,
+      },
     })
 
-    setMessages((prev) => [...prev, optMsg])
+    setMessages(prev => [...prev, optimistic])
+    setSendingMsg(true)
     setReplyingTo(null)
     setForwardingMsg(null)
 
-    socket.emit('msg:send', {
-      body:           body.trim(),
-      sessionId:      sid,
-      conversationId: conversationId || undefined,
-      name:           u?.fullName || u?.name || metadata.guestName || null,
-      email:          u?.email    || metadata.guestEmail || null,
-      userId:         u?.id       || null,
-      replyToId:      rep?.id     || null,
-      forwardedFromId: fwd?.id   || null,
-      metadata: {
-        ...metadata,
-        ...(pkg ? { packageContext: { id: pkg.id, title: pkg.title, slug: pkg.slug, price: pkg.price, image: pkg.image } } : {}),
-        ...(rep ? { replyTo: { id: rep.id, body: rep.body, senderName: rep.senderName } } : {}),
-        ...(fwd ? { forwardedFrom: { id: fwd.id, body: fwd.body, senderName: fwd.senderName } } : {}),
+    socket.emit(
+      'msg:send',
+      {
+        body:      text,
+        sessionId: sessionIdRef.current || undefined,
+        name:      options.guestName  || u?.fullName || u?.name || 'Guest',
+        email:     options.guestEmail || u?.email    || null,
+        metadata:  optimistic.metadata,
       },
-    }, (res) => {
-      if (!mountedRef.current) return
-      setSendingMsg(false)
-      if (res?.success && res.message) {
-        setMessages((prev) =>
-          prev
-            .filter((m) => m.id !== optId)
-            .concat(prev.some((m) => m.id === res.message.id) ? [] : [normalizeMsg(res.message)])
-        )
-        if (res.conversationId && !conversationId)
-          setConversationId(res.conversationId)
-      } else {
-        setMessages((prev) => prev.filter((m) => m.id !== optId))
+      (res) => {
+        setSendingMsg(false)
+        if (!mountedRef.current) return
+        if (!res?.success) {
+          /* Remove failed optimistic */
+          setMessages(prev => prev.filter(m => m.id !== optId))
+          setSubmitError(res?.error || 'Failed to send message. Please try again.')
+        }
       }
-    })
+    )
+  }, [replyingTo, forwardingMsg, packageContext])
 
-    return true
-  }, [conversationId, packageContext, replyingTo, forwardingMsg])
-
-  /* ── Edit message ───────────────────────────────────────────────────── */
-  const editMessage = useCallback((id, newBody) => {
-    const socket = socketRef.current
-    if (!id || !newBody?.trim() || !socket?.connected) return
-    const sid = getStoredSession()
-    socket.emit('msg:edit', {
-      messageId: id,
-      body:      newBody.trim(),
-      sessionId: sid,
-      conversationId: conversationId || undefined,
-    }, (res) => {
-      if (!mountedRef.current) return
-      if (res?.success) {
-        updateMessage(id, { body: newBody.trim(), isEdited: true, updatedAt: new Date().toISOString() })
-      }
+  /* ═══════════════════════════════════════════════════════════
+     TYPING EMIT
+  ═══════════════════════════════════════════════════════════ */
+  const emitTyping = useCallback((isTypingNow) => {
+    const socket = getSocket()
+    if (!socket.connected) return
+    socket.emit('msg:typing', {
+      conversationId: convIdRef.current   || undefined,
+      sessionId:      sessionIdRef.current || undefined,
+      isTyping:       isTypingNow,
+      senderType:     'user',
     })
+  }, [])
+
+  /* ═══════════════════════════════════════════════════════════
+     MESSAGE ACTIONS
+  ═══════════════════════════════════════════════════════════ */
+  const editMessage = useCallback((id, body) => {
+    if (!body?.trim()) return
+    setMessages(prev =>
+      prev.map(m => m.id === id ? { ...m, body: body.trim(), isEdited: true } : m)
+    )
     setEditingMsg(null)
-  }, [conversationId, updateMessage])
+  }, [])
 
-  /* ── Delete message ─────────────────────────────────────────────────── */
   const deleteMessage = useCallback((id) => {
-    const socket = socketRef.current
-    if (!id || !socket?.connected) return
-    const sid = getStoredSession()
-    socket.emit('msg:delete', {
-      messageId:      id,
-      sessionId:      sid,
-      conversationId: conversationId || undefined,
-    }, (res) => {
-      if (!mountedRef.current) return
-      if (res?.success) {
-        updateMessage(id, { isDeleted: true, body: 'This message was deleted.' })
-      }
-    })
-  }, [conversationId, updateMessage])
+    setMessages(prev =>
+      prev.map(m => m.id === id ? { ...m, isDeleted: true, body: '' } : m)
+    )
+  }, [])
 
-  /* ── React to message ───────────────────────────────────────────────── */
-  const reactToMessage = useCallback((messageId, emoji) => {
-    const socket = socketRef.current
-    if (!messageId || !emoji || !socket?.connected) return
-    const sid = getStoredSession()
-    const u   = userRef.current
-    const reactorId = u?.id || sid
-
-    // Optimistic
-    setMessages((prev) =>
-      prev.map((m) => {
-        if (m.id !== messageId) return m
-        const reactions = { ...(m.reactions || {}) }
-        const existing  = reactions[emoji] || { count: 0, users: [] }
-        const hasReacted = existing.users.includes(reactorId)
-        reactions[emoji] = hasReacted
-          ? { count: Math.max(0, existing.count - 1), users: existing.users.filter((u) => u !== reactorId) }
-          : { count: existing.count + 1, users: [...existing.users, reactorId] }
-        if (reactions[emoji].count === 0) delete reactions[emoji]
+  const reactToMessage = useCallback((msgId, emoji) => {
+    const uid = userRef.current?.id || 'guest'
+    setMessages(prev =>
+      prev.map(m => {
+        if (m.id !== msgId) return m
+        const reactions   = { ...(m.reactions || {}) }
+        const cur         = reactions[emoji] || { count: 0, users: [] }
+        const hasReacted  = cur.users?.includes(uid)
+        reactions[emoji]  = {
+          count: hasReacted ? Math.max(0, cur.count - 1) : cur.count + 1,
+          users: hasReacted
+            ? cur.users.filter(u => u !== uid)
+            : [...(cur.users || []), uid],
+        }
         return { ...m, reactions }
       })
     )
+  }, [])
 
-    socket.emit('msg:react', {
-      messageId,
-      emoji,
-      sessionId:      sid,
-      conversationId: conversationId || undefined,
-      userId:         u?.id || null,
-    })
-  }, [conversationId])
+  /* ═══════════════════════════════════════════════════════════
+     REPLY / FORWARD / EDIT CONTROLS
+  ═══════════════════════════════════════════════════════════ */
+  const startReply     = useCallback((msg) => { setReplyingTo(msg); setForwardingMsg(null); setEditingMsg(null) }, [])
+  const cancelReply    = useCallback(() => setReplyingTo(null), [])
+  const cancelEdit     = useCallback(() => setEditingMsg(null), [])
 
-  /* ── Pin / unpin ────────────────────────────────────────────────────── */
-  const togglePin = useCallback((msg) => {
-    const socket = socketRef.current
-    const isPinned = !msg.isPinned
-
-    // Optimistic
-    updateMessage(msg.id, { isPinned })
-    if (isPinned) {
-      setPinnedMessages((prev) => {
-        const n = [...prev.filter((m) => m.id !== msg.id), { ...msg, isPinned: true }]
-        savePins(n)
-        return n
-      })
-    } else {
-      setPinnedMessages((prev) => {
-        const n = prev.filter((m) => m.id !== msg.id)
-        savePins(n)
-        return n
-      })
-    }
-
-    if (socket?.connected) {
-      socket.emit('msg:pin', {
-        messageId:      msg.id,
-        isPinned,
-        sessionId:      getStoredSession(),
-        conversationId: conversationId || undefined,
-      })
-    }
-  }, [conversationId, updateMessage])
-
-  /* ── Forward ────────────────────────────────────────────────────────── */
   const forwardMessage = useCallback((msg) => {
+    if (!msg) { setForwardingMsg(null); return }
     setForwardingMsg(msg)
     setReplyingTo(null)
   }, [])
 
-  /* ── Reply ──────────────────────────────────────────────────────────── */
-  const startReply = useCallback((msg) => {
-    setReplyingTo({ id: msg.id, body: msg.body, senderName: msg.senderName || 'Support' })
-    setForwardingMsg(null)
-    setEditingMsg(null)
+  /* ═══════════════════════════════════════════════════════════
+     PIN
+  ═══════════════════════════════════════════════════════════ */
+  const togglePin = useCallback((msg) => {
+    setPinnedMessages(prev => {
+      const exists = prev.some(p => p.id === msg.id)
+      const next   = exists ? prev.filter(p => p.id !== msg.id) : [...prev, msg]
+      ss.setJSON(PINNED_KEY, next)
+      return next
+    })
+    setMessages(prev =>
+      prev.map(m => m.id === msg.id ? { ...m, isPinned: !m.isPinned } : m)
+    )
   }, [])
 
-  /* ── Background ─────────────────────────────────────────────────────── */
-  const changeChatBackground = useCallback((bg) => {
-    setChatBackground(bg)
-    saveBg(bg)
-  }, [])
+  /* ═══════════════════════════════════════════════════════════
+     SEARCH
+  ═══════════════════════════════════════════════════════════ */
+  const searchMessages = useCallback((q) => {
+    setSearchQuery(q)
+    if (!q.trim()) {
+      setFilteredMessages([])
+      return
+    }
+    const lower = q.toLowerCase()
+    setFilteredMessages(
+      messages.filter(m =>
+        m.body?.toLowerCase().includes(lower) ||
+        m.senderName?.toLowerCase().includes(lower)
+      )
+    )
+  }, [messages])
 
-  /* ── Search / highlight ─────────────────────────────────────────────── */
-  const searchMessages = useCallback((query) => {
-    setSearchQuery(query)
-  }, [])
-
+  /* ═══════════════════════════════════════════════════════════
+     SCROLL TO
+  ═══════════════════════════════════════════════════════════ */
   const scrollToMessage = useCallback((id) => {
     setHighlightedMsg(id)
     setTimeout(() => {
       if (mountedRef.current) setHighlightedMsg(null)
-    }, 2000)
+    }, 2_500)
   }, [])
 
-  /* ── Typing ─────────────────────────────────────────────────────────── */
-  const emitTyping = useCallback((isTypingNow) => {
-    const socket = socketRef.current
-    if (!socket?.connected || !conversationId) return
-    const u = userRef.current
+  /* ═══════════════════════════════════════════════════════════
+     BACKGROUND
+  ═══════════════════════════════════════════════════════════ */
+  const changeChatBackground = useCallback((bg) => {
+    setChatBackground(bg)
+    ss.set(BG_KEY, bg.id)
+  }, [])
 
-    if (isTypingNow) {
-      if (typingEmitRef.current) return
-      typingEmitRef.current = true
-      socket.emit('msg:typing', {
-        conversationId,
-        isTyping:   true,
-        senderName: u?.fullName || u?.name || 'Guest',
-        senderType: 'user',
-      })
-      clearTimeout(typingEmitTimer.current)
-      typingEmitTimer.current = setTimeout(() => {
-        typingEmitRef.current = false
-      }, 2500)
-    } else {
-      typingEmitRef.current = false
-      clearTimeout(typingEmitTimer.current)
-      socket.emit('msg:typing', {
-        conversationId,
-        isTyping:   false,
-        senderName: u?.fullName || u?.name || 'Guest',
-        senderType: 'user',
-      })
-    }
-  }, [conversationId])
+  /* ═══════════════════════════════════════════════════════════
+     PACKAGE CONTEXT
+  ═══════════════════════════════════════════════════════════ */
+  const clearPackageContext = useCallback(() => setPackageContext(null), [])
 
-  /* ── Filtered messages for search ───────────────────────────────────── */
-  const filteredMessages = useMemo(() => {
-    if (!searchQuery.trim()) return messages
-    const q = searchQuery.toLowerCase()
-    return messages.filter((m) =>
-      (m.body || '').toLowerCase().includes(q) ||
-      (m.senderName || '').toLowerCase().includes(q)
-    )
-  }, [messages, searchQuery])
-
-  /* ── Context value ────────────────────────────────────────────────────── */
+  /* ═══════════════════════════════════════════════════════════
+     CONTEXT VALUE
+  ═══════════════════════════════════════════════════════════ */
   const value = useMemo(() => ({
-    // Connection
-    connected, connectionState,
-    // Portal
+    /* ── Portal ── */
     isOpen, openPortal, closePortal,
-    // Messages
-    messages, filteredMessages, sendMessage, editMessage, deleteMessage,
-    reactToMessage, forwardMessage, forwardingMsg,
-    // Conversation
-    conversationId, sessionId,
-    // Typing
+
+    /* ── Connection ── */
+    connected, connectionState, adminOnline, registered, sendingMsg,
+
+    /* ── Messages ── */
+    messages, filteredMessages,
+    sendMessage, editMessage, deleteMessage, reactToMessage,
+
+    /* ── Typing ── */
     isTyping, emitTyping,
-    // Status
-    adminOnline, unreadCount, sendingMsg, registered,
-    newConversationNotification: notification,
-    // Package
-    packageContext, clearPackageContext,
-    // Reply
-    replyingTo, startReply, cancelReply: () => setReplyingTo(null),
-    // Edit
-    editingMsg, setEditingMsg, editMessage, cancelEdit: () => setEditingMsg(null),
-    // Pin
+
+    /* ── Reply / Edit / Forward ── */
+    replyingTo, startReply, cancelReply,
+    editingMsg, setEditingMsg, cancelEdit,
+    forwardingMsg, forwardMessage,
+
+    /* ── Pin ── */
     pinnedMessages, togglePin, showPinned, setShowPinned,
-    // Background
-    chatBackground, changeChatBackground,
-    // Search
-    searchQuery, searchMessages,
+
+    /* ── Scroll/highlight ── */
     highlightedMsg, scrollToMessage,
-    // Misc
-    clearUnread: () => setUnreadCount(0),
+
+    /* ── Search ── */
+    searchQuery, searchMessages, filteredMessages,
+
+    /* ── Background ── */
+    chatBackground, changeChatBackground,
+
+    /* ── Package ── */
+    packageContext, setPackageContext, clearPackageContext,
+
+    /* ── Unread / notifications (Navbar uses these) ── */
+    unreadCount,
+    newConversationNotification,
+
+    /* ── Error ── */
+    submitError, setSubmitError,
+    submitRetryCount: submitRetryCount.current,
+
+    /* ── Compat stubs ── */
+    loadingData:  false,
+    isSubmitted:  false,
+    isAnimating:  false,
+    displayName:  user?.fullName || user?.name || '',
+
+    /* ── CHAT_BACKGROUNDS for picker ── */
+    CHAT_BACKGROUNDS,
   }), [
-    connected, connectionState,
     isOpen, openPortal, closePortal,
-    messages, filteredMessages, sendMessage, editMessage, deleteMessage,
-    reactToMessage, forwardMessage, forwardingMsg,
-    conversationId, sessionId,
+    connected, connectionState, adminOnline, registered, sendingMsg,
+    messages, filteredMessages, sendMessage, editMessage, deleteMessage, reactToMessage,
     isTyping, emitTyping,
-    adminOnline, unreadCount, sendingMsg, registered, notification,
-    packageContext, clearPackageContext,
-    replyingTo, startReply,
-    editingMsg, setEditingMsg,
-    pinnedMessages, togglePin, showPinned, setShowPinned,
-    chatBackground, changeChatBackground,
-    searchQuery, searchMessages,
+    replyingTo, startReply, cancelReply,
+    editingMsg, cancelEdit,
+    forwardingMsg, forwardMessage,
+    pinnedMessages, togglePin, showPinned,
     highlightedMsg, scrollToMessage,
+    searchQuery, searchMessages,
+    chatBackground, changeChatBackground,
+    packageContext, clearPackageContext,
+    unreadCount, newConversationNotification,
+    submitError,
+    user,
   ])
 
   return (
@@ -647,8 +696,4 @@ export function MessagingProvider({ children }) {
   )
 }
 
-export const useMessaging = () => {
-  const ctx = useContext(MessagingContext)
-  if (!ctx) throw new Error('useMessaging must be inside MessagingProvider')
-  return ctx
-}
+export default MessagingContext

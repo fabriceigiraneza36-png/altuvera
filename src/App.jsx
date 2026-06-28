@@ -1,5 +1,5 @@
 // ============================================================================
-// App.jsx — Application Shell (Optimized)
+// App.jsx — Application Shell v2.0
 // ============================================================================
 
 import React, {
@@ -17,29 +17,29 @@ import {
   Navigate,
   Outlet,
 } from "react-router-dom";
-import { useApp }          from "./context/AppContext";
-import GoogleCallbackPage  from "./pages/GoogleCallbackPage";
-import { useUserAuth }     from "./context/UserAuthContext";
-import { MessagingProvider } from "./context/MessagingContext";
-import ErrorBoundary       from "./components/common/ErrorBoundary";
-import countryService      from "./services/countryService";
-import NewsletterPopup     from "./components/common/NewsletterPopup";
-import AutoSubscribeModal  from "./components/common/AutoSubscribeModal";
+import { useApp }             from "./context/AppContext";
+import { useUserAuth }        from "./context/UserAuthContext";
+import { MessagingProvider }  from "./context/MessagingContext";
+import ErrorBoundary          from "./components/common/ErrorBoundary";
+import countryService         from "./services/countryService";
+import NewsletterPopup        from "./components/common/NewsletterPopup";
+import AutoSubscribeModal     from "./components/common/AutoSubscribeModal";
+import GoogleCallbackPage     from "./pages/GoogleCallbackPage";
 
 // ── Eager imports ─────────────────────────────────────────────────────────────
-import Navbar           from "./components/common/Navbar";
-import Footer           from "./components/common/Footer";
-import UserNotifications from './pages/auth/UserNotifications'
-import ScrollToTop      from "./components/common/ScrollToTop";
-import Loader           from "./components/common/Loader";
-import CookieConsent from "./components/common/CookieConsent";
-import CookieDocumentation from "./components/common/CookieDocumentation";
-import AuthModal        from "./components/auth/AuthModal";
-import CongratulationWindow from "./components/auth/CongratulationWindow";
-import NotLoggedInMessage   from "./components/auth/NotLoggedInMessage";
-import ProtectedRoute   from "./components/auth/ProtectedRoute";
-import PageWrapper      from "./components/common/PageWrapper";
-import WhatsAppButton   from "./components/common/WhatsAppButton";
+import Navbar                 from "./components/common/Navbar";
+import Footer                 from "./components/common/Footer";
+import ScrollToTop            from "./components/common/ScrollToTop";
+import Loader                 from "./components/common/Loader";
+import CookieConsent          from "./components/common/CookieConsent";
+import CookieDocumentation    from "./components/common/CookieDocumentation";
+import AuthModal              from "./components/auth/AuthModal";
+import CongratulationWindow   from "./components/auth/CongratulationWindow";
+import NotLoggedInMessage     from "./components/auth/NotLoggedInMessage";
+import ProtectedRoute         from "./components/auth/ProtectedRoute";
+import PageWrapper            from "./components/common/PageWrapper";
+import WhatsAppButton         from "./components/common/WhatsAppButton";
+import UserNotifications      from "./pages/auth/UserNotifications";
 
 // ── Lazy imports ──────────────────────────────────────────────────────────────
 const PersistentVideoPlayer = React.lazy(() =>
@@ -54,29 +54,27 @@ const NotFound = React.lazy(() => import("./pages/NotFound"));
 // CONSTANTS
 // ============================================================================
 
-const WELCOME_KEY_PREFIX              = "altuvera_welcome_shown:";
-const CELEBRATION_DURATION_MS         = 4200;
-const CALLBACK_REDIRECT_DELAY_MS      = 1800;
+const WELCOME_KEY_PREFIX               = "altuvera_welcome_shown:";
+const CELEBRATION_DURATION_MS          = 4200;
+const CALLBACK_REDIRECT_DELAY_MS       = 1800;
 const CALLBACK_ERROR_REDIRECT_DELAY_MS = 1200;
 
 // ============================================================================
-// LEGACY URL REDIRECT MAP
+// LEGACY REDIRECT MAP
 // ============================================================================
 
 const REDIRECT_MAP = {
-  "/home":          "/",
-  "/destinations/": "/destinations",
-  "/tours":         "/packages",
-  "/safaris":       "/packages",
-  "/blog":          "/posts",
-  "/articles":      "/posts",
-  "/news":          "/posts",
-  "/map":           "/interactive-map",
-  "/contact-us":    "/contact",
-  "/about-us":      "/about",
-  "/our-team":      "/team",
-  "/faqs":          "/faq",
-  "/packages/":     "/packages",
+  "/home":       "/",
+  "/tours":      "/packages",
+  "/safaris":    "/packages",
+  "/blog":       "/posts",
+  "/articles":   "/posts",
+  "/news":       "/posts",
+  "/map":        "/interactive-map",
+  "/contact-us": "/contact",
+  "/about-us":   "/about",
+  "/our-team":   "/team",
+  "/faqs":       "/faq",
 };
 
 const getRedirectUrl = (pathname) => {
@@ -90,28 +88,19 @@ const getRedirectUrl = (pathname) => {
 // ============================================================================
 
 const publicRoutes = [
-  // ── Home ───────────────────────────────────────────────────────────────────
   {
     path: "/",
     component: React.lazy(() => import("./pages/Home")),
     meta: {
       title: "East Africa Safaris & Tours",
-      description:
-        "Book authentic East African safaris and cultural tours with Altuvera.",
+      description: "Book authentic East African safaris with Altuvera.",
     },
   },
-
-  // ── Dev / Test ──────────────────────────────────────────────────────────────
   {
     path: "/tailwind-test",
     component: React.lazy(() => import("./pages/TailwindTest")),
-    meta: {
-      title: "Tailwind CSS Test",
-      description: "Live test page for Tailwind CSS styles.",
-    },
+    meta: { title: "Tailwind CSS Test" },
   },
-
-  // ── Destinations ────────────────────────────────────────────────────────────
   {
     path: "/destinations",
     component: React.lazy(() => import("./pages/Destinations")),
@@ -125,32 +114,23 @@ const publicRoutes = [
     component: React.lazy(() => import("./pages/DestinationDetail")),
     meta: {
       title: "Destination",
-      description:
-        "Discover destination highlights, best time to visit, and travel tips.",
+      description: "Discover destination highlights and travel tips.",
     },
   },
-
-  // ── Adventures ──────────────────────────────────────────────────────────────
   {
     path: "/adventures/:slug",
     component: React.lazy(() => import("./pages/AdventureGuide")),
     meta: {
       title: "Adventure Guide",
-      description:
-        "Explore complete adventure guides and matching destinations across East Africa.",
+      description: "Complete adventure guides across East Africa.",
     },
   },
-
-  // ── Countries ───────────────────────────────────────────────────────────────
   {
     path: "/country/:countryId",
-    component: React.lazy(() =>
-      import("./pages/CountryPage/CountryPage.jsx")
-    ),
+    component: React.lazy(() => import("./pages/CountryPage/CountryPage.jsx")),
     meta: {
       title: "Country Guide",
-      description:
-        "Country travel guides and planning tips for East African adventures.",
+      description: "Country travel guides for East African adventures.",
     },
   },
   {
@@ -158,17 +138,15 @@ const publicRoutes = [
     component: React.lazy(() => import("./pages/CountryDestinations")),
     meta: {
       title: "Country Destinations",
-      description: "Browse top destinations and highlights by country.",
+      description: "Browse top destinations by country.",
     },
   },
-
-  // ── Content pages ────────────────────────────────────────────────────────────
   {
     path: "/tips",
     component: React.lazy(() => import("./pages/Tips")),
     meta: {
       title: "Travel Tips",
-      description: "Practical safari and travel tips for East Africa.",
+      description: "Practical safari and travel tips.",
     },
   },
   {
@@ -176,8 +154,7 @@ const publicRoutes = [
     component: React.lazy(() => import("./pages/Explore")),
     meta: {
       title: "Explore",
-      description:
-        "Explore experiences and culture for your East African journey.",
+      description: "Explore East African experiences and culture.",
     },
   },
   {
@@ -185,26 +162,20 @@ const publicRoutes = [
     component: React.lazy(() => import("./pages/Posts")),
     meta: {
       title: "Posts Journal",
-      description: "Travel guides, safari tips, and stories from East Africa.",
+      description: "Travel guides and stories from East Africa.",
     },
   },
   {
     path: "/post/:slug",
     component: React.lazy(() => import("./pages/PostDetail")),
-    meta: {
-      title: "Article",
-      description: "Read Altuvera travel stories and guides.",
-    },
+    meta: { title: "Article", description: "Altuvera travel stories." },
   },
-
-  // ── Packages ─────────────────────────────────────────────────────────────────
   {
     path: "/packages",
     component: React.lazy(() => import("./pages/Packages")),
     meta: {
       title: "Travel Packages",
-      description:
-        "Browse curated East Africa safari and travel packages with transparent pricing.",
+      description: "Curated East Africa safari packages.",
     },
   },
   {
@@ -212,95 +183,64 @@ const publicRoutes = [
     component: React.lazy(() => import("./pages/PackageDetail")),
     meta: {
       title: "Package Details",
-      description:
-        "Full package details, itinerary, inclusions, pricing and booking.",
+      description: "Full itinerary, inclusions and pricing.",
     },
   },
-
-  // ── Map ───────────────────────────────────────────────────────────────────────
   {
     path: "/interactive-map",
     component: React.lazy(() => import("./pages/InteractiveMap")),
     meta: {
       title: "Interactive Map",
-      description: "Explore destinations with Altuvera's interactive map.",
+      description: "Explore destinations on Altuvera's map.",
     },
   },
-
-  // ── Info pages ────────────────────────────────────────────────────────────────
   {
     path: "/services",
     component: React.lazy(() => import("./pages/Services")),
     meta: {
       title: "Services",
-      description: "Safari planning and travel services by Altuvera.",
+      description: "Safari planning services by Altuvera.",
     },
   },
   {
     path: "/about",
     component: React.lazy(() => import("./pages/About")),
-    meta: {
-      title: "About Altuvera",
-      description: "Learn about Altuvera and our safari mission.",
-    },
+    meta: { title: "About Altuvera" },
   },
   {
     path: "/contact",
     component: React.lazy(() => import("./pages/Contact")),
-    meta: {
-      title: "Contact Altuvera",
-      description: "Get in touch with Altuvera to plan your safari.",
-    },
+    meta: { title: "Contact Altuvera" },
   },
   {
     path: "/gallery",
     component: React.lazy(() => import("./pages/Gallery")),
-    meta: {
-      title: "Gallery",
-      description: "Browse photos from safaris and cultural experiences.",
-    },
+    meta: { title: "Gallery" },
   },
   {
     path: "/faq",
     component: React.lazy(() => import("./pages/FAQ")),
-    meta: {
-      title: "FAQ",
-      description: "Answers to common questions about booking and safaris.",
-    },
+    meta: { title: "FAQ" },
   },
   {
     path: "/team",
     component: React.lazy(() => import("./pages/Team")),
-    meta: {
-      title: "Our Team",
-      description: "Meet the Altuvera team.",
-    },
+    meta: { title: "Our Team" },
   },
-
-  // ── Legal pages ───────────────────────────────────────────────────────────────
   {
     path: "/payment-terms",
     component: React.lazy(() => import("./pages/PaymentTerms")),
-    meta: {
-      title: "Payment Terms",
-      description: "Payment terms and booking information.",
-    },
+    meta: { title: "Payment Terms" },
   },
   {
     path: "/privacy",
     component: React.lazy(() => import("./pages/PrivacyPolicy")),
-    meta: {
-      title: "Privacy Policy",
-      description: "Altuvera privacy policy.",
-    },
+    meta: { title: "Privacy Policy" },
   },
   {
     path: "/terms",
     component: React.lazy(() => import("./pages/TermsOfService")),
-    meta: {
-      title: "Terms of Service",
-      description: "Altuvera terms of service.",
-    },
+    meta: { title: "Terms of Service" },
   },
 ];
 
@@ -308,7 +248,7 @@ const protectedRoutes = [
   {
     path: "/booking",
     component: React.lazy(() => import("./pages/Booking")),
-    meta: { title: "Booking", noindex: true },
+    meta: { title: "Book Your Adventure", noindex: true },
   },
   {
     path: "/profile",
@@ -329,6 +269,11 @@ const protectedRoutes = [
     path: "/settings",
     component: React.lazy(() => import("./pages/auth/UserSettings")),
     meta: { title: "Settings", noindex: true },
+  },
+  {
+    path: "/notifications",
+    component: UserNotifications,           // eager — used frequently
+    meta: { title: "Notifications", noindex: true },
   },
 ];
 
@@ -375,10 +320,10 @@ const renderProtectedRoute = ({ path, component: Component, meta = {} }) => (
 );
 
 // ============================================================================
-// INLINE SVG ATOMS
+// SVG ATOMS
 // ============================================================================
 
-const Icon = ({ children, size = 16, style, ...props }) => (
+const Icon = ({ children, size = 16, ...props }) => (
   <svg
     width={size}
     height={size}
@@ -389,27 +334,26 @@ const Icon = ({ children, size = 16, style, ...props }) => (
     strokeLinecap="round"
     strokeLinejoin="round"
     aria-hidden="true"
-    style={style}
     {...props}
   >
     {children}
   </svg>
 );
 
-const CheckIcon = ({ size = 28, strokeWidth = 3.5, color = "#fff" }) => (
-  <Icon size={size} stroke={color} strokeWidth={strokeWidth}>
+const CheckIcon = ({ size = 30, color = "#fff" }) => (
+  <Icon size={size} stroke={color} strokeWidth={3.5}>
     <path d="M20 6L9 17l-5-5" />
   </Icon>
 );
 
-const ArrowRightIcon = ({ size = 16, style }) => (
-  <Icon size={size} style={style}>
+const ArrowRightIcon = ({ size = 16 }) => (
+  <Icon size={size}>
     <line x1="5" y1="12" x2="19" y2="12" />
     <polyline points="12 5 19 12 12 19" />
   </Icon>
 );
 
-const GlobeIcon = ({ size = 14 }) => (
+const GlobeIcon    = ({ size = 13 }) => (
   <Icon size={size}>
     <circle cx="12" cy="12" r="10" />
     <line x1="2" y1="12" x2="22" y2="12" />
@@ -417,7 +361,7 @@ const GlobeIcon = ({ size = 14 }) => (
   </Icon>
 );
 
-const CalendarIcon = ({ size = 14 }) => (
+const CalendarIcon = ({ size = 13 }) => (
   <Icon size={size}>
     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
     <line x1="16" y1="2" x2="16" y2="6" />
@@ -426,7 +370,7 @@ const CalendarIcon = ({ size = 14 }) => (
   </Icon>
 );
 
-const HeartIcon = ({ size = 14 }) => (
+const HeartIcon = ({ size = 13 }) => (
   <Icon size={size}>
     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
   </Icon>
@@ -446,44 +390,32 @@ const GitHubMark = ({ size = 44 }) => (
 );
 
 // ============================================================================
-// STYLES — injected once, scoped to class prefix
+// STYLES
 // ============================================================================
 
 const APP_STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,900;1,600&family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-  @keyframes appFadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
-  @keyframes appScaleUp {
-    from { opacity: 0; transform: scale(0.94) translateY(20px); }
-    to   { opacity: 1; transform: scale(1)    translateY(0); }
+  @keyframes appFadeIn   { from { opacity:0 } to { opacity:1 } }
+  @keyframes appScaleUp  {
+    from { opacity:0; transform:scale(.94) translateY(20px) }
+    to   { opacity:1; transform:scale(1)   translateY(0)    }
   }
   @keyframes appCheckmark {
-    0%   { transform: scale(0.7);  opacity: 0; }
-    60%  { transform: scale(1.12);             }
-    100% { transform: scale(1);    opacity: 1; }
+    0%   { transform:scale(.7);  opacity:0 }
+    60%  { transform:scale(1.12)            }
+    100% { transform:scale(1);   opacity:1 }
   }
   @keyframes appPulseRing {
-    0%   { transform: scale(1);   opacity: .6; }
-    100% { transform: scale(1.6); opacity: 0;  }
+    0%   { transform:scale(1);   opacity:.6 }
+    100% { transform:scale(1.6); opacity:0  }
   }
   @keyframes appFloatUp {
-    0%   { opacity: 0; transform: translateY(8px);  }
-    100% { opacity: 1; transform: translateY(0);     }
+    0%   { opacity:0; transform:translateY(8px) }
+    100% { opacity:1; transform:translateY(0)   }
   }
-  @keyframes appConfetti {
-    0%   { transform: translateY(0)     rotate(0deg);   opacity: 1; }
-    100% { transform: translateY(-80px) rotate(360deg); opacity: 0; }
-  }
-  @keyframes ghSpin {
-    to { transform: rotate(360deg); }
-  }
-  @keyframes appReveal {
-    from { width: 0; }
-    to   { width: 100%; }
-  }
+  @keyframes ghSpin    { to { transform:rotate(360deg) } }
+  @keyframes appReveal { from { width:0 } to { width:100% } }
 
   .app-shell {
     min-height: 100vh;
@@ -492,13 +424,14 @@ const APP_STYLES = `
     position: relative;
     isolation: isolate;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
 
-  /* ── Celebration card ──────────────────────────────────────────────────── */
+  /* ── Celebration ── */
   .cel-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(4, 47, 31, 0.38);
+    background: rgba(4,47,31,.38);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
     display: flex;
@@ -506,22 +439,22 @@ const APP_STYLES = `
     justify-content: center;
     z-index: 99999;
     padding: 20px;
-    animation: appFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation: appFadeIn .4s cubic-bezier(.16,1,.3,1) both;
   }
   .cel-card {
-    background: #ffffff;
+    background: #fff;
     border-radius: 28px;
-    padding: clamp(36px, 5vw, 52px) clamp(28px, 4vw, 44px);
+    padding: clamp(36px,5vw,52px) clamp(28px,4vw,44px);
     text-align: center;
     box-shadow:
-      0 32px 64px -12px rgba(4, 47, 31, 0.2),
-      0  8px 24px -4px  rgba(4, 47, 31, 0.1),
-      0  0   0   1px   rgba(4, 47, 31, 0.05);
+      0 32px 64px -12px rgba(4,47,31,.2),
+      0  8px 24px  -4px rgba(4,47,31,.1),
+      0  0   0      1px rgba(4,47,31,.05);
     max-width: 420px;
     width: 100%;
     position: relative;
     overflow: hidden;
-    animation: appScaleUp 0.65s cubic-bezier(0.34, 1.3, 0.64, 1) both;
+    animation: appScaleUp .65s cubic-bezier(.34,1.3,.64,1) both;
   }
   .cel-blob {
     position: absolute;
@@ -529,46 +462,39 @@ const APP_STYLES = `
     pointer-events: none;
   }
   .cel-blob--tl {
-    top: -50px; left: -50px;
-    width: 180px; height: 180px;
-    background: radial-gradient(circle, rgba(16,185,129,.09) 0%, transparent 70%);
+    top:-50px; left:-50px; width:180px; height:180px;
+    background: radial-gradient(circle,rgba(16,185,129,.09) 0%,transparent 70%);
   }
   .cel-blob--br {
-    bottom: -50px; right: -50px;
-    width: 160px; height: 160px;
-    background: radial-gradient(circle, rgba(5,150,105,.07) 0%, transparent 70%);
+    bottom:-50px; right:-50px; width:160px; height:160px;
+    background: radial-gradient(circle,rgba(5,150,105,.07) 0%,transparent 70%);
   }
   .cel-checkmark-wrap {
     position: relative;
-    width: 72px;
-    height: 72px;
+    width: 72px; height: 72px;
     margin: 0 auto 22px;
   }
   .cel-checkmark-ring {
-    position: absolute;
-    inset: -6px;
+    position: absolute; inset: -6px;
     border-radius: 50%;
-    border: 2px solid rgba(16, 185, 129, 0.35);
-    animation: appPulseRing 1.5s cubic-bezier(0, 0, 0.2, 1) 0.5s infinite;
+    border: 2px solid rgba(16,185,129,.35);
+    animation: appPulseRing 1.5s cubic-bezier(0,0,.2,1) .5s infinite;
   }
   .cel-checkmark-circle {
-    width: 72px;
-    height: 72px;
+    width: 72px; height: 72px;
     border-radius: 50%;
-    background: linear-gradient(145deg, #10b981, #047857);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 14px 28px rgba(5, 150, 105, 0.3);
-    animation: appCheckmark 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+    background: linear-gradient(145deg,#10b981,#047857);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 14px 28px rgba(5,150,105,.3);
+    animation: appCheckmark .65s cubic-bezier(.34,1.56,.64,1) .15s both;
   }
   .cel-title {
     font-family: 'Playfair Display', Georgia, serif;
-    font-size: clamp(22px, 4.5vw, 30px);
+    font-size: clamp(22px,4.5vw,30px);
     font-weight: 700;
     color: #0f172a;
     margin: 0 0 6px;
-    letter-spacing: -0.02em;
+    letter-spacing: -.02em;
     line-height: 1.2;
     position: relative;
     z-index: 1;
@@ -577,166 +503,120 @@ const APP_STYLES = `
     font-size: 11px;
     color: #059669;
     font-weight: 800;
-    letter-spacing: 0.16em;
+    letter-spacing: .16em;
     text-transform: uppercase;
     margin: 0 0 16px;
-    position: relative;
-    z-index: 1;
-    animation: appFloatUp 0.5s 0.4s both;
+    position: relative; z-index: 1;
+    animation: appFloatUp .5s .4s both;
   }
   .cel-desc {
-    font-size: 14.5px;
-    color: #475569;
-    line-height: 1.72;
-    margin: 0 auto 26px;
-    max-width: 340px;
-    position: relative;
-    z-index: 1;
-    animation: appFloatUp 0.5s 0.5s both;
+    font-size: 14.5px; color: #475569; line-height: 1.72;
+    margin: 0 auto 26px; max-width: 340px;
+    position: relative; z-index: 1;
+    animation: appFloatUp .5s .5s both;
   }
   .cel-badges {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    flex-wrap: wrap;
+    display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;
     margin-bottom: 28px;
-    position: relative;
-    z-index: 1;
-    animation: appFloatUp 0.5s 0.6s both;
+    position: relative; z-index: 1;
+    animation: appFloatUp .5s .6s both;
   }
   .cel-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
+    display: inline-flex; align-items: center; gap: 6px;
     padding: 7px 15px;
     background: #f0fdf4;
     border-radius: 99px;
-    border: 1.5px solid rgba(4, 120, 87, 0.14);
-    font-size: 13px;
-    color: #047857;
-    font-weight: 700;
-    transition: all 0.2s ease;
+    border: 1.5px solid rgba(4,120,87,.14);
+    font-size: 13px; color: #047857; font-weight: 700;
+    transition: all .2s ease;
   }
   .cel-badge:hover {
     background: #dcfce7;
-    border-color: rgba(4, 120, 87, 0.28);
+    border-color: rgba(4,120,87,.28);
     transform: translateY(-1px);
   }
   .cel-cta {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 15px 28px;
-    background: linear-gradient(135deg, #047857, #065f46);
-    color: #ffffff;
-    text-decoration: none;
-    border-radius: 14px;
-    font-weight: 700;
-    font-size: 15px;
-    box-shadow: 0 8px 22px rgba(4, 120, 87, 0.22);
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    z-index: 1;
-    animation: appFloatUp 0.5s 0.7s both;
-    border: none;
-    cursor: pointer;
-    letter-spacing: 0.01em;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 15px 28px;
+    background: linear-gradient(135deg,#047857,#065f46);
+    color: #fff; text-decoration: none;
+    border-radius: 14px; font-weight: 700; font-size: 15px;
+    box-shadow: 0 8px 22px rgba(4,120,87,.22);
+    transition: all .25s cubic-bezier(.4,0,.2,1);
+    position: relative; z-index: 1;
+    animation: appFloatUp .5s .7s both;
+    border: none; cursor: pointer; letter-spacing: .01em;
   }
   .cel-cta:hover {
-    background: linear-gradient(135deg, #065f46, #022c22);
+    background: linear-gradient(135deg,#065f46,#022c22);
     transform: translateY(-2px);
-    box-shadow: 0 14px 32px rgba(4, 120, 87, 0.32);
+    box-shadow: 0 14px 32px rgba(4,120,87,.32);
   }
   .cel-cta:active { transform: translateY(0); }
 
-  /* ── GitHub callback page ──────────────────────────────────────────────── */
+  /* ── GitHub callback ── */
   .gh-page {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: flex; align-items: center; justify-content: center;
     min-height: 100vh;
-    background: linear-gradient(145deg, #f0fdf4 0%, #f8fafc 100%);
+    background: linear-gradient(145deg,#f0fdf4 0%,#f8fafc 100%);
     font-family: 'Inter', -apple-system, sans-serif;
     padding: 20px;
   }
   .gh-card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    background: #ffffff;
-    border-radius: 24px;
-    padding: clamp(40px, 6vw, 56px) clamp(32px, 5vw, 48px);
+    display: flex; flex-direction: column; align-items: center;
+    background: #fff; border-radius: 24px;
+    padding: clamp(40px,6vw,56px) clamp(32px,5vw,48px);
     box-shadow:
-      0 24px 48px rgba(0, 0, 0, 0.08),
-      0  4px 12px rgba(0, 0, 0, 0.04),
-      0  0   0   1px rgba(0, 0, 0, 0.04);
-    max-width: 400px;
-    width: 100%;
-    text-align: center;
+      0 24px 48px rgba(0,0,0,.08),
+      0  4px 12px rgba(0,0,0,.04),
+      0  0   0   1px rgba(0,0,0,.04);
+    max-width: 400px; width: 100%; text-align: center;
   }
   .gh-spinner {
-    width: 44px;
-    height: 44px;
-    border: 3px solid #e5e7eb;
-    border-top-color: #059669;
+    width: 44px; height: 44px;
+    border: 3px solid #e5e7eb; border-top-color: #059669;
     border-radius: 50%;
-    animation: ghSpin 0.8s linear infinite;
+    animation: ghSpin .8s linear infinite;
     margin-bottom: 28px;
   }
   .gh-spinner--error { border-top-color: #ef4444; animation-duration: 2s; }
   .gh-spinner--done  { border-top-color: #10b981; animation-duration: 2s; }
   .gh-title {
     font-family: 'Playfair Display', Georgia, serif;
-    font-size: 22px;
-    font-weight: 700;
-    color: #0f172a;
-    margin: 0 0 10px;
-    letter-spacing: -0.015em;
+    font-size: 22px; font-weight: 700; color: #0f172a;
+    margin: 0 0 10px; letter-spacing: -.015em;
   }
-  .gh-status {
-    font-size: 14px;
-    line-height: 1.6;
-    font-weight: 600;
-    margin: 0;
-  }
+  .gh-status { font-size: 14px; line-height: 1.6; font-weight: 600; margin: 0; }
   .gh-status--default { color: #6b7280; }
   .gh-status--done    { color: #059669; }
   .gh-status--error   { color: #ef4444; }
   .gh-error-detail {
-    margin-top: 10px;
-    font-size: 13px;
-    color: #9ca3af;
-    line-height: 1.6;
-    max-width: 300px;
+    margin-top: 10px; font-size: 13px; color: #9ca3af;
+    line-height: 1.6; max-width: 300px;
   }
   .gh-progress {
-    width: 100%;
-    height: 3px;
-    background: #e5e7eb;
-    border-radius: 2px;
-    overflow: hidden;
-    margin-top: 24px;
+    width: 100%; height: 3px;
+    background: #e5e7eb; border-radius: 2px;
+    overflow: hidden; margin-top: 24px;
   }
   .gh-progress__fill {
     height: 100%;
-    background: linear-gradient(90deg, #10b981, #059669);
+    background: linear-gradient(90deg,#10b981,#059669);
     border-radius: 2px;
     animation: appReveal 1.6s ease-out both;
   }
 `;
 
-let stylesInjected = false;
+/* Inject once, idempotent */
+let _stylesInjected = false;
 function injectAppStyles() {
-  if (stylesInjected || typeof document === "undefined") return;
-  const el = document.getElementById("app-styles");
-  if (el) { stylesInjected = true; return; }
+  if (_stylesInjected || typeof document === "undefined") return;
+  if (document.getElementById("app-styles")) { _stylesInjected = true; return; }
   const s = document.createElement("style");
   s.id = "app-styles";
   s.textContent = APP_STYLES;
   document.head.appendChild(s);
-  stylesInjected = true;
+  _stylesInjected = true;
 }
 
 // ============================================================================
@@ -744,9 +624,9 @@ function injectAppStyles() {
 // ============================================================================
 
 const FEATURE_BADGES = [
-  { id: "explore",  label: "Explore",  icon: <GlobeIcon    size={13} /> },
-  { id: "book",     label: "Book",     icon: <CalendarIcon size={13} /> },
-  { id: "wishlist", label: "Wishlist", icon: <HeartIcon    size={13} /> },
+  { id: "explore",  label: "Explore",  Icon: GlobeIcon    },
+  { id: "book",     label: "Book",     Icon: CalendarIcon },
+  { id: "wishlist", label: "Wishlist", Icon: HeartIcon    },
 ];
 
 // ============================================================================
@@ -761,29 +641,31 @@ const GitHubCallbackPage = React.memo(() => {
     const delay = socialAuthError
       ? CALLBACK_ERROR_REDIRECT_DELAY_MS
       : CALLBACK_REDIRECT_DELAY_MS;
-    const timer = setTimeout(() => window.location.replace("/"), delay);
-    return () => clearTimeout(timer);
+    const t = setTimeout(() => window.location.replace("/"), delay);
+    return () => clearTimeout(t);
   }, [githubLoading, isAuthenticated, socialAuthError]);
 
-  const isError     = Boolean(socialAuthError);
-  const isDone      = !githubLoading && isAuthenticated && !isError;
+  const isError = Boolean(socialAuthError);
+  const isDone  = !githubLoading && isAuthenticated && !isError;
+
   const statusClass = isError
     ? "gh-status--error"
     : isDone
     ? "gh-status--done"
     : "gh-status--default";
+
   const statusMsg = isError
     ? "Sign-in failed. Redirecting…"
     : isDone
-    ? "Signed in successfully! Redirecting…"
+    ? "Signed in! Redirecting…"
     : githubLoading
     ? "Verifying your GitHub account…"
     : "Completing sign-in…";
-  const spinnerClass = isError
-    ? "gh-spinner gh-spinner--error"
-    : isDone
-    ? "gh-spinner gh-spinner--done"
-    : "gh-spinner";
+
+  const spinnerClass = [
+    "gh-spinner",
+    isError ? "gh-spinner--error" : isDone ? "gh-spinner--done" : "",
+  ].filter(Boolean).join(" ");
 
   return (
     <div className="gh-page">
@@ -813,7 +695,7 @@ const CelebrationOverlay = React.memo(({ userName, onDismiss }) => {
     if (!userName) return "Traveler";
     return userName
       .split(" ")
-      .map((n) => (n[0]?.toUpperCase() ?? "") + n.slice(1).toLowerCase())
+      .map((w) => (w[0]?.toUpperCase() ?? "") + w.slice(1).toLowerCase())
       .join(" ");
   }, [userName]);
 
@@ -828,26 +710,30 @@ const CelebrationOverlay = React.memo(({ userName, onDismiss }) => {
       <div className="cel-card" onClick={(e) => e.stopPropagation()}>
         <div className="cel-blob cel-blob--tl" aria-hidden="true" />
         <div className="cel-blob cel-blob--br" aria-hidden="true" />
+
         <div className="cel-checkmark-wrap">
           <div className="cel-checkmark-ring" aria-hidden="true" />
           <div className="cel-checkmark-circle">
-            <CheckIcon size={30} strokeWidth={3} color="#fff" />
+            <CheckIcon size={30} color="#fff" />
           </div>
         </div>
+
         <h2 className="cel-title">Welcome, {displayName}!</h2>
         <p className="cel-subtitle">Your adventure starts now</p>
         <p className="cel-desc">
           You now have full access to plan your dream safari, save stunning
           destinations, and explore the wonders of East Africa.
         </p>
+
         <div className="cel-badges">
-          {FEATURE_BADGES.map(({ id, label, icon }) => (
+          {FEATURE_BADGES.map(({ id, label, Icon }) => (
             <span key={id} className="cel-badge">
-              {icon}
+              <Icon size={13} />
               {label}
             </span>
           ))}
         </div>
+
         <a href="/packages" className="cel-cta">
           <ArrowRightIcon size={16} />
           Explore Packages
@@ -862,6 +748,11 @@ CelebrationOverlay.displayName = "CelebrationOverlay";
 // LAYOUT COMPONENTS
 // ============================================================================
 
+/**
+ * AppLayout — shared shell for all normal pages.
+ * Navbar is rendered here, which also renders <MessagePortal />.
+ * MessagingProvider is already above this in the tree.
+ */
 const AppLayout = React.memo(() => (
   <>
     <Navbar />
@@ -909,7 +800,7 @@ const OverlayLayer = React.memo(
 OverlayLayer.displayName = "OverlayLayer";
 
 // ============================================================================
-// SMART REDIRECT
+// SMART REDIRECT (404 + legacy URLs)
 // ============================================================================
 
 const SmartRedirect = React.memo(() => {
@@ -935,7 +826,7 @@ SmartRedirect.displayName = "SmartRedirect";
 function useCelebration({ isAuthenticated, user }) {
   const [showCelebration, setShowCelebration] = useState(false);
   const prevAuthRef = useRef(false);
-  const dismiss     = useCallback(() => setShowCelebration(false), []);
+  const dismiss = useCallback(() => setShowCelebration(false), []);
 
   useEffect(() => {
     const wasAuthenticated = prevAuthRef.current;
@@ -956,12 +847,12 @@ function useCelebration({ isAuthenticated, user }) {
 
       if (shouldShow) {
         setShowCelebration(true);
-        const timer = setTimeout(
+        const t = setTimeout(
           () => setShowCelebration(false),
           CELEBRATION_DURATION_MS
         );
         prevAuthRef.current = isAuthenticated;
-        return () => clearTimeout(timer);
+        return () => clearTimeout(t);
       }
     }
 
@@ -990,9 +881,7 @@ function useDevPerfLog(pathname) {
     const entry = performance.getEntriesByType?.("navigation")?.[0];
     if (entry) {
       console.debug(
-        `[Router] ${pathname} — DOM interactive: ${Math.round(
-          entry.domInteractive
-        )} ms`
+        `[Router] ${pathname} — DOM interactive: ${Math.round(entry.domInteractive)}ms`
       );
     }
   }, [pathname]);
@@ -1013,7 +902,10 @@ function App() {
     showNotLoggedInMessage,
   } = useUserAuth();
 
+  /* One-time style injection */
   useEffect(injectAppStyles, []);
+
+  /* Hooks */
   usePrefetchCountries();
   useRouteLoader({ location, isLoading, setIsLoading });
   useDevPerfLog(location.pathname);
@@ -1023,12 +915,12 @@ function App() {
     user,
   });
 
-  const userName = user?.fullName || user?.name;
+  const userName = user?.fullName || user?.name || null;
 
   return (
     <div className="app-shell">
       <Routes>
-        {/* ── GitHub OAuth callback — bare page, no Navbar/Footer ── */}
+        {/* ── OAuth callbacks — bare pages, no Navbar/Footer ── */}
         <Route
           path="/auth/github/callback"
           element={
@@ -1037,28 +929,25 @@ function App() {
             </PageWrapper>
           }
         />
-
-        {/* ── Google OAuth callback ── */}
         <Route
           path="/auth/google/callback"
           element={<GoogleCallbackPage />}
         />
 
-        {/* ── Main shell (Navbar + Footer) ── */}
+        {/* ── Main shell: Navbar + Footer ── */}
         <Route element={<AppLayout />}>
+          {/* Public pages */}
           {publicRoutes.map(renderPublicRoute)}
+
+          {/* Protected pages (includes /notifications) */}
           {protectedRoutes.map(renderProtectedRoute)}
+
+          {/* 404 + legacy URL redirects */}
           <Route path="*" element={<SmartRedirect />} />
         </Route>
-
-<Route path="/notifications" element={
-  <ProtectedRoute>
-    <UserNotifications />
-  </ProtectedRoute>
-} />
-
       </Routes>
 
+      {/* ── Global overlays (outside Routes — always present) ── */}
       <OverlayLayer
         isLoading={isLoading}
         showCelebration={showCelebration}
@@ -1082,6 +971,20 @@ function App() {
 // PROVIDERS WRAPPER
 // ============================================================================
 
+/**
+ * Provider nesting order (outermost → innermost):
+ *
+ *   BrowserRouter              ← in main.jsx
+ *     AppContext.Provider      ← in main.jsx
+ *       UserAuthProvider       ← in main.jsx
+ *         MessagingProvider    ← HERE  (needs UserAuth for token/user)
+ *           ErrorBoundary
+ *             App
+ *
+ * MessagingProvider must be:
+ *   - INSIDE UserAuthProvider  → so it can read token + user
+ *   - OUTSIDE App/Navbar       → so Navbar's useMessaging() works
+ */
 const AppWithProviders = () => (
   <MessagingProvider>
     <ErrorBoundary>
