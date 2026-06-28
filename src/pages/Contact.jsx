@@ -10,7 +10,7 @@ import {
   FiCheckCircle, FiUser, FiAlertCircle, FiChevronDown, FiUsers,
   FiGlobe, FiStar, FiArrowRight, FiArrowLeft, FiHelpCircle,
   FiShield, FiX, FiExternalLink, FiAward, FiZap, FiUserCheck,
-  FiMessageCircle, FiSmile,
+  FiSmile,
 } from "react-icons/fi";
 import {
   FaFacebookF, FaInstagram, FaTwitter, FaYoutube, FaWhatsapp, FaTiktok,
@@ -26,7 +26,6 @@ import { apiFetch } from "../utils/apiBase";
 import VerificationModal from "../components/common/VerificationModal";
 import EmojiPicker from "../components/messaging/EmojiPicker";
 import { useUserAuth } from "../context/UserAuthContext";
-import { useMessaging } from "../context/MessagingContext";
 
 /* ══════════════════════════════════════════════════════
    BRAND TOKENS
@@ -380,14 +379,6 @@ FieldTextarea.displayName = "FieldTextarea";
 ══════════════════════════════════════════════════════ */
 const Contact = () => {
   const { user, isAuthenticated } = useUserAuth();
-
-  /* ── Messaging context — open portal for live chat ── */
-  const { openPortal } = useMessaging()
-
-  /* FAB opens the global chat portal */
-  const handleChatFab = useCallback(() => {
-    openPortal()
-  }, [openPortal])
 
   /* ═══════════════════════════════
      FETCH FAQs
@@ -1377,19 +1368,6 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* ══════════ LIVE CHAT FAB ══════════ */}
-      <motion.button
-        className="cf-fab"
-        onClick={handleChatFab}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.93 }}
-        aria-label="Open live chat"
-      >
-        <FiMessageCircle size={24} color="#fff" />
-        <span className="cf-fab-pulse" />
-        <span className="cf-fab-badge">Chat</span>
-      </motion.button>
-
       {/* ══════════ VERIFICATION MODAL ══════════ */}
       <VerificationModal
         open={verOpen}
@@ -2074,132 +2052,6 @@ body{-webkit-font-smoothing:antialiased}
 }
 @keyframes cf-spin{to{transform:rotate(360deg)}}
 
-/* ─── CHAT FAB ───────────────────────────────── */
-.cf-fab{
-  position:fixed;bottom:28px;right:28px;
-  width:58px;height:58px;border-radius:50%;
-  background:linear-gradient(135deg,#065f46,#047857);
-  border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 8px 26px rgba(6,78,59,.36);
-  z-index:900;
-}
-.cf-fab-pulse{
-  position:absolute;inset:-4px;border-radius:50%;
-  border:3px solid #059669;opacity:.5;
-  animation:cf-pulse 2s ease-out infinite;
-}
-@keyframes cf-pulse{0%{transform:scale(1);opacity:.5}100%{transform:scale(1.55);opacity:0}}
-.cf-fab-badge{
-  position:absolute;top:-4px;right:-4px;
-  background:#ef4444;color:#fff;
-  font-size:10px;font-weight:700;
-  padding:2px 6px;border-radius:999px;
-  border:2px solid #fff;
-  pointer-events:none;
-}
-
-/* ─── CHAT WINDOW ────────────────────────────── */
-.cf-chat{
-  position:fixed;bottom:28px;right:28px;
-  width:clamp(300px,88vw,370px);
-  background:#fff;border-radius:20px;
-  box-shadow:0 22px 60px rgba(0,0,0,.15);
-  overflow:hidden;z-index:950;
-  display:flex;flex-direction:column;
-  max-height:calc(100vh - 56px);
-}
-.cf-chat-head{
-  background:linear-gradient(135deg,#064e3b,#047857);
-  padding:14px 16px;
-  display:flex;align-items:center;justify-content:space-between;
-  flex-shrink:0;
-}
-.cf-chat-head-l{display:flex;align-items:center;gap:10px}
-.cf-chat-av{
-  width:38px;height:38px;border-radius:50%;
-  background:rgba(255,255,255,.14);
-  display:flex;align-items:center;justify-content:center;
-  flex-shrink:0;
-}
-.cf-chat-name{color:#fff;font-weight:700;font-size:14px}
-.cf-chat-status{color:rgba(255,255,255,.72);font-size:11.5px;display:flex;align-items:center;gap:5px;margin-top:1px}
-.cf-chat-dot{width:7px;height:7px;border-radius:50%;background:#94a3b8}
-.cf-chat-dot.live{background:#4ade80;box-shadow:0 0 7px rgba(74,222,128,.5)}
-.cf-chat-close{
-  width:28px;height:28px;border-radius:50%;
-  background:rgba(255,255,255,.14);border:none;
-  cursor:pointer;display:flex;align-items:center;justify-content:center;
-  color:#fff;transition:background .2s;
-}
-.cf-chat-close:hover{background:rgba(255,255,255,.24)}
-.cf-chat-body{flex:1;padding:16px;background:#f8fffe;overflow-y:auto;min-height:200px;max-height:300px}
-.cf-chat-welcome{
-  background:#fff;padding:16px;border-radius:14px;
-  box-shadow:0 2px 8px rgba(0,0,0,.04);
-}
-.cf-chat-welcome-icon{
-  width:42px;height:42px;border-radius:12px;
-  background:#ecfdf5;
-  display:flex;align-items:center;justify-content:center;
-  margin-bottom:10px;
-}
-.cf-chat-welcome p{font-size:13.5px;color:#1e293b;line-height:1.55;margin-bottom:6px}
-.cf-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px}
-.cf-chip{
-  padding:6px 12px;background:#fff;
-  border:1px solid #059669;border-radius:999px;
-  font-size:11.5px;font-weight:600;color:#065f46;
-  cursor:pointer;transition:all .2s;
-}
-.cf-chip:hover{background:#065f46;color:#fff;border-color:#065f46}
-.cf-bubble{
-  padding:11px 14px;border-radius:14px;
-  max-width:88%;margin-bottom:10px;
-  box-shadow:0 2px 7px rgba(0,0,0,.04);
-}
-.cf-bubble--user{
-  background:linear-gradient(135deg,#065f46,#047857);
-  margin-left:auto;border-radius:14px 14px 4px 14px;
-}
-.cf-bubble--user p{color:#fff}
-.cf-bubble:not(.cf-bubble--user){
-  background:#fff;margin-right:auto;
-  border-radius:14px 14px 14px 4px;
-}
-.cf-bubble-who{display:block;font-size:10.5px;font-weight:700;color:#94a3b8;margin-bottom:3px}
-.cf-bubble p{font-size:13.5px;line-height:1.5;margin:0 0 3px}
-.cf-bubble-time{font-size:10px;color:#94a3b8;display:block;text-align:right}
-.cf-bubble--user .cf-bubble-time{color:rgba(255,255,255,.6)}
-.cf-chat-err{
-  padding:8px 14px;margin:0 14px 10px;
-  border-radius:10px;background:#fef2f2;
-  color:#b91c1c;font-size:12px;
-  display:flex;align-items:center;gap:6px;
-  flex-shrink:0;
-}
-.cf-chat-foot{
-  padding:10px 12px;border-top:1px solid #e2e8f0;
-  display:flex;gap:8px;align-items:center;flex-shrink:0;
-}
-.cf-chat-in{
-  flex:1;padding:9px 14px;
-  border:1.5px solid #e2e8f0;border-radius:999px;
-  font-family:'Inter',sans-serif;font-size:13.5px;
-  outline:none;transition:border-color .22s;
-}
-.cf-chat-in:focus{border-color:#065f46}
-.cf-chat-send{
-  width:38px;height:38px;border-radius:50%;
-  background:linear-gradient(135deg,#065f46,#059669);
-  border:none;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  box-shadow:0 4px 11px rgba(6,78,59,.22);flex-shrink:0;
-  transition:box-shadow .22s;
-}
-.cf-chat-send:hover:not(:disabled){box-shadow:0 7px 18px rgba(6,78,59,.34)}
-.cf-chat-send:disabled{opacity:.55;cursor:not-allowed}
-
 /* ─── SPINNER ────────────────────────────────── */
 .cf-spin{animation:cf-spin .7s linear infinite}
 
@@ -2224,9 +2076,7 @@ body{-webkit-font-smoothing:antialiased}
   .cf-nav-back,.cf-nav-next{width:100%;justify-content:center}
   .cf-trust-grid{grid-template-columns:1fr}
   .cf-trust-item{border-right:none;border-bottom:1px solid rgba(255,255,255,.07)}
-  .cf-trust-item:last-child{border-bottom:none}
-  .cf-chat{bottom:0;right:0;width:100vw;border-radius:20px 20px 0 0;max-height:85vh}
-  .cf-fab{bottom:18px;right:18px}
+   .cf-trust-item:last-child{border-bottom:none}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}

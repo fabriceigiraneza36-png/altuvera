@@ -25,16 +25,16 @@ const ICONS = {
   x:              <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
   mail:           <><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></>,
   user:           <><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></>,
-  atSign:         <><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-4 8"/></>,
+  atSign:         <><circle cx="12" cy="12" r="4"/><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 1 0 1 0-4 8"/></>,
   messageCircle:  <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>,
-  headphones:     <><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></>,
+  headphones:     <><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0-2-2v-3a2 2 0 0 0-2-2H3z"/></>,
   mapPin:         <><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></>,
   calendar:       <><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></>,
   compass:        <><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></>,
   plane:          <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>,
   check:          <polyline points="20 6 9 17 4 12"/>,
   checkCheck:     <><path d="M18 6 7 17l-5-5"/><path d="m22 10-7.5 7.5L13 16"/></>,
-  sparkles:       <><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></>,
+  sparkles:       <><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1-1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M19 17v4"/><path d="M3 5h4"/><path d="M17 19h4"/></>,
   shieldCheck:    <><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></>,
   messagesSquare: <><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4c0-1.1.9-2 2-2h8a2 2 0 0 1 2 2v5Z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/></>,
   alertCircle:    <><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></>,
@@ -50,7 +50,6 @@ const ICONS = {
   search:         <><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></>,
   image:          <><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></>,
   chevronDown:    <polyline points="6 9 12 15 18 9"/>,
-  chevronUp:      <polyline points="18 15 12 9 6 15"/>,
   moreHorizontal: <><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></>,
   closeCircle:    <><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></>,
   copy:           <><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></>,
@@ -101,44 +100,14 @@ const fmtPrice = (p, c = 'USD') => {
   catch { return `$${Number(p).toLocaleString()}` }
 }
 
+function getInitials(name) {
+  if (!name) return 'U'
+  const parts = name.trim().split(/\s+/)
+  if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  return name.slice(0, 2).toUpperCase()
+}
+
 const COMMON_REACTIONS = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🔥', '✈️']
-
-/* ══════════════════════════════════════════════════════════════════════════
-   CONNECTION DOT
-   ══════════════════════════════════════════════════════════════════════════ */
-const ConnectionDot = ({ state }) => {
-  const colours = {
-    connected: '#16a34a', connecting: '#4ade80',
-    reconnecting: '#fbbf24', disconnected: '#9ca3af',
-  }
-  const pulse = state !== 'disconnected'
-  return (
-    <span className="mp__status-dot-wrap">
-      <span className={`mp__status-dot ${pulse ? 'mp__status-dot--pulse' : ''}`}
-        style={{ background: colours[state] || colours.disconnected }} />
-    </span>
-  )
-}
-
-/* ══════════════════════════════════════════════════════════════════════════
-   USER IDENTITY BAR
-   ══════════════════════════════════════════════════════════════════════════ */
-const UserIdentityBar = ({ user }) => {
-  if (!user) return null
-  const initials = (user.fullName || user.name || user.email || 'U')
-    .split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase()
-  const name = user.fullName || user.name || user.email?.split('@')[0] || 'Traveler'
-  return (
-    <div className="mp__user-bar">
-      <div className="mp__user-bar-avatar">{initials}</div>
-      <div className="mp__user-bar-info">
-        <p className="mp__user-bar-name">{name}</p>
-        {user.email && <p className="mp__user-bar-email">{user.email}</p>}
-      </div>
-      <div className="mp__user-bar-badge"><Icon name="shieldCheck" size={12} /> Verified</div>
-    </div>
-  )
-}
 
 /* ══════════════════════════════════════════════════════════════════════════
    PACKAGE CONTEXT CARD
@@ -803,62 +772,100 @@ export default function MessagePortal() {
       >
         {/* ── Header ─────────────────────────────────────────────────── */}
         <div className="mp__header">
-          <div className="mp__header-left">
-            <div className="mp__support-avatar">
-              <Icon name="globe" size={18} />
-              {adminOnline && <span className="mp__online-ring" />}
-            </div>
-            <div className="mp__header-info">
-              <h3 className="mp__header-title">Altuvera Support</h3>
-              <div className="mp__header-status">
-                <ConnectionDot state={connectionState} />
-                <span className="mp__header-status-text">{statusLabel}</span>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div className="mp__support-avatar">
+                <Icon name="globe" size={16} />
+                {adminOnline && <span className="mp__online-ring" />}
               </div>
+              <h3 className="mp__header-title" style={{ fontSize: 15, fontWeight: 700, color: '#0f172a', margin: 0 }}>Altuvera Support</h3>
+              <span style={{
+                fontSize: 10.5, fontWeight: 600, padding: '2px 8px', borderRadius: 6, letterSpacing: '.2px',
+                color: connectionState === 'connected' && adminOnline ? '#059669' : connectionState === 'reconnecting' ? '#d97706' : '#94a3b8',
+                background: connectionState === 'connected' && adminOnline ? '#ecfdf5' : connectionState === 'reconnecting' ? '#fffbeb' : '#f1f5f9',
+              }}>{statusLabel}</span>
             </div>
-          </div>
-          <div className="mp__header-actions">
-            {pinnedMessages.length > 0 && (
-              <button
-                className={`mp__header-btn ${showPinned ? 'mp__header-btn--active' : ''}`}
-                onClick={() => { setShowPinned(v => !v); setShowBgPicker(false); setShowSearch(false) }}
-                title={`${pinnedMessages.length} pinned message${pinnedMessages.length !== 1 ? 's' : ''}`}
-                type="button"
-              >
-                <Icon name="pin" size={14} />
-                {pinnedMessages.length > 0 && (
+            <div style={{ display: 'flex', gap: 4, alignItems: 'center' }}>
+              {pinnedMessages.length > 0 && (
+                <button className={`mp__header-btn ${showPinned ? 'mp__header-btn--active' : ''}`}
+                  onClick={() => { setShowPinned(v => !v); setShowBgPicker(false); setShowSearch(false) }}
+                  title="Pinned" type="button">
+                  <Icon name="pin" size={13} />
                   <span className="mp__header-btn-badge">{pinnedMessages.length}</span>
-                )}
+                </button>
+              )}
+              <button className={`mp__header-btn ${showSearch ? 'mp__header-btn--active' : ''}`}
+                onClick={() => { setShowSearch(v => !v); setShowBgPicker(false); setShowPinned(false); if (showSearch) searchMessages('') }}
+                title="Search" type="button">
+                <Icon name="search" size={13} />
               </button>
-            )}
-            <button
-              className={`mp__header-btn ${showSearch ? 'mp__header-btn--active' : ''}`}
-              onClick={() => { setShowSearch(v => !v); setShowBgPicker(false); setShowPinned(false); if (showSearch) searchMessages('') }}
-              title="Search messages" type="button"
-            >
-              <Icon name="search" size={14} />
-            </button>
-            <button
-              className={`mp__header-btn ${showBgPicker ? 'mp__header-btn--active' : ''}`}
-              onClick={() => { setShowBgPicker(v => !v); setShowPinned(false); setShowSearch(false) }}
-              title="Change background" type="button"
-            >
-              <Icon name="palette" size={14} />
-            </button>
-            {newConversationNotification && (
-              <div className="mp__notification-badge" title="New message">
-                <Icon name="alertCircle" size={14} />
-              </div>
-            )}
-            <button className="mp__header-btn"
-              onClick={() => { window.location.href = 'mailto:support@altuvera.com' }}
-              title="Email us" type="button">
-              <Icon name="mail" size={14} />
-            </button>
-            <button className="mp__header-btn mp__header-btn--close"
-              onClick={closePortal} title="Close" type="button">
-              <Icon name="x" size={14} />
-            </button>
+              <button className={`mp__header-btn ${showBgPicker ? 'mp__header-btn--active' : ''}`}
+                onClick={() => { setShowBgPicker(v => !v); setShowPinned(false); setShowSearch(false) }}
+                title="Background" type="button">
+                <Icon name="palette" size={13} />
+              </button>
+              <button className="mp__header-btn" title="Email us" type="button"
+                onClick={() => { window.location.href = 'mailto:support@altuvera.com' }}>
+                <Icon name="mail" size={13} />
+              </button>
+              <button className="mp__header-btn mp__header-btn--close" onClick={closePortal} title="Close" type="button">
+                <Icon name="x" size={13} />
+              </button>
+            </div>
           </div>
+
+          {/* User identity bar */}
+          {isAuthenticated && user && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap',
+              padding: '6px 10px', background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0',
+            }}>
+              <span style={{
+                width: 28, height: 28, borderRadius: '50%', flexShrink: 0,
+                background: 'linear-gradient(135deg, #065f46, #047857)',
+                color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 10.5, fontWeight: 700, letterSpacing: '.3px',
+              }}>{getInitials(user.fullName || user.name || user.email || 'U')}</span>
+              <span style={{ fontSize: 13.5, fontWeight: 600, color: '#0f172a', lineHeight: 1.2 }}>
+                {user.fullName || user.name || user.email?.split('@')[0] || 'User'}
+              </span>
+              {user.email && <span style={{ fontSize: 11.5, color: '#64748b', lineHeight: 1.2 }}>{user.email}</span>}
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', gap: 3,
+                padding: '1px 7px', borderRadius: 5, fontSize: 9.5, fontWeight: 700,
+                background: '#ecfdf5', border: '1px solid #a7f3d0', color: '#065f46', letterSpacing: '.2px',
+              }}>
+                <Icon name="shieldCheck" size={9} /> Verified
+              </span>
+            </div>
+          )}
+
+          {/* Context bar: Asking about / replying / forwarding */}
+          {(packageContext || replyingTo || forwardingMsg) && (
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '5px 10px', marginTop: 6,
+              background: '#f0fdf4', borderRadius: 8, border: '1px solid #bbf7d0',
+              fontSize: 11.5, color: '#065f46', fontWeight: 500,
+            }}>
+              <Icon name={forwardingMsg ? "forward" : replyingTo ? "reply" : "package"} size={11} />
+              <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {packageContext
+                  ? packageContext.title
+                  : replyingTo
+                    ? `Reply to ${replyingTo.senderName || 'Support'}`
+                    : `Forward: ${forwardingMsg.body?.slice(0, 40)}…`}
+              </span>
+              {(replyingTo || forwardingMsg) && replyingTo?.createdAt && (
+                <span style={{ fontSize: 10, color: '#64748b', flexShrink: 0 }}>{formatTime(replyingTo.createdAt)}</span>
+              )}
+              <button onClick={() => { if (replyingTo) cancelReply(); if (forwardingMsg) forwardMessage(null); }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: 0, display: 'flex' }}
+                type="button">
+                <Icon name="x" size={11} />
+              </button>
+            </div>
+          )}
         </div>
 
         {/* ── Pinned panel ────────────────────────────────────────────── */}
@@ -888,9 +895,6 @@ export default function MessagePortal() {
             onClose={() => { setShowSearch(false); searchMessages('') }}
           />
         )}
-
-        {/* ── User bar ─────────────────────────────────────────────────── */}
-        {isAuthenticated && user && <UserIdentityBar user={user} />}
 
         {/* ── Package context card ─────────────────────────────────────── */}
         {packageContext && <PackageContextCard pkg={packageContext} onClear={clearPackageContext} />}
@@ -1031,8 +1035,8 @@ export default function MessagePortal() {
                 editingMsg    ? 'Edit your message…'
                 : forwardingMsg ? `Forward: ${forwardingMsg.body?.slice(0, 30)}…`
                 : packageContext ? `Ask about ${packageContext.title}…`
-                : connected   ? (userName ? `Message from ${userName}…` : 'Type your message…')
-                : 'Reconnecting…'
+                : !connected ? 'Reconnecting…'
+                : 'Ask about anything…'
               }
               value={input}
               onChange={e => { setInput(e.target.value); resizeTextarea(); handleTyping() }}
