@@ -22,11 +22,11 @@ import SEO from "../components/common/SEO";
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 import { sendMessage } from "../utils/sendMessage";
 import { sendVerificationCode, verifyCode } from "../utils/verifyEmail";
-import { useChatSocket } from "../hooks/useChatSocket";
 import { apiFetch } from "../utils/apiBase";
 import VerificationModal from "../components/common/VerificationModal";
 import EmojiPicker from "../components/messaging/EmojiPicker";
 import { useUserAuth } from "../context/UserAuthContext";
+import { useMessaging } from "../context/MessagingContext";
 
 /* ══════════════════════════════════════════════════════
    BRAND TOKENS
@@ -381,64 +381,13 @@ FieldTextarea.displayName = "FieldTextarea";
 const Contact = () => {
   const { user, isAuthenticated } = useUserAuth();
 
-  /* ── Auto-fill tracking ── */
-  const [autoFilledFields, setAutoFilledFields] = useState(new Set());
-  const [showBanner, setShowBanner] = useState(false);
-  const autoFillDone = useRef(false);
+  /* ── Messaging context — open portal for live chat ── */
+  const { openPortal } = useMessaging()
 
-  /* ── Form state ── */
-  const [form, setForm] = useState(INIT_FORM);
-  const [touched, setTouched] = useState({});
-  const [errors, setErrors] = useState({});
-  const [step, setStep] = useState(0);
-  const [direction, setDirection] = useState(1);
-  const [submitting, setSubmitting] = useState(false);
-  const [submitProgress, setSubmitProgress] = useState(0);
-  const [submitted, setSubmitted] = useState(false);
-
-  /* ── Verification ── */
-  const [verOpen, setVerOpen] = useState(false);
-  const [verErr, setVerErr] = useState("");
-  const [verLoading, setVerLoading] = useState(false);
-  // Store email at time of submit so it survives form resets
-  const verEmailRef = useRef("");
-
-  /* ── FAQ ── */
-  const [faqs, setFaqs] = useState([]);
-  const [faqsLoading, setFaqsLoading] = useState(true);
-  const [faqsError, setFaqsError] = useState("");
-  const [openFaqId, setOpenFaqId] = useState(null);
-
-  /* ── Chat ── */
-  const [chatOpen, setChatOpen] = useState(false);
-  const [chatInput, setChatInput] = useState("");
-  const [chatSending, setChatSending] = useState(false);
-  const [chatErr, setChatErr] = useState("");
-  const [emojiOpen, setEmojiOpen] = useState(false);
-
-  /* ── Refs ── */
-  const heroRef = useRef(null);
-  const chatBodyRef = useRef(null);
-  const emojiRef = useRef(null);
-  // Store the full form data at submit time for use after verification
-  const pendingFormRef = useRef(null);
-
-  /* ── Parallax ── */
-  const { scrollYProgress } = useScroll({
-    target: heroRef,
-    offset: ["start start", "end start"],
-  });
-  const heroY = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
-
-  /* ── Chat socket ── */
-  const {
-    connected: chatConnected,
-    connect: connectChat,
-    registerChat,
-    sendMessage: sendChatMsg,
-    messages: chatMessages,
-  } = useChatSocket();
+  /* FAB opens the global chat portal */
+  const handleChatFab = useCallback(() => {
+    openPortal()
+  }, [openPortal])
 
   /* ═══════════════════════════════
      FETCH FAQs
@@ -500,49 +449,9 @@ const Contact = () => {
     setErrors((prev) => ({ ...prev, ...newErrors }));
   }, [user, isAuthenticated]);
 
-  /* ═══════════════════════════════
-     CHAT LIFECYCLE
-  ═══════════════════════════════ */
-  useEffect(() => {
-    if (chatOpen && !chatConnected) connectChat();
-  }, [chatOpen, chatConnected, connectChat]);
-
-  const chatRegistered = useRef(false);
-  useEffect(() => {
-    if (!chatOpen || !chatConnected || chatRegistered.current) return;
-    chatRegistered.current = true;
-    registerChat({
-      name: form.name || user?.fullName || "Guest",
-      email: form.email || user?.email || "",
-    }).catch(() => { });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chatOpen, chatConnected]);
-
-  // Reset chat registration when chat closes
-  useEffect(() => {
-    if (!chatOpen) chatRegistered.current = false;
-  }, [chatOpen]);
-
-  useEffect(() => {
-    if (chatBodyRef.current) {
-      chatBodyRef.current.scrollTop = chatBodyRef.current.scrollHeight;
-    }
-  }, [chatMessages, chatOpen]);
-
-  useEffect(() => {
-    if (!emojiOpen) return;
-    const handlePointerDown = (event) => {
-      if (emojiRef.current && !emojiRef.current.contains(event.target)) {
-        setEmojiOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handlePointerDown);
-    return () => document.removeEventListener("mousedown", handlePointerDown);
-  }, [emojiOpen]);
-
-  /* ═══════════════════════════════
+  /* ══════════════════════════════════════════════════════
      HANDLERS
-  ═══════════════════════════════ */
+  ═══════════════════════════════════════════════════════ */
   const handleChange = useCallback((e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -732,30 +641,6 @@ const Contact = () => {
     verEmailRef.current = "";
     setSubmitProgress(0);
   }, []);
-
-  /* ── Chat send ── */
-  const handleChatSend = useCallback(async () => {
-    const body = chatInput.trim();
-    if (!body) return;
-    setChatErr("");
-    setChatSending(true);
-    try {
-      const chatName = form.name || user?.fullName || "Guest";
-      const chatEmail = form.email || user?.email || "";
-
-      if (!chatRegistered.current) {
-        await registerChat({ name: chatName, email: chatEmail });
-        chatRegistered.current = true;
-      }
-
-      await sendChatMsg({ body, name: chatName, email: chatEmail });
-      setChatInput("");
-    } catch (err) {
-      setChatErr(err?.message || "Failed to send. Try again.");
-    } finally {
-      setChatSending(false);
-    }
-  }, [chatInput, form, user, registerChat, sendChatMsg]);
 
   /* ── Completion % ── */
   const completion = useMemo(() => {
@@ -1493,159 +1378,17 @@ const Contact = () => {
       </section>
 
       {/* ══════════ LIVE CHAT FAB ══════════ */}
-      <AnimatePresence>
-        {!chatOpen && (
-          <motion.button
-            key="fab" className="cf-fab"
-            onClick={() => setChatOpen(true)}
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            whileHover={{ scale: 1.1 }}
-            whileTap={{ scale: 0.93 }}
-            aria-label="Open live chat"
-          >
-            <FiMessageCircle size={24} color="#fff" />
-            <span className="cf-fab-pulse" />
-            <span className="cf-fab-badge">Chat</span>
-          </motion.button>
-        )}
-      </AnimatePresence>
-
-      {/* ══════════ CHAT WINDOW ══════════ */}
-      <AnimatePresence>
-        {chatOpen && (
-          <motion.div
-            key="chat" className="cf-chat"
-            initial={{ opacity: 0, y: 24, scale: 0.94 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 24, scale: 0.94 }}
-            transition={{ duration: 0.38, ease: EASE.snappy }}
-          >
-            <div className="cf-chat-head">
-              <div className="cf-chat-head-l">
-                <div className="cf-chat-av">
-                  <BiSupport size={20} color="#fff" />
-                </div>
-                <div>
-                  <div className="cf-chat-name">Altuvera Support</div>
-                  <div className="cf-chat-status">
-                    <span
-                      className={`cf-chat-dot${chatConnected ? " live" : ""}`}
-                    />
-                    {chatConnected ? "Online" : "Connecting…"}
-                  </div>
-                </div>
-              </div>
-              <button
-                className="cf-chat-close"
-                onClick={() => setChatOpen(false)}
-                aria-label="Close chat"
-              >
-                <FiX size={17} />
-              </button>
-            </div>
-
-            <div className="cf-chat-body" ref={chatBodyRef}>
-              {chatMessages.length === 0 && (
-                <div className="cf-chat-welcome">
-                  <div className="cf-chat-welcome-icon">
-                    <BiSupport size={26} color={G[700]} />
-                  </div>
-                  <p><strong>Hi there! 👋</strong></p>
-                  <p>How can we help you plan your safari today?</p>
-                  <div className="cf-chips">
-                    {[
-                      "Gorilla Trekking", "Safari Packages",
-                      "Group Tours", "Pricing",
-                    ].map((t) => (
-                      <button
-                        key={t} className="cf-chip" type="button"
-                        onClick={() => setChatInput(t)}
-                      >
-                        {t}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {chatMessages.map((msg, i) => {
-                const isUser =
-                  msg.sender === "user" || msg.role === "user";
-                return (
-                  <motion.div
-                    key={i}
-                    className={`cf-bubble${isUser ? " cf-bubble--user" : ""}`}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.28 }}
-                  >
-                    {!isUser && (
-                      <span className="cf-bubble-who">Support</span>
-                    )}
-                    <p>{msg.body || msg.message || msg.content}</p>
-                    <span className="cf-bubble-time">
-                      {new Date(
-                        msg.createdAt || Date.now()
-                      ).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            {chatErr && (
-              <div className="cf-chat-err">
-                <FiAlertCircle size={13} /> {chatErr}
-              </div>
-            )}
-
-            <div className="cf-chat-foot">
-              <input
-                className="cf-chat-in"
-                placeholder="Type your message…"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleChatSend();
-                  }
-                }}
-                disabled={chatSending}
-                aria-label="Chat message"
-              />
-              <motion.button
-                className="cf-chat-send"
-                onClick={handleChatSend}
-                disabled={!chatInput.trim() || chatSending}
-                whileHover={{ scale: 1.08 }}
-                whileTap={{ scale: 0.93 }}
-                aria-label="Send message"
-              >
-                {chatSending ? (
-                  <svg
-                    className="cf-spin" width="16" height="16"
-                    viewBox="0 0 24 24" fill="none" stroke="#fff"
-                    strokeWidth="2.5"
-                  >
-                    <circle cx="12" cy="12" r="10" strokeOpacity=".25" />
-                    <path
-                      d="M12 2a10 10 0 0 1 10 10"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                ) : (
-                  <RiSendPlaneFill size={16} color="#fff" />
-                )}
-              </motion.button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <motion.button
+        className="cf-fab"
+        onClick={handleChatFab}
+        whileHover={{ scale: 1.1 }}
+        whileTap={{ scale: 0.93 }}
+        aria-label="Open live chat"
+      >
+        <FiMessageCircle size={24} color="#fff" />
+        <span className="cf-fab-pulse" />
+        <span className="cf-fab-badge">Chat</span>
+      </motion.button>
 
       {/* ══════════ VERIFICATION MODAL ══════════ */}
       <VerificationModal

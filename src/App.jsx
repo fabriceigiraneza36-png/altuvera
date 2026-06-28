@@ -29,9 +29,11 @@ import AutoSubscribeModal  from "./components/common/AutoSubscribeModal";
 // ── Eager imports ─────────────────────────────────────────────────────────────
 import Navbar           from "./components/common/Navbar";
 import Footer           from "./components/common/Footer";
+import UserNotifications from './pages/auth/UserNotifications'
 import ScrollToTop      from "./components/common/ScrollToTop";
 import Loader           from "./components/common/Loader";
-import CookieConsent    from "./components/common/CookieConsent";
+import CookieConsent from "./components/common/CookieConsent";
+import CookieDocumentation from "./components/common/CookieDocumentation";
 import AuthModal        from "./components/auth/AuthModal";
 import CongratulationWindow from "./components/auth/CongratulationWindow";
 import NotLoggedInMessage   from "./components/auth/NotLoggedInMessage";
@@ -889,6 +891,7 @@ const OverlayLayer = React.memo(
         <PersistentMapViewer />
       </Suspense>
       <CookieConsent />
+      <CookieDocumentation />
       <AuthModal />
       <WhatsAppButton />
       <NewsletterPopup source="exit-popup" />
@@ -1047,6 +1050,13 @@ function App() {
           {protectedRoutes.map(renderProtectedRoute)}
           <Route path="*" element={<SmartRedirect />} />
         </Route>
+
+<Route path="/notifications" element={
+  <ProtectedRoute>
+    <UserNotifications />
+  </ProtectedRoute>
+} />
+
       </Routes>
 
       <OverlayLayer

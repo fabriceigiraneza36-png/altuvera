@@ -21,6 +21,7 @@ import {
   FiTrash2,
   FiEdit3,
   FiXCircle,
+  FiMenu,
 } from "react-icons/fi";
 import { HiSparkles } from "react-icons/hi";
 import PageHeader from "../components/common/PageHeader";
@@ -256,11 +257,13 @@ const ScrollReveal = ({ children, delay = 0, direction = "up", className = "", s
 export default function PrivacyPolicy() {
   const [activeSection, setActiveSection] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const sectionRefs = useRef({});
 
   const scrollToSection = (id) => {
     setActiveSection(id);
     sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setSidebarOpen(false);
   };
 
   const handlePrint = () => window.print();
@@ -289,25 +292,35 @@ export default function PrivacyPolicy() {
       {/* ════════ HERO SUMMARY BAR ════════ */}
       <section className="pp-summary-bar">
         <div className="pp-wrap">
-          <div className="pp-summary-grid">
-            {[
-              { icon: FiShield, label: "Your Data Protected", sub: "Enterprise-grade encryption" },
-              { icon: FiLock, label: "Never Sold", sub: "We don't sell your data" },
-              { icon: FiClock, label: "Last Updated", sub: LAST_UPDATED },
-              { icon: FiCheckCircle, label: `Version ${VERSION}`, sub: `Effective ${EFFECTIVE_DATE}` },
-            ].map((item, i) => (
-              <ScrollReveal key={i} delay={i * 0.08} direction="up">
-                <div className="pp-summary-item">
-                  <div className="pp-summary-icon">
-                    <item.icon size={20} />
+          <div className="pp-summary-bar-inner">
+            <div className="pp-summary-grid">
+              {[
+                { icon: FiShield, label: "Your Data Protected", sub: "Enterprise-grade encryption" },
+                { icon: FiLock, label: "Never Sold", sub: "We don't sell your data" },
+                { icon: FiClock, label: "Last Updated", sub: LAST_UPDATED },
+                { icon: FiCheckCircle, label: `Version ${VERSION}`, sub: `Effective ${EFFECTIVE_DATE}` },
+              ].map((item, i) => (
+                <ScrollReveal key={i} delay={i * 0.08} direction="up">
+                  <div className="pp-summary-item">
+                    <div className="pp-summary-icon">
+                      <item.icon size={20} />
+                    </div>
+                    <div>
+                      <div className="pp-summary-label">{item.label}</div>
+                      <div className="pp-summary-sub">{item.sub}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="pp-summary-label">{item.label}</div>
-                    <div className="pp-summary-sub">{item.sub}</div>
-                  </div>
-                </div>
-              </ScrollReveal>
-            ))}
+                </ScrollReveal>
+              ))}
+            </div>
+            <button
+              className="pp-sidebar-toggle"
+              onClick={() => setSidebarOpen((v) => !v)}
+              aria-label={sidebarOpen ? "Hide navigation" : "Show navigation"}
+            >
+              <FiMenu size={18} />
+              <span>{sidebarOpen ? "Hide" : "Menu"}</span>
+            </button>
           </div>
         </div>
       </section>
@@ -315,10 +328,30 @@ export default function PrivacyPolicy() {
       {/* ════════ MAIN CONTENT ════════ */}
       <section className="pp-main">
         <div className="pp-wrap">
-          <div className="pp-layout">
+          <div className={`pp-layout ${sidebarOpen ? "" : "pp-layout--sidebar-hidden"}`}>
+            {/* Mobile backdrop */}
+            <AnimatePresence>
+              {sidebarOpen && (
+                <motion.div
+                  className="pp-sidebar-backdrop"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setSidebarOpen(false)}
+                />
+              )}
+            </AnimatePresence>
+
             {/* ── Sidebar Navigation ── */}
-            <ScrollReveal direction="left" delay={0.1}>
-              <aside className="pp-sidebar">
+            <AnimatePresence>
+              {sidebarOpen && (
+                <motion.aside
+                  className="pp-sidebar"
+                  initial={{ x: -20, opacity: 0 }}
+                  animate={{ x: 0, opacity: 1 }}
+                  exit={{ x: -20, opacity: 0 }}
+                  transition={{ duration: 0.25 }}
+                >
                 <div className="pp-sidebar-inner">
                   <div className="pp-sidebar-header">
                     <FiShield size={16} color={BRAND.green700} />
@@ -364,8 +397,9 @@ export default function PrivacyPolicy() {
                     </button>
                   </div>
                 </div>
-              </aside>
-            </ScrollReveal>
+                </motion.aside>
+              )}
+            </AnimatePresence>
 
             {/* ── Content Area ── */}
             <main className="pp-content">
@@ -639,11 +673,60 @@ const privacyStyles = `
   z-index: 1;
 }
 
+/* Collapsed sidebar — content expands */
+.pp-layout--sidebar-hidden {
+  grid-template-columns: 1fr;
+}
+
+/* Sidebar toggle button */
+.pp-sidebar-toggle {
+  display: none;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 16px;
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.pp-sidebar-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Summary bar inner */
+.pp-summary-bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  max-width: 1340px;
+  margin: 0 auto;
+}
+
+/* Mobile sidebar backdrop */
+.pp-sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 999;
+  backdrop-filter: blur(2px);
+}
+
 /* ═══════════════ SIDEBAR ═══════════════ */
 .pp-sidebar {
   position: sticky;
   top: 100px;
 }
+
 .pp-sidebar-inner {
   background: #fff;
   border-radius: 20px;
@@ -1130,46 +1213,75 @@ const privacyStyles = `
 
 /* ═══════════════ RESPONSIVE ═══════════════ */
 @media (max-width: 1024px) {
+  .pp-summary-bar-inner {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .pp-sidebar-toggle {
+    display: inline-flex;
+  }
+
   .pp-layout {
     grid-template-columns: 1fr;
+    position: relative;
   }
+
+  .pp-layout--sidebar-hidden {
+    grid-template-columns: 1fr;
+  }
+
+  .pp-sidebar-backdrop {
+    display: block;
+  }
+
   .pp-sidebar {
-    position: static;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 300px;
+    max-width: 85vw;
+    z-index: 1000;
+    border-radius: 0;
+    overflow-y: auto;
+    transform: translateX(0);
+    transition: transform 0.3s ease;
   }
+
   .pp-sidebar-inner {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    align-items: flex-start;
+    border-radius: 0;
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+    min-height: 100vh;
+    padding: 24px 20px;
   }
-  .pp-sidebar-header {
-    width: 100%;
-    margin-bottom: 4px;
-    padding-bottom: 12px;
-  }
-  .pp-sidebar-search {
-    flex: 1;
-    min-width: 200px;
-    margin-bottom: 0;
-  }
+
   .pp-nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex-direction: column;
+    flex-wrap: nowrap;
     width: 100%;
-    margin-bottom: 8px;
+    gap: 4px;
   }
+
   .pp-nav-item {
-    padding: 8px 14px;
-    font-size: 12.5px;
-    white-space: nowrap;
-    width: auto;
-  }
-  .pp-nav-num { display: none; }
-  .pp-sidebar-actions {
-    flex-direction: row;
     width: 100%;
-    padding-top: 12px;
+    padding: 11px 12px;
+    white-space: normal;
+  }
+
+  .pp-nav-num { display: inline; }
+
+  .pp-sidebar-actions {
+    flex-direction: column;
+    width: 100%;
+    padding-top: 14px;
+  }
+
+  /* When sidebar hidden on mobile, slide it out */
+  .pp-layout--sidebar-hidden .pp-sidebar {
+    transform: translateX(-100%);
   }
 }
 

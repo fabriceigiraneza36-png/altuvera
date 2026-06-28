@@ -12,8 +12,10 @@ import {
   FiMapPin,
   FiArrowRight,
   FiLinkedin,
+  FiGlobe,
 } from "react-icons/fi";
 import { FaXTwitter } from "react-icons/fa6";
+import { openCookieSettings } from "../../utils/cookiePreferences";
 
 const Footer = () => {
   const { user } = useUserAuth();
@@ -603,20 +605,29 @@ const Footer = () => {
             {[
               { label: "Privacy Policy", path: "/privacy" },
               { label: "Terms of Service", path: "/terms" },
-              { label: "Coo", path: "/cookies" },
-            ].map((item) => (
-              <Link
-                key={item.label}
-                to={item.path}
-                style={styles.bottomLink}
-                onMouseOver={(e) => (e.target.style.color = "#10B981")}
-                onMouseOut={(e) =>
-                  (e.target.style.color = "rgba(255,255,255,0.6)")
+              { label: "Cookies", action: "cookies" },
+            ].map((item) => {
+              const handleClick = (e) => {
+                if (item.action === "cookies") {
+                  e.preventDefault();
+                  openCookieSettings();
                 }
-              >
-                {item.label}
-              </Link>
-            ))}
+              };
+              return (
+                <Link
+                  key={item.label}
+                  to={item.path || "#"}
+                  style={styles.bottomLink}
+                  onMouseOver={(e) => (e.target.style.color = "#10B981")}
+                  onMouseOut={(e) =>
+                    (e.target.style.color = "rgba(255,255,255,0.6)")
+                  }
+                  onClick={handleClick}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
           </div>
         </div>
       </div>

@@ -24,9 +24,10 @@ import {
    FiFeather,
    FiBookOpen,
    FiArrowUpRight,
+   FiSun,
    FiRefreshCw,
    FiWifiOff
- } from 'react-icons/fi';
+  } from 'react-icons/fi';
 import PageHeader from '../components/common/PageHeader';
 import AnimatedSection from '../components/common/AnimatedSection';
 import Button from '../components/common/Button';

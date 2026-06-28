@@ -273,6 +273,7 @@ body.cc-active {
 .cc-footer {
   display: flex;
   gap: 10px;
+  flex-wrap: wrap;
 }
 
 /* ===== RESPONSIVE ===== */
@@ -282,12 +283,17 @@ body.cc-active {
     bottom: 12px;
   }
 
+  .cc-banner-inner {
+    padding: 16px;
+  }
+
   .cc-actions,
   .cc-footer {
-    flex-direction: column;
+    flex-wrap: wrap;
   }
 
   .cc-btn {
-    width: 100%;
+    flex: 1 1 auto;
+    min-width: 100px;
   }
 }

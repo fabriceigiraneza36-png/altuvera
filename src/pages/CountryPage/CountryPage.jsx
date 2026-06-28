@@ -65,7 +65,6 @@ const P = {
   ticket:"M2 9a3 3 0 010 6v2a2 2 0 002 2h16a2 2 0 002-2v-2a3 3 0 010-6V7a2 2 0 00-2-2H4a2 2 0 00-2 2z",
   car:"M16 3h-2l-2 3H5a2 2 0 00-2 2v7a2 2 0 002 2h1m10 0h3a2 2 0 002-2V8a2 2 0 00-2-2h-2l-1-3z",
   wifi:"M5 12.55a11 11 0 0114.08 0M1.42 9a16 16 0 0121.16 0M8.53 16.11a6 6 0 016.95 0M12 20h.01",
-  book2:"M12 2l3.1 6.3L22 9.3l-5 4.9 1.2 6.9L12 17.8l-6.2 3.3L7 14.1 2 9.3l6.9-1L12 2z",
   history:"M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z",
   link:"M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71",
 };
@@ -122,19 +121,19 @@ const Reveal = ({ children, from = "bottom", delay = 0, distance = 36, className
   const [ref, vis] = useInView();
   const tx = {
     bottom: `translateY(${distance}px)`,
-    top:    `translateY(-${distance}px)`,
-    left:   `translateX(-${distance}px)`,
-    right:  `translateX(${distance}px)`,
-    scale:  `scale(0.93) translateY(14px)`,
+    top: `translateY(-${distance}px)`,
+    left: `translateX(-${distance}px)`,
+    right: `translateX(${distance}px)`,
+    scale: `scale(0.93) translateY(14px)`,
   };
   return (
     <div ref={ref} className={className}
       style={{
-        opacity:    vis ? 1 : 0,
-        transform:  vis ? "none" : (tx[from] || tx.bottom),
+        opacity: vis ? 1 : 0,
+        transform: vis ? "none" : (tx[from] || tx.bottom),
         transition: `opacity .6s cubic-bezier(.4,0,.2,1) ${delay}ms,
                      transform .6s cubic-bezier(.4,0,.2,1) ${delay}ms`,
-        willChange: "opacity,transform",
+        willChange: "opacity, transform",
       }}>
       {children}
     </div>
@@ -214,10 +213,10 @@ const getHeroImages = (c) => {
   return [...set].filter(Boolean).slice(0, 7);
 };
 
-const getFlag     = (c) => pick(c?.flagUrl, c?.flag);
-const getRegion   = (c) => pick(c?.continent, c?.region, c?.subRegion);
-const getTagline  = (c) => pick(c?.tagline, c?.motto);
-const getDesc     = (c) => pick(c?.fullDescription, c?.description, c?.additionalInfo);
+const getFlag = (c) => pick(c?.flagUrl, c?.flag);
+const getRegion = (c) => pick(c?.continent, c?.region, c?.subRegion);
+const getTagline = (c) => pick(c?.tagline, c?.motto);
+const getDesc = (c) => pick(c?.fullDescription, c?.description, c?.additionalInfo);
 const getOverview = (c) => pick(c?.description, c?.tagline);
 
 const getGallery = (c) => {
@@ -248,22 +247,22 @@ const getTips = (c) => toArr(
   Array.isArray(c?.travelTips) ? c.travelTips.join(",") : (c?.travelTips || "")
 ).slice(0, 6);
 
-const getFaqs    = (c) => (Array.isArray(c?.faqs)    ? c.faqs    : []);
+const getFaqs = (c) => (Array.isArray(c?.faqs) ? c.faqs : []);
 const getReviews = (c) => (Array.isArray(c?.reviews) ? c.reviews : []);
 
 const getFactItems = (c) => [
-  { icon: "mapPin",      label: "Capital",      val: pick(c?.capital) },
-  { icon: "dollar",      label: "Currency",     val: pick(c?.currency) + (c?.currencySymbol ? ` (${c.currencySymbol})` : "") },
-  { icon: "sun",         label: "Best Time",    val: pick(c?.bestTime, c?.bestTimeToVisit) },
-  { icon: "book",        label: "Languages",    val: toArr(c?.languages || c?.officialLanguages).slice(0,3).join(", ") },
-  { icon: "users",       label: "Population",   val: formatPop(c?.population) },
-  { icon: "clock",       label: "Time Zone",    val: pick(c?.timezone) },
-  { icon: "shield",      label: "Visa",         val: pick(c?.visaInfo).slice(0, 80) },
-  { icon: "thermometer", label: "Climate",      val: pick(c?.climate) },
-  { icon: "globe",       label: "Region",       val: pick(c?.region, c?.continent) },
-  { icon: "feather",     label: "Driving Side", val: pick(c?.drivingSide) },
-  { icon: "wifi",        label: "Internet TLD", val: pick(c?.internetTLD) },
-  { icon: "droplet",     label: "Water Safety", val: pick(c?.waterSafety) },
+  { icon: "mapPin", label: "Capital", val: pick(c?.capital) },
+  { icon: "dollar", label: "Currency", val: pick(c?.currency) + (c?.currencySymbol ? ` (${c.currencySymbol})` : "") },
+  { icon: "sun", label: "Best Time", val: pick(c?.bestTime, c?.bestTimeToVisit) },
+  { icon: "book", label: "Languages", val: toArr(c?.languages || c?.officialLanguages).slice(0, 3).join(", ") },
+  { icon: "users", label: "Population", val: formatPop(c?.population) },
+  { icon: "clock", label: "Time Zone", val: pick(c?.timezone) },
+  { icon: "shield", label: "Visa", val: pick(c?.visaInfo).slice(0, 80) },
+  { icon: "thermometer", label: "Climate", val: pick(c?.climate) },
+  { icon: "globe", label: "Region", val: pick(c?.region, c?.continent) },
+  { icon: "feather", label: "Driving Side", val: pick(c?.drivingSide) },
+  { icon: "wifi", label: "Internet TLD", val: pick(c?.internetTLD) },
+  { icon: "droplet", label: "Water Safety", val: pick(c?.waterSafety) },
 ].filter(f => f.val && f.val.trim());
 
 const formatPop = (p) => {
@@ -277,15 +276,15 @@ const formatPop = (p) => {
 
 const getMonthStatus = (c, monthAbbr) => {
   const seasons = c?.seasons;
-  const best = (seasons?.best ? toArr(seasons.best) : []).map(s => s.toLowerCase().slice(0,3));
-  const wet  = (seasons?.wet  ? toArr(seasons.wet)  : []).map(s => s.toLowerCase().slice(0,3));
+  const best = (seasons?.best ? toArr(seasons.best) : []).map(s => s.toLowerCase().slice(0, 3));
+  const wet = (seasons?.wet ? toArr(seasons.wet) : []).map(s => s.toLowerCase().slice(0, 3));
   const m = monthAbbr.toLowerCase();
   if (best.some(b => b === m || b.startsWith(m))) return "best";
-  if (wet.some(w  => w === m || w.startsWith(m)))  return "avoid";
+  if (wet.some(w => w === m || w.startsWith(m))) return "avoid";
   return "ok";
 };
 
-/* ── Auto-generate FAQs from country data ─────── */
+/* ── Auto-generate FAQs ─────────────────────── */
 const generateFaqs = (country) => {
   const faqs = [];
   const name = country?.name || "this country";
@@ -352,7 +351,6 @@ const generateFaqs = (country) => {
     answer: `${name} has ${destCount} curated travel destinations ranging from national parks and wildlife reserves to cultural sites and scenic landscapes.`,
   });
 
-  // Always add a safety FAQ
   faqs.push({
     question: `Is ${name} safe for tourists?`,
     answer: health
@@ -370,23 +368,23 @@ const getHistoryUrl = (country) => {
 };
 
 /* ═══════════════════════════════════════════════════════
-   HERO — Enhanced slideshow
+   HERO
 ═══════════════════════════════════════════════════════ */
 const Hero = ({ country, navigate }) => {
-  const images  = useMemo(() => getHeroImages(country), [country]);
-  const flag    = getFlag(country);
-  const region  = getRegion(country);
+  const images = useMemo(() => getHeroImages(country), [country]);
+  const flag = getFlag(country);
+  const region = getRegion(country);
   const tagline = getTagline(country);
-  const slug    = getCountrySlug(country);
+  const slug = getCountrySlug(country);
 
-  const [idx, setIdx]         = useState(0);
+  const [idx, setIdx] = useState(0);
   const [prevIdx, setPrevIdx] = useState(null);
-  const [rdy, setRdy]         = useState(false);
-  const [paused, setPaused]   = useState(false);
-  const timerRef              = useRef(null);
+  const [rdy, setRdy] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const timerRef = useRef(null);
 
   const isFlagEmoji = flag && !flag.startsWith("http");
-  const isFlagUrl   = flag && flag.startsWith("http");
+  const isFlagUrl = flag && flag.startsWith("http");
 
   useEffect(() => { const t = setTimeout(() => setRdy(true), 80); return () => clearTimeout(t); }, []);
 
@@ -404,7 +402,7 @@ const Hero = ({ country, navigate }) => {
     return () => clearInterval(timerRef.current);
   }, [images.length, paused, goNext]);
 
-  const rating    = country?.averageRating ?? country?.rating ?? null;
+  const rating = country?.averageRating ?? country?.rating ?? null;
   const destCount = country?.destinationCount ?? null;
 
   return (
@@ -412,7 +410,6 @@ const Hero = ({ country, navigate }) => {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}>
 
-      {/* Slides */}
       <div className="cp-hero__slides" aria-hidden="true">
         {images.length > 0 ? images.map((src, i) => (
           <div key={i}
@@ -426,11 +423,9 @@ const Hero = ({ country, navigate }) => {
         )}
       </div>
 
-      {/* Gradient overlays */}
       <div className="cp-hero__ov" />
       <div className="cp-hero__ov2" />
 
-      {/* Slide nav arrows */}
       {images.length > 1 && (
         <>
           <button className="cp-hero__arr cp-hero__arr--l" onClick={goPrev} aria-label="Previous slide">
@@ -442,7 +437,6 @@ const Hero = ({ country, navigate }) => {
         </>
       )}
 
-      {/* Dots */}
       {images.length > 1 && (
         <div className="cp-hero__dots">
           {images.map((_, i) => (
@@ -452,20 +446,18 @@ const Hero = ({ country, navigate }) => {
         </div>
       )}
 
-      {/* Slide counter */}
       {images.length > 1 && (
         <div className="cp-hero__counter">
-          <span>{String(idx + 1).padStart(2,"0")}</span>
+          <span>{String(idx + 1).padStart(2, "0")}</span>
           <div className="cp-hero__counter-bar">
             <div className="cp-hero__counter-fill"
               key={idx}
               style={{ animationDuration: paused ? "0s" : "6.5s" }} />
           </div>
-          <span>{String(images.length).padStart(2,"0")}</span>
+          <span>{String(images.length).padStart(2, "0")}</span>
         </div>
       )}
 
-      {/* Breadcrumb */}
       <nav className="cp-hero__nav" aria-label="Breadcrumb">
         <div className="cp-wrap">
           <ol className="cp-hero__crumbs">
@@ -476,7 +468,6 @@ const Hero = ({ country, navigate }) => {
         </div>
       </nav>
 
-      {/* Body */}
       <div className="cp-wrap cp-hero__body">
         <Reveal from="bottom" delay={80}>
           <div className="cp-hero__chips">
@@ -551,14 +542,13 @@ const Hero = ({ country, navigate }) => {
         )}
       </div>
 
-      {/* Flag badge */}
       {flag && (
         <div className="cp-hero__flag" aria-hidden="true">
           {isFlagUrl
             ? <img src={flag} alt={`${country.name} flag`} />
             : isFlagEmoji
-            ? <span>{flag}</span>
-            : <Icon name="globe" size={28} />}
+              ? <span>{flag}</span>
+              : <Icon name="globe" size={28} />}
         </div>
       )}
 
@@ -571,14 +561,14 @@ const Hero = ({ country, navigate }) => {
 };
 
 /* ═══════════════════════════════════════════════════════
-   FACTS HORIZONTAL SCROLL CARDS  (replaces FactsSec grid)
+   FACTS HORIZONTAL SCROLL
 ═══════════════════════════════════════════════════════ */
 const FactsScrollSec = ({ country }) => {
   const facts = getFactItems(country);
   if (!facts.length) return null;
 
-  const trackRef   = useRef(null);
-  const [canLeft,  setCanLeft]  = useState(false);
+  const trackRef = useRef(null);
+  const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(true);
 
   const checkScroll = useCallback(() => {
@@ -636,7 +626,6 @@ const FactsScrollSec = ({ country }) => {
           </button>
         )}
       </div>
-      {/* Fade indicators */}
       <div className={`cp-facts-fade cp-facts-fade--l ${canLeft ? "vis" : ""}`} />
       <div className={`cp-facts-fade cp-facts-fade--r ${canRight ? "vis" : ""}`} />
     </section>
@@ -644,11 +633,10 @@ const FactsScrollSec = ({ country }) => {
 };
 
 /* ═══════════════════════════════════════════════════════
-   GALLERY IMAGE HIGHLIGHT CARDS  (replaces HighlightsSec)
+   IMAGE HIGHLIGHTS
 ═══════════════════════════════════════════════════════ */
 const ImageHighlightsSec = ({ country, gallery }) => {
   const highlights = useMemo(() => {
-    // Pair gallery images with highlight text if available
     const raw = Array.isArray(country?.highlights)
       ? country.highlights.map(toStr).filter(Boolean)
       : toArr(country?.highlights || "");
@@ -660,8 +648,8 @@ const ImageHighlightsSec = ({ country, gallery }) => {
 
   if (!highlights.length) return null;
 
-  const trackRef   = useRef(null);
-  const [canLeft,  setCanLeft]  = useState(false);
+  const trackRef = useRef(null);
+  const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(true);
 
   const checkScroll = useCallback(() => {
@@ -740,13 +728,13 @@ const ImageHighlightsSec = ({ country, gallery }) => {
    ABOUT
 ═══════════════════════════════════════════════════════ */
 const AboutSec = ({ country, navigate }) => {
-  const desc     = getDesc(country);
+  const desc = getDesc(country);
   const overview = getOverview(country);
-  const slug     = getCountrySlug(country);
-  const facts    = getFactItems(country);
-  const flag     = getFlag(country);
+  const slug = getCountrySlug(country);
+  const facts = getFactItems(country);
+  const flag = getFlag(country);
   const isFlagEmoji = flag && !flag.startsWith("http");
-  const isFlagUrl   = flag && flag.startsWith("http");
+  const isFlagUrl = flag && flag.startsWith("http");
 
   if (!desc && !overview) return null;
 
@@ -797,8 +785,8 @@ const AboutSec = ({ country, navigate }) => {
                       {isFlagUrl
                         ? <img src={flag} alt={`${country.name} flag`} />
                         : isFlagEmoji
-                        ? <span>{flag}</span>
-                        : <Icon name="globe" size={32} />}
+                          ? <span>{flag}</span>
+                          : <Icon name="globe" size={32} />}
                     </div>
                   )}
                   <div>
@@ -828,8 +816,8 @@ const AboutSec = ({ country, navigate }) => {
             <Reveal from="right" delay={180}>
               <div className="cp-trust-block">
                 {[
-                  { icon: "award",      label: "Expert Guides" },
-                  { icon: "shield",     label: "Safe Travel" },
+                  { icon: "award", label: "Expert Guides" },
+                  { icon: "shield", label: "Safe Travel" },
                   { icon: "headphones", label: "24/7 Support" },
                 ].map((x, i) => (
                   <div key={i} className="cp-trust-block__item">
@@ -851,10 +839,10 @@ const AboutSec = ({ country, navigate }) => {
 ═══════════════════════════════════════════════════════ */
 const BestTimeSec = ({ country }) => {
   const bestTime = pick(country?.bestTime, country?.bestTimeToVisit);
-  const climate  = pick(country?.climate);
+  const climate = pick(country?.climate);
   if (!bestTime && !climate) return null;
 
-  const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   return (
     <section className="cp-sec cp-sec--white">
@@ -897,7 +885,7 @@ const BestTimeSec = ({ country }) => {
                 })}
               </div>
               <div className="cp-besttime__legend">
-                {[{ c:"best",l:"Best" },{ c:"ok",l:"OK" },{ c:"avoid",l:"Avoid" }].map(x => (
+                {[{ c: "best", l: "Best" }, { c: "ok", l: "OK" }, { c: "avoid", l: "Avoid" }].map(x => (
                   <div key={x.c} className="cp-besttime__legend-item">
                     <div className={`cp-besttime__legend-dot cp-besttime__legend-dot--${x.c}`} />
                     {x.l}
@@ -916,10 +904,10 @@ const BestTimeSec = ({ country }) => {
    ACTIVITIES
 ═══════════════════════════════════════════════════════ */
 const ACT_ICONS = {
-  safari:"eye", drive:"car", walk:"mapPin", hike:"mountain",
-  bird:"eye", photo:"camera", culture:"book", village:"flag",
-  boat:"compass", fish:"compass", swim:"compass", balloon:"sun",
-  trek:"mountain", gorilla:"eye", chimp:"eye", track:"compass",
+  safari: "eye", drive: "car", walk: "mapPin", hike: "mountain",
+  bird: "eye", photo: "camera", culture: "book", village: "flag",
+  boat: "compass", fish: "compass", swim: "compass", balloon: "sun",
+  trek: "mountain", gorilla: "eye", chimp: "eye", track: "compass",
 };
 const getActIcon = (act) => {
   const a = act.toLowerCase();
@@ -1012,13 +1000,13 @@ const DestinationsSec = ({ country, slug, allDests, previewDests, loading }) => 
 
         {loading ? (
           <div className="cp-dest-grid">
-            {[1,2,3].map(i => (
+            {[1, 2, 3].map(i => (
               <div key={i} className="cp-dest-skel">
-                <div className="cp-shimmer" style={{ aspectRatio:"16/10" }} />
-                <div style={{ padding:20, display:"flex", flexDirection:"column", gap:10 }}>
-                  <div className="cp-shimmer" style={{ height:22, width:"60%", borderRadius:6 }} />
-                  <div className="cp-shimmer" style={{ height:14, width:"85%", borderRadius:6 }} />
-                  <div className="cp-shimmer" style={{ height:14, width:"50%", borderRadius:6 }} />
+                <div className="cp-shimmer" style={{ aspectRatio: "16/10" }} />
+                <div style={{ padding: 20, display: "flex", flexDirection: "column", gap: 10 }}>
+                  <div className="cp-shimmer" style={{ height: 22, width: "60%", borderRadius: 6 }} />
+                  <div className="cp-shimmer" style={{ height: 14, width: "85%", borderRadius: 6 }} />
+                  <div className="cp-shimmer" style={{ height: 14, width: "50%", borderRadius: 6 }} />
                 </div>
               </div>
             ))}
@@ -1053,17 +1041,17 @@ const DestinationsSec = ({ country, slug, allDests, previewDests, loading }) => 
 const GallerySec = ({ country, gallery }) => {
   const [lb, setLb] = useState({ open: false, idx: 0 });
 
-  const openLb  = useCallback((i) => { setLb({ open:true, idx:i }); document.body.style.overflow="hidden"; }, []);
-  const closeLb = useCallback(() =>  { setLb({ open:false, idx:0 }); document.body.style.overflow=""; }, []);
-  const prev    = useCallback(e => { e?.stopPropagation(); setLb(p => ({ ...p, idx:(p.idx-1+gallery.length)%gallery.length })); }, [gallery.length]);
-  const next    = useCallback(e => { e?.stopPropagation(); setLb(p => ({ ...p, idx:(p.idx+1)%gallery.length })); }, [gallery.length]);
+  const openLb = useCallback((i) => { setLb({ open: true, idx: i }); document.body.style.overflow = "hidden"; }, []);
+  const closeLb = useCallback(() => { setLb({ open: false, idx: 0 }); document.body.style.overflow = ""; }, []);
+  const prev = useCallback(e => { e?.stopPropagation(); setLb(p => ({ ...p, idx: (p.idx - 1 + gallery.length) % gallery.length })); }, [gallery.length]);
+  const next = useCallback(e => { e?.stopPropagation(); setLb(p => ({ ...p, idx: (p.idx + 1) % gallery.length })); }, [gallery.length]);
 
   useEffect(() => {
     if (!lb.open) return;
     const fn = e => {
-      if (e.key === "Escape")      closeLb();
-      if (e.key === "ArrowLeft")   prev();
-      if (e.key === "ArrowRight")  next();
+      if (e.key === "Escape") closeLb();
+      if (e.key === "ArrowLeft") prev();
+      if (e.key === "ArrowRight") next();
     };
     window.addEventListener("keydown", fn);
     return () => window.removeEventListener("keydown", fn);
@@ -1082,10 +1070,10 @@ const GallerySec = ({ country, gallery }) => {
               <button className={`cp-gallery-item ${i === 0 ? "cp-gallery-item--hero" : ""}`}
                 onClick={() => openLb(i)} aria-label={`View photo ${i + 1}`}>
                 <img src={src} alt={`${country.name} ${i + 1}`} loading={i < 3 ? "eager" : "lazy"}
-                  onError={e => { e.currentTarget.closest(".cp-gallery-item").style.display="none"; }} />
+                  onError={e => { e.currentTarget.closest(".cp-gallery-item").style.display = "none"; }} />
                 <div className="cp-gallery-item__ov">
                   <Icon name="zoomIn" size={22} />
-                  <span>{country.name} · {String(i+1).padStart(2,"0")}</span>
+                  <span>{country.name} · {String(i + 1).padStart(2, "0")}</span>
                 </div>
               </button>
             </Reveal>
@@ -1100,7 +1088,7 @@ const GallerySec = ({ country, gallery }) => {
             <Icon name="x" size={18} />
           </button>
           <div className="cp-lb__stage" onClick={e => e.stopPropagation()}>
-            <img src={gallery[lb.idx]} alt={`${country.name} ${lb.idx+1}`} className="cp-lb__img" />
+            <img src={gallery[lb.idx]} alt={`${country.name} ${lb.idx + 1}`} className="cp-lb__img" />
           </div>
           {gallery.length > 1 && (
             <>
@@ -1112,14 +1100,14 @@ const GallerySec = ({ country, gallery }) => {
               </button>
               <div className="cp-lb__foot" onClick={e => e.stopPropagation()}>
                 <div className="cp-lb__strip">
-                  {gallery.slice(0,12).map((src,i) => (
-                    <button key={i} className={`cp-lb__thumb ${lb.idx===i?"on":""}`}
-                      onClick={() => setLb(p => ({ ...p, idx:i }))}>
+                  {gallery.slice(0, 12).map((src, i) => (
+                    <button key={i} className={`cp-lb__thumb ${lb.idx === i ? "on" : ""}`}
+                      onClick={() => setLb(p => ({ ...p, idx: i }))}>
                       <img src={src} alt="" />
                     </button>
                   ))}
                 </div>
-                <span className="cp-lb__count">{lb.idx+1} / {gallery.length}</span>
+                <span className="cp-lb__count">{lb.idx + 1} / {gallery.length}</span>
               </div>
             </>
           )}
@@ -1160,7 +1148,7 @@ const UnescoSec = ({ country }) => {
 };
 
 /* ═══════════════════════════════════════════════════════
-   HISTORY LINK SECTION  (replaces TimelineSec)
+   HISTORY LINK BANNER
 ═══════════════════════════════════════════════════════ */
 const HistoryLinkSec = ({ country }) => {
   const historyUrl = getHistoryUrl(country);
@@ -1183,20 +1171,13 @@ const HistoryLinkSec = ({ country }) => {
                 the events, figures, and milestones that shaped this remarkable nation.
               </p>
               <div className="cp-history-banner__btns">
-                <a
-                  href={historyUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="cp-btn cp-btn--emerald cp-btn--lg"
-                >
+                <a href={historyUrl} target="_blank" rel="noopener noreferrer"
+                  className="cp-btn cp-btn--emerald cp-btn--lg">
                   <Icon name="externalLink" size={15} /> Read Full History on Wikipedia
                 </a>
-                <a
-                  href={`https://www.britannica.com/place/${encodeURIComponent(name)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="cp-btn cp-btn--outline cp-btn--lg"
-                >
+                <a href={`https://www.britannica.com/place/${encodeURIComponent(name)}`}
+                  target="_blank" rel="noopener noreferrer"
+                  className="cp-btn cp-btn--outline cp-btn--lg">
                   <Icon name="book" size={15} /> Britannica Encyclopedia
                 </a>
               </div>
@@ -1205,22 +1186,28 @@ const HistoryLinkSec = ({ country }) => {
               {country?.independence && (
                 <div className="cp-history-fact">
                   <span className="cp-history-fact__icon"><Icon name="flag" size={16} /></span>
-                  <span className="cp-history-fact__label">Independence</span>
-                  <span className="cp-history-fact__val">{country.independence}</span>
+                  <div>
+                    <span className="cp-history-fact__label">Independence</span>
+                    <span className="cp-history-fact__val">{country.independence}</span>
+                  </div>
                 </div>
               )}
               {country?.governmentType && (
                 <div className="cp-history-fact">
                   <span className="cp-history-fact__icon"><Icon name="shield" size={16} /></span>
-                  <span className="cp-history-fact__label">Government</span>
-                  <span className="cp-history-fact__val">{country.governmentType}</span>
+                  <div>
+                    <span className="cp-history-fact__label">Government</span>
+                    <span className="cp-history-fact__val">{country.governmentType}</span>
+                  </div>
                 </div>
               )}
               {country?.headOfState && (
                 <div className="cp-history-fact">
                   <span className="cp-history-fact__icon"><Icon name="users" size={16} /></span>
-                  <span className="cp-history-fact__label">Head of State</span>
-                  <span className="cp-history-fact__val">{country.headOfState}</span>
+                  <div>
+                    <span className="cp-history-fact__label">Head of State</span>
+                    <span className="cp-history-fact__val">{country.headOfState}</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -1235,9 +1222,9 @@ const HistoryLinkSec = ({ country }) => {
    TIPS & SAFETY
 ═══════════════════════════════════════════════════════ */
 const TipsSec = ({ country }) => {
-  const tips       = getTips(country);
+  const tips = getTips(country);
   const healthInfo = pick(country?.healthInfo);
-  const visaInfo   = pick(country?.visaInfo);
+  const visaInfo = pick(country?.visaInfo);
   if (!tips.length && !healthInfo && !visaInfo) return null;
 
   return (
@@ -1258,7 +1245,7 @@ const TipsSec = ({ country }) => {
                 <ul className="cp-tips-list">
                   {tips.map((tip, i) => (
                     <li key={i} className="cp-tips-list__item">
-                      <span className="cp-tips-list__num">{String(i+1).padStart(2,"0")}</span>
+                      <span className="cp-tips-list__num">{String(i + 1).padStart(2, "0")}</span>
                       <span>{tip}</span>
                     </li>
                   ))}
@@ -1313,12 +1300,12 @@ const TipsSec = ({ country }) => {
 ═══════════════════════════════════════════════════════ */
 const ReviewsSec = ({ country }) => {
   const reviews = getReviews(country);
-  const agg     = country?.reviewAggregate ?? null;
+  const agg = country?.reviewAggregate ?? null;
   if (!reviews.length && !agg) return null;
 
-  const avg   = agg?.avgRating   || country?.averageRating || 0;
-  const total = agg?.totalReviews || country?.reviewCount   || 0;
-  const dist  = agg?.distribution;
+  const avg = agg?.avgRating || country?.averageRating || 0;
+  const total = agg?.totalReviews || country?.reviewCount || 0;
+  const dist = agg?.distribution;
 
   return (
     <section className="cp-sec cp-sec--white">
@@ -1331,7 +1318,7 @@ const ReviewsSec = ({ country }) => {
               <div className="cp-rev-agg__score">
                 <span className="cp-rev-agg__big">{Number(avg).toFixed(1)}</span>
                 <div className="cp-rev-agg__stars">
-                  {Array.from({ length:5 }, (_,i) => (
+                  {Array.from({ length: 5 }, (_, i) => (
                     <Icon key={i} name="star" size={16}
                       className={i < Math.round(avg) ? "cp-star-on" : "cp-star-off"} />
                   ))}
@@ -1341,18 +1328,18 @@ const ReviewsSec = ({ country }) => {
               {dist && (
                 <div className="cp-rev-agg__bars">
                   {[
-                    { l:"5★", c:dist.fiveStar  || 0 },
-                    { l:"4★", c:dist.fourStar  || 0 },
-                    { l:"3★", c:dist.threeStar || 0 },
-                    { l:"2★", c:dist.twoStar   || 0 },
-                    { l:"1★", c:dist.oneStar   || 0 },
+                    { l: "5★", c: dist.fiveStar || 0 },
+                    { l: "4★", c: dist.fourStar || 0 },
+                    { l: "3★", c: dist.threeStar || 0 },
+                    { l: "2★", c: dist.twoStar || 0 },
+                    { l: "1★", c: dist.oneStar || 0 },
                   ].map(b => {
-                    const pct = total > 0 ? Math.round((b.c/total)*100) : 0;
+                    const pct = total > 0 ? Math.round((b.c / total) * 100) : 0;
                     return (
                       <div key={b.l} className="cp-rev-bar">
                         <span className="cp-rev-bar__label">{b.l}</span>
                         <div className="cp-rev-bar__track">
-                          <div className="cp-rev-bar__fill" style={{ width:`${pct}%` }} />
+                          <div className="cp-rev-bar__fill" style={{ width: `${pct}%` }} />
                         </div>
                         <span className="cp-rev-bar__pct">{pct}%</span>
                       </div>
@@ -1379,13 +1366,13 @@ const ReviewsSec = ({ country }) => {
                       <strong>{rev.reviewerName || "Anonymous"}</strong>
                       <div className="cp-rev-card__meta">
                         {rev.reviewerCountry}
-                        {rev.tripDate && ` · ${new Date(rev.tripDate).toLocaleDateString("en-US",{month:"short",year:"numeric"})}`}
+                        {rev.tripDate && ` · ${new Date(rev.tripDate).toLocaleDateString("en-US", { month: "short", year: "numeric" })}`}
                       </div>
                     </div>
                     {rev.isVerified && <Icon name="checkCircle" size={14} className="cp-rev-card__v" />}
                   </div>
                   <div className="cp-rev-card__stars">
-                    {Array.from({ length:5 }, (_,s) => (
+                    {Array.from({ length: 5 }, (_, s) => (
                       <Icon key={s} name="star" size={12}
                         className={s < Math.round(rev.rating) ? "cp-star-on" : "cp-star-off"} />
                     ))}
@@ -1404,11 +1391,11 @@ const ReviewsSec = ({ country }) => {
 };
 
 /* ═══════════════════════════════════════════════════════
-   FAQ — Auto-generated per country
+   FAQ
 ═══════════════════════════════════════════════════════ */
 const FaqSec = ({ country }) => {
-  const dbFaqs      = getFaqs(country);
-  const autoFaqs    = useMemo(() => generateFaqs(country), [country]);
+  const dbFaqs = getFaqs(country);
+  const autoFaqs = useMemo(() => generateFaqs(country), [country]);
   const displayFaqs = dbFaqs.length > 0 ? dbFaqs : autoFaqs;
   const [open, setOpen] = useState(null);
 
@@ -1424,7 +1411,7 @@ const FaqSec = ({ country }) => {
             <Reveal key={faq.id || i} from="bottom" delay={i * 50}>
               <div className={`cp-faq-item ${open === i ? "cp-faq-item--open" : ""}`}>
                 <button className="cp-faq-item__btn" onClick={() => setOpen(open === i ? null : i)}>
-                  <span className="cp-faq-item__num">{String(i+1).padStart(2,"0")}</span>
+                  <span className="cp-faq-item__num">{String(i + 1).padStart(2, "0")}</span>
                   <span className="cp-faq-item__q">{faq.question}</span>
                   <span className="cp-faq-item__icon">
                     <Icon name={open === i ? "minus" : "plus"} size={16} />
@@ -1485,11 +1472,11 @@ const CtaFooter = ({ country, slug, navigate }) => (
         </div>
         <div className="cp-cta-footer__trust">
           {[
-            { icon:"award",      label:"Expert Guides" },
-            { icon:"shield",     label:"Safe & Ethical" },
-            { icon:"headphones", label:"24/7 Support" },
-            { icon:"star",       label:"Top Rated" },
-          ].map((x,i) => (
+            { icon: "award", label: "Expert Guides" },
+            { icon: "shield", label: "Safe & Ethical" },
+            { icon: "headphones", label: "24/7 Support" },
+            { icon: "star", label: "Top Rated" },
+          ].map((x, i) => (
             <div key={i} className="cp-cta-footer__trust-item">
               <Icon name={x.icon} size={16} /> {x.label}
             </div>
@@ -1505,9 +1492,9 @@ const CtaFooter = ({ country, slug, navigate }) => (
 ═══════════════════════════════════════════════════════ */
 const CountryPage = () => {
   const { countryId } = useParams();
-  const navigate      = useNavigate();
+  const navigate = useNavigate();
 
-  useEffect(() => { window.scrollTo({ top:0, behavior:"instant" }); }, [countryId]);
+  useEffect(() => { window.scrollTo({ top: 0, behavior: "instant" }); }, [countryId]);
 
   const { country, loading, error, refetch } = useCountry(countryId);
   const { destinations: allDests = [], loading: destsLoading } =
@@ -1537,7 +1524,7 @@ const CountryPage = () => {
     );
   }
 
-  const slug    = getCountrySlug(country);
+  const slug = getCountrySlug(country);
   const gallery = getGallery(country);
 
   return (

@@ -11,6 +11,7 @@ import React, {
   useRef,
   useMemo,
 } from "react";
+import { connectSocket, disconnectSocket, getSocket } from "../utils/socket";
 
 // ============================================================================
 // Configuration

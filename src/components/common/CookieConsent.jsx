@@ -13,6 +13,7 @@ import {
   COOKIE_PREFS_KEY,
   OPEN_COOKIE_SETTINGS_EVENT,
 } from "../../utils/cookiePreferences";
+import { openCookieDocs } from "./CookieDocumentation";
 import "./CookieConsent.css";
 
 const defaultPrefs = {
@@ -138,6 +139,7 @@ export default function CookieConsent() {
                 </div>
               </div>
               <div className="cc-actions">
+                <Button onClick={openCookieDocs}>📖 Learn More</Button>
                 <Button onClick={() => setSettings(true)}>⚙️ Customize</Button>
                 <Button onClick={() => save({ analytics: false, marketing: false })}>Essential</Button>
                 <Button variant="primary" onClick={() => save({ analytics: true, marketing: true })}>Accept All</Button>
@@ -199,6 +201,7 @@ export default function CookieConsent() {
               </div>
 
               <div className="cc-footer">
+                <Button onClick={openCookieDocs}>📖 Learn More</Button>
                 <Button onClick={() => save({ analytics: false, marketing: false })}>Save Essentials</Button>
                 <Button variant="primary" onClick={() => save(prefs)}>Save Preferences</Button>
               </div>
