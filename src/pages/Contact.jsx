@@ -374,11 +374,61 @@ const FieldTextarea = React.memo(({
 });
 FieldTextarea.displayName = "FieldTextarea";
 
-/* ══════════════════════════════════════════════════════
-   MAIN COMPONENT
-══════════════════════════════════════════════════════ */
 const Contact = () => {
   const { user, isAuthenticated } = useUserAuth();
+
+  // ═══════════════════════════════
+  //  ALL STATE DECLARATIONS (MISSING IN ORIGINAL)
+  // ═══════════════════════════════
+  const [form, setForm]                       = useState(INIT_FORM);
+  const [errors, setErrors]                   = useState({});
+  const [touched, setTouched]                 = useState({});
+  const [step, setStep]                       = useState(0);
+  const [direction, setDirection]             = useState(1);
+  const [submitted, setSubmitted]             = useState(false);
+  const [submitting, setSubmitting]           = useState(false);
+  const [submitProgress, setSubmitProgress]   = useState(0);
+  const [autoFilledFields, setAutoFilledFields] = useState(new Set());
+  const [showBanner, setShowBanner]           = useState(false);
+  const [emojiOpen, setEmojiOpen]             = useState(false);
+
+  // FAQ state
+  const [faqs, setFaqs]             = useState([]);
+  const [faqsLoading, setFaqsLoading] = useState(false);
+  const [faqsError, setFaqsError]   = useState(null);
+  const [openFaqId, setOpenFaqId]   = useState(null);
+
+  // Verification modal state
+  const [verOpen, setVerOpen]       = useState(false);
+  const [verLoading, setVerLoading] = useState(false);
+  const [verErr, setVerErr]         = useState("");
+
+  // Refs
+  const autoFillDone   = useRef(false);
+  const pendingFormRef = useRef(null);
+  const verEmailRef    = useRef("");
+  const emojiRef       = useRef(null);
+  const heroRef        = useRef(null);
+
+  // Hero parallax
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroY       = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
+
+  // Close emoji picker on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (emojiRef.current && !emojiRef.current.contains(e.target)) {
+        setEmojiOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
 
   /* ═══════════════════════════════
      FETCH FAQs
