@@ -60,6 +60,11 @@ const Navbar = () => {
   const searchAbortRef = useRef(null);
   const latestSearchRef = useRef("");
   const lastScrollYRef = useRef(0);
+  const prevNavHiddenRef = useRef(false);
+  const logoDetachedTimerRef = useRef(null);
+  const logoRef = useRef(null);
+  const [logoDetached, setLogoDetached] = useState(false);
+  const [logoRect, setLogoRect] = useState(null);
 
   const localDestinations = useMemo(() => getAllDestinations(), []);
 
@@ -148,6 +153,29 @@ const Navbar = () => {
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  useEffect(() => {
+    const prevHidden = prevNavHiddenRef.current;
+    prevNavHiddenRef.current = navHidden;
+
+    if (navHidden && !prevHidden) {
+      if (logoRef.current) {
+        const rect = logoRef.current.getBoundingClientRect();
+        setLogoRect({ top: rect.top, left: rect.left });
+      }
+      setLogoDetached(true);
+      if (logoDetachedTimerRef.current) clearTimeout(logoDetachedTimerRef.current);
+    } else if (!navHidden && prevHidden) {
+      if (logoDetachedTimerRef.current) clearTimeout(logoDetachedTimerRef.current);
+      logoDetachedTimerRef.current = setTimeout(() => {
+        setLogoDetached(false);
+      }, 500);
+    }
+
+    return () => {
+      if (logoDetachedTimerRef.current) clearTimeout(logoDetachedTimerRef.current);
+    };
+  }, [navHidden]);
 
   const closeAll = useCallback(() => {
     setIsMobileMenuOpen(false);
@@ -367,6 +395,35 @@ const Navbar = () => {
   ════════════════════════════════════════════════════════════════════════ */
   return (
     <>
+      {/* ── STANDALONE LOGO (visible when nav is hidden on scroll-down) ── */}
+      {logoDetached && logoRect && (
+        <Link
+          to="/"
+          className="nav__logo nav__logo--standalone"
+          style={{
+            position: "fixed",
+            top: logoRect.top,
+            left: logoRect.left,
+            zIndex: 1001,
+            opacity: navHidden ? 0.3 : 0,
+            transition: "opacity 0.5s ease",
+            pointerEvents: "none",
+          }}
+          aria-label="Altuvera Home"
+        >
+          <div className="nav__logo-glow" />
+          <div className="nav__logo-img-wrapper">
+            <img
+              src={getBrandLogoUrl()}
+              alt={BRAND_LOGO_ALT}
+              className="nav__logo-img"
+              draggable={false}
+            />
+          </div>
+          <span className="nav__logo-text">Altuvera</span>
+        </Link>
+      )}
+
       {/* ── NAVBAR ── */}
       <nav
         ref={headerRef}
@@ -379,7 +436,12 @@ const Navbar = () => {
       >
         <div className="nav__inner">
           {/* Logo */}
-          <Link to="/" className="nav__logo" aria-label="Altuvera Home">
+          <Link
+            ref={logoRef}
+            to="/"
+            className="nav__logo"
+            aria-label="Altuvera Home"
+          >
             <div className="nav__logo-glow" />
             <div className="nav__logo-img-wrapper">
               <img

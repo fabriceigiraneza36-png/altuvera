@@ -93,6 +93,9 @@
 .nav__logo:active {
   transform: scale(0.98);
 }
+.nav__logo--standalone {
+  pointer-events: none;
+}
 
 .nav__logo-glow {
   position: absolute;
