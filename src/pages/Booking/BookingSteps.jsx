@@ -8,9 +8,10 @@
  */
 
 import React, {
-  useState, useRef, useEffect, useCallback, memo,
+  useState, useCallback, memo,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import SelectModal from "./components/SelectModal";
 
 /* ══════════════════════════════════════════════════════════════
    MICRO-COMPONENTS
@@ -82,35 +83,9 @@ const StepTrip = memo(({
   destinationsList, countriesList, categoriesList,
   isMobile,
 }) => {
-  const [destQuery,       setDestQuery]       = useState("");
-  const [countryQuery,    setCountryQuery]    = useState("");
-  const [showDestDrop,    setShowDestDrop]    = useState(false);
-  const [showCountryDrop, setShowCountryDrop] = useState(false);
-  const destRef    = useRef(null);
-  const countryRef = useRef(null);
+  const [openCountryModal, setOpenCountryModal] = useState(false);
+  const [openDestModal, setOpenDestModal] = useState(false);
 
-  useEffect(() => {
-    const fn = (e) => {
-      if (!destRef.current?.contains(e.target))    setShowDestDrop(false);
-      if (!countryRef.current?.contains(e.target)) setShowCountryDrop(false);
-    };
-    document.addEventListener("mousedown", fn);
-    return () => document.removeEventListener("mousedown", fn);
-  }, []);
-
-  const filteredDests = (destinationsList || []).filter((d) => {
-    if (!destQuery) return true;
-    const q = destQuery.toLowerCase();
-    return d.label?.toLowerCase().includes(q) || d.country?.toLowerCase().includes(q);
-  });
-
-  const filteredCountries = (countriesList || []).filter((c) => {
-    if (!countryQuery) return true;
-    const q = countryQuery.toLowerCase();
-    return c.label?.toLowerCase().includes(q) || c.region?.toLowerCase().includes(q);
-  });
-
-  // FIX: use camelCase keys matching INITIAL_FORM
   const selectedCountry = (countriesList || []).find(
     (c) => c.value === formData.countryId
   );
@@ -124,21 +99,18 @@ const StepTrip = memo(({
     setFormData((p) => ({
       ...p,
       countryId:     c.value,
-      destinationId: "", // reset destination when country changes
+      destinationId: "",
     }));
-    setCountryQuery("");
-    setShowCountryDrop(false);
+    setOpenCountryModal(false);
   }, [setFormData]);
 
   const handleDestSelect = useCallback((d) => {
     setFormData((p) => ({
       ...p,
       destinationId: d.value,
-      // auto-fill country if destination knows its countryId
       countryId: d.countryId || p.countryId,
     }));
-    setDestQuery("");
-    setShowDestDrop(false);
+    setOpenDestModal(false);
   }, [setFormData]);
 
   const MONTHS = [
@@ -165,189 +137,124 @@ const StepTrip = memo(({
         marginBottom: 8,
       }}>
         {/* Country */}
-        <div ref={countryRef}>
+        <div>
           <label className="bk-label">
             Country <span style={{ color: "#ef4444" }}>*</span>
           </label>
-          <div className="bk-dest-search" style={{ position: "relative" }}>
-            <input
-              type="text"
-              className={`bk-input${
-                errors.countryId && touched.countryId
-                  ? " bk-input--error"
-                  : selectedCountry
-                  ? " bk-input--verified"
-                  : ""
-              }`}
-              placeholder="🌍 Search countries…"
-              value={selectedCountry ? selectedCountry.label : countryQuery}
-              onChange={(e) => {
-                setCountryQuery(e.target.value);
-                setShowCountryDrop(true);
-                if (!e.target.value) {
-                  setFormData((p) => ({ ...p, countryId: "" }));
-                }
+          <button
+            type="button"
+            className={`bk-input bk-input--select-trigger${errors.countryId && touched.countryId ? " bk-input--error" : selectedCountry ? " bk-input--verified" : ""}`}
+            onClick={() => setOpenCountryModal(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: 10,
+              textAlign: "left", cursor: "pointer",
+            }}
+            aria-label="Open country selector"
+          >
+            <span style={{ fontSize: 20, flexShrink: 0 }}>
+              {selectedCountry && selectedCountry.flag && !selectedCountry.flag.startsWith("http")
+                ? selectedCountry.flag
+                : "🌍"}
+            </span>
+            <span style={{
+              flex: 1, minWidth: 0, fontWeight: selectedCountry ? 700 : 400,
+              color: selectedCountry ? "#111827" : "#9ca3af",
+              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+            }}>
+              {selectedCountry ? selectedCountry.label : "Select a country"}
+            </span>
+            <span style={{ fontSize: 16, color: "#9ca3af", flexShrink: 0 }}>▾</span>
+          </button>
+          {selectedCountry && (
+            <button
+              type="button"
+              onClick={() => {
+                setFormData((p) => ({ ...p, countryId: "", destinationId: "" }));
               }}
-              onFocus={() => { if (!selectedCountry) setShowCountryDrop(true); }}
-              aria-label="Search countries"
-              aria-expanded={showCountryDrop}
-              aria-autocomplete="list"
-            />
-            {selectedCountry && (
-              <button
-                type="button"
-                onClick={() => {
-                  setFormData((p) => ({
-                    ...p, countryId: "", destinationId: "",
-                  }));
-                  setCountryQuery("");
-                }}
-                style={{
-                  position: "absolute", right: 12, top: "50%",
-                  transform: "translateY(-50%)",
-                  background: "none", border: "none",
-                  color: "#9ca3af", cursor: "pointer", fontSize: 18, padding: 0,
-                }}
-                aria-label="Clear country"
-              >×</button>
-            )}
-            <AnimatePresence>
-              {showCountryDrop && filteredCountries.length > 0 && (
-                <motion.div
-                  className="bk-dest-dropdown"
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.15 }}
-                  role="listbox"
-                >
-                  {filteredCountries.slice(0, 30).map((c) => (
-                    <div
-                      key={c.value}
-                      className={`bk-dest-option${
-                        formData.countryId === c.value ? " bk-dest-option--active" : ""
-                      }`}
-                      onClick={() => handleCountrySelect(c)}
-                      role="option"
-                      aria-selected={formData.countryId === c.value}
-                    >
-                      <span style={{ fontSize: 22, flexShrink: 0 }}>
-                        {c.flag && !c.flag.startsWith("http") ? c.flag : "🌍"}
-                      </span>
-                      <div style={{ minWidth: 0 }}>
-                        <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: "#111827" }}>
-                          {c.label}
-                        </p>
-                        {c.region && (
-                          <p style={{ margin: 0, fontSize: 12, color: "#9ca3af" }}>
-                            {c.region}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+              style={{
+                position: "absolute", right: 36, top: "50%",
+                transform: "translateY(-50%)",
+                background: "none", border: "none",
+                color: "#9ca3af", cursor: "pointer", fontSize: 18, padding: 0,
+              }}
+              aria-label="Clear country"
+            >×</button>
+          )}
           <FieldError error={errors.countryId} touched={touched.countryId} />
         </div>
 
         {/* Destination */}
-        <div ref={destRef}>
+        <div>
           <label className="bk-label">
             Specific Destination{" "}
             <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optional)</span>
           </label>
-          <div className="bk-dest-search" style={{ position: "relative" }}>
-            <input
-              type="text"
-              className={`bk-input${selectedDest ? " bk-input--verified" : ""}`}
-              placeholder="🏞️ Search destinations…"
-              value={selectedDest ? selectedDest.label : destQuery}
-              onChange={(e) => {
-                setDestQuery(e.target.value);
-                setShowDestDrop(true);
-                if (!e.target.value) {
-                  setFormData((p) => ({ ...p, destinationId: "" }));
-                }
-              }}
-              onFocus={() => { if (!selectedDest) setShowDestDrop(true); }}
-              aria-label="Search destinations"
-              aria-expanded={showDestDrop}
-            />
-            {selectedDest && (
-              <button
-                type="button"
-                onClick={() => {
-                  setFormData((p) => ({ ...p, destinationId: "" }));
-                  setDestQuery("");
-                }}
-                style={{
-                  position: "absolute", right: 12, top: "50%",
-                  transform: "translateY(-50%)",
-                  background: "none", border: "none",
-                  color: "#9ca3af", cursor: "pointer", fontSize: 18, padding: 0,
-                }}
-                aria-label="Clear destination"
-              >×</button>
+          <button
+            type="button"
+            className={`bk-input bk-input--select-trigger${selectedDest ? " bk-input--verified" : ""}`}
+            onClick={() => setOpenDestModal(true)}
+            style={{
+              display: "flex", alignItems: "center", gap: 10,
+              textAlign: "left", cursor: "pointer",
+            }}
+            aria-label="Open destination selector"
+          >
+            {selectedDest ? (
+              selectedDest.image ? (
+                <img src={selectedDest.image} alt="" className="bk-dest-thumb" style={{ width: 28, height: 28, borderRadius: 8 }} />
+              ) : (
+                <span style={{ fontSize: 20, flexShrink: 0 }}>🏞️</span>
+              )
+            ) : (
+              <span style={{ fontSize: 20, flexShrink: 0 }}>🏞️</span>
             )}
-            <AnimatePresence>
-              {showDestDrop && filteredDests.length > 0 && (
-                <motion.div
-                  className="bk-dest-dropdown"
-                  initial={{ opacity: 0, y: -6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  transition={{ duration: 0.15 }}
-                  role="listbox"
-                >
-                  {filteredDests.slice(0, 20).map((d) => (
-                    <div
-                      key={d.value}
-                      className={`bk-dest-option${
-                        formData.destinationId === d.value ? " bk-dest-option--active" : ""
-                      }`}
-                      onClick={() => handleDestSelect(d)}
-                      role="option"
-                      aria-selected={formData.destinationId === d.value}
-                    >
-                      {d.image ? (
-                        <img src={d.image} alt={d.label} className="bk-dest-thumb" />
-                      ) : (
-                        <div
-                          className="bk-dest-thumb"
-                          style={{
-                            display: "flex", alignItems: "center",
-                            justifyContent: "center", fontSize: 20,
-                          }}
-                        >🏞️</div>
-                      )}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: "#111827" }}>
-                          {d.label}
-                        </p>
-                        <p style={{ margin: 0, fontSize: 12, color: "#9ca3af" }}>
-                          {d.country}{d.duration && ` · ${d.duration}`}
-                        </p>
-                      </div>
-                      {d.rating && (
-                        <span style={{
-                          fontSize: 12, fontWeight: 700, color: "#f59e0b",
-                          flexShrink: 0, marginLeft: "auto",
-                        }}>
-                          ⭐ {Number(d.rating).toFixed(1)}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+            <span style={{
+              flex: 1, minWidth: 0, fontWeight: selectedDest ? 700 : 400,
+              color: selectedDest ? "#111827" : "#9ca3af",
+              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+            }}>
+              {selectedDest ? selectedDest.label : "Select a destination"}
+            </span>
+            <span style={{ fontSize: 16, color: "#9ca3af", flexShrink: 0 }}>▾</span>
+          </button>
+          {selectedDest && (
+            <button
+              type="button"
+              onClick={() => {
+                setFormData((p) => ({ ...p, destinationId: "" }));
+              }}
+              style={{
+                position: "absolute", right: 36, top: "50%",
+                transform: "translateY(-50%)",
+                background: "none", border: "none",
+                color: "#9ca3af", cursor: "pointer", fontSize: 18, padding: 0,
+              }}
+              aria-label="Clear destination"
+            >×</button>
+          )}
           <FieldError error={errors.destinationId} touched={touched.destinationId} />
         </div>
       </div>
+
+      {/* Modals */}
+      <SelectModal
+        isOpen={openCountryModal}
+        onClose={() => setOpenCountryModal(false)}
+        onSelect={handleCountrySelect}
+        items={countriesList}
+        mode="country"
+        selectedValue={formData.countryId}
+        isMobile={isMobile}
+      />
+      <SelectModal
+        isOpen={openDestModal}
+        onClose={() => setOpenDestModal(false)}
+        onSelect={handleDestSelect}
+        items={destinationsList}
+        mode="destination"
+        selectedValue={formData.destinationId}
+        isMobile={isMobile}
+      />
 
       <div className="bk-sep" />
 

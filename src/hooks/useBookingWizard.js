@@ -1,12 +1,9 @@
 /**
- * useBookingWizard — v2.2
+ * useBookingWizard — v2.3
  * FIXES:
- *  - All formData fields now camelCase (matches BookingSteps)
- *  - currentStep starts at 0
- *  - validateStep reads correct field names
- *  - GROUP_TYPES includes icons
- *  - ACCOMMODATION_TYPES includes icons and desc
- *  - INTERESTS array matches expected {value, label, icon} shape
+ *  - fetchJSON paths no longer include /api prefix (API_URL already has it)
+ *  - getCountries replaced with direct fetchJSON (consistent URL handling)
+ *  - All other logic unchanged from v2.2
  */
 
 import {
@@ -17,8 +14,9 @@ import {
   useContext,
 } from "react";
 import { ReactReduxContext } from "react-redux";
-import { createBooking, ApiError, getCountries } from "../api/bookingApi";
+import { createBooking, ApiError } from "../api/bookingApi";
 import { STEPS } from "../pages/Booking/BookingShared";
+import { toAbsoluteApiUrl } from "../utils/apiBase";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Safe Redux hook
@@ -57,34 +55,35 @@ const useSafeReduxAuth = () => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Constants
+// fetchJSON — uses toAbsoluteApiUrl so /api is never doubled
+// paths must NOT start with /api
 // ─────────────────────────────────────────────────────────────────────────────
-const API_BASE = import.meta.env.VITE_API_URL ?? "";
-
 const fetchJSON = async (path, signal) => {
-  const res = await fetch(`${API_BASE}${path}`, { signal });
-  if (!res.ok) throw new Error(`HTTP ${res.status}: ${path}`);
+  // toAbsoluteApiUrl auto-strips any accidental /api prefix
+  const url = toAbsoluteApiUrl(path);
+  const res = await fetch(url, { signal });
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${url}`);
   return res.json();
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// INITIAL FORM — all camelCase to match BookingSteps components
+// INITIAL FORM — all camelCase
 // ─────────────────────────────────────────────────────────────────────────────
 const INITIAL_FORM = {
   // Step 0 — Trip
-  destinationId:   "",
-  countryId:       "",
-  categoryId:      "",
-  startDate:       "",
-  endDate:         "",
-  isFlexible:      false,
-  flexibleMonths:  [],
+  destinationId:  "",
+  countryId:      "",
+  categoryId:     "",
+  startDate:      "",
+  endDate:        "",
+  isFlexible:     false,
+  flexibleMonths: [],
 
   // Step 1 — Travelers
-  adults:          1,
-  children:        0,
-  infants:         0,
-  groupType:       "",
+  adults:    1,
+  children:  0,
+  infants:   0,
+  groupType: "",
 
   // Step 2 — Preferences
   accommodationType:    "",
@@ -95,9 +94,7 @@ const INITIAL_FORM = {
   hasMedicalConditions: false,
   medicalDetails:       "",
 
-  // Step 3 — Review (read-only, no fields)
-
-  // Step 4 — Contact (handled in BookingContact)
+  // Step 4 — Contact
   firstName:    "",
   lastName:     "",
   email:        "",
@@ -115,9 +112,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 // ─────────────────────────────────────────────────────────────────────────────
 const sanitizePayload = (obj) =>
   Object.fromEntries(
-    Object.entries(obj).filter(
-      ([, v]) => v !== "" && v !== null && v !== undefined,
-    ),
+    Object.entries(obj).filter(([, v]) => v !== "" && v !== null && v !== undefined)
   );
 
 const buildFieldErrors = (err) => {
@@ -128,7 +123,7 @@ const buildFieldErrors = (err) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Static option sets — stable references
+// Static option sets
 // ─────────────────────────────────────────────────────────────────────────────
 const GROUP_TYPES = [
   { value: "solo",      label: "Solo",      icon: "🧍" },
@@ -139,11 +134,11 @@ const GROUP_TYPES = [
 ];
 
 const ACCOMMODATION_TYPES = [
-  { value: "luxury",   label: "Luxury",    icon: "👑", desc: "5-Star resorts & lodges"   },
-  { value: "standard", label: "Standard",  icon: "🏨", desc: "3–4 star hotels"           },
-  { value: "budget",   label: "Budget",    icon: "🏕️", desc: "Hostels & guesthouses"    },
-  { value: "camping",  label: "Camping",   icon: "⛺", desc: "Camping & glamping"        },
-  { value: "mixed",    label: "Mixed",     icon: "🔀", desc: "Flexible / mix of options" },
+  { value: "luxury",   label: "Luxury",   icon: "👑", desc: "5-Star resorts & lodges"   },
+  { value: "standard", label: "Standard", icon: "🏨", desc: "3–4 star hotels"           },
+  { value: "budget",   label: "Budget",   icon: "🏕️", desc: "Hostels & guesthouses"    },
+  { value: "camping",  label: "Camping",  icon: "⛺", desc: "Camping & glamping"        },
+  { value: "mixed",    label: "Mixed",    icon: "🔀", desc: "Flexible / mix of options" },
 ];
 
 const INTERESTS = [
@@ -165,8 +160,7 @@ const INTERESTS = [
 export const useBookingWizard = () => {
   const { user, isAuthenticated } = useSafeReduxAuth();
 
-  // ── UI state ────────────────────────────────────────────────────────────
-  // FIX: start at 0, not 1
+  // ── UI state ──────────────────────────────────────────────────────────
   const [currentStep,    setCurrentStep]    = useState(0);
   const [isAnimating,    setIsAnimating]    = useState(false);
   const [isSubmitting,   setIsSubmitting]   = useState(false);
@@ -175,22 +169,22 @@ export const useBookingWizard = () => {
   const [submissionRef,  setSubmissionRef]  = useState(null);
   const [showModal,      setShowModal]      = useState(false);
 
-  // ── Form state ──────────────────────────────────────────────────────────
+  // ── Form state ────────────────────────────────────────────────────────
   const [formData, setFormData] = useState(INITIAL_FORM);
   const [errors,   setErrors]   = useState({});
   const [touched,  setTouched]  = useState({});
 
-  // ── API / reference data ────────────────────────────────────────────────
+  // ── Reference data ────────────────────────────────────────────────────
   const [categoriesList,   setCategoriesList]   = useState([]);
   const [destinationsList, setDestinationsList] = useState([]);
   const [countriesList,    setCountriesList]    = useState([]);
   const [servicesData,     setServicesData]     = useState([]);
 
-  // ── Submission error ────────────────────────────────────────────────────
+  // ── Submission error ──────────────────────────────────────────────────
   const [submitError,      setSubmitError]      = useState(null);
   const [submitRetryCount, setSubmitRetryCount] = useState(0);
 
-  // ── Guards ──────────────────────────────────────────────────────────────
+  // ── Guards ────────────────────────────────────────────────────────────
   const navigatingRef = useRef(false);
   const mountedRef    = useRef(true);
   useEffect(() => {
@@ -198,7 +192,7 @@ export const useBookingWizard = () => {
     return () => { mountedRef.current = false; };
   }, []);
 
-  // ── Prefill from authenticated user ────────────────────────────────────
+  // ── Prefill from authenticated user ──────────────────────────────────
   useEffect(() => {
     if (!user) return;
     setFormData((prev) => ({
@@ -211,7 +205,8 @@ export const useBookingWizard = () => {
     }));
   }, [user]);
 
-  // ── Load reference data ─────────────────────────────────────────────────
+  // ── Load reference data ───────────────────────────────────────────────
+  // FIXED: paths do NOT include /api — toAbsoluteApiUrl adds it
   useEffect(() => {
     const controller = new AbortController();
     const { signal } = controller;
@@ -220,35 +215,39 @@ export const useBookingWizard = () => {
       setLoadingData(true);
 
       const [countriesResult, destResult, svcResult] = await Promise.allSettled([
-        getCountries({ is_active: true, limit: 200 }),
-        fetchJSON("/api/destinations?is_active=true&limit=200", signal),
-        fetchJSON("/api/services?is_active=true&limit=200",     signal),
+        // ✅ "/countries" → "https://backend.../api/countries"
+        fetchJSON("/countries?is_active=true&limit=200", signal),
+        // ✅ "/destinations" → "https://backend.../api/destinations"
+        fetchJSON("/destinations?is_active=true&limit=200", signal),
+        // ✅ "/services" → "https://backend.../api/services"
+        fetchJSON("/services?is_active=true&limit=200", signal),
       ]);
 
       if (!mountedRef.current) return;
 
+      // Countries
       if (countriesResult.status === "fulfilled") {
-        // Normalise to { value, label, flag, region }
-        const raw = countriesResult.value?.data ?? [];
+        const raw = countriesResult.value?.data ?? countriesResult.value ?? [];
         setCountriesList(
-          raw.map((c) => ({
-            value:  String(c.id ?? c.value ?? c.code ?? ""),
-            label:  c.name ?? c.label ?? "",
-            flag:   c.flag ?? "",
+          (Array.isArray(raw) ? raw : []).map((c) => ({
+            value:  String(c.id    ?? c.value ?? c.code ?? ""),
+            label:  c.name  ?? c.label ?? "",
+            flag:   c.flag  ?? "",
             region: c.region ?? c.continent ?? "",
           }))
         );
       } else {
-        console.warn("[BookingWizard] Countries:", countriesResult.reason?.message);
+        console.warn("[BookingWizard] Countries failed:", countriesResult.reason?.message);
       }
 
+      // Destinations
       if (destResult.status === "fulfilled") {
-        const raw = destResult.value?.data ?? [];
+        const raw = destResult.value?.data ?? destResult.value ?? [];
         setDestinationsList(
-          raw.map((d) => ({
+          (Array.isArray(raw) ? raw : []).map((d) => ({
             value:     String(d.id ?? d.value ?? ""),
-            label:     d.name ?? d.label ?? "",
-            country:   d.country ?? "",
+            label:     d.name  ?? d.label ?? "",
+            country:   d.country  ?? "",
             countryId: String(d.country_id ?? ""),
             image:     d.image ?? d.thumbnail ?? "",
             rating:    d.rating ?? null,
@@ -256,18 +255,18 @@ export const useBookingWizard = () => {
           }))
         );
       } else if (!signal.aborted) {
-        console.warn("[BookingWizard] Destinations:", destResult.reason?.message);
+        console.warn("[BookingWizard] Destinations failed:", destResult.reason?.message);
       }
 
+      // Services + derive categories
       if (svcResult.status === "fulfilled") {
-        const svcs = svcResult.value?.data ?? [];
+        const raw  = svcResult.value?.data ?? svcResult.value ?? [];
+        const svcs = Array.isArray(raw) ? raw : [];
         setServicesData(svcs);
         const cats = [...new Set(svcs.map((s) => s.category).filter(Boolean))];
-        setCategoriesList(
-          cats.map((c) => ({ value: c, label: c }))
-        );
+        setCategoriesList(cats.map((c) => ({ value: c, label: c })));
       } else if (!signal.aborted) {
-        console.warn("[BookingWizard] Services:", svcResult.reason?.message);
+        console.warn("[BookingWizard] Services failed:", svcResult.reason?.message);
       }
 
       if (mountedRef.current) setLoadingData(false);
@@ -277,7 +276,7 @@ export const useBookingWizard = () => {
     return () => controller.abort();
   }, []);
 
-  // ── Computed values ─────────────────────────────────────────────────────
+  // ── Computed values ───────────────────────────────────────────────────
   const displayName =
     [formData.firstName, formData.lastName].filter(Boolean).join(" ") ||
     user?.full_name || user?.name || user?.email || "Traveler";
@@ -298,11 +297,12 @@ export const useBookingWizard = () => {
   }, [formData.adults, formData.children, formData.infants]);
 
   const getDestinationName = useCallback(
-    (id) => destinationsList.find((d) => String(d.value) === String(id))?.label ?? String(id),
-    [destinationsList],
+    (id) =>
+      destinationsList.find((d) => String(d.value) === String(id))?.label ?? String(id),
+    [destinationsList]
   );
 
-  // ── Field change ────────────────────────────────────────────────────────
+  // ── Field change ──────────────────────────────────────────────────────
   const handleChange = useCallback((e) => {
     const target     = e?.target ?? e;
     const fieldName  = target?.name  ?? "";
@@ -313,7 +313,6 @@ export const useBookingWizard = () => {
     if (!fieldName) return;
 
     setFormData((prev) => ({ ...prev, [fieldName]: fieldValue }));
-
     setErrors((prev) => {
       if (!(fieldName in prev)) return prev;
       const { [fieldName]: _removed, ...rest } = prev;
@@ -321,13 +320,13 @@ export const useBookingWizard = () => {
     });
   }, []);
 
-  // ── Field blur ──────────────────────────────────────────────────────────
+  // ── Field blur ────────────────────────────────────────────────────────
   const handleBlur = useCallback((e) => {
     const name = e?.target?.name ?? (typeof e === "string" ? e : "");
     if (name) setTouched((prev) => ({ ...prev, [name]: true }));
   }, []);
 
-  // ── Interest toggle ─────────────────────────────────────────────────────
+  // ── Interest toggle ───────────────────────────────────────────────────
   const handleInterestToggle = useCallback((interestValue) => {
     setFormData((prev) => {
       const cur = Array.isArray(prev.interests) ? prev.interests : [];
@@ -340,49 +339,38 @@ export const useBookingWizard = () => {
     });
   }, []);
 
-  // ── Step validation — reads camelCase fields ────────────────────────────
+  // ── Step validation ───────────────────────────────────────────────────
   const validateStep = useCallback(
     (step) => {
       const errs = {};
-
       switch (step) {
-        case 0: // Trip details
+        case 0:
           if (!formData.countryId && !formData.destinationId) {
             errs.countryId = "Please select a country or destination.";
           }
           if (!formData.isFlexible) {
-            if (!formData.startDate) {
+            if (!formData.startDate)
               errs.startDate = "Please choose a departure date.";
-            }
           } else {
-            if (!formData.flexibleMonths?.length) {
+            if (!formData.flexibleMonths?.length)
               errs.flexibleMonths = "Please select at least one preferred month.";
-            }
           }
           break;
-
-        case 1: // Travelers
-          if (!formData.adults || parseInt(formData.adults, 10) < 1) {
+        case 1:
+          if (!formData.adults || parseInt(formData.adults, 10) < 1)
             errs.adults = "At least 1 adult is required.";
-          }
-          if (!formData.groupType) {
+          if (!formData.groupType)
             errs.groupType = "Please select your group type.";
-          }
           break;
-
-        case 2: // Preferences
-          if (!formData.accommodationType) {
+        case 2:
+          if (!formData.accommodationType)
             errs.accommodationType = "Please select an accommodation style.";
-          }
-          if (!formData.budgetRange) {
+          if (!formData.budgetRange)
             errs.budgetRange = "Please select your budget range.";
-          }
           break;
-
-        case 3: // Review — no required fields
+        case 3:
           break;
-
-        case 4: // Contact (handled in BookingContact)
+        case 4:
           if (!formData.firstName?.trim()) errs.firstName = "First name is required.";
           if (!formData.lastName?.trim())  errs.lastName  = "Last name is required.";
           if (!formData.email?.trim())     errs.email     = "Email address is required.";
@@ -392,32 +380,23 @@ export const useBookingWizard = () => {
           if (!formData.agreeToTerms)
             errs.agreeToTerms = "You must agree to the terms to continue.";
           break;
-
         default:
           break;
       }
-
       return errs;
     },
     [
-      formData.countryId,
-      formData.destinationId,
-      formData.isFlexible,
-      formData.startDate,
-      formData.flexibleMonths,
-      formData.adults,
-      formData.groupType,
-      formData.accommodationType,
-      formData.budgetRange,
-      formData.firstName,
-      formData.lastName,
-      formData.email,
-      formData.phone,
-      formData.agreeToTerms,
-    ],
+      formData.countryId,       formData.destinationId,
+      formData.isFlexible,      formData.startDate,
+      formData.flexibleMonths,  formData.adults,
+      formData.groupType,       formData.accommodationType,
+      formData.budgetRange,     formData.firstName,
+      formData.lastName,        formData.email,
+      formData.phone,           formData.agreeToTerms,
+    ]
   );
 
-  // ── Navigation ──────────────────────────────────────────────────────────
+  // ── Navigation ────────────────────────────────────────────────────────
   const goToStep = useCallback((step) => {
     if (step < 0 || step > STEPS.length - 1) return;
     if (navigatingRef.current) return;
@@ -446,22 +425,21 @@ export const useBookingWizard = () => {
       });
       return;
     }
-    // Clear errors for this step on successful advance
     setErrors({});
     goToStep(currentStep + 1);
   }, [currentStep, goToStep, validateStep]);
 
   const prevStep = useCallback(
     () => goToStep(currentStep - 1),
-    [currentStep, goToStep],
+    [currentStep, goToStep]
   );
 
   const handleStepClick = useCallback(
     (step) => { if (step <= currentStep) goToStep(step); },
-    [currentStep, goToStep],
+    [currentStep, goToStep]
   );
 
-  // ── Submit ──────────────────────────────────────────────────────────────
+  // ── Submit ────────────────────────────────────────────────────────────
   const handleSubmit = useCallback(async (e) => {
     if (e?.preventDefault) e.preventDefault();
     if (isSubmitting) return;
@@ -482,35 +460,35 @@ export const useBookingWizard = () => {
     setErrors({});
 
     try {
-      // Map camelCase form fields → snake_case API payload
       const payload = sanitizePayload({
         destination_id:       formData.destinationId || undefined,
-        country_id:           formData.countryId || undefined,
-        category_id:          formData.categoryId || undefined,
-        travel_date:          formData.startDate || undefined,
-        return_date:          formData.endDate || undefined,
+        country_id:           formData.countryId     || undefined,
+        category_id:          formData.categoryId    || undefined,
+        travel_date:          formData.startDate     || undefined,
+        return_date:          formData.endDate       || undefined,
         flexible_dates:       formData.isFlexible,
         flexible_months:      formData.flexibleMonths?.join(",") || undefined,
-        number_of_adults:     Math.max(1, parseInt(formData.adults, 10) || 1),
+        number_of_adults:     Math.max(1, parseInt(formData.adults,   10) || 1),
         number_of_children:   Math.max(0, parseInt(formData.children, 10) || 0),
-        number_of_infants:    Math.max(0, parseInt(formData.infants, 10) || 0),
+        number_of_infants:    Math.max(0, parseInt(formData.infants,  10) || 0),
         number_of_travelers:  getTotalVisitors(),
-        group_type:           formData.groupType || undefined,
-        accommodation_type:   formData.accommodationType || undefined,
-        budget_range:         formData.budgetRange || undefined,
+        group_type:           formData.groupType           || undefined,
+        accommodation_type:   formData.accommodationType   || undefined,
+        budget_range:         formData.budgetRange         || undefined,
         interests:            formData.interests?.join(",") || undefined,
         dietary_requirements: formData.dietaryRequirements || undefined,
-        special_requests:     formData.specialRequests || undefined,
-        medical_conditions:   formData.medicalDetails || undefined,
+        special_requests:     formData.specialRequests     || undefined,
+        medical_conditions:   formData.medicalDetails      || undefined,
         first_name:           formData.firstName?.trim(),
         last_name:            formData.lastName?.trim(),
         full_name:            `${formData.firstName} ${formData.lastName}`.trim(),
         email:                formData.email?.trim(),
         phone:                formData.phone?.trim(),
         whatsapp:             formData.whatsapp?.trim() || formData.phone?.trim(),
-        nationality:          formData.nationality || undefined,
+        nationality:          formData.nationality     || undefined,
         source:               "website",
-        referrer_url:         typeof window !== "undefined" ? window.location.href : undefined,
+        referrer_url:         typeof window !== "undefined"
+          ? window.location.href : undefined,
       });
 
       const data = await createBooking(payload);
@@ -518,7 +496,7 @@ export const useBookingWizard = () => {
 
       setIsSubmitted(true);
       setSubmissionRef(
-        data?.booking_number ?? data?.referenceNumber ?? data?.id ?? "",
+        data?.booking_number ?? data?.referenceNumber ?? data?.id ?? ""
       );
       setSubmitRetryCount(0);
 
@@ -537,24 +515,26 @@ export const useBookingWizard = () => {
           });
           setSubmitError(
             Object.values(fieldErrors).join("; ") ||
-            "Please check the highlighted fields and try again.",
+            "Please check the highlighted fields and try again."
           );
         } else if (err.isRateLimit) {
           setSubmitError("Too many requests — please wait a moment before trying again.");
         } else if (err.isServerError) {
           setSubmitError(
             "Our servers are temporarily unavailable. " +
-            "Please try again shortly or contact us via WhatsApp.",
+            "Please try again shortly or contact us via WhatsApp."
           );
         } else if (err.isNetwork) {
           setSubmitError(
-            "Network error — please check your internet connection and try again.",
+            "Network error — please check your internet connection and try again."
           );
         } else {
           setSubmitError(err.message || "Booking failed. Please try again.");
         }
       } else {
-        setSubmitError("An unexpected error occurred. Please try again or contact support.");
+        setSubmitError(
+          "An unexpected error occurred. Please try again or contact support."
+        );
       }
 
       setSubmitRetryCount((c) => c + 1);
@@ -563,62 +543,24 @@ export const useBookingWizard = () => {
     }
   }, [formData, currentStep, isSubmitting, validateStep, getTotalVisitors]);
 
-  // ── Modal helpers ───────────────────────────────────────────────────────
+  // ── Modal helpers ─────────────────────────────────────────────────────
   const openModal  = useCallback(() => setShowModal(true),  []);
   const closeModal = useCallback(() => setShowModal(false), []);
 
-  // ── Public API ──────────────────────────────────────────────────────────
+  // ── Public API ────────────────────────────────────────────────────────
   return {
-    // UI
-    currentStep,
-    isAnimating,
-    isSubmitting,
-    isSubmitted,
-    loadingData,
-    showModal,
-    openModal,
-    closeModal,
-
-    // Form
-    formData,
-    setFormData,
-    errors,
-    touched,
-    handleChange,
-    handleBlur,
-    handleInterestToggle,
-
-    // Navigation
-    nextStep,
-    prevStep,
-    handleStepClick,
-
-    // Submission
-    handleSubmit,
-    submitError,
-    setSubmitError,
-    submissionRef,
-    submitRetryCount,
-
-    // Reference data
-    categoriesList,
-    destinationsList,
-    countriesList,
-    servicesData,
-
-    // Computed
-    displayName,
-    getTripDuration,
-    getTotalVisitors,
-    getDestinationName,
-
-    // Static options
+    currentStep, isAnimating, isSubmitting, isSubmitted,
+    loadingData, showModal, openModal, closeModal,
+    formData, setFormData, errors, touched,
+    handleChange, handleBlur, handleInterestToggle,
+    nextStep, prevStep, handleStepClick,
+    handleSubmit, submitError, setSubmitError,
+    submissionRef, submitRetryCount,
+    categoriesList, destinationsList, countriesList, servicesData,
+    displayName, getTripDuration, getTotalVisitors, getDestinationName,
     groupTypes:         GROUP_TYPES,
     accommodationTypes: ACCOMMODATION_TYPES,
     interests:          INTERESTS,
-
-    // Auth
-    user,
-    isAuthenticated,
+    user, isAuthenticated,
   };
 };

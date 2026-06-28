@@ -1,27 +1,31 @@
-// utils/verifyEmail.js
+// src/utils/verifyEmail.js
 // ═══════════════════════════════════════════════════════════════════════════
-// Email verification utilities — OTP send / verify / resend
-// ONLY used for auth flows (register, login, account security).
-// NEVER used for contact forms — those go directly via sendContactForm().
+// OTP verification utilities — auth flows ONLY, never contact forms.
+//
+// Confirmed backend endpoints (routes/users.js):
+//   POST /api/users/login        → sends OTP (authLimiter)
+//   POST /api/users/verify-code  → verifies OTP (verifyLimiter)
+//   POST /api/users/resend-code  → resends OTP (authLimiter)
 // ═══════════════════════════════════════════════════════════════════════════
 
 import { toAbsoluteApiUrl } from "./apiBase";
 
-// ─── Constants ────────────────────────────────────────────────────────────
+// ─── Confirmed OTP endpoints ─────────────────────────────────────────────
+// These match routes/users.js exactly.
 const OTP_ENDPOINTS = {
-  send:   "/users/send-otp",     // POST — sends a fresh OTP
-  verify: "/users/verify-otp",   // POST — verifies submitted code
-  resend: "/users/resend-otp",   // POST — resends with new code + resets timer
+  send:   "/users/login",        // POST — triggers OTP send
+  verify: "/users/verify-code",  // POST — submits the 6-digit code
+  resend: "/users/resend-code",  // POST — resends with fresh code
 };
 
 // ─── Core fetch wrapper ───────────────────────────────────────────────────
 /**
  * POST to an OTP endpoint.
- * Always throws a clean Error on failure so callers can catch & display.
+ * Throws a clean, user-friendly Error on every failure.
  *
- * @param {string} endpoint  - relative API path (from OTP_ENDPOINTS)
+ * @param {string} endpoint  - key of OTP_ENDPOINTS
  * @param {object} payload   - JSON body
- * @returns {Promise<object>} parsed JSON response
+ * @returns {Promise<object>}
  */
 const callOtpApi = async (endpoint, payload) => {
   const url = toAbsoluteApiUrl(endpoint);
@@ -29,11 +33,14 @@ const callOtpApi = async (endpoint, payload) => {
   if (import.meta.env.DEV) {
     console.log(`[verifyEmail] POST ${url}`, {
       ...payload,
-      // Never log actual OTP codes in full
-      code: payload.code ? `${String(payload.code).slice(0, 2)}****` : undefined,
+      // Partially mask OTP codes in dev logs
+      code: payload.code
+        ? `${String(payload.code).slice(0, 2)}****`
+        : undefined,
     });
   }
 
+  // ── Network request ───────────────────────────────────────────────────
   let response;
   try {
     response = await fetch(url, {
@@ -42,15 +49,16 @@ const callOtpApi = async (endpoint, payload) => {
         "Content-Type": "application/json",
         Accept:         "application/json",
       },
+      credentials: "include",
       body: JSON.stringify(payload),
     });
-  } catch (networkErr) {
-    // Fetch itself failed (offline, DNS, CORS, etc.)
+  } catch {
     throw new Error(
       "Network error — please check your connection and try again."
     );
   }
 
+  // ── Parse response ────────────────────────────────────────────────────
   let result;
   try {
     result = await response.json();
@@ -61,58 +69,74 @@ const callOtpApi = async (endpoint, payload) => {
     );
   }
 
+  // ── Handle errors by status code ──────────────────────────────────────
   if (!response.ok) {
-    // Map common HTTP status codes to user-friendly messages
     const serverMsg =
-      result?.message ||
-      result?.error   ||
+      result?.message     ||
+      result?.error       ||
       result?.errors?.[0] ||
       "";
 
-    if (response.status === 429) {
-      // Rate limit — extract wait time if provided
-      const retryAfter =
-        result?.retryAfter ||
-        result?.retry_after ||
-        result?.waitSeconds ||
-        40;
-      const err = new Error(
-        `Please wait ${retryAfter} seconds before requesting a new code.`
-      );
-      err.status      = 429;
-      err.retryAfter  = retryAfter;
-      err.data        = result;
-      throw err;
-    }
+    switch (response.status) {
+      case 400:
+        throw Object.assign(
+          new Error(serverMsg || "Invalid request. Please check your details."),
+          { status: 400, data: result }
+        );
 
-    if (response.status === 400) {
-      throw Object.assign(
-        new Error(serverMsg || "Invalid request. Please check your details."),
-        { status: 400, data: result }
-      );
-    }
+      case 401:
+      case 403:
+        throw Object.assign(
+          new Error(
+            serverMsg ||
+            "Verification failed. The code may be incorrect or expired."
+          ),
+          { status: response.status, data: result }
+        );
 
-    if (response.status === 401 || response.status === 403) {
-      throw Object.assign(
-        new Error(serverMsg || "Verification failed. The code may have expired."),
-        { status: response.status, data: result }
-      );
-    }
+      case 404:
+        // Should never happen if OTP_ENDPOINTS are correct
+        console.error(
+          `[verifyEmail] 404 at ${url}\n` +
+          "OTP_ENDPOINTS in verifyEmail.js may not match backend routes.\n" +
+          "Expected: POST /api/users/login, /api/users/verify-code, /api/users/resend-code"
+        );
+        throw new Error(
+          "Verification service unavailable. Please try again or contact support."
+        );
 
-    if (response.status >= 500) {
-      throw Object.assign(
-        new Error(
-          serverMsg ||
-          "Our servers are having trouble. Please try again in a moment."
-        ),
-        { status: response.status, data: result }
-      );
-    }
+      case 429: {
+        // Rate limit — extract wait time from response if available
+        const retryAfter =
+          result?.retryAfter  ||
+          result?.retry_after ||
+          result?.waitSeconds ||
+          result?.wait        ||
+          40;
+        const err       = new Error(
+          `Please wait ${retryAfter} seconds before requesting a new code.`
+        );
+        err.status      = 429;
+        err.retryAfter  = retryAfter;
+        err.data        = result;
+        throw err;
+      }
 
-    throw Object.assign(
-      new Error(serverMsg || `Request failed (${response.status})`),
-      { status: response.status, data: result }
-    );
+      default:
+        if (response.status >= 500) {
+          throw Object.assign(
+            new Error(
+              serverMsg ||
+              "Our servers are having trouble. Please try again in a moment."
+            ),
+            { status: response.status, data: result }
+          );
+        }
+        throw Object.assign(
+          new Error(serverMsg || `Request failed (${response.status})`),
+          { status: response.status, data: result }
+        );
+    }
   }
 
   return result;
@@ -120,12 +144,13 @@ const callOtpApi = async (endpoint, payload) => {
 
 // ─── Send OTP ─────────────────────────────────────────────────────────────
 /**
- * Request a new OTP code be sent to the given email.
- * Used for: account registration, login verification, security checks.
+ * Request an OTP be sent to the given email.
+ * Maps to: POST /api/users/login
+ *
+ * Used for: account registration, login, security checks.
  * NOT for contact forms.
  *
  * @param {{ email: string, purpose?: string }} opts
- *   purpose: "verify" | "login" | "resend" | "reverification"
  */
 export const sendVerificationCode = async ({
   email,
@@ -135,18 +160,16 @@ export const sendVerificationCode = async ({
     throw new Error("Email address is required.");
   }
 
-  const validPurposes = ["verify", "login", "resend", "reverification"];
-  const resolvedPurpose = validPurposes.includes(purpose) ? purpose : "verify";
-
   return callOtpApi(OTP_ENDPOINTS.send, {
     email:   email.trim().toLowerCase(),
-    purpose: resolvedPurpose,
+    purpose, // backend may or may not use this — harmless if ignored
   });
 };
 
 // ─── Verify OTP ───────────────────────────────────────────────────────────
 /**
- * Submit a 6-digit OTP code for verification.
+ * Submit a 6-digit OTP code.
+ * Maps to: POST /api/users/verify-code
  *
  * @param {{ email: string, code: string | number }} opts
  */
@@ -154,9 +177,8 @@ export const verifyCode = async ({ email, code }) => {
   if (!email?.trim()) throw new Error("Email address is required.");
   if (!code)          throw new Error("Verification code is required.");
 
-  // Sanitise: digits only, exactly 6
+  // Digits only, exactly 6 characters
   const sanitized = String(code).replace(/\D/g, "").slice(0, 6);
-
   if (sanitized.length !== 6) {
     throw new Error("Please enter a valid 6-digit code.");
   }
@@ -169,7 +191,8 @@ export const verifyCode = async ({ email, code }) => {
 
 // ─── Resend OTP ───────────────────────────────────────────────────────────
 /**
- * Request a fresh OTP (invalidates previous code, resets the rate-limit timer).
+ * Request a fresh OTP (invalidates previous code, resets rate-limit timer).
+ * Maps to: POST /api/users/resend-code
  *
  * @param {{ email: string }} opts
  */
