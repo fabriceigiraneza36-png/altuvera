@@ -1013,6 +1013,48 @@ function NewsletterBlock() {
    MAIN PAGE COMPONENT
    =================================================================== */
 
+const SectionHeader = ({ title, subtitle, align = 'center' }) => {
+  const isCenter = align === 'center';
+  return (
+    <div
+      style={{
+        textAlign: align,
+        marginBottom: 'clamp(24px,4vw,44px)',
+        maxWidth: isCenter ? 760 : 'none',
+        marginLeft: isCenter ? 'auto' : undefined,
+        marginRight: isCenter ? 'auto' : undefined,
+      }}
+    >
+      <h2
+        style={{
+          fontFamily: 'Georgia, "Times New Roman", serif',
+          fontSize: 'clamp(24px,4.5vw,50px)',
+          fontWeight: 800,
+          color: '#166534',
+          lineHeight: 1.08,
+          letterSpacing: '-0.03em',
+          marginBottom: subtitle ? 18 : 0,
+        }}
+      >
+        {title}
+      </h2>
+      {subtitle && (
+        <p
+          style={{
+            fontSize: 'clamp(15px,1.6vw,18px)',
+            color: '#4B5563',
+            lineHeight: 1.6,
+            maxWidth: 700,
+            margin: isCenter ? '0 auto' : 0,
+          }}
+        >
+          {subtitle}
+        </p>
+      )}
+    </div>
+  );
+};
+
 function Explore() {
   const [filter, setFilter] = useState('all');
 
