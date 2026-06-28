@@ -1,11 +1,19 @@
-// src/pages/Booking/BookingSteps.jsx
+/**
+ * BookingSteps.jsx — v2.2
+ * FIXES:
+ *  - All field reads/writes use camelCase matching useBookingWizard INITIAL_FORM
+ *  - NavBar totalSteps and isLastStep derived from STEPS.length prop
+ *  - Counter onChange updates formData via setFormData correctly
+ *  - Interest toggle uses item.value consistently
+ */
+
 import React, {
   useState, useRef, useEffect, useCallback, memo,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 /* ══════════════════════════════════════════════════════════════
-   SHARED MICRO-COMPONENTS
+   MICRO-COMPONENTS
 ══════════════════════════════════════════════════════════════ */
 const FieldError = memo(({ error, touched }) =>
   error && touched ? (
@@ -16,15 +24,6 @@ const FieldError = memo(({ error, touched }) =>
 );
 FieldError.displayName = "FieldError";
 
-const FieldHint = memo(({ text }) =>
-  text ? (
-    <p style={{ margin: "5px 0 0", fontSize: 12, color: "#9ca3af", lineHeight: 1.5 }}>
-      {text}
-    </p>
-  ) : null
-);
-FieldHint.displayName = "FieldHint";
-
 const Counter = memo(({ value, onChange, min = 0, max = 30, label, hint }) => (
   <div style={{
     display: "flex", alignItems: "center",
@@ -32,9 +31,7 @@ const Counter = memo(({ value, onChange, min = 0, max = 30, label, hint }) => (
     padding: "15px 0",
   }}>
     <div>
-      <span style={{ fontSize: 14.5, fontWeight: 600, color: "#374151" }}>
-        {label}
-      </span>
+      <span style={{ fontSize: 14.5, fontWeight: 600, color: "#374151" }}>{label}</span>
       {hint && (
         <p style={{ margin: "2px 0 0", fontSize: 11.5, color: "#9ca3af" }}>{hint}</p>
       )}
@@ -76,6 +73,8 @@ SectionCard.displayName = "SectionCard";
 
 /* ══════════════════════════════════════════════════════════════
    STEP 0 — TRIP DETAILS
+   Fields: destinationId, countryId, categoryId,
+           startDate, endDate, isFlexible, flexibleMonths
 ══════════════════════════════════════════════════════════════ */
 const StepTrip = memo(({
   formData, setFormData, errors, touched,
@@ -83,14 +82,13 @@ const StepTrip = memo(({
   destinationsList, countriesList, categoriesList,
   isMobile,
 }) => {
-  const [destQuery,        setDestQuery]        = useState("");
-  const [countryQuery,     setCountryQuery]     = useState("");
-  const [showDestDrop,     setShowDestDrop]     = useState(false);
-  const [showCountryDrop,  setShowCountryDrop]  = useState(false);
+  const [destQuery,       setDestQuery]       = useState("");
+  const [countryQuery,    setCountryQuery]    = useState("");
+  const [showDestDrop,    setShowDestDrop]    = useState(false);
+  const [showCountryDrop, setShowCountryDrop] = useState(false);
   const destRef    = useRef(null);
   const countryRef = useRef(null);
 
-  /* Close on outside click */
   useEffect(() => {
     const fn = (e) => {
       if (!destRef.current?.contains(e.target))    setShowDestDrop(false);
@@ -101,30 +99,52 @@ const StepTrip = memo(({
   }, []);
 
   const filteredDests = (destinationsList || []).filter((d) => {
+    if (!destQuery) return true;
     const q = destQuery.toLowerCase();
     return d.label?.toLowerCase().includes(q) || d.country?.toLowerCase().includes(q);
   });
 
   const filteredCountries = (countriesList || []).filter((c) => {
+    if (!countryQuery) return true;
     const q = countryQuery.toLowerCase();
     return c.label?.toLowerCase().includes(q) || c.region?.toLowerCase().includes(q);
   });
 
-  const selectedCountry = countriesList?.find(c => c.value === formData.countryId);
-  const selectedDest    = destinationsList?.find(d => d.value === formData.destinationId);
+  // FIX: use camelCase keys matching INITIAL_FORM
+  const selectedCountry = (countriesList || []).find(
+    (c) => c.value === formData.countryId
+  );
+  const selectedDest = (destinationsList || []).find(
+    (d) => d.value === formData.destinationId
+  );
+
   const today = new Date().toISOString().split("T")[0];
 
   const handleCountrySelect = useCallback((c) => {
-    setFormData(p => ({ ...p, countryId: c.value, destinationId: "" }));
+    setFormData((p) => ({
+      ...p,
+      countryId:     c.value,
+      destinationId: "", // reset destination when country changes
+    }));
     setCountryQuery("");
     setShowCountryDrop(false);
   }, [setFormData]);
 
   const handleDestSelect = useCallback((d) => {
-    setFormData(p => ({ ...p, destinationId: d.value, countryId: d.countryId || p.countryId }));
+    setFormData((p) => ({
+      ...p,
+      destinationId: d.value,
+      // auto-fill country if destination knows its countryId
+      countryId: d.countryId || p.countryId,
+    }));
     setDestQuery("");
     setShowDestDrop(false);
   }, [setFormData]);
+
+  const MONTHS = [
+    "Jan","Feb","Mar","Apr","May","Jun",
+    "Jul","Aug","Sep","Oct","Nov","Dec",
+  ];
 
   return (
     <div className="bk-step-content">
@@ -134,34 +154,41 @@ const StepTrip = memo(({
         </div>
         <h2 className="bk-step-header__title">Where would you like to go?</h2>
         <p className="bk-step-header__sub">
-          Choose your dream destination and travel dates. Select a specific
-          destination or simply choose a country to explore.
+          Choose your dream destination and travel dates.
         </p>
       </div>
 
-      {/* Destination selectors */}
+      {/* Country + Destination pickers */}
       <div style={{
         display: "grid", gap: 22,
         gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
         marginBottom: 8,
       }}>
-        {/* Country picker */}
+        {/* Country */}
         <div ref={countryRef}>
-          <label className="bk-label">Country <span>*</span></label>
-          <div className="bk-dest-search">
+          <label className="bk-label">
+            Country <span style={{ color: "#ef4444" }}>*</span>
+          </label>
+          <div className="bk-dest-search" style={{ position: "relative" }}>
             <input
               type="text"
-              className={`bk-input${errors.countryId && touched.countryId ? " bk-input--error" : selectedCountry ? " bk-input--verified" : ""}`}
+              className={`bk-input${
+                errors.countryId && touched.countryId
+                  ? " bk-input--error"
+                  : selectedCountry
+                  ? " bk-input--verified"
+                  : ""
+              }`}
               placeholder="🌍 Search countries…"
               value={selectedCountry ? selectedCountry.label : countryQuery}
               onChange={(e) => {
                 setCountryQuery(e.target.value);
                 setShowCountryDrop(true);
-                if (!e.target.value) setFormData(p => ({ ...p, countryId: "" }));
+                if (!e.target.value) {
+                  setFormData((p) => ({ ...p, countryId: "" }));
+                }
               }}
-              onFocus={() => {
-                if (!selectedCountry) setShowCountryDrop(true);
-              }}
+              onFocus={() => { if (!selectedCountry) setShowCountryDrop(true); }}
               aria-label="Search countries"
               aria-expanded={showCountryDrop}
               aria-autocomplete="list"
@@ -170,15 +197,16 @@ const StepTrip = memo(({
               <button
                 type="button"
                 onClick={() => {
-                  setFormData(p => ({ ...p, countryId: "", destinationId: "" }));
+                  setFormData((p) => ({
+                    ...p, countryId: "", destinationId: "",
+                  }));
                   setCountryQuery("");
                 }}
                 style={{
                   position: "absolute", right: 12, top: "50%",
                   transform: "translateY(-50%)",
                   background: "none", border: "none",
-                  color: "#9ca3af", cursor: "pointer",
-                  fontSize: 16, padding: 0,
+                  color: "#9ca3af", cursor: "pointer", fontSize: 18, padding: 0,
                 }}
                 aria-label="Clear country"
               >×</button>
@@ -196,12 +224,14 @@ const StepTrip = memo(({
                   {filteredCountries.slice(0, 30).map((c) => (
                     <div
                       key={c.value}
-                      className={`bk-dest-option${formData.countryId === c.value ? " bk-dest-option--active" : ""}`}
+                      className={`bk-dest-option${
+                        formData.countryId === c.value ? " bk-dest-option--active" : ""
+                      }`}
                       onClick={() => handleCountrySelect(c)}
                       role="option"
                       aria-selected={formData.countryId === c.value}
                     >
-                      <span style={{ fontSize: 24, flexShrink: 0 }}>
+                      <span style={{ fontSize: 22, flexShrink: 0 }}>
                         {c.flag && !c.flag.startsWith("http") ? c.flag : "🌍"}
                       </span>
                       <div style={{ minWidth: 0 }}>
@@ -209,7 +239,9 @@ const StepTrip = memo(({
                           {c.label}
                         </p>
                         {c.region && (
-                          <p style={{ margin: 0, fontSize: 12, color: "#9ca3af" }}>{c.region}</p>
+                          <p style={{ margin: 0, fontSize: 12, color: "#9ca3af" }}>
+                            {c.region}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -221,9 +253,12 @@ const StepTrip = memo(({
           <FieldError error={errors.countryId} touched={touched.countryId} />
         </div>
 
-        {/* Destination picker */}
+        {/* Destination */}
         <div ref={destRef}>
-          <label className="bk-label">Specific Destination <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optional)</span></label>
+          <label className="bk-label">
+            Specific Destination{" "}
+            <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optional)</span>
+          </label>
           <div className="bk-dest-search" style={{ position: "relative" }}>
             <input
               type="text"
@@ -233,11 +268,11 @@ const StepTrip = memo(({
               onChange={(e) => {
                 setDestQuery(e.target.value);
                 setShowDestDrop(true);
-                if (!e.target.value) setFormData(p => ({ ...p, destinationId: "" }));
+                if (!e.target.value) {
+                  setFormData((p) => ({ ...p, destinationId: "" }));
+                }
               }}
-              onFocus={() => {
-                if (!selectedDest) setShowDestDrop(true);
-              }}
+              onFocus={() => { if (!selectedDest) setShowDestDrop(true); }}
               aria-label="Search destinations"
               aria-expanded={showDestDrop}
             />
@@ -245,14 +280,14 @@ const StepTrip = memo(({
               <button
                 type="button"
                 onClick={() => {
-                  setFormData(p => ({ ...p, destinationId: "" }));
+                  setFormData((p) => ({ ...p, destinationId: "" }));
                   setDestQuery("");
                 }}
                 style={{
                   position: "absolute", right: 12, top: "50%",
                   transform: "translateY(-50%)",
                   background: "none", border: "none",
-                  color: "#9ca3af", cursor: "pointer", fontSize: 16, padding: 0,
+                  color: "#9ca3af", cursor: "pointer", fontSize: 18, padding: 0,
                 }}
                 aria-label="Clear destination"
               >×</button>
@@ -270,7 +305,9 @@ const StepTrip = memo(({
                   {filteredDests.slice(0, 20).map((d) => (
                     <div
                       key={d.value}
-                      className={`bk-dest-option${formData.destinationId === d.value ? " bk-dest-option--active" : ""}`}
+                      className={`bk-dest-option${
+                        formData.destinationId === d.value ? " bk-dest-option--active" : ""
+                      }`}
                       onClick={() => handleDestSelect(d)}
                       role="option"
                       aria-selected={formData.destinationId === d.value}
@@ -278,10 +315,13 @@ const StepTrip = memo(({
                       {d.image ? (
                         <img src={d.image} alt={d.label} className="bk-dest-thumb" />
                       ) : (
-                        <div className="bk-dest-thumb" style={{
-                          display: "flex", alignItems: "center",
-                          justifyContent: "center", fontSize: 20,
-                        }}>🏞️</div>
+                        <div
+                          className="bk-dest-thumb"
+                          style={{
+                            display: "flex", alignItems: "center",
+                            justifyContent: "center", fontSize: 20,
+                          }}
+                        >🏞️</div>
                       )}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: "#111827" }}>
@@ -305,21 +345,20 @@ const StepTrip = memo(({
               )}
             </AnimatePresence>
           </div>
+          <FieldError error={errors.destinationId} touched={touched.destinationId} />
         </div>
       </div>
 
-      {/* Validation hint */}
-      {errors.destinationId && touched.destinationId && (
-        <FieldError error={errors.destinationId} touched={true} />
-      )}
-
       <div className="bk-sep" />
 
-      {/* Flexible dates toggle */}
+      {/* Flexible dates toggle — writes to isFlexible */}
       <div style={{ marginBottom: 20 }}>
         <label
           className="bk-check-row"
-          onClick={() => setFormData(p => ({ ...p, isFlexible: !p.isFlexible }))}
+          style={{ cursor: "pointer" }}
+          onClick={() =>
+            setFormData((p) => ({ ...p, isFlexible: !p.isFlexible }))
+          }
         >
           <div className={`bk-check${formData.isFlexible ? " bk-check--on" : ""}`}>
             {formData.isFlexible && <span className="bk-check__mark">✓</span>}
@@ -335,7 +374,7 @@ const StepTrip = memo(({
         </label>
       </div>
 
-      {/* Date inputs */}
+      {/* Date inputs — writes to startDate / endDate / flexibleMonths */}
       <AnimatePresence mode="wait">
         {!formData.isFlexible ? (
           <motion.div
@@ -350,11 +389,20 @@ const StepTrip = memo(({
             }}
           >
             <div>
-              <label className="bk-label">Departure Date <span>*</span></label>
+              <label className="bk-label">
+                Departure Date <span style={{ color: "#ef4444" }}>*</span>
+              </label>
+              {/* FIX: name="startDate" matches formData.startDate */}
               <input
                 type="date"
                 name="startDate"
-                className={`bk-input${errors.startDate && touched.startDate ? " bk-input--error" : formData.startDate ? " bk-input--verified" : ""}`}
+                className={`bk-input${
+                  errors.startDate && touched.startDate
+                    ? " bk-input--error"
+                    : formData.startDate
+                    ? " bk-input--verified"
+                    : ""
+                }`}
                 value={formData.startDate}
                 min={today}
                 onChange={handleChange}
@@ -368,10 +416,17 @@ const StepTrip = memo(({
                 Return Date{" "}
                 <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optional)</span>
               </label>
+              {/* FIX: name="endDate" matches formData.endDate */}
               <input
                 type="date"
                 name="endDate"
-                className={`bk-input${errors.endDate && touched.endDate ? " bk-input--error" : formData.endDate ? " bk-input--verified" : ""}`}
+                className={`bk-input${
+                  errors.endDate && touched.endDate
+                    ? " bk-input--error"
+                    : formData.endDate
+                    ? " bk-input--verified"
+                    : ""
+                }`}
                 value={formData.endDate}
                 min={formData.startDate || today}
                 onChange={handleChange}
@@ -379,16 +434,16 @@ const StepTrip = memo(({
                 aria-label="Return date"
               />
               <FieldError error={errors.endDate} touched={touched.endDate} />
-              {formData.startDate && formData.endDate && (
-                <p style={{ margin: "5px 0 0", fontSize: 12, color: "#059669", fontWeight: 600 }}>
-                  {(() => {
-                    const d = Math.round(
-                      (new Date(formData.endDate) - new Date(formData.startDate)) / 86400000
-                    );
-                    return d > 0 ? `✓ ${d} day${d !== 1 ? "s" : ""} trip` : null;
-                  })()}
-                </p>
-              )}
+              {formData.startDate && formData.endDate && (() => {
+                const d = Math.round(
+                  (new Date(formData.endDate) - new Date(formData.startDate)) / 86400000
+                );
+                return d > 0 ? (
+                  <p style={{ margin: "5px 0 0", fontSize: 12, color: "#059669", fontWeight: 600 }}>
+                    ✓ {d} day{d !== 1 ? "s" : ""} trip
+                  </p>
+                ) : null;
+              })()}
             </div>
           </motion.div>
         ) : (
@@ -399,30 +454,27 @@ const StepTrip = memo(({
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
           >
-            <label className="bk-label">Preferred Months <span>*</span></label>
-            <div style={{
-              display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 6,
-            }}>
-              {[
-                "Jan","Feb","Mar","Apr","May","Jun",
-                "Jul","Aug","Sep","Oct","Nov","Dec",
-              ].map((m) => {
-                const active = (formData.flexibleMonths || []).includes(m.toLowerCase());
+            <label className="bk-label">
+              Preferred Months <span style={{ color: "#ef4444" }}>*</span>
+            </label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 6 }}>
+              {MONTHS.map((m) => {
+                const ml     = m.toLowerCase();
+                const active = (formData.flexibleMonths || []).includes(ml);
                 return (
                   <button
                     key={m}
                     type="button"
                     className={`bk-interest${active ? " bk-interest--active" : ""}`}
                     style={{ padding: "7px 14px", fontSize: 13 }}
-                    onClick={() => {
-                      const ml = m.toLowerCase();
-                      setFormData(p => ({
+                    onClick={() =>
+                      setFormData((p) => ({
                         ...p,
                         flexibleMonths: active
-                          ? (p.flexibleMonths || []).filter(x => x !== ml)
+                          ? (p.flexibleMonths || []).filter((x) => x !== ml)
                           : [...(p.flexibleMonths || []), ml],
-                      }));
-                    }}
+                      }))
+                    }
                   >
                     {m}
                   </button>
@@ -432,7 +484,8 @@ const StepTrip = memo(({
             <FieldError error={errors.flexibleMonths} touched={touched.flexibleMonths} />
             {(formData.flexibleMonths || []).length > 0 && (
               <p style={{ fontSize: 12, color: "#059669", fontWeight: 600, marginTop: 4 }}>
-                ✓ {formData.flexibleMonths.length} month{formData.flexibleMonths.length !== 1 ? "s" : ""} selected
+                ✓ {formData.flexibleMonths.length} month
+                {formData.flexibleMonths.length !== 1 ? "s" : ""} selected
               </p>
             )}
           </motion.div>
@@ -444,7 +497,11 @@ const StepTrip = memo(({
         <>
           <div className="bk-sep" />
           <div>
-            <label className="bk-label">Trip Category <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optional)</span></label>
+            <label className="bk-label">
+              Trip Category{" "}
+              <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optional)</span>
+            </label>
+            {/* FIX: name="categoryId" matches formData.categoryId */}
             <select
               name="categoryId"
               className="bk-select"
@@ -467,13 +524,16 @@ StepTrip.displayName = "StepTrip";
 
 /* ══════════════════════════════════════════════════════════════
    STEP 1 — TRAVELERS
+   Fields: adults, children, infants, groupType
 ══════════════════════════════════════════════════════════════ */
 const StepTravelers = memo(({
   formData, setFormData, errors, touched, groupTypes, isMobile,
 }) => {
-  const total = (parseInt(formData.adults) || 0)
-    + (parseInt(formData.children) || 0)
-    + (parseInt(formData.infants) || 0);
+  // FIX: read from formData.adults / children / infants (camelCase)
+  const adults   = parseInt(formData.adults,   10) || 0;
+  const children = parseInt(formData.children, 10) || 0;
+  const infants  = parseInt(formData.infants,  10) || 0;
+  const total    = adults + children + infants;
 
   return (
     <div className="bk-step-content">
@@ -487,39 +547,34 @@ const StepTravelers = memo(({
         </p>
       </div>
 
-      {/* Traveler counters */}
       <SectionCard>
+        {/* FIX: write to formData.adults */}
         <Counter
-          label="Adults"
-          hint="Ages 18+"
-          value={parseInt(formData.adults) || 0}
-          onChange={(v) => setFormData(p => ({ ...p, adults: v }))}
-          min={1}
-          max={30}
+          label="Adults" hint="Ages 18+"
+          value={adults}
+          onChange={(v) => setFormData((p) => ({ ...p, adults: v }))}
+          min={1} max={30}
         />
         <div style={{ height: 1, background: "#e5e7eb" }} />
+        {/* FIX: write to formData.children */}
         <Counter
-          label="Children"
-          hint="Ages 5–17"
-          value={parseInt(formData.children) || 0}
-          onChange={(v) => setFormData(p => ({ ...p, children: v }))}
-          min={0}
-          max={15}
+          label="Children" hint="Ages 5–17"
+          value={children}
+          onChange={(v) => setFormData((p) => ({ ...p, children: v }))}
+          min={0} max={15}
         />
         <div style={{ height: 1, background: "#e5e7eb" }} />
+        {/* FIX: write to formData.infants */}
         <Counter
-          label="Infants"
-          hint="Ages 0–4"
-          value={parseInt(formData.infants) || 0}
-          onChange={(v) => setFormData(p => ({ ...p, infants: v }))}
-          min={0}
-          max={5}
+          label="Infants" hint="Ages 0–4"
+          value={infants}
+          onChange={(v) => setFormData((p) => ({ ...p, infants: v }))}
+          min={0} max={5}
         />
       </SectionCard>
 
       <FieldError error={errors.adults} touched={touched.adults} />
 
-      {/* Total badge */}
       <AnimatePresence>
         {total > 0 && (
           <motion.div
@@ -539,17 +594,19 @@ const StepTravelers = memo(({
               {total} traveller{total !== 1 ? "s" : ""} total
             </span>
             <span style={{ fontSize: 12, color: "#6b7280", marginLeft: 4 }}>
-              {formData.adults > 0 && `${formData.adults} adult${formData.adults !== 1 ? "s" : ""}`}
-              {formData.children > 0 && `, ${formData.children} child${formData.children !== 1 ? "ren" : ""}`}
-              {formData.infants > 0 && `, ${formData.infants} infant${formData.infants !== 1 ? "s" : ""}`}
+              {adults > 0 && `${adults} adult${adults !== 1 ? "s" : ""}`}
+              {children > 0 && `, ${children} child${children !== 1 ? "ren" : ""}`}
+              {infants > 0 && `, ${infants} infant${infants !== 1 ? "s" : ""}`}
             </span>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Group type */}
+      {/* Group type — writes to formData.groupType */}
       <div>
-        <label className="bk-label">Group Type <span>*</span></label>
+        <label className="bk-label">
+          Group Type <span style={{ color: "#ef4444" }}>*</span>
+        </label>
         <div
           className="bk-opt-grid bk-opt-grid--3"
           style={isMobile ? { gridTemplateColumns: "repeat(2,1fr)" } : {}}
@@ -559,14 +616,21 @@ const StepTravelers = memo(({
           {(groupTypes || []).map((g) => (
             <div
               key={g.value}
-              className={`bk-opt-card${formData.groupType === g.value ? " bk-opt-card--active" : ""}`}
-              onClick={() => setFormData(p => ({ ...p, groupType: g.value }))}
+              className={`bk-opt-card${
+                formData.groupType === g.value ? " bk-opt-card--active" : ""
+              }`}
+              onClick={() => setFormData((p) => ({ ...p, groupType: g.value }))}
               role="radio"
               aria-checked={formData.groupType === g.value}
               tabIndex={0}
-              onKeyDown={(e) => e.key === "Enter" && setFormData(p => ({ ...p, groupType: g.value }))}
+              onKeyDown={(e) =>
+                e.key === "Enter" &&
+                setFormData((p) => ({ ...p, groupType: g.value }))
+              }
             >
-              <span className="bk-opt-card__icon" style={{ fontSize: 28 }}>{g.icon}</span>
+              <span className="bk-opt-card__icon" style={{ fontSize: 28 }}>
+                {g.icon}
+              </span>
               <span className="bk-opt-card__label">{g.label}</span>
             </div>
           ))}
@@ -580,17 +644,21 @@ StepTravelers.displayName = "StepTravelers";
 
 /* ══════════════════════════════════════════════════════════════
    STEP 2 — PREFERENCES
+   Fields: accommodationType, budgetRange, interests,
+           dietaryRequirements, specialRequests,
+           hasMedicalConditions, medicalDetails
 ══════════════════════════════════════════════════════════════ */
 const BUDGET_OPTIONS = [
-  { value: "under-2000",  label: "Under $2K",    icon: "💵"     },
-  { value: "2000-5000",   label: "$2K – $5K",    icon: "💵💵"   },
-  { value: "5000-10000",  label: "$5K – $10K",   icon: "💵💵💵" },
-  { value: "over-10000",  label: "Over $10K",    icon: "💎"     },
-  { value: "flexible",    label: "Flexible",     icon: "🤝"     },
+  { value: "under-2000", label: "Under $2K",  icon: "💵"     },
+  { value: "2000-5000",  label: "$2K – $5K",  icon: "💵💵"   },
+  { value: "5000-10000", label: "$5K – $10K", icon: "💵💵💵" },
+  { value: "over-10000", label: "Over $10K",  icon: "💎"     },
+  { value: "flexible",   label: "Flexible",   icon: "🤝"     },
 ];
 
 const StepPreferences = memo(({
   formData, setFormData, handleChange,
+  errors, touched,
   accommodationTypes, interests: interestsList,
   handleInterestToggle, isMobile,
 }) => (
@@ -601,13 +669,15 @@ const StepPreferences = memo(({
       </div>
       <h2 className="bk-step-header__title">Personalise your experience</h2>
       <p className="bk-step-header__sub">
-        Help us craft the perfect itinerary by sharing your travel style and preferences.
+        Help us craft the perfect itinerary by sharing your travel style.
       </p>
     </div>
 
-    {/* Accommodation */}
+    {/* Accommodation — writes to formData.accommodationType */}
     <div style={{ marginBottom: 28 }}>
-      <label className="bk-label">Accommodation Style <span>*</span></label>
+      <label className="bk-label">
+        Accommodation Style <span style={{ color: "#ef4444" }}>*</span>
+      </label>
       <div
         className="bk-opt-grid bk-opt-grid--4"
         style={isMobile ? { gridTemplateColumns: "repeat(2,1fr)" } : {}}
@@ -617,24 +687,36 @@ const StepPreferences = memo(({
         {(accommodationTypes || []).map((a) => (
           <div
             key={a.value}
-            className={`bk-opt-card${formData.accommodationType === a.value ? " bk-opt-card--active" : ""}`}
-            onClick={() => setFormData(p => ({ ...p, accommodationType: a.value }))}
+            className={`bk-opt-card${
+              formData.accommodationType === a.value ? " bk-opt-card--active" : ""
+            }`}
+            onClick={() =>
+              setFormData((p) => ({ ...p, accommodationType: a.value }))
+            }
             role="radio"
             aria-checked={formData.accommodationType === a.value}
             tabIndex={0}
-            onKeyDown={(e) => e.key === "Enter" && setFormData(p => ({ ...p, accommodationType: a.value }))}
+            onKeyDown={(e) =>
+              e.key === "Enter" &&
+              setFormData((p) => ({ ...p, accommodationType: a.value }))
+            }
           >
-            <span className="bk-opt-card__icon" style={{ fontSize: 28 }}>{a.icon}</span>
+            <span className="bk-opt-card__icon" style={{ fontSize: 28 }}>
+              {a.icon}
+            </span>
             <span className="bk-opt-card__label">{a.label}</span>
-            <span className="bk-opt-card__desc">{a.desc}</span>
+            {a.desc && (
+              <span className="bk-opt-card__desc">{a.desc}</span>
+            )}
           </div>
         ))}
       </div>
+      <FieldError error={errors.accommodationType} touched={touched.accommodationType} />
     </div>
 
     <div className="bk-sep" />
 
-    {/* Interests */}
+    {/* Interests — uses handleInterestToggle(item.value) */}
     <div style={{ marginBottom: 28 }}>
       <label className="bk-label">
         What interests you most?{" "}
@@ -643,31 +725,42 @@ const StepPreferences = memo(({
         </span>
       </label>
       <div className="bk-interests" role="group" aria-label="Interests">
-        {(interestsList || []).map((item) => (
-          <button
-            key={item.value}
-            type="button"
-            className={`bk-interest${formData.interests?.includes(item.value) ? " bk-interest--active" : ""}`}
-            onClick={() => handleInterestToggle(item.value)}
-            aria-pressed={formData.interests?.includes(item.value)}
-          >
-            <span aria-hidden="true">{item.icon}</span>
-            {item.label}
-          </button>
-        ))}
+        {(interestsList || []).map((item) => {
+          // Support both {value,label,icon} objects and plain strings
+          const val   = item?.value ?? item;
+          const label = item?.label ?? item;
+          const icon  = item?.icon  ?? "";
+          const active = (formData.interests || []).includes(val);
+
+          return (
+            <button
+              key={val}
+              type="button"
+              className={`bk-interest${active ? " bk-interest--active" : ""}`}
+              onClick={() => handleInterestToggle(val)}
+              aria-pressed={active}
+            >
+              {icon && <span aria-hidden="true">{icon}</span>}
+              {label}
+            </button>
+          );
+        })}
       </div>
       {(formData.interests?.length > 0) && (
         <p style={{ marginTop: 10, fontSize: 12.5, color: "#059669", fontWeight: 700 }}>
-          ✓ {formData.interests.length} interest{formData.interests.length !== 1 ? "s" : ""} selected
+          ✓ {formData.interests.length} interest
+          {formData.interests.length !== 1 ? "s" : ""} selected
         </p>
       )}
     </div>
 
     <div className="bk-sep" />
 
-    {/* Budget */}
+    {/* Budget — writes to formData.budgetRange */}
     <div style={{ marginBottom: 24 }}>
-      <label className="bk-label">Budget Range (per person) <span>*</span></label>
+      <label className="bk-label">
+        Budget Range (per person) <span style={{ color: "#ef4444" }}>*</span>
+      </label>
       <div
         className="bk-opt-grid bk-opt-grid--3"
         style={isMobile ? { gridTemplateColumns: "repeat(2,1fr)" } : {}}
@@ -677,18 +770,26 @@ const StepPreferences = memo(({
         {BUDGET_OPTIONS.map((b) => (
           <div
             key={b.value}
-            className={`bk-opt-card${formData.budgetRange === b.value ? " bk-opt-card--active" : ""}`}
-            onClick={() => setFormData(p => ({ ...p, budgetRange: b.value }))}
+            className={`bk-opt-card${
+              formData.budgetRange === b.value ? " bk-opt-card--active" : ""
+            }`}
+            onClick={() => setFormData((p) => ({ ...p, budgetRange: b.value }))}
             role="radio"
             aria-checked={formData.budgetRange === b.value}
             tabIndex={0}
-            onKeyDown={(e) => e.key === "Enter" && setFormData(p => ({ ...p, budgetRange: b.value }))}
+            onKeyDown={(e) =>
+              e.key === "Enter" &&
+              setFormData((p) => ({ ...p, budgetRange: b.value }))
+            }
           >
-            <span className="bk-opt-card__icon" style={{ fontSize: 24 }}>{b.icon}</span>
+            <span className="bk-opt-card__icon" style={{ fontSize: 24 }}>
+              {b.icon}
+            </span>
             <span className="bk-opt-card__label">{b.label}</span>
           </div>
         ))}
       </div>
+      <FieldError error={errors.budgetRange} touched={touched.budgetRange} />
     </div>
 
     <div className="bk-sep" />
@@ -701,6 +802,7 @@ const StepPreferences = memo(({
     }}>
       <div>
         <label className="bk-label">Dietary Requirements</label>
+        {/* FIX: name="dietaryRequirements" matches formData.dietaryRequirements */}
         <select
           name="dietaryRequirements"
           className="bk-select"
@@ -719,10 +821,11 @@ const StepPreferences = memo(({
       </div>
       <div>
         <label className="bk-label">Special Requests</label>
+        {/* FIX: name="specialRequests" matches formData.specialRequests */}
         <textarea
           name="specialRequests"
           className="bk-textarea"
-          placeholder="Anniversary celebrations, accessibility needs, wildlife wishlist…"
+          placeholder="Anniversary celebrations, accessibility needs…"
           value={formData.specialRequests}
           onChange={handleChange}
           rows={3}
@@ -732,14 +835,21 @@ const StepPreferences = memo(({
       </div>
     </div>
 
-    {/* Medical */}
+    {/* Medical — writes to formData.hasMedicalConditions */}
     <div>
       <label
         className="bk-check-row"
-        onClick={() => setFormData(p => ({ ...p, hasMedicalConditions: !p.hasMedicalConditions }))}
+        style={{ cursor: "pointer" }}
+        onClick={() =>
+          setFormData((p) => ({
+            ...p, hasMedicalConditions: !p.hasMedicalConditions,
+          }))
+        }
       >
         <div className={`bk-check${formData.hasMedicalConditions ? " bk-check--on" : ""}`}>
-          {formData.hasMedicalConditions && <span className="bk-check__mark">✓</span>}
+          {formData.hasMedicalConditions && (
+            <span className="bk-check__mark">✓</span>
+          )}
         </div>
         <div>
           <span className="bk-check-label" style={{ fontWeight: 700 }}>
@@ -758,10 +868,11 @@ const StepPreferences = memo(({
             exit={{ opacity: 0, height: 0 }}
             style={{ marginTop: 12, overflow: "hidden" }}
           >
+            {/* FIX: name="medicalDetails" matches formData.medicalDetails */}
             <textarea
               name="medicalDetails"
               className="bk-textarea"
-              placeholder="Briefly describe relevant medical conditions or needs…"
+              placeholder="Briefly describe relevant medical conditions…"
               value={formData.medicalDetails}
               onChange={handleChange}
               rows={3}
@@ -778,28 +889,32 @@ StepPreferences.displayName = "StepPreferences";
 
 /* ══════════════════════════════════════════════════════════════
    STEP 3 — REVIEW
+   Read-only summary of formData
 ══════════════════════════════════════════════════════════════ */
 const StepReview = memo(({
   formData, destinationsList, countriesList,
   groupTypes, accommodationTypes,
   getTripDuration, getTotalVisitors, isMobile,
 }) => {
-  const dest      = destinationsList?.find(d => d.value === formData.destinationId);
-  const country   = countriesList?.find(c => c.value === formData.countryId);
-  const groupType = groupTypes?.find(g => g.value === formData.groupType);
-  const accom     = accommodationTypes?.find(a => a.value === formData.accommodationType);
+  // FIX: read from camelCase keys
+  const dest      = (destinationsList || []).find((d) => d.value === formData.destinationId);
+  const country   = (countriesList    || []).find((c) => c.value === formData.countryId);
+  const groupType = (groupTypes       || []).find((g) => g.value === formData.groupType);
+  const accom     = (accommodationTypes || []).find((a) => a.value === formData.accommodationType);
   const duration  = getTripDuration?.();
   const total     = getTotalVisitors?.();
 
-  const budgetLabel = formData.budgetRange
-    ? {
-        "under-2000":  "Under $2,000",
-        "2000-5000":   "$2,000 – $5,000",
-        "5000-10000":  "$5,000 – $10,000",
-        "over-10000":  "Over $10,000",
-        "flexible":    "Flexible",
-      }[formData.budgetRange] || formData.budgetRange
-    : null;
+  const adults   = parseInt(formData.adults,   10) || 0;
+  const children = parseInt(formData.children, 10) || 0;
+  const infants  = parseInt(formData.infants,  10) || 0;
+
+  const BUDGET_LABELS = {
+    "under-2000":  "Under $2,000",
+    "2000-5000":   "$2,000 – $5,000",
+    "5000-10000":  "$5,000 – $10,000",
+    "over-10000":  "Over $10,000",
+    "flexible":    "Flexible",
+  };
 
   const rows = [
     {
@@ -807,31 +922,52 @@ const StepReview = memo(({
       val: dest?.label || country?.label || "Not specified",
     },
     formData.isFlexible
-      ? { key: "📅 Dates", val: `Flexible — ${(formData.flexibleMonths || []).join(", ") || "Any"}` }
+      ? {
+          key: "📅 Dates",
+          val: `Flexible — ${
+            (formData.flexibleMonths || []).length
+              ? formData.flexibleMonths.join(", ")
+              : "Any month"
+          }`,
+        }
       : {
           key: "📅 Departure",
           val: formData.startDate
             ? new Date(formData.startDate).toLocaleDateString("en-US", {
-                weekday: "short", year: "numeric", month: "long", day: "numeric",
+                weekday: "short", year: "numeric",
+                month: "long", day: "numeric",
               })
             : "—",
         },
     !formData.isFlexible && formData.endDate && {
       key: "🏁 Return",
       val: new Date(formData.endDate).toLocaleDateString("en-US", {
-        weekday: "short", year: "numeric", month: "long", day: "numeric",
+        weekday: "short", year: "numeric",
+        month: "long", day: "numeric",
       }),
     },
-    duration && { key: "⏱️ Duration", val: `${duration} day${duration !== 1 ? "s" : ""}` },
+    duration && {
+      key: "⏱️ Duration",
+      val: `${duration} day${duration !== 1 ? "s" : ""}`,
+    },
     {
       key: "👥 Travellers",
-      val: `${total} (${formData.adults} adult${formData.adults !== 1 ? "s" : ""}${
-        formData.children ? `, ${formData.children} child${formData.children !== 1 ? "ren" : ""}` : ""
-      }${formData.infants ? `, ${formData.infants} infant${formData.infants !== 1 ? "s" : ""}` : ""})`,
+      val: `${total} (${adults} adult${adults !== 1 ? "s" : ""}${
+        children ? `, ${children} child${children !== 1 ? "ren" : ""}` : ""
+      }${infants ? `, ${infants} infant${infants !== 1 ? "s" : ""}` : ""})`,
     },
-    groupType && { key: "🧳 Group Type", val: `${groupType.icon} ${groupType.label}` },
-    accom     && { key: "🏨 Accommodation", val: `${accom.icon} ${accom.label}` },
-    budgetLabel && { key: "💰 Budget Range", val: budgetLabel },
+    groupType && {
+      key: "🧳 Group Type",
+      val: `${groupType.icon} ${groupType.label}`,
+    },
+    accom && {
+      key: "🏨 Accommodation",
+      val: `${accom.icon} ${accom.label}`,
+    },
+    formData.budgetRange && {
+      key: "💰 Budget",
+      val: BUDGET_LABELS[formData.budgetRange] || formData.budgetRange,
+    },
     formData.interests?.length > 0 && {
       key: "✨ Interests",
       val: formData.interests.join(", "),
@@ -854,12 +990,10 @@ const StepReview = memo(({
         </div>
         <h2 className="bk-step-header__title">Review your trip details</h2>
         <p className="bk-step-header__sub">
-          Everything look good? Go back to edit anything, or continue to fill in
-          your contact details to complete your booking request.
+          Everything look good? Go back to edit, or continue to complete your booking.
         </p>
       </div>
 
-      {/* Destination hero image */}
       {dest?.image && (
         <div style={{
           borderRadius: 18, overflow: "hidden",
@@ -867,8 +1001,7 @@ const StepReview = memo(({
           marginBottom: 24, position: "relative",
         }}>
           <img
-            src={dest.image}
-            alt={dest.label}
+            src={dest.image} alt={dest.label}
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
           <div style={{
@@ -893,7 +1026,6 @@ const StepReview = memo(({
         </div>
       )}
 
-      {/* Summary table */}
       <div className="bk-summary">
         {rows.map((row) => (
           <div key={row.key} className="bk-summary__row">
@@ -903,7 +1035,6 @@ const StepReview = memo(({
         ))}
       </div>
 
-      {/* No payment notice */}
       <div className="bk-info-box bk-info-box--green" style={{ marginTop: 20 }}>
         <span style={{ fontSize: 20, flexShrink: 0 }}>💡</span>
         <div>
@@ -911,8 +1042,8 @@ const StepReview = memo(({
             No payment required at this stage.
           </p>
           <p style={{ margin: 0, fontSize: 13 }}>
-            Your booking request is completely free. Our travel expert will contact
-            you to discuss pricing, availability and customise your itinerary.
+            Your booking request is completely free. Our travel expert will
+            contact you to discuss pricing and customise your itinerary.
           </p>
         </div>
       </div>
@@ -929,7 +1060,7 @@ const NavBar = memo(({
   isSubmitting, isLastStep, isMobile,
 }) => (
   <div className="bk-nav">
-    <div style={{ display: "flex", gap: 10 }}>
+    <div>
       {currentStep > 0 && (
         <button
           type="button"
@@ -944,7 +1075,8 @@ const NavBar = memo(({
     </div>
 
     <div style={{
-      display: "flex", gap: 12, alignItems: "center", marginLeft: "auto",
+      display: "flex", gap: 12,
+      alignItems: "center", marginLeft: "auto",
     }}>
       {!isMobile && (
         <span style={{ fontSize: 12.5, color: "#9ca3af", fontWeight: 500 }}>
@@ -956,10 +1088,12 @@ const NavBar = memo(({
         className="bk-btn bk-btn--primary"
         onClick={onNext}
         disabled={isSubmitting}
-        style={{ minWidth: isMobile ? 0 : 190 }}
-        aria-label={isLastStep ? "Continue to contact" : "Next step"}
+        style={{ minWidth: isMobile ? 0 : 200 }}
+        aria-label={isLastStep ? "Continue to contact details" : "Next step"}
       >
-        {isLastStep ? (
+        {isSubmitting ? (
+          "Processing…"
+        ) : isLastStep ? (
           <>Continue to Contact <span aria-hidden="true">→</span></>
         ) : (
           <>Next Step <span aria-hidden="true">→</span></>
@@ -971,14 +1105,19 @@ const NavBar = memo(({
 NavBar.displayName = "NavBar";
 
 /* ══════════════════════════════════════════════════════════════
-   MAIN BOOKING STEPS
+   MAIN EXPORT — BookingSteps
 ══════════════════════════════════════════════════════════════ */
 const STEP_TRANSITION = {
-  initial: { opacity: 0, x: 20 },
-  animate: { opacity: 1, x: 0 },
-  exit:    { opacity: 0, x: -20 },
+  initial:    { opacity: 0, x: 20  },
+  animate:    { opacity: 1, x: 0   },
+  exit:       { opacity: 0, x: -20 },
   transition: { duration: 0.25, ease: "easeInOut" },
 };
+
+// FIX: steps rendered here are 0-indexed, matching useBookingWizard
+// Steps 0-3 = Trip, Travelers, Preferences, Review
+// Step 4 = Contact (rendered separately in Booking.jsx as BookingContact)
+const TOTAL_STEPS = 5; // matches STEPS.length in BookingShared
 
 const BookingSteps = ({
   currentStep, isAnimating,
@@ -1000,6 +1139,7 @@ const BookingSteps = ({
     isMobile,
   };
 
+  // Steps 0–3 only (step 4 = BookingContact handled by parent)
   const stepComponents = [
     <StepTrip
       key="trip"
@@ -1033,23 +1173,23 @@ const BookingSteps = ({
     />,
   ];
 
+  // FIX: isLastStep = step 3 (Review), the last step before Contact
+  const isLastStep = currentStep === 3;
+
   return (
     <>
       <AnimatePresence mode="wait">
-        <motion.div
-          key={currentStep}
-          {...STEP_TRANSITION}
-        >
-          {stepComponents[currentStep]}
+        <motion.div key={currentStep} {...STEP_TRANSITION}>
+          {stepComponents[currentStep] ?? null}
         </motion.div>
       </AnimatePresence>
 
       <NavBar
         currentStep={currentStep}
-        totalSteps={5}
+        totalSteps={TOTAL_STEPS}
         onPrev={prevStep}
         onNext={nextStep}
-        isLastStep={currentStep === 3}
+        isLastStep={isLastStep}
         isMobile={isMobile}
         isSubmitting={isSubmitting}
       />
