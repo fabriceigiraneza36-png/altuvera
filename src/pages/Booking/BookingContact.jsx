@@ -9,8 +9,7 @@ import {
   FiLock, FiArrowLeft, FiZap, FiCheckCircle, FiInfo,
   FiMapPin, FiClock, FiUsers, FiStar,
 } from "react-icons/fi";
-
-const API = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+import EmailVerification from "../../components/booking/EmailVerification";
 
 /* ── Constants ──────────────────────────────────────────────── */
 const COUNTRIES_LIST = [
@@ -145,276 +144,8 @@ const OtpBoxes = memo(({ value, onChange, hasError, disabled }) => {
 OtpBoxes.displayName = "OtpBoxes";
 
 /* ── Email Verification Block ───────────────────────────────── */
-const EmailVerification = memo(({ email, onVerified, isMobile }) => {
-  const [phase, setPhase]           = useState("idle");
-  const [otp, setOtp]               = useState("");
-  const [otpError, setOtpError]     = useState("");
-  const [apiError, setApiError]     = useState("");
-  const [resendSecs, setResendSecs] = useState(0);
-  const [timerSecs, setTimerSecs]   = useState(TIMER_SECS);
-  const timerRef  = useRef(null);
-  const resendRef = useRef(null);
 
-  useEffect(() => () => {
-    clearInterval(timerRef.current);
-    clearInterval(resendRef.current);
-  }, []);
-
-  const startExpiry = useCallback(() => {
-    clearInterval(timerRef.current);
-    setTimerSecs(TIMER_SECS);
-    timerRef.current = setInterval(() => {
-      setTimerSecs(s => {
-        if (s <= 1) {
-          clearInterval(timerRef.current);
-          setPhase("idle");
-          setOtp("");
-          setApiError("Code expired. Please request a new one.");
-          return 0;
-        }
-        return s - 1;
-      });
-    }, 1000);
-  }, []);
-
-  const startResend = useCallback(() => {
-    clearInterval(resendRef.current);
-    setResendSecs(RESEND_SECS);
-    resendRef.current = setInterval(() => {
-      setResendSecs(s => {
-        if (s <= 1) { clearInterval(resendRef.current); return 0; }
-        return s - 1;
-      });
-    }, 1000);
-  }, []);
-
-  const sendCode = useCallback(async () => {
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setApiError("Please enter a valid email address first.");
-      return;
-    }
-    setPhase("sending");
-    setApiError("");
-    setOtp("");
-    setOtpError("");
-
-    try {
-      const res  = await fetch(`${API}/bookings/send-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.error || data?.message || "Failed to send code.");
-      setPhase("sent");
-      startExpiry();
-      startResend();
-    } catch (err) {
-      setApiError(err.message || "Network error. Please try again.");
-      setPhase("idle");
-    }
-  }, [email, startExpiry, startResend]);
-
-  /* Auto-verify when 6 digits entered */
-  useEffect(() => {
-    if (otp.length === OTP_LENGTH && phase === "sent") {
-      verifyCode(otp);
-    }
-  }, [otp]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const verifyCode = useCallback(async (code) => {
-    setPhase("verifying");
-    setOtpError("");
-
-    try {
-      const res  = await fetch(`${API}/bookings/verify-otp`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, code }),
-      });
-      const data = await res.json();
-
-      if (!res.ok || !data.verified) {
-        throw new Error(data?.error || data?.message || "Incorrect code. Please try again.");
-      }
-
-      clearInterval(timerRef.current);
-      clearInterval(resendRef.current);
-      setPhase("verified");
-      onVerified();
-    } catch (err) {
-      setOtpError(err.message || "Verification failed. Please try again.");
-      setOtp("");
-      setPhase("sent");
-    }
-  }, [email, onVerified]);
-
-  const mins = String(Math.floor(timerSecs / 60)).padStart(2, "0");
-  const secs = String(timerSecs % 60).padStart(2, "0");
-
-  /* Verified */
-  if (phase === "verified") {
-    return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 8 }}
-      >
-        <div className="bk-verified-badge">
-          <FiCheckCircle size={15} />
-          Email verified
-        </div>
-        <span style={{ fontSize: 12, color: "#9ca3af" }}>{email}</span>
-      </motion.div>
-    );
-  }
-
-  /* Idle / sending */
-  if (phase === "idle" || phase === "sending") {
-    return (
-      <div style={{ marginTop: 10 }}>
-        <AnimatePresence>
-          {apiError && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="bk-info-box bk-info-box--red"
-              style={{ marginBottom: 10 }}
-              role="alert"
-            >
-              <FiAlertTriangle size={15} style={{ flexShrink: 0 }} />
-              <p style={{ margin: 0 }}>{apiError}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <button
-          type="button"
-          className="bk-send-code-btn"
-          onClick={sendCode}
-          disabled={phase === "sending" || !email}
-          aria-busy={phase === "sending"}
-        >
-          {phase === "sending" ? (
-            <>
-              <span className="bk-btn__spinner" style={{
-                width: 14, height: 14,
-                borderColor: "rgba(255,255,255,.3)",
-                borderTopColor: "#fff",
-              }} />
-              Sending code…
-            </>
-          ) : (
-            <>
-              <FiSend size={14} />
-              Send Verification Code
-            </>
-          )}
-        </button>
-        <p style={{ margin: "8px 0 0", fontSize: 12, color: "#9ca3af", lineHeight: 1.55 }}>
-          We'll send a {OTP_LENGTH}-digit code to{" "}
-          <strong style={{ color: "#374151" }}>{email || "your email"}</strong> to
-          confirm your identity. Check spam if it doesn't arrive.
-        </p>
-      </div>
-    );
-  }
-
-  /* Sent — show OTP boxes */
-  return (
-    <motion.div
-      className="bk-otp-section"
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
-      <div className="bk-otp-header">
-        <div className="bk-otp-icon">
-          <FiMail size={20} />
-        </div>
-        <div>
-          <p className="bk-otp-title">Check your inbox</p>
-          <p className="bk-otp-sub">
-            Code sent to <strong>{email}</strong>
-          </p>
-        </div>
-      </div>
-
-      <OtpBoxes
-        value={otp}
-        onChange={setOtp}
-        hasError={!!otpError}
-        disabled={phase === "verifying"}
-      />
-
-      <AnimatePresence>
-        {otpError && (
-          <motion.p
-            className="bk-field-error"
-            style={{ marginBottom: 8 }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            role="alert"
-          >
-            <FiAlertTriangle size={12} /> {otpError}
-          </motion.p>
-        )}
-      </AnimatePresence>
-
-      {phase === "verifying" && (
-        <p className="bk-field-success">
-          <FiCheckCircle size={12} /> Verifying…
-        </p>
-      )}
-
-      {/* Timer + resend */}
-      <div className="bk-otp-timer">
-        <TimerRing seconds={timerSecs} total={TIMER_SECS} />
-        <span
-          className={`bk-otp-timer-text${timerSecs < 60 ? " bk-otp-timer-text--urgent" : ""}`}
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          Code expires in {mins}:{secs}
-        </span>
-
-        <button
-          type="button"
-          onClick={sendCode}
-          disabled={resendSecs > 0 || phase === "verifying"}
-          style={{
-            marginLeft: "auto",
-            display: "inline-flex", alignItems: "center", gap: 5,
-            background: "none", border: "none",
-            cursor: resendSecs > 0 ? "not-allowed" : "pointer",
-            color: resendSecs > 0 ? "#9ca3af" : "#059669",
-            fontSize: 12.5, fontWeight: 700,
-            fontFamily: "inherit", padding: "4px 0",
-            opacity: resendSecs > 0 ? 0.6 : 1,
-          }}
-          aria-disabled={resendSecs > 0}
-        >
-          <FiRefreshCw size={12} />
-          {resendSecs > 0 ? `Resend in ${resendSecs}s` : "Resend Code"}
-        </button>
-      </div>
-
-      {/* Manual verify if auto didn't trigger */}
-      {otp.length === OTP_LENGTH && phase === "sent" && (
-        <button
-          type="button"
-          className="bk-send-code-btn"
-          style={{ marginTop: 12 }}
-          onClick={() => verifyCode(otp)}
-        >
-          <FiCheck size={14} /> Verify Code
-        </button>
-      )}
-    </motion.div>
-  );
-});
-EmailVerification.displayName = "EmailVerification";
+// Using imported EmailVerification component
 
 /* ── Trip Mini Summary ──────────────────────────────────────── */
 const TripMiniSummary = memo(({
@@ -657,14 +388,13 @@ const BookingContact = ({
         </div>
         <FieldError error={errors.email} touched={touched.email} />
 
-        {/* Verification widget */}
-        {!isAuthenticated && formData.email && !errors.email && !touched.email_invalid && (
-          <EmailVerification
-            email={formData.email}
-            onVerified={() => setEmailVerified(true)}
-            isMobile={isMobile}
-          />
-        )}
+      {/* Verification widget */}
+{!isAuthenticated && formData.email && !errors.email && (
+  <EmailVerification
+    email={formData.email}
+    onVerified={() => setEmailVerified(true)}
+  />
+)}
 
         {emailVerified && !isAuthenticated && (
           <FieldSuccess msg="Email address verified successfully ✓" />

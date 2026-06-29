@@ -1,6 +1,8 @@
 /**
  * SubscriptionForm.jsx
  * Fully wired to live backend — sends real emails, saves to DB
+ * For logged-in users: auto-subscribes
+ * For not-logged-in users: opens AuthModal
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
@@ -11,8 +13,9 @@ import {
   FiAlertCircle,
   FiRefreshCw,
 } from 'react-icons/fi';
-import EmailAutocompleteInput from './EmailAutocompleteInput';
+import { useUserAuth } from '../../context/UserAuthContext';
 import { useSubscription } from '../../hooks/useSubscription';
+import EmailAutocompleteInput from './EmailAutocompleteInput';
 
 // ── Loading spinner ───────────────────────────────────────────────────────────
 const Spinner = ({ color = '#065F46' }) => (
@@ -63,9 +66,11 @@ const SubscriptionForm = ({
   initialEmail  = '',
   initialName   = '',
   user          = null,
+  requireAuth   = false,        // When true, require user to be logged in
 }) => {
   const [email, setEmail] = useState(initialEmail);
   const [name,  setName]  = useState(initialName);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
 
   const {
     loading,
@@ -77,7 +82,10 @@ const SubscriptionForm = ({
     reset,
   } = useSubscription();
 
+  const { isAuthenticated, openModal, user: authUser } = useUserAuth();
+
   const isDark = theme === 'dark';
+  const userEmail = authUser?.email || '';
 
   // Update local state when props change (e.g., user logs in)
   useEffect(() => {
@@ -87,12 +95,24 @@ const SubscriptionForm = ({
 
   // ── Submit ──────────────────────────────────────────────────────────────────
   const handleSubmit = useCallback(async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
+
+    // If requireAuth and not logged in, open auth modal
+    if (requireAuth && !isAuthenticated) {
+      setShowAuthPrompt(true);
+      openModal('login');
+      return;
+    }
+
+    // For logged-in users, use their email from profile and pass their user ID
+    const emailToUse = isAuthenticated ? (userEmail || email) : email;
+    const userId = isAuthenticated ? authUser?.id : null;
 
     const result = await subscribe({
-      email:  email.trim(),
+      email:  emailToUse.trim(),
       name:   name.trim(),
       source,
+      userId,
     });
 
     if (result?.success) {
@@ -104,7 +124,20 @@ const SubscriptionForm = ({
         alreadySubscribed: result.alreadySubscribed,
       });
     }
-  }, [email, name, source, subscribe, onSuccess]);
+  }, [email, name, source, subscribe, onSuccess, isAuthenticated, userEmail, openModal, requireAuth, authUser?.id]);
+
+  // ── Auto-subscribe logged-in users when they become authenticated ────────────────
+  useEffect(() => {
+    if (isAuthenticated && userEmail && !success && !loading) {
+      // Auto-subscribe logged-in users
+      subscribe({
+        email: userEmail,
+        name: authUser?.fullName || authUser?.name || '',
+        source: 'auto-subscribed-logged-in',
+        userId: authUser?.id,
+      });
+    }
+  }, [isAuthenticated, userEmail, success, loading, subscribe, authUser?.fullName, authUser?.name, authUser?.id]);
 
   // ── Styles ──────────────────────────────────────────────────────────────────
   const s = {

@@ -169,7 +169,6 @@ const SecHead = ({ tag, title, sub, center = false, light = false }) => {
         transform: vis ? "none" : "translateY(24px)",
         transition: "all .6s cubic-bezier(.4,0,.2,1)",
       }}>
-      {tag && <Tag text={tag} dark={light} />}
       <h2 className="cp-sh__t">{title}</h2>
       {sub && <p className="cp-sh__s">{sub}</p>}
       <div className="cp-sh__bar" />
@@ -636,27 +635,37 @@ const FactsScrollSec = ({ country }) => {
    IMAGE HIGHLIGHTS
 ═══════════════════════════════════════════════════════ */
 const ImageHighlightsSec = ({ country, gallery }) => {
+  const rawHighlights = useMemo(() => {
+    if (Array.isArray(country?.highlights)) {
+      return country.highlights.map(toStr).filter(Boolean);
+    }
+    return toArr(country?.highlights || "");
+  }, [country]);
+
   const highlights = useMemo(() => {
-    const raw = Array.isArray(country?.highlights)
-      ? country.highlights.map(toStr).filter(Boolean)
-      : toArr(country?.highlights || "");
-    return gallery.slice(0, 8).map((img, i) => ({
-      img,
-      label: raw[i] || `${country?.name || "Destination"} Experience ${i + 1}`,
-    }));
-  }, [country, gallery]);
+    if (!rawHighlights.length) return [];
+    return rawHighlights.slice(0, 8).map((label, i) => {
+      const img = gallery[i] || country?.heroImage || country?.imageUrl;
+      return img ? { img, label } : null;
+    }).filter(Boolean);
+  }, [country, gallery, rawHighlights]);
 
   if (!highlights.length) return null;
 
   const trackRef = useRef(null);
   const [canLeft, setCanLeft] = useState(false);
   const [canRight, setCanRight] = useState(true);
+  const [hoveredIdx, setHoveredIdx] = useState(null);
+
+  // Duplicate highlights for seamless infinite loop
+  const duplicatedHighlights = useMemo(() => [...highlights, ...highlights], [highlights]);
 
   const checkScroll = useCallback(() => {
     const el = trackRef.current;
     if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
     setCanLeft(el.scrollLeft > 8);
-    setCanRight(el.scrollLeft < el.scrollWidth - el.clientWidth - 8);
+    setCanRight(maxScroll > 0 && el.scrollLeft < maxScroll - 8);
   }, []);
 
   useEffect(() => {
@@ -669,13 +678,36 @@ const ImageHighlightsSec = ({ country, gallery }) => {
       el.removeEventListener("scroll", checkScroll);
       window.removeEventListener("resize", checkScroll);
     };
-  }, [checkScroll, highlights.length]);
+  }, [checkScroll, duplicatedHighlights.length]);
 
   const scroll = (dir) => {
     const el = trackRef.current;
     if (!el) return;
     el.scrollBy({ left: dir * 280, behavior: "smooth" });
   };
+
+  const renderCard = (item, i, isDuplicate = false) => (
+    <div
+      key={`${isDuplicate ? "dup" : "orig"}-${i}`}
+      className="cp-hl-item-wrap"
+      onMouseEnter={() => setHoveredIdx(i)}
+      onMouseLeave={() => setHoveredIdx(null)}
+    >
+      <div className={`cp-hl-img-card ${hoveredIdx === i ? "hovered" : ""}`}>
+        <div className="cp-hl-img-card__img">
+          <img src={item.img} alt={item.label}
+            loading={i < 3 ? "eager" : "lazy"}
+            onError={e => { e.currentTarget.closest(".cp-hl-img-card").style.display = "none"; }}
+          />
+          <div className="cp-hl-img-card__ov" />
+        </div>
+        <div className="cp-hl-img-card__body">
+          <span className="cp-hl-img-card__num">{String((i % highlights.length) + 1).padStart(2, "0")}</span>
+          <p className="cp-hl-img-card__label">{item.label}</p>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <section className="cp-sec cp-sec--soft cp-img-hl-sec">
@@ -695,23 +727,8 @@ const ImageHighlightsSec = ({ country, gallery }) => {
         )}
         <div className="cp-hl-track" ref={trackRef}>
           <div className="cp-hl-inner">
-            {highlights.map((item, i) => (
-              <Reveal key={i} from="bottom" delay={i * 60} className="cp-hl-item-wrap">
-                <div className="cp-hl-img-card">
-                  <div className="cp-hl-img-card__img">
-                    <img src={item.img} alt={item.label}
-                      loading={i < 3 ? "eager" : "lazy"}
-                      onError={e => { e.currentTarget.closest(".cp-hl-img-card").style.display = "none"; }}
-                    />
-                    <div className="cp-hl-img-card__ov" />
-                  </div>
-                  <div className="cp-hl-img-card__body">
-                    <span className="cp-hl-img-card__num">{String(i + 1).padStart(2, "0")}</span>
-                    <p className="cp-hl-img-card__label">{item.label}</p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
+            {highlights.map((item, i) => renderCard(item, i, false))}
+            {highlights.map((item, i) => renderCard(item, i + highlights.length, true))}
           </div>
         </div>
         {canRight && (
@@ -743,7 +760,6 @@ const AboutSec = ({ country, navigate }) => {
       <div className="cp-wrap">
         <div className="cp-about">
           <div className="cp-about__main">
-            <Tag text="COUNTRY GUIDE" />
             <Reveal from="left">
               <h2 className="cp-about__title">About {country.name}</h2>
             </Reveal>
@@ -1163,7 +1179,6 @@ const HistoryLinkSec = ({ country }) => {
               <Icon name="history" size={72} />
             </div>
             <div className="cp-history-banner__content">
-              <Tag text="HISTORY" />
               <h2 className="cp-history-banner__title">The History of {name}</h2>
               <p className="cp-history-banner__desc">
                 Discover the rich historical journey of {name} — from ancient civilisations

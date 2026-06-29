@@ -238,7 +238,6 @@ const SecHead = ({ tag, title, sub, center = false, light = false }) => {
         transition: "all .6s cubic-bezier(.4,0,.2,1)",
       }}
     >
-      {tag && <Tag text={tag} />}
       <h2 className="d-sh__t">{title}</h2>
       {sub && <p className="d-sh__s">{sub}</p>}
       <div className="d-sh__bar" />

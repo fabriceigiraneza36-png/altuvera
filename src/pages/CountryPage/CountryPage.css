@@ -855,10 +855,11 @@
 }
 
 /* ═══════════════════════════════════════════════════════
-   FACTS HORIZONTAL SCROLL
-═══════════════════════════════════════════════════════ */
+    FACTS HORIZONTAL SCROLL (Travel Information Cards)
+    ═══════════════════════════════════════════════════════ */
 .cp-facts-sec {
   overflow: visible;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
 }
 
 .cp-facts-scroll-wrap {
@@ -871,7 +872,7 @@
   scroll-behavior: smooth;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
-  padding: 4px 24px 16px;
+  padding: 24px 24px 32px;
 }
 
 .cp-facts-track::-webkit-scrollbar {
@@ -880,9 +881,19 @@
 
 .cp-facts-inner {
   display: flex;
-  gap: 14px;
+  gap: 16px;
   width: max-content;
   padding: 0 max(24px, calc((100vw - 1220px) / 2));
+  animation: factsMarquee 25s linear infinite;
+}
+
+.cp-facts-inner:hover {
+  animation-play-state: paused;
+}
+
+@keyframes factsMarquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(16px - 50%)); }
 }
 
 .cp-fact-card {
@@ -890,19 +901,20 @@
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 10px;
-  min-width: 155px;
-  max-width: 195px;
+  gap: 12px;
+  min-width: 170px;
+  max-width: 210px;
   background: #fff;
-  border: 1.5px solid #d1fae5;
-  border-radius: 20px;
-  padding: 22px 16px;
-  box-shadow: 0 3px 14px rgba(22, 101, 52, .05);
-  transition: all .35s cubic-bezier(.4, 0, .2, 1);
+  border: 2px solid #d1fae5;
+  border-radius: 24px;
+  padding: 26px 20px;
+  box-shadow: 0 6px 24px rgba(22, 101, 52, .06);
+  transition: all .4s cubic-bezier(.4, 0, .2, 1), transform .4s cubic-bezier(.4, 0, .2, 1);
   flex-shrink: 0;
   cursor: default;
   position: relative;
   overflow: hidden;
+  transform-origin: center center;
 }
 
 .cp-fact-card::before {
@@ -911,17 +923,18 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 3px;
+  height: 4px;
   background: linear-gradient(90deg, #166534, #4ade80);
   transform: scaleX(0);
   transform-origin: left;
-  transition: transform .35s ease;
+  transition: transform .4s ease;
 }
 
 .cp-fact-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 14px 32px rgba(22, 101, 52, .12);
-  border-color: #86efac;
+  transform: translateY(-10px) scale(1.05);
+  box-shadow: 0 20px 48px rgba(22, 101, 52, .15);
+  border-color: #4ade80;
+  background: linear-gradient(135deg, #fafffe 0%, #ffffff 100%);
 }
 
 .cp-fact-card:hover::before {
@@ -929,40 +942,53 @@
 }
 
 .cp-fact-card__icon {
-  width: 48px;
-  height: 48px;
-  border-radius: 14px;
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
   background: linear-gradient(135deg, #dcfce7, #bbf7d0);
   display: flex;
   align-items: center;
   justify-content: center;
   color: #166534;
   flex-shrink: 0;
-  transition: all .3s;
+  transition: all .35s cubic-bezier(.4, 0, .2, 1);
+  box-shadow: 0 3px 12px rgba(22, 101, 52, .08);
 }
 
 .cp-fact-card:hover .cp-fact-card__icon {
   background: linear-gradient(135deg, #166534, #16a34a);
   color: #fff;
-  transform: scale(1.06);
+  transform: scale(1.12) rotate(5deg);
+  box-shadow: 0 6px 20px rgba(22, 101, 52, .2);
 }
 
 .cp-fact-card__label {
   display: block;
-  font-size: .6rem;
-  font-weight: 700;
+  font-size: .65rem;
+  font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: .1em;
-  color: #9ca3af;
+  letter-spacing: .12em;
+  color: #6b7280;
+  transition: color .3s;
+}
+
+.cp-fact-card:hover .cp-fact-card__label {
+  color: #166534;
 }
 
 .cp-fact-card__val {
   display: block;
-  font-size: .92rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #052e16;
   line-height: 1.35;
   word-break: break-word;
+  transition: all .3s;
+}
+
+.cp-fact-card:hover .cp-fact-card__val {
+  color: #0f172a;
+  transform: scale(1.05);
 }
 
 /* Nav buttons */
@@ -1027,8 +1053,8 @@
 }
 
 /* ═══════════════════════════════════════════════════════
-   IMAGE HIGHLIGHT CARDS
-═══════════════════════════════════════════════════════ */
+    IMAGE HIGHLIGHT CARDS (Infinite Slideshow + Hover Effects)
+    ═══════════════════════════════════════════════════════ */
 .cp-img-hl-sec {
   overflow: visible;
 }
@@ -1054,6 +1080,26 @@
   gap: 18px;
   width: max-content;
   padding: 0 max(24px, calc((100vw - 1220px) / 2));
+  animation: infiniteSlideshow 30s linear infinite;
+}
+
+/* Duplicate items for seamless loop */
+.cp-hl-inner::after {
+  content: "";
+  flex-shrink: 0;
+}
+
+@keyframes infiniteSlideshow {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(calc(18px - 100%));
+  }
+}
+
+.cp-hl-inner.paused-animation {
+  animation-play-state: paused;
 }
 
 .cp-hl-item-wrap {
@@ -1066,15 +1112,19 @@
   overflow: hidden;
   background: #fff;
   box-shadow: 0 6px 24px rgba(22, 101, 52, .08);
-  transition: all .4s cubic-bezier(.4, 0, .2, 1);
+  transition: all .4s cubic-bezier(.4, 0, .2, 1), filter .3s ease, opacity .3s ease;
   cursor: default;
   border: 1.5px solid #d1fae5;
+  position: relative;
+  z-index: 1;
+  transform-origin: center bottom;
 }
 
-.cp-hl-img-card:hover {
-  transform: translateY(-7px) scale(1.02);
-  box-shadow: 0 18px 44px rgba(22, 101, 52, .16);
-  border-color: #86efac;
+.cp-hl-img-card.hovered {
+  transform: translateY(-7px) scale(1.08);
+  box-shadow: 0 24px 56px rgba(22, 101, 52, .22);
+  border-color: #4ade80;
+  z-index: 100;
 }
 
 .cp-hl-img-card__img {
@@ -1091,8 +1141,8 @@
   transition: transform .6s cubic-bezier(.4, 0, .2, 1);
 }
 
-.cp-hl-img-card:hover .cp-hl-img-card__img img {
-  transform: scale(1.08);
+.cp-hl-img-card.hovered .cp-hl-img-card__img img {
+  transform: scale(1.12);
 }
 
 .cp-hl-img-card__ov {
@@ -1132,6 +1182,30 @@
   flex: 1;
   margin: 0;
   padding-top: 2px;
+}
+
+/* Blur effect for non-hovered cards during slideshow - triggered by hover on .cp-hl-item-wrap */
+.cp-hl-item-wrap:hover .cp-hl-img-card {
+  filter: blur(0);
+  opacity: 1;
+}
+
+.cp-hl-item-wrap .cp-hl-img-card:not(.hovered) {
+  filter: blur(0.5px);
+  opacity: 0.9;
+  transition: filter .4s ease, opacity .4s ease;
+}
+
+.cp-hl-img-card.hovered {
+  filter: blur(0) !important;
+  opacity: 1 !important;
+}
+
+/* Sibling blur effect when a card is hovered - all other cards get blurred */
+.cp-hl-item-wrap:hover ~ .cp-hl-item-wrap .cp-hl-img-card:not(.hovered),
+.cp-hl-item-wrap:not(:hover) .cp-hl-img-card:not(.hovered) {
+  filter: blur(1px);
+  opacity: 0.7;
 }
 
 /* Nav buttons */

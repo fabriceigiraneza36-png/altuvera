@@ -5,7 +5,7 @@
 
 import { useState, useCallback } from 'react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://backend-jd8f.onrender.com';
+import { API_BASE } from '../utils/apiBase';
 
 // ── Safely extract a string message from any error shape ──────────────────────
 const extractErrorMessage = (data, fallback = 'Subscription failed. Please try again.') => {
@@ -52,7 +52,7 @@ export const useSubscription = () => {
     });
   }, []);
 
-  const subscribe = useCallback(async ({ email, name = '', source = 'website' }) => {
+  const subscribe = useCallback(async ({ email, name = '', source = 'website', userId = null }) => {
 
     // ── Client-side validation ──────────────────────────────────────────────
     if (!email?.trim()) {
@@ -75,13 +75,14 @@ export const useSubscription = () => {
     });
 
     try {
-      const res = await fetch(`${API_BASE}/api/subscribers`, {
+      const res = await fetch(`${API_BASE}/subscribers`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
           email:  email.trim().toLowerCase(),
           name:   name.trim()  || undefined,
           source: source       || 'website',
+          userId: userId       || undefined,
         }),
       });
 
@@ -165,7 +166,7 @@ export const useSubscription = () => {
 
     try {
       const res = await fetch(
-        `${API_BASE}/api/subscribers/unsubscribe/${encodeURIComponent(email.trim())}`,
+        `${API_BASE}/subscribers/unsubscribe/${encodeURIComponent(email.trim())}`,
         { method: 'DELETE' },
       );
 
