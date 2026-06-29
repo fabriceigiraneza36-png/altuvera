@@ -63,11 +63,12 @@ const CALLBACK_ERROR_REDIRECT_DELAY_MS = 1200;
 // LEGACY REDIRECT MAP
 // ============================================================================
 
+
 const REDIRECT_MAP = {
   "/home":       "/",
   "/tours":      "/packages",
   "/safaris":    "/packages",
-  "/blog":       "/posts",
+  "/blog":       "/posts",      // ← already exists (list page)
   "/articles":   "/posts",
   "/news":       "/posts",
   "/map":        "/interactive-map",
@@ -80,7 +81,23 @@ const REDIRECT_MAP = {
 const getRedirectUrl = (pathname) => {
   if (!pathname) return null;
   const clean = pathname.toLowerCase().replace(/\/$/, "") || "/";
-  return REDIRECT_MAP[clean] ?? null;
+
+  // 1. Static map
+  if (REDIRECT_MAP[clean]) return REDIRECT_MAP[clean];
+
+  // 2. /blog/:slug  →  /post/:slug
+  const blogMatch = clean.match(/^\/blog\/(.+)$/);
+  if (blogMatch) return `/post/${blogMatch[1]}`;
+
+  // 3. /articles/:slug  →  /post/:slug
+  const articleMatch = clean.match(/^\/articles\/(.+)$/);
+  if (articleMatch) return `/post/${articleMatch[1]}`;
+
+  // 4. /news/:slug  →  /post/:slug
+  const newsMatch = clean.match(/^\/news\/(.+)$/);
+  if (newsMatch) return `/post/${newsMatch[1]}`;
+
+  return null;
 };
 
 // ============================================================================
@@ -945,6 +962,14 @@ function App() {
           {/* 404 + legacy URL redirects */}
           <Route path="*" element={<SmartRedirect />} />
         </Route>
+
+        <Route element={<AppLayout />}>
+  {publicRoutes.map(renderPublicRoute)}
+  {protectedRoutes.map(renderProtectedRoute)}
+
+  {/* This catches /blog/:slug and redirects via getRedirectUrl */}
+  <Route path="*" element={<SmartRedirect />} />
+</Route>
       </Routes>
 
       {/* ── Global overlays (outside Routes — always present) ── */}

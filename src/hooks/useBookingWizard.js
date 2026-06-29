@@ -247,9 +247,11 @@ export const useBookingWizard = () => {
           (Array.isArray(raw) ? raw : []).map((d) => ({
             value:     String(d.id ?? d.value ?? ""),
             label:     d.name  ?? d.label ?? "",
-            country:   d.country  ?? "",
+            country:   typeof d.country === "object"
+              ? (d.country?.name ?? d.countryName ?? "")
+              : (d.country ?? ""),
             countryId: String(d.country_id ?? ""),
-            image:     d.image ?? d.thumbnail ?? "",
+            image:     d.image ?? d.thumbnail ?? d.imageUrl ?? "",
             rating:    d.rating ?? null,
             duration:  d.duration ?? "",
           }))
@@ -298,8 +300,9 @@ export const useBookingWizard = () => {
 
   const getDestinationName = useCallback(
     (id) =>
-      destinationsList.find((d) => String(d.value) === String(id))?.label ?? String(id),
-    [destinationsList]
+      destinationsList.find((d) => String(d.value) === String(id ?? formData.destinationId))?.label
+        ?? String(id ?? formData.destinationId ?? ""),
+    [destinationsList, formData.destinationId]
   );
 
   // ── Field change ──────────────────────────────────────────────────────
@@ -439,6 +442,13 @@ export const useBookingWizard = () => {
     [currentStep, goToStep]
   );
 
+  // ── Compute booking_type before submit
+  const computeBookingType = useCallback(() => {
+    const { destinationId, countryId, categoryId } = formData;
+    if (destinationId || countryId || categoryId) return "destination";
+    return "custom";
+  }, [formData]);
+
   // ── Submit ────────────────────────────────────────────────────────────
   const handleSubmit = useCallback(async (e) => {
     if (e?.preventDefault) e.preventDefault();
@@ -461,6 +471,7 @@ export const useBookingWizard = () => {
 
     try {
       const payload = sanitizePayload({
+        booking_type:          computeBookingType(),
         destination_id:       formData.destinationId || undefined,
         country_id:           formData.countryId     || undefined,
         category_id:          formData.categoryId    || undefined,
@@ -541,7 +552,7 @@ export const useBookingWizard = () => {
     } finally {
       if (mountedRef.current) setIsSubmitting(false);
     }
-  }, [formData, currentStep, isSubmitting, validateStep, getTotalVisitors]);
+  }, [formData, currentStep, isSubmitting, validateStep, getTotalVisitors, computeBookingType]);
 
   // ── Modal helpers ─────────────────────────────────────────────────────
   const openModal  = useCallback(() => setShowModal(true),  []);

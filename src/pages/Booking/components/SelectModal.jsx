@@ -179,7 +179,9 @@ const SelectModal = memo(({
                           {item.label}
                         </span>
                         <span className="bk-select-modal__item-sub">
-                          {item.country}
+                          {typeof item.country === "object"
+                            ? item.country?.name ?? ""
+                            : item.country}
                           {item.duration && ` · ${item.duration}`}
                         </span>
                       </div>

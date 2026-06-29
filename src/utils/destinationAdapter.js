@@ -224,7 +224,9 @@ export const adaptDestination = (raw) => {
   /* ── Country ────────────────────────────────────────────── */
   const country = raw.country && typeof raw.country === "object"
     ? raw.country
-    : {};
+    : raw.country
+      ? { name: String(raw.country) }
+      : {};
 
   /* ── Gallery ────────────────────────────────────────────── */
   const gallery = toArr(raw.gallery).map(adaptGalleryItem);

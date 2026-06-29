@@ -147,7 +147,7 @@ const StepOne = memo(({
                   </div>
                   {(dest.country || dest.region) && (
                     <div style={{ fontSize: 11, color: isActive ? "rgba(255,255,255,0.78)" : THEME.textLight }}>
-                      {normalizeOptionLabel(dest.country || dest.region)}
+                       {normalizeOptionLabel(dest.country || dest.region).label}
                     </div>
                   )}
                 </motion.button>
