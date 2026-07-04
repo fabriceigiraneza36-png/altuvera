@@ -1,0 +1,158 @@
+// src/main.jsx
+// ─────────────────────────────────────────────────────────────────────────────
+// Application Entry Point
+// ─────────────────────────────────────────────────────────────────────────────
+
+import React from "react";
+import ReactDOM from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import { HelmetProvider } from "react-helmet-async";
+import App from "./App.jsx";
+import { AppProvider } from "./context/AppContext.jsx";
+import { UserAuthProvider } from "./context/UserAuthContext.jsx";
+import { WishlistProvider } from "./context/WishlistContext.jsx";
+import { ToastProvider } from "./context/ToastContext.jsx";
+import { initConsentMode } from "./utils/cookiePreferences.js";
+import "./index.css";
+import { generateSvgPlaceholder } from "./utils/placeholderImage";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CONSENT MODE — Must run BEFORE any tracking scripts load
+// ─────────────────────────────────────────────────────────────────────────────
+
+initConsentMode();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTO-FIX BROKEN IMAGES
+// ─────────────────────────────────────────────────────────────────────────────
+
+document.addEventListener(
+  "error",
+  (event) => {
+    const target = event.target;
+    if (
+      target?.tagName === "IMG" &&
+      target.dataset.fallback !== "true" &&
+      !target.src?.startsWith("data:")
+    ) {
+      target.dataset.fallback = "true";
+      const w = target.naturalWidth || target.width || 800;
+      const h = target.naturalHeight || target.height || 600;
+      const text = target.alt || "Altuvera";
+      target.src = generateSvgPlaceholder(w, h, text);
+    }
+  },
+  true
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SCROLL OBSERVER
+// ─────────────────────────────────────────────────────────────────────────────
+
+const initScrollObserver = async () => {
+  try {
+    const { initScrollObserver: init } = await import(
+      "./utils/scrollObserver.js"
+    );
+    init();
+  } catch {
+    // Progressive enhancement — safe to ignore
+  }
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GLOBAL ERROR HANDLERS
+// ─────────────────────────────────────────────────────────────────────────────
+
+window.addEventListener("unhandledrejection", (event) => {
+  if (
+    event.reason?.name === "AbortError" ||
+    event.reason?.message?.toLowerCase().includes("aborted")
+  ) {
+    event.preventDefault();
+    return;
+  }
+  if (import.meta.env.DEV) {
+    console.error("[App] Unhandled rejection:", event.reason);
+  }
+});
+
+window.addEventListener("error", (event) => {
+  if (
+    event.filename?.includes("google") ||
+    event.filename?.includes("gtag") ||
+    event.filename?.includes("gsi")
+  ) {
+    event.preventDefault();
+    return;
+  }
+  if (import.meta.env.DEV) {
+    console.error("[App] Unhandled error:", event.error);
+  }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PERFORMANCE MARK
+// ─────────────────────────────────────────────────────────────────────────────
+
+if (import.meta.env.DEV) {
+  performance.mark("app:init:start");
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ROOT ELEMENT
+// ─────────────────────────────────────────────────────────────────────────────
+
+const rootElement = document.getElementById("root");
+
+if (!rootElement) {
+  throw new Error(
+    '[App] Root element "#root" not found. Check your index.html.'
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RENDER
+// ─────────────────────────────────────────────────────────────────────────────
+
+ReactDOM.createRoot(rootElement).render(
+  <React.StrictMode>
+    <BrowserRouter
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
+      <HelmetProvider>
+        <AppProvider>
+          <ToastProvider>
+            <UserAuthProvider>
+              <WishlistProvider>
+                <App />
+              </WishlistProvider>
+            </UserAuthProvider>
+          </ToastProvider>
+        </AppProvider>
+      </HelmetProvider>
+    </BrowserRouter>
+  </React.StrictMode>
+);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// POST-RENDER
+// ─────────────────────────────────────────────────────────────────────────────
+
+if ("requestIdleCallback" in window) {
+  window.requestIdleCallback(initScrollObserver, { timeout: 3000 });
+} else {
+  setTimeout(initScrollObserver, 1000);
+}
+
+if (import.meta.env.DEV) {
+  performance.mark("app:init:end");
+  performance.measure("app:init", "app:init:start", "app:init:end");
+  const [measure] = performance.getEntriesByName("app:init");
+  if (measure) {
+    console.debug(`[App] Initialized in ${Math.round(measure.duration)}ms`);
+  }
+}

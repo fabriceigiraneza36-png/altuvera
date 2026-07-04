@@ -1,0 +1,129 @@
+/* Enhanced WhatsApp Button Styles */
+
+/* Custom scrollbar for modal */
+.whatsapp-modal::-webkit-scrollbar {
+  width: 5px;
+}
+
+.whatsapp-modal::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.whatsapp-modal::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  border-radius: 10px;
+}
+
+/* Input placeholder styling */
+.whatsapp-input::placeholder,
+.whatsapp-textarea::placeholder {
+  color: #aaa;
+  font-style: italic;
+}
+
+/* Focus visible for accessibility */
+.whatsapp-btn:focus-visible {
+  outline: 3px solid rgba(37, 211, 102, 0.5);
+  outline-offset: 2px;
+}
+
+/* Smooth transitions */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Animation keyframes */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.4); opacity: 0; }
+  100% { transform: scale(1); opacity: 0.6; }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Shimmer effect for loading states */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0) 0%,
+    rgba(255,255,255,0.5) 50%,
+    rgba(255,255,255,0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 380px) {
+  .whatsapp-modal-content {
+    padding: 12px !important;
+  }
+  
+  .whatsapp-preset-grid {
+    gap: 6px !important;
+  }
+  
+  .whatsapp-option-card {
+    padding: 12px !important;
+  }
+}
+
+/* Landscape mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+  .whatsapp-modal {
+    max-height: 95vh !important;
+  }
+  
+  .whatsapp-header {
+    padding: 12px !important;
+  }
+  
+  .whatsapp-icon-circle {
+    width: 40px !important;
+    height: 40px !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .whatsapp-floating-btn {
+    border: 3px solid #fff;
+  }
+  
+  .whatsapp-preset-btn {
+    border-width: 3px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Dark mode support (optional) */
+@media (prefers-color-scheme: dark) {
+  .whatsapp-modal {
+    /* Uncomment for dark mode support */
+    /* background-color: #1a1a1a;
+    color: #fff; */
+  }
+}
+
+/* Print styles - hide button */
+@media print {
+  .whatsapp-button-wrapper {
+    display: none !important;
+  }
+}
