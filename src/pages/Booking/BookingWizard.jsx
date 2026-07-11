@@ -1,14 +1,14 @@
-// src/pages/Booking/BookingWizard.jsx — COMPLETE REWRITE
-// ✅ step derived from PROP (not useParams) — 100% reliable
-// ✅ nextStep navigates correctly from review → contact
+// src/pages/Booking/BookingWizard.jsx
+// ─────────────────────────────────────────────────────────────────────────────
+// ✅ All state lives in BookingShell (survives step navigation)
+// ✅ This component is purely presentational — receives step as prop
+// ✅ nextStep / prevStep navigate via React Router
 // ✅ Shake animation on validation errors
-// ✅ localStorage persistence
+// ─────────────────────────────────────────────────────────────────────────────
 "use strict";
 
-import React, {
-  useState, useEffect, useMemo, useCallback, useRef,
-} from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useCallback, useEffect, useState } from "react";
+import { useNavigate }       from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 import GlobalStyles          from "./GlobalStyles";
@@ -24,11 +24,10 @@ import SuccessScreen         from "./components/SuccessScreen";
 import PageHeader            from "../../components/common/PageHeader";
 import AnimatedSection       from "../../components/common/AnimatedSection";
 
-import { useBookingPersistence }            from "../../hooks/useBookingPersistence";
-import { useBookingWizard }                 from "../../hooks/useBookingWizard";
-import { STEP_ROUTES, stepToPath }          from "./BookingRouter";
+import { useBookingCtx }            from "./BookingShell";
+import { STEP_ROUTES, stepToPath }  from "./BookingRouter";
 
-/* ── Constants ────────────────────────────────────────────────────────── */
+/* ── Constants ── */
 const HERO_IMAGE =
   "https://i.pinimg.com/1200x/c9/b9/bf/c9b9bf5b87a7ad8d09d900c681cd7214.jpg";
 
@@ -41,37 +40,7 @@ const TRUST_ITEMS = [
 
 const BG_PATTERN = `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23059669' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`;
 
-/* ── Step validation ──────────────────────────────────────────────────── */
-function validateStep(step, formData) {
-  const errors = {};
-  if (step === 0) {
-    if (!formData.countryId)
-      errors.countryId = "Please select a country";
-    if (!formData.isFlexible && !formData.startDate)
-      errors.startDate = "Please select a departure date";
-    if (formData.isFlexible && !(formData.flexibleMonths || []).length)
-      errors.flexibleMonths = "Please select at least one month";
-  }
-  if (step === 1) {
-    if (!formData.adults || parseInt(formData.adults, 10) < 1)
-      errors.adults = "At least 1 adult is required";
-    if (!formData.groupType)
-      errors.groupType = "Please select a group type";
-  }
-  // step 2 = Review — no validation required
-  if (step === 3) {
-    if (!formData.firstName?.trim()) errors.firstName = "First name is required";
-    if (!formData.lastName?.trim())  errors.lastName  = "Last name is required";
-    if (!formData.email?.trim())     errors.email     = "Email address is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))
-      errors.email = "Please enter a valid email";
-    if (!formData.phone?.trim())   errors.phone   = "Phone number is required";
-    if (!formData.country?.trim()) errors.country = "Your country is required";
-    if (!formData.agreeToTerms)    errors.agreeToTerms = "You must agree to the terms";
-  }
-  return errors;
-}
-
+/* ── Helpers ── */
 const extractMsg = (err) => {
   if (!err) return null;
   if (typeof err === "string") return err;
@@ -81,7 +50,7 @@ const extractMsg = (err) => {
   return String(err);
 };
 
-/* ── Sub-components ───────────────────────────────────────────────────── */
+/* ── Sub-components ── */
 const LoadingSpinner = () => (
   <div style={{ textAlign: "center", padding: "80px 24px" }}>
     <motion.div
@@ -129,9 +98,7 @@ const ErrorBanner = ({ error, onDismiss, onRetry, retryCount = 0 }) => {
                 background: "#dc2626", color: "#fff",
                 fontSize: 13, fontWeight: 700, cursor: "pointer",
               }}
-            >
-              🔄 Try Again
-            </button>
+            >🔄 Try Again</button>
           )}
           <a
             href="https://wa.me/250788000000"
@@ -142,14 +109,11 @@ const ErrorBanner = ({ error, onDismiss, onRetry, retryCount = 0 }) => {
               background: "#25D366", color: "#fff",
               fontSize: 13, fontWeight: 700, textDecoration: "none",
             }}
-          >
-            💬 WhatsApp
-          </a>
+          >💬 WhatsApp</a>
         </div>
       </div>
       <button
-        type="button" onClick={onDismiss}
-        aria-label="Dismiss"
+        type="button" onClick={onDismiss} aria-label="Dismiss"
         style={{
           position: "absolute", top: 10, right: 12,
           background: "none", border: "none",
@@ -162,75 +126,29 @@ const ErrorBanner = ({ error, onDismiss, onRetry, retryCount = 0 }) => {
 };
 
 /* ══════════════════════════════════════════════════════════════════════
-   BOOKING WIZARD
-   step prop is passed DIRECTLY from BookingRouter — no URL parsing needed
+   BOOKING WIZARD — presentational, consumes BookingCtx
 ══════════════════════════════════════════════════════════════════════ */
 const BookingWizard = ({ step: stepProp = 0, successMode = false }) => {
   const navigate    = useNavigate();
+  const ctx         = useBookingCtx();
 
-  /*
-   * currentStep comes DIRECTLY from the prop.
-   * When BookingRouter renders <BookingWizard step={2} /> we KNOW we're on step 2.
-   * No useParams(), no pathToStep() parsing — zero ambiguity.
-   */
+  const {
+    formData, setFormData,
+    errors,  setErrors,
+    touched, setTouched,
+    handleChange, handleBlur, handleInterestToggle,
+    shake, triggerShake, validateStep,
+    isSubmitting, submitError, setSubmitError,
+    retryCount, submissionRef, bookingEmail,
+    handleSubmit,
+    showResume, setShowResume,
+    handleResume, handleStartFresh,
+    getTripDuration, getTotalVisitors,
+    wizard, persistence,
+  } = ctx;
+
+  /* ── currentStep from prop ── */
   const currentStep = successMode ? -1 : stepProp;
-
-  /* ── Remote data (destinations, group types, etc.) ── */
-  const wizard = useBookingWizard();
-
-  /* ── Persistence ── */
-  const persistence = useBookingPersistence();
-
-  /* ── Form state — merge persistence on mount ── */
-  const [formData, setFormDataRaw] = useState(
-    () => ({ ...persistence.DEFAULT_FORM, ...persistence.formData }),
-  );
-
-  /* Fill wizard pre-filled values (user email etc.) once loaded */
-  const mergedOnce = useRef(false);
-  useEffect(() => {
-    if (wizard.loadingData || mergedOnce.current || !wizard.formData) return;
-    mergedOnce.current = true;
-    setFormDataRaw((prev) => {
-      const patch = {};
-      ["email", "firstName", "lastName", "phone"].forEach((f) => {
-        if (wizard.formData[f] && !prev[f]) patch[f] = wizard.formData[f];
-      });
-      return Object.keys(patch).length ? { ...prev, ...patch } : prev;
-    });
-  }, [wizard.loadingData, wizard.formData]);
-
-  /* ── Unified form setter ── */
-  const setFormData = useCallback((updater) => {
-    setFormDataRaw((prev) => {
-      const next = typeof updater === "function" ? updater(prev) : updater;
-      persistence.setFormData(next); // debounced localStorage
-      return next;
-    });
-  }, [persistence]);
-
-  /* ── Validation state ── */
-  const [errors,  setErrors]  = useState({});
-  const [touched, setTouched] = useState({});
-
-  /* ── Shake animation ── */
-  const [shake, setShake]     = useState(false);
-  const triggerShake = useCallback(() => {
-    setShake(true);
-    setTimeout(() => setShake(false), 600);
-  }, []);
-
-  /* ── Submit state ── */
-  const [submitError,   setSubmitError]   = useState(null);
-  const [retryCount,    setRetryCount]    = useState(0);
-  const [isSubmitting,  setIsSubmitting]  = useState(false);
-  const [submissionRef, setSubmissionRef] = useState(null);
-  const [bookingEmail,  setBookingEmail]  = useState(null);
-
-  /* ── Resume banner ── */
-  const [showResume, setShowResume] = useState(
-    () => persistence.hasSavedData && (persistence.currentStep ?? 0) > 0,
-  );
 
   /* ── Responsive ── */
   const [windowWidth, setWindowWidth] = useState(
@@ -251,49 +169,42 @@ const BookingWizard = ({ step: stepProp = 0, successMode = false }) => {
   const cardPad    = isMobile ? "24px 16px" : isTablet ? "40px 32px" : "52px 64px";
   const sectionPad = isMobile ? "32px 14px 80px" : isTablet ? "44px 24px 100px" : "64px 32px 120px";
 
-  /* ══════════════════════════════════════════════════════════════════
-     NAVIGATION — simple, direct, no ambiguity
-  ══════════════════════════════════════════════════════════════════ */
+  /* ── Navigation ── */
   const goToStep = useCallback((targetStep) => {
-    const slug = stepToPath(targetStep);  // e.g. 3 → "contact"
-    console.log(`[BookingWizard] goToStep(${targetStep}) → /booking/${slug}`);
+    const slug = stepToPath(targetStep);
     navigate(`/booking/${slug}`);
-    persistence.setCurrentStep(targetStep);
+    persistence.setCurrentStep?.(targetStep);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [navigate, persistence]);
 
-  /* ── NEXT ── */
   const nextStep = useCallback(() => {
-    console.log(`[BookingWizard] nextStep called, currentStep=${currentStep}`);
-
+    console.log("[BookingWizard] nextStep — currentStep:", currentStep);
     const errs = validateStep(currentStep, formData);
-    console.log(`[BookingWizard] validation errors:`, errs);
+    console.log("[BookingWizard] errors:", errs);
 
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
       setTouched(Object.fromEntries(Object.keys(errs).map((k) => [k, true])));
       triggerShake();
-      return; // stay on current step
+      /* Scroll to first error */
+      requestAnimationFrame(() => {
+        const el = document.querySelector("[role='alert']");
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+      return;
     }
 
     setErrors({});
     setTouched({});
+    goToStep(currentStep + 1);
+  }, [currentStep, formData, validateStep, setErrors, setTouched, triggerShake, goToStep]);
 
-    const next = currentStep + 1;
-    console.log(`[BookingWizard] advancing to step ${next}`);
-    goToStep(next);
-  }, [currentStep, formData, goToStep, triggerShake]);
-
-  /* ── PREV ── */
   const prevStep = useCallback(() => {
     if (currentStep > 0) goToStep(currentStep - 1);
   }, [currentStep, goToStep]);
 
-  /* ── Step click (progress stepper) ── */
   const handleStepClick = useCallback((targetStep) => {
-    // Always allow going back
     if (targetStep <= currentStep) { goToStep(targetStep); return; }
-    // Validate each step up to target
     for (let s = currentStep; s < targetStep; s++) {
       const errs = validateStep(s, formData);
       if (Object.keys(errs).length > 0) {
@@ -304,96 +215,15 @@ const BookingWizard = ({ step: stepProp = 0, successMode = false }) => {
       }
     }
     goToStep(targetStep);
-  }, [currentStep, formData, goToStep, triggerShake]);
+  }, [currentStep, formData, validateStep, setErrors, setTouched, triggerShake, goToStep]);
 
-  /* ── Field handlers ── */
-  const handleChange = useCallback((e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((p) => ({ ...p, [name]: type === "checkbox" ? checked : value }));
-    setErrors((p) => { const n = { ...p }; delete n[name]; return n; });
-  }, [setFormData]);
+  /* ── Derived ── */
+  const isSuccessView = successMode || currentStep === -1;
+  const isContactStep = currentStep === 3;
+  const isStepsView   = currentStep >= 0 && currentStep <= 2;
+  const STEPS_META    = STEP_ROUTES.map((r) => ({ label: r.label }));
 
-  const handleBlur = useCallback((e) => {
-    const { name } = e.target;
-    setTouched((p) => ({ ...p, [name]: true }));
-    const errs = validateStep(currentStep, formData);
-    if (errs[name]) setErrors((p) => ({ ...p, [name]: errs[name] }));
-  }, [currentStep, formData]);
-
-  const handleInterestToggle = useCallback((val) => {
-    setFormData((p) => ({
-      ...p,
-      interests: (p.interests || []).includes(val)
-        ? (p.interests || []).filter((i) => i !== val)
-        : [...(p.interests || []), val],
-    }));
-  }, [setFormData]);
-
-  /* ── Computed helpers ── */
-  const getTripDuration = useCallback(() => {
-    if (!formData.startDate || !formData.endDate) return null;
-    const d = Math.round(
-      (new Date(formData.endDate) - new Date(formData.startDate)) / 86400000,
-    );
-    return d > 0 ? d : null;
-  }, [formData.startDate, formData.endDate]);
-
-  const getTotalVisitors = useCallback(() =>
-    (parseInt(formData.adults,   10) || 0) +
-    (parseInt(formData.children, 10) || 0) +
-    (parseInt(formData.infants,  10) || 0),
-  [formData.adults, formData.children, formData.infants]);
-
-  /* ── Submit ── */
-  const handleSubmit = useCallback(async () => {
-    const errs = validateStep(3, formData);
-    if (Object.keys(errs).length > 0) {
-      setErrors(errs);
-      setTouched(Object.fromEntries(Object.keys(errs).map((k) => [k, true])));
-      triggerShake();
-      return;
-    }
-    setIsSubmitting(true);
-    setSubmitError(null);
-    try {
-      const result = await wizard.handleSubmit?.(formData);
-      const ref = result?.ref || result?.id || result?.bookingId
-        || wizard.submissionRef || null;
-      persistence.clearStorage();
-      setBookingEmail(formData.email);
-      setSubmissionRef(ref);
-      navigate("/booking/success", { replace: true });
-    } catch (err) {
-      setSubmitError(err);
-      setRetryCount((c) => c + 1);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [formData, wizard, persistence, navigate, triggerShake]);
-
-  /* ── Resume ── */
-  const handleResume = useCallback(() => {
-    setShowResume(false);
-    goToStep(persistence.currentStep ?? 0);
-  }, [persistence.currentStep, goToStep]);
-
-  const handleStartFresh = useCallback(() => {
-    persistence.clearStorage();
-    setFormDataRaw(persistence.DEFAULT_FORM);
-    setErrors({});
-    setTouched({});
-    setShowResume(false);
-    navigate("/booking/trip", { replace: true });
-  }, [persistence, navigate]);
-
-  /* ── What to show ── */
-  const isSuccessView  = successMode || currentStep === -1;
-  const isContactStep  = currentStep === 3;
-  const isStepsView    = currentStep >= 0 && currentStep <= 2;
-
-  const STEPS_META = STEP_ROUTES.map((r) => ({ label: r.label }));
-
-  /* ════════════════ LOADING ════════════════ */
+  /* ════════ LOADING ════════ */
   if (wizard.loadingData) {
     return (
       <>
@@ -416,7 +246,7 @@ const BookingWizard = ({ step: stepProp = 0, successMode = false }) => {
     );
   }
 
-  /* ════════════════ SUCCESS ════════════════ */
+  /* ════════ SUCCESS ════════ */
   if (isSuccessView) {
     return (
       <>
@@ -450,7 +280,7 @@ const BookingWizard = ({ step: stepProp = 0, successMode = false }) => {
     );
   }
 
-  /* ════════════════ MAIN FORM ════════════════ */
+  /* ════════ MAIN ════════ */
   return (
     <>
       <GlobalStyles />
@@ -472,14 +302,13 @@ const BookingWizard = ({ step: stepProp = 0, successMode = false }) => {
         position: "relative",
         overflow: "hidden",
       }}>
+        {/* Background decoration */}
         <div aria-hidden="true" style={{
           position: "absolute", inset: 0,
           backgroundImage: BG_PATTERN,
           pointerEvents: "none", zIndex: 0,
         }} />
-
         <FloatingParticles />
-
         <motion.div aria-hidden="true"
           animate={{ scale: [1, 1.08, 1], rotate: [0, 4, 0] }}
           transition={{ duration: 18, repeat: Infinity, ease: "easeInOut" }}
@@ -523,8 +352,8 @@ const BookingWizard = ({ step: stepProp = 0, successMode = false }) => {
                   savedAt={persistence.savedAt}
                   step={persistence.currentStep}
                   stepLabel={STEP_ROUTES[persistence.currentStep ?? 0]?.label}
-                  onResume={handleResume}
-                  onStartFresh={handleStartFresh}
+                  onResume={() => handleResume(navigate)}
+                  onStartFresh={() => handleStartFresh(navigate)}
                   isMobile={isMobile}
                 />
               </motion.div>
@@ -541,12 +370,10 @@ const BookingWizard = ({ step: stepProp = 0, successMode = false }) => {
             />
           </AnimatedSection>
 
-          {/* Main card with shake on error */}
+          {/* Main card — shake on validation error */}
           <AnimatedSection animation="fadeInUp" delay={0.1}>
             <motion.div
-              animate={shake
-                ? { x: [-10, 10, -8, 8, -5, 5, -2, 2, 0] }
-                : { x: 0 }}
+              animate={shake ? { x: [-10, 10, -8, 8, -5, 5, -2, 2, 0] } : { x: 0 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
             >
               <GlassCard glow style={{ padding: cardPad }}>
@@ -556,19 +383,12 @@ const BookingWizard = ({ step: stepProp = 0, successMode = false }) => {
                     <ErrorBanner
                       error={submitError}
                       onDismiss={() => setSubmitError(null)}
-                      onRetry={() => { setSubmitError(null); handleSubmit(); }}
+                      onRetry={() => { setSubmitError(null); handleSubmit(navigate); }}
                       retryCount={retryCount}
                     />
                   )}
                 </AnimatePresence>
 
-                {/*
-                 * KEY POINT:
-                 * We use `currentStep` as the AnimatePresence key.
-                 * Because currentStep comes from the PROP (which changes
-                 * when React Router renders a different route component),
-                 * this will always animate correctly.
-                 */}
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={`wizard-step-${currentStep}`}
@@ -580,7 +400,7 @@ const BookingWizard = ({ step: stepProp = 0, successMode = false }) => {
                     <form
                       onSubmit={(e) => {
                         e.preventDefault();
-                        if (isContactStep) handleSubmit();
+                        if (isContactStep) handleSubmit(navigate);
                         else nextStep();
                       }}
                       noValidate
@@ -598,15 +418,15 @@ const BookingWizard = ({ step: stepProp = 0, successMode = false }) => {
                           isMobile={isMobile}
                           isTablet={isTablet}
                           displayName={wizard.displayName}
-                          categoriesList={wizard.categoriesList   || []}
+                          categoriesList={wizard.categoriesList    || []}
                           destinationsList={wizard.destinationsList || []}
-                          countriesList={wizard.countriesList     || []}
-                          servicesData={wizard.servicesData       || []}
+                          countriesList={wizard.countriesList      || []}
+                          servicesData={wizard.servicesData        || []}
                           getTripDuration={getTripDuration}
-                          groupTypes={wizard.groupTypes           || []}
+                          groupTypes={wizard.groupTypes            || []}
                           accommodationTypes={wizard.accommodationTypes || []}
                           getTotalVisitors={getTotalVisitors}
-                          interests={wizard.interests             || []}
+                          interests={wizard.interests              || []}
                           handleInterestToggle={handleInterestToggle}
                           nextStep={nextStep}
                           prevStep={prevStep}
@@ -633,13 +453,13 @@ const BookingWizard = ({ step: stepProp = 0, successMode = false }) => {
                           isAuthenticated={wizard.isAuthenticated}
                           openModal={wizard.openModal}
                           isSubmitting={isSubmitting}
-                          onSubmit={handleSubmit}
+                          onSubmit={() => handleSubmit(navigate)}
                           prevStep={prevStep}
                           isMobile={isMobile}
                           submitError={submitError}
                           destinationsList={wizard.destinationsList || []}
-                          groupTypes={wizard.groupTypes           || []}
-                          countriesList={wizard.countriesList     || []}
+                          groupTypes={wizard.groupTypes            || []}
+                          countriesList={wizard.countriesList      || []}
                         />
                       )}
                     </form>

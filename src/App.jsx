@@ -19,7 +19,6 @@ import {
 } from "react-router-dom";
 import { useApp }             from "./context/AppContext";
 import { useUserAuth }        from "./context/UserAuthContext";
-import { MessagingProvider }  from "./context/MessagingContext";
 import ErrorBoundary          from "./components/common/ErrorBoundary";
 import countryService         from "./services/countryService";
 import GoogleCallbackPage     from "./pages/GoogleCallbackPage";
@@ -113,11 +112,6 @@ const publicRoutes = [
   path: "/reviews",
   component: React.lazy(() => import("./components/auth/UserReviews")),
   meta: { title: "My Reviews", noindex: true },
-},
-{
-  path: "/messages",
-  component: React.lazy(() => import("./components/auth/UserMessages")),
-  meta: { title: "Messages", noindex: true },
 },
 {
   path: "/checklist",
@@ -1002,11 +996,9 @@ function App() {
 // ============================================================================
 
 const AppWithProviders = () => (
-  <MessagingProvider>
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>
-  </MessagingProvider>
+  <ErrorBoundary>
+    <App />
+  </ErrorBoundary>
 );
 
 export default AppWithProviders;

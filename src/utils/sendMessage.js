@@ -4,7 +4,6 @@
  * Uses toAbsoluteApiUrl from apiBase — never doubles /api.
  *
  *   sendContactForm(formData)   → POST /api/contact
- *   sendChatMessage(opts)       → POST /api/messages/send
  *   submitBookingRequest(f, t)  → POST /api/bookings
  *   sendMessage                 → alias of sendContactForm
  * ═══════════════════════════════════════════════════════════════════════════
@@ -219,8 +218,7 @@ export const sendContactForm = async (formData) => {
     (k) => payload[k] === undefined && delete payload[k]
   );
 
-  // Link this contact inquiry to the live-chat conversation so the user
-  // can see the team's replies inside the messaging portal.
+  // Attach any stored session id (used for continuity on the backend)
   try {
     const sid = localStorage.getItem("atv_session_id");
     if (sid) payload.sessionId = sid;
@@ -230,33 +228,7 @@ export const sendContactForm = async (formData) => {
   return postJSON("/contact", payload);
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 2. CHAT MESSAGE  →  POST /api/messages/send
-// ═══════════════════════════════════════════════════════════════════════════
-
-export const sendChatMessage = async ({
-  conversationId,
-  body,
-  sessionId,
-  token,
-  metadata = {},
-}) => {
-  if (!conversationId) throw new Error("conversationId is required.");
-  if (!body?.trim())   throw new Error("Message body is required.");
-
-  return postJSON(
-    "/messages/send",
-    {
-      conversationId: Number(conversationId),
-      body:           body.trim(),
-      sessionId:      sessionId || undefined,
-      metadata:       { ...metadata, source: "http-fallback" },
-    },
-    token
-  );
-};
-
-// ═══════════════════════════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════════
 // 3. BOOKING REQUEST  →  POST /api/bookings
 // ═══════════════════════════════════════════════════════════════════════════
 

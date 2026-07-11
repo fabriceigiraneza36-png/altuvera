@@ -8,17 +8,14 @@ import {
   FiLogOut,
   FiCalendar,
   FiSettings,
-  FiMessageCircle,
   FiChevronDown,
 } from "react-icons/fi";
 import { useApp } from "../../context/AppContext";
 import { useUserAuth } from "../../context/UserAuthContext";
-import { useMessaging } from "../../context/MessagingContext";
 import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 import { preloadRoute } from "../../utils/routeUtils";
 import { getCountrySlug } from "../../utils/countrySlugMap";
 import { useCountries } from "../../hooks/useCountries";
-import MessagePortal from "../messaging/MessagePortal";
 import "./Navbar.css";
 
 const cn = (...c) => c.filter(Boolean).join(" ");
@@ -43,14 +40,6 @@ const Navbar = () => {
   const { user, isAuthenticated, authLoading, openModal, logout } =
     useUserAuth();
   const { countries: backendCountries } = useCountries({ limit: 12 });
-  const {
-    openPortal,
-    closePortal,
-    isOpen: isChatOpen,
-    unreadCount: chatUnread,
-    connectionState,
-    adminOnline,
-  } = useMessaging();
 
   const headerRef = useRef(null);
   const userMenuRef = useRef(null);
@@ -353,20 +342,14 @@ const Navbar = () => {
     return p === "google" ? "Google" : p === "github" ? "GitHub" : "Email";
   }, [user?.authProvider]);
 
-  const handleLogout = useCallback(() => {
+    const handleLogout = useCallback(() => {
     closeAll();
     logout();
     navigate("/");
   }, [closeAll, logout, navigate]);
 
-  /* ── Chat button class ── */
-  const chatBtnClass = cn(
-    "nav__icon-btn nav__chat-btn",
-    connectionState === "connected" && "nav__chat-btn--online",
-    chatUnread > 0 && "nav__chat-btn--unread",
-  );
-
-  /* ════════════════════════════════════════════════════════════════════════
+  /* ════════════════════════════════════════════════════════════
+════════════
      RENDER
   ════════════════════════════════════════════════════════════════════════ */
   return (
@@ -548,29 +531,6 @@ const Navbar = () => {
                 <span className="nav__icon-ripple" />
               </span>
             </Link>
-
-            {/* ── LIVE CHAT BUTTON ── */}
-            <button
-              className={chatBtnClass}
-              onClick={isChatOpen ? closePortal : openPortal}
-              aria-label="Live Chat"
-              title={
-                connectionState === "connected" && adminOnline
-                  ? "Support is online — Chat now"
-                  : "Live Chat"
-              }
-            >
-              <FiMessageCircle size={19} />
-              {chatUnread > 0 && (
-                <span className="nav__badge nav__badge--chat">
-                  {chatUnread > 9 ? "9+" : chatUnread}
-                </span>
-              )}
-              {connectionState === "connected" && adminOnline && (
-                <span className="nav__chat-online-dot" />
-              )}
-              <span className="nav__icon-ripple" />
-            </button>
 
             {/* Auth area */}
             {authLoading ? (
@@ -915,26 +875,6 @@ const Navbar = () => {
 
           <div className="mm__divider" />
 
-          {/* ── Mobile Chat Button ── */}
-          <button
-            className="mm__chat-btn"
-            onClick={() => {
-              setIsMobileMenuOpen(false);
-              openPortal();
-            }}
-          >
-            <FiMessageCircle size={20} />
-            <span>Live Support Chat</span>
-            {chatUnread > 0 && (
-              <span className="mm__chat-badge">
-                {chatUnread > 9 ? "9+" : chatUnread}
-              </span>
-            )}
-            {connectionState === "connected" && adminOnline && (
-              <span className="mm__chat-online">● Online</span>
-            )}
-          </button>
-
           <div className="mm__auth">
             {isAuthenticated ? (
               <>
@@ -1007,9 +947,6 @@ const Navbar = () => {
           </Link>
         </div>
       </aside>
-
-      {/* ── MESSAGE PORTAL ── */}
-      <MessagePortal />
     </>
   );
 };

@@ -538,8 +538,8 @@ const VIDEO_PLAYLIST = [
 ];
 
 const INTRO_SIDE_IMAGES = [
-  { src: "https://i.pinimg.com/736x/8b/8b/61/8b8b61c3e5aa4d7e96b4bc15e26aba78.jpg", alt: "African Culture" },
-  { src: "https://i.pinimg.com/1200x/33/b4/bc/33b4bc7083952ab04349188419bbcdcb.jpg", alt: "Safari Landscape" },
+  { src: "https://i.pinimg.com/736x/aa/c0/4c/aac04c789034e5993003ddc53818a06d.jpg", alt: "East African Culture" },
+  { src: "https://i.pinimg.com/1200x/8f/f4/63/8ff463499be98f73c3c9626985e674ee.jpg", alt: "Safari Landscape" },
 ];
 
 /* ═══════════════════════════════════════════
@@ -1628,21 +1628,21 @@ const Home = () => {
       description: "Rwanda offers one of Africa's most exclusive wildlife experiences. Trek through the misty forests of Volcanoes National Park to meet endangered mountain gorillas.",
       bullets: ["World-famous mountain gorilla trekking", "Nyungwe Forest canopy walk & chimpanzee tracking", "Big Five safaris in Akagera National Park", "Luxury eco-lodges with expert local guides"],
       ctaLabel: "Explore Rwanda", link: "/country/rwanda",
-      images: ["https://i.pinimg.com/736x/8a/3d/69/8a3d695b613a5f68bc14cb3507d7ec9d.jpg", "https://i.pinimg.com/1200x/47/49/a6/4749a673fd707e5f24b78d530ec65265.jpg", "https://i.pinimg.com/736x/46/fe/c8/46fec850388090f1f6bbdd4246b9a049.jpg],"],
+      images: ["https://i.pinimg.com/1200x/5d/1a/90/5d1a90a3a3f9ad6bcddf570344ff2fc4.jpg", "https://i.pinimg.com/1200x/73/f0/ee/73f0ee6d0c2fab1906c16ce20c251f56.jpg", "https://i.pinimg.com/736x/1b/b0/93/1bb093429a44a95a21befac22cb424ad.jpg"],
     },
     {
       title: "Witness the Great Migration & Conquer Africa's Highest Peak",
       description: "From the endless plains of the Serengeti to the snow-capped summit of Mount Kilimanjaro, Tanzania delivers bucket-list adventures.",
       bullets: ["The Great Wildebeest Migration in Serengeti", "Mount Kilimanjaro climbing expeditions", "Ngorongoro Crater Big Five safaris", "Zanzibar beach escapes & cultural tours"],
       ctaLabel: "Explore Tanzania", link: "/country/tanzania",
-      images: ["https://i.pinimg.com/1200x/cc/86/5b/cc865b52a3d1cce78d91e973ba8507da.jpg", "https://i.pinimg.com/736x/3e/f8/62/3ef8623a8cc3a998f5781b1f6e9a6352.jpg", "https://i.pinimg.com/736x/c6/9c/61/c69c61402e05bd6adee85a4bcfcc8bc4.jpg"],
+      images: ["https://i.pinimg.com/1200x/d7/c2/55/d7c255030d2c381093145fc8409270b0.jpg", "https://i.pinimg.com/1200x/7c/5b/d9/7c5bd9c6303f68eec25ff948f1b0f11e.jpg", "https://i.pinimg.com/1200x/7b/7f/33/7b7f33e40af1ff8d756c610703f32f6e.jpg"],
     },
     {
       title: "Experience Legendary Safaris & Coastal Paradise",
       description: "Kenya combines iconic wildlife encounters with spectacular landscapes and pristine Indian Ocean beaches.",
       bullets: ["Maasai Mara Great Migration safaris", "Amboseli elephant encounters with Kilimanjaro views", "Sunrise hot-air balloon adventures", "Diani Beach & Swahili coastal experiences"],
       ctaLabel: "Explore Kenya", link: "/country/kenya",
-      images: ["https://i.pinimg.com/736x/b7/0a/30/b70a3053497810dd71c003ce63ab1fd7.jpg"],
+      images: ["https://i.pinimg.com/1200x/f1/39/4e/f1394ec9513f84684ccdb41fea97d4f9.jpg","https://i.pinimg.com/1200x/0f/c4/6f/0fc46fc0a5e286b126ab6e78697c5e5f.jpg", "https://i.pinimg.com/736x/cc/5f/49/cc5f496af04db30b07c3559d5a708cb7.jpg"],
     },
   ], []);
 

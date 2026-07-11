@@ -10,14 +10,13 @@ import {
   MapPin, Clock, Users, Star, ChevronLeft, ChevronRight,
   ChevronDown, Check, X, BookOpen, Heart, Share2, Loader2,
   Package, Phone, Mail, User, Sparkles, Shield, CheckCircle,
-  XCircle, AlertCircle, Info, Camera, MessageCircle,
+  XCircle, AlertCircle, Info, Camera,
   ArrowRight, Zap, Globe, Calendar, Mountain, Compass,
   Award, TrendingUp, Coffee, Sun, Wind, Leaf,
 } from 'lucide-react'
 import { packagesAPI } from '../api/packages'
 import { createBooking } from '../api/bookingApi'
 import { useUserAuth }  from '../context/UserAuthContext'
-import { useMessaging } from '../context/MessagingContext'
 
 /* ── helpers ─────────────────────────────────────────────────────────── */
 const fmtPrice = (price, currency = 'USD') => {
@@ -1206,7 +1205,6 @@ function ErrorState({ message }) {
 export default function PackageDetail() {
   const { slug }                  = useParams()
   const { user }                  = useUserAuth()
-  const { openPortal }            = useMessaging()
 
   const [pkg,       setPkg]       = useState(null)
   const [loading,   setLoading]   = useState(true)
@@ -1252,20 +1250,6 @@ export default function PackageDetail() {
       })
       .finally(() => setLoading(false))
   }, [slug])
-
-  const handleAskSupport = useCallback(() => {
-    if (!pkg) return
-    openPortal({
-      id:          pkg.id,
-      title:       pkg.title,
-      slug:        pkg.slug,
-      image:       pkg.cover_image_url || pkg.thumbnail_url || null,
-      destination: pkg.destination     || null,
-      price:       Number(pkg.price)   || null,
-      priceLabel:  pkg.price_label     || 'per person',
-      currency:    pkg.currency        || 'USD',
-    })
-  }, [pkg, openPortal])
 
   const toggleWishlist = () => {
     if (!pkg) return
@@ -1476,21 +1460,20 @@ export default function PackageDetail() {
               </button>
 
               <button
-                onClick={handleAskSupport}
+                onClick={handleShare}
                 style={{
                   display: 'flex', alignItems: 'center', gap: 7,
                   padding: '9px 18px', borderRadius: 12,
-                  background: 'linear-gradient(135deg, #059669, #065f46)',
-                  color: 'white', border: 'none',
-                  fontWeight: 700, fontSize: 13.5, cursor: 'pointer',
-                  boxShadow: '0 4px 16px rgba(5,150,105,0.28)',
-                  transition: 'all 0.25s',
-                  marginLeft: 'auto',
+                  background: 'rgba(255,255,255,0.10)',
+                  border: '1.5px solid rgba(255,255,255,0.18)',
+                  color: 'white', fontSize: 13.5, fontWeight: 600,
+                  cursor: 'pointer', transition: 'all 0.2s',
                 }}
-                onMouseOver={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(5,150,105,0.38)' }}
-                onMouseOut={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(5,150,105,0.28)' }}
+                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.18)'}
+                onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.10)'}
               >
-                <MessageCircle size={15} /> Ask Support
+                {copied ? <Check size={15} /> : <Share2 size={15} />}
+                {copied ? 'Copied!' : 'Share'}
               </button>
 
               {pkg.is_sold_out && (
@@ -1858,24 +1841,6 @@ export default function PackageDetail() {
                 </div>
               )}
 
-              {/* Chat button */}
-              <button
-                onClick={handleAskSupport}
-                style={{
-                  width: '100%', padding: '12px 20px', borderRadius: 14,
-                  background: 'rgba(255,255,255,0.10)',
-                  border: '1.5px solid rgba(255,255,255,0.18)',
-                  color: 'white', fontSize: 14, fontWeight: 600,
-                  cursor: 'pointer', display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', gap: 8,
-                  transition: 'all 0.2s', marginBottom: 0,
-                  backdropFilter: 'blur(8px)',
-                }}
-                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.18)'}
-                onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.10)'}
-              >
-                <MessageCircle size={16} /> Ask about this package
-              </button>
             </div>
 
             {/* Pricing tiers */}
@@ -1934,12 +1899,12 @@ export default function PackageDetail() {
                   <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 18, lineHeight: 1.6 }}>
                     This package is fully booked. Contact us to join the waitlist.
                   </p>
-                  <button
-                    onClick={handleAskSupport}
+                  <a
+                    href="/contact"
                     className="pkd-cta"
                   >
-                    <MessageCircle size={16} /> Chat with Us
-                  </button>
+                    Contact Us
+                  </a>
                 </div>
               ) : (
                 <BookingForm pkg={pkg} user={user} />

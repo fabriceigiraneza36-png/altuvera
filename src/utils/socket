@@ -1,0 +1,298 @@
+// ============================================================================
+// src/utils/socket.js
+// Socket.IO client utility — matches usage in UserAuthContext + useNotifications
+// ============================================================================
+
+import { io } from "socket.io-client";
+
+// ── Config ────────────────────────────────────────────────────────────────────
+
+const SOCKET_URL =
+  import.meta.env.VITE_SOCKET_URL ||
+  (import.meta.env.VITE_API_URL
+    ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, "")
+    : "https://backend-jd8f.onrender.com");
+
+const TOKEN_KEY = "altuvera_auth_token";
+
+// ── State ─────────────────────────────────────────────────────────────────────
+
+/** @type {import('socket.io-client').Socket | null} */
+let socket = null;
+
+/** Whether a connection attempt is in progress */
+let connecting = false;
+
+/** Queued callbacks waiting for the socket to be ready */
+let readyCallbacks = [];
+
+// ── Internal helpers ──────────────────────────────────────────────────────────
+
+const getStoredToken = () => {
+  try {
+    return (
+      localStorage.getItem(TOKEN_KEY) ||
+      sessionStorage.getItem(TOKEN_KEY) ||
+      null
+    );
+  } catch {
+    return null;
+  }
+};
+
+const flushReadyCallbacks = () => {
+  const cbs = readyCallbacks.slice();
+  readyCallbacks = [];
+  cbs.forEach((cb) => {
+    try {
+      cb(socket);
+    } catch (err) {
+      console.warn("[Socket] Ready callback error:", err.message);
+    }
+  });
+};
+
+// ── Public API ────────────────────────────────────────────────────────────────
+
+/**
+ * Connect to the Socket.IO server.
+ *
+ * Safe to call multiple times — returns the existing socket if already
+ * connected or connecting.  Accepts an optional auth token; if omitted,
+ * falls back to the value stored in localStorage / sessionStorage.
+ *
+ * @param {string}  [token]   - JWT access token (optional)
+ * @param {object}  [options] - Extra socket.io-client options (optional)
+ * @returns {import('socket.io-client').Socket}
+ */
+export const connectSocket = (token, options = {}) => {
+  // Return existing live socket immediately
+  if (socket && socket.connected) {
+    return socket;
+  }
+
+  // If a socket exists but is disconnected, reconnect it
+  if (socket && !socket.connected && !connecting) {
+    const authToken = token || getStoredToken();
+    if (authToken) {
+      socket.auth = { token: authToken };
+    }
+    socket.connect();
+    return socket;
+  }
+
+  // Already connecting — return the pending socket
+  if (connecting && socket) {
+    return socket;
+  }
+
+  connecting = true;
+  const authToken = token || getStoredToken();
+
+  socket = io(SOCKET_URL, {
+    // Auth payload — backend reads socket.handshake.auth.token
+    auth: authToken ? { token: authToken } : {},
+
+    // Prefer WebSocket, fall back to polling
+    transports: ["websocket", "polling"],
+
+    // Reconnection strategy
+    reconnection: true,
+    reconnectionAttempts: 8,
+    reconnectionDelay: 1_000,
+    reconnectionDelayMax: 30_000,
+    randomizationFactor: 0.5,
+
+    // Connection timeout
+    timeout: 20_000,
+
+    // Keep connection alive
+    forceNew: false,
+    multiplex: true,
+
+    // Spread any caller overrides
+    ...options,
+  });
+
+  // ── Socket event handlers ────────────────────────────────────────────────
+
+  socket.on("connect", () => {
+    connecting = false;
+    if (import.meta.env.DEV) {
+      console.info("[Socket] Connected:", socket.id);
+    }
+    flushReadyCallbacks();
+  });
+
+  socket.on("disconnect", (reason) => {
+    if (import.meta.env.DEV) {
+      console.info("[Socket] Disconnected:", reason);
+    }
+    // Socket.IO auto-reconnects for most reasons except these
+    if (
+      reason === "io server disconnect" ||
+      reason === "io client disconnect"
+    ) {
+      connecting = false;
+    }
+  });
+
+  socket.on("connect_error", (err) => {
+    connecting = false;
+    if (import.meta.env.DEV) {
+      console.warn("[Socket] Connection error:", err.message);
+    }
+  });
+
+  socket.on("reconnect", (attempt) => {
+    if (import.meta.env.DEV) {
+      console.info("[Socket] Reconnected after", attempt, "attempt(s)");
+    }
+    // Re-send auth token on reconnect in case it changed
+    const freshToken = token || getStoredToken();
+    if (freshToken && socket) {
+      socket.auth = { token: freshToken };
+    }
+    flushReadyCallbacks();
+  });
+
+  socket.on("reconnect_error", (err) => {
+    if (import.meta.env.DEV) {
+      console.warn("[Socket] Reconnect error:", err.message);
+    }
+  });
+
+  socket.on("reconnect_failed", () => {
+    connecting = false;
+    console.error(
+      "[Socket] Reconnection failed after maximum attempts. " +
+        "Real-time features will be unavailable until page refresh.",
+    );
+  });
+
+  // Generic server-sent error event (optional — backend may emit this)
+  socket.on("error", (err) => {
+    if (import.meta.env.DEV) {
+      console.warn("[Socket] Server error event:", err);
+    }
+  });
+
+  return socket;
+};
+
+/**
+ * Disconnect and destroy the current socket.
+ * Clears the singleton so the next call to connectSocket() creates a fresh one.
+ */
+export const disconnectSocket = () => {
+  if (!socket) return;
+
+  try {
+    // Remove all listeners before disconnecting to prevent memory leaks
+    socket.removeAllListeners();
+    socket.disconnect();
+  } catch (err) {
+    if (import.meta.env.DEV) {
+      console.warn("[Socket] Error during disconnect:", err.message);
+    }
+  } finally {
+    socket = null;
+    connecting = false;
+    readyCallbacks = [];
+  }
+};
+
+/**
+ * Get the current socket instance without creating one.
+ *
+ * Returns `null` if no socket has been created yet or after disconnectSocket()
+ * has been called.
+ *
+ * @returns {import('socket.io-client').Socket | null}
+ */
+export const getSocket = () => socket;
+
+/**
+ * Returns a Promise that resolves with the socket once it is connected.
+ *
+ * If the socket is already connected, resolves immediately.
+ * If no socket exists, calls connectSocket() first.
+ *
+ * Useful for one-shot operations that need to wait for the connection.
+ *
+ * @param {string}  [token]       - JWT token (forwarded to connectSocket)
+ * @param {number}  [timeoutMs]   - Max ms to wait (default 15 000)
+ * @returns {Promise<import('socket.io-client').Socket>}
+ */
+export const waitForSocket = (token, timeoutMs = 15_000) =>
+  new Promise((resolve, reject) => {
+    const s = socket && socket.connected ? socket : connectSocket(token);
+
+    if (s.connected) {
+      resolve(s);
+      return;
+    }
+
+    let timer = null;
+
+    const onConnect = () => {
+      clearTimeout(timer);
+      resolve(s);
+    };
+
+    timer = setTimeout(() => {
+      s.off("connect", onConnect);
+      reject(
+        new Error(
+          `[Socket] waitForSocket timed out after ${timeoutMs}ms`,
+        ),
+      );
+    }, timeoutMs);
+
+    s.once("connect", onConnect);
+  });
+
+/**
+ * Update the auth token on the live socket without reconnecting.
+ *
+ * Call this after a token refresh so the next reconnection attempt
+ * uses the new token.
+ *
+ * @param {string} token - New JWT access token
+ */
+export const updateSocketAuth = (token) => {
+  if (!token) return;
+  if (socket) {
+    socket.auth = { token };
+  }
+};
+
+/**
+ * Register a callback that fires as soon as the socket is connected.
+ * If already connected, the callback runs synchronously.
+ *
+ * @param {(socket: import('socket.io-client').Socket) => void} cb
+ */
+export const onSocketReady = (cb) => {
+  if (typeof cb !== "function") return;
+  if (socket && socket.connected) {
+    try {
+      cb(socket);
+    } catch (err) {
+      console.warn("[Socket] onSocketReady callback error:", err.message);
+    }
+    return;
+  }
+  readyCallbacks.push(cb);
+};
+
+// ── Default export (convenience) ──────────────────────────────────────────────
+
+export default {
+  connectSocket,
+  disconnectSocket,
+  getSocket,
+  waitForSocket,
+  updateSocketAuth,
+  onSocketReady,
+};

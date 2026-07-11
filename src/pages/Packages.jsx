@@ -14,7 +14,6 @@ import {
   ChevronRight, RefreshCw, Mountain, Compass, Leaf,
   Award, Wind, Coffee, Bookmark, ChevronDown,
 } from 'lucide-react'
-import { useMessaging } from '../context/MessagingContext'
 
 /* ── API ─────────────────────────────────────────────────────────────── */
 const API_BASE =
@@ -560,19 +559,6 @@ const GridCard = React.memo(function GridCard({
           </div>
 
           <div style={{ display: 'flex', gap: 7, alignItems: 'center' }}>
-            <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAsk?.(pkg) }}
-              style={{
-                width: 36, height: 36, borderRadius: 10,
-                border: '1.5px solid #a7f3d0', background: '#f0fdf4',
-                color: '#059669', display: 'flex', alignItems: 'center',
-                justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s',
-              }}
-              onMouseOver={e => { e.currentTarget.style.background = '#059669'; e.currentTarget.style.color = 'white' }}
-              onMouseOut={e => { e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.color = '#059669' }}
-            >
-              <MessageCircle size={14} />
-            </button>
             <span className="pkg-cta" style={{ padding: '9px 18px', fontSize: 12.5 }}>
               View <ArrowRight size={12} />
             </span>
@@ -734,20 +720,6 @@ const ListCard = React.memo(function ListCard({
           </div>
 
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            <button
-              onClick={(e) => { e.preventDefault(); e.stopPropagation(); onAsk?.(pkg) }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                padding: '9px 16px', borderRadius: 11,
-                border: '1.5px solid #a7f3d0', background: '#f0fdf4',
-                color: '#059669', fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
-                transition: 'all 0.2s', fontFamily: 'inherit',
-              }}
-              onMouseOver={e => { e.currentTarget.style.background = '#059669'; e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = '#059669' }}
-              onMouseOut={e => { e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.color = '#059669'; e.currentTarget.style.borderColor = '#a7f3d0' }}
-            >
-              <MessageCircle size={13} /> Ask
-            </button>
             <span className="pkg-cta">
               View Details <ArrowRight size={13} />
             </span>
@@ -1258,7 +1230,6 @@ function ErrorState({ error, onRetry }) {
 export default function Packages() {
   useEffect(injectStyles, [])
 
-  const { openPortal } = useMessaging()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [packages,    setPackages]    = useState([])
@@ -1348,19 +1319,6 @@ export default function Packages() {
       return n
     })
   }, [])
-
-  const handleAsk = useCallback((pkg) => {
-    openPortal({
-      id:          pkg.id,
-      title:       pkg.title,
-      slug:        pkg.slug,
-      image:       pkg.cover_image_url || pkg.thumbnail_url || null,
-      destination: pkg.destination || null,
-      price:       Number(pkg.price) || null,
-      priceLabel:  pkg.price_label  || 'per person',
-      currency:    pkg.currency     || 'USD',
-    })
-  }, [openPortal])
 
   const handleReset = useCallback(() => {
     setSearch(''); setCategory(''); setDuration('')
@@ -1576,7 +1534,7 @@ export default function Packages() {
                     {packages.map((pkg, i) => (
                       <GridCard
                         key={pkg.id} pkg={pkg} index={i}
-                        wishlist={wishlist} onWishlist={handleWishlist} onAsk={handleAsk}
+                        wishlist={wishlist} onWishlist={handleWishlist}
                       />
                     ))}
                   </div>
@@ -1585,7 +1543,7 @@ export default function Packages() {
                     {packages.map((pkg, i) => (
                       <ListCard
                         key={pkg.id} pkg={pkg} index={i}
-                        wishlist={wishlist} onWishlist={handleWishlist} onAsk={handleAsk}
+                        wishlist={wishlist} onWishlist={handleWishlist}
                       />
                     ))}
                   </div>

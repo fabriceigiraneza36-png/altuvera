@@ -2,6 +2,7 @@
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import BookingWizard from "./BookingWizard";
+import BookingShell  from "./BookingShell";   // ← new shared wrapper
 
 export const STEP_ROUTES = [
   { path: "trip",      step: 0, label: "Trip Details" },
@@ -22,23 +23,20 @@ export const pathToStep = (slug) => {
 };
 
 /**
- * Each step gets its OWN explicit route so React Router
- * always knows which step we're on — no ambiguity.
+ * BookingShell owns ALL shared state.
+ * BookingWizard receives step as a prop — no remounting issues.
  */
 const BookingRouter = () => (
   <Routes>
-    {/* Default → trip */}
-    <Route index element={<Navigate to="trip" replace />} />
-
-    {/* Step routes — each passes step number directly as prop */}
-    <Route path="trip"      element={<BookingWizard step={0} />} />
-    <Route path="travelers" element={<BookingWizard step={1} />} />
-    <Route path="review"    element={<BookingWizard step={2} />} />
-    <Route path="contact"   element={<BookingWizard step={3} />} />
-    <Route path="success"   element={<BookingWizard step={-1} successMode />} />
-
-    {/* Catch-all */}
-    <Route path="*" element={<Navigate to="trip" replace />} />
+    <Route element={<BookingShell />}>
+      <Route index                  element={<Navigate to="trip" replace />} />
+      <Route path="trip"            element={<BookingWizard step={0} />} />
+      <Route path="travelers"       element={<BookingWizard step={1} />} />
+      <Route path="review"          element={<BookingWizard step={2} />} />
+      <Route path="contact"         element={<BookingWizard step={3} />} />
+      <Route path="success"         element={<BookingWizard step={-1} successMode />} />
+      <Route path="*"               element={<Navigate to="trip" replace />} />
+    </Route>
   </Routes>
 );
 

@@ -20,10 +20,7 @@ import { RiSendPlaneFill } from "react-icons/ri";
 import SEO from "../components/common/SEO";
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 import { sendMessage } from "../utils/sendMessage";
-import { apiFetch } from "../utils/apiBase";
-import EmojiPicker from "../components/messaging/EmojiPicker";
 import { useUserAuth } from "../context/UserAuthContext";
-import { useMessaging } from "../context/MessagingContext";
 
 /* ══════ TOKENS ══════ */
 const G = {
@@ -232,7 +229,6 @@ FieldTextarea.displayName = "FieldTextarea";
 ══════════════════════════════════════════════ */
 const Contact = () => {
   const { user, isAuthenticated } = useUserAuth();
-  const { openPortal } = useMessaging();
 
   /* ── State ── */
   const [form,             setForm]             = useState(INIT_FORM);
@@ -396,9 +392,6 @@ const Contact = () => {
       // Success
       setSubmittedEmail(form.email);
       setSubmitProgress(100);
-      // Open the messaging portal so the user can follow the conversation
-      // and see the team's replies live in the chat widget.
-      try { openPortal(); } catch { /* non-fatal */ }
       setTimeout(() => {
         if (mounted.current) setSubmitted(true);
       }, 300);
@@ -733,19 +726,6 @@ const Contact = () => {
                               placeholder="Hi, I'm interested in booking a gorilla trekking experience..."
                               value={form.message} onChange={handleChange} onBlur={handleBlur}
                               error={errors.message} touched={touched.message} />
-
-                            {/* Emoji picker */}
-                            <div className="cf-emoji-row">
-                              <button type="button" className="cf-emoji-btn"
-                                onClick={() => setEmojiOpen((v) => !v)} aria-label="Add emoji">
-                                <FiSmile size={15} /> Add emoji
-                              </button>
-                              {emojiOpen && (
-                                <div ref={emojiRef} className="cf-emoji-wrap">
-                                  <EmojiPicker onSelect={handleEmojiSelect} onClose={() => setEmojiOpen(false)} />
-                                </div>
-                              )}
-                            </div>
 
                             {/* Server error */}
                             {errors.submit && (
