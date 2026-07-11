@@ -97,7 +97,7 @@ const Footer = () => {
     {
       icon: FiYoutube,
       label: "YouTube",
-      url: "#",
+      url: "https://www.youtube.com/@altuverasafaris",
     },
   ];
 
@@ -558,7 +558,7 @@ bottomLink: {
               <div style={styles.contactIcon}>
                 <FiPhone size={18} />
               </div>
-              <span style={styles.contactText}>+250 792352409</span>
+              <span style={styles.contactText}>+250 785751391</span>
             </div>
 
             <div style={styles.contactItem}>

@@ -81,12 +81,12 @@ const SOCIALS = [
   { icon: FaInstagram, label: "Instagram", url: "#",                          color: "#E1306C" },
   { icon: FaTwitter,   label: "Twitter",   url: "#",                          color: "#1DA1F2" },
   { icon: FaYoutube,   label: "YouTube",   url: "#",                          color: "#FF0000" },
-  { icon: FaWhatsapp,  label: "WhatsApp",  url: "https://wa.me/250792352409", color: "#25D366" },
+   { icon: FaWhatsapp,  label: "WhatsApp",  url: "https://wa.me/250785751391", color: "#25D366" },
   { icon: FaTiktok,    label: "TikTok",    url: "#",                          color: "#000" },
 ];
 
 const QUICK_CHANNELS = [
-  { icon: FaWhatsapp, title: "WhatsApp",  subtitle: "Instant chat",       detail: "+250 792 352 409",         href: "https://wa.me/250792352409",          color: "#25D366" },
+   { icon: FaWhatsapp, title: "WhatsApp",  subtitle: "Instant chat",       detail: "+250 785 751 391",         href: "https://wa.me/250785751391",          color: "#25D366" },
   { icon: FiPhone,    title: "Call Us",   subtitle: "Speak to an expert", detail: "+250 792 352 409",         href: "tel:+250792352409",                   color: G[700]   },
   { icon: FiMail,     title: "Email",     subtitle: "Detailed inquiries", detail: "altuverasafari@gmail.com", href: "mailto:altuverasafari@gmail.com",     color: "#3B82F6" },
 ];
@@ -883,7 +883,7 @@ const Contact = () => {
               </p>
               <div className="cf-cta-btns">
                 <a href="#contact-form" className="cf-btn cf-btn--white"><FiSend size={15} /> Plan My Safari</a>
-                <a href="https://wa.me/250792352409" target="_blank" rel="noopener noreferrer" className="cf-btn cf-btn--ghost">
+                <a href="https://wa.me/250785751391" target="_blank" rel="noopener noreferrer" className="cf-btn cf-btn--ghost">
                   <FaWhatsapp size={16} /> WhatsApp Us
                 </a>
               </div>

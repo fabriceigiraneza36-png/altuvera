@@ -902,23 +902,6 @@ const S = {
 };
 
 /* ═══════════════════════════════════════════════════════
-   LABEL PILL
-   ═══════════════════════════════════════════════════════ */
-const LabelPill = ({ icon: Icon, text }) => (
-  <div style={{
-    display: 'inline-flex', alignItems: 'center', gap: 8,
-    padding: '8px 20px', borderRadius: 9999,
-    background: 'linear-gradient(135deg,#f0fdf4,#dcfce7)',
-    border: '1.5px solid #a7f3d0', marginBottom: 20,
-  }}>
-    <Icon size={14} color="#059669" />
-    <span style={{ fontSize: 12, fontWeight: 800, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
-      {text}
-    </span>
-  </div>
-);
-
-/* ═══════════════════════════════════════════════════════
    MAIN PAGE
    ═══════════════════════════════════════════════════════ */
 const About = () => {
@@ -1054,7 +1037,6 @@ const About = () => {
       <section style={{ padding: 'clamp(20px,4vw,40px) 24px', background: 'linear-gradient(180deg,#fff 0%,#FAFFFE 100%)' }}>
         <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
           <FadeInSection>
-            <LabelPill icon={LuSparkles} text="Our Story" />
             <h2 style={{ ...S.h2, marginBottom: 32 }}>
               More Than a Safari Company—<span style={{ color: '#059669' }}>A Movement</span>
             </h2>
@@ -1238,7 +1220,6 @@ const About = () => {
         <div style={{ maxWidth: 1400, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 'clamp(28px,4vw,44px)' }}>
             <FadeInSection>
-              <LabelPill icon={LuCamera} text="Gallery" />
               <h2 style={S.h2}>Captured <span style={{ color: '#059669' }}>Moments</span></h2>
               <p style={{ ...S.p, maxWidth: 600, margin: '0 auto' }}>
                 A curated collection of breathtaking moments from our East African journeys.
@@ -1310,7 +1291,6 @@ const About = () => {
         <div style={{ maxWidth: 1400, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 'clamp(32px,5vw,56px)' }}>
             <FadeInSection>
-              <LabelPill icon={LuUsers} text="Our People" />
               <h2 style={S.h2}>The <span style={{ color: '#059669' }}>People</span> Behind Your Journey</h2>
               <p style={{ ...S.p, maxWidth: 750, margin: '0 auto' }}>
                 Led by Co-Founder IGIRANEZA Fabrice, our leadership team combines visionary thinking

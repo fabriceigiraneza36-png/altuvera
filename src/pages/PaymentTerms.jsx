@@ -20,8 +20,6 @@ import {
   FiPrinter,
   FiChevronDown,
   FiChevronUp,
-  FiChevronLeft,
-  FiChevronRight,
   FiHelpCircle,
   FiLock,
   FiGlobe,
@@ -61,8 +59,8 @@ const ADMIN = {
   name: "IGIRANEZA Fabrice",
   phone1: "+250 792352409",
   phone2: "+250 792352409",
-  whatsapp: "+250792352409",
-  whatsappDisplay: "+250 792352409",
+  whatsapp: "+250785751391",
+  whatsappDisplay: "+250 785751391",
   email: "info@altuverasafari.com",
   office: "Musanze, Rwanda",
 };
@@ -2551,7 +2549,6 @@ const PaymentTerms = () => {
   const [declarationSuccess, setDeclarationSuccess] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
   const [gateContext, setGateContext] = useState("");
-  const trackRef = useRef(null);
 
   // Styles for contact text
   const styles = {
@@ -2849,18 +2846,6 @@ const PaymentTerms = () => {
     []
   );
 
-  const trustBadges = useMemo(
-    () => [
-      { icon: <FiShield size={22} />, label: "Secure Payments", sub: "Personal & Private" },
-      { icon: <FiAward size={22} />, label: "Licensed Operator", sub: "Fully Certified" },
-      { icon: <FiUsers size={22} />, label: "10+ Travelers", sub: "Since 2018" },
-      { icon: <FiCheckCircle size={22} />, label: "Price Guarantee", sub: "No Hidden Fees" },
-      { icon: <FiHeart size={22} />, label: "98% Satisfaction", sub: "Verified Reviews" },
-      { icon: <FiGlobe size={22} />, label: "3+ Countries", sub: "East Africa" },
-    ],
-    []
-  );
-
   /* ═══════════════════════════════════════════
      RENDER
      ═══════════════════════════════════════════ */
@@ -2926,7 +2911,7 @@ const PaymentTerms = () => {
       </div>
 
       {/* ═══ MAIN CONTENT ═══ */}
-      <section style={{ padding: "48px 24px 100px" }}>
+      <section style={{ padding: "32px 24px 80px" }}>
         <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
           {/* ═══ HERO SECTION ═══ */}
           <AnimatedSection animation="fadeInUp">
@@ -3086,7 +3071,7 @@ const PaymentTerms = () => {
                   gap: "18px",
                   marginTop: "52px",
                   maxWidth: "860px",
-                  margin: "52px auto 0",
+                  margin: "36px auto 0",
                 }}
               >
                 {[
@@ -3177,7 +3162,7 @@ const PaymentTerms = () => {
                 display: "grid",
                 gridTemplateColumns: "repeat(3, 1fr)",
                 gap: "22px",
-                marginBottom: "72px",
+                marginBottom: "40px",
               }}
             >
               {terms.map((item, i) => (
@@ -3196,7 +3181,7 @@ const PaymentTerms = () => {
           {/* ═══ PAYMENT METHODS ═══ */}
           <div id="pt-methods">
             <AnimatedSection animation="fadeInUp">
-              <div style={{ marginBottom: "48px" }}>
+                <div style={{ marginBottom: "32px" }}>
                 <div style={{ textAlign: "center", marginBottom: "28px" }}>
                   <h2
                     style={{
@@ -3228,7 +3213,7 @@ const PaymentTerms = () => {
                     display: "grid",
                     gridTemplateColumns: "repeat(3, 1fr)",
                     gap: "20px",
-                    marginBottom: "52px",
+                    marginBottom: "36px",
                   }}
                 >
                   {paymentMethods.map((m) => {
@@ -3390,7 +3375,7 @@ const PaymentTerms = () => {
                   padding: "clamp(28px, 4vw, 52px)",
                   boxShadow: "var(--pt-shadow-lg)",
                   border: "1px solid #F3F4F6",
-                  marginBottom: "72px",
+                  marginBottom: "40px",
                 }}
               >
                 <div style={{ textAlign: "center", marginBottom: "28px" }}>
@@ -3564,7 +3549,7 @@ const PaymentTerms = () => {
                   padding: "clamp(28px, 4vw, 56px)",
                   boxShadow: "var(--pt-shadow-lg)",
                   border: "1px solid #F3F4F6",
-                  marginBottom: "72px",
+                  marginBottom: "40px",
                 }}
               >
                 <div style={{ textAlign: "center", marginBottom: "28px" }}>
@@ -3592,7 +3577,7 @@ const PaymentTerms = () => {
                 </div>
                 <div
                   style={{
-                    marginTop: "44px",
+                    marginTop: "28px",
                     textAlign: "center",
                     padding: "36px 24px",
                     backgroundColor: "#F9FAFB",
@@ -3702,142 +3687,6 @@ const PaymentTerms = () => {
             </AnimatedSection>
           </div>
 
-          {/* ═══ TRUST BADGES ═══ */}
-          <AnimatedSection animation="fadeInUp">
-            <div style={{ marginBottom: "60px" }}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginBottom: "20px",
-                  flexWrap: "wrap",
-                  gap: "12px",
-                }}
-              >
-                <h3
-                  style={{
-                    fontFamily: ds.font.heading,
-                    fontSize: "24px",
-                    fontWeight: "700",
-                    color: "#111827",
-                  }}
-                >
-                  Why Travelers Trust Altuvera
-                </h3>
-                <div style={{ display: "flex", gap: "8px" }}>
-                  {[
-                    { icon: <FiChevronLeft size={18} />, d: -300 },
-                    { icon: <FiChevronRight size={18} />, d: 300 },
-                  ].map((b, i) => (
-                    <button
-                      key={i}
-                      onClick={() =>
-                        trackRef.current?.scrollBy({
-                          left: b.d,
-                          behavior: "smooth",
-                        })
-                      }
-                      style={{
-                        width: "38px",
-                        height: "38px",
-                        borderRadius: "12px",
-                        background: "#fff",
-                        border: "1px solid #E5E7EB",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "#374151",
-                        transition: "all .25s",
-                      }}
-                      onMouseOver={(e) => {
-                        e.currentTarget.style.background = "#059669";
-                        e.currentTarget.style.color = "#fff";
-                        e.currentTarget.style.borderColor = "#059669";
-                      }}
-                      onMouseOut={(e) => {
-                        e.currentTarget.style.background = "#fff";
-                        e.currentTarget.style.color = "#374151";
-                        e.currentTarget.style.borderColor = "#E5E7EB";
-                      }}
-                    >
-                      {b.icon}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div
-                ref={trackRef}
-                className="pt-scroll"
-                style={{
-                  display: "flex",
-                  gap: "18px",
-                  overflowX: "auto",
-                  scrollSnapType: "x mandatory",
-                  paddingBottom: "8px",
-                  scrollBehavior: "smooth",
-                }}
-              >
-                {trustBadges.map((b, i) => (
-                  <div
-                    key={i}
-                    style={{
-                      flex: "0 0 220px",
-                      scrollSnapAlign: "start",
-                      backgroundColor: "#fff",
-                      borderRadius: "20px",
-                      padding: "28px 24px",
-                      textAlign: "center",
-                      border: "1px solid #F3F4F6",
-                      boxShadow: "var(--pt-shadow-sm)",
-                      transition: "all 0.35s var(--pt-transition)",
-                    }}
-                    onMouseOver={(e) => {
-                      e.currentTarget.style.transform = "translateY(-6px)";
-                      e.currentTarget.style.boxShadow = "0 14px 36px rgba(5,150,105,.1)";
-                      e.currentTarget.style.borderColor = "#D1FAE5";
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.transform = "translateY(0)";
-                      e.currentTarget.style.boxShadow = "var(--pt-shadow-sm)";
-                      e.currentTarget.style.borderColor = "#F3F4F6";
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "52px",
-                        height: "52px",
-                        borderRadius: "16px",
-                        backgroundColor: "#ECFDF5",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        margin: "0 auto 14px",
-                        color: "#059669",
-                      }}
-                    >
-                      {b.icon}
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "15px",
-                        fontWeight: "700",
-                        color: "#111827",
-                        marginBottom: "4px",
-                      }}
-                    >
-                      {b.label}
-                    </div>
-                    <div style={{ fontSize: "13px", color: "#6B7280" }}>
-                      {b.sub}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </AnimatedSection>
 
           {/* ═══ CONTACT BAR ═══ */}
           <AnimatedSection animation="fadeInUp">
@@ -3860,13 +3709,7 @@ const PaymentTerms = () => {
                   label: "WhatsApp",
                   value: (
                     <span style={styles.contactText}>
-                      {ADMIN.phone1}
-                      {ADMIN.phone1 !== ADMIN.phone2 && (
-                        <>
-                          <br />
-                          {ADMIN.phone2}
-                        </>
-                      )}
+                      {ADMIN.whatsappDisplay}
                     </span>
                   ),
                   action: () =>
@@ -3969,7 +3812,7 @@ const PaymentTerms = () => {
             <div
               className="no-print"
               style={{
-                marginTop: "44px",
+                marginTop: "28px",
                 textAlign: "center",
                 display: "flex",
                 gap: "14px",

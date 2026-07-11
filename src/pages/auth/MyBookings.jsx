@@ -9,6 +9,7 @@
     FiCheckCircle, FiXCircle, FiAlertCircle,
     FiRefreshCw, FiSearch, FiShield, FiUser,
     FiChevronDown, FiChevronUp, FiExternalLink,
+    FiBan, FiDollarSign, FiInfo, FiSend, FiFileText, FiRotateCcw,
   } from "react-icons/fi";
   import {
     HiOutlineTicket, HiLocationMarker,
@@ -270,6 +271,101 @@
       .mb-filter-tabs { width: 100%; }
       .mb-stats { grid-template-columns: repeat(2, 1fr); }
     }
+
+    /* ── Request button ── */
+    .mb-req-btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 7px 14px; border-radius: 9px; font-size: 0.78rem;
+      font-weight: 700; cursor: pointer; font-family: inherit;
+      border: 1.5px solid #fca5a5; background: #fef2f2; color: #b91c1c;
+      transition: all 0.18s;
+    }
+    .mb-req-btn:hover { background: #fee2e2; color: #991b1b; }
+
+    /* ── Request status banner ── */
+    .mb-request-banner {
+      margin: 14px 20px 0; padding: 12px 16px; border-radius: 12px;
+      font-size: 0.82rem; line-height: 1.5;
+    }
+    .mb-rb-head { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+    .mb-rb-icon { display: inline-flex; }
+    .mb-rb-status {
+      margin-left: auto; font-size: 0.62rem; font-weight: 800;
+      padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .mb-rb-reason {
+      margin: 8px 0 0; display: flex; gap: 6px; align-items: flex-start;
+      font-weight: 600; opacity: 0.92;
+    }
+    .mb-rb-reason svg { flex-shrink: 0; margin-top: 3px; }
+    .mb-rb-note { margin: 6px 0 0; opacity: 0.92; }
+
+    /* ── Request modal ── */
+    .mb-modal-overlay {
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(15,23,42,0.55); backdrop-filter: blur(3px);
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+      animation: mbFadeIn 0.2s ease-out;
+    }
+    .mb-modal {
+      width: 100%; max-width: 460px; background: #fff;
+      border-radius: 20px; padding: 24px; box-shadow: 0 24px 60px rgba(0,0,0,0.25);
+      animation: mbFadeIn 0.25s ease-out;
+    }
+    .mb-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .mb-modal-head h3 { margin: 0; font-size: 1.1rem; font-weight: 800; color: #0f172a; }
+    .mb-modal-x {
+      border: none; background: transparent; color: #94a3b8; cursor: pointer;
+      display: inline-flex; padding: 4px; border-radius: 8px;
+    }
+    .mb-modal-x:hover { background: #f1f5f9; color: #0f172a; }
+    .mb-modal-sub { margin: 8px 0 18px; color: #64748b; font-size: 0.85rem; }
+    .mb-modal-bk { font-family: monospace; font-weight: 800; color: #059669; }
+
+    .mb-req-types { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .mb-req-type {
+      display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
+      padding: 14px; border-radius: 14px; cursor: pointer; text-align: left;
+      border: 2px solid #e2e8f0; background: #f8fafc; transition: all 0.18s; font-family: inherit;
+    }
+    .mb-req-type:hover { border-color: #fca5a5; }
+    .mb-req-type.active { border-color: #dc2626; background: #fef2f2; }
+    .mb-rt-title { font-size: 0.9rem; font-weight: 800; color: #0f172a; }
+    .mb-rt-desc { font-size: 0.72rem; color: #64748b; }
+
+    .mb-req-label {
+      display: block; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 0.06em; color: #94a3b8; margin-bottom: 6px;
+    }
+    .mb-req-req { color: #dc2626; }
+    .mb-req-textarea {
+      width: 100%; border-radius: 12px; border: 1.5px solid #e2e8f0;
+      padding: 12px 14px; font-size: 0.88rem; font-family: inherit; resize: vertical;
+      outline: none; box-sizing: border-box;
+    }
+    .mb-req-textarea:focus { border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,0.1); }
+
+    .mb-modal-actions { display: flex; gap: 10px; margin-top: 18px; }
+    .mb-req-cancel {
+      flex: 0 0 auto; padding: 11px 18px; border-radius: 12px;
+      border: 1.5px solid #e2e8f0; background: #fff; color: #475569;
+      font-weight: 700; font-size: 0.85rem; cursor: pointer; font-family: inherit;
+    }
+    .mb-req-cancel:hover:not(:disabled) { background: #f8fafc; }
+    .mb-req-submit {
+      flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      padding: 11px 18px; border-radius: 12px; border: none;
+      background: linear-gradient(135deg, #dc2626, #b91c1c); color: #fff;
+      font-weight: 800; font-size: 0.85rem; cursor: pointer; font-family: inherit;
+      box-shadow: 0 4px 12px rgba(220,38,38,0.3); transition: all 0.2s;
+    }
+    .mb-req-submit:hover:not(:disabled) { transform: translateY(-1px); }
+    .mb-req-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .mb-req-foot { margin: 12px 2px 0; font-size: 0.74rem; color: #64748b; display: flex; gap: 5px; align-items: center; }
+
+    @media (max-width: 640px) {
+      .mb-req-types { grid-template-columns: 1fr; }
+    }
   `;
 
   // ─── Proximity Banner ─────────────────────────────────────────────────────────
@@ -293,11 +389,170 @@
     );
   }
 
+  // ─── Cancellation / Refund helpers ───────────────────────────────────────
+  const requestEligibility = (b) => {
+    const s = b.status;
+    const hasPending = b.cancel_request_status === "pending";
+    const finalized  =
+      ["cancelled", "refunded"].includes(s) || b.cancel_request_status === "approved";
+    const canCancel = ["pending", "confirmed", "on-hold"].includes(s);
+    const canRefund = ["confirmed", "completed"].includes(s);
+    return {
+      hasPending,
+      finalized,
+      canCancel,
+      canRefund,
+      canRequest: !finalized && (canCancel || canRefund),
+    };
+  };
+
+  // ─── Request status banner (transparent history) ───────────────────────────
+  function RequestStatusBanner({ booking }) {
+    if (!booking.cancel_request_status || booking.cancel_request_status === "none")
+      return null;
+    const isRefund  = booking.cancel_request_type === "refund";
+    const status    = booking.cancel_request_status;
+    const cfg =
+      status === "pending"  ? { bg: "#fffbeb", border: "#fde68a", color: "#92400e", badge: "#f59e0b", label: "Under Review" } :
+      status === "approved" ? { bg: "#f0fdf4", border: "#bbf7d0", color: "#166534", badge: "#059669", label: isRefund ? "Refund Approved" : "Cancellation Approved" } :
+                              { bg: "#fef2f2", border: "#fecaca", color: "#991b1b", badge: "#dc2626", label: "Request Declined" };
+
+    return (
+      <div
+        className="mb-request-banner"
+        style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color }}
+      >
+        <div className="mb-rb-head">
+          <span className="mb-rb-icon">
+            {isRefund ? <FiDollarSign size={15} /> : <FiBan size={15} />}
+          </span>
+          <strong>
+            {isRefund ? "Refund" : "Cancellation"} Request
+          </strong>
+          <span
+            className="mb-rb-status"
+            style={{ background: cfg.badge, color: "#fff" }}
+          >
+            {cfg.label}
+          </span>
+        </div>
+        {booking.cancel_request_reason && (
+          <p className="mb-rb-reason"><FiInfo size={12} /> {booking.cancel_request_reason}</p>
+        )}
+        {status === "pending" && (
+          <p className="mb-rb-note">
+            We've notified our team. You'll see the outcome here as soon as it's reviewed.
+          </p>
+        )}
+        {status === "approved" && (
+          <p className="mb-rb-note">
+            ✅ Your request was approved
+            {isRefund && booking.refund_amount != null
+              ? ` — refund of ${booking.currency || ""} ${booking.refund_amount}`
+              : ""}.
+            Booking is now <strong>{booking.status}</strong>.
+          </p>
+        )}
+        {status === "rejected" && booking.cancel_admin_response && (
+          <p className="mb-rb-note">
+            <strong>Our note: </strong>{booking.cancel_admin_response}
+          </p>
+        )}
+      </div>
+    );
+  }
+
+  // ─── Request modal ────────────────────────────────────────────────────────
+  function RequestModal({ booking, onClose, onSubmit, submitting, error }) {
+    const [type,   setType]   = useState(
+      booking && booking.status === "completed" ? "refund" : "cancellation");
+    const [reason, setReason] = useState("");
+    const elig = requestEligibility(booking);
+
+    if (!booking) return null;
+
+    return (
+      <div className="mb-modal-overlay" onClick={onClose}>
+        <div className="mb-modal" onClick={(e) => e.stopPropagation()}>
+          <div className="mb-modal-head">
+            <h3>Request {booking.status === "completed" ? "Refund" : "Cancellation or Refund"}</h3>
+            <button className="mb-modal-x" onClick={onClose} aria-label="Close">
+              <FiXCircle size={20} />
+            </button>
+          </div>
+
+          <p className="mb-modal-sub">
+            Booking <span className="mb-modal-bk">{booking.booking_number || `#${booking.id}`}</span>
+            {" "}· {booking.destination_name || "your trip"}
+          </p>
+
+          {/* Type selector */}
+          <div className="mb-req-types">
+            {elig.canCancel && (
+              <button
+                type="button"
+                className={`mb-req-type ${type === "cancellation" ? "active" : ""}`}
+                onClick={() => setType("cancellation")}
+              >
+                <FiBan size={18} />
+                <span className="mb-rt-title">Cancel Trip</span>
+                <span className="mb-rt-desc">Void this booking entirely</span>
+              </button>
+            )}
+            {elig.canRefund && (
+              <button
+                type="button"
+                className={`mb-req-type ${type === "refund" ? "active" : ""}`}
+                onClick={() => setType("refund")}
+              >
+                <FiDollarSign size={18} />
+                <span className="mb-rt-title">Request Refund</span>
+                <span className="mb-rt-desc">For paid / completed trips</span>
+              </button>
+            )}
+          </div>
+
+          <label className="mb-req-label">Reason <span className="mb-req-req">*</span></label>
+          <textarea
+            className="mb-req-textarea"
+            rows={4}
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="Tell us why you'd like to cancel or request a refund…"
+          />
+
+          {error && <div className="mb-error" style={{ marginTop: 10 }}>⚠️ {error}</div>}
+
+          <div className="mb-modal-actions">
+            <button className="mb-req-cancel" onClick={onClose} disabled={submitting}>
+              Cancel
+            </button>
+            <button
+              className="mb-req-submit"
+              disabled={submitting || !reason.trim()}
+              onClick={() => onSubmit(booking, type, reason.trim())}
+            >
+              {submitting ? (
+                <><FiRefreshCw size={15} className="mb-spin-icon" /> Submitting…</>
+              ) : (
+                <><FiSend size={15} /> Submit Request</>
+              )}
+            </button>
+          </div>
+          <p className="mb-req-foot">
+            <FiInfo size={12} /> Our team reviews every request and replies here.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // ─── Booking Card ─────────────────────────────────────────────────────────────
-  function BookingCard({ booking }) {
+  function BookingCard({ booking, onRequest }) {
     const [expanded, setExpanded] = useState(false);
     const st    = getStatus(booking.status);
     const admin = isAdmin(booking);
+    const elig  = requestEligibility(booking);
     const days  = daysUntil(booking.travel_date);
     const upcomingConfirmed =
       days !== null && days >= 0 && days <= UPCOMING_THRESHOLD_DAYS &&
@@ -327,6 +582,9 @@
           <ProximityBanner days={days} dest={booking.destination_name} />
         )}
 
+        {/* Cancellation / refund request status */}
+        <RequestStatusBanner booking={booking} />
+
         {/* Main */}
         <div className="mb-card-main">
           <div className="mb-card-top">
@@ -350,9 +608,22 @@
                 </span>
               </div>
             </div>
-            <button className="mb-toggle-btn" onClick={() => setExpanded((v) => !v)}>
-              {expanded ? <><FiChevronUp size={14} /> Less</> : <><FiChevronDown size={14} /> Details</>}
-            </button>
+            <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+              {elig.canRequest && (
+                <button
+                  className="mb-req-btn"
+                  onClick={() => onRequest && onRequest(booking)}
+                >
+                  <FiRotateCcw size={14} />
+                  {elig.canRefund && elig.canCancel
+                    ? "Cancel / Refund"
+                    : elig.canRefund ? "Request Refund" : "Request Cancellation"}
+                </button>
+              )}
+              <button className="mb-toggle-btn" onClick={() => setExpanded((v) => !v)}>
+                {expanded ? <><FiChevronUp size={14} /> Less</> : <><FiChevronDown size={14} /> Details</>}
+              </button>
+            </div>
           </div>
 
           {/* Summary */}
@@ -465,6 +736,11 @@
     const [totalPages, setTotalPages] = useState(1);
     const [total,      setTotal]      = useState(0);
 
+    // ── Cancellation / refund request modal ──
+    const [reqBooking,    setReqBooking]    = useState(null);
+    const [reqSubmitting, setReqSubmitting] = useState(false);
+    const [reqError,      setReqError]      = useState(null);
+
     const fetchBookings = useCallback(async (pageNum = 1) => {
       setLoading(true);
       setError(null);
@@ -521,6 +797,29 @@
     ];
 
     const showSplit = filter === "all" && selfB.length > 0 && adminB.length > 0;
+
+    // ── Submit cancellation / refund request ──
+    const openRequest = useCallback((b) => {
+      setReqError(null);
+      setReqBooking(b);
+    }, []);
+
+    const submitRequest = useCallback(async (booking, type, reason) => {
+      setReqSubmitting(true);
+      setReqError(null);
+      try {
+        await authFetch(`/bookings/${booking.id}/request-cancellation`, {
+          method: "POST",
+          body: JSON.stringify({ type, reason }),
+        });
+        setReqBooking(null);
+        await fetchBookings(1);
+      } catch (err) {
+        setReqError(err.message || "Failed to submit request.");
+      } finally {
+        setReqSubmitting(false);
+      }
+    }, [authFetch, fetchBookings]);
 
     return (
       <>
@@ -628,7 +927,7 @@
                   </span>
                 </div>
                 <AnimatePresence>
-                  {selfB.map((b) => <BookingCard key={b.id} booking={b} />)}
+                  {selfB.map((b) => <BookingCard key={b.id} booking={b} onRequest={openRequest} />)}
                 </AnimatePresence>
 
                 <div style={{ borderTop: "2px solid #e2e8f0", paddingTop: 24, marginTop: 10 }}>
@@ -640,7 +939,7 @@
                     </span>
                   </div>
                   <AnimatePresence>
-                    {adminB.map((b) => <BookingCard key={b.id} booking={b} />)}
+                    {adminB.map((b) => <BookingCard key={b.id} booking={b} onRequest={openRequest} />)}
                   </AnimatePresence>
                 </div>
               </>
@@ -649,7 +948,7 @@
             {/* ── Default flat list ── */}
             {!showSplit && displayed.length > 0 && (
               <AnimatePresence>
-                {displayed.map((b) => <BookingCard key={b.id} booking={b} />)}
+                {displayed.map((b) => <BookingCard key={b.id} booking={b} onRequest={openRequest} />)}
               </AnimatePresence>
             )}
 
@@ -666,6 +965,18 @@
             )}
 
           </div>
+
+          {/* ── Cancellation / refund request modal ── */}
+          {reqBooking && (
+            <RequestModal
+              booking={reqBooking}
+              onClose={() => setReqBooking(null)}
+              onSubmit={submitRequest}
+              submitting={reqSubmitting}
+              error={reqError}
+            />
+          )}
+
         </DashboardLayout>
       </>
     );

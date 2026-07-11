@@ -221,7 +221,7 @@ const BookingVerifyResult = () => {
             {isSuccess && (
               <>
                 <a
-                  href="https://wa.me/250788000000"
+                  href="https://wa.me/250785751391"
                   target="_blank" rel="noopener noreferrer"
                   style={{
                     display: "inline-flex", alignItems: "center", gap: 7,
@@ -277,7 +277,7 @@ const BookingVerifyResult = () => {
           }}>
             Need help?{" "}
             <a
-              href="https://wa.me/250788000000"
+              href="https://wa.me/250785751391"
               target="_blank" rel="noopener noreferrer"
               style={{ color: "#059669", fontWeight: 700 }}
             >

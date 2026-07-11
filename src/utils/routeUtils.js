@@ -32,7 +32,7 @@ export const BRAND_CONTACT = {
   email: "altuverasafari@gmail.com",
   emailBookings: "info@altuverasafari.com",
   address: "Musanze, Rwanda",
-  whatsapp: "https://wa.me/250792352409",
+  whatsapp: "https://wa.me/250785751391",
 };
 
 export const BRAND_SOCIAL = {

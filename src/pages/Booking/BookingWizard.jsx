@@ -125,7 +125,7 @@ const ErrorBanner = ({ error, onDismiss, onRetry, retryCount = 0 }) => {
             </button>
           )}
           <a
-            href="https://wa.me/250788000000"
+            href="https://wa.me/250785751391"
             target="_blank" rel="noopener noreferrer"
             style={{
               display: "inline-flex", alignItems: "center", gap: 6,

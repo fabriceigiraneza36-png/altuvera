@@ -331,7 +331,7 @@ const EmailVerification = memo(({
 
           {/* WhatsApp fallback */}
           <a
-            href="https://wa.me/250788000000"
+            href="https://wa.me/250785751391"
             target="_blank"
             rel="noopener noreferrer"
             className="bk-email-verify__wa-link"

@@ -1,7 +1,7 @@
 // src/pages/Booking/components/WhatsAppContactBanner.jsx
 import React from "react";
 
-const WA_NUMBER = "+250788000000"; // replace with real number
+const WA_NUMBER = "+250785751391"; // Altuvera WhatsApp number
 const WA_MSG = encodeURIComponent(
   "Hi Altuvera! I'm interested in booking an adventure. Can you help me?"
 );

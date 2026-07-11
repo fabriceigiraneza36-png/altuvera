@@ -19,10 +19,10 @@ const BODY_FONT =
 // ============================================================
 const CONTACT_INFO = {
   name: "IGIRANEZA Fabrice",
-  phone1: "+250 792352409",
-  phone2: "+250 792352409",
-  whatsapp: "+250792352409",
-  whatsappDisplay: "+250 792352409",
+  phone1: "+250 785751391",
+  phone2: "+250 785751391",
+  whatsapp: "+250785751391",
+  whatsappDisplay: "+250 785751391",
 };
 
 const PRESET_MESSAGES = [

@@ -259,7 +259,7 @@ const SuccessScreen = ({ isMobile, displayName, submissionRef }) => {
         </Link>
 
         <a
-          href="https://wa.me/250788000000"
+          href="https://wa.me/250785751391"
           target="_blank"
           rel="noopener noreferrer"
           style={{
@@ -296,7 +296,7 @@ const SuccessScreen = ({ isMobile, displayName, submissionRef }) => {
       <p style={{ margin: 0, fontSize: 12.5, color: "#9ca3af" }}>
         Need immediate help?{" "}
         <a
-          href="https://wa.me/250788000000"
+          href="https://wa.me/250785751391"
           target="_blank" rel="noopener noreferrer"
           style={{ color: "#059669", fontWeight: 700, textDecoration: "none" }}
         >
