@@ -56,6 +56,23 @@ const FieldHint = memo(({ text }) =>
 );
 FieldHint.displayName = "FieldHint";
 
+/* ── Auto-filled-from-account tag ── */
+const AutoFilledTag = () => (
+  <span
+    title="Auto-completed from your account"
+    style={{
+      display: "inline-flex", alignItems: "center", gap: 3,
+      marginLeft: 8, padding: "2px 7px",
+      borderRadius: 999, fontSize: 10, fontWeight: 700,
+      letterSpacing: "0.03em", textTransform: "uppercase",
+      color: "#047857", background: "#dcfce7",
+      border: "1px solid #a7f3d0", verticalAlign: "middle",
+    }}
+  >
+    <FiZap size={9} /> Auto-filled
+  </span>
+);
+
 /* ── Trip mini summary ── */
 const TripMiniSummary = memo(({
   formData, getTripDuration, getTotalVisitors,
@@ -116,6 +133,8 @@ const BookingContact = ({
   isAuthenticated, openModal,
   isSubmitting, onSubmit, prevStep,
   isMobile, submitError,
+  /* fields auto-completed from the logged-in user's account */
+  prefilledFields = {},
   /* bookingId — provided after successful submission for resend */
   bookingId,
 }) => {
@@ -174,6 +193,21 @@ const BookingContact = ({
         </div>
       )}
 
+      {/* ── Auto-completed notice (logged-in users) ── */}
+      {isAuthenticated && Object.keys(prefilledFields).length > 0 && (
+        <div
+          className="bk-info-box bk-info-box--green"
+          style={{ marginBottom: 22 }}
+          role="status"
+        >
+          <FiCheckCircle size={16} style={{ flexShrink: 0, marginTop: 1 }} />
+          <p style={{ margin: 0 }}>
+            <strong>Your details were auto-completed</strong> from your
+            Altuvera account. Review them below and update if needed.
+          </p>
+        </div>
+      )}
+
       {/* ── Trip summary pill ── */}
       <TripMiniSummary
         formData={formData}
@@ -225,6 +259,7 @@ const BookingContact = ({
         <div>
           <label className="bk-label" htmlFor="bk-firstName">
             First Name <span>*</span>
+            {prefilledFields.firstName && <AutoFilledTag />}
           </label>
           <div className="bk-input-wrap">
             <FiUser size={15} className="bk-input-icon" />
@@ -252,6 +287,7 @@ const BookingContact = ({
         <div>
           <label className="bk-label" htmlFor="bk-lastName">
             Last Name <span>*</span>
+            {prefilledFields.lastName && <AutoFilledTag />}
           </label>
           <div className="bk-input-wrap">
             <FiUser size={15} className="bk-input-icon" />
@@ -278,9 +314,10 @@ const BookingContact = ({
 
       {/* ── Email ── */}
       <div style={{ marginBottom: 18 }}>
-        <label className="bk-label" htmlFor="bk-email">
-          Email Address <span>*</span>
-        </label>
+          <label className="bk-label" htmlFor="bk-email">
+            Email Address <span>*</span>
+            {prefilledFields.email && <AutoFilledTag />}
+          </label>
         <div className="bk-input-wrap">
           <FiMail size={15} className="bk-input-icon" />
           <input
@@ -325,10 +362,11 @@ const BookingContact = ({
 
       {/* ── Phone ── */}
       <div style={{ marginBottom: 18 }}>
-        <label className="bk-label" htmlFor="bk-phone">
-          Phone Number{" "}
-          <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optional)</span>
-        </label>
+          <label className="bk-label" htmlFor="bk-phone">
+            Phone Number{" "}
+            <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optional)</span>
+            {prefilledFields.phone && <AutoFilledTag />}
+          </label>
         <div className="bk-input-wrap">
           <FiPhone size={15} className="bk-input-icon" />
           <input
@@ -360,6 +398,7 @@ const BookingContact = ({
         <div>
           <label className="bk-label" htmlFor="bk-country">
             Country of Residence
+            {prefilledFields.country && <AutoFilledTag />}
           </label>
           <div className="bk-input-wrap">
             <FiGlobe size={15} className="bk-input-icon" />

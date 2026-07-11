@@ -670,6 +670,7 @@ const Booking = () => {
                         user={wizard.user}
                         displayName={wizard.displayName}
                         isAuthenticated={wizard.isAuthenticated}
+                        prefilledFields={wizard.prefilledFields}
                         openModal={wizard.openModal}
                         isSubmitting={wizard.isSubmitting}
                         onSubmit={wizard.handleSubmit}

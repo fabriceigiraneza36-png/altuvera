@@ -183,6 +183,9 @@ export const useBookingWizard = () => {
 
   const [pendingBookingId, setPendingBookingId] = useState(null);
 
+  // ── Fields auto-completed from the logged-in user's account ──
+  const [prefilledFields, setPrefilledFields] = useState({});
+
   // ── Submission error ──────────────────────────────────────────────────
   const [submitError,      setSubmitError]      = useState(null);
   const [submitRetryCount, setSubmitRetryCount] = useState(0);
@@ -198,16 +201,31 @@ export const useBookingWizard = () => {
   // ── Prefill from authenticated user ──────────────────────────────────
   useEffect(() => {
     if (!user) return;
-    setFormData((prev) => ({
-      ...prev,
-      firstName:   prev.firstName   || user.first_name  || user.name?.split(" ")[0] || "",
-      lastName:    prev.lastName    || user.last_name   || user.name?.split(" ")[1] || "",
-      email:       prev.email       || user.email       || "",
-      phone:       prev.phone       || user.phone       || "",
-      nationality: prev.nationality || user.nationality || user.country || "",
-      country:     prev.country     || user.country     || user.countryOfResidence || "",
-    }));
-  }, [user]);
+    const sources = {
+      firstName:   user.first_name  || user.name?.split(" ")[0] || "",
+      lastName:    user.last_name   || user.name?.split(" ")[1] || "",
+      email:       user.email       || "",
+      phone:       user.phone       || "",
+      nationality: user.nationality || user.country || "",
+      country:     user.country     || user.countryOfResidence || "",
+    };
+    setFormData((prev) => {
+      const next   = { ...prev };
+      const filled = {};
+      let changed  = false;
+      for (const [field, value] of Object.entries(sources)) {
+        if (value && !prev[field]) {
+          next[field] = value;
+          filled[field] = true;
+          changed = true;
+        }
+      }
+      if (changed) {
+        setPrefilledFields((pf) => ({ ...pf, ...filled }));
+      }
+      return next;
+    });
+  }, [user, setFormData]);
 
   // ── Load reference data ───────────────────────────────────────────────
   // FIXED: paths do NOT include /api — toAbsoluteApiUrl adds it
@@ -583,5 +601,6 @@ export const useBookingWizard = () => {
     accommodationTypes: ACCOMMODATION_TYPES,
     interests:          INTERESTS,
     user, isAuthenticated,
+    prefilledFields,
   };
 };

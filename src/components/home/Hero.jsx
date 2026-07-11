@@ -43,7 +43,7 @@ export const HERO_SLIDES = [
   },
   {
     image:
-      "https://pictures.altai-travel.com/1920x1040/kilimanjaro-national-park-tanzania-istock-3490.jpg",
+      "blob:https://gemini.google.com/1ae6af11-00de-4f65-b44c-62d8cae770a9",
     fallback:
       "https://www.andbeyond.com/wp-content/uploads/sites/5/Elephants-and-mount-kilimanjaro.jpg",
     title: "Summit Mount Kilimanjaro",
@@ -69,7 +69,7 @@ export const HERO_SLIDES = [
   },
   {
     image:
-      "https://images.squarespace-cdn.com/content/v1/57b88db03e00be38aec142b0/1526928305567-Y0MTKDAAGPS2IP0YXMSO/03_What_To_Do_In_Gisenyi_in_Lake_Kivu_Rwanda_Visiting_Gisenyi_HandZaround.jpg?format=1500w",
+      "https://copilot.microsoft.com/th/id/BCO.fd1714d5-8831-4d7f-8cb0-141b6ee84f02.png",
     fallback:
       "https://images.trvl-media.com/place/3000470585/420aa538-86d3-463e-ab29-6105311b6442.jpg",
     title: "Lake Kivu Sunrise in Rwanda",
@@ -82,9 +82,9 @@ export const HERO_SLIDES = [
   },
   {
     image:
-      "https://yellowzebrasafaris.com/media/46316/serengeti-safaris-tanzania-wildlife-adventures.jpg?format=jpg&height=1024&v=1da5e0fb8b7e1f0&width=2048",
+      "https://i.pinimg.com/736x/68/e6/cd/68e6cd9f11e9fd00ea3fb928103b8f2b.jpg",
     fallback:
-      "https://www.serengeti.com/assets/img/serengeti-national-park-savannah-landscape.jpg",
+      "https://copilot.microsoft.com/th/id/BCO.e252cb92-305d-4a41-905c-bf7924734ce6.png",
     title: "Serengeti Grasslands",
     subtitle:
       "Endless grasslands and wildlife roaming under wide Tanzanian skies",
@@ -95,7 +95,7 @@ export const HERO_SLIDES = [
   },
   {
     image:
-      "https://img1.wsimg.com/isteam/ip/29cc5507-095f-4b8e-ad81-fae5576e3852/GettyImages-148679836-5b03d89030371300373c5135.jpg/:/cr=t:0%25,l:0%25,w:100%25,h:100%25/rs=w:1280",
+      "https://i.pinimg.com/736x/7b/57/7e/7b577ea3d79d41336090cafb48ca1bc0.jpg",
     fallback:
       "https://i.pinimg.com/1200x/8c/8d/39/8c8d391974e82e3a2c2422ee8775394b.jpg",
     title: "Ngorongoro Caldera Vista",

@@ -1589,8 +1589,15 @@ const MoreInCountrySection = ({ d }) => {
 const ROTATE_WINDOW   = 3;
 const ROTATE_INTERVAL = 6000;
 
+/* DEV-only test harness: seed a comment on mount for the "kalisin-mbi"
+   destination to verify the community discussion flow end-to-end.
+   Guarded so it never runs in production and never spams duplicates. */
+let kalininSeeded = false;
+
 const CommentsSection = ({ d }) => {
-  const destId = d?.id || d?._id || d?.slug;
+  /* The comments API matches the numeric primary key, so prefer numericId.
+     (adaptDestination maps `id` to the slug, with the real PK in `numericId`.) */
+  const destId = d?.numericId || d?.id || d?._id || d?.slug;
   const { comments, loading, createComment, error } = useDestinationComments(destId);
   const { isAuthenticated = false, openModal } = useUserAuth() || {};
 
@@ -1609,6 +1616,20 @@ const CommentsSection = ({ d }) => {
     if (comments.length <= ROTATE_WINDOW) return comments;
     return Array.from({ length: ROTATE_WINDOW }, (_, k) => comments[(rotIdx + k) % comments.length]);
   }, [comments, rotIdx]);
+
+  /* ── DEV test: auto-seed a comment on mount for kalisin-mbi ── */
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    if (kalininSeeded) return;
+    if (!d?.slug || !d.slug.toLowerCase().includes("kalisin")) return;
+    if (!isAuthenticated) return;
+    if (comments.length > 0) return;
+    kalininSeeded = true;
+    createComment(
+      destId,
+      "Test comment — verifying the community discussion feature works on Kalisin Mbi! 🌍"
+    ).catch(() => { kalininSeeded = false; });
+  }, [d?.slug, isAuthenticated, comments.length, destId, createComment]);
 
   const handleSubmit = async e => {
     e.preventDefault();
