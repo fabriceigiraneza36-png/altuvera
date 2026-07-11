@@ -1,4 +1,4 @@
-// src/pages/Booking/BookingRouter.jsx — FIXED
+// src/pages/Booking/BookingRouter.jsx
 import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import BookingWizard from "./BookingWizard";
@@ -16,19 +16,29 @@ export const stepToPath = (step) => {
 };
 
 export const pathToStep = (slug) => {
+  if (!slug) return 0;
   const found = STEP_ROUTES.find((r) => r.path === slug);
-  return found ? found.step : 0;
+  return found !== undefined ? found.step : 0;
 };
 
+/**
+ * Each step gets its OWN explicit route so React Router
+ * always knows which step we're on — no ambiguity.
+ */
 const BookingRouter = () => (
   <Routes>
+    {/* Default → trip */}
     <Route index element={<Navigate to="trip" replace />} />
-    <Route path="trip"      element={<BookingWizard />} />
-    <Route path="travelers" element={<BookingWizard />} />
-    <Route path="review"    element={<BookingWizard />} />
-    <Route path="contact"   element={<BookingWizard />} />
-    <Route path="success"   element={<BookingWizard successMode />} />
-    <Route path="*"         element={<Navigate to="trip" replace />} />
+
+    {/* Step routes — each passes step number directly as prop */}
+    <Route path="trip"      element={<BookingWizard step={0} />} />
+    <Route path="travelers" element={<BookingWizard step={1} />} />
+    <Route path="review"    element={<BookingWizard step={2} />} />
+    <Route path="contact"   element={<BookingWizard step={3} />} />
+    <Route path="success"   element={<BookingWizard step={-1} successMode />} />
+
+    {/* Catch-all */}
+    <Route path="*" element={<Navigate to="trip" replace />} />
   </Routes>
 );
 

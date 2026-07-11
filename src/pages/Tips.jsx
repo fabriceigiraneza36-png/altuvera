@@ -273,7 +273,7 @@ const Tips = () => {
         <PageHeader
           title="Travel Insights"
           subtitle="Curated professional advice for a seamless East African experience."
-          backgroundImage="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1600&q=80"
+          backgroundImage="blob:https://gemini.google.com/acfb6cf5-0e5a-4dc5-a89a-3058bdb79dae"
           breadcrumbs={[{ label: "Travel Tips" }]}
         />
         <div className="tips-container">
@@ -329,7 +329,7 @@ const Tips = () => {
         <PageHeader
           title="Travel Insights"
           subtitle="Curated professional advice for a seamless East African experience."
-          backgroundImage="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1600&q=80"
+          backgroundImage="blob:https://gemini.google.com/749e14f8-0bec-4b57-aee7-836060a076f5"
           breadcrumbs={[{ label: "Travel Tips" }]}
         />
         <div className="tips-container">
@@ -818,7 +818,7 @@ const Tips = () => {
       <PageHeader
         title="Travel Insights"
         subtitle="Curated professional advice for a seamless East African experience."
-        backgroundImage="https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1600&q=80"
+        backgroundImage="blob:https://gemini.google.com/2142a5c3-aa80-4dcf-a958-b32a6fd3072d"
         breadcrumbs={[{ label: "Travel Tips" }]}
       >
         <div
