@@ -1021,7 +1021,7 @@ const DestinationCard = memo(function DestinationCard({
   } = destination;
 
   const destId = slug || id;
-  const bookId = String(id || slug);
+  const bookId = String(slug || id);
   const isLiked = isWishlisted(destId);
   const safeImgs = images.length > 0 ? images : [heroImage || FALLBACK];
   const activeBadges = Object.keys(BADGE_CFG).filter(k => destination[k]);

@@ -161,36 +161,67 @@ const DestinationPopup = ({ destination }) => {
           </div>
         )}
 
-        <Link
-          to={`/destinations/${d.slug}`}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 8,
-            padding: "10px 16px",
-            background: "linear-gradient(135deg, #059669, #047857)",
-            color: "white",
-            borderRadius: 12,
-            textDecoration: "none",
-            fontSize: 13,
-            fontWeight: 600,
-            transition: "all 0.2s ease",
-            border: "none",
-            cursor: "pointer",
-            width: "100%",
-          }}
-          onMouseOver={(e) => {
-            e.currentTarget.style.transform = "translateY(-1px)";
-            e.currentTarget.style.boxShadow = "0 6px 20px rgba(5,150,105,0.35)";
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.transform = "translateY(0)";
-            e.currentTarget.style.boxShadow = "none";
-          }}
-        >
-          View Details <FiArrowRight size={14} />
-        </Link>
+        <div style={{ display: "flex", gap: 8 }}>
+          <Link
+            to={`/destinations/${d.slug}`}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              padding: "10px 16px",
+              background: "linear-gradient(135deg, #059669, #047857)",
+              color: "white",
+              borderRadius: 12,
+              textDecoration: "none",
+              fontSize: 13,
+              fontWeight: 600,
+              transition: "all 0.2s ease",
+              border: "none",
+              cursor: "pointer",
+              flex: 1,
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.transform = "translateY(-1px)";
+              e.currentTarget.style.boxShadow = "0 6px 20px rgba(5,150,105,0.35)";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = "translateY(0)";
+              e.currentTarget.style.boxShadow = "none";
+            }}
+          >
+            View Details <FiArrowRight size={14} />
+          </Link>
+
+          <Link
+            to={`/booking?destination=${d.slug}`}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              padding: "10px 14px",
+              background: "#fff",
+              color: "#047857",
+              borderRadius: 12,
+              textDecoration: "none",
+              fontSize: 13,
+              fontWeight: 700,
+              border: "1.5px solid #a7f3d0",
+              cursor: "pointer",
+              flex: 1,
+              transition: "all 0.2s ease",
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = "#f0fdf4";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = "#fff";
+            }}
+          >
+            📅 Book Now
+          </Link>
+        </div>
       </div>
     </div>
   );

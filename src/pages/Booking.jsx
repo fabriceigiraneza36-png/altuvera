@@ -8,6 +8,7 @@
 import React, {
   useState, useEffect, useMemo, useCallback, useRef,
 } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 import PageHeader            from "../components/common/PageHeader";
@@ -321,6 +322,52 @@ const SuccessScreen = ({ isMobile, displayName, submissionRef, bookingEmail }) =
 const Booking = () => {
   const wizard = useBookingWizard();
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const destinationSlug = searchParams.get("destination");
+  const appliedSlugRef = useRef(null);
+  const [prefillInfo, setPrefillInfo] = useState(null);
+
+  /* ── Auto-fill destination + country from ?destination=slug ── */
+  useEffect(() => {
+    if (!destinationSlug) return;
+    if (appliedSlugRef.current === destinationSlug) return;
+    if (wizard.loadingData) return;
+
+    const list = wizard.destinationsList || [];
+    if (!list.length) return;
+
+    const match = list.find(
+      (d) => d.slug === destinationSlug || d.value === destinationSlug,
+    );
+
+    appliedSlugRef.current = destinationSlug;
+
+    if (!match) {
+      setPrefillInfo({ notFound: true, slug: destinationSlug });
+      return;
+    }
+
+    wizard.setFormData((prev) => ({
+      ...prev,
+      destinationId: match.value,
+      countryId: match.countryId || prev.countryId,
+    }));
+
+    setPrefillInfo({
+      name:    match.label,
+      country: match.country,
+      slug:    destinationSlug,
+    });
+  }, [destinationSlug, wizard.loadingData, wizard.destinationsList, wizard.setFormData]);
+
+  const clearPrefill = useCallback(() => {
+    setPrefillInfo(null);
+    if (destinationSlug) {
+      searchParams.delete("destination");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [destinationSlug, searchParams, setSearchParams]);
+
   const [windowWidth, setWindowWidth] = useState(
     typeof window !== "undefined" ? window.innerWidth : 1200,
   );
@@ -513,6 +560,44 @@ const Booking = () => {
                 transition: "opacity .22s ease, transform .22s ease",
               }}
             >
+              {/* Auto-fill notice */}
+              <AnimatePresence>
+                {prefillInfo && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    animate={{ opacity: 1, height: "auto", marginBottom: 24 }}
+                    exit={{ opacity: 0, height: 0, marginBottom: 0 }}
+                    role="status"
+                    className="bk-info-box bk-info-box--green"
+                    style={{ position: "relative", overflow: "hidden" }}
+                  >
+                    <span style={{ fontSize: 20, flexShrink: 0 }}>📍</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: "0 0 2px", fontWeight: 700, fontSize: 14, color: "#065f46" }}>
+                        {prefillInfo.notFound
+                          ? "Destination not found"
+                          : `Pre-filled: ${prefillInfo.name}`}
+                      </p>
+                      <p style={{ margin: 0, fontSize: 13, color: "#047857" }}>
+                        {prefillInfo.notFound
+                          ? `We couldn't match “${prefillInfo.slug}”. Please choose a destination below.`
+                          : `${prefillInfo.country ? `${prefillInfo.country} · ` : ""}Just confirm your dates and details to continue.`}
+                      </p>
+                    </div>
+                    <button
+                      type="button" onClick={clearPrefill}
+                      aria-label="Dismiss"
+                      style={{
+                        position: "absolute", top: 10, right: 12,
+                        background: "transparent", border: "none",
+                        color: "#9ca3af", fontSize: 22,
+                        cursor: "pointer", padding: 0, lineHeight: 1,
+                      }}
+                    >×</button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Global error */}
               <ErrorBanner
                 error={wizard.submitError}

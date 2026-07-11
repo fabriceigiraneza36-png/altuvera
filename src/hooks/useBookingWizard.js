@@ -251,6 +251,7 @@ export const useBookingWizard = () => {
           (Array.isArray(raw) ? raw : []).map((d) => ({
             value:     String(d.id ?? d.value ?? ""),
             label:     d.name  ?? d.label ?? "",
+            slug:      String(d.slug ?? d.slug_url ?? d.value ?? ""),
             country:   typeof d.country === "object"
               ? (d.country?.name ?? d.countryName ?? "")
               : (d.country ?? ""),
