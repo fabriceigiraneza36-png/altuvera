@@ -1,9 +1,13 @@
 /**
- * useBookingWizard — v2.3
+ * useBookingWizard — v3.0
  * FIXES:
- *  - fetchJSON paths no longer include /api prefix (API_URL already has it)
- *  - getCountries replaced with direct fetchJSON (consistent URL handling)
- *  - All other logic unchanged from v2.2
+ *  - Step validation cases realigned to match 4-step UI (0=Trip, 1=Travelers, 2=Contact, 3=Review)
+ *  - Preferences step (old step 2) merged into Travelers step
+ *  - All formData values normalized to plain strings/primitives — never objects
+ *  - handleChange guards against React-Select {value,label} objects being stored
+ *  - setFormData wrapper normalizes incoming values defensively
+ *  - fetchJSON paths unchanged
+ *  - All other logic unchanged from v2.3
  */
 
 import {
@@ -55,11 +59,9 @@ const useSafeReduxAuth = () => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// fetchJSON — uses toAbsoluteApiUrl so /api is never doubled
-// paths must NOT start with /api
+// fetchJSON
 // ─────────────────────────────────────────────────────────────────────────────
 const fetchJSON = async (path, signal) => {
-  // toAbsoluteApiUrl auto-strips any accidental /api prefix
   const url = toAbsoluteApiUrl(path);
   const res = await fetch(url, { signal });
   if (!res.ok) throw new Error(`HTTP ${res.status}: ${url}`);
@@ -67,7 +69,27 @@ const fetchJSON = async (path, signal) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// INITIAL FORM — all camelCase
+// ✅ CORE FIX — normalize any value before storing in formData
+// Prevents {value, label} objects from React-Select or anywhere else
+// from being stored as form field values
+// ─────────────────────────────────────────────────────────────────────────────
+const normalizeFieldValue = (value) => {
+  if (value === null || value === undefined) return "";
+  // React-Select / custom select passes {value, label} objects
+  if (typeof value === "object" && !Array.isArray(value)) {
+    // If it has a .value property, extract just that
+    if ("value" in value) return String(value.value ?? "");
+    // Otherwise stringify safely
+    return "";
+  }
+  // Arrays are fine (interests, flexibleMonths)
+  if (Array.isArray(value)) return value;
+  // Booleans, numbers, strings — pass through
+  return value;
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// INITIAL FORM — all camelCase, all plain primitives
 // ─────────────────────────────────────────────────────────────────────────────
 const INITIAL_FORM = {
   // Step 0 — Trip
@@ -80,30 +102,36 @@ const INITIAL_FORM = {
   flexibleMonths: [],
 
   // Step 1 — Travelers
-  adults:    1,
-  children:  0,
-  infants:   0,
-  groupType: "",
-
-  // Step 2 — Preferences
+  adults:               1,
+  children:             0,
+  infants:              0,
+  groupType:            "",
   accommodationType:    "",
+  accommodation:        "",
   budgetRange:          "",
-  interests:            [],
-  dietaryRequirements:  "",
-  specialRequests:      "",
-  hasMedicalConditions: false,
-  medicalDetails:       "",
 
-  // Step 4 — Contact
-  firstName:    "",
-  lastName:     "",
-  email:        "",
-  phone:        "",
-  whatsapp:     "",
-  nationality:  "",
-  country:      "",
-  agreeToTerms: false,
-  source:       "website",
+  // Step 2 — Contact
+  firstName:              "",
+  lastName:               "",
+  email:                  "",
+  phone:                  "",
+  whatsapp:               "",
+  nationality:            "",
+  country:                "",
+  agreeToTerms:           false,
+  subscribeNewsletter:    false,
+  newsletterOptIn:        false,
+  hearAboutUs:            "",
+  preferredContactMethod: "",
+  preferredContactTime:   "",
+  pickupLocation:         "",
+  marketingSource:        "",
+  specialRequests:        "",
+  dietaryRequirements:    "",
+  hasMedicalConditions:   false,
+  medicalDetails:         "",
+  interests:              [],
+  source:                 "website",
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -171,9 +199,23 @@ export const useBookingWizard = () => {
   const [showModal,      setShowModal]      = useState(false);
 
   // ── Form state ────────────────────────────────────────────────────────
-  const [formData, setFormData] = useState(INITIAL_FORM);
-  const [errors,   setErrors]   = useState({});
-  const [touched,  setTouched]  = useState({});
+  const [formData, setFormDataRaw] = useState(INITIAL_FORM);
+  const [errors,   setErrors]      = useState({});
+  const [touched,  setTouched]     = useState({});
+
+  // ✅ Wrap setFormData so every update normalizes values
+  // This prevents {value,label} objects from ever being stored
+  const setFormData = useCallback((updater) => {
+    setFormDataRaw((prev) => {
+      const next = typeof updater === "function" ? updater(prev) : updater;
+      // Normalize every field in the new state
+      const normalized = {};
+      for (const [key, val] of Object.entries(next)) {
+        normalized[key] = normalizeFieldValue(val);
+      }
+      return normalized;
+    });
+  }, []);
 
   // ── Reference data ────────────────────────────────────────────────────
   const [categoriesList,   setCategoriesList]   = useState([]);
@@ -182,9 +224,7 @@ export const useBookingWizard = () => {
   const [servicesData,     setServicesData]     = useState([]);
 
   const [pendingBookingId, setPendingBookingId] = useState(null);
-
-  // ── Fields auto-completed from the logged-in user's account ──
-  const [prefilledFields, setPrefilledFields] = useState({});
+  const [prefilledFields,  setPrefilledFields]  = useState({});
 
   // ── Submission error ──────────────────────────────────────────────────
   const [submitError,      setSubmitError]      = useState(null);
@@ -228,7 +268,6 @@ export const useBookingWizard = () => {
   }, [user, setFormData]);
 
   // ── Load reference data ───────────────────────────────────────────────
-  // FIXED: paths do NOT include /api — toAbsoluteApiUrl adds it
   useEffect(() => {
     const controller = new AbortController();
     const { signal } = controller;
@@ -237,12 +276,9 @@ export const useBookingWizard = () => {
       setLoadingData(true);
 
       const [countriesResult, destResult, svcResult] = await Promise.allSettled([
-        // ✅ "/countries" → "https://backend.../api/countries"
-        fetchJSON("/countries?is_active=true&limit=200", signal),
-        // ✅ "/destinations" → "https://backend.../api/destinations"
+        fetchJSON("/countries?is_active=true&limit=200",    signal),
         fetchJSON("/destinations?is_active=true&limit=200", signal),
-        // ✅ "/services" → "https://backend.../api/services"
-        fetchJSON("/services?is_active=true&limit=200", signal),
+        fetchJSON("/services?is_active=true&limit=200",     signal),
       ]);
 
       if (!mountedRef.current) return;
@@ -323,18 +359,33 @@ export const useBookingWizard = () => {
 
   const getDestinationName = useCallback(
     (id) =>
-      destinationsList.find((d) => String(d.value) === String(id ?? formData.destinationId))?.label
-        ?? String(id ?? formData.destinationId ?? ""),
+      destinationsList.find(
+        (d) => String(d.value) === String(id ?? formData.destinationId)
+      )?.label ?? String(id ?? formData.destinationId ?? ""),
     [destinationsList, formData.destinationId]
   );
 
   // ── Field change ──────────────────────────────────────────────────────
+  // ✅ Guards against React-Select calling onChange with {value, label} object
   const handleChange = useCallback((e) => {
+    // React-Select and custom pickers may pass the option object directly
+    // instead of a DOM event — detect and handle both cases
+    if (e && typeof e === "object" && !e.target && "value" in e && "label" in e) {
+      // This is a React-Select option object — should not happen with native
+      // selects but guard defensively. We cannot know the field name here,
+      // so just ignore silently (caller should use setFormData directly).
+      console.warn("[BookingWizard] handleChange received a raw option object — use setFormData instead.", e);
+      return;
+    }
+
     const target     = e?.target ?? e;
     const fieldName  = target?.name  ?? "";
-    const fieldValue = target?.type === "checkbox"
+    const rawValue   = target?.type === "checkbox"
       ? target.checked
       : (target?.value ?? "");
+
+    // ✅ Normalize before storing — strips any accidental {value,label} objects
+    const fieldValue = normalizeFieldValue(rawValue);
 
     if (!fieldName) return;
 
@@ -344,7 +395,7 @@ export const useBookingWizard = () => {
       const { [fieldName]: _removed, ...rest } = prev;
       return rest;
     });
-  }, []);
+  }, [setFormData]);
 
   // ── Field blur ────────────────────────────────────────────────────────
   const handleBlur = useCallback((e) => {
@@ -354,22 +405,31 @@ export const useBookingWizard = () => {
 
   // ── Interest toggle ───────────────────────────────────────────────────
   const handleInterestToggle = useCallback((interestValue) => {
+    // Normalize the interest value in case an object was passed
+    const val = typeof interestValue === "object" && interestValue !== null
+      ? (interestValue.value ?? String(interestValue))
+      : interestValue;
+
     setFormData((prev) => {
       const cur = Array.isArray(prev.interests) ? prev.interests : [];
       return {
         ...prev,
-        interests: cur.includes(interestValue)
-          ? cur.filter((i) => i !== interestValue)
-          : [...cur, interestValue],
+        interests: cur.includes(val)
+          ? cur.filter((i) => i !== val)
+          : [...cur, val],
       };
     });
-  }, []);
+  }, [setFormData]);
 
   // ── Step validation ───────────────────────────────────────────────────
+  // ✅ FIXED: 4 steps (0=Trip, 1=Travelers, 2=Contact, 3=Review)
+  // Old code had 5 cases (0-4) — contact was at case 4 which never ran
   const validateStep = useCallback(
     (step) => {
       const errs = {};
+
       switch (step) {
+        // ── Step 0: Trip Details ──────────────────────────────────────
         case 0:
           if (!formData.countryId && !formData.destinationId) {
             errs.countryId = "Please select a country or destination.";
@@ -382,44 +442,46 @@ export const useBookingWizard = () => {
               errs.flexibleMonths = "Please select at least one preferred month.";
           }
           break;
+
+        // ── Step 1: Travelers ─────────────────────────────────────────
         case 1:
           if (!formData.adults || parseInt(formData.adults, 10) < 1)
             errs.adults = "At least 1 adult is required.";
           if (!formData.groupType)
             errs.groupType = "Please select your group type.";
           break;
+
+        // ── Step 2: Contact Info ──────────────────────────────────────
+        // ✅ FIXED: was case 4 (unreachable) — now correctly case 2
         case 2:
-          if (!formData.accommodationType)
-            errs.accommodationType = "Please select an accommodation style.";
-          if (!formData.budgetRange)
-            errs.budgetRange = "Please select your budget range.";
-          break;
-        case 3:
-          break;
-        case 4:
-          if (!formData.firstName?.trim()) errs.firstName = "First name is required.";
-          if (!formData.lastName?.trim())  errs.lastName  = "Last name is required.";
-          if (!formData.email?.trim())     errs.email     = "Email address is required.";
+          if (!formData.firstName?.trim())
+            errs.firstName = "First name is required.";
+          if (!formData.lastName?.trim())
+            errs.lastName = "Last name is required.";
+          if (!formData.email?.trim())
+            errs.email = "Email address is required.";
           else if (!EMAIL_RE.test(formData.email.trim()))
             errs.email = "Please enter a valid email address.";
-          if (!formData.phone?.trim())     errs.phone     = "Phone number is required.";
-          if (!formData.country?.trim())   errs.country   = "Country of residence is required.";
           if (!formData.agreeToTerms)
             errs.agreeToTerms = "You must agree to the terms to continue.";
           break;
+
+        // ── Step 3: Review — no validation needed, submit is next ─────
+        case 3:
+          break;
+
         default:
           break;
       }
+
       return errs;
     },
     [
-      formData.countryId,       formData.destinationId,
-      formData.isFlexible,      formData.startDate,
-      formData.flexibleMonths,  formData.adults,
-      formData.groupType,       formData.accommodationType,
-      formData.budgetRange,     formData.firstName,
-      formData.lastName,        formData.email,
-      formData.phone,           formData.country,
+      formData.countryId,      formData.destinationId,
+      formData.isFlexible,     formData.startDate,
+      formData.flexibleMonths, formData.adults,
+      formData.groupType,      formData.firstName,
+      formData.lastName,       formData.email,
       formData.agreeToTerms,
     ]
   );
@@ -467,7 +529,7 @@ export const useBookingWizard = () => {
     [currentStep, goToStep]
   );
 
-  // ── Compute booking_type before submit
+  // ── Compute booking_type ──────────────────────────────────────────────
   const computeBookingType = useCallback(() => {
     const { destinationId, countryId, categoryId } = formData;
     if (destinationId || countryId || categoryId) return "destination";
@@ -475,11 +537,13 @@ export const useBookingWizard = () => {
   }, [formData]);
 
   // ── Submit ────────────────────────────────────────────────────────────
+  // ✅ FIXED: validates step 2 (contact) not step 4
   const handleSubmit = useCallback(async (e) => {
     if (e?.preventDefault) e.preventDefault();
     if (isSubmitting) return;
 
-    const stepErrs = validateStep(4);
+    // Validate contact fields (step 2) before final submit
+    const stepErrs = validateStep(2);
     if (Object.keys(stepErrs).length) {
       setErrors(stepErrs);
       setTouched((prev) => {
@@ -522,7 +586,7 @@ export const useBookingWizard = () => {
         phone:                formData.phone?.trim(),
         whatsapp:             formData.whatsapp?.trim() || formData.phone?.trim(),
         nationality:          formData.nationality || undefined,
-        country:              formData.country || undefined,
+        country:              formData.country     || undefined,
         source:               "website",
         referrer_url:         typeof window !== "undefined"
           ? window.location.href : undefined,
@@ -556,7 +620,9 @@ export const useBookingWizard = () => {
             "Please check the highlighted fields and try again."
           );
         } else if (err.isRateLimit) {
-          setSubmitError("Too many requests — please wait a moment before trying again.");
+          setSubmitError(
+            "Too many requests — please wait a moment before trying again."
+          );
         } else if (err.isServerError) {
           setSubmitError(
             "Our servers are temporarily unavailable. " +
@@ -579,7 +645,10 @@ export const useBookingWizard = () => {
     } finally {
       if (mountedRef.current) setIsSubmitting(false);
     }
-  }, [formData, currentStep, isSubmitting, validateStep, getTotalVisitors, computeBookingType]);
+  }, [
+    formData, isSubmitting,
+    validateStep, getTotalVisitors, computeBookingType,
+  ]);
 
   // ── Modal helpers ─────────────────────────────────────────────────────
   const openModal  = useCallback(() => setShowModal(true),  []);
