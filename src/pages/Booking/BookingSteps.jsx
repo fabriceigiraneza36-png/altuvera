@@ -1,39 +1,66 @@
-/**
- * BookingSteps.jsx — v3.1
- * ✅ All React hooks explicitly imported
- * ✅ Steps: 0=Trip, 1=Travelers, 2=Review (step 3=Contact in Booking.jsx)
- */
+// src/pages/Booking/BookingSteps.jsx
 import React, {
-  useState, useCallback, useMemo, memo,
+  useState, useCallback, useMemo, memo, useEffect,
 } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  MapPin, Calendar, ChevronDown, X, Sparkles,
-  Clock, CheckCircle2, Navigation, Users, Home,
-  ArrowLeft, ArrowRight,
+  MapPin, Calendar, ChevronDown, X, Sparkles, Clock,
+  CheckCircle2, Navigation, Users, Home, ArrowLeft, ArrowRight,
 } from "lucide-react";
 import SelectModal from "./components/SelectModal";
+import { useTypewriter, useTypewriterOnce } from "../../hooks/useTypewriter";
+
+/* ══════════════════════════════════════════════════════════════
+   TYPEWRITER HEADING
+══════════════════════════════════════════════════════════════ */
+const TypewriterHeading = memo(({ strings, className, style, loop = true }) => {
+  const { text } = useTypewriter(strings, {
+    speed: 55, deleteSpeed: 30, pauseAfter: 2200, loop,
+  });
+
+  return (
+    <span style={style} className={className}>
+      {text}
+      <motion.span
+        animate={{ opacity: [1, 0, 1] }}
+        transition={{ duration: 0.9, repeat: Infinity, ease: "linear" }}
+        style={{ color: "#059669", fontWeight: 900, marginLeft: 1 }}
+      >
+        |
+      </motion.span>
+    </span>
+  );
+});
+TypewriterHeading.displayName = "TypewriterHeading";
+
+/* Single-shot typewriter for subtitles */
+const TypewriterSub = memo(({ text, delay = 0, style }) => {
+  const { text: t } = useTypewriterOnce(text, { speed: 28, startDelay: delay });
+  return <span style={style}>{t}</span>;
+});
+TypewriterSub.displayName = "TypewriterSub";
 
 /* ══════════════════════════════════════════════════════════════
    SHARED PRIMITIVES
 ══════════════════════════════════════════════════════════════ */
-const Label = ({ children, required }) => (
+const Label = memo(({ children, required }) => (
   <p style={{
     margin: "0 0 8px", fontSize: 12.5, fontWeight: 700,
     color: "#374151", textTransform: "uppercase",
-    letterSpacing: ".07em",
-    display: "flex", alignItems: "center", gap: 4,
+    letterSpacing: ".07em", display: "flex", alignItems: "center", gap: 4,
   }}>
     {children}
-    {required && <span style={{ color: "#ef4444", fontSize: 14 }}>*</span>}
+    {required && <span style={{ color: "#ef4444" }}>*</span>}
   </p>
-);
+));
+Label.displayName = "Label";
 
 const FieldError = memo(({ error, touched }) =>
   error && touched ? (
     <motion.p
-      initial={{ opacity: 0, y: -4 }}
-      animate={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: -4, height: 0 }}
+      animate={{ opacity: 1, y: 0,  height: "auto" }}
+      exit={{    opacity: 0, y: -4, height: 0      }}
       style={{
         margin: "6px 0 0", fontSize: 12.5, color: "#dc2626",
         display: "flex", alignItems: "center", gap: 5, fontWeight: 600,
@@ -46,40 +73,55 @@ const FieldError = memo(({ error, touched }) =>
 );
 FieldError.displayName = "FieldError";
 
-const SectionCard = memo(({ headerIcon, headerLabel, headerRight, children }) => (
-  <div style={{
-    background: "#fff", borderRadius: 20,
-    border: "1.5px solid #f0fdf4",
-    boxShadow: "0 2px 16px rgba(5,150,105,.06)",
-    marginBottom: 20, overflow: "hidden",
-  }}>
-    <div style={{
-      padding: "13px 22px", borderBottom: "1px solid #f3f4f6",
-      background: "linear-gradient(to right,#f0fdf4,#fff)",
-      display: "flex", alignItems: "center",
-      justifyContent: "space-between", gap: 8, flexWrap: "wrap",
-    }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-        {React.cloneElement(headerIcon, { size: 15, color: "#059669" })}
-        <span style={{
-          fontSize: 12.5, fontWeight: 700, color: "#374151",
-          textTransform: "uppercase", letterSpacing: ".06em",
-        }}>
-          {headerLabel}
-        </span>
-      </div>
-      {headerRight}
-    </div>
+/* Staggered field reveal wrapper */
+const FieldReveal = memo(({ children, delay = 0 }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 16 }}
+    animate={{ opacity: 1, y: 0  }}
+    transition={{ duration: 0.35, delay, ease: [0.4, 0, 0.2, 1] }}
+  >
     {children}
-  </div>
+  </motion.div>
+));
+FieldReveal.displayName = "FieldReveal";
+
+const SectionCard = memo(({ headerIcon, headerLabel, headerRight, children, delay = 0 }) => (
+  <FieldReveal delay={delay}>
+    <div style={{
+      background: "#fff", borderRadius: 20,
+      border: "1.5px solid #f0fdf4",
+      boxShadow: "0 2px 16px rgba(5,150,105,.06)",
+      marginBottom: 20, overflow: "hidden",
+    }}>
+      <div style={{
+        padding: "13px 22px", borderBottom: "1px solid #f3f4f6",
+        background: "linear-gradient(to right,#f0fdf4,#fff)",
+        display: "flex", alignItems: "center",
+        justifyContent: "space-between", gap: 8, flexWrap: "wrap",
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {React.cloneElement(headerIcon, { size: 15, color: "#059669" })}
+          <span style={{
+            fontSize: 12.5, fontWeight: 700, color: "#374151",
+            textTransform: "uppercase", letterSpacing: ".06em",
+          }}>
+            {headerLabel}
+          </span>
+        </div>
+        {headerRight}
+      </div>
+      {children}
+    </div>
+  </FieldReveal>
 ));
 SectionCard.displayName = "SectionCard";
 
-const StepHeader = memo(({ icon, badge, title, subtitle, isMobile }) => (
+/* Animated step header */
+const StepHeader = memo(({ icon, badge, titleStrings, titleStatic, subtitle, isMobile }) => (
   <div style={{ textAlign: "center", marginBottom: isMobile ? 32 : 44 }}>
     <motion.div
       initial={{ scale: 0, rotate: -20 }}
-      animate={{ scale: 1, rotate: 0 }}
+      animate={{ scale: 1, rotate: 0  }}
       transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.05 }}
       style={{
         width: 72, height: 72, borderRadius: "50%",
@@ -95,15 +137,16 @@ const StepHeader = memo(({ icon, badge, title, subtitle, isMobile }) => (
 
     {badge && (
       <motion.span
-        initial={{ opacity: 0, y: -6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
+        initial={{ opacity: 0, y: -6, scale: 0.9 }}
+        animate={{ opacity: 1, y: 0,  scale: 1   }}
+        transition={{ delay: 0.12 }}
         style={{
           display: "inline-block", marginBottom: 10,
           background: "linear-gradient(90deg,#f0fdf4,#dcfce7)",
           border: "1.5px solid #a7f3d0", borderRadius: 20,
           padding: "4px 16px", fontSize: 12, fontWeight: 700,
-          color: "#059669", letterSpacing: ".05em", textTransform: "uppercase",
+          color: "#059669", letterSpacing: ".05em",
+          textTransform: "uppercase",
         }}
       >
         {badge}
@@ -111,24 +154,29 @@ const StepHeader = memo(({ icon, badge, title, subtitle, isMobile }) => (
     )}
 
     <motion.h2
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.12 }}
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0  }}
+      transition={{ delay: 0.14 }}
       style={{
         fontFamily: "'Playfair Display',serif",
-        fontSize: isMobile ? 26 : 34, fontWeight: 900,
+        fontSize: isMobile ? 24 : 32, fontWeight: 900,
         color: "#0f172a", margin: "0 0 10px",
         lineHeight: 1.2, letterSpacing: "-0.02em",
+        minHeight: isMobile ? 58 : 42,
       }}
     >
-      {title}
+      {titleStrings ? (
+        <TypewriterHeading strings={titleStrings} loop={false} />
+      ) : (
+        titleStatic
+      )}
     </motion.h2>
 
     {subtitle && (
       <motion.p
-        initial={{ opacity: 0, y: 6 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.18 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.8 }}
         style={{
           fontSize: isMobile ? 14 : 15.5, color: "#6b7280",
           lineHeight: 1.65, maxWidth: 500, margin: "0 auto",
@@ -141,23 +189,12 @@ const StepHeader = memo(({ icon, badge, title, subtitle, isMobile }) => (
 ));
 StepHeader.displayName = "StepHeader";
 
-/* ══════════════════════════════════════════════════════════════
-   STEP 0 — TRIP DETAILS
-══════════════════════════════════════════════════════════════ */
-const MONTHS = [
-  { s: "Jan", v: "january"   }, { s: "Feb", v: "february"  },
-  { s: "Mar", v: "march"     }, { s: "Apr", v: "april"     },
-  { s: "May", v: "may"       }, { s: "Jun", v: "june"      },
-  { s: "Jul", v: "july"      }, { s: "Aug", v: "august"    },
-  { s: "Sep", v: "september" }, { s: "Oct", v: "october"   },
-  { s: "Nov", v: "november"  }, { s: "Dec", v: "december"  },
-];
-
+/* ── Picker button ── */
 const PickerButton = memo(({
   onClick, icon, label, value,
   hasValue, error, touched, clearable, onClear,
 }) => (
-  <div>
+  <motion.div whileTap={{ scale: 0.99 }}>
     <button
       type="button"
       onClick={onClick}
@@ -167,8 +204,7 @@ const PickerButton = memo(({
         background: hasValue ? "#f0fdf4" : "#f9fafb",
         border: `2px solid ${
           error && touched ? "#fca5a5"
-          : hasValue ? "#6ee7b7"
-          : "#e5e7eb"
+          : hasValue ? "#6ee7b7" : "#e5e7eb"
         }`,
         borderRadius: 14, cursor: "pointer", textAlign: "left",
         transition: "all .2s", fontFamily: "inherit",
@@ -177,15 +213,11 @@ const PickerButton = memo(({
       <span style={{
         width: 34, height: 34, borderRadius: 10, flexShrink: 0,
         background: hasValue
-          ? "linear-gradient(135deg,#059669,#10b981)"
-          : "#e5e7eb",
+          ? "linear-gradient(135deg,#059669,#10b981)" : "#e5e7eb",
         display: "flex", alignItems: "center", justifyContent: "center",
         transition: "all .2s",
       }}>
-        {React.cloneElement(icon, {
-          size: 16,
-          color: hasValue ? "#fff" : "#9ca3af",
-        })}
+        {React.cloneElement(icon, { size: 16, color: hasValue ? "#fff" : "#9ca3af" })}
       </span>
       <span style={{
         flex: 1, fontSize: 14.5,
@@ -212,25 +244,32 @@ const PickerButton = memo(({
         <ChevronDown size={16} color="#9ca3af" style={{ flexShrink: 0 }} />
       )}
     </button>
-    <FieldError error={error} touched={touched} />
-  </div>
+    <AnimatePresence>
+      {error && touched && (
+        <FieldError error={error} touched={touched} />
+      )}
+    </AnimatePresence>
+  </motion.div>
 ));
 PickerButton.displayName = "PickerButton";
 
+/* ── Date field ── */
 const DateField = memo(({
   label, name, value, min,
   onChange, onBlur, error, touched, required,
 }) => (
   <div>
     <Label required={required}>{label}</Label>
-    <div style={{ position: "relative" }}>
+    <motion.div
+      whileFocus={{ scale: 1.01 }}
+      style={{ position: "relative" }}
+    >
       <div style={{
         position: "absolute", left: 14, top: "50%",
         transform: "translateY(-50%)", pointerEvents: "none", zIndex: 1,
         width: 34, height: 34,
         background: value
-          ? "linear-gradient(135deg,#059669,#10b981)"
-          : "#e5e7eb",
+          ? "linear-gradient(135deg,#059669,#10b981)" : "#e5e7eb",
         borderRadius: 10,
         display: "flex", alignItems: "center", justifyContent: "center",
         transition: "all .2s",
@@ -238,19 +277,14 @@ const DateField = memo(({
         <Calendar size={16} color={value ? "#fff" : "#9ca3af"} />
       </div>
       <input
-        type="date"
-        name={name}
-        value={value || ""}
-        min={min}
-        onChange={onChange}
-        onBlur={onBlur}
+        type="date" name={name} value={value || ""} min={min}
+        onChange={onChange} onBlur={onBlur}
         style={{
           width: "100%", padding: "14px 16px 14px 60px",
           background: value ? "#f0fdf4" : "#f9fafb",
           border: `2px solid ${
             error && touched ? "#fca5a5"
-            : value ? "#6ee7b7"
-            : "#e5e7eb"
+            : value ? "#6ee7b7" : "#e5e7eb"
           }`,
           borderRadius: 14, fontSize: 14.5,
           fontWeight: value ? 700 : 400,
@@ -259,15 +293,29 @@ const DateField = memo(({
           fontFamily: "inherit", transition: "all .2s", cursor: "pointer",
         }}
       />
-    </div>
-    <FieldError error={error} touched={touched} />
+    </motion.div>
+    <AnimatePresence>
+      {error && touched && <FieldError error={error} touched={touched} />}
+    </AnimatePresence>
   </div>
 ));
 DateField.displayName = "DateField";
 
+/* ── Month selector ── */
+const MONTHS = [
+  { s: "Jan", v: "january"   }, { s: "Feb", v: "february"  },
+  { s: "Mar", v: "march"     }, { s: "Apr", v: "april"     },
+  { s: "May", v: "may"       }, { s: "Jun", v: "june"      },
+  { s: "Jul", v: "july"      }, { s: "Aug", v: "august"    },
+  { s: "Sep", v: "september" }, { s: "Oct", v: "october"   },
+  { s: "Nov", v: "november"  }, { s: "Dec", v: "december"  },
+];
+
+/* ══════════════════════════════════════════════════════════════
+   STEP 0 — TRIP DETAILS
+══════════════════════════════════════════════════════════════ */
 const StepTrip = memo(({
-  formData, setFormData,
-  errors, touched,
+  formData, setFormData, errors, touched,
   handleChange, handleBlur,
   destinationsList, countriesList, categoriesList,
   isMobile, displayName,
@@ -277,7 +325,6 @@ const StepTrip = memo(({
 
   const today = new Date().toISOString().split("T")[0];
 
-  /* ✅ useMemo imported at top of file */
   const selectedCountry = useMemo(() =>
     (countriesList || []).find((c) => c.value === formData.countryId),
   [countriesList, formData.countryId]);
@@ -294,7 +341,6 @@ const StepTrip = memo(({
     return d > 0 ? d : null;
   }, [formData.startDate, formData.endDate]);
 
-  /* ✅ useCallback imported at top of file */
   const handleCountrySelect = useCallback((c) => {
     setFormData((p) => ({ ...p, countryId: c.value, destinationId: "" }));
     setOpenCountry(false);
@@ -319,72 +365,77 @@ const StepTrip = memo(({
 
   const hour = new Date().getHours();
   const greeting =
-    hour < 12 ? "Good morning"
-    : hour < 17 ? "Good afternoon"
-    : "Good evening";
+    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
+  const titleStrings = displayName
+    ? [`${greeting}, ${displayName}! Where to?`]
+    : ["Where would you like to go?", "Plan your African adventure!", "Your journey starts here!"];
 
   return (
     <div>
       <StepHeader
         icon={<Navigation size={30} color="#fff" />}
-        badge={displayName ? `${greeting}, ${displayName}! 👋` : undefined}
-        title={<>Where would you like <span style={{ color: "#059669" }}>to go?</span></>}
-        subtitle="Choose your dream destination and travel dates to begin planning your perfect African adventure."
+        badge="Step 1 of 4 · Trip Details"
+        titleStrings={titleStrings}
+        subtitle="Choose your dream destination and travel dates to begin your perfect adventure."
         isMobile={isMobile}
       />
 
-      {/* ── Destination card ── */}
+      {/* Destination card */}
       <SectionCard
         headerIcon={<MapPin />}
         headerLabel="Destination"
+        delay={0.05}
       >
         <div style={{
           padding: "20px 22px",
           display: "grid", gap: 18,
           gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
         }}>
-          <div>
-            <Label required>Country</Label>
-            <PickerButton
-              onClick={() => setOpenCountry(true)}
-              icon={<MapPin />}
-              label="Select a country"
-              value={
-                selectedCountry
-                  ? `${selectedCountry.flag && !selectedCountry.flag.startsWith("http")
-                      ? selectedCountry.flag + " " : ""}${selectedCountry.label}`
-                  : null
-              }
-              hasValue={!!selectedCountry}
-              error={errors.countryId}
-              touched={touched.countryId}
-              clearable
-              onClear={() =>
-                setFormData((p) => ({ ...p, countryId: "", destinationId: "" }))
-              }
-            />
-          </div>
+          <FieldReveal delay={0.1}>
+            <div>
+              <Label required>Country</Label>
+              <PickerButton
+                onClick={() => setOpenCountry(true)}
+                icon={<MapPin />}
+                label="Select a country"
+                value={
+                  selectedCountry
+                    ? `${selectedCountry.flag && !selectedCountry.flag.startsWith("http")
+                        ? selectedCountry.flag + " " : ""}${selectedCountry.label}`
+                    : null
+                }
+                hasValue={!!selectedCountry}
+                error={errors.countryId}
+                touched={touched.countryId}
+                clearable
+                onClear={() => setFormData((p) => ({ ...p, countryId: "", destinationId: "" }))}
+              />
+            </div>
+          </FieldReveal>
 
-          <div>
-            <Label>
-              Specific Destination{" "}
-              <span style={{
-                fontSize: 11, color: "#9ca3af",
-                fontWeight: 400, textTransform: "none", letterSpacing: 0,
-              }}>
-                (optional)
-              </span>
-            </Label>
-            <PickerButton
-              onClick={() => setOpenDest(true)}
-              icon={<Sparkles />}
-              label="Select a destination"
-              value={selectedDest?.label ?? null}
-              hasValue={!!selectedDest}
-              clearable
-              onClear={() => setFormData((p) => ({ ...p, destinationId: "" }))}
-            />
-          </div>
+          <FieldReveal delay={0.15}>
+            <div>
+              <Label>
+                Specific Destination{" "}
+                <span style={{
+                  fontSize: 11, color: "#9ca3af",
+                  fontWeight: 400, textTransform: "none", letterSpacing: 0,
+                }}>
+                  (optional)
+                </span>
+              </Label>
+              <PickerButton
+                onClick={() => setOpenDest(true)}
+                icon={<Sparkles />}
+                label="Select a destination"
+                value={selectedDest?.label ?? null}
+                hasValue={!!selectedDest}
+                clearable
+                onClear={() => setFormData((p) => ({ ...p, destinationId: "" }))}
+              />
+            </div>
+          </FieldReveal>
         </div>
       </SectionCard>
 
@@ -407,11 +458,12 @@ const StepTrip = memo(({
         isMobile={isMobile}
       />
 
-      {/* ── Popular destinations ── */}
+      {/* Popular destinations */}
       {(destinationsList || []).length > 0 && (
         <SectionCard
           headerIcon={<Sparkles />}
           headerLabel="Popular Destinations"
+          delay={0.1}
         >
           <div style={{
             padding: "16px 22px",
@@ -420,25 +472,27 @@ const StepTrip = memo(({
             gap: 10,
           }}>
             {destinationsList.slice(0, 6).map((dest, i) => {
-              const id = dest.value || dest.id || dest._id || dest.slug || String(dest.name || dest);
+              const id = dest.value || dest.id || dest._id
+                || dest.slug || String(dest.name || dest);
               const isActive = formData.destinationId === id;
               return (
                 <motion.button
                   key={id || i}
                   type="button"
+                  initial={{ opacity: 0, scale: 0.92 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.12 + i * 0.05 }}
                   whileHover={{ y: -2, boxShadow: "0 6px 18px rgba(5,150,105,.18)" }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => setFormData((p) => ({ ...p, destinationId: id }))}
                   style={{
                     padding: "12px 14px", borderRadius: 14,
                     background: isActive
-                      ? "linear-gradient(135deg,#059669,#10b981)"
-                      : "#f9fafb",
+                      ? "linear-gradient(135deg,#059669,#10b981)" : "#f9fafb",
                     border: `2px solid ${isActive ? "#059669" : "#e5e7eb"}`,
                     cursor: "pointer", textAlign: "left",
                     transition: "all .2s", fontFamily: "inherit",
-                    boxShadow: isActive
-                      ? "0 4px 14px rgba(5,150,105,.28)" : "none",
+                    boxShadow: isActive ? "0 4px 14px rgba(5,150,105,.28)" : "none",
                   }}
                 >
                   <div style={{
@@ -465,14 +519,13 @@ const StepTrip = memo(({
         </SectionCard>
       )}
 
-      {/* ── Dates card ── */}
+      {/* Dates card */}
       <SectionCard
         headerIcon={<Calendar />}
         headerLabel="Travel Dates"
+        delay={0.15}
         headerRight={
-          <label style={{
-            display: "flex", alignItems: "center", gap: 8, cursor: "pointer",
-          }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
             <span style={{ fontSize: 12.5, fontWeight: 600, color: "#6b7280" }}>
               Flexible
             </span>
@@ -484,8 +537,7 @@ const StepTrip = memo(({
               style={{
                 width: 44, height: 24, borderRadius: 12, border: "none",
                 background: formData.isFlexible
-                  ? "linear-gradient(90deg,#059669,#10b981)"
-                  : "#e5e7eb",
+                  ? "linear-gradient(90deg,#059669,#10b981)" : "#e5e7eb",
                 position: "relative", cursor: "pointer",
                 transition: "background .25s",
                 boxShadow: formData.isFlexible
@@ -511,9 +563,9 @@ const StepTrip = memo(({
               <motion.div
                 key="fixed"
                 initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.18 }}
+                animate={{ opacity: 1, y: 0  }}
+                exit={{    opacity: 0, y: -6  }}
+                transition={{ duration: 0.2 }}
                 style={{
                   display: "grid", gap: 18,
                   gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
@@ -537,28 +589,29 @@ const StepTrip = memo(({
               <motion.div
                 key="flex"
                 initial={{ opacity: 0, y: -6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.18 }}
+                animate={{ opacity: 1, y: 0  }}
+                exit={{    opacity: 0, y: -6  }}
+                transition={{ duration: 0.2 }}
               >
                 <Label required>Preferred Months</Label>
                 <div style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(4,1fr)",
-                  gap: 8,
+                  display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8,
                 }}>
-                  {MONTHS.map(({ s, v }) => {
+                  {MONTHS.map(({ s, v }, i) => {
                     const active = (formData.flexibleMonths || []).includes(v);
                     return (
-                      <button
+                      <motion.button
                         key={v}
                         type="button"
+                        initial={{ opacity: 0, scale: 0.85 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: i * 0.03 }}
+                        whileTap={{ scale: 0.93 }}
                         onClick={() => toggleMonth(v)}
                         style={{
                           padding: "10px 4px", borderRadius: 10, border: "none",
                           background: active
-                            ? "linear-gradient(135deg,#059669,#10b981)"
-                            : "#f3f4f6",
+                            ? "linear-gradient(135deg,#059669,#10b981)" : "#f3f4f6",
                           color: active ? "#fff" : "#374151",
                           fontSize: 13, fontWeight: 700,
                           cursor: "pointer", transition: "all .18s",
@@ -567,22 +620,30 @@ const StepTrip = memo(({
                         }}
                       >
                         {s}
-                      </button>
+                      </motion.button>
                     );
                   })}
                 </div>
-                <FieldError
-                  error={errors.flexibleMonths}
-                  touched={touched.flexibleMonths}
-                />
+                <AnimatePresence>
+                  {errors.flexibleMonths && touched.flexibleMonths && (
+                    <FieldError
+                      error={errors.flexibleMonths}
+                      touched={touched.flexibleMonths}
+                    />
+                  )}
+                </AnimatePresence>
                 {(formData.flexibleMonths || []).length > 0 && (
-                  <p style={{
-                    margin: "10px 0 0", fontSize: 13,
-                    color: "#059669", fontWeight: 700,
-                  }}>
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    style={{
+                      margin: "10px 0 0", fontSize: 13,
+                      color: "#059669", fontWeight: 700,
+                    }}
+                  >
                     ✓ {formData.flexibleMonths.length} month
                     {formData.flexibleMonths.length !== 1 ? "s" : ""} selected
-                  </p>
+                  </motion.p>
                 )}
               </motion.div>
             )}
@@ -592,10 +653,10 @@ const StepTrip = memo(({
           <AnimatePresence>
             {tripDays && (
               <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                style={{ marginTop: 16 }}
+                initial={{ opacity: 0, scale: 0.9, height: 0 }}
+                animate={{ opacity: 1, scale: 1,   height: "auto" }}
+                exit={{    opacity: 0, scale: 0.9, height: 0      }}
+                style={{ marginTop: 16, overflow: "hidden" }}
               >
                 <div style={{
                   display: "flex", alignItems: "center", gap: 12,
@@ -614,16 +675,18 @@ const StepTrip = memo(({
                   <div>
                     <p style={{
                       margin: 0, fontSize: 11.5, color: "#6b7280",
-                      fontWeight: 600, textTransform: "uppercase",
-                      letterSpacing: ".06em",
+                      fontWeight: 600, textTransform: "uppercase", letterSpacing: ".06em",
                     }}>
                       Trip Duration
                     </p>
-                    <p style={{
-                      margin: 0, fontSize: 20, fontWeight: 900, color: "#059669",
-                    }}>
+                    <motion.p
+                      key={tripDays}
+                      initial={{ scale: 0.7, opacity: 0 }}
+                      animate={{ scale: 1,   opacity: 1 }}
+                      style={{ margin: 0, fontSize: 22, fontWeight: 900, color: "#059669" }}
+                    >
                       {tripDays} day{tripDays !== 1 ? "s" : ""}
-                    </p>
+                    </motion.p>
                   </div>
                 </div>
               </motion.div>
@@ -632,11 +695,12 @@ const StepTrip = memo(({
         </div>
       </SectionCard>
 
-      {/* ── Category (optional) ── */}
+      {/* Category */}
       {(categoriesList || []).length > 0 && (
         <SectionCard
           headerIcon={<CheckCircle2 />}
-          headerLabel="Trip Category"
+          headerLabel="Trip Category (optional)"
+          delay={0.2}
         >
           <div style={{ padding: "16px 22px" }}>
             <select
@@ -687,12 +751,8 @@ const Counter = memo(({ label, hint, icon, value, onChange, min = 0, max = 30 })
         {icon}
       </div>
       <div>
-        <p style={{ margin: 0, fontWeight: 700, fontSize: 14.5, color: "#1f2937" }}>
-          {label}
-        </p>
-        {hint && (
-          <p style={{ margin: "2px 0 0", fontSize: 12, color: "#9ca3af" }}>{hint}</p>
-        )}
+        <p style={{ margin: 0, fontWeight: 700, fontSize: 14.5, color: "#1f2937" }}>{label}</p>
+        {hint && <p style={{ margin: "2px 0 0", fontSize: 12, color: "#9ca3af" }}>{hint}</p>}
       </div>
     </div>
     <div style={{
@@ -701,7 +761,8 @@ const Counter = memo(({ label, hint, icon, value, onChange, min = 0, max = 30 })
       border: "1.5px solid #e5e7eb",
       boxShadow: "0 1px 4px rgba(0,0,0,.06)", overflow: "hidden",
     }}>
-      <button
+      <motion.button
+        whileTap={{ scale: value <= min ? 1 : 0.85 }}
         type="button"
         onClick={() => onChange(Math.max(min, value - 1))}
         disabled={value <= min}
@@ -715,17 +776,27 @@ const Counter = memo(({ label, hint, icon, value, onChange, min = 0, max = 30 })
           display: "flex", alignItems: "center", justifyContent: "center",
           transition: "all .15s",
         }}
-      >−</button>
-      <span style={{
-        minWidth: 44, textAlign: "center",
-        fontSize: 17, fontWeight: 800, color: "#111827",
-        borderLeft: "1px solid #f3f4f6",
-        borderRight: "1px solid #f3f4f6",
-        lineHeight: "40px", height: 40,
-      }}>
-        {value}
-      </span>
-      <button
+      >−</motion.button>
+      <AnimatePresence mode="wait">
+        <motion.span
+          key={value}
+          initial={{ scale: 0.5, opacity: 0 }}
+          animate={{ scale: 1,   opacity: 1 }}
+          exit={{    scale: 0.5, opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          style={{
+            minWidth: 44, textAlign: "center",
+            fontSize: 17, fontWeight: 800, color: "#111827",
+            borderLeft: "1px solid #f3f4f6",
+            borderRight: "1px solid #f3f4f6",
+            lineHeight: "40px", height: 40, display: "block",
+          }}
+        >
+          {value}
+        </motion.span>
+      </AnimatePresence>
+      <motion.button
+        whileTap={{ scale: value >= max ? 1 : 0.85 }}
         type="button"
         onClick={() => onChange(Math.min(max, value + 1))}
         disabled={value >= max}
@@ -739,7 +810,7 @@ const Counter = memo(({ label, hint, icon, value, onChange, min = 0, max = 30 })
           display: "flex", alignItems: "center", justifyContent: "center",
           transition: "all .15s",
         }}
-      >+</button>
+      >+</motion.button>
     </div>
   </div>
 ));
@@ -749,24 +820,27 @@ const StepTravelers = memo(({
   formData, setFormData, errors, touched,
   groupTypes, accommodationTypes, isMobile, displayName,
 }) => {
-  /* ✅ useMemo imported at top of file */
   const adults   = useMemo(() => parseInt(formData.adults,   10) || 0, [formData.adults]);
   const children = useMemo(() => parseInt(formData.children, 10) || 0, [formData.children]);
   const infants  = useMemo(() => parseInt(formData.infants,  10) || 0, [formData.infants]);
   const total    = adults + children + infants;
 
+  const titleStrings = displayName
+    ? [`Perfect, ${displayName}! Who's joining?`]
+    : ["Who's joining the adventure?", "Tell us about your group!"];
+
   return (
     <div>
       <StepHeader
         icon={<Users size={30} color="#fff" />}
-        badge={displayName ? `Perfect, ${displayName}!` : undefined}
-        title={<>Who's joining the <span style={{ color: "#059669" }}>adventure?</span></>}
-        subtitle="Tell us about your group so we can tailor the perfect experience."
+        badge="Step 2 of 4 · Travelers"
+        titleStrings={titleStrings}
+        subtitle="Help us tailor the perfect experience for your group."
         isMobile={isMobile}
       />
 
-      {/* ── Group type ── */}
-      <SectionCard headerIcon={<Users />} headerLabel="Group Type">
+      {/* Group type */}
+      <SectionCard headerIcon={<Users />} headerLabel="Group Type" delay={0.05}>
         <div style={{
           padding: "18px 22px",
           display: "grid",
@@ -780,19 +854,18 @@ const StepTravelers = memo(({
               <motion.button
                 key={id}
                 type="button"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.04 }}
-                whileHover={{ y: -2, boxShadow: "0 6px 18px rgba(5,150,105,.15)" }}
-                whileTap={{ scale: 0.97 }}
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0  }}
+                transition={{ delay: i * 0.05 }}
+                whileHover={{ y: -3, boxShadow: "0 8px 24px rgba(5,150,105,.18)" }}
+                whileTap={{ scale: 0.96 }}
                 onClick={() => setFormData((p) => ({ ...p, groupType: id }))}
                 role="radio"
                 aria-checked={isActive}
                 style={{
                   padding: "18px 10px", borderRadius: 16,
                   background: isActive
-                    ? "linear-gradient(135deg,#f0fdf4,#dcfce7)"
-                    : "#f9fafb",
+                    ? "linear-gradient(135deg,#f0fdf4,#dcfce7)" : "#f9fafb",
                   border: `2px solid ${isActive ? "#059669" : "#e5e7eb"}`,
                   cursor: "pointer", textAlign: "center",
                   transition: "all .2s", fontFamily: "inherit",
@@ -800,40 +873,54 @@ const StepTravelers = memo(({
                   outline: "none",
                 }}
               >
-                <div style={{ fontSize: 30, marginBottom: 8 }}>{g.icon}</div>
+                <motion.div
+                  animate={{ scale: isActive ? 1.1 : 1 }}
+                  style={{ fontSize: 30, marginBottom: 8 }}
+                >
+                  {g.icon}
+                </motion.div>
                 <div style={{
                   fontSize: 12.5, fontWeight: 700,
-                  color: isActive ? "#065f46" : "#374151",
-                  lineHeight: 1.3,
+                  color: isActive ? "#065f46" : "#374151", lineHeight: 1.3,
                 }}>
                   {g.label || g.name || g.full_name}
                 </div>
-                {isActive && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    style={{
-                      width: 20, height: 20, borderRadius: "50%",
-                      background: "#059669", margin: "8px auto 0",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}
-                  >
-                    <CheckCircle2 size={13} color="#fff" />
-                  </motion.div>
-                )}
+                <AnimatePresence>
+                  {isActive && (
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{    scale: 0, opacity: 0 }}
+                      style={{
+                        width: 20, height: 20, borderRadius: "50%",
+                        background: "#059669", margin: "8px auto 0",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}
+                    >
+                      <CheckCircle2 size={13} color="#fff" />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </motion.button>
             );
           })}
         </div>
-        {errors.groupType && touched.groupType && (
-          <p style={{ margin: "0 22px 14px", fontSize: 12.5, color: "#dc2626", fontWeight: 600 }}>
-            ⚠ {errors.groupType}
-          </p>
-        )}
+        <AnimatePresence>
+          {errors.groupType && touched.groupType && (
+            <motion.p
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{    opacity: 0, height: 0    }}
+              style={{ margin: "0 22px 14px", fontSize: 12.5, color: "#dc2626", fontWeight: 600 }}
+            >
+              ⚠ {errors.groupType}
+            </motion.p>
+          )}
+        </AnimatePresence>
       </SectionCard>
 
-      {/* ── Traveler counts ── */}
-      <SectionCard headerIcon={<Users />} headerLabel="Number of Travellers">
+      {/* Traveler counts */}
+      <SectionCard headerIcon={<Users />} headerLabel="Number of Travellers" delay={0.1}>
         <div style={{ padding: "4px 22px" }}>
           <Counter
             icon="🧑" label="Adults" hint="Ages 18 and above"
@@ -857,55 +944,63 @@ const StepTravelers = memo(({
         <AnimatePresence>
           {total > 0 && (
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 8, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: "auto" }}
+              exit={{    opacity: 0, y: 8, height: 0    }}
               style={{
-                margin: "0 22px 18px",
+                margin: "0 22px 18px", overflow: "hidden",
+              }}
+            >
+              <div style={{
                 display: "flex", alignItems: "center",
                 justifyContent: "space-between",
                 padding: "14px 18px",
                 background: "linear-gradient(135deg,#f0fdf4,#dcfce7)",
                 border: "1.5px solid #a7f3d0", borderRadius: 14,
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <Users size={18} color="#059669" />
-                <div>
-                  <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: "#065f46" }}>
-                    Total travellers
-                  </p>
-                  <p style={{ margin: "2px 0 0", fontSize: 12, color: "#6b7280" }}>
-                    {adults} adult{adults !== 1 ? "s" : ""}
-                    {children > 0 && ` · ${children} child${children !== 1 ? "ren" : ""}`}
-                    {infants  > 0 && ` · ${infants} infant${infants !== 1 ? "s" : ""}`}
-                  </p>
+              }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <Users size={18} color="#059669" />
+                  <div>
+                    <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: "#065f46" }}>
+                      Total travellers
+                    </p>
+                    <p style={{ margin: "2px 0 0", fontSize: 12, color: "#6b7280" }}>
+                      {adults} adult{adults !== 1 ? "s" : ""}
+                      {children > 0 && ` · ${children} child${children !== 1 ? "ren" : ""}`}
+                      {infants  > 0 && ` · ${infants} infant${infants !== 1 ? "s" : ""}`}
+                    </p>
+                  </div>
                 </div>
+                <motion.span
+                  key={total}
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1,   opacity: 1 }}
+                  style={{ fontSize: 32, fontWeight: 900, color: "#059669", lineHeight: 1 }}
+                >
+                  {total}
+                </motion.span>
               </div>
-              <motion.span
-                key={total}
-                initial={{ scale: 0.6, opacity: 0 }}
-                animate={{ scale: 1,   opacity: 1 }}
-                style={{
-                  fontSize: 30, fontWeight: 900, color: "#059669", lineHeight: 1,
-                }}
-              >
-                {total}
-              </motion.span>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {errors.adults && touched.adults && (
-          <p style={{ margin: "0 22px 14px", fontSize: 12.5, color: "#dc2626", fontWeight: 600 }}>
-            ⚠ {errors.adults}
-          </p>
-        )}
+        <AnimatePresence>
+          {errors.adults && touched.adults && (
+            <motion.p
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{    opacity: 0, height: 0    }}
+              style={{ margin: "0 22px 14px", fontSize: 12.5, color: "#dc2626", fontWeight: 600 }}
+            >
+              ⚠ {errors.adults}
+            </motion.p>
+          )}
+        </AnimatePresence>
       </SectionCard>
 
-      {/* ── Accommodation ── */}
+      {/* Accommodation */}
       {(accommodationTypes || []).length > 0 && (
-        <SectionCard headerIcon={<Home />} headerLabel="Accommodation Style">
+        <SectionCard headerIcon={<Home />} headerLabel="Accommodation Style" delay={0.15}>
           <div style={{
             padding: "18px 22px",
             display: "grid",
@@ -915,15 +1010,14 @@ const StepTravelers = memo(({
             {accommodationTypes.map((a, i) => {
               const id = a.value || a.id;
               const isActive =
-                formData.accommodationType === id ||
-                formData.accommodation      === id;
+                formData.accommodationType === id || formData.accommodation === id;
               return (
                 <motion.button
                   key={id}
                   type="button"
                   initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.05 }}
+                  animate={{ opacity: 1, y: 0  }}
+                  transition={{ delay: i * 0.06 }}
                   whileHover={{ y: -2, boxShadow: "0 6px 18px rgba(5,150,105,.15)" }}
                   whileTap={{ scale: 0.97 }}
                   onClick={() => setFormData((p) => ({
@@ -934,21 +1028,18 @@ const StepTravelers = memo(({
                   style={{
                     padding: "16px 18px", borderRadius: 16,
                     background: isActive
-                      ? "linear-gradient(135deg,#f0fdf4,#dcfce7)"
-                      : "#f9fafb",
+                      ? "linear-gradient(135deg,#f0fdf4,#dcfce7)" : "#f9fafb",
                     border: `2px solid ${isActive ? "#059669" : "#e5e7eb"}`,
                     cursor: "pointer", textAlign: "left",
                     transition: "all .2s", fontFamily: "inherit",
                     boxShadow: isActive ? "0 4px 16px rgba(5,150,105,.18)" : "none",
-                    display: "flex", alignItems: "flex-start", gap: 14,
-                    outline: "none",
+                    display: "flex", alignItems: "flex-start", gap: 14, outline: "none",
                   }}
                 >
                   <div style={{
                     width: 42, height: 42, borderRadius: 11, flexShrink: 0,
                     background: isActive
-                      ? "linear-gradient(135deg,#059669,#10b981)"
-                      : "#e5e7eb",
+                      ? "linear-gradient(135deg,#059669,#10b981)" : "#e5e7eb",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: 20, transition: "all .2s",
                     boxShadow: isActive ? "0 4px 12px rgba(5,150,105,.3)" : "none",
@@ -968,12 +1059,17 @@ const StepTravelers = memo(({
                       </p>
                     )}
                   </div>
-                  {isActive && (
-                    <CheckCircle2
-                      size={18} color="#059669"
-                      style={{ flexShrink: 0, marginTop: 2 }}
-                    />
-                  )}
+                  <AnimatePresence>
+                    {isActive && (
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        exit={{    scale: 0 }}
+                      >
+                        <CheckCircle2 size={18} color="#059669" style={{ flexShrink: 0, marginTop: 2 }} />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.button>
               );
             })}
@@ -996,12 +1092,17 @@ const BUDGET_LABELS = {
   "flexible":   "Flexible",
 };
 
-const ReviewRow = memo(({ label, value, icon }) => (
-  <div style={{
-    display: "flex", alignItems: "flex-start",
-    gap: 12, padding: "14px 0",
-    borderBottom: "1px solid #f3f4f6",
-  }}>
+const ReviewRow = memo(({ label, value, icon, delay = 0 }) => (
+  <motion.div
+    initial={{ opacity: 0, x: -12 }}
+    animate={{ opacity: 1, x: 0   }}
+    transition={{ delay, duration: 0.3 }}
+    style={{
+      display: "flex", alignItems: "flex-start",
+      gap: 12, padding: "14px 0",
+      borderBottom: "1px solid #f3f4f6",
+    }}
+  >
     <div style={{
       width: 34, height: 34, borderRadius: 9,
       background: "linear-gradient(135deg,#f0fdf4,#dcfce7)",
@@ -1020,13 +1121,12 @@ const ReviewRow = memo(({ label, value, icon }) => (
       </p>
       <p style={{
         margin: 0, fontSize: 14.5, fontWeight: 700,
-        color: "#111827", lineHeight: 1.45,
-        wordBreak: "break-word",
+        color: "#111827", lineHeight: 1.45, wordBreak: "break-word",
       }}>
         {value}
       </p>
     </div>
-  </div>
+  </motion.div>
 ));
 ReviewRow.displayName = "ReviewRow";
 
@@ -1035,7 +1135,6 @@ const StepReview = memo(({
   groupTypes, accommodationTypes,
   getTripDuration, getTotalVisitors, isMobile,
 }) => {
-  /* ✅ useMemo imported at top of file */
   const dest = useMemo(() =>
     (destinationsList || []).find((d) => d.value === formData.destinationId),
   [destinationsList, formData.destinationId]);
@@ -1056,76 +1155,51 @@ const StepReview = memo(({
 
   const duration = getTripDuration?.();
   const total    = getTotalVisitors?.();
-
   const adults   = parseInt(formData.adults,   10) || 0;
   const children = parseInt(formData.children, 10) || 0;
   const infants  = parseInt(formData.infants,  10) || 0;
 
   const rows = useMemo(() => [
-    {
-      icon: "📍", label: "Destination",
-      value: dest?.label || country?.label || "Not specified",
-    },
+    { icon: "📍", label: "Destination",
+      value: dest?.label || country?.label || "Not specified" },
     formData.isFlexible
-      ? {
-          icon: "📅", label: "Dates",
+      ? { icon: "📅", label: "Dates",
           value: `Flexible — ${
             (formData.flexibleMonths || []).length
               ? formData.flexibleMonths
                   .map((m) => m.charAt(0).toUpperCase() + m.slice(1))
                   .join(", ")
               : "Any month"
-          }`,
-        }
-      : {
-          icon: "📅", label: "Departure",
+          }` }
+      : { icon: "📅", label: "Departure",
           value: formData.startDate
             ? new Date(formData.startDate).toLocaleDateString("en-US", {
                 weekday: "short", year: "numeric",
                 month: "long", day: "numeric",
               })
-            : "—",
-        },
+            : "—" },
     !formData.isFlexible && formData.endDate && {
       icon: "🏁", label: "Return",
       value: new Date(formData.endDate).toLocaleDateString("en-US", {
         weekday: "short", year: "numeric", month: "long", day: "numeric",
       }),
     },
-    duration && !formData.isFlexible && {
-      icon: "⏱️", label: "Duration",
-      value: `${duration} day${duration !== 1 ? "s" : ""}`,
-    },
-    {
-      icon: "👥", label: "Travellers",
+    duration && { icon: "⏱️", label: "Duration",
+      value: `${duration} day${duration !== 1 ? "s" : ""}` },
+    { icon: "👥", label: "Travellers",
       value: `${total || 0} total — ${adults} adult${adults !== 1 ? "s" : ""}${
         children ? `, ${children} child${children !== 1 ? "ren" : ""}` : ""
-      }${infants ? `, ${infants} infant${infants !== 1 ? "s" : ""}` : ""}`,
-    },
-    groupType && {
-      icon: "🧳", label: "Group Type",
-      value: `${groupType.icon ?? ""} ${groupType.label || groupType.name}`.trim(),
-    },
-    accom && {
-      icon: "🏨", label: "Accommodation",
-      value: `${accom.icon ?? ""} ${accom.label || accom.name}`.trim(),
-    },
-    formData.budgetRange && {
-      icon: "💰", label: "Budget",
-      value: BUDGET_LABELS[formData.budgetRange] || formData.budgetRange,
-    },
-    formData.interests?.length > 0 && {
-      icon: "✨", label: "Interests",
-      value: formData.interests.join(", "),
-    },
-    formData.dietaryRequirements && {
-      icon: "🍽️", label: "Dietary",
-      value: formData.dietaryRequirements,
-    },
-    formData.specialRequests && {
-      icon: "💬", label: "Special Requests",
-      value: formData.specialRequests,
-    },
+      }${infants ? `, ${infants} infant${infants !== 1 ? "s" : ""}` : ""}` },
+    groupType && { icon: "🧳", label: "Group Type",
+      value: `${groupType.icon ?? ""} ${groupType.label || groupType.name}`.trim() },
+    accom && { icon: "🏨", label: "Accommodation",
+      value: `${accom.icon ?? ""} ${accom.label || accom.name}`.trim() },
+    formData.budgetRange && { icon: "💰", label: "Budget",
+      value: BUDGET_LABELS[formData.budgetRange] || formData.budgetRange },
+    formData.interests?.length > 0 && { icon: "✨", label: "Interests",
+      value: formData.interests.join(", ") },
+    formData.specialRequests && { icon: "💬", label: "Special Requests",
+      value: formData.specialRequests },
   ].filter(Boolean), [
     dest, country, formData, duration, total,
     adults, children, infants, groupType, accom,
@@ -1135,8 +1209,13 @@ const StepReview = memo(({
     <div>
       <StepHeader
         icon={<CheckCircle2 size={30} color="#fff" />}
-        badge="Step 3 of 4"
-        title={<>Review your <span style={{ color: "#059669" }}>trip details</span></>}
+        badge="Step 3 of 4 · Review"
+        titleStatic={
+          <>
+            Review your{" "}
+            <span style={{ color: "#059669" }}>trip details</span>
+          </>
+        }
         subtitle="Everything look good? Go back to edit, or continue to complete your booking."
         isMobile={isMobile}
       />
@@ -1144,8 +1223,9 @@ const StepReview = memo(({
       {/* Destination hero */}
       {dest?.image && (
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.1 }}
           style={{
             borderRadius: 20, overflow: "hidden",
             height: isMobile ? 170 : 230,
@@ -1160,8 +1240,7 @@ const StepReview = memo(({
           <div style={{
             position: "absolute", inset: 0,
             background: "linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 55%)",
-            display: "flex", alignItems: "flex-end",
-            padding: "22px 24px",
+            display: "flex", alignItems: "flex-end", padding: "22px 24px",
           }}>
             <div>
               <h3 style={{
@@ -1174,8 +1253,8 @@ const StepReview = memo(({
               </h3>
               {dest.country && (
                 <p style={{
-                  margin: 0, color: "rgba(255,255,255,.82)", fontSize: 13.5,
-                  display: "flex", alignItems: "center", gap: 5,
+                  margin: 0, color: "rgba(255,255,255,.82)",
+                  fontSize: 13.5,
                 }}>
                   📍 {dest.country}
                 </p>
@@ -1185,27 +1264,27 @@ const StepReview = memo(({
         </motion.div>
       )}
 
-      {/* Summary table */}
-      <SectionCard headerIcon={<CheckCircle2 />} headerLabel="Trip Summary">
+      {/* Summary */}
+      <SectionCard headerIcon={<CheckCircle2 />} headerLabel="Trip Summary" delay={0.05}>
         <div style={{ padding: "0 22px" }}>
-          {rows.map((row) => (
+          {rows.map((row, i) => (
             <ReviewRow
               key={row.label}
               icon={row.icon}
               label={row.label}
               value={row.value}
+              delay={0.06 + i * 0.05}
             />
           ))}
         </div>
-        {/* Remove last border */}
         <div style={{ height: 8 }} />
       </SectionCard>
 
       {/* No payment notice */}
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0  }}
+        transition={{ delay: 0.4 }}
         style={{
           display: "flex", gap: 14, alignItems: "flex-start",
           padding: "18px 22px",
@@ -1236,130 +1315,132 @@ StepReview.displayName = "StepReview";
 const NavBar = memo(({
   currentStep, totalSteps, onPrev, onNext,
   isSubmitting, isLastStep, isMobile,
-}) => (
-  <div style={{
-    display: "flex", alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 36, paddingTop: 24,
-    borderTop: "1.5px solid #f3f4f6",
-    gap: 12, flexWrap: "wrap",
-  }}>
-    <div>
-      {currentStep > 0 && (
+}) => {
+  const [shaking, setShaking] = useState(false);
+
+  const handleNext = () => {
+    // The parent validates; if it returns without navigating, shake
+    onNext();
+  };
+
+  return (
+    <motion.div
+      animate={shaking ? { x: [-8, 8, -8, 8, 0] } : { x: 0 }}
+      transition={{ duration: 0.4 }}
+      style={{
+        display: "flex", alignItems: "center",
+        justifyContent: "space-between",
+        marginTop: 36, paddingTop: 24,
+        borderTop: "1.5px solid #f3f4f6",
+        gap: 12, flexWrap: "wrap",
+      }}
+    >
+      <div>
+        {currentStep > 0 && (
+          <motion.button
+            whileHover={{ x: -2 }}
+            whileTap={{ scale: 0.97 }}
+            type="button"
+            onClick={onPrev}
+            disabled={isSubmitting}
+            aria-label="Previous step"
+            style={{
+              display: "flex", alignItems: "center", gap: 8,
+              padding: "13px 22px",
+              background: "#f9fafb", color: "#374151",
+              border: "1.5px solid #e5e7eb",
+              borderRadius: 50, fontSize: 14, fontWeight: 700,
+              cursor: isSubmitting ? "not-allowed" : "pointer",
+              opacity: isSubmitting ? 0.6 : 1, transition: "all .2s",
+            }}
+          >
+            <ArrowLeft size={16} /> Back
+          </motion.button>
+        )}
+      </div>
+
+      <div style={{ display: "flex", gap: 14, alignItems: "center", marginLeft: "auto" }}>
+        {/* Dot progress */}
+        {!isMobile && (
+          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+            {Array.from({ length: totalSteps }).map((_, i) => (
+              <motion.div
+                key={i}
+                animate={{
+                  width: i === currentStep ? 22 : 7,
+                  background: i < currentStep
+                    ? "#10b981"
+                    : i === currentStep
+                    ? "linear-gradient(90deg,#059669,#10b981)"
+                    : "#e5e7eb",
+                }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                style={{ height: 7, borderRadius: 10 }}
+              />
+            ))}
+          </div>
+        )}
+
         <motion.button
-          whileHover={{ x: -2 }}
+          whileHover={{ y: -1, boxShadow: "0 10px 28px rgba(5,150,105,.38)" }}
           whileTap={{ scale: 0.97 }}
           type="button"
-          onClick={onPrev}
+          onClick={handleNext}
           disabled={isSubmitting}
-          aria-label="Previous step"
+          aria-label={isLastStep ? "Continue to contact details" : "Next step"}
           style={{
             display: "flex", alignItems: "center", gap: 8,
-            padding: "13px 22px",
-            background: "#f9fafb", color: "#374151",
-            border: "1.5px solid #e5e7eb",
-            borderRadius: 50, fontSize: 14, fontWeight: 700,
+            padding: "14px 28px",
+            background: "linear-gradient(135deg,#059669,#10b981)",
+            color: "#fff", border: "none",
+            borderRadius: 50, fontSize: 14.5, fontWeight: 800,
             cursor: isSubmitting ? "not-allowed" : "pointer",
-            opacity: isSubmitting ? 0.6 : 1,
+            opacity: isSubmitting ? 0.7 : 1,
+            boxShadow: "0 4px 18px rgba(5,150,105,.3)",
             transition: "all .2s",
+            minWidth: isMobile ? 140 : 210,
+            justifyContent: "center",
           }}
         >
-          <ArrowLeft size={16} />
-          Back
+          {isSubmitting ? (
+            <>
+              <motion.span
+                animate={{ rotate: 360 }}
+                transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+                style={{ display: "inline-block", fontSize: 16 }}
+              >⟳</motion.span>
+              Processing…
+            </>
+          ) : (
+            <>
+              {isLastStep ? "Continue to Contact" : "Next Step"}
+              <ArrowRight size={16} />
+            </>
+          )}
         </motion.button>
-      )}
-    </div>
-
-    <div style={{
-      display: "flex", gap: 14,
-      alignItems: "center", marginLeft: "auto",
-    }}>
-      {/* Dot progress */}
-      {!isMobile && (
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-          {Array.from({ length: totalSteps }).map((_, i) => (
-            <motion.div
-              key={i}
-              animate={{
-                width: i === currentStep ? 20 : 7,
-                background: i <= currentStep
-                  ? "linear-gradient(90deg,#059669,#10b981)"
-                  : "#e5e7eb",
-              }}
-              transition={{ duration: 0.3 }}
-              style={{ height: 7, borderRadius: 10 }}
-            />
-          ))}
-        </div>
-      )}
-
-      <motion.button
-        whileHover={{ y: -1, boxShadow: "0 8px 24px rgba(5,150,105,.35)" }}
-        whileTap={{ scale: 0.97 }}
-        type="button"
-        onClick={onNext}
-        disabled={isSubmitting}
-        aria-label={isLastStep ? "Continue to contact details" : "Next step"}
-        style={{
-          display: "flex", alignItems: "center", gap: 8,
-          padding: "14px 28px",
-          background: "linear-gradient(135deg,#059669,#10b981)",
-          color: "#fff", border: "none",
-          borderRadius: 50, fontSize: 14.5, fontWeight: 800,
-          cursor: isSubmitting ? "not-allowed" : "pointer",
-          opacity: isSubmitting ? 0.7 : 1,
-          boxShadow: "0 4px 18px rgba(5,150,105,.3)",
-          transition: "all .2s",
-          minWidth: isMobile ? 140 : 200,
-          justifyContent: "center",
-        }}
-      >
-        {isSubmitting ? (
-          <>
-            <motion.span
-              animate={{ rotate: 360 }}
-              transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-              style={{ display: "inline-block", fontSize: 16 }}
-            >
-              ⟳
-            </motion.span>
-            Processing…
-          </>
-        ) : (
-          <>
-            {isLastStep ? "Continue to Contact" : "Next Step"}
-            <ArrowRight size={16} />
-          </>
-        )}
-      </motion.button>
-    </div>
-  </div>
-));
+      </div>
+    </motion.div>
+  );
+});
 NavBar.displayName = "NavBar";
 
 /* ══════════════════════════════════════════════════════════════
    MAIN EXPORT
-   Steps 0=Trip, 1=Travelers, 2=Review (step 3=Contact in Booking.jsx)
 ══════════════════════════════════════════════════════════════ */
-const TOTAL_STEPS = 4; // Trip, Travelers, Review, Contact
+const TOTAL_STEPS = 4;
 
 const BookingSteps = ({
-  currentStep, isAnimating,
-  formData, setFormData,
-  errors, touched,
-  handleChange, handleBlur,
+  currentStep, formData, setFormData,
+  errors, touched, handleChange, handleBlur,
   isMobile, isTablet,
-  categoriesList, destinationsList,
-  countriesList, groupTypes,
-  accommodationTypes, getTripDuration,
-  getTotalVisitors, interests,
-  handleInterestToggle, nextStep, prevStep,
-  isSubmitting, displayName,
+  categoriesList, destinationsList, countriesList,
+  groupTypes, accommodationTypes, getTripDuration,
+  getTotalVisitors, interests, handleInterestToggle,
+  nextStep, prevStep, isSubmitting, displayName,
 }) => {
   const sharedProps = {
     formData, setFormData,
-    errors, touched,
-    handleChange, handleBlur,
+    errors, touched, handleChange, handleBlur,
     isMobile, displayName,
   };
 
@@ -1391,7 +1472,6 @@ const BookingSteps = ({
     />,
   ];
 
-  // isLastStep = step 2 (Review), last step before Contact
   const isLastStep = currentStep === 2;
 
   return (
@@ -1399,10 +1479,10 @@ const BookingSteps = ({
       <AnimatePresence mode="wait">
         <motion.div
           key={currentStep}
-          initial={{ opacity: 0, x: 20  }}
+          initial={{ opacity: 0, x: 40  }}
           animate={{ opacity: 1, x: 0   }}
-          exit={{    opacity: 0, x: -20 }}
-          transition={{ duration: 0.25, ease: "easeInOut" }}
+          exit={{    opacity: 0, x: -40 }}
+          transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
         >
           {stepComponents[currentStep] ?? null}
         </motion.div>

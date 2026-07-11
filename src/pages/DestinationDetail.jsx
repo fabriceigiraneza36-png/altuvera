@@ -11,6 +11,7 @@ import React, {
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useDestination } from "../hooks/useDestinations";
 import { useDestinationComments } from "../hooks/useDestinationComments";
+import { useUserAuth } from "../context/UserAuthContext";
 import { api } from "../utils/api";
 import PageHeader from "../components/common/PageHeader";
 import "../styles/destinationDetail.css";
@@ -1244,21 +1245,64 @@ const MoreInCountrySection = ({ d }) => {
 /* ═══════════════════════════════════════════════════════════
    COMMENTS (second-to-last)
 ═══════════════════════════════════════════════════════════ */
+const ROTATE_WINDOW = 3;      // number of comments shown at once on the public UI
+const ROTATE_INTERVAL = 6000; // ms between rotations
+
 const CommentsSection = ({ d }) => {
   const destId = d?.id || d?._id || d?.slug;
   const { comments, loading, createComment, error } = useDestinationComments(destId);
+
+  // Auth — commenting requires a signed-in user
+  const { isAuthenticated = false, openModal } = useUserAuth() || {};
+
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [localError, setLocalError] = useState("");
+  const [rotIdx, setRotIdx] = useState(0);
+
+  // Rotate the 3-comment window through the full list
+  useEffect(() => {
+    if (comments.length <= ROTATE_WINDOW) { setRotIdx(0); return; }
+    const t = setInterval(() => {
+      setRotIdx(i => (i + ROTATE_WINDOW) % comments.length);
+    }, ROTATE_INTERVAL);
+    return () => clearInterval(t);
+  }, [comments.length]);
+
+  // The 3 comments currently visible (cyclic window)
+  const visibleComments = useMemo(() => {
+    if (comments.length <= ROTATE_WINDOW) return comments;
+    return Array.from({ length: ROTATE_WINDOW }, (_, k) =>
+      comments[(rotIdx + k) % comments.length]
+    );
+  }, [comments, rotIdx]);
 
   const handleSubmit = async e => {
     e.preventDefault();
+    setLocalError("");
     if (!text.trim()) return;
+
+    if (!isAuthenticated) {
+      if (typeof openModal === "function") openModal("login");
+      else setLocalError("Please sign in to post a comment.");
+      return;
+    }
+
     setSubmitting(true);
-    try { await createComment(destId, text.trim()); setText(""); }
-    catch {} finally { setSubmitting(false); }
+    try {
+      await createComment(destId, text.trim());
+      setText("");
+      setRotIdx(0); // jump back so the newest comment is visible
+    } catch (err) {
+      setLocalError(err?.message || "Could not post your comment. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (!destId) return null;
+
+  const displayError = localError || error;
 
   return (
     <section className="dd-comments-section">
@@ -1279,27 +1323,31 @@ const CommentsSection = ({ d }) => {
               <span className="dd-comments-portal__count">{comments.length}</span>
             </div>
 
-            {error && (
+            {displayError && (
               <div className="dd-alert dd-alert--warn" style={{ marginBottom: 16 }}>
-                <Icon name="alertTriangle" size={14} /> {error}
+                <Icon name="alertTriangle" size={14} /> {displayError}
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="dd-comments-form">
               <input type="text" value={text} onChange={e => setText(e.target.value)}
-                placeholder={`Write a comment about ${d.name}...`}
-                maxLength={500} className="dd-comments-form__input" />
+                placeholder={isAuthenticated
+                  ? `Write a comment about ${d.name}...`
+                  : `Sign in to comment about ${d.name}...`}
+                maxLength={2000} className="dd-comments-form__input" />
               <button type="submit" disabled={submitting || !text.trim()} className="dd-comments-form__btn">
                 {submitting ? "Posting…" : "Post Comment"}
               </button>
             </form>
 
             <div>
-              {comments.map(c => (
+              {visibleComments.map(c => c && (
                 <div key={c.id} className="dd-comment-item">
                   <div className="dd-comment-item__header">
                     <div className="dd-comment-item__avatar">
-                      {(c.user?.name || c.authorName || "A")[0]}
+                      {c.user?.avatar
+                        ? <img src={c.user.avatar} alt="" style={{ width: "100%", height: "100%", borderRadius: "inherit", objectFit: "cover" }} />
+                        : (c.user?.name || c.authorName || "A")[0]}
                     </div>
                     <div>
                       <div className="dd-comment-item__name">{c.user?.name || c.authorName || "Anonymous"}</div>
@@ -1315,6 +1363,28 @@ const CommentsSection = ({ d }) => {
                 </p>
               )}
             </div>
+
+            {comments.length > ROTATE_WINDOW && (
+              <div className="dd-comments-rotator">
+                <span className="dd-comments-rotator__label">
+                  Showing 3 of {comments.length} community comments
+                </span>
+                <div className="dd-comments-rotator__dots">
+                  {Array.from({ length: Math.ceil(comments.length / ROTATE_WINDOW) }, (_, p) => {
+                    const active = Math.floor(rotIdx / ROTATE_WINDOW) === p;
+                    return (
+                      <button
+                        key={p}
+                        type="button"
+                        aria-label={`Show comments group ${p + 1}`}
+                        className={`dd-comments-rotator__dot${active ? " dd-comments-rotator__dot--active" : ""}`}
+                        onClick={() => setRotIdx((p * ROTATE_WINDOW) % comments.length)}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </Reveal>
       </div>
