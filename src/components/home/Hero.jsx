@@ -1,19 +1,21 @@
 // components/home/Hero.jsx
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   FiPlay,
-  FiMap,
   FiArrowRight,
   FiChevronDown,
-  FiX,
-  FiAlertCircle,
+  FiChevronLeft,
+  FiChevronRight,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "../common/Button";
 import { useApp } from "../../context/AppContext";
 import { useScrollTriggeredSlide } from "../../hooks/useScrollTriggeredSlide";
 
+/* ═══════════════════════════════════════════════════════════
+   SLIDE DATA
+═══════════════════════════════════════════════════════════ */
 export const HERO_SLIDES = [
   {
     image:
@@ -24,8 +26,8 @@ export const HERO_SLIDES = [
     subtitle:
       "Experience nature's greatest spectacle across the vast Serengeti and Maasai Mara plains",
     location: "Rwanda & Tanzania",
-    animationPreset: "cinematicDrift",
-    overlayGradient:
+    preset: "cinematicDrift",
+    gradient:
       "linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 50%, rgba(16,185,129,0.15) 100%)",
   },
   {
@@ -37,8 +39,8 @@ export const HERO_SLIDES = [
     subtitle:
       "An intimate encounter with our closest relatives in their misty forest home",
     location: "Rwanda & Uganda",
-    animationPreset: "softFocus",
-    overlayGradient:
+    preset: "softFocus",
+    gradient:
       "linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(34,85,51,0.35) 100%)",
   },
   {
@@ -50,8 +52,8 @@ export const HERO_SLIDES = [
     subtitle:
       "Conquer Africa's highest peak and stand at the legendary roof of the continent",
     location: "Tanzania",
-    animationPreset: "risingHorizon",
-    overlayGradient:
+    preset: "risingHorizon",
+    gradient:
       "linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 60%, rgba(255,255,255,0.05) 100%)",
   },
   {
@@ -63,8 +65,8 @@ export const HERO_SLIDES = [
     subtitle:
       "Explore the rock-hewn churches of Lalibela and Ethiopia's 3,000-year timeless heritage",
     location: "Ethiopia",
-    animationPreset: "zoomOut",
-    overlayGradient:
+    preset: "zoomOut",
+    gradient:
       "linear-gradient(45deg, rgba(139,69,19,0.35) 0%, rgba(0,0,0,0.45) 100%)",
   },
   {
@@ -76,8 +78,8 @@ export const HERO_SLIDES = [
     subtitle:
       "Serene dawn over Lake Kivu with misty waters and distant hills at sunrise",
     location: "Lake Kivu, Rwanda",
-    animationPreset: "parallaxDepth",
-    overlayGradient:
+    preset: "parallaxDepth",
+    gradient:
       "linear-gradient(180deg, rgba(255,140,0,0.15) 0%, rgba(0,0,0,0.5) 100%)",
   },
   {
@@ -89,8 +91,8 @@ export const HERO_SLIDES = [
     subtitle:
       "Endless grasslands and wildlife roaming under wide Tanzanian skies",
     location: "Tanzania",
-    animationPreset: "horizontalPan",
-    overlayGradient:
+    preset: "horizontalPan",
+    gradient:
       "linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.15) 50%, rgba(218,165,32,0.15) 100%)",
   },
   {
@@ -102,8 +104,8 @@ export const HERO_SLIDES = [
     subtitle:
       "Breathtaking crater views and rich wildlife habitats high in Tanzanian highlands",
     location: "Tanzania",
-    animationPreset: "cinematicWide",
-    overlayGradient:
+    preset: "cinematicWide",
+    gradient:
       "linear-gradient(135deg, rgba(0,100,0,0.25) 0%, rgba(0,0,0,0.5) 100%)",
   },
   {
@@ -115,8 +117,8 @@ export const HERO_SLIDES = [
     subtitle:
       "Mist‑covered rainforests rich with gorillas and biodiversity in Uganda",
     location: "Uganda",
-    animationPreset: "verticalReveal",
-    overlayGradient:
+    preset: "verticalReveal",
+    gradient:
       "linear-gradient(180deg, rgba(0,50,0,0.4) 0%, rgba(0,0,0,0.6) 100%)",
   },
   {
@@ -128,8 +130,8 @@ export const HERO_SLIDES = [
     subtitle:
       "Open landscapes and wildlife safaris across eastern Rwanda's pristine wilderness",
     location: "Rwanda",
-    animationPreset: "dynamicSweep",
-    overlayGradient:
+    preset: "dynamicSweep",
+    gradient:
       "linear-gradient(45deg, rgba(0,0,0,0.45) 0%, rgba(16,185,129,0.15) 100%)",
   },
   {
@@ -141,21 +143,67 @@ export const HERO_SLIDES = [
     subtitle:
       "Iconic African wildlife framed by majestic Mount Kilimanjaro in Rwanda",
     location: "Rwanda",
-    animationPreset: "rotateZoom",
-    overlayGradient:
+    preset: "rotateZoom",
+    gradient:
       "linear-gradient(0deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.25) 50%, rgba(135,206,235,0.15) 100%)",
   },
 ];
 
 /* ═══════════════════════════════════════════════════════════
-   ANIMATED LOCATION PIN — Custom SVG with pulse + bounce
+   IMAGE PRESETS (Ken Burns effects)
 ═══════════════════════════════════════════════════════════ */
-const AnimatedLocationPin = ({ size = 18 }) => (
+const PRESETS = {
+  cinematicDrift: {
+    initial: { scale: 1.18, x: "4%", y: "2%" },
+    animate: { scale: 1.02, x: "-3%", y: "-1%" },
+  },
+  verticalReveal: {
+    initial: { scale: 1.22, y: "6%" },
+    animate: { scale: 1.04, y: "-4%" },
+  },
+  horizontalPan: {
+    initial: { scale: 1.1, x: "-6%" },
+    animate: { scale: 1.02, x: "4%" },
+  },
+  zoomOut: {
+    initial: { scale: 1.28 },
+    animate: { scale: 1.02 },
+  },
+  rotateZoom: {
+    initial: { scale: 1.14, rotate: 1.5 },
+    animate: { scale: 1.02, rotate: 0 },
+  },
+  parallaxDepth: {
+    initial: { scale: 1.18, y: "8%" },
+    animate: { scale: 1.02, y: "-2%" },
+  },
+  softFocus: {
+    initial: { scale: 1.08 },
+    animate: { scale: 1.02 },
+  },
+  dynamicSweep: {
+    initial: { scale: 1.14, x: "6%", y: "-4%" },
+    animate: { scale: 1.02, x: "-3%", y: "2%" },
+  },
+  risingHorizon: {
+    initial: { scale: 1.18, y: "10%" },
+    animate: { scale: 1.02, y: "-4%" },
+  },
+  cinematicWide: {
+    initial: { scale: 1.22, x: "-4%" },
+    animate: { scale: 1.02, x: "3%" },
+  },
+};
+
+/* ═══════════════════════════════════════════════════════════
+   ANIMATED LOCATION PIN SVG
+═══════════════════════════════════════════════════════════ */
+const LocationPin = ({ size = 17 }) => (
   <motion.div
     style={{
       position: "relative",
-      width: size + 8,
-      height: size + 8,
+      width: size + 10,
+      height: size + 10,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
@@ -163,620 +211,528 @@ const AnimatedLocationPin = ({ size = 18 }) => (
     }}
   >
     {/* Ripple rings */}
-    <motion.div
-      style={{
-        position: "absolute",
-        inset: 0,
-        borderRadius: "50%",
-        border: "1.5px solid rgba(16, 185, 129, 0.4)",
-      }}
-      animate={{
-        scale: [1, 1.8, 2.2],
-        opacity: [0.6, 0.2, 0],
-      }}
-      transition={{
-        duration: 2.4,
-        repeat: Infinity,
-        ease: "easeOut",
-        delay: 0,
-      }}
-    />
-    <motion.div
-      style={{
-        position: "absolute",
-        inset: 0,
-        borderRadius: "50%",
-        border: "1px solid rgba(16, 185, 129, 0.3)",
-      }}
-      animate={{
-        scale: [1, 1.6, 2],
-        opacity: [0.4, 0.15, 0],
-      }}
-      transition={{
-        duration: 2.4,
-        repeat: Infinity,
-        ease: "easeOut",
-        delay: 0.8,
-      }}
-    />
+    {[0, 0.9].map((delay, i) => (
+      <motion.div
+        key={i}
+        style={{
+          position: "absolute",
+          inset: 0,
+          borderRadius: "50%",
+          border: `1px solid rgba(16,185,129,${0.35 - i * 0.12})`,
+        }}
+        animate={{
+          scale: [1, 1.7 + i * 0.3, 2 + i * 0.3],
+          opacity: [0.5 - i * 0.15, 0.15, 0],
+        }}
+        transition={{
+          duration: 2.6,
+          repeat: Infinity,
+          ease: "easeOut",
+          delay,
+        }}
+      />
+    ))}
 
-    {/* The pin itself */}
+    {/* Pin SVG */}
     <motion.svg
       width={size}
       height={size}
       viewBox="0 0 24 24"
       fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      animate={{
-        y: [0, -2, 0],
+      animate={{ y: [0, -2.5, 0] }}
+      transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+      style={{
+        position: "relative",
+        zIndex: 2,
+        filter: "drop-shadow(0 2px 6px rgba(16,185,129,0.4))",
       }}
-      transition={{
-        duration: 2,
-        repeat: Infinity,
-        ease: "easeInOut",
-      }}
-      style={{ position: "relative", zIndex: 2, filter: "drop-shadow(0 2px 4px rgba(16,185,129,0.35))" }}
     >
-      {/* Pin body */}
-      <motion.path
-        d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
-        fill="url(#pinGradient)"
-        stroke="rgba(255,255,255,0.9)"
-        strokeWidth="0.8"
-        initial={{ scale: 0, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ duration: 0.5, ease: "backOut" }}
-      />
-      {/* Inner circle */}
-      <motion.circle
-        cx="12"
-        cy="9"
-        r="3"
-        fill="none"
-        stroke="rgba(255,255,255,0.95)"
-        strokeWidth="1.5"
-        initial={{ scale: 0 }}
-        animate={{ scale: [1, 1.1, 1] }}
-        transition={{
-          scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
-          default: { delay: 0.3, duration: 0.4, ease: "backOut" },
-        }}
-      />
-      {/* Inner dot */}
-      <motion.circle
-        cx="12"
-        cy="9"
-        r="1.2"
-        fill="rgba(255,255,255,0.9)"
-        animate={{
-          opacity: [0.7, 1, 0.7],
-          scale: [0.9, 1.1, 0.9],
-        }}
-        transition={{
-          duration: 1.5,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      />
-      {/* Gradient definition */}
       <defs>
-        <linearGradient id="pinGradient" x1="5" y1="2" x2="19" y2="22" gradientUnits="userSpaceOnUse">
+        <linearGradient id="hero-pin-g" x1="5" y1="2" x2="19" y2="22" gradientUnits="userSpaceOnUse">
           <stop offset="0%" stopColor="#34d399" />
-          <stop offset="50%" stopColor="#10b981" />
+          <stop offset="55%" stopColor="#10b981" />
           <stop offset="100%" stopColor="#059669" />
         </linearGradient>
       </defs>
+      <motion.path
+        d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
+        fill="url(#hero-pin-g)"
+        stroke="rgba(255,255,255,0.85)"
+        strokeWidth="0.7"
+      />
+      <motion.circle
+        cx="12" cy="9" r="2.8"
+        fill="none"
+        stroke="rgba(255,255,255,0.9)"
+        strokeWidth="1.4"
+        animate={{ scale: [1, 1.08, 1] }}
+        transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+      />
+      <motion.circle
+        cx="12" cy="9" r="1"
+        fill="rgba(255,255,255,0.85)"
+        animate={{ opacity: [0.6, 1, 0.6] }}
+        transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+      />
     </motion.svg>
   </motion.div>
 );
+
+/* ═══════════════════════════════════════════════════════════
+   CSS INJECTION
+═══════════════════════════════════════════════════════════ */
+const HERO_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+.hero-root {
+  position: relative;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 600px;
+  overflow: hidden;
+  background: #0a0a0a;
+}
+
+/* ── Slide Layers ── */
+.hero-slides {
+  position: absolute; inset: 0;
+}
+.hero-slide {
+  position: absolute; inset: 0; overflow: hidden;
+}
+.hero-slide-img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  will-change: transform;
+}
+.hero-overlay-slide {
+  position: absolute; inset: 0;
+  z-index: 2; pointer-events: none;
+}
+.hero-vignette {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.3) 100%);
+  z-index: 3; pointer-events: none;
+}
+.hero-grain {
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.75' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  z-index: 4; pointer-events: none;
+  opacity: 0.5;
+}
+
+/* ── Content ── */
+.hero-content {
+  position: relative; z-index: 10;
+  height: 100%;
+  display: flex; flex-direction: column;
+  justify-content: center; align-items: center;
+  text-align: center;
+  padding: 0 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+/* ── Eyebrow ── */
+.hero-eyebrow {
+  display: inline-flex; align-items: center; gap: 10px;
+  margin-bottom: clamp(16px, 3vw, 28px);
+}
+.hero-eyebrow__line {
+  width: clamp(24px, 5vw, 56px);
+  height: 1.5px;
+  border-radius: 1px;
+}
+.hero-eyebrow__line--left {
+  background: linear-gradient(90deg, transparent, rgba(16,185,129,0.7));
+}
+.hero-eyebrow__line--right {
+  background: linear-gradient(90deg, rgba(16,185,129,0.7), transparent);
+}
+.hero-eyebrow__text {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: clamp(10px, 1.2vw, 13px);
+  font-weight: 700;
+  color: #10b981;
+  letter-spacing: clamp(2px, 0.5vw, 4.5px);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ── Title ── */
+.hero-title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(32px, 6.5vw, 74px);
+  font-weight: 400;
+  color: #ffffff;
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  margin: 0 0 clamp(12px, 2vw, 24px);
+  max-width: 900px;
+  text-shadow: 0 4px 40px rgba(0,0,0,0.4);
+}
+
+/* ── Subtitle ── */
+.hero-subtitle {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: clamp(14px, 1.6vw, 19px);
+  font-weight: 400;
+  color: rgba(255,255,255,0.88);
+  line-height: 1.7;
+  max-width: 660px;
+  margin: 0 0 clamp(10px, 1.5vw, 18px);
+  text-shadow: 0 2px 12px rgba(0,0,0,0.25);
+}
+
+/* ── Location ── */
+.hero-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: clamp(24px, 4vw, 44px);
+}
+.hero-location__divider {
+  width: clamp(14px, 2vw, 22px);
+  height: 1.5px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, rgba(16,185,129,0.5), rgba(16,185,129,0.12));
+}
+.hero-location__text {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: clamp(12px, 1.3vw, 15px);
+  font-weight: 600;
+  color: rgba(255,255,255,0.9);
+  letter-spacing: 0.3px;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.3);
+}
+
+/* ── Buttons ── */
+.hero-buttons {
+  display: flex;
+  gap: clamp(12px, 2vw, 20px);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.hero-play-btn {
+  display: flex; align-items: center; gap: 12px;
+  padding: clamp(12px, 1.5vw, 16px) clamp(20px, 2.5vw, 32px);
+  background: transparent;
+  border: 1.5px solid rgba(255,255,255,0.6);
+  border-radius: 999px;
+  color: #fff;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: clamp(13px, 1.2vw, 15px);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.35s cubic-bezier(0.22,1,0.36,1);
+  backdrop-filter: blur(4px);
+}
+.hero-play-btn:hover {
+  background: rgba(255,255,255,1);
+  color: #059669;
+  border-color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 32px rgba(0,0,0,0.25);
+}
+.hero-play-icon {
+  width: clamp(32px, 3.5vw, 40px);
+  height: clamp(32px, 3.5vw, 40px);
+  border-radius: 50%;
+  background: #fff;
+  display: flex; align-items: center; justify-content: center;
+  color: #059669;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+.hero-play-btn:hover .hero-play-icon {
+  background: #059669;
+  color: #fff;
+  transform: scale(1.06);
+}
+
+/* ── Nav Arrows ── */
+.hero-nav {
+  position: absolute;
+  top: 50%; z-index: 12;
+  transform: translateY(-50%);
+  width: clamp(38px, 4vw, 48px);
+  height: clamp(38px, 4vw, 48px);
+  border-radius: 50%;
+  border: 1.5px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(8px);
+  color: rgba(255,255,255,0.8);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.35s cubic-bezier(0.22,1,0.36,1);
+}
+.hero-root:hover .hero-nav { opacity: 1; }
+.hero-nav:hover {
+  background: rgba(255,255,255,0.16);
+  border-color: rgba(255,255,255,0.4);
+  color: #fff;
+  transform: translateY(-50%) scale(1.06);
+}
+.hero-nav--prev { left: clamp(12px, 2vw, 28px); }
+.hero-nav--next { right: clamp(12px, 2vw, 28px); }
+
+/* ── Indicators ── */
+.hero-indicators {
+  position: absolute;
+  bottom: clamp(80px, 14vh, 130px);
+  left: 50%; transform: translateX(-50%);
+  display: flex; gap: 6px;
+  z-index: 12;
+}
+.hero-dot {
+  width: 28px; height: 3px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.25);
+  border: none; padding: 0;
+  cursor: pointer;
+  position: relative; overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.22,1,0.36,1);
+}
+.hero-dot:hover { background: rgba(255,255,255,0.4); }
+.hero-dot--active {
+  width: 44px;
+  background: rgba(255,255,255,0.3);
+}
+.hero-dot__fill {
+  position: absolute; top: 0; left: 0;
+  height: 100%;
+  background: #10b981;
+  border-radius: 2px;
+}
+
+/* ── Scroll CTA ── */
+.hero-scroll {
+  position: absolute;
+  bottom: clamp(20px, 4vh, 44px);
+  left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column;
+  align-items: center; gap: 6px;
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+  z-index: 12;
+  background: none; border: none;
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  transition: color 0.3s ease;
+}
+.hero-scroll:hover { color: rgba(255,255,255,0.95); }
+.hero-scroll__text {
+  font-size: 10px; font-weight: 600;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+}
+
+/* ── Stats Bar ── */
+.hero-stats {
+  position: absolute;
+  bottom: clamp(20px, 4vh, 44px);
+  right: clamp(16px, 3vw, 44px);
+  z-index: 12;
+  display: flex; gap: clamp(20px, 3vw, 36px);
+}
+.hero-stat__value {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(20px, 3vw, 34px);
+  font-weight: 400; color: #fff;
+  line-height: 1;
+}
+.hero-stat__label {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-size: clamp(9px, 0.9vw, 11px);
+  font-weight: 600; color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-top: 4px;
+}
+
+/* ── Ambient Glow ── */
+.hero-glow {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 5;
+  filter: blur(60px);
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .hero-stats { display: none; }
+}
+@media (max-width: 768px) {
+  .hero-root { min-height: 100svh; }
+  .hero-nav { display: none; }
+  .hero-indicators { bottom: 90px; }
+  .hero-scroll { bottom: 20px; }
+}
+@media (max-width: 480px) {
+  .hero-indicators { bottom: 80px; gap: 5px; }
+  .hero-dot { width: 20px; height: 2.5px; }
+  .hero-dot--active { width: 36px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.2s !important;
+  }
+}
+`;
+
+function injectHeroCSS() {
+  if (typeof document === "undefined") return;
+  if (document.getElementById("hero-css-v2")) return;
+  const s = document.createElement("style");
+  s.id = "hero-css-v2";
+  s.textContent = HERO_CSS;
+  document.head.appendChild(s);
+}
 
 /* ═══════════════════════════════════════════════════════════
    HERO COMPONENT
 ═══════════════════════════════════════════════════════════ */
 const Hero = () => {
   const slides = HERO_SLIDES;
-  const [currentSlide, setCurrentSlide] = useState(0);
+  const total = slides.length;
+  const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [direction, setDirection] = useState(1);
-  const { playVideo, openMap, isPlayerOpen } = useApp();
+  const [imageErrors, setImageErrors] = useState({});
+  const { playVideo, isPlayerOpen } = useApp();
+  const timerRef = useRef(null);
+  const INTERVAL = 11000;
 
   const tourismVideos = [
-    "eoTKXtrRjmY",
-    "8YVlT7GFqzA",
-    "86aGcUQq_1E",
-    "0RZknKnFqOg",
-    "wP4AAYn5tqY",
-    "siqAfzwCVuw",
+    "eoTKXtrRjmY", "8YVlT7GFqzA", "86aGcUQq_1E",
+    "0RZknKnFqOg", "wP4AAYn5tqY", "siqAfzwCVuw",
     "4cX_JIMJwGY",
-    "eoTKXtrRjmY",
-    "86aGcUQq_1E",
-    "8YVlT7GFqzA",
   ];
 
-  const slideAnimationPresets = {
-    cinematicDrift: {
-      initial: { scale: 1.2, x: "5%", y: "3%" },
-      animate: { scale: 1, x: "-3%", y: "-2%" },
-    },
-    verticalReveal: {
-      initial: { scale: 1.25, y: "8%" },
-      animate: { scale: 1.05, y: "-5%" },
-    },
-    horizontalPan: {
-      initial: { scale: 1.1, x: "-8%" },
-      animate: { scale: 1.02, x: "5%" },
-    },
-    zoomOut: {
-      initial: { scale: 1.3 },
-      animate: { scale: 1 },
-    },
-    rotateZoom: {
-      initial: { scale: 1.15, rotate: 2 },
-      animate: { scale: 1, rotate: 0 },
-    },
-    parallaxDepth: {
-      initial: { scale: 1.2, y: "10%" },
-      animate: { scale: 1.02, y: "-3%" },
-    },
-    softFocus: {
-      initial: { scale: 1.08 },
-      animate: { scale: 1.02 },
-    },
-    dynamicSweep: {
-      initial: { scale: 1.15, x: "8%", y: "-5%" },
-      animate: { scale: 1, x: "-4%", y: "3%" },
-    },
-    risingHorizon: {
-      initial: { scale: 1.2, y: "12%" },
-      animate: { scale: 1, y: "-5%" },
-    },
-    cinematicWide: {
-      initial: { scale: 1.25, x: "-5%" },
-      animate: { scale: 1.02, x: "4%" },
-    },
-  };
+  useEffect(() => { injectHeroCSS(); }, []);
 
-  const [imageErrors, setImageErrors] = useState({});
-
-  const handleImageError = (index) => {
-    setImageErrors((prev) => ({ ...prev, [index]: true }));
-  };
-
-  const nextSlide = useCallback(() => {
-    setDirection(1);
-    setCurrentSlide((prev) => (prev + 1) % slides.length);
-  }, [slides.length]);
-
-  const prevSlide = useCallback(() => {
-    setDirection(-1);
-    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
-  }, [slides.length]);
-
-  const containerRef = useScrollTriggeredSlide(nextSlide, 300);
-
-  const goToSlide = (index) => {
-    setDirection(index > currentSlide ? 1 : -1);
-    setCurrentSlide(index);
-    setIsPaused(true);
-    setTimeout(() => setIsPaused(false), 16000);
-  };
-
-  useEffect(() => {
+  // ── Auto-advance ──
+  const startTimer = useCallback(() => {
+    clearInterval(timerRef.current);
     if (isPaused || isPlayerOpen) return;
-    const timer = setInterval(nextSlide, 11000);
-    return () => clearInterval(timer);
-  }, [isPaused, isPlayerOpen, nextSlide]);
+    timerRef.current = setInterval(
+      () => setCurrent((p) => (p + 1) % total),
+      INTERVAL,
+    );
+  }, [isPaused, isPlayerOpen, total]);
 
-  // Preload images
   useEffect(() => {
-    slides.forEach((slide) => {
+    startTimer();
+    return () => clearInterval(timerRef.current);
+  }, [startTimer]);
+
+  // ── Navigation ──
+  const goTo = useCallback(
+    (i) => {
+      setCurrent(i);
+      setIsPaused(true);
+      setTimeout(() => setIsPaused(false), 16000);
+    },
+    [],
+  );
+
+  const next = useCallback(() => {
+    setCurrent((p) => (p + 1) % total);
+    startTimer();
+  }, [total, startTimer]);
+
+  const prev = useCallback(() => {
+    setCurrent((p) => (p - 1 + total) % total);
+    startTimer();
+  }, [total, startTimer]);
+
+  // ── Scroll trigger ──
+  const containerRef = useScrollTriggeredSlide(next, 300);
+
+  // ── Preload ──
+  useEffect(() => {
+    slides.forEach((s) => {
       const img = new Image();
-      img.src = slide.image;
-      if (slide.fallback) {
-        const fallbackImg = new Image();
-        fallbackImg.src = slide.fallback;
+      img.src = s.image;
+      if (s.fallback) {
+        const fb = new Image();
+        fb.src = s.fallback;
       }
     });
   }, []);
 
-  const scrollToContent = () => {
-    window.scrollTo({
-      top: window.innerHeight,
-      behavior: "smooth",
-    });
+  const handleImageError = (i) => {
+    setImageErrors((prev) => ({ ...prev, [i]: true }));
   };
 
-  const handleWatchStory = () => {
-    const randomIdx = Math.floor(Math.random() * tourismVideos.length);
-    playVideo(tourismVideos[randomIdx], "Watching Altuvera Story");
+  const scrollDown = () => {
+    window.scrollTo({ top: window.innerHeight, behavior: "smooth" });
   };
 
-  const handleWatchMap = () => {
-    openMap({
-      title: "East Africa Live Explorer",
-      lat: -1.95,
-      lng: 35.9,
-      zoom: 5,
-      query: "East Africa",
-    });
+  const handleWatch = () => {
+    const idx = Math.floor(Math.random() * tourismVideos.length);
+    playVideo(tourismVideos[idx], "Altuvera Story");
   };
 
-  const getCurrentAnimation = (index) => {
-    const preset = slides[index].animationPreset;
-    return (
-      slideAnimationPresets[preset] || slideAnimationPresets.cinematicDrift
-    );
-  };
+  const getPreset = (i) =>
+    PRESETS[slides[i].preset] || PRESETS.cinematicDrift;
 
-  const styles = {
-    hero: {
-      position: "relative",
-      height: "100vh",
-      minHeight: "800px",
-      overflow: "hidden",
-      backgroundColor: "#111",
-    },
-    slidesContainer: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-    },
-    slide: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      overflow: "hidden",
-    },
-    slideImage: {
-      width: "100%",
-      height: "100%",
-      objectFit: "cover",
-      willChange: "transform",
-    },
-    overlay: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      zIndex: 2,
-      pointerEvents: "none",
-    },
-    vignetteOverlay: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      background:
-        "radial-gradient(ellipse at center, transparent 0%, rgba(0,0,0,0.35) 100%)",
-      zIndex: 3,
-      pointerEvents: "none",
-    },
-    pattern: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-      zIndex: 4,
-      pointerEvents: "none",
-    },
-    content: {
-      position: "relative",
-      zIndex: 10,
-      height: "100%",
-      display: "flex",
-      flexDirection: "column",
-      justifyContent: "center",
-      alignItems: "center",
-      textAlign: "center",
-      padding: "0 24px",
-      maxWidth: "1200px",
-      margin: "0 auto",
-    },
-    taglineContainer: {
-      display: "flex",
-      alignItems: "center",
-      gap: "16px",
-      marginBottom: "24px",
-    },
-    taglineLine: {
-      width: "60px",
-      height: "2px",
-      background: "linear-gradient(90deg, transparent, #10B981, transparent)",
-    },
-    tagline: {
-      fontFamily: "'Inter', sans-serif",
-      fontSize: "14px",
-      fontWeight: "600",
-      color: "#10B981",
-      letterSpacing: "4px",
-      textTransform: "uppercase",
-    },
-    title: {
-      fontFamily: "'Playfair Display', serif",
-      fontSize: "clamp(36px, 6vw, 72px)",
-      fontWeight: "700",
-      color: "white",
-      marginBottom: "24px",
-      lineHeight: "1.1",
-      textShadow: "0 4px 30px rgba(0, 0, 0, 0.5)",
-      maxWidth: "900px",
-    },
-    subtitle: {
-      fontFamily: "'Inter', sans-serif",
-      fontSize: "clamp(16px, 2vw, 20px)",
-      color: "rgba(255, 255, 255, 0.9)",
-      marginBottom: "16px",
-      maxWidth: "700px",
-      lineHeight: "1.7",
-      textShadow: "0 2px 10px rgba(0, 0, 0, 0.3)",
-    },
-    locationContainer: {
-      display: "inline-flex",
-      alignItems: "center",
-      gap: "10px",
-      padding: "0",
-      marginBottom: "40px",
-    },
-    locationText: {
-      fontFamily: "'Inter', sans-serif",
-      fontSize: "15px",
-      fontWeight: "600",
-      color: "rgba(255, 255, 255, 0.92)",
-      letterSpacing: "0.5px",
-      textShadow: "0 1px 8px rgba(0,0,0,0.3)",
-    },
-    locationDivider: {
-      width: "20px",
-      height: "1.5px",
-      background: "linear-gradient(90deg, rgba(16,185,129,0.6), rgba(16,185,129,0.15))",
-      borderRadius: "1px",
-    },
-    buttons: {
-      display: "flex",
-      gap: "20px",
-      flexWrap: "wrap",
-      justifyContent: "center",
-    },
-    playButton: {
-      display: "flex",
-      alignItems: "center",
-      gap: "12px",
-      padding: "16px 32px",
-      backgroundColor: "transparent",
-      border: "2px solid white",
-      borderRadius: "50px",
-      color: "white",
-      fontSize: "15px",
-      fontWeight: "600",
-      cursor: "pointer",
-      transition: "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
-    },
-    mapButton: {
-      display: "flex",
-      alignItems: "center",
-      gap: "10px",
-      padding: "16px 28px",
-      backgroundColor: "rgba(16, 185, 129, 0.16)",
-      border: "1px solid rgba(255,255,255,0.36)",
-      borderRadius: "50px",
-      color: "white",
-      fontSize: "15px",
-      fontWeight: "700",
-      cursor: "pointer",
-      transition: "all 0.3s ease",
-      backdropFilter: "blur(8px)",
-    },
-    playIcon: {
-      width: "40px",
-      height: "40px",
-      borderRadius: "50%",
-      backgroundColor: "white",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      color: "#059669",
-      transition: "all 0.3s ease",
-    },
-    slideIndicators: {
-      position: "absolute",
-      bottom: "120px",
-      left: "50%",
-      transform: "translateX(-50%)",
-      display: "flex",
-      gap: "8px",
-      zIndex: 10,
-    },
-    indicator: {
-      width: "32px",
-      height: "4px",
-      borderRadius: "2px",
-      backgroundColor: "rgba(255, 255, 255, 0.3)",
-      cursor: "pointer",
-      transition: "all 0.3s ease",
-      border: "none",
-      position: "relative",
-      overflow: "hidden",
-    },
-    indicatorActive: {
-      backgroundColor: "rgba(255, 255, 255, 0.4)",
-      width: "48px",
-    },
-    indicatorProgress: {
-      position: "absolute",
-      top: 0,
-      left: 0,
-      height: "100%",
-      backgroundColor: "#10B981",
-      borderRadius: "2px",
-    },
-    scrollIndicator: {
-      position: "absolute",
-      bottom: "40px",
-      left: "50%",
-      transform: "translateX(-50%)",
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      gap: "8px",
-      color: "white",
-      cursor: "pointer",
-      zIndex: 10,
-      background: "none",
-      border: "none",
-    },
-    scrollText: {
-      fontSize: "12px",
-      fontWeight: "500",
-      textTransform: "uppercase",
-      letterSpacing: "2px",
-      opacity: 0.8,
-    },
-    stats: {
-      position: "absolute",
-      bottom: "40px",
-      left: "40px",
-      right: "40px",
-      display: "none",
-      justifyContent: "space-between",
-      zIndex: 10,
-      maxWidth: "1400px",
-      margin: "0 auto",
-    },
-    stat: { textAlign: "left" },
-    statNumber: {
-      fontFamily: "'Playfair Display', serif",
-      fontSize: "42px",
-      fontWeight: "700",
-      color: "white",
-    },
-    statLabel: {
-      fontSize: "14px",
-      color: "rgba(255, 255, 255, 0.7)",
-      textTransform: "uppercase",
-      letterSpacing: "1px",
-    },
-    floatingElement: {
-      position: "absolute",
-      width: "300px",
-      height: "300px",
-      borderRadius: "50%",
-      background:
-        "radial-gradient(circle, rgba(16, 185, 129, 0.12) 0%, transparent 70%)",
-      pointerEvents: "none",
-      zIndex: 5,
-    },
-  };
+  const slide = slides[current];
 
   return (
-    <section style={styles.hero} ref={containerRef}>
-      <style>
-        {`
-          @keyframes bounce {
-            0%, 100% { transform: translateX(-50%) translateY(0); }
-            50% { transform: translateX(-50%) translateY(-10px); }
-          }
-          .play-btn-hover:hover {
-            background-color: white !important;
-            color: #059669 !important;
-            transform: translateY(-3px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-          }
-          .play-btn-hover:hover .play-icon-inner {
-            background-color: #059669 !important;
-            color: white !important;
-            transform: scale(1.1);
-          }
-          .map-btn-hover:hover {
-            transform: translateY(-3px);
-            background-color: rgba(16, 185, 129, 0.35) !important;
-            box-shadow: 0 10px 30px rgba(16,185,129,0.3);
-          }
-          .indicator-btn:hover {
-            background-color: rgba(255, 255, 255, 0.5);
-          }
-          .scroll-indicator-btn:hover {
-            opacity: 0.7;
-          }
-          .scroll-indicator-btn {
-            animation: bounce 2s infinite;
-          }
-          @media (max-width: 768px) {
-            .hero-stats { display: none !important; }
-          }
-        `}
-      </style>
-
-      {/* Floating Elements */}
+    <section className="hero-root" ref={containerRef}>
+      {/* ── Ambient glow ── */}
       <motion.div
-        style={{ ...styles.floatingElement, top: "10%", left: "-100px" }}
-        animate={{
-          x: [0, 30, 0],
-          y: [0, -20, 0],
+        className="hero-glow"
+        style={{
+          top: "8%", left: "-80px",
+          width: 320, height: 320,
+          background: "radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)",
         }}
-        transition={{
-          duration: 10,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
+        animate={{ x: [0, 25, 0], y: [0, -18, 0] }}
+        transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       />
       <motion.div
-        style={{ ...styles.floatingElement, bottom: "20%", right: "-100px" }}
-        animate={{
-          x: [0, -30, 0],
-          y: [0, 20, 0],
+        className="hero-glow"
+        style={{
+          bottom: "15%", right: "-60px",
+          width: 280, height: 280,
+          background: "radial-gradient(circle, rgba(16,185,129,0.08) 0%, transparent 70%)",
         }}
-        transition={{
-          duration: 12,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
+        animate={{ x: [0, -20, 0], y: [0, 15, 0] }}
+        transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
       />
 
-      {/* SLIDES - Cross-fade without black screen */}
-      <div style={styles.slidesContainer}>
+      {/* ── Slides ── */}
+      <div className="hero-slides">
         <AnimatePresence initial={false}>
           {slides.map(
-            (slide, index) =>
-              index === currentSlide && (
+            (s, i) =>
+              i === current && (
                 <motion.div
-                  key={index}
+                  key={i}
+                  className="hero-slide"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  transition={{
-                    opacity: { duration: 1.2, ease: "easeInOut" },
-                  }}
-                  style={{
-                    ...styles.slide,
-                    zIndex: index === currentSlide ? 1 : 0,
-                  }}
+                  transition={{ duration: 1.4, ease: "easeInOut" }}
+                  style={{ zIndex: 1 }}
                 >
                   <motion.img
-                    src={imageErrors[index] ? slide.fallback : slide.image}
-                    alt={slide.title}
-                    onError={() => handleImageError(index)}
-                    initial={getCurrentAnimation(index).initial}
-                    animate={getCurrentAnimation(index).animate}
-                    transition={{
-                      duration: 12,
-                      ease: "linear",
-                    }}
-                    style={styles.slideImage}
+                    src={imageErrors[i] ? s.fallback : s.image}
+                    alt={s.title}
+                    className="hero-slide-img"
+                    onError={() => handleImageError(i)}
+                    initial={getPreset(i).initial}
+                    animate={getPreset(i).animate}
+                    transition={{ duration: 13, ease: "linear" }}
+                    draggable={false}
                   />
-                  {/* Slide-specific gradient overlay */}
                   <div
-                    style={{
-                      ...styles.overlay,
-                      background: slide.overlayGradient,
-                    }}
+                    className="hero-overlay-slide"
+                    style={{ background: s.gradient }}
                   />
                 </motion.div>
               ),
@@ -784,102 +740,94 @@ const Hero = () => {
         </AnimatePresence>
       </div>
 
-      {/* Static Overlays */}
-      <div style={styles.vignetteOverlay} />
-      <div style={styles.pattern} />
+      <div className="hero-vignette" />
+      <div className="hero-grain" />
 
-      {/* Content with smooth transitions */}
-      <div style={styles.content}>
+      {/* ── Content ── */}
+      <div className="hero-content">
         <AnimatePresence mode="wait">
           <motion.div
-            key={currentSlide}
+            key={current}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            transition={{ duration: 0.5 }}
             style={{
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
             }}
           >
-            {/* Tagline */}
+            {/* Eyebrow */}
             <motion.div
-              style={styles.taglineContainer}
-              initial={{ opacity: 0, y: 30 }}
+              className="hero-eyebrow"
+              initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{
-                duration: 0.8,
-                delay: 0.2,
-                ease: [0.16, 1, 0.3, 1],
-              }}
+              transition={{ duration: 0.7, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             >
               <motion.div
-                style={styles.taglineLine}
+                className="hero-eyebrow__line hero-eyebrow__line--left"
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
-                transition={{ duration: 1, delay: 0.5 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                style={{ transformOrigin: "right" }}
               />
-              <span style={styles.tagline}>
-                True adventure in High Places & Deep Culture
+              <span className="hero-eyebrow__text">
+                Adventure in High Places & Deep Culture
               </span>
               <motion.div
-                style={styles.taglineLine}
+                className="hero-eyebrow__line hero-eyebrow__line--right"
                 initial={{ scaleX: 0 }}
                 animate={{ scaleX: 1 }}
-                transition={{ duration: 1, delay: 0.5 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                style={{ transformOrigin: "left" }}
               />
             </motion.div>
 
-            {/* Title with Mask Reveal */}
-            <div style={{ overflow: "hidden", marginBottom: "24px" }}>
+            {/* Title */}
+            <div style={{ overflow: "hidden" }}>
               <motion.h1
-                style={styles.title}
-                initial={{ y: "100%", opacity: 0 }}
+                className="hero-title"
+                initial={{ y: "110%", opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{
-                  duration: 1,
-                  delay: 0.3,
+                  duration: 0.9,
+                  delay: 0.2,
                   ease: [0.16, 1, 0.3, 1],
                 }}
-                key={`title-${currentSlide}`}
               >
-                {slides[currentSlide].title}
+                {slide.title}
               </motion.h1>
             </div>
 
-            {/* Subtitle with Blur In */}
+            {/* Subtitle */}
             <motion.p
-              style={styles.subtitle}
-              initial={{ opacity: 0, filter: "blur(10px)", y: 20 }}
-              animate={{ opacity: 1, filter: "blur(0px)", y: 0 }}
-              transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
-              key={`sub-${currentSlide}`}
+              className="hero-subtitle"
+              initial={{ opacity: 0, y: 16, filter: "blur(8px)" }}
+              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+              transition={{ duration: 0.7, delay: 0.4 }}
             >
-              {slides[currentSlide].subtitle}
+              {slide.subtitle}
             </motion.p>
 
-            {/* Location — Clean, no blurry container */}
+            {/* Location */}
             <motion.div
-              style={styles.locationContainer}
-              initial={{ opacity: 0, y: 10 }}
+              className="hero-location"
+              initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.45, ease: "easeOut" }}
-              key={`loc-${currentSlide}`}
+              transition={{ duration: 0.5, delay: 0.35 }}
             >
-              <AnimatedLocationPin size={18} />
-              <div style={styles.locationDivider} />
-              <span style={styles.locationText}>
-                {slides[currentSlide].location}
-              </span>
+              <LocationPin size={17} />
+              <div className="hero-location__divider" />
+              <span className="hero-location__text">{slide.location}</span>
             </motion.div>
 
             {/* Buttons */}
             <motion.div
-              style={styles.buttons}
-              initial={{ opacity: 0, y: 20 }}
+              className="hero-buttons"
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.5 }}
+              transition={{ duration: 0.6, delay: 0.45 }}
             >
               <motion.div
                 whileHover={{ scale: 1.03 }}
@@ -889,21 +837,20 @@ const Hero = () => {
                   to="/destinations"
                   variant="primary"
                   size="large"
-                  icon={<FiArrowRight size={18} />}
+                  icon={<FiArrowRight size={16} />}
                 >
                   Explore Destinations
                 </Button>
               </motion.div>
 
               <motion.button
-                style={styles.playButton}
-                onClick={handleWatchStory}
-                className="play-btn-hover"
+                className="hero-play-btn"
+                onClick={handleWatch}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
               >
-                <div style={styles.playIcon} className="play-icon-inner">
-                  <FiPlay size={16} />
+                <div className="hero-play-icon">
+                  <FiPlay size={14} />
                 </div>
                 Watch Our Story
               </motion.button>
@@ -912,67 +859,69 @@ const Hero = () => {
         </AnimatePresence>
       </div>
 
-      {/* Slide Indicators with Progress */}
-      <div style={styles.slideIndicators}>
-        {slides.map((_, index) => (
+      {/* ── Nav Arrows ── */}
+      <button className="hero-nav hero-nav--prev" onClick={prev} aria-label="Previous slide">
+        <FiChevronLeft size={18} />
+      </button>
+      <button className="hero-nav hero-nav--next" onClick={next} aria-label="Next slide">
+        <FiChevronRight size={18} />
+      </button>
+
+      {/* ── Indicators ── */}
+      <div className="hero-indicators">
+        {slides.map((_, i) => (
           <button
-            key={index}
-            className="indicator-btn"
-            style={{
-              ...styles.indicator,
-              ...(currentSlide === index ? styles.indicatorActive : {}),
-            }}
-            onClick={() => goToSlide(index)}
+            key={i}
+            className={`hero-dot ${i === current ? "hero-dot--active" : ""}`}
+            onClick={() => goTo(i)}
+            aria-label={`Slide ${i + 1}`}
           >
-            {currentSlide === index && !isPaused && !isPlayerOpen && (
+            {i === current && !isPaused && !isPlayerOpen && (
               <motion.div
-                style={styles.indicatorProgress}
+                className="hero-dot__fill"
                 initial={{ width: "0%" }}
                 animate={{ width: "100%" }}
-                transition={{ duration: 11, ease: "linear" }}
-                key={`progress-${currentSlide}`}
+                transition={{ duration: INTERVAL / 1000, ease: "linear" }}
+                key={`fill-${current}`}
               />
             )}
           </button>
         ))}
       </div>
 
-      {/* Scroll Indicator */}
+      {/* ── Scroll CTA ── */}
       <motion.button
-        style={styles.scrollIndicator}
-        onClick={scrollToContent}
-        className="scroll-indicator-btn"
+        className="hero-scroll"
+        onClick={scrollDown}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 1.5 }}
-        whileHover={{ scale: 1.1 }}
+        transition={{ delay: 1.8 }}
+        whileHover={{ scale: 1.05 }}
       >
-        <span style={styles.scrollText}>Scroll Down</span>
+        <span className="hero-scroll__text">Scroll</span>
         <motion.div
-          animate={{ y: [0, 6, 0] }}
-          transition={{ duration: 1.5, repeat: Infinity }}
+          animate={{ y: [0, 5, 0] }}
+          transition={{ duration: 1.6, repeat: Infinity }}
         >
-          <FiChevronDown size={24} />
+          <FiChevronDown size={20} />
         </motion.div>
       </motion.button>
 
-      {/* Stats */}
-      <div style={styles.stats} className="hero-stats">
+      {/* ── Stats (desktop) ── */}
+      <div className="hero-stats">
         {[
-          { num: "2+", lab: "Countries" },
+          { num: "6+", lab: "Countries" },
           { num: "500+", lab: "Destinations" },
-          { num: "15K+", lab: "Happy Travelers" },
-          { num: "98%", lab: "Satisfaction" },
+          { num: "15K+", lab: "Travelers" },
         ].map((st, i) => (
           <motion.div
             key={i}
-            style={styles.stat}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.2 + i * 0.15 }}
+            transition={{ delay: 1.4 + i * 0.12 }}
           >
-            <div style={styles.statNumber}>{st.num}</div>
-            <div style={styles.statLabel}>{st.lab}</div>
+            <div className="hero-stat__value">{st.num}</div>
+            <div className="hero-stat__label">{st.lab}</div>
           </motion.div>
         ))}
       </div>
@@ -980,4 +929,4 @@ const Hero = () => {
   );
 };
 
-export default Hero;  
+export default Hero;
