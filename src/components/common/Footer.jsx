@@ -568,7 +568,7 @@ bottomLink: {
               <span style={styles.contactText}>
                 altuverasafari@gmail.com
                 <br />
-                fabriceigiraneza36@gmail.com
+                info@altuverasafari.com
               </span>
             </div>
           </div>

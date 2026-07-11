@@ -30,7 +30,7 @@ export const BRAND_CONTACT = {
   phone: "+250 792352409",
   phoneAlt: "+250 792352409",
   email: "altuverasafari@gmail.com",
-  emailBookings: "fabriceigiraneza36@gmail.com",
+  emailBookings: "info@altuverasafari.com",
   address: "Musanze, Rwanda",
   whatsapp: "https://wa.me/250792352409",
 };

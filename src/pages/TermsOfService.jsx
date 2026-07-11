@@ -467,7 +467,7 @@ export default function TermsOfService() {
                             <FiMail size={18} color={BRAND.green700} />
                             <div>
                               <span style={styles.contactLabel}>General Questions</span>
-                              <a href="mailto:fabriceigiraneza36@gmail.com" style={styles.contactLink}>
+                              <a href="mailto:info@altuverasafari.com" style={styles.contactLink}>
                                 altuverasafari@gmail.com
                               </a>
                             </div>

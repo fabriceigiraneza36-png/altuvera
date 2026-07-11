@@ -63,7 +63,7 @@ const ADMIN = {
   phone2: "+250 792352409",
   whatsapp: "+250792352409",
   whatsappDisplay: "+250 792352409",
-  email: "fabriceigiraneza36@gmail.com",
+  email: "info@altuverasafari.com",
   office: "Musanze, Rwanda",
 };
 
@@ -2548,6 +2548,7 @@ const PaymentTerms = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [preferredMethod, setPreferredMethod] = useState(null);
   const [declarationNote, setDeclarationNote] = useState("");
+  const [declarationSuccess, setDeclarationSuccess] = useState(false);
   const [gateOpen, setGateOpen] = useState(false);
   const [gateContext, setGateContext] = useState("");
   const trackRef = useRef(null);
@@ -2612,6 +2613,8 @@ const PaymentTerms = () => {
     openGate(
       `I'd like to declare my preferred payment method: *${m}*${note}\n\nPlease contact me to finalize my booking.`
     );
+    setDeclarationSuccess(true);
+    setTimeout(() => setDeclarationSuccess(false), 4000);
   }, [preferredMethod, declarationNote, openGate]);
 
   // ═══════════════════════════════════════════
@@ -2927,26 +2930,7 @@ const PaymentTerms = () => {
         <div style={{ maxWidth: "1400px", margin: "0 auto" }}>
           {/* ═══ HERO SECTION ═══ */}
           <AnimatedSection animation="fadeInUp">
-            <div style={{ textAlign: "center", marginBottom: "64px" }}>
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  padding: "8px 20px",
-                  backgroundColor: "#ECFDF5",
-                  borderRadius: "30px",
-                  fontSize: "12px",
-                  fontWeight: "700",
-                  color: "#059669",
-                  textTransform: "uppercase",
-                  letterSpacing: "1.2px",
-                  marginBottom: "24px",
-                  border: "1px solid #D1FAE5",
-                }}
-              >
-                <FiLock size={14} /> Personal & Secure
-              </div>
+            <div style={{ textAlign: "center", marginBottom: "28px" }}>
               <h1
                 style={{
                   fontFamily: "'Playfair Display', serif",
@@ -3163,24 +3147,7 @@ const PaymentTerms = () => {
           {/* ═══ OVERVIEW: KEY TERMS ═══ */}
           <div id="pt-overview">
             <AnimatedSection animation="fadeInUp">
-              <div style={{ textAlign: "center", marginBottom: "40px" }}>
-                <span
-                  style={{
-                    display: "inline-block",
-                    padding: "6px 18px",
-                    backgroundColor: "#ECFDF5",
-                    borderRadius: "30px",
-                    fontSize: "12px",
-                    fontWeight: "700",
-                    color: "#059669",
-                    textTransform: "uppercase",
-                    letterSpacing: "1px",
-                    marginBottom: "16px",
-                    border: "1px solid #D1FAE5",
-                  }}
-                >
-                  Key Terms
-                </span>
+              <div style={{ textAlign: "center", marginBottom: "28px" }}>
                 <h2
                   style={{
                     fontFamily: "'Playfair Display', serif",
@@ -3225,284 +3192,12 @@ const PaymentTerms = () => {
             </div>
           </div>
 
-          {/* ═══ HOW IT WORKS ═══ */}
-          <div id="pt-process">
-            <AnimatedSection animation="fadeInUp">
-              <div
-                style={{
-                  backgroundColor: "#fff",
-                  borderRadius: "32px",
-                  padding: "clamp(32px, 5vw, 64px)",
-                  boxShadow: "var(--pt-shadow-lg)",
-                  border: "1px solid #F3F4F6",
-                  marginBottom: "72px",
-                }}
-              >
-                <div style={{ textAlign: "center", marginBottom: "52px" }}>
-                  <span
-                    style={{
-                      display: "inline-block",
-                      padding: "6px 18px",
-                      backgroundColor: "#ECFDF5",
-                      borderRadius: "30px",
-                      fontSize: "12px",
-                      fontWeight: "700",
-                      color: "#059669",
-                      textTransform: "uppercase",
-                      letterSpacing: "1px",
-                      marginBottom: "16px",
-                      border: "1px solid #D1FAE5",
-                    }}
-                  >
-                    Simple 5-Step Process
-                  </span>
-                  <h2
-                    style={{
-                      fontFamily: "'Playfair Display', serif",
-                      fontSize: "clamp(26px, 3vw, 40px)",
-                      fontWeight: "700",
-                      color: "#111827",
-                      marginBottom: "10px",
-                    }}
-                  >
-                    From Inquiry to Adventure
-                  </h2>
-                  <p
-                    style={{
-                      fontSize: "16px",
-                      color: "#6B7280",
-                      maxWidth: "560px",
-                      margin: "0 auto",
-                    }}
-                  >
-                    Five steps to your personalized East African safari
-                  </p>
-                </div>
-
-                <div
-                  className="pt-process-grid"
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns:
-                      "repeat(auto-fit, minmax(190px, 1fr))",
-                    gap: "32px",
-                  }}
-                >
-                  {processSteps.map((s, idx) => (
-                    <div
-                      className="pt-step-card"
-                      key={s.step}
-                      style={{
-                        textAlign: "center",
-                        animation: `pt-fadeUp 0.55s ease ${idx * 0.1}s both`,
-                      }}
-                    >
-                        <div
-                          className="pt-process-icon"
-                          style={{
-                            width: "80px",
-                            height: "80px",
-                            borderRadius: "26px",
-                            background: `${s.color}12`,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            margin: "0 auto 20px",
-                            color: s.color,
-                            position: "relative",
-                            transition: "all 0.4s var(--pt-transition)",
-                            border: `1px solid ${s.color}18`,
-                          }}
-                          onMouseOver={(e) => {
-                            e.currentTarget.style.transform = "scale(1.1) translateY(-4px)";
-                            e.currentTarget.style.boxShadow = `0 16px 36px ${s.color}22`;
-                            e.currentTarget.style.borderColor = `${s.color}40`;
-                          }}
-                          onMouseOut={(e) => {
-                            e.currentTarget.style.transform = "scale(1) translateY(0)";
-                            e.currentTarget.style.boxShadow = "none";
-                            e.currentTarget.style.borderColor = `${s.color}18`;
-                          }}
-                        >
-                        {s.icon}
-                        <span
-                          style={{
-                            position: "absolute",
-                            top: "-8px",
-                            right: "-8px",
-                            width: "28px",
-                            height: "28px",
-                            borderRadius: "50%",
-                            backgroundColor: s.color,
-                            color: "#fff",
-                            fontSize: "12px",
-                            fontWeight: "700",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            boxShadow: `0 3px 10px ${s.color}40`,
-                          }}
-                        >
-                          {s.step}
-                        </span>
-                      </div>
-                      <h4
-                        style={{
-                          fontFamily: "'Playfair Display', serif",
-                          fontSize: "18px",
-                          fontWeight: "700",
-                          color: "#111827",
-                          marginBottom: "10px",
-                        }}
-                      >
-                        {s.title}
-                      </h4>
-                      <p
-                        style={{
-                          fontSize: "14px",
-                          color: "#6B7280",
-                          lineHeight: 1.7,
-                        }}
-                      >
-                        {s.desc}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* CTA Banner */}
-                <div
-                  className="pt-cta-banner"
-                  style={{
-                    marginTop: "56px",
-                    padding: "clamp(24px, 4vw, 36px) clamp(24px, 4vw, 40px)",
-                    background:
-                      "linear-gradient(135deg, #064E3B 0%, #047857 50%, #10B981 100%)",
-                    backgroundSize: "200% 200%",
-                    animation: "pt-shimmer 4s ease-in-out infinite",
-                    borderRadius: "26px",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: "28px",
-                    flexWrap: "wrap",
-                    color: "#fff",
-                    position: "relative",
-                    overflow: "hidden",
-                    boxShadow: "0 12px 40px rgba(4, 120, 87, 0.22)",
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "-60px",
-                      right: "-60px",
-                      width: "180px",
-                      height: "180px",
-                      borderRadius: "50%",
-                      background: "rgba(255,255,255,.06)",
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: "-40px",
-                      left: "-40px",
-                      width: "140px",
-                      height: "140px",
-                      borderRadius: "50%",
-                      background: "rgba(255,255,255,.04)",
-                    }}
-                  />
-                  <div
-                    className="pt-cta-banner-content"
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "18px",
-                      position: "relative",
-                      zIndex: 1,
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "52px",
-                        height: "52px",
-                        borderRadius: "50%",
-                        backgroundColor: "rgba(37,211,102,.2)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        animation: "pt-float 3s ease-in-out infinite",
-                      }}
-                    >
-                      <FaWhatsapp size={26} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: "18px", fontWeight: "700" }}>
-                        Chat with {ADMIN.name}
-                      </div>
-                      <div style={{ fontSize: "14px", opacity: 0.85 }}>
-                        {ADMIN.whatsappDisplay} — responds within minutes
-                      </div>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() =>
-                      openGate("I'm ready to start planning my safari!")
-                    }
-                    style={{
-                      padding: "12px 28px",
-                      backgroundColor: "#25D366",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: "50px",
-                      cursor: "pointer",
-                      fontSize: "15px",
-                      fontWeight: "700",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      transition: "all 0.3s",
-                      boxShadow: "0 4px 16px rgba(37,211,102,.3)",
-                      fontFamily: "'Inter', sans-serif",
-                    }}
-                    onMouseOver={(e) =>
-                      (e.currentTarget.style.transform = "translateY(-2px)")
-                    }
-                    onMouseOut={(e) =>
-                      (e.currentTarget.style.transform = "translateY(0)")
-                    }
-                  >
-                    <FaWhatsapp size={18} /> Start Chat
-                  </button>
-                </div>
-              </div>
-            </AnimatedSection>
-          </div>
 
           {/* ═══ PAYMENT METHODS ═══ */}
           <div id="pt-methods">
             <AnimatedSection animation="fadeInUp">
-              <div style={{ marginBottom: "72px" }}>
-                <div style={{ textAlign: "center", marginBottom: "44px" }}>
-                  <span
-                    style={{
-                      display: "inline-block",
-                      padding: "6px 18px",
-                      backgroundColor: "#F5F3FF",
-                      borderRadius: "30px",
-                      fontSize: "12px",
-                      fontWeight: "700",
-                      color: "#7C3AED",
-                      textTransform: "uppercase",
-                      letterSpacing: "1px",
-                      marginBottom: "16px",
-                      border: "1px solid #EDE9FE",
-                    }}
-                  >
-                    Payment Options
-                  </span>
+              <div style={{ marginBottom: "48px" }}>
+                <div style={{ textAlign: "center", marginBottom: "28px" }}>
                   <h2
                     style={{
                       fontFamily: "'Playfair Display', serif",
@@ -3681,203 +3376,6 @@ const PaymentTerms = () => {
                     );
                   })}
                 </div>
-
-                {/* Declaration Panel */}
-                <div
-                  style={{
-                    backgroundColor: "#fff",
-                    borderRadius: "28px",
-                    padding: "clamp(28px, 4vw, 48px)",
-                    boxShadow: "var(--pt-shadow-lg)",
-                    border: "1px solid #F3F4F6",
-                  }}
-                >
-                  <div style={{ textAlign: "center", marginBottom: "36px" }}>
-                    <h3
-                      style={{
-                        fontFamily: "'Playfair Display', serif",
-                        fontSize: "26px",
-                        fontWeight: "700",
-                        color: "#111827",
-                        marginBottom: "10px",
-                      }}
-                    >
-                      Declare Your Payment Preference
-                    </h3>
-                    <p
-                      style={{
-                        fontSize: "15px",
-                        color: "#6B7280",
-                        maxWidth: "560px",
-                        margin: "0 auto",
-                        lineHeight: 1.6,
-                      }}
-                    >
-                      Select a method above, add an optional note, then click
-                      below. You'll go through a quick form before being
-                      connected with {ADMIN.name}.
-                    </p>
-                  </div>
-
-                  {/* Selected method display */}
-                  <div
-                    style={{
-                      padding: "16px 20px",
-                      borderRadius: "16px",
-                      border: preferredMethod
-                        ? "2px solid #059669"
-                        : "2px dashed #D1D5DB",
-                      backgroundColor: preferredMethod
-                        ? "#ECFDF5"
-                        : "#FAFAFA",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      marginBottom: "20px",
-                      transition: "all 0.3s var(--pt-transition)",
-                    }}
-                  >
-                    {preferredMethod ? (
-                      <>
-                        <FiCheckCircle size={20} color="#059669" />
-                        <span
-                          style={{
-                            fontSize: "16px",
-                            fontWeight: "600",
-                            color: "#065F46",
-                          }}
-                        >
-                          {
-                            paymentMethods.find(
-                              (x) => x.id === preferredMethod
-                            )?.name
-                          }
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <FiCreditCard size={20} color="#9CA3AF" />
-                        <span
-                          style={{ fontSize: "15px", color: "#9CA3AF" }}
-                        >
-                          Select a payment method from above
-                        </span>
-                      </>
-                    )}
-                  </div>
-
-                  <div style={{ marginBottom: "28px" }}>
-                    <label
-                      style={{
-                        display: "block",
-                        fontSize: "12px",
-                        fontWeight: "700",
-                        color: "#374151",
-                        marginBottom: "8px",
-                        textTransform: "uppercase",
-                        letterSpacing: "0.8px",
-                      }}
-                    >
-                      Additional Note{" "}
-                      <span
-                        style={{
-                          fontWeight: "400",
-                          color: "#9CA3AF",
-                          textTransform: "none",
-                          letterSpacing: 0,
-                        }}
-                      >
-                        (Optional)
-                      </span>
-                    </label>
-                    <textarea
-                      value={declarationNote}
-                      onChange={(e) =>
-                        setDeclarationNote(e.target.value)
-                      }
-                      placeholder="e.g. Interested in a 5-day gorilla trekking safari for 2 in July..."
-                      rows={3}
-                      style={{
-                        width: "100%",
-                        padding: "14px 18px",
-                        borderRadius: "14px",
-                        border: "2px solid #E5E7EB",
-                        fontSize: "15px",
-                        outline: "none",
-                        resize: "vertical",
-                        fontFamily: "'Inter', sans-serif",
-                        transition:
-                          "border-color 0.25s, box-shadow 0.25s",
-                        backgroundColor: "#FAFBFC",
-                        boxSizing: "border-box",
-                      }}
-                      onFocus={(e) => {
-                        e.currentTarget.style.borderColor = "#059669";
-                        e.currentTarget.style.boxShadow =
-                          "0 0 0 4px rgba(5,150,105,.08)";
-                      }}
-                      onBlur={(e) => {
-                        e.currentTarget.style.borderColor = "#E5E7EB";
-                        e.currentTarget.style.boxShadow = "none";
-                      }}
-                    />
-                  </div>
-
-                  <div style={{ textAlign: "center" }}>
-                    <button
-                      onClick={handleDeclaration}
-                      disabled={!preferredMethod}
-                      style={{
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "12px",
-                        padding: "16px 40px",
-                        background: preferredMethod
-                          ? "linear-gradient(135deg, #25D366, #128C7E)"
-                          : "#E5E7EB",
-                        color: preferredMethod ? "#fff" : "#9CA3AF",
-                        border: "none",
-                        borderRadius: "50px",
-                        cursor: preferredMethod
-                          ? "pointer"
-                          : "not-allowed",
-                        fontSize: "16px",
-                        fontWeight: "700",
-                        transition: "all 0.3s var(--pt-transition)",
-                        boxShadow: preferredMethod
-                          ? "0 8px 28px rgba(37,211,102,.3)"
-                          : "none",
-                        fontFamily: "'Inter', sans-serif",
-                      }}
-                      onMouseOver={(e) => {
-                        if (preferredMethod)
-                          e.currentTarget.style.transform =
-                            "translateY(-2px)";
-                      }}
-                      onMouseOut={(e) =>
-                        (e.currentTarget.style.transform =
-                          "translateY(0)")
-                      }
-                    >
-                      <FaWhatsapp size={20} /> Declare & Message{" "}
-                      {ADMIN.name.split(" ")[0]}
-                    </button>
-                    <p
-                      style={{
-                        fontSize: "12px",
-                        color: "#9CA3AF",
-                        marginTop: "14px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: "6px",
-                      }}
-                    >
-                      <FiLock size={11} /> You'll enter your details
-                      first — then get {ADMIN.name}'s WhatsApp contact
-                    </p>
-                  </div>
-                </div>
               </div>
             </AnimatedSection>
           </div>
@@ -3895,24 +3393,7 @@ const PaymentTerms = () => {
                   marginBottom: "72px",
                 }}
               >
-                <div style={{ textAlign: "center", marginBottom: "44px" }}>
-                  <span
-                    style={{
-                      display: "inline-block",
-                      padding: "6px 18px",
-                      backgroundColor: "#FEF2F2",
-                      borderRadius: "30px",
-                      fontSize: "12px",
-                      fontWeight: "700",
-                      color: "#DC2626",
-                      textTransform: "uppercase",
-                      letterSpacing: "1px",
-                      marginBottom: "16px",
-                      border: "1px solid #FECACA",
-                    }}
-                  >
-                    Cancellation Policy
-                  </span>
+                <div style={{ textAlign: "center", marginBottom: "28px" }}>
                   <h2
                     style={{
                       fontFamily: "'Playfair Display', serif",
@@ -4086,24 +3567,7 @@ const PaymentTerms = () => {
                   marginBottom: "72px",
                 }}
               >
-                <div style={{ textAlign: "center", marginBottom: "44px" }}>
-                  <span
-                    style={{
-                      display: "inline-block",
-                      padding: "6px 18px",
-                      backgroundColor: "#EFF6FF",
-                      borderRadius: "30px",
-                      fontSize: "12px",
-                      fontWeight: "700",
-                      color: "#2563EB",
-                      textTransform: "uppercase",
-                      letterSpacing: "1px",
-                      marginBottom: "16px",
-                      border: "1px solid #DBEAFE",
-                    }}
-                  >
-                    Have Questions?
-                  </span>
+                <div style={{ textAlign: "center", marginBottom: "28px" }}>
                   <h2
                     style={{
                       fontFamily: "'Playfair Display', serif",
@@ -4397,8 +3861,12 @@ const PaymentTerms = () => {
                   value: (
                     <span style={styles.contactText}>
                       {ADMIN.phone1}
-                      <br />
-                      {ADMIN.phone2}
+                      {ADMIN.phone1 !== ADMIN.phone2 && (
+                        <>
+                          <br />
+                          {ADMIN.phone2}
+                        </>
+                      )}
                     </span>
                   ),
                   action: () =>
@@ -4413,8 +3881,12 @@ const PaymentTerms = () => {
                   value: (
                     <span style={styles.contactText}>
                       {ADMIN.phone1}
-                      <br />
-                      {ADMIN.phone2}
+                      {ADMIN.phone1 !== ADMIN.phone2 && (
+                        <>
+                          <br />
+                          {ADMIN.phone2}
+                        </>
+                      )}
                     </span>
                   ),
                 },
@@ -4469,6 +3941,28 @@ const PaymentTerms = () => {
               ))}
             </div>
           </AnimatedSection>
+
+          {declarationSuccess && (
+            <div
+              style={{
+                marginBottom: "24px",
+                padding: "16px 24px",
+                background: "#ECFDF5",
+                border: "1px solid #D1FAE5",
+                borderRadius: "16px",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "10px",
+                color: "#065F46",
+                fontSize: "15px",
+                fontWeight: "600",
+              }}
+            >
+              <FiCheckCircle size={20} color="#059669" />
+              Payment preference declared successfully! {ADMIN.name} will contact you shortly.
+            </div>
+          )}
 
           {/* ═══ DOCUMENT ACTIONS ═══ */}
           <AnimatedSection animation="fadeInUp">
@@ -4551,7 +4045,8 @@ const PaymentTerms = () => {
             Last updated: February 2025 • All bookings managed by{" "}
             {ADMIN.name} (
             <span style={styles.contactText}>
-              {ADMIN.phone1} | {ADMIN.phone2}
+              {ADMIN.phone1}
+              {ADMIN.phone1 !== ADMIN.phone2 && ` | ${ADMIN.phone2}`}
             </span>
             )
           </p>

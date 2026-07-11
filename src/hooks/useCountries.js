@@ -8,6 +8,36 @@ import {
 } from "react";
 import countryService from "../services/countryService";
 import countryInsightService from "../services/countryInsightService";
+import { multiBackendFetch } from "../utils/multiBackendFetch";
+import { adaptDestinationList } from "../utils/destinationAdapter";
+
+/* ── Helpers ─────────────────────────────────────────────── */
+const toStr = (v) => (v == null ? "" : String(v).trim().toLowerCase());
+
+/* Match an adapted destination to a country by id / slug / name */
+const destinationMatchesCountry = (dest, country, idOrSlug) => {
+  const needles = [
+    toStr(country?.id),
+    toStr(country?.slug),
+    toStr(country?.name),
+    toStr(idOrSlug),
+  ].filter(Boolean);
+  if (needles.length === 0) return false;
+
+  const hay = [
+    toStr(dest.countryId),
+    toStr(dest.country_id),
+    toStr(dest.countrySlug),
+    toStr(dest.country_slug),
+    toStr(dest.country),
+    toStr(dest.country_name),
+    toStr(dest.countryObj?.id),
+    toStr(dest.countryObj?.slug),
+    toStr(dest.countryObj?.name),
+  ].filter(Boolean);
+
+  return needles.some((n) => hay.includes(n));
+};
 
 /* ─────────────────────────────────────────────────────────
    useCountries — paginated/filtered list of countries
@@ -271,6 +301,7 @@ export function useCountryDestinations(idOrSlug, params = {}) {
   const [countryMeta, setCountryMeta]   = useState(null);
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState(null);
+  const [source, setSource]             = useState("primary");
 
   const paramsKey = useMemo(
     () => JSON.stringify({ idOrSlug, ...params }),
@@ -290,18 +321,45 @@ export function useCountryDestinations(idOrSlug, params = {}) {
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setSource("primary");
 
-    countryService
-      .getDestinations(idOrSlug, paramsRef.current)
-      .then((res) => {
-        if (!cancelled) {
-          setDestinations(res.data       ?? []);
-          setPagination(res.pagination   ?? null);
-          setCountryMeta(res.country     ?? null);
-        }
-      })
+    const load = async () => {
+      // Primary: destinations embedded in /countries/:slug response
+      const res = await countryService.getDestinations(idOrSlug, paramsRef.current);
+      if (cancelled) return;
+
+      const primary = res.data ?? [];
+      const country = res.country ?? null;
+      setCountryMeta(country);
+
+      if (primary.length > 0) {
+        setDestinations(primary);
+        setPagination(res.pagination ?? null);
+        setSource("primary");
+        return;
+      }
+
+      // Fallback: fetch the global destinations catalogue and
+      // keep only those belonging to this country.
+      try {
+        const body = await multiBackendFetch("/destinations");
+        const rawList = Array.isArray(body) ? body : (body?.data ?? []);
+        const all = adaptDestinationList(rawList);
+        const matched = all.filter((d) =>
+          destinationMatchesCountry(d, country, idOrSlug)
+        );
+        setDestinations(matched);
+        setPagination(null);
+        setSource("fallback");
+      } catch {
+        if (!cancelled) setDestinations([]);
+      }
+    };
+
+    load()
       .catch((err) => {
-        if (!cancelled && err?.name !== "AbortError") {
+        if (cancelled) return;
+        if (err?.name !== "AbortError") {
           setError(err?.message || "Failed to load destinations");
           setDestinations([]);
         }
@@ -314,7 +372,7 @@ export function useCountryDestinations(idOrSlug, params = {}) {
     };
   }, [paramsKey]);
 
-  return { destinations, pagination, countryMeta, loading, error };
+  return { destinations, pagination, countryMeta, loading, error, source };
 }
 
 /* ─────────────────────────────────────────────────────────

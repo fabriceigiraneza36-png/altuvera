@@ -1181,7 +1181,15 @@ function DestinationsSection({ country, allDests, destsLoading }) {
         ) : allDests.length === 0 ? (
           <div className="cp-dest-empty">
             <h3>Destinations Coming Soon</h3>
-            <p>We're curating incredible experiences in {country.name}. Check back shortly.</p>
+            <p>
+              We're curating incredible experiences in {country.name}.
+              In the meantime, explore our full collection of handpicked destinations.
+            </p>
+            <div className="cp-show-more">
+              <Link to="/destinations" className="cp-btn cp-btn--outline">
+                Browse All Destinations <FiArrowRight size={14} />
+              </Link>
+            </div>
           </div>
         ) : (
           <>

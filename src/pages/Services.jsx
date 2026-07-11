@@ -275,6 +275,240 @@ const GlobalStyles = () => (
         transition-duration: .01ms !important;
       }
     }
+
+    /* ══════════════════════════════════════════
+       WHY ALTUVERA — NEW GREEN CARD DESIGN
+    ══════════════════════════════════════════ */
+    .why-section {
+      padding: clamp(3rem,6vw,5rem) 0;
+      background: #f0fdf4;
+    }
+    .why-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+    .why-card {
+      background: #fff;
+      border-radius: 1.75rem;
+      overflow: hidden;
+      border: 1px solid #d1fae5;
+      box-shadow: 0 4px 20px rgba(5,150,105,0.06);
+      display: flex;
+      flex-direction: column;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      text-decoration: none;
+      color: inherit;
+    }
+    .why-card:hover {
+      transform: translateY(-12px);
+      box-shadow: 0 25px 50px -12px rgba(16,185,129,0.25);
+      border-color: #a7f3d0;
+    }
+    .why-card-img-wrap {
+      position: relative;
+      height: 200px;
+      overflow: hidden;
+      background: linear-gradient(135deg, #059669, #047857);
+    }
+    .why-card-img-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, transparent, rgba(16,185,129,0.15));
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .why-card:hover .why-card-img-wrap::after {
+      opacity: 1;
+    }
+    .why-card-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.6s cubic-bezier(0.4,0,0.2,1);
+      display: block;
+    }
+    .why-card:hover .why-card-img {
+      transform: scale(1.06);
+    }
+    .why-card-icon-wrap {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #059669, #047857);
+      position: relative;
+    }
+    .why-card-icon-wrap::before {
+      content: '';
+      position: absolute;
+      top: -40%;
+      right: -40%;
+      width: 80%;
+      height: 80%;
+      background: rgba(255,255,255,0.12);
+      border-radius: 50%;
+      filter: blur(20px);
+    }
+    .why-card-icon {
+      color: rgba(255,255,255,0.95);
+      filter: drop-shadow(0 4px 16px rgba(0,0,0,0.18));
+      transition: transform 0.3s ease;
+      position: relative;
+      z-index: 1;
+    }
+    .why-card:hover .why-card-icon {
+      transform: scale(1.1);
+    }
+    .why-card-eco-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(255,255,255,0.95);
+      color: #059669;
+      font-size: .65rem;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      padding: .3rem .7rem;
+      border-radius: 99px;
+      display: flex;
+      align-items: center;
+      gap: .3rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      font-family: 'Inter', sans-serif;
+      z-index: 2;
+    }
+    .why-card-body {
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      gap: .75rem;
+    }
+    .why-card-title {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #064e3b;
+      line-height: 1.3;
+      margin: 0;
+    }
+    .why-card-desc {
+      font-family: 'Inter', sans-serif;
+      font-size: .88rem;
+      color: #4b5563;
+      line-height: 1.7;
+      margin: 0;
+      flex: 1;
+    }
+    .why-card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .4rem;
+    }
+    .why-card-tag {
+      font-family: 'Inter', sans-serif;
+      font-size: .68rem;
+      font-weight: 600;
+      padding: .25rem .65rem;
+      border-radius: 99px;
+      background: #ecfdf5;
+      color: #059669;
+      border: 1px solid #d1fae5;
+      cursor: pointer;
+      transition: all .2s ease;
+    }
+    .why-card-tag:hover {
+      background: #d1fae5;
+      color: #047857;
+    }
+    .why-card-footer {
+      padding: 1rem 1.5rem;
+      background: #f0fdf4;
+      border-top: 1px solid #d1fae5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'Inter', sans-serif;
+    }
+    .why-card-footer-left {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      font-size: .75rem;
+      color: #059669;
+    }
+    .why-card-footer-avatar {
+      width: 1.5rem;
+      height: 1.5rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #059669, #047857);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: .65rem;
+      font-weight: 800;
+    }
+    .why-card-cta {
+      display: flex;
+      align-items: center;
+      gap: .35rem;
+      font-size: .78rem;
+      font-weight: 700;
+      color: #fff;
+      background: #059669;
+      border: none;
+      border-radius: .65rem;
+      padding: .5rem 1rem;
+      cursor: pointer;
+      transition: all .25s ease;
+      text-decoration: none;
+    }
+    .why-card-cta:hover {
+      background: #047857;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(5,150,105,0.35);
+    }
+    .home-section-title-serif {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: clamp(1.75rem,3.5vw,2.75rem);
+      font-weight: 800;
+      color: #14532d;
+      line-height: 1.1;
+      margin-bottom: .85rem;
+    }
+    .home-section-eyebrow {
+      font-family: 'Inter', sans-serif;
+      font-size: .68rem;
+      font-weight: 800;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: #16a34a;
+      margin-bottom: .75rem;
+      display: block;
+    }
+    .home-section-subtitle-new {
+      font-family: 'Inter', sans-serif;
+      font-size: clamp(.88rem,1.3vw,1rem);
+      color: #5A7A5A;
+      line-height: 1.65;
+      max-width: 580px;
+    }
+    .section-cta {
+      display: flex;
+      justify-content: center;
+      margin-top: clamp(1.5rem,3vw,2.5rem);
+    }
+    .home-container {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 0 clamp(1.25rem,4vw,3rem);
+    }
   `}</style>
 );
 
@@ -357,7 +591,133 @@ const FALLBACK_TEAM = [
   },
 ];
 
-/* ─────────────────────────────────────────────
+/* ═══════════════════════════════════════════
+   WHY ALTUVERA DATA
+═══════════════════════════════════════════ */
+const WHY_CARDS = [
+  {
+    id: 1,
+    title: "Expert Local Guides",
+    description: "Our guides are born and raised in the regions they lead. Decades of field experience, wildlife knowledge, and cultural fluency turn every game drive into a master class.",
+    tags: ["Certified", "Multilingual", "Wildlife Experts"],
+    badge: "Top Rated",
+    badgeIcon: "⭐",
+    image: "https://i.pinimg.com/736x/f3/8e/5d/f38e5ddcc6677a39515284b5c2c7a2e4.jpg",
+    footer: "Guided by Altuvera Pros",
+    link: "/team",
+    ctaLabel: "Meet the Team",
+    iconType: "compass",
+  },
+  {
+    id: 2,
+    title: "Sustainable Safari Practices",
+    description: "Every journey we design actively protects the ecosystems you visit. From carbon offset programs to direct community investment, we travel with purpose.",
+    tags: ["Eco-Certified", "Carbon Offset", "Community Impact"],
+    badge: "Eco",
+    badgeIcon: "🌿",
+    image: "https://i.pinimg.com/1200x/33/7b/76/337b768498fe758d5146b5b0fcbac0ad.jpg",
+    footer: "Conservation First",
+    link: "/about#mission",
+    ctaLabel: "Our Mission",
+    iconType: "leaf",
+  },
+  {
+    id: 3,
+    title: "Fully Tailored Itineraries",
+    description: "No two travelers are alike. We craft each journey from scratch — adjusting pacing, accommodations, and experiences to match your exact vision and travel style.",
+    tags: ["Bespoke", "Flexible", "Curated"],
+    badge: "Custom",
+    badgeIcon: "✦",
+    image: "https://i.pinimg.com/1200x/48/c9/f7/48c9f7d212a4a2933b84ec65c19e4628.jpg",
+    footer: "Your Journey, Your Rules",
+    link: "/packages",
+    ctaLabel: "View Packages",
+    iconType: "map",
+  },
+  {
+    id: 4,
+    title: "Authentic Cultural Immersion",
+    description: "Beyond wildlife — we connect you with the people who define these landscapes. Share meals with Maasai elders, visit gorilla conservation projects, witness living traditions.",
+    tags: ["Cultural", "Authentic", "Immersive"],
+    badge: "Unique",
+    badgeIcon: "🏛",
+    image: "https://i.pinimg.com/736x/4a/9d/29/4a9d29a741657c485053b0883aa0df29.jpg",
+    footer: "Real Connections",
+    link: "/destinations",
+    ctaLabel: "Explore",
+    iconType: "heart",
+  },
+  {
+    id: 5,
+    title: "Seamless End-to-End Service",
+    description: "From your first enquiry to your final transfer home, our team is with you every step. 24/7 in-country support means no detail goes unmanaged.",
+    tags: ["24/7 Support", "Logistics", "Hassle-Free"],
+    badge: "Premium",
+    badgeIcon: "💎",
+    image: "https://i.pinimg.com/1200x/f0/33/77/f033774e32b1ba127ac4b4e6900b89af.jpg",
+    footer: "Always by Your Side",
+    link: "/contact",
+    ctaLabel: "Contact Us",
+    iconType: "shield",
+  },
+  {
+    id: 6,
+    title: "Award-Winning Experiences",
+    description: "Recognised by travellers and industry bodies alike for excellence in responsible tourism. Our track record speaks through the stories our guests share.",
+    tags: ["Award-Winning", "5-Star Rated", "Trusted"],
+    badge: "Best in Class",
+    badgeIcon: "🏆",
+    image: "https://i.pinimg.com/736x/52/a6/89/52a689bd83f6a3a1c2dd75e822b70f39.jpg",
+    footer: "Recognised Excellence",
+    link: "/about",
+    ctaLabel: "Learn More",
+    iconType: "star",
+  },
+];
+
+/* SVG icons for why cards */
+const WhyCardIcon = ({ type, size = 52 }) => {
+  const icons = {
+    compass: (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10"/>
+        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
+      </svg>
+    ),
+    leaf: (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
+        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
+      </svg>
+    ),
+    map: (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
+        <line x1="9" y1="3" x2="9" y2="18"/>
+        <line x1="15" y1="6" x2="15" y2="21"/>
+      </svg>
+    ),
+    heart: (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+      </svg>
+    ),
+    shield: (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+    ),
+    star: (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+      </svg>
+    ),
+  };
+  return icons[type] || icons.compass;
+};
+
+/* ═══════════════════════════════════════════
    STATIC DATA
 ───────────────────────────────────────────── */
 const WHY_ITEMS = [
@@ -660,48 +1020,71 @@ const ServiceCard = ({ service, index, onClick, isMobile }) => {
 /* ─────────────────────────────────────────────
    WHY CARD
 ───────────────────────────────────────────── */
-const WhyCard = ({ item, index }) => {
-  const { Icon, title, stat, desc } = item;
+const WhyCard = ({ card, index }) => {
+  const [hovered, setHovered] = useState(false);
+  const [imgError, setImgError] = useState(false);
+
   return (
-    <div className="sv-why-card">
-      {/* Stat badge */}
-      <div style={{
-        position: "absolute", top: 18, right: 18,
-        padding: "4px 12px", borderRadius: 999,
-        background: "var(--sv-mint)", border: "1px solid #a7f3d0",
-        fontSize: 12, fontWeight: 800, color: "var(--sv-green-dk)",
-      }}>
-        {stat}
+    <Link
+      to={card.link}
+      className="why-card mixed-card-reveal"
+      style={{ animationDelay: `${index * 80}ms` }}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      aria-label={card.ctaLabel}
+    >
+      {/* Image / Icon top area */}
+      <div className="why-card-img-wrap">
+        {!imgError && card.image ? (
+          <img
+            src={card.image}
+            alt={card.title}
+            className="why-card-img"
+            loading="lazy"
+            onError={() => setImgError(true)}
+          />
+        ) : (
+          <div className="why-card-icon-wrap">
+            <div className="why-card-icon">
+              <WhyCardIcon type={card.iconType} size={56} />
+            </div>
+          </div>
+        )}
+        {/* ECO / type badge */}
+        <div className="why-card-eco-badge">
+          <span>{card.badgeIcon}</span>
+          <span>{card.badge}</span>
+        </div>
       </div>
 
-      {/* BG blob */}
-      <div style={{
-        position: "absolute", top: -30, right: -30,
-        width: 100, height: 100, borderRadius: "50%",
-        background: "radial-gradient(circle, #ecfdf5 0%, transparent 70%)",
-        pointerEvents: "none",
-      }} />
-
-      <div className="sv-why-icon" style={{
-        width: 48, height: 48, borderRadius: 14,
-        background: "var(--sv-mint)", border: "1.5px solid #a7f3d0",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        color: "var(--sv-green-dk)", marginBottom: 14, flexShrink: 0,
-      }}>
-        <Icon size={22} />
+      {/* Body */}
+      <div className="why-card-body">
+        <h3 className="why-card-title">{card.title}</h3>
+        <p className="why-card-desc">{card.description}</p>
+        <div className="why-card-tags">
+          {card.tags.map((tag, i) => (
+            <span key={i} className="why-card-tag">{tag}</span>
+          ))}
+        </div>
       </div>
 
-      <h3 style={{
-        fontFamily: "'DM Serif Display', Georgia, serif",
-        fontSize: "clamp(17px,2vw,20px)", fontWeight: 400,
-        color: "var(--sv-text)", marginBottom: 10, lineHeight: 1.2,
-      }}>
-        {title}
-      </h3>
-      <p style={{ fontSize: 13.5, color: "var(--sv-text-2)", lineHeight: 1.72, flex: 1 }}>
-        {desc}
-      </p>
-    </div>
+      {/* Footer */}
+      <div className="why-card-footer">
+        <div className="why-card-footer-left">
+          <div className="why-card-footer-avatar">
+            {card.footer.charAt(0)}
+          </div>
+          <span style={{ fontWeight: 600, fontSize: ".75rem" }}>{card.footer}</span>
+        </div>
+        <span className="why-card-cta">
+          {card.ctaLabel}
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </span>
+      </div>
+    </Link>
   );
 };
 
@@ -1112,22 +1495,27 @@ const Services = () => {
           </div>
         </section>
 
-        {/* ══ WHY ALTUVERA ══ */}
-        <section className="sv-section sv-section--white">
-          <div className="sv-inner">
-            <SectionHead
-              label="Why Altuvera"
-              title="The Altuvera Difference"
-              desc="Expertise, passion, and an unwavering commitment to excellence — here is what sets us apart."
-              Icon={FiAward}
-            />
-
-            <div className="sv-grid-2">
-              {WHY_ITEMS.map((item, i) => (
-                <Reveal key={item.title} index={i}>
-                  <WhyCard item={item} index={i} />
-                </Reveal>
+        {/* ── Why Altuvera — NEW GREEN CARD DESIGN ── */}
+        <section className="why-section">
+          <div className="home-container">
+            <div className="section-header" style={{ textAlign: "center", marginBottom: "2.5rem" }}>
+              <h2 className="home-section-title-serif">
+                The Altuvera <span style={{ color: "#22c55e" }}>Difference</span>
+              </h2>
+              <p className="home-section-subtitle-new" style={{ margin: "0 auto" }}>
+                Experience the difference that comes with expertise, passion, and an
+                unwavering commitment to excellence in every journey we craft.
+              </p>
+            </div>
+            <div className="why-grid">
+              {WHY_CARDS.map((card, i) => (
+                <WhyCard key={card.id} card={card} index={i} />
               ))}
+            </div>
+            <div className="section-cta" style={{ marginTop: "2.5rem" }}>
+              <Button to="/about" variant="primary" size="large" icon={<FiArrowRight size={18} />}>
+                Learn More About Us
+              </Button>
             </div>
           </div>
         </section>
