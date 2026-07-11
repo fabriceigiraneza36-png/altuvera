@@ -9,7 +9,7 @@
     FiCheckCircle, FiXCircle, FiAlertCircle,
     FiRefreshCw, FiSearch, FiShield, FiUser,
     FiChevronDown, FiChevronUp, FiExternalLink,
-    FiBan, FiDollarSign, FiInfo, FiSend, FiFileText, FiRotateCcw,
+    FiSlash, FiDollarSign, FiInfo, FiSend, FiFileText, FiRotateCcw,
   } from "react-icons/fi";
   import {
     HiOutlineTicket, HiLocationMarker,
@@ -424,7 +424,7 @@
       >
         <div className="mb-rb-head">
           <span className="mb-rb-icon">
-            {isRefund ? <FiDollarSign size={15} /> : <FiBan size={15} />}
+            {isRefund ? <FiDollarSign size={15} /> : <FiSlash size={15} />}
           </span>
           <strong>
             {isRefund ? "Refund" : "Cancellation"} Request
@@ -494,7 +494,7 @@
                 className={`mb-req-type ${type === "cancellation" ? "active" : ""}`}
                 onClick={() => setType("cancellation")}
               >
-                <FiBan size={18} />
+                <FiSlash size={18} />
                 <span className="mb-rt-title">Cancel Trip</span>
                 <span className="mb-rt-desc">Void this booking entirely</span>
               </button>

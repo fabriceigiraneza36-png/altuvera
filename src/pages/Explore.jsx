@@ -16,7 +16,7 @@ import DestinationCard, {
   DestinationCardSkeleton,
 } from '../components/common/DestinationCard';
 import { useCountries } from '../hooks/useCountries';
-import { useFeaturedTestimonials } from '../hooks/useTestimonials';
+import { useTestimonials } from '../hooks/useTestimonials';
 import {
   FiArrowRight, FiMapPin, FiCompass, FiClock, FiStar,
   FiHeart, FiUsers, FiAward, FiTrendingUp, FiGlobe,
@@ -1131,7 +1131,7 @@ function WhyImageSlideshow() {
    TESTIMONIALS SLIDER
 ═══════════════════════════════════════════════════════════ */
 function TestimonialsSlider() {
-  const { testimonials, loading, error } = useFeaturedTestimonials(12);
+  const { testimonials, loading, error } = useTestimonials();
   const [idx, setIdx] = useState(0);
   const timerRef = useRef(null);
 

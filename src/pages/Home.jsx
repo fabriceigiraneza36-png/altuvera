@@ -30,7 +30,7 @@ import { useApp } from "../context/AppContext";
 import { useDestinations } from "../hooks/useDestinations";
 import { usePosts } from "../hooks/usePosts";
 import { useWishlist } from "../hooks/useWishlist";
-import { useFeaturedTestimonials } from "../hooks/useTestimonials";
+import { useTestimonials } from "../hooks/useTestimonials";
 
 import "../styles/Home.css";
 
@@ -1289,7 +1289,7 @@ const TestimonialCard = ({ slide }) => {
 };
 
 const TestimonialSection = () => {
-  const { testimonials, loading } = useFeaturedTestimonials(6);
+  const { testimonials, loading } = useTestimonials();
 
   const slides = useMemo(() => {
     if (loading) return [];

@@ -1309,119 +1309,119 @@ const StepReview = memo(({
 });
 StepReview.displayName = "StepReview";
 
+// src/pages/Booking/BookingSteps.jsx
+// Only showing the NavBar + BookingSteps export
+// (all Step components StepTrip, StepTravelers, StepReview remain identical)
+
 /* ══════════════════════════════════════════════════════════════
    NAVIGATION BAR
 ══════════════════════════════════════════════════════════════ */
 const NavBar = memo(({
-  currentStep, totalSteps, onPrev, onNext,
-  isSubmitting, isLastStep, isMobile,
-}) => {
-  const [shaking, setShaking] = useState(false);
-
-  const handleNext = () => {
-    // The parent validates; if it returns without navigating, shake
-    onNext();
-  };
-
-  return (
-    <motion.div
-      animate={shaking ? { x: [-8, 8, -8, 8, 0] } : { x: 0 }}
-      transition={{ duration: 0.4 }}
-      style={{
-        display: "flex", alignItems: "center",
-        justifyContent: "space-between",
-        marginTop: 36, paddingTop: 24,
-        borderTop: "1.5px solid #f3f4f6",
-        gap: 12, flexWrap: "wrap",
-      }}
-    >
-      <div>
-        {currentStep > 0 && (
-          <motion.button
-            whileHover={{ x: -2 }}
-            whileTap={{ scale: 0.97 }}
-            type="button"
-            onClick={onPrev}
-            disabled={isSubmitting}
-            aria-label="Previous step"
-            style={{
-              display: "flex", alignItems: "center", gap: 8,
-              padding: "13px 22px",
-              background: "#f9fafb", color: "#374151",
-              border: "1.5px solid #e5e7eb",
-              borderRadius: 50, fontSize: 14, fontWeight: 700,
-              cursor: isSubmitting ? "not-allowed" : "pointer",
-              opacity: isSubmitting ? 0.6 : 1, transition: "all .2s",
-            }}
-          >
-            <ArrowLeft size={16} /> Back
-          </motion.button>
-        )}
-      </div>
-
-      <div style={{ display: "flex", gap: 14, alignItems: "center", marginLeft: "auto" }}>
-        {/* Dot progress */}
-        {!isMobile && (
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            {Array.from({ length: totalSteps }).map((_, i) => (
-              <motion.div
-                key={i}
-                animate={{
-                  width: i === currentStep ? 22 : 7,
-                  background: i < currentStep
-                    ? "#10b981"
-                    : i === currentStep
-                    ? "linear-gradient(90deg,#059669,#10b981)"
-                    : "#e5e7eb",
-                }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
-                style={{ height: 7, borderRadius: 10 }}
-              />
-            ))}
-          </div>
-        )}
-
+  currentStep,
+  totalSteps,
+  onPrev,
+  onNext,
+  isSubmitting,
+  isLastStep,
+  isMobile,
+}) => (
+  <div style={{
+    display: "flex", alignItems: "center",
+    justifyContent: "space-between",
+    marginTop: 36, paddingTop: 24,
+    borderTop: "1.5px solid #f3f4f6",
+    gap: 12, flexWrap: "wrap",
+  }}>
+    {/* Back */}
+    <div>
+      {currentStep > 0 && (
         <motion.button
-          whileHover={{ y: -1, boxShadow: "0 10px 28px rgba(5,150,105,.38)" }}
+          whileHover={{ x: -2 }}
           whileTap={{ scale: 0.97 }}
           type="button"
-          onClick={handleNext}
+          onClick={onPrev}
           disabled={isSubmitting}
-          aria-label={isLastStep ? "Continue to contact details" : "Next step"}
           style={{
             display: "flex", alignItems: "center", gap: 8,
-            padding: "14px 28px",
-            background: "linear-gradient(135deg,#059669,#10b981)",
-            color: "#fff", border: "none",
-            borderRadius: 50, fontSize: 14.5, fontWeight: 800,
+            padding: "13px 22px",
+            background: "#f9fafb", color: "#374151",
+            border: "1.5px solid #e5e7eb", borderRadius: 50,
+            fontSize: 14, fontWeight: 700,
             cursor: isSubmitting ? "not-allowed" : "pointer",
-            opacity: isSubmitting ? 0.7 : 1,
-            boxShadow: "0 4px 18px rgba(5,150,105,.3)",
-            transition: "all .2s",
-            minWidth: isMobile ? 140 : 210,
-            justifyContent: "center",
+            opacity: isSubmitting ? 0.6 : 1,
+            transition: "all .2s", fontFamily: "inherit",
           }}
         >
-          {isSubmitting ? (
-            <>
-              <motion.span
-                animate={{ rotate: 360 }}
-                transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-                style={{ display: "inline-block", fontSize: 16 }}
-              >⟳</motion.span>
-              Processing…
-            </>
-          ) : (
-            <>
-              {isLastStep ? "Continue to Contact" : "Next Step"}
-              <ArrowRight size={16} />
-            </>
-          )}
+          <ArrowLeft size={16} />
+          Back
         </motion.button>
-      </div>
-    </motion.div>
-  );
-});
+      )}
+    </div>
+
+    {/* Right: dots + next */}
+    <div style={{ display: "flex", gap: 14, alignItems: "center", marginLeft: "auto" }}>
+      {!isMobile && (
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          {Array.from({ length: totalSteps }).map((_, i) => (
+            <motion.div
+              key={i}
+              animate={{
+                width: i === currentStep ? 22 : 7,
+                background:
+                  i < currentStep   ? "#10b981"
+                  : i === currentStep ? "linear-gradient(90deg,#059669,#10b981)"
+                  : "#e5e7eb",
+              }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+              style={{ height: 7, borderRadius: 10 }}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* THE BUTTON — type="button" so it never submits the form accidentally */}
+      <motion.button
+        whileHover={{ y: -1, boxShadow: "0 10px 28px rgba(5,150,105,.38)" }}
+        whileTap={{ scale: 0.97 }}
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();   // ← belt
+          e.stopPropagation();  // ← suspenders
+          onNext();             // ← calls wizard's nextStep
+        }}
+        disabled={isSubmitting}
+        style={{
+          display: "flex", alignItems: "center", gap: 8,
+          padding: "14px 28px",
+          background: "linear-gradient(135deg,#059669,#10b981)",
+          color: "#fff", border: "none", borderRadius: 50,
+          fontSize: 14.5, fontWeight: 800,
+          cursor: isSubmitting ? "not-allowed" : "pointer",
+          opacity: isSubmitting ? 0.7 : 1,
+          boxShadow: "0 4px 18px rgba(5,150,105,.3)",
+          transition: "all .2s", fontFamily: "inherit",
+          minWidth: isMobile ? 150 : 220,
+          justifyContent: "center",
+        }}
+      >
+        {isSubmitting ? (
+          <>
+            <motion.span
+              animate={{ rotate: 360 }}
+              transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+              style={{ display: "inline-block" }}
+            >⟳</motion.span>
+            &nbsp;Processing…
+          </>
+        ) : isLastStep ? (
+          <>Continue to Contact <ArrowRight size={16} /></>
+        ) : (
+          <>Next Step <ArrowRight size={16} /></>
+        )}
+      </motion.button>
+    </div>
+  </div>
+));
 NavBar.displayName = "NavBar";
 
 /* ══════════════════════════════════════════════════════════════
@@ -1430,37 +1430,37 @@ NavBar.displayName = "NavBar";
 const TOTAL_STEPS = 4;
 
 const BookingSteps = ({
-  currentStep, formData, setFormData,
-  errors, touched, handleChange, handleBlur,
+  currentStep,
+  formData, setFormData,
+  errors, touched,
+  handleChange, handleBlur,
   isMobile, isTablet,
   categoriesList, destinationsList, countriesList,
-  groupTypes, accommodationTypes, getTripDuration,
-  getTotalVisitors, interests, handleInterestToggle,
-  nextStep, prevStep, isSubmitting, displayName,
+  groupTypes, accommodationTypes,
+  getTripDuration, getTotalVisitors,
+  interests, handleInterestToggle,
+  nextStep,
+  prevStep,
+  isSubmitting,
+  displayName,
 }) => {
   const sharedProps = {
-    formData, setFormData,
-    errors, touched, handleChange, handleBlur,
-    isMobile, displayName,
+    formData, setFormData, errors, touched,
+    handleChange, handleBlur, isMobile, displayName,
   };
 
-  const stepComponents = [
-    <StepTrip
-      key="trip"
-      {...sharedProps}
+  const steps = [
+    <StepTrip     key="trip"      {...sharedProps}
       destinationsList={destinationsList}
       countriesList={countriesList}
       categoriesList={categoriesList}
     />,
-    <StepTravelers
-      key="travelers"
-      {...sharedProps}
+    <StepTravelers key="travelers" {...sharedProps}
       groupTypes={groupTypes}
       accommodationTypes={accommodationTypes}
       getTotalVisitors={getTotalVisitors}
     />,
-    <StepReview
-      key="review"
+    <StepReview   key="review"
       formData={formData}
       destinationsList={destinationsList}
       countriesList={countriesList}
@@ -1472,19 +1472,20 @@ const BookingSteps = ({
     />,
   ];
 
+  /* currentStep 2 = Review = last step before Contact */
   const isLastStep = currentStep === 2;
 
   return (
     <>
       <AnimatePresence mode="wait">
         <motion.div
-          key={currentStep}
+          key={`sc-${currentStep}`}
           initial={{ opacity: 0, x: 40  }}
           animate={{ opacity: 1, x: 0   }}
           exit={{    opacity: 0, x: -40 }}
-          transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
+          transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
         >
-          {stepComponents[currentStep] ?? null}
+          {steps[currentStep] ?? null}
         </motion.div>
       </AnimatePresence>
 

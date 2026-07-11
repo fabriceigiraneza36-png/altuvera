@@ -23,6 +23,7 @@ import { sendMessage } from "../utils/sendMessage";
 import { apiFetch } from "../utils/apiBase";
 import EmojiPicker from "../components/messaging/EmojiPicker";
 import { useUserAuth } from "../context/UserAuthContext";
+import { useMessaging } from "../context/MessagingContext";
 
 /* ══════ TOKENS ══════ */
 const G = {
@@ -231,6 +232,7 @@ FieldTextarea.displayName = "FieldTextarea";
 ══════════════════════════════════════════════ */
 const Contact = () => {
   const { user, isAuthenticated } = useUserAuth();
+  const { openPortal } = useMessaging();
 
   /* ── State ── */
   const [form,             setForm]             = useState(INIT_FORM);
@@ -394,6 +396,9 @@ const Contact = () => {
       // Success
       setSubmittedEmail(form.email);
       setSubmitProgress(100);
+      // Open the messaging portal so the user can follow the conversation
+      // and see the team's replies live in the chat widget.
+      try { openPortal(); } catch { /* non-fatal */ }
       setTimeout(() => {
         if (mounted.current) setSubmitted(true);
       }, 300);

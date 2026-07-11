@@ -11,7 +11,7 @@ export function useTestimonials(params = {}) {
     setError(null);
 
     try {
-      const result = await enhancedApiClient.request("/testimonials", {
+      const result = await enhancedApiClient.request("/testimonials?limit=200", {
         method: "GET",
         cacheTime: 10 * 60 * 1000, // 10 minutes cache
       });

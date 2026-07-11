@@ -219,6 +219,13 @@ export const sendContactForm = async (formData) => {
     (k) => payload[k] === undefined && delete payload[k]
   );
 
+  // Link this contact inquiry to the live-chat conversation so the user
+  // can see the team's replies inside the messaging portal.
+  try {
+    const sid = localStorage.getItem("atv_session_id");
+    if (sid) payload.sessionId = sid;
+  } catch { /* ignore */ }
+
   // POST /api/contact  (toAbsoluteApiUrl handles the full URL)
   return postJSON("/contact", payload);
 };

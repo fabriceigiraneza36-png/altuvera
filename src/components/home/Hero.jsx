@@ -108,9 +108,9 @@ export const HERO_SLIDES = [
   },
   {
     image:
-      "https://ugandarwandagorillatours.com/wp-content/uploads/2019/02/bwindi-forest-uganda-gorilla-safaris.jpg",
+      "https://i.pinimg.com/736x/10/51/94/1051943d2c780489c4e999436a06b4b3.jpg",
     fallback:
-      "https://i.pinimg.com/1200x/1e/5b/d2/1e5bd2291f7be957992fbc3c13a8f9a2.jpg",
+      "https://copilot.microsoft.com/th/id/BCO.580c7e63-7c54-4f45-91a8-6c837aa880ed.png",
     title: "Bwindi Rainforest",
     subtitle:
       "Mist‑covered rainforests rich with gorillas and biodiversity in Uganda",
@@ -121,7 +121,7 @@ export const HERO_SLIDES = [
   },
   {
     image:
-      "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/15/26/6d/0c/views-from-the-western.jpg?h=1200&s=1&w=1200",
+      "https://i.pinimg.com/1200x/18/8c/c2/188cc2754c648e1f6426268a6ba5c382.jpg",
     fallback:
       "https://i.natgeofe.com/n/2c6a7c2d-5dcc-4c19-9707-5fd50222374c/Magashi_05-19-98e.JPG",
     title: "Akagera National Park",
@@ -136,7 +136,7 @@ export const HERO_SLIDES = [
     image:
       "https://res.cloudinary.com/doijjawna/image/upload/v1781342711/ChatGPT_Image_Jun_13_2026_11_24_57_AM_fu7nt6.png",
     fallback:
-      "https://i.pinimg.com/1200x/77/19/ad/7719adaae5f3d0c347a8d034aee9c9b2.jpg",
+      "https://copilot.microsoft.com/th/id/BCO.db353217-b4b5-4d08-b747-001ccd69d7b9.png",
     title: "Amboseli & Kilimanjaro",
     subtitle:
       "Iconic African wildlife framed by majestic Mount Kilimanjaro in Rwanda",

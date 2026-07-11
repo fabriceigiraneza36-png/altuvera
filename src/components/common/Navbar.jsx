@@ -15,7 +15,6 @@ import { useApp } from "../../context/AppContext";
 import { useUserAuth } from "../../context/UserAuthContext";
 import { useMessaging } from "../../context/MessagingContext";
 import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
-import { getAllDestinations } from "../../data/destinations";
 import { preloadRoute } from "../../utils/routeUtils";
 import { getCountrySlug } from "../../utils/countrySlugMap";
 import { useCountries } from "../../hooks/useCountries";
@@ -65,8 +64,6 @@ const Navbar = () => {
   const logoRef = useRef(null);
   const [logoDetached, setLogoDetached] = useState(false);
   const [logoRect, setLogoRect] = useState(null);
-
-  const localDestinations = useMemo(() => getAllDestinations(), []);
 
   const destinationsDropdown = useMemo(() => {
     const items = [
@@ -164,16 +161,19 @@ const Navbar = () => {
         setLogoRect({ top: rect.top, left: rect.left });
       }
       setLogoDetached(true);
-      if (logoDetachedTimerRef.current) clearTimeout(logoDetachedTimerRef.current);
+      if (logoDetachedTimerRef.current)
+        clearTimeout(logoDetachedTimerRef.current);
     } else if (!navHidden && prevHidden) {
-      if (logoDetachedTimerRef.current) clearTimeout(logoDetachedTimerRef.current);
+      if (logoDetachedTimerRef.current)
+        clearTimeout(logoDetachedTimerRef.current);
       logoDetachedTimerRef.current = setTimeout(() => {
         setLogoDetached(false);
       }, 500);
     }
 
     return () => {
-      if (logoDetachedTimerRef.current) clearTimeout(logoDetachedTimerRef.current);
+      if (logoDetachedTimerRef.current)
+        clearTimeout(logoDetachedTimerRef.current);
     };
   }, [navHidden]);
 
@@ -200,14 +200,16 @@ const Navbar = () => {
     if (searchOpen) setTimeout(() => searchInputRef.current?.focus(), 100);
   }, [searchOpen]);
 
-  /* ── Search ── */
+  /* ── Search — backend only, no local mock data ── */
   useEffect(() => {
     const q = searchValue.trim();
     latestSearchRef.current = q;
+
     if (searchAbortRef.current) {
       searchAbortRef.current.abort();
       searchAbortRef.current = null;
     }
+
     if (q.length < 2) {
       setSearchResults([]);
       setIsSearching(false);
@@ -221,10 +223,10 @@ const Navbar = () => {
         return v.name || v.countryName || v.location || v.slug || "";
       return String(v);
     };
-    const key = (i) => i?._id || i?.id || i?.slug || i?.name;
+
     const toR = (i) => ({
       id: i?.id || i?._id || i?.slug,
-      slug: i?.slug || i?.id,
+      slug: i?.slug || i?.id || i?._id,
       name: i?.title || i?.name || i?.category || "Result",
       country: norm(i?.country || i?.countryName || i?.location),
       category: norm(i?.category || i?.type || "Destination"),
@@ -233,32 +235,6 @@ const Navbar = () => {
       price: i?.price,
       duration: i?.duration,
     });
-
-    const ql = q.toLowerCase();
-    const local = localDestinations
-      .filter((d) => {
-        const n = (d?.name || "").toLowerCase();
-        const ds = (d?.description || "").toLowerCase();
-        const co = norm(d?.country).toLowerCase();
-        const lo = (d?.location || "").toLowerCase();
-        return (
-          n.includes(ql) ||
-          ds.includes(ql) ||
-          co.includes(ql) ||
-          lo.includes(ql)
-        );
-      })
-      .sort((a, b) => {
-        const as = (a?.name || "").toLowerCase().startsWith(ql) ? 1 : 0;
-        const bs = (b?.name || "").toLowerCase().startsWith(ql) ? 1 : 0;
-        return as !== bs
-          ? bs - as
-          : (a?.name || "").localeCompare(b?.name || "");
-      })
-      .slice(0, 6)
-      .map(toR);
-
-    setSearchResults(local);
 
     const tid = setTimeout(async () => {
       setIsSearching(true);
@@ -269,21 +245,22 @@ const Navbar = () => {
           `${API_URL}/search?q=${encodeURIComponent(q)}&limit=10`,
           { signal: ctrl.signal },
         );
+        if (!res.ok) throw new Error("Search failed");
         const data = await res.json();
         if (latestSearchRef.current !== q) return;
-        const remote = (data?.data || []).map(toR);
-        const m = new Map();
-        for (const i of local) m.set(key(i), i);
-        for (const i of remote) m.set(key(i), i);
-        setSearchResults(Array.from(m.values()).slice(0, 10));
-      } catch {
-        /* abort */
+        const remote = (data?.data || data?.results || []).map(toR);
+        setSearchResults(remote.slice(0, 10));
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          if (latestSearchRef.current === q) setSearchResults([]);
+        }
       } finally {
         if (latestSearchRef.current === q) setIsSearching(false);
       }
-    }, 300);
+    }, 350);
+
     return () => clearTimeout(tid);
-  }, [searchValue, API_URL, localDestinations]);
+  }, [searchValue, API_URL]);
 
   useEffect(() => {
     const fn = (e) => e.key === "Escape" && closeAll();
@@ -329,8 +306,6 @@ const Navbar = () => {
   }, []);
   const handleDesktopClick = useCallback((e, l) => {
     if (l.dropdown) {
-      // On touch devices, rely on click/tap to open dropdown.
-      // Prevent immediate navigation so user can pick a sub-item.
       e.preventDefault();
       setActiveDropdown((p) => (p === l.name ? null : l.name));
     }
@@ -338,7 +313,6 @@ const Navbar = () => {
 
   const handleDesktopDblClick = useCallback(
     (e, l) => {
-      // Double click/tap should navigate to the parent page.
       if (l.dropdown) {
         e.preventDefault();
         setActiveDropdown(null);
@@ -369,9 +343,11 @@ const Navbar = () => {
   }, [user]);
 
   const displayName = useMemo(
-    () => user?.fullName || user?.name || user?.email?.split("@")[0] || "User",
+    () =>
+      user?.fullName || user?.name || user?.email?.split("@")[0] || "User",
     [user],
   );
+
   const providerLabel = useMemo(() => {
     const p = (user?.authProvider || "").toLowerCase();
     return p === "google" ? "Google" : p === "github" ? "GitHub" : "Email";
@@ -383,7 +359,7 @@ const Navbar = () => {
     navigate("/");
   }, [closeAll, logout, navigate]);
 
-  /* ── Chat button pulse ── */
+  /* ── Chat button class ── */
   const chatBtnClass = cn(
     "nav__icon-btn nav__chat-btn",
     connectionState === "connected" && "nav__chat-btn--online",
@@ -573,7 +549,6 @@ const Navbar = () => {
               </span>
             </Link>
 
-
             {/* ── LIVE CHAT BUTTON ── */}
             <button
               className={chatBtnClass}
@@ -666,7 +641,10 @@ const Navbar = () => {
                       <m.icon size={16} /> {m.label}
                     </Link>
                   ))}
-                  <button className="nav__user-drop-out" onClick={handleLogout}>
+                  <button
+                    className="nav__user-drop-out"
+                    onClick={handleLogout}
+                  >
                     <FiLogOut size={16} /> Sign Out
                   </button>
                 </div>
@@ -745,35 +723,51 @@ const Navbar = () => {
               </button>
             )}
           </form>
+
           <div className="srch__results">
             {isSearching && (
               <p className="srch__status">
                 <span className="srch__spinner" /> Searching…
               </p>
             )}
+
+            {!isSearching &&
+              searchValue.trim().length >= 2 &&
+              searchResults.length === 0 && (
+                <p className="srch__status">No destinations found.</p>
+              )}
+
             {searchResults.length > 0 && (
               <div className="srch__list">
                 {searchResults.map((r, ri) => (
                   <Link
-                    key={r.id || r._id}
+                    key={r.id || r.slug || ri}
                     to={`/destination/${r.slug || r.id}`}
                     className="srch__item"
                     style={{ "--ri": ri }}
-                    onClick={() => setSearchOpen(false)}
+                    onClick={() => {
+                      setSearchOpen(false);
+                      setSearchValue("");
+                    }}
                   >
-                    <img
-                      src={
-                        r.heroImage ||
-                        r.images?.[0] ||
-                        "https://placehold.co/80x80/059669/ffffff?text=Altuvera"
-                      }
-                      alt=""
-                      className="srch__thumb"
-                    />
+                    {r.heroImage ? (
+                      <img
+                        src={r.heroImage}
+                        alt=""
+                        className="srch__thumb"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <div className="srch__thumb srch__thumb--placeholder" />
+                    )}
                     <div>
                       <p className="srch__name">{r.name}</p>
                       <p className="srch__meta">
-                        {r.country} · {r.category || "Destination"}
+                        {r.country && <span>{r.country}</span>}
+                        {r.country && r.category && <span> · </span>}
+                        {r.category && <span>{r.category}</span>}
                         {r.duration && <span> · {r.duration}</span>}
                         {r.price && <span> · From ${r.price}</span>}
                       </p>
@@ -781,21 +775,22 @@ const Navbar = () => {
                   </Link>
                 ))}
                 <Link
-                  to={`/destinations?search=${encodeURIComponent(searchValue)}`}
+                  to={`/destinations?search=${encodeURIComponent(
+                    searchValue,
+                  )}`}
                   className="srch__all"
-                  onClick={() => setSearchOpen(false)}
+                  onClick={() => {
+                    setSearchOpen(false);
+                    setSearchValue("");
+                  }}
                 >
                   View all results for &ldquo;{searchValue}&rdquo;
                 </Link>
               </div>
             )}
-            {!isSearching &&
-              searchValue.trim().length >= 2 &&
-              searchResults.length === 0 && (
-                <p className="srch__status">No destinations found.</p>
-              )}
           </div>
         </div>
+
         <button
           className="srch__close"
           onClick={() => setSearchOpen(false)}
