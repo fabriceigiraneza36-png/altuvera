@@ -1,7 +1,8 @@
 /**
- * Booking.jsx — v5.0
+ * Booking.jsx — v6.0
  * ✅ Email link verification — no OTP codes
  * ✅ [object Object] fixed — safe error extraction everywhere
+ * ✅ Preferences step removed (Trip → Travelers → Review → Contact)
  * ✅ Professional, responsive, accessible
  */
 import React, {
@@ -70,9 +71,7 @@ const LoadingSpinner = () => (
         margin: "0 auto 20px",
       }}
     />
-    <p style={{
-      color: "#6b7280", fontSize: 15, fontWeight: 500, margin: 0,
-    }}>
+    <p style={{ color: "#6b7280", fontSize: 15, fontWeight: 500, margin: 0 }}>
       Loading booking details…
     </p>
   </div>
@@ -146,10 +145,10 @@ const ErrorBanner = ({ error, onDismiss, onRetry, retryCount = 0 }) => {
 };
 
 /* ── Step Validation Hint ── */
+// Steps: 0=Trip, 1=Travelers, 2=Review, 3=Contact
 const FIELD_GROUPS = [
   ["countryId", "destinationId", "startDate", "endDate", "flexibleMonths"],
   ["adults", "groupType"],
-  ["accommodationType", "budgetRange"],
   [],
   ["firstName", "lastName", "email", "phone", "country", "agreeToTerms"],
 ];
@@ -234,7 +233,6 @@ const SuccessScreen = ({ isMobile, displayName, submissionRef, bookingEmail }) =
       Your adventure request has been received.
     </motion.p>
 
-    {/* Booking ref */}
     {submissionRef && (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -252,7 +250,6 @@ const SuccessScreen = ({ isMobile, displayName, submissionRef, bookingEmail }) =
       </motion.div>
     )}
 
-    {/* Email verification notice */}
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
@@ -261,28 +258,18 @@ const SuccessScreen = ({ isMobile, displayName, submissionRef, bookingEmail }) =
     >
       <span style={{ fontSize: 28, flexShrink: 0 }}>📧</span>
       <div>
-        <p style={{
-          margin: "0 0 6px", fontWeight: 800,
-          color: "#1e40af", fontSize: 14.5,
-        }}>
+        <p style={{ margin: "0 0 6px", fontWeight: 800, color: "#1e40af", fontSize: 14.5 }}>
           One more step — verify your email
         </p>
-        <p style={{
-          margin: 0, color: "#3b82f6",
-          fontSize: 13.5, lineHeight: 1.6,
-        }}>
+        <p style={{ margin: 0, color: "#3b82f6", fontSize: 13.5, lineHeight: 1.6 }}>
           We've sent a <strong>confirmation link</strong> to{" "}
-          {bookingEmail
-            ? <strong>{bookingEmail}</strong>
-            : "your email address"
-          }.{" "}
+          {bookingEmail ? <strong>{bookingEmail}</strong> : "your email address"}.{" "}
           Click it to confirm your booking and notify our team.
           Check your spam folder if you don't see it within a few minutes.
         </p>
       </div>
     </motion.div>
 
-    {/* CTA row */}
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
@@ -343,8 +330,7 @@ const Booking = () => {
     const onResize = () => {
       cancelAnimationFrame(rafId);
       rafId = requestAnimationFrame(() => {
-        if (typeof window !== "undefined")
-          setWindowWidth(window.innerWidth);
+        if (typeof window !== "undefined") setWindowWidth(window.innerWidth);
       });
     };
     window.addEventListener("resize", onResize, { passive: true });
@@ -432,13 +418,8 @@ const Booking = () => {
           minHeight: "70vh", position: "relative",
         }}>
           <FloatingParticles />
-          <div style={{
-            maxWidth: 680, margin: "0 auto",
-            position: "relative", zIndex: 1,
-          }}>
-            <GlassCard glow style={{
-              padding: isMobile ? "32px 20px" : "52px 56px",
-            }}>
+          <div style={{ maxWidth: 680, margin: "0 auto", position: "relative", zIndex: 1 }}>
+            <GlassCard glow style={{ padding: isMobile ? "32px 20px" : "52px 56px" }}>
               <SuccessScreen
                 isMobile={isMobile}
                 displayName={wizard.displayName}
@@ -508,10 +489,7 @@ const Booking = () => {
           }}
         />
 
-        <div style={{
-          maxWidth: 1020, margin: "0 auto",
-          position: "relative", zIndex: 1,
-        }}>
+        <div style={{ maxWidth: 1020, margin: "0 auto", position: "relative", zIndex: 1 }}>
           <AnimatedSection animation="fadeInUp">
             <WhatsAppContactBanner isMobile={isMobile} />
           </AnimatedSection>
@@ -616,7 +594,6 @@ const Booking = () => {
                         destinationsList={wizard.destinationsList}
                         groupTypes={wizard.groupTypes}
                         countriesList={wizard.countriesList}
-                        /* Pass the booking ID once created, for resend */
                         bookingId={wizard.submissionRef
                           ? undefined
                           : wizard.pendingBookingId}
@@ -655,8 +632,10 @@ const Booking = () => {
                     backdropFilter: "blur(8px)",
                   }}
                 >
-                  <span style={{ fontSize: isMobile ? 15 : 17 }}
-                    role="img" aria-label={item.text}>
+                  <span
+                    style={{ fontSize: isMobile ? 15 : 17 }}
+                    role="img" aria-label={item.text}
+                  >
                     {item.icon}
                   </span>
                   {item.text}

@@ -1,122 +1,225 @@
-// src/pages/Booking/components/StepThree.jsx
-// (fixed: removed outer motion wrapper)
+// src/pages/Booking/components/StepThree.jsx  — Interests step (kept as step 3 if used)
 import React, { memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Star, CheckCircle, MessageSquare } from "lucide-react";
-import { THEME } from "../BookingShared";
-import { InterestTag } from "./FormComponents";
-import { ADMIN_CONTACT } from "../BookingShared";
+import { Heart, Star, CheckCircle2, MessageCircle } from "lucide-react";
+import { THEME, ADMIN_CONTACT } from "../BookingShared";
+
+const CardHeader = ({ icon, label, sub }) => (
+  <div style={{
+    padding: "13px 22px", borderBottom: "1px solid #f3f4f6",
+    background: "linear-gradient(to right,#f0fdf4,#fff)",
+    display: "flex", alignItems: "center", gap: 8,
+  }}>
+    {React.cloneElement(icon, { size: 15, color: "#059669" })}
+    <span style={{ fontSize: 12.5, fontWeight: 700, color: "#374151", textTransform: "uppercase", letterSpacing: ".06em" }}>
+      {label}
+    </span>
+    {sub && <span style={{ fontSize: 11.5, color: "#9ca3af", fontWeight: 400, marginLeft: 4, textTransform: "none" }}>{sub}</span>}
+  </div>
+);
 
 const StepThree = memo(({ formData, interests, handleInterestToggle, isMobile, displayName }) => {
-  const selectedCount = formData.interests.length;
+  const selectedCount = (formData.interests || []).length;
 
   return (
     <div>
-      {/* Header */}
-      <div style={{ textAlign: "center", marginBottom: isMobile ? 30 : 42 }}>
+      {/* ── Header ── */}
+      <div style={{ textAlign: "center", marginBottom: isMobile ? 32 : 44 }}>
         <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.1, type: "spring", bounce: 0.5 }}
+          initial={{ scale: 0, rotate: -20 }}
+          animate={{ scale: 1, rotate: 0 }}
+          transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.05 }}
           style={{
-            width: 66, height: 66, borderRadius: "50%",
-            background: `linear-gradient(135deg, ${THEME.primary}, ${THEME.primaryLight})`,
+            width: 72, height: 72, borderRadius: "50%",
+            background: "linear-gradient(135deg,#059669,#10b981)",
             display: "flex", alignItems: "center", justifyContent: "center",
-            margin: "0 auto 18px",
-            boxShadow: `0 12px 30px rgba(5,150,105,0.3)`,
+            margin: "0 auto 20px",
+            boxShadow: "0 12px 36px rgba(5,150,105,.32)",
           }}
         >
-          <Heart size={28} color="white" />
+          <Heart size={30} color="#fff" />
         </motion.div>
-        <h2 style={{ fontFamily: "'Playfair Display', serif", fontSize: isMobile ? 24 : 34, fontWeight: 700, color: THEME.text, marginBottom: 10 }}>
-          What Excites You <span style={{ color: THEME.primary }}>Most?</span>
+
+        {displayName && (
+          <motion.span
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            style={{
+              display: "inline-block", marginBottom: 10,
+              background: "linear-gradient(90deg,#f0fdf4,#dcfce7)",
+              border: "1.5px solid #a7f3d0", borderRadius: 20,
+              padding: "4px 16px", fontSize: 12, fontWeight: 700,
+              color: "#059669", letterSpacing: ".05em", textTransform: "uppercase",
+            }}
+          >
+            Excellent, {displayName}!
+          </motion.span>
+        )}
+
+        <h2 style={{
+          fontFamily: "'Playfair Display',serif",
+          fontSize: isMobile ? 26 : 34, fontWeight: 900,
+          color: "#0f172a", margin: "0 0 10px",
+          letterSpacing: "-0.02em", lineHeight: 1.2,
+        }}>
+          What excites you{" "}
+          <span style={{ color: "#059669" }}>most?</span>
         </h2>
-        <p style={{ fontSize: isMobile ? 14 : 16, color: THEME.textLight, lineHeight: 1.65, maxWidth: 540, margin: "0 auto" }}>
-          {displayName ? `Excellent, ${displayName}! ` : ""}Select the experiences that excite you most and we'll build a custom itinerary.
+        <p style={{
+          fontSize: isMobile ? 14 : 15.5, color: "#6b7280",
+          lineHeight: 1.65, maxWidth: 500, margin: "0 auto",
+        }}>
+          Select the experiences that excite you most and we'll build a
+          custom itinerary around your passions.
         </p>
       </div>
 
-      {/* Interest tags */}
-      <div>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16, fontSize: isMobile ? 14 : 16, fontWeight: 700, color: THEME.text }}>
-          <div style={{ width: 34, height: 34, borderRadius: 10, backgroundColor: THEME.background, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <Star size={17} color={THEME.primary} />
+      {/* ── Interests grid ── */}
+      <div style={{
+        background: "#fff", borderRadius: 20,
+        border: "1.5px solid #f0fdf4",
+        boxShadow: "0 2px 16px rgba(5,150,105,.06)",
+        marginBottom: 20, overflow: "hidden",
+      }}>
+        <CardHeader
+          icon={<Star />}
+          label="Select Your Interests"
+          sub="· choose as many as you like"
+        />
+        <div style={{ padding: "18px 22px" }}>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: isMobile ? "repeat(2,1fr)" : "repeat(4,1fr)",
+            gap: 10,
+          }}>
+            {(interests || []).map((item, i) => {
+              const val   = item?.value ?? item?.name ?? item;
+              const label = item?.label ?? item?.name ?? item;
+              const icon  = item?.icon ?? "";
+              const active = (formData.interests || []).includes(val);
+
+              return (
+                <motion.button
+                  key={val}
+                  type="button"
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.03 }}
+                  whileHover={{ y: -2, boxShadow: "0 6px 18px rgba(5,150,105,.15)" }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => handleInterestToggle(val)}
+                  aria-pressed={active}
+                  style={{
+                    padding: "14px 10px",
+                    borderRadius: 14, border: "none",
+                    background: active
+                      ? "linear-gradient(135deg,#059669,#10b981)"
+                      : "#f3f4f6",
+                    cursor: "pointer", fontFamily: "inherit",
+                    transition: "all .18s",
+                    boxShadow: active ? "0 4px 14px rgba(5,150,105,.28)" : "none",
+                    display: "flex", flexDirection: "column",
+                    alignItems: "center", gap: 6,
+                  }}
+                >
+                  {icon && (
+                    <span style={{ fontSize: 26 }} aria-hidden="true">{icon}</span>
+                  )}
+                  <span style={{
+                    fontSize: 12, fontWeight: 700,
+                    color: active ? "#fff" : "#374151",
+                    lineHeight: 1.3, textAlign: "center",
+                  }}>
+                    {label}
+                  </span>
+                </motion.button>
+              );
+            })}
           </div>
-          Select Your Interests
-          <span style={{ fontSize: 12, color: THEME.textLight, fontWeight: 500 }}>(choose as many as you like)</span>
-        </div>
 
-        <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: 12 }}>
-          {interests.map((interest, i) => (
-            <motion.div
-              key={interest.name}
-              initial={{ opacity: 0, scale: 0.88 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.04 }}
-            >
-              <InterestTag
-                selected={formData.interests.includes(interest.name)}
-                onClick={() => handleInterestToggle(interest.name)}
-                icon={interest.icon}
-                name={interest.name}
-                isMobile={isMobile}
-              />
-            </motion.div>
-          ))}
+          {/* Feedback */}
+          <AnimatePresence>
+            {selectedCount > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 8, height: 0 }}
+                animate={{ opacity: 1, y: 0, height: "auto" }}
+                exit={{ opacity: 0, y: 8, height: 0 }}
+                style={{ marginTop: 16 }}
+              >
+                <div style={{
+                  display: "flex", alignItems: "center", gap: 12,
+                  padding: "14px 18px",
+                  background: selectedCount >= 3
+                    ? "linear-gradient(135deg,#f0fdf4,#dcfce7)"
+                    : "#f9fafb",
+                  border: `1.5px solid ${selectedCount >= 3 ? "#a7f3d0" : "#e5e7eb"}`,
+                  borderRadius: 14,
+                }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                    background: selectedCount >= 3
+                      ? "linear-gradient(135deg,#059669,#10b981)"
+                      : "#e5e7eb",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    transition: "all .25s",
+                  }}>
+                    <CheckCircle2 size={18} color={selectedCount >= 3 ? "#fff" : "#9ca3af"} />
+                  </div>
+                  <div>
+                    <p style={{
+                      margin: 0, fontWeight: 700, fontSize: 14,
+                      color: selectedCount >= 3 ? "#065f46" : "#374151",
+                    }}>
+                      {selectedCount < 3
+                        ? `${selectedCount} selected — add a few more!`
+                        : `${selectedCount} interest${selectedCount !== 1 ? "s" : ""} selected ✨`}
+                    </p>
+                    <p style={{ margin: "2px 0 0", fontSize: 12.5, color: "#9ca3af" }}>
+                      {selectedCount >= 3
+                        ? "We'll build a tailored itinerary around these."
+                        : "The more you select, the better we can customise your trip."}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-
-        {/* Progress feedback */}
-        <AnimatePresence>
-          {selectedCount > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, height: 0 }}
-              animate={{ opacity: 1, y: 0, height: "auto" }}
-              exit={{ opacity: 0, y: 10, height: 0 }}
-              style={{
-                marginTop: 20, padding: "14px 18px",
-                backgroundColor: selectedCount >= 3 ? THEME.background : THEME.gray50,
-                borderRadius: 13,
-                border: `2px solid ${selectedCount >= 3 ? THEME.primaryLighter : THEME.gray200}`,
-                display: "flex", alignItems: "center", gap: 12,
-              }}
-            >
-              <div style={{ width: 38, height: 38, borderRadius: 11, backgroundColor: selectedCount >= 3 ? THEME.primary : THEME.gray400, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <CheckCircle size={19} color="white" />
-              </div>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700, color: selectedCount >= 3 ? THEME.primaryDark : THEME.text }}>
-                  {selectedCount === 0 ? "Select your interests" : selectedCount < 3 ? `${selectedCount} selected — add a few more!` : `${selectedCount} interests selected ✨`}
-                </div>
-                <div style={{ fontSize: 12, color: THEME.textLight }}>
-                  {selectedCount >= 3 ? "We'll build a tailored itinerary around these." : "The more you select, the better we can customise your trip."}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
-      {/* Info banner */}
+      {/* ── Info banner ── */}
       <motion.div
-        initial={{ opacity: 0, y: 14 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.28 }}
+        transition={{ delay: 0.25 }}
         style={{
-          marginTop: 32, padding: isMobile ? 18 : 22,
-          background: "linear-gradient(135deg, rgba(37,211,102,0.08), rgba(5,150,105,0.05))",
-          borderRadius: 16, border: "1px solid rgba(37,211,102,0.2)",
-          display: "flex", alignItems: "flex-start", gap: 14,
+          display: "flex", alignItems: "flex-start", gap: 16,
+          padding: isMobile ? "18px" : "22px",
+          background: "linear-gradient(135deg,rgba(37,211,102,.08),rgba(5,150,105,.05))",
+          border: "1.5px solid rgba(37,211,102,.22)",
+          borderRadius: 20,
         }}
       >
-        <div style={{ width: 46, height: 46, borderRadius: 13, background: "linear-gradient(135deg, #25D366, #128C7E)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <MessageSquare size={22} color="white" />
+        <div style={{
+          width: 48, height: 48, borderRadius: 14, flexShrink: 0,
+          background: "linear-gradient(135deg,#25D366,#128C7E)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          boxShadow: "0 6px 20px rgba(37,211,102,.3)",
+        }}>
+          <MessageCircle size={22} color="#fff" />
         </div>
         <div>
-          <div style={{ fontSize: isMobile ? 14 : 15, fontWeight: 700, color: THEME.primaryDark, marginBottom: 5 }}>
+          <p style={{
+            margin: "0 0 5px", fontWeight: 800, fontSize: 14.5, color: "#065f46",
+          }}>
             Personalised Pricing
-          </div>
-          <p style={{ fontSize: isMobile ? 13 : 14, color: THEME.textLight, lineHeight: 1.6, margin: 0 }}>
-            After you submit, <strong>{ADMIN_CONTACT.name}</strong> will contact you via WhatsApp with a custom quote built around your interests.
+          </p>
+          <p style={{ margin: 0, fontSize: 13.5, color: "#6b7280", lineHeight: 1.6 }}>
+            After you submit,{" "}
+            <strong style={{ color: "#059669" }}>
+              {ADMIN_CONTACT?.name ?? "our travel expert"}
+            </strong>{" "}
+            will contact you via WhatsApp with a custom quote built around your interests.
           </p>
         </div>
       </motion.div>
@@ -124,4 +227,5 @@ const StepThree = memo(({ formData, interests, handleInterestToggle, isMobile, d
   );
 });
 
+StepThree.displayName = "StepThree";
 export default StepThree;

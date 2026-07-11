@@ -1,82 +1,232 @@
 /**
- * BookingSteps.jsx — v2.2
- * FIXES:
- *  - All field reads/writes use camelCase matching useBookingWizard INITIAL_FORM
- *  - NavBar totalSteps and isLastStep derived from STEPS.length prop
- *  - Counter onChange updates formData via setFormData correctly
- *  - Interest toggle uses item.value consistently
+ * BookingSteps.jsx — v3.0
+ * Steps: 0=Trip Details, 1=Travelers, 2=Review
+ * ✅ Preferences step removed
+ * ✅ All camelCase field names matching useBookingWizard
+ * ✅ Polished, accessible, responsive design
  */
 
-import React, {
-  useState, useCallback, memo,
-} from "react";
+import React, { useState, useCallback, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import SelectModal from "./components/SelectModal";
 
 /* ══════════════════════════════════════════════════════════════
-   MICRO-COMPONENTS
+   SHARED MICRO-COMPONENTS
 ══════════════════════════════════════════════════════════════ */
+
 const FieldError = memo(({ error, touched }) =>
   error && touched ? (
-    <p className="bk-field-error" role="alert">
+    <motion.p
+      initial={{ opacity: 0, y: -4 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bk-field-error"
+      role="alert"
+    >
       <span aria-hidden="true">⚠</span> {error}
-    </p>
+    </motion.p>
   ) : null
 );
 FieldError.displayName = "FieldError";
 
-const Counter = memo(({ value, onChange, min = 0, max = 30, label, hint }) => (
+const Counter = memo(({ value, onChange, min = 0, max = 30, label, hint, icon }) => (
   <div style={{
     display: "flex", alignItems: "center",
     justifyContent: "space-between",
-    padding: "15px 0",
+    padding: "16px 0",
   }}>
-    <div>
-      <span style={{ fontSize: 14.5, fontWeight: 600, color: "#374151" }}>{label}</span>
-      {hint && (
-        <p style={{ margin: "2px 0 0", fontSize: 11.5, color: "#9ca3af" }}>{hint}</p>
+    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+      {icon && (
+        <div style={{
+          width: 38, height: 38, borderRadius: 10,
+          background: "linear-gradient(135deg,#f0fdf4,#dcfce7)",
+          border: "1.5px solid #a7f3d0",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 18, flexShrink: 0,
+        }}>
+          {icon}
+        </div>
       )}
+      <div>
+        <span style={{ fontSize: 14.5, fontWeight: 700, color: "#1f2937", display: "block" }}>
+          {label}
+        </span>
+        {hint && (
+          <span style={{ fontSize: 12, color: "#9ca3af", marginTop: 1, display: "block" }}>
+            {hint}
+          </span>
+        )}
+      </div>
     </div>
-    <div className="bk-counter">
+    <div className="bk-counter" style={{
+      display: "flex", alignItems: "center", gap: 0,
+      background: "#fff", borderRadius: 14,
+      border: "1.5px solid #e5e7eb",
+      boxShadow: "0 1px 4px rgba(0,0,0,.06)",
+      overflow: "hidden",
+    }}>
       <button
         type="button"
         className="bk-counter__btn"
         onClick={() => onChange(Math.max(min, value - 1))}
         disabled={value <= min}
         aria-label={`Decrease ${label}`}
+        style={{
+          width: 40, height: 40, border: "none",
+          background: value <= min ? "#f9fafb" : "#fff",
+          color: value <= min ? "#d1d5db" : "#059669",
+          fontSize: 20, fontWeight: 700, cursor: value <= min ? "not-allowed" : "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          transition: "all .15s",
+        }}
       >−</button>
-      <span className="bk-counter__val" aria-live="polite">{value}</span>
+      <span
+        aria-live="polite"
+        style={{
+          minWidth: 44, textAlign: "center",
+          fontSize: 16, fontWeight: 800, color: "#111827",
+          borderLeft: "1px solid #f3f4f6",
+          borderRight: "1px solid #f3f4f6",
+          lineHeight: "40px", height: 40,
+        }}
+      >
+        {value}
+      </span>
       <button
         type="button"
         className="bk-counter__btn"
         onClick={() => onChange(Math.min(max, value + 1))}
         disabled={value >= max}
         aria-label={`Increase ${label}`}
+        style={{
+          width: 40, height: 40, border: "none",
+          background: value >= max ? "#f9fafb" : "#fff",
+          color: value >= max ? "#d1d5db" : "#059669",
+          fontSize: 20, fontWeight: 700, cursor: value >= max ? "not-allowed" : "pointer",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          transition: "all .15s",
+        }}
       >+</button>
     </div>
   </div>
 ));
 Counter.displayName = "Counter";
 
-const SectionCard = memo(({ children, style }) => (
+const SectionCard = memo(({ children, style, title, icon }) => (
   <div style={{
-    background: "#f9fafb",
-    borderRadius: 18,
-    padding: "6px 20px",
-    border: "1.5px solid #e5e7eb",
+    background: "#fff",
+    borderRadius: 20,
+    border: "1.5px solid #f0fdf4",
+    boxShadow: "0 2px 16px rgba(5,150,105,.06)",
+    overflow: "hidden",
     marginBottom: 24,
     ...style,
   }}>
-    {children}
+    {(title || icon) && (
+      <div style={{
+        padding: "14px 22px 12px",
+        borderBottom: "1px solid #f3f4f6",
+        display: "flex", alignItems: "center", gap: 8,
+        background: "linear-gradient(to right,#f0fdf4,#fff)",
+      }}>
+        {icon && <span style={{ fontSize: 16 }}>{icon}</span>}
+        {title && (
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#374151", letterSpacing: ".01em" }}>
+            {title}
+          </span>
+        )}
+      </div>
+    )}
+    <div style={{ padding: "4px 22px" }}>
+      {children}
+    </div>
   </div>
 ));
 SectionCard.displayName = "SectionCard";
 
+const StepHeader = memo(({ icon, title, subtitle, badge }) => (
+  <div style={{ marginBottom: 36, textAlign: "center" }}>
+    <motion.div
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 300, damping: 22 }}
+      style={{
+        width: 72, height: 72, borderRadius: "50%",
+        background: "linear-gradient(135deg,#059669,#10b981)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        margin: "0 auto 18px",
+        boxShadow: "0 8px 28px rgba(5,150,105,.28)",
+        fontSize: 30,
+      }}
+    >
+      {icon}
+    </motion.div>
+    {badge && (
+      <motion.span
+        initial={{ opacity: 0, y: -6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        style={{
+          display: "inline-block",
+          background: "linear-gradient(90deg,#f0fdf4,#dcfce7)",
+          color: "#059669", border: "1.5px solid #a7f3d0",
+          borderRadius: 20, padding: "3px 14px",
+          fontSize: 11.5, fontWeight: 700,
+          letterSpacing: ".05em", textTransform: "uppercase",
+          marginBottom: 10,
+        }}
+      >
+        {badge}
+      </motion.span>
+    )}
+    <motion.h2
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.12 }}
+      style={{
+        margin: "0 0 8px",
+        fontSize: 26, fontWeight: 900, color: "#0f172a",
+        fontFamily: "'Playfair Display', serif",
+        letterSpacing: "-0.02em", lineHeight: 1.25,
+      }}
+    >
+      {title}
+    </motion.h2>
+    {subtitle && (
+      <motion.p
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.18 }}
+        style={{
+          margin: 0, color: "#6b7280",
+          fontSize: 15, lineHeight: 1.65,
+          maxWidth: 480, marginLeft: "auto", marginRight: "auto",
+        }}
+      >
+        {subtitle}
+      </motion.p>
+    )}
+  </div>
+));
+StepHeader.displayName = "StepHeader";
+
 /* ══════════════════════════════════════════════════════════════
    STEP 0 — TRIP DETAILS
-   Fields: destinationId, countryId, categoryId,
-           startDate, endDate, isFlexible, flexibleMonths
 ══════════════════════════════════════════════════════════════ */
+const MONTHS = [
+  { short: "Jan", full: "january"   },
+  { short: "Feb", full: "february"  },
+  { short: "Mar", full: "march"     },
+  { short: "Apr", full: "april"     },
+  { short: "May", full: "may"       },
+  { short: "Jun", full: "june"      },
+  { short: "Jul", full: "july"      },
+  { short: "Aug", full: "august"    },
+  { short: "Sep", full: "september" },
+  { short: "Oct", full: "october"   },
+  { short: "Nov", full: "november"  },
+  { short: "Dec", full: "december"  },
+];
+
 const StepTrip = memo(({
   formData, setFormData, errors, touched,
   handleChange, handleBlur,
@@ -84,23 +234,14 @@ const StepTrip = memo(({
   isMobile,
 }) => {
   const [openCountryModal, setOpenCountryModal] = useState(false);
-  const [openDestModal, setOpenDestModal] = useState(false);
+  const [openDestModal,    setOpenDestModal]    = useState(false);
 
-  const selectedCountry = (countriesList || []).find(
-    (c) => c.value === formData.countryId
-  );
-  const selectedDest = (destinationsList || []).find(
-    (d) => d.value === formData.destinationId
-  );
-
+  const selectedCountry = (countriesList || []).find((c) => c.value === formData.countryId);
+  const selectedDest    = (destinationsList || []).find((d) => d.value === formData.destinationId);
   const today = new Date().toISOString().split("T")[0];
 
   const handleCountrySelect = useCallback((c) => {
-    setFormData((p) => ({
-      ...p,
-      countryId:     c.value,
-      destinationId: "",
-    }));
+    setFormData((p) => ({ ...p, countryId: c.value, destinationId: "" }));
     setOpenCountryModal(false);
   }, [setFormData]);
 
@@ -113,128 +254,151 @@ const StepTrip = memo(({
     setOpenDestModal(false);
   }, [setFormData]);
 
-  const MONTHS = [
-    "Jan","Feb","Mar","Apr","May","Jun",
-    "Jul","Aug","Sep","Oct","Nov","Dec",
-  ];
+  const tripDays = useMemo(() => {
+    if (!formData.startDate || !formData.endDate) return null;
+    const d = Math.round(
+      (new Date(formData.endDate) - new Date(formData.startDate)) / 86400000
+    );
+    return d > 0 ? d : null;
+  }, [formData.startDate, formData.endDate]);
 
   return (
     <div className="bk-step-content">
-      <div className="bk-step-header">
-        <div className="bk-step-header__icon-wrap">
-          <span style={{ fontSize: 26 }}>🗺️</span>
-        </div>
-        <h2 className="bk-step-header__title">Where would you like to go?</h2>
-        <p className="bk-step-header__sub">
-          Choose your dream destination and travel dates.
-        </p>
-      </div>
+      <StepHeader
+        icon="🗺️"
+        badge="Step 1 of 4"
+        title="Where would you like to go?"
+        subtitle="Choose your dream destination and preferred travel dates."
+      />
 
-      {/* Country + Destination pickers */}
-      <div style={{
-        display: "grid", gap: 22,
-        gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-        marginBottom: 8,
-      }}>
-        {/* Country */}
-        <div>
-          <label className="bk-label">
-            Country <span style={{ color: "#ef4444" }}>*</span>
-          </label>
-          <button
-            type="button"
-            className={`bk-input bk-input--select-trigger${errors.countryId && touched.countryId ? " bk-input--error" : selectedCountry ? " bk-input--verified" : ""}`}
-            onClick={() => setOpenCountryModal(true)}
-            style={{
-              display: "flex", alignItems: "center", gap: 10,
-              textAlign: "left", cursor: "pointer",
-            }}
-            aria-label="Open country selector"
-          >
-            <span style={{ fontSize: 20, flexShrink: 0 }}>
-              {selectedCountry && selectedCountry.flag && !selectedCountry.flag.startsWith("http")
-                ? selectedCountry.flag
-                : "🌍"}
-            </span>
-            <span style={{
-              flex: 1, minWidth: 0, fontWeight: selectedCountry ? 700 : 400,
-              color: selectedCountry ? "#111827" : "#9ca3af",
-              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-            }}>
-              {selectedCountry ? selectedCountry.label : "Select a country"}
-            </span>
-            <span style={{ fontSize: 16, color: "#9ca3af", flexShrink: 0 }}>▾</span>
-          </button>
-          {selectedCountry && (
-            <button
-              type="button"
-              onClick={() => {
-                setFormData((p) => ({ ...p, countryId: "", destinationId: "" }));
-              }}
-              style={{
-                position: "absolute", right: 36, top: "50%",
-                transform: "translateY(-50%)",
-                background: "none", border: "none",
-                color: "#9ca3af", cursor: "pointer", fontSize: 18, padding: 0,
-              }}
-              aria-label="Clear country"
-            >×</button>
-          )}
-          <FieldError error={errors.countryId} touched={touched.countryId} />
-        </div>
+      {/* Location pickers */}
+      <SectionCard title="Destination" icon="📍">
+        <div style={{
+          display: "grid", gap: 18,
+          gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+          padding: "10px 0 6px",
+        }}>
+          {/* Country picker */}
+          <div>
+            <label className="bk-label" style={{ marginBottom: 8 }}>
+              Country <span style={{ color: "#ef4444" }}>*</span>
+            </label>
+            <div style={{ position: "relative" }}>
+              <button
+                type="button"
+                onClick={() => setOpenCountryModal(true)}
+                aria-label="Open country selector"
+                style={{
+                  width: "100%", display: "flex", alignItems: "center", gap: 10,
+                  padding: "13px 16px",
+                  background: errors.countryId && touched.countryId
+                    ? "#fef2f2"
+                    : selectedCountry ? "#f0fdf4" : "#f9fafb",
+                  border: `2px solid ${
+                    errors.countryId && touched.countryId
+                      ? "#fca5a5"
+                      : selectedCountry ? "#6ee7b7" : "#e5e7eb"
+                  }`,
+                  borderRadius: 14, cursor: "pointer",
+                  transition: "all .2s",
+                  textAlign: "left",
+                }}
+              >
+                <span style={{ fontSize: 22, flexShrink: 0 }}>
+                  {selectedCountry?.flag && !selectedCountry.flag.startsWith("http")
+                    ? selectedCountry.flag : "🌍"}
+                </span>
+                <span style={{
+                  flex: 1, fontSize: 14.5, fontWeight: selectedCountry ? 700 : 400,
+                  color: selectedCountry ? "#111827" : "#9ca3af",
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                }}>
+                  {selectedCountry?.label ?? "Select a country"}
+                </span>
+                {selectedCountry ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFormData((p) => ({ ...p, countryId: "", destinationId: "" }));
+                    }}
+                    aria-label="Clear country"
+                    style={{
+                      background: "#e5e7eb", border: "none",
+                      borderRadius: "50%", width: 22, height: 22,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", fontSize: 13, color: "#6b7280",
+                      flexShrink: 0,
+                    }}
+                  >×</button>
+                ) : (
+                  <span style={{ color: "#9ca3af", fontSize: 14, flexShrink: 0 }}>▾</span>
+                )}
+              </button>
+            </div>
+            <FieldError error={errors.countryId} touched={touched.countryId} />
+          </div>
 
-        {/* Destination */}
-        <div>
-          <label className="bk-label">
-            Specific Destination{" "}
-            <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optional)</span>
-          </label>
-          <button
-            type="button"
-            className={`bk-input bk-input--select-trigger${selectedDest ? " bk-input--verified" : ""}`}
-            onClick={() => setOpenDestModal(true)}
-            style={{
-              display: "flex", alignItems: "center", gap: 10,
-              textAlign: "left", cursor: "pointer",
-            }}
-            aria-label="Open destination selector"
-          >
-            {selectedDest ? (
-              selectedDest.image ? (
-                <img src={selectedDest.image} alt="" className="bk-dest-thumb" style={{ width: 28, height: 28, borderRadius: 8 }} />
-              ) : (
-                <span style={{ fontSize: 20, flexShrink: 0 }}>🏞️</span>
-              )
-            ) : (
-              <span style={{ fontSize: 20, flexShrink: 0 }}>🏞️</span>
-            )}
-            <span style={{
-              flex: 1, minWidth: 0, fontWeight: selectedDest ? 700 : 400,
-              color: selectedDest ? "#111827" : "#9ca3af",
-              whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-            }}>
-              {selectedDest ? selectedDest.label : "Select a destination"}
-            </span>
-            <span style={{ fontSize: 16, color: "#9ca3af", flexShrink: 0 }}>▾</span>
-          </button>
-          {selectedDest && (
-            <button
-              type="button"
-              onClick={() => {
-                setFormData((p) => ({ ...p, destinationId: "" }));
-              }}
-              style={{
-                position: "absolute", right: 36, top: "50%",
-                transform: "translateY(-50%)",
-                background: "none", border: "none",
-                color: "#9ca3af", cursor: "pointer", fontSize: 18, padding: 0,
-              }}
-              aria-label="Clear destination"
-            >×</button>
-          )}
-          <FieldError error={errors.destinationId} touched={touched.destinationId} />
+          {/* Destination picker */}
+          <div>
+            <label className="bk-label" style={{ marginBottom: 8 }}>
+              Specific Destination{" "}
+              <span style={{ color: "#9ca3af", fontWeight: 400, fontSize: 12 }}>(optional)</span>
+            </label>
+            <div style={{ position: "relative" }}>
+              <button
+                type="button"
+                onClick={() => setOpenDestModal(true)}
+                aria-label="Open destination selector"
+                style={{
+                  width: "100%", display: "flex", alignItems: "center", gap: 10,
+                  padding: "13px 16px",
+                  background: selectedDest ? "#f0fdf4" : "#f9fafb",
+                  border: `2px solid ${selectedDest ? "#6ee7b7" : "#e5e7eb"}`,
+                  borderRadius: 14, cursor: "pointer",
+                  transition: "all .2s", textAlign: "left",
+                }}
+              >
+                {selectedDest?.image ? (
+                  <img
+                    src={selectedDest.image} alt=""
+                    style={{ width: 26, height: 26, borderRadius: 6, objectFit: "cover", flexShrink: 0 }}
+                  />
+                ) : (
+                  <span style={{ fontSize: 22, flexShrink: 0 }}>🏞️</span>
+                )}
+                <span style={{
+                  flex: 1, fontSize: 14.5, fontWeight: selectedDest ? 700 : 400,
+                  color: selectedDest ? "#111827" : "#9ca3af",
+                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                }}>
+                  {selectedDest?.label ?? "Select a destination"}
+                </span>
+                {selectedDest ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setFormData((p) => ({ ...p, destinationId: "" }));
+                    }}
+                    aria-label="Clear destination"
+                    style={{
+                      background: "#e5e7eb", border: "none",
+                      borderRadius: "50%", width: 22, height: 22,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      cursor: "pointer", fontSize: 13, color: "#6b7280",
+                      flexShrink: 0,
+                    }}
+                  >×</button>
+                ) : (
+                  <span style={{ color: "#9ca3af", fontSize: 14, flexShrink: 0 }}>▾</span>
+                )}
+              </button>
+            </div>
+            <FieldError error={errors.destinationId} touched={touched.destinationId} />
+          </div>
         </div>
-      </div>
+      </SectionCard>
 
       {/* Modals */}
       <SelectModal
@@ -256,165 +420,234 @@ const StepTrip = memo(({
         isMobile={isMobile}
       />
 
-      <div className="bk-sep" />
-
-      {/* Flexible dates toggle — writes to isFlexible */}
-      <div style={{ marginBottom: 20 }}>
-        <label
-          className="bk-check-row"
-          style={{ cursor: "pointer" }}
-          onClick={() =>
-            setFormData((p) => ({ ...p, isFlexible: !p.isFlexible }))
-          }
-        >
-          <div className={`bk-check${formData.isFlexible ? " bk-check--on" : ""}`}>
-            {formData.isFlexible && <span className="bk-check__mark">✓</span>}
-          </div>
+      {/* Dates section */}
+      <SectionCard title="Travel Dates" icon="📅">
+        {/* Flexible toggle */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "14px 0 12px",
+          borderBottom: "1px solid #f3f4f6",
+        }}>
           <div>
-            <span className="bk-check-label" style={{ fontWeight: 700 }}>
-              My dates are flexible
-            </span>
-            <p style={{ margin: "2px 0 0", fontSize: 12.5, color: "#9ca3af" }}>
-              Open to adjustments for better availability and pricing
+            <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: "#1f2937" }}>
+              Flexible dates
+            </p>
+            <p style={{ margin: "2px 0 0", fontSize: 12, color: "#9ca3af" }}>
+              Choose preferred months instead of fixed dates
             </p>
           </div>
-        </label>
-      </div>
-
-      {/* Date inputs — writes to startDate / endDate / flexibleMonths */}
-      <AnimatePresence mode="wait">
-        {!formData.isFlexible ? (
-          <motion.div
-            key="fixed-dates"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
+          <button
+            type="button"
+            role="switch"
+            aria-checked={formData.isFlexible}
+            onClick={() => setFormData((p) => ({ ...p, isFlexible: !p.isFlexible }))}
             style={{
-              display: "grid", gap: 22,
-              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+              width: 52, height: 28, borderRadius: 14, border: "none",
+              background: formData.isFlexible
+                ? "linear-gradient(90deg,#059669,#10b981)"
+                : "#e5e7eb",
+              position: "relative", cursor: "pointer",
+              transition: "background .25s", flexShrink: 0,
+              boxShadow: formData.isFlexible
+                ? "0 2px 8px rgba(5,150,105,.3)"
+                : "none",
             }}
           >
-            <div>
-              <label className="bk-label">
-                Departure Date <span style={{ color: "#ef4444" }}>*</span>
-              </label>
-              {/* FIX: name="startDate" matches formData.startDate */}
-              <input
-                type="date"
-                name="startDate"
-                className={`bk-input${
-                  errors.startDate && touched.startDate
-                    ? " bk-input--error"
-                    : formData.startDate
-                    ? " bk-input--verified"
-                    : ""
-                }`}
-                value={formData.startDate}
-                min={today}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                aria-label="Departure date"
-              />
-              <FieldError error={errors.startDate} touched={touched.startDate} />
-            </div>
-            <div>
-              <label className="bk-label">
-                Return Date{" "}
-                <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optional)</span>
-              </label>
-              {/* FIX: name="endDate" matches formData.endDate */}
-              <input
-                type="date"
-                name="endDate"
-                className={`bk-input${
-                  errors.endDate && touched.endDate
-                    ? " bk-input--error"
-                    : formData.endDate
-                    ? " bk-input--verified"
-                    : ""
-                }`}
-                value={formData.endDate}
-                min={formData.startDate || today}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                aria-label="Return date"
-              />
-              <FieldError error={errors.endDate} touched={touched.endDate} />
-              {formData.startDate && formData.endDate && (() => {
-                const d = Math.round(
-                  (new Date(formData.endDate) - new Date(formData.startDate)) / 86400000
-                );
-                return d > 0 ? (
-                  <p style={{ margin: "5px 0 0", fontSize: 12, color: "#059669", fontWeight: 600 }}>
-                    ✓ {d} day{d !== 1 ? "s" : ""} trip
-                  </p>
-                ) : null;
-              })()}
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div
-            key="flexible-months"
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-          >
-            <label className="bk-label">
-              Preferred Months <span style={{ color: "#ef4444" }}>*</span>
-            </label>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 6 }}>
-              {MONTHS.map((m) => {
-                const ml     = m.toLowerCase();
-                const active = (formData.flexibleMonths || []).includes(ml);
-                return (
-                  <button
-                    key={m}
-                    type="button"
-                    className={`bk-interest${active ? " bk-interest--active" : ""}`}
-                    style={{ padding: "7px 14px", fontSize: 13 }}
-                    onClick={() =>
-                      setFormData((p) => ({
-                        ...p,
-                        flexibleMonths: active
-                          ? (p.flexibleMonths || []).filter((x) => x !== ml)
-                          : [...(p.flexibleMonths || []), ml],
-                      }))
-                    }
-                  >
-                    {m}
-                  </button>
-                );
-              })}
-            </div>
-            <FieldError error={errors.flexibleMonths} touched={touched.flexibleMonths} />
-            {(formData.flexibleMonths || []).length > 0 && (
-              <p style={{ fontSize: 12, color: "#059669", fontWeight: 600, marginTop: 4 }}>
-                ✓ {formData.flexibleMonths.length} month
-                {formData.flexibleMonths.length !== 1 ? "s" : ""} selected
-              </p>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <motion.div
+              animate={{ x: formData.isFlexible ? 26 : 2 }}
+              transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              style={{
+                width: 22, height: 22, borderRadius: "50%",
+                background: "#fff", position: "absolute", top: 3,
+                boxShadow: "0 1px 4px rgba(0,0,0,.18)",
+              }}
+            />
+          </button>
+        </div>
 
-      {/* Category */}
+        <AnimatePresence mode="wait">
+          {!formData.isFlexible ? (
+            <motion.div
+              key="fixed"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              style={{
+                display: "grid", gap: 18,
+                gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                padding: "14px 0 6px",
+              }}
+            >
+              <div>
+                <label className="bk-label" style={{ marginBottom: 8 }}>
+                  Departure Date <span style={{ color: "#ef4444" }}>*</span>
+                </label>
+                <input
+                  type="date"
+                  name="startDate"
+                  value={formData.startDate}
+                  min={today}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  aria-label="Departure date"
+                  style={{
+                    width: "100%", padding: "12px 14px",
+                    borderRadius: 12, fontSize: 14, fontWeight: 500,
+                    border: `2px solid ${
+                      errors.startDate && touched.startDate
+                        ? "#fca5a5"
+                        : formData.startDate ? "#6ee7b7" : "#e5e7eb"
+                    }`,
+                    background: errors.startDate && touched.startDate
+                      ? "#fef2f2"
+                      : formData.startDate ? "#f0fdf4" : "#f9fafb",
+                    outline: "none", boxSizing: "border-box",
+                    transition: "all .2s", color: "#111827",
+                  }}
+                />
+                <FieldError error={errors.startDate} touched={touched.startDate} />
+              </div>
+
+              <div>
+                <label className="bk-label" style={{ marginBottom: 8 }}>
+                  Return Date{" "}
+                  <span style={{ color: "#9ca3af", fontWeight: 400, fontSize: 12 }}>(optional)</span>
+                </label>
+                <input
+                  type="date"
+                  name="endDate"
+                  value={formData.endDate}
+                  min={formData.startDate || today}
+                  onChange={handleChange}
+                  onBlur={handleBlur}
+                  aria-label="Return date"
+                  style={{
+                    width: "100%", padding: "12px 14px",
+                    borderRadius: 12, fontSize: 14, fontWeight: 500,
+                    border: `2px solid ${
+                      errors.endDate && touched.endDate
+                        ? "#fca5a5"
+                        : formData.endDate ? "#6ee7b7" : "#e5e7eb"
+                    }`,
+                    background: errors.endDate && touched.endDate
+                      ? "#fef2f2"
+                      : formData.endDate ? "#f0fdf4" : "#f9fafb",
+                    outline: "none", boxSizing: "border-box",
+                    transition: "all .2s", color: "#111827",
+                  }}
+                />
+                <FieldError error={errors.endDate} touched={touched.endDate} />
+              </div>
+
+              {tripDays && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  style={{
+                    gridColumn: isMobile ? "1" : "1 / -1",
+                    display: "flex", alignItems: "center", gap: 10,
+                    background: "linear-gradient(135deg,#f0fdf4,#dcfce7)",
+                    border: "1.5px solid #a7f3d0",
+                    borderRadius: 12, padding: "10px 16px",
+                  }}
+                >
+                  <span style={{ fontSize: 18 }}>⏱️</span>
+                  <span style={{ fontSize: 14, fontWeight: 800, color: "#065f46" }}>
+                    {tripDays} day{tripDays !== 1 ? "s" : ""} adventure
+                  </span>
+                </motion.div>
+              )}
+            </motion.div>
+          ) : (
+            <motion.div
+              key="flexible"
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              style={{ padding: "14px 0 10px" }}
+            >
+              <label className="bk-label" style={{ marginBottom: 10 }}>
+                Preferred Months <span style={{ color: "#ef4444" }}>*</span>
+              </label>
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: 8,
+              }}>
+                {MONTHS.map(({ short, full }) => {
+                  const active = (formData.flexibleMonths || []).includes(full);
+                  return (
+                    <button
+                      key={full}
+                      type="button"
+                      onClick={() =>
+                        setFormData((p) => ({
+                          ...p,
+                          flexibleMonths: active
+                            ? (p.flexibleMonths || []).filter((x) => x !== full)
+                            : [...(p.flexibleMonths || []), full],
+                        }))
+                      }
+                      style={{
+                        padding: "10px 6px",
+                        borderRadius: 10, border: "none",
+                        background: active
+                          ? "linear-gradient(135deg,#059669,#10b981)"
+                          : "#f3f4f6",
+                        color: active ? "#fff" : "#374151",
+                        fontSize: 13, fontWeight: 700,
+                        cursor: "pointer", transition: "all .18s",
+                        boxShadow: active
+                          ? "0 2px 8px rgba(5,150,105,.28)"
+                          : "none",
+                      }}
+                    >
+                      {short}
+                    </button>
+                  );
+                })}
+              </div>
+              <FieldError error={errors.flexibleMonths} touched={touched.flexibleMonths} />
+              {(formData.flexibleMonths || []).length > 0 && (
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  style={{
+                    marginTop: 10, fontSize: 13, color: "#059669",
+                    fontWeight: 700, display: "flex", alignItems: "center", gap: 6,
+                  }}
+                >
+                  ✓ {formData.flexibleMonths.length} month
+                  {formData.flexibleMonths.length !== 1 ? "s" : ""} selected
+                </motion.p>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </SectionCard>
+
+      {/* Category (optional) */}
       {categoriesList?.length > 0 && (
-        <>
-          <div className="bk-sep" />
-          <div>
-            <label className="bk-label">
-              Trip Category{" "}
-              <span style={{ color: "#9ca3af", fontWeight: 400 }}>(optional)</span>
-            </label>
-            {/* FIX: name="categoryId" matches formData.categoryId */}
+        <SectionCard title="Trip Category" icon="🎯">
+          <div style={{ padding: "10px 0 6px" }}>
             <select
               name="categoryId"
-              className="bk-select"
               value={formData.categoryId}
               onChange={handleChange}
               aria-label="Trip category"
+              style={{
+                width: "100%", padding: "12px 14px",
+                borderRadius: 12, fontSize: 14, fontWeight: 500,
+                border: "2px solid #e5e7eb", background: "#f9fafb",
+                color: "#374151", outline: "none", cursor: "pointer",
+                appearance: "none",
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%239ca3af'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
+                backgroundRepeat: "no-repeat",
+                backgroundPosition: "right 14px center",
+                backgroundSize: "18px",
+              }}
             >
               <option value="">All Categories</option>
               {categoriesList.map((c) => (
@@ -422,7 +655,7 @@ const StepTrip = memo(({
               ))}
             </select>
           </div>
-        </>
+        </SectionCard>
       )}
     </div>
   );
@@ -431,12 +664,10 @@ StepTrip.displayName = "StepTrip";
 
 /* ══════════════════════════════════════════════════════════════
    STEP 1 — TRAVELERS
-   Fields: adults, children, infants, groupType
 ══════════════════════════════════════════════════════════════ */
 const StepTravelers = memo(({
   formData, setFormData, errors, touched, groupTypes, isMobile,
 }) => {
-  // FIX: read from formData.adults / children / infants (camelCase)
   const adults   = parseInt(formData.adults,   10) || 0;
   const children = parseInt(formData.children, 10) || 0;
   const infants  = parseInt(formData.infants,  10) || 0;
@@ -444,36 +675,30 @@ const StepTravelers = memo(({
 
   return (
     <div className="bk-step-content">
-      <div className="bk-step-header">
-        <div className="bk-step-header__icon-wrap">
-          <span style={{ fontSize: 26 }}>👥</span>
-        </div>
-        <h2 className="bk-step-header__title">Who's coming along?</h2>
-        <p className="bk-step-header__sub">
-          Tell us about your group so we can tailor the perfect experience.
-        </p>
-      </div>
+      <StepHeader
+        icon="👥"
+        badge="Step 2 of 4"
+        title="Who's coming along?"
+        subtitle="Tell us about your group so we can tailor the perfect experience."
+      />
 
-      <SectionCard>
-        {/* FIX: write to formData.adults */}
+      <SectionCard title="Group Composition" icon="👣">
         <Counter
-          label="Adults" hint="Ages 18+"
+          icon="🧑" label="Adults" hint="Ages 18 and above"
           value={adults}
           onChange={(v) => setFormData((p) => ({ ...p, adults: v }))}
           min={1} max={30}
         />
-        <div style={{ height: 1, background: "#e5e7eb" }} />
-        {/* FIX: write to formData.children */}
+        <div style={{ height: 1, background: "#f3f4f6", margin: "0 -22px" }} />
         <Counter
-          label="Children" hint="Ages 5–17"
+          icon="🧒" label="Children" hint="Ages 5 – 17"
           value={children}
           onChange={(v) => setFormData((p) => ({ ...p, children: v }))}
           min={0} max={15}
         />
-        <div style={{ height: 1, background: "#e5e7eb" }} />
-        {/* FIX: write to formData.infants */}
+        <div style={{ height: 1, background: "#f3f4f6", margin: "0 -22px" }} />
         <Counter
-          label="Infants" hint="Ages 0–4"
+          icon="👶" label="Infants" hint="Ages 0 – 4"
           value={infants}
           onChange={(v) => setFormData((p) => ({ ...p, infants: v }))}
           min={0} max={5}
@@ -485,62 +710,104 @@ const StepTravelers = memo(({
       <AnimatePresence>
         {total > 0 && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, scale: 0.95, y: 8 }}
+            animate={{ opacity: 1, scale: 1,    y: 0 }}
             exit={{ opacity: 0, scale: 0.95 }}
             style={{
-              display: "flex", alignItems: "center", gap: 10,
-              padding: "11px 18px",
+              display: "flex", alignItems: "center", gap: 14,
+              padding: "16px 22px",
               background: "linear-gradient(135deg,#f0fdf4,#dcfce7)",
-              borderRadius: 12, marginBottom: 24,
+              borderRadius: 16, marginBottom: 24,
               border: "1.5px solid #a7f3d0",
+              boxShadow: "0 4px 16px rgba(5,150,105,.1)",
             }}
           >
-            <span style={{ fontSize: 20 }}>👣</span>
-            <span style={{ fontSize: 14, fontWeight: 700, color: "#065f46" }}>
-              {total} traveller{total !== 1 ? "s" : ""} total
-            </span>
-            <span style={{ fontSize: 12, color: "#6b7280", marginLeft: 4 }}>
-              {adults > 0 && `${adults} adult${adults !== 1 ? "s" : ""}`}
-              {children > 0 && `, ${children} child${children !== 1 ? "ren" : ""}`}
-              {infants > 0 && `, ${infants} infant${infants !== 1 ? "s" : ""}`}
-            </span>
+            <div style={{
+              width: 44, height: 44, borderRadius: 12,
+              background: "linear-gradient(135deg,#059669,#10b981)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 20, flexShrink: 0,
+              boxShadow: "0 4px 12px rgba(5,150,105,.3)",
+            }}>
+              ✅
+            </div>
+            <div>
+              <p style={{ margin: 0, fontWeight: 800, fontSize: 15, color: "#065f46" }}>
+                {total} traveller{total !== 1 ? "s" : ""} total
+              </p>
+              <p style={{ margin: "2px 0 0", fontSize: 13, color: "#6b7280" }}>
+                {adults} adult{adults !== 1 ? "s" : ""}
+                {children > 0 && ` · ${children} child${children !== 1 ? "ren" : ""}`}
+                {infants > 0 && ` · ${infants} infant${infants !== 1 ? "s" : ""}`}
+              </p>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Group type — writes to formData.groupType */}
+      {/* Group type */}
       <div>
-        <label className="bk-label">
+        <label className="bk-label" style={{ marginBottom: 12 }}>
           Group Type <span style={{ color: "#ef4444" }}>*</span>
         </label>
         <div
-          className="bk-opt-grid bk-opt-grid--3"
-          style={isMobile ? { gridTemplateColumns: "repeat(2,1fr)" } : {}}
+          style={{
+            display: "grid",
+            gridTemplateColumns: isMobile
+              ? "repeat(2,1fr)"
+              : "repeat(3,1fr)",
+            gap: 12,
+          }}
           role="radiogroup"
           aria-label="Group type"
         >
-          {(groupTypes || []).map((g) => (
-            <div
-              key={g.value}
-              className={`bk-opt-card${
-                formData.groupType === g.value ? " bk-opt-card--active" : ""
-              }`}
-              onClick={() => setFormData((p) => ({ ...p, groupType: g.value }))}
-              role="radio"
-              aria-checked={formData.groupType === g.value}
-              tabIndex={0}
-              onKeyDown={(e) =>
-                e.key === "Enter" &&
-                setFormData((p) => ({ ...p, groupType: g.value }))
-              }
-            >
-              <span className="bk-opt-card__icon" style={{ fontSize: 28 }}>
-                {g.icon}
-              </span>
-              <span className="bk-opt-card__label">{g.label}</span>
-            </div>
-          ))}
+          {(groupTypes || []).map((g) => {
+            const isActive = formData.groupType === g.value;
+            return (
+              <motion.div
+                key={g.value}
+                whileHover={{ y: -2, boxShadow: "0 8px 24px rgba(5,150,105,.15)" }}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => setFormData((p) => ({ ...p, groupType: g.value }))}
+                role="radio"
+                aria-checked={isActive}
+                tabIndex={0}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && setFormData((p) => ({ ...p, groupType: g.value }))
+                }
+                style={{
+                  padding: "18px 14px",
+                  borderRadius: 16, cursor: "pointer",
+                  border: `2px solid ${isActive ? "#059669" : "#e5e7eb"}`,
+                  background: isActive
+                    ? "linear-gradient(135deg,#f0fdf4,#dcfce7)"
+                    : "#fff",
+                  textAlign: "center",
+                  transition: "all .2s",
+                  boxShadow: isActive
+                    ? "0 4px 16px rgba(5,150,105,.18)"
+                    : "0 1px 4px rgba(0,0,0,.05)",
+                  outline: "none",
+                }}
+              >
+                <div style={{ fontSize: 30, marginBottom: 8 }}>{g.icon}</div>
+                <div style={{
+                  fontSize: 13, fontWeight: 700,
+                  color: isActive ? "#065f46" : "#374151",
+                }}>
+                  {g.label}
+                </div>
+                {isActive && (
+                  <div style={{
+                    width: 20, height: 20, borderRadius: "50%",
+                    background: "#059669", margin: "8px auto 0",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    color: "#fff", fontSize: 11, fontWeight: 900,
+                  }}>✓</div>
+                )}
+              </motion.div>
+            );
+          })}
         </div>
         <FieldError error={errors.groupType} touched={touched.groupType} />
       </div>
@@ -550,263 +817,50 @@ const StepTravelers = memo(({
 StepTravelers.displayName = "StepTravelers";
 
 /* ══════════════════════════════════════════════════════════════
-   STEP 2 — PREFERENCES
-   Fields: accommodationType, budgetRange, interests,
-           dietaryRequirements, specialRequests,
-           hasMedicalConditions, medicalDetails
+   STEP 2 — REVIEW
 ══════════════════════════════════════════════════════════════ */
-const BUDGET_OPTIONS = [
-  { value: "under-2000", label: "Under $2K",  icon: "💵"     },
-  { value: "2000-5000",  label: "$2K – $5K",  icon: "💵💵"   },
-  { value: "5000-10000", label: "$5K – $10K", icon: "💵💵💵" },
-  { value: "over-10000", label: "Over $10K",  icon: "💎"     },
-  { value: "flexible",   label: "Flexible",   icon: "🤝"     },
-];
+const BUDGET_LABELS = {
+  "under-2000":  "Under $2,000",
+  "2000-5000":   "$2,000 – $5,000",
+  "5000-10000":  "$5,000 – $10,000",
+  "over-10000":  "Over $10,000",
+  "flexible":    "Flexible",
+};
 
-const StepPreferences = memo(({
-  formData, setFormData, handleChange,
-  errors, touched,
-  accommodationTypes, interests: interestsList,
-  handleInterestToggle, isMobile,
-}) => (
-  <div className="bk-step-content">
-    <div className="bk-step-header">
-      <div className="bk-step-header__icon-wrap">
-        <span style={{ fontSize: 26 }}>✨</span>
-      </div>
-      <h2 className="bk-step-header__title">Personalise your experience</h2>
-      <p className="bk-step-header__sub">
-        Help us craft the perfect itinerary by sharing your travel style.
+const ReviewRow = ({ label, value, icon }) => (
+  <div style={{
+    display: "flex", alignItems: "flex-start",
+    gap: 12, padding: "14px 0",
+    borderBottom: "1px solid #f3f4f6",
+  }}>
+    <div style={{
+      width: 34, height: 34, borderRadius: 9,
+      background: "linear-gradient(135deg,#f0fdf4,#dcfce7)",
+      border: "1px solid #a7f3d0",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      fontSize: 16, flexShrink: 0,
+    }}>
+      {icon}
+    </div>
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <p style={{ margin: "0 0 2px", fontSize: 11.5, color: "#9ca3af", fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em" }}>
+        {label}
+      </p>
+      <p style={{ margin: 0, fontSize: 14.5, fontWeight: 700, color: "#111827", lineHeight: 1.45 }}>
+        {value}
       </p>
     </div>
-
-    {/* Accommodation — writes to formData.accommodationType */}
-    <div style={{ marginBottom: 28 }}>
-      <label className="bk-label">
-        Accommodation Style <span style={{ color: "#ef4444" }}>*</span>
-      </label>
-      <div
-        className="bk-opt-grid bk-opt-grid--4"
-        style={isMobile ? { gridTemplateColumns: "repeat(2,1fr)" } : {}}
-        role="radiogroup"
-        aria-label="Accommodation style"
-      >
-        {(accommodationTypes || []).map((a) => (
-          <div
-            key={a.value}
-            className={`bk-opt-card${
-              formData.accommodationType === a.value ? " bk-opt-card--active" : ""
-            }`}
-            onClick={() =>
-              setFormData((p) => ({ ...p, accommodationType: a.value }))
-            }
-            role="radio"
-            aria-checked={formData.accommodationType === a.value}
-            tabIndex={0}
-            onKeyDown={(e) =>
-              e.key === "Enter" &&
-              setFormData((p) => ({ ...p, accommodationType: a.value }))
-            }
-          >
-            <span className="bk-opt-card__icon" style={{ fontSize: 28 }}>
-              {a.icon}
-            </span>
-            <span className="bk-opt-card__label">{a.label}</span>
-            {a.desc && (
-              <span className="bk-opt-card__desc">{a.desc}</span>
-            )}
-          </div>
-        ))}
-      </div>
-      <FieldError error={errors.accommodationType} touched={touched.accommodationType} />
-    </div>
-
-    <div className="bk-sep" />
-
-    {/* Interests — uses handleInterestToggle(item.value) */}
-    <div style={{ marginBottom: 28 }}>
-      <label className="bk-label">
-        What interests you most?{" "}
-        <span style={{ fontWeight: 400, color: "#9ca3af", fontSize: 12 }}>
-          (Select all that apply)
-        </span>
-      </label>
-      <div className="bk-interests" role="group" aria-label="Interests">
-        {(interestsList || []).map((item) => {
-          // Support both {value,label,icon} objects and plain strings
-          const val   = item?.value ?? item;
-          const label = item?.label ?? item;
-          const icon  = item?.icon  ?? "";
-          const active = (formData.interests || []).includes(val);
-
-          return (
-            <button
-              key={val}
-              type="button"
-              className={`bk-interest${active ? " bk-interest--active" : ""}`}
-              onClick={() => handleInterestToggle(val)}
-              aria-pressed={active}
-            >
-              {icon && <span aria-hidden="true">{icon}</span>}
-              {label}
-            </button>
-          );
-        })}
-      </div>
-      {(formData.interests?.length > 0) && (
-        <p style={{ marginTop: 10, fontSize: 12.5, color: "#059669", fontWeight: 700 }}>
-          ✓ {formData.interests.length} interest
-          {formData.interests.length !== 1 ? "s" : ""} selected
-        </p>
-      )}
-    </div>
-
-    <div className="bk-sep" />
-
-    {/* Budget — writes to formData.budgetRange */}
-    <div style={{ marginBottom: 24 }}>
-      <label className="bk-label">
-        Budget Range (per person) <span style={{ color: "#ef4444" }}>*</span>
-      </label>
-      <div
-        className="bk-opt-grid bk-opt-grid--3"
-        style={isMobile ? { gridTemplateColumns: "repeat(2,1fr)" } : {}}
-        role="radiogroup"
-        aria-label="Budget range"
-      >
-        {BUDGET_OPTIONS.map((b) => (
-          <div
-            key={b.value}
-            className={`bk-opt-card${
-              formData.budgetRange === b.value ? " bk-opt-card--active" : ""
-            }`}
-            onClick={() => setFormData((p) => ({ ...p, budgetRange: b.value }))}
-            role="radio"
-            aria-checked={formData.budgetRange === b.value}
-            tabIndex={0}
-            onKeyDown={(e) =>
-              e.key === "Enter" &&
-              setFormData((p) => ({ ...p, budgetRange: b.value }))
-            }
-          >
-            <span className="bk-opt-card__icon" style={{ fontSize: 24 }}>
-              {b.icon}
-            </span>
-            <span className="bk-opt-card__label">{b.label}</span>
-          </div>
-        ))}
-      </div>
-      <FieldError error={errors.budgetRange} touched={touched.budgetRange} />
-    </div>
-
-    <div className="bk-sep" />
-
-    {/* Special requirements */}
-    <div style={{
-      display: "grid", gap: 18,
-      gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-      marginBottom: 20,
-    }}>
-      <div>
-        <label className="bk-label">Dietary Requirements</label>
-        {/* FIX: name="dietaryRequirements" matches formData.dietaryRequirements */}
-        <select
-          name="dietaryRequirements"
-          className="bk-select"
-          value={formData.dietaryRequirements}
-          onChange={handleChange}
-        >
-          <option value="">No restrictions</option>
-          <option value="vegetarian">🥦 Vegetarian</option>
-          <option value="vegan">🌱 Vegan</option>
-          <option value="halal">☪️ Halal</option>
-          <option value="kosher">✡️ Kosher</option>
-          <option value="gluten-free">🌾 Gluten-Free</option>
-          <option value="nut-allergy">🥜 Nut Allergy</option>
-          <option value="other">💬 Other</option>
-        </select>
-      </div>
-      <div>
-        <label className="bk-label">Special Requests</label>
-        {/* FIX: name="specialRequests" matches formData.specialRequests */}
-        <textarea
-          name="specialRequests"
-          className="bk-textarea"
-          placeholder="Anniversary celebrations, accessibility needs…"
-          value={formData.specialRequests}
-          onChange={handleChange}
-          rows={3}
-          style={{ minHeight: 80 }}
-          aria-label="Special requests"
-        />
-      </div>
-    </div>
-
-    {/* Medical — writes to formData.hasMedicalConditions */}
-    <div>
-      <label
-        className="bk-check-row"
-        style={{ cursor: "pointer" }}
-        onClick={() =>
-          setFormData((p) => ({
-            ...p, hasMedicalConditions: !p.hasMedicalConditions,
-          }))
-        }
-      >
-        <div className={`bk-check${formData.hasMedicalConditions ? " bk-check--on" : ""}`}>
-          {formData.hasMedicalConditions && (
-            <span className="bk-check__mark">✓</span>
-          )}
-        </div>
-        <div>
-          <span className="bk-check-label" style={{ fontWeight: 700 }}>
-            I have medical conditions to disclose
-          </span>
-          <p style={{ margin: "2px 0 0", fontSize: 12.5, color: "#9ca3af" }}>
-            Helps us ensure your safety and comfort
-          </p>
-        </div>
-      </label>
-      <AnimatePresence>
-        {formData.hasMedicalConditions && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            style={{ marginTop: 12, overflow: "hidden" }}
-          >
-            {/* FIX: name="medicalDetails" matches formData.medicalDetails */}
-            <textarea
-              name="medicalDetails"
-              className="bk-textarea"
-              placeholder="Briefly describe relevant medical conditions…"
-              value={formData.medicalDetails}
-              onChange={handleChange}
-              rows={3}
-              style={{ minHeight: 80 }}
-              aria-label="Medical details"
-            />
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
   </div>
-));
-StepPreferences.displayName = "StepPreferences";
+);
 
-/* ══════════════════════════════════════════════════════════════
-   STEP 3 — REVIEW
-   Read-only summary of formData
-══════════════════════════════════════════════════════════════ */
 const StepReview = memo(({
   formData, destinationsList, countriesList,
   groupTypes, accommodationTypes,
   getTripDuration, getTotalVisitors, isMobile,
 }) => {
-  // FIX: read from camelCase keys
-  const dest      = (destinationsList || []).find((d) => d.value === formData.destinationId);
-  const country   = (countriesList    || []).find((c) => c.value === formData.countryId);
-  const groupType = (groupTypes       || []).find((g) => g.value === formData.groupType);
+  const dest      = (destinationsList   || []).find((d) => d.value === formData.destinationId);
+  const country   = (countriesList      || []).find((c) => c.value === formData.countryId);
+  const groupType = (groupTypes         || []).find((g) => g.value === formData.groupType);
   const accom     = (accommodationTypes || []).find((a) => a.value === formData.accommodationType);
   const duration  = getTripDuration?.();
   const total     = getTotalVisitors?.();
@@ -815,145 +869,147 @@ const StepReview = memo(({
   const children = parseInt(formData.children, 10) || 0;
   const infants  = parseInt(formData.infants,  10) || 0;
 
-  const BUDGET_LABELS = {
-    "under-2000":  "Under $2,000",
-    "2000-5000":   "$2,000 – $5,000",
-    "5000-10000":  "$5,000 – $10,000",
-    "over-10000":  "Over $10,000",
-    "flexible":    "Flexible",
-  };
+  const locationLabel = dest?.label || country?.label || "Not specified";
+  const dateLabel = formData.isFlexible
+    ? `Flexible — ${(formData.flexibleMonths || []).length
+        ? formData.flexibleMonths.map((m) => m.charAt(0).toUpperCase() + m.slice(1)).join(", ")
+        : "Any month"}`
+    : formData.startDate
+      ? new Date(formData.startDate).toLocaleDateString("en-US", {
+          weekday: "short", year: "numeric", month: "long", day: "numeric",
+        })
+      : "—";
 
-  const rows = [
-    {
-      key: "📍 Destination",
-      val: dest?.label || country?.label || "Not specified",
-    },
-    formData.isFlexible
-      ? {
-          key: "📅 Dates",
-          val: `Flexible — ${
-            (formData.flexibleMonths || []).length
-              ? formData.flexibleMonths.join(", ")
-              : "Any month"
-          }`,
-        }
-      : {
-          key: "📅 Departure",
-          val: formData.startDate
-            ? new Date(formData.startDate).toLocaleDateString("en-US", {
-                weekday: "short", year: "numeric",
-                month: "long", day: "numeric",
-              })
-            : "—",
-        },
-    !formData.isFlexible && formData.endDate && {
-      key: "🏁 Return",
-      val: new Date(formData.endDate).toLocaleDateString("en-US", {
-        weekday: "short", year: "numeric",
-        month: "long", day: "numeric",
-      }),
-    },
-    duration && {
-      key: "⏱️ Duration",
-      val: `${duration} day${duration !== 1 ? "s" : ""}`,
-    },
-    {
-      key: "👥 Travellers",
-      val: `${total} (${adults} adult${adults !== 1 ? "s" : ""}${
-        children ? `, ${children} child${children !== 1 ? "ren" : ""}` : ""
-      }${infants ? `, ${infants} infant${infants !== 1 ? "s" : ""}` : ""})`,
-    },
-    groupType && {
-      key: "🧳 Group Type",
-      val: `${groupType.icon} ${groupType.label}`,
-    },
-    accom && {
-      key: "🏨 Accommodation",
-      val: `${accom.icon} ${accom.label}`,
-    },
-    formData.budgetRange && {
-      key: "💰 Budget",
-      val: BUDGET_LABELS[formData.budgetRange] || formData.budgetRange,
-    },
-    formData.interests?.length > 0 && {
-      key: "✨ Interests",
-      val: formData.interests.join(", "),
-    },
-    formData.dietaryRequirements && {
-      key: "🍽️ Dietary",
-      val: formData.dietaryRequirements,
-    },
-    formData.specialRequests && {
-      key: "💬 Special Requests",
-      val: formData.specialRequests,
-    },
-  ].filter(Boolean);
+  const travellerLabel = `${total || 0} total — ${adults} adult${adults !== 1 ? "s" : ""}${
+    children ? `, ${children} child${children !== 1 ? "ren" : ""}` : ""
+  }${infants ? `, ${infants} infant${infants !== 1 ? "s" : ""}` : ""}`;
 
   return (
     <div className="bk-step-content">
-      <div className="bk-step-header">
-        <div className="bk-step-header__icon-wrap">
-          <span style={{ fontSize: 26 }}>📋</span>
-        </div>
-        <h2 className="bk-step-header__title">Review your trip details</h2>
-        <p className="bk-step-header__sub">
-          Everything look good? Go back to edit, or continue to complete your booking.
-        </p>
-      </div>
+      <StepHeader
+        icon="📋"
+        badge="Step 3 of 4"
+        title="Review your trip details"
+        subtitle="Everything look good? Go back to edit, or continue to complete your booking."
+      />
 
+      {/* Destination hero image */}
       {dest?.image && (
-        <div style={{
-          borderRadius: 18, overflow: "hidden",
-          height: isMobile ? 160 : 220,
-          marginBottom: 24, position: "relative",
-        }}>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            borderRadius: 20, overflow: "hidden",
+            height: isMobile ? 170 : 230,
+            marginBottom: 24, position: "relative",
+            boxShadow: "0 8px 32px rgba(0,0,0,.14)",
+          }}
+        >
           <img
             src={dest.image} alt={dest.label}
             style={{ width: "100%", height: "100%", objectFit: "cover" }}
           />
           <div style={{
             position: "absolute", inset: 0,
-            background: "linear-gradient(to top,rgba(0,0,0,.65) 0%,transparent 55%)",
+            background: "linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 55%)",
             display: "flex", alignItems: "flex-end",
-            padding: "20px 22px",
+            padding: "22px 24px",
           }}>
             <div>
               <h3 style={{
-                margin: 0, color: "#fff",
+                margin: "0 0 4px", color: "#fff",
                 fontFamily: "'Playfair Display',serif",
-                fontSize: isMobile ? 18 : 22, fontWeight: 800,
-              }}>{dest.label}</h3>
+                fontSize: isMobile ? 20 : 24, fontWeight: 900,
+                textShadow: "0 2px 8px rgba(0,0,0,.4)",
+              }}>
+                {dest.label}
+              </h3>
               {dest.country && (
-                <p style={{ margin: "3px 0 0", color: "rgba(255,255,255,.8)", fontSize: 13 }}>
-                  {dest.country}
+                <p style={{
+                  margin: 0, color: "rgba(255,255,255,.82)", fontSize: 13.5,
+                  display: "flex", alignItems: "center", gap: 5,
+                }}>
+                  📍 {dest.country}
                 </p>
               )}
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
-      <div className="bk-summary">
-        {rows.map((row) => (
-          <div key={row.key} className="bk-summary__row">
-            <span className="bk-summary__key">{row.key}</span>
-            <span className="bk-summary__val">{row.val}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className="bk-info-box bk-info-box--green" style={{ marginTop: 20 }}>
-        <span style={{ fontSize: 20, flexShrink: 0 }}>💡</span>
-        <div>
-          <p style={{ margin: 0, fontWeight: 700, marginBottom: 3 }}>
-            No payment required at this stage.
-          </p>
-          <p style={{ margin: 0, fontSize: 13 }}>
-            Your booking request is completely free. Our travel expert will
-            contact you to discuss pricing and customise your itinerary.
-          </p>
+      {/* Summary card */}
+      <div style={{
+        background: "#fff", borderRadius: 20,
+        border: "1.5px solid #f0fdf4",
+        boxShadow: "0 2px 16px rgba(5,150,105,.07)",
+        overflow: "hidden", marginBottom: 24,
+      }}>
+        <div style={{
+          padding: "14px 22px",
+          background: "linear-gradient(to right,#f0fdf4,#fff)",
+          borderBottom: "1px solid #f3f4f6",
+          display: "flex", alignItems: "center", gap: 8,
+        }}>
+          <span style={{ fontSize: 16 }}>✅</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "#374151" }}>
+            Trip Summary
+          </span>
+        </div>
+        <div style={{ padding: "0 22px" }}>
+          <ReviewRow icon="📍" label="Destination"  value={locationLabel} />
+          <ReviewRow icon="📅" label="Dates"        value={dateLabel} />
+          {duration && !formData.isFlexible && formData.endDate && (
+            <ReviewRow icon="⏱️" label="Duration"   value={`${duration} day${duration !== 1 ? "s" : ""}`} />
+          )}
+          <ReviewRow icon="👥" label="Travellers"   value={travellerLabel} />
+          {groupType && (
+            <ReviewRow icon="🧳" label="Group Type" value={`${groupType.icon} ${groupType.label}`} />
+          )}
+          {accom && (
+            <ReviewRow icon="🏨" label="Accommodation" value={`${accom.icon} ${accom.label}`} />
+          )}
+          {formData.budgetRange && (
+            <ReviewRow icon="💰" label="Budget" value={BUDGET_LABELS[formData.budgetRange] || formData.budgetRange} />
+          )}
+          {formData.interests?.length > 0 && (
+            <ReviewRow
+              icon="✨" label="Interests"
+              value={formData.interests.join(", ")}
+            />
+          )}
+          {formData.dietaryRequirements && (
+            <ReviewRow icon="🍽️" label="Dietary" value={formData.dietaryRequirements} />
+          )}
+          {formData.specialRequests && (
+            <ReviewRow icon="💬" label="Special Requests" value={formData.specialRequests} />
+          )}
         </div>
       </div>
+
+      {/* No payment notice */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        style={{
+          display: "flex", gap: 14, alignItems: "flex-start",
+          padding: "18px 22px",
+          background: "linear-gradient(135deg,#eff6ff,#dbeafe)",
+          borderRadius: 16, border: "1.5px solid #93c5fd",
+          boxShadow: "0 2px 12px rgba(59,130,246,.1)",
+        }}
+      >
+        <span style={{ fontSize: 24, flexShrink: 0 }}>💡</span>
+        <div>
+          <p style={{ margin: "0 0 4px", fontWeight: 800, fontSize: 14.5, color: "#1e40af" }}>
+            No payment required at this stage
+          </p>
+          <p style={{ margin: 0, fontSize: 13.5, color: "#3b82f6", lineHeight: 1.6 }}>
+            Your booking request is completely free. Our travel expert will
+            contact you to discuss pricing and craft your perfect itinerary.
+          </p>
+        </div>
+      </motion.div>
     </div>
   );
 });
@@ -966,46 +1022,94 @@ const NavBar = memo(({
   currentStep, totalSteps, onPrev, onNext,
   isSubmitting, isLastStep, isMobile,
 }) => (
-  <div className="bk-nav">
+  <div style={{
+    display: "flex", alignItems: "center", justifyContent: "space-between",
+    marginTop: 36, paddingTop: 24,
+    borderTop: "1.5px solid #f3f4f6",
+    gap: 12, flexWrap: "wrap",
+  }}>
     <div>
       {currentStep > 0 && (
-        <button
+        <motion.button
+          whileHover={{ x: -2 }}
+          whileTap={{ scale: 0.97 }}
           type="button"
-          className="bk-btn bk-btn--secondary"
           onClick={onPrev}
           disabled={isSubmitting}
           aria-label="Go to previous step"
+          style={{
+            display: "flex", alignItems: "center", gap: 8,
+            padding: "13px 22px",
+            background: "#f9fafb", color: "#374151",
+            border: "1.5px solid #e5e7eb",
+            borderRadius: 50, fontSize: 14, fontWeight: 700,
+            cursor: isSubmitting ? "not-allowed" : "pointer",
+            opacity: isSubmitting ? 0.6 : 1,
+            transition: "all .2s",
+          }}
         >
           ← Back
-        </button>
+        </motion.button>
       )}
     </div>
 
     <div style={{
-      display: "flex", gap: 12,
+      display: "flex", gap: 14,
       alignItems: "center", marginLeft: "auto",
     }}>
       {!isMobile && (
-        <span style={{ fontSize: 12.5, color: "#9ca3af", fontWeight: 500 }}>
-          Step {currentStep + 1} of {totalSteps}
-        </span>
+        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+          {Array.from({ length: totalSteps }).map((_, i) => (
+            <div
+              key={i}
+              style={{
+                width: i === currentStep ? 20 : 7,
+                height: 7, borderRadius: 10,
+                background: i <= currentStep
+                  ? "linear-gradient(90deg,#059669,#10b981)"
+                  : "#e5e7eb",
+                transition: "all .3s",
+              }}
+            />
+          ))}
+        </div>
       )}
-      <button
+
+      <motion.button
+        whileHover={{ y: -1, boxShadow: "0 8px 24px rgba(5,150,105,.35)" }}
+        whileTap={{ scale: 0.97 }}
         type="button"
-        className="bk-btn bk-btn--primary"
         onClick={onNext}
         disabled={isSubmitting}
-        style={{ minWidth: isMobile ? 0 : 200 }}
         aria-label={isLastStep ? "Continue to contact details" : "Next step"}
+        style={{
+          display: "flex", alignItems: "center", gap: 8,
+          padding: "14px 28px",
+          background: "linear-gradient(135deg,#059669,#10b981)",
+          color: "#fff", border: "none",
+          borderRadius: 50, fontSize: 14.5, fontWeight: 800,
+          cursor: isSubmitting ? "not-allowed" : "pointer",
+          opacity: isSubmitting ? 0.7 : 1,
+          boxShadow: "0 4px 18px rgba(5,150,105,.3)",
+          transition: "all .2s", minWidth: isMobile ? 0 : 200,
+          justifyContent: "center",
+        }}
       >
         {isSubmitting ? (
-          "Processing…"
+          <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <motion.span
+              animate={{ rotate: 360 }}
+              transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+              style={{ display: "inline-block", fontSize: 16 }}
+            >⟳</motion.span>
+            Processing…
+          </span>
         ) : isLastStep ? (
           <>Continue to Contact <span aria-hidden="true">→</span></>
         ) : (
           <>Next Step <span aria-hidden="true">→</span></>
         )}
-      </button>
+      </motion.button>
     </div>
   </div>
 ));
@@ -1013,6 +1117,7 @@ NavBar.displayName = "NavBar";
 
 /* ══════════════════════════════════════════════════════════════
    MAIN EXPORT — BookingSteps
+   Steps 0=Trip, 1=Travelers, 2=Review  (step 3=Contact in Booking.jsx)
 ══════════════════════════════════════════════════════════════ */
 const STEP_TRANSITION = {
   initial:    { opacity: 0, x: 20  },
@@ -1021,10 +1126,7 @@ const STEP_TRANSITION = {
   transition: { duration: 0.25, ease: "easeInOut" },
 };
 
-// FIX: steps rendered here are 0-indexed, matching useBookingWizard
-// Steps 0-3 = Trip, Travelers, Preferences, Review
-// Step 4 = Contact (rendered separately in Booking.jsx as BookingContact)
-const TOTAL_STEPS = 5; // matches STEPS.length in BookingShared
+const TOTAL_STEPS = 4; // Trip, Travelers, Review, Contact
 
 const BookingSteps = ({
   currentStep, isAnimating,
@@ -1046,7 +1148,6 @@ const BookingSteps = ({
     isMobile,
   };
 
-  // Steps 0–3 only (step 4 = BookingContact handled by parent)
   const stepComponents = [
     <StepTrip
       key="trip"
@@ -1059,13 +1160,6 @@ const BookingSteps = ({
       key="travelers"
       {...sharedProps}
       groupTypes={groupTypes}
-    />,
-    <StepPreferences
-      key="preferences"
-      {...sharedProps}
-      accommodationTypes={accommodationTypes}
-      interests={interests}
-      handleInterestToggle={handleInterestToggle}
     />,
     <StepReview
       key="review"
@@ -1080,8 +1174,8 @@ const BookingSteps = ({
     />,
   ];
 
-  // FIX: isLastStep = step 3 (Review), the last step before Contact
-  const isLastStep = currentStep === 3;
+  // isLastStep here = step 2 (Review), last before Contact
+  const isLastStep = currentStep === 2;
 
   return (
     <>

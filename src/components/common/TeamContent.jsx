@@ -1,4 +1,4 @@
-// src/components/common/TeamContent.jsx — Clean Professional Redesign
+// src/components/common/TeamContent.jsx — Dark Green & White Professional Redesign
 import React, {
   useState, useEffect, useCallback, useMemo, useRef,
 } from "react";
@@ -39,639 +39,341 @@ const teamAPI = {
   getDepartments() { return this._fetch("/team/departments/list"); },
 };
 
-/* ── Fallback data ── */
+/* ── Fallback ── */
 const FALLBACK_MEMBERS = [
-  { id: 1, name: "IGIRANEZA Fabrice", role: "Founder & CEO", department: "Leadership", image_url: "https://randomuser.me/api/portraits/men/32.jpg", bio: "Visionary entrepreneur leading Altuvera's mission to deliver transformative travel experiences across East Africa.", expertise: ["Strategic Planning", "Tourism Innovation", "Partnership Development"], languages: ["English", "French", "Kinyarwanda"], certifications: [], years_experience: 12, location: "Musanze, Rwanda", linkedin_url: "https://linkedin.com", twitter_url: "https://twitter.com", email: "fabrice@altuvera.com", is_featured: true, is_active: true, display_order: 1 },
-  { id: 2, name: "UWIMANA Grace", role: "Head of Operations", department: "Operations", image_url: "https://randomuser.me/api/portraits/women/44.jpg", bio: "Ensures seamless coordination of every itinerary with precision and local expertise.", expertise: ["Logistics Management", "Quality Assurance", "Team Coordination"], languages: ["English", "Swahili"], certifications: [], years_experience: 8, location: "Musanze, Rwanda", linkedin_url: "https://linkedin.com", email: "grace@altuvera.com", is_featured: false, is_active: true, display_order: 2 },
-  { id: 3, name: "MUTABAZI Jean", role: "Lead Safari Guide", department: "Guides", image_url: "https://randomuser.me/api/portraits/men/67.jpg", bio: "Expert wildlife guide combining extensive field knowledge with exceptional safety standards.", expertise: ["Wildlife Tracking", "Bird Identification", "Conservation Education"], languages: ["English", "Swahili", "French"], certifications: ["Certified Safari Guide", "Wilderness First Aid"], years_experience: 15, location: "Serengeti, Tanzania", linkedin_url: "https://linkedin.com", email: "jean@altuvera.com", is_featured: true, is_active: true, display_order: 3 },
-  { id: 4, name: "INGABIRE Diane", role: "Customer Experience Manager", department: "Customer Service", image_url: "https://randomuser.me/api/portraits/women/28.jpg", bio: "Designs guest-first service experiences from initial inquiry through post-trip follow-up.", expertise: ["Client Relations", "Service Design", "Feedback Analysis"], languages: ["English", "French"], certifications: [], years_experience: 6, location: "Kampala, Uganda", linkedin_url: "https://linkedin.com", twitter_url: "https://twitter.com", email: "diane@altuvera.com", is_featured: false, is_active: true, display_order: 4 },
-  { id: 5, name: "HABIMANA Patrick", role: "Conservation Liaison", department: "Conservation", image_url: "https://randomuser.me/api/portraits/men/52.jpg", bio: "Manages partnerships with wildlife conservancies and oversees community development initiatives.", expertise: ["Conservation Strategy", "Community Engagement", "Sustainability"], languages: ["English", "Rukiga"], certifications: ["Conservation Management Certificate"], years_experience: 10, location: "Bwindi, Uganda", linkedin_url: "https://linkedin.com", email: "patrick@altuvera.com", is_featured: false, is_active: true, display_order: 5 },
-  { id: 6, name: "MUKAMANA Claudine", role: "Marketing Director", department: "Marketing", image_url: "https://randomuser.me/api/portraits/women/65.jpg", bio: "Leads brand strategy and digital marketing initiatives to connect travelers with authentic African experiences.", expertise: ["Digital Marketing", "Brand Strategy", "Content Creation"], languages: ["English", "French", "Kinyarwanda"], certifications: [], years_experience: 7, location: "Musanze, Rwanda", linkedin_url: "https://linkedin.com", twitter_url: "https://twitter.com", instagram_url: "https://instagram.com", email: "claudine@altuvera.com", is_featured: false, is_active: true, display_order: 6 },
+  { id: 1, name: "IGIRANEZA Fabrice", role: "Founder & CEO", department: "Leadership", image_url: "https://randomuser.me/api/portraits/men/32.jpg", bio: "Visionary entrepreneur leading Altuvera's mission to deliver transformative travel experiences across East Africa.", expertise: ["Strategic Planning", "Tourism Innovation"], languages: ["English", "French", "Kinyarwanda"], certifications: [], years_experience: 12, location: "Musanze, Rwanda", linkedin_url: "#", twitter_url: "#", email: "fabrice@altuvera.com", is_featured: true, is_active: true, display_order: 1 },
+  { id: 2, name: "UWIMANA Grace", role: "Head of Operations", department: "Operations", image_url: "https://randomuser.me/api/portraits/women/44.jpg", bio: "Ensures seamless coordination of every itinerary with precision and local expertise.", expertise: ["Logistics", "Quality Assurance"], languages: ["English", "Swahili"], certifications: [], years_experience: 8, location: "Musanze, Rwanda", linkedin_url: "#", email: "grace@altuvera.com", is_featured: false, is_active: true, display_order: 2 },
+  { id: 3, name: "MUTABAZI Jean", role: "Lead Safari Guide", department: "Guides", image_url: "https://randomuser.me/api/portraits/men/67.jpg", bio: "Expert wildlife guide combining extensive field knowledge with exceptional safety standards.", expertise: ["Wildlife Tracking", "Conservation"], languages: ["English", "Swahili", "French"], certifications: ["Certified Safari Guide"], years_experience: 15, location: "Serengeti, Tanzania", linkedin_url: "#", email: "jean@altuvera.com", is_featured: true, is_active: true, display_order: 3 },
+  { id: 4, name: "INGABIRE Diane", role: "Customer Experience Manager", department: "Customer Service", image_url: "https://randomuser.me/api/portraits/women/28.jpg", bio: "Designs guest-first service experiences from initial inquiry through post-trip follow-up.", expertise: ["Client Relations", "Service Design"], languages: ["English", "French"], certifications: [], years_experience: 6, location: "Kampala, Uganda", linkedin_url: "#", twitter_url: "#", email: "diane@altuvera.com", is_featured: false, is_active: true, display_order: 4 },
+  { id: 5, name: "HABIMANA Patrick", role: "Conservation Liaison", department: "Conservation", image_url: "https://randomuser.me/api/portraits/men/52.jpg", bio: "Manages partnerships with wildlife conservancies and oversees community development initiatives.", expertise: ["Conservation Strategy", "Community Engagement"], languages: ["English", "Rukiga"], certifications: ["Conservation Certificate"], years_experience: 10, location: "Bwindi, Uganda", linkedin_url: "#", email: "patrick@altuvera.com", is_featured: false, is_active: true, display_order: 5 },
+  { id: 6, name: "MUKAMANA Claudine", role: "Marketing Director", department: "Marketing", image_url: "https://randomuser.me/api/portraits/women/65.jpg", bio: "Leads brand strategy and digital marketing to connect travelers with authentic African experiences.", expertise: ["Digital Marketing", "Brand Strategy"], languages: ["English", "French", "Kinyarwanda"], certifications: [], years_experience: 7, location: "Musanze, Rwanda", linkedin_url: "#", twitter_url: "#", instagram_url: "#", email: "claudine@altuvera.com", is_featured: false, is_active: true, display_order: 6 },
 ];
 
+/* ── Palette ── */
+const C = {
+  darkGreen: "#064e3b",
+  green: "#065f46",
+  medGreen: "#047857",
+  lightGreen: "#059669",
+  paleGreen: "#d1fae5",
+  faintGreen: "#ecfdf5",
+  ghostGreen: "#f0fdf4",
+  white: "#ffffff",
+  offWhite: "#fafffe",
+  textDark: "#064e3b",
+  textMed: "#065f46",
+  textLight: "#047857",
+  textMuted: "#6b7280",
+  border: "#d1fae5",
+  borderLight: "#e5f5ee",
+};
+
 /* ── Styles ── */
-const TC_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;600;700;800;900&display=swap');
-
-  .tc-root {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    padding: clamp(48px, 6vw, 80px) clamp(16px, 3vw, 40px);
-    background: #ffffff;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .tc-root::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, #d1fae5, transparent);
-  }
-
-  .tc-wrap {
-    max-width: 1200px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-  }
-
-  /* ── Heading ── */
-  .tc-heading {
-    text-align: center;
-    margin-bottom: 36px;
-  }
-
-  .tc-title {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(28px, 4.5vw, 46px);
-    font-weight: 800;
-    color: #111827;
-    margin: 0 0 12px;
-    line-height: 1.15;
-    letter-spacing: -0.025em;
-  }
-
-  .tc-title-accent {
-    color: #059669;
-    position: relative;
-  }
-
-  .tc-subtitle {
-    font-size: clamp(14px, 1.8vw, 16.5px);
-    color: #6b7280;
-    line-height: 1.75;
-    max-width: 600px;
-    margin: 0 auto;
-    font-weight: 400;
-  }
-
-  /* ── Fallback banner ── */
-  .tc-banner {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 10px 18px;
-    background: #fffbeb;
-    border: 1px solid #fde68a;
-    border-radius: 10px;
-    margin-bottom: 24px;
-    color: #92400e;
-    font-size: 13px;
-  }
-
-  /* ── Filters ── */
-  .tc-filters {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-    margin-bottom: 32px;
-  }
-
-  .tc-filter-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 18px;
-    border-radius: 8px;
-    border: 1.5px solid #e5e7eb;
-    background: #ffffff;
-    color: #374151;
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-
-  .tc-filter-btn:hover {
-    border-color: #a7f3d0;
-    background: #f0fdf4;
-    color: #059669;
-  }
-
-  .tc-filter-btn.active {
-    background: #059669;
-    border-color: #059669;
-    color: #ffffff;
-    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.25);
-  }
-
-  .tc-filter-count {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 18px;
-    height: 18px;
-    padding: 0 5px;
-    border-radius: 4px;
-    background: rgba(0, 0, 0, 0.06);
-    font-size: 10px;
-    font-weight: 800;
-    color: inherit;
-  }
-
-  .tc-filter-btn.active .tc-filter-count {
-    background: rgba(255, 255, 255, 0.2);
-    color: #ffffff;
-  }
-
-  .tc-filter-more {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    padding: 8px 14px;
-    border-radius: 8px;
-    border: 1.5px dashed #d1d5db;
-    background: transparent;
-    color: #6b7280;
-    font-family: 'Inter', sans-serif;
-    font-size: 12.5px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .tc-filter-more:hover {
-    border-color: #a7f3d0;
-    color: #059669;
-    background: #f0fdf4;
-  }
-
-  /* ── Grid ── */
-  .tc-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 24px;
-    margin-bottom: 40px;
-  }
-
-  /* ── Card ── */
-  .tc-card {
-    background: #ffffff;
-    border-radius: 16px;
-    border: 1px solid #e5e7eb;
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .tc-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), 0 8px 16px rgba(5, 150, 105, 0.06);
-    border-color: #a7f3d0;
-  }
-
-  /* Card image area */
-  .tc-card-img-wrap {
-    position: relative;
-    width: 100%;
-    padding-top: 100%;
-    overflow: hidden;
-    background: #f3f4f6;
-  }
-
-  .tc-card-img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
-  }
-
-  .tc-card:hover .tc-card-img {
-    transform: scale(1.05);
-  }
-
-  .tc-card-img-fallback {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
-  }
-
-  .tc-card-initials {
-    font-family: 'Playfair Display', serif;
-    font-size: 48px;
-    font-weight: 800;
-    color: #059669;
-    opacity: 0.7;
-  }
-
-  .tc-card-img-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    height: 80px;
-    background: linear-gradient(to top, rgba(0, 0, 0, 0.15), transparent);
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-
-  .tc-card:hover .tc-card-img-overlay {
-    opacity: 1;
-  }
-
-  .tc-featured-tag {
-    position: absolute;
-    top: 12px;
-    left: 12px;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 10px;
-    border-radius: 6px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(8px);
-    color: #d97706;
-    font-size: 10px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    z-index: 2;
-  }
-
-  /* Card body */
-  .tc-card-body {
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-  }
-
-  .tc-card-dept {
-    display: inline-block;
-    width: fit-content;
-    padding: 2px 10px;
-    border-radius: 5px;
-    background: #f0fdf4;
-    font-size: 10.5px;
-    color: #047857;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    margin-bottom: 8px;
-  }
-
-  .tc-card-name {
-    font-family: 'Playfair Display', serif;
-    font-size: 18px;
-    font-weight: 700;
-    color: #111827;
-    margin: 0 0 4px;
-    line-height: 1.3;
-  }
-
-  .tc-card-role {
-    font-size: 13.5px;
-    color: #059669;
-    font-weight: 600;
-    margin: 0 0 10px;
-  }
-
-  .tc-card-bio {
-    font-size: 13px;
-    color: #6b7280;
-    line-height: 1.65;
-    margin: 0 0 14px;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  /* Expertise */
-  .tc-card-tags {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    margin-bottom: 12px;
-  }
-
-  .tc-card-tag {
-    padding: 3px 8px;
-    border-radius: 5px;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-    font-size: 10.5px;
-    color: #4b5563;
-    font-weight: 500;
-  }
-
-  .tc-card-tag-more {
-    padding: 3px 8px;
-    border-radius: 5px;
-    background: #f3f4f6;
-    font-size: 10.5px;
-    color: #9ca3af;
-    font-weight: 600;
-  }
-
-  /* Meta */
-  .tc-card-meta {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    margin-bottom: 14px;
-  }
-
-  .tc-card-meta-item {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    color: #9ca3af;
-  }
-
-  .tc-card-meta-item svg {
-    flex-shrink: 0;
-    color: #d1d5db;
-  }
-
-  /* Socials */
-  .tc-card-socials {
-    display: flex;
-    gap: 6px;
-    padding-top: 14px;
-    border-top: 1px solid #f3f4f6;
-    margin-top: auto;
-  }
-
-  .tc-card-social {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    border: 1px solid #e5e7eb;
-    background: #ffffff;
-    color: #6b7280;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none;
-    transition: all 0.2s ease;
-  }
-
-  .tc-card-social:hover {
-    background: #059669;
-    border-color: #059669;
-    color: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 3px 8px rgba(5, 150, 105, 0.25);
-  }
-
-  /* ── Skeleton ── */
-  .tc-skel {
-    background: linear-gradient(110deg, #f3f4f6 8%, #fafafa 18%, #f3f4f6 33%);
-    background-size: 200% 100%;
-    animation: tc-shimmer 1.4s ease-in-out infinite;
-    border-radius: 6px;
-  }
-
-  @keyframes tc-shimmer {
-    from { background-position: -200% 0; }
-    to { background-position: 200% 0; }
-  }
-
-  .tc-skel-card {
-    background: #ffffff;
-    border-radius: 16px;
-    border: 1px solid #e5e7eb;
-    overflow: hidden;
-  }
-
-  .tc-skel-card .tc-skel-img {
-    width: 100%;
-    padding-top: 100%;
-    border-radius: 0;
-  }
-
-  .tc-skel-card .tc-skel-body {
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  /* ── Error / Empty ── */
-  .tc-state-box {
-    text-align: center;
-    padding: 48px 24px;
-    border-radius: 16px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-bottom: 28px;
-  }
-
-  .tc-state-box.error {
-    background: #fef2f2;
-    border: 1px solid #fecaca;
-  }
-
-  .tc-state-box.empty {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
-  }
-
-  .tc-state-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 18px;
-    font-weight: 700;
-    color: #111827;
-    margin: 12px 0 6px;
-  }
-
-  .tc-state-text {
-    font-size: 13.5px;
-    color: #9ca3af;
-    margin: 0 0 18px;
-    line-height: 1.6;
-  }
-
-  .tc-action-btn {
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 10px 22px;
-    border-radius: 10px;
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: none;
-  }
-
-  .tc-action-btn.retry {
-    background: #fef2f2;
-    border: 1.5px solid #f87171;
-    color: #dc2626;
-  }
-
-  .tc-action-btn.retry:hover {
-    background: #fee2e2;
-    transform: translateY(-1px);
-  }
-
-  .tc-action-btn.reset {
-    background: #059669;
-    color: #ffffff;
-    box-shadow: 0 2px 8px rgba(5, 150, 105, 0.2);
-  }
-
-  .tc-action-btn.reset:hover {
-    background: #047857;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(5, 150, 105, 0.3);
-  }
-
-  /* ── CTA ── */
-  .tc-cta {
-    background: #111827;
-    border-radius: 20px;
-    padding: clamp(36px, 5vw, 56px) clamp(24px, 5vw, 48px);
-    text-align: center;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .tc-cta::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px;
-    background: linear-gradient(90deg, #059669, #34d399, #059669);
-  }
-
-  .tc-cta-inner {
-    position: relative;
-    z-index: 1;
-  }
-
-  .tc-cta-title {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(20px, 3.5vw, 28px);
-    font-weight: 800;
-    color: #ffffff;
-    margin: 0 0 10px;
-  }
-
-  .tc-cta-text {
-    font-size: 14.5px;
-    color: rgba(255, 255, 255, 0.6);
-    line-height: 1.7;
-    max-width: 440px;
-    margin: 0 auto 24px;
-  }
-
-  .tc-cta-btns {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-
-  /* ── Responsive ── */
-  @media (max-width: 1024px) {
-    .tc-grid {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 20px;
-    }
-  }
-
-  @media (max-width: 640px) {
-    .tc-grid {
-      grid-template-columns: 1fr;
-      gap: 16px;
-    }
-
-    .tc-card-img-wrap {
-      padding-top: 75%;
-    }
-
-    .tc-cta-btns {
-      flex-direction: column;
-      align-items: center;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .tc-card,
-    .tc-card-social,
-    .tc-card-img {
-      transition: none !important;
-    }
-
-    .tc-skel {
-      animation: none !important;
-    }
-  }
-`;
-
-let _tcInjected = false;
-function injectTCStyles() {
-  if (_tcInjected || typeof document === "undefined") return;
-  if (document.getElementById("tc-styles-v2")) { _tcInjected = true; return; }
-  const s = document.createElement("style");
-  s.id = "tc-styles-v2";
-  s.textContent = TC_STYLES;
-  document.head.appendChild(s);
-  _tcInjected = true;
+const STYLES = `
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;600;700;800;900&display=swap');
+
+.tm-root{
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  padding:clamp(40px,5vw,72px) clamp(16px,3vw,40px);
+  background:${C.white};
+  position:relative;
 }
 
-/* ── Skeleton card ── */
-function SkeletonCard() {
+.tm-wrap{max-width:1160px;margin:0 auto;position:relative;z-index:1}
+
+/* Heading */
+.tm-head{text-align:center;margin-bottom:28px}
+.tm-h2{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(26px,4.2vw,42px);font-weight:800;
+  color:${C.darkGreen};margin:0 0 10px;line-height:1.18;letter-spacing:-.02em;
+}
+.tm-h2 em{font-style:normal;color:${C.lightGreen}}
+.tm-sub{
+  font-size:clamp(13.5px,1.6vw,15.5px);color:${C.textMuted};
+  line-height:1.7;max-width:560px;margin:0 auto;
+}
+
+/* Banner */
+.tm-banner{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  padding:9px 16px;background:${C.ghostGreen};border:1px solid ${C.paleGreen};
+  border-radius:10px;margin-bottom:20px;color:${C.green};font-size:12.5px;
+}
+.tm-banner button{
+  background:none;border:none;color:${C.lightGreen};font-weight:700;
+  cursor:pointer;text-decoration:underline;font-family:inherit;font-size:12.5px;margin-left:3px;
+}
+
+/* Filters */
+.tm-filters{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin-bottom:28px}
+.tm-fbtn{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:7px 16px;border-radius:8px;
+  border:1.5px solid ${C.paleGreen};background:${C.white};
+  color:${C.green};font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;
+  cursor:pointer;transition:all .18s ease;
+}
+.tm-fbtn:hover{background:${C.ghostGreen};border-color:${C.paleGreen}}
+.tm-fbtn.on{
+  background:${C.darkGreen};border-color:${C.darkGreen};color:${C.white};
+  box-shadow:0 2px 8px rgba(6,78,59,.22);
+}
+.tm-fcount{
+  min-width:16px;height:16px;padding:0 4px;border-radius:4px;
+  background:rgba(6,78,59,.08);font-size:9.5px;font-weight:800;
+  display:inline-flex;align-items:center;justify-content:center;color:inherit;
+}
+.tm-fbtn.on .tm-fcount{background:rgba(255,255,255,.18);color:${C.white}}
+.tm-fmore{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:7px 13px;border-radius:8px;border:1.5px dashed ${C.paleGreen};
+  background:transparent;color:${C.lightGreen};font-family:'Inter',sans-serif;
+  font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;
+}
+.tm-fmore:hover{background:${C.ghostGreen}}
+
+/* Grid */
+.tm-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:22px;margin-bottom:32px;
+}
+
+/* ═══════════ CARD ═══════════ */
+.tm-card{
+  background:${C.white};
+  border-radius:16px;
+  border:1.5px solid ${C.borderLight};
+  padding:24px 20px 20px;
+  text-align:center;
+  display:flex;flex-direction:column;
+  transition:all .28s cubic-bezier(.4,0,.2,1);
+  position:relative;
+}
+.tm-card:hover{
+  transform:translateY(-5px);
+  border-color:${C.paleGreen};
+  box-shadow:0 16px 40px rgba(6,78,59,.1);
+}
+.tm-card::after{
+  content:'';position:absolute;bottom:0;left:20px;right:20px;
+  height:2px;border-radius:2px;
+  background:linear-gradient(90deg,${C.lightGreen},${C.medGreen});
+  opacity:0;transition:opacity .25s;
+}
+.tm-card:hover::after{opacity:1}
+
+/* Featured */
+.tm-feat{
+  position:absolute;top:12px;right:12px;
+  display:flex;align-items:center;gap:3px;
+  padding:3px 9px;border-radius:6px;
+  background:${C.faintGreen};border:1px solid ${C.paleGreen};
+  color:${C.lightGreen};font-size:9.5px;font-weight:800;
+  text-transform:uppercase;letter-spacing:.03em;
+}
+
+/* Avatar */
+.tm-avatar{
+  width:88px;height:88px;
+  border-radius:50%;
+  margin:0 auto 14px;
+  position:relative;
+  flex-shrink:0;
+}
+.tm-avatar-ring{
+  width:100%;height:100%;border-radius:50%;
+  overflow:hidden;
+  border:3px solid ${C.paleGreen};
+  background:${C.faintGreen};
+  transition:border-color .25s;
+}
+.tm-card:hover .tm-avatar-ring{border-color:${C.lightGreen}}
+.tm-avatar-img{
+  width:100%;height:100%;object-fit:cover;
+  display:block;
+  transition:transform .4s ease,opacity .35s ease;
+}
+.tm-card:hover .tm-avatar-img{transform:scale(1.06)}
+.tm-avatar-fb{
+  width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,${C.faintGreen},${C.paleGreen});
+  border-radius:50%;
+}
+.tm-avatar-in{
+  font-family:'Playfair Display',serif;
+  font-size:28px;font-weight:800;color:${C.lightGreen};
+}
+.tm-dot{
+  position:absolute;bottom:2px;right:2px;
+  width:12px;height:12px;border-radius:50%;
+  border:2.5px solid ${C.white};
+}
+
+/* Text */
+.tm-name{
+  font-family:'Playfair Display',serif;
+  font-size:17px;font-weight:700;color:${C.darkGreen};
+  margin:0 0 3px;line-height:1.25;
+}
+.tm-role{font-size:13px;color:${C.lightGreen};font-weight:600;margin:0 0 6px}
+.tm-dept{
+  display:inline-block;padding:2px 10px;border-radius:5px;
+  background:${C.ghostGreen};border:1px solid ${C.paleGreen};
+  font-size:10px;color:${C.medGreen};font-weight:700;
+  text-transform:uppercase;letter-spacing:.03em;margin-bottom:10px;
+}
+.tm-bio{
+  font-size:12.5px;color:${C.textMuted};line-height:1.65;
+  margin:0 0 12px;
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+
+/* Tags */
+.tm-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-bottom:10px}
+.tm-tag{
+  padding:2px 8px;border-radius:5px;
+  background:${C.ghostGreen};border:1px solid ${C.borderLight};
+  font-size:10px;color:${C.green};font-weight:600;
+}
+.tm-tag-x{
+  padding:2px 7px;border-radius:5px;
+  background:${C.faintGreen};font-size:10px;color:${C.lightGreen};font-weight:700;
+}
+
+/* Meta */
+.tm-meta{display:flex;flex-direction:column;gap:3px;margin-bottom:12px}
+.tm-mi{
+  display:flex;align-items:center;justify-content:center;
+  gap:5px;font-size:11px;color:${C.textMuted};
+}
+.tm-mi svg{flex-shrink:0;color:${C.paleGreen}}
+
+/* Socials */
+.tm-socials{
+  display:flex;justify-content:center;gap:6px;
+  padding-top:12px;border-top:1px solid ${C.borderLight};margin-top:auto;
+}
+.tm-slink{
+  width:30px;height:30px;border-radius:8px;
+  border:1.5px solid ${C.borderLight};background:${C.white};
+  color:${C.green};display:flex;align-items:center;justify-content:center;
+  text-decoration:none;transition:all .18s;
+}
+.tm-slink:hover{
+  background:${C.darkGreen};border-color:${C.darkGreen};color:${C.white};
+  transform:translateY(-1px);box-shadow:0 3px 8px rgba(6,78,59,.2);
+}
+
+/* Skeleton */
+.tm-sk{
+  background:linear-gradient(110deg,${C.borderLight} 8%,${C.ghostGreen} 18%,${C.borderLight} 33%);
+  background-size:200% 100%;animation:tmShim 1.4s ease-in-out infinite;border-radius:6px;
+}
+@keyframes tmShim{from{background-position:-200% 0}to{background-position:200% 0}}
+.tm-sk-card{
+  background:${C.white};border-radius:16px;border:1.5px solid ${C.borderLight};
+  padding:24px 20px 20px;display:flex;flex-direction:column;align-items:center;gap:8px;
+}
+
+/* State boxes */
+.tm-state{
+  text-align:center;padding:44px 24px;border-radius:16px;
+  display:flex;flex-direction:column;align-items:center;margin-bottom:24px;
+}
+.tm-state.err{background:#fef2f2;border:1px solid #fecaca}
+.tm-state.nil{background:${C.ghostGreen};border:1px solid ${C.paleGreen}}
+.tm-state h3{
+  font-family:'Playfair Display',serif;font-size:17px;font-weight:700;
+  color:${C.darkGreen};margin:10px 0 5px;
+}
+.tm-state p{font-size:13px;color:${C.textMuted};margin:0 0 16px;line-height:1.55}
+.tm-abtn{
+  display:flex;align-items:center;gap:6px;
+  padding:9px 20px;border-radius:9px;font-family:'Inter',sans-serif;
+  font-size:12.5px;font-weight:700;cursor:pointer;transition:all .18s;border:none;
+}
+.tm-abtn.retry{background:#fef2f2;border:1.5px solid #f87171;color:#dc2626}
+.tm-abtn.retry:hover{background:#fee2e2;transform:translateY(-1px)}
+.tm-abtn.reset{background:${C.darkGreen};color:${C.white};box-shadow:0 2px 8px rgba(6,78,59,.18)}
+.tm-abtn.reset:hover{background:${C.green};transform:translateY(-1px)}
+
+/* CTA */
+.tm-cta{
+  background:${C.darkGreen};border-radius:18px;
+  padding:clamp(32px,4.5vw,48px) clamp(20px,4vw,44px);
+  text-align:center;position:relative;overflow:hidden;
+}
+.tm-cta::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,${C.lightGreen},${C.paleGreen},${C.lightGreen});
+}
+.tm-cta-h{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(19px,3.2vw,26px);font-weight:800;
+  color:${C.white};margin:0 0 8px;
+}
+.tm-cta-p{
+  font-size:14px;color:rgba(255,255,255,.6);
+  line-height:1.65;max-width:420px;margin:0 auto 20px;
+}
+.tm-cta-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+/* Responsive */
+@media(max-width:960px){.tm-grid{grid-template-columns:repeat(2,1fr);gap:18px}}
+@media(max-width:580px){
+  .tm-grid{grid-template-columns:1fr;gap:14px}
+  .tm-cta-row{flex-direction:column;align-items:center}
+}
+@media(prefers-reduced-motion:reduce){
+  .tm-card,.tm-slink,.tm-avatar-img{transition:none!important}
+  .tm-sk{animation:none!important}
+}
+`;
+
+let _injected = false;
+function injectStyles() {
+  if (_injected || typeof document === "undefined") return;
+  if (document.getElementById("tm-st")) { _injected = true; return; }
+  const s = document.createElement("style");
+  s.id = "tm-st";
+  s.textContent = STYLES;
+  document.head.appendChild(s);
+  _injected = true;
+}
+
+/* ── Skeleton ── */
+function Skeleton() {
+  const b = (w, h) => <div className="tm-sk" style={{ width: w, height: h }} />;
   return (
-    <div className="tc-skel-card" aria-hidden="true">
-      <div className="tc-skel tc-skel-img" />
-      <div className="tc-skel-body">
-        <div className="tc-skel" style={{ width: "35%", height: 12 }} />
-        <div className="tc-skel" style={{ width: "70%", height: 18 }} />
-        <div className="tc-skel" style={{ width: "50%", height: 14 }} />
-        <div className="tc-skel" style={{ width: "100%", height: 12, marginTop: 4 }} />
-        <div className="tc-skel" style={{ width: "85%", height: 12 }} />
-        <div style={{ display: "flex", gap: 6, paddingTop: 10, borderTop: "1px solid #f3f4f6", marginTop: 8 }}>
-          {[1, 2, 3].map(i => <div key={i} className="tc-skel" style={{ width: 32, height: 32, borderRadius: 8 }} />)}
-        </div>
+    <div className="tm-sk-card" aria-hidden="true">
+      <div className="tm-sk" style={{ width: 88, height: 88, borderRadius: "50%" }} />
+      {b("60%", 16)}{b("40%", 13)}{b("30%", 18)}{b("85%", 11)}{b("70%", 11)}
+      <div style={{ display: "flex", gap: 6, paddingTop: 10, borderTop: `1px solid ${C.borderLight}`, marginTop: 6, width: "100%", justifyContent: "center" }}>
+        {[1, 2, 3].map(i => <div key={i} className="tm-sk" style={{ width: 30, height: 30, borderRadius: 8 }} />)}
       </div>
     </div>
   );
 }
 
-/* ── Team card ── */
-function TeamCard({ member }) {
-  const [imgState, setImgState] = useState("loading"); // loading | loaded | error
+/* ── Card ── */
+function Card({ member }) {
+  const [imgState, setImgState] = useState("loading");
 
   const expertise = Array.isArray(member.expertise) ? member.expertise : [];
   const languages = Array.isArray(member.languages) ? member.languages : [];
-  const certifications = Array.isArray(member.certifications) ? member.certifications : [];
+  const certs = Array.isArray(member.certifications) ? member.certifications : [];
 
-  const socialLinks = [
-    member.linkedin_url && { href: member.linkedin_url, icon: <FiLinkedin size={14} />, label: "LinkedIn" },
-    member.twitter_url && { href: member.twitter_url, icon: <FiTwitter size={14} />, label: "Twitter" },
-    member.instagram_url && { href: member.instagram_url, icon: <FiInstagram size={14} />, label: "Instagram" },
-    member.website_url && { href: member.website_url, icon: <FiExternalLink size={14} />, label: "Website" },
-    member.email && { href: `mailto:${member.email}`, icon: <FiMail size={14} />, label: "Email", internal: true },
-    member.phone && { href: `tel:${member.phone}`, icon: <FiPhone size={14} />, label: "Phone", internal: true },
+  const socials = [
+    member.linkedin_url && { href: member.linkedin_url, icon: <FiLinkedin size={13} />, label: "LinkedIn" },
+    member.twitter_url && { href: member.twitter_url, icon: <FiTwitter size={13} />, label: "Twitter" },
+    member.instagram_url && { href: member.instagram_url, icon: <FiInstagram size={13} />, label: "Instagram" },
+    member.website_url && { href: member.website_url, icon: <FiExternalLink size={13} />, label: "Website" },
+    member.email && { href: `mailto:${member.email}`, icon: <FiMail size={13} />, label: "Email", int: true },
+    member.phone && { href: `tel:${member.phone}`, icon: <FiPhone size={13} />, label: "Phone", int: true },
   ].filter(Boolean);
 
   const initials = member.name
@@ -679,333 +381,247 @@ function TeamCard({ member }) {
     : "?";
 
   return (
-    <article className="tc-card" role="listitem">
-      {/* Image */}
-      <div className="tc-card-img-wrap">
-        {member.is_featured && (
-          <div className="tc-featured-tag">
-            <FiAward size={10} /> Featured
-          </div>
-        )}
+    <article className="tm-card" role="listitem">
+      {member.is_featured && (
+        <div className="tm-feat"><FiAward size={9} /> Featured</div>
+      )}
 
-        {imgState === "loading" && member.image_url && (
-          <div className="tc-skel" style={{ position: "absolute", inset: 0, borderRadius: 0 }} />
-        )}
-
-        {imgState === "error" || !member.image_url ? (
-          <div className="tc-card-img-fallback">
-            <span className="tc-card-initials">{initials}</span>
-          </div>
-        ) : (
-          <img
-            src={member.image_url}
-            alt={`${member.name} — ${member.role}`}
-            className="tc-card-img"
-            style={{ opacity: imgState === "loaded" ? 1 : 0 }}
-            onLoad={() => setImgState("loaded")}
-            onError={() => setImgState("error")}
-            loading="lazy"
-            decoding="async"
-          />
-        )}
-
-        <div className="tc-card-img-overlay" />
-      </div>
-
-      {/* Body */}
-      <div className="tc-card-body">
-        {member.department && <span className="tc-card-dept">{member.department}</span>}
-        <h3 className="tc-card-name">{member.name}</h3>
-        <p className="tc-card-role">{member.role}</p>
-        {member.bio && <p className="tc-card-bio">{member.bio}</p>}
-
-        {expertise.length > 0 && (
-          <div className="tc-card-tags">
-            {expertise.slice(0, 3).map((s, i) => <span key={i} className="tc-card-tag">{s}</span>)}
-            {expertise.length > 3 && <span className="tc-card-tag-more">+{expertise.length - 3}</span>}
-          </div>
-        )}
-
-        <div className="tc-card-meta">
-          {languages.length > 0 && (
-            <div className="tc-card-meta-item">
-              <FiGlobe size={11} />
-              <span>{languages.slice(0, 3).join(", ")}{languages.length > 3 ? ` +${languages.length - 3}` : ""}</span>
-            </div>
+      <div className="tm-avatar">
+        <div className="tm-avatar-ring">
+          {imgState === "loading" && member.image_url && (
+            <div className="tm-sk" style={{ position: "absolute", inset: 0, borderRadius: "50%" }} />
           )}
-          {certifications.length > 0 && (
-            <div className="tc-card-meta-item" style={{ color: "#d97706" }}>
-              <FiAward size={11} style={{ color: "#f59e0b" }} />
-              <span>{certifications[0]}{certifications.length > 1 ? ` +${certifications.length - 1}` : ""}</span>
+          {(imgState === "error" || !member.image_url) ? (
+            <div className="tm-avatar-fb">
+              <span className="tm-avatar-in">{initials}</span>
             </div>
-          )}
-          {member.years_experience > 0 && (
-            <div className="tc-card-meta-item">
-              <FiCalendar size={11} />
-              <span>{member.years_experience}+ years experience</span>
-            </div>
-          )}
-          {member.location && (
-            <div className="tc-card-meta-item">
-              <FiMapPin size={11} />
-              <span>{member.location}</span>
-            </div>
+          ) : (
+            <img
+              src={member.image_url}
+              alt={`${member.name}`}
+              className="tm-avatar-img"
+              style={{ opacity: imgState === "loaded" ? 1 : 0 }}
+              onLoad={() => setImgState("loaded")}
+              onError={() => setImgState("error")}
+              loading="lazy"
+              decoding="async"
+            />
           )}
         </div>
+        <div className="tm-dot" style={{ backgroundColor: member.is_active ? C.lightGreen : "#9ca3af" }} />
+      </div>
 
-        {socialLinks.length > 0 && (
-          <div className="tc-card-socials">
-            {socialLinks.map((lk, i) => (
-              <a
-                key={i}
-                href={lk.href}
-                target={lk.internal ? undefined : "_blank"}
-                rel={lk.internal ? undefined : "noopener noreferrer"}
-                className="tc-card-social"
-                aria-label={lk.label}
-                title={lk.label}
-              >
-                {lk.icon}
-              </a>
-            ))}
+      <h3 className="tm-name">{member.name}</h3>
+      <p className="tm-role">{member.role}</p>
+      {member.department && <span className="tm-dept">{member.department}</span>}
+      {member.bio && <p className="tm-bio">{member.bio}</p>}
+
+      {expertise.length > 0 && (
+        <div className="tm-tags">
+          {expertise.slice(0, 3).map((s, i) => <span key={i} className="tm-tag">{s}</span>)}
+          {expertise.length > 3 && <span className="tm-tag-x">+{expertise.length - 3}</span>}
+        </div>
+      )}
+
+      <div className="tm-meta">
+        {languages.length > 0 && (
+          <div className="tm-mi">
+            <FiGlobe size={10} />
+            <span>{languages.slice(0, 3).join(", ")}{languages.length > 3 ? ` +${languages.length - 3}` : ""}</span>
           </div>
         )}
+        {certs.length > 0 && (
+          <div className="tm-mi" style={{ color: "#b45309" }}>
+            <FiAward size={10} style={{ color: "#f59e0b" }} />
+            <span>{certs[0]}{certs.length > 1 ? ` +${certs.length - 1}` : ""}</span>
+          </div>
+        )}
+        {member.years_experience > 0 && (
+          <div className="tm-mi"><FiCalendar size={10} /><span>{member.years_experience}+ yrs experience</span></div>
+        )}
+        {member.location && (
+          <div className="tm-mi"><FiMapPin size={10} /><span>{member.location}</span></div>
+        )}
       </div>
+
+      {socials.length > 0 && (
+        <div className="tm-socials">
+          {socials.map((lk, i) => (
+            <a
+              key={i} href={lk.href}
+              target={lk.int ? undefined : "_blank"}
+              rel={lk.int ? undefined : "noopener noreferrer"}
+              className="tm-slink" aria-label={lk.label} title={lk.label}
+            >{lk.icon}</a>
+          ))}
+        </div>
+      )}
     </article>
   );
 }
 
-/* ── Department filter ── */
-function DepartmentFilter({ departments, activeFilter, onFilter, memberCounts }) {
-  const [expanded, setExpanded] = useState(false);
-  const visible = expanded ? departments : departments.slice(0, 5);
-  const hasMore = departments.length > 5;
+/* ── Filter bar ── */
+function Filters({ departments, active, onFilter, counts }) {
+  const [open, setOpen] = useState(false);
+  const vis = open ? departments : departments.slice(0, 5);
+  const more = departments.length > 5;
 
   return (
-    <div className="tc-filters">
-      <button
-        onClick={() => onFilter("all")}
-        className={`tc-filter-btn ${activeFilter === "all" ? "active" : ""}`}
-      >
-        All
-        {memberCounts.all > 0 && <span className="tc-filter-count">{memberCounts.all}</span>}
+    <div className="tm-filters">
+      <button onClick={() => onFilter("all")} className={`tm-fbtn ${active === "all" ? "on" : ""}`}>
+        All{counts.all > 0 && <span className="tm-fcount">{counts.all}</span>}
       </button>
-
-      {visible.map(dept => {
-        const name = typeof dept === "string" ? dept : dept.name;
+      {vis.map(d => {
+        const n = typeof d === "string" ? d : d.name;
         return (
-          <button
-            key={name}
-            onClick={() => onFilter(name)}
-            className={`tc-filter-btn ${activeFilter === name ? "active" : ""}`}
-          >
-            {name}
-            {memberCounts[name] > 0 && <span className="tc-filter-count">{memberCounts[name]}</span>}
+          <button key={n} onClick={() => onFilter(n)} className={`tm-fbtn ${active === n ? "on" : ""}`}>
+            {n}{counts[n] > 0 && <span className="tm-fcount">{counts[n]}</span>}
           </button>
         );
       })}
-
-      {hasMore && (
-        <button className="tc-filter-more" onClick={() => setExpanded(v => !v)}>
-          <FiChevronDown size={13} style={{ transform: expanded ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.2s" }} />
-          {expanded ? "Less" : `+${departments.length - 5}`}
+      {more && (
+        <button className="tm-fmore" onClick={() => setOpen(v => !v)}>
+          <FiChevronDown size={12} style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }} />
+          {open ? "Less" : `+${departments.length - 5}`}
         </button>
       )}
     </div>
   );
 }
 
-/* ── Main component ── */
+/* ══════════ MAIN ══════════ */
 const TeamContent = () => {
   const [members, setMembers] = useState([]);
-  const [filteredMembers, setFilteredMembers] = useState([]);
-  const [departments, setDepartments] = useState([]);
+  const [filtered, setFiltered] = useState([]);
+  const [depts, setDepts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeFilter, setActiveFilter] = useState("all");
-  const [usingFallback, setUsingFallback] = useState(false);
-  const isMounted = useRef(true);
+  const [active, setActive] = useState("all");
+  const [fallback, setFallback] = useState(false);
+  const mounted = useRef(true);
 
-  useEffect(() => { injectTCStyles(); }, []);
+  useEffect(() => { injectStyles(); }, []);
 
-  const fetchData = useCallback(async () => {
-    if (!isMounted.current) return;
-    setLoading(true);
-    setError(null);
-    setUsingFallback(false);
+  const load = useCallback(async () => {
+    if (!mounted.current) return;
+    setLoading(true); setError(null); setFallback(false);
     try {
-      const [membersRes, deptsRes] = await Promise.allSettled([
+      const [mR, dR] = await Promise.allSettled([
         teamAPI.getAll({ sort: "display_order", order: "ASC", limit: 100 }),
         teamAPI.getDepartments(),
       ]);
-      if (!isMounted.current) return;
-
-      if (membersRes.status === "fulfilled") {
-        const arr = Array.isArray(membersRes.value.data)
-          ? membersRes.value.data
-          : (Array.isArray(membersRes.value) ? membersRes.value : []);
-        setMembers(arr);
-        setFilteredMembers(arr);
-      } else {
-        throw new Error(membersRes.reason?.message || "Failed to fetch team");
-      }
-
-      if (deptsRes.status === "fulfilled") {
-        setDepartments(Array.isArray(deptsRes.value.data) ? deptsRes.value.data : []);
-      } else if (membersRes.status === "fulfilled") {
-        const arr = Array.isArray(membersRes.value.data) ? membersRes.value.data : [];
-        setDepartments([...new Set(arr.map(m => m.department).filter(Boolean))].sort());
+      if (!mounted.current) return;
+      if (mR.status === "fulfilled") {
+        const a = Array.isArray(mR.value.data) ? mR.value.data : (Array.isArray(mR.value) ? mR.value : []);
+        setMembers(a); setFiltered(a);
+      } else throw new Error(mR.reason?.message || "Fetch failed");
+      if (dR.status === "fulfilled") {
+        setDepts(Array.isArray(dR.value.data) ? dR.value.data : []);
+      } else if (mR.status === "fulfilled") {
+        const a = Array.isArray(mR.value.data) ? mR.value.data : [];
+        setDepts([...new Set(a.map(m => m.department).filter(Boolean))].sort());
       }
     } catch {
-      if (!isMounted.current) return;
-      setMembers(FALLBACK_MEMBERS);
-      setFilteredMembers(FALLBACK_MEMBERS);
-      setDepartments([...new Set(FALLBACK_MEMBERS.map(m => m.department).filter(Boolean))].sort());
-      setUsingFallback(true);
-    } finally {
-      if (isMounted.current) setLoading(false);
-    }
+      if (!mounted.current) return;
+      setMembers(FALLBACK_MEMBERS); setFiltered(FALLBACK_MEMBERS);
+      setDepts([...new Set(FALLBACK_MEMBERS.map(m => m.department).filter(Boolean))].sort());
+      setFallback(true);
+    } finally { if (mounted.current) setLoading(false); }
   }, []);
 
-  useEffect(() => {
-    isMounted.current = true;
-    fetchData();
-    return () => { isMounted.current = false; };
-  }, [fetchData]);
+  useEffect(() => { mounted.current = true; load(); return () => { mounted.current = false; }; }, [load]);
 
   useEffect(() => {
-    setFilteredMembers(
-      activeFilter === "all"
-        ? members
-        : members.filter(m => m.department?.toLowerCase() === activeFilter.toLowerCase())
-    );
-  }, [activeFilter, members]);
+    setFiltered(active === "all" ? members : members.filter(m => m.department?.toLowerCase() === active.toLowerCase()));
+  }, [active, members]);
 
-  const memberCounts = useMemo(() => {
+  const counts = useMemo(() => {
     const c = { all: members.length };
     members.forEach(m => { if (m.department) c[m.department] = (c[m.department] || 0) + 1; });
     return c;
   }, [members]);
 
-  const handleRetry = useCallback(() => { setActiveFilter("all"); fetchData(); }, [fetchData]);
+  const retry = useCallback(() => { setActive("all"); load(); }, [load]);
 
   return (
-    <section className="tc-root">
-      <div className="tc-wrap">
-        {/* Heading */}
+    <section className="tm-root">
+      <div className="tm-wrap">
+
         <AnimatedSection animation="fadeInUp">
-          <div className="tc-heading">
-            <h2 className="tc-title">
-              Meet Our <span className="tc-title-accent">Team</span>
-            </h2>
-            <p className="tc-subtitle">
-              Dedicated professionals working collaboratively to deliver seamless
-              and authentic East African travel experiences.
+          <div className="tm-head">
+            <h2 className="tm-h2">Meet Our <em>Team</em></h2>
+            <p className="tm-sub">
+              Dedicated professionals delivering seamless and authentic East African travel experiences.
             </p>
           </div>
         </AnimatedSection>
 
-        {/* Fallback banner */}
-        {usingFallback && !loading && (
+        {fallback && !loading && (
           <AnimatedSection animation="fadeInUp">
-            <div className="tc-banner">
-              <FiAlertCircle size={14} />
-              <span>Showing preview data — live data will load when the server is available.</span>
-              <button
-                onClick={handleRetry}
-                style={{
-                  background: "none", border: "none", color: "#059669",
-                  fontWeight: 700, cursor: "pointer", textDecoration: "underline",
-                  marginLeft: 4, fontFamily: "inherit", fontSize: "13px",
-                }}
-              >
-                Retry
-              </button>
+            <div className="tm-banner">
+              <FiAlertCircle size={13} />
+              <span>Showing preview data — live data loads when the server is available.</span>
+              <button onClick={retry}>Retry</button>
             </div>
           </AnimatedSection>
         )}
 
-        {/* Filters */}
-        {departments.length > 0 && !loading && (
+        {depts.length > 0 && !loading && (
           <AnimatedSection animation="fadeInUp">
-            <DepartmentFilter
-              departments={departments}
-              activeFilter={activeFilter}
-              onFilter={setActiveFilter}
-              memberCounts={memberCounts}
-            />
+            <Filters departments={depts} active={active} onFilter={setActive} counts={counts} />
           </AnimatedSection>
         )}
 
-        {/* Error */}
         {error && (
           <AnimatedSection animation="fadeInUp">
-            <div className="tc-state-box error">
-              <FiAlertCircle size={36} color="#f87171" />
-              <h3 className="tc-state-title">Failed to Load Team</h3>
-              <p className="tc-state-text">{error}</p>
-              <button className="tc-action-btn retry" onClick={handleRetry}>
-                <FiRefreshCw size={14} /> Try Again
-              </button>
+            <div className="tm-state err">
+              <FiAlertCircle size={34} color="#f87171" />
+              <h3>Failed to Load Team</h3>
+              <p>{error}</p>
+              <button className="tm-abtn retry" onClick={retry}><FiRefreshCw size={13} /> Try Again</button>
             </div>
           </AnimatedSection>
         )}
 
-        {/* Cards grid */}
-        <div className="tc-grid" role="list">
+        <div className="tm-grid" role="list">
           {loading
             ? Array.from({ length: 6 }).map((_, i) => (
-              <AnimatedSection key={i} animation="fadeInUp" delay={i * 0.06}>
-                <SkeletonCard />
+              <AnimatedSection key={i} animation="fadeInUp" delay={i * 0.05}>
+                <Skeleton />
               </AnimatedSection>
             ))
-            : filteredMembers.map((member, i) => (
-              <AnimatedSection key={member.id || i} animation="fadeInUp" delay={i * 0.07}>
-                <TeamCard member={member} />
+            : filtered.map((m, i) => (
+              <AnimatedSection key={m.id || i} animation="fadeInUp" delay={i * 0.06}>
+                <Card member={m} />
               </AnimatedSection>
             ))
           }
         </div>
 
-        {/* Empty */}
-        {!loading && !error && filteredMembers.length === 0 && (
+        {!loading && !error && filtered.length === 0 && (
           <AnimatedSection animation="fadeInUp">
-            <div className="tc-state-box empty">
-              <FiUsers size={40} style={{ color: "#d1d5db" }} />
-              <h3 className="tc-state-title">No Team Members Found</h3>
-              <p className="tc-state-text">
-                {activeFilter !== "all"
-                  ? `No members in the "${activeFilter}" department.`
-                  : "Team members will appear here once added."}
-              </p>
-              {activeFilter !== "all" && (
-                <button className="tc-action-btn reset" onClick={() => setActiveFilter("all")}>
-                  View All Members
-                </button>
+            <div className="tm-state nil">
+              <FiUsers size={36} style={{ color: C.paleGreen }} />
+              <h3>No Team Members Found</h3>
+              <p>{active !== "all" ? `No members in "${active}".` : "Members will appear once added."}</p>
+              {active !== "all" && (
+                <button className="tm-abtn reset" onClick={() => setActive("all")}>View All</button>
               )}
             </div>
           </AnimatedSection>
         )}
 
-        {/* CTA */}
         <AnimatedSection animation="fadeInUp">
-          <div className="tc-cta">
-            <div className="tc-cta-inner">
-              <h3 className="tc-cta-title">Ready to Start Your Adventure?</h3>
-              <p className="tc-cta-text">
-                Connect with our team to begin planning your transformative East African journey.
-              </p>
-              <div className="tc-cta-btns">
-                <Button to="/contact" variant="primary" icon={<FiArrowRight size={16} />}>
-                  Contact Our Team
-                </Button>
-                <Button to="/destinations" variant="outline">
-                  Explore Destinations
-                </Button>
-              </div>
+          <div className="tm-cta">
+            <h3 className="tm-cta-h">Ready to Start Your Adventure?</h3>
+            <p className="tm-cta-p">Connect with our team to plan your transformative East African journey.</p>
+            <div className="tm-cta-row">
+              <Button to="/contact" variant="primary" icon={<FiArrowRight size={15} />}>Contact Our Team</Button>
+              <Button to="/destinations" variant="outline">Explore Destinations</Button>
             </div>
           </div>
         </AnimatedSection>
+
       </div>
     </section>
   );
