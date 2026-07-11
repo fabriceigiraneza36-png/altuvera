@@ -13,7 +13,7 @@ const publicDir = path.join(repoRoot, "public");
 const baseUrlRaw =
   process.env.VITE_SITE_URL ||
   process.env.SITE_URL ||
-  "https://altuvera.vercel.app";
+  "https://www.altuverasafaris.com";
 const baseUrl = String(baseUrlRaw).replace(/\/+$/, "");
 
 const today = new Date().toISOString().slice(0, 10);

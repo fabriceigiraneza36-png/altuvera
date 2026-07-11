@@ -3,7 +3,7 @@ export const getSiteUrl = () => {
   const raw =
     (typeof envUrl === "string" && envUrl.trim()) ||
     (typeof window !== "undefined" && window.location?.origin) ||
-    "https://altuvera.vercel.app";
+    "https://www.altuverasafaris.com";
   return String(raw).replace(/\/+$/, "");
 };
 

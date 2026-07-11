@@ -76,4 +76,4 @@ Crawl-delay: 2
 # Disallow: /
 
 # Sitemaps
-Sitemap: https://altuvera.vercel.app/sitemap.xml
+Sitemap: https://www.altuverasafaris.com/sitemap.xml
