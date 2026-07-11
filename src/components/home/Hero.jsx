@@ -1,3 +1,4 @@
+// components/home/Hero.jsx
 import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -7,7 +8,6 @@ import {
   FiChevronDown,
   FiX,
   FiAlertCircle,
-  FiMapPin,
 } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "../common/Button";
@@ -16,7 +16,6 @@ import { useScrollTriggeredSlide } from "../../hooks/useScrollTriggeredSlide";
 
 export const HERO_SLIDES = [
   {
-    // https://i.pinimg.com/1200x/cc/22/42/cc2242dbd24507eca2cd4313ffbd5c72.jpg
     image:
       "https://res.cloudinary.com/doijjawna/image/upload/v1781342220/ChatGPT_Image_Jun_13_2026_11_16_51_AM_oibwwb.png",
     fallback:
@@ -148,6 +147,132 @@ export const HERO_SLIDES = [
   },
 ];
 
+/* ═══════════════════════════════════════════════════════════
+   ANIMATED LOCATION PIN — Custom SVG with pulse + bounce
+═══════════════════════════════════════════════════════════ */
+const AnimatedLocationPin = ({ size = 18 }) => (
+  <motion.div
+    style={{
+      position: "relative",
+      width: size + 8,
+      height: size + 8,
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "center",
+      flexShrink: 0,
+    }}
+  >
+    {/* Ripple rings */}
+    <motion.div
+      style={{
+        position: "absolute",
+        inset: 0,
+        borderRadius: "50%",
+        border: "1.5px solid rgba(16, 185, 129, 0.4)",
+      }}
+      animate={{
+        scale: [1, 1.8, 2.2],
+        opacity: [0.6, 0.2, 0],
+      }}
+      transition={{
+        duration: 2.4,
+        repeat: Infinity,
+        ease: "easeOut",
+        delay: 0,
+      }}
+    />
+    <motion.div
+      style={{
+        position: "absolute",
+        inset: 0,
+        borderRadius: "50%",
+        border: "1px solid rgba(16, 185, 129, 0.3)",
+      }}
+      animate={{
+        scale: [1, 1.6, 2],
+        opacity: [0.4, 0.15, 0],
+      }}
+      transition={{
+        duration: 2.4,
+        repeat: Infinity,
+        ease: "easeOut",
+        delay: 0.8,
+      }}
+    />
+
+    {/* The pin itself */}
+    <motion.svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      animate={{
+        y: [0, -2, 0],
+      }}
+      transition={{
+        duration: 2,
+        repeat: Infinity,
+        ease: "easeInOut",
+      }}
+      style={{ position: "relative", zIndex: 2, filter: "drop-shadow(0 2px 4px rgba(16,185,129,0.35))" }}
+    >
+      {/* Pin body */}
+      <motion.path
+        d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z"
+        fill="url(#pinGradient)"
+        stroke="rgba(255,255,255,0.9)"
+        strokeWidth="0.8"
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ duration: 0.5, ease: "backOut" }}
+      />
+      {/* Inner circle */}
+      <motion.circle
+        cx="12"
+        cy="9"
+        r="3"
+        fill="none"
+        stroke="rgba(255,255,255,0.95)"
+        strokeWidth="1.5"
+        initial={{ scale: 0 }}
+        animate={{ scale: [1, 1.1, 1] }}
+        transition={{
+          scale: { duration: 2, repeat: Infinity, ease: "easeInOut" },
+          default: { delay: 0.3, duration: 0.4, ease: "backOut" },
+        }}
+      />
+      {/* Inner dot */}
+      <motion.circle
+        cx="12"
+        cy="9"
+        r="1.2"
+        fill="rgba(255,255,255,0.9)"
+        animate={{
+          opacity: [0.7, 1, 0.7],
+          scale: [0.9, 1.1, 0.9],
+        }}
+        transition={{
+          duration: 1.5,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
+      {/* Gradient definition */}
+      <defs>
+        <linearGradient id="pinGradient" x1="5" y1="2" x2="19" y2="22" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#34d399" />
+          <stop offset="50%" stopColor="#10b981" />
+          <stop offset="100%" stopColor="#059669" />
+        </linearGradient>
+      </defs>
+    </motion.svg>
+  </motion.div>
+);
+
+/* ═══════════════════════════════════════════════════════════
+   HERO COMPONENT
+═══════════════════════════════════════════════════════════ */
 const Hero = () => {
   const slides = HERO_SLIDES;
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -393,19 +518,26 @@ const Hero = () => {
       lineHeight: "1.7",
       textShadow: "0 2px 10px rgba(0, 0, 0, 0.3)",
     },
-    location: {
+    locationContainer: {
       display: "inline-flex",
       alignItems: "center",
-      gap: "8px",
-      padding: "10px 20px",
-      backgroundColor: "rgba(255, 255, 255, 0.1)",
-      backdropFilter: "blur(10px)",
-      borderRadius: "50px",
-      color: "#10B981",
-      fontSize: "14px",
-      fontWeight: "600",
+      gap: "10px",
+      padding: "0",
       marginBottom: "40px",
-      border: "1px solid rgba(255, 255, 255, 0.2)",
+    },
+    locationText: {
+      fontFamily: "'Inter', sans-serif",
+      fontSize: "15px",
+      fontWeight: "600",
+      color: "rgba(255, 255, 255, 0.92)",
+      letterSpacing: "0.5px",
+      textShadow: "0 1px 8px rgba(0,0,0,0.3)",
+    },
+    locationDivider: {
+      width: "20px",
+      height: "1.5px",
+      background: "linear-gradient(90deg, rgba(16,185,129,0.6), rgba(16,185,129,0.15))",
+      borderRadius: "1px",
     },
     buttons: {
       display: "flex",
@@ -727,20 +859,19 @@ const Hero = () => {
               {slides[currentSlide].subtitle}
             </motion.p>
 
-            {/* Location */}
+            {/* Location — Clean, no blurry container */}
             <motion.div
-              style={styles.location}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
+              style={styles.locationContainer}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.45, ease: "easeOut" }}
+              key={`loc-${currentSlide}`}
             >
-              <motion.span
-                animate={{ scale: [1, 1.15, 1] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              >
-                <FiMapPin size={16} />
-              </motion.span>
-              {slides[currentSlide].location}
+              <AnimatedLocationPin size={18} />
+              <div style={styles.locationDivider} />
+              <span style={styles.locationText}>
+                {slides[currentSlide].location}
+              </span>
             </motion.div>
 
             {/* Buttons */}
@@ -849,4 +980,4 @@ const Hero = () => {
   );
 };
 
-export default Hero;
+export default Hero;  

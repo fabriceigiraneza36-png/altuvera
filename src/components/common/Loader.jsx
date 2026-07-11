@@ -1,3 +1,4 @@
+// components/common/Loader.jsx
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { getBrandLogoUrl } from "../../utils/seo";
 
@@ -6,48 +7,50 @@ const Loader = () => {
   const [displayProgress, setDisplayProgress] = useState(0);
   const [isVisible, setIsVisible] = useState(true);
   const [isExiting, setIsExiting] = useState(false);
+  const [activeMessage, setActiveMessage] = useState(0);
   const progressIntervalRef = useRef(null);
   const displayIntervalRef = useRef(null);
 
   const loadingMessages = [
-    { threshold: 0, text: "Preparing your adventure" },
+    { threshold: 0,  text: "Preparing your adventure" },
     { threshold: 20, text: "Discovering hidden gems" },
     { threshold: 40, text: "Charting unique paths" },
     { threshold: 60, text: "Curating experiences" },
     { threshold: 80, text: "Almost ready for takeoff" },
   ];
 
-  const getLoadingText = () => {
+  useEffect(() => {
     for (let i = loadingMessages.length - 1; i >= 0; i--) {
       if (displayProgress >= loadingMessages[i].threshold) {
-        return loadingMessages[i].text;
+        setActiveMessage(i);
+        break;
       }
     }
-    return loadingMessages[0].text;
-  };
+  }, [displayProgress]);
 
-  const bubbles = useMemo(
+  const orbs = useMemo(
     () =>
-      Array.from({ length: 10 }, (_, i) => ({
+      Array.from({ length: 5 }, (_, i) => ({
         id: i,
-        left: `${8 + Math.random() * 84}%`,
-        size: 16 + Math.random() * 16,
-        opacity: 0.14 + Math.random() * 0.1,
-        duration: `${11 + Math.random() * 6}s`,
-        delay: `${Math.random() * 4}s`,
+        size: 280 + Math.random() * 220,
+        x: 10 + Math.random() * 80,
+        y: 10 + Math.random() * 80,
+        duration: 18 + Math.random() * 10,
+        delay: Math.random() * 5,
+        opacity: 0.025 + Math.random() * 0.02,
       })),
     [],
   );
 
-  const particles = useMemo(
+  const floatingDots = useMemo(
     () =>
-      Array.from({ length: 8 }, (_, i) => ({
+      Array.from({ length: 12 }, (_, i) => ({
         id: i,
-        left: `${8 + Math.random() * 84}%`,
-        size: 3 + Math.random() * 2,
-        delay: `${Math.random() * 6}s`,
-        duration: `${8 + Math.random() * 5}s`,
-        opacity: 0.14 + Math.random() * 0.1,
+        left: `${5 + Math.random() * 90}%`,
+        size: 2 + Math.random() * 2.5,
+        delay: `${Math.random() * 8}s`,
+        duration: `${12 + Math.random() * 8}s`,
+        opacity: 0.12 + Math.random() * 0.15,
       })),
     [],
   );
@@ -59,7 +62,6 @@ const Loader = () => {
     };
   }, []);
 
-  // Faster actual loading progress
   useEffect(() => {
     progressIntervalRef.current = setInterval(() => {
       setProgress((prev) => {
@@ -67,588 +69,453 @@ const Loader = () => {
           clearInterval(progressIntervalRef.current);
           return 100;
         }
-
-        if (prev < 35) {
-          return Math.min(100, prev + 8 + Math.random() * 8);
-        }
-        if (prev < 70) {
-          return Math.min(100, prev + 5 + Math.random() * 5);
-        }
-        if (prev < 92) {
-          return Math.min(100, prev + 2 + Math.random() * 3);
-        }
+        if (prev < 35) return Math.min(100, prev + 8 + Math.random() * 8);
+        if (prev < 70) return Math.min(100, prev + 5 + Math.random() * 5);
+        if (prev < 92) return Math.min(100, prev + 2 + Math.random() * 3);
         return Math.min(100, prev + 1 + Math.random() * 1.5);
       });
     }, 120);
-
     return () => clearInterval(progressIntervalRef.current);
   }, []);
 
-  // Real-time visible percentage counting
   useEffect(() => {
     displayIntervalRef.current = setInterval(() => {
       setDisplayProgress((prev) => {
-        if (prev < progress) {
-          return prev + 1;
-        }
-
+        if (prev < progress) return prev + 1;
         if (progress === 100 && prev >= 100) {
           clearInterval(displayIntervalRef.current);
           setTimeout(() => {
             setIsExiting(true);
-            setTimeout(() => setIsVisible(false), 850);
-          }, 120);
+            setTimeout(() => setIsVisible(false), 900);
+          }, 200);
           return 100;
         }
-
         return prev;
       });
     }, 18);
-
     return () => clearInterval(displayIntervalRef.current);
   }, [progress]);
 
   if (!isVisible) return null;
 
-  const styles = {
-    container: {
-      position: "fixed",
-      inset: 0,
-      background: "#ffffff",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      zIndex: 9999,
-      overflow: "hidden",
-      opacity: isExiting ? 0 : 1,
-      filter: isExiting ? "blur(4px)" : "blur(0px)",
-      transform: isExiting ? "scale(1.02)" : "scale(1)",
-      transition:
-        "opacity 0.85s cubic-bezier(0.22, 1, 0.36, 1), filter 0.85s cubic-bezier(0.22, 1, 0.36, 1), transform 0.85s cubic-bezier(0.22, 1, 0.36, 1)",
-    },
-    whiteBase: {
-      position: "absolute",
-      inset: 0,
-      background: "#ffffff",
-      zIndex: 0,
-    },
-    ambientGlow: {
-      position: "absolute",
-      inset: 0,
-      background:
-        "radial-gradient(circle at 50% 45%, rgba(16,185,129,0.04) 0%, rgba(16,185,129,0.015) 26%, transparent 58%)",
-      zIndex: 1,
-      pointerEvents: "none",
-    },
-    content: {
-      position: "relative",
-      zIndex: 10,
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      justifyContent: "center",
-      textAlign: "center",
-      width: "100%",
-      padding: "24px",
-      opacity: isExiting ? 0 : 1,
-      transform: isExiting ? "translateY(-14px) scale(0.99)" : "translateY(0) scale(1)",
-      transition:
-        "opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1)",
-    },
-    logoContainer: {
-      position: "relative",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      marginBottom: "28px",
-      width: "200px",
-      height: "200px",
-    },
-    logo: {
-      width: "118px",
-      height: "118px",
-      objectFit: "contain",
-      position: "relative",
-      zIndex: 5,
-      animation: "logoFloat 4.8s cubic-bezier(0.37, 0, 0.63, 1) infinite",
-    },
-    logoRing: {
-      position: "absolute",
-      top: "50%",
-      left: "50%",
-      transform: "translate(-50%, -50%)",
-      borderRadius: "50%",
-      border: "1px solid rgba(16, 185, 129, 0.16)",
-      animation: "ringExpand 4.2s cubic-bezier(0.22, 1, 0.36, 1) infinite",
-    },
-    logoHalo: {
-      position: "absolute",
-      top: "50%",
-      left: "50%",
-      width: "150px",
-      height: "150px",
-      transform: "translate(-50%, -50%)",
-      borderRadius: "50%",
-      background:
-        "radial-gradient(circle, rgba(16,185,129,0.08) 0%, rgba(16,185,129,0.03) 38%, transparent 72%)",
-      filter: "blur(10px)",
-    },
-    text: {
-      fontFamily: "'Playfair Display', serif",
-      fontSize: "44px",
-      fontWeight: "700",
-      color: "#111111",
-      marginBottom: "10px",
-      letterSpacing: "-0.5px",
-    },
-    tagline: {
-      fontFamily: "'Dancing Script', cursive",
-      fontSize: "20px",
-      color: "#10B981",
-      marginBottom: "40px",
-      opacity: 0.92,
-    },
-    progressWrapper: {
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-      width: "280px",
-      maxWidth: "85vw",
-    },
-    progressContainer: {
-      width: "100%",
-      height: "4px",
-      backgroundColor: "rgba(16, 185, 129, 0.08)",
-      borderRadius: "999px",
-      overflow: "hidden",
-      marginBottom: "16px",
-    },
-    progressBar: {
-      height: "100%",
-      background: "linear-gradient(90deg, #059669 0%, #10B981 58%, #34D399 100%)",
-      borderRadius: "999px",
-      transition: "width 0.16s linear",
-      width: `${Math.min(displayProgress, 100)}%`,
-      position: "relative",
-      overflow: "hidden",
-    },
-    progressShine: {
-      position: "absolute",
-      inset: 0,
-      background:
-        "linear-gradient(90deg, transparent, rgba(255,255,255,0.65), transparent)",
-      animation: "shine 2.2s linear infinite",
-    },
-    loadingText: {
-      fontSize: "12px",
-      color: "#444444",
-      letterSpacing: "2.5px",
-      textTransform: "uppercase",
-      fontWeight: "500",
-      marginBottom: "8px",
-      minHeight: "18px",
-      textAlign: "center",
-    },
-    loadingDots: {
-      display: "inline-flex",
-      marginLeft: "4px",
-    },
-    loadingDot: {
-      display: "inline-block",
-      color: "#10B981",
-      animation: "dotBounce 1.6s ease-in-out infinite",
-      fontSize: "14px",
-      lineHeight: 1,
-    },
-    percentText: {
-      fontSize: "12px",
-      color: "#888888",
-      letterSpacing: "1px",
-      fontWeight: "500",
-      fontVariantNumeric: "tabular-nums",
-    },
-    floatingBubble: {
-      position: "absolute",
-      borderRadius: "50%",
-      pointerEvents: "none",
-      border: "1px solid rgba(16, 185, 129, 0.09)",
-      background:
-        "radial-gradient(circle at 32% 28%, rgba(255,255,255,0.96) 0%, rgba(255,255,255,0.58) 18%, rgba(16,185,129,0.11) 55%, rgba(16,185,129,0.04) 76%, transparent 100%)",
-      boxShadow:
-        "inset 0 0 10px rgba(255,255,255,0.6), 0 0 10px rgba(16,185,129,0.05)",
-      willChange: "transform, opacity",
-    },
-    particle: {
-      position: "absolute",
-      borderRadius: "50%",
-      pointerEvents: "none",
-    },
-    mountainsContainer: {
-      position: "absolute",
-      bottom: "30px",
-      left: "50%",
-      transform: "translateX(-50%)",
-      display: "flex",
-      alignItems: "flex-end",
-      justifyContent: "center",
-      gap: "6px",
-      opacity: isExiting ? 0 : 0.12,
-      transition: "opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1)",
-      zIndex: 3,
-    },
-    mountain: {
-      width: 0,
-      height: 0,
-      borderStyle: "solid",
-      borderColor: "transparent transparent #10B981 transparent",
-      animation: "mountainSway 7s ease-in-out infinite",
-    },
-  };
-
   return (
-    <div style={styles.container}>
-      <style>
-        {`
-          @keyframes logoFloat {
-            0%, 100% { transform: translateY(0px) scale(1); }
-            50% { transform: translateY(-7px) scale(1.01); }
-          }
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
+        overflow: "hidden",
+        opacity: isExiting ? 0 : 1,
+        transform: isExiting ? "scale(1.03)" : "scale(1)",
+        transition: "opacity 0.9s cubic-bezier(0.22,1,0.36,1), transform 0.9s cubic-bezier(0.22,1,0.36,1)",
+      }}
+    >
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
 
-          @keyframes ringExpand {
-            0% {
-              transform: translate(-50%, -50%) scale(0.94);
-              opacity: 0;
-            }
-            16% {
-              opacity: 0.52;
-            }
-            72% {
-              opacity: 0.12;
-            }
-            100% {
-              transform: translate(-50%, -50%) scale(1.16);
-              opacity: 0;
-            }
-          }
+        @keyframes ld-float {
+          0%, 100% { transform: translateY(0) scale(1); }
+          50%      { transform: translateY(-8px) scale(1.008); }
+        }
+        @keyframes ld-ring-pulse {
+          0%   { transform: translate(-50%,-50%) scale(0.92); opacity: 0; }
+          20%  { opacity: 0.5; }
+          80%  { opacity: 0.08; }
+          100% { transform: translate(-50%,-50%) scale(1.2); opacity: 0; }
+        }
+        @keyframes ld-shimmer {
+          0%   { transform: translateX(-200%); }
+          100% { transform: translateX(300%); }
+        }
+        @keyframes ld-dot {
+          0%, 80%, 100% { opacity: 0.25; transform: translateY(0); }
+          40%           { opacity: 1;    transform: translateY(-3px); }
+        }
+        @keyframes ld-orb-drift {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          25%      { transform: translate(15px, -20px) scale(1.05); }
+          50%      { transform: translate(-10px, 10px) scale(0.95); }
+          75%      { transform: translate(20px, 15px) scale(1.02); }
+        }
+        @keyframes ld-particle-rise {
+          0%   { transform: translateY(20px); opacity: 0; }
+          15%  { opacity: 1; }
+          85%  { opacity: 1; }
+          100% { transform: translateY(calc(-100vh - 20px)); opacity: 0; }
+        }
+        @keyframes ld-text-in {
+          0%   { opacity: 0; transform: translateY(8px); filter: blur(4px); }
+          100% { opacity: 1; transform: translateY(0);   filter: blur(0); }
+        }
+        @keyframes ld-logo-glow {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0), 0 0 40px rgba(16,185,129,0.06); }
+          50%      { box-shadow: 0 0 0 8px rgba(16,185,129,0.04), 0 0 60px rgba(16,185,129,0.08); }
+        }
+        @keyframes ld-progress-pulse {
+          0%, 100% { opacity: 1; }
+          50%      { opacity: 0.7; }
+        }
+        @keyframes ld-mountain-breath {
+          0%, 100% { transform: translateY(0) scaleY(1); }
+          50%      { transform: translateY(-1px) scaleY(1.02); }
+        }
+        @keyframes ld-line-grow {
+          0%   { transform: scaleX(0); }
+          100% { transform: scaleX(1); }
+        }
 
-          @keyframes dotBounce {
-            0%, 80%, 100% {
-              transform: translateY(0);
-              opacity: 0.35;
-            }
-            40% {
-              transform: translateY(-4px);
-              opacity: 1;
-            }
-          }
+        .ld-msg-enter {
+          animation: ld-text-in 0.45s cubic-bezier(0.22,1,0.36,1) forwards;
+        }
 
-          @keyframes shine {
-            0% { transform: translateX(-160%); }
-            100% { transform: translateX(220%); }
-          }
+        @media (max-width: 768px) {
+          .ld-title    { font-size: 32px !important; }
+          .ld-tagline  { font-size: 14px !important; }
+          .ld-logo-box { width: 160px !important; height: 160px !important; }
+          .ld-logo-img { width: 88px !important;  height: 88px !important; }
+          .ld-bar-wrap { width: 240px !important; }
+        }
+        @media (max-width: 480px) {
+          .ld-title    { font-size: 26px !important; }
+          .ld-tagline  { font-size: 12.5px !important; letter-spacing: 3px !important; }
+          .ld-logo-box { width: 130px !important; height: 130px !important; margin-bottom: 20px !important; }
+          .ld-logo-img { width: 72px !important;  height: 72px !important; }
+          .ld-bar-wrap { width: 85vw !important; max-width: 260px !important; }
+          .ld-pct      { font-size: 11px !important; }
+        }
+      `}</style>
 
-          @keyframes mountainSway {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-2px); }
-          }
+      {/* ── Background ── */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "linear-gradient(168deg, #ffffff 0%, #f8fdfb 35%, #f0fdf7 60%, #ffffff 100%)",
+      }} />
 
-          @keyframes bubbleFloatDown1 {
-            0% {
-              transform: translate3d(0px, -12vh, 0) scale(0.95);
-              opacity: 0;
-            }
-            10% {
-              opacity: 1;
-            }
-            35% {
-              transform: translate3d(8px, 10vh, 0) scale(1);
-            }
-            62% {
-              transform: translate3d(-5px, 34vh, 0) scale(1.01);
-            }
-            82% {
-              transform: translate3d(4px, 56vh, 0) scale(0.995);
-              opacity: 0.9;
-            }
-            100% {
-              transform: translate3d(0px, 72vh, 0) scale(0.99);
-              opacity: 0;
-            }
-          }
-
-          @keyframes bubbleFloatDown2 {
-            0% {
-              transform: translate3d(0px, -14vh, 0) scale(0.95);
-              opacity: 0;
-            }
-            12% {
-              opacity: 1;
-            }
-            30% {
-              transform: translate3d(-8px, 12vh, 0) scale(1.01);
-            }
-            58% {
-              transform: translate3d(-14px, 36vh, 0) scale(1.02);
-            }
-            84% {
-              transform: translate3d(-7px, 60vh, 0) scale(1);
-              opacity: 0.88;
-            }
-            100% {
-              transform: translate3d(0px, 74vh, 0) scale(0.99);
-              opacity: 0;
-            }
-          }
-
-          @keyframes bubbleFloatDown3 {
-            0% {
-              transform: translate3d(0px, -11vh, 0) scale(0.95);
-              opacity: 0;
-            }
-            10% {
-              opacity: 1;
-            }
-            36% {
-              transform: translate3d(7px, 14vh, 0) scale(1);
-            }
-            66% {
-              transform: translate3d(12px, 40vh, 0) scale(1.015);
-            }
-            86% {
-              transform: translate3d(5px, 61vh, 0) scale(1);
-              opacity: 0.9;
-            }
-            100% {
-              transform: translate3d(0px, 76vh, 0) scale(0.99);
-              opacity: 0;
-            }
-          }
-
-          @keyframes bubbleFloatDown4 {
-            0% {
-              transform: translate3d(0px, -13vh, 0) scale(0.94);
-              opacity: 0;
-            }
-            10% {
-              opacity: 1;
-            }
-            34% {
-              transform: translate3d(-5px, 11vh, 0) scale(1);
-            }
-            60% {
-              transform: translate3d(9px, 35vh, 0) scale(1.02);
-            }
-            84% {
-              transform: translate3d(3px, 59vh, 0) scale(1);
-              opacity: 0.88;
-            }
-            100% {
-              transform: translate3d(0px, 75vh, 0) scale(0.99);
-              opacity: 0;
-            }
-          }
-
-          @keyframes particleDrift {
-            0% {
-              transform: translateY(-16px);
-              opacity: 0;
-            }
-            10% {
-              opacity: 1;
-            }
-            90% {
-              opacity: 1;
-            }
-            100% {
-              transform: translateY(calc(100vh + 18px));
-              opacity: 0;
-            }
-          }
-
-          @media (max-width: 768px) {
-            .loader-title {
-              font-size: 34px !important;
-            }
-            .loader-tagline {
-              font-size: 17px !important;
-              margin-bottom: 34px !important;
-            }
-            .loader-logo-wrap {
-              width: 170px !important;
-              height: 170px !important;
-              margin-bottom: 22px !important;
-            }
-            .loader-logo {
-              width: 98px !important;
-              height: 98px !important;
-            }
-            .loader-progress {
-              width: 240px !important;
-            }
-          }
-
-          @media (max-width: 480px) {
-            .loader-title {
-              font-size: 28px !important;
-            }
-            .loader-tagline {
-              font-size: 15px !important;
-              margin-bottom: 28px !important;
-            }
-            .loader-logo-wrap {
-              width: 145px !important;
-              height: 145px !important;
-              margin-bottom: 18px !important;
-            }
-            .loader-logo {
-              width: 84px !important;
-              height: 84px !important;
-            }
-            .loader-progress {
-              width: 82vw !important;
-              max-width: 260px !important;
-            }
-          }
-        `}
-      </style>
-
-      <div style={styles.whiteBase}></div>
-      <div style={styles.ambientGlow}></div>
-
-      {bubbles.map((bubble, index) => (
+      {/* ── Floating orbs ── */}
+      {orbs.map(orb => (
         <div
-          key={bubble.id}
+          key={orb.id}
           style={{
-            ...styles.floatingBubble,
-            left: bubble.left,
-            top: "-10vh",
-            width: `${bubble.size}px`,
-            height: `${bubble.size}px`,
-            opacity: bubble.opacity,
-            animation: `bubbleFloatDown${(index % 4) + 1} ${bubble.duration} cubic-bezier(0.22, 1, 0.36, 1) infinite`,
-            animationDelay: bubble.delay,
+            position: "absolute",
+            left: `${orb.x}%`, top: `${orb.y}%`,
+            width: orb.size, height: orb.size,
+            borderRadius: "50%",
+            background: `radial-gradient(circle, rgba(16,185,129,${orb.opacity}) 0%, transparent 70%)`,
+            animation: `ld-orb-drift ${orb.duration}s ease-in-out infinite`,
+            animationDelay: `${orb.delay}s`,
+            pointerEvents: "none",
+            filter: "blur(40px)",
           }}
         />
       ))}
 
-      {particles.map((particle) => (
+      {/* ── Rising particles ── */}
+      {floatingDots.map(dot => (
         <div
-          key={particle.id}
+          key={dot.id}
           style={{
-            ...styles.particle,
-            left: particle.left,
-            top: "-20px",
-            width: `${particle.size}px`,
-            height: `${particle.size}px`,
-            background: `rgba(16, 185, 129, ${particle.opacity})`,
-            boxShadow: "0 0 6px rgba(16,185,129,0.16)",
-            animation: `particleDrift ${particle.duration} linear infinite`,
-            animationDelay: particle.delay,
+            position: "absolute",
+            left: dot.left,
+            bottom: "-20px",
+            width: dot.size, height: dot.size,
+            borderRadius: "50%",
+            background: `rgba(16,185,129,${dot.opacity})`,
+            animation: `ld-particle-rise ${dot.duration} linear infinite`,
+            animationDelay: dot.delay,
+            pointerEvents: "none",
           }}
         />
       ))}
 
-      <div style={styles.content}>
-        <div style={styles.logoContainer} className="loader-logo-wrap">
-          <div style={styles.logoHalo}></div>
+      {/* ── Subtle grid pattern ── */}
+      <div style={{
+        position: "absolute", inset: 0,
+        backgroundImage: `
+          linear-gradient(rgba(16,185,129,0.02) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(16,185,129,0.02) 1px, transparent 1px)
+        `,
+        backgroundSize: "60px 60px",
+        pointerEvents: "none",
+        opacity: 0.6,
+      }} />
 
-          <div style={{ ...styles.logoRing, width: "150px", height: "150px" }}></div>
-          <div
-            style={{
-              ...styles.logoRing,
-              width: "188px",
-              height: "188px",
-              borderColor: "rgba(16, 185, 129, 0.11)",
-              animationDelay: "0.8s",
-            }}
-          ></div>
-          <div
-            style={{
-              ...styles.logoRing,
-              width: "224px",
-              height: "224px",
-              borderWidth: "1px",
-              borderColor: "rgba(16, 185, 129, 0.07)",
-              animationDelay: "1.6s",
-            }}
-          ></div>
+      {/* ── Content ── */}
+      <div style={{
+        position: "relative", zIndex: 10,
+        height: "100%",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        textAlign: "center",
+        padding: "24px",
+        opacity: isExiting ? 0 : 1,
+        transform: isExiting ? "translateY(-10px)" : "translateY(0)",
+        transition: "opacity 0.8s ease, transform 0.8s ease",
+      }}>
 
+        {/* Logo Container */}
+        <div
+          className="ld-logo-box"
+          style={{
+            position: "relative",
+            width: 190, height: 190,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            marginBottom: 28,
+          }}
+        >
+          {/* Rings */}
+          {[140, 172, 204].map((size, i) => (
+            <div
+              key={i}
+              style={{
+                position: "absolute",
+                top: "50%", left: "50%",
+                width: size, height: size,
+                borderRadius: "50%",
+                border: `1px solid rgba(16,185,129,${0.14 - i * 0.035})`,
+                animation: `ld-ring-pulse 3.8s cubic-bezier(0.22,1,0.36,1) infinite`,
+                animationDelay: `${i * 0.7}s`,
+              }}
+            />
+          ))}
+
+          {/* Glow halo */}
+          <div style={{
+            position: "absolute", top: "50%", left: "50%",
+            width: 130, height: 130,
+            transform: "translate(-50%,-50%)",
+            borderRadius: "50%",
+            background: "radial-gradient(circle, rgba(16,185,129,0.06) 0%, transparent 70%)",
+            filter: "blur(16px)",
+            animation: "ld-logo-glow 4s ease-in-out infinite",
+          }} />
+
+          {/* Logo */}
           <img
             src={getBrandLogoUrl()}
             alt="Altuvera"
-            style={styles.logo}
-            className="loader-logo"
+            className="ld-logo-img"
+            style={{
+              width: 100, height: 100,
+              objectFit: "contain",
+              position: "relative", zIndex: 5,
+              animation: "ld-float 5s cubic-bezier(0.37,0,0.63,1) infinite",
+              filter: "drop-shadow(0 4px 20px rgba(16,185,129,0.12))",
+            }}
             onError={(e) => {
               e.currentTarget.src = getBrandLogoUrl();
-              e.currentTarget.alt = 'Altuvera';
             }}
           />
         </div>
 
-        <h1 style={styles.text} className="loader-title">
+        {/* Brand Name */}
+        <h1
+          className="ld-title"
+          style={{
+            fontFamily: "'DM Serif Display', Georgia, serif",
+            fontSize: 42,
+            fontWeight: 400,
+            color: "#0f172a",
+            margin: "0 0 8px",
+            letterSpacing: "-0.5px",
+            lineHeight: 1.1,
+          }}
+        >
           Altuvera
         </h1>
 
-        <p style={styles.tagline} className="loader-tagline">
-          True adventure in High Places & Deep Culture
-        </p>
+        {/* Tagline with decorative lines */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 14,
+          marginBottom: 36,
+        }}>
+          <div style={{
+            width: 32, height: 1.5,
+            background: "linear-gradient(90deg, transparent, #10b981)",
+            borderRadius: 1,
+            animation: "ld-line-grow 1s ease forwards",
+            transformOrigin: "right",
+          }} />
+          <p
+            className="ld-tagline"
+            style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontSize: 13,
+              fontWeight: 600,
+              color: "#059669",
+              letterSpacing: "3.5px",
+              textTransform: "uppercase",
+              margin: 0,
+              opacity: 0.85,
+            }}
+          >
+            Adventure Awaits
+          </p>
+          <div style={{
+            width: 32, height: 1.5,
+            background: "linear-gradient(90deg, #10b981, transparent)",
+            borderRadius: 1,
+            animation: "ld-line-grow 1s ease forwards",
+            transformOrigin: "left",
+          }} />
+        </div>
 
-        <div style={styles.progressWrapper} className="loader-progress">
-          <div style={styles.progressContainer}>
-            <div style={styles.progressBar}>
-              <div style={styles.progressShine}></div>
-            </div>
-          </div>
-
-          <p style={styles.loadingText}>
-            {getLoadingText()}
-            <span style={styles.loadingDots}>
-              <span style={styles.loadingDot}>.</span>
-              <span style={{ ...styles.loadingDot, animationDelay: "0.2s" }}>.</span>
-              <span style={{ ...styles.loadingDot, animationDelay: "0.4s" }}>.</span>
+        {/* Progress Section */}
+        <div
+          className="ld-bar-wrap"
+          style={{
+            display: "flex", flexDirection: "column",
+            alignItems: "center", width: 300,
+          }}
+        >
+          {/* Loading Message */}
+          <p
+            key={activeMessage}
+            className="ld-msg-enter"
+            style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontSize: 12,
+              fontWeight: 500,
+              color: "#64748b",
+              letterSpacing: "1.5px",
+              textTransform: "uppercase",
+              marginBottom: 14,
+              minHeight: 18,
+              display: "flex", alignItems: "center", gap: 2,
+            }}
+          >
+            {loadingMessages[activeMessage].text}
+            <span style={{ display: "inline-flex", marginLeft: 3 }}>
+              {[0, 1, 2].map(i => (
+                <span
+                  key={i}
+                  style={{
+                    display: "inline-block",
+                    color: "#10b981",
+                    fontSize: 14,
+                    fontWeight: 700,
+                    animation: `ld-dot 1.4s ease-in-out ${i * 0.18}s infinite`,
+                  }}
+                >
+                  .
+                </span>
+              ))}
             </span>
           </p>
 
-          <p style={styles.percentText}>{displayProgress}%</p>
+          {/* Progress Track */}
+          <div style={{
+            width: "100%", height: 3,
+            borderRadius: 999,
+            background: "rgba(16,185,129,0.08)",
+            overflow: "hidden",
+            marginBottom: 14,
+            position: "relative",
+          }}>
+            <div style={{
+              height: "100%",
+              width: `${Math.min(displayProgress, 100)}%`,
+              borderRadius: 999,
+              background: "linear-gradient(90deg, #059669, #10b981, #34d399)",
+              transition: "width 0.12s linear",
+              position: "relative",
+              overflow: "hidden",
+            }}>
+              <div style={{
+                position: "absolute", inset: 0,
+                background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent)",
+                animation: "ld-shimmer 2s linear infinite",
+              }} />
+            </div>
+
+            {/* Glow dot at end of bar */}
+            {displayProgress > 3 && displayProgress < 100 && (
+              <div style={{
+                position: "absolute",
+                top: "50%",
+                left: `${Math.min(displayProgress, 100)}%`,
+                transform: "translate(-50%, -50%)",
+                width: 8, height: 8,
+                borderRadius: "50%",
+                background: "#10b981",
+                boxShadow: "0 0 12px rgba(16,185,129,0.5), 0 0 4px rgba(16,185,129,0.8)",
+                animation: "ld-progress-pulse 1.2s ease-in-out infinite",
+                transition: "left 0.12s linear",
+              }} />
+            )}
+          </div>
+
+          {/* Percentage */}
+          <p
+            className="ld-pct"
+            style={{
+              fontFamily: "'Plus Jakarta Sans', sans-serif",
+              fontSize: 12,
+              fontWeight: 600,
+              color: "#94a3b8",
+              letterSpacing: "0.5px",
+              margin: 0,
+              fontVariantNumeric: "tabular-nums",
+              transition: "color 0.3s ease",
+              ...(displayProgress >= 100 ? { color: "#10b981" } : {}),
+            }}
+          >
+            {displayProgress}%
+          </p>
         </div>
       </div>
 
-      <div style={styles.mountainsContainer}>
-        <div
+      {/* ── Mountain Silhouette ── */}
+      <div style={{
+        position: "absolute",
+        bottom: 0, left: 0, right: 0,
+        height: 80,
+        overflow: "hidden",
+        opacity: isExiting ? 0 : 1,
+        transition: "opacity 0.6s ease",
+        pointerEvents: "none",
+      }}>
+        <svg
+          viewBox="0 0 1440 80"
+          preserveAspectRatio="none"
           style={{
-            ...styles.mountain,
-            borderWidth: "0 18px 32px 18px",
-            animationDelay: "0s",
+            position: "absolute",
+            bottom: 0, left: 0,
+            width: "100%", height: "100%",
           }}
-        ></div>
-        <div
-          style={{
-            ...styles.mountain,
-            borderWidth: "0 26px 48px 26px",
-            animationDelay: "0.4s",
-          }}
-        ></div>
-        <div
-          style={{
-            ...styles.mountain,
-            borderWidth: "0 35px 65px 35px",
-            animationDelay: "0.2s",
-          }}
-        ></div>
-        <div
-          style={{
-            ...styles.mountain,
-            borderWidth: "0 28px 52px 28px",
-            animationDelay: "0.5s",
-          }}
-        ></div>
-        <div
-          style={{
-            ...styles.mountain,
-            borderWidth: "0 20px 36px 20px",
-            animationDelay: "0.3s",
-          }}
-        ></div>
+        >
+          <defs>
+            <linearGradient id="ld-mtn-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#059669" stopOpacity="0.06" />
+              <stop offset="100%" stopColor="#059669" stopOpacity="0.02" />
+            </linearGradient>
+          </defs>
+
+          {/* Back range */}
+          <path
+            d="M0,80 L0,60 L120,42 L240,55 L360,32 L480,48 L600,25 L720,40 L840,20 L960,38 L1080,28 L1200,45 L1320,35 L1440,50 L1440,80 Z"
+            fill="url(#ld-mtn-grad)"
+            style={{ animation: "ld-mountain-breath 8s ease-in-out infinite" }}
+          />
+
+          {/* Front range */}
+          <path
+            d="M0,80 L0,65 L180,50 L320,60 L480,40 L640,55 L800,35 L960,50 L1100,38 L1280,52 L1440,45 L1440,80 Z"
+            fill="rgba(16,185,129,0.04)"
+            style={{ animation: "ld-mountain-breath 6s ease-in-out 0.5s infinite" }}
+          />
+
+          {/* Accent peaks */}
+          <path
+            d="M600,80 L600,30 L620,25 L640,30 L640,80 Z"
+            fill="rgba(16,185,129,0.05)"
+            style={{ animation: "ld-mountain-breath 7s ease-in-out 0.2s infinite" }}
+          />
+          <path
+            d="M820,80 L820,35 L845,22 L870,35 L870,80 Z"
+            fill="rgba(16,185,129,0.06)"
+            style={{ animation: "ld-mountain-breath 7s ease-in-out 0.8s infinite" }}
+          />
+        </svg>
       </div>
     </div>
   );
