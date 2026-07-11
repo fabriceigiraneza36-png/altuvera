@@ -4,6 +4,7 @@
 // Step 1 → Travellers
 // Step 2 → Contact Info
 // Step 3 → Review + Submit (opens WhatsApp)
+// ✅ Fixed: FieldError now safely extracts string from any error shape
 // ─────────────────────────────────────────────────────────────────────────────
 import React, {
   useState, useCallback, useMemo, memo,
@@ -22,6 +23,31 @@ import {
 } from "./BookingShared";
 
 /* ════════════════════════════════════════════════════════
+   SAFE ERROR EXTRACTOR
+════════════════════════════════════════════════════════ */
+const extractErrorMessage = (err) => {
+  if (!err) return null;
+  if (typeof err === "string") return err;
+  if (err instanceof Error) return err.message;
+  if (typeof err === "object") {
+    return (
+      err.message ||
+      err.msg ||
+      err.error ||
+      (err.errors
+        ? Array.isArray(err.errors)
+          ? err.errors
+              .map((e) => (typeof e === "string" ? e : e?.message ?? JSON.stringify(e)))
+              .join(", ")
+          : String(err.errors)
+        : null) ||
+      JSON.stringify(err)
+    );
+  }
+  return String(err);
+};
+
+/* ════════════════════════════════════════════════════════
    PRIMITIVES
 ════════════════════════════════════════════════════════ */
 const Label = memo(({ children, required }) => (
@@ -36,8 +62,12 @@ const Label = memo(({ children, required }) => (
 ));
 Label.displayName = "Label";
 
-const FieldError = memo(({ error, touched }) =>
-  error && touched ? (
+/* ✅ FIXED — safely converts any error shape to a string before rendering */
+const FieldError = memo(({ error, touched }) => {
+  if (!error || !touched) return null;
+  const message = extractErrorMessage(error);
+  if (!message) return null;
+  return (
     <motion.p
       initial={{ opacity: 0, y: -4, height: 0 }}
       animate={{ opacity: 1, y: 0, height: "auto" }}
@@ -48,10 +78,10 @@ const FieldError = memo(({ error, touched }) =>
       }}
       role="alert"
     >
-      ⚠ {error}
+      ⚠ {message}
     </motion.p>
-  ) : null
-);
+  );
+});
 FieldError.displayName = "FieldError";
 
 const FieldReveal = memo(({ children, delay = 0 }) => (
@@ -475,7 +505,9 @@ const ReviewRow = memo(({ label, value, icon, delay = 0 }) => (
         margin: 0, fontSize: 14.5, fontWeight: 700,
         color: "#111827", lineHeight: 1.45, wordBreak: "break-word",
       }}>
-        {value}
+        {typeof value === "string" || typeof value === "number"
+          ? value
+          : String(value ?? "—")}
       </p>
     </div>
   </motion.div>
@@ -575,11 +607,21 @@ const StepTrip = memo(({
       </SectionCard>
 
       <SelectModal isOpen={openCountry} onClose={() => setOpenCountry(false)}
-        onSelect={(c) => { setFormData((p) => ({ ...p, countryId: c.value, destinationId: "" })); setOpenCountry(false); }}
+        onSelect={(c) => {
+          setFormData((p) => ({ ...p, countryId: c.value, destinationId: "" }));
+          setOpenCountry(false);
+        }}
         items={countriesList} mode="country"
         selectedValue={formData.countryId} isMobile={isMobile} />
+
       <SelectModal isOpen={openDest} onClose={() => setOpenDest(false)}
-        onSelect={(d) => { setFormData((p) => ({ ...p, destinationId: d.value, countryId: d.countryId || p.countryId })); setOpenDest(false); }}
+        onSelect={(d) => {
+          setFormData((p) => ({
+            ...p, destinationId: d.value,
+            countryId: d.countryId || p.countryId,
+          }));
+          setOpenDest(false);
+        }}
         items={destinationsList} mode="destination"
         selectedValue={formData.destinationId} isMobile={isMobile} />
 
@@ -605,7 +647,8 @@ const StepTrip = memo(({
                   onClick={() => setFormData((p) => ({ ...p, destinationId: id }))}
                   style={{
                     padding: "12px 14px", borderRadius: 14,
-                    background: isActive ? "linear-gradient(135deg,#059669,#10b981)" : "#f9fafb",
+                    background: isActive
+                      ? "linear-gradient(135deg,#059669,#10b981)" : "#f9fafb",
                     border: `2px solid ${isActive ? "#059669" : "#e5e7eb"}`,
                     cursor: "pointer", textAlign: "left",
                     transition: "all .2s", fontFamily: "inherit",
@@ -622,7 +665,10 @@ const StepTrip = memo(({
                     {normalizeOptionLabel(dest)}
                   </div>
                   {(dest.country || dest.region) && (
-                    <div style={{ fontSize: 11.5, color: isActive ? "rgba(255,255,255,.78)" : "#9ca3af" }}>
+                    <div style={{
+                      fontSize: 11.5,
+                      color: isActive ? "rgba(255,255,255,.78)" : "#9ca3af",
+                    }}>
                       {dest.country || dest.region}
                     </div>
                   )}
@@ -667,8 +713,10 @@ const StepTrip = memo(({
               <motion.div key="fixed"
                 initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }}
-                style={{ display: "grid", gap: 18,
-                  gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr" }}
+                style={{
+                  display: "grid", gap: 18,
+                  gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                }}
               >
                 <DateField label="Departure Date" name="startDate" required
                   value={formData.startDate} min={today}
@@ -702,7 +750,8 @@ const StepTrip = memo(({
                         }))}
                         style={{
                           padding: "10px 4px", borderRadius: 10, border: "none",
-                          background: active ? "linear-gradient(135deg,#059669,#10b981)" : "#f3f4f6",
+                          background: active
+                            ? "linear-gradient(135deg,#059669,#10b981)" : "#f3f4f6",
                           color: active ? "#fff" : "#374151",
                           fontSize: 13, fontWeight: 700,
                           cursor: "pointer", transition: "all .18s",
@@ -716,7 +765,10 @@ const StepTrip = memo(({
                 </div>
                 <AnimatePresence>
                   {errors.flexibleMonths && touched.flexibleMonths && (
-                    <FieldError error={errors.flexibleMonths} touched={touched.flexibleMonths} />
+                    <FieldError
+                      error={errors.flexibleMonths}
+                      touched={touched.flexibleMonths}
+                    />
                   )}
                 </AnimatePresence>
                 {(formData.flexibleMonths || []).length > 0 && (
@@ -753,8 +805,10 @@ const StepTrip = memo(({
                     <Clock size={18} color="#fff" />
                   </div>
                   <div>
-                    <p style={{ margin: 0, fontSize: 11.5, color: "#6b7280",
-                      fontWeight: 600, textTransform: "uppercase", letterSpacing: ".06em" }}>
+                    <p style={{
+                      margin: 0, fontSize: 11.5, color: "#6b7280",
+                      fontWeight: 600, textTransform: "uppercase", letterSpacing: ".06em",
+                    }}>
                       Trip Duration
                     </p>
                     <p style={{ margin: 0, fontSize: 22, fontWeight: 900, color: "#059669" }}>
@@ -770,9 +824,16 @@ const StepTrip = memo(({
 
       {/* Category */}
       {(categoriesList || []).length > 0 && (
-        <SectionCard headerIcon={<CheckCircle2 />} headerLabel="Trip Category (optional)" delay={0.2}>
+        <SectionCard
+          headerIcon={<CheckCircle2 />}
+          headerLabel="Trip Category (optional)"
+          delay={0.2}
+        >
           <div style={{ padding: "16px 22px" }}>
-            <select name="categoryId" value={formData.categoryId || ""} onChange={handleChange}
+            <select
+              name="categoryId"
+              value={formData.categoryId || ""}
+              onChange={handleChange}
               style={{
                 width: "100%", padding: "13px 40px 13px 16px",
                 borderRadius: 12, fontSize: 14, fontWeight: 500,
@@ -845,24 +906,39 @@ const StepTravelers = memo(({
                 role="radio" aria-checked={isActive}
                 style={{
                   padding: "18px 10px", borderRadius: 16,
-                  background: isActive ? "linear-gradient(135deg,#f0fdf4,#dcfce7)" : "#f9fafb",
+                  background: isActive
+                    ? "linear-gradient(135deg,#f0fdf4,#dcfce7)" : "#f9fafb",
                   border: `2px solid ${isActive ? "#059669" : "#e5e7eb"}`,
                   cursor: "pointer", textAlign: "center",
                   transition: "all .2s", fontFamily: "inherit",
-                  boxShadow: isActive ? "0 4px 16px rgba(5,150,105,.18)" : "none", outline: "none",
+                  boxShadow: isActive ? "0 4px 16px rgba(5,150,105,.18)" : "none",
+                  outline: "none",
                 }}
               >
-                <motion.div animate={{ scale: isActive ? 1.1 : 1 }} style={{ fontSize: 30, marginBottom: 8 }}>
+                <motion.div
+                  animate={{ scale: isActive ? 1.1 : 1 }}
+                  style={{ fontSize: 30, marginBottom: 8 }}
+                >
                   {g.icon}
                 </motion.div>
-                <div style={{ fontSize: 12.5, fontWeight: 700, color: isActive ? "#065f46" : "#374151", lineHeight: 1.3 }}>
+                <div style={{
+                  fontSize: 12.5, fontWeight: 700,
+                  color: isActive ? "#065f46" : "#374151", lineHeight: 1.3,
+                }}>
                   {g.label || g.name || g.full_name}
                 </div>
                 <AnimatePresence>
                   {isActive && (
-                    <motion.div initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0, opacity: 0 }}
-                      style={{ width: 20, height: 20, borderRadius: "50%", background: "#059669", margin: "8px auto 0",
-                        display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <motion.div
+                      initial={{ scale: 0, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      exit={{ scale: 0, opacity: 0 }}
+                      style={{
+                        width: 20, height: 20, borderRadius: "50%",
+                        background: "#059669", margin: "8px auto 0",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}
+                    >
                       <CheckCircle2 size={13} color="#fff" />
                     </motion.div>
                   )}
@@ -871,13 +947,18 @@ const StepTravelers = memo(({
             );
           })}
         </div>
+
+        {/* ✅ FIXED — safe error render for groupType */}
         <AnimatePresence>
           {errors.groupType && touched.groupType && (
-            <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              style={{ margin: "0 22px 14px", fontSize: 12.5, color: "#dc2626", fontWeight: 600 }}>
-              ⚠ {errors.groupType}
-            </motion.p>
+              style={{ padding: "0 22px 14px" }}
+            >
+              <FieldError error={errors.groupType} touched={touched.groupType} />
+            </motion.div>
           )}
         </AnimatePresence>
       </SectionCard>
@@ -900,10 +981,12 @@ const StepTravelers = memo(({
 
         <AnimatePresence>
           {total > 0 && (
-            <motion.div initial={{ opacity: 0, y: 8, height: 0 }}
+            <motion.div
+              initial={{ opacity: 0, y: 8, height: 0 }}
               animate={{ opacity: 1, y: 0, height: "auto" }}
               exit={{ opacity: 0, y: 8, height: 0 }}
-              style={{ margin: "0 22px 18px", overflow: "hidden" }}>
+              style={{ margin: "0 22px 18px", overflow: "hidden" }}
+            >
               <div style={{
                 display: "flex", alignItems: "center", justifyContent: "space-between",
                 padding: "14px 18px",
@@ -923,22 +1006,30 @@ const StepTravelers = memo(({
                     </p>
                   </div>
                 </div>
-                <motion.span key={total}
-                  initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-                  style={{ fontSize: 32, fontWeight: 900, color: "#059669", lineHeight: 1 }}>
+                <motion.span
+                  key={total}
+                  initial={{ scale: 0.5, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  style={{ fontSize: 32, fontWeight: 900, color: "#059669", lineHeight: 1 }}
+                >
                   {total}
                 </motion.span>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* ✅ FIXED — safe error render for adults */}
         <AnimatePresence>
           {errors.adults && touched.adults && (
-            <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }}
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              style={{ margin: "0 22px 14px", fontSize: 12.5, color: "#dc2626", fontWeight: 600 }}>
-              ⚠ {errors.adults}
-            </motion.p>
+              style={{ padding: "0 22px 14px" }}
+            >
+              <FieldError error={errors.adults} touched={touched.adults} />
+            </motion.div>
           )}
         </AnimatePresence>
       </SectionCard>
@@ -954,18 +1045,22 @@ const StepTravelers = memo(({
           }}>
             {accommodationTypes.map((a, i) => {
               const id = a.value || a.id;
-              const isActive = formData.accommodationType === id || formData.accommodation === id;
+              const isActive = formData.accommodationType === id
+                || formData.accommodation === id;
               return (
                 <motion.button key={id} type="button"
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.06 }}
                   whileHover={{ y: -2, boxShadow: "0 6px 18px rgba(5,150,105,.15)" }}
                   whileTap={{ scale: 0.97 }}
-                  onClick={() => setFormData((p) => ({ ...p, accommodationType: id, accommodation: id }))}
+                  onClick={() => setFormData((p) => ({
+                    ...p, accommodationType: id, accommodation: id,
+                  }))}
                   role="radio" aria-checked={isActive}
                   style={{
                     padding: "16px 18px", borderRadius: 16,
-                    background: isActive ? "linear-gradient(135deg,#f0fdf4,#dcfce7)" : "#f9fafb",
+                    background: isActive
+                      ? "linear-gradient(135deg,#f0fdf4,#dcfce7)" : "#f9fafb",
                     border: `2px solid ${isActive ? "#059669" : "#e5e7eb"}`,
                     cursor: "pointer", textAlign: "left",
                     transition: "all .2s", fontFamily: "inherit",
@@ -975,15 +1070,18 @@ const StepTravelers = memo(({
                 >
                   <div style={{
                     width: 42, height: 42, borderRadius: 11, flexShrink: 0,
-                    background: isActive ? "linear-gradient(135deg,#059669,#10b981)" : "#e5e7eb",
+                    background: isActive
+                      ? "linear-gradient(135deg,#059669,#10b981)" : "#e5e7eb",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: 20, transition: "all .2s",
                   }}>
                     {a.icon}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: "0 0 3px", fontWeight: 700, fontSize: 14,
-                      color: isActive ? "#065f46" : "#111827" }}>
+                    <p style={{
+                      margin: "0 0 3px", fontWeight: 700, fontSize: 14,
+                      color: isActive ? "#065f46" : "#111827",
+                    }}>
                       {a.label || a.name}
                     </p>
                     {(a.desc || a.description) && (
@@ -994,8 +1092,15 @@ const StepTravelers = memo(({
                   </div>
                   <AnimatePresence>
                     {isActive && (
-                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}>
-                        <CheckCircle2 size={18} color="#059669" style={{ flexShrink: 0, marginTop: 2 }} />
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        exit={{ scale: 0 }}
+                      >
+                        <CheckCircle2
+                          size={18} color="#059669"
+                          style={{ flexShrink: 0, marginTop: 2 }}
+                        />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -1018,13 +1123,17 @@ const StepTravelers = memo(({
             const isActive = formData.budgetRange === b.value;
             return (
               <motion.button key={b.value} type="button"
-                initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }}
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.05 }}
                 whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
-                onClick={() => setFormData((p) => ({ ...p, budgetRange: isActive ? "" : b.value }))}
+                onClick={() => setFormData((p) => ({
+                  ...p, budgetRange: isActive ? "" : b.value,
+                }))}
                 style={{
                   padding: "14px 10px", borderRadius: 14,
-                  background: isActive ? "linear-gradient(135deg,#059669,#10b981)" : "#f9fafb",
+                  background: isActive
+                    ? "linear-gradient(135deg,#059669,#10b981)" : "#f9fafb",
                   border: `2px solid ${isActive ? "#059669" : "#e5e7eb"}`,
                   cursor: "pointer", textAlign: "center",
                   transition: "all .2s", fontFamily: "inherit",
@@ -1032,8 +1141,10 @@ const StepTravelers = memo(({
                 }}
               >
                 <div style={{ fontSize: 22, marginBottom: 4 }}>{b.icon}</div>
-                <div style={{ fontSize: 12, fontWeight: 700,
-                  color: isActive ? "#fff" : "#374151", lineHeight: 1.3 }}>
+                <div style={{
+                  fontSize: 12, fontWeight: 700,
+                  color: isActive ? "#fff" : "#374151", lineHeight: 1.3,
+                }}>
                   {b.label}
                 </div>
               </motion.button>
@@ -1069,13 +1180,15 @@ const StepContact = memo(({
 
     {/* Auto-fill notice */}
     {isAuthenticated && (formData.firstName || formData.email) && (
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
         style={{
           marginBottom: 20, display: "flex", alignItems: "flex-start", gap: 14,
           padding: "18px 22px",
           background: "linear-gradient(135deg,rgba(5,150,105,.08),rgba(236,253,245,1))",
           border: "1.5px solid rgba(16,185,129,.2)", borderRadius: 18,
-        }}>
+        }}
+      >
         <div style={{
           width: 42, height: 42, borderRadius: 12, flexShrink: 0,
           background: "linear-gradient(135deg,#059669,#10b981)",
@@ -1133,8 +1246,16 @@ const StepContact = memo(({
     {/* Preferences */}
     <SectionCard
       headerIcon={<Settings />}
-      headerLabel={<>Travel Preferences <span style={{ fontSize: 11, color: "#9ca3af",
-        fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>— optional</span></>}
+      headerLabel={
+        <>Travel Preferences{" "}
+          <span style={{
+            fontSize: 11, color: "#9ca3af",
+            fontWeight: 400, textTransform: "none", letterSpacing: 0,
+          }}>
+            — optional
+          </span>
+        </>
+      }
       delay={0.1}
     >
       <div style={{
@@ -1147,11 +1268,12 @@ const StepContact = memo(({
           icon={MessageCircle}
           value={formData.preferredContactMethod}
           onChange={handleChange} onBlur={handleBlur}
-          error={errors.preferredContactMethod} touched={touched.preferredContactMethod}
+          error={errors.preferredContactMethod}
+          touched={touched.preferredContactMethod}
           options={[
-            { value: "whatsapp", name: "💬 WhatsApp" },
-            { value: "email",    name: "📧 Email"    },
-            { value: "phone",    name: "📞 Phone Call" },
+            { value: "whatsapp", name: "💬 WhatsApp"   },
+            { value: "email",    name: "📧 Email"       },
+            { value: "phone",    name: "📞 Phone Call"  },
           ]} />
         <TextInput name="preferredContactTime" label="Best Time to Reach You"
           placeholder="e.g. 9am–12pm (GMT+2)" icon={Clock}
@@ -1167,15 +1289,16 @@ const StepContact = memo(({
           value={formData.marketingSource}
           onChange={handleChange} onBlur={handleBlur}
           options={[
-            { value: "google",    name: "🔍 Google Search"    },
-            { value: "instagram", name: "📸 Instagram"         },
-            { value: "tiktok",    name: "🎵 TikTok"            },
-            { value: "facebook",  name: "👥 Facebook"          },
-            { value: "referral",  name: "🤝 Friend/Referral"   },
+            { value: "google",    name: "🔍 Google Search"     },
+            { value: "instagram", name: "📸 Instagram"          },
+            { value: "tiktok",    name: "🎵 TikTok"             },
+            { value: "facebook",  name: "👥 Facebook"           },
+            { value: "referral",  name: "🤝 Friend/Referral"    },
             { value: "returning", name: "✈️ Returning Traveler" },
-            { value: "other",     name: "💡 Other"             },
+            { value: "other",     name: "💡 Other"              },
           ]} />
       </div>
+
       {/* Newsletter */}
       <div style={{ padding: "0 22px 18px" }}>
         <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
@@ -1203,8 +1326,16 @@ const StepContact = memo(({
     {(interests || []).length > 0 && (
       <SectionCard
         headerIcon={<Heart />}
-        headerLabel={<>Interests <span style={{ fontSize: 11, color: "#9ca3af",
-          fontWeight: 400, textTransform: "none", letterSpacing: 0 }}>— optional</span></>}
+        headerLabel={
+          <>Interests{" "}
+            <span style={{
+              fontSize: 11, color: "#9ca3af",
+              fontWeight: 400, textTransform: "none", letterSpacing: 0,
+            }}>
+              — optional
+            </span>
+          </>
+        }
         delay={0.15}
       >
         <div style={{ padding: "16px 22px" }}>
@@ -1220,23 +1351,29 @@ const StepContact = memo(({
               const active = (formData.interests || []).includes(val);
               return (
                 <motion.button key={val} type="button"
-                  initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.03 }}
                   whileHover={{ y: -2 }} whileTap={{ scale: 0.97 }}
                   onClick={() => handleInterestToggle(val)}
                   aria-pressed={active}
                   style={{
                     padding: "14px 10px", borderRadius: 14, border: "none",
-                    background: active ? "linear-gradient(135deg,#059669,#10b981)" : "#f3f4f6",
+                    background: active
+                      ? "linear-gradient(135deg,#059669,#10b981)" : "#f3f4f6",
                     cursor: "pointer", fontFamily: "inherit", transition: "all .18s",
                     boxShadow: active ? "0 4px 14px rgba(5,150,105,.28)" : "none",
-                    display: "flex", flexDirection: "column", alignItems: "center", gap: 6,
+                    display: "flex", flexDirection: "column",
+                    alignItems: "center", gap: 6,
                   }}
                 >
                   {icon && <span style={{ fontSize: 24 }}>{icon}</span>}
-                  <span style={{ fontSize: 12, fontWeight: 700,
-                    color: active ? "#fff" : "#374151", lineHeight: 1.3, textAlign: "center" }}>
-                    {label}
+                  <span style={{
+                    fontSize: 12, fontWeight: 700,
+                    color: active ? "#fff" : "#374151",
+                    lineHeight: 1.3, textAlign: "center",
+                  }}>
+                    {typeof label === "string" ? label : String(label ?? "")}
                   </span>
                 </motion.button>
               );
@@ -1281,7 +1418,9 @@ const StepContact = memo(({
       <div style={{
         padding: "18px 22px", marginBottom: 20,
         background: "#f9fafb", borderRadius: 16,
-        border: `2px solid ${errors.agreeToTerms && touched.agreeToTerms ? "#fca5a5" : "#e5e7eb"}`,
+        border: `2px solid ${
+          errors.agreeToTerms && touched.agreeToTerms ? "#fca5a5" : "#e5e7eb"
+        }`,
       }}>
         <label style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
           <div
@@ -1320,13 +1459,16 @@ const StepContact = memo(({
     </FieldReveal>
 
     {/* WhatsApp info */}
-    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+    <motion.div
+      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
       style={{
         display: "flex", alignItems: "center", gap: 16,
         padding: isMobile ? "18px" : "22px",
         background: "linear-gradient(135deg,rgba(37,211,102,.1),rgba(5,150,105,.06))",
         border: "1.5px solid rgba(37,211,102,.25)", borderRadius: 20,
-      }}>
+      }}
+    >
       <div style={{
         width: 52, height: 52, borderRadius: "50%", flexShrink: 0,
         background: "linear-gradient(135deg,#25D366,#128C7E)",
@@ -1358,12 +1500,12 @@ const StepReview = memo(({
   groupTypes, accommodationTypes,
   getTripDuration, getTotalVisitors, isMobile,
 }) => {
-  const dest    = (destinationsList || []).find((d) => d.value === formData.destinationId);
-  const country = (countriesList    || []).find((c) => c.value === formData.countryId);
-  const group   = (groupTypes       || []).find((g) => (g.value || g.id) === formData.groupType);
-  const accom   = (accommodationTypes || []).find((a) =>
-    (a.value || a.id) === (formData.accommodationType || formData.accommodation),
-  );
+  const dest    = (destinationsList    || []).find((d) => d.value === formData.destinationId);
+  const country = (countriesList       || []).find((c) => c.value === formData.countryId);
+  const group   = (groupTypes          || []).find((g) =>
+    (g.value || g.id) === formData.groupType);
+  const accom   = (accommodationTypes  || []).find((a) =>
+    (a.value || a.id) === (formData.accommodationType || formData.accommodation));
 
   const duration = getTripDuration?.();
   const total    = getTotalVisitors?.();
@@ -1372,49 +1514,66 @@ const StepReview = memo(({
   const infants  = parseInt(formData.infants,  10) || 0;
 
   const rows = [
-    // Contact
     { icon: "👤", label: "Name",
       value: `${formData.firstName || ""} ${formData.lastName || ""}`.trim() || "—" },
-    { icon: "📧", label: "Email",     value: formData.email   || "—" },
-    { icon: "📞", label: "Phone",     value: formData.phone   || "—" },
-    { icon: "🌍", label: "From",      value: formData.country || "—" },
-    // Trip
+    { icon: "📧", label: "Email",  value: formData.email   || "—" },
+    { icon: "📞", label: "Phone",  value: formData.phone   || "—" },
+    { icon: "🌍", label: "From",   value: formData.country || "—" },
     { icon: "📍", label: "Destination",
       value: dest?.label || country?.label || "Not specified" },
     formData.isFlexible
       ? { icon: "📅", label: "Dates",
           value: `Flexible — ${(formData.flexibleMonths || []).length
-            ? formData.flexibleMonths.map((m) => m.charAt(0).toUpperCase() + m.slice(1)).join(", ")
+            ? formData.flexibleMonths
+                .map((m) => m.charAt(0).toUpperCase() + m.slice(1))
+                .join(", ")
             : "Any month"}` }
       : { icon: "📅", label: "Departure",
           value: formData.startDate
-            ? new Date(formData.startDate).toLocaleDateString("en-US",
-                { weekday: "short", year: "numeric", month: "long", day: "numeric" })
+            ? new Date(formData.startDate).toLocaleDateString("en-US", {
+                weekday: "short", year: "numeric",
+                month: "long", day: "numeric",
+              })
             : "—" },
     !formData.isFlexible && formData.endDate && {
       icon: "🏁", label: "Return",
-      value: new Date(formData.endDate).toLocaleDateString("en-US",
-        { weekday: "short", year: "numeric", month: "long", day: "numeric" }),
+      value: new Date(formData.endDate).toLocaleDateString("en-US", {
+        weekday: "short", year: "numeric",
+        month: "long", day: "numeric",
+      }),
     },
-    duration && { icon: "⏱️", label: "Duration",
-      value: `${duration} day${duration !== 1 ? "s" : ""}` },
-    // Travellers
+    duration && {
+      icon: "⏱️", label: "Duration",
+      value: `${duration} day${duration !== 1 ? "s" : ""}`,
+    },
     { icon: "👥", label: "Travellers",
       value: `${total || 0} total — ${adults} adult${adults !== 1 ? "s" : ""}${
         children ? `, ${children} child${children !== 1 ? "ren" : ""}` : ""
       }${infants ? `, ${infants} infant${infants !== 1 ? "s" : ""}` : ""}` },
-    group && { icon: "🧳", label: "Group Type",
-      value: `${group.icon ?? ""} ${group.label || group.name}`.trim() },
-    accom && { icon: "🏨", label: "Accommodation",
-      value: `${accom.icon ?? ""} ${accom.label || accom.name}`.trim() },
-    formData.budgetRange && { icon: "💰", label: "Budget",
-      value: BUDGET_LABELS[formData.budgetRange] || formData.budgetRange },
-    formData.interests?.length && { icon: "✨", label: "Interests",
-      value: formData.interests.join(", ") },
-    formData.specialRequests && { icon: "💬", label: "Special Requests",
-      value: formData.specialRequests },
-    formData.preferredContactMethod && { icon: "📲", label: "Contact Via",
-      value: formData.preferredContactMethod },
+    group && {
+      icon: "🧳", label: "Group Type",
+      value: `${group.icon ?? ""} ${group.label || group.name}`.trim(),
+    },
+    accom && {
+      icon: "🏨", label: "Accommodation",
+      value: `${accom.icon ?? ""} ${accom.label || accom.name}`.trim(),
+    },
+    formData.budgetRange && {
+      icon: "💰", label: "Budget",
+      value: BUDGET_LABELS[formData.budgetRange] || formData.budgetRange,
+    },
+    formData.interests?.length && {
+      icon: "✨", label: "Interests",
+      value: formData.interests.join(", "),
+    },
+    formData.specialRequests && {
+      icon: "💬", label: "Special Requests",
+      value: formData.specialRequests,
+    },
+    formData.preferredContactMethod && {
+      icon: "📲", label: "Contact Via",
+      value: formData.preferredContactMethod,
+    },
   ].filter(Boolean);
 
   return (
@@ -1429,14 +1588,17 @@ const StepReview = memo(({
 
       {/* Hero image */}
       {dest?.image && (
-        <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.1 }}
           style={{
             borderRadius: 20, overflow: "hidden",
             height: isMobile ? 170 : 230,
             marginBottom: 20, position: "relative",
             boxShadow: "0 8px 32px rgba(0,0,0,.14)",
-          }}>
+          }}
+        >
           <img src={dest.image} alt={dest.label}
             style={{ width: "100%", height: "100%", objectFit: "cover" }} />
           <div style={{
@@ -1445,9 +1607,11 @@ const StepReview = memo(({
             display: "flex", alignItems: "flex-end", padding: "22px 24px",
           }}>
             <div>
-              <h3 style={{ margin: "0 0 4px", color: "#fff",
+              <h3 style={{
+                margin: "0 0 4px", color: "#fff",
                 fontFamily: "'Playfair Display',serif",
-                fontSize: isMobile ? 20 : 24, fontWeight: 900 }}>
+                fontSize: isMobile ? 20 : 24, fontWeight: 900,
+              }}>
                 {dest.label}
               </h3>
               {dest.country && (
@@ -1461,26 +1625,38 @@ const StepReview = memo(({
       )}
 
       {/* Summary */}
-      <SectionCard headerIcon={<CheckCircle2 />} headerLabel="Full Trip Summary" delay={0.05}>
+      <SectionCard
+        headerIcon={<CheckCircle2 />}
+        headerLabel="Full Trip Summary"
+        delay={0.05}
+      >
         <div style={{ padding: "0 22px" }}>
           {rows.map((row, i) => (
-            <ReviewRow key={row.label}
-              icon={row.icon} label={row.label} value={row.value}
-              delay={0.05 + i * 0.04} />
+            <ReviewRow
+              key={row.label}
+              icon={row.icon}
+              label={row.label}
+              value={row.value}
+              delay={0.05 + i * 0.04}
+            />
           ))}
         </div>
         <div style={{ height: 8 }} />
       </SectionCard>
 
       {/* WhatsApp submit notice */}
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
         style={{
           display: "flex", gap: 14, alignItems: "flex-start",
           padding: "20px 24px",
           background: "linear-gradient(135deg,rgba(37,211,102,.12),rgba(5,150,105,.06))",
           borderRadius: 18, border: "1.5px solid rgba(37,211,102,.3)",
           boxShadow: "0 2px 16px rgba(37,211,102,.1)",
-        }}>
+        }}
+      >
         <div style={{
           width: 48, height: 48, borderRadius: "50%", flexShrink: 0,
           background: "linear-gradient(135deg,#25D366,#128C7E)",
@@ -1494,8 +1670,9 @@ const StepReview = memo(({
             Ready to submit? 🎉
           </p>
           <p style={{ margin: 0, fontSize: 13.5, color: "#6b7280", lineHeight: 1.6 }}>
-            Clicking <strong style={{ color: "#059669" }}>Submit Booking</strong> will open
-            WhatsApp with your full booking details pre-filled.{" "}
+            Clicking{" "}
+            <strong style={{ color: "#059669" }}>Submit Booking</strong>{" "}
+            will open WhatsApp with your full booking details pre-filled.{" "}
             <strong>No payment required</strong> — our expert will be in touch within 24 hours.
           </p>
         </div>
@@ -1520,7 +1697,8 @@ const NavBar = memo(({
   }}>
     <div>
       {currentStep > 0 && (
-        <motion.button whileHover={{ x: -2 }} whileTap={{ scale: 0.97 }}
+        <motion.button
+          whileHover={{ x: -2 }} whileTap={{ scale: 0.97 }}
           type="button" onClick={onPrev} disabled={isSubmitting}
           style={{
             display: "flex", alignItems: "center", gap: 8,
@@ -1531,7 +1709,8 @@ const NavBar = memo(({
             cursor: isSubmitting ? "not-allowed" : "pointer",
             opacity: isSubmitting ? 0.6 : 1,
             transition: "all .2s", fontFamily: "inherit",
-          }}>
+          }}
+        >
           <ArrowLeft size={16} />
           Back
         </motion.button>
@@ -1547,8 +1726,9 @@ const NavBar = memo(({
               animate={{
                 width: i === currentStep ? 22 : 7,
                 background: i < currentStep ? "#10b981"
-                  : i === currentStep ? "linear-gradient(90deg,#059669,#10b981)"
-                  : "#e5e7eb",
+                  : i === currentStep
+                    ? "linear-gradient(90deg,#059669,#10b981)"
+                    : "#e5e7eb",
               }}
               transition={{ duration: 0.35, ease: "easeOut" }}
               style={{ height: 7, borderRadius: 10 }}
@@ -1591,7 +1771,8 @@ const NavBar = memo(({
           </>
         ) : isReviewStep ? (
           <>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" style={{ flexShrink: 0 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"
+              style={{ flexShrink: 0 }}>
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.44-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
             </svg>
             Submit via WhatsApp
