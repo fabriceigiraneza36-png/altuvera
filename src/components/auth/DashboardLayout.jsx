@@ -4,7 +4,7 @@ import { NavLink, useNavigate, Link } from "react-router-dom";
 import { useUserAuth } from "../../context/UserAuthContext";
 import {
   FiUser, FiCalendar, FiHeart, FiSettings,
-  FiLogOut, FiMenu, FiX, FiBell, FiMessageSquare,
+  FiLogOut, FiMenu, FiX, FiBell,
   FiStar, FiCreditCard, FiBarChart2, FiHome,
   FiCheckSquare,
 } from "react-icons/fi";
@@ -27,7 +27,6 @@ const DashboardLayout = ({ children, title, subtitle }) => {
     { name: "Payments",       path: "/payments",       icon: <FiCreditCard size={18} />  },
     { name: "Wishlist",       path: "/wishlist",       icon: <FiHeart size={18} />       },
     { name: "Notifications",  path: "/notifications",  icon: <FiBell size={18} />        },
-    { name: "Messages",       path: "/messages",       icon: <FiMessageSquare size={18} />},
     { name: "Reviews",        path: "/reviews",        icon: <FiStar size={18} />        },
     { name: "Checklist",      path: "/checklist",      icon: <FiCheckSquare size={18} /> },
     { name: "Analytics",      path: "/analytics",      icon: <FiBarChart2 size={18} />   },

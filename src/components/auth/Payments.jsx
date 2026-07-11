@@ -277,12 +277,6 @@ function PaymentCard({ booking }) {
           >
             <FiArrowRight size={13} /> View Booking
           </Link>
-          <Link
-            to="/messages"
-            className="pay-btn pay-btn-ghost"
-          >
-            💬 Contact Team
-          </Link>
         </div>
       </div>
     </motion.div>

@@ -217,29 +217,29 @@ const HOME_PKG_STYLES = `
 /* ══════════════════════════════════════════
    REDESIGNED TESTIMONIALS
 ══════════════════════════════════════════ */
-.htestimonial-section{padding:clamp(3rem,6vw,5rem) 0;background:#F0FDF4;position:relative;overflow:hidden;}
-.htestimonial-section::before{content:'';position:absolute;top:-6rem;left:-8rem;width:28rem;height:28rem;border-radius:50%;background:radial-gradient(circle,rgba(34,197,94,.08) 0%,transparent 70%);pointer-events:none;}
-.htestimonial-section::after{content:'';position:absolute;bottom:-5rem;right:-6rem;width:22rem;height:22rem;border-radius:50%;background:radial-gradient(circle,rgba(21,128,61,.07) 0%,transparent 70%);pointer-events:none;}
-.htestimonial-header{text-align:center;margin-bottom:clamp(1.75rem,3.5vw,3rem);position:relative;z-index:1;}
-.htestimonial-eyebrow{font-family:'Inter',sans-serif;font-size:.68rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#16a34a;margin-bottom:.85rem;display:block;}
-.htestimonial-title{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.75rem,3.5vw,2.75rem);font-weight:800;color:#14532d;line-height:1.1;margin-bottom:.9rem;}
-.htestimonial-subtitle{font-family:'Inter',sans-serif;font-size:clamp(.9rem,1.4vw,1.05rem);color:#5A7A5A;line-height:1.65;max-width:560px;margin:0 auto;}
-.htestimonial-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem;position:relative;z-index:1;}
+.htestimonial-section{padding:clamp(3.5rem,7vw,6rem) 0;background:linear-gradient(135deg,#065f46 0%,#047857 55%,#059669 100%);position:relative;overflow:hidden;}
+.htestimonial-section::before{content:'';position:absolute;top:-8rem;left:-8rem;width:30rem;height:30rem;border-radius:50%;background:radial-gradient(circle,rgba(167,243,208,.18) 0%,transparent 70%);pointer-events:none;}
+.htestimonial-section::after{content:'';position:absolute;bottom:-7rem;right:-7rem;width:26rem;height:26rem;border-radius:50%;background:radial-gradient(circle,rgba(16,185,129,.22) 0%,transparent 70%);pointer-events:none;}
+.htestimonial-header{text-align:center;margin-bottom:clamp(2rem,3.8vw,3.25rem);position:relative;z-index:1;}
+.htestimonial-eyebrow{font-family:'Inter',sans-serif;font-size:.68rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#a7f3d0;margin-bottom:.85rem;display:block;}
+.htestimonial-title{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.85rem,3.8vw,2.85rem);font-weight:800;color:#ffffff;line-height:1.1;margin-bottom:.9rem;}
+.htestimonial-subtitle{font-family:'Inter',sans-serif;font-size:clamp(.9rem,1.4vw,1.05rem);color:rgba(255,255,255,.85);line-height:1.65;max-width:560px;margin:0 auto;}
+.htestimonial-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.75rem;position:relative;z-index:1;}
 @media(max-width:700px){.htestimonial-grid{grid-template-columns:1fr;}}
-.htestimonial-card{background:#fff;border-radius:1.5rem;padding:2rem;border:1.5px solid #DCFCE7;box-shadow:0 2px 16px rgba(0,0,0,.04);display:flex;flex-direction:column;gap:1.1rem;position:relative;overflow:hidden;transition:transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .35s ease,border-color .25s;}
-.htestimonial-card:hover{transform:translateY(-6px);box-shadow:0 20px 52px rgba(22,163,74,.12);border-color:#BBF7D0;}
-.htestimonial-card-glyph{position:absolute;top:.75rem;right:1.25rem;font-family:'Playfair Display',Georgia,serif;font-size:5rem;line-height:1;color:#DCFCE7;pointer-events:none;user-select:none;}
+.htestimonial-card{background:#fff;border-radius:1.5rem;padding:2rem;border:1.5px solid #e2e8f0;box-shadow:0 18px 44px rgba(0,0,0,.22);display:flex;flex-direction:column;gap:1.1rem;position:relative;overflow:hidden;transition:transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .35s ease,border-color .25s;}
+.htestimonial-card:hover{transform:translateY(-6px);box-shadow:0 30px 70px rgba(0,0,0,.32);border-color:#10b981;}
+.htestimonial-card-glyph{position:absolute;top:.75rem;right:1.25rem;font-family:'Playfair Display',Georgia,serif;font-size:5rem;line-height:1;color:#ecfdf5;pointer-events:none;user-select:none;}
 .htestimonial-stars{display:flex;gap:.25rem;}
 .htestimonial-star{font-size:.85rem;color:#d1d5db;}
 .htestimonial-star.filled{color:#f59e0b;}
-.htestimonial-quote{font-family:'Inter',sans-serif;font-size:.9rem;line-height:1.78;color:#3F5C3F;font-style:italic;flex:1;position:relative;z-index:1;}
-.htestimonial-person{display:flex;align-items:center;gap:.85rem;padding-top:1rem;border-top:1.5px solid #F0FDF4;flex-wrap:wrap;}
-.htestimonial-avatar{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2.5px solid #BBF7D0;flex-shrink:0;}
-.htestimonial-avatar-init{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#15803d,#22c55e);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Inter',sans-serif;font-weight:800;font-size:1.1rem;flex-shrink:0;border:2.5px solid #BBF7D0;}
-.htestimonial-name{font-family:'Inter',sans-serif;font-size:.9rem;font-weight:700;color:#14532d;}
-.htestimonial-meta{font-family:'Inter',sans-serif;font-size:.72rem;color:#7A9E7A;margin-top:.1rem;}
-.htestimonial-trip-badge{margin-left:auto;padding:.3rem .85rem;border-radius:99px;background:#F0FDF4;border:1px solid #BBF7D0;font-family:'Inter',sans-serif;font-size:.65rem;font-weight:700;color:#15803d;letter-spacing:.04em;white-space:nowrap;}
-.htestimonial-skeleton{background:#fff;border-radius:1.5rem;padding:2rem;border:1.5px solid #DCFCE7;animation:htSkeletonPulse 1.6s ease-in-out infinite;}
+.htestimonial-quote{font-family:'Inter',sans-serif;font-size:.92rem;line-height:1.78;color:#334155;font-style:italic;flex:1;position:relative;z-index:1;}
+.htestimonial-person{display:flex;align-items:center;gap:.85rem;padding-top:1rem;border-top:1.5px solid #e2e8f0;flex-wrap:wrap;}
+.htestimonial-avatar{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2.5px solid #10b981;flex-shrink:0;}
+.htestimonial-avatar-init{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#15803d,#22c55e);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Inter',sans-serif;font-weight:800;font-size:1.1rem;flex-shrink:0;border:2.5px solid #10b981;}
+.htestimonial-name{font-family:'Inter',sans-serif;font-size:.92rem;font-weight:700;color:#0f172a;}
+.htestimonial-meta{font-family:'Inter',sans-serif;font-size:.72rem;color:#64748b;margin-top:.1rem;}
+.htestimonial-trip-badge{margin-left:auto;padding:.3rem .85rem;border-radius:99px;background:#ecfdf5;border:1px solid #a7f3d0;font-family:'Inter',sans-serif;font-size:.65rem;font-weight:700;color:#047857;letter-spacing:.04em;white-space:nowrap;}
+.htestimonial-skeleton{background:#fff;border-radius:1.5rem;padding:2rem;border:1.5px solid #e2e8f0;box-shadow:0 18px 44px rgba(0,0,0,.22);animation:htSkeletonPulse 1.6s ease-in-out infinite;}
 @keyframes htSkeletonPulse{0%,100%{opacity:1}50%{opacity:.5}}
 
 /* ══════════════════════════════════════════
@@ -553,7 +553,7 @@ const WHY_CARDS = [
     tags: ["Certified", "Multilingual", "Wildlife Experts"],
     badge: "Top Rated",
     badgeIcon: "⭐",
-    image: "https://i.pinimg.com/736x/f3/8e/5d/f38e5ddcc6677a39515284b5c2c7a2e4.jpg",
+    image: "https://i.pinimg.com/236x/14/f8/7f/14f87f11922888cf40a8ca405d731246.jpg",
     footer: "Guided by Altuvera Pros",
     link: "/team",
     ctaLabel: "Meet the Team",
@@ -566,7 +566,7 @@ const WHY_CARDS = [
     tags: ["Eco-Certified", "Carbon Offset", "Community Impact"],
     badge: "Eco",
     badgeIcon: "🌿",
-    image: "https://i.pinimg.com/1200x/33/7b/76/337b768498fe758d5146b5b0fcbac0ad.jpg",
+    image: "https://i.pinimg.com/1200x/26/6a/37/266a37f7480fef673c3443705f3edcde.jpg",
     footer: "Conservation First",
     link: "/about#mission",
     ctaLabel: "Our Mission",
@@ -579,7 +579,7 @@ const WHY_CARDS = [
     tags: ["Bespoke", "Flexible", "Curated"],
     badge: "Custom",
     badgeIcon: "✦",
-    image: "https://i.pinimg.com/1200x/48/c9/f7/48c9f7d212a4a2933b84ec65c19e4628.jpg",
+    image: "https://i.pinimg.com/1200x/8f/9d/e8/8f9de8dad8e26fc74268e13f37149f92.jpg",
     footer: "Your Journey, Your Rules",
     link: "/packages",
     ctaLabel: "View Packages",
@@ -592,7 +592,7 @@ const WHY_CARDS = [
     tags: ["Cultural", "Authentic", "Immersive"],
     badge: "Unique",
     badgeIcon: "🏛",
-    image: "https://i.pinimg.com/736x/4a/9d/29/4a9d29a741657c485053b0883aa0df29.jpg",
+    image: "https://i.pinimg.com/736x/e1/5b/9e/e15b9ef8fe7dfae13d170068d8d3008e.jpg",
     footer: "Real Connections",
     link: "/destinations",
     ctaLabel: "Explore",
@@ -605,7 +605,7 @@ const WHY_CARDS = [
     tags: ["24/7 Support", "Logistics", "Hassle-Free"],
     badge: "Premium",
     badgeIcon: "💎",
-    image: "https://i.pinimg.com/1200x/f0/33/77/f033774e32b1ba127ac4b4e6900b89af.jpg",
+    image: "https://i.pinimg.com/1200x/19/8d/ab/198dab499b95cff53e2a48a8ba02c673.jpg",
     footer: "Always by Your Side",
     link: "/contact",
     ctaLabel: "Contact Us",
@@ -618,7 +618,7 @@ const WHY_CARDS = [
     tags: ["Award-Winning", "5-Star Rated", "Trusted"],
     badge: "Best in Class",
     badgeIcon: "🏆",
-    image: "https://i.pinimg.com/736x/52/a6/89/52a689bd83f6a3a1c2dd75e822b70f39.jpg",
+    image: "https://i.pinimg.com/736x/08/73/a9/0873a9c33c198ea63293106972294bf0.jpg",
     footer: "Recognised Excellence",
     link: "/about",
     ctaLabel: "Learn More",
@@ -1259,8 +1259,8 @@ const TestimonialCard = ({ slide }) => {
       className="htestimonial-card"
       style={{
         transform: hovered ? "translateY(-6px)" : "none",
-        boxShadow: hovered ? "0 20px 52px rgba(22,163,74,.12)" : "0 2px 16px rgba(0,0,0,.04)",
-        borderColor: hovered ? "#BBF7D0" : "#DCFCE7",
+        boxShadow: hovered ? "0 30px 70px rgba(0,0,0,.32)" : "0 18px 44px rgba(0,0,0,.22)",
+        borderColor: hovered ? "#10b981" : "#e2e8f0",
       }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -1332,8 +1332,8 @@ const TestimonialSection = () => {
             ))}
           </div>
         ) : slides.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "3rem 1rem", color: "#7A9E7A", fontFamily: "'Inter',sans-serif" }}>
-            <p style={{ fontWeight: 600, color: "#14532d" }}>No reviews yet</p>
+          <div style={{ textAlign: "center", padding: "3rem 1rem", color: "rgba(255,255,255,.85)", fontFamily: "'Inter',sans-serif" }}>
+            <p style={{ fontWeight: 600, color: "#ffffff" }}>No reviews yet</p>
             <p style={{ fontSize: ".88rem" }}>Be the first to share your experience!</p>
           </div>
         ) : (
@@ -1628,7 +1628,7 @@ const Home = () => {
       description: "Rwanda offers one of Africa's most exclusive wildlife experiences. Trek through the misty forests of Volcanoes National Park to meet endangered mountain gorillas.",
       bullets: ["World-famous mountain gorilla trekking", "Nyungwe Forest canopy walk & chimpanzee tracking", "Big Five safaris in Akagera National Park", "Luxury eco-lodges with expert local guides"],
       ctaLabel: "Explore Rwanda", link: "/country/rwanda",
-      images: ["https://i.pinimg.com/1200x/5d/1a/90/5d1a90a3a3f9ad6bcddf570344ff2fc4.jpg", "https://i.pinimg.com/1200x/73/f0/ee/73f0ee6d0c2fab1906c16ce20c251f56.jpg", "https://i.pinimg.com/736x/1b/b0/93/1bb093429a44a95a21befac22cb424ad.jpg"],
+      images: ["https://i.pinimg.com/1200x/5d/1a/90/5d1a90a3a3f9ad6bcddf570344ff2fc4.jpg", "https://i.pinimg.com/1200x/73/f0/ee/73f0ee6d0c2fab1906c16ce20c251f56.jpg", "https://i.pinimg.com/736x/46/fe/c8/46fec850388090f1f6bbdd4246b9a049.jpg]"],
     },
     {
       title: "Witness the Great Migration & Conquer Africa's Highest Peak",
@@ -1642,7 +1642,7 @@ const Home = () => {
       description: "Kenya combines iconic wildlife encounters with spectacular landscapes and pristine Indian Ocean beaches.",
       bullets: ["Maasai Mara Great Migration safaris", "Amboseli elephant encounters with Kilimanjaro views", "Sunrise hot-air balloon adventures", "Diani Beach & Swahili coastal experiences"],
       ctaLabel: "Explore Kenya", link: "/country/kenya",
-      images: ["https://i.pinimg.com/1200x/f1/39/4e/f1394ec9513f84684ccdb41fea97d4f9.jpg","https://i.pinimg.com/1200x/0f/c4/6f/0fc46fc0a5e286b126ab6e78697c5e5f.jpg", "https://i.pinimg.com/736x/cc/5f/49/cc5f496af04db30b07c3559d5a708cb7.jpg"],
+      images: ["https://i.pinimg.com/1200x/82/1c/3c/821c3c64c9ef926ad79900314de0ea9b.jpg","https://i.pinimg.com/1200x/0f/c4/6f/0fc46fc0a5e286b126ab6e78697c5e5f.jpg", "https://i.pinimg.com/736x/cc/5f/49/cc5f496af04db30b07c3559d5a708cb7.jpg"],
     },
   ], []);
 

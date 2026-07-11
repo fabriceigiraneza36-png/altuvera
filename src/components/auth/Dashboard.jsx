@@ -298,13 +298,6 @@ const QUICK_ACTIONS = [
     to: "/checklist",
   },
   {
-    label: "Messages",
-    desc: "Chat with support",
-    icon: "💬",
-    bg: "#f0f9ff", color: "#0891b2",
-    to: "/messages",
-  },
-  {
     label: "Wishlist",
     desc: "Your saved destinations",
     icon: "❤️",
