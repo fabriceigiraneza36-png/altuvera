@@ -820,65 +820,7 @@ const AboutTeamCard = ({ member }) => {
 };
 
 /* ═══════════════════════════════════════════════════════
-   VALUE CARD
-   ═══════════════════════════════════════════════════════ */
-const ValueCard = ({ icon: Icon, title, description, details, index }) => {
-  const [expanded, setExpanded] = useState(false);
-  return (
-    <FadeInSection delay={index * 0.1}>
-      <div className="about-value-card" style={{ padding: 'clamp(24px,4vw,48px)', height: '100%' }}>
-        <div className="about-value-bar" />
-        <div
-          className="about-value-icon"
-          style={{
-            width: 64, height: 64, borderRadius: 16,
-            background: 'linear-gradient(135deg,#ECFDF5,#D1FAE5)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: 24, transition: 'background 0.4s ease',
-          }}
-        >
-          <Icon size={28} style={{ color: '#059669', transition: 'color 0.4s ease' }} />
-        </div>
-        <h3 style={{
-          fontSize: 'clamp(20px,2.2vw,24px)', fontWeight: 700, marginBottom: 16,
-          color: '#0f172a', fontFamily: "'Playfair Display', serif",
-        }}>{title}</h3>
-        <p style={{ color: '#64748b', lineHeight: 1.8, fontSize: 'clamp(14px,1.1vw,15px)', marginBottom: 16 }}>
-          {description}
-        </p>
-        <AnimatePresence>
-          {expanded && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              <p style={{
-                color: '#64748b', lineHeight: 1.8, fontSize: 14,
-                paddingTop: 12, borderTop: '1px solid rgba(5,150,105,0.1)',
-              }}>{details}</p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        <button
-          onClick={() => setExpanded(v => !v)}
-          style={{
-            background: 'none', border: 'none', color: '#059669',
-            fontSize: 14, fontWeight: 600, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 6, padding: 0, marginTop: 8,
-          }}
-        >
-          {expanded ? 'Read Less' : 'Read More'}
-          <motion.span animate={{ rotate: expanded ? 180 : 0 }} transition={{ duration: 0.3 }}>↓</motion.span>
-        </button>
-      </div>
-    </FadeInSection>
-  );
-};
-
-/* ═══════════════════════════════════════════════════════
-   STAT CARD
+    STAT CARD
    ═══════════════════════════════════════════════════════ */
 const AboutStatCard = ({ value, suffix, label, description, icon: Icon }) => (
   <FadeInSection>
@@ -1029,39 +971,6 @@ const About = () => {
     { id: 3, title: 'Lake Victoria', subtitle: "Africa's largest lake", videoId: 'xdFYFB3vyoo', poster: 'https://i.ytimg.com/vi/xdFYFB3vyoo/hqdefault.jpg' },
   ];
 
-  const values = [
-    {
-      icon: LuHeart, title: 'Authentic Passion',
-      description: "We don't just guide tours—we share a lifetime of deep, genuine love for the African soil, its magnificent wildlife, and the rich tapestry of cultures.",
-      details: "Our passion extends beyond professional duty. Many of our team members have dedicated their entire lives to understanding and protecting Africa's ecosystems.",
-    },
-    {
-      icon: LuShieldCheck, title: 'Unwavering Integrity',
-      description: 'Complete transparency defines every interaction. From honest pricing with no hidden fees to respecting sacred traditions and honoring commitments.',
-      details: "Every quote is comprehensive. Every expectation is realistic. When we say something is included, it's included.",
-    },
-    {
-      icon: LuGlobe, title: 'Environmental Stewardship',
-      description: "Pioneering low-impact travel that goes beyond sustainability—we actively restore vulnerable ecosystems and contribute to conservation efforts.",
-      details: "Since 2026, we've operated as a plastic-free company. We offset 150% of our carbon emissions.",
-    },
-    {
-      icon: LuZap, title: 'Transformative Moments',
-      description: "We specialize in creating those rare, unplannable encounters that transform a journey into a life-changing experience.",
-      details: 'Our guides know where the leopards rest. They understand the migration patterns.',
-    },
-    {
-      icon: LuUsers, title: 'Community Partnership',
-      description: 'Our success is measured by the positive impact we create in local communities. We employ local talent and support indigenous businesses.',
-      details: "Over 90% of our staff come from local communities. We've funded schools and medical clinics.",
-    },
-    {
-      icon: LuCompass, title: 'Expert Guidance',
-      description: "Our team combines generations of local knowledge with professional expertise. We don't just show you Africa—we help you understand its rhythms.",
-      details: 'Every Altuvera guide undergoes a minimum of 18 months of training.',
-    },
-  ];
-
   /* ── Skeleton helpers ── */
   const TeamSkeletons = () => (
     <div className="about-team-grid">
@@ -1142,7 +1051,7 @@ const About = () => {
       {/* ══════════════════════════════════════════
           INTRODUCTION
           ══════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(28px,6vw,64px) 24px', background: 'linear-gradient(180deg,#fff 0%,#FAFFFE 100%)' }}>
+      <section style={{ padding: 'clamp(20px,4vw,40px) 24px', background: 'linear-gradient(180deg,#fff 0%,#FAFFFE 100%)' }}>
         <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
           <FadeInSection>
             <LabelPill icon={LuSparkles} text="Our Story" />
@@ -1186,9 +1095,9 @@ const About = () => {
       {/* ══════════════════════════════════════════
           VIDEO SECTION — autoplay iframe cards
           ══════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(28px,6vw,64px) 24px', background: '#fff' }}>
+      <section style={{ padding: 'clamp(20px,4vw,40px) 24px', background: '#fff' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 'clamp(28px,4vw,44px)' }}>
+          <div style={{ textAlign: 'center', marginBottom: 'clamp(22px,3vw,36px)' }}>
             <FadeInSection>
               <h2 style={S.h2}>Experience Altuvera <span style={{ color: '#059669' }}>Through Film</span></h2>
               <p style={{ ...S.p, maxWidth: 650, margin: '0 auto' }}>
@@ -1230,7 +1139,7 @@ const About = () => {
       {/* ══════════════════════════════════════════
           PHILOSOPHY
           ══════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(24px,5vw,56px) 24px', background: '#F0FDF4', overflow: 'hidden' }}>
+      <section style={{ padding: 'clamp(18px,3.5vw,38px) 24px', background: '#F0FDF4', overflow: 'hidden' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto' }}>
           <div style={{
             display: 'grid',
@@ -1296,7 +1205,7 @@ const About = () => {
       {/* ══════════════════════════════════════════
           FOUNDER'S STORY
           ══════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(24px,5vw,56px) 24px', background: '#fff' }}>
+      <section style={{ padding: 'clamp(18px,3.5vw,38px) 24px', background: '#fff' }}>
         <div style={{ maxWidth: 1000, margin: '0 auto' }}>
           <FadeInSection>
             <div style={{ textAlign: 'center', marginBottom: 48 }}>
@@ -1325,7 +1234,7 @@ const About = () => {
       {/* ══════════════════════════════════════════
           GALLERY — backend-fetched, max 20
           ══════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(28px,6vw,64px) 24px', background: '#F0FDF4' }}>
+      <section style={{ padding: 'clamp(20px,4vw,40px) 24px', background: '#F0FDF4' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 'clamp(28px,4vw,44px)' }}>
             <FadeInSection>
@@ -1379,33 +1288,11 @@ const About = () => {
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
-          VALUES
-          ══════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(24px,5vw,56px) 24px', background: '#fff' }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 'clamp(32px,5vw,56px)' }}>
-            <FadeInSection>
-              <h2 style={S.h2}>The Principles <span style={{ color: '#059669' }}>Fabrice Designed</span></h2>
-              <p style={{ ...S.p, maxWidth: 750, margin: '0 auto' }}>
-                IGIRANEZA Fabrice established these six principles as the foundation of Altuvera.
-              </p>
-            </FadeInSection>
-          </div>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,350px),1fr))',
-            gap: 'clamp(20px,2.5vw,28px)',
-          }}>
-            {values.map((v, i) => <ValueCard key={i} {...v} index={i} />)}
-          </div>
-        </div>
-      </section>
 
       {/* ══════════════════════════════════════════
           QUOTE
           ══════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(24px,5vw,56px) 24px', background: '#FAFFFE' }}>
+      <section style={{ padding: 'clamp(18px,3.5vw,38px) 24px', background: '#FAFFFE' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <QuoteBlock
             quote="I designed Altuvera to prove that travel can be more than tourism. It can be a force for transformation—changing travelers, empowering communities, and protecting the wild places that make Africa extraordinary."
@@ -1419,7 +1306,7 @@ const About = () => {
       {/* ══════════════════════════════════════════
           TEAM — backend-fetched
           ══════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(32px,7vw,72px) 24px', background: '#fff' }}>
+      <section style={{ padding: 'clamp(22px,5vw,52px) 24px', background: '#fff' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 'clamp(32px,5vw,56px)' }}>
             <FadeInSection>
@@ -1446,7 +1333,7 @@ const About = () => {
       {/* ══════════════════════════════════════════
           MISSION & VISION
           ══════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(24px,5vw,56px) 24px', background: '#fff' }}>
+      <section id="mission" style={{ padding: 'clamp(18px,3.5vw,38px) 24px', background: '#fff' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{
             display: 'grid',
@@ -1498,7 +1385,7 @@ const About = () => {
           CTA  (reduced height)
           ══════════════════════════════════════════ */}
       <section style={{
-        padding: 'clamp(40px,6vw,72px) 24px',
+        padding: 'clamp(28px,4vw,52px) 24px',
         background: 'linear-gradient(135deg,#059669,#047857)',
         position: 'relative', overflow: 'hidden',
       }}>

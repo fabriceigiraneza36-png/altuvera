@@ -6,12 +6,30 @@ import { FiArrowUp } from "react-icons/fi";
 const ScrollToTop = () => {
   const [isVisible, setIsVisible]         = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const { pathname } = useLocation();
+  const { pathname, hash } = useLocation();
 
-  /* ── Scroll to top on route change ─────────────────────── */
+  /* ── Scroll to top (or to hash target) on route change ── */
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" });
-  }, [pathname]);
+    if (hash) {
+      const id = hash.slice(1);
+      const scrollToTarget = () => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+          return true;
+        }
+        return false;
+      };
+      if (!scrollToTarget()) {
+        const t = setInterval(() => {
+          if (scrollToTarget()) clearInterval(t);
+        }, 100);
+        setTimeout(() => clearInterval(t), 2000);
+      }
+    } else {
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }
+  }, [pathname, hash]);
 
   /* ── Track scroll position & progress ──────────────────── */
   useEffect(() => {

@@ -264,6 +264,8 @@ const HOME_PKG_STYLES = `
   flex-direction: column;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
+  text-decoration: none;
+  color: inherit;
 }
 .why-card:hover {
   transform: translateY(-12px);
@@ -553,7 +555,7 @@ const WHY_CARDS = [
     badgeIcon: "⭐",
     image: "https://i.pinimg.com/736x/f3/8e/5d/f38e5ddcc6677a39515284b5c2c7a2e4.jpg",
     footer: "Guided by Altuvera Pros",
-    link: "/about",
+    link: "/team",
     ctaLabel: "Meet the Team",
     iconType: "compass",
   },
@@ -566,7 +568,7 @@ const WHY_CARDS = [
     badgeIcon: "🌿",
     image: "https://i.pinimg.com/1200x/33/7b/76/337b768498fe758d5146b5b0fcbac0ad.jpg",
     footer: "Conservation First",
-    link: "/about",
+    link: "/about#mission",
     ctaLabel: "Our Mission",
     iconType: "leaf",
   },
@@ -1125,11 +1127,13 @@ const WhyCard = ({ card, index }) => {
   const [imgError, setImgError] = useState(false);
 
   return (
-    <div
+    <Link
+      to={card.link}
       className="why-card mixed-card-reveal"
       style={{ animationDelay: `${index * 80}ms` }}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      aria-label={card.ctaLabel}
     >
       {/* Image / Icon top area */}
       <div className="why-card-img-wrap">
@@ -1174,15 +1178,15 @@ const WhyCard = ({ card, index }) => {
           </div>
           <span style={{ fontWeight: 600, fontSize: ".75rem" }}>{card.footer}</span>
         </div>
-        <Link to={card.link} className="why-card-cta">
+        <span className="why-card-cta">
           {card.ctaLabel}
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="5" y1="12" x2="19" y2="12"/>
             <polyline points="12 5 19 12 12 19"/>
           </svg>
-        </Link>
+        </span>
       </div>
-    </div>
+    </Link>
   );
 };
 
