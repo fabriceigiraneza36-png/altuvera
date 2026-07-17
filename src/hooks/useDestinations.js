@@ -110,7 +110,7 @@ export function useNewDestinations(limit = 8) {
 }
 
 export function useCountryDestinations(countryId) {
-  const result       = useFetch(`/countries/${countryId}/destinations`, !!countryId);
+  const result       = useFetch(`/destinations?country_id=${countryId}`, !!countryId);
   const destinations = useMemo(
     () => adaptDestinationList(Array.isArray(result.data) ? result.data : []),
     [result.data]
