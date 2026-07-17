@@ -1,13 +1,10 @@
 /**
- * useBookingWizard — v3.0
- * FIXES:
- *  - Step validation cases realigned to match 4-step UI (0=Trip, 1=Travelers, 2=Contact, 3=Review)
- *  - Preferences step (old step 2) merged into Travelers step
- *  - All formData values normalized to plain strings/primitives — never objects
- *  - handleChange guards against React-Select {value,label} objects being stored
- *  - setFormData wrapper normalizes incoming values defensively
- *  - fetchJSON paths unchanged
- *  - All other logic unchanged from v2.3
+ * useBookingWizard — v4.0
+ * ✅ normalizeFieldValue preserves booleans, arrays, numbers
+ * ✅ isFlexible stays boolean (was being stringified to "false"/"true")
+ * ✅ destination country normalized to string at fetch time
+ * ✅ All icon fields guaranteed plain strings
+ * ✅ setFormData wrapper is stable and safe
  */
 
 import {
@@ -22,9 +19,9 @@ import { createBooking, ApiError } from "../api/bookingApi";
 import { STEPS } from "../pages/Booking/BookingShared";
 import { toAbsoluteApiUrl } from "../utils/apiBase";
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Safe Redux hook
-// ─────────────────────────────────────────────────────────────────────────────
+/* ─────────────────────────────────────────────────────────────────────────────
+   Safe Redux hook
+───────────────────────────────────────────────────────────────────────────── */
 const useSafeReduxAuth = () => {
   const reduxCtx = useContext(ReactReduxContext);
 
@@ -43,7 +40,7 @@ const useSafeReduxAuth = () => {
 
   useEffect(() => {
     if (!reduxCtx) return;
-    const unsubscribe = reduxCtx.store.subscribe(() => {
+    const unsub = reduxCtx.store.subscribe(() => {
       try {
         const { auth = {} } = reduxCtx.store.getState();
         setAuthState({
@@ -52,15 +49,15 @@ const useSafeReduxAuth = () => {
         });
       } catch { /* store torn down */ }
     });
-    return unsubscribe;
+    return unsub;
   }, [reduxCtx]);
 
   return authState;
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// fetchJSON
-// ─────────────────────────────────────────────────────────────────────────────
+/* ─────────────────────────────────────────────────────────────────────────────
+   fetchJSON
+───────────────────────────────────────────────────────────────────────────── */
 const fetchJSON = async (path, signal) => {
   const url = toAbsoluteApiUrl(path);
   const res = await fetch(url, { signal });
@@ -68,49 +65,75 @@ const fetchJSON = async (path, signal) => {
   return res.json();
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// ✅ CORE FIX — normalize any value before storing in formData
-// Prevents {value, label} objects from React-Select or anywhere else
-// from being stored as form field values
-// ─────────────────────────────────────────────────────────────────────────────
+/* ─────────────────────────────────────────────────────────────────────────────
+   ✅ FIXED normalizeFieldValue
+   Rules:
+     • null / undefined  → ""
+     • boolean           → kept as boolean  (isFlexible, agreeToTerms …)
+     • number            → kept as number   (adults, children, infants)
+     • array             → kept as array    (interests, flexibleMonths)
+     • plain string      → kept as string
+     • {value, label}    → extract .value as string
+     • other object      → ""
+───────────────────────────────────────────────────────────────────────────── */
 const normalizeFieldValue = (value) => {
   if (value === null || value === undefined) return "";
-  // React-Select / custom select passes {value, label} objects
-  if (typeof value === "object" && !Array.isArray(value)) {
-    // If it has a .value property, extract just that
+  if (typeof value === "boolean") return value;          // ✅ preserve booleans
+  if (typeof value === "number")  return value;          // ✅ preserve numbers
+  if (Array.isArray(value))       return value;          // ✅ preserve arrays
+  if (typeof value === "string")  return value;
+  if (typeof value === "object") {
+    // React-Select / custom picker option object
     if ("value" in value) return String(value.value ?? "");
-    // Otherwise stringify safely
     return "";
   }
-  // Arrays are fine (interests, flexibleMonths)
-  if (Array.isArray(value)) return value;
-  // Booleans, numbers, strings — pass through
-  return value;
+  return String(value);
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-// INITIAL FORM — all camelCase, all plain primitives
-// ─────────────────────────────────────────────────────────────────────────────
+/* ─────────────────────────────────────────────────────────────────────────────
+   Safe string coercion for country field on destinations
+   API sometimes returns country as an object {id, name, …}
+───────────────────────────────────────────────────────────────────────────── */
+const safeCountryName = (raw) => {
+  if (!raw) return "";
+  if (typeof raw === "string") return raw;
+  if (typeof raw === "object") return raw.name ?? raw.label ?? raw.title ?? "";
+  return String(raw);
+};
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Safe icon string
+   Ensures icon fields are never objects
+───────────────────────────────────────────────────────────────────────────── */
+const safeIcon = (raw) => {
+  if (!raw) return "";
+  if (typeof raw === "string") return raw;
+  return "";  // drop non-string icons silently
+};
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   INITIAL FORM — all plain primitives
+───────────────────────────────────────────────────────────────────────────── */
 const INITIAL_FORM = {
-  // Step 0 — Trip
+  // Step 0
   destinationId:  "",
   countryId:      "",
   categoryId:     "",
   startDate:      "",
   endDate:        "",
-  isFlexible:     false,
-  flexibleMonths: [],
+  isFlexible:     false,   // boolean
+  flexibleMonths: [],      // array of strings
 
-  // Step 1 — Travelers
-  adults:               1,
-  children:             0,
-  infants:              0,
+  // Step 1
+  adults:               1,   // number
+  children:             0,   // number
+  infants:              0,   // number
   groupType:            "",
   accommodationType:    "",
   accommodation:        "",
   budgetRange:          "",
 
-  // Step 2 — Contact
+  // Step 2
   firstName:              "",
   lastName:               "",
   email:                  "",
@@ -118,9 +141,9 @@ const INITIAL_FORM = {
   whatsapp:               "",
   nationality:            "",
   country:                "",
-  agreeToTerms:           false,
-  subscribeNewsletter:    false,
-  newsletterOptIn:        false,
+  agreeToTerms:           false,   // boolean
+  subscribeNewsletter:    false,   // boolean
+  newsletterOptIn:        false,   // boolean
   hearAboutUs:            "",
   preferredContactMethod: "",
   preferredContactTime:   "",
@@ -128,32 +151,17 @@ const INITIAL_FORM = {
   marketingSource:        "",
   specialRequests:        "",
   dietaryRequirements:    "",
-  hasMedicalConditions:   false,
+  hasMedicalConditions:   false,   // boolean
   medicalDetails:         "",
-  interests:              [],
+  interests:              [],      // array
   source:                 "website",
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────────────────────
-const sanitizePayload = (obj) =>
-  Object.fromEntries(
-    Object.entries(obj).filter(([, v]) => v !== "" && v !== null && v !== undefined)
-  );
-
-const buildFieldErrors = (err) => {
-  if (err instanceof ApiError && typeof err.toFieldErrors === "function") {
-    return err.toFieldErrors();
-  }
-  return { general: err?.message || "Unknown error" };
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Static option sets
-// ─────────────────────────────────────────────────────────────────────────────
+/* ─────────────────────────────────────────────────────────────────────────────
+   Static option sets — icon fields are plain emoji strings
+───────────────────────────────────────────────────────────────────────────── */
 const GROUP_TYPES = [
   { value: "solo",      label: "Solo",      icon: "🧍" },
   { value: "couple",    label: "Couple",    icon: "👫" },
@@ -183,13 +191,27 @@ const INTERESTS = [
   { value: "food",        label: "Food & Cuisine",     icon: "🍽️" },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Hook
-// ─────────────────────────────────────────────────────────────────────────────
+/* ─────────────────────────────────────────────────────────────────────────────
+   Helpers
+───────────────────────────────────────────────────────────────────────────── */
+const sanitizePayload = (obj) =>
+  Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== "" && v !== null && v !== undefined),
+  );
+
+const buildFieldErrors = (err) => {
+  if (err instanceof ApiError && typeof err.toFieldErrors === "function")
+    return err.toFieldErrors();
+  return { general: err?.message || "Unknown error" };
+};
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Hook
+───────────────────────────────────────────────────────────────────────────── */
 export const useBookingWizard = () => {
   const { user, isAuthenticated } = useSafeReduxAuth();
 
-  // ── UI state ──────────────────────────────────────────────────────────
+  /* UI state */
   const [currentStep,    setCurrentStep]    = useState(0);
   const [isAnimating,    setIsAnimating]    = useState(false);
   const [isSubmitting,   setIsSubmitting]   = useState(false);
@@ -198,17 +220,19 @@ export const useBookingWizard = () => {
   const [submissionRef,  setSubmissionRef]  = useState(null);
   const [showModal,      setShowModal]      = useState(false);
 
-  // ── Form state ────────────────────────────────────────────────────────
+  /* Form state */
   const [formData, setFormDataRaw] = useState(INITIAL_FORM);
   const [errors,   setErrors]      = useState({});
   const [touched,  setTouched]     = useState({});
 
-  // ✅ Wrap setFormData so every update normalizes values
-  // This prevents {value,label} objects from ever being stored
+  /**
+   * ✅ Stable setFormData wrapper
+   * Normalizes every field on every update.
+   * Booleans, numbers, and arrays are preserved correctly.
+   */
   const setFormData = useCallback((updater) => {
     setFormDataRaw((prev) => {
-      const next = typeof updater === "function" ? updater(prev) : updater;
-      // Normalize every field in the new state
+      const next = typeof updater === "function" ? updater(prev) : { ...updater };
       const normalized = {};
       for (const [key, val] of Object.entries(next)) {
         normalized[key] = normalizeFieldValue(val);
@@ -217,20 +241,19 @@ export const useBookingWizard = () => {
     });
   }, []);
 
-  // ── Reference data ────────────────────────────────────────────────────
+  /* Reference data */
   const [categoriesList,   setCategoriesList]   = useState([]);
   const [destinationsList, setDestinationsList] = useState([]);
   const [countriesList,    setCountriesList]    = useState([]);
   const [servicesData,     setServicesData]     = useState([]);
-
   const [pendingBookingId, setPendingBookingId] = useState(null);
   const [prefilledFields,  setPrefilledFields]  = useState({});
 
-  // ── Submission error ──────────────────────────────────────────────────
+  /* Submission error */
   const [submitError,      setSubmitError]      = useState(null);
   const [submitRetryCount, setSubmitRetryCount] = useState(0);
 
-  // ── Guards ────────────────────────────────────────────────────────────
+  /* Guards */
   const navigatingRef = useRef(false);
   const mountedRef    = useRef(true);
   useEffect(() => {
@@ -238,7 +261,7 @@ export const useBookingWizard = () => {
     return () => { mountedRef.current = false; };
   }, []);
 
-  // ── Prefill from authenticated user ──────────────────────────────────
+  /* ── Prefill from authenticated user ── */
   useEffect(() => {
     if (!user) return;
     const sources = {
@@ -260,14 +283,12 @@ export const useBookingWizard = () => {
           changed = true;
         }
       }
-      if (changed) {
-        setPrefilledFields((pf) => ({ ...pf, ...filled }));
-      }
+      if (changed) setPrefilledFields((pf) => ({ ...pf, ...filled }));
       return next;
     });
   }, [user, setFormData]);
 
-  // ── Load reference data ───────────────────────────────────────────────
+  /* ── Load reference data ── */
   useEffect(() => {
     const controller = new AbortController();
     const { signal } = controller;
@@ -283,49 +304,47 @@ export const useBookingWizard = () => {
 
       if (!mountedRef.current) return;
 
-      // Countries
+      /* Countries */
       if (countriesResult.status === "fulfilled") {
         const raw = countriesResult.value?.data ?? countriesResult.value ?? [];
         setCountriesList(
           (Array.isArray(raw) ? raw : []).map((c) => ({
             value:  String(c.id    ?? c.value ?? c.code ?? ""),
-            label:  c.name  ?? c.label ?? "",
-            flag:   c.flag  ?? "",
-            region: c.region ?? c.continent ?? "",
-          }))
+            label:  String(c.name  ?? c.label ?? ""),
+            flag:   safeIcon(c.flag),
+            region: String(c.region ?? c.continent ?? ""),
+          })),
         );
       } else {
         console.warn("[BookingWizard] Countries failed:", countriesResult.reason?.message);
       }
 
-      // Destinations
+      /* Destinations — ✅ country always normalized to string */
       if (destResult.status === "fulfilled") {
         const raw = destResult.value?.data ?? destResult.value ?? [];
         setDestinationsList(
           (Array.isArray(raw) ? raw : []).map((d) => ({
-            value:     String(d.id ?? d.value ?? ""),
-            label:     d.name  ?? d.label ?? "",
-            slug:      String(d.slug ?? d.slug_url ?? d.value ?? ""),
-            country:   typeof d.country === "object"
-              ? (d.country?.name ?? d.countryName ?? "")
-              : (d.country ?? ""),
+            value:     String(d.id    ?? d.value ?? ""),
+            label:     String(d.name  ?? d.label ?? ""),
+            slug:      String(d.slug  ?? d.slug_url ?? d.value ?? ""),
+            country:   safeCountryName(d.country ?? d.countryName),  // ✅ always string
             countryId: String(d.country_id ?? ""),
-            image:     d.image ?? d.thumbnail ?? d.imageUrl ?? "",
+            image:     String(d.image ?? d.thumbnail ?? d.imageUrl ?? ""),
             rating:    d.rating ?? null,
-            duration:  d.duration ?? "",
-          }))
+            duration:  String(d.duration ?? ""),
+          })),
         );
       } else if (!signal.aborted) {
         console.warn("[BookingWizard] Destinations failed:", destResult.reason?.message);
       }
 
-      // Services + derive categories
+      /* Services + categories */
       if (svcResult.status === "fulfilled") {
         const raw  = svcResult.value?.data ?? svcResult.value ?? [];
         const svcs = Array.isArray(raw) ? raw : [];
         setServicesData(svcs);
         const cats = [...new Set(svcs.map((s) => s.category).filter(Boolean))];
-        setCategoriesList(cats.map((c) => ({ value: c, label: c })));
+        setCategoriesList(cats.map((c) => ({ value: String(c), label: String(c) })));
       } else if (!signal.aborted) {
         console.warn("[BookingWizard] Services failed:", svcResult.reason?.message);
       }
@@ -337,7 +356,7 @@ export const useBookingWizard = () => {
     return () => controller.abort();
   }, []);
 
-  // ── Computed values ───────────────────────────────────────────────────
+  /* ── Computed values ── */
   const displayName =
     [formData.firstName, formData.lastName].filter(Boolean).join(" ") ||
     user?.full_name || user?.name || user?.email || "Traveler";
@@ -346,47 +365,49 @@ export const useBookingWizard = () => {
     if (!formData.startDate || !formData.endDate) return null;
     const start = new Date(formData.startDate);
     const end   = new Date(formData.endDate);
-    if (isNaN(start) || isNaN(end) || end <= start) return null;
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || end <= start) return null;
     return Math.ceil((end - start) / 86_400_000);
   }, [formData.startDate, formData.endDate]);
 
   const getTotalVisitors = useCallback(() => {
-    const adults   = Math.max(0, parseInt(formData.adults,   10) || 0);
-    const children = Math.max(0, parseInt(formData.children, 10) || 0);
-    const infants  = Math.max(0, parseInt(formData.infants,  10) || 0);
-    return Math.max(1, adults + children + infants);
+    const a = Math.max(0, parseInt(formData.adults,   10) || 0);
+    const c = Math.max(0, parseInt(formData.children, 10) || 0);
+    const i = Math.max(0, parseInt(formData.infants,  10) || 0);
+    return Math.max(1, a + c + i);
   }, [formData.adults, formData.children, formData.infants]);
 
   const getDestinationName = useCallback(
     (id) =>
       destinationsList.find(
-        (d) => String(d.value) === String(id ?? formData.destinationId)
+        (d) => String(d.value) === String(id ?? formData.destinationId),
       )?.label ?? String(id ?? formData.destinationId ?? ""),
-    [destinationsList, formData.destinationId]
+    [destinationsList, formData.destinationId],
   );
 
-  // ── Field change ──────────────────────────────────────────────────────
-  // ✅ Guards against React-Select calling onChange with {value, label} object
+  /* ── handleChange ── */
   const handleChange = useCallback((e) => {
-    // React-Select and custom pickers may pass the option object directly
-    // instead of a DOM event — detect and handle both cases
-    if (e && typeof e === "object" && !e.target && "value" in e && "label" in e) {
-      // This is a React-Select option object — should not happen with native
-      // selects but guard defensively. We cannot know the field name here,
-      // so just ignore silently (caller should use setFormData directly).
-      console.warn("[BookingWizard] handleChange received a raw option object — use setFormData instead.", e);
+    // Guard against React-Select passing raw option object
+    if (
+      e &&
+      typeof e === "object" &&
+      !e.target &&
+      "value" in e &&
+      "label" in e
+    ) {
+      console.warn(
+        "[BookingWizard] handleChange received option object — use setFormData directly.",
+        e,
+      );
       return;
     }
 
-    const target     = e?.target ?? e;
-    const fieldName  = target?.name  ?? "";
-    const rawValue   = target?.type === "checkbox"
-      ? target.checked
-      : (target?.value ?? "");
+    const target    = e?.target ?? e;
+    const fieldName = target?.name ?? "";
+    const rawValue  =
+      target?.type === "checkbox" ? target.checked : (target?.value ?? "");
 
-    // ✅ Normalize before storing — strips any accidental {value,label} objects
+    // ✅ normalizeFieldValue preserves booleans from checkboxes
     const fieldValue = normalizeFieldValue(rawValue);
-
     if (!fieldName) return;
 
     setFormData((prev) => ({ ...prev, [fieldName]: fieldValue }));
@@ -397,18 +418,20 @@ export const useBookingWizard = () => {
     });
   }, [setFormData]);
 
-  // ── Field blur ────────────────────────────────────────────────────────
+  /* ── handleBlur ── */
   const handleBlur = useCallback((e) => {
     const name = e?.target?.name ?? (typeof e === "string" ? e : "");
     if (name) setTouched((prev) => ({ ...prev, [name]: true }));
   }, []);
 
-  // ── Interest toggle ───────────────────────────────────────────────────
+  /* ── handleInterestToggle ── */
   const handleInterestToggle = useCallback((interestValue) => {
-    // Normalize the interest value in case an object was passed
-    const val = typeof interestValue === "object" && interestValue !== null
-      ? (interestValue.value ?? String(interestValue))
-      : interestValue;
+    const val =
+      typeof interestValue === "object" && interestValue !== null
+        ? (interestValue.value ?? String(interestValue))
+        : String(interestValue ?? "");
+
+    if (!val) return;
 
     setFormData((prev) => {
       const cur = Array.isArray(prev.interests) ? prev.interests : [];
@@ -421,19 +444,14 @@ export const useBookingWizard = () => {
     });
   }, [setFormData]);
 
-  // ── Step validation ───────────────────────────────────────────────────
-  // ✅ FIXED: 4 steps (0=Trip, 1=Travelers, 2=Contact, 3=Review)
-  // Old code had 5 cases (0-4) — contact was at case 4 which never ran
+  /* ── Step validation ── */
   const validateStep = useCallback(
     (step) => {
       const errs = {};
-
       switch (step) {
-        // ── Step 0: Trip Details ──────────────────────────────────────
         case 0:
-          if (!formData.countryId && !formData.destinationId) {
+          if (!formData.countryId && !formData.destinationId)
             errs.countryId = "Please select a country or destination.";
-          }
           if (!formData.isFlexible) {
             if (!formData.startDate)
               errs.startDate = "Please choose a departure date.";
@@ -442,17 +460,12 @@ export const useBookingWizard = () => {
               errs.flexibleMonths = "Please select at least one preferred month.";
           }
           break;
-
-        // ── Step 1: Travelers ─────────────────────────────────────────
         case 1:
           if (!formData.adults || parseInt(formData.adults, 10) < 1)
             errs.adults = "At least 1 adult is required.";
           if (!formData.groupType)
             errs.groupType = "Please select your group type.";
           break;
-
-        // ── Step 2: Contact Info ──────────────────────────────────────
-        // ✅ FIXED: was case 4 (unreachable) — now correctly case 2
         case 2:
           if (!formData.firstName?.trim())
             errs.firstName = "First name is required.";
@@ -465,15 +478,11 @@ export const useBookingWizard = () => {
           if (!formData.agreeToTerms)
             errs.agreeToTerms = "You must agree to the terms to continue.";
           break;
-
-        // ── Step 3: Review — no validation needed, submit is next ─────
         case 3:
           break;
-
         default:
           break;
       }
-
       return errs;
     },
     [
@@ -483,17 +492,15 @@ export const useBookingWizard = () => {
       formData.groupType,      formData.firstName,
       formData.lastName,       formData.email,
       formData.agreeToTerms,
-    ]
+    ],
   );
 
-  // ── Navigation ────────────────────────────────────────────────────────
+  /* ── Navigation ── */
   const goToStep = useCallback((step) => {
     if (step < 0 || step > STEPS.length - 1) return;
     if (navigatingRef.current) return;
-
     navigatingRef.current = true;
     setIsAnimating(true);
-
     setTimeout(() => {
       if (mountedRef.current) {
         setCurrentStep(step);
@@ -521,28 +528,26 @@ export const useBookingWizard = () => {
 
   const prevStep = useCallback(
     () => goToStep(currentStep - 1),
-    [currentStep, goToStep]
+    [currentStep, goToStep],
   );
 
   const handleStepClick = useCallback(
     (step) => { if (step <= currentStep) goToStep(step); },
-    [currentStep, goToStep]
+    [currentStep, goToStep],
   );
 
-  // ── Compute booking_type ──────────────────────────────────────────────
+  /* ── Compute booking_type ── */
   const computeBookingType = useCallback(() => {
     const { destinationId, countryId, categoryId } = formData;
     if (destinationId || countryId || categoryId) return "destination";
     return "custom";
   }, [formData]);
 
-  // ── Submit ────────────────────────────────────────────────────────────
-  // ✅ FIXED: validates step 2 (contact) not step 4
+  /* ── Submit ── */
   const handleSubmit = useCallback(async (e) => {
     if (e?.preventDefault) e.preventDefault();
     if (isSubmitting) return;
 
-    // Validate contact fields (step 2) before final submit
     const stepErrs = validateStep(2);
     if (Object.keys(stepErrs).length) {
       setErrors(stepErrs);
@@ -560,7 +565,7 @@ export const useBookingWizard = () => {
 
     try {
       const payload = sanitizePayload({
-        booking_type:          computeBookingType(),
+        booking_type:         computeBookingType(),
         destination_id:       formData.destinationId || undefined,
         country_id:           formData.countryId     || undefined,
         category_id:          formData.categoryId    || undefined,
@@ -572,9 +577,9 @@ export const useBookingWizard = () => {
         number_of_children:   Math.max(0, parseInt(formData.children, 10) || 0),
         number_of_infants:    Math.max(0, parseInt(formData.infants,  10) || 0),
         number_of_travelers:  getTotalVisitors(),
-        group_type:           formData.groupType           || undefined,
-        accommodation_type:   formData.accommodationType   || undefined,
-        budget_range:         formData.budgetRange         || undefined,
+        group_type:           formData.groupType         || undefined,
+        accommodation_type:   formData.accommodationType || undefined,
+        budget_range:         formData.budgetRange       || undefined,
         interests:            formData.interests?.join(",") || undefined,
         dietary_requirements: formData.dietaryRequirements || undefined,
         special_requests:     formData.specialRequests     || undefined,
@@ -588,8 +593,8 @@ export const useBookingWizard = () => {
         nationality:          formData.nationality || undefined,
         country:              formData.country     || undefined,
         source:               "website",
-        referrer_url:         typeof window !== "undefined"
-          ? window.location.href : undefined,
+        referrer_url:
+          typeof window !== "undefined" ? window.location.href : undefined,
       });
 
       const data = await createBooking(payload);
@@ -598,7 +603,7 @@ export const useBookingWizard = () => {
 
       setIsSubmitted(true);
       setSubmissionRef(
-        data?.booking_number ?? data?.referenceNumber ?? data?.id ?? ""
+        data?.booking_number ?? data?.referenceNumber ?? data?.id ?? "",
       );
       setSubmitRetryCount(0);
 
@@ -617,31 +622,32 @@ export const useBookingWizard = () => {
           });
           setSubmitError(
             Object.values(fieldErrors).join("; ") ||
-            "Please check the highlighted fields and try again."
+            "Please check the highlighted fields and try again.",
           );
         } else if (err.isRateLimit) {
           setSubmitError(
-            "Too many requests — please wait a moment before trying again."
+            "Too many requests — please wait a moment before trying again.",
           );
         } else if (err.isServerError) {
           setSubmitError(
             "Our servers are temporarily unavailable. " +
-            "Please try again shortly or contact us via WhatsApp."
+            "Please try again shortly or contact us via WhatsApp.",
           );
         } else if (err.isNetwork) {
           setSubmitError(
-            "Network error — please check your internet connection and try again."
+            "Network error — please check your internet connection and try again.",
           );
         } else {
           setSubmitError(err.message || "Booking failed. Please try again.");
         }
       } else {
         setSubmitError(
-          "An unexpected error occurred. Please try again or contact support."
+          "An unexpected error occurred. Please try again or contact support.",
         );
       }
 
       setSubmitRetryCount((c) => c + 1);
+
     } finally {
       if (mountedRef.current) setIsSubmitting(false);
     }
@@ -650,11 +656,11 @@ export const useBookingWizard = () => {
     validateStep, getTotalVisitors, computeBookingType,
   ]);
 
-  // ── Modal helpers ─────────────────────────────────────────────────────
+  /* ── Modal helpers ── */
   const openModal  = useCallback(() => setShowModal(true),  []);
   const closeModal = useCallback(() => setShowModal(false), []);
 
-  // ── Public API ────────────────────────────────────────────────────────
+  /* ── Public API ── */
   return {
     currentStep, isAnimating, isSubmitting, isSubmitted,
     loadingData, showModal, openModal, closeModal,

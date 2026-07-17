@@ -1,7 +1,7 @@
 // src/pages/Booking/BookingShared.js
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared constants, helpers, theme, validation and WhatsApp builder
-// used across ALL booking components.
+// ✅ v4.0 — normalizeOptionLabel now returns STRING not object (bug fix)
 // ─────────────────────────────────────────────────────────────────────────────
 
 /* ═══════════════════════════════════════════════════════
@@ -9,44 +9,35 @@
 ═══════════════════════════════════════════════════════ */
 export const THEME = {
   colors: {
-    primary:      "#047857",
-    primaryDark:  "#065f46",
-    primaryLight: "#10b981",
-    primaryXLight:"#34d399",
-    primaryGhost: "rgba(4,120,87,0.08)",
-    primaryBorder:"#bbf7d0",
-
-    surface:    "#ffffff",
-    surfaceAlt: "#f0fdf4",
-    surfaceSoft:"#ecfdf5",
-
-    text:    "#0f172a",
-    textMid: "#374151",
-    textSoft:"#6b7280",
-    textXSoft:"#9ca3af",
-
-    border:    "#e5e7eb",
-    borderSoft:"#f3f4f6",
-
-    error:       "#ef4444",
-    errorBg:     "#fef2f2",
-    errorBorder: "#fecaca",
-
-    warning:   "#f59e0b",
-    warningBg: "#fffbeb",
-
-    success:   "#10b981",
-    successBg: "#ecfdf5",
-
-    gold:   "#d97706",
-    goldBg: "#fef3c7",
+    primary:       "#047857",
+    primaryDark:   "#065f46",
+    primaryLight:  "#10b981",
+    primaryXLight: "#34d399",
+    primaryGhost:  "rgba(4,120,87,0.08)",
+    primaryBorder: "#bbf7d0",
+    surface:       "#ffffff",
+    surfaceAlt:    "#f0fdf4",
+    surfaceSoft:   "#ecfdf5",
+    text:          "#0f172a",
+    textMid:       "#374151",
+    textSoft:      "#6b7280",
+    textXSoft:     "#9ca3af",
+    border:        "#e5e7eb",
+    borderSoft:    "#f3f4f6",
+    error:         "#ef4444",
+    errorBg:       "#fef2f2",
+    errorBorder:   "#fecaca",
+    warning:       "#f59e0b",
+    warningBg:     "#fffbeb",
+    success:       "#10b981",
+    successBg:     "#ecfdf5",
+    gold:          "#d97706",
+    goldBg:        "#fef3c7",
   },
-
   fonts: {
     sans:  "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     serif: "'Playfair Display', Georgia, serif",
   },
-
   radii: {
     sm:   "4px",
     md:   "8px",
@@ -54,7 +45,6 @@ export const THEME = {
     xl:   "24px",
     full: "9999px",
   },
-
   shadows: {
     sm:      "0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04)",
     md:      "0 4px 16px rgba(0,0,0,.08), 0 2px 6px rgba(0,0,0,.04)",
@@ -63,14 +53,12 @@ export const THEME = {
     green:   "0 8px 32px rgba(4,120,87,.20)",
     greenLg: "0 16px 48px rgba(4,120,87,.28)",
   },
-
   transitions: {
     fast:   "all .15s ease",
     base:   "all .25s cubic-bezier(.4,0,.2,1)",
     slow:   "all .45s cubic-bezier(.16,1,.3,1)",
     spring: "all .6s cubic-bezier(.34,1.56,.64,1)",
   },
-
   zIndex: {
     base:     1,
     dropdown: 100,
@@ -82,53 +70,89 @@ export const THEME = {
 };
 
 /* ═══════════════════════════════════════════════════════
-   ADMIN CONTACT — WhatsApp target
-   Replace phone with your real number (digits only, no +)
+   ADMIN CONTACT
 ═══════════════════════════════════════════════════════ */
 export const ADMIN_CONTACT = {
   name:  "Safari Expert",
-  phone: "250788000000", // ← your WhatsApp number
-  wa:    "https://wa.me/250788000000",
+  phone: "250785751391",
+  wa:    "https://wa.me/250785751391",
 };
 
 /* ═══════════════════════════════════════════════════════
-   UTILITY — normalizeOptionLabel / normalizeOptionValue
+   ✅ FIXED — normalizeOptionLabel returns a STRING, not an object
+   Previous version returned {value, label} causing React error #31
+   when the result was rendered directly as a child.
 ═══════════════════════════════════════════════════════ */
+
+/**
+ * Extract the display LABEL string from any option shape.
+ * Always returns a plain string — safe to render as React child.
+ */
 export const normalizeOptionLabel = (option) => {
-  if (!option) return { value: "", label: "" };
-  if (typeof option === "string") return { value: option, label: option };
-  if (typeof option !== "object") {
-    const s = String(option);
-    return { value: s, label: s };
+  if (option === null || option === undefined) return "";
+  if (typeof option === "string") return option;
+  if (typeof option === "number" || typeof option === "boolean")
+    return String(option);
+  if (typeof option === "object") {
+    const label =
+      option.label ??
+      option.name  ??
+      option.title ??
+      option.text  ??
+      option.display ??
+      option.value ??
+      option.id    ??
+      "";
+    return String(label);
   }
-  const value =
-    option.value ?? option.id ?? option.key ??
-    option.code  ?? option.slug ?? "";
-  const label =
-    option.label ?? option.name ?? option.title ??
-    option.text  ?? option.display ?? String(value);
-  const icon = option.icon ?? option.emoji ?? option.symbol ?? undefined;
-  const desc = option.desc ?? option.description ?? option.subtitle ?? undefined;
+  return String(option);
+};
+
+/**
+ * Extract the VALUE string from any option shape.
+ * Always returns a plain string — safe to store in formData.
+ */
+export const normalizeOptionValue = (option) => {
+  if (option === null || option === undefined) return "";
+  if (typeof option === "string") return option;
+  if (typeof option === "number" || typeof option === "boolean")
+    return String(option);
+  if (typeof option === "object") {
+    return String(
+      option.value ??
+      option.id    ??
+      option._id   ??
+      option.slug  ??
+      option.key   ??
+      option.code  ??
+      "",
+    );
+  }
+  return String(option);
+};
+
+/**
+ * Extract a full normalized option descriptor object.
+ * Only use this when you need ALL fields (value + label + icon + desc).
+ * Do NOT render the return value directly as a React child.
+ */
+export const normalizeOptionDescriptor = (option) => {
+  if (!option) return { value: "", label: "" };
+  const value = normalizeOptionValue(option);
+  const label = normalizeOptionLabel(option);
+  const raw   = typeof option === "object" ? option : {};
   return {
-    value: String(value),
-    label: String(label),
-    ...(icon !== undefined && { icon }),
-    ...(desc !== undefined && { desc }),
+    value,
+    label,
+    ...(raw.icon  !== undefined && { icon:  raw.icon  }),
+    ...(raw.emoji !== undefined && { emoji: raw.emoji }),
+    ...(raw.desc  !== undefined && { desc:  raw.desc  }),
+    ...(raw.description !== undefined && { desc: raw.description }),
   };
 };
 
-export const normalizeOptionValue = (option) => {
-  if (!option) return "";
-  if (typeof option === "string") return option;
-  if (typeof option !== "object") return String(option);
-  return String(
-    option.value ?? option.id ?? option._id ??
-    option.slug  ?? option.key ?? option.code ?? "",
-  );
-};
-
 /* ═══════════════════════════════════════════════════════
-   STEPS  (4-step flow: Trip → Travelers → Contact → Review)
+   STEPS  (4-step flow)
 ═══════════════════════════════════════════════════════ */
 export const STEPS = [
   { id: 0, key: "trip",      label: "Trip Details", icon: "🗺️",  description: "Where & when"   },
@@ -159,7 +183,7 @@ export const FLEXIBLE_MONTHS = [
 ];
 
 /* ═══════════════════════════════════════════════════════
-   OPTION LISTS
+   OPTION LISTS — all icon fields are plain emoji strings
 ═══════════════════════════════════════════════════════ */
 export const GROUP_TYPES = [
   { value: "solo",      label: "Solo Adventure", icon: "🧳" },
@@ -208,13 +232,13 @@ export const BUDGET_LABELS = Object.fromEntries(
 );
 
 export const HEAR_ABOUT_US_OPTIONS = [
-  { value: "google",       label: "Google Search",  icon: "🔍" },
-  { value: "social",       label: "Social Media",   icon: "📱" },
-  { value: "referral",     label: "Friend / Family",icon: "👥" },
-  { value: "travel-agent", label: "Travel Agent",   icon: "🧳" },
-  { value: "magazine",     label: "Magazine / Blog",icon: "📰" },
-  { value: "repeat",       label: "Previous Guest", icon: "⭐" },
-  { value: "other",        label: "Other",          icon: "💬" },
+  { value: "google",       label: "Google Search",   icon: "🔍" },
+  { value: "social",       label: "Social Media",    icon: "📱" },
+  { value: "referral",     label: "Friend / Family", icon: "👥" },
+  { value: "travel-agent", label: "Travel Agent",    icon: "🧳" },
+  { value: "magazine",     label: "Magazine / Blog", icon: "📰" },
+  { value: "repeat",       label: "Previous Guest",  icon: "⭐" },
+  { value: "other",        label: "Other",           icon: "💬" },
 ];
 
 export const DIETARY_OPTIONS = [
@@ -230,7 +254,6 @@ export const DIETARY_OPTIONS = [
 
 /* ═══════════════════════════════════════════════════════
    DEFAULT / INITIAL FORM STATE
-   (exported as both DEFAULT_FORM and INITIAL_FORM for compat)
 ═══════════════════════════════════════════════════════ */
 export const DEFAULT_FORM = {
   // Step 0 — Trip
@@ -244,14 +267,14 @@ export const DEFAULT_FORM = {
   flexibleMonths: [],
 
   // Step 1 — Travelers
-  adults:    2,
-  children:  0,
-  infants:   0,
-  groupType: "",
+  adults:            2,
+  children:          0,
+  infants:           0,
+  groupType:         "",
+  accommodationType: "",
+  budgetRange:       "",
 
-  // Preferences (collected on step 1 & 2)
-  accommodationType:    "",
-  budgetRange:          "",
+  // Preferences
   interests:            [],
   dietaryRequirements:  "",
   specialRequests:      "",
@@ -259,13 +282,13 @@ export const DEFAULT_FORM = {
   medicalDetails:       "",
 
   // Step 2 — Contact
-  firstName:           "",
-  lastName:            "",
-  email:               "",
-  phone:               "",
-  whatsapp:            "",
-  nationality:         "",
-  country:             "",
+  firstName:              "",
+  lastName:               "",
+  email:                  "",
+  phone:                  "",
+  whatsapp:               "",
+  nationality:            "",
+  country:                "",
   preferredContactMethod: "whatsapp",
   preferredContactTime:   "",
   pickupLocation:         "",
@@ -273,22 +296,19 @@ export const DEFAULT_FORM = {
   newsletterOptIn:        false,
   agreeToTerms:           false,
   subscribeNewsletter:    false,
+  hearAboutUs:            "",
   source:                 "website",
 };
 
-/** @alias DEFAULT_FORM — kept for legacy imports */
+/** @alias DEFAULT_FORM */
 export const INITIAL_FORM = DEFAULT_FORM;
 
 /* ═══════════════════════════════════════════════════════
    VALIDATION
 ═══════════════════════════════════════════════════════ */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/**
- * Validate a step by NUMERIC index (0-3) or by KEY string.
- * Returns { field: errorMessage } — empty = valid.
- */
 export const validateStep = (stepOrKey, form) => {
-  // Accept numeric step index OR string key
   const key =
     typeof stepOrKey === "number"
       ? (STEPS[stepOrKey]?.key ?? String(stepOrKey))
@@ -299,9 +319,8 @@ export const validateStep = (stepOrKey, form) => {
   switch (key) {
     case "trip":
     case "0": {
-      if (!form.destinationId && !form.countryId) {
+      if (!form.destinationId && !form.countryId)
         errors.countryId = "Please select a destination or country.";
-      }
       if (!form.isFlexible) {
         if (!form.startDate) errors.startDate = "Departure date is required.";
         if (form.startDate && form.endDate && form.startDate >= form.endDate)
@@ -311,7 +330,6 @@ export const validateStep = (stepOrKey, form) => {
       }
       break;
     }
-
     case "travelers":
     case "1": {
       if (!form.adults || parseInt(form.adults, 10) < 1)
@@ -320,34 +338,22 @@ export const validateStep = (stepOrKey, form) => {
         errors.groupType = "Please select a group type.";
       break;
     }
-
     case "contact":
     case "2": {
       if (!form.firstName?.trim()) errors.firstName = "First name is required.";
       if (!form.lastName?.trim())  errors.lastName  = "Last name is required.";
       if (!form.email?.trim()) {
         errors.email = "Email is required.";
-      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      } else if (!EMAIL_RE.test(form.email.trim())) {
         errors.email = "Please enter a valid email address.";
       }
-      if (!form.phone?.trim())   errors.phone   = "Phone number is required.";
-      if (!form.country?.trim()) errors.country = "Country of residence is required.";
-      if (!form.agreeToTerms)    errors.agreeToTerms = "You must agree to the terms.";
+      if (!form.agreeToTerms)
+        errors.agreeToTerms = "You must agree to the terms.";
       break;
     }
-
     case "review":
     case "3":
-      // Read-only review step — always valid
       break;
-
-    // Legacy key names kept for compat
-    case "preferences": {
-      if (!form.accommodationType)
-        errors.accommodationType = "Please choose an accommodation type.";
-      break;
-    }
-
     default:
       break;
   }
@@ -355,9 +361,6 @@ export const validateStep = (stepOrKey, form) => {
   return errors;
 };
 
-/**
- * Validate ALL steps — returns { [stepKey]: { [field]: message } }
- */
 export const validateAllSteps = (form) => {
   const allErrors = {};
   STEPS.forEach(({ key }) => {
@@ -367,39 +370,30 @@ export const validateAllSteps = (form) => {
   return allErrors;
 };
 
-/** True if a step (by index or key) has no errors */
 export const isStepComplete = (stepOrKey, form) =>
   Object.keys(validateStep(stepOrKey, form)).length === 0;
 
 /* ═══════════════════════════════════════════════════════
    FORMATTING HELPERS
 ═══════════════════════════════════════════════════════ */
-
-/** "2025-01-15" → "Jan 15, 2025" */
 export const formatDate = (dateStr) => {
   if (!dateStr) return "";
   try {
     return new Date(dateStr).toLocaleDateString("en-US", {
       year: "numeric", month: "short", day: "numeric",
     });
-  } catch {
-    return dateStr;
-  }
+  } catch { return dateStr; }
 };
 
-/** Full locale date: "Mon, January 15, 2025" */
 export const formatDateFull = (dateStr) => {
   if (!dateStr) return "";
   try {
     return new Date(dateStr).toLocaleDateString("en-US", {
       weekday: "short", year: "numeric", month: "long", day: "numeric",
     });
-  } catch {
-    return dateStr;
-  }
+  } catch { return dateStr; }
 };
 
-/** Number of nights between two ISO date strings */
 export const calcNights = (startDate, endDate) => {
   if (!startDate || !endDate) return 0;
   return Math.max(
@@ -408,7 +402,6 @@ export const calcNights = (startDate, endDate) => {
   );
 };
 
-/** "2 Adults, 1 Child" */
 export const formatTravelers = ({ adults = 0, children = 0, infants = 0 }) => {
   const parts = [];
   if (adults)   parts.push(`${adults} Adult${adults   !== 1 ? "s" : ""}`);
@@ -417,31 +410,30 @@ export const formatTravelers = ({ adults = 0, children = 0, infants = 0 }) => {
   return parts.join(", ") || "No travelers";
 };
 
-/** Total traveler count */
 export const totalTravelers = ({ adults = 0, children = 0, infants = 0 }) =>
-  (parseInt(adults, 10) || 0) +
+  (parseInt(adults,   10) || 0) +
   (parseInt(children, 10) || 0) +
-  (parseInt(infants, 10) || 0);
+  (parseInt(infants,  10) || 0);
 
-/** Find label in an option array by value */
 export const getOptionLabel = (options, value) => {
-  if (!value) return "";
-  return options.find((o) => o.value === value)?.label ?? value;
+  if (!value || !Array.isArray(options)) return "";
+  return options.find((o) => o.value === value)?.label ?? String(value);
 };
 
-/** Find icon in an option array by value */
 export const getOptionIcon = (options, value) => {
-  if (!value) return "";
-  return options.find((o) => o.value === value)?.icon ?? "";
+  if (!value || !Array.isArray(options)) return "";
+  const icon = options.find((o) => o.value === value)?.icon;
+  // ✅ Always return a string — never an object
+  return typeof icon === "string" ? icon : "";
 };
 
-/** Human-readable booking summary string */
 export const buildSummaryText = (form) => {
   const lines = [];
   if (form.startDate && form.endDate) {
     const nights = calcNights(form.startDate, form.endDate);
     lines.push(
-      `📅 ${formatDate(form.startDate)} → ${formatDate(form.endDate)} (${nights} night${nights !== 1 ? "s" : ""})`,
+      `📅 ${formatDate(form.startDate)} → ${formatDate(form.endDate)} ` +
+      `(${nights} night${nights !== 1 ? "s" : ""})`,
     );
   } else if (form.isFlexible && form.flexibleMonths?.length) {
     lines.push(`📅 Flexible: ${form.flexibleMonths.join(", ")}`);
@@ -461,18 +453,6 @@ export const buildSummaryText = (form) => {
 /* ═══════════════════════════════════════════════════════
    WHATSAPP MESSAGE BUILDER
 ═══════════════════════════════════════════════════════ */
-
-/**
- * Build a fully-formatted WhatsApp message from formData + lookup lists.
- *
- * @param {object} options
- * @param {object} options.formData        - The booking form state
- * @param {Array}  options.destinationsList
- * @param {Array}  options.countriesList
- * @param {Array}  options.groupTypes
- * @param {Array}  options.accommodationTypes
- * @returns {string} Plain-text WhatsApp message (uses *bold*)
- */
 export const buildWhatsAppMessage = ({
   formData,
   destinationsList   = [],
@@ -480,19 +460,25 @@ export const buildWhatsAppMessage = ({
   groupTypes         = [],
   accommodationTypes = [],
 }) => {
-  /* ── Lookups ── */
   const dest    = destinationsList.find((d) => d.value === formData.destinationId);
   const country = countriesList.find((c)    => c.value === formData.countryId);
-  const group   = [
-    ...groupTypes,
-    ...GROUP_TYPES,
-  ].find((g) => (g.value || g.id) === formData.groupType);
-  const accom   = [
-    ...accommodationTypes,
-    ...ACCOMMODATION_TYPES,
-  ].find((a) => (a.value || a.id) === (formData.accommodationType || formData.accommodation));
 
-  /* ── Dates ── */
+  // Merge static + dynamic, dedupe by value
+  const allGroups = [...groupTypes, ...GROUP_TYPES];
+  const allAccoms = [...accommodationTypes, ...ACCOMMODATION_TYPES];
+  const group = allGroups.find(
+    (g) => (g.value || g.id) === formData.groupType,
+  );
+  const accom = allAccoms.find(
+    (a) => (a.value || a.id) === (formData.accommodationType || formData.accommodation),
+  );
+
+  // ✅ Safe icon extraction — always strings
+  const groupIcon = typeof group?.icon === "string" ? group.icon : "";
+  const accomIcon = typeof accom?.icon === "string" ? accom.icon : "";
+  const groupName = group?.label || group?.name || "";
+  const accomName = accom?.label || accom?.name || "";
+
   let dateInfo = "";
   if (formData.isFlexible && formData.flexibleMonths?.length) {
     dateInfo = `Flexible — ${formData.flexibleMonths
@@ -507,12 +493,10 @@ export const buildWhatsAppMessage = ({
       : formatDate(formData.startDate);
   }
 
-  /* ── Travellers ── */
   const adults   = parseInt(formData.adults,   10) || 0;
   const children = parseInt(formData.children, 10) || 0;
   const infants  = parseInt(formData.infants,  10) || 0;
   const total    = adults + children + infants;
-  const travellerStr = formatTravelers({ adults, children, infants });
 
   const budgetLabel = formData.budgetRange
     ? (BUDGET_LABELS[formData.budgetRange] || formData.budgetRange)
@@ -521,6 +505,15 @@ export const buildWhatsAppMessage = ({
   const interestLabels = (formData.interests || [])
     .map((v) => getOptionLabel(INTERESTS, v) || v)
     .join(", ");
+
+  // ✅ Safe country name — never render an object
+  const destCountryName = (() => {
+    const c = dest?.country;
+    if (!c) return "";
+    if (typeof c === "string") return c;
+    if (typeof c === "object") return c?.name ?? c?.label ?? "";
+    return "";
+  })();
 
   const lines = [
     "🌍 *NEW BOOKING REQUEST*",
@@ -536,46 +529,33 @@ export const buildWhatsAppMessage = ({
     "",
     "✈️ *TRIP DETAILS*",
     `Destination: ${dest?.label || country?.label || "Not specified"}`,
-    country?.label && dest?.label ? `Country:     ${country.label}` : null,
+    destCountryName ? `Country:     ${destCountryName}` : null,
     dateInfo ? `Dates:       ${dateInfo}` : null,
     formData.categoryId ? `Category:    ${formData.categoryId}` : null,
     "",
     "👥 *TRAVELLERS*",
-    `Total:       ${total} (${travellerStr})`,
-    group
-      ? `Group Type:  ${group.icon ? group.icon + " " : ""}${group.label || group.name}`
-      : null,
-    accom
-      ? `Accom. Style: ${accom.icon ? accom.icon + " " : ""}${accom.label || accom.name}`
-      : null,
-    budgetLabel
-      ? `Budget:      ${budgetLabel}`
-      : null,
+    `Total:       ${total} (${formatTravelers({ adults, children, infants })})`,
+    groupName ? `Group Type:  ${groupIcon ? groupIcon + " " : ""}${groupName}` : null,
+    accomName ? `Accom.:      ${accomIcon ? accomIcon + " " : ""}${accomName}` : null,
+    budgetLabel ? `Budget:      ${budgetLabel}` : null,
     "",
-    interestLabels
-      ? `✨ *INTERESTS*\n${interestLabels}`
-      : null,
+    interestLabels ? `✨ *INTERESTS*\n${interestLabels}` : null,
     formData.preferredContactMethod
       ? `📞 *PREFERRED CONTACT*\n${formData.preferredContactMethod}${
           formData.preferredContactTime
             ? ` — best time: ${formData.preferredContactTime}` : ""
-        }`
-      : null,
+        }` : null,
     formData.pickupLocation
-      ? `📍 *PICKUP LOCATION*\n${formData.pickupLocation}`
-      : null,
+      ? `📍 *PICKUP LOCATION*\n${formData.pickupLocation}` : null,
     formData.marketingSource
       ? `🔍 *HOW THEY FOUND US*\n${
           getOptionLabel(HEAR_ABOUT_US_OPTIONS, formData.marketingSource) ||
           formData.marketingSource
-        }`
-      : null,
+        }` : null,
     formData.dietaryRequirements
-      ? `🍽️ *DIETARY*\n${formData.dietaryRequirements}`
-      : null,
+      ? `🍽️ *DIETARY*\n${formData.dietaryRequirements}` : null,
     formData.specialRequests
-      ? `💬 *SPECIAL REQUESTS*\n${formData.specialRequests}`
-      : null,
+      ? `💬 *SPECIAL REQUESTS*\n${formData.specialRequests}` : null,
     "",
     "━━━━━━━━━━━━━━━━━━━━━━━━",
     `📅 Submitted: ${new Date().toLocaleString("en-US", {
@@ -587,10 +567,9 @@ export const buildWhatsAppMessage = ({
   return lines.join("\n");
 };
 
-
 export const sendWhatsApp = (formData, lists = {}) => {
   const message = buildWhatsAppMessage({ formData, ...lists });
-  const url = `https://wa.me/${ADMIN_CONTACT.phone}?text=${encodeURIComponent(message)}`;
+  const url     = `https://wa.me/${ADMIN_CONTACT.phone}?text=${encodeURIComponent(message)}`;
   window.open(url, "_blank", "noopener,noreferrer");
-  return url; // return for logging / testing
+  return url;
 };

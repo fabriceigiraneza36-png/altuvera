@@ -3,8 +3,12 @@
 // Step 0 → Trip Details
 // Step 1 → Travellers
 // Step 2 → Contact Info
-// Step 3 → Review + Submit (opens WhatsApp)
-// ✅ Fixed: FieldError now safely extracts string from any error shape
+// Step 3 → Review + Submit
+// ✅ v7.0 — All object-to-React-child paths eliminated
+// ✅ normalizeOptionLabel now imported and used only to get STRING labels
+// ✅ StepHeader title prop accepts string or ReactElement — guarded render
+// ✅ ReviewRow.value always stringified before render
+// ✅ Icon fields in group types / accommodation types always string-guarded
 // ─────────────────────────────────────────────────────────────────────────────
 import React, {
   useState, useCallback, useMemo, memo,
@@ -23,8 +27,12 @@ import {
 } from "./BookingShared";
 
 /* ════════════════════════════════════════════════════════
-   SAFE ERROR EXTRACTOR
+   SAFE HELPERS
 ════════════════════════════════════════════════════════ */
+
+/**
+ * Extract a plain string error message from any shape.
+ */
 const extractErrorMessage = (err) => {
   if (!err) return null;
   if (typeof err === "string") return err;
@@ -32,8 +40,8 @@ const extractErrorMessage = (err) => {
   if (typeof err === "object") {
     return (
       err.message ||
-      err.msg ||
-      err.error ||
+      err.msg     ||
+      err.error   ||
       (err.errors
         ? Array.isArray(err.errors)
           ? err.errors
@@ -45,6 +53,30 @@ const extractErrorMessage = (err) => {
     );
   }
   return String(err);
+};
+
+/**
+ * Safely coerce any value to a renderable string.
+ * Never returns an object — React error #31 prevention.
+ */
+const safeStr = (val, fallback = "—") => {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val === "string") return val || fallback;
+  if (typeof val === "number" || typeof val === "boolean") return String(val);
+  if (React.isValidElement(val)) return fallback; // JSX not allowed in text slots
+  if (typeof val === "object") {
+    return val.label ?? val.name ?? val.value ?? val.title ?? fallback;
+  }
+  return String(val) || fallback;
+};
+
+/**
+ * Safely render an emoji icon — returns string or null.
+ * Drops any non-string icon (e.g. object) silently.
+ */
+const safeIcon = (icon) => {
+  if (typeof icon === "string") return icon;
+  return null;
 };
 
 /* ════════════════════════════════════════════════════════
@@ -62,7 +94,10 @@ const Label = memo(({ children, required }) => (
 ));
 Label.displayName = "Label";
 
-/* ✅ FIXED — safely converts any error shape to a string before rendering */
+/**
+ * ✅ Always converts error to string before rendering.
+ * Prevents React error #31 from object errors.
+ */
 const FieldError = memo(({ error, touched }) => {
   if (!error || !touched) return null;
   const message = extractErrorMessage(error);
@@ -115,7 +150,10 @@ const SectionCard = memo(({ headerIcon, headerLabel, headerRight, children, dela
             fontSize: 12.5, fontWeight: 700, color: "#374151",
             textTransform: "uppercase", letterSpacing: ".06em",
           }}>
-            {headerLabel}
+            {/* ✅ headerLabel must be string or ReactElement */}
+            {typeof headerLabel === "string" || React.isValidElement(headerLabel)
+              ? headerLabel
+              : safeStr(headerLabel)}
           </span>
         </div>
         {headerRight}
@@ -126,67 +164,96 @@ const SectionCard = memo(({ headerIcon, headerLabel, headerRight, children, dela
 ));
 SectionCard.displayName = "SectionCard";
 
-const StepHeader = memo(({ icon, badge, title, subtitle, isMobile }) => (
-  <div style={{ textAlign: "center", marginBottom: isMobile ? 32 : 44 }}>
-    <motion.div
-      initial={{ scale: 0, rotate: -20 }}
-      animate={{ scale: 1, rotate: 0 }}
-      transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.05 }}
-      style={{
-        width: 72, height: 72, borderRadius: "50%",
-        background: "linear-gradient(135deg,#059669,#10b981)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        margin: "0 auto 20px",
-        boxShadow: "0 12px 36px rgba(5,150,105,.32)",
-        fontSize: 30,
-      }}
-    >
-      {icon}
-    </motion.div>
-    {badge && (
-      <motion.span
-        initial={{ opacity: 0, y: -6, scale: 0.9 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ delay: 0.12 }}
+/**
+ * ✅ StepHeader — title accepts string OR ReactElement only.
+ * If an object slips through, we extract a string safely.
+ */
+const StepHeader = memo(({ icon, badge, title, subtitle, isMobile }) => {
+  const safeTitle = useMemo(() => {
+    if (title === null || title === undefined) return "";
+    if (typeof title === "string" || typeof title === "number") return String(title);
+    if (React.isValidElement(title)) return title; // JSX fragment — allowed
+    if (typeof title === "object") {
+      // Object accidentally passed — extract label/name safely
+      return title.label ?? title.name ?? title.value ?? JSON.stringify(title);
+    }
+    return String(title);
+  }, [title]);
+
+  const safeSubtitle = useMemo(() => {
+    if (!subtitle) return null;
+    if (typeof subtitle === "string") return subtitle;
+    if (React.isValidElement(subtitle)) return subtitle;
+    if (typeof subtitle === "object")
+      return subtitle.label ?? subtitle.name ?? String(subtitle);
+    return String(subtitle);
+  }, [subtitle]);
+
+  return (
+    <div style={{ textAlign: "center", marginBottom: isMobile ? 32 : 44 }}>
+      <motion.div
+        initial={{ scale: 0, rotate: -20 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: "spring", stiffness: 260, damping: 20, delay: 0.05 }}
         style={{
-          display: "inline-block", marginBottom: 10,
-          background: "linear-gradient(90deg,#f0fdf4,#dcfce7)",
-          border: "1.5px solid #a7f3d0", borderRadius: 20,
-          padding: "4px 16px", fontSize: 12, fontWeight: 700,
-          color: "#059669", letterSpacing: ".05em", textTransform: "uppercase",
+          width: 72, height: 72, borderRadius: "50%",
+          background: "linear-gradient(135deg,#059669,#10b981)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          margin: "0 auto 20px",
+          boxShadow: "0 12px 36px rgba(5,150,105,.32)",
+          fontSize: 30,
         }}
       >
-        {badge}
-      </motion.span>
-    )}
-    <motion.h2
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.14 }}
-      style={{
-        fontFamily: "'Playfair Display',serif",
-        fontSize: isMobile ? 24 : 32, fontWeight: 900,
-        color: "#0f172a", margin: "0 0 10px",
-        lineHeight: 1.2, letterSpacing: "-0.02em",
-      }}
-    >
-      {title}
-    </motion.h2>
-    {subtitle && (
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.22 }}
+        {icon}
+      </motion.div>
+
+      {badge && (
+        <motion.span
+          initial={{ opacity: 0, y: -6, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ delay: 0.12 }}
+          style={{
+            display: "inline-block", marginBottom: 10,
+            background: "linear-gradient(90deg,#f0fdf4,#dcfce7)",
+            border: "1.5px solid #a7f3d0", borderRadius: 20,
+            padding: "4px 16px", fontSize: 12, fontWeight: 700,
+            color: "#059669", letterSpacing: ".05em", textTransform: "uppercase",
+          }}
+        >
+          {safeStr(badge)}
+        </motion.span>
+      )}
+
+      <motion.h2
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.14 }}
         style={{
-          fontSize: isMobile ? 14 : 15.5, color: "#6b7280",
-          lineHeight: 1.65, maxWidth: 500, margin: "0 auto",
+          fontFamily: "'Playfair Display',serif",
+          fontSize: isMobile ? 24 : 32, fontWeight: 900,
+          color: "#0f172a", margin: "0 0 10px",
+          lineHeight: 1.2, letterSpacing: "-0.02em",
         }}
       >
-        {subtitle}
-      </motion.p>
-    )}
-  </div>
-));
+        {safeTitle}
+      </motion.h2>
+
+      {safeSubtitle && (
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.22 }}
+          style={{
+            fontSize: isMobile ? 14 : 15.5, color: "#6b7280",
+            lineHeight: 1.65, maxWidth: 500, margin: "0 auto",
+          }}
+        >
+          {safeSubtitle}
+        </motion.p>
+      )}
+    </div>
+  );
+});
 StepHeader.displayName = "StepHeader";
 
 /* ── PickerButton ── */
@@ -220,7 +287,9 @@ const PickerButton = memo(({
         color: hasValue ? "#111827" : "#9ca3af",
         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
       }}>
-        {value || label}
+        {/* ✅ value must be string */}
+        {typeof value === "string" ? value : null}
+        {(!value || typeof value !== "string") ? label : null}
       </span>
       {clearable && hasValue ? (
         <button type="button"
@@ -327,8 +396,8 @@ const TextInput = memo(({
           }}
           onBlur={(e) => {
             onBlur?.(e);
-            e.target.style.borderColor = error && touched ? "#fca5a5"
-              : hasVal ? "#6ee7b7" : "#e5e7eb";
+            e.target.style.borderColor =
+              error && touched ? "#fca5a5" : hasVal ? "#6ee7b7" : "#e5e7eb";
             e.target.style.boxShadow = "none";
           }}
         />
@@ -381,9 +450,10 @@ const SelectInput = memo(({
           }}
         >
           <option value="">Select…</option>
-          {options.map((o) => (
+          {(options || []).map((o) => (
             <option key={o.value ?? o.id} value={o.value ?? o.id}>
-              {o.name ?? o.label}
+              {/* ✅ Always render string option labels */}
+              {safeStr(o.name ?? o.label, "")}
             </option>
           ))}
         </select>
@@ -414,11 +484,18 @@ const Counter = memo(({ label, hint, icon, value, onChange, min = 0, max = 30 })
         display: "flex", alignItems: "center", justifyContent: "center",
         fontSize: 18,
       }}>
-        {icon}
+        {/* ✅ icon always a string emoji from INITIAL_FORM caller */}
+        {safeIcon(icon) ?? "👤"}
       </div>
       <div>
-        <p style={{ margin: 0, fontWeight: 700, fontSize: 14.5, color: "#1f2937" }}>{label}</p>
-        {hint && <p style={{ margin: "2px 0 0", fontSize: 12, color: "#9ca3af" }}>{hint}</p>}
+        <p style={{ margin: 0, fontWeight: 700, fontSize: 14.5, color: "#1f2937" }}>
+          {safeStr(label)}
+        </p>
+        {hint && (
+          <p style={{ margin: "2px 0 0", fontSize: 12, color: "#9ca3af" }}>
+            {safeStr(hint)}
+          </p>
+        )}
       </div>
     </div>
     <div style={{
@@ -474,44 +551,55 @@ const Counter = memo(({ label, hint, icon, value, onChange, min = 0, max = 30 })
 Counter.displayName = "Counter";
 
 /* ── ReviewRow ── */
-const ReviewRow = memo(({ label, value, icon, delay = 0 }) => (
-  <motion.div
-    initial={{ opacity: 0, x: -12 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ delay, duration: 0.3 }}
-    style={{
-      display: "flex", alignItems: "flex-start",
-      gap: 12, padding: "14px 0",
-      borderBottom: "1px solid #f3f4f6",
-    }}
-  >
-    <div style={{
-      width: 34, height: 34, borderRadius: 9,
-      background: "linear-gradient(135deg,#f0fdf4,#dcfce7)",
-      border: "1px solid #a7f3d0",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      fontSize: 16, flexShrink: 0,
-    }}>
-      {icon}
-    </div>
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <p style={{
-        margin: "0 0 2px", fontSize: 11.5, color: "#9ca3af",
-        fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em",
+const ReviewRow = memo(({ label, value, icon, delay = 0 }) => {
+  // ✅ Always render as string — never render objects
+  const displayValue = useMemo(() => {
+    if (value === null || value === undefined) return "—";
+    if (typeof value === "string") return value || "—";
+    if (typeof value === "number" || typeof value === "boolean") return String(value);
+    if (React.isValidElement(value)) return "—"; // safety — JSX not allowed here
+    if (typeof value === "object")
+      return value.label ?? value.name ?? value.value ?? JSON.stringify(value);
+    return String(value) || "—";
+  }, [value]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -12 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay, duration: 0.3 }}
+      style={{
+        display: "flex", alignItems: "flex-start",
+        gap: 12, padding: "14px 0",
+        borderBottom: "1px solid #f3f4f6",
+      }}
+    >
+      <div style={{
+        width: 34, height: 34, borderRadius: 9,
+        background: "linear-gradient(135deg,#f0fdf4,#dcfce7)",
+        border: "1px solid #a7f3d0",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        fontSize: 16, flexShrink: 0,
       }}>
-        {label}
-      </p>
-      <p style={{
-        margin: 0, fontSize: 14.5, fontWeight: 700,
-        color: "#111827", lineHeight: 1.45, wordBreak: "break-word",
-      }}>
-        {typeof value === "string" || typeof value === "number"
-          ? value
-          : String(value ?? "—")}
-      </p>
-    </div>
-  </motion.div>
-));
+        {safeIcon(icon) ?? "📌"}
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{
+          margin: "0 0 2px", fontSize: 11.5, color: "#9ca3af",
+          fontWeight: 700, textTransform: "uppercase", letterSpacing: ".06em",
+        }}>
+          {safeStr(label)}
+        </p>
+        <p style={{
+          margin: 0, fontSize: 14.5, fontWeight: 700,
+          color: "#111827", lineHeight: 1.45, wordBreak: "break-word",
+        }}>
+          {displayValue}
+        </p>
+      </div>
+    </motion.div>
+  );
+});
 ReviewRow.displayName = "ReviewRow";
 
 /* ════════════════════════════════════════════════════════
@@ -543,17 +631,26 @@ const StepTrip = memo(({
     return d > 0 ? d : null;
   }, [formData.startDate, formData.endDate]);
 
-  const hour = new Date().getHours();
+  const hour     = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
+  // ✅ Country button label — always a plain string
+  const countryButtonLabel = useMemo(() => {
+    if (!selectedCountry) return null;
+    const flag = safeIcon(selectedCountry.flag) ?? "";
+    const name = safeStr(selectedCountry.label);
+    return flag ? `${flag} ${name}` : name;
+  }, [selectedCountry]);
 
   return (
     <div>
       <StepHeader
         icon={<Navigation size={30} color="#fff" />}
         badge="Step 1 of 4 · Trip Details"
-        title={displayName
-          ? <>{greeting}, <span style={{ color: "#059669" }}>{displayName}!</span> Where to?</>
-          : <>Where would you like <span style={{ color: "#059669" }}>to go?</span></>
+        title={
+          displayName
+            ? <>{greeting}, <span style={{ color: "#059669" }}>{safeStr(displayName)}!</span> Where to?</>
+            : <>Where would you like <span style={{ color: "#059669" }}>to go?</span></>
         }
         subtitle="Choose your dream destination and travel dates to begin your perfect adventure."
         isMobile={isMobile}
@@ -572,14 +669,14 @@ const StepTrip = memo(({
                 onClick={() => setOpenCountry(true)}
                 icon={<MapPin />}
                 label="Select a country"
-                value={selectedCountry
-                  ? `${selectedCountry.flag && !selectedCountry.flag.startsWith("http")
-                      ? selectedCountry.flag + " " : ""}${selectedCountry.label}`
-                  : null}
+                value={countryButtonLabel}
                 hasValue={!!selectedCountry}
-                error={errors.countryId} touched={touched.countryId}
+                error={errors.countryId}
+                touched={touched.countryId}
                 clearable
-                onClear={() => setFormData((p) => ({ ...p, countryId: "", destinationId: "" }))}
+                onClear={() =>
+                  setFormData((p) => ({ ...p, countryId: "", destinationId: "" }))
+                }
               />
             </div>
           </FieldReveal>
@@ -587,8 +684,10 @@ const StepTrip = memo(({
             <div>
               <Label>
                 Specific Destination{" "}
-                <span style={{ fontSize: 11, color: "#9ca3af", fontWeight: 400,
-                  textTransform: "none", letterSpacing: 0 }}>
+                <span style={{
+                  fontSize: 11, color: "#9ca3af", fontWeight: 400,
+                  textTransform: "none", letterSpacing: 0,
+                }}>
                   (optional)
                 </span>
               </Label>
@@ -596,7 +695,7 @@ const StepTrip = memo(({
                 onClick={() => setOpenDest(true)}
                 icon={<Sparkles />}
                 label="Select a destination"
-                value={selectedDest?.label ?? null}
+                value={selectedDest ? safeStr(selectedDest.label) : null}
                 hasValue={!!selectedDest}
                 clearable
                 onClear={() => setFormData((p) => ({ ...p, destinationId: "" }))}
@@ -606,24 +705,29 @@ const StepTrip = memo(({
         </div>
       </SectionCard>
 
-      <SelectModal isOpen={openCountry} onClose={() => setOpenCountry(false)}
+      <SelectModal
+        isOpen={openCountry} onClose={() => setOpenCountry(false)}
         onSelect={(c) => {
           setFormData((p) => ({ ...p, countryId: c.value, destinationId: "" }));
           setOpenCountry(false);
         }}
         items={countriesList} mode="country"
-        selectedValue={formData.countryId} isMobile={isMobile} />
+        selectedValue={formData.countryId} isMobile={isMobile}
+      />
 
-      <SelectModal isOpen={openDest} onClose={() => setOpenDest(false)}
+      <SelectModal
+        isOpen={openDest} onClose={() => setOpenDest(false)}
         onSelect={(d) => {
           setFormData((p) => ({
-            ...p, destinationId: d.value,
+            ...p,
+            destinationId: d.value,
             countryId: d.countryId || p.countryId,
           }));
           setOpenDest(false);
         }}
         items={destinationsList} mode="destination"
-        selectedValue={formData.destinationId} isMobile={isMobile} />
+        selectedValue={formData.destinationId} isMobile={isMobile}
+      />
 
       {/* Popular destinations */}
       {(destinationsList || []).length > 0 && (
@@ -635,7 +739,9 @@ const StepTrip = memo(({
             gap: 10,
           }}>
             {destinationsList.slice(0, 6).map((dest, i) => {
-              const id = normalizeOptionValue(dest);
+              const id      = normalizeOptionValue(dest);
+              // ✅ Always a string — normalizeOptionLabel now returns string
+              const label   = normalizeOptionLabel(dest);
               const isActive = formData.destinationId === id;
               return (
                 <motion.button key={id || i} type="button"
@@ -661,15 +767,17 @@ const StepTrip = memo(({
                     marginBottom: 2, overflow: "hidden",
                     textOverflow: "ellipsis", whiteSpace: "nowrap",
                   }}>
+                    {/* ✅ dest.flag is always string from useBookingWizard */}
                     {dest.flag ? `${dest.flag} ` : "🏞️ "}
-                    {normalizeOptionLabel(dest)}
+                    {label}
                   </div>
                   {(dest.country || dest.region) && (
                     <div style={{
                       fontSize: 11.5,
                       color: isActive ? "rgba(255,255,255,.78)" : "#9ca3af",
                     }}>
-                      {dest.country || dest.region}
+                      {/* ✅ dest.country is always string from useBookingWizard */}
+                      {safeStr(dest.country || dest.region)}
                     </div>
                   )}
                 </motion.button>
@@ -685,15 +793,19 @@ const StepTrip = memo(({
         headerRight={
           <label style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer" }}>
             <span style={{ fontSize: 12.5, fontWeight: 600, color: "#6b7280" }}>Flexible</span>
-            <button type="button" role="switch" aria-checked={formData.isFlexible}
-              onClick={() => setFormData((p) => ({ ...p, isFlexible: !p.isFlexible }))}
+            <button
+              type="button" role="switch" aria-checked={formData.isFlexible}
+              onClick={() =>
+                setFormData((p) => ({ ...p, isFlexible: !p.isFlexible }))
+              }
               style={{
                 width: 44, height: 24, borderRadius: 12, border: "none",
                 background: formData.isFlexible
                   ? "linear-gradient(90deg,#059669,#10b981)" : "#e5e7eb",
                 position: "relative", cursor: "pointer", transition: "background .25s",
                 boxShadow: formData.isFlexible ? "0 2px 8px rgba(5,150,105,.3)" : "none",
-              }}>
+              }}
+            >
               <motion.div
                 animate={{ x: formData.isFlexible ? 22 : 2 }}
                 transition={{ type: "spring", stiffness: 500, damping: 35 }}
@@ -718,14 +830,18 @@ const StepTrip = memo(({
                   gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
                 }}
               >
-                <DateField label="Departure Date" name="startDate" required
+                <DateField
+                  label="Departure Date" name="startDate" required
                   value={formData.startDate} min={today}
                   onChange={handleChange} onBlur={handleBlur}
-                  error={errors.startDate} touched={touched.startDate} />
-                <DateField label="Return Date" name="endDate"
+                  error={errors.startDate} touched={touched.startDate}
+                />
+                <DateField
+                  label="Return Date" name="endDate"
                   value={formData.endDate} min={formData.startDate || today}
                   onChange={handleChange} onBlur={handleBlur}
-                  error={errors.endDate} touched={touched.endDate} />
+                  error={errors.endDate} touched={touched.endDate}
+                />
               </motion.div>
             ) : (
               <motion.div key="flex"
@@ -782,7 +898,6 @@ const StepTrip = memo(({
             )}
           </AnimatePresence>
 
-          {/* Duration badge */}
           <AnimatePresence>
             {tripDays && (
               <motion.div
@@ -848,7 +963,9 @@ const StepTrip = memo(({
             >
               <option value="">All categories</option>
               {categoriesList.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
+                <option key={c.value} value={c.value}>
+                  {safeStr(c.label)}
+                </option>
               ))}
             </select>
           </div>
@@ -877,9 +994,10 @@ const StepTravelers = memo(({
       <StepHeader
         icon={<Users size={30} color="#fff" />}
         badge="Step 2 of 4 · Travellers"
-        title={displayName
-          ? <>Perfect, <span style={{ color: "#059669" }}>{displayName}!</span> Who's joining?</>
-          : <>Who's joining the <span style={{ color: "#059669" }}>adventure?</span></>
+        title={
+          displayName
+            ? <>Perfect, <span style={{ color: "#059669" }}>{safeStr(displayName)}!</span> Who's joining?</>
+            : <>Who's joining the <span style={{ color: "#059669" }}>adventure?</span></>
         }
         subtitle="Help us tailor the perfect experience for your group."
         isMobile={isMobile}
@@ -894,8 +1012,12 @@ const StepTravelers = memo(({
           gap: 12,
         }}>
           {(groupTypes || []).map((g, i) => {
-            const id = g.value || g.id;
+            const id       = g.value || g.id;
             const isActive = formData.groupType === id;
+            // ✅ Icon and label always strings
+            const gIcon    = safeIcon(g.icon);
+            const gLabel   = safeStr(g.label ?? g.name ?? g.full_name, "");
+
             return (
               <motion.button key={id} type="button"
                 initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
@@ -915,17 +1037,19 @@ const StepTravelers = memo(({
                   outline: "none",
                 }}
               >
-                <motion.div
-                  animate={{ scale: isActive ? 1.1 : 1 }}
-                  style={{ fontSize: 30, marginBottom: 8 }}
-                >
-                  {g.icon}
-                </motion.div>
+                {gIcon && (
+                  <motion.div
+                    animate={{ scale: isActive ? 1.1 : 1 }}
+                    style={{ fontSize: 30, marginBottom: 8 }}
+                  >
+                    {gIcon}
+                  </motion.div>
+                )}
                 <div style={{
                   fontSize: 12.5, fontWeight: 700,
                   color: isActive ? "#065f46" : "#374151", lineHeight: 1.3,
                 }}>
-                  {g.label || g.name || g.full_name}
+                  {gLabel}
                 </div>
                 <AnimatePresence>
                   {isActive && (
@@ -948,7 +1072,6 @@ const StepTravelers = memo(({
           })}
         </div>
 
-        {/* ✅ FIXED — safe error render for groupType */}
         <AnimatePresence>
           {errors.groupType && touched.groupType && (
             <motion.div
@@ -1019,7 +1142,6 @@ const StepTravelers = memo(({
           )}
         </AnimatePresence>
 
-        {/* ✅ FIXED — safe error render for adults */}
         <AnimatePresence>
           {errors.adults && touched.adults && (
             <motion.div
@@ -1044,9 +1166,14 @@ const StepTravelers = memo(({
             gap: 12,
           }}>
             {accommodationTypes.map((a, i) => {
-              const id = a.value || a.id;
+              const id       = a.value || a.id;
               const isActive = formData.accommodationType === id
                 || formData.accommodation === id;
+              // ✅ Icon and label always strings
+              const aIcon    = safeIcon(a.icon);
+              const aLabel   = safeStr(a.label ?? a.name, "");
+              const aDesc    = safeStr(a.desc ?? a.description, "");
+
               return (
                 <motion.button key={id} type="button"
                   initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
@@ -1075,18 +1202,18 @@ const StepTravelers = memo(({
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: 20, transition: "all .2s",
                   }}>
-                    {a.icon}
+                    {aIcon ?? "🏨"}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{
                       margin: "0 0 3px", fontWeight: 700, fontSize: 14,
                       color: isActive ? "#065f46" : "#111827",
                     }}>
-                      {a.label || a.name}
+                      {aLabel}
                     </p>
-                    {(a.desc || a.description) && (
+                    {aDesc && (
                       <p style={{ margin: 0, fontSize: 12, color: "#9ca3af", lineHeight: 1.5 }}>
-                        {a.desc || a.description}
+                        {aDesc}
                       </p>
                     )}
                   </div>
@@ -1121,6 +1248,8 @@ const StepTravelers = memo(({
         }}>
           {BUDGET_OPTIONS.map((b, i) => {
             const isActive = formData.budgetRange === b.value;
+            // ✅ Icon always string
+            const bIcon = safeIcon(b.icon);
             return (
               <motion.button key={b.value} type="button"
                 initial={{ opacity: 0, scale: 0.92 }}
@@ -1140,12 +1269,14 @@ const StepTravelers = memo(({
                   boxShadow: isActive ? "0 4px 14px rgba(5,150,105,.28)" : "none",
                 }}
               >
-                <div style={{ fontSize: 22, marginBottom: 4 }}>{b.icon}</div>
+                {bIcon && (
+                  <div style={{ fontSize: 22, marginBottom: 4 }}>{bIcon}</div>
+                )}
                 <div style={{
                   fontSize: 12, fontWeight: 700,
                   color: isActive ? "#fff" : "#374151", lineHeight: 1.3,
                 }}>
-                  {b.label}
+                  {safeStr(b.label)}
                 </div>
               </motion.button>
             );
@@ -1172,13 +1303,14 @@ const StepContact = memo(({
       icon={<User size={30} color="#fff" />}
       badge="Step 3 of 4 · Contact"
       title={<>Almost <span style={{ color: "#059669" }}>there!</span></>}
-      subtitle={displayName
-        ? `Let's go, ${displayName}! Fill in your details and we'll reach out within 24 hours.`
-        : "Fill in your contact details and we'll be in touch within 24 hours."}
+      subtitle={
+        displayName
+          ? `Let's go, ${safeStr(displayName)}! Fill in your details and we'll reach out within 24 hours.`
+          : "Fill in your contact details and we'll be in touch within 24 hours."
+      }
       isMobile={isMobile}
     />
 
-    {/* Auto-fill notice */}
     {isAuthenticated && (formData.firstName || formData.email) && (
       <motion.div
         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -1207,7 +1339,6 @@ const StepContact = memo(({
       </motion.div>
     )}
 
-    {/* Contact details */}
     <SectionCard headerIcon={<User />} headerLabel="Contact Details" delay={0.05}>
       <div style={{
         padding: "20px 22px",
@@ -1243,19 +1374,9 @@ const StepContact = memo(({
       </div>
     </SectionCard>
 
-    {/* Preferences */}
     <SectionCard
       headerIcon={<Settings />}
-      headerLabel={
-        <>Travel Preferences{" "}
-          <span style={{
-            fontSize: 11, color: "#9ca3af",
-            fontWeight: 400, textTransform: "none", letterSpacing: 0,
-          }}>
-            — optional
-          </span>
-        </>
-      }
+      headerLabel="Travel Preferences — optional"
       delay={0.1}
     >
       <div style={{
@@ -1271,19 +1392,22 @@ const StepContact = memo(({
           error={errors.preferredContactMethod}
           touched={touched.preferredContactMethod}
           options={[
-            { value: "whatsapp", name: "💬 WhatsApp"   },
-            { value: "email",    name: "📧 Email"       },
-            { value: "phone",    name: "📞 Phone Call"  },
-          ]} />
+            { value: "whatsapp", name: "💬 WhatsApp"  },
+            { value: "email",    name: "📧 Email"      },
+            { value: "phone",    name: "📞 Phone Call" },
+          ]}
+        />
         <TextInput name="preferredContactTime" label="Best Time to Reach You"
           placeholder="e.g. 9am–12pm (GMT+2)" icon={Clock}
           value={formData.preferredContactTime}
           onChange={handleChange} onBlur={handleBlur}
-          helpText="Include your timezone for faster replies." />
+          helpText="Include your timezone for faster replies."
+        />
         <TextInput name="pickupLocation" label="Pickup Location"
           placeholder="Hotel / Airport / City" icon={MapPin}
           value={formData.pickupLocation}
-          onChange={handleChange} onBlur={handleBlur} />
+          onChange={handleChange} onBlur={handleBlur}
+        />
         <SelectInput name="marketingSource" label="How Did You Find Us?"
           icon={Compass}
           value={formData.marketingSource}
@@ -1296,14 +1420,16 @@ const StepContact = memo(({
             { value: "referral",  name: "🤝 Friend/Referral"    },
             { value: "returning", name: "✈️ Returning Traveler" },
             { value: "other",     name: "💡 Other"              },
-          ]} />
+          ]}
+        />
       </div>
 
-      {/* Newsletter */}
       <div style={{ padding: "0 22px 18px" }}>
         <label style={{ display: "flex", alignItems: "center", gap: 10, cursor: "pointer" }}>
           <div
-            onClick={() => setFormData((p) => ({ ...p, newsletterOptIn: !p.newsletterOptIn }))}
+            onClick={() =>
+              setFormData((p) => ({ ...p, newsletterOptIn: !p.newsletterOptIn }))
+            }
             style={{
               width: 20, height: 20, borderRadius: 6, flexShrink: 0,
               border: `2px solid ${formData.newsletterOptIn ? "#059669" : "#d1d5db"}`,
@@ -1326,16 +1452,7 @@ const StepContact = memo(({
     {(interests || []).length > 0 && (
       <SectionCard
         headerIcon={<Heart />}
-        headerLabel={
-          <>Interests{" "}
-            <span style={{
-              fontSize: 11, color: "#9ca3af",
-              fontWeight: 400, textTransform: "none", letterSpacing: 0,
-            }}>
-              — optional
-            </span>
-          </>
-        }
+        headerLabel="Interests — optional"
         delay={0.15}
       >
         <div style={{ padding: "16px 22px" }}>
@@ -1345,12 +1462,15 @@ const StepContact = memo(({
             gap: 10,
           }}>
             {interests.map((item, i) => {
-              const val    = item?.value ?? item?.name ?? item;
-              const label  = item?.label ?? item?.name ?? item;
-              const icon   = item?.icon ?? "";
+              const val    = item?.value ?? item?.name ?? String(item ?? "");
+              // ✅ label always string
+              const label  = safeStr(item?.label ?? item?.name ?? item, "");
+              // ✅ icon always string or null
+              const icon   = safeIcon(item?.icon);
               const active = (formData.interests || []).includes(val);
+
               return (
-                <motion.button key={val} type="button"
+                <motion.button key={val || i} type="button"
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.03 }}
@@ -1373,7 +1493,7 @@ const StepContact = memo(({
                     color: active ? "#fff" : "#374151",
                     lineHeight: 1.3, textAlign: "center",
                   }}>
-                    {typeof label === "string" ? label : String(label ?? "")}
+                    {label}
                   </span>
                 </motion.button>
               );
@@ -1424,7 +1544,9 @@ const StepContact = memo(({
       }}>
         <label style={{ display: "flex", alignItems: "flex-start", gap: 12, cursor: "pointer" }}>
           <div
-            onClick={() => setFormData((p) => ({ ...p, agreeToTerms: !p.agreeToTerms }))}
+            onClick={() =>
+              setFormData((p) => ({ ...p, agreeToTerms: !p.agreeToTerms }))
+            }
             style={{
               width: 22, height: 22, borderRadius: 6, flexShrink: 0, marginTop: 2,
               border: `2px solid ${formData.agreeToTerms ? "#059669" : "#d1d5db"}`,
@@ -1502,10 +1624,12 @@ const StepReview = memo(({
 }) => {
   const dest    = (destinationsList    || []).find((d) => d.value === formData.destinationId);
   const country = (countriesList       || []).find((c) => c.value === formData.countryId);
-  const group   = (groupTypes          || []).find((g) =>
-    (g.value || g.id) === formData.groupType);
-  const accom   = (accommodationTypes  || []).find((a) =>
-    (a.value || a.id) === (formData.accommodationType || formData.accommodation));
+  const group   = (groupTypes          || []).find(
+    (g) => (g.value || g.id) === formData.groupType,
+  );
+  const accom   = (accommodationTypes  || []).find(
+    (a) => (a.value || a.id) === (formData.accommodationType || formData.accommodation),
+  );
 
   const duration = getTripDuration?.();
   const total    = getTotalVisitors?.();
@@ -1513,6 +1637,7 @@ const StepReview = memo(({
   const children = parseInt(formData.children, 10) || 0;
   const infants  = parseInt(formData.infants,  10) || 0;
 
+  // ✅ All values guaranteed plain strings
   const rows = [
     { icon: "👤", label: "Name",
       value: `${formData.firstName || ""} ${formData.lastName || ""}`.trim() || "—" },
@@ -1520,14 +1645,16 @@ const StepReview = memo(({
     { icon: "📞", label: "Phone",  value: formData.phone   || "—" },
     { icon: "🌍", label: "From",   value: formData.country || "—" },
     { icon: "📍", label: "Destination",
-      value: dest?.label || country?.label || "Not specified" },
+      value: safeStr(dest?.label || country?.label, "Not specified") },
     formData.isFlexible
       ? { icon: "📅", label: "Dates",
-          value: `Flexible — ${(formData.flexibleMonths || []).length
-            ? formData.flexibleMonths
-                .map((m) => m.charAt(0).toUpperCase() + m.slice(1))
-                .join(", ")
-            : "Any month"}` }
+          value: `Flexible — ${
+            (formData.flexibleMonths || []).length
+              ? formData.flexibleMonths
+                  .map((m) => m.charAt(0).toUpperCase() + m.slice(1))
+                  .join(", ")
+              : "Any month"
+          }` }
       : { icon: "📅", label: "Departure",
           value: formData.startDate
             ? new Date(formData.startDate).toLocaleDateString("en-US", {
@@ -1535,45 +1662,48 @@ const StepReview = memo(({
                 month: "long", day: "numeric",
               })
             : "—" },
-    !formData.isFlexible && formData.endDate && {
-      icon: "🏁", label: "Return",
-      value: new Date(formData.endDate).toLocaleDateString("en-US", {
-        weekday: "short", year: "numeric",
-        month: "long", day: "numeric",
-      }),
-    },
-    duration && {
-      icon: "⏱️", label: "Duration",
-      value: `${duration} day${duration !== 1 ? "s" : ""}`,
-    },
+    !formData.isFlexible && formData.endDate
+      ? { icon: "🏁", label: "Return",
+          value: new Date(formData.endDate).toLocaleDateString("en-US", {
+            weekday: "short", year: "numeric",
+            month: "long", day: "numeric",
+          }) }
+      : null,
+    duration
+      ? { icon: "⏱️", label: "Duration",
+          value: `${duration} day${duration !== 1 ? "s" : ""}` }
+      : null,
     { icon: "👥", label: "Travellers",
       value: `${total || 0} total — ${adults} adult${adults !== 1 ? "s" : ""}${
         children ? `, ${children} child${children !== 1 ? "ren" : ""}` : ""
       }${infants ? `, ${infants} infant${infants !== 1 ? "s" : ""}` : ""}` },
-    group && {
-      icon: "🧳", label: "Group Type",
-      value: `${group.icon ?? ""} ${group.label || group.name}`.trim(),
-    },
-    accom && {
-      icon: "🏨", label: "Accommodation",
-      value: `${accom.icon ?? ""} ${accom.label || accom.name}`.trim(),
-    },
-    formData.budgetRange && {
-      icon: "💰", label: "Budget",
-      value: BUDGET_LABELS[formData.budgetRange] || formData.budgetRange,
-    },
-    formData.interests?.length && {
-      icon: "✨", label: "Interests",
-      value: formData.interests.join(", "),
-    },
-    formData.specialRequests && {
-      icon: "💬", label: "Special Requests",
-      value: formData.specialRequests,
-    },
-    formData.preferredContactMethod && {
-      icon: "📲", label: "Contact Via",
-      value: formData.preferredContactMethod,
-    },
+    group
+      ? { icon: "🧳", label: "Group Type",
+          // ✅ safeIcon + safeStr — never renders object
+          value: [safeIcon(group.icon), safeStr(group.label ?? group.name, "")]
+            .filter(Boolean).join(" ").trim() }
+      : null,
+    accom
+      ? { icon: "🏨", label: "Accommodation",
+          value: [safeIcon(accom.icon), safeStr(accom.label ?? accom.name, "")]
+            .filter(Boolean).join(" ").trim() }
+      : null,
+    formData.budgetRange
+      ? { icon: "💰", label: "Budget",
+          value: BUDGET_LABELS[formData.budgetRange] || safeStr(formData.budgetRange) }
+      : null,
+    formData.interests?.length
+      ? { icon: "✨", label: "Interests",
+          value: formData.interests.join(", ") }
+      : null,
+    formData.specialRequests
+      ? { icon: "💬", label: "Special Requests",
+          value: safeStr(formData.specialRequests) }
+      : null,
+    formData.preferredContactMethod
+      ? { icon: "📲", label: "Contact Via",
+          value: safeStr(formData.preferredContactMethod) }
+      : null,
   ].filter(Boolean);
 
   return (
@@ -1582,7 +1712,7 @@ const StepReview = memo(({
         icon={<CheckCircle2 size={30} color="#fff" />}
         badge="Step 4 of 4 · Review"
         title={<>Review your <span style={{ color: "#059669" }}>trip details</span></>}
-        subtitle="Everything look good? Hit submit and we'll send your request via WhatsApp instantly."
+        subtitle="Everything look good? Hit submit and we'll get back to you within 24 hours."
         isMobile={isMobile}
       />
 
@@ -1599,8 +1729,10 @@ const StepReview = memo(({
             boxShadow: "0 8px 32px rgba(0,0,0,.14)",
           }}
         >
-          <img src={dest.image} alt={dest.label}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+          <img
+            src={dest.image} alt={safeStr(dest.label)}
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
           <div style={{
             position: "absolute", inset: 0,
             background: "linear-gradient(to top,rgba(0,0,0,.7) 0%,transparent 55%)",
@@ -1612,11 +1744,11 @@ const StepReview = memo(({
                 fontFamily: "'Playfair Display',serif",
                 fontSize: isMobile ? 20 : 24, fontWeight: 900,
               }}>
-                {dest.label}
+                {safeStr(dest.label)}
               </h3>
               {dest.country && (
                 <p style={{ margin: 0, color: "rgba(255,255,255,.82)", fontSize: 13.5 }}>
-                  📍 {dest.country}
+                  📍 {safeStr(dest.country)}
                 </p>
               )}
             </div>
@@ -1633,7 +1765,7 @@ const StepReview = memo(({
         <div style={{ padding: "0 22px" }}>
           {rows.map((row, i) => (
             <ReviewRow
-              key={row.label}
+              key={`${row.label}-${i}`}
               icon={row.icon}
               label={row.label}
               value={row.value}
@@ -1644,7 +1776,7 @@ const StepReview = memo(({
         <div style={{ height: 8 }} />
       </SectionCard>
 
-      {/* WhatsApp submit notice */}
+      {/* Submit notice */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -1672,7 +1804,7 @@ const StepReview = memo(({
           <p style={{ margin: 0, fontSize: 13.5, color: "#6b7280", lineHeight: 1.6 }}>
             Clicking{" "}
             <strong style={{ color: "#059669" }}>Submit Booking</strong>{" "}
-            will open WhatsApp with your full booking details pre-filled.{" "}
+            will send your full booking details to our team.{" "}
             <strong>No payment required</strong> — our expert will be in touch within 24 hours.
           </p>
         </div>
@@ -1683,7 +1815,7 @@ const StepReview = memo(({
 StepReview.displayName = "StepReview";
 
 /* ════════════════════════════════════════════════════════
-   NAVBAR
+   NAV BAR
 ════════════════════════════════════════════════════════ */
 const NavBar = memo(({
   currentStep, totalSteps, onPrev, onNext,
@@ -1718,7 +1850,6 @@ const NavBar = memo(({
     </div>
 
     <div style={{ display: "flex", gap: 14, alignItems: "center", marginLeft: "auto" }}>
-      {/* Progress dots */}
       {!isMobile && (
         <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
           {Array.from({ length: totalSteps }).map((_, i) => (
@@ -1771,11 +1902,10 @@ const NavBar = memo(({
           </>
         ) : isReviewStep ? (
           <>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"
-              style={{ flexShrink: 0 }}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff" style={{ flexShrink: 0 }}>
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.44-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
             </svg>
-            Submit via WhatsApp
+            Submit Booking
           </>
         ) : (
           <>Next Step <ArrowRight size={16} /></>
