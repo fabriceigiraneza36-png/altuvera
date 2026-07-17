@@ -60,7 +60,7 @@ const buildSitemap = () => {
   const destinationItems = getAllDestinations()
     .filter((d) => d && d.id)
     .map((d) => ({
-      loc: `/destination/${d.id}`,
+      loc: `/destinations/${d.id}`,
       lastmod: today,
       changefreq: "monthly",
       priority: 0.8,

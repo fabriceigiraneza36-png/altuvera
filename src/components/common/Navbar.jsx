@@ -441,7 +441,7 @@ const Navbar = () => {
 
   const handleResultClick = useCallback(
     (dest) => {
-      navigate(`/destination/${dest.slug || dest.id}`);
+      navigate(`/destinations/${dest.slug || dest.id}`);
       setSearchOpen(false);
       setSearchValue("");
       setSearchResults([]);

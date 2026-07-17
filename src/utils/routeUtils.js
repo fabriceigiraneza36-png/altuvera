@@ -278,13 +278,13 @@ export const getRedirectUrl = (pathname) => {
         if (!slug) return false;
         return (
           `/${slug}` === normalizedPath ||
-          `/destination/${slug}` === normalizedPath
+          `/destinations/${slug}` === normalizedPath
         );
       })
     : null;
   if (destinationMatch) {
     const slug = destinationMatch.slug || destinationMatch.id;
-    return slug ? `/destination/${slug}` : null;
+    return slug ? `/destinations/${slug}` : null;
   }
 
   const knownRoutes = [
@@ -408,7 +408,7 @@ export const preloadRoute = (pathname) => {
     return;
   }
 
-  if (normalizedPath.startsWith("/destination/")) {
+  if (normalizedPath.startsWith("/destinations/")) {
     const loader = routeToComponent["/destinations"];
     if (loader) runLoader(loader);
     return;

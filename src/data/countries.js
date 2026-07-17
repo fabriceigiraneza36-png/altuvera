@@ -3210,7 +3210,7 @@ Djibouti's colonial heritage (French Territory of the Afars and the Issas, later
     images: [
       "https://media.evendo.com/locations-resized/CityDetails/original/d4fa3d2c-b64a-4fba-881f-af127ccdf9c7",
       "https://i.pinimg.com/1200x/1e/02/46/1e0246d24313863a07928baf6d5b31e5.jpg",
-      "https://ik.imgkit.net/3vlqs5axxjf/external/http://images.ntmllc.com/v4/destination/Djibouti/Lake-Abbe/316748_SCN_lake-abbe_iStock-601939858_ZE3A6C.jpg?tr=w-1200%2Cfo-auto",
+      "https://ik.imgkit.net/3vlqs5axxjf/external/http://images.ntmllc.com/v4/destinations/Djibouti/Lake-Abbe/316748_SCN_lake-abbe_iStock-601939858_ZE3A6C.jpg?tr=w-1200%2Cfo-auto",
       "https://img.liveaboard.com/imageserver/picture_library/site/diving/djibouti/goubet-al-kharab/goubet-al-kharab-xl.jpg",
       "https://i.pinimg.com/736x/04/93/94/049394701f3133c97ebcb3672e3458c8.jpg",
       "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcR6bth-0a2T54xpM-r0YjVNpwi-ou6aVqEhp5IzVjScwNtdHsHQlRobQ3xPAnHl",
