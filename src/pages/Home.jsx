@@ -1289,7 +1289,7 @@ const TestimonialCard = ({ slide }) => {
 };
 
 const TestimonialSection = () => {
-  const { testimonials, loading } = useTestimonials();
+  const { testimonials, loading } = useTestimonials("active=all");
 
   const slides = useMemo(() => {
     if (loading) return [];

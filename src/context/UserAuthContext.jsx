@@ -33,6 +33,8 @@ const REVERIFICATION_THRESHOLD = 3;
 const resolveGithubRedirectUri = () => {
   if (import.meta.env.VITE_GITHUB_REDIRECT_URI)
     return import.meta.env.VITE_GITHUB_REDIRECT_URI;
+  if (import.meta.env.VITE_GITHUB_CALLBACK_URL)
+    return import.meta.env.VITE_GITHUB_CALLBACK_URL;
   const path =
     import.meta.env.VITE_GITHUB_REDIRECT_PATH || "/auth/github/callback";
   return `${window.location.origin}${path}`;
@@ -43,7 +45,8 @@ if (import.meta.env.DEV) {
     VITE_API_URL:            import.meta.env.VITE_API_URL,
     VITE_GOOGLE_CLIENT_ID:   import.meta.env.VITE_GOOGLE_CLIENT_ID,
     VITE_GITHUB_CLIENT_ID:   import.meta.env.VITE_GITHUB_CLIENT_ID,
-    VITE_GITHUB_REDIRECT_URI: import.meta.env.VITE_GITHUB_REDIRECT_URI,
+    VITE_GITHUB_REDIRECT_URI:   import.meta.env.VITE_GITHUB_REDIRECT_URI,
+    VITE_GITHUB_CALLBACK_URL:   import.meta.env.VITE_GITHUB_CALLBACK_URL,
   };
   Object.entries(vars).forEach(([k, v]) => {
     if (!v) console.warn(`[Auth] Missing env var: ${k}`);

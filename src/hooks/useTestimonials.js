@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import enhancedApiClient from "../utils/enhancedApiClient";
 
-export function useTestimonials(params = {}) {
+export function useTestimonials(query = "") {
   const [testimonials, setTestimonials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -11,7 +11,8 @@ export function useTestimonials(params = {}) {
     setError(null);
 
     try {
-      const result = await enhancedApiClient.request("/testimonials?limit=200", {
+      const url = `/testimonials?limit=200${query ? `&${query}` : ""}`;
+      const result = await enhancedApiClient.request(url, {
         method: "GET",
         cacheTime: 10 * 60 * 1000, // 10 minutes cache
       });
@@ -33,7 +34,7 @@ export function useTestimonials(params = {}) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [query]);
 
   useEffect(() => {
     fetchTestimonials();
