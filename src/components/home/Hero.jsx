@@ -43,7 +43,7 @@ export const HERO_SLIDES = [
   },
   {
     image:
-      "blob:https://gemini.google.com/1ae6af11-00de-4f65-b44c-62d8cae770a9",
+      "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=3840",
     fallback:
       "https://www.andbeyond.com/wp-content/uploads/sites/5/Elephants-and-mount-kilimanjaro.jpg",
     title: "Summit Mount Kilimanjaro",

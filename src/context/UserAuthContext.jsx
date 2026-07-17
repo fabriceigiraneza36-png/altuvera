@@ -268,9 +268,21 @@ const isDismissalError = (msg = "") => {
 };
 
 // ─── COOP-safe popup closed check ────────────────────────────────────────────
+// Under a Cross-Origin-Opener-Policy of "same-origin" the browser throws when a
+// cross-origin popup's `closed` property is read. We read it AT MOST ONCE and
+// cache the result so the console warning only ever appears a single time, then
+// rely on the BroadcastChannel / postMessage callback (which is COOP-safe) and
+// the watchdog timeout to resolve the promise regardless.
+let _popupClosedCache = null;
 const isPopupClosed = (popup) => {
-  try { return !popup || popup.closed; }
-  catch { return false; } // COOP blocked — assume still open
+  if (_popupClosedCache !== null) return _popupClosedCache;
+  try {
+    const closed = !popup || popup.closed;
+    _popupClosedCache = closed; // cache — never re-read a cross-origin handle
+    return closed;
+  } catch {
+    return false; // COOP blocked — assume still open, callback/timeout handles it
+  }
 };
 
 // ─── FedCM-safe One Tap notification classifier ───────────────────────────────
@@ -353,6 +365,8 @@ const openGooglePopup = (clientId, mode = "signin") =>
     let bcHandler    = null;
     let watchdogTimer = null;
     let bc           = null;
+
+    _popupClosedCache = null; // fresh cache for this popup instance
 
     const cleanup = () => {
       settled = true;
