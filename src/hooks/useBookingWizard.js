@@ -264,9 +264,12 @@ export const useBookingWizard = () => {
   /* ── Prefill from authenticated user ── */
   useEffect(() => {
     if (!user) return;
+    const nameParts = (user.fullName || user.name || "").trim().split(/\s+/);
+    const firstName = nameParts[0] || "";
+    const lastName  = nameParts.slice(1).join(" ") || "";
     const sources = {
-      firstName:   user.first_name  || user.name?.split(" ")[0] || "",
-      lastName:    user.last_name   || user.name?.split(" ")[1] || "",
+      firstName,
+      lastName,
       email:       user.email       || "",
       phone:       user.phone       || "",
       nationality: user.nationality || user.country || "",

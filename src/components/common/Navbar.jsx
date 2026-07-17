@@ -16,6 +16,7 @@ import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 import { preloadRoute } from "../../utils/routeUtils";
 import { getCountrySlug } from "../../utils/countrySlugMap";
 import { useCountries } from "../../hooks/useCountries";
+import { adaptDestination } from "../../utils/destinationAdapter";
 import "./Navbar.css";
 
 const cn = (...c) => c.filter(Boolean).join(" ");
@@ -189,7 +190,7 @@ const Navbar = () => {
     if (searchOpen) setTimeout(() => searchInputRef.current?.focus(), 100);
   }, [searchOpen]);
 
-  /* ── Search — backend only, no local mock data ── */
+  /* ── Search — live backend destinations, no mock data ── */
   useEffect(() => {
     const q = searchValue.trim();
     latestSearchRef.current = q;
@@ -205,40 +206,23 @@ const Navbar = () => {
       return;
     }
 
-    const norm = (v) => {
-      if (typeof v === "string") return v;
-      if (!v) return "";
-      if (typeof v === "object")
-        return v.name || v.countryName || v.location || v.slug || "";
-      return String(v);
-    };
-
-    const toR = (i) => ({
-      id: i?.id || i?._id || i?.slug,
-      slug: i?.slug || i?.id || i?._id,
-      name: i?.title || i?.name || i?.category || "Result",
-      country: norm(i?.country || i?.countryName || i?.location),
-      category: norm(i?.category || i?.type || "Destination"),
-      heroImage: i?.image || i?.heroImage || i?.images?.[0] || "",
-      description: i?.description,
-      price: i?.price,
-      duration: i?.duration,
-    });
-
     const tid = setTimeout(async () => {
       setIsSearching(true);
       const ctrl = new AbortController();
       searchAbortRef.current = ctrl;
       try {
         const res = await fetch(
-          `${API_URL}/search?q=${encodeURIComponent(q)}&limit=10`,
+          `${API_URL}/destinations/suggestions?q=${encodeURIComponent(q)}&limit=10`,
           { signal: ctrl.signal },
         );
         if (!res.ok) throw new Error("Search failed");
         const data = await res.json();
         if (latestSearchRef.current !== q) return;
-        const remote = (data?.data || data?.results || []).map(toR);
-        setSearchResults(remote.slice(0, 10));
+        const raw = data?.data || data?.results || data || [];
+        const adapted = Array.isArray(raw)
+          ? raw.map(adaptDestination).filter(Boolean)
+          : [];
+        setSearchResults(adapted.slice(0, 10));
       } catch (err) {
         if (err.name !== "AbortError") {
           if (latestSearchRef.current === q) setSearchResults([]);
@@ -246,7 +230,7 @@ const Navbar = () => {
       } finally {
         if (latestSearchRef.current === q) setIsSearching(false);
       }
-    }, 350);
+    }, 250);
 
     return () => clearTimeout(tid);
   }, [searchValue, API_URL]);
@@ -729,7 +713,6 @@ const Navbar = () => {
                         {r.country && r.category && <span> · </span>}
                         {r.category && <span>{r.category}</span>}
                         {r.duration && <span> · {r.duration}</span>}
-                        {r.price && <span> · From ${r.price}</span>}
                       </p>
                     </div>
                   </Link>

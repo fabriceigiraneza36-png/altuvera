@@ -45,6 +45,7 @@ import TeamCard from "../components/common/TeamCard";
 import { useMediaQuery } from "../hooks/useMediaQuery";
 import useScrollProgress from "../hooks/useScrollProgress";
 import { services } from "../data/services";
+import { useFeaturedTestimonials } from "../hooks/useTestimonials";
 
 /* ─────────────────────────────────────────────
    INJECT FONTS + BASE STYLES
@@ -602,7 +603,7 @@ const WHY_CARDS = [
     tags: ["Certified", "Multilingual", "Wildlife Experts"],
     badge: "Top Rated",
     badgeIcon: "⭐",
-    image: "https://i.pinimg.com/736x/f3/8e/5d/f38e5ddcc6677a39515284b5c2c7a2e4.jpg",
+    image: "https://i.pinimg.com/236x/14/f8/7f/14f87f11922888cf40a8ca405d731246.jpg",
     footer: "Guided by Altuvera Pros",
     link: "/team",
     ctaLabel: "Meet the Team",
@@ -615,7 +616,7 @@ const WHY_CARDS = [
     tags: ["Eco-Certified", "Carbon Offset", "Community Impact"],
     badge: "Eco",
     badgeIcon: "🌿",
-    image: "https://i.pinimg.com/1200x/33/7b/76/337b768498fe758d5146b5b0fcbac0ad.jpg",
+    image: "blob:https://gemini.google.com/0b15b422-cf52-433f-ad61-26aeb2637be0",
     footer: "Conservation First",
     link: "/about#mission",
     ctaLabel: "Our Mission",
@@ -628,7 +629,7 @@ const WHY_CARDS = [
     tags: ["Bespoke", "Flexible", "Curated"],
     badge: "Custom",
     badgeIcon: "✦",
-    image: "https://i.pinimg.com/1200x/48/c9/f7/48c9f7d212a4a2933b84ec65c19e4628.jpg",
+    image: "https://i.pinimg.com/1200x/8f/9d/e8/8f9de8dad8e26fc74268e13f37149f92.jpg",
     footer: "Your Journey, Your Rules",
     link: "/packages",
     ctaLabel: "View Packages",
@@ -641,7 +642,7 @@ const WHY_CARDS = [
     tags: ["Cultural", "Authentic", "Immersive"],
     badge: "Unique",
     badgeIcon: "🏛",
-    image: "https://i.pinimg.com/736x/4a/9d/29/4a9d29a741657c485053b0883aa0df29.jpg",
+    image: "https://i.pinimg.com/736x/e1/5b/9e/e15b9ef8fe7dfae13d170068d8d3008e.jpg",
     footer: "Real Connections",
     link: "/destinations",
     ctaLabel: "Explore",
@@ -654,7 +655,7 @@ const WHY_CARDS = [
     tags: ["24/7 Support", "Logistics", "Hassle-Free"],
     badge: "Premium",
     badgeIcon: "💎",
-    image: "https://i.pinimg.com/1200x/f0/33/77/f033774e32b1ba127ac4b4e6900b89af.jpg",
+    image: "https://i.pinimg.com/1200x/19/8d/ab/198dab499b95cff53e2a48a8ba02c673.jpg",
     footer: "Always by Your Side",
     link: "/contact",
     ctaLabel: "Contact Us",
@@ -667,7 +668,7 @@ const WHY_CARDS = [
     tags: ["Award-Winning", "5-Star Rated", "Trusted"],
     badge: "Best in Class",
     badgeIcon: "🏆",
-    image: "https://i.pinimg.com/736x/52/a6/89/52a689bd83f6a3a1c2dd75e822b70f39.jpg",
+    image: "https://i.pinimg.com/736x/08/73/a9/0873a9c33c198ea63293106972294bf0.jpg",
     footer: "Recognised Excellence",
     link: "/about",
     ctaLabel: "Learn More",
@@ -759,41 +760,8 @@ const WHY_ITEMS = [
   },
 ];
 
-const TESTIMONIALS = [
-  {
-    quote:
-      "Every single detail was flawlessly executed. Our guides brought the ecosystem to life in ways no documentary ever could.",
-    author: "Sarah Mitchell",
-    role: "Wildlife Photographer · United Kingdom",
-    rating: 5,
-    avatar:
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop",
-    trip: "Serengeti Safari",
-  },
-  {
-    quote:
-      "From the Serengeti plains to Zanzibar's shores, our honeymoon was crafted with extraordinary care and attention.",
-    author: "James & Emily Parker",
-    role: "Honeymooners · Australia",
-    rating: 5,
-    avatar:
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop",
-    trip: "Tanzania Honeymoon",
-  },
-  {
-    quote:
-      "Professional, deeply knowledgeable, and genuinely passionate about conservation. An experience I will treasure forever.",
-    author: "Michael Chen",
-    role: "Adventure Traveller · Canada",
-    rating: 5,
-    avatar:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop",
-    trip: "Gorilla Trekking",
-  },
-];
-
 /* ─────────────────────────────────────────────
-   HELPERS / HOOKS
+    HELPERS / HOOKS
 ───────────────────────────────────────────── */
 const useScrollReveal = () => {
   const ref = useRef(null);
@@ -1426,6 +1394,7 @@ const Services = () => {
   const [teamMembers, setTeamMembers] = useState([]);
   const [teamLoading, setTeamLoading] = useState(true);
   const [teamError, setTeamError] = useState(null);
+  const { testimonials, loading: testimonialsLoading, error: testimonialsError } = useFeaturedTestimonials(6);
   const isMobile = useMediaQuery("(max-width: 768px)");
   const scrollProgress = useScrollProgress();
 
@@ -1568,11 +1537,51 @@ const Services = () => {
             />
 
             <div className="sv-grid-3">
-              {TESTIMONIALS.map((t, i) => (
-                <Reveal key={t.author} index={i}>
-                  <TestiCard t={t} />
-                </Reveal>
-              ))}
+              {testimonialsLoading ? (
+                [0, 1, 2].map((i) => (
+                  <Reveal key={`sk-${i}`} index={i}>
+                    <div className="sv-testi-card" style={{ padding: 24 }}>
+                      <div style={{ height: 14, width: "45%", background: "#DCFCE7", borderRadius: 6, marginBottom: 16 }} />
+                      <div style={{ height: 10, width: "95%", background: "#F0FDF4", borderRadius: 4, marginBottom: 8 }} />
+                      <div style={{ height: 10, width: "80%", background: "#F0FDF4", borderRadius: 4, marginBottom: 8 }} />
+                      <div style={{ height: 10, width: "60%", background: "#F0FDF4", borderRadius: 4, marginBottom: 24 }} />
+                      <div style={{ height: 44, display: "flex", alignItems: "center", gap: 12, borderTop: "1px solid #F0FDF4", paddingTop: 16 }}>
+                        <div style={{ width: 44, height: 44, borderRadius: "50%", background: "#DCFCE7" }} />
+                        <div style={{ flex: 1 }}>
+                          <div style={{ height: 12, width: "50%", background: "#BBF7D0", borderRadius: 4, marginBottom: 6 }} />
+                          <div style={{ height: 10, width: "35%", background: "#F0FDF4", borderRadius: 4 }} />
+                        </div>
+                      </div>
+                    </div>
+                  </Reveal>
+                ))
+              ) : testimonialsError ? (
+                <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "3rem 1rem", color: "#64748b" }}>
+                  <p style={{ fontWeight: 600, color: "#0f172a" }}>Could not load testimonials</p>
+                  <p style={{ fontSize: ".88rem" }}>{testimonialsError}</p>
+                </div>
+              ) : testimonials.length === 0 ? (
+                <div style={{ gridColumn: "1 / -1", textAlign: "center", padding: "3rem 1rem", color: "#64748b" }}>
+                  <p style={{ fontWeight: 600, color: "#0f172a" }}>No testimonials yet</p>
+                  <p style={{ fontSize: ".88rem" }}>Be the first to share your experience!</p>
+                </div>
+              ) : (
+                testimonials.map((t, i) => {
+                  const card = {
+                    quote: t.testimonial_text || t.text || "",
+                    author: t.name || "Traveller",
+                    role: t.location || "Verified Traveller",
+                    rating: parseInt(t.rating) || 5,
+                    avatar: t.avatar_url || t.avatar || "",
+                    trip: t.trip || "",
+                  };
+                  return (
+                    <Reveal key={t.id || i} index={i}>
+                      <TestiCard t={card} />
+                    </Reveal>
+                  );
+                })
+              )}
             </div>
           </div>
         </section>

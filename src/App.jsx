@@ -31,7 +31,7 @@ import CongratulationWindow from "./components/auth/CongratulationWindow";
 import NotLoggedInMessage  from "./components/auth/NotLoggedInMessage";
 import ProtectedRoute      from "./components/auth/ProtectedRoute";
 import PageWrapper         from "./components/common/PageWrapper";
-import BookingVerifyResult from "./pages/BookingVerifyResult";
+import BookingVerifyResult from "./pages/Booking/BookingVerifyResult";
 import WhatsAppButton      from "./components/common/WhatsAppButton";
 import UserNotifications   from "./pages/auth/UserNotifications";
 import Explore             from "./pages/Explore";
@@ -89,7 +89,6 @@ const getRedirectUrl = (pathname) => {
 
 /**
  * PUBLIC routes — accessible without authentication.
- * ✅ /booking/* is here — WhatsApp flow needs no login.
  */
 const publicRoutes = [
   // ── Auth-dashboard utilities (public but user-specific) ──
@@ -241,9 +240,12 @@ const publicRoutes = [
     component: React.lazy(() => import("./pages/TermsOfService")),
     meta: { title: "Terms of Service" },
   },
+];
 
-  // ── ✅ BOOKING — public, no auth required ──
-  // Uses wildcard so BookingRouter handles /booking/trip, /travelers, etc.
+/**
+ * PROTECTED routes — require authentication.
+ */
+const protectedRoutes = [
   {
     path: "/booking/*",
     component: React.lazy(() => import("./pages/Booking")),
@@ -253,13 +255,6 @@ const publicRoutes = [
       noindex: true,
     },
   },
-];
-
-/**
- * PROTECTED routes — require authentication.
- * Booking removed from here — it's now public above.
- */
-const protectedRoutes = [
   {
     path: "/profile",
     component: React.lazy(() => import("./pages/auth/UserProfile")),
