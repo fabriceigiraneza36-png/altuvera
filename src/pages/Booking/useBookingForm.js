@@ -3,21 +3,17 @@ import { useState, useCallback, useRef } from "react";
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export const STEPS = [
-  { id: "identity",    label: "Your Details"    },
-  { id: "destination", label: "Destination"     },
-  { id: "travel",      label: "Trip Details"    },
-  { id: "contact",     label: "Contact & Send"  },
+  { id: "identity",    label: "Identity",    desc: "Tell us about yourself" },
+  { id: "destination", label: "Destination", desc: "Where you're going" },
+  { id: "trip",        label: "Trip",        desc: "When & how many" },
+  { id: "contact",     label: "Send",        desc: "Final details" },
 ];
 
 const INITIAL = {
-  /* Step 0 — Identity (3 fields) */
   firstName: "", lastName: "", nationality: "",
-  /* Step 1 — Destination (3 fields) */
   countryId: "", destinationId: "", groupType: "",
-  /* Step 2 — Trip (3 fields: dates + travelers + requests) */
   startDate: "", endDate: "", flexibleDates: false, flexibleMonths: [],
   adults: 1, children: 0, specialRequests: "",
-  /* Step 3 — Contact (3 fields: email, phone, country) */
   email: "", phone: "", country: "",
   preferredContactMethod: "whatsapp",
   newsletterOptIn: false, agreeToTerms: false,
@@ -26,53 +22,49 @@ const INITIAL = {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const VALIDATORS = [
-  /* Step 0 */
   (d) => {
     const e = {};
-    if (!d.firstName.trim())    e.firstName    = "First name is required";
-    if (!d.lastName.trim())     e.lastName     = "Last name is required";
-    if (!d.nationality.trim())  e.nationality  = "Nationality helps us tailor visas";
+    if (!d.firstName.trim())    e.firstName    = "First name required";
+    if (!d.lastName.trim())     e.lastName     = "Last name required";
+    if (!d.nationality.trim())  e.nationality  = "Nationality required";
     return e;
   },
-  /* Step 1 */
   (d) => {
     const e = {};
-    if (!d.countryId)     e.countryId     = "Please pick a country";
-    if (!d.destinationId) e.destinationId = "Please pick a destination";
-    if (!d.groupType)     e.groupType     = "Select your group type";
+    if (!d.countryId)     e.countryId     = "Choose a country";
+    if (!d.destinationId) e.destinationId = "Choose a destination";
+    if (!d.groupType)     e.groupType     = "Select group type";
     return e;
   },
-  /* Step 2 */
   (d) => {
     const e = {};
-    if (!d.flexibleDates && !d.startDate) e.startDate = "Pick a travel date";
+    if (!d.flexibleDates && !d.startDate) e.startDate = "Pick a date";
     if (!d.flexibleDates && d.startDate && d.endDate && d.endDate < d.startDate)
       e.endDate = "Return must be after departure";
     if (d.flexibleDates && (!d.flexibleMonths || !d.flexibleMonths.length))
       e.flexibleMonths = "Pick at least one month";
-    if (!d.adults || Number(d.adults) < 1) e.adults = "At least 1 adult required";
+    if (!d.adults || Number(d.adults) < 1) e.adults = "At least 1 adult";
     return e;
   },
-  /* Step 3 */
   (d) => {
     const e = {};
-    if (!d.email.trim() || !EMAIL_RE.test(d.email)) e.email   = "Valid email required";
-    if (!d.phone.trim())                             e.phone   = "Phone number required";
-    if (!d.country.trim())                           e.country = "Country required";
-    if (!d.agreeToTerms)                             e.agreeToTerms = "You must accept the terms";
+    if (!d.email.trim() || !EMAIL_RE.test(d.email)) e.email = "Valid email required";
+    if (!d.phone.trim())   e.phone   = "Phone required";
+    if (!d.country.trim()) e.country = "Country required";
+    if (!d.agreeToTerms)   e.agreeToTerms = "Please accept terms";
     return e;
   },
 ];
 
 export function useBookingForm({ countriesList = [], destinationsList = [] }) {
-  const [step,        setStep]        = useState(0);
-  const [data,        setData]        = useState(INITIAL);
-  const [errors,      setErrors]      = useState({});
-  const [touched,     setTouched]     = useState({});
-  const [submitting,  setSubmitting]  = useState(false);
-  const [submitted,   setSubmitted]   = useState(false);
+  const [step, setStep]         = useState(0);
+  const [data, setData]         = useState(INITIAL);
+  const [errors, setErrors]     = useState({});
+  const [touched, setTouched]   = useState({});
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted]   = useState(false);
   const [submitError, setSubmitError] = useState(null);
-  const [bookingRef,  setBookingRef]  = useState(null);
+  const [bookingRef, setBookingRef]   = useState(null);
   const retryRef = useRef(0);
 
   const set = useCallback((field, value) => {
@@ -95,15 +87,10 @@ export function useBookingForm({ countriesList = [], destinationsList = [] }) {
     }
     setErrors({});
     setStep(s => Math.min(s + 1, STEPS.length - 1));
-    window.scrollTo({ top: 0, behavior: "smooth" });
     return true;
   }, [step, data]);
 
-  const goBack = useCallback(() => {
-    setStep(s => Math.max(0, s - 1));
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, []);
-
+  const goBack = useCallback(() => setStep(s => Math.max(0, s - 1)), []);
   const jumpTo = useCallback((t) => { if (t < step) setStep(t); }, [step]);
 
   const submit = useCallback(async () => {
@@ -126,8 +113,7 @@ export function useBookingForm({ countriesList = [], destinationsList = [] }) {
         body: JSON.stringify({
           firstName: data.firstName, lastName: data.lastName,
           full_name: `${data.firstName} ${data.lastName}`.trim(),
-          email: data.email, phone: data.phone,
-          country: data.country,
+          email: data.email, phone: data.phone, country: data.country,
           nationality: data.nationality || undefined,
           countryId: data.countryId || undefined,
           destinationId: data.destinationId || undefined,

@@ -9,6 +9,12 @@ import {
   FiCalendar,
   FiSettings,
   FiChevronDown,
+  FiChevronLeft,
+  FiChevronRight,
+  FiMapPin,
+  FiX,
+  FiMenu,
+  FiArrowRight,
 } from "react-icons/fi";
 import { useApp } from "../../context/AppContext";
 import { useUserAuth } from "../../context/UserAuthContext";
@@ -21,6 +27,172 @@ import "./Navbar.css";
 
 const cn = (...c) => c.filter(Boolean).join(" ");
 
+/* ── Slideshow Card Component ── */
+const DestinationCard = ({ destination, onClick, style, index }) => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
+  const slideTimer = useRef(null);
+
+  const images = useMemo(() => {
+    const imgs = [];
+    if (destination.heroImage) imgs.push(destination.heroImage);
+    if (destination.images && Array.isArray(destination.images)) {
+      destination.images.forEach((img) => {
+        const url = typeof img === "string" ? img : img?.url || img?.src;
+        if (url && !imgs.includes(url)) imgs.push(url);
+      });
+    }
+    if (destination.gallery && Array.isArray(destination.gallery)) {
+      destination.gallery.forEach((img) => {
+        const url = typeof img === "string" ? img : img?.url || img?.src;
+        if (url && !imgs.includes(url)) imgs.push(url);
+      });
+    }
+    return imgs.length > 0 ? imgs.slice(0, 5) : [];
+  }, [destination]);
+
+  useEffect(() => {
+    if (images.length <= 1) return;
+    slideTimer.current = setInterval(() => {
+      setCurrentSlide((p) => (p + 1) % images.length);
+    }, 3000);
+    return () => clearInterval(slideTimer.current);
+  }, [images.length]);
+
+  const goSlide = (dir, e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    clearInterval(slideTimer.current);
+    setCurrentSlide((p) =>
+      dir === "next"
+        ? (p + 1) % images.length
+        : (p - 1 + images.length) % images.length
+    );
+    slideTimer.current = setInterval(() => {
+      setCurrentSlide((p) => (p + 1) % images.length);
+    }, 3000);
+  };
+
+  return (
+    <div
+      className="srch-card"
+      style={{ ...style, "--card-i": index }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      onClick={onClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === "Enter" && onClick()}
+    >
+      <div className="srch-card__img-wrap">
+        {images.length > 0 ? (
+          images.map((img, i) => (
+            <img
+              key={i}
+              src={img}
+              alt={`${destination.name} ${i + 1}`}
+              className={cn(
+                "srch-card__img",
+                i === currentSlide && "srch-card__img--active"
+              )}
+              loading="lazy"
+              onError={(e) => {
+                e.currentTarget.style.display = "none";
+              }}
+            />
+          ))
+        ) : (
+          <div className="srch-card__img-placeholder">
+            <FiMapPin size={28} />
+          </div>
+        )}
+
+        {/* Slide indicators */}
+        {images.length > 1 && (
+          <div className="srch-card__dots">
+            {images.map((_, i) => (
+              <span
+                key={i}
+                className={cn(
+                  "srch-card__dot",
+                  i === currentSlide && "srch-card__dot--active"
+                )}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Slide arrows on hover */}
+        {images.length > 1 && isHovered && (
+          <>
+            <button
+              className="srch-card__arrow srch-card__arrow--prev"
+              onClick={(e) => goSlide("prev", e)}
+              aria-label="Previous image"
+            >
+              <FiChevronLeft size={16} />
+            </button>
+            <button
+              className="srch-card__arrow srch-card__arrow--next"
+              onClick={(e) => goSlide("next", e)}
+              aria-label="Next image"
+            >
+              <FiChevronRight size={16} />
+            </button>
+          </>
+        )}
+
+        {/* Category badge */}
+        {destination.category && (
+          <span className="srch-card__badge">{destination.category}</span>
+        )}
+      </div>
+
+      {/* Hover overlay with description */}
+      <div
+        className={cn(
+          "srch-card__overlay",
+          isHovered && "srch-card__overlay--visible"
+        )}
+      >
+        <h4 className="srch-card__overlay-title">{destination.name}</h4>
+        {destination.country && (
+          <p className="srch-card__overlay-loc">
+            <FiMapPin size={12} /> {destination.country}
+          </p>
+        )}
+        <p className="srch-card__overlay-desc">
+          {destination.description
+            ? destination.description.slice(0, 120) + "…"
+            : destination.shortDescription ||
+              "Discover this amazing destination"}
+        </p>
+        {destination.price && (
+          <p className="srch-card__overlay-price">
+            From ${destination.price}
+          </p>
+        )}
+        <span className="srch-card__overlay-cta">
+          View Details <FiArrowRight size={14} />
+        </span>
+      </div>
+
+      {/* Bottom info bar (always visible) */}
+      <div className="srch-card__info">
+        <h4 className="srch-card__name">{destination.name}</h4>
+        {destination.country && (
+          <p className="srch-card__location">
+            <FiMapPin size={11} /> {destination.country}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ══════════════════════════════════════════════════════
+   NAVBAR MAIN
+   ══════════════════════════════════════════════════════ */
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [navHidden, setNavHidden] = useState(false);
@@ -55,6 +227,7 @@ const Navbar = () => {
   const [logoDetached, setLogoDetached] = useState(false);
   const [logoRect, setLogoRect] = useState(null);
 
+  /* ── Dropdown Data ── */
   const destinationsDropdown = useMemo(() => {
     const items = [
       { name: "All Destinations", path: "/destinations", isOverview: true },
@@ -73,7 +246,7 @@ const Navbar = () => {
             c.shortDescription ||
             (c.description ? `${c.description.slice(0, 60)}…` : ""),
           path: `/country/${getCountrySlug(c)}`,
-        }),
+        })
       );
     }
     return items;
@@ -98,7 +271,7 @@ const Navbar = () => {
       },
       { name: "Contact", path: "/contact" },
     ],
-    [destinationsDropdown],
+    [destinationsDropdown]
   );
 
   const userMenuItems = useMemo(() => {
@@ -117,7 +290,7 @@ const Navbar = () => {
     return items;
   }, [user?.role]);
 
-  /* ── Scroll ── */
+  /* ── Scroll Logic ── */
   useEffect(() => {
     let ticking = false;
     const onScroll = () => {
@@ -141,10 +314,10 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  /* ── Logo detach on scroll hide ── */
   useEffect(() => {
     const prevHidden = prevNavHiddenRef.current;
     prevNavHiddenRef.current = navHidden;
-
     if (navHidden && !prevHidden) {
       if (logoRef.current) {
         const rect = logoRef.current.getBoundingClientRect();
@@ -160,13 +333,13 @@ const Navbar = () => {
         setLogoDetached(false);
       }, 500);
     }
-
     return () => {
       if (logoDetachedTimerRef.current)
         clearTimeout(logoDetachedTimerRef.current);
     };
   }, [navHidden]);
 
+  /* ── Utilities ── */
   const closeAll = useCallback(() => {
     setIsMobileMenuOpen(false);
     setActiveDropdown(null);
@@ -187,10 +360,10 @@ const Navbar = () => {
   }, [isMobileMenuOpen, searchOpen]);
 
   useEffect(() => {
-    if (searchOpen) setTimeout(() => searchInputRef.current?.focus(), 100);
+    if (searchOpen) setTimeout(() => searchInputRef.current?.focus(), 150);
   }, [searchOpen]);
 
-  /* ── Search — live backend destinations, no mock data ── */
+  /* ── Search — live backend ── */
   useEffect(() => {
     const q = searchValue.trim();
     latestSearchRef.current = q;
@@ -212,8 +385,8 @@ const Navbar = () => {
       searchAbortRef.current = ctrl;
       try {
         const res = await fetch(
-          `${API_URL}/destinations/suggestions?q=${encodeURIComponent(q)}&limit=10`,
-          { signal: ctrl.signal },
+          `${API_URL}/destinations/suggestions?q=${encodeURIComponent(q)}&limit=12`,
+          { signal: ctrl.signal }
         );
         if (!res.ok) throw new Error("Search failed");
         const data = await res.json();
@@ -222,7 +395,7 @@ const Navbar = () => {
         const adapted = Array.isArray(raw)
           ? raw.map(adaptDestination).filter(Boolean)
           : [];
-        setSearchResults(adapted.slice(0, 10));
+        setSearchResults(adapted.slice(0, 12));
       } catch (err) {
         if (err.name !== "AbortError") {
           if (latestSearchRef.current === q) setSearchResults([]);
@@ -263,20 +436,33 @@ const Navbar = () => {
         setSearchValue("");
       }
     },
-    [searchValue, navigate],
+    [searchValue, navigate]
+  );
+
+  const handleResultClick = useCallback(
+    (dest) => {
+      navigate(`/destination/${dest.slug || dest.id}`);
+      setSearchOpen(false);
+      setSearchValue("");
+      setSearchResults([]);
+    },
+    [navigate]
   );
 
   const toggleMobileDropdown = useCallback(
     (n) => setActiveMobileDropdown((p) => (p === n ? null : n)),
-    [],
+    []
   );
+
   const handleDropdownEnter = useCallback((n) => {
     clearTimeout(dropdownTimer.current);
     setActiveDropdown(n);
   }, []);
+
   const handleDropdownLeave = useCallback(() => {
     dropdownTimer.current = setTimeout(() => setActiveDropdown(null), 150);
   }, []);
+
   const handleDesktopClick = useCallback((e, l) => {
     if (l.dropdown) {
       e.preventDefault();
@@ -292,7 +478,7 @@ const Navbar = () => {
         navigate(l.path);
       }
     },
-    [navigate],
+    [navigate]
   );
 
   const isActive = useCallback(
@@ -300,7 +486,7 @@ const Navbar = () => {
       location.pathname === l.path ||
       l.dropdown?.some((d) => d.path === location.pathname) ||
       false,
-    [location.pathname],
+    [location.pathname]
   );
 
   const getInitials = useCallback(() => {
@@ -318,7 +504,7 @@ const Navbar = () => {
   const displayName = useMemo(
     () =>
       user?.fullName || user?.name || user?.email?.split("@")[0] || "User",
-    [user],
+    [user]
   );
 
   const providerLabel = useMemo(() => {
@@ -326,33 +512,32 @@ const Navbar = () => {
     return p === "google" ? "Google" : p === "github" ? "GitHub" : "Email";
   }, [user?.authProvider]);
 
-    const handleLogout = useCallback(() => {
+  const handleLogout = useCallback(() => {
     closeAll();
     logout();
     navigate("/");
   }, [closeAll, logout, navigate]);
 
-  /* ════════════════════════════════════════════════════════════
-════════════
+  /* ══════════════════════════════════════
      RENDER
-  ════════════════════════════════════════════════════════════════════════ */
+     ══════════════════════════════════════ */
   return (
     <>
-      {/* ── STANDALONE LOGO (visible when nav is hidden on scroll-down) ── */}
+      {/* ── FLOATING LOGO when nav hidden ── */}
       {logoDetached && logoRect && (
         <Link
           to="/"
-          className="nav__logo nav__logo--standalone"
+          className="nav__logo nav__logo--floating"
           style={{
             position: "fixed",
-            top: logoRect.top,
+            top: 12,
             left: logoRect.left,
-            zIndex: 1001,
-            opacity: navHidden ? 0.3 : 0,
-            transition: "opacity 0.5s ease",
-            pointerEvents: "none",
+            zIndex: 1100,
+            opacity: navHidden ? 0.35 : 0,
+            transition: "opacity 0.4s ease",
+            pointerEvents: navHidden ? "auto" : "none",
           }}
-          aria-label="Altuvera Home"
+          aria-label="Home"
         >
           <div className="nav__logo-glow" />
           <div className="nav__logo-img-wrapper">
@@ -367,14 +552,14 @@ const Navbar = () => {
         </Link>
       )}
 
-      {/* ── NAVBAR ── */}
+      {/* ══════ NAVBAR ══════ */}
       <nav
         ref={headerRef}
         role="navigation"
         className={cn(
           "nav",
           isScrolled && "nav--scrolled",
-          navHidden && "nav--hidden",
+          navHidden && "nav--hidden"
         )}
       >
         <div className="nav__inner">
@@ -397,7 +582,7 @@ const Navbar = () => {
             <span className="nav__logo-text">Altuvera</span>
           </Link>
 
-          {/* Desktop Links */}
+          {/* ── Desktop Links ── */}
           <div className="nav__links">
             {navLinks.map((link, i) => (
               <div
@@ -419,7 +604,7 @@ const Navbar = () => {
                   onMouseEnter={() => preloadRoute(link.path)}
                   className={cn(
                     "nav__link",
-                    isActive(link) && "nav__link--active",
+                    isActive(link) && "nav__link--active"
                   )}
                   aria-expanded={
                     link.dropdown ? activeDropdown === link.name : undefined
@@ -431,7 +616,7 @@ const Navbar = () => {
                       size={14}
                       className={cn(
                         "nav__chevron",
-                        activeDropdown === link.name && "nav__chevron--open",
+                        activeDropdown === link.name && "nav__chevron--open"
                       )}
                     />
                   )}
@@ -443,7 +628,7 @@ const Navbar = () => {
                   <div
                     className={cn(
                       "nav__dropdown",
-                      activeDropdown === link.name && "nav__dropdown--open",
+                      activeDropdown === link.name && "nav__dropdown--open"
                     )}
                   >
                     <div className="nav__dropdown-inner">
@@ -453,7 +638,7 @@ const Navbar = () => {
                           to={sub.path}
                           className={cn(
                             "nav__dropdown-link",
-                            sub.info && "nav__dropdown-link--rich",
+                            sub.info && "nav__dropdown-link--rich"
                           )}
                           style={{ "--si": si }}
                           onClick={() => setActiveDropdown(null)}
@@ -489,19 +674,17 @@ const Navbar = () => {
             ))}
           </div>
 
-          {/* Actions */}
+          {/* ── Actions ── */}
           <div className="nav__actions">
-            {/* Search */}
             <button
               className="nav__icon-btn"
               onClick={() => setSearchOpen(true)}
-              aria-label="Search"
+              aria-label="Search destinations"
             >
               <FiSearch size={19} />
               <span className="nav__icon-ripple" />
             </button>
 
-            {/* Wishlist / Gallery */}
             <Link to="/gallery" className="nav__icon-link">
               <span
                 className="nav__icon-btn"
@@ -516,7 +699,7 @@ const Navbar = () => {
               </span>
             </Link>
 
-            {/* Auth area */}
+            {/* Auth */}
             {authLoading ? (
               <span className="nav__auth-skel" />
             ) : isAuthenticated ? (
@@ -548,7 +731,7 @@ const Navbar = () => {
                 <div
                   className={cn(
                     "nav__user-drop",
-                    userMenuOpen && "nav__user-drop--open",
+                    userMenuOpen && "nav__user-drop--open"
                   )}
                 >
                   <div className="nav__user-drop-head">
@@ -626,7 +809,7 @@ const Navbar = () => {
           <button
             className={cn(
               "nav__hamburger",
-              isMobileMenuOpen && "nav__hamburger--open",
+              isMobileMenuOpen && "nav__hamburger--open"
             )}
             onClick={() => setIsMobileMenuOpen((p) => !p)}
             aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
@@ -641,106 +824,131 @@ const Navbar = () => {
         </div>
       </nav>
 
-      {/* ── SEARCH OVERLAY ── */}
+      {/* ══════ SEARCH OVERLAY ══════ */}
       <div
         className={cn("srch", searchOpen && "srch--open")}
         onClick={() => setSearchOpen(false)}
       >
-        <div className="srch__box" onClick={(e) => e.stopPropagation()}>
-          <form onSubmit={handleSearchSubmit} className="srch__form">
-            <FiSearch className="srch__icon" size={22} />
-            <input
-              ref={searchInputRef}
-              type="text"
-              placeholder="Search destinations, experiences..."
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              className="srch__input"
-            />
-            {searchValue && (
-              <button
-                type="button"
-                className="srch__clear"
-                onClick={() => setSearchValue("")}
-              >
-                ✕
-              </button>
-            )}
-          </form>
+        <div className="srch__container" onClick={(e) => e.stopPropagation()}>
+          {/* Search Header */}
+          <div className="srch__header">
+            <button
+              className="srch__back"
+              onClick={() => setSearchOpen(false)}
+              aria-label="Close search"
+            >
+              <FiChevronLeft size={24} />
+            </button>
+            <form onSubmit={handleSearchSubmit} className="srch__form">
+              <FiSearch className="srch__icon" size={20} />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search destinations, experiences..."
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                className="srch__input"
+                autoComplete="off"
+              />
+              {searchValue && (
+                <button
+                  type="button"
+                  className="srch__clear"
+                  onClick={() => {
+                    setSearchValue("");
+                    searchInputRef.current?.focus();
+                  }}
+                  aria-label="Clear search"
+                >
+                  <FiX size={18} />
+                </button>
+              )}
+            </form>
+            <button
+              className="srch__cancel"
+              onClick={() => setSearchOpen(false)}
+            >
+              Cancel
+            </button>
+          </div>
 
-          <div className="srch__results">
+          {/* Search Results */}
+          <div className="srch__body">
+            {/* Loading */}
             {isSearching && (
-              <p className="srch__status">
-                <span className="srch__spinner" /> Searching…
-              </p>
+              <div className="srch__loading">
+                <div className="srch__loading-spinner" />
+                <p>Searching destinations…</p>
+              </div>
             )}
 
+            {/* Empty */}
             {!isSearching &&
               searchValue.trim().length >= 2 &&
               searchResults.length === 0 && (
-                <p className="srch__status">No destinations found.</p>
+                <div className="srch__empty">
+                  <FiSearch size={48} />
+                  <h3>No destinations found</h3>
+                  <p>
+                    Try different keywords or{" "}
+                    <Link
+                      to="/destinations"
+                      onClick={() => {
+                        setSearchOpen(false);
+                        setSearchValue("");
+                      }}
+                    >
+                      browse all destinations
+                    </Link>
+                  </p>
+                </div>
               )}
 
+            {/* Prompt */}
+            {!isSearching &&
+              searchValue.trim().length < 2 &&
+              searchResults.length === 0 && (
+                <div className="srch__prompt">
+                  <FiMapPin size={40} />
+                  <h3>Discover your next adventure</h3>
+                  <p>Type at least 2 characters to search destinations</p>
+                </div>
+              )}
+
+            {/* Results Grid */}
             {searchResults.length > 0 && (
-              <div className="srch__list">
-                {searchResults.map((r, ri) => (
-                  <Link
-                    key={r.id || r.slug || ri}
-                    to={`/destination/${r.slug || r.id}`}
-                    className="srch__item"
-                    style={{ "--ri": ri }}
-                    onClick={() => {
-                      setSearchOpen(false);
-                      setSearchValue("");
-                    }}
-                  >
-                    {r.heroImage ? (
-                      <img
-                        src={r.heroImage}
-                        alt=""
-                        className="srch__thumb"
-                        onError={(e) => {
-                          e.currentTarget.style.display = "none";
-                        }}
-                      />
-                    ) : (
-                      <div className="srch__thumb srch__thumb--placeholder" />
-                    )}
-                    <div>
-                      <p className="srch__name">{r.name}</p>
-                      <p className="srch__meta">
-                        {r.country && <span>{r.country}</span>}
-                        {r.country && r.category && <span> · </span>}
-                        {r.category && <span>{r.category}</span>}
-                        {r.duration && <span> · {r.duration}</span>}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
+              <>
+                <div className="srch__results-header">
+                  <h3>
+                    {searchResults.length} destination
+                    {searchResults.length !== 1 ? "s" : ""} found
+                  </h3>
+                </div>
+                <div className="srch__grid">
+                  {searchResults.map((dest, idx) => (
+                    <DestinationCard
+                      key={dest.id || dest.slug || idx}
+                      destination={dest}
+                      index={idx}
+                      onClick={() => handleResultClick(dest)}
+                    />
+                  ))}
+                </div>
                 <Link
-                  to={`/destinations?search=${encodeURIComponent(
-                    searchValue,
-                  )}`}
-                  className="srch__all"
+                  to={`/destinations?search=${encodeURIComponent(searchValue)}`}
+                  className="srch__view-all"
                   onClick={() => {
                     setSearchOpen(false);
                     setSearchValue("");
                   }}
                 >
-                  View all results for &ldquo;{searchValue}&rdquo;
+                  View all results for "{searchValue}"
+                  <FiArrowRight size={16} />
                 </Link>
-              </div>
+              </>
             )}
           </div>
         </div>
-
-        <button
-          className="srch__close"
-          onClick={() => setSearchOpen(false)}
-          aria-label="Close search"
-        >
-          ✕
-        </button>
       </div>
 
       {/* ── BACKDROP ── */}
@@ -749,11 +957,12 @@ const Navbar = () => {
         onClick={() => setIsMobileMenuOpen(false)}
       />
 
-      {/* ── MOBILE MENU ── */}
+      {/* ══════ MOBILE MENU ══════ */}
       <aside
         className={cn("mm", isMobileMenuOpen && "mm--open")}
         aria-hidden={!isMobileMenuOpen}
       >
+        {/* Mobile Header */}
         <div className="mm__head">
           <Link
             to="/"
@@ -774,10 +983,25 @@ const Navbar = () => {
             onClick={() => setIsMobileMenuOpen(false)}
             aria-label="Close"
           >
-            <span className="mm__close-x">✕</span>
+            <FiX size={22} />
           </button>
         </div>
 
+        {/* Mobile Quick Search */}
+        <div className="mm__search-bar">
+          <button
+            className="mm__search-trigger"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              setTimeout(() => setSearchOpen(true), 200);
+            }}
+          >
+            <FiSearch size={18} />
+            <span>Search destinations…</span>
+          </button>
+        </div>
+
+        {/* Mobile Body */}
         <div className="mm__body">
           {navLinks.map((link, idx) => (
             <div key={link.name} className="mm__item" style={{ "--idx": idx }}>
@@ -786,7 +1010,7 @@ const Navbar = () => {
                   <button
                     className={cn(
                       "mm__toggle",
-                      activeMobileDropdown === link.name && "mm__toggle--on",
+                      activeMobileDropdown === link.name && "mm__toggle--on"
                     )}
                     onClick={() => toggleMobileDropdown(link.name)}
                     aria-expanded={activeMobileDropdown === link.name}
@@ -796,14 +1020,14 @@ const Navbar = () => {
                       size={18}
                       className={cn(
                         "mm__chev",
-                        activeMobileDropdown === link.name && "mm__chev--open",
+                        activeMobileDropdown === link.name && "mm__chev--open"
                       )}
                     />
                   </button>
                   <div
                     className={cn(
                       "mm__sub",
-                      activeMobileDropdown === link.name && "mm__sub--open",
+                      activeMobileDropdown === link.name && "mm__sub--open"
                     )}
                   >
                     {link.dropdown.map((sub, si) => (
@@ -814,7 +1038,7 @@ const Navbar = () => {
                           "mm__sub-link",
                           sub.info && "mm__sub-link--rich",
                           location.pathname === sub.path &&
-                            "mm__sub-link--active",
+                            "mm__sub-link--active"
                         )}
                         style={{ "--si": si }}
                         onClick={() => setIsMobileMenuOpen(false)}
@@ -846,7 +1070,7 @@ const Navbar = () => {
                   to={link.path}
                   className={cn(
                     "mm__link",
-                    location.pathname === link.path && "mm__link--active",
+                    location.pathname === link.path && "mm__link--active"
                   )}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -858,6 +1082,7 @@ const Navbar = () => {
 
           <div className="mm__divider" />
 
+          {/* Mobile Auth */}
           <div className="mm__auth">
             {isAuthenticated ? (
               <>
@@ -904,29 +1129,20 @@ const Navbar = () => {
                   openModal("login", { skipNotLoggedInMessage: true });
                 }}
               >
+                <FiUser size={18} />
                 Sign In / Sign Up
               </button>
             )}
           </div>
 
+          {/* Mobile CTA */}
           <Link
             to="/booking"
             className="mm__cta"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            Book Your Adventure
-            <svg
-              width="18"
-              height="18"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
+            <span>Book Your Adventure</span>
+            <FiArrowRight size={18} />
           </Link>
         </div>
       </aside>
