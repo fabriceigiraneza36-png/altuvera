@@ -1,5 +1,6 @@
 // ============================================================================
 // src/pages/Packages.jsx — Premium Redesign matching Explore.jsx aesthetic
+// v2.1 — Fixed: FiMountain replaced (not exported by react-icons/fi)
 // ============================================================================
 
 import React, {
@@ -11,10 +12,13 @@ import {
   FiArrowRight, FiPackage, FiLoader, FiHeart, FiGrid,
   FiList, FiStar, FiZap, FiDollarSign, FiGlobe,
   FiShield, FiCalendar, FiFilter, FiCheck,
-  FiChevronRight, FiRefreshCw, FiMountain, FiCompass,
+  FiChevronRight, FiRefreshCw, FiCompass,
   FiAward, FiWind, FiBookmark, FiTrendingUp,
-  FiCamera, FiSun, FiTarget, FiEye,
+  FiCamera, FiSun, FiTarget, FiEye, FiTriangle,
 } from 'react-icons/fi'
+
+// ✅ FiMountain does NOT exist in react-icons/fi
+// Using FiTriangle as mountain substitute throughout
 
 /* ── API ─────────────────────────────────────────────────────────────── */
 const API_BASE =
@@ -54,17 +58,17 @@ const HERO_BG =
   'https://images.unsplash.com/photo-1547970810-dc1eac37d174?w=1600&q=80&auto=format&fit=crop'
 
 const CATEGORIES = [
-  { id: '',                    label: 'All',          Icon: FiGlobe      },
-  { id: 'Safari',              label: 'Safari',       Icon: FiStar       },
-  { id: 'Beach & Coastal',     label: 'Beach',        Icon: FiWind       },
-  { id: 'Mountain & Trekking', label: 'Trekking',     Icon: FiMountain   },
-  { id: 'Cultural & Heritage', label: 'Cultural',     Icon: FiCompass    },
-  { id: 'Wildlife',            label: 'Wildlife',     Icon: FiCamera     },
-  { id: 'Adventure',           label: 'Adventure',    Icon: FiZap        },
-  { id: 'Honeymoon',           label: 'Honeymoon',    Icon: FiHeart      },
-  { id: 'Family',              label: 'Family',       Icon: FiUsers      },
-  { id: 'Photography',         label: 'Photography',  Icon: FiCamera     },
-  { id: 'Budget',              label: 'Budget',       Icon: FiDollarSign },
+  { id: '',                    label: 'All',         Icon: FiGlobe      },
+  { id: 'Safari',              label: 'Safari',      Icon: FiStar       },
+  { id: 'Beach & Coastal',     label: 'Beach',       Icon: FiWind       },
+  { id: 'Mountain & Trekking', label: 'Trekking',    Icon: FiTriangle   },
+  { id: 'Cultural & Heritage', label: 'Cultural',    Icon: FiCompass    },
+  { id: 'Wildlife',            label: 'Wildlife',    Icon: FiCamera     },
+  { id: 'Adventure',           label: 'Adventure',   Icon: FiZap        },
+  { id: 'Honeymoon',           label: 'Honeymoon',   Icon: FiHeart      },
+  { id: 'Family',              label: 'Family',      Icon: FiUsers      },
+  { id: 'Photography',         label: 'Photography', Icon: FiCamera     },
+  { id: 'Budget',              label: 'Budget',      Icon: FiDollarSign },
 ]
 
 const SORT_OPTIONS = [
@@ -85,11 +89,11 @@ const DURATION_FILTERS = [
 ]
 
 const PRICE_RANGES = [
-  { label: 'Any Price',     min: '',     max: ''    },
-  { label: 'Under $500',    min: '',     max: '500' },
-  { label: '$500 – $1,500', min: '500',  max: '1500'},
-  { label: '$1,500 – $3K',  min: '1500', max: '3000'},
-  { label: '$3,000+',       min: '3000', max: ''    },
+  { label: 'Any Price',     min: '',     max: ''     },
+  { label: 'Under $500',    min: '',     max: '500'  },
+  { label: '$500 – $1,500', min: '500',  max: '1500' },
+  { label: '$1,500 – $3K',  min: '1500', max: '3000' },
+  { label: '$3,000+',       min: '3000', max: ''     },
 ]
 
 const LIMIT = 12
@@ -101,7 +105,9 @@ const fmtPrice = (price, currency = 'USD') => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency', currency, maximumFractionDigits: 0,
     }).format(price)
-  } catch { return `$${Number(price).toLocaleString()}` }
+  } catch {
+    return `$${Number(price).toLocaleString()}`
+  }
 }
 
 const fmtDuration = (days, nights) => {
@@ -163,11 +169,11 @@ const PKG_CSS = `
 }
 @keyframes pk-float {
   0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-8px); }
+  50%      { transform: translateY(-8px); }
 }
 @keyframes pk-pulse {
   0%, 100% { opacity: 1; }
-  50%       { opacity: 0.55; }
+  50%      { opacity: 0.55; }
 }
 @keyframes pk-gradient-shift {
   0%   { background-position: 0% 50%; }
@@ -175,7 +181,6 @@ const PKG_CSS = `
   100% { background-position: 0% 50%; }
 }
 
-/* ── Root ── */
 .pk-root {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -183,11 +188,9 @@ const PKG_CSS = `
   min-height: 100vh;
 }
 
-/* ── Scrollbar hide ── */
 .pk-hide-scroll { scrollbar-width: none; }
 .pk-hide-scroll::-webkit-scrollbar { display: none; }
 
-/* ── Category pill ── */
 .pk-cat-pill {
   display: inline-flex; align-items: center; gap: 7px;
   padding: 8px 18px; border-radius: 999px;
@@ -212,7 +215,6 @@ const PKG_CSS = `
   color: var(--pk-green-dk); transform: translateY(-1px);
 }
 
-/* ── Grid card ── */
 .pk-card {
   background: var(--pk-surface);
   border-radius: var(--pk-radius);
@@ -234,7 +236,6 @@ const PKG_CSS = `
 }
 .pk-card:hover .pk-card-img { transform: scale(1.07); }
 
-/* ── List card ── */
 .pk-list-card {
   background: var(--pk-surface);
   border-radius: var(--pk-radius);
@@ -254,14 +255,12 @@ const PKG_CSS = `
 }
 .pk-list-card:hover .pk-card-img { transform: scale(1.06); }
 
-/* ── Skeleton ── */
 .pk-skel {
   background: linear-gradient(90deg, #d1fae5 0%, #ecfdf5 40%, #d1fae5 80%);
   background-size: 200%; border-radius: 10px;
   animation: pk-shimmer 1.6s ease infinite;
 }
 
-/* ── View toggle btn ── */
 .pk-view-btn {
   padding: 9px; border: none; background: transparent;
   cursor: pointer; border-radius: 10px;
@@ -274,7 +273,6 @@ const PKG_CSS = `
 }
 .pk-view-btn:not(.active):hover { background: rgba(255,255,255,0.55); }
 
-/* ── Filter option ── */
 .pk-filter-opt {
   width: 100%; text-align: left;
   padding: 10px 14px; border-radius: 12px;
@@ -292,7 +290,6 @@ const PKG_CSS = `
   border: 1px solid #a7f3d0;
 }
 
-/* ── CTA button ── */
 .pk-cta {
   display: inline-flex; align-items: center; justify-content: center;
   gap: 8px; padding: 13px 28px;
@@ -321,14 +318,12 @@ const PKG_CSS = `
   box-shadow: none;
 }
 
-/* ── Drawer ── */
 @keyframes pk-slide-in {
   from { opacity: 0; transform: translateX(100%); }
   to   { opacity: 1; transform: translateX(0); }
 }
 .pk-drawer { animation: pk-slide-in 0.3s var(--pk-ease) both; }
 
-/* ── Section label ── */
 .pk-section-label {
   display: inline-flex; align-items: center; gap: 7px;
   padding: 5px 16px; border-radius: 999px;
@@ -339,7 +334,6 @@ const PKG_CSS = `
   margin-bottom: 16px;
 }
 
-/* ── Responsive ── */
 @media (max-width: 640px) {
   .pk-grid { grid-template-columns: 1fr !important; }
   .pk-list-card { grid-template-columns: 1fr !important; }
@@ -363,6 +357,31 @@ function injectStyles() {
   document.head.appendChild(s)
   _injected = true
 }
+
+/* ══════════════════════════════════════════════════════════════════════
+   PLACEHOLDER ICON — replaces FiMountain everywhere
+   A simple inline SVG mountain shape for empty-state cards
+══════════════════════════════════════════════════════════════════════ */
+const MountainPlaceholder = React.memo(function MountainPlaceholder({ size = 48, color = '#a7f3d0' }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M8 21l4.5-9L17 21" />
+      <path d="M2 21l6-10.5L14 21" />
+      <path d="M14.5 21L18 13l4 8" />
+      <path d="M12 3l1.5 3L12 9l-1.5-3z" />
+    </svg>
+  )
+})
 
 /* ══════════════════════════════════════════════════════════════════════
    GRID CARD
@@ -390,8 +409,11 @@ const GridCard = React.memo(function GridCard({ pkg, wishlist, onWishlist, index
         {cover
           ? <img src={cover} alt={pkg.title} loading="lazy" className="pk-card-img"
               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-          : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <FiMountain size={48} style={{ color: '#a7f3d0' }} />
+          : <div style={{
+              width: '100%', height: '100%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <MountainPlaceholder size={48} />
             </div>
         }
 
@@ -610,9 +632,16 @@ const ListCard = React.memo(function ListCard({ pkg, wishlist, onWishlist, index
       }}>
         {cover
           ? <img src={cover} alt={pkg.title} loading="lazy" className="pk-card-img"
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', position: 'absolute', inset: 0 }} />
-          : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'absolute', inset: 0 }}>
-              <FiMountain size={44} style={{ color: '#a7f3d0' }} />
+              style={{
+                width: '100%', height: '100%', objectFit: 'cover',
+                display: 'block', position: 'absolute', inset: 0,
+              }} />
+          : <div style={{
+              width: '100%', height: '100%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              position: 'absolute', inset: 0,
+            }}>
+              <MountainPlaceholder size={44} />
             </div>
         }
 
@@ -633,7 +662,10 @@ const ListCard = React.memo(function ListCard({ pkg, wishlist, onWishlist, index
             </span>
           )}
           {hasDisc && (
-            <span style={{ fontSize: 9.5, fontWeight: 800, padding: '3px 10px', borderRadius: 999, color: 'white', background: '#ef4444' }}>
+            <span style={{
+              fontSize: 9.5, fontWeight: 800, padding: '3px 10px',
+              borderRadius: 999, color: 'white', background: '#ef4444',
+            }}>
               -{pkg.discount_percent}%
             </span>
           )}
@@ -653,11 +685,18 @@ const ListCard = React.memo(function ListCard({ pkg, wishlist, onWishlist, index
           onMouseOver={e => e.currentTarget.style.transform = 'scale(1.12)'}
           onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
         >
-          <FiHeart size={13} style={{ fill: isWish ? '#ef4444' : 'none', color: isWish ? '#ef4444' : '#6b7280' }} />
+          <FiHeart size={13} style={{
+            fill: isWish ? '#ef4444' : 'none',
+            color: isWish ? '#ef4444' : '#6b7280',
+          }} />
         </button>
 
         {pkg.is_sold_out && (
-          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.58)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'rgba(0,0,0,0.58)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
             <span style={{
               color: 'white', fontWeight: 700, fontSize: 11,
               border: '1px solid rgba(255,255,255,0.4)',
@@ -671,7 +710,10 @@ const ListCard = React.memo(function ListCard({ pkg, wishlist, onWishlist, index
       </div>
 
       {/* Content column */}
-      <div style={{ padding: '22px 26px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <div style={{
+        padding: '22px 26px', display: 'flex', flexDirection: 'column',
+        justifyContent: 'space-between',
+      }}>
         <div>
           {pkg.category && (
             <span style={{
@@ -695,17 +737,27 @@ const ListCard = React.memo(function ListCard({ pkg, wishlist, onWishlist, index
           {/* Meta chips */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 11 }}>
             {pkg.destination && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#475569', fontWeight: 500 }}>
+              <span style={{
+                display: 'flex', alignItems: 'center', gap: 4,
+                fontSize: 13, color: '#475569', fontWeight: 500,
+              }}>
                 <FiMapPin size={11} style={{ color: '#059669' }} /> {pkg.destination}
               </span>
             )}
             {pkg.duration_days && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#475569', fontWeight: 500 }}>
-                <FiClock size={11} style={{ color: '#059669' }} /> {fmtDuration(pkg.duration_days, pkg.duration_nights)}
+              <span style={{
+                display: 'flex', alignItems: 'center', gap: 4,
+                fontSize: 13, color: '#475569', fontWeight: 500,
+              }}>
+                <FiClock size={11} style={{ color: '#059669' }} />
+                {fmtDuration(pkg.duration_days, pkg.duration_nights)}
               </span>
             )}
             {pkg.max_travelers && (
-              <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, color: '#475569', fontWeight: 500 }}>
+              <span style={{
+                display: 'flex', alignItems: 'center', gap: 4,
+                fontSize: 13, color: '#475569', fontWeight: 500,
+              }}>
                 <FiUsers size={11} style={{ color: '#059669' }} /> Max {pkg.max_travelers}
               </span>
             )}
@@ -742,7 +794,10 @@ const ListCard = React.memo(function ListCard({ pkg, wishlist, onWishlist, index
         }}>
           <div>
             {hasDisc && (
-              <p style={{ fontSize: 12, color: '#94a3b8', textDecoration: 'line-through', marginBottom: 2 }}>
+              <p style={{
+                fontSize: 12, color: '#94a3b8',
+                textDecoration: 'line-through', marginBottom: 2,
+              }}>
                 {fmtPrice(origPx, pkg.currency)}
               </p>
             )}
@@ -784,9 +839,14 @@ function SkeletonCard({ view = 'grid' }) {
           <div className="pk-skel" style={{ width: '100%', height: 13 }} />
           <div className="pk-skel" style={{ width: '72%', height: 13 }} />
           <div style={{ display: 'flex', gap: 6 }}>
-            {[1,2,3].map(i => <div key={i} className="pk-skel" style={{ width: 64, height: 24, borderRadius: 999 }} />)}
+            {[1, 2, 3].map(i => (
+              <div key={i} className="pk-skel" style={{ width: 64, height: 24, borderRadius: 999 }} />
+            ))}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+          <div style={{
+            display: 'flex', justifyContent: 'space-between',
+            alignItems: 'center', marginTop: 8,
+          }}>
             <div className="pk-skel" style={{ width: 100, height: 30 }} />
             <div className="pk-skel" style={{ width: 130, height: 42, borderRadius: 14 }} />
           </div>
@@ -794,8 +854,12 @@ function SkeletonCard({ view = 'grid' }) {
       </div>
     )
   }
+
   return (
-    <div style={{ background: 'white', borderRadius: 22, border: '1.5px solid #dcfce7', overflow: 'hidden' }}>
+    <div style={{
+      background: 'white', borderRadius: 22,
+      border: '1.5px solid #dcfce7', overflow: 'hidden',
+    }}>
       <div className="pk-skel" style={{ height: 236 }} />
       <div style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 11 }}>
         <div className="pk-skel" style={{ width: '86%', height: 20 }} />
@@ -803,7 +867,9 @@ function SkeletonCard({ view = 'grid' }) {
         <div className="pk-skel" style={{ width: '100%', height: 13 }} />
         <div className="pk-skel" style={{ width: '68%', height: 13 }} />
         <div style={{ display: 'flex', gap: 5 }}>
-          {[1,2].map(i => <div key={i} className="pk-skel" style={{ width: 60, height: 24, borderRadius: 999 }} />)}
+          {[1, 2].map(i => (
+            <div key={i} className="pk-skel" style={{ width: 60, height: 24, borderRadius: 999 }} />
+          ))}
         </div>
         <div style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end',
@@ -918,7 +984,9 @@ function FilterPanel(props) {
           <FiSliders size={compact ? 14 : 15} color="white" />
         </div>
         <div>
-          <p style={{ fontSize: compact ? 13 : 14, fontWeight: 700, color: '#022c22', margin: 0 }}>Filters</p>
+          <p style={{ fontSize: compact ? 13 : 14, fontWeight: 700, color: '#022c22', margin: 0 }}>
+            Filters
+          </p>
           {activeCount > 0 && (
             <p style={{ fontSize: 11, color: '#059669', margin: 0, fontWeight: 600 }}>
               {activeCount} active
@@ -952,8 +1020,10 @@ function FilterPanel(props) {
           boxShadow: '0 4px 24px rgba(5,150,105,0.08)', overflow: 'hidden',
         }}>
           <HeaderInner compact={false} />
-          <div style={{ padding: '16px 14px', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
-            className="pk-hide-scroll">
+          <div
+            style={{ padding: '16px 14px', maxHeight: 'calc(100vh - 200px)', overflowY: 'auto' }}
+            className="pk-hide-scroll"
+          >
             <FilterContent {...props} />
           </div>
         </div>
@@ -963,7 +1033,10 @@ function FilterPanel(props) {
       {isOpen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 9999, display: 'flex' }}>
           <div
-            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.52)', backdropFilter: 'blur(6px)' }}
+            style={{
+              position: 'absolute', inset: 0,
+              background: 'rgba(0,0,0,0.52)', backdropFilter: 'blur(6px)',
+            }}
             onClick={onClose}
           />
           <div
@@ -1003,7 +1076,10 @@ function FilterPanel(props) {
                 <FiX size={15} color="#64748b" />
               </button>
             </div>
-            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 14px' }} className="pk-hide-scroll">
+            <div
+              style={{ flex: 1, overflowY: 'auto', padding: '16px 14px' }}
+              className="pk-hide-scroll"
+            >
               <FilterContent {...props} />
             </div>
           </div>
@@ -1033,8 +1109,12 @@ function Hero({ search, onSearch, total, loading }) {
     }}>
       {/* BG image */}
       <img
-        src={HERO_BG} alt="African safari landscape"
-        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }}
+        src={HERO_BG}
+        alt="African safari landscape"
+        style={{
+          position: 'absolute', inset: 0,
+          width: '100%', height: '100%', objectFit: 'cover',
+        }}
       />
 
       {/* Overlays */}
@@ -1180,8 +1260,10 @@ function Hero({ search, onSearch, total, loading }) {
 
       {/* Wave transition */}
       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, lineHeight: 0 }}>
-        <svg viewBox="0 0 1440 54" fill="none" xmlns="http://www.w3.org/2000/svg"
-          style={{ width: '100%', display: 'block' }} preserveAspectRatio="none">
+        <svg
+          viewBox="0 0 1440 54" fill="none" xmlns="http://www.w3.org/2000/svg"
+          style={{ width: '100%', display: 'block' }} preserveAspectRatio="none"
+        >
           <path d="M0,54 C480,0 960,0 1440,54 L1440,54 L0,54 Z" fill="#f0fdf4" />
         </svg>
       </div>
@@ -1206,7 +1288,8 @@ function ActiveChip({ label, onRemove }) {
         style={{
           width: 18, height: 18, borderRadius: '50%', background: '#d1fae5',
           border: 'none', cursor: 'pointer', display: 'flex',
-          alignItems: 'center', justifyContent: 'center', transition: 'all 0.18s', flexShrink: 0,
+          alignItems: 'center', justifyContent: 'center', transition: 'all 0.18s',
+          flexShrink: 0,
         }}
         onMouseOver={e => e.currentTarget.style.background = '#a7f3d0'}
         onMouseOut={e => e.currentTarget.style.background = '#d1fae5'}
@@ -1368,7 +1451,9 @@ export default function Packages() {
     const el = loaderRef.current
     if (!el || !hasMore) return
     const obs = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && !loadingMore && hasMore) loadPackages(page + 1, true)
+      if (entries[0].isIntersecting && !loadingMore && hasMore) {
+        loadPackages(page + 1, true)
+      }
     }, { threshold: 0.15 })
     obs.observe(el)
     return () => obs.disconnect()
@@ -1415,8 +1500,10 @@ export default function Packages() {
         position: 'sticky', top: 64, zIndex: 30,
       }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 clamp(16px,3vw,40px)' }}>
-          <div className="pk-hide-scroll"
-            style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '12px 0' }}>
+          <div
+            className="pk-hide-scroll"
+            style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '12px 0' }}
+          >
             {CATEGORIES.map(cat => {
               const active = cat.id === category
               const { Icon } = cat
@@ -1478,7 +1565,9 @@ export default function Packages() {
                       )}
                     </h2>
                     {dSearch && (
-                      <p style={{ fontSize: 13.5, color: '#94a3b8', marginTop: 4, fontWeight: 500 }}>
+                      <p style={{
+                        fontSize: 13.5, color: '#94a3b8', marginTop: 4, fontWeight: 500,
+                      }}>
                         Results for <strong style={{ color: '#475569' }}>"{dSearch}"</strong>
                       </p>
                     )}
@@ -1578,7 +1667,11 @@ export default function Packages() {
                   <div
                     className="pk-grid"
                     style={view === 'grid'
-                      ? { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 'clamp(14px,2vw,24px)' }
+                      ? {
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))',
+                          gap: 'clamp(14px,2vw,24px)',
+                        }
                       : { display: 'flex', flexDirection: 'column', gap: 20 }
                     }
                   >
@@ -1594,16 +1687,26 @@ export default function Packages() {
                 ) : view === 'grid' ? (
                   <div
                     className="pk-grid"
-                    style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 'clamp(14px,2vw,24px)' }}
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))',
+                      gap: 'clamp(14px,2vw,24px)',
+                    }}
                   >
                     {packages.map((pkg, i) => (
-                      <GridCard key={pkg.id} pkg={pkg} index={i} wishlist={wishlist} onWishlist={handleWishlist} />
+                      <GridCard
+                        key={pkg.id} pkg={pkg} index={i}
+                        wishlist={wishlist} onWishlist={handleWishlist}
+                      />
                     ))}
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
                     {packages.map((pkg, i) => (
-                      <ListCard key={pkg.id} pkg={pkg} index={i} wishlist={wishlist} onWishlist={handleWishlist} />
+                      <ListCard
+                        key={pkg.id} pkg={pkg} index={i}
+                        wishlist={wishlist} onWishlist={handleWishlist}
+                      />
                     ))}
                   </div>
                 )}

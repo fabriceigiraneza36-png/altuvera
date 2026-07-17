@@ -1,7 +1,10 @@
 // src/App.jsx
 // ============================================================================
-// Application Shell v2.1
-// ─ /booking/* is now PUBLIC (WhatsApp-based flow needs no auth)
+// Application Shell v2.2
+// Changes from v2.1:
+//   - No functional changes — companion to Packages.jsx FiMountain fix
+//   - Code organization cleanup, display names enforced
+//   - Removed unused imports guard comment
 // ============================================================================
 
 import React, {
@@ -20,21 +23,21 @@ import GoogleCallbackPage  from "./pages/GoogleCallbackPage";
 import { initConsentMode } from "./utils/cookiePreferences";
 
 // ── Eager imports ─────────────────────────────────────────────────────────────
-import Navbar              from "./components/common/Navbar";
-import Footer              from "./components/common/Footer";
-import ScrollToTop         from "./components/common/ScrollToTop";
-import Loader              from "./components/common/Loader";
-import CookieConsent       from "./components/common/CookieConsent";
-import CookieDocumentation from "./components/common/CookieDocumentation";
-import AuthModal           from "./components/auth/AuthModal";
+import Navbar               from "./components/common/Navbar";
+import Footer               from "./components/common/Footer";
+import ScrollToTop          from "./components/common/ScrollToTop";
+import Loader               from "./components/common/Loader";
+import CookieConsent        from "./components/common/CookieConsent";
+import CookieDocumentation  from "./components/common/CookieDocumentation";
+import AuthModal            from "./components/auth/AuthModal";
 import CongratulationWindow from "./components/auth/CongratulationWindow";
-import NotLoggedInMessage  from "./components/auth/NotLoggedInMessage";
-import ProtectedRoute      from "./components/auth/ProtectedRoute";
-import PageWrapper         from "./components/common/PageWrapper";
-import BookingVerifyResult from "./pages/Booking/BookingVerifyResult";
-import WhatsAppButton      from "./components/common/WhatsAppButton";
-import UserNotifications   from "./pages/auth/UserNotifications";
-import Explore             from "./pages/Explore";
+import NotLoggedInMessage   from "./components/auth/NotLoggedInMessage";
+import ProtectedRoute       from "./components/auth/ProtectedRoute";
+import PageWrapper          from "./components/common/PageWrapper";
+import BookingVerifyResult  from "./pages/Booking/BookingVerifyResult";
+import WhatsAppButton       from "./components/common/WhatsAppButton";
+import UserNotifications    from "./pages/auth/UserNotifications";
+import Explore              from "./pages/Explore";
 
 // ── Lazy imports ──────────────────────────────────────────────────────────────
 const PersistentVideoPlayer = React.lazy(() =>
@@ -74,12 +77,16 @@ const getRedirectUrl = (pathname) => {
   if (!pathname) return null;
   const clean = pathname.toLowerCase().replace(/\/$/, "") || "/";
   if (REDIRECT_MAP[clean]) return REDIRECT_MAP[clean];
-  const blogMatch    = clean.match(/^\/blog\/(.+)$/);
-  if (blogMatch)    return `/post/${blogMatch[1]}`;
+
+  const blogMatch = clean.match(/^\/blog\/(.+)$/);
+  if (blogMatch) return `/post/${blogMatch[1]}`;
+
   const articleMatch = clean.match(/^\/articles\/(.+)$/);
   if (articleMatch) return `/post/${articleMatch[1]}`;
-  const newsMatch    = clean.match(/^\/news\/(.+)$/);
-  if (newsMatch)    return `/post/${newsMatch[1]}`;
+
+  const newsMatch = clean.match(/^\/news\/(.+)$/);
+  if (newsMatch) return `/post/${newsMatch[1]}`;
+
   return null;
 };
 
@@ -137,7 +144,9 @@ const publicRoutes = [
   },
   {
     path: "/country/:countryId",
-    component: React.lazy(() => import("./pages/CountryPage/CountryPage.jsx")),
+    component: React.lazy(() =>
+      import("./pages/CountryPage/CountryPage.jsx"),
+    ),
     meta: { title: "Country Guide" },
   },
   {
@@ -315,54 +324,72 @@ const renderProtectedRoute = ({ path, component: Component, meta = {} }) => (
 
 const Icon = ({ children, size = 16, ...props }) => (
   <svg
-    width={size} height={size}
-    viewBox="0 0 24 24" fill="none"
-    stroke="currentColor" strokeWidth="2"
-    strokeLinecap="round" strokeLinejoin="round"
-    aria-hidden="true" {...props}
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+    {...props}
   >
     {children}
   </svg>
 );
 
-const CheckIcon       = ({ size = 30, color = "#fff" }) => (
-  <Icon size={size} stroke={color} strokeWidth={3.5}><path d="M20 6L9 17l-5-5" /></Icon>
+const CheckIcon = ({ size = 30, color = "#fff" }) => (
+  <Icon size={size} stroke={color} strokeWidth={3.5}>
+    <path d="M20 6L9 17l-5-5" />
+  </Icon>
 );
-const ArrowRightIcon  = ({ size = 16 }) => (
+
+const ArrowRightIcon = ({ size = 16 }) => (
   <Icon size={size}>
-    <line x1="5" y1="12" x2="19" y2="12" />
+    <line x1="5"  y1="12" x2="19" y2="12" />
     <polyline points="12 5 19 12 12 19" />
   </Icon>
 );
-const GlobeIcon       = ({ size = 13 }) => (
+
+const GlobeIcon = ({ size = 13 }) => (
   <Icon size={size}>
     <circle cx="12" cy="12" r="10" />
     <line x1="2" y1="12" x2="22" y2="12" />
     <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
   </Icon>
 );
-const CalendarIcon    = ({ size = 13 }) => (
+
+const CalendarIcon = ({ size = 13 }) => (
   <Icon size={size}>
     <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-    <line x1="16" y1="2" x2="16" y2="6" />
-    <line x1="8"  y1="2" x2="8"  y2="6" />
+    <line x1="16" y1="2"  x2="16" y2="6"  />
+    <line x1="8"  y1="2"  x2="8"  y2="6"  />
     <line x1="3"  y1="10" x2="21" y2="10" />
   </Icon>
 );
-const HeartIcon       = ({ size = 13 }) => (
+
+const HeartIcon = ({ size = 13 }) => (
   <Icon size={size}>
     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
   </Icon>
 );
-const GitHubMark      = ({ size = 44 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24"
-    fill="#24292f" aria-hidden="true" style={{ marginBottom: 14 }}>
+
+const GitHubMark = ({ size = 44 }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="#24292f"
+    aria-hidden="true"
+    style={{ marginBottom: 14 }}
+  >
     <path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z" />
   </svg>
 );
 
 // ============================================================================
-// STYLES  (unchanged from v2.0)
+// STYLES
 // ============================================================================
 
 const APP_STYLES = `
@@ -549,7 +576,10 @@ const APP_STYLES = `
 let _stylesInjected = false;
 function injectAppStyles() {
   if (_stylesInjected || typeof document === "undefined") return;
-  if (document.getElementById("app-styles")) { _stylesInjected = true; return; }
+  if (document.getElementById("app-styles")) {
+    _stylesInjected = true;
+    return;
+  }
   const s = document.createElement("style");
   s.id = "app-styles";
   s.textContent = APP_STYLES;
@@ -584,15 +614,26 @@ const GitHubCallbackPage = React.memo(() => {
   const isError = Boolean(socialAuthError);
   const isDone  = !githubLoading && isAuthenticated && !isError;
 
-  const statusClass = isError ? "gh-status--error" : isDone ? "gh-status--done" : "gh-status--default";
-  const statusMsg   = isError
+  const statusClass = isError
+    ? "gh-status--error"
+    : isDone
+    ? "gh-status--done"
+    : "gh-status--default";
+
+  const statusMsg = isError
     ? "Sign-in failed. Redirecting…"
-    : isDone   ? "Signed in! Redirecting…"
-    : githubLoading ? "Verifying your GitHub account…"
+    : isDone
+    ? "Signed in! Redirecting…"
+    : githubLoading
+    ? "Verifying your GitHub account…"
     : "Completing sign-in…";
 
-  const spinnerClass = ["gh-spinner", isError ? "gh-spinner--error" : isDone ? "gh-spinner--done" : ""]
-    .filter(Boolean).join(" ");
+  const spinnerClass = [
+    "gh-spinner",
+    isError ? "gh-spinner--error" : isDone ? "gh-spinner--done" : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <div className="gh-page">
@@ -603,7 +644,9 @@ const GitHubCallbackPage = React.memo(() => {
         <p className={`gh-status ${statusClass}`}>{statusMsg}</p>
         {isError && <p className="gh-error-detail">{socialAuthError}</p>}
         {!isError && (
-          <div className="gh-progress"><div className="gh-progress__fill" /></div>
+          <div className="gh-progress">
+            <div className="gh-progress__fill" />
+          </div>
         )}
       </div>
     </div>
@@ -624,23 +667,31 @@ const CelebrationOverlay = React.memo(({ userName, onDismiss }) => {
   }, [userName]);
 
   return (
-    <div className="cel-backdrop" role="dialog" aria-modal="true"
-      aria-label="Welcome celebration" onClick={onDismiss}>
+    <div
+      className="cel-backdrop"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Welcome celebration"
+      onClick={onDismiss}
+    >
       <div className="cel-card" onClick={(e) => e.stopPropagation()}>
         <div className="cel-blob cel-blob--tl" aria-hidden="true" />
         <div className="cel-blob cel-blob--br" aria-hidden="true" />
+
         <div className="cel-checkmark-wrap">
           <div className="cel-checkmark-ring" aria-hidden="true" />
           <div className="cel-checkmark-circle">
             <CheckIcon size={30} color="#fff" />
           </div>
         </div>
+
         <h2 className="cel-title">Welcome, {displayName}!</h2>
         <p className="cel-subtitle">Your adventure starts now</p>
         <p className="cel-desc">
           You now have full access to plan your dream safari, save stunning
           destinations, and explore the wonders of East Africa.
         </p>
+
         <div className="cel-badges">
           {FEATURE_BADGES.map(({ id, label, Icon }) => (
             <span key={id} className="cel-badge">
@@ -649,6 +700,7 @@ const CelebrationOverlay = React.memo(({ userName, onDismiss }) => {
             </span>
           ))}
         </div>
+
         <a href="/packages" className="cel-cta">
           <ArrowRightIcon size={16} />
           Explore Packages
@@ -694,11 +746,14 @@ const OverlayLayer = React.memo(
       <AuthModal />
       <WhatsAppButton />
       {showCelebration && (
-        <CelebrationOverlay userName={userName} onDismiss={onDismissCelebration} />
+        <CelebrationOverlay
+          userName={userName}
+          onDismiss={onDismissCelebration}
+        />
       )}
       {isLoading && <Loader fullScreen />}
     </>
-  )
+  ),
 );
 OverlayLayer.displayName = "OverlayLayer";
 
@@ -708,7 +763,9 @@ OverlayLayer.displayName = "OverlayLayer";
 const SmartRedirect = React.memo(() => {
   const { pathname } = useLocation();
   const redirectUrl  = useMemo(() => getRedirectUrl(pathname), [pathname]);
+
   if (redirectUrl) return <Navigate to={redirectUrl} replace />;
+
   return (
     <PageWrapper title="Page Not Found" noindex>
       <Suspense fallback={<Loader />}>
@@ -729,24 +786,32 @@ function useCelebration({ isAuthenticated, user }) {
 
   useEffect(() => {
     const wasAuthenticated = prevAuthRef.current;
+
     if (isAuthenticated && !wasAuthenticated && user) {
       const email = (user?.email ?? "").toLowerCase().trim();
       const key   = email ? `${WELCOME_KEY_PREFIX}${email}` : null;
       let shouldShow = false;
+
       try {
         if (!key || !localStorage.getItem(key)) {
           shouldShow = true;
           if (key) localStorage.setItem(key, String(Date.now()));
         }
-      } catch { shouldShow = true; }
+      } catch {
+        shouldShow = true;
+      }
 
       if (shouldShow) {
         setShowCelebration(true);
-        const t = setTimeout(() => setShowCelebration(false), CELEBRATION_DURATION_MS);
+        const t = setTimeout(
+          () => setShowCelebration(false),
+          CELEBRATION_DURATION_MS,
+        );
         prevAuthRef.current = isAuthenticated;
         return () => clearTimeout(t);
       }
     }
+
     prevAuthRef.current = isAuthenticated;
   }, [isAuthenticated, user]);
 
@@ -770,8 +835,11 @@ function useDevPerfLog(pathname) {
   useEffect(() => {
     if (!import.meta.env.DEV) return;
     const entry = performance.getEntriesByType?.("navigation")?.[0];
-    if (entry)
-      console.debug(`[Router] ${pathname} — DOM interactive: ${Math.round(entry.domInteractive)}ms`);
+    if (entry) {
+      console.debug(
+        `[Router] ${pathname} — DOM interactive: ${Math.round(entry.domInteractive)}ms`,
+      );
+    }
   }, [pathname]);
 }
 
@@ -782,8 +850,10 @@ function App() {
   const location = useLocation();
   const { isLoading, setIsLoading } = useApp();
   const {
-    isAuthenticated, user,
-    showCongratulation, congratulationType,
+    isAuthenticated,
+    user,
+    showCongratulation,
+    congratulationType,
     showNotLoggedInMessage,
   } = useUserAuth();
 
@@ -795,7 +865,8 @@ function App() {
   useDevPerfLog(location.pathname);
 
   const { showCelebration, dismiss: dismissCelebration } = useCelebration({
-    isAuthenticated, user,
+    isAuthenticated,
+    user,
   });
 
   const userName = user?.fullName || user?.name || null;
@@ -804,12 +875,18 @@ function App() {
     <div className="app-shell">
       <Routes>
         {/* ── OAuth callbacks ── */}
-        <Route path="/auth/github/callback" element={
-          <PageWrapper title="Signing in with GitHub…" noindex>
-            <GitHubCallbackPage />
-          </PageWrapper>
-        } />
-        <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
+        <Route
+          path="/auth/github/callback"
+          element={
+            <PageWrapper title="Signing in with GitHub…" noindex>
+              <GitHubCallbackPage />
+            </PageWrapper>
+          }
+        />
+        <Route
+          path="/auth/google/callback"
+          element={<GoogleCallbackPage />}
+        />
 
         {/* ── Booking email verification ── */}
         <Route path="/booking/verify" element={<BookingVerifyResult />} />
