@@ -1,10 +1,15 @@
+// ============================================================================
+// src/pages/Booking/Booking.jsx — Full Page Layout (not a modal/popup)
+// ============================================================================
+
 import React, { useEffect, useMemo, useRef, useCallback } from "react";
-import { useSearchParams, useParams, useNavigate, Navigate } from "react-router-dom";
+import { useSearchParams, useParams, useNavigate, Navigate, Link } from "react-router-dom";
 import {
-  HiArrowLeft, HiArrowRight, HiCheck, HiSparkles, HiShieldCheck,
-  HiInformationCircle, HiExclamationCircle, HiCheckCircle, HiX,
-  HiChatAlt2,
-} from "react-icons/hi";
+  FiArrowLeft, FiArrowRight, FiCheck, FiShield, FiInfo,
+  FiAlertCircle, FiCheckCircle, FiX, FiMessageCircle,
+  FiLock, FiGlobe, FiAward, FiMapPin, FiCalendar,
+  FiUsers, FiStar, FiHeart, FiCompass,
+} from "react-icons/fi";
 import { RiShieldKeyholeLine } from "react-icons/ri";
 import { MdVerified } from "react-icons/md";
 
@@ -23,16 +28,470 @@ import { useDestinationsList } from "../../hooks/useDestinationsList";
 
 const WA = "250785751391";
 
-/* ────────────────────────────────────────────────────────────────────────────
-   Inner page — renders inside the app shell (Navbar + Footer).
-   Step index is driven by the URL: /booking/step/:step
-──────────────────────────────────────────────────────────────────────────── */
+/* ── Inject Styles ──────────────────────────────────────────────────── */
+const BK_CSS = `
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --bk-green:    #059669;
+  --bk-green-lt: #10b981;
+  --bk-green-dk: #047857;
+  --bk-forest:   #022c22;
+  --bk-mint:     #ecfdf5;
+  --bk-text:     #0f172a;
+  --bk-text-2:   #475569;
+  --bk-text-3:   #94a3b8;
+  --bk-border:   #e2e8f0;
+  --bk-surface:  #ffffff;
+  --bk-bg:       #f0fdf4;
+  --bk-radius:   20px;
+  --bk-ease:     cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes bk-fade-up {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes bk-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes bk-step-in {
+  from { opacity: 0; transform: translateX(18px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes bk-slide-down {
+  from { opacity: 0; transform: translateY(-10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes bk-scale-x {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+@keyframes bk-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes bk-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.55; }
+}
+@keyframes bk-float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-6px); }
+}
+
+.bk-fade-up    { animation: bk-fade-up   0.45s var(--bk-ease) both; }
+.bk-fade-in    { animation: bk-fade-in   0.35s ease both; }
+.bk-step-in    { animation: bk-step-in   0.38s var(--bk-ease) both; }
+.bk-slide-down { animation: bk-slide-down 0.3s ease both; }
+.bk-scale-x    { animation: bk-scale-x   0.28s ease both; transform-origin: left; }
+
+/* ── Page root ── */
+.bk-page {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background: var(--bk-bg);
+  min-height: 100vh;
+}
+
+/* ── Hero banner ── */
+.bk-hero {
+  position: relative;
+  height: clamp(220px, 30vw, 340px);
+  overflow: hidden;
+  background: var(--bk-forest);
+}
+.bk-hero__img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
+}
+.bk-hero__overlay {
+  position: absolute; inset: 0;
+  background: linear-gradient(
+    160deg,
+    rgba(2,44,34,0.45) 0%,
+    rgba(2,44,34,0.72) 100%
+  );
+}
+.bk-hero__content {
+  position: relative; z-index: 2;
+  height: 100%;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding: 0 clamp(20px, 5vw, 60px);
+}
+.bk-hero__label {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 5px 18px; border-radius: 999px;
+  background: rgba(16,185,129,0.18); backdrop-filter: blur(10px);
+  border: 1px solid rgba(74,222,128,0.35);
+  color: #86efac; font-size: 11px; font-weight: 700;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.bk-hero__title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(28px, 4.5vw, 52px);
+  font-weight: 400; color: white; line-height: 1.12;
+  letter-spacing: -0.02em; margin: 0 0 12px;
+  text-shadow: 0 2px 24px rgba(0,0,0,0.35);
+}
+.bk-hero__sub {
+  font-size: clamp(13px, 1.4vw, 16px);
+  color: rgba(255,255,255,0.72); line-height: 1.72;
+  font-weight: 300;
+}
+.bk-hero__wave {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  line-height: 0;
+}
+
+/* ── Main layout ── */
+.bk-main {
+  max-width: 1360px;
+  margin: 0 auto;
+  padding: clamp(24px, 3vw, 44px) clamp(16px, 3vw, 40px) 72px;
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: clamp(20px, 2.5vw, 36px);
+  align-items: flex-start;
+}
+@media (max-width: 1024px) {
+  .bk-main { grid-template-columns: 1fr; }
+  .bk-sidebar { order: -1; }
+}
+
+/* ── Form card ── */
+.bk-form-card {
+  background: var(--bk-surface);
+  border-radius: var(--bk-radius);
+  border: 1.5px solid #d1fae5;
+  box-shadow: 0 4px 32px rgba(5,150,105,0.08);
+  overflow: hidden;
+}
+
+/* Top accent bar */
+.bk-form-card__accent {
+  height: 4px;
+  background: linear-gradient(90deg, #10b981, #059669, #0d9488);
+}
+
+/* ── Stepper ── */
+.bk-stepper {
+  display: flex;
+  border-bottom: 1px solid #f1f5f9;
+  padding: 0 clamp(16px, 3vw, 28px);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.bk-stepper::-webkit-scrollbar { display: none; }
+
+.bk-step-btn {
+  position: relative;
+  display: flex; align-items: center; gap: 9px;
+  padding: 16px clamp(12px, 2vw, 20px);
+  font-size: 13px; font-weight: 600;
+  border: none; background: transparent;
+  cursor: default; white-space: nowrap;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  transition: color 0.25s;
+  flex-shrink: 0;
+}
+.bk-step-btn--active  { color: #059669; cursor: default; }
+.bk-step-btn--done    { color: #10b981; cursor: pointer; }
+.bk-step-btn--pending { color: #94a3b8; }
+.bk-step-btn--done:hover { color: #047857; }
+
+.bk-step-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; flex-shrink: 0;
+  transition: all 0.25s;
+}
+.bk-step-num--active  { background: linear-gradient(135deg,#10b981,#059669); color: white; box-shadow: 0 3px 10px rgba(5,150,105,0.3); }
+.bk-step-num--done    { background: #d1fae5; color: #047857; }
+.bk-step-num--pending { background: #f1f5f9; color: #94a3b8; }
+
+.bk-step-underline {
+  position: absolute; bottom: 0; left: 12px; right: 12px;
+  height: 2.5px; border-radius: 999px;
+  background: linear-gradient(90deg, #10b981, #059669);
+}
+
+/* ── Form header ── */
+.bk-form-header {
+  padding: clamp(20px, 3vw, 32px) clamp(16px, 3vw, 32px) 0;
+  text-align: center;
+}
+.bk-form-header__icon {
+  width: 56px; height: 56px;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border: 1.5px solid #a7f3d0;
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-bottom: 14px;
+  color: #059669;
+}
+.bk-form-header__title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(22px, 2.8vw, 30px);
+  font-weight: 400; color: var(--bk-forest);
+  margin: 0 0 6px; line-height: 1.2;
+}
+.bk-form-header__desc {
+  font-size: 14px; color: var(--bk-text-3);
+  margin: 0; line-height: 1.65;
+}
+
+/* ── Form body ── */
+.bk-form-body {
+  padding: clamp(20px, 3vw, 28px) clamp(16px, 3vw, 32px);
+}
+
+/* ── Nav buttons ── */
+.bk-nav {
+  display: flex; align-items: center;
+  padding: 0 clamp(16px,3vw,32px) clamp(20px,3vw,28px);
+  gap: 12px;
+}
+.bk-btn-back {
+  display: flex; align-items: center; gap: 8px;
+  height: 46px; padding: 0 18px;
+  border: 1.5px solid var(--bk-border);
+  background: white; border-radius: 14px;
+  font-size: 14px; font-weight: 600; color: var(--bk-text-2);
+  cursor: pointer; transition: all 0.25s var(--bk-ease);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.bk-btn-back:hover {
+  background: #f8fafc; border-color: #cbd5e1; color: var(--bk-text);
+  transform: translateX(-2px);
+}
+.bk-btn-next {
+  flex: 1; height: 50px;
+  display: flex; align-items: center; justify-content: center; gap: 9px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white; border: none; border-radius: 14px;
+  font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: all 0.3s var(--bk-ease);
+  box-shadow: 0 6px 24px rgba(16,185,129,0.32);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.bk-btn-next:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 32px rgba(16,185,129,0.45);
+}
+.bk-btn-next:active:not(:disabled) { transform: scale(0.98); }
+.bk-btn-next:disabled {
+  opacity: 0.55; cursor: not-allowed;
+  transform: none; box-shadow: none;
+}
+
+/* ── Trust strip ── */
+.bk-trust-strip {
+  display: flex; align-items: center; justify-content: center;
+  flex-wrap: wrap; gap: 18px;
+  padding: 14px clamp(16px,3vw,32px);
+  border-top: 1px solid #f0fdf4;
+  background: #fafffe;
+}
+.bk-trust-item {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11.5px; color: var(--bk-text-3); font-weight: 500;
+}
+.bk-trust-item svg { color: #059669; flex-shrink: 0; }
+
+/* ── Form footer ── */
+.bk-form-footer {
+  padding: 12px clamp(16px,3vw,32px);
+  border-top: 1px solid #f1f5f9;
+  background: #fafffe;
+  text-align: center;
+}
+.bk-form-footer p {
+  font-size: 11px; color: var(--bk-text-3);
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  margin: 0;
+}
+
+/* ── Error banner ── */
+.bk-error-banner {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px; border-radius: 14px;
+  background: #fef2f2; border: 1.5px solid #fecaca;
+  margin: 0 clamp(16px,3vw,32px) 0;
+  animation: bk-slide-down 0.3s ease;
+}
+.bk-error-banner p { font-size: 14px; color: #b91c1c; margin: 0 0 10px; line-height: 1.6; }
+
+/* ── Sidebar ── */
+.bk-sidebar {
+  display: flex; flex-direction: column; gap: 18px;
+  position: sticky; top: 96px;
+}
+.bk-sidebar-card {
+  background: var(--bk-surface);
+  border-radius: var(--bk-radius);
+  border: 1.5px solid #d1fae5;
+  box-shadow: 0 4px 24px rgba(5,150,105,0.07);
+  overflow: hidden;
+}
+
+/* Gallery card */
+.bk-gallery-card {
+  height: 260px; position: relative;
+  background: var(--bk-forest);
+  border-radius: var(--bk-radius);
+  overflow: hidden;
+  border: 1.5px solid #d1fae5;
+  box-shadow: 0 4px 24px rgba(5,150,105,0.07);
+}
+
+/* Why card */
+.bk-why-card {
+  padding: 22px;
+}
+.bk-why-card__title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 17px; font-weight: 400;
+  color: var(--bk-forest); margin: 0 0 14px;
+}
+.bk-why-item {
+  display: flex; align-items: flex-start; gap: 12px;
+  margin-bottom: 13px;
+}
+.bk-why-item:last-child { margin-bottom: 0; }
+.bk-why-icon {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--bk-mint); border: 1px solid #a7f3d0;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--bk-green-dk); flex-shrink: 0;
+}
+.bk-why-title { font-size: 13.5px; font-weight: 700; color: var(--bk-text); margin: 0 0 2px; }
+.bk-why-desc  { font-size: 12.5px; color: var(--bk-text-3); margin: 0; line-height: 1.6; }
+
+/* Trust card */
+.bk-trust-card { padding: 20px 22px; }
+.bk-trust-card__title {
+  font-size: 11px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--bk-green); margin: 0 0 14px;
+}
+.bk-trust-row {
+  display: flex; align-items: center; gap: 10px;
+  margin-bottom: 10px;
+}
+.bk-trust-row:last-child { margin-bottom: 0; }
+.bk-trust-check {
+  width: 22px; height: 22px; border-radius: 6px;
+  background: var(--bk-mint); border: 1px solid #a7f3d0;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; color: var(--bk-green-dk);
+}
+.bk-trust-text { font-size: 13px; color: var(--bk-text-2); font-weight: 500; }
+
+/* WA button */
+.bk-wa-btn {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  width: 100%; padding: 14px 20px;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  border: none; border-radius: 14px;
+  color: white; font-size: 14px; font-weight: 700;
+  cursor: pointer; text-decoration: none;
+  transition: all 0.3s var(--bk-ease);
+  box-shadow: 0 6px 22px rgba(34,197,94,0.3);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+.bk-wa-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 30px rgba(34,197,94,0.42);
+}
+
+/* Progress bar */
+.bk-progress {
+  height: 3px;
+  background: #f0fdf4;
+  border-radius: 0;
+  overflow: hidden;
+}
+.bk-progress__fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #059669);
+  transition: width 0.5s var(--bk-ease);
+  border-radius: 0 999px 999px 0;
+}
+
+/* Section label */
+.bk-section-label {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 5px 16px; border-radius: 999px;
+  background: var(--bk-mint); color: var(--bk-green-dk);
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  border: 1px solid #a7f3d0;
+}
+
+/* Breadcrumb */
+.bk-breadcrumb {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--bk-text-3); font-weight: 500;
+  margin-bottom: 28px;
+  padding: clamp(16px,2.5vw,32px) clamp(16px,3vw,40px) 0;
+  max-width: 1360px; margin-left: auto; margin-right: auto;
+}
+.bk-breadcrumb a {
+  color: var(--bk-green); text-decoration: none; font-weight: 600;
+  transition: color 0.2s;
+}
+.bk-breadcrumb a:hover { color: var(--bk-green-dk); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+`;
+
+let _bkInjected = false;
+function injectBkStyles() {
+  if (_bkInjected || typeof document === "undefined") return;
+  if (document.getElementById("bk-styles")) { _bkInjected = true; return; }
+  const s = document.createElement("style");
+  s.id = "bk-styles";
+  s.textContent = BK_CSS;
+  document.head.appendChild(s);
+  _bkInjected = true;
+}
+
+/* ── Step icons ─────────────────────────────────────────────────────── */
+const STEP_ICONS = [FiUsers, FiMapPin, FiCalendar, FiMessageCircle];
+
+/* ── Why book items ─────────────────────────────────────────────────── */
+const WHY_ITEMS = [
+  { Icon: FiShield,   title: "No Payment Now",      desc: "Submit your request completely free — pay later." },
+  { Icon: FiAward,    title: "Expert-Led Safaris",   desc: "Locally certified guides with 10+ years experience." },
+  { Icon: FiCompass,  title: "Bespoke Itineraries",  desc: "Every trip custom-crafted around your exact wishes." },
+  { Icon: FiHeart,    title: "24/7 Support",          desc: "Our team is always reachable, wherever you are." },
+];
+
+/* ── Hero background ────────────────────────────────────────────────── */
+const HERO_IMG = "https://images.unsplash.com/photo-1516426122078-c23e76319801?w=1600&q=80&auto=format&fit=crop";
+
+/* ══════════════════════════════════════════════════════════════════════
+   BOOKING PAGE — INNER
+══════════════════════════════════════════════════════════════════════ */
 function BookingPage() {
+  useEffect(injectBkStyles, []);
+
   const { data: rc = [] } = useCountriesList?.() || {};
   const { data: rd = [] } = useDestinationsList?.() || {};
 
   const countriesList = useMemo(
     () => rc.map(c => ({ value: String(c.id), label: c.name })), [rc]);
+
   const destinationsList = useMemo(
     () => rd.map(d => {
       const countryId =
@@ -55,18 +514,15 @@ function BookingPage() {
   const form = useBookingContext();
   const navigate = useNavigate();
 
-  // Hero override: when a destination is selected, surface its backend image
-  // in the gallery for 5s, then the standard slideshow keeps moving.
   const heroOverride = useMemo(() => {
     if (!form.data.destinationId) return null;
     const dest = destinationsList.find(
-      d => String(d.value) === String(form.data.destinationId),
-    );
+      d => String(d.value) === String(form.data.destinationId));
     if (!dest || !dest.image) return null;
     return { src: dest.image, alt: dest.label, caption: dest.label, tag: "Your selection" };
   }, [destinationsList, form.data.destinationId]);
 
-  /* ── Prefill from ?destination= (shared link) ── */
+  /* Prefill from ?destination= */
   const [sp] = useSearchParams();
   const ar = useRef(null);
   useEffect(() => {
@@ -92,10 +548,10 @@ function BookingPage() {
 
   const renderStep = () => {
     switch (form.step) {
-      case 0: return <Step0Identity     {...props} />;
-      case 1: return <Step1Destination  {...props} />;
-      case 2: return <Step2Trip         {...props} />;
-      case 3: return <Step3Contact      {...props} />;
+      case 0: return <Step0Identity    {...props} />;
+      case 1: return <Step1Destination {...props} />;
+      case 2: return <Step2Trip        {...props} />;
+      case 3: return <Step3Contact     {...props} />;
       default: return null;
     }
   };
@@ -118,10 +574,7 @@ function BookingPage() {
     if (i <= form.step) { form.jumpTo(i); goStep(i); }
   };
 
-  /* ── Success (submitted) → dedicated route ── */
-  if (form.submitted) {
-    return <Navigate to="/booking/success" replace />;
-  }
+  if (form.submitted) return <Navigate to="/booking/success" replace />;
 
   const HEADINGS = [
     form.displayName ? `Hi ${form.displayName}!` : "Let's get started",
@@ -130,179 +583,367 @@ function BookingPage() {
     "Send your request",
   ];
 
+  const progressPct = ((form.step + 1) / form.STEPS.length) * 100;
+  const StepIcon = STEP_ICONS[form.step] || FiCompass;
+
   return (
-    <div className="am-fadeIn min-h-[70vh] bg-gradient-to-b from-emerald-50/40 to-white py-8 sm:py-12">
-      <style>{`
-        @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
-        @keyframes viewIn    { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes stepIn    { from{opacity:0;transform:translateX(16px)} to{opacity:1;transform:translateX(0)} }
-        @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes scaleX    { from{transform:scaleX(0)} to{transform:scaleX(1)} }
+    <div className="bk-page">
 
-        .am-fadeIn    { animation: fadeIn     300ms ease-out both; }
-        .am-viewIn    { animation: viewIn     350ms ease-out both; }
-        .am-stepIn    { animation: stepIn     350ms ease-out both; }
-        .am-slideDown { animation: slideDown  300ms ease-out both; }
-        .am-scaleX    { animation: scaleX     250ms ease-out both; transform-origin:left; }
-
-        @media(prefers-reduced-motion:reduce){
-          *,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important}
-        }
-      `}</style>
-
-      <div className="max-w-[1100px] mx-auto px-4 sm:px-6">
-        <div className="relative w-full bg-white rounded-2xl lg:rounded-3xl shadow-xl overflow-hidden
-                        flex flex-col lg:flex-row border border-emerald-100">
-
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-400 z-50" />
-
-          {/* Gallery — desktop */}
-          <div className="hidden lg:block lg:w-[46%] xl:w-[48%] relative bg-gray-900 flex-shrink-0 min-h-[560px]">
-            <GallerySlideshow hero={heroOverride} />
+      {/* ── Hero Banner ── */}
+      <div className="bk-hero">
+        <img src={HERO_IMG} alt="African safari" className="bk-hero__img" />
+        <div className="bk-hero__overlay" />
+        <div className="bk-hero__content">
+          <div className="bk-hero__label">
+            <FiCompass size={11} />
+            Safari Booking
           </div>
-          {/* Gallery — mobile strip */}
-          <div className="lg:hidden relative bg-gray-900 flex-shrink-0" style={{ height: "8rem" }}>
-            <GallerySlideshow intervalMs={6000} hero={heroOverride} />
-          </div>
+          <h1 className="bk-hero__title">
+            Plan Your African Adventure
+          </h1>
+          <p className="bk-hero__sub">
+            Fill in a few details and our expert team will craft your perfect itinerary.
+          </p>
+        </div>
+        <div className="bk-hero__wave">
+          <svg viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg"
+            style={{ width: "100%", display: "block" }} preserveAspectRatio="none">
+            <path d="M0,48 C480,0 960,0 1440,48 L1440,48 L0,48 Z" fill="#f0fdf4" />
+          </svg>
+        </div>
+      </div>
 
-          {/* Form panel */}
-          <div className="flex-1 flex flex-col min-w-0 bg-white">
+      {/* ── Breadcrumb ── */}
+      <div style={{
+        maxWidth: 1360, margin: "0 auto",
+        padding: "16px clamp(16px,3vw,40px) 0",
+      }}>
+        <div className="bk-breadcrumb" style={{ margin: 0, padding: 0 }}>
+          <Link to="/">Home</Link>
+          <FiArrowRight size={12} />
+          <Link to="/packages">Packages</Link>
+          <FiArrowRight size={12} />
+          <span style={{ color: "#0f172a" }}>Book Your Safari</span>
+        </div>
+      </div>
 
-            {/* Header */}
-            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex-shrink-0">
-              <div className="flex items-center gap-2.5">
-                <h3 className="text-base font-bold text-gray-900 tracking-tight">Book Your Safari</h3>
+      {/* ── Main content ── */}
+      <div className="bk-main bk-fade-up">
+
+        {/* ── LEFT: Form card ── */}
+        <div>
+          <div className="bk-form-card">
+            {/* Top accent */}
+            <div className="bk-form-card__accent" />
+
+            {/* Progress bar */}
+            <div className="bk-progress">
+              <div className="bk-progress__fill" style={{ width: `${progressPct}%` }} />
+            </div>
+
+            {/* Header row */}
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "14px clamp(16px,3vw,28px)", borderBottom: "1px solid #f0fdf4",
+            }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{
+                  width: 36, height: 36, borderRadius: 10,
+                  background: "linear-gradient(135deg,#10b981,#059669)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}>
+                  <FiCompass size={17} color="white" />
+                </div>
+                <div>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: "#022c22", margin: 0 }}>
+                    Book Your Safari
+                  </p>
+                  <p style={{ fontSize: 11.5, color: "#94a3b8", margin: 0, fontWeight: 500 }}>
+                    Step {form.step + 1} of {form.STEPS.length}
+                  </p>
+                </div>
               </div>
+
               <a href={`https://wa.me/${WA}`} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1.5 h-9 px-3 rounded-xl bg-[#25D366] hover:bg-[#1ebe5d]
-                           text-white text-xs font-semibold transition-all">
-                <HiChatAlt2 className="w-4 h-4" />
-                <span className="hidden sm:inline">Chat with expert</span>
-                <span className="sm:hidden">Chat</span>
+                className="bk-wa-btn"
+                style={{ width: "auto", padding: "9px 18px", fontSize: 13 }}>
+                <FiMessageCircle size={15} />
+                Chat with Expert
               </a>
             </div>
 
             {/* Stepper */}
-            <div className="flex border-b border-gray-100 px-4 sm:px-6 flex-shrink-0">
+            <div className="bk-stepper">
               {form.STEPS.map((s, i) => {
-                const active = form.step === i;
-                const done = form.step > i;
+                const active  = form.step === i;
+                const done    = form.step > i;
                 const canClick = done;
+                const cls = active ? "bk-step-btn--active" : done ? "bk-step-btn--done" : "bk-step-btn--pending";
+                const numCls = active ? "bk-step-num--active" : done ? "bk-step-num--done" : "bk-step-num--pending";
                 return (
                   <button key={s.id} type="button"
-                    onClick={() => handleStepClick(i)}
-                    disabled={!canClick}
-                    className={`relative flex-1 sm:flex-initial flex items-center gap-1.5 px-2 sm:px-4 py-3
-                      text-[11px] sm:text-sm font-semibold transition-all
-                      ${active ? "text-emerald-600" : done ? "text-emerald-500" : "text-gray-400"}
-                      ${canClick ? "cursor-pointer hover:text-emerald-700" : "cursor-default"}`}>
-                    <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold
-                      ${active ? "bg-emerald-500 text-white" : done ? "bg-emerald-100 text-emerald-600" : "bg-gray-100 text-gray-400"}`}>
-                      {done ? <HiCheck className="w-3 h-3" /> : i + 1}
+                    className={`bk-step-btn ${cls}`}
+                    onClick={() => canClick && handleStepClick(i)}
+                    disabled={!canClick}>
+                    <span className={`bk-step-num ${numCls}`}>
+                      {done ? <FiCheck size={11} /> : i + 1}
                     </span>
-                    <span className="hidden sm:inline">{s.label}</span>
-                    {active && (
-                      <span className="am-scaleX absolute bottom-0 left-1 right-1 sm:left-3 sm:right-3 h-0.5 bg-emerald-500 rounded-full" />
-                    )}
+                    <span style={{ display: "none" }} className="sm-inline">{s.label}</span>
+                    <span style={{ fontSize: 12 }} className="step-label-desktop">{s.label}</span>
+                    {active && <span className="bk-step-underline bk-scale-x" />}
                   </button>
                 );
               })}
             </div>
 
-            {/* Body */}
-            <div className="flex-1 overflow-x-hidden px-4 sm:px-6 py-5">
-
-              {form.submitError && (
-                <div className="am-slideDown mb-4 flex items-start gap-3 p-3.5 rounded-xl bg-red-50 border border-red-200">
-                  <HiExclamationCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm text-red-700 mb-2">{form.submitError}</p>
-                    <a href={`https://wa.me/${WA}`} target="_blank" rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#25D366] hover:bg-[#1ebe5d]
-                                 text-white text-xs font-semibold transition-all">
-                      <HiChatAlt2 className="w-3.5 h-3.5" /> Contact us on WhatsApp
-                    </a>
-                  </div>
-                  <button onClick={() => form.setSubmitError(null)}
-                    className="text-red-400 hover:text-red-600 p-0.5 rounded transition-colors">
-                    <HiX className="w-4 h-4" />
-                  </button>
+            {/* Error banner */}
+            {form.submitError && (
+              <div className="bk-error-banner" style={{ margin: "16px clamp(16px,3vw,28px)" }}>
+                <FiAlertCircle size={18} color="#dc2626" style={{ flexShrink: 0, marginTop: 2 }} />
+                <div style={{ flex: 1 }}>
+                  <p>{form.submitError}</p>
+                  <a href={`https://wa.me/${WA}`} target="_blank" rel="noopener noreferrer"
+                    className="bk-wa-btn"
+                    style={{ width: "auto", padding: "8px 16px", fontSize: 12, display: "inline-flex" }}>
+                    <FiMessageCircle size={13} /> Contact via WhatsApp
+                  </a>
                 </div>
-              )}
+                <button onClick={() => form.setSubmitError?.(null)}
+                  style={{ border: "none", background: "transparent", cursor: "pointer", color: "#ef4444", padding: 4, borderRadius: 6 }}>
+                  <FiX size={16} />
+                </button>
+              </div>
+            )}
 
-              <div className="am-viewIn">
-                <div className="text-center mb-6">
-                  <div className="inline-flex items-center justify-center w-13 h-13 rounded-2xl
-                                  bg-gradient-to-br from-emerald-100 to-emerald-50 mb-3 p-3">
-                    <HiSparkles className="w-7 h-7 text-emerald-600" />
-                  </div>
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">
-                    {HEADINGS[form.step]}
-                  </h2>
-                  <p className="text-sm text-gray-500 mt-1">
-                    {form.STEPS[form.step]?.desc}
-                  </p>
-                </div>
+            {/* Form heading */}
+            <div className="bk-form-header">
+              <div className="bk-form-header__icon">
+                <StepIcon size={26} />
+              </div>
+              <h2 className="bk-form-header__title">{HEADINGS[form.step]}</h2>
+              <p className="bk-form-header__desc">{form.STEPS[form.step]?.desc}</p>
+            </div>
 
-                <div key={form.step} className="am-stepIn">
-                  {renderStep()}
-                </div>
-
-                <div className={`mt-6 flex gap-3 ${form.step === 0 ? "justify-end" : "justify-between"}`}>
-                  {form.step > 0 && (
-                    <button type="button" onClick={handleBack} disabled={form.submitting}
-                      className="flex items-center gap-2 px-4 h-11 rounded-xl text-gray-600 font-medium text-sm
-                                 hover:bg-gray-100 transition-all">
-                      <HiArrowLeft className="w-4 h-4" /> Back
-                    </button>
-                  )}
-                  <button type="button" onClick={handleNext} disabled={form.submitting}
-                    className="flex-1 sm:flex-initial h-12 px-6 rounded-xl bg-emerald-600 text-white font-semibold text-sm
-                               flex items-center justify-center gap-2 hover:bg-emerald-700 hover:shadow-lg
-                               hover:shadow-emerald-200 active:scale-[0.98] disabled:opacity-50
-                               disabled:cursor-not-allowed transition-all">
-                    {form.submitting ? (
-                      <><Spinner /> Sending…</>
-                    ) : isLast ? (
-                      <><HiCheck className="w-4 h-4" /> Send My Request</>
-                    ) : (
-                      <>Continue <HiArrowRight className="w-4 h-4" /></>
-                    )}
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-center gap-5 mt-6 flex-wrap">
-                  {[
-                    { icon: RiShieldKeyholeLine, text: "Secure" },
-                    { icon: MdVerified,          text: "No payment now" },
-                    { icon: HiShieldCheck,       text: "Expert guides" },
-                  ].map(({ icon: BI, text }) => (
-                    <div key={text} className="flex items-center gap-1.5 text-[11px] text-gray-400">
-                      <BI className="w-3.5 h-3.5 text-emerald-500" />
-                      <span>{text}</span>
-                    </div>
-                  ))}
-                </div>
+            {/* Step content */}
+            <div className="bk-form-body">
+              <div key={form.step} className="bk-step-in">
+                {renderStep()}
               </div>
             </div>
 
+            {/* Navigation */}
+            <div className="bk-nav">
+              {form.step > 0 && (
+                <button type="button" className="bk-btn-back"
+                  onClick={handleBack} disabled={form.submitting}>
+                  <FiArrowLeft size={16} /> Back
+                </button>
+              )}
+              <button type="button" className="bk-btn-next"
+                onClick={handleNext} disabled={form.submitting}>
+                {form.submitting ? (
+                  <><Spinner /> Sending…</>
+                ) : isLast ? (
+                  <><FiCheck size={16} /> Send My Request</>
+                ) : (
+                  <>Continue <FiArrowRight size={16} /></>
+                )}
+              </button>
+            </div>
+
+            {/* Trust strip */}
+            <div className="bk-trust-strip">
+              {[
+                { Icon: RiShieldKeyholeLine, text: "256-bit SSL Encrypted"  },
+                { Icon: MdVerified,          text: "No Payment Required"    },
+                { Icon: FiAward,             text: "Expert-Guided Safaris"  },
+              ].map(({ Icon, text }) => (
+                <div key={text} className="bk-trust-item">
+                  <Icon size={14} />
+                  <span>{text}</span>
+                </div>
+              ))}
+            </div>
+
             {/* Footer */}
-            <div className="px-4 sm:px-6 py-3 border-t border-gray-100 bg-gray-50/50 flex-shrink-0">
-              <p className="text-center text-[11px] text-gray-400 flex items-center justify-center gap-1.5">
-                <RiShieldKeyholeLine className="w-3.5 h-3.5 text-emerald-500" />
-                256-bit SSL encryption • No payment required • WhatsApp negotiation
+            <div className="bk-form-footer">
+              <p>
+                <RiShieldKeyholeLine size={12} style={{ color: "#059669" }} />
+                Your data is private and never shared with third parties
               </p>
             </div>
           </div>
+        </div>
+
+        {/* ── RIGHT: Sidebar ── */}
+        <aside className="bk-sidebar">
+
+          {/* Gallery card */}
+          <div className="bk-gallery-card">
+            <GallerySlideshow hero={heroOverride} />
+          </div>
+
+          {/* Why book card */}
+          <div className="bk-sidebar-card">
+            <div className="bk-why-card">
+              <h3 className="bk-why-card__title">Why Book With Us?</h3>
+              {WHY_ITEMS.map(({ Icon, title, desc }) => (
+                <div key={title} className="bk-why-item">
+                  <div className="bk-why-icon">
+                    <Icon size={17} />
+                  </div>
+                  <div>
+                    <p className="bk-why-title">{title}</p>
+                    <p className="bk-why-desc">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Trust checklist card */}
+          <div className="bk-sidebar-card">
+            <div className="bk-trust-card">
+              <p className="bk-trust-card__title">Your Guarantee</p>
+              {[
+                "100% free to enquire",
+                "No hidden fees or charges",
+                "Response within 2 hours",
+                "Certified local guides",
+                "Flexible cancellation policy",
+                "Fully insured & bonded",
+              ].map(item => (
+                <div key={item} className="bk-trust-row">
+                  <div className="bk-trust-check">
+                    <FiCheck size={12} />
+                  </div>
+                  <span className="bk-trust-text">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* WhatsApp CTA */}
+          <div className="bk-sidebar-card" style={{ padding: 20 }}>
+            <p style={{
+              fontFamily: "'DM Serif Display', serif",
+              fontSize: 16, fontWeight: 400, color: "#022c22",
+              margin: "0 0 8px",
+            }}>
+              Prefer to chat directly?
+            </p>
+            <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 14px", lineHeight: 1.6 }}>
+              Our safari experts are available on WhatsApp — get instant answers and personalised advice.
+            </p>
+            <a href={`https://wa.me/${WA}`} target="_blank" rel="noopener noreferrer"
+              className="bk-wa-btn">
+              <FiMessageCircle size={17} />
+              Chat on WhatsApp
+            </a>
+          </div>
+
+          {/* Ratings snippet */}
+          <div className="bk-sidebar-card" style={{ padding: "18px 20px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+              <div style={{ display: "flex", gap: 3 }}>
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <FiStar key={i} size={14}
+                    style={{ fill: "#f59e0b", color: "#f59e0b" }} />
+                ))}
+              </div>
+              <span style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>4.9 / 5</span>
+            </div>
+            <p style={{ fontSize: 12.5, color: "#64748b", margin: "0 0 6px", lineHeight: 1.65 }}>
+              "Absolutely flawless experience — from booking to the final sunset drive. The team went above and beyond."
+            </p>
+            <p style={{ fontSize: 12, color: "#94a3b8", margin: 0, fontWeight: 600 }}>
+              — Sarah M., United Kingdom
+            </p>
+          </div>
+
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   SUCCESS PAGE
+══════════════════════════════════════════════════════════════════════ */
+function BookingSuccessRoute() {
+  useEffect(injectBkStyles, []);
+  const form = useBookingContext();
+  if (!form.submitted) return <Navigate to="/booking" replace />;
+
+  return (
+    <div className="bk-page">
+      {/* Hero */}
+      <div className="bk-hero" style={{ height: "clamp(180px,22vw,260px)" }}>
+        <img src={HERO_IMG} alt="Success" className="bk-hero__img" />
+        <div className="bk-hero__overlay" />
+        <div className="bk-hero__content">
+          <div className="bk-hero__label">
+            <FiCheckCircle size={11} /> Booking Confirmed
+          </div>
+          <h1 className="bk-hero__title" style={{ fontSize: "clamp(24px,3.5vw,42px)" }}>
+            We've Got Your Request!
+          </h1>
+        </div>
+        <div className="bk-hero__wave">
+          <svg viewBox="0 0 1440 48" fill="none" xmlns="http://www.w3.org/2000/svg"
+            style={{ width: "100%", display: "block" }} preserveAspectRatio="none">
+            <path d="M0,48 C480,0 960,0 1440,48 L1440,48 L0,48 Z" fill="#f0fdf4" />
+          </svg>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 1360, margin: "0 auto", padding: "clamp(24px,3vw,44px) clamp(16px,3vw,40px) 72px" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 380px", gap: 28, alignItems: "flex-start" }}
+          className="bk-fade-up bk-success-grid">
+          <style>{`
+            @media (max-width: 1024px) {
+              .bk-success-grid { grid-template-columns: 1fr !important; }
+            }
+          `}</style>
+
+          {/* Success card */}
+          <div className="bk-form-card">
+            <div className="bk-form-card__accent" />
+            <SuccessScreen
+              displayName={form.displayName}
+              bookingRef={form.bookingRef}
+              email={form.data.email}
+              onReset={form.reset}
+            />
+          </div>
+
+          {/* Sidebar */}
+          <aside className="bk-sidebar" style={{ top: 96 }}>
+            <div className="bk-gallery-card">
+              <GallerySlideshow />
+            </div>
+            <div className="bk-sidebar-card" style={{ padding: 20 }}>
+              <p style={{ fontFamily: "'DM Serif Display',serif", fontSize: 16, fontWeight: 400, color: "#022c22", margin: "0 0 8px" }}>
+                Questions about your booking?
+              </p>
+              <p style={{ fontSize: 13, color: "#64748b", margin: "0 0 14px", lineHeight: 1.6 }}>
+                Our team is standing by to assist you with any questions or special requests.
+              </p>
+              <a href={`https://wa.me/${WA}`} target="_blank" rel="noopener noreferrer"
+                className="bk-wa-btn">
+                <FiMessageCircle size={17} /> Chat on WhatsApp
+              </a>
+            </div>
+          </aside>
         </div>
       </div>
     </div>
   );
 }
 
-/* ────────────────────────────────────────────────────────────────────────────
-   Step router — maps /booking/step/:step onto the context step index.
-──────────────────────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   STEP ROUTE
+══════════════════════════════════════════════════════════════════════ */
 function BookingStepRoute() {
   const { step } = useParams();
   const navigate = useNavigate();
@@ -320,43 +961,9 @@ function BookingStepRoute() {
   return <BookingPage />;
 }
 
-/* ────────────────────────────────────────────────────────────────────────────
-   Success route.
-──────────────────────────────────────────────────────────────────────────── */
-function BookingSuccessRoute() {
-  const form = useBookingContext();
-  if (!form.submitted) return <Navigate to="/booking" replace />;
-  return (
-    <div className="am-fadeIn min-h-[70vh] bg-gradient-to-b from-emerald-50/40 to-white py-8 sm:py-12">
-      <div className="max-w-[1100px] mx-auto px-4 sm:px-6">
-        <div className="relative w-full bg-white rounded-2xl lg:rounded-3xl shadow-xl overflow-hidden
-                        flex flex-col lg:flex-row border border-emerald-100">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-400 z-50" />
-          <div className="hidden lg:block lg:w-[46%] xl:w-[48%] relative bg-gray-900 flex-shrink-0 min-h-[560px]">
-            <GallerySlideshow />
-          </div>
-          <div className="lg:hidden relative bg-gray-900 flex-shrink-0" style={{ height: "8rem" }}>
-            <GallerySlideshow intervalMs={6000} />
-          </div>
-          <div className="flex-1 flex flex-col min-w-0 bg-white">
-            <div className="flex-1 flex flex-col min-w-0 bg-white overflow-y-auto">
-              <SuccessScreen
-                displayName={form.displayName}
-                bookingRef={form.bookingRef}
-                email={form.data.email}
-                onReset={form.reset}
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ────────────────────────────────────────────────────────────────────────────
-   Public export — wraps everything in the provider.
-──────────────────────────────────────────────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════════════
+   PUBLIC EXPORT
+══════════════════════════════════════════════════════════════════════ */
 export default function Booking() {
   return (
     <BookingProvider>
@@ -367,8 +974,6 @@ export default function Booking() {
 
 function BookingRoutes() {
   const form = useBookingContext();
-  // Render the success screen as a full route only when submitted; otherwise
-  // the default landing is step 0.
   if (form.submitted) return <BookingSuccessRoute />;
   return <BookingPage />;
 }
