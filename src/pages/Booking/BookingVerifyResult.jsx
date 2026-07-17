@@ -1,17 +1,3 @@
-/**
- * BookingVerifyResult.jsx
- * ─────────────────────────────────────────────────────────────────
- * Landing page users arrive at after clicking the email
- * verification link from their booking confirmation email.
- *
- * Backend redirects to:
- *   /booking/verify?status=success&ref=BK-XXXXXX
- *   /booking/verify?status=already_verified
- *   /booking/verify?status=expired
- *   /booking/verify?status=invalid
- *   /booking/verify?status=error
- * ─────────────────────────────────────────────────────────────────
- */
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
