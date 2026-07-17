@@ -566,7 +566,7 @@ const WHY_CARDS = [
     tags: ["Eco-Certified", "Carbon Offset", "Community Impact"],
     badge: "Eco",
     badgeIcon: "🌿",
-    image: "blob:https://gemini.google.com/0b15b422-cf52-433f-ad61-26aeb2637be0",
+    image: "https://gemini.google.com/0b15b422-cf52-433f-ad61-26aeb2637be0",
     footer: "Conservation First",
     link: "/about#mission",
     ctaLabel: "Our Mission",

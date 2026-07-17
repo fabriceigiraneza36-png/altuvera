@@ -12,7 +12,7 @@ import {
   FiSave, FiLayout, FiCheck, FiAlertCircle,
   FiToggleLeft, FiToggleRight, FiChevronRight,
   FiLogOut, FiShield, FiGlobe, FiBell,
-  FiSun, FiMoon, FiZap,
+  FiZap,
 } from "react-icons/fi";
 
 // ─── Inline CSS ───────────────────────────────────────────────────────────────
@@ -325,7 +325,6 @@ export default function UserSettings() {
     emailNotifications: user?.preferences?.emailNotifications ?? true,
     smsNotifications:   user?.preferences?.smsNotifications   ?? false,
     marketingEmails:    user?.preferences?.marketingEmails    ?? true,
-    darkMode:           user?.preferences?.darkMode           ?? false,
     language:           user?.preferences?.language           || "en",
     travelUpdates:      user?.preferences?.travelUpdates      ?? true,
     autoFillForms:      user?.preferences?.autoFillForms      ?? true,
@@ -474,15 +473,6 @@ export default function UserSettings() {
                 <option value="sw">🇰🇪 Swahili</option>
               </select>
             </div>
-
-            {/* Dark Mode */}
-            <ToggleRow
-              icon={preferences.darkMode ? <FiMoon size={16} /> : <FiSun size={16} />}
-              label="Dark Mode"
-              desc="Switch to a darker interface theme."
-              checked={Boolean(preferences.darkMode)}
-              onChange={(e) => updatePreference("darkMode", e.target.checked)}
-            />
 
             {/* Auto-fill */}
             <ToggleRow

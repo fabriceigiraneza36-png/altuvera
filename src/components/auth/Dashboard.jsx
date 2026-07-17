@@ -7,10 +7,8 @@ import { useNotifications } from "../../hooks/useNotifications";
 import DashboardLayout from "../../components/auth/DashboardLayout";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  FiCalendar, FiMapPin, FiHeart, FiSettings,
-  FiBell, FiMessageSquare, FiCreditCard, FiStar,
-  FiCheckSquare, FiBarChart2, FiArrowRight,
-  FiGlobe, FiTrendingUp, FiClock, FiAward,
+  FiCalendar, FiHeart, FiStar, FiArrowRight,
+  FiTrendingUp, FiClock, FiAward,
 } from "react-icons/fi";
 import {
   HiOutlineTicket, HiOutlineLocationMarker,
@@ -291,13 +289,6 @@ const QUICK_ACTIONS = [
     to: "/my-bookings",
   },
   {
-    label: "Request Checklist",
-    desc: "Get trip checklist from admin",
-    icon: "✅",
-    bg: "#fefce8", color: "#d97706",
-    to: "/checklist",
-  },
-  {
     label: "Wishlist",
     desc: "Your saved destinations",
     icon: "❤️",
@@ -436,21 +427,6 @@ export default function UserDashboard() {
                 </Link>
               ))}
             </div>
-          </div>
-
-          {/* ── Checklist CTA ── */}
-          <div className="db-checklist-cta">
-            <div className="db-checklist-icon">📋</div>
-            <div className="db-checklist-text">
-              <h4>Request a Trip Checklist</h4>
-              <p>
-                Ask our team to prepare a personalized PDF checklist for your
-                upcoming trip — delivered directly to you via notification.
-              </p>
-            </div>
-            <Link to="/checklist" className="db-checklist-btn">
-              Request Now <FiArrowRight size={13} />
-            </Link>
           </div>
 
           {/* ── Two Column: Upcoming + Activity ── */}

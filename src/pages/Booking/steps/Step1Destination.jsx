@@ -17,8 +17,18 @@ export default function Step1Destination({
 }) {
   const filtered = useMemo(() => {
     if (!data.countryId) return [];
-    return destinationsList.filter(d => String(d.countryId) === String(data.countryId));
-  }, [destinationsList, data.countryId]);
+    const byId = destinationsList.filter(
+      d => String(d.countryId) === String(data.countryId),
+    );
+    if (byId.length) return byId;
+    // Fallback: backend rows may not carry country_id — match by country name
+    const country = countriesList.find(c => String(c.value) === String(data.countryId));
+    const name = (country?.label || "").trim().toLowerCase();
+    if (!name) return [];
+    return destinationsList.filter(
+      d => String(d.country || "").trim().toLowerCase() === name,
+    );
+  }, [destinationsList, countriesList, data.countryId]);
 
   const selectedDest = useMemo(
     () => filtered.find(d => String(d.value) === String(data.destinationId)) || null,

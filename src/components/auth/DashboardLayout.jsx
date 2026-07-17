@@ -5,8 +5,7 @@ import { useUserAuth } from "../../context/UserAuthContext";
 import {
   FiUser, FiCalendar, FiHeart, FiSettings,
   FiLogOut, FiMenu, FiX, FiBell,
-  FiStar, FiCreditCard, FiBarChart2, FiHome,
-  FiCheckSquare,
+  FiStar, FiHome,
 } from "react-icons/fi";
 import AnimatedSection from "../common/AnimatedSection";
 import NotificationBell from "./NotificationBell";
@@ -24,12 +23,9 @@ const DashboardLayout = ({ children, title, subtitle }) => {
     { name: "Overview",       path: "/dashboard",      icon: <FiHome size={18} />        },
     { name: "My Profile",     path: "/profile",        icon: <FiUser size={18} />        },
     { name: "Bookings",       path: "/my-bookings",    icon: <FiCalendar size={18} />    },
-    { name: "Payments",       path: "/payments",       icon: <FiCreditCard size={18} />  },
     { name: "Wishlist",       path: "/wishlist",       icon: <FiHeart size={18} />       },
     { name: "Notifications",  path: "/notifications",  icon: <FiBell size={18} />        },
     { name: "Reviews",        path: "/reviews",        icon: <FiStar size={18} />        },
-    { name: "Checklist",      path: "/checklist",      icon: <FiCheckSquare size={18} /> },
-    { name: "Analytics",      path: "/analytics",      icon: <FiBarChart2 size={18} />   },
     { name: "Settings",       path: "/settings",       icon: <FiSettings size={18} />    },
   ];
 

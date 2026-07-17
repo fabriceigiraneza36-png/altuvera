@@ -98,24 +98,9 @@ const publicRoutes = [
     meta: { title: "Dashboard", noindex: true },
   },
   {
-    path: "/payments",
-    component: React.lazy(() => import("./components/auth/Payments")),
-    meta: { title: "Payments", noindex: true },
-  },
-  {
     path: "/reviews",
     component: React.lazy(() => import("./components/auth/UserReviews")),
     meta: { title: "My Reviews", noindex: true },
-  },
-  {
-    path: "/checklist",
-    component: React.lazy(() => import("./components/auth/Checklist")),
-    meta: { title: "Trip Checklist", noindex: true },
-  },
-  {
-    path: "/analytics",
-    component: React.lazy(() => import("./components/auth/Analytics")),
-    meta: { title: "Travel Analytics", noindex: true },
   },
 
   // ── Main public pages ──
@@ -240,12 +225,6 @@ const publicRoutes = [
     component: React.lazy(() => import("./pages/TermsOfService")),
     meta: { title: "Terms of Service" },
   },
-];
-
-/**
- * PROTECTED routes — require authentication.
- */
-const protectedRoutes = [
   {
     path: "/booking/*",
     component: React.lazy(() => import("./pages/Booking")),
@@ -255,6 +234,12 @@ const protectedRoutes = [
       noindex: true,
     },
   },
+];
+
+/**
+ * PROTECTED routes — require authentication.
+ */
+const protectedRoutes = [
   {
     path: "/profile",
     component: React.lazy(() => import("./pages/auth/UserProfile")),
