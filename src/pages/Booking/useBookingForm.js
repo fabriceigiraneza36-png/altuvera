@@ -3,23 +3,22 @@ import { useState, useCallback, useRef } from "react";
 const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export const STEPS = [
-  { id: "name",        label: "Welcome"     },
-  { id: "destination", label: "Destination"  },
-  { id: "travel",      label: "Dates"        },
-  { id: "travelers",   label: "Travelers"    },
-  { id: "contact",     label: "Contact"      },
-  { id: "review",      label: "Review"       },
+  { id: "identity",    label: "Your Details"    },
+  { id: "destination", label: "Destination"     },
+  { id: "travel",      label: "Trip Details"    },
+  { id: "contact",     label: "Contact & Send"  },
 ];
 
 const INITIAL = {
-  firstName: "", lastName: "",
-  countryId: "", destinationId: "",
-  startDate: "", endDate: "",
-  flexibleDates: false, flexibleMonths: [],
-  adults: 1, children: 0,
-  groupType: "", specialRequests: "",
-  email: "", phone: "",
-  country: "", nationality: "",
+  /* Step 0 — Identity (3 fields) */
+  firstName: "", lastName: "", nationality: "",
+  /* Step 1 — Destination (3 fields) */
+  countryId: "", destinationId: "", groupType: "",
+  /* Step 2 — Trip (3 fields: dates + travelers + requests) */
+  startDate: "", endDate: "", flexibleDates: false, flexibleMonths: [],
+  adults: 1, children: 0, specialRequests: "",
+  /* Step 3 — Contact (3 fields: email, phone, country) */
+  email: "", phone: "", country: "",
   preferredContactMethod: "whatsapp",
   newsletterOptIn: false, agreeToTerms: false,
 };
@@ -27,18 +26,23 @@ const INITIAL = {
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const VALIDATORS = [
+  /* Step 0 */
   (d) => {
     const e = {};
-    if (!d.firstName.trim()) e.firstName = "First name is required";
-    if (!d.lastName.trim())  e.lastName  = "Last name is required";
+    if (!d.firstName.trim())    e.firstName    = "First name is required";
+    if (!d.lastName.trim())     e.lastName     = "Last name is required";
+    if (!d.nationality.trim())  e.nationality  = "Nationality helps us tailor visas";
     return e;
   },
+  /* Step 1 */
   (d) => {
     const e = {};
     if (!d.countryId)     e.countryId     = "Please pick a country";
     if (!d.destinationId) e.destinationId = "Please pick a destination";
+    if (!d.groupType)     e.groupType     = "Select your group type";
     return e;
   },
+  /* Step 2 */
   (d) => {
     const e = {};
     if (!d.flexibleDates && !d.startDate) e.startDate = "Pick a travel date";
@@ -46,23 +50,18 @@ const VALIDATORS = [
       e.endDate = "Return must be after departure";
     if (d.flexibleDates && (!d.flexibleMonths || !d.flexibleMonths.length))
       e.flexibleMonths = "Pick at least one month";
+    if (!d.adults || Number(d.adults) < 1) e.adults = "At least 1 adult required";
     return e;
   },
+  /* Step 3 */
   (d) => {
     const e = {};
-    if (!d.adults || Number(d.adults) < 1) e.adults    = "At least 1 adult";
-    if (!d.groupType)                       e.groupType = "Select group type";
+    if (!d.email.trim() || !EMAIL_RE.test(d.email)) e.email   = "Valid email required";
+    if (!d.phone.trim())                             e.phone   = "Phone number required";
+    if (!d.country.trim())                           e.country = "Country required";
+    if (!d.agreeToTerms)                             e.agreeToTerms = "You must accept the terms";
     return e;
   },
-  (d) => {
-    const e = {};
-    if (!d.email.trim() || !EMAIL_RE.test(d.email)) e.email = "Valid email required";
-    if (!d.phone.trim())   e.phone   = "Phone number required";
-    if (!d.country.trim()) e.country = "Country required";
-    if (!d.agreeToTerms)   e.agreeToTerms = "You must accept the terms";
-    return e;
-  },
-  () => ({}),
 ];
 
 export function useBookingForm({ countriesList = [], destinationsList = [] }) {
@@ -105,12 +104,10 @@ export function useBookingForm({ countriesList = [], destinationsList = [] }) {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  const jumpTo = useCallback((t) => {
-    if (t < step) setStep(t);
-  }, [step]);
+  const jumpTo = useCallback((t) => { if (t < step) setStep(t); }, [step]);
 
   const submit = useCallback(async () => {
-    const errs = VALIDATORS[4]?.(data) || {};
+    const errs = VALIDATORS[STEPS.length - 1]?.(data) || {};
     if (Object.keys(errs).length) {
       setErrors(errs);
       setTouched(p => ({
@@ -135,7 +132,7 @@ export function useBookingForm({ countriesList = [], destinationsList = [] }) {
           countryId: data.countryId || undefined,
           destinationId: data.destinationId || undefined,
           startDate: data.flexibleDates ? undefined : data.startDate || undefined,
-          endDate: data.flexibleDates ? undefined : data.endDate || undefined,
+          endDate:   data.flexibleDates ? undefined : data.endDate   || undefined,
           flexibleDates: data.flexibleDates,
           flexibleMonths: data.flexibleDates ? data.flexibleMonths : [],
           adults: Number(data.adults), children: Number(data.children),
@@ -169,7 +166,7 @@ export function useBookingForm({ countriesList = [], destinationsList = [] }) {
     retryRef.current = 0;
   }, []);
 
-  const displayName    = data.firstName.trim() || null;
+  const displayName = data.firstName.trim() || null;
   const totalTravelers = Number(data.adults) + Number(data.children);
 
   const getDestinationName = useCallback(
