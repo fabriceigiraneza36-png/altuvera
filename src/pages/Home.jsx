@@ -13,16 +13,17 @@ import {
 } from "react-icons/md";
 import {
   IoChevronBack, IoChevronForward, IoCompassOutline, IoEarthOutline,
-  IoHeartOutline, IoHeart, IoPlayCircle,
+  IoHeartOutline, IoHeart,
 } from "react-icons/io5";
 import {
   Clock, MapPin, ArrowRight, Package, Heart,
 } from "lucide-react";
 import {
-  FiChevronLeft, FiChevronRight, FiMapPin, FiStar,
+  FiChevronLeft, FiChevronRight, FiMapPin,
 } from "react-icons/fi";
 
 import Hero, { HERO_SLIDES } from "../components/home/Hero";
+import TestimonialShowcase from "../components/home/TestimonialShowcase";
 import Button from "../components/common/Button";
 import SEO from "../components/common/SEO";
 
@@ -30,7 +31,6 @@ import { useApp } from "../context/AppContext";
 import { useDestinations } from "../hooks/useDestinations";
 import { usePosts } from "../hooks/usePosts";
 import { useWishlist } from "../hooks/useWishlist";
-import { useTestimonials } from "../hooks/useTestimonials";
 
 import "../styles/Home.css";
 
@@ -94,6 +94,302 @@ const parseJsonField = (val, fallback = []) => {
 ═══════════════════════════════════════════ */
 const HOME_PKG_STYLES = `
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Inter:wght@400;500;600;700&display=swap');
+
+/* ══════════════════════════════════════════
+   INTRO MEDIA PANEL — FIXED SIZE & ANIMATED
+══════════════════════════════════════════ */
+.intro-media-grid {
+  width: 100%;
+  max-width: 540px;
+  height: 420px;
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: .75rem;
+  flex-shrink: 0;
+  position: relative;
+}
+
+/* Main video card — spans full left column */
+.intro-media-main {
+  grid-row: 1 / -1;
+  position: relative;
+  border-radius: 1.5rem;
+  overflow: hidden;
+  background: #0f1b0f;
+  box-shadow: 0 16px 48px rgba(0,0,0,.18);
+  cursor: pointer;
+  transition: box-shadow .4s ease;
+}
+.intro-media-main:hover {
+  box-shadow: 0 24px 64px rgba(0,0,0,.28);
+}
+.intro-media-main::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(5,37,20,.75) 0%, rgba(5,37,20,.15) 45%, transparent 100%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Video background inside main card */
+.intro-media-main .intro-yt-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+/* Main card label */
+.intro-media-main-label {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 1.25rem;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+}
+.intro-media-main-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  width: fit-content;
+  font-family: 'Inter', sans-serif;
+  font-size: .58rem;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #86efac;
+  background: rgba(16,185,129,.15);
+  backdrop-filter: blur(8px);
+  padding: .25rem .6rem;
+  border-radius: 99px;
+  border: 1px solid rgba(134,239,172,.2);
+}
+.intro-media-main-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+  margin: 0;
+}
+.intro-media-main-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: .72rem;
+  color: rgba(255,255,255,.6);
+  margin: 0;
+}
+
+/* Play overlay pulse */
+.intro-media-play-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 4;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  background: rgba(255,255,255,.15);
+  backdrop-filter: blur(10px);
+  border: 2px solid rgba(255,255,255,.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all .3s cubic-bezier(.34,1.56,.64,1);
+  animation: introPlayPulse 2.5s ease-in-out infinite;
+}
+.intro-media-play-ring:hover {
+  background: rgba(16,185,129,.6);
+  border-color: #34d399;
+  transform: translate(-50%, -50%) scale(1.12);
+  animation: none;
+}
+.intro-media-play-ring svg {
+  color: #fff;
+  margin-left: 2px;
+}
+@keyframes introPlayPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,.4); }
+  50% { box-shadow: 0 0 0 14px rgba(16,185,129,0); }
+}
+
+/* Side cards */
+.intro-media-side {
+  position: relative;
+  border-radius: 1.25rem;
+  overflow: hidden;
+  background: #e2e8f0;
+  box-shadow: 0 8px 28px rgba(0,0,0,.1);
+  transition: all .4s cubic-bezier(.34,1.56,.64,1);
+  cursor: pointer;
+}
+.intro-media-side:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 16px 44px rgba(0,0,0,.18);
+}
+.intro-media-side img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .7s cubic-bezier(.25,.46,.45,.94);
+}
+.intro-media-side:hover img {
+  transform: scale(1.08);
+}
+.intro-media-side::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(5,37,20,.5) 0%, transparent 55%);
+  pointer-events: none;
+}
+.intro-media-side-label {
+  position: absolute;
+  bottom: .75rem;
+  left: .75rem;
+  right: .75rem;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+}
+.intro-media-side-tag {
+  font-family: 'Inter', sans-serif;
+  font-size: .55rem;
+  font-weight: 800;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: #fff;
+  background: rgba(0,0,0,.35);
+  backdrop-filter: blur(6px);
+  padding: .2rem .5rem;
+  border-radius: 99px;
+  border: 1px solid rgba(255,255,255,.12);
+}
+
+/* Floating decoration elements */
+.intro-media-float-badge {
+  position: absolute;
+  z-index: 10;
+  background: #fff;
+  border-radius: 1rem;
+  padding: .6rem .85rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,.15);
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  animation: introFloatBounce 4s ease-in-out infinite;
+  border: 1px solid #f1f5f9;
+}
+.intro-media-float-badge--top {
+  top: -.75rem;
+  right: -.5rem;
+  animation-delay: 0s;
+}
+.intro-media-float-badge--bottom {
+  bottom: -.75rem;
+  left: 2rem;
+  animation-delay: 1.5s;
+}
+@keyframes introFloatBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+.intro-float-icon {
+  width: 2rem;
+  height: 2rem;
+  border-radius: .6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.intro-float-icon--green { background: #ecfdf5; color: #059669; }
+.intro-float-icon--amber { background: #fffbeb; color: #d97706; }
+.intro-float-text {
+  display: flex;
+  flex-direction: column;
+  gap: .05rem;
+}
+.intro-float-title {
+  font-family: 'Inter', sans-serif;
+  font-size: .7rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+.intro-float-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: .58rem;
+  color: #94a3b8;
+  line-height: 1.2;
+}
+
+/* Stagger entrance animations */
+.intro-media-grid .intro-media-main {
+  animation: introCardEnter .7s cubic-bezier(.34,1.56,.64,1) .2s both;
+}
+.intro-media-grid .intro-media-side:nth-child(2) {
+  animation: introCardEnter .7s cubic-bezier(.34,1.56,.64,1) .4s both;
+}
+.intro-media-grid .intro-media-side:nth-child(3) {
+  animation: introCardEnter .7s cubic-bezier(.34,1.56,.64,1) .55s both;
+}
+.intro-media-float-badge--top {
+  animation: introCardEnter .7s cubic-bezier(.34,1.56,.64,1) .7s both, introFloatBounce 4s ease-in-out .7s infinite;
+}
+.intro-media-float-badge--bottom {
+  animation: introCardEnter .7s cubic-bezier(.34,1.56,.64,1) .85s both, introFloatBounce 4s ease-in-out 2.35s infinite;
+}
+@keyframes introCardEnter {
+  from { opacity: 0; transform: translateY(28px) scale(.92); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Corner glow on main card */
+.intro-media-main-glow {
+  position: absolute;
+  top: -3rem;
+  right: -3rem;
+  width: 8rem;
+  height: 8rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(16,185,129,.25) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .intro-media-grid {
+    max-width: 460px;
+    height: 360px;
+  }
+}
+@media (max-width: 900px) {
+  .intro-media-grid {
+    max-width: 100%;
+    height: 340px;
+    margin-top: 1.5rem;
+  }
+  .intro-media-float-badge { display: none; }
+}
+@media (max-width: 600px) {
+  .intro-media-grid {
+    height: 280px;
+    grid-template-columns: 1.3fr 1fr;
+    gap: .5rem;
+  }
+  .intro-media-main-title { font-size: .9rem; }
+  .intro-media-play-ring { width: 2.75rem; height: 2.75rem; }
+}
 
 /* ── Scroll row ── */
 .mixed-scroll-row{display:flex;gap:1.5rem;overflow-x:auto;padding-bottom:1.25rem;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
@@ -215,233 +511,35 @@ const HOME_PKG_STYLES = `
 .dest-modal-glow{position:absolute;bottom:-4rem;right:-4rem;width:12rem;height:12rem;border-radius:50%;background:radial-gradient(circle,rgba(21,128,61,.08) 0%,transparent 70%);pointer-events:none;}
 
 /* ══════════════════════════════════════════
-   REDESIGNED TESTIMONIALS
+   WHY ALTUVERA
 ══════════════════════════════════════════ */
-.htestimonial-section{padding:clamp(3.5rem,7vw,6rem) 0;background:linear-gradient(135deg,#065f46 0%,#047857 55%,#059669 100%);position:relative;overflow:hidden;}
-.htestimonial-section::before{content:'';position:absolute;top:-8rem;left:-8rem;width:30rem;height:30rem;border-radius:50%;background:radial-gradient(circle,rgba(167,243,208,.18) 0%,transparent 70%);pointer-events:none;}
-.htestimonial-section::after{content:'';position:absolute;bottom:-7rem;right:-7rem;width:26rem;height:26rem;border-radius:50%;background:radial-gradient(circle,rgba(16,185,129,.22) 0%,transparent 70%);pointer-events:none;}
-.htestimonial-header{text-align:center;margin-bottom:clamp(2rem,3.8vw,3.25rem);position:relative;z-index:1;}
-.htestimonial-eyebrow{font-family:'Inter',sans-serif;font-size:.68rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#a7f3d0;margin-bottom:.85rem;display:block;}
-.htestimonial-title{font-family:'Playfair Display',Georgia,serif;font-size:clamp(1.85rem,3.8vw,2.85rem);font-weight:800;color:#ffffff;line-height:1.1;margin-bottom:.9rem;}
-.htestimonial-subtitle{font-family:'Inter',sans-serif;font-size:clamp(.9rem,1.4vw,1.05rem);color:rgba(255,255,255,.85);line-height:1.65;max-width:560px;margin:0 auto;}
-.htestimonial-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.75rem;position:relative;z-index:1;}
-@media(max-width:700px){.htestimonial-grid{grid-template-columns:1fr;}}
-.htestimonial-card{background:#fff;border-radius:1.5rem;padding:2rem;border:1.5px solid #e2e8f0;box-shadow:0 18px 44px rgba(0,0,0,.22);display:flex;flex-direction:column;gap:1.1rem;position:relative;overflow:hidden;transition:transform .35s cubic-bezier(.34,1.56,.64,1),box-shadow .35s ease,border-color .25s;}
-.htestimonial-card:hover{transform:translateY(-6px);box-shadow:0 30px 70px rgba(0,0,0,.32);border-color:#10b981;}
-.htestimonial-card-glyph{position:absolute;top:.75rem;right:1.25rem;font-family:'Playfair Display',Georgia,serif;font-size:5rem;line-height:1;color:#ecfdf5;pointer-events:none;user-select:none;}
-.htestimonial-stars{display:flex;gap:.25rem;}
-.htestimonial-star{font-size:.85rem;color:#d1d5db;}
-.htestimonial-star.filled{color:#f59e0b;}
-.htestimonial-quote{font-family:'Inter',sans-serif;font-size:.92rem;line-height:1.78;color:#334155;font-style:italic;flex:1;position:relative;z-index:1;}
-.htestimonial-person{display:flex;align-items:center;gap:.85rem;padding-top:1rem;border-top:1.5px solid #e2e8f0;flex-wrap:wrap;}
-.htestimonial-avatar{width:48px;height:48px;border-radius:50%;object-fit:cover;border:2.5px solid #10b981;flex-shrink:0;}
-.htestimonial-avatar-init{width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,#15803d,#22c55e);display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Inter',sans-serif;font-weight:800;font-size:1.1rem;flex-shrink:0;border:2.5px solid #10b981;}
-.htestimonial-name{font-family:'Inter',sans-serif;font-size:.92rem;font-weight:700;color:#0f172a;}
-.htestimonial-meta{font-family:'Inter',sans-serif;font-size:.72rem;color:#64748b;margin-top:.1rem;}
-.htestimonial-trip-badge{margin-left:auto;padding:.3rem .85rem;border-radius:99px;background:#ecfdf5;border:1px solid #a7f3d0;font-family:'Inter',sans-serif;font-size:.65rem;font-weight:700;color:#047857;letter-spacing:.04em;white-space:nowrap;}
-.htestimonial-skeleton{background:#fff;border-radius:1.5rem;padding:2rem;border:1.5px solid #e2e8f0;box-shadow:0 18px 44px rgba(0,0,0,.22);animation:htSkeletonPulse 1.6s ease-in-out infinite;}
-@keyframes htSkeletonPulse{0%,100%{opacity:1}50%{opacity:.5}}
+.why-section{padding:clamp(3rem,6vw,5rem) 0;background:#f0fdf4;}
+.why-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;}
+.why-card{background:#fff;border-radius:1.75rem;overflow:hidden;border:1px solid #d1fae5;box-shadow:0 4px 20px rgba(5,150,105,0.06);display:flex;flex-direction:column;transition:all 0.4s cubic-bezier(0.4,0,0.2,1);position:relative;text-decoration:none;color:inherit;}
+.why-card:hover{transform:translateY(-12px);box-shadow:0 25px 50px -12px rgba(16,185,129,0.25);border-color:#a7f3d0;}
+.why-card-img-wrap{position:relative;height:200px;overflow:hidden;background:linear-gradient(135deg,#059669,#047857);}
+.why-card-img-wrap::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent,rgba(16,185,129,0.15));opacity:0;transition:opacity 0.3s ease;}
+.why-card:hover .why-card-img-wrap::after{opacity:1;}
+.why-card-img{width:100%;height:100%;object-fit:cover;transition:transform 0.6s cubic-bezier(0.4,0,0.2,1);display:block;}
+.why-card:hover .why-card-img{transform:scale(1.06);}
+.why-card-icon-wrap{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#059669,#047857);position:relative;}
+.why-card-icon-wrap::before{content:'';position:absolute;top:-40%;right:-40%;width:80%;height:80%;background:rgba(255,255,255,0.12);border-radius:50%;filter:blur(20px);}
+.why-card-icon{color:rgba(255,255,255,0.95);filter:drop-shadow(0 4px 16px rgba(0,0,0,0.18));transition:transform 0.3s ease;position:relative;z-index:1;}
+.why-card:hover .why-card-icon{transform:scale(1.1);}
+.why-card-eco-badge{position:absolute;top:1rem;right:1rem;background:rgba(255,255,255,0.95);color:#059669;font-size:.65rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;padding:.3rem .7rem;border-radius:99px;display:flex;align-items:center;gap:.3rem;box-shadow:0 2px 8px rgba(0,0,0,0.1);font-family:'Inter',sans-serif;z-index:2;}
+.why-card-body{padding:1.5rem;display:flex;flex-direction:column;flex:1;gap:.75rem;}
+.why-card-title{font-family:'Playfair Display',Georgia,serif;font-size:1.2rem;font-weight:700;color:#064e3b;line-height:1.3;margin:0;}
+.why-card-desc{font-family:'Inter',sans-serif;font-size:.88rem;color:#4b5563;line-height:1.7;margin:0;flex:1;}
+.why-card-tags{display:flex;flex-wrap:wrap;gap:.4rem;}
+.why-card-tag{font-family:'Inter',sans-serif;font-size:.68rem;font-weight:600;padding:.25rem .65rem;border-radius:99px;background:#ecfdf5;color:#059669;border:1px solid #d1fae5;cursor:pointer;transition:all .2s ease;}
+.why-card-tag:hover{background:#d1fae5;color:#047857;}
+.why-card-footer{padding:1rem 1.5rem;background:#f0fdf4;border-top:1px solid #d1fae5;display:flex;align-items:center;justify-content:space-between;font-family:'Inter',sans-serif;}
+.why-card-footer-left{display:flex;align-items:center;gap:.5rem;font-size:.75rem;color:#059669;}
+.why-card-footer-avatar{width:1.5rem;height:1.5rem;border-radius:50%;background:linear-gradient(135deg,#059669,#047857);display:flex;align-items:center;justify-content:center;color:#fff;font-size:.65rem;font-weight:800;}
+.why-card-cta{display:flex;align-items:center;gap:.35rem;font-size:.78rem;font-weight:700;color:#fff;background:#059669;border:none;border-radius:.65rem;padding:.5rem 1rem;cursor:pointer;transition:all .25s ease;text-decoration:none;}
+.why-card-cta:hover{background:#047857;transform:translateY(-1px);box-shadow:0 4px 14px rgba(5,150,105,0.35);}
 
-/* ══════════════════════════════════════════
-   WHY ALTUVERA — NEW GREEN CARD DESIGN
-══════════════════════════════════════════ */
-.why-section {
-  padding: clamp(3rem,6vw,5rem) 0;
-  background: #f0fdf4;
-}
-.why-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.5rem;
-}
-.why-card {
-  background: #fff;
-  border-radius: 1.75rem;
-  overflow: hidden;
-  border: 1px solid #d1fae5;
-  box-shadow: 0 4px 20px rgba(5,150,105,0.06);
-  display: flex;
-  flex-direction: column;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  text-decoration: none;
-  color: inherit;
-}
-.why-card:hover {
-  transform: translateY(-12px);
-  box-shadow: 0 25px 50px -12px rgba(16,185,129,0.25);
-  border-color: #a7f3d0;
-}
-.why-card-img-wrap {
-  position: relative;
-  height: 200px;
-  overflow: hidden;
-  background: linear-gradient(135deg, #059669, #047857);
-}
-.why-card-img-wrap::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to bottom, transparent, rgba(16,185,129,0.15));
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-.why-card:hover .why-card-img-wrap::after {
-  opacity: 1;
-}
-.why-card-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 0.6s cubic-bezier(0.4,0,0.2,1);
-  display: block;
-}
-.why-card:hover .why-card-img {
-  transform: scale(1.06);
-}
-.why-card-icon-wrap {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #059669, #047857);
-  position: relative;
-}
-.why-card-icon-wrap::before {
-  content: '';
-  position: absolute;
-  top: -40%;
-  right: -40%;
-  width: 80%;
-  height: 80%;
-  background: rgba(255,255,255,0.12);
-  border-radius: 50%;
-  filter: blur(20px);
-}
-.why-card-icon {
-  color: rgba(255,255,255,0.95);
-  filter: drop-shadow(0 4px 16px rgba(0,0,0,0.18));
-  transition: transform 0.3s ease;
-  position: relative;
-  z-index: 1;
-}
-.why-card:hover .why-card-icon {
-  transform: scale(1.1);
-}
-.why-card-eco-badge {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: rgba(255,255,255,0.95);
-  color: #059669;
-  font-size: .65rem;
-  font-weight: 800;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  padding: .3rem .7rem;
-  border-radius: 99px;
-  display: flex;
-  align-items: center;
-  gap: .3rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  font-family: 'Inter', sans-serif;
-  z-index: 2;
-}
-.why-card-body {
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  gap: .75rem;
-}
-.why-card-title {
-  font-family: 'Playfair Display', Georgia, serif;
-  font-size: 1.2rem;
-  font-weight: 700;
-  color: #064e3b;
-  line-height: 1.3;
-  margin: 0;
-}
-.why-card-desc {
-  font-family: 'Inter', sans-serif;
-  font-size: .88rem;
-  color: #4b5563;
-  line-height: 1.7;
-  margin: 0;
-  flex: 1;
-}
-.why-card-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .4rem;
-}
-.why-card-tag {
-  font-family: 'Inter', sans-serif;
-  font-size: .68rem;
-  font-weight: 600;
-  padding: .25rem .65rem;
-  border-radius: 99px;
-  background: #ecfdf5;
-  color: #059669;
-  border: 1px solid #d1fae5;
-  cursor: pointer;
-  transition: all .2s ease;
-}
-.why-card-tag:hover {
-  background: #d1fae5;
-  color: #047857;
-}
-.why-card-footer {
-  padding: 1rem 1.5rem;
-  background: #f0fdf4;
-  border-top: 1px solid #d1fae5;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-family: 'Inter', sans-serif;
-}
-.why-card-footer-left {
-  display: flex;
-  align-items: center;
-  gap: .5rem;
-  font-size: .75rem;
-  color: #059669;
-}
-.why-card-footer-avatar {
-  width: 1.5rem;
-  height: 1.5rem;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #059669, #047857);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  font-size: .65rem;
-  font-weight: 800;
-}
-.why-card-cta {
-  display: flex;
-  align-items: center;
-  gap: .35rem;
-  font-size: .78rem;
-  font-weight: 700;
-  color: #fff;
-  background: #059669;
-  border: none;
-  border-radius: .65rem;
-  padding: .5rem 1rem;
-  cursor: pointer;
-  transition: all .25s ease;
-  text-decoration: none;
-}
-.why-card-cta:hover {
-  background: #047857;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 14px rgba(5,150,105,0.35);
-}
-
-/* ── Feature blocks (country sections) ── */
+/* ── Feature blocks ── */
 .feature-block{display:grid;grid-template-columns:1fr 1fr;gap:clamp(2rem,5vw,5rem);align-items:center;padding:clamp(2.5rem,5vw,4.5rem) 0;}
 .feature-block--reverse{direction:rtl;}.feature-block--reverse>*{direction:ltr;}
 .feature-block-media{position:relative;}
@@ -463,7 +561,8 @@ const HOME_PKG_STYLES = `
 .feature-block-bullet-mark{width:.45rem;height:.45rem;border-radius:50%;background:#15803d;flex-shrink:0;}
 .feature-block-cta{display:inline-flex;align-items:center;gap:.5rem;font-family:'Inter',sans-serif;font-size:.88rem;font-weight:700;color:#fff;padding:.8rem 1.6rem;border-radius:99px;background:linear-gradient(135deg,#15803d,#059669);text-decoration:none;box-shadow:0 4px 16px rgba(21,128,61,.3);transition:all .25s ease;width:fit-content;}
 .feature-block-cta:hover{box-shadow:0 8px 28px rgba(21,128,61,.45);transform:translateY(-1px);}
-@media(max-width:900px){.feature-block{grid-template-columns:1fr;}.feature-block--reverse{direction:ltr;}}
+@media(max-width:900px){.feature-block{grid-template-columns:1fr;}.feature-block--reverse{direction:ltr;}.why-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:600px){.why-grid{grid-template-columns:1fr;}}
 
 /* Section headers */
 .home-section-eyebrow{font-family:'Inter',sans-serif;font-size:.68rem;font-weight:800;letter-spacing:.18em;text-transform:uppercase;color:#16a34a;margin-bottom:.75rem;display:block;}
@@ -510,10 +609,6 @@ const HOME_PKG_STYLES = `
 .vmodal-playlist-name{font-family:'Inter',sans-serif;font-size:.78rem;font-weight:600;color:#fff;display:block;}
 .vmodal-playlist-desc{font-family:'Inter',sans-serif;font-size:.68rem;color:rgba(255,255,255,.45);display:block;margin-top:.1rem;}
 .vmodal-playlist-num{font-family:'Inter',sans-serif;font-size:.65rem;color:rgba(255,255,255,.3);font-weight:700;}
-
-/* Why grid responsive */
-@media(max-width:900px){.why-grid{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:600px){.why-grid{grid-template-columns:1fr;}}
 `;
 
 let homeStylesInjected = false;
@@ -538,8 +633,8 @@ const VIDEO_PLAYLIST = [
 ];
 
 const INTRO_SIDE_IMAGES = [
-  { src: "https://i.pinimg.com/736x/aa/c0/4c/aac04c789034e5993003ddc53818a06d.jpg", alt: "East African Culture" },
-  { src: "https://i.pinimg.com/1200x/8f/f4/63/8ff463499be98f73c3c9626985e674ee.jpg", alt: "Safari Landscape" },
+  { src: "https://i.pinimg.com/736x/aa/c0/4c/aac04c789034e5993003ddc53818a06d.jpg", alt: "East African Culture", tag: "Culture" },
+  { src: "https://i.pinimg.com/1200x/8f/f4/63/8ff463499be98f73c3c9626985e674ee.jpg", alt: "Safari Landscape", tag: "Safari" },
 ];
 
 /* ═══════════════════════════════════════════
@@ -547,123 +642,57 @@ const INTRO_SIDE_IMAGES = [
 ═══════════════════════════════════════════ */
 const WHY_CARDS = [
   {
-    id: 1,
-    title: "Expert Local Guides",
+    id: 1, title: "Expert Local Guides",
     description: "Our guides are born and raised in the regions they lead. Decades of field experience, wildlife knowledge, and cultural fluency turn every game drive into a master class.",
-    tags: ["Certified", "Multilingual", "Wildlife Experts"],
-    badge: "Top Rated",
-    badgeIcon: "⭐",
+    tags: ["Certified", "Multilingual", "Wildlife Experts"], badge: "Top Rated", badgeIcon: "⭐",
     image: "https://i.pinimg.com/236x/14/f8/7f/14f87f11922888cf40a8ca405d731246.jpg",
-    footer: "Guided by Altuvera Pros",
-    link: "/team",
-    ctaLabel: "Meet the Team",
-    iconType: "compass",
+    footer: "Guided by Altuvera Pros", link: "/team", ctaLabel: "Meet the Team", iconType: "compass",
   },
   {
-    id: 2,
-    title: "Sustainable Safari Practices",
+    id: 2, title: "Sustainable Safari Practices",
     description: "Every journey we design actively protects the ecosystems you visit. From carbon offset programs to direct community investment, we travel with purpose.",
-    tags: ["Eco-Certified", "Carbon Offset", "Community Impact"],
-    badge: "Eco",
-    badgeIcon: "🌿",
+    tags: ["Eco-Certified", "Carbon Offset", "Community Impact"], badge: "Eco", badgeIcon: "🌿",
     image: "https://gemini.google.com/0b15b422-cf52-433f-ad61-26aeb2637be0",
-    footer: "Conservation First",
-    link: "/about#mission",
-    ctaLabel: "Our Mission",
-    iconType: "leaf",
+    footer: "Conservation First", link: "/about#mission", ctaLabel: "Our Mission", iconType: "leaf",
   },
   {
-    id: 3,
-    title: "Fully Tailored Itineraries",
+    id: 3, title: "Fully Tailored Itineraries",
     description: "No two travelers are alike. We craft each journey from scratch — adjusting pacing, accommodations, and experiences to match your exact vision and travel style.",
-    tags: ["Bespoke", "Flexible", "Curated"],
-    badge: "Custom",
-    badgeIcon: "✦",
+    tags: ["Bespoke", "Flexible", "Curated"], badge: "Custom", badgeIcon: "✦",
     image: "https://i.pinimg.com/1200x/8f/9d/e8/8f9de8dad8e26fc74268e13f37149f92.jpg",
-    footer: "Your Journey, Your Rules",
-    link: "/packages",
-    ctaLabel: "View Packages",
-    iconType: "map",
+    footer: "Your Journey, Your Rules", link: "/packages", ctaLabel: "View Packages", iconType: "map",
   },
   {
-    id: 4,
-    title: "Authentic Cultural Immersion",
+    id: 4, title: "Authentic Cultural Immersion",
     description: "Beyond wildlife — we connect you with the people who define these landscapes. Share meals with Maasai elders, visit gorilla conservation projects, witness living traditions.",
-    tags: ["Cultural", "Authentic", "Immersive"],
-    badge: "Unique",
-    badgeIcon: "🏛",
+    tags: ["Cultural", "Authentic", "Immersive"], badge: "Unique", badgeIcon: "🏛",
     image: "https://i.pinimg.com/736x/e1/5b/9e/e15b9ef8fe7dfae13d170068d8d3008e.jpg",
-    footer: "Real Connections",
-    link: "/destinations",
-    ctaLabel: "Explore",
-    iconType: "heart",
+    footer: "Real Connections", link: "/destinations", ctaLabel: "Explore", iconType: "heart",
   },
   {
-    id: 5,
-    title: "Seamless End-to-End Service",
+    id: 5, title: "Seamless End-to-End Service",
     description: "From your first enquiry to your final transfer home, our team is with you every step. 24/7 in-country support means no detail goes unmanaged.",
-    tags: ["24/7 Support", "Logistics", "Hassle-Free"],
-    badge: "Premium",
-    badgeIcon: "💎",
+    tags: ["24/7 Support", "Logistics", "Hassle-Free"], badge: "Premium", badgeIcon: "💎",
     image: "https://i.pinimg.com/1200x/19/8d/ab/198dab499b95cff53e2a48a8ba02c673.jpg",
-    footer: "Always by Your Side",
-    link: "/contact",
-    ctaLabel: "Contact Us",
-    iconType: "shield",
+    footer: "Always by Your Side", link: "/contact", ctaLabel: "Contact Us", iconType: "shield",
   },
   {
-    id: 6,
-    title: "Award-Winning Experiences",
+    id: 6, title: "Award-Winning Experiences",
     description: "Recognised by travellers and industry bodies alike for excellence in responsible tourism. Our track record speaks through the stories our guests share.",
-    tags: ["Award-Winning", "5-Star Rated", "Trusted"],
-    badge: "Best in Class",
-    badgeIcon: "🏆",
+    tags: ["Award-Winning", "5-Star Rated", "Trusted"], badge: "Best in Class", badgeIcon: "🏆",
     image: "https://i.pinimg.com/736x/08/73/a9/0873a9c33c198ea63293106972294bf0.jpg",
-    footer: "Recognised Excellence",
-    link: "/about",
-    ctaLabel: "Learn More",
-    iconType: "star",
+    footer: "Recognised Excellence", link: "/about", ctaLabel: "Learn More", iconType: "star",
   },
 ];
 
-/* SVG icons for why cards */
 const WhyCardIcon = ({ type, size = 52 }) => {
   const icons = {
-    compass: (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10"/>
-        <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/>
-      </svg>
-    ),
-    leaf: (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/>
-        <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/>
-      </svg>
-    ),
-    map: (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/>
-        <line x1="9" y1="3" x2="9" y2="18"/>
-        <line x1="15" y1="6" x2="15" y2="21"/>
-      </svg>
-    ),
-    heart: (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-      </svg>
-    ),
-    shield: (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        <path d="M9 12l2 2 4-4"/>
-      </svg>
-    ),
-    star: (
-      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
-      </svg>
-    ),
+    compass: (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>),
+    leaf: (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>),
+    map: (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>),
+    heart: (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>),
+    shield: (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>),
+    star: (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>),
   };
   return icons[type] || icons.compass;
 };
@@ -707,10 +736,7 @@ const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
       } catch { setVideoError(true); }
     };
     const t = setTimeout(init, 300);
-    return () => {
-      clearTimeout(t);
-      if (playerRef.current) { try { playerRef.current.destroy(); } catch { } playerRef.current = null; }
-    };
+    return () => { clearTimeout(t); if (playerRef.current) { try { playerRef.current.destroy(); } catch { } playerRef.current = null; } };
   }, [isOpen, currentIdx, playlist]);
 
   const playNext = useCallback(() => setCurrentIdx((p) => (p + 1) % playlist.length), [playlist.length]);
@@ -734,10 +760,7 @@ const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
             </div>
           ) : (<div ref={containerRef} className="vmodal-yt-player" />)}
           {!videoError && !isReady && (
-            <div className="vmodal-loading">
-              <div className="vmodal-loading-spinner" />
-              <p>Loading video…</p>
-            </div>
+            <div className="vmodal-loading"><div className="vmodal-loading-spinner" /><p>Loading video…</p></div>
           )}
         </div>
         <div className="vmodal-controls">
@@ -768,9 +791,7 @@ const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
                 onClick={() => { setCurrentIdx(i); setVideoError(false); }}>
                 <div className="vmodal-playlist-thumb">
                   <img src={item.poster} alt={item.title} />
-                  {i === currentIdx && isReady && (
-                    <div className="vmodal-playlist-playing"><span /><span /><span /></div>
-                  )}
+                  {i === currentIdx && isReady && (<div className="vmodal-playlist-playing"><span /><span /><span /></div>)}
                 </div>
                 <div className="vmodal-playlist-meta">
                   <span className="vmodal-playlist-name">{item.title}</span>
@@ -787,7 +808,7 @@ const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
 };
 
 /* ═══════════════════════════════════════════
-   INLINE VIDEO PLAYER
+   INLINE VIDEO PLAYER (muted background)
 ═══════════════════════════════════════════ */
 const InlineVideoPlayer = ({ playlist, startIndex = 0 }) => {
   const [currentIdx, setCurrentIdx] = useState(startIndex);
@@ -799,67 +820,33 @@ const InlineVideoPlayer = ({ playlist, startIndex = 0 }) => {
   useEffect(() => { setCurrentIdx(startIndex); }, [startIndex]);
 
   useEffect(() => {
-    setIsReady(false);
-    setVideoError(false);
-
-    const destroyPlayer = () => {
-      if (playerRef.current) {
-        try { playerRef.current.destroy(); } catch {}
-        playerRef.current = null;
-      }
-    };
-
+    setIsReady(false); setVideoError(false);
+    const destroyPlayer = () => { if (playerRef.current) { try { playerRef.current.destroy(); } catch {} playerRef.current = null; } };
     const init = () => {
       if (!containerRef.current || !window.YT) return;
       destroyPlayer();
       try {
         playerRef.current = new window.YT.Player(containerRef.current, {
-          height: "100%",
-          width: "100%",
-          videoId: playlist[currentIdx]?.videoId,
-          playerVars: {
-            autoplay: 1,
-            mute: 1,
-            modestbranding: 1,
-            rel: 0,
-            fs: 0,
-            enablejsapi: 1,
-            playsinline: 1,
-            iv_load_policy: 3,
-            cc_load_policy: 0,
-          },
+          height: "100%", width: "100%", videoId: playlist[currentIdx]?.videoId,
+          playerVars: { autoplay: 1, mute: 1, modestbranding: 1, rel: 0, fs: 0, enablejsapi: 1, playsinline: 1, iv_load_policy: 3, cc_load_policy: 0, controls: 0, showinfo: 0 },
           events: {
             onReady: () => setIsReady(true),
-            onStateChange: (e) => {
-              if (e.data === window.YT.PlayerState.ENDED) {
-                setCurrentIdx((p) => (p + 1) % playlist.length);
-              }
-            },
+            onStateChange: (e) => { if (e.data === window.YT.PlayerState.ENDED) setCurrentIdx((p) => (p + 1) % playlist.length); },
             onError: () => setVideoError(true),
           },
         });
-      } catch {
-        setVideoError(true);
-      }
+      } catch { setVideoError(true); }
     };
-
     let timeoutId;
-    if (window.YT) {
-      timeoutId = setTimeout(init, 300);
-    } else if (window._ytApiReadyCb) {
-      window._ytApiReadyCb.push(() => { timeoutId = setTimeout(init, 300); });
-    }
-
-    return () => {
-      clearTimeout(timeoutId);
-      destroyPlayer();
-    };
+    if (window.YT) { timeoutId = setTimeout(init, 300); }
+    else if (window._ytApiReadyCb) { window._ytApiReadyCb.push(() => { timeoutId = setTimeout(init, 300); }); }
+    return () => { clearTimeout(timeoutId); destroyPlayer(); };
   }, [currentIdx, playlist]);
 
   const current = playlist[currentIdx];
 
   return (
-    <div className="intro-yt-bg">
+    <div className="intro-yt-bg" style={{ position: "absolute", inset: 0 }}>
       {(!isReady || videoError) && (
         <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
           <img src={current?.poster} alt={current?.title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
@@ -871,31 +858,79 @@ const InlineVideoPlayer = ({ playlist, startIndex = 0 }) => {
 };
 
 /* ═══════════════════════════════════════════
-   INTRO MEDIA PANEL
+   INTRO MEDIA PANEL — REDESIGNED FIXED SIZE
 ═══════════════════════════════════════════ */
 const IntroMediaPanel = () => {
+  const [videoModalOpen, setVideoModalOpen] = useState(false);
+  const [videoStartIdx, setVideoStartIdx] = useState(0);
   const fv = VIDEO_PLAYLIST[0];
+
+  const openVideo = useCallback((idx = 0) => {
+    setVideoStartIdx(idx);
+    setVideoModalOpen(true);
+  }, []);
+
   return (
     <>
-      <div className="intro-media-panel">
-        <div className="intro-main-card">
-          <InlineVideoPlayer playlist={VIDEO_PLAYLIST} startIndex={0} />
-          <div className="intro-main-card-overlay" />
-          <div className="intro-main-card-label">
-            <span className="intro-main-card-badge">▶ Watch Reel</span>
-            <h3 className="intro-main-card-title">{fv?.title}</h3>
-            <p className="intro-main-card-sub">{fv?.subtitle}</p>
+      <div className="intro-media-grid">
+        {/* Floating badges */}
+        <div className="intro-media-float-badge intro-media-float-badge--top">
+          <div className="intro-float-icon intro-float-icon--green">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <path d="M9 12l2 2 4-4"/>
+            </svg>
+          </div>
+          <div className="intro-float-text">
+            <span className="intro-float-title">100% Trusted</span>
+            <span className="intro-float-sub">Verified local partners</span>
           </div>
         </div>
-        <div className="intro-side-col">
-          {INTRO_SIDE_IMAGES.map((img, i) => (
-            <div key={i} className="intro-side-card">
-              <img src={img.src} alt={img.alt} className="intro-side-card-img" />
-              <div className="intro-side-card-overlay" />
-            </div>
-          ))}
+
+        <div className="intro-media-float-badge intro-media-float-badge--bottom">
+          <div className="intro-float-icon intro-float-icon--amber">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+          <div className="intro-float-text">
+            <span className="intro-float-title">4.9★ Rated</span>
+            <span className="intro-float-sub">500+ happy travellers</span>
+          </div>
         </div>
+
+        {/* Main video card */}
+        <div className="intro-media-main" onClick={() => openVideo(0)}>
+          <InlineVideoPlayer playlist={VIDEO_PLAYLIST} startIndex={0} />
+          <div className="intro-media-main-glow" />
+          <div className="intro-media-play-ring">
+            <MdPlayArrow size={22} />
+          </div>
+          <div className="intro-media-main-label">
+            <span className="intro-media-main-badge">▶ Watch Reel</span>
+            <h3 className="intro-media-main-title">{fv?.title}</h3>
+            <p className="intro-media-main-sub">{fv?.subtitle}</p>
+          </div>
+        </div>
+
+        {/* Side image cards */}
+        {INTRO_SIDE_IMAGES.map((img, i) => (
+          <div key={i} className="intro-media-side">
+            <img src={img.src} alt={img.alt} loading="lazy" />
+            <div className="intro-media-side-label">
+              <span className="intro-media-side-tag">{img.tag}</span>
+            </div>
+          </div>
+        ))}
       </div>
+
+      {/* Video modal */}
+      <VideoPlayerModal
+        isOpen={videoModalOpen}
+        onClose={() => setVideoModalOpen(false)}
+        playlist={VIDEO_PLAYLIST}
+        startIndex={videoStartIdx}
+      />
     </>
   );
 };
@@ -922,10 +957,8 @@ const DestinationModal = ({ destination, isOpen, onClose, isWishlisted, onWishli
   const country = (typeof destination?.country === "object" && destination.country?.name)
     || destination?.countryObj?.name
     || (typeof destination?.country === "string" ? destination.country : "") || "";
-  const description = destination?.description || destination?.shortDescription
-    || destination?.excerpt || "Discover this breathtaking destination.";
-  const img = destination?.heroImage || destination?.imageUrl || destination?.image_url
-    || destination?.image
+  const description = destination?.description || destination?.shortDescription || destination?.excerpt || "Discover this breathtaking destination.";
+  const img = destination?.heroImage || destination?.imageUrl || destination?.image_url || destination?.image
     || (Array.isArray(destination?.images) ? destination.images[0] : "")
     || (Array.isArray(destination?.gallery) ? destination.gallery[0]?.imageUrl : "");
   const slug = destination?.slug || destination?.id || destination?._id;
@@ -961,25 +994,19 @@ const DestinationModal = ({ destination, isOpen, onClose, isWishlisted, onWishli
           {rating > 0 && (
             <div className="dest-modal-rating">
               {Array.from({ length: 5 }).map((_, i) =>
-                i < Math.round(rating)
-                  ? <FaStar key={i} className="dest-modal-star filled" />
-                  : <FaRegStar key={i} className="dest-modal-star" />
+                i < Math.round(rating) ? <FaStar key={i} className="dest-modal-star filled" /> : <FaRegStar key={i} className="dest-modal-star" />
               )}
               <span className="dest-modal-rating-text">{rating.toFixed(1)}</span>
             </div>
           )}
           {duration && <div className="dest-modal-duration"><MdOutlineExplore /><span>{duration}</span></div>}
-          <p className="dest-modal-description">
-            {description.length > 280 ? description.substring(0, 280) + "…" : description}
-          </p>
+          <p className="dest-modal-description">{description.length > 280 ? description.substring(0, 280) + "…" : description}</p>
           {highlights.length > 0 && (
             <div className="dest-modal-highlights">
               <h4>Highlights</h4>
-              <ul>
-                {highlights.slice(0, 4).map((h, i) => (
-                  <li key={i}><span className="dest-modal-highlight-dot" />{typeof h === "string" ? h : h.text || h.title || ""}</li>
-                ))}
-              </ul>
+              <ul>{highlights.slice(0, 4).map((h, i) => (
+                <li key={i}><span className="dest-modal-highlight-dot" />{typeof h === "string" ? h : h.text || h.title || ""}</li>
+              ))}</ul>
             </div>
           )}
           <div className="dest-modal-actions">
@@ -1012,8 +1039,7 @@ const DestinationSlideshow = ({ destinations, isWishlisted, onWishlistToggle }) 
       else if (w < 1024) setCardsPerView(2);
       else setCardsPerView(3);
     };
-    update();
-    window.addEventListener("resize", update);
+    update(); window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, []);
 
@@ -1026,56 +1052,35 @@ const DestinationSlideshow = ({ destinations, isWishlisted, onWishlistToggle }) 
   const goNext = useCallback(() => goTo(currentIndex + 1), [currentIndex, goTo]);
 
   useEffect(() => {
-    const h = (e) => {
-      if (modalOpen) return;
-      if (e.key === "ArrowLeft") goPrev();
-      if (e.key === "ArrowRight") goNext();
-    };
+    const h = (e) => { if (modalOpen) return; if (e.key === "ArrowLeft") goPrev(); if (e.key === "ArrowRight") goNext(); };
     window.addEventListener("keydown", h);
     return () => window.removeEventListener("keydown", h);
   }, [goPrev, goNext, modalOpen]);
 
   const cardWidthPct = 100 / cardsPerView;
   const totalDots = maxIndex + 1;
-
   const getName = (d) => d?.name || d?.title || "Destination";
-  const getCountry = (d) => (typeof d?.country === "object" && d.country?.name)
-    || d?.countryObj?.name
-    || (typeof d?.country === "string" ? d.country : "") || "";
-  const getImage = (d) => d?.heroImage || d?.imageUrl || d?.image_url || d?.image
-    || (Array.isArray(d?.images) ? d.images[0] : "")
-    || (Array.isArray(d?.gallery) ? d.gallery[0]?.imageUrl : "");
+  const getCountry = (d) => (typeof d?.country === "object" && d.country?.name) || d?.countryObj?.name || (typeof d?.country === "string" ? d.country : "") || "";
+  const getImage = (d) => d?.heroImage || d?.imageUrl || d?.image_url || d?.image || (Array.isArray(d?.images) ? d.images[0] : "") || (Array.isArray(d?.gallery) ? d.gallery[0]?.imageUrl : "");
   const getCategory = (d) => d?.category || d?.type || "";
 
   if (!destinations.length) return null;
 
   return (
     <div style={{ position: "relative" }} ref={containerRef}>
-      <button className="dest-arr dest-arr--left" onClick={goPrev} disabled={!canPrev}
-        style={{ opacity: canPrev ? 1 : 0.3, pointerEvents: canPrev ? "auto" : "none" }}>
-        <FiChevronLeft size={22} />
-      </button>
-      <button className="dest-arr dest-arr--right" onClick={goNext} disabled={!canNext}
-        style={{ opacity: canNext ? 1 : 0.3, pointerEvents: canNext ? "auto" : "none" }}>
-        <FiChevronRight size={22} />
-      </button>
+      <button className="dest-arr dest-arr--left" onClick={goPrev} disabled={!canPrev} style={{ opacity: canPrev ? 1 : 0.3, pointerEvents: canPrev ? "auto" : "none" }}><FiChevronLeft size={22} /></button>
+      <button className="dest-arr dest-arr--right" onClick={goNext} disabled={!canNext} style={{ opacity: canNext ? 1 : 0.3, pointerEvents: canNext ? "auto" : "none" }}><FiChevronRight size={22} /></button>
       <div className="dest-slideshow-wrap" style={{ padding: "0 3.5rem" }}>
-        <div ref={trackRef} className="dest-slideshow-track"
-          style={{ transform: `translateX(-${currentIndex * cardWidthPct}%)` }}>
+        <div ref={trackRef} className="dest-slideshow-track" style={{ transform: `translateX(-${currentIndex * cardWidthPct}%)` }}>
           {destinations.map((dest, idx) => {
-            const name = getName(dest);
-            const country = getCountry(dest);
-            const img = getImage(dest);
-            const category = getCategory(dest);
+            const name = getName(dest); const country = getCountry(dest); const img = getImage(dest); const category = getCategory(dest);
             return (
               <div key={dest?._id || dest?.slug || idx} className="dest-slide-card"
                 style={{ width: `calc(${cardWidthPct}% - 1rem)`, height: "420px", margin: "0 0.5rem" }}
                 onClick={() => { setSelectedDest(dest); setModalOpen(true); }}
                 role="button" tabIndex={0}
                 onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (setSelectedDest(dest), setModalOpen(true))}>
-                {img ? (
-                  <img src={img} alt={name} className="dest-slide-img" loading="lazy" />
-                ) : (
+                {img ? (<img src={img} alt={name} className="dest-slide-img" loading="lazy" />) : (
                   <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg,#14532d,#166534)", display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <IoEarthOutline size={64} style={{ color: "rgba(255,255,255,.3)" }} />
                   </div>
@@ -1093,14 +1098,7 @@ const DestinationSlideshow = ({ destinations, isWishlisted, onWishlistToggle }) 
           })}
         </div>
       </div>
-      {totalDots > 1 && (
-        <div className="dest-dots">
-          {Array.from({ length: totalDots }).map((_, i) => (
-            <button key={i} className={`dest-dot ${i === currentIndex ? "active" : ""}`}
-              onClick={() => goTo(i)} />
-          ))}
-        </div>
-      )}
+      {totalDots > 1 && (<div className="dest-dots">{Array.from({ length: totalDots }).map((_, i) => (<button key={i} className={`dest-dot ${i === currentIndex ? "active" : ""}`} onClick={() => goTo(i)} />))}</div>)}
       <DestinationModal
         destination={selectedDest} isOpen={modalOpen}
         onClose={() => { setModalOpen(false); setSelectedDest(null); }}
@@ -1120,70 +1118,34 @@ const DestSlideshowSkeleton = () => (
 );
 
 /* ═══════════════════════════════════════════
-   WHY ALTUVERA CARD COMPONENT
+   WHY ALTUVERA CARD
 ═══════════════════════════════════════════ */
 const WhyCard = ({ card, index }) => {
-  const [hovered, setHovered] = useState(false);
   const [imgError, setImgError] = useState(false);
 
   return (
-    <Link
-      to={card.link}
-      className="why-card mixed-card-reveal"
-      style={{ animationDelay: `${index * 80}ms` }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      aria-label={card.ctaLabel}
-    >
-      {/* Image / Icon top area */}
+    <Link to={card.link} className="why-card mixed-card-reveal" style={{ animationDelay: `${index * 80}ms` }} aria-label={card.ctaLabel}>
       <div className="why-card-img-wrap">
         {!imgError && card.image ? (
-          <img
-            src={card.image}
-            alt={card.title}
-            className="why-card-img"
-            loading="lazy"
-            onError={() => setImgError(true)}
-          />
+          <img src={card.image} alt={card.title} className="why-card-img" loading="lazy" onError={() => setImgError(true)} />
         ) : (
-          <div className="why-card-icon-wrap">
-            <div className="why-card-icon">
-              <WhyCardIcon type={card.iconType} size={56} />
-            </div>
-          </div>
+          <div className="why-card-icon-wrap"><div className="why-card-icon"><WhyCardIcon type={card.iconType} size={56} /></div></div>
         )}
-        {/* ECO / type badge */}
-        <div className="why-card-eco-badge">
-          <span>{card.badgeIcon}</span>
-          <span>{card.badge}</span>
-        </div>
+        <div className="why-card-eco-badge"><span>{card.badgeIcon}</span><span>{card.badge}</span></div>
       </div>
-
-      {/* Body */}
       <div className="why-card-body">
         <h3 className="why-card-title">{card.title}</h3>
         <p className="why-card-desc">{card.description}</p>
-        <div className="why-card-tags">
-          {card.tags.map((tag, i) => (
-            <span key={i} className="why-card-tag">{tag}</span>
-          ))}
-        </div>
+        <div className="why-card-tags">{card.tags.map((tag, i) => (<span key={i} className="why-card-tag">{tag}</span>))}</div>
       </div>
-
-      {/* Footer */}
       <div className="why-card-footer">
         <div className="why-card-footer-left">
-          <div className="why-card-footer-avatar">
-            {card.footer.charAt(0)}
-          </div>
+          <div className="why-card-footer-avatar">{card.footer.charAt(0)}</div>
           <span style={{ fontWeight: 600, fontSize: ".75rem" }}>{card.footer}</span>
         </div>
         <span className="why-card-cta">
           {card.ctaLabel}
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="5" y1="12" x2="19" y2="12"/>
-            <polyline points="12 5 19 12 12 19"/>
-          </svg>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
         </span>
       </div>
     </Link>
@@ -1191,7 +1153,7 @@ const WhyCard = ({ card, index }) => {
 };
 
 /* ═══════════════════════════════════════════
-   FEATURE BLOCK (Country Sections)
+   FEATURE BLOCK
 ═══════════════════════════════════════════ */
 const FeatureBlock = ({ data, index }) => {
   const reverse = index % 2 === 1;
@@ -1214,17 +1176,13 @@ const FeatureBlock = ({ data, index }) => {
           {data.images.map((src, i) => (
             <img key={i} src={src} alt={`${data.title} ${i + 1}`}
               className={`feature-block-img ${i === curImg ? "feature-block-img--active" : ""} ${isT && i === curImg ? "feature-block-img--exiting" : ""}`}
-              loading="lazy"
-            />
+              loading="lazy" />
           ))}
           <div className="feature-block-img-overlay" />
         </div>
         {data.images.length > 1 && (
           <div className="feature-block-dots">
-            {data.images.map((_, i) => (
-              <button key={i} className={`feature-block-dot ${i === curImg ? "active" : ""}`}
-                onClick={() => { setT(false); setCurImg(i); }} />
-            ))}
+            {data.images.map((_, i) => (<button key={i} className={`feature-block-dot ${i === curImg ? "active" : ""}`} onClick={() => { setT(false); setCurImg(i); }} />))}
           </div>
         )}
       </div>
@@ -1235,112 +1193,11 @@ const FeatureBlock = ({ data, index }) => {
           <p className="feature-block-desc">{data.descriptions ? data.descriptions[0] : data.description}</p>
           {data.bullets && (
             <ul className="feature-block-bullets">
-              {data.bullets.map((b, i) => (
-                <li key={i}><span className="feature-block-bullet-mark" /><span>{b}</span></li>
-              ))}
+              {data.bullets.map((b, i) => (<li key={i}><span className="feature-block-bullet-mark" /><span>{b}</span></li>))}
             </ul>
           )}
-          <Link to={data.link} className="feature-block-cta">
-            <span>{data.ctaLabel}</span><HiOutlineArrowRight />
-          </Link>
+          <Link to={data.link} className="feature-block-cta"><span>{data.ctaLabel}</span><HiOutlineArrowRight /></Link>
         </div>
-      </div>
-    </section>
-  );
-};
-
-/* ═══════════════════════════════════════════
-   TESTIMONIAL SECTION
-═══════════════════════════════════════════ */
-const TestimonialCard = ({ slide }) => {
-  const [hovered, setHovered] = useState(false);
-  return (
-    <div
-      className="htestimonial-card"
-      style={{
-        transform: hovered ? "translateY(-6px)" : "none",
-        boxShadow: hovered ? "0 30px 70px rgba(0,0,0,.32)" : "0 18px 44px rgba(0,0,0,.22)",
-        borderColor: hovered ? "#10b981" : "#e2e8f0",
-      }}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      <div className="htestimonial-card-glyph">&ldquo;</div>
-      <div className="htestimonial-stars">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <span key={i} className={`htestimonial-star ${i < (slide.rating || 5) ? "filled" : ""}`}>★</span>
-        ))}
-      </div>
-      <p className="htestimonial-quote">&ldquo;{slide.quote}&rdquo;</p>
-      <div className="htestimonial-person">
-        {slide.image ? (
-          <img src={slide.image} alt={slide.name} className="htestimonial-avatar" />
-        ) : (
-          <div className="htestimonial-avatar-init">{(slide.name || "T")[0]}</div>
-        )}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="htestimonial-name">{slide.name}</div>
-          {slide.meta && <div className="htestimonial-meta">{slide.meta}</div>}
-        </div>
-        {slide.trip && <span className="htestimonial-trip-badge">{slide.trip}</span>}
-      </div>
-    </div>
-  );
-};
-
-const TestimonialSection = () => {
-  const { testimonials, loading } = useTestimonials("active=all");
-
-  const slides = useMemo(() => {
-    if (loading) return [];
-    return testimonials.map((t) => ({
-      id: t.id, name: t.name, trip: t.trip,
-      meta: [t.location, t.date_text].filter(Boolean).join(" · "),
-      image: t.avatar_url || null,
-      rating: parseInt(t.rating) || 5,
-      quote: t.testimonial_text,
-    }));
-  }, [testimonials, loading]);
-
-  return (
-    <section className="htestimonial-section">
-      <div className="home-container">
-        <div className="htestimonial-header">
-          <span className="htestimonial-eyebrow">Guest Experiences</span>
-          <h2 className="htestimonial-title">Voices From the Field</h2>
-          <p className="htestimonial-subtitle">
-            Real stories from real travellers — people whose lives were quietly, profoundly changed
-            by the places they visited and the moments they couldn't have planned.
-          </p>
-        </div>
-        {loading ? (
-          <div className="htestimonial-grid">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="htestimonial-skeleton" style={{ height: 260 }}>
-                <div style={{ height: 14, width: "45%", background: "#BBF7D0", borderRadius: 6, marginBottom: 16 }} />
-                <div style={{ height: 10, width: "95%", background: "#DCFCE7", borderRadius: 4, marginBottom: 8 }} />
-                <div style={{ height: 10, width: "80%", background: "#DCFCE7", borderRadius: 4, marginBottom: 8 }} />
-                <div style={{ height: 10, width: "65%", background: "#DCFCE7", borderRadius: 4, marginBottom: 24 }} />
-                <div style={{ height: 40, display: "flex", alignItems: "center", gap: 12, borderTop: "1px solid #F0FDF4", paddingTop: 16 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: "50%", background: "#BBF7D0" }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ height: 12, width: "50%", background: "#DCFCE7", borderRadius: 4, marginBottom: 6 }} />
-                    <div style={{ height: 10, width: "35%", background: "#F0FDF4", borderRadius: 4 }} />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : slides.length === 0 ? (
-          <div style={{ textAlign: "center", padding: "3rem 1rem", color: "rgba(255,255,255,.85)", fontFamily: "'Inter',sans-serif" }}>
-            <p style={{ fontWeight: 600, color: "#ffffff" }}>No reviews yet</p>
-            <p style={{ fontSize: ".88rem" }}>Be the first to share your experience!</p>
-          </div>
-        ) : (
-          <div className="htestimonial-grid">
-            {slides.map((slide, i) => <TestimonialCard key={slide.id || i} slide={slide} />)}
-          </div>
-        )}
       </div>
     </section>
   );
@@ -1361,30 +1218,17 @@ const HorizontalPackageCard = React.memo(function HorizontalPackageCard({ pkg, i
   return (
     <Link to={`/packages/${pkg.slug || pkg.id}`} className="hpkg-card mixed-card-reveal" style={{ animationDelay: `${index * 80}ms` }}>
       <div className="hpkg-img-wrap">
-        {cover ? (
-          <img src={cover} alt={pkg.title} className="hpkg-img" loading="lazy" />
-        ) : (
+        {cover ? (<img src={cover} alt={pkg.title} className="hpkg-img" loading="lazy" />) : (
           <div style={{ width: "100%", height: "100%", background: `linear-gradient(145deg,${accent}33,${accent}77)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
             <Package size={40} style={{ color: accent, opacity: 0.4 }} />
           </div>
         )}
         <div className="hpkg-img-gradient" />
-        {pkg.badge_label ? (
-          <span className="hpkg-badge" style={{ backgroundColor: pkg.badge_color || accent }}>{pkg.badge_label}</span>
-        ) : pkg.is_featured && (
-          <span className="hpkg-badge" style={{ backgroundColor: "#f59e0b" }}>Featured</span>
-        )}
+        {pkg.badge_label ? (<span className="hpkg-badge" style={{ backgroundColor: pkg.badge_color || accent }}>{pkg.badge_label}</span>)
+          : pkg.is_featured && (<span className="hpkg-badge" style={{ backgroundColor: "#f59e0b" }}>Featured</span>)}
         {hasDisc && <span className="hpkg-discount">-{pkg.discount_percent}% OFF</span>}
-        {!hasDisc && (
-          <button className="hpkg-wish" onClick={handleWish}>
-            <Heart size={14} style={{ fill: isWish ? "#ef4444" : "none", color: isWish ? "#ef4444" : "#64748b" }} />
-          </button>
-        )}
-        {pkg.duration_days && (
-          <div className="hpkg-duration-pill">
-            <Clock size={10} />{fmtDuration(pkg.duration_days, pkg.duration_nights)}
-          </div>
-        )}
+        {!hasDisc && (<button className="hpkg-wish" onClick={handleWish}><Heart size={14} style={{ fill: isWish ? "#ef4444" : "none", color: isWish ? "#ef4444" : "#64748b" }} /></button>)}
+        {pkg.duration_days && (<div className="hpkg-duration-pill"><Clock size={10} />{fmtDuration(pkg.duration_days, pkg.duration_nights)}</div>)}
         {pkg.is_sold_out && (
           <div style={{ position: "absolute", inset: 0, background: "rgba(0,0,0,.6)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <span style={{ color: "#fff", fontWeight: 900, fontSize: ".75rem", letterSpacing: ".1em", textTransform: "uppercase", border: "1px solid rgba(255,255,255,.4)", padding: ".4rem 1rem", borderRadius: "99px", backdropFilter: "blur(6px)" }}>Sold Out</span>
@@ -1394,29 +1238,20 @@ const HorizontalPackageCard = React.memo(function HorizontalPackageCard({ pkg, i
       <div className="hpkg-body">
         {pkg.category && <span className="hpkg-category">{pkg.category}</span>}
         <h3 className="hpkg-title">{pkg.title}</h3>
-        {/* Meta — location only, no group size */}
         <div className="hpkg-meta">
           {(pkg.destination || pkg.country) && (
-            <span className="hpkg-meta-item">
-              <MapPin size={10} style={{ color: "#059669", flexShrink: 0 }} />
-              {[pkg.destination, pkg.country].filter(Boolean).join(", ")}
-            </span>
+            <span className="hpkg-meta-item"><MapPin size={10} style={{ color: "#059669", flexShrink: 0 }} />{[pkg.destination, pkg.country].filter(Boolean).join(", ")}</span>
           )}
         </div>
         {pkg.short_description && <p className="hpkg-desc">{pkg.short_description}</p>}
         {feats.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: ".4rem" }}>
-            {feats.map((f, i) => (
-              <span key={i} style={{ fontSize: ".65rem", fontWeight: 700, padding: ".2rem .6rem", borderRadius: "99px", background: `${accent}15`, color: accent, border: `1px solid ${accent}30`, fontFamily: "'Inter',sans-serif" }}>{f}</span>
-            ))}
+            {feats.map((f, i) => (<span key={i} style={{ fontSize: ".65rem", fontWeight: 700, padding: ".2rem .6rem", borderRadius: "99px", background: `${accent}15`, color: accent, border: `1px solid ${accent}30`, fontFamily: "'Inter',sans-serif" }}>{f}</span>))}
           </div>
         )}
         <div className="hpkg-footer">
           <div>
-            {hasDisc && (() => {
-              const orig = Number(pkg.price) / (1 - Number(pkg.discount_percent) / 100);
-              return <p style={{ fontSize: ".7rem", color: "#94a3b8", textDecoration: "line-through", lineHeight: 1, marginBottom: ".15rem", fontFamily: "'Inter',sans-serif" }}>{fmtPrice(orig, pkg.currency)}</p>;
-            })()}
+            {hasDisc && (() => { const orig = Number(pkg.price) / (1 - Number(pkg.discount_percent) / 100); return <p style={{ fontSize: ".7rem", color: "#94a3b8", textDecoration: "line-through", lineHeight: 1, marginBottom: ".15rem", fontFamily: "'Inter',sans-serif" }}>{fmtPrice(orig, pkg.currency)}</p>; })()}
             <p className="hpkg-price" style={{ color: accent }}>{pkg.is_price_visible !== false ? fmtPrice(pkg.price, pkg.currency) : "POA"}</p>
             <p className="hpkg-price-label">{pkg.price_label || "per person"}</p>
           </div>
@@ -1433,9 +1268,7 @@ const HorizontalPostCard = React.memo(function HorizontalPostCard({ post, index 
   return (
     <Link to={`/blog/${post.slug}`} className="hpost-card mixed-card-reveal" style={{ animationDelay: `${index * 80}ms` }}>
       <div className="hpost-img-wrap">
-        {post.image_url ? (
-          <img src={post.image_url} alt={post.title} className="hpost-img" loading="lazy" />
-        ) : (
+        {post.image_url ? (<img src={post.image_url} alt={post.title} className="hpost-img" loading="lazy" />) : (
           <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg,#e2e8f0,#f1f5f9)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <MdOutlineArticle size={36} style={{ color: "#94a3b8" }} />
           </div>
@@ -1544,9 +1377,7 @@ const MixedScrollRow = ({ packages, posts, loadingPkgs, loadingPosts, wishlist, 
         </div>
       </div>
       <div style={{ position: "relative" }}>
-        <button className="scroll-nav-btn scroll-nav-btn--left" onClick={() => scroll("left")} disabled={!canLeft}>
-          <IoChevronBack size={18} />
-        </button>
+        <button className="scroll-nav-btn scroll-nav-btn--left" onClick={() => scroll("left")} disabled={!canLeft}><IoChevronBack size={18} /></button>
         <div ref={rowRef} className="mixed-scroll-row" style={{ padding: ".5rem .25rem 1.25rem" }}>
           {isLoading
             ? Array.from({ length: 9 }).map((_, i) => i % 3 === 2 ? <PostSkeleton key={i} /> : <PackageSkeleton key={i} />)
@@ -1557,13 +1388,9 @@ const MixedScrollRow = ({ packages, posts, loadingPkgs, loadingPosts, wishlist, 
             )
           }
         </div>
-        <button className="scroll-nav-btn scroll-nav-btn--right" onClick={() => scroll("right")} disabled={!canRight}>
-          <IoChevronForward size={18} />
-        </button>
+        <button className="scroll-nav-btn scroll-nav-btn--right" onClick={() => scroll("right")} disabled={!canRight}><IoChevronForward size={18} /></button>
       </div>
-      <div className="scroll-progress-bar">
-        <div className="scroll-progress-fill" style={{ width: `${scrollProgress}%` }} />
-      </div>
+      <div className="scroll-progress-bar"><div className="scroll-progress-fill" style={{ width: `${scrollProgress}%` }} /></div>
     </div>
   );
 };
@@ -1628,7 +1455,7 @@ const Home = () => {
       description: "Rwanda offers one of Africa's most exclusive wildlife experiences. Trek through the misty forests of Volcanoes National Park to meet endangered mountain gorillas.",
       bullets: ["World-famous mountain gorilla trekking", "Nyungwe Forest canopy walk & chimpanzee tracking", "Big Five safaris in Akagera National Park", "Luxury eco-lodges with expert local guides"],
       ctaLabel: "Explore Rwanda", link: "/country/rwanda",
-      images: ["https://i.pinimg.com/1200x/5d/1a/90/5d1a90a3a3f9ad6bcddf570344ff2fc4.jpg", "https://i.pinimg.com/1200x/73/f0/ee/73f0ee6d0c2fab1906c16ce20c251f56.jpg", "https://i.pinimg.com/736x/46/fe/c8/46fec850388090f1f6bbdd4246b9a049.jpg]"],
+      images: ["https://i.pinimg.com/1200x/5d/1a/90/5d1a90a3a3f9ad6bcddf570344ff2fc4.jpg", "https://i.pinimg.com/1200x/73/f0/ee/73f0ee6d0c2fab1906c16ce20c251f56.jpg", "https://i.pinimg.com/736x/46/fe/c8/46fec850388090f1f6bbdd4246b9a049.jpg"],
     },
     {
       title: "Witness the Great Migration & Conquer Africa's Highest Peak",
@@ -1642,7 +1469,7 @@ const Home = () => {
       description: "Kenya combines iconic wildlife encounters with spectacular landscapes and pristine Indian Ocean beaches.",
       bullets: ["Maasai Mara Great Migration safaris", "Amboseli elephant encounters with Kilimanjaro views", "Sunrise hot-air balloon adventures", "Diani Beach & Swahili coastal experiences"],
       ctaLabel: "Explore Kenya", link: "/country/kenya",
-      images: ["https://i.pinimg.com/1200x/82/1c/3c/821c3c64c9ef926ad79900314de0ea9b.jpg","https://i.pinimg.com/1200x/0f/c4/6f/0fc46fc0a5e286b126ab6e78697c5e5f.jpg", "https://i.pinimg.com/736x/cc/5f/49/cc5f496af04db30b07c3559d5a708cb7.jpg"],
+      images: ["https://i.pinimg.com/1200x/82/1c/3c/821c3c64c9ef926ad79900314de0ea9b.jpg", "https://i.pinimg.com/1200x/0f/c4/6f/0fc46fc0a5e286b126ab6e78697c5e5f.jpg", "https://i.pinimg.com/736x/cc/5f/49/cc5f496af04db30b07c3559d5a708cb7.jpg"],
     },
   ], []);
 
@@ -1677,50 +1504,32 @@ const Home = () => {
         <div className="home-container">
           <div className="section-header" style={{ textAlign: "center", marginBottom: "2.5rem" }}>
             <span className="home-section-eyebrow">Where Will You Go?</span>
-            <h2 className="home-section-title-serif">
-              Handpicked <span style={{ color: "#22c55e" }}>Destinations</span>
-            </h2>
+            <h2 className="home-section-title-serif">Handpicked <span style={{ color: "#22c55e" }}>Destinations</span></h2>
             <p className="home-section-subtitle-new" style={{ margin: "0 auto" }}>
-              Each place chosen for the stories it holds, the wildlife it shelters,
-              and the people who call it home.
+              Each place chosen for the stories it holds, the wildlife it shelters, and the people who call it home.
             </p>
           </div>
           {destLoading ? <DestSlideshowSkeleton /> : (
-            <DestinationSlideshow
-              destinations={allDest.slice(0, 12)}
-              isWishlisted={(id) => isWishlisted(id)}
-              onWishlistToggle={toggleWishlist}
-            />
+            <DestinationSlideshow destinations={allDest.slice(0, 12)} isWishlisted={(id) => isWishlisted(id)} onWishlistToggle={toggleWishlist} />
           )}
           <div className="section-cta" style={{ marginTop: "2.5rem" }}>
-            <Button to="/destinations" variant="primary" size="large" icon={<HiOutlineArrowRight size={18} />}>
-              View All Destinations
-            </Button>
+            <Button to="/destinations" variant="primary" size="large" icon={<HiOutlineArrowRight size={18} />}>View All Destinations</Button>
           </div>
         </div>
       </section>
 
-      {/* ── Why Altuvera — NEW GREEN CARD DESIGN ── */}
+      {/* ── Why Altuvera ── */}
       <section className="why-section">
         <div className="home-container">
           <div className="section-header" style={{ textAlign: "center", marginBottom: "2.5rem" }}>
-            <h2 className="home-section-title-serif">
-              The Altuvera <span style={{ color: "#22c55e" }}>Difference</span>
-            </h2>
+            <h2 className="home-section-title-serif">The Altuvera <span style={{ color: "#22c55e" }}>Difference</span></h2>
             <p className="home-section-subtitle-new" style={{ margin: "0 auto" }}>
-              Experience the difference that comes with expertise, passion, and an
-              unwavering commitment to excellence in every journey we craft.
+              Experience the difference that comes with expertise, passion, and an unwavering commitment to excellence in every journey we craft.
             </p>
           </div>
-          <div className="why-grid">
-            {WHY_CARDS.map((card, i) => (
-              <WhyCard key={card.id} card={card} index={i} />
-            ))}
-          </div>
+          <div className="why-grid">{WHY_CARDS.map((card, i) => (<WhyCard key={card.id} card={card} index={i} />))}</div>
           <div className="section-cta" style={{ marginTop: "2.5rem" }}>
-            <Button to="/about" variant="primary" size="large" icon={<HiOutlineArrowRight size={18} />}>
-              Learn More About Us
-            </Button>
+            <Button to="/about" variant="primary" size="large" icon={<HiOutlineArrowRight size={18} />}>Learn More About Us</Button>
           </div>
         </div>
       </section>
@@ -1731,47 +1540,30 @@ const Home = () => {
           <div className="section-header" style={{ textAlign: "center", paddingTop: "clamp(2rem,4vw,3.5rem)" }}>
             <span className="home-section-eyebrow">The Altuvera Way</span>
             <h2 className="home-section-title-serif">
-              The People Who Go{" "}
-              <span style={{ color: "#22c55e" }}>Never Quite Come Back</span>{" "}
-              the Same
+              The People Who Go{" "}<span style={{ color: "#22c55e" }}>Never Quite Come Back</span>{" "}the Same
             </h2>
             <p className="home-section-subtitle-new" style={{ margin: "0 auto" }}>
-              Every journey we craft is built around a simple truth — the most important
-              thing you'll bring home isn't a souvenir.
+              Every journey we craft is built around a simple truth — the most important thing you'll bring home isn't a souvenir.
             </p>
           </div>
         </div>
         <div className="feature-blocks-stack">
-          {featureBlocks.map((block, i) => (
-            <FeatureBlock key={block.title} data={block} index={i} />
-          ))}
+          {featureBlocks.map((block, i) => (<FeatureBlock key={block.title} data={block} index={i} />))}
         </div>
       </section>
 
-      {/* ── Testimonials ── */}
-      <TestimonialSection />
+      {/* ── Testimonials — External Component ── */}
+      <TestimonialShowcase />
 
       {/* ── Packages & Stories ── */}
       <section className="home-section posts-section">
         <div className="home-container">
           <div className="section-header" style={{ marginBottom: "0.5rem" }}>
             <span className="home-section-eyebrow">Curated For You</span>
-            <h2 className="home-section-title-serif">
-              Explore Packages &{" "}
-              <span style={{ color: "#22c55e" }}>Stories</span>
-            </h2>
-            <p className="home-section-subtitle-new">
-              Curated adventures and field notes — scroll to discover.
-            </p>
+            <h2 className="home-section-title-serif">Explore Packages &{" "}<span style={{ color: "#22c55e" }}>Stories</span></h2>
+            <p className="home-section-subtitle-new">Curated adventures and field notes — scroll to discover.</p>
           </div>
-          <MixedScrollRow
-            packages={packages}
-            posts={posts}
-            loadingPkgs={loadingPkgs}
-            loadingPosts={postsLoading}
-            wishlist={pkgWishlist}
-            onWishlist={handlePkgWishlist}
-          />
+          <MixedScrollRow packages={packages} posts={posts} loadingPkgs={loadingPkgs} loadingPosts={postsLoading} wishlist={pkgWishlist} onWishlist={handlePkgWishlist} />
         </div>
       </section>
     </div>

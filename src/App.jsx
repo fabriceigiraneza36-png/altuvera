@@ -37,6 +37,7 @@ import PageWrapper          from "./components/common/PageWrapper";
 import BookingVerifyResult  from "./pages/Booking/BookingVerifyResult";
 import WhatsAppButton       from "./components/common/WhatsAppButton";
 import UserNotifications    from "./pages/auth/UserNotifications";
+import Messages             from "./pages/auth/Messages";
 import Explore              from "./pages/Explore";
 
 // ── Lazy imports ──────────────────────────────────────────────────────────────
@@ -273,6 +274,11 @@ const protectedRoutes = [
     path: "/notifications",
     component: UserNotifications,
     meta: { title: "Notifications", noindex: true },
+  },
+  {
+    path: "/messages",
+    component: Messages,
+    meta: { title: "Messages", noindex: true },
   },
 ];
 

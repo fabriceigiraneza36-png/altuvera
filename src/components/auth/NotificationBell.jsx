@@ -105,28 +105,72 @@ export default function NotificationBell({ style = {} }) {
         <BellIcon count={notifs.unreadCount} />
       </motion.button>
 
-      {/* Dropdown Panel */}
+      {/* Centered Modal Overlay (no more left-floating dropdown) */}
       <AnimatePresence>
         {open && (
           <motion.div
             ref={panelRef}
-            initial={{ opacity: 0, y: -8, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0,  scale: 1    }}
-            exit={{    opacity: 0, y: -8, scale: 0.97 }}
-            transition={{ duration: 0.18 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onMouseDown={(e) => { if (e.target === e.currentTarget) setOpen(false) }}
             style={{
-              position:     'absolute',
-              top:          'calc(100% + 10px)',
-              right:        0,
-              zIndex:       9999,
-              width:        380,
-              maxWidth:     'calc(100vw - 24px)',
+              position:        'fixed',
+              inset:           0,
+              zIndex:          99999,
+              display:         'flex',
+              alignItems:      'center',
+              justifyContent:  'center',
+              padding:         '20px',
+              background:      'rgba(15,23,42,0.45)',
+              backdropFilter:  'blur(4px)',
+              WebkitBackdropFilter: 'blur(4px)',
             }}
           >
-            <NotificationPanel
-              {...notifs}
-              onClose={() => setOpen(false)}
-            />
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0,  scale: 1    }}
+              exit={{    opacity: 0, y: 16, scale: 0.96 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+              style={{
+                position:         'relative',
+                width:           '100%',
+                maxWidth:        440,
+                maxHeight:       'calc(100vh - 120px)',
+                display:         'flex',
+                flexDirection:    'column',
+              }}
+            >
+              {/* Close button */}
+              <button
+                onClick={() => setOpen(false)}
+                aria-label="Close notifications"
+                style={{
+                  position:        'absolute',
+                  top:             -14,
+                  right:           -14,
+                  width:           34,
+                  height:          34,
+                  borderRadius:    '50%',
+                  border:          'none',
+                  background:      '#0f172a',
+                  color:           '#fff',
+                  fontSize:        18,
+                  lineHeight:      1,
+                  cursor:          'pointer',
+                  boxShadow:       '0 4px 12px rgba(0,0,0,0.25)',
+                  zIndex:          1,
+                }}
+              >
+                ×
+              </button>
+
+              <NotificationPanel
+                {...notifs}
+                onClose={() => setOpen(false)}
+              />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -5,17 +5,19 @@ import { useUserAuth } from "../../context/UserAuthContext";
 import {
   FiUser, FiCalendar, FiHeart, FiSettings,
   FiLogOut, FiMenu, FiX, FiBell,
-  FiStar, FiHome,
+  FiStar, FiHome, FiMessageSquare,
 } from "react-icons/fi";
 import AnimatedSection from "../common/AnimatedSection";
 import NotificationBell from "./NotificationBell";
 import { useNotifications } from "../../hooks/useNotifications";
+import { useConversations } from "../../hooks/useConversations";
 
 const DashboardLayout = ({ children, title, subtitle }) => {
   const { user, logout }    = useUserAuth();
   const navigate             = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { tripAlerts, dismissTripAlert, unreadCount } = useNotifications();
+  const { unreadCount: unreadMessages } = useConversations();
 
   const handleLogout = () => { logout(); navigate("/"); };
 
@@ -25,6 +27,8 @@ const DashboardLayout = ({ children, title, subtitle }) => {
     { name: "Bookings",       path: "/my-bookings",    icon: <FiCalendar size={18} />    },
     { name: "Wishlist",       path: "/wishlist",       icon: <FiHeart size={18} />       },
     { name: "Notifications",  path: "/notifications",  icon: <FiBell size={18} />        },
+    { name: "Messages",       path: "/messages",       icon: <FiMessageSquare size={18} /> },
+
     { name: "Reviews",        path: "/reviews",        icon: <FiStar size={18} />        },
     { name: "Settings",       path: "/settings",       icon: <FiSettings size={18} />    },
   ];
@@ -202,6 +206,9 @@ const DashboardLayout = ({ children, title, subtitle }) => {
               {link.name}
               {link.name === "Notifications" && unreadCount > 0 && (
                 <span className="nav-badge">{unreadCount}</span>
+              )}
+              {link.name === "Messages" && unreadMessages > 0 && (
+                <span className="nav-badge">{unreadMessages}</span>
               )}
             </NavLink>
           ))}
