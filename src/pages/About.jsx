@@ -949,7 +949,7 @@ const About = () => {
   const heroImage = 'https://i.pinimg.com/1200x/d6/fd/68/d6fd6828f6d716bf6786bdecef85e642.jpg';
 
   const VIDEO_PLAYLIST = [
-    { id: 1, title: 'The Beauty of Rwanda', subtitle: "Experience Rwanda's natural wonders", videoId: 'dTlfCgkHN6s', poster: 'https://i.ytimg.com/vi/dTlfCgkHN6s/hqdefault.jpg' },
+    { id: 1, title: 'The Wildlife Memories', subtitle: "Experience East africa's natural wonders", videoId: 'fKsrERSd_Lo', poster: 'https://i.ytimg.com/vi/dTlfCgkHN6s/hqdefault.jpg' },
     { id: 2, title: "East Africa's Great Migration", subtitle: 'The Great Wildebeest Migration', videoId: 'IvCfINrZrLk', poster: 'https://i.ytimg.com/vi/IvCfINrZrLk/hqdefault.jpg' },
     { id: 3, title: 'Lake Victoria', subtitle: "Africa's largest lake", videoId: 'xdFYFB3vyoo', poster: 'https://i.ytimg.com/vi/xdFYFB3vyoo/hqdefault.jpg' },
   ];

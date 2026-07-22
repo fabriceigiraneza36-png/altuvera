@@ -99,37 +99,37 @@ const CODE_TTL_RESEND = 15 * 60;
 const API_BASE = API_URL;
 
 const ROLES = [
-  { value: "user", label: "Traveler", icon: HiGlobe, desc: "Explore & discover", color: "#3b82f6" },
-  { value: "photographer", label: "Photographer", icon: HiPhotograph, desc: "Capture moments", color: "#8b5cf6" },
-  { value: "planner", label: "Planner", icon: HiSparkles, desc: "Craft itineraries", color: "#059669" },
+  { value: "user",         label: "Traveler",      icon: HiGlobe,      desc: "Explore & discover",   color: "#3b82f6" },
+  { value: "photographer", label: "Photographer",  icon: HiPhotograph, desc: "Capture moments",       color: "#8b5cf6" },
+  { value: "planner",      label: "Planner",       icon: HiSparkles,   desc: "Craft itineraries",     color: "#059669" },
 ];
 
 const LANGUAGES = [
-  "English", "French", "Spanish", "Arabic", "Swahili",
-  "Portuguese", "German", "Italian", "Chinese (Mandarin)",
-  "Japanese", "Korean", "Hindi", "Russian", "Dutch",
-  "Turkish", "Polish", "Swedish", "Norwegian", "Danish",
-  "Finnish", "Amharic", "Hausa", "Yoruba", "Zulu",
-  "Afrikaans", "Malay", "Indonesian", "Thai", "Vietnamese",
+  "English","French","Spanish","Arabic","Swahili",
+  "Portuguese","German","Italian","Chinese (Mandarin)",
+  "Japanese","Korean","Hindi","Russian","Dutch",
+  "Turkish","Polish","Swedish","Norwegian","Danish",
+  "Finnish","Amharic","Hausa","Yoruba","Zulu",
+  "Afrikaans","Malay","Indonesian","Thai","Vietnamese",
 ];
 
 const TRAVEL_STYLES = [
-  { label: "Adventure", emoji: "🧗" },
-  { label: "Luxury", emoji: "✨" },
-  { label: "Budget", emoji: "💰" },
-  { label: "Cultural", emoji: "🏛️" },
-  { label: "Wildlife", emoji: "🦁" },
-  { label: "Beach", emoji: "🏖️" },
-  { label: "Mountain", emoji: "🏔️" },
-  { label: "City Break", emoji: "🏙️" },
-  { label: "Road Trip", emoji: "🚗" },
+  { label: "Adventure",   emoji: "🧗" },
+  { label: "Luxury",      emoji: "✨" },
+  { label: "Budget",      emoji: "💰" },
+  { label: "Cultural",    emoji: "🏛️" },
+  { label: "Wildlife",    emoji: "🦁" },
+  { label: "Beach",       emoji: "🏖️" },
+  { label: "Mountain",    emoji: "🏔️" },
+  { label: "City Break",  emoji: "🏙️" },
+  { label: "Road Trip",   emoji: "🚗" },
   { label: "Backpacking", emoji: "🎒" },
-  { label: "Family", emoji: "👨‍👩‍👧" },
-  { label: "Solo", emoji: "🙋" },
+  { label: "Family",      emoji: "👨‍👩‍👧" },
+  { label: "Solo",        emoji: "🙋" },
   { label: "Eco-Tourism", emoji: "🌿" },
   { label: "Photography", emoji: "📸" },
-  { label: "Culinary", emoji: "🍽️" },
-  { label: "Spiritual", emoji: "🧘" },
+  { label: "Culinary",    emoji: "🍽️" },
+  { label: "Spiritual",   emoji: "🧘" },
 ];
 
 /* ═══════════════════════════════════════════════════════════════
@@ -168,7 +168,7 @@ const initAvatar = (name, color = "#059669") => {
 const readFile = (file) =>
   new Promise((res, rej) => {
     const r = new FileReader();
-    r.onload = () => res(r.result);
+    r.onload  = () => res(r.result);
     r.onerror = () => rej(new Error("Cannot read file"));
     r.readAsDataURL(file);
   });
@@ -181,10 +181,10 @@ const formatExpiry = (seconds) => {
 const isDismissalError = (msg = "") => {
   const m = msg.toLowerCase();
   return (
-    m.includes("dismiss") || m.includes("cancel") ||
-    m.includes("closed") || m.includes("credential_cancelled") ||
-    m.includes("popup_closed") || m.includes("skipped") ||
-    m.includes("not_displayed") || m.includes("google button")
+    m.includes("dismiss")    || m.includes("cancel")              ||
+    m.includes("closed")     || m.includes("credential_cancelled")||
+    m.includes("popup_closed")|| m.includes("skipped")            ||
+    m.includes("not_displayed")|| m.includes("google button")
   );
 };
 
@@ -227,11 +227,12 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
           style={{
             position: "absolute", inset: 0,
             transition: "opacity 1200ms ease-in-out, transform 1200ms ease-in-out",
-            opacity: i === current ? 1 : 0,
+            opacity:   i === current ? 1 : 0,
             transform: i === current ? "scale(1)" : "scale(1.05)",
           }}
         >
-          <img src={item.src} alt={item.alt}
+          <img
+            src={item.src} alt={item.alt}
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
             loading={i <= 1 ? "eager" : "lazy"} decoding="async"
           />
@@ -246,9 +247,11 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
       <div style={{ position: "absolute", inset: 0, zIndex: 20 }}
         className="flex flex-col justify-between p-6 sm:p-8"
       >
+        {/* Brand */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md p-1.5 ring-1 ring-white/20 flex items-center justify-center">
-            <img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT}
+            <img
+              src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT}
               style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
               loading="eager"
             />
@@ -259,12 +262,14 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
           </div>
         </div>
 
+        {/* Caption + controls */}
         <div className="space-y-4">
           <div key={current} className="transition-all duration-500">
             <p className="text-emerald-400 text-xs font-semibold uppercase tracking-widest mb-1">
               {slide.caption}
             </p>
-            <h4 className="text-white text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight"
+            <h4
+              className="text-white text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight"
               style={{ animation: "fadeSlideUp 600ms ease-out both" }}
             >
               {slide.subtitle}
@@ -274,7 +279,8 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {GALLERY.map((_, i) => (
-                <button key={i} onClick={() => setCurrent(i)}
+                <button
+                  key={i} onClick={() => setCurrent(i)}
                   style={{
                     transition: "all 300ms", borderRadius: "9999px",
                     width: i === current ? "2rem" : "0.5rem", height: "0.5rem",
@@ -286,11 +292,13 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
               ))}
             </div>
             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <button onClick={() => advance(-1)}
+              <button
+                onClick={() => advance(-1)}
                 className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
                 aria-label="Previous"
               ><HiChevronLeft className="w-4 h-4" /></button>
-              <button onClick={() => advance(1)}
+              <button
+                onClick={() => advance(1)}
                 className="w-8 h-8 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
                 aria-label="Next"
               ><HiChevronRight className="w-4 h-4" /></button>
@@ -298,7 +306,8 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
           </div>
 
           <div className="w-full h-0.5 bg-white/10 rounded-full overflow-hidden">
-            <div key={`prog-${current}`}
+            <div
+              key={`prog-${current}`}
               className="h-full bg-gradient-to-r from-emerald-400 to-emerald-300 rounded-full"
               style={{ animation: !isPaused ? `progressBar ${intervalMs}ms linear forwards` : "none" }}
             />
@@ -312,7 +321,6 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
 /* ═══════════════════════════════════════════════════════════════
    SHARED SUB-COMPONENTS
 ═══════════════════════════════════════════════════════════════ */
-
 const Spinner = ({ className = "" }) => (
   <div className={`w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin ${className}`} />
 );
@@ -332,8 +340,9 @@ const InputField = ({
     </label>
     <div className="relative">
       <div className="absolute left-3.5 top-1/2 -translate-y-1/2 z-10 pointer-events-none">
-        <Icon className={`w-[18px] h-[18px] transition-colors duration-200 ${fieldError ? "text-red-400" : valid ? "text-emerald-500" : "text-gray-400"
-          }`} />
+        <Icon className={`w-[18px] h-[18px] transition-colors duration-200 ${
+          fieldError ? "text-red-400" : valid ? "text-emerald-500" : "text-gray-400"
+        }`} />
       </div>
 
       {isEmail ? (
@@ -344,12 +353,15 @@ const InputField = ({
           autoComplete={autoComplete || "email"}
           required={required}
           disabled={disabled}
-          className={`w-full h-12 pl-11 pr-10 rounded-xl border-2 bg-gray-50/50 text-gray-900 text-sm placeholder:text-gray-400 outline-none transition-all duration-200 ${disabled ? "opacity-60 cursor-not-allowed bg-gray-100" : ""} ${fieldError
+          className={`w-full h-12 pl-11 pr-10 rounded-xl border-2 bg-gray-50/50 text-gray-900 text-sm placeholder:text-gray-400 outline-none transition-all duration-200 ${
+            disabled ? "opacity-60 cursor-not-allowed bg-gray-100" : ""
+          } ${
+            fieldError
               ? "border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-100"
               : valid
                 ? "border-emerald-300 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
                 : "border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 hover:border-gray-300"
-            }`}
+          }`}
           {...props}
         />
       ) : (
@@ -362,12 +374,15 @@ const InputField = ({
           autoComplete={autoComplete}
           required={required}
           disabled={disabled}
-          className={`w-full h-12 pl-11 pr-10 rounded-xl border-2 bg-gray-50/50 text-gray-900 text-sm placeholder:text-gray-400 outline-none transition-all duration-200 ${disabled ? "opacity-60 cursor-not-allowed bg-gray-100" : ""} ${fieldError
+          className={`w-full h-12 pl-11 pr-10 rounded-xl border-2 bg-gray-50/50 text-gray-900 text-sm placeholder:text-gray-400 outline-none transition-all duration-200 ${
+            disabled ? "opacity-60 cursor-not-allowed bg-gray-100" : ""
+          } ${
+            fieldError
               ? "border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-100"
               : valid
                 ? "border-emerald-300 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
                 : "border-gray-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 hover:border-gray-300"
-            }`}
+          }`}
           {...props}
         />
       )}
@@ -422,14 +437,11 @@ const SelectField = ({
 );
 
 const SocialButtons = ({
-  mode,
-  googleLoading, githubLoading, loading,
-  onGoogle, onGithub,
+  mode, googleLoading, githubLoading, loading, onGoogle, onGithub,
 }) => (
   <div className="grid grid-cols-2 gap-3">
     <button
-      type="button"
-      onClick={() => onGoogle(mode)}
+      type="button" onClick={() => onGoogle(mode)}
       disabled={googleLoading || loading}
       className="flex items-center justify-center gap-2.5 h-12 rounded-xl border-2 border-gray-200 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 hover:border-gray-300 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
     >
@@ -437,8 +449,7 @@ const SocialButtons = ({
       <span>{googleLoading ? "Connecting…" : "Google"}</span>
     </button>
     <button
-      type="button"
-      onClick={() => onGithub(mode)}
+      type="button" onClick={() => onGithub(mode)}
       disabled={githubLoading || loading}
       className="flex items-center justify-center gap-2.5 h-12 rounded-xl bg-gray-900 text-white text-sm font-medium hover:bg-gray-800 hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
     >
@@ -460,6 +471,8 @@ export default function AuthModal() {
     hasGooglePending, promptGoogleAuth, startGithubAuth,
     completeGoogleSignUp, clearGooglePending,
     socialAuthError, clearSocialAuthError, uploadAvatar,
+    /* ✅ NEW — used by doForgotUsernameVerify for immediate login */
+    saveAuth,
   } = useUserAuth();
 
   useAuthStats();
@@ -474,52 +487,52 @@ export default function AuthModal() {
     profession: "", travelStyles: [],
   });
 
-  const [signUpStep, setSignUpStep] = useState(1);
-  const [agreeTerms, setAgreeTerms] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [signUpStep,      setSignUpStep]      = useState(1);
+  const [agreeTerms,      setAgreeTerms]      = useState(false);
+  const [loading,         setLoading]         = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [code, setCode] = useState(emptyCode());
-  const [resendTimer, setResendTimer] = useState(0);
-  const [verifySource, setVerifySource] = useState("login");
-  const [authMethod, setAuthMethod] = useState("email");
-  const [codeState, setCodeState] = useState("");
-  const [emailTouched, setEmailTouched] = useState(false);
-  const [nameTouched, setNameTouched] = useState(false);
-  const [codeExpiry, setCodeExpiry] = useState(CODE_TTL_LOGIN_REGISTER);
-  const [codeExpired, setCodeExpired] = useState(false);
-  const [professionOpen, setProfessionOpen] = useState(false);
+  const [error,           setError]           = useState("");
+  const [success,         setSuccess]         = useState("");
+  const [code,            setCode]            = useState(emptyCode());
+  const [resendTimer,     setResendTimer]     = useState(0);
+  const [verifySource,    setVerifySource]    = useState("login");
+  const [authMethod,      setAuthMethod]      = useState("email");
+  const [codeState,       setCodeState]       = useState("");
+  const [emailTouched,    setEmailTouched]    = useState(false);
+  const [nameTouched,     setNameTouched]     = useState(false);
+  const [codeExpiry,      setCodeExpiry]      = useState(CODE_TTL_LOGIN_REGISTER);
+  const [codeExpired,     setCodeExpired]     = useState(false);
+  const [professionOpen,  setProfessionOpen]  = useState(false);
 
   /* ── Forgot Username state ── */
-  const [forgotUsernameMode, setForgotUsernameMode] = useState(false); // true = show forgot username UI
-  const [forgotStep, setForgotStep] = useState("email"); // "email" | "code" | "success"
-  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotUsernameMode, setForgotUsernameMode] = useState(false);
+  const [forgotStep,         setForgotStep]         = useState("email"); // "email"|"code"|"success"
+  const [forgotEmail,        setForgotEmail]        = useState("");
   const [forgotEmailTouched, setForgotEmailTouched] = useState(false);
-  const [forgotCode, setForgotCode] = useState(emptyCode());
-  const [forgotCodeState, setForgotCodeState] = useState(""); // "" | "verifying" | "success" | "error"
-  const [forgotResendTimer, setForgotResendTimer] = useState(0);
-  const [forgotCodeExpiry, setForgotCodeExpiry] = useState(CODE_TTL_LOGIN_REGISTER);
-  const [forgotCodeExpired, setForgotCodeExpired] = useState(false);
+  const [forgotCode,         setForgotCode]         = useState(emptyCode());
+  const [forgotCodeState,    setForgotCodeState]    = useState(""); // ""|"verifying"|"success"|"error"
+  const [forgotResendTimer,  setForgotResendTimer]  = useState(0);
+  const [forgotCodeExpiry,   setForgotCodeExpiry]   = useState(CODE_TTL_LOGIN_REGISTER);
+  const [forgotCodeExpired,  setForgotCodeExpired]  = useState(false);
 
   /* ── Refs ── */
-  const codeRefs = useRef([]);
-  const forgotCodeRefs = useRef([]);
-  const firstInputRef = useRef(null);
-  const forgotEmailRef = useRef(null);
-  const expiryTimerRef = useRef(null);
+  const codeRefs          = useRef([]);
+  const forgotCodeRefs    = useRef([]);
+  const firstInputRef     = useRef(null);
+  const forgotEmailRef    = useRef(null);
+  const expiryTimerRef    = useRef(null);
   const forgotExpiryTimerRef = useRef(null);
 
   /* ── Derived ── */
-  const isLogin = modalView === "login";
+  const isLogin    = modalView === "login";
   const isRegister = modalView === "register";
-  const isVerify = modalView === "verify";
+  const isVerify   = modalView === "verify";
 
-  const activeEmail = (pendingEmail || form.email || googleUser?.email || "").trim();
-  const emailOk = EMAIL_RE.test(form.email.trim());
-  const nameOk = form.fullName.trim().length >= 2;
-  const bioOk = form.bio.trim().length <= MAX_BIO;
-  const isBusy = googleLoading || githubLoading || loading;
+  const activeEmail   = (pendingEmail || form.email || googleUser?.email || "").trim();
+  const emailOk       = EMAIL_RE.test(form.email.trim());
+  const nameOk        = form.fullName.trim().length >= 2;
+  const bioOk         = form.bio.trim().length <= MAX_BIO;
+  const isBusy        = googleLoading || githubLoading || loading;
   const forgotEmailOk = EMAIL_RE.test(forgotEmail.trim());
 
   const currentRole = useMemo(
@@ -537,7 +550,9 @@ export default function AuthModal() {
 
   const todayStr = new Date().toISOString().split("T")[0];
 
-  /* ── Expiry countdown (main verify) ── */
+  /* ═══════════════════════════════════════════════════════════
+     COUNTDOWN HELPERS
+  ═══════════════════════════════════════════════════════════ */
   const startExpiryCountdown = useCallback((seconds = CODE_TTL_LOGIN_REGISTER) => {
     if (expiryTimerRef.current) clearInterval(expiryTimerRef.current);
     setCodeExpiry(seconds);
@@ -556,12 +571,14 @@ export default function AuthModal() {
   }, []);
 
   const stopExpiryCountdown = useCallback(() => {
-    if (expiryTimerRef.current) { clearInterval(expiryTimerRef.current); expiryTimerRef.current = null; }
+    if (expiryTimerRef.current) {
+      clearInterval(expiryTimerRef.current);
+      expiryTimerRef.current = null;
+    }
     setCodeExpiry(CODE_TTL_LOGIN_REGISTER);
     setCodeExpired(false);
   }, []);
 
-  /* ── Forgot username expiry countdown ── */
   const startForgotExpiryCountdown = useCallback((seconds = CODE_TTL_LOGIN_REGISTER) => {
     if (forgotExpiryTimerRef.current) clearInterval(forgotExpiryTimerRef.current);
     setForgotCodeExpiry(seconds);
@@ -580,17 +597,23 @@ export default function AuthModal() {
   }, []);
 
   const stopForgotExpiryCountdown = useCallback(() => {
-    if (forgotExpiryTimerRef.current) { clearInterval(forgotExpiryTimerRef.current); forgotExpiryTimerRef.current = null; }
+    if (forgotExpiryTimerRef.current) {
+      clearInterval(forgotExpiryTimerRef.current);
+      forgotExpiryTimerRef.current = null;
+    }
     setForgotCodeExpiry(CODE_TTL_LOGIN_REGISTER);
     setForgotCodeExpired(false);
   }, []);
 
+  /* Cleanup on unmount */
   useEffect(() => () => {
-    if (expiryTimerRef.current) clearInterval(expiryTimerRef.current);
+    if (expiryTimerRef.current)       clearInterval(expiryTimerRef.current);
     if (forgotExpiryTimerRef.current) clearInterval(forgotExpiryTimerRef.current);
   }, []);
 
-  /* ── Field helper ── */
+  /* ═══════════════════════════════════════════════════════════
+     FIELD HELPERS
+  ═══════════════════════════════════════════════════════════ */
   const set = useCallback((field, val) => {
     setForm((p) => ({ ...p, [field]: val }));
     setError("");
@@ -607,6 +630,9 @@ export default function AuthModal() {
     }));
   }, []);
 
+  /* ═══════════════════════════════════════════════════════════
+     FORGOT USERNAME RESET
+  ═══════════════════════════════════════════════════════════ */
   const resetForgotUsername = useCallback(() => {
     setForgotUsernameMode(false);
     setForgotStep("email");
@@ -620,6 +646,9 @@ export default function AuthModal() {
     setSuccess("");
   }, [stopForgotExpiryCountdown]);
 
+  /* ═══════════════════════════════════════════════════════════
+     SWITCH VIEW
+  ═══════════════════════════════════════════════════════════ */
   const switchView = useCallback((view) => {
     if (loading) return;
     stopExpiryCountdown();
@@ -633,7 +662,9 @@ export default function AuthModal() {
     if (view === "login") clearGooglePending?.();
   }, [clearGooglePending, clearSocialAuthError, loading, resetForgotUsername, setModalView, stopExpiryCountdown]);
 
-  /* ── Effects ── */
+  /* ═══════════════════════════════════════════════════════════
+     EFFECTS
+  ═══════════════════════════════════════════════════════════ */
   useEffect(() => {
     document.body.style.overflow = isModalOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
@@ -657,7 +688,8 @@ export default function AuthModal() {
     if (isRegister && !hasGooglePending) setSignUpStep(1);
     setForm((p) => ({ ...p, keepSignedIn: persistSession }));
     setTimeout(() => firstInputRef.current?.focus(), 350);
-  }, [isLogin, isModalOpen, isRegister, persistSession, hasGooglePending, stopExpiryCountdown, resetForgotUsername]);
+  }, [isLogin, isModalOpen, isRegister, persistSession, hasGooglePending,
+    stopExpiryCountdown, resetForgotUsername]);
 
   useEffect(() => {
     if (!socialAuthError) return;
@@ -669,8 +701,8 @@ export default function AuthModal() {
     if (googleUser && isRegister) {
       setForm((p) => ({
         ...p,
-        email: googleUser.email || p.email,
-        fullName: googleUser.name || p.fullName,
+        email:         googleUser.email   || p.email,
+        fullName:      googleUser.name    || p.fullName,
         avatarPreview: googleUser.picture || p.avatarPreview,
       }));
       setSignUpStep(2);
@@ -691,7 +723,9 @@ export default function AuthModal() {
     return () => clearInterval(t);
   }, [forgotResendTimer]);
 
-  /* ── Social auth ── */
+  /* ═══════════════════════════════════════════════════════════
+     SOCIAL AUTH
+  ═══════════════════════════════════════════════════════════ */
   const handleGoogleAuth = useCallback(async (mode = "signin") => {
     if (isBusy) return;
     clearSocialAuthError?.(); setError(""); setSuccess("");
@@ -713,7 +747,9 @@ export default function AuthModal() {
     catch (err) { setError(err?.message || "GitHub authentication failed."); }
   }, [clearSocialAuthError, isBusy, startGithubAuth]);
 
-  /* ── Avatar ── */
+  /* ═══════════════════════════════════════════════════════════
+     AVATAR
+  ═══════════════════════════════════════════════════════════ */
   const handleAvatarChange = useCallback(async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -734,23 +770,26 @@ export default function AuthModal() {
     try { return await uploadAvatar(form.avatarFile); }
     catch { setSuccess("Using placeholder — update anytime."); return fallback; }
     finally { setAvatarUploading(false); }
-  }, [currentRole?.color, form.avatarFile, form.avatarPreview, form.email, form.fullName, googleUser?.picture, uploadAvatar]);
+  }, [currentRole?.color, form.avatarFile, form.avatarPreview, form.email,
+    form.fullName, googleUser?.picture, uploadAvatar]);
 
-  /* ── Sign In ── */
+  /* ═══════════════════════════════════════════════════════════
+     SIGN IN
+  ═══════════════════════════════════════════════════════════ */
   const handleSignIn = useCallback(async (e) => {
     e.preventDefault();
     setEmailTouched(true); setNameTouched(true);
     if (!emailOk) { setError("Please enter a valid email."); return; }
-    if (!nameOk) { setError("Please enter your full name."); return; }
+    if (!nameOk)  { setError("Please enter your full name."); return; }
     try {
       setLoading(true); setError(""); setSuccess("");
       setSessionPreference(form.keepSignedIn);
       await login({
-        email: form.email.trim(),
-        fullName: form.fullName.trim(),
+        email:          form.email.trim(),
+        fullName:       form.fullName.trim(),
         persistSession: form.keepSignedIn,
       });
-      setSuccess("Signed in successfully!");
+      setSuccess("Verification code sent!");
     } catch (err) {
       setError(err?.message || "Sign in failed.");
     } finally {
@@ -758,16 +797,16 @@ export default function AuthModal() {
     }
   }, [emailOk, nameOk, form.email, form.fullName, form.keepSignedIn, login, setSessionPreference]);
 
-  /* ══════════════════════════════════════════════════════════
-     FORGOT USERNAME HANDLERS
-  ══════════════════════════════════════════════════════════ */
+  /* ═══════════════════════════════════════════════════════════
+     FORGOT USERNAME — Step 1: Send code
+  ═══════════════════════════════════════════════════════════ */
   const handleForgotUsernameSendCode = useCallback(async (e) => {
     e.preventDefault();
     setForgotEmailTouched(true);
     if (!forgotEmailOk) { setError("Please enter a valid email address."); return; }
     try {
       setLoading(true); setError(""); setSuccess("");
-      const res = await fetch(`${API_BASE}/users/forgot-username/send-code`, {
+      const res  = await fetch(`${API_BASE}/users/forgot-username/send-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail.trim() }),
@@ -785,13 +824,20 @@ export default function AuthModal() {
     }
   }, [forgotEmailOk, forgotEmail, startForgotExpiryCountdown]);
 
+  /* ═══════════════════════════════════════════════════════════
+     FORGOT USERNAME — Step 2: Verify code & auto-login
+     ✅ FIX: calls saveAuth() from context instead of writing
+        to localStorage + reloading — state updates immediately
+  ═══════════════════════════════════════════════════════════ */
   const doForgotUsernameVerify = useCallback(async (val) => {
-    if (!forgotEmail.trim()) { setError("Missing email. Please restart."); return; }
-    if (val.length !== 6) { setError("Enter the full 6-digit code."); return; }
-    if (forgotCodeExpired) { setError("Code expired. Request a new one."); return; }
+    if (!forgotEmail.trim())  { setError("Missing email. Please restart."); return; }
+    if (val.length !== 6)     { setError("Enter the full 6-digit code."); return; }
+    if (forgotCodeExpired)    { setError("Code expired. Request a new one."); return; }
+
     try {
       setLoading(true); setForgotCodeState("verifying"); setError("");
-      const res = await fetch(`${API_BASE}/users/forgot-username/verify`, {
+
+      const res  = await fetch(`${API_BASE}/users/forgot-username/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail.trim(), code: val }),
@@ -799,51 +845,32 @@ export default function AuthModal() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Verification failed.");
 
+      /* Mark code boxes as success */
       setForgotCodeState("success");
       stopForgotExpiryCountdown();
 
-      const recoveredName = data.data?.fullName || data.data?.username || "";
-      const recoveredEmail = data.data?.email || forgotEmail.trim();
+      const recoveredName  = data.data?.fullName || data.data?.username || "";
+      const recoveredEmail = data.data?.email    || forgotEmail.trim();
 
-      // Auto-fill the login form
-      setForm((p) => ({
-        ...p,
-        email: recoveredEmail,
-        fullName: recoveredName,
-      }));
-      setEmailTouched(true);
-      setNameTouched(true);
+      setSuccess(`Welcome back, ${recoveredName || recoveredEmail}! Signing you in…`);
 
-      setSuccess(`Username recovered: "${recoveredName}". Signing you in…`);
+      /* ── ✅ CRITICAL FIX ──────────────────────────────────────────────────
+         The backend returns:  { data: { token, refreshToken, user, fullName, … } }
+         saveAuth() from UserAuthContext reads extractPayload(data) which picks
+         up data.data.token, data.data.refreshToken, data.data.user and calls:
+           setToken(tok)         → JWT in state
+           setUser(normalized)   → user object in state
+           localStorage/session  → token persisted correctly
 
-      // Auto-login: if the response includes tokens, log user in directly
-      if (data.data?.token && data.data?.user) {
-        // The context should have a method to set auth directly
-        // If login() from context accepts token data, use it
-        // Otherwise we store in localStorage and reload
-        try {
-          const authData = {
-            token: data.data.token,
-            refreshToken: data.data.refreshToken,
-            user: data.data.user,
-          };
-          // Store auth data
-          const storage = form.keepSignedIn ? localStorage : sessionStorage;
-          storage.setItem("auth_token", authData.token);
-          storage.setItem("refresh_token", authData.refreshToken);
-          storage.setItem("user", JSON.stringify(authData.user));
+         This means React state is updated immediately — no page reload needed,
+         no "not logged in" race, no wrong storage keys.
+      ──────────────────────────────────────────────────────────────────────── */
+      setTimeout(() => {
+        saveAuth(data, { persist: form.keepSignedIn });
+        resetForgotUsername();
+        closeModal();
+      }, 1200); // brief delay so user sees the "Signing you in…" message
 
-          // Small delay for UX, then reload to pick up auth state
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
-        } catch {
-          // Fallback: just fill form and let user click sign in
-          setForgotStep("success");
-        }
-      } else {
-        setForgotStep("success");
-      }
     } catch (err) {
       setForgotCodeState("error");
       setError(err?.message || "Verification failed.");
@@ -855,17 +882,28 @@ export default function AuthModal() {
     } finally {
       setLoading(false);
     }
-  }, [forgotEmail, forgotCodeExpired, stopForgotExpiryCountdown, form.keepSignedIn]);
+  }, [
+    forgotEmail, forgotCodeExpired, stopForgotExpiryCountdown,
+    form.keepSignedIn, saveAuth, resetForgotUsername, closeModal,
+  ]);
 
-  // Auto-submit forgot username code when 6 digits entered
+  /* Auto-submit when 6 digits entered */
   useEffect(() => {
     const val = forgotCode.join("");
-    if (val.length === 6 && forgotUsernameMode && forgotStep === "code" && !loading &&
-      forgotCodeState !== "verifying" && forgotCodeState !== "success" && !forgotCodeExpired) {
+    if (
+      val.length === 6          &&
+      forgotUsernameMode        &&
+      forgotStep === "code"     &&
+      !loading                  &&
+      forgotCodeState !== "verifying" &&
+      forgotCodeState !== "success"   &&
+      !forgotCodeExpired
+    ) {
       const t = setTimeout(() => doForgotUsernameVerify(val), 400);
       return () => clearTimeout(t);
     }
-  }, [forgotCode, forgotUsernameMode, forgotStep, loading, forgotCodeState, forgotCodeExpired, doForgotUsernameVerify]);
+  }, [forgotCode, forgotUsernameMode, forgotStep, loading,
+    forgotCodeState, forgotCodeExpired, doForgotUsernameVerify]);
 
   const handleForgotCodeChange = useCallback((i, val) => {
     if (!/^[0-9]?$/.test(val)) return;
@@ -875,7 +913,8 @@ export default function AuthModal() {
   }, []);
 
   const handleForgotCodeKey = useCallback((i, e) => {
-    if (e.key === "Backspace" && !forgotCode[i] && i > 0) forgotCodeRefs.current[i - 1]?.focus();
+    if (e.key === "Backspace" && !forgotCode[i] && i > 0)
+      forgotCodeRefs.current[i - 1]?.focus();
   }, [forgotCode]);
 
   const handleForgotCodePaste = useCallback((e) => {
@@ -892,7 +931,7 @@ export default function AuthModal() {
     if (!forgotEmail.trim() || forgotResendTimer > 0 || loading) return;
     try {
       setLoading(true); setError(""); setSuccess("");
-      const res = await fetch(`${API_BASE}/users/forgot-username/send-code`, {
+      const res  = await fetch(`${API_BASE}/users/forgot-username/send-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail.trim() }),
@@ -912,11 +951,13 @@ export default function AuthModal() {
     }
   }, [forgotEmail, forgotResendTimer, loading, startForgotExpiryCountdown]);
 
-  /* ── Verify (main) ── */
+  /* ═══════════════════════════════════════════════════════════
+     VERIFY (main OTP flow)
+  ═══════════════════════════════════════════════════════════ */
   const doVerify = useCallback(async (val) => {
     if (!activeEmail) { setError("Missing email. Please restart."); return; }
     if (val.length !== 6) { setError("Enter the full 6-digit code."); return; }
-    if (codeExpired) { setError("Code expired. Request a new one."); return; }
+    if (codeExpired)      { setError("Code expired. Request a new one."); return; }
     try {
       setLoading(true); setCodeState("verifying"); setError("");
       await verifyCode(activeEmail, val);
@@ -929,14 +970,18 @@ export default function AuthModal() {
 
   useEffect(() => {
     const val = code.join("");
-    if (val.length === 6 && isVerify && !loading &&
-      codeState !== "verifying" && codeState !== "success" && !codeExpired) {
+    if (
+      val.length === 6 && isVerify && !loading &&
+      codeState !== "verifying" && codeState !== "success" && !codeExpired
+    ) {
       const t = setTimeout(() => doVerify(val), 400);
       return () => clearTimeout(t);
     }
   }, [code, isVerify, loading, codeState, codeExpired, doVerify]);
 
-  /* ── Sign Up ── */
+  /* ═══════════════════════════════════════════════════════════
+     SIGN UP
+  ═══════════════════════════════════════════════════════════ */
   const handleSignUp = useCallback(async (e) => {
     e.preventDefault();
     if (!agreeTerms) { setError("Please accept the Terms and Privacy Policy."); return; }
@@ -965,7 +1010,9 @@ export default function AuthModal() {
   }, [agreeTerms, authMethod, completeGoogleSignUp, form, hasGooglePending,
     register, resolveAvatar, setSessionPreference, startExpiryCountdown]);
 
-  /* ── OTP handlers (main) ── */
+  /* ═══════════════════════════════════════════════════════════
+     OTP HANDLERS (main)
+  ═══════════════════════════════════════════════════════════ */
   const handleCodeChange = useCallback((i, val) => {
     if (!/^[0-9]?$/.test(val)) return;
     setCode((p) => { const n = [...p]; n[i] = val; return n; });
@@ -1005,17 +1052,13 @@ export default function AuthModal() {
     setModalView(verifySource);
   }, [setModalView, stopExpiryCountdown, verifySource]);
 
+  /* ── Guard ── */
   if (!isModalOpen) return null;
 
   /* ── Step labels ── */
-  const STEP_LABELS = ["Method", "Profile", "Details", "Confirm"];
-  const STEP_TITLES = ["Choose Method", "Your Profile", "More Details", "Confirm"];
-  const STEP_SUBTITLES = [
-    "Pick how you'd like to join",
-    "Tell us about yourself",
-    "Help us personalize your journey",
-    "Review and create your account",
-  ];
+  const STEP_LABELS    = ["Method",               "Profile",              "Details",                          "Confirm"];
+  const STEP_TITLES    = ["Choose Method",         "Your Profile",         "More Details",                     "Confirm"];
+  const STEP_SUBTITLES = ["Pick how you'd like to join", "Tell us about yourself", "Help us personalize your journey", "Review and create your account"];
 
   /* ═══════════════════════════════════════════════════════════
      RENDER
@@ -1023,32 +1066,30 @@ export default function AuthModal() {
   return (
     <>
       <style>{`
-        @keyframes fadeIn    { from{opacity:0} to{opacity:1} }
-        @keyframes modalIn   { from{opacity:0;transform:scale(0.95) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
-        @keyframes viewIn    { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes stepIn    { from{opacity:0;transform:translateX(16px)} to{opacity:1;transform:translateX(0)} }
-        @keyframes slideDown { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes scaleIn   { from{transform:scale(0)} 50%{transform:scale(1.15)} to{transform:scale(1)} }
-        @keyframes scaleX    { from{transform:scaleX(0)} to{transform:scaleX(1)} }
-        @keyframes fadeSlideUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes progressBar { from{width:0%} to{width:100%} }
-        @keyframes shake     { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+        @keyframes fadeIn     { from{opacity:0} to{opacity:1} }
+        @keyframes modalIn    { from{opacity:0;transform:scale(0.95) translateY(20px)} to{opacity:1;transform:scale(1) translateY(0)} }
+        @keyframes viewIn     { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes stepIn     { from{opacity:0;transform:translateX(16px)} to{opacity:1;transform:translateX(0)} }
+        @keyframes slideDown  { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes scaleIn    { from{transform:scale(0)} 50%{transform:scale(1.15)} to{transform:scale(1)} }
+        @keyframes scaleX     { from{transform:scaleX(0)} to{transform:scaleX(1)} }
+        @keyframes fadeSlideUp{ from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes progressBar{ from{width:0%} to{width:100%} }
+        @keyframes shake      { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
 
-        .am-fadeIn    { animation: fadeIn     300ms ease-out both; }
-        .am-modalIn   { animation: modalIn    450ms cubic-bezier(0.34,1.56,0.64,1) both 80ms; }
-        .am-viewIn    { animation: viewIn     350ms ease-out both; }
-        .am-stepIn    { animation: stepIn     350ms ease-out both; }
-        .am-slideDown { animation: slideDown  300ms ease-out both; }
-        .am-scaleIn   { animation: scaleIn    300ms ease-out both; }
-        .am-scaleX    { animation: scaleX     250ms ease-out both; transform-origin:left; }
-        .am-shake     { animation: shake      500ms ease-in-out; }
+        .am-fadeIn  { animation: fadeIn     300ms ease-out both; }
+        .am-modalIn { animation: modalIn    450ms cubic-bezier(0.34,1.56,0.64,1) both 80ms; }
+        .am-viewIn  { animation: viewIn     350ms ease-out both; }
+        .am-stepIn  { animation: stepIn     350ms ease-out both; }
+        .am-slideDown{ animation: slideDown 300ms ease-out both; }
+        .am-scaleIn { animation: scaleIn    300ms ease-out both; }
+        .am-scaleX  { animation: scaleX     250ms ease-out both; transform-origin:left; }
+        .am-shake   { animation: shake      500ms ease-in-out; }
 
         .auth-scroll::-webkit-scrollbar       { width:5px; }
         .auth-scroll::-webkit-scrollbar-track { background:transparent; }
         .auth-scroll::-webkit-scrollbar-thumb { background:#e5e7eb; border-radius:3px; }
         .auth-scroll::-webkit-scrollbar-thumb:hover { background:#d1d5db; }
-        .no-scroll::-webkit-scrollbar { display:none; }
-        .no-scroll { -ms-overflow-style:none; scrollbar-width:none; }
 
         @media(prefers-reduced-motion:reduce){
           *,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.01ms!important}
@@ -1062,31 +1103,35 @@ export default function AuthModal() {
         current={form.profession}
       />
 
-      {/* ── Backdrop ── */}
+      {/* Backdrop */}
       <div
         className="am-fadeIn fixed inset-0 z-[9990] flex items-center justify-center p-0 sm:p-4 lg:p-6 bg-black/50 backdrop-blur-sm"
         onClick={closeModal}
       >
-        {/* ── Modal ── */}
+        {/* Modal */}
         <div
           className="am-modalIn relative w-full max-w-[1040px] bg-white rounded-none sm:rounded-2xl lg:rounded-3xl shadow-2xl overflow-hidden flex flex-col lg:flex-row"
-          style={{ maxHeight: "100dvh", height: "100dvh", ...(window.innerWidth >= 640 ? { height: "auto", maxHeight: "92vh" } : {}) }}
+          style={{
+            maxHeight: "100dvh", height: "100dvh",
+            ...(window.innerWidth >= 640 ? { height: "auto", maxHeight: "92vh" } : {}),
+          }}
           onClick={(e) => e.stopPropagation()}
           role="dialog" aria-modal="true" aria-labelledby="auth-title"
         >
+          {/* Top accent bar */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-400 z-50" />
 
-          {/* ── Gallery — desktop ── */}
+          {/* Gallery — desktop */}
           <div className="hidden lg:block lg:w-[46%] xl:w-[48%] relative bg-gray-900 flex-shrink-0">
             <GallerySlideshow />
           </div>
 
-          {/* ── Gallery — mobile strip ── */}
+          {/* Gallery — mobile strip */}
           <div className="lg:hidden relative bg-gray-900 flex-shrink-0" style={{ height: "7rem" }}>
             <GallerySlideshow intervalMs={6000} />
           </div>
 
-          {/* ── Form panel ── */}
+          {/* Form panel */}
           <div className="flex-1 flex flex-col min-w-0 bg-white overflow-hidden">
 
             {/* Header */}
@@ -1112,12 +1157,13 @@ export default function AuthModal() {
             {!isVerify && !forgotUsernameMode && (
               <div className="flex border-b border-gray-100 px-4 sm:px-6 flex-shrink-0">
                 {[
-                  { view: "login", label: "Sign In", icon: HiLockClosed },
-                  { view: "register", label: "Create Account", icon: HiSparkles },
+                  { view: "login",    label: "Sign In",        icon: HiLockClosed },
+                  { view: "register", label: "Create Account", icon: HiSparkles   },
                 ].map(({ view, label, icon: TabIcon }) => (
                   <button key={view} onClick={() => switchView(view)} disabled={loading}
-                    className={`relative flex items-center gap-1.5 px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold transition-all duration-200 ${modalView === view ? "text-emerald-600" : "text-gray-500 hover:text-gray-700"
-                      }`}
+                    className={`relative flex items-center gap-1.5 px-3 sm:px-4 py-3 text-xs sm:text-sm font-semibold transition-all duration-200 ${
+                      modalView === view ? "text-emerald-600" : "text-gray-500 hover:text-gray-700"
+                    }`}
                   >
                     <TabIcon className="w-4 h-4" />
                     <span>{label}</span>
@@ -1150,16 +1196,16 @@ export default function AuthModal() {
               )}
 
               {/* ════════════════════════════════════════════════════
-                 FORGOT USERNAME FLOW
+                  FORGOT USERNAME FLOW
               ════════════════════════════════════════════════════ */}
               {forgotUsernameMode && isLogin && (
                 <div className="am-viewIn">
 
-                  {/* ── Forgot Step: Email ── */}
+                  {/* Step: Email */}
                   {forgotStep === "email" && (
                     <>
                       <div className="text-center mb-6">
-                        <div className="inline-flex items-center justify-center w-13 h-13 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 mb-3 p-3">
+                        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 mb-3 p-3">
                           <HiQuestionMarkCircle className="w-7 h-7 text-amber-600" />
                         </div>
                         <h2 id="auth-title" className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">
@@ -1181,11 +1227,13 @@ export default function AuthModal() {
                           error={forgotEmailTouched && !forgotEmailOk ? "Please enter a valid email." : ""}
                           valid={forgotEmailTouched && forgotEmailOk}
                         />
-
                         <button type="submit" disabled={loading}
                           className="w-full h-12 rounded-xl bg-amber-500 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-amber-600 hover:shadow-lg hover:shadow-amber-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                         >
-                          {loading ? <><Spinner /><span>Sending Code…</span></> : <><HiMail className="w-4 h-4" /><span>Send Verification Code</span></>}
+                          {loading
+                            ? <><Spinner /><span>Sending Code…</span></>
+                            : <><HiMail className="w-4 h-4" /><span>Send Verification Code</span></>
+                          }
                         </button>
                       </form>
 
@@ -1199,7 +1247,7 @@ export default function AuthModal() {
                     </>
                   )}
 
-                  {/* ── Forgot Step: Code ── */}
+                  {/* Step: Code */}
                   {forgotStep === "code" && (
                     <>
                       <div className="text-center mb-6">
@@ -1216,14 +1264,15 @@ export default function AuthModal() {
                         </div>
 
                         {forgotCodeState !== "success" && (
-                          <div className={`inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-full text-sm font-medium transition-all ${forgotCodeExpired
+                          <div className={`inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                            forgotCodeExpired
                               ? "bg-red-50 text-red-600 border border-red-200"
                               : forgotCodeExpiry <= 30
                                 ? "bg-red-50 text-red-600 border border-red-200 animate-pulse"
                                 : forgotCodeExpiry <= 120
                                   ? "bg-amber-50 text-amber-700 border border-amber-200"
                                   : "bg-gray-50 text-gray-600 border border-gray-200"
-                            }`}>
+                          }`}>
                             {forgotCodeExpired ? (
                               <><HiExclamationCircle className="w-4 h-4" /><span>Code expired — request a new one</span></>
                             ) : (
@@ -1235,10 +1284,14 @@ export default function AuthModal() {
                         )}
                       </div>
 
-                      <form onSubmit={(e) => { e.preventDefault(); doForgotUsernameVerify(forgotCode.join("")); }} noValidate className="space-y-5">
+                      <form
+                        onSubmit={(e) => { e.preventDefault(); doForgotUsernameVerify(forgotCode.join("")); }}
+                        noValidate className="space-y-5"
+                      >
                         <div
                           className={`flex justify-center gap-2 sm:gap-3 ${forgotCodeState === "verifying" ? "animate-pulse" : ""} ${forgotCodeState === "error" ? "am-shake" : ""}`}
-                          onPaste={handleForgotCodePaste} role="group" aria-label="Verification code"
+                          onPaste={handleForgotCodePaste}
+                          role="group" aria-label="Verification code"
                         >
                           {forgotCode.map((digit, i) => (
                             <input key={i}
@@ -1248,7 +1301,8 @@ export default function AuthModal() {
                               onChange={(e) => handleForgotCodeChange(i, e.target.value)}
                               onKeyDown={(e) => handleForgotCodeKey(i, e)}
                               disabled={forgotCodeState === "verifying" || forgotCodeState === "success" || forgotCodeExpired}
-                              className={`text-center text-xl sm:text-2xl font-bold font-mono rounded-xl border-2 outline-none transition-all duration-200 ${forgotCodeExpired
+                              className={`text-center text-xl sm:text-2xl font-bold font-mono rounded-xl border-2 outline-none transition-all duration-200 ${
+                                forgotCodeExpired
                                   ? "border-red-200 bg-red-50/50 text-red-300 cursor-not-allowed"
                                   : forgotCodeState === "success"
                                     ? "border-emerald-400 bg-emerald-50 text-emerald-600"
@@ -1257,7 +1311,7 @@ export default function AuthModal() {
                                       : digit
                                         ? "border-emerald-400 bg-emerald-50/50 text-gray-900"
                                         : "border-gray-200 bg-gray-50/50 text-gray-900 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-                                }`}
+                              }`}
                               style={{ width: "2.75rem", height: "3.25rem" }}
                               aria-label={`Digit ${i + 1}`}
                               autoComplete={i === 0 ? "one-time-code" : "off"}
@@ -1277,7 +1331,10 @@ export default function AuthModal() {
                         )}
 
                         <button type="submit"
-                          disabled={loading || forgotCode.join("").length !== 6 || forgotCodeState === "verifying" || forgotCodeState === "success" || forgotCodeExpired}
+                          disabled={
+                            loading || forgotCode.join("").length !== 6 ||
+                            forgotCodeState === "verifying" || forgotCodeState === "success" || forgotCodeExpired
+                          }
                           className="w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         >
                           {loading || forgotCodeState === "verifying" ? (
@@ -1292,12 +1349,22 @@ export default function AuthModal() {
                         </button>
 
                         <div className="flex flex-col sm:flex-row gap-3">
-                          <button type="button" onClick={() => { setForgotStep("email"); stopForgotExpiryCountdown(); setForgotCode(emptyCode()); setError(""); setSuccess(""); }} disabled={loading}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setForgotStep("email");
+                              stopForgotExpiryCountdown();
+                              setForgotCode(emptyCode());
+                              setError(""); setSuccess("");
+                            }}
+                            disabled={loading}
                             className="flex items-center justify-center gap-2 px-5 h-11 rounded-xl text-gray-600 font-medium text-sm border border-gray-200 hover:bg-gray-50 transition-all sm:w-auto w-full"
                           >
                             <HiArrowLeft className="w-4 h-4" /> Back
                           </button>
-                          <button type="button" onClick={handleForgotResend} disabled={forgotResendTimer > 0 || loading}
+                          <button
+                            type="button" onClick={handleForgotResend}
+                            disabled={forgotResendTimer > 0 || loading}
                             className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-emerald-600 font-semibold text-sm border-2 border-emerald-200 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                           >
                             <HiRefresh className={`w-4 h-4 ${forgotResendTimer > 0 || loading ? "animate-spin" : ""}`} />
@@ -1315,45 +1382,6 @@ export default function AuthModal() {
                       </div>
                     </>
                   )}
-
-                  {/* ── Forgot Step: Success (fallback if no auto-login) ── */}
-                  {forgotStep === "success" && (
-                    <>
-                      <div className="text-center mb-6">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-4">
-                          <HiCheckCircle className="w-9 h-9 text-emerald-600" />
-                        </div>
-                        <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">
-                          Username Recovered!
-                        </h2>
-                        <p className="text-sm text-gray-500 mt-2">
-                          Your username has been filled in. Click below to sign in.
-                        </p>
-                      </div>
-
-                      <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 mb-4">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500">Full Name</span>
-                          <span className="text-sm font-bold text-gray-900">{form.fullName || "—"}</span>
-                        </div>
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="text-sm text-gray-500">Email</span>
-                          <span className="text-sm font-bold text-gray-900">{form.email || "—"}</span>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          resetForgotUsername();
-                          // Form fields are already filled, user can just click sign in
-                        }}
-                        className="w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-200 active:scale-[0.98] transition-all duration-200"
-                      >
-                        <HiArrowRight className="w-4 h-4" />
-                        Continue to Sign In
-                      </button>
-                    </>
-                  )}
                 </div>
               )}
 
@@ -1361,7 +1389,7 @@ export default function AuthModal() {
               {isLogin && !forgotUsernameMode && (
                 <div className="am-viewIn">
                   <div className="text-center mb-6">
-                    <div className="inline-flex items-center justify-center w-13 h-13 rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 mb-3 p-3">
+                    <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 mb-3 p-3">
                       <HiShieldCheck className="w-7 h-7 text-emerald-600" />
                     </div>
                     <h2 id="auth-title" className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">
@@ -1380,6 +1408,7 @@ export default function AuthModal() {
                       error={emailTouched && !emailOk ? "Please enter a valid email." : ""}
                       valid={emailTouched && emailOk}
                     />
+
                     <div>
                       <InputField
                         id="login-name" label="Full Name" icon={HiUser}
@@ -1389,14 +1418,13 @@ export default function AuthModal() {
                         error={nameTouched && !nameOk ? "At least 2 characters required." : ""}
                         valid={nameTouched && nameOk}
                       />
-                      {/* Forgot Username link */}
                       <div className="flex justify-end mt-1.5">
                         <button
                           type="button"
                           onClick={() => {
                             setForgotUsernameMode(true);
                             setForgotStep("email");
-                            setForgotEmail(form.email || ""); // pre-fill with current email
+                            setForgotEmail(form.email || "");
                             setError(""); setSuccess("");
                             setTimeout(() => forgotEmailRef.current?.focus(), 300);
                           }}
@@ -1409,19 +1437,25 @@ export default function AuthModal() {
                     </div>
 
                     <label className="flex items-center gap-3 cursor-pointer group">
-                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${form.keepSignedIn ? "bg-emerald-500 border-emerald-500" : "border-gray-300 group-hover:border-gray-400"
-                        }`}>
+                      <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                        form.keepSignedIn ? "bg-emerald-500 border-emerald-500" : "border-gray-300 group-hover:border-gray-400"
+                      }`}>
                         {form.keepSignedIn && <HiCheck className="w-3 h-3 text-white" />}
                       </div>
-                      <input type="checkbox" checked={form.keepSignedIn}
-                        onChange={(e) => set("keepSignedIn", e.target.checked)} className="sr-only" />
+                      <input
+                        type="checkbox" checked={form.keepSignedIn}
+                        onChange={(e) => set("keepSignedIn", e.target.checked)} className="sr-only"
+                      />
                       <span className="text-sm text-gray-600">Keep me signed in</span>
                     </label>
 
                     <button type="submit" disabled={loading || isBusy}
                       className="w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                     >
-                      {loading ? <><Spinner /><span>Signing In…</span></> : <><span>Continue with Email</span><HiArrowRight className="w-4 h-4" /></>}
+                      {loading
+                        ? <><Spinner /><span>Signing In…</span></>
+                        : <><span>Continue with Email</span><HiArrowRight className="w-4 h-4" /></>
+                      }
                     </button>
 
                     <div className="flex items-center gap-4">
@@ -1430,7 +1464,8 @@ export default function AuthModal() {
                       <div className="flex-1 h-px bg-gray-200" />
                     </div>
 
-                    <SocialButtons mode="signin"
+                    <SocialButtons
+                      mode="signin"
                       googleLoaded={googleLoaded} googleLoading={googleLoading}
                       githubLoading={githubLoading} loading={loading}
                       onGoogle={handleGoogleAuth} onGithub={handleGithubAuth}
@@ -1439,9 +1474,9 @@ export default function AuthModal() {
 
                   <div className="flex items-center justify-center gap-5 mt-5 flex-wrap">
                     {[
-                      { icon: RiShieldKeyholeLine, text: "256-bit Encrypted" },
-                      { icon: MdVerified, text: "Verified" },
-                      { icon: MdOutlineSecurityUpdateGood, text: "GDPR" },
+                      { icon: RiShieldKeyholeLine,      text: "256-bit Encrypted" },
+                      { icon: MdVerified,               text: "Verified"          },
+                      { icon: MdOutlineSecurityUpdateGood, text: "GDPR"           },
                     ].map(({ icon: BI, text }) => (
                       <div key={text} className="flex items-center gap-1.5 text-[11px] text-gray-400">
                         <BI className="w-3.5 h-3.5 text-emerald-500" /><span>{text}</span>
@@ -1476,20 +1511,22 @@ export default function AuthModal() {
                   {/* Stepper */}
                   <div className="flex items-center justify-center mb-5 px-2">
                     {STEP_LABELS.map((label, i) => {
-                      const n = i + 1;
-                      const done = signUpStep > n;
+                      const n      = i + 1;
+                      const done   = signUpStep > n;
                       const active = signUpStep === n;
                       return (
                         <React.Fragment key={n}>
                           <div className="flex flex-col items-center gap-1">
-                            <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${done ? "bg-emerald-500 text-white" :
-                                active ? "bg-emerald-100 text-emerald-600 ring-4 ring-emerald-50" :
-                                  "bg-gray-100 text-gray-400"
-                              }`}>
+                            <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
+                              done   ? "bg-emerald-500 text-white" :
+                              active ? "bg-emerald-100 text-emerald-600 ring-4 ring-emerald-50" :
+                                       "bg-gray-100 text-gray-400"
+                            }`}>
                               {done ? <HiCheck className="w-3.5 h-3.5" /> : n}
                             </div>
-                            <span className={`text-[9px] sm:text-[10px] font-semibold uppercase tracking-wide ${signUpStep >= n ? "text-emerald-600" : "text-gray-400"
-                              }`}>{label}</span>
+                            <span className={`text-[9px] sm:text-[10px] font-semibold uppercase tracking-wide ${
+                              signUpStep >= n ? "text-emerald-600" : "text-gray-400"
+                            }`}>{label}</span>
                           </div>
                           {i < 3 && (
                             <div className="flex-1 h-0.5 mx-1 sm:mx-2 mb-4 rounded-full bg-gray-100 overflow-hidden">
@@ -1501,7 +1538,7 @@ export default function AuthModal() {
                     })}
                   </div>
 
-                  {/* Step 1 */}
+                  {/* ── Step 1 ── */}
                   {signUpStep === 1 && (
                     <div className="space-y-4 am-stepIn">
                       {hasGooglePending ? (
@@ -1536,7 +1573,8 @@ export default function AuthModal() {
                             error={nameTouched && !nameOk ? "At least 2 characters." : ""}
                             valid={nameTouched && nameOk}
                           />
-                          <button type="button"
+                          <button
+                            type="button"
                             onClick={() => {
                               setEmailTouched(true); setNameTouched(true);
                               if (emailOk && nameOk) { setAuthMethod("email"); setSignUpStep(2); }
@@ -1552,7 +1590,8 @@ export default function AuthModal() {
                             <span className="text-xs text-gray-400 uppercase tracking-wider font-medium">or</span>
                             <div className="flex-1 h-px bg-gray-200" />
                           </div>
-                          <SocialButtons mode="signup"
+                          <SocialButtons
+                            mode="signup"
                             googleLoaded={googleLoaded} googleLoading={googleLoading}
                             githubLoading={githubLoading} loading={loading}
                             onGoogle={handleGoogleAuth} onGithub={handleGithubAuth}
@@ -1562,13 +1601,14 @@ export default function AuthModal() {
                     </div>
                   )}
 
-                  {/* Step 2 */}
+                  {/* ── Step 2 ── */}
                   {signUpStep === 2 && (
                     <div className="space-y-4 am-stepIn">
                       {googleUser && (
                         <div className="flex items-center gap-3 p-3.5 rounded-xl bg-gray-50 border border-gray-200">
-                          <img src={googleUser.picture || initAvatar(googleUser.name)} alt=""
-                            style={{ width: "2.5rem", height: "2.5rem", borderRadius: "9999px", objectFit: "cover", display: "block", border: "2px solid #e5e7eb", flexShrink: 0 }}
+                          <img
+                            src={googleUser.picture || initAvatar(googleUser.name)} alt=""
+                            style={{ width:"2.5rem", height:"2.5rem", borderRadius:"9999px", objectFit:"cover", display:"block", border:"2px solid #e5e7eb", flexShrink:0 }}
                           />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-gray-900 truncate">{googleUser.name}</p>
@@ -1597,13 +1637,15 @@ export default function AuthModal() {
                         <div className="grid grid-cols-3 gap-2">
                           {ROLES.map(({ value, label, icon: RIcon, desc }) => (
                             <button key={value} type="button" onClick={() => set("role", value)}
-                              className={`relative flex flex-col items-center text-center p-2.5 sm:p-3.5 rounded-xl border-2 transition-all duration-200 ${form.role === value
+                              className={`relative flex flex-col items-center text-center p-2.5 sm:p-3.5 rounded-xl border-2 transition-all duration-200 ${
+                                form.role === value
                                   ? "border-emerald-400 bg-emerald-50/80 shadow-sm"
                                   : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50"
-                                }`}
+                              }`}
                             >
-                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-1.5 transition-all ${form.role === value ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-500"
-                                }`}>
+                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-1.5 transition-all ${
+                                form.role === value ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-500"
+                              }`}>
                                 <RIcon className="w-4 h-4" />
                               </div>
                               <span className="text-xs font-semibold text-gray-800">{label}</span>
@@ -1631,10 +1673,11 @@ export default function AuthModal() {
                           <p className="text-xs text-gray-400 flex items-center gap-1">
                             <HiInformationCircle className="w-3.5 h-3.5" />Shown on your public profile
                           </p>
-                          <span className={`text-xs tabular-nums ${form.bio.length > MAX_BIO * 0.85
+                          <span className={`text-xs tabular-nums ${
+                            form.bio.length > MAX_BIO * 0.85
                               ? form.bio.length > MAX_BIO ? "text-red-500 font-semibold" : "text-amber-500"
                               : "text-gray-400"
-                            }`}>{form.bio.length}/{MAX_BIO}</span>
+                          }`}>{form.bio.length}/{MAX_BIO}</span>
                         </div>
                       </div>
                       <div className="flex gap-3 pt-1">
@@ -1657,7 +1700,7 @@ export default function AuthModal() {
                     </div>
                   )}
 
-                  {/* Step 3 */}
+                  {/* ── Step 3 ── */}
                   {signUpStep === 3 && (
                     <div className="space-y-4 am-stepIn">
                       <InputField
@@ -1705,10 +1748,11 @@ export default function AuthModal() {
                           Profession <span className="text-gray-400 font-normal text-xs">— Optional</span>
                         </label>
                         <button type="button" onClick={() => setProfessionOpen(true)}
-                          className={`w-full h-12 rounded-xl border-2 flex items-center gap-3 px-4 text-sm transition-all duration-200 ${form.profession
+                          className={`w-full h-12 rounded-xl border-2 flex items-center gap-3 px-4 text-sm transition-all duration-200 ${
+                            form.profession
                               ? "border-emerald-300 bg-emerald-50/50 text-emerald-700 hover:border-emerald-400"
                               : "border-gray-200 bg-gray-50/50 text-gray-400 hover:border-gray-300"
-                            }`}
+                          }`}
                         >
                           <HiOfficeBuilding className={`w-[18px] h-[18px] flex-shrink-0 ${form.profession ? "text-emerald-500" : "text-gray-400"}`} />
                           <span className="flex-1 text-left truncate">{form.profession || "Select your profession…"}</span>
@@ -1727,9 +1771,7 @@ export default function AuthModal() {
                             <button type="button"
                               onClick={() => setForm((p) => ({ ...p, travelStyles: [] }))}
                               className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-                            >
-                              Clear all
-                            </button>
+                            >Clear all</button>
                           )}
                         </div>
                         <div className="flex flex-wrap gap-1.5">
@@ -1737,10 +1779,11 @@ export default function AuthModal() {
                             const active = form.travelStyles.includes(label);
                             return (
                               <button key={label} type="button" onClick={() => toggleTravelStyle(label)}
-                                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium border-2 transition-all duration-150 ${active
+                                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium border-2 transition-all duration-150 ${
+                                  active
                                     ? "bg-emerald-500 border-emerald-500 text-white shadow-sm"
                                     : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
-                                  }`}
+                                }`}
                               >
                                 <span>{emoji}</span>
                                 <span>{label}</span>
@@ -1768,15 +1811,16 @@ export default function AuthModal() {
                     </div>
                   )}
 
-                  {/* Step 4 */}
+                  {/* ── Step 4 ── */}
                   {signUpStep === 4 && (
                     <form onSubmit={handleSignUp} noValidate className="space-y-4 am-stepIn">
+                      {/* Avatar + name preview */}
                       <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-200">
                         <div className="relative flex-shrink-0">
                           <div className="rounded-full bg-gradient-to-br from-emerald-400 to-teal-500"
                             style={{ width: "68px", height: "68px", padding: "3px" }}>
                             <img src={avatarSrc} alt="Avatar"
-                              style={{ width: "100%", height: "100%", borderRadius: "9999px", objectFit: "cover", display: "block", border: "2px solid white" }}
+                              style={{ width:"100%", height:"100%", borderRadius:"9999px", objectFit:"cover", display:"block", border:"2px solid white" }}
                             />
                           </div>
                           <label className={`absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center cursor-pointer hover:bg-emerald-600 hover:scale-110 transition-all ${avatarUploading ? "cursor-wait" : ""}`}>
@@ -1798,18 +1842,20 @@ export default function AuthModal() {
                           </span>
                         </div>
                       </div>
+
+                      {/* Summary */}
                       <div className="rounded-xl bg-gray-50 border border-gray-200 p-4">
                         <h4 className="text-sm font-bold text-gray-800 mb-3">Account Summary</h4>
                         <dl className="space-y-2">
                           {[
-                            ["Email", form.email || googleUser?.email],
-                            ["Phone", form.phone || "Not provided"],
-                            ["Role", currentRole?.label],
-                            ["Auth", authMethod === "google" ? "Google" : "Email OTP"],
-                            ["Nationality", form.nationality || "Not provided"],
-                            ["Residence", form.residenceCountry || "Not provided"],
-                            ["Language", form.preferredLanguage || "Not provided"],
-                            ["Profession", form.profession || "Not provided"],
+                            ["Email",        form.email             || googleUser?.email],
+                            ["Phone",        form.phone             || "Not provided"],
+                            ["Role",         currentRole?.label],
+                            ["Auth",         authMethod === "google" ? "Google" : "Email OTP"],
+                            ["Nationality",  form.nationality        || "Not provided"],
+                            ["Residence",    form.residenceCountry   || "Not provided"],
+                            ["Language",     form.preferredLanguage  || "Not provided"],
+                            ["Profession",   form.profession         || "Not provided"],
                             form.travelStyles.length > 0
                               ? ["Travel Style", form.travelStyles.slice(0, 3).join(", ") + (form.travelStyles.length > 3 ? ` +${form.travelStyles.length - 3}` : "")]
                               : null,
@@ -1821,19 +1867,24 @@ export default function AuthModal() {
                           ))}
                         </dl>
                       </div>
+
                       <label className="flex items-center gap-3 cursor-pointer group">
-                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${form.keepSignedIn ? "bg-emerald-500 border-emerald-500" : "border-gray-300 group-hover:border-gray-400"
-                          }`}>
+                        <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${
+                          form.keepSignedIn ? "bg-emerald-500 border-emerald-500" : "border-gray-300 group-hover:border-gray-400"
+                        }`}>
                           {form.keepSignedIn && <HiCheck className="w-3 h-3 text-white" />}
                         </div>
                         <input type="checkbox" checked={form.keepSignedIn}
                           onChange={(e) => set("keepSignedIn", e.target.checked)} className="sr-only" />
                         <span className="text-sm text-gray-600">Keep me signed in</span>
                       </label>
-                      <label className={`flex items-start gap-3 cursor-pointer p-4 rounded-xl border group transition-all ${agreeTerms ? "border-emerald-200 bg-emerald-50/50" : "border-gray-200 bg-gray-50"
+
+                      <label className={`flex items-start gap-3 cursor-pointer p-4 rounded-xl border group transition-all ${
+                        agreeTerms ? "border-emerald-200 bg-emerald-50/50" : "border-gray-200 bg-gray-50"
+                      }`}>
+                        <div className={`w-5 h-5 mt-0.5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                          agreeTerms ? "bg-emerald-500 border-emerald-500" : "border-gray-300 group-hover:border-gray-400"
                         }`}>
-                        <div className={`w-5 h-5 mt-0.5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${agreeTerms ? "bg-emerald-500 border-emerald-500" : "border-gray-300 group-hover:border-gray-400"
-                          }`}>
                           {agreeTerms && <HiCheck className="w-3 h-3 text-white" />}
                         </div>
                         <input type="checkbox" checked={agreeTerms}
@@ -1847,6 +1898,7 @@ export default function AuthModal() {
                             className="text-emerald-600 font-medium underline underline-offset-2 hover:text-emerald-700">Privacy Policy</a>
                         </span>
                       </label>
+
                       <div className="flex gap-3">
                         <button type="button" onClick={() => setSignUpStep(3)} disabled={loading || avatarUploading}
                           className="flex items-center gap-2 px-4 h-11 rounded-xl text-gray-600 font-medium text-sm hover:bg-gray-100 transition-all"
@@ -1893,14 +1945,15 @@ export default function AuthModal() {
                     </div>
 
                     {codeState !== "success" && (
-                      <div className={`inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-full text-sm font-medium transition-all ${codeExpired
+                      <div className={`inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                        codeExpired
                           ? "bg-red-50 text-red-600 border border-red-200"
                           : codeExpiry <= 30
                             ? "bg-red-50 text-red-600 border border-red-200 animate-pulse"
                             : codeExpiry <= 120
                               ? "bg-amber-50 text-amber-700 border border-amber-200"
                               : "bg-gray-50 text-gray-600 border border-gray-200"
-                        }`}>
+                      }`}>
                         {codeExpired ? (
                           <><HiExclamationCircle className="w-4 h-4" /><span>Code expired — request a new one</span></>
                         ) : (
@@ -1925,7 +1978,8 @@ export default function AuthModal() {
                           onChange={(e) => handleCodeChange(i, e.target.value)}
                           onKeyDown={(e) => handleCodeKey(i, e)}
                           disabled={codeState === "verifying" || codeState === "success" || codeExpired}
-                          className={`text-center text-xl sm:text-2xl font-bold font-mono rounded-xl border-2 outline-none transition-all duration-200 ${codeExpired
+                          className={`text-center text-xl sm:text-2xl font-bold font-mono rounded-xl border-2 outline-none transition-all duration-200 ${
+                            codeExpired
                               ? "border-red-200 bg-red-50/50 text-red-300 cursor-not-allowed"
                               : codeState === "success"
                                 ? "border-emerald-400 bg-emerald-50 text-emerald-600"
@@ -1934,7 +1988,7 @@ export default function AuthModal() {
                                   : digit
                                     ? "border-emerald-400 bg-emerald-50/50 text-gray-900"
                                     : "border-gray-200 bg-gray-50/50 text-gray-900 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
-                            }`}
+                          }`}
                           style={{ width: "2.75rem", height: "3.25rem" }}
                           aria-label={`Digit ${i + 1}`}
                           autoComplete={i === 0 ? "one-time-code" : "off"}
@@ -1984,7 +2038,8 @@ export default function AuthModal() {
                   </form>
                 </div>
               )}
-            </div>
+
+            </div>{/* end scrollable body */}
 
             {/* Footer */}
             <div className="px-4 sm:px-6 py-3 border-t border-gray-100 bg-gray-50/50 flex-shrink-0">
@@ -1993,9 +2048,10 @@ export default function AuthModal() {
                 256-bit SSL encryption • We never share your data
               </p>
             </div>
-          </div>
-        </div>
-      </div>
+
+          </div>{/* end form panel */}
+        </div>{/* end modal */}
+      </div>{/* end backdrop */}
     </>
   );
 }
