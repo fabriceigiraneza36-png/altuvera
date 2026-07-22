@@ -1,262 +1,266 @@
 // src/hooks/useConversations.js
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { useUserAuth } from "../context/UserAuthContext";
+import { useState, useEffect, useCallback, useRef } from "react";
 
-/* ─────────────────────────────────────────────────────────────
-   CONFIG
-───────────────────────────────────────────────────────────────*/
-const API_BASE = import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
-const TOKEN_KEY = "altuvera_auth_token";
-const MAX_FAILS = 3;
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  "https://backend-jd8f.onrender.com/api";
 
-/* ─────────────────────────────────────────────────────────────
-   HELPERS
-───────────────────────────────────────────────────────────────*/
+const TOKEN_KEYS = [
+  "altuvera_auth_token",
+  "auth_token",
+  "token",
+];
+
 const getToken = () => {
   try {
-    return (
-      localStorage.getItem(TOKEN_KEY) ||
-      sessionStorage.getItem(TOKEN_KEY) ||
-      null
-    );
-  } catch {
-    return null;
-  }
+    for (const k of TOKEN_KEYS) {
+      const v =
+        localStorage.getItem(k) || sessionStorage.getItem(k);
+      if (v) return v;
+    }
+  } catch { /* ignore */ }
+  return "";
 };
 
-const authFetch = (url, opts = {}) => {
-  const token = getToken();
-  return fetch(url, {
+const authFetch = (url, opts = {}) =>
+  fetch(url, {
     credentials: "include",
     ...opts,
     headers: {
       "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      Authorization: `Bearer ${getToken()}`,
       ...opts.headers,
     },
   });
-};
 
-/**
- * Lightweight messaging hook for the user dashboard.
- * Lists the current user's conversations, lets them open one and
- * send messages, and keeps it live via Socket.io (`msg:message`,
- * `msg:new-from-user`, `msg:conversation-updated`, `msg:read`).
- */
+/* ─── Serialise snake_case → camelCase ──────────────────────────────── */
+const normConv = (c) => ({
+  id:             c.id,
+  sessionId:      c.session_id      || c.sessionId,
+  userId:         c.user_id         || c.userId,
+  guestName:      c.guest_name      || c.guestName,
+  guestEmail:     c.guest_email     || c.guestEmail,
+  userFullName:   c.user_full_name  || c.userFullName,
+  subject:        c.subject,
+  status:         c.status          || "open",
+  priority:       c.priority        || "normal",
+  bookingNumber:  c.booking_number  || c.bookingNumber,
+  lastMessage:    c.last_message    || c.lastMessage,
+  lastMessageAt:  c.last_message_at || c.lastMessageAt,
+  unreadUser:     parseInt(c.unread_user || c.unreadUser || 0, 10),
+  unreadAdmin:    parseInt(c.unread_admin || c.unreadAdmin || 0, 10),
+  createdAt:      c.created_at      || c.createdAt,
+  updatedAt:      c.updated_at      || c.updatedAt,
+});
+
+const normMsg = (m) => ({
+  id:             m.id,
+  conversationId: m.conversation_id || m.conversationId,
+  senderType:     m.sender_type     || m.senderType,
+  senderId:       m.sender_id       || m.senderId,
+  senderName:     m.sender_name     || m.senderName,
+  senderEmail:    m.sender_email    || m.senderEmail,
+  senderAvatar:   m.sender_avatar   || m.senderAvatar,
+  body:           m.body,
+  isRead:         m.is_read         ?? m.isRead ?? false,
+  readAt:         m.read_at         || m.readAt,
+  replyToId:      m.reply_to_id     || m.replyToId,
+  reactions:      typeof m.reactions === "string"
+                    ? (() => { try { return JSON.parse(m.reactions); } catch { return {}; } })()
+                    : (m.reactions || {}),
+  metadata:       m.metadata || {},
+  createdAt:      m.created_at || m.createdAt,
+  updatedAt:      m.updated_at || m.updatedAt,
+});
+
+/* ═══════════════════════════════════════════════════════════════════════
+   HOOK
+═══════════════════════════════════════════════════════════════════════ */
 export function useConversations() {
-  const { user, isAuthenticated } = useUserAuth();
+  const [conversations,      setConversations]      = useState([]);
+  const [messages,           setMessages]           = useState([]);
+  const [activeId,           setActiveId]           = useState(null);
+  const [activeConversation, setActiveConversation] = useState(null);
+  const [loading,            setLoading]            = useState(false);
+  const [loadingMsgs,        setLoadingMsgs]        = useState(false);
+  const [sending,            setSending]            = useState(false);
+  const [error,              setError]              = useState("");
 
-  const [conversations, setConversations] = useState([]);
-  const [activeId,      setActiveId]      = useState(null);
-  const [activeConv,    setActiveConv]    = useState(null);
-  const [messages,      setMessages]      = useState([]);
-  const [unreadCount,   setUnreadCount]   = useState(0);
-  const [loading,       setLoading]       = useState(false);
-  const [loadingMsgs,   setLoadingMsgs]   = useState(false);
-  const [sending,       setSending]       = useState(false);
-  const [error,         setError]         = useState(null);
+  const pollRef = useRef(null);
 
-  const failsRef   = useRef(0);
-  const mountedRef = useRef(true);
-  const socketRef = useRef(null);
+  /* ── Derived: total unread for user ──────────────────────────────── */
+  const unreadCount = conversations.reduce(
+    (sum, c) => sum + (c.unreadUser || 0),
+    0,
+  );
 
-  /* ── List conversations ── */
+  /* ── Fetch conversation list ─────────────────────────────────────── */
   const fetchConversations = useCallback(async () => {
-    if (!isAuthenticated || failsRef.current >= MAX_FAILS) return;
     setLoading(true);
+    setError("");
     try {
-      const res = await authFetch(`${API_BASE}/messages/conversations`);
-      if (res.status === 401 || res.status === 403) {
-        failsRef.current = MAX_FAILS;
+      const res = await authFetch(
+        `${API_BASE}/messages/conversations?limit=100`,
+      );
+      if (res.status === 401) {
+        setError("Please log in to view messages.");
         return;
       }
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      if (!mountedRef.current) return;
-      failsRef.current = 0;
-      setConversations(data.data || []);
-      setUnreadCount(
-        (data.data || []).reduce((s, c) => s + (c.unreadUser || 0), 0),
-      );
-    } catch (err) {
-      if (err.name !== "AbortError") {
-        failsRef.current += 1;
-        if (mountedRef.current) setError(err.message);
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || `Server error ${res.status}`);
       }
-    } finally {
-      if (mountedRef.current) setLoading(false);
-    }
-  }, [isAuthenticated]);
-
-  /* ── Open a conversation + load its messages ── */
-  const openConversation = useCallback(async (id) => {
-    if (!id) return;
-    setActiveId(id);
-    setLoadingMsgs(true);
-    try {
-      const res = await authFetch(`${API_BASE}/messages/conversations/${id}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      if (mountedRef.current) {
-        setActiveConv(data.data);
-        setMessages(data.data.messages || []);
-      }
-      markRead(id).catch(() => {});
+      setConversations((data.data || []).map(normConv));
     } catch (err) {
-      if (mountedRef.current) setError(err.message);
+      setError(err.message || "Failed to load conversations.");
     } finally {
-      if (mountedRef.current) setLoadingMsgs(false);
+      setLoading(false);
     }
   }, []);
 
-  /* ── Send a message ── */
-  const sendMessage = useCallback(async (id, body, replyToId = null) => {
-    const text = (body || "").trim();
-    if (!id || !text) return;
-    setSending(true);
-    const optimistic = {
-      id: `tmp-${Date.now()}`, conversationId: id, senderType: "user",
-      body: text, isRead: false, reactions: {}, replyToId, createdAt: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, optimistic]);
-    try {
-      const res = await authFetch(
-        `${API_BASE}/messages/conversations/${id}/messages`,
-        { method: "POST", body: JSON.stringify({ body: text, ...(replyToId ? { replyToId } : {}) }) },
-      );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      if (mountedRef.current) {
-        setMessages((prev) =>
-          prev.map((m) => (m.id === optimistic.id ? data.data : m)),
-        );
-      }
-      fetchConversations().catch(() => {});
-    } catch (err) {
-      if (mountedRef.current) {
-        setError(err.message);
-        setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
-      }
-    } finally {
-      if (mountedRef.current) setSending(false);
-    }
+  /* Initial load */
+  useEffect(() => {
+    fetchConversations();
   }, [fetchConversations]);
 
-  /* ── Mark read ── */
-  const markRead = useCallback(async (id) => {
-    try {
-      await authFetch(`${API_BASE}/messages/conversations/${id}/read`, {
-        method: "PATCH",
-      });
-    } catch { /* silent */ }
-  }, []);
+  /* Polling: refresh every 15 s when tab is visible */
+  useEffect(() => {
+    const start = () => {
+      pollRef.current = setInterval(() => {
+        if (!document.hidden) fetchConversations();
+      }, 15_000);
+    };
+    const stop = () => clearInterval(pollRef.current);
 
-  /* ── Fetch a conversation linked to a booking number ── */
-  const findBookingConversation = useCallback(async (bookingNumber) => {
-    if (!bookingNumber) return null;
+    start();
+    document.addEventListener("visibilitychange", () => {
+      document.hidden ? stop() : start();
+    });
+    return () => {
+      stop();
+      document.removeEventListener("visibilitychange", () => {});
+    };
+  }, [fetchConversations]);
+
+  /* ── Open a conversation ─────────────────────────────────────────── */
+  const openConversation = useCallback(async (id) => {
+    if (id === null) {
+      setActiveId(null);
+      setActiveConversation(null);
+      setMessages([]);
+      return;
+    }
+
+    setActiveId(id);
+    setLoadingMsgs(true);
+    setError("");
+
     try {
       const res = await authFetch(
-        `${API_BASE}/messages/conversations/by-booking/${encodeURIComponent(bookingNumber)}`,
+        `${API_BASE}/messages/conversations/${id}`,
       );
-      if (!res.ok) return null;
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || `Server error ${res.status}`);
+      }
       const data = await res.json();
-      return data.data || null;
-    } catch {
-      return null;
+      const conv = normConv(data.data);
+      setActiveConversation(conv);
+      setMessages((data.data?.messages || []).map(normMsg));
+
+      // Mark as read
+      authFetch(`${API_BASE}/messages/conversations/${id}/read`, {
+        method: "PATCH",
+      }).catch(() => {});
+
+      // Reset unread in local list
+      setConversations((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, unreadUser: 0 } : c)),
+      );
+    } catch (err) {
+      setError(err.message || "Failed to open conversation.");
+    } finally {
+      setLoadingMsgs(false);
     }
   }, []);
 
-  /* ── Socket wiring ── */
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    let cancelled = false;
-    import("../utils/socket")
-      .then(({ connectSocket }) => {
-        if (cancelled) return;
-        const socket = connectSocket();
-        socketRef.current = socket;
+  /* ── Send message ────────────────────────────────────────────────── */
+  const sendMessage = useCallback(
+    async (conversationId, body, replyToId = null) => {
+      if (!body?.trim() || !conversationId) return;
 
-        const onMessage = (msg) => {
-          if (!mountedRef.current) return;
-          if (msg.conversationId === activeId) {
-            setMessages((prev) => {
-              if (prev.some((m) => m.id === msg.id)) return prev;
-              return [...prev, msg];
-            });
-          } else {
-            // Refresh conversations list so unread badge updates
-            fetchConversations().catch(() => {});
-          }
-        };
-        const onUpdated = (conv) => {
-          if (!mountedRef.current) return;
-          setConversations((prev) =>
-            prev.map((c) => (c.id === conv.id ? { ...c, ...conv } : c)),
-          );
-          if (conv.id === activeId) setActiveConv((p) => (p ? { ...p, ...conv } : p));
-        };
-        const onRead = ({ conversationId }) => {
-          if (!mountedRef.current) return;
-          const isActive = conversationId === activeId;
-          if (isActive) {
-            setMessages((prev) => prev.map((m) => ({ ...m, isRead: true })));
-          }
-        };
-        const onReaction = ({ messageId, reactions }) => {
-          if (!mountedRef.current) return;
-          setMessages((prev) =>
-            prev.map((m) => (String(m.id) === String(messageId) ? { ...m, reactions: reactions || {} } : m)),
-          );
-        };
+      setSending(true);
 
-        socket.on("msg:message", onMessage);
-        socket.on("msg:conversation-updated", onUpdated);
-        socket.on("msg:read", onRead);
-        socket.on("msg:reaction", onReaction);
+      /* Optimistic insert */
+      const optimistic = {
+        id:             `tmp-${Date.now()}`,
+        conversationId,
+        senderType:     "user",
+        senderName:     "You",
+        body:           body.trim(),
+        isRead:         false,
+        reactions:      {},
+        replyToId:      replyToId || null,
+        createdAt:      new Date().toISOString(),
+      };
+      setMessages((prev) => [...prev, optimistic]);
 
-        return () => {
-          socket.off("msg:message", onMessage);
-          socket.off("msg:conversation-updated", onUpdated);
-          socket.off("msg:read", onRead);
-          socket.off("msg:reaction", onReaction);
-        };
-      })
-      .catch(() => { /* socket unavailable — polling covers it */ });
+      try {
+        const res = await authFetch(
+          `${API_BASE}/messages/conversations/${conversationId}/messages`,
+          {
+            method: "POST",
+            body: JSON.stringify({
+              body: body.trim(),
+              ...(replyToId ? { replyToId } : {}),
+            }),
+          },
+        );
 
-    return () => { cancelled = true; };
-  }, [isAuthenticated, activeId, fetchConversations]);
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.message || "Failed to send message.");
+        }
 
-  /* ── Lifecycle ── */
-  useEffect(() => {
-    mountedRef.current = true;
-    failsRef.current = 0;
-    if (isAuthenticated) fetchConversations();
-    return () => {
-      mountedRef.current = false;
-    };
-  }, [isAuthenticated, fetchConversations]);
+        const data = await res.json();
+        const saved = normMsg(data.data);
 
-  const activeConversation = useMemo(
-    () => activeConv || conversations.find((c) => c.id === activeId) || null,
-    [activeConv, conversations, activeId],
+        setMessages((prev) =>
+          prev.map((m) => (m.id === optimistic.id ? saved : m)),
+        );
+
+        /* Refresh conversation list to update last_message */
+        setConversations((prev) =>
+          prev.map((c) =>
+            c.id === conversationId
+              ? { ...c, lastMessage: body.slice(0, 120), lastMessageAt: new Date().toISOString() }
+              : c,
+          ),
+        );
+      } catch (err) {
+        /* Rollback */
+        setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
+        setError(err.message || "Failed to send message.");
+      } finally {
+        setSending(false);
+      }
+    },
+    [],
   );
 
   return {
     conversations,
+    messages,
     activeId,
     activeConversation,
-    messages,
     unreadCount,
     loading,
     loadingMsgs,
-    sending,        error,
-    fetchConversations,
+    sending,
+    error,
     openConversation,
     sendMessage,
-    markRead,
-    findBookingConversation,
-    setActiveId,
+    fetchConversations,
   };
 }
-
-export default useConversations;
