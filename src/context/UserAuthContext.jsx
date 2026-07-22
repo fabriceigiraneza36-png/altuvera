@@ -25,9 +25,6 @@ const GITHUB_SCOPE =
   import.meta.env.VITE_GITHUB_SCOPE || "read:user user:email";
 
 // ── Re-verification threshold — must match backend REVERIFICATION_THRESHOLD ──
-// Backend: after THRESHOLD logins, user must re-verify via email OTP.
-// Counter resets to 1 after successful re-verification (not 0, since
-// the re-verification itself counts as one login).
 const REVERIFICATION_THRESHOLD = 3;
 
 const resolveGithubRedirectUri = () => {
@@ -42,11 +39,11 @@ const resolveGithubRedirectUri = () => {
 
 if (import.meta.env.DEV) {
   const vars = {
-    VITE_API_URL:            import.meta.env.VITE_API_URL,
-    VITE_GOOGLE_CLIENT_ID:   import.meta.env.VITE_GOOGLE_CLIENT_ID,
-    VITE_GITHUB_CLIENT_ID:   import.meta.env.VITE_GITHUB_CLIENT_ID,
-    VITE_GITHUB_REDIRECT_URI:   import.meta.env.VITE_GITHUB_REDIRECT_URI,
-    VITE_GITHUB_CALLBACK_URL:   import.meta.env.VITE_GITHUB_CALLBACK_URL,
+    VITE_API_URL:             import.meta.env.VITE_API_URL,
+    VITE_GOOGLE_CLIENT_ID:    import.meta.env.VITE_GOOGLE_CLIENT_ID,
+    VITE_GITHUB_CLIENT_ID:    import.meta.env.VITE_GITHUB_CLIENT_ID,
+    VITE_GITHUB_REDIRECT_URI: import.meta.env.VITE_GITHUB_REDIRECT_URI,
+    VITE_GITHUB_CALLBACK_URL: import.meta.env.VITE_GITHUB_CALLBACK_URL,
   };
   Object.entries(vars).forEach(([k, v]) => {
     if (!v) console.warn(`[Auth] Missing env var: ${k}`);
@@ -58,17 +55,17 @@ if (import.meta.env.DEV) {
 // ============================================================================
 
 const KEYS = {
-  TOKEN:               "altuvera_auth_token",
-  REFRESH:             "altuvera_refresh_token",
-  SESSION_PREF:        "altuvera_persist_session",
-  PROFILE_CACHE:       "altuvera_profile_cache",
-  GOOGLE_PENDING:      "altuvera_google_pending",
-  GOOGLE_POPUP_STATE:  "altuvera_google_popup_state",
-  GITHUB_STATE:        "altuvera_github_state",
-  GITHUB_INTENT:       "altuvera_github_intent",
-  LOGIN_COUNTER:       "altuvera_login_counter",
-  LAST_LOGOUT:         "altuvera_last_logout",
-  WELCOME_SHOWN_PREFIX:"altuvera_welcome_shown:",
+  TOKEN:                "altuvera_auth_token",
+  REFRESH:              "altuvera_refresh_token",
+  SESSION_PREF:         "altuvera_persist_session",
+  PROFILE_CACHE:        "altuvera_profile_cache",
+  GOOGLE_PENDING:       "altuvera_google_pending",
+  GOOGLE_POPUP_STATE:   "altuvera_google_popup_state",
+  GITHUB_STATE:         "altuvera_github_state",
+  GITHUB_INTENT:        "altuvera_github_intent",
+  LOGIN_COUNTER:        "altuvera_login_counter",
+  LAST_LOGOUT:          "altuvera_last_logout",
+  WELCOME_SHOWN_PREFIX: "altuvera_welcome_shown:",
 };
 
 // ============================================================================
@@ -182,16 +179,16 @@ const normalizeUser = (raw, {
   );
 
   return {
-    id:           raw.id || raw._id || raw.userId || null,
+    id:            raw.id || raw._id || raw.userId || null,
     email,
     fullName,
-    name:         fullName,
-    avatar:       avatar || null,
-    phone:        pick(raw.phone, raw.phoneNumber, raw.phone_number),
-    bio:          pick(raw.bio,   raw.biography,   raw.about),
-    role:         pick(raw.role,  raw.userRole,    "user"),
-    authProvider: pick(raw.authProvider, raw.auth_provider, raw.provider, "email"),
-    isVerified:   Boolean(
+    name:          fullName,
+    avatar:        avatar || null,
+    phone:         pick(raw.phone, raw.phoneNumber, raw.phone_number),
+    bio:           pick(raw.bio,   raw.biography,   raw.about),
+    role:          pick(raw.role,  raw.userRole,    "user"),
+    authProvider:  pick(raw.authProvider, raw.auth_provider, raw.provider, "email"),
+    isVerified:    Boolean(
       raw.isVerified || raw.is_verified || raw.emailVerified || raw.verified,
     ),
     emailVerified: Boolean(
@@ -214,12 +211,12 @@ const normalizeUser = (raw, {
 const extractPayload = (data) => {
   const d = data?.data || data || {};
   return {
-    token:        d.token        || d.accessToken  || d.access_token  || data?.token        || null,
-    refreshToken: d.refreshToken || d.refresh_token                   || data?.refreshToken || null,
-    user:         d.user         || data?.user      || d               || null,
-    isNewUser:    Boolean(d.isNewUser         || d.is_new_user    || data?.isNewUser),
-    requiresProfile: Boolean(d.requiresProfile || d.requires_profile || data?.requiresProfile),
-    loginCounter: d.loginCounter ?? d.login_counter ?? data?.loginCounter ?? null,
+    token:           d.token        || d.accessToken  || d.access_token  || data?.token        || null,
+    refreshToken:    d.refreshToken || d.refresh_token                   || data?.refreshToken || null,
+    user:            d.user         || data?.user      || d               || null,
+    isNewUser:       Boolean(d.isNewUser         || d.is_new_user    || data?.isNewUser),
+    requiresProfile: Boolean(d.requiresProfile   || d.requires_profile || data?.requiresProfile),
+    loginCounter:    d.loginCounter ?? d.login_counter ?? data?.loginCounter ?? null,
     wasReverification: Boolean(d.wasReverification ?? data?.wasReverification),
   };
 };
@@ -260,37 +257,32 @@ const readProfileCache = () => {
 const isDismissalError = (msg = "") => {
   const m = msg.toLowerCase();
   return (
-    m.includes("dismiss")            || m.includes("cancel")      ||
-    m.includes("closed")             || m.includes("credential_cancelled") ||
-    m.includes("popup_closed")       || m.includes("skipped")     ||
-    m.includes("not_displayed")      || m.includes("access_denied")
+    m.includes("dismiss")         || m.includes("cancel")             ||
+    m.includes("closed")          || m.includes("credential_cancelled") ||
+    m.includes("popup_closed")    || m.includes("skipped")            ||
+    m.includes("not_displayed")   || m.includes("access_denied")
   );
 };
 
 // ─── COOP-safe popup closed check ────────────────────────────────────────────
-// Under a Cross-Origin-Opener-Policy of "same-origin" the browser throws when a
-// cross-origin popup's `closed` property is read. We read it AT MOST ONCE and
-// cache the result so the console warning only ever appears a single time, then
-// rely on the BroadcastChannel / postMessage callback (which is COOP-safe) and
-// the watchdog timeout to resolve the promise regardless.
 let _popupClosedCache = null;
 const isPopupClosed = (popup) => {
   if (_popupClosedCache !== null) return _popupClosedCache;
   try {
     const closed = !popup || popup.closed;
-    _popupClosedCache = closed; // cache — never re-read a cross-origin handle
+    _popupClosedCache = closed;
     return closed;
   } catch {
-    return false; // COOP blocked — assume still open, callback/timeout handles it
+    return false;
   }
 };
 
 // ─── FedCM-safe One Tap notification classifier ───────────────────────────────
 const classifyOneTapNotification = (notification) => {
   try {
-    let displayed   = false;
-    let skipped     = false;
-    let dismissed   = false;
+    let displayed    = false;
+    let skipped      = false;
+    let dismissed    = false;
     let notDisplayed = false;
 
     try { displayed    = Boolean(notification.isDisplayMoment?.());  } catch { /* FedCM */ }
@@ -298,9 +290,9 @@ const classifyOneTapNotification = (notification) => {
     try { dismissed    = Boolean(notification.isDismissedMoment?.()); } catch { /* FedCM */ }
     try { notDisplayed = Boolean(notification.isNotDisplayed?.());   } catch { /* FedCM */ }
 
-    if (displayed)               return "success";
-    if (skipped || dismissed)    return "dismissed";
-    if (notDisplayed)            return "unavailable";
+    if (displayed)            return "success";
+    if (skipped || dismissed) return "dismissed";
+    if (notDisplayed)         return "unavailable";
     return "dismissed";
   } catch { return "dismissed"; }
 };
@@ -333,7 +325,7 @@ const openGooglePopup = (clientId, mode = "signin") =>
       prompt: mode === "signup" ? "select_account consent" : "select_account",
     });
 
-    const W = 500, H = 640;
+    const W    = 500, H = 640;
     const left = Math.round((window.screen.width  - W) / 2);
     const top  = Math.round((window.screen.height - H) / 2);
     const features = [
@@ -359,30 +351,22 @@ const openGooglePopup = (clientId, mode = "signin") =>
       ));
     }
 
-    let settled      = false;
-    let pollTimer    = null;
-    let msgHandler   = null;
-    let bcHandler    = null;
+    let settled       = false;
+    let pollTimer     = null;
+    let msgHandler    = null;
     let watchdogTimer = null;
-    let bc           = null;
+    let bc            = null;
 
-    _popupClosedCache = null; // fresh cache for this popup instance
+    _popupClosedCache = null; // fresh for this popup instance
 
     const cleanup = () => {
       settled = true;
-      if (pollTimer)    { clearInterval(pollTimer);   pollTimer    = null; }
-      if (watchdogTimer){ clearTimeout(watchdogTimer); watchdogTimer = null; }
-      if (msgHandler) {
-        window.removeEventListener("message", msgHandler);
-        msgHandler = null;
-      }
-      if (bc) {
-        try { bc.close(); } catch { /* ignore */ }
-        bc = null;
-      }
-      try { sessionStorage.removeItem(KEYS.GOOGLE_POPUP_STATE); } catch { /* ignore */ }
-      try { if (!isPopupClosed(popup)) popup.close(); }
-      catch { /* COOP may block — popup closes itself */ }
+      if (pollTimer)     { clearInterval(pollTimer);    pollTimer     = null; }
+      if (watchdogTimer) { clearTimeout(watchdogTimer); watchdogTimer = null; }
+      if (msgHandler)    { window.removeEventListener("message", msgHandler); msgHandler = null; }
+      if (bc)            { try { bc.close(); } catch {} bc = null; }
+      try { sessionStorage.removeItem(KEYS.GOOGLE_POPUP_STATE); } catch {}
+      try { if (!isPopupClosed(popup)) popup.close(); } catch {}
     };
 
     const settle = (fn, val) => {
@@ -411,11 +395,11 @@ const openGooglePopup = (clientId, mode = "signin") =>
         return settle(reject, new Error(error));
       }
 
-      const token = credential || idToken;
-      if (!token)
+      const tok = credential || idToken;
+      if (!tok)
         return settle(resolve, { dismissed: true, reason: "no_credential" });
 
-      settle(resolve, token);
+      settle(resolve, tok);
     };
 
     // Strategy 1: postMessage
@@ -439,8 +423,8 @@ const openGooglePopup = (clientId, mode = "signin") =>
           return settle(reject, new Error(error));
         }
 
-        const token = credential || idToken;
-        if (token) settle(resolve, token);
+        const tok = credential || idToken;
+        if (tok) settle(resolve, tok);
       };
     } catch { /* BroadcastChannel not supported */ }
 
@@ -462,8 +446,8 @@ const openGooglePopup = (clientId, mode = "signin") =>
         const query = new URLSearchParams(popup.location.search);
 
         const idToken =
-          hash.get("id_token")   || hash.get("credential")   ||
-          query.get("id_token")  || query.get("credential");
+          hash.get("id_token")  || hash.get("credential")  ||
+          query.get("id_token") || query.get("credential");
 
         const errParam = hash.get("error")  || query.get("error");
         const retState = hash.get("state")  || query.get("state");
@@ -500,6 +484,7 @@ const openGooglePopup = (clientId, mode = "signin") =>
 // ============================================================================
 
 export function UserAuthProvider({ children }) {
+
   // ── Core state ──────────────────────────────────────────────────────────────
   const [user, setUser]                     = useState(null);
   const [token, setToken]                   = useState(() => store.get(KEYS.TOKEN));
@@ -513,14 +498,14 @@ export function UserAuthProvider({ children }) {
 
   // ── Re-verification ───────────────────────────────────────────────────────
   const [requiresLoginVerification, setRequiresLoginVerification] = useState(false);
-  const [pendingSocialAuth, setPendingSocialAuth] = useState(null);
+  const [pendingSocialAuth, setPendingSocialAuth]                  = useState(null);
 
   // ── Login counter (synced from server) ────────────────────────────────────
   const [loginCounter, setLoginCounter] = useState(() => store.getLoginCounter());
 
   // ── Notifications ─────────────────────────────────────────────────────────
-  const [showCongratulation,    setShowCongratulation]    = useState(false);
-  const [congratulationType,    setCongratulationType]    = useState("");
+  const [showCongratulation,     setShowCongratulation]     = useState(false);
+  const [congratulationType,     setCongratulationType]     = useState("");
   const [showNotLoggedInMessage, setShowNotLoggedInMessage] = useState(false);
 
   // ── Social auth ───────────────────────────────────────────────────────────
@@ -541,7 +526,7 @@ export function UserAuthProvider({ children }) {
   const notLoggedInRef  = useRef(null);
 
   // ── Computed ──────────────────────────────────────────────────────────────
-  const isAuthenticated = useMemo(() => !!user && !!token, [user, token]);
+  const isAuthenticated  = useMemo(() => !!user && !!token, [user, token]);
   const hasGooglePending = useMemo(
     () => !!googleUser?.email && !!googleUser?.credential,
     [googleUser],
@@ -629,13 +614,19 @@ export function UserAuthProvider({ children }) {
   const setSessionPreference = useCallback((persist) => {
     const next = Boolean(persist);
     setPersistSession(next);
-    try { localStorage.setItem(KEYS.SESSION_PREF, String(next)); } catch { /* ignore */ }
+    try { localStorage.setItem(KEYS.SESSION_PREF, String(next)); } catch {}
     const t = token || store.get(KEYS.TOKEN);
     if (t) store.set(KEYS.TOKEN, t, next);
     const r = store.get(KEYS.REFRESH);
     if (r) store.set(KEYS.REFRESH, r, next);
   }, [token]);
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // ✅ FIX: saveAuth now also accepts a top-level `data` shape from
+  //    forgotUsernameVerify which wraps everything inside data.data
+  //    The extractPayload function already handles both shapes, so this
+  //    is handled transparently — no special casing needed here.
+  // ══════════════════════════════════════════════════════════════════════════
   const saveAuth = useCallback((data, opts = {}) => {
     const {
       token: tok, refreshToken: ref, user: raw,
@@ -647,15 +638,14 @@ export function UserAuthProvider({ children }) {
     if (tok) { store.set(KEYS.TOKEN, tok, persist); setToken(tok); }
     if (ref)   store.set(KEYS.REFRESH, ref, persist);
 
-    // Sync counter from server response if present
     if (typeof serverCounter === "number") {
       setLoginCounter(serverCounter);
       store.setLoginCounter(serverCounter);
     }
 
     const fallback = {
-      email:  pendingRef.current?.email   || googleUser?.email   || "",
-      name:   pendingRef.current?.fullName || googleUser?.name   || "",
+      email:  pendingRef.current?.email    || googleUser?.email   || "",
+      name:   pendingRef.current?.fullName || googleUser?.name    || "",
       avatar: pendingRef.current?.avatar   || googleUser?.picture || "",
     };
 
@@ -769,26 +759,26 @@ export function UserAuthProvider({ children }) {
 
     if (res.status === 204) return {};
 
-    let data = null;
+    let resData = null;
     try {
       const ct = res.headers.get("content-type") || "";
-      data = ct.includes("application/json")
+      resData = ct.includes("application/json")
         ? await res.json()
         : { message: await res.text() };
-    } catch { data = {}; }
+    } catch { resData = {}; }
 
     if (!res.ok) {
       if (res.status === 401) clearAuth();
       const msg =
-        data?.message || data?.error || data?.data?.message ||
+        resData?.message || resData?.error || resData?.data?.message ||
         `Request failed (${res.status})`;
       const err  = new Error(msg);
       err.status = res.status;
-      err.data   = data;
+      err.data   = resData;
       throw err;
     }
 
-    return data || {};
+    return resData || {};
   }, [clearAuth, persistSession, saveAuth, token]);
 
   // ============================================================================
@@ -808,7 +798,6 @@ export function UserAuthProvider({ children }) {
       if (norm) {
         setUser(norm);
         cacheProfile(norm);
-        // Sync counter from server
         if (typeof norm.loginCounter === "number") {
           setLoginCounter(norm.loginCounter);
           store.setLoginCounter(norm.loginCounter);
@@ -845,6 +834,14 @@ export function UserAuthProvider({ children }) {
       pendingRef.current = null;
       throw new Error(err?.message || "Failed to send verification code.");
     });
+
+    // ✅ FIX: If the backend returns the user's stored fullName in the
+    //    login response (which our updated authController now does),
+    //    update pendingRef so verifyCode can use it for the greeting.
+    const returnedName = data?.data?.fullName || data?.fullName || "";
+    if (returnedName && !pendingRef.current?.fullName) {
+      pendingRef.current = { ...pendingRef.current, fullName: returnedName };
+    }
 
     setPendingEmail(email);
     setRequiresLoginVerification(false);
@@ -885,70 +882,84 @@ export function UserAuthProvider({ children }) {
     return data;
   }, [authFetch, setSessionPreference]);
 
-  // In UserAuthContext.jsx — replace verifyCode only
+  // ============================================================================
+  // Verify Code
+  // ============================================================================
 
-const verifyCode = useCallback(async (email, code) => {
-  // Resolve email: argument takes priority, then pendingEmail state,
-  // then pendingRef (set synchronously in login/register before state updates)
-  const e = trim(email)
-    || trim(pendingEmail)
-    || trim(pendingRef.current?.email)
-    || "";
-  const c = trim(String(code || ""));
+  const verifyCode = useCallback(async (email, code) => {
+    const e = trim(email)
+      || trim(pendingEmail)
+      || trim(pendingRef.current?.email)
+      || "";
+    const c = trim(String(code || ""));
 
-  if (!e) throw new Error("Email is required. Please restart the sign-in flow.");
-  if (!c) throw new Error("Verification code is required.");
+    if (!e) throw new Error("Email is required. Please restart the sign-in flow.");
+    if (!c) throw new Error("Verification code is required.");
 
-  const data = await authFetch("/users/verify-code", {
-    method: "POST",
-    body:   JSON.stringify({ email: e, code: c }),
-  });
+    const data = await authFetch("/users/verify-code", {
+      method: "POST",
+      body:   JSON.stringify({ email: e, code: c }),
+    });
 
-  const payload    = extractPayload(data);
-  const newCounter = payload.loginCounter
-    ?? data?.data?.loginCounter
-    ?? data?.loginCounter
-    ?? 0;
+    const payload    = extractPayload(data);
+    const newCounter = payload.loginCounter
+      ?? data?.data?.loginCounter
+      ?? data?.loginCounter
+      ?? 0;
 
-  if (requiresLoginVerification) {
-    if (pendingSocialAuth?.data) {
-      saveAuth(pendingSocialAuth.data, { persist: persistSession });
-    } else {
-      saveAuth(data, { persist: persistSession });
+    if (requiresLoginVerification) {
+      if (pendingSocialAuth?.data) {
+        saveAuth(pendingSocialAuth.data, { persist: persistSession });
+      } else {
+        saveAuth(data, { persist: persistSession });
+      }
+      setLoginCounter(newCounter);
+      store.setLoginCounter(newCounter);
+      setRequiresLoginVerification(false);
+      setPendingSocialAuth(null);
+      setPendingEmail("");
+      closeModal();
+      triggerCongratulation(
+        data?.data?.isNewUser || data?.isNewUser ? "signup" : "login",
+      );
+      return data;
     }
+
+    saveAuth(data, { persist: persistSession });
+    setPendingEmail("");
     setLoginCounter(newCounter);
     store.setLoginCounter(newCounter);
-    setRequiresLoginVerification(false);
-    setPendingSocialAuth(null);
-    setPendingEmail("");
     closeModal();
     triggerCongratulation(
       data?.data?.isNewUser || data?.isNewUser ? "signup" : "login",
     );
     return data;
-  }
+  }, [
+    authFetch, closeModal, pendingEmail, pendingSocialAuth,
+    persistSession, requiresLoginVerification, saveAuth, triggerCongratulation,
+  ]);
 
-  saveAuth(data, { persist: persistSession });
-  setPendingEmail("");
-  setLoginCounter(newCounter);
-  store.setLoginCounter(newCounter);
-  closeModal();
-  triggerCongratulation(
-    data?.data?.isNewUser || data?.isNewUser ? "signup" : "login",
-  );
-  return data;
-}, [
-  authFetch, closeModal, pendingEmail, pendingSocialAuth,
-  persistSession, requiresLoginVerification, saveAuth, triggerCongratulation,
-]);
+  // ============================================================================
+  // Resend Code
+  // ============================================================================
 
   const resendCode = useCallback(async (email) => {
     const e = trim(email || pendingEmail);
     if (!e) throw new Error("Email is required.");
-    return authFetch("/users/resend-code", {
+
+    const data = await authFetch("/users/resend-code", {
       method: "POST",
       body:   JSON.stringify({ email: e }),
     });
+
+    // ✅ FIX: If backend returns the user's fullName in resend response,
+    //    update pendingRef so the UI can display their name as a reminder.
+    const returnedName = data?.data?.fullName || data?.fullName || "";
+    if (returnedName && pendingRef.current) {
+      pendingRef.current = { ...pendingRef.current, fullName: returnedName };
+    }
+
+    return data;
   }, [authFetch, pendingEmail]);
 
   const checkEmail = useCallback(async (email) => {
@@ -986,7 +997,6 @@ const verifyCode = useCallback(async (email, code) => {
 
       const { isNewUser, requiresProfile } = extractPayload(data);
 
-      // New user needs to complete profile
       if (isNewUser || requiresProfile) {
         const decoded = decodeJWT(credential);
         const pending = {
@@ -1007,7 +1017,6 @@ const verifyCode = useCallback(async (email, code) => {
       triggerCongratulation("login");
       return data;
     } catch (err) {
-      // Re-verification required from backend
       const errData = err?.data || {};
       if (
         errData?.code === "REVERIFICATION_REQUIRED" ||
@@ -1017,7 +1026,6 @@ const verifyCode = useCallback(async (email, code) => {
         setPendingEmail(revEmail);
         setSocialAuthError("");
         setRequiresLoginVerification(true);
-        // Backend already sent the OTP — just show the verify view
         setModalView("verify");
         return { requiresVerification: true };
       }
@@ -1037,7 +1045,6 @@ const verifyCode = useCallback(async (email, code) => {
   const handleGoogleResponse = useCallback(async (response) => {
     if (!response?.credential) { setGoogleLoading(false); return; }
 
-    // If a manual callback is registered (from promptGoogleAuth), use it
     if (googleCbRef.current) {
       const cb = googleCbRef.current;
       googleCbRef.current = null;
@@ -1072,7 +1079,7 @@ const verifyCode = useCallback(async (email, code) => {
           callback:              handleGoogleResponse,
           auto_select:           false,
           cancel_on_tap_outside: true,
-          use_fedcm_for_prompt:  true, // suppress FedCM migration warning
+          use_fedcm_for_prompt:  true,
           itp_support:           true,
         });
         setGoogleLoaded(true);
@@ -1129,13 +1136,10 @@ const verifyCode = useCallback(async (email, code) => {
           fn(val);
         };
 
-        // ── Button render path ────────────────────────────────────────────
+        // ── Button render path ──────────────────────────────────────────
         if (opts.container) {
           if (!googleLoaded || !window.google?.accounts?.id) {
-            return settle(
-              reject,
-              new Error("Google Sign-In is loading. Please try again."),
-            );
+            return settle(reject, new Error("Google Sign-In is loading. Please try again."));
           }
           try {
             opts.container.innerHTML = "";
@@ -1155,7 +1159,7 @@ const verifyCode = useCallback(async (email, code) => {
           }
         }
 
-        // ── Helper: run popup fallback ────────────────────────────────────
+        // ── Helper: run popup fallback ──────────────────────────────────
         const runPopup = async (reason) => {
           if (settled) return;
           if (import.meta.env.DEV)
@@ -1163,14 +1167,10 @@ const verifyCode = useCallback(async (email, code) => {
 
           setGoogleLoading(true);
           try {
-            const result = await openGooglePopup(
-              GOOGLE_CLIENT_ID, opts.mode || "signin",
-            );
+            const result = await openGooglePopup(GOOGLE_CLIENT_ID, opts.mode || "signin");
 
-            if (result?.dismissed)
-              return settle(resolve, result);
+            if (result?.dismissed) return settle(resolve, result);
 
-            // result is the id_token string
             const credential = result;
 
             if (opts.mode === "signup") {
@@ -1197,22 +1197,18 @@ const verifyCode = useCallback(async (email, code) => {
           }
         };
 
-      // ── Skip One Tap for explicit button clicks ─────────────────────────
-      // One Tap is designed for passive sign-in, not for explicit user actions.
-      // Keeping it here wastes time, consumes the user gesture, and makes the
-      // popup fallback more likely to be blocked by the browser.
-      if (opts.skipOneTap) {
-        runPopup("skip_one_tap");
-        return;
-      }
+        // ── Skip One Tap for explicit button clicks ──────────────────────
+        if (opts.skipOneTap) {
+          runPopup("skip_one_tap");
+          return;
+        }
 
-      // ── Try One Tap first ─────────────────────────────────────────────
-      if (!googleLoaded || !window.google?.accounts?.id) {
-        runPopup("sdk_not_ready");
-        return;
-      }
+        // ── Try One Tap first ────────────────────────────────────────────
+        if (!googleLoaded || !window.google?.accounts?.id) {
+          runPopup("sdk_not_ready");
+          return;
+        }
 
-        // 8s One Tap window before popup fallback
         const oneTapTimeout = setTimeout(() => {
           googleCbRef.current = null;
           runPopup("timeout");
@@ -1248,10 +1244,8 @@ const verifyCode = useCallback(async (email, code) => {
             if (outcome === "dismissed" || outcome === "unavailable") {
               clearTimeout(oneTapTimeout);
               googleCbRef.current = null;
-              // Never reject — silently fall back to popup
               runPopup(outcome);
             }
-            // outcome === "success" → wait for credential callback
           });
         } catch {
           clearTimeout(oneTapTimeout);
@@ -1291,7 +1285,6 @@ const verifyCode = useCallback(async (email, code) => {
         }),
       });
     } catch (err) {
-      // Re-verification required
       const errData = err?.data || {};
       if (
         errData?.code === "REVERIFICATION_REQUIRED" ||
@@ -1357,7 +1350,6 @@ const verifyCode = useCallback(async (email, code) => {
       triggerCongratulation("login");
       return data;
     } catch (err) {
-      // Re-verification required
       const errData = err?.data || {};
       if (
         errData?.code === "REVERIFICATION_REQUIRED" ||
@@ -1367,7 +1359,6 @@ const verifyCode = useCallback(async (email, code) => {
         setPendingEmail(revEmail);
         setSocialAuthError("");
         setRequiresLoginVerification(true);
-        // Backend already sent OTP — show verify view
         setModalView("verify");
         return { requiresVerification: true };
       }
@@ -1407,12 +1398,12 @@ const verifyCode = useCallback(async (email, code) => {
   }, []);
 
   const consumeGithubCallback = useCallback(async () => {
-    const url       = new URL(window.location.href);
-    const code      = url.searchParams.get("code");
-    const state     = url.searchParams.get("state");
-    const oauthErr  = url.searchParams.get("error");
-    const errDesc   = url.searchParams.get("error_description");
-    const provider  = url.searchParams.get("auth_provider");
+    const url      = new URL(window.location.href);
+    const code     = url.searchParams.get("code");
+    const state    = url.searchParams.get("state");
+    const oauthErr = url.searchParams.get("error");
+    const errDesc  = url.searchParams.get("error_description");
+    const provider = url.searchParams.get("auth_provider");
 
     if (!code && !oauthErr) return;
     if (provider && provider !== "github") return;
@@ -1543,9 +1534,9 @@ const verifyCode = useCallback(async (email, code) => {
   // Bootstrap
   // ============================================================================
 
-  useEffect(() => { fetchUser(); },             [fetchUser]);
-  useEffect(() => { initGoogleSdk(); },         [initGoogleSdk]);
-  useEffect(() => { consumeGithubCallback(); },  [consumeGithubCallback]);
+  useEffect(() => { fetchUser(); },            [fetchUser]);
+  useEffect(() => { initGoogleSdk(); },        [initGoogleSdk]);
+  useEffect(() => { consumeGithubCallback(); }, [consumeGithubCallback]);
 
   // ============================================================================
   // Context Value
