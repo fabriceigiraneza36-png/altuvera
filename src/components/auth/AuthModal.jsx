@@ -42,6 +42,7 @@ import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 import EmailAutocompleteInput from "../common/EmailAutocompleteInput";
 import CountryPhoneSelect, { COUNTRIES } from "./CountryPhoneSelect";
 import ProfessionPickerModal from "./ProfessionPickerModal";
+import { API_URL } from "../../utils/apiBase";
 import "./AuthModal.css";
 
 /* ═══════════════════════════════════════════════════════════════
@@ -95,7 +96,7 @@ const MAX_FILE = 10 * 1024 * 1024;
 const CODE_TTL_LOGIN_REGISTER = 10 * 60;
 const CODE_TTL_RESEND = 15 * 60;
 
-const API_BASE = process.env.REACT_APP_API_URL || "/api/users";
+const API_BASE = API_URL;
 
 const ROLES = [
   { value: "user", label: "Traveler", icon: HiGlobe, desc: "Explore & discover", color: "#3b82f6" },
@@ -766,7 +767,7 @@ export default function AuthModal() {
     if (!forgotEmailOk) { setError("Please enter a valid email address."); return; }
     try {
       setLoading(true); setError(""); setSuccess("");
-      const res = await fetch(`${API_BASE}/forgot-username/send-code`, {
+      const res = await fetch(`${API_BASE}/users/forgot-username/send-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail.trim() }),
@@ -790,7 +791,7 @@ export default function AuthModal() {
     if (forgotCodeExpired) { setError("Code expired. Request a new one."); return; }
     try {
       setLoading(true); setForgotCodeState("verifying"); setError("");
-      const res = await fetch(`${API_BASE}/forgot-username/verify`, {
+      const res = await fetch(`${API_BASE}/users/forgot-username/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail.trim(), code: val }),
@@ -891,7 +892,7 @@ export default function AuthModal() {
     if (!forgotEmail.trim() || forgotResendTimer > 0 || loading) return;
     try {
       setLoading(true); setError(""); setSuccess("");
-      const res = await fetch(`${API_BASE}/forgot-username/send-code`, {
+      const res = await fetch(`${API_BASE}/users/forgot-username/send-code`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: forgotEmail.trim() }),
