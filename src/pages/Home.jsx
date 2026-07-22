@@ -637,7 +637,7 @@ const INTRO_SIDE_IMAGES = [
 ═══════════════════════════════════════════ */
 const WHY_CARDS = [
   { id: 1, title: "Expert Local Guides", description: "Our guides are born and raised in the regions they lead. Decades of field experience turn every game drive into a master class.", tags: ["Certified", "Multilingual", "Wildlife Experts"], badge: "Top Rated", badgeIcon: "⭐", image: "https://i.pinimg.com/236x/14/f8/7f/14f87f11922888cf40a8ca405d731246.jpg", footer: "Guided by Altuvera Pros", link: "/team", ctaLabel: "Meet the Team", iconType: "compass" },
-  { id: 2, title: "Sustainable Safari Practices", description: "Every journey actively protects the ecosystems you visit. Carbon offset programs and direct community investment.", tags: ["Eco-Certified", "Carbon Offset", "Community Impact"], badge: "Eco", badgeIcon: "🌿", image: "", footer: "Conservation First", link: "/about#mission", ctaLabel: "Our Mission", iconType: "leaf" },
+  { id: 2, title: "Sustainable Safari Practices", description: "Every journey actively protects the ecosystems you visit. Carbon offset programs and direct community investment.", tags: ["Eco-Certified", "Carbon Offset", "Community Impact"], badge: "Eco", badgeIcon: "🌿", image: "https://i.pinimg.com/736x/4a/85/00/4a8500f4f31a3e9a11baa099fa0f9038.jpg", footer: "Conservation First", link: "/about#mission", ctaLabel: "Our Mission", iconType: "leaf" },
   { id: 3, title: "Fully Tailored Itineraries", description: "No two travelers are alike. We craft each journey from scratch to match your exact vision and travel style.", tags: ["Bespoke", "Flexible", "Curated"], badge: "Custom", badgeIcon: "✦", image: "https://i.pinimg.com/1200x/8f/9d/e8/8f9de8dad8e26fc74268e13f37149f92.jpg", footer: "Your Journey, Your Rules", link: "/packages", ctaLabel: "View Packages", iconType: "map" },
   { id: 4, title: "Authentic Cultural Immersion", description: "Beyond wildlife — share meals with Maasai elders, visit gorilla conservation projects, witness living traditions.", tags: ["Cultural", "Authentic", "Immersive"], badge: "Unique", badgeIcon: "🏛", image: "https://i.pinimg.com/736x/e1/5b/9e/e15b9ef8fe7dfae13d170068d8d3008e.jpg", footer: "Real Connections", link: "/destinations", ctaLabel: "Explore", iconType: "heart" },
   { id: 5, title: "Seamless End-to-End Service", description: "From first enquiry to final transfer. 24/7 in-country support means no detail goes unmanaged.", tags: ["24/7 Support", "Logistics", "Hassle-Free"], badge: "Premium", badgeIcon: "💎", image: "https://i.pinimg.com/1200x/19/8d/ab/198dab499b95cff53e2a48a8ba02c673.jpg", footer: "Always by Your Side", link: "/contact", ctaLabel: "Contact Us", iconType: "shield" },
@@ -646,12 +646,12 @@ const WHY_CARDS = [
 
 const WhyCardIcon = ({ type, size = 48 }) => {
   const icons = {
-    compass: (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>),
-    leaf: (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>),
-    map: (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>),
-    heart: (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>),
-    shield: (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>),
-    star: (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>),
+    compass: (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" /></svg>),
+    leaf: (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z" /><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12" /></svg>),
+    map: (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" /><line x1="9" y1="3" x2="9" y2="18" /><line x1="15" y1="6" x2="15" y2="21" /></svg>),
+    heart: (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" /></svg>),
+    shield: (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" /></svg>),
+    star: (<svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>),
   };
   return icons[type] || icons.compass;
 };
@@ -695,7 +695,7 @@ const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
       } catch { setVideoError(true); }
     };
     const t = setTimeout(init, 300);
-    return () => { clearTimeout(t); if (playerRef.current) { try { playerRef.current.destroy(); } catch {} playerRef.current = null; } };
+    return () => { clearTimeout(t); if (playerRef.current) { try { playerRef.current.destroy(); } catch { } playerRef.current = null; } };
   }, [isOpen, currentIdx, playlist]);
 
   const playNext = useCallback(() => setCurrentIdx((p) => (p + 1) % playlist.length), [playlist.length]);
@@ -771,7 +771,7 @@ const InlineVideoPlayer = ({ playlist, startIndex = 0 }) => {
   useEffect(() => { setCurrentIdx(startIndex); }, [startIndex]);
   useEffect(() => {
     setIsReady(false); setVideoError(false);
-    const destroy = () => { if (playerRef.current) { try { playerRef.current.destroy(); } catch {} playerRef.current = null; } };
+    const destroy = () => { if (playerRef.current) { try { playerRef.current.destroy(); } catch { } playerRef.current = null; } };
     const init = () => {
       if (!containerRef.current || !window.YT) return;
       destroy();
@@ -821,13 +821,13 @@ const IntroMediaPanel = () => {
       <div className="intro-media-grid">
         <div className="intro-media-float-badge intro-media-float-badge--top">
           <div className="intro-float-icon intro-float-icon--green">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" /></svg>
           </div>
           <div className="intro-float-text"><span className="intro-float-title">100% Trusted</span><span className="intro-float-sub">Verified local partners</span></div>
         </div>
         <div className="intro-media-float-badge intro-media-float-badge--bottom">
           <div className="intro-float-icon intro-float-icon--amber">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
           </div>
           <div className="intro-float-text"><span className="intro-float-title">4.9★ Rated</span><span className="intro-float-sub">500+ happy travellers</span></div>
         </div>
@@ -996,7 +996,7 @@ const WhyCard = ({ card, index }) => {
       </div>
       <div className="why-card-footer">
         <div className="why-card-footer-left"><div className="why-card-footer-avatar">{card.footer.charAt(0)}</div><span style={{ fontWeight: 600, fontSize: ".68rem" }}>{card.footer}</span></div>
-        <span className="why-card-cta">{card.ctaLabel}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span>
+        <span className="why-card-cta">{card.ctaLabel}<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12" /><polyline points="12 5 19 12 12 19" /></svg></span>
       </div>
     </Link>
   );
@@ -1186,7 +1186,7 @@ const Home = () => {
   }, []);
 
   const handlePkgWishlist = useCallback((id) => {
-    setPkgWishlist((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); try { localStorage.setItem("altuvera_wishlist", JSON.stringify([...n])); } catch {} return n; });
+    setPkgWishlist((prev) => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); try { localStorage.setItem("altuvera_wishlist", JSON.stringify([...n])); } catch { } return n; });
   }, []);
 
   useEffect(() => { loadWishlist(); }, [loadWishlist]);
@@ -1208,7 +1208,7 @@ const Home = () => {
   }, [destLoading, setIsLoading]);
 
   const featureBlocks = useMemo(() => [
-    { title: "Encounter Mountain Gorillas & Explore the Land of a Thousand Hills", description: "Rwanda offers one of Africa's most exclusive wildlife experiences. Trek through the misty forests of Volcanoes National Park to meet endangered mountain gorillas.", bullets: ["World-famous mountain gorilla trekking", "Nyungwe Forest canopy walk & chimpanzee tracking", "Big Five safaris in Akagera National Park", "Luxury eco-lodges with expert local guides"], ctaLabel: "Explore Rwanda", link: "/country/rwanda", images: ["https://i.pinimg.com/1200x/5d/1a/90/5d1a90a3a3f9ad6bcddf570344ff2fc4.jpg", "https://i.pinimg.com/1200x/73/f0/ee/73f0ee6d0c2fab1906c16ce20c251f56.jpg", "https://i.pinimg.com/736x/46/fe/c8/46fec850388090f1f6bbdd4246b9a049.jpg"] },
+    { title: "Encounter Mountain Gorillas & Explore the Land of a Thousand Hills", description: "Rwanda offers one of Africa's most exclusive wildlife experiences. Trek through the misty forests of Volcanoes National Park to meet endangered mountain gorillas.", bullets: ["World-famous mountain gorilla trekking", "Nyungwe Forest canopy walk & chimpanzee tracking", "Big Five safaris in Akagera National Park", "Luxury eco-lodges with expert local guides"], ctaLabel: "Explore Rwanda", link: "/country/rwanda", images: ["https://i.pinimg.com/1200x/5d/1a/90/5d1a90a3a3f9ad6bcddf570344ff2fc4.jpg", "https://i.pinimg.com/736x/e0/83/c3/e083c397d1853489522b905f9da8ff52.jpg", "https://i.pinimg.com/736x/46/fe/c8/46fec850388090f1f6bbdd4246b9a049.jpg"] },
     { title: "Witness the Great Migration & Conquer Africa's Highest Peak", description: "From the endless plains of the Serengeti to the snow-capped summit of Mount Kilimanjaro, Tanzania delivers bucket-list adventures.", bullets: ["The Great Wildebeest Migration in Serengeti", "Mount Kilimanjaro climbing expeditions", "Ngorongoro Crater Big Five safaris", "Zanzibar beach escapes & cultural tours"], ctaLabel: "Explore Tanzania", link: "/country/tanzania", images: ["https://i.pinimg.com/1200x/d7/c2/55/d7c255030d2c381093145fc8409270b0.jpg", "https://i.pinimg.com/1200x/7c/5b/d9/7c5bd9c6303f68eec25ff948f1b0f11e.jpg", "https://i.pinimg.com/1200x/7b/7f/33/7b7f33e40af1ff8d756c610703f32f6e.jpg"] },
     { title: "Experience Legendary Safaris & Coastal Paradise", description: "Kenya combines iconic wildlife encounters with spectacular landscapes and pristine Indian Ocean beaches.", bullets: ["Maasai Mara Great Migration safaris", "Amboseli elephant encounters with Kilimanjaro views", "Sunrise hot-air balloon adventures", "Diani Beach & Swahili coastal experiences"], ctaLabel: "Explore Kenya", link: "/country/kenya", images: ["https://i.pinimg.com/1200x/82/1c/3c/821c3c64c9ef926ad79900314de0ea9b.jpg", "https://i.pinimg.com/1200x/0f/c4/6f/0fc46fc0a5e286b126ab6e78697c5e5f.jpg", "https://i.pinimg.com/736x/cc/5f/49/cc5f496af04db30b07c3559d5a708cb7.jpg"] },
   ], []);

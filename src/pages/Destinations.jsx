@@ -1,16 +1,15 @@
 // src/pages/Destinations.jsx
 // ============================================================
-// Destinations Page — Clean, Focused, Center-Aligned Hero
-// Matches Explore hero styling with center alignment + fog
+// Destinations Page — Centered hero, scatter-merge card animations
 // ============================================================
 import React, {
   useState, useEffect, useCallback, useRef,
 } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  FiArrowRight, FiMapPin, FiCompass, FiGlobe,
+  FiArrowRight, FiMapPin, FiGlobe,
   FiCalendar, FiChevronLeft, FiChevronRight,
-  FiTrendingUp, FiMail,
+  FiTrendingUp, FiMail, FiChevronDown,
 } from 'react-icons/fi';
 import SEO from '../components/common/SEO';
 import AnimatedSection from '../components/common/AnimatedSection';
@@ -49,6 +48,34 @@ function usePopularDestinations(limit = 14) {
     return () => { cancelled = true; };
   }, [limit]);
   return { data, loading };
+}
+
+/* ═══════════════════════════════════════════════════════════
+   USE IN VIEW — for scroll-triggered animations
+═══════════════════════════════════════════════════════════ */
+function useInView(options = {}) {
+  const ref = useRef(null);
+  const [inView, setInView] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.15, rootMargin: '0px 0px -60px 0px', ...options },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return [ref, inView];
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -105,6 +132,7 @@ const CSS = `
   --dv-bg:       #f8fafb;
   --dv-radius:   22px;
   --dv-ease:     cubic-bezier(0.22, 1, 0.36, 1);
+  --dv-ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 @keyframes dv-fade-up {
@@ -118,10 +146,6 @@ const CSS = `
 @keyframes dv-ken-burns {
   0%   { transform: scale(1.0); }
   100% { transform: scale(1.1); }
-}
-@keyframes dv-progress {
-  from { transform: scaleX(0); }
-  to   { transform: scaleX(1); }
 }
 @keyframes dv-shimmer {
   0%   { background-position: 200% 0; }
@@ -150,6 +174,16 @@ const CSS = `
   50%  { transform: translateX(-5%) translateY(0); }
   100% { transform: translateX(5%) translateY(2%); }
 }
+@keyframes dv-scroll-bounce {
+  0%, 100% { transform: translateY(0); opacity: 0.7; }
+  50%       { transform: translateY(6px); opacity: 1; }
+}
+@keyframes dv-scroll-line {
+  0%   { transform: scaleY(0); transform-origin: top; }
+  40%  { transform: scaleY(1); transform-origin: top; }
+  60%  { transform: scaleY(1); transform-origin: bottom; }
+  100% { transform: scaleY(0); transform-origin: bottom; }
+}
 
 *, *::before, *::after { box-sizing: border-box; }
 
@@ -161,19 +195,18 @@ const CSS = `
 }
 
 /* ═════════════════════════════════════════════════
-   HERO  — center-aligned, fog, matching Explore fonts
+   HERO  — medium-height, centred, with fog
 ═════════════════════════════════════════════════ */
 .dv-hero {
   position: relative;
-  height: 100vh; height: 100dvh;
-  min-height: 540px; max-height: 980px;
+  height: clamp(460px, 65vh, 640px);
   overflow: hidden;
   background: var(--dv-forest);
 }
 .dv-hero__slide {
   position: absolute; inset: 0;
   opacity: 0;
-  transition: opacity 1.8s cubic-bezier(0.4,0,0.2,1);
+  transition: opacity 1.6s cubic-bezier(0.4,0,0.2,1);
   z-index: 0;
 }
 .dv-hero__slide--on { opacity: 1; z-index: 1; }
@@ -183,7 +216,7 @@ const CSS = `
 }
 .dv-hero__slide--on img { animation: dv-ken-burns 13s ease-out forwards; }
 
-/* Fog layers */
+/* Fog */
 .dv-hero__fog {
   position: absolute; inset: 0;
   z-index: 2; pointer-events: none;
@@ -199,12 +232,12 @@ const CSS = `
 .dv-hero__fog-layer--1 {
   background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800'%3E%3Cfilter id='f'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.008' numOctaves='2' seed='7'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.9 0'/%3E%3CfeGaussianBlur stdDeviation='30'/%3E%3C/filter%3E%3Crect width='1200' height='800' filter='url(%23f)' opacity='0.7'/%3E%3C/svg%3E");
   animation: dv-fog-drift 32s ease-in-out infinite;
-  opacity: 0.45;
+  opacity: 0.42;
 }
 .dv-hero__fog-layer--2 {
   background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800'%3E%3Cfilter id='f2'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.012' numOctaves='3' seed='19'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.7 0'/%3E%3CfeGaussianBlur stdDeviation='40'/%3E%3C/filter%3E%3Crect width='1200' height='800' filter='url(%23f2)' opacity='0.6'/%3E%3C/svg%3E");
   animation: dv-fog-drift-slow 48s ease-in-out infinite;
-  opacity: 0.35;
+  opacity: 0.33;
 }
 .dv-hero__fog-bottom {
   position: absolute;
@@ -213,9 +246,9 @@ const CSS = `
   z-index: 2;
   background: linear-gradient(
     to top,
-    rgba(255,255,255,0.32) 0%,
-    rgba(255,255,255,0.14) 40%,
-    rgba(255,255,255,0.05) 70%,
+    rgba(255,255,255,0.3) 0%,
+    rgba(255,255,255,0.12) 40%,
+    rgba(255,255,255,0.04) 70%,
     transparent 100%
   );
   pointer-events: none;
@@ -227,10 +260,10 @@ const CSS = `
   position: absolute; inset: 0; z-index: 3; pointer-events: none;
   background: linear-gradient(
     180deg,
-    rgba(2,44,34,0.28) 0%,
-    rgba(2,44,34,0.10) 45%,
-    rgba(2,44,34,0.55) 82%,
-    rgba(2,44,34,0.92) 100%
+    rgba(2,44,34,0.30) 0%,
+    rgba(2,44,34,0.15) 45%,
+    rgba(2,44,34,0.60) 82%,
+    rgba(2,44,34,0.85) 100%
   );
 }
 .dv-hero__ov-radial {
@@ -246,7 +279,7 @@ const CSS = `
   background-image: url("data:image/svg+xml,%3Csvg width='200' height='200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='0.75' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
 }
 
-/* HERO BODY — CENTER ALIGNED */
+/* HERO BODY — centered, medium height */
 .dv-hero__body {
   position: absolute; inset: 0; z-index: 5;
   display: flex; flex-direction: column;
@@ -254,11 +287,12 @@ const CSS = `
   align-items: center;
   text-align: center;
   padding: 0 clamp(20px, 5vw, 60px);
+  padding-bottom: 60px;
 }
 .dv-hero__eyebrow {
   display: inline-flex; align-items: center; gap: 10px;
-  margin-bottom: clamp(14px,2vw,22px);
-  opacity: 0; animation: dv-fade-up 0.85s var(--dv-ease) 0.05s forwards;
+  margin-bottom: clamp(12px,1.8vw,20px);
+  opacity: 0; animation: dv-fade-up 0.8s var(--dv-ease) 0.05s forwards;
 }
 .dv-hero__ey-line {
   height: 1.5px; border-radius: 1px;
@@ -274,12 +308,12 @@ const CSS = `
 }
 .dv-hero__title {
   font-family: 'DM Serif Display', Georgia, serif;
-  font-size: clamp(40px,7vw,88px);
-  font-weight: 400; line-height: 1.02;
+  font-size: clamp(34px,5.5vw,66px);
+  font-weight: 400; line-height: 1.05;
   color: #fff;
   margin: 0; letter-spacing: -0.03em;
-  max-width: 900px;
-  opacity: 0; animation: dv-fade-up 0.9s var(--dv-ease) 0.14s forwards;
+  max-width: 860px;
+  opacity: 0; animation: dv-fade-up 0.85s var(--dv-ease) 0.14s forwards;
 }
 .dv-hero__title em {
   font-style: italic;
@@ -288,19 +322,19 @@ const CSS = `
 }
 .dv-hero__desc {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: clamp(14px,1.35vw,17px);
-  color: rgba(255,255,255,0.75);
-  line-height: 1.78;
-  max-width: 620px;
-  margin: clamp(14px,2vw,22px) auto clamp(22px,3vw,36px);
+  font-size: clamp(13px,1.3vw,16px);
+  color: rgba(255,255,255,0.76);
+  line-height: 1.75;
+  max-width: 580px;
+  margin: clamp(14px,2vw,20px) auto clamp(18px,2.5vw,28px);
   font-weight: 300;
-  opacity: 0; animation: dv-fade-up 0.9s var(--dv-ease) 0.26s forwards;
+  opacity: 0; animation: dv-fade-up 0.85s var(--dv-ease) 0.26s forwards;
 }
 .dv-hero__location {
   display: inline-flex; align-items: center; gap: 10px;
   justify-content: center;
-  margin-bottom: clamp(24px,3vw,36px);
-  opacity: 0; animation: dv-fade-up 0.9s var(--dv-ease) 0.38s forwards;
+  margin-bottom: clamp(20px,2.6vw,30px);
+  opacity: 0; animation: dv-fade-up 0.85s var(--dv-ease) 0.38s forwards;
 }
 .dv-hero__loc-divider {
   width: clamp(14px,1.8vw,22px); height: 1px;
@@ -334,35 +368,35 @@ const CSS = `
 
 /* Hero action buttons */
 .dv-hero__actions {
-  display: flex; gap: 14px; flex-wrap: wrap;
+  display: flex; gap: 12px; flex-wrap: wrap;
   justify-content: center;
-  opacity: 0; animation: dv-fade-up 0.9s var(--dv-ease) 0.48s forwards;
+  opacity: 0; animation: dv-fade-up 0.85s var(--dv-ease) 0.48s forwards;
 }
 .dv-hero__btn-primary {
   display: inline-flex; align-items: center; gap: 9px;
-  padding: clamp(13px,1.4vw,16px) clamp(24px,2.6vw,36px);
+  padding: clamp(12px,1.3vw,15px) clamp(22px,2.5vw,32px);
   border-radius: 14px; border: none;
   background: linear-gradient(135deg,#10b981,#059669);
   color: #fff;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-weight: 700; font-size: clamp(13px,1.2vw,15px);
+  font-weight: 700; font-size: clamp(13px,1.2vw,14.5px);
   cursor: pointer;
-  box-shadow: 0 8px 28px rgba(16,185,129,0.42);
+  box-shadow: 0 8px 26px rgba(16,185,129,0.4);
   transition: all 0.35s var(--dv-ease); text-decoration: none;
 }
 .dv-hero__btn-primary:hover {
   transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 14px 40px rgba(16,185,129,0.55);
+  box-shadow: 0 14px 38px rgba(16,185,129,0.55);
 }
 .dv-hero__btn-ghost {
   display: inline-flex; align-items: center; gap: 9px;
-  padding: clamp(13px,1.4vw,16px) clamp(22px,2.4vw,32px);
+  padding: clamp(12px,1.3vw,15px) clamp(20px,2.3vw,30px);
   border-radius: 14px;
   border: 1.5px solid rgba(255,255,255,0.25);
   background: rgba(255,255,255,0.09);
   backdrop-filter: blur(12px); color: #fff;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-weight: 700; font-size: clamp(13px,1.2vw,15px);
+  font-weight: 700; font-size: clamp(13px,1.2vw,14.5px);
   cursor: pointer;
   transition: all 0.32s ease; text-decoration: none;
 }
@@ -372,60 +406,57 @@ const CSS = `
   transform: translateY(-2px);
 }
 
-/* Dots + Progress + Scroll hint */
+/* Slide dots (centered) */
 .dv-hero__dots {
   position: absolute;
-  bottom: clamp(24px,3.5vh,44px);
+  bottom: clamp(58px, 8vh, 78px);
   left: 50%;
   transform: translateX(-50%);
   z-index: 6; display: flex; gap: 8px;
 }
 .dv-hero__dot {
   width: 7px; height: 7px; border-radius: 4px;
-  background: rgba(255,255,255,0.28);
+  background: rgba(255,255,255,0.3);
   border: none; padding: 0; cursor: pointer;
   transition: all 0.5s var(--dv-ease);
 }
 .dv-hero__dot--on {
-  width: 28px; background: rgba(255,255,255,0.9);
+  width: 28px; background: rgba(255,255,255,0.92);
   box-shadow: 0 0 8px rgba(255,255,255,0.35);
 }
-.dv-hero__prog {
-  position: absolute; bottom: 0; left: 0; right: 0;
-  height: 3px; z-index: 6;
-  background: rgba(255,255,255,0.06);
-}
-.dv-hero__prog-fill {
-  height: 100%;
-  background: linear-gradient(90deg,#34d399,#10b981);
-  transform-origin: left;
-  animation: dv-progress 8s linear forwards;
-}
+
+/* Scroll-down link (centered, bottom) */
 .dv-hero__scroll {
   position: absolute;
-  bottom: clamp(20px,3.8vh,46px);
-  right: clamp(24px,4vw,60px);
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: clamp(14px, 2.5vh, 24px);
   z-index: 6;
-  display: flex; flex-direction: column; align-items: center; gap: 6px;
-  color: rgba(255,255,255,0.42);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  color: rgba(255,255,255,0.7);
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 10px; font-weight: 700;
   letter-spacing: 2.5px; text-transform: uppercase;
   background: none; border: none; cursor: pointer;
+  padding: 6px 10px;
   transition: color 0.3s ease;
+  opacity: 0; animation: dv-fade-up 0.9s var(--dv-ease) 0.6s forwards;
 }
-.dv-hero__scroll:hover { color: rgba(255,255,255,0.85); }
+.dv-hero__scroll:hover { color: #fff; }
 .dv-hero__scroll-line {
-  width: 1px; height: 36px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.4), transparent);
-  animation: dv-progress 2.5s ease-in-out infinite alternate;
+  width: 1px; height: 26px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0.15));
+  animation: dv-scroll-line 2s ease-in-out infinite;
+}
+.dv-hero__scroll-icon {
+  animation: dv-scroll-bounce 2s ease-in-out infinite;
 }
 
 /* ═════════════════════════════════════════════════
-   SECTIONS  — tight vertical spacing
+   SECTIONS  — tight spacing
 ═════════════════════════════════════════════════ */
 .dv-section {
-  padding: clamp(32px,4vw,56px) clamp(16px,5vw,56px);
+  padding: clamp(36px,4.5vw,64px) clamp(16px,5vw,56px);
 }
 .dv-section--alt   { background: var(--dv-surface); }
 .dv-section--forest {
@@ -450,7 +481,6 @@ const CSS = `
 }
 .dv-inner { max-width: 1400px; margin: 0 auto; position: relative; z-index: 1; }
 
-/* Section header — no badges */
 .dv-section-head {
   text-align: center; max-width: 780px;
   margin: 0 auto clamp(24px,3vw,36px);
@@ -480,7 +510,7 @@ const CSS = `
 .dv-section-desc--left { margin: 0; }
 
 /* ═════════════════════════════════════════════════
-   COUNTRIES GRID
+   COUNTRY CARDS  — centred content + scatter-merge animation
 ═════════════════════════════════════════════════ */
 .dv-countries-grid {
   display: grid;
@@ -491,13 +521,13 @@ const CSS = `
   position: relative; border-radius: var(--dv-radius);
   overflow: hidden; background: var(--dv-forest);
   cursor: pointer; text-decoration: none; color: #fff;
-  display: block; min-height: 420px;
-  transition: all 0.5s var(--dv-ease);
+  display: block; min-height: 440px;
+  transition: transform 0.55s var(--dv-ease), box-shadow 0.55s var(--dv-ease);
   box-shadow: 0 4px 24px rgba(0,0,0,0.08);
 }
 .dv-country-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 24px 56px rgba(5,150,105,0.18), 0 8px 24px rgba(0,0,0,0.1);
+  transform: translateY(-8px);
+  box-shadow: 0 24px 56px rgba(5,150,105,0.2), 0 8px 24px rgba(0,0,0,0.1);
 }
 .dv-country-card__img-wrap {
   position: absolute; inset: 0; overflow: hidden;
@@ -505,26 +535,100 @@ const CSS = `
 .dv-country-card__img {
   width: 100%; height: 100%;
   object-fit: cover; object-position: center;
-  transition: transform 8s cubic-bezier(0.25,0,0.15,1);
+  transition: transform 8s cubic-bezier(0.25,0,0.15,1), filter 0.55s ease;
+  filter: brightness(0.98) saturate(1.05);
 }
-.dv-country-card:hover .dv-country-card__img { transform: scale(1.06); }
+.dv-country-card:hover .dv-country-card__img {
+  transform: scale(1.08);
+  filter: brightness(1.05) saturate(1.15);
+}
 .dv-country-card__overlay {
   position: absolute; inset: 0;
   background: linear-gradient(
     160deg,
-    rgba(2,44,34,0.25) 0%,
-    rgba(2,44,34,0.1) 35%,
-    rgba(2,44,34,0.68) 100%
+    rgba(2,44,34,0.30) 0%,
+    rgba(2,44,34,0.15) 35%,
+    rgba(2,44,34,0.72) 100%
   );
   z-index: 1;
 }
 .dv-country-card__content {
   position: relative; z-index: 2;
   display: flex; flex-direction: column;
-  justify-content: flex-end;
+  justify-content: center;      /* ← vertically centred */
+  align-items: center;           /* ← horizontally centred */
+  text-align: center;
   height: 100%;
   padding: clamp(22px,3vw,36px);
 }
+
+/* Scattered → merged element animations */
+.dv-scatter {
+  opacity: 0;
+  transition:
+    opacity 0.7s var(--dv-ease),
+    transform 0.9s var(--dv-ease-bounce),
+    filter 0.7s var(--dv-ease);
+  will-change: opacity, transform, filter;
+  filter: blur(4px);
+}
+
+.dv-country-card:not(.dv-in-view) .dv-country-card__flag {
+  opacity: 0;
+  transform: translate(-50px, -60px) rotate(-25deg) scale(0.5);
+  filter: blur(6px);
+}
+.dv-country-card:not(.dv-in-view) .dv-country-card__badge {
+  opacity: 0;
+  transform: translate(60px, -50px) rotate(20deg) scale(0.5);
+  filter: blur(6px);
+}
+.dv-country-card:not(.dv-in-view) .dv-country-card__name {
+  opacity: 0;
+  transform: translateY(45px) scale(0.85);
+  filter: blur(6px);
+}
+.dv-country-card:not(.dv-in-view) .dv-country-card__region {
+  opacity: 0;
+  transform: translateX(-55px) scale(0.8);
+  filter: blur(6px);
+}
+.dv-country-card:not(.dv-in-view) .dv-country-card__desc {
+  opacity: 0;
+  transform: translateX(55px) scale(0.9);
+  filter: blur(6px);
+}
+.dv-country-card:not(.dv-in-view) .dv-country-card__btn {
+  opacity: 0;
+  transform: translateY(55px) scale(0.7);
+  filter: blur(6px);
+}
+
+/* When card enters view — everything merges into place */
+.dv-country-card.dv-in-view .dv-country-card__flag,
+.dv-country-card.dv-in-view .dv-country-card__badge,
+.dv-country-card.dv-in-view .dv-country-card__name,
+.dv-country-card.dv-in-view .dv-country-card__region,
+.dv-country-card.dv-in-view .dv-country-card__desc,
+.dv-country-card.dv-in-view .dv-country-card__btn {
+  opacity: 1;
+  transform: translate(0, 0) rotate(0) scale(1);
+  filter: blur(0);
+  transition:
+    opacity 0.75s var(--dv-ease),
+    transform 0.9s var(--dv-ease-bounce),
+    filter 0.6s var(--dv-ease);
+}
+
+/* Staggered delays for merge */
+.dv-country-card.dv-in-view .dv-country-card__flag   { transition-delay: 0.05s; }
+.dv-country-card.dv-in-view .dv-country-card__badge  { transition-delay: 0.12s; }
+.dv-country-card.dv-in-view .dv-country-card__name   { transition-delay: 0.22s; }
+.dv-country-card.dv-in-view .dv-country-card__region { transition-delay: 0.32s; }
+.dv-country-card.dv-in-view .dv-country-card__desc   { transition-delay: 0.42s; }
+.dv-country-card.dv-in-view .dv-country-card__btn    { transition-delay: 0.52s; }
+
+/* Element styling */
 .dv-country-card__flag {
   position: absolute; top: 18px; left: 18px; z-index: 3;
   width: 44px; height: 44px; border-radius: 12px;
@@ -542,7 +646,7 @@ const CSS = `
 .dv-country-card__badge {
   position: absolute; top: 18px; right: 18px; z-index: 3;
   padding: 5px 12px; border-radius: 999px;
-  background: rgba(16,185,129,0.88);
+  background: rgba(16,185,129,0.9);
   backdrop-filter: blur(8px);
   color: #fff;
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
@@ -556,18 +660,18 @@ const CSS = `
   line-height: 1.12; letter-spacing: -0.02em;
 }
 .dv-country-card__region {
-  display: flex; align-items: center; gap: 6px;
-  color: rgba(255,255,255,0.6);
+  display: inline-flex; align-items: center; gap: 6px;
+  color: rgba(255,255,255,0.65);
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: 12px;
-  font-weight: 600; margin-bottom: 12px;
+  font-weight: 600; margin-bottom: 14px;
   letter-spacing: 0.02em;
 }
 .dv-country-card__desc {
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-size: clamp(13px,1.15vw,14.5px);
-  line-height: 1.7; color: rgba(255,255,255,0.75);
-  margin: 0 0 20px; max-width: 460px;
+  line-height: 1.7; color: rgba(255,255,255,0.78);
+  margin: 0 0 22px; max-width: 380px;
   display: -webkit-box;
   -webkit-line-clamp: 3; -webkit-box-orient: vertical;
   overflow: hidden;
@@ -580,17 +684,17 @@ const CSS = `
   font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
   font-weight: 700; font-size: 13.5px;
   cursor: pointer;
-  box-shadow: 0 6px 22px rgba(16,185,129,0.35);
-  transition: all 0.3s var(--dv-ease);
-  text-decoration: none; width: fit-content;
+  box-shadow: 0 6px 22px rgba(16,185,129,0.4);
+  transition: transform 0.3s var(--dv-ease), box-shadow 0.3s var(--dv-ease);
+  text-decoration: none;
 }
 .dv-country-card__btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 32px rgba(16,185,129,0.5);
+  box-shadow: 0 10px 32px rgba(16,185,129,0.55);
 }
 .dv-country-skel {
   border-radius: var(--dv-radius); overflow: hidden;
-  min-height: 420px;
+  min-height: 440px;
   background: linear-gradient(90deg,#e2e8f0 0%,#f1f5f9 40%,#e2e8f0 80%);
   background-size: 200%;
   animation: dv-shimmer 1.6s ease infinite;
@@ -704,34 +808,40 @@ const CSS = `
    RESPONSIVE
 ═════════════════════════════════════════════════ */
 @media (max-width: 1024px) {
-  .dv-hero { min-height: 500px; }
+  .dv-hero { height: clamp(440px, 60vh, 560px); }
 }
 @media (max-width: 768px) {
-  .dv-hero { min-height: 460px; max-height: 720px; }
+  .dv-hero { height: clamp(420px, 55vh, 520px); }
   .dv-hero__btn-ghost { display: none; }
-  .dv-hero__scroll { display: none; }
   .dv-countries-grid { grid-template-columns: repeat(auto-fill,minmax(min(100%,280px),1fr)); }
-  .dv-country-card { min-height: 380px; }
+  .dv-country-card { min-height: 400px; }
   .dv-section-head--split { flex-direction: column; align-items: flex-start; }
 }
 @media (max-width: 640px) {
-  .dv-hero { height: 88vh; height: 88dvh; min-height: 440px; }
-  .dv-hero__body { padding: 0 20px; }
-  .dv-hero__dots { bottom: 20px; }
+  .dv-hero { height: clamp(400px, 60vh, 480px); }
+  .dv-hero__body { padding: 0 20px; padding-bottom: 70px; }
   .dv-countries-grid { grid-template-columns: 1fr; }
-  .dv-country-card { min-height: 340px; }
+  .dv-country-card { min-height: 360px; }
   .dv-slider__item { flex: 0 0 clamp(240px,80vw,300px); }
   .dv-cta__buttons { flex-direction: column; align-items: center; }
   .dv-cta__btn-primary,
   .dv-cta__btn-secondary { width: 100%; max-width: 320px; justify-content: center; }
 }
 @media (max-width: 380px) {
-  .dv-hero__title { font-size: clamp(32px,10vw,52px); }
+  .dv-hero__title { font-size: clamp(28px,8.5vw,44px); }
 }
 @media (prefers-reduced-motion: reduce) {
   *,*::before,*::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
+  }
+  .dv-country-card:not(.dv-in-view) .dv-country-card__flag,
+  .dv-country-card:not(.dv-in-view) .dv-country-card__badge,
+  .dv-country-card:not(.dv-in-view) .dv-country-card__name,
+  .dv-country-card:not(.dv-in-view) .dv-country-card__region,
+  .dv-country-card:not(.dv-in-view) .dv-country-card__desc,
+  .dv-country-card:not(.dv-in-view) .dv-country-card__btn {
+    opacity: 1; transform: none; filter: none;
   }
 }
 `;
@@ -779,7 +889,7 @@ function LocationPin({ size = 17 }) {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   HERO BANNER  — centered
+   HERO BANNER  — centered, medium-height, scroll link
 ═══════════════════════════════════════════════════════════ */
 function HeroBanner() {
   const [active, setActive]   = useState(0);
@@ -802,6 +912,10 @@ function HeroBanner() {
     clearInterval(timerRef.current);
     timerRef.current = setInterval(advance, 8000);
   }, [advance]);
+
+  const scrollToCountries = () => {
+    document.getElementById('countries')?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const slide = HERO_SLIDES[active];
 
@@ -856,7 +970,7 @@ function HeroBanner() {
         </div>
       </div>
 
-      {/* Dots (centered bottom) */}
+      {/* Dots */}
       <div className="dv-hero__dots">
         {HERO_SLIDES.map((_, i) => (
           <button
@@ -868,27 +982,22 @@ function HeroBanner() {
         ))}
       </div>
 
-      {/* Progress bar */}
-      <div className="dv-hero__prog">
-        <div className="dv-hero__prog-fill" key={`p-${animKey}`} />
-      </div>
-
-      {/* Scroll hint */}
-      <button className="dv-hero__scroll" onClick={() => {
-        document.getElementById('countries')?.scrollIntoView({ behavior: 'smooth' });
-      }}>
+      {/* Scroll-down link (centered bottom) */}
+      <button className="dv-hero__scroll" onClick={scrollToCountries} aria-label="Scroll to countries">
+        <span>Scroll</span>
         <div className="dv-hero__scroll-line" />
-        Scroll
+        <FiChevronDown size={16} className="dv-hero__scroll-icon" />
       </button>
     </section>
   );
 }
 
 /* ═══════════════════════════════════════════════════════════
-   COUNTRY CARD
+   COUNTRY CARD  — with scatter → merge animation
 ═══════════════════════════════════════════════════════════ */
-function CountryCard({ country, index }) {
+function CountryCard({ country }) {
   const navigate  = useNavigate();
+  const [ref, inView] = useInView();
   const slug      = getCountrySlug(country);
   const flag      = country.flagUrl || country.flag_url || country.flag || '';
   const isImg     = flag && (flag.startsWith('http') || flag.includes('/'));
@@ -899,11 +1008,11 @@ function CountryCard({ country, index }) {
 
   return (
     <div
-      className="dv-country-card"
+      ref={ref}
+      className={`dv-country-card ${inView ? 'dv-in-view' : ''}`}
       onClick={() => navigate(`/country/${slug}`)}
       role="button" tabIndex={0}
       onKeyDown={e => e.key === 'Enter' && navigate(`/country/${slug}`)}
-      style={{ animationDelay: `${Math.min(index, 5) * 0.06}s`, animation: 'dv-fade-up 0.5s var(--dv-ease) both' }}
     >
       <div className="dv-country-card__img-wrap">
         <img className="dv-country-card__img" src={heroImg} alt={country.name} loading="lazy" draggable={false} />
@@ -969,7 +1078,7 @@ function CountriesSection() {
           </div>
         ) : (
           <div className="dv-countries-grid">
-            {countries.map((c, i) => <CountryCard key={c.id || c.slug} country={c} index={i} />)}
+            {countries.map(c => <CountryCard key={c.id || c.slug} country={c} />)}
           </div>
         )}
       </div>
@@ -1109,11 +1218,7 @@ export default function Destinations() {
 
       <div className="dv-page">
         <HeroBanner />
-
-        {/* COUNTRIES */}
         <CountriesSection />
-
-        {/* POPULAR SLIDER */}
         <PopularSlideshow />
 
         {/* FINAL CTA */}

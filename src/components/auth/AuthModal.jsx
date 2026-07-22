@@ -30,6 +30,7 @@ import {
   HiLocationMarker,
   HiOfficeBuilding,
   HiPencil,
+  HiQuestionMarkCircle,
 } from "react-icons/hi";
 import { FiGithub, FiZap } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
@@ -93,6 +94,8 @@ const MAX_BIO = 300;
 const MAX_FILE = 10 * 1024 * 1024;
 const CODE_TTL_LOGIN_REGISTER = 10 * 60;
 const CODE_TTL_RESEND = 15 * 60;
+
+const API_BASE = process.env.REACT_APP_API_URL || "/api/users";
 
 const ROLES = [
   { value: "user", label: "Traveler", icon: HiGlobe, desc: "Explore & discover", color: "#3b82f6" },
@@ -242,7 +245,6 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
       <div style={{ position: "absolute", inset: 0, zIndex: 20 }}
         className="flex flex-col justify-between p-6 sm:p-8"
       >
-        {/* Logo */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md p-1.5 ring-1 ring-white/20 flex items-center justify-center">
             <img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT}
@@ -256,7 +258,6 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
           </div>
         </div>
 
-        {/* Caption */}
         <div className="space-y-4">
           <div key={current} className="transition-all duration-500">
             <p className="text-emerald-400 text-xs font-semibold uppercase tracking-widest mb-1">
@@ -308,21 +309,19 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
 };
 
 /* ═══════════════════════════════════════════════════════════════
-   SHARED SUB-COMPONENTS  — ALL defined OUTSIDE AuthModal
-   so React never unmounts/remounts inputs on re-render
+   SHARED SUB-COMPONENTS
 ═══════════════════════════════════════════════════════════════ */
 
 const Spinner = ({ className = "" }) => (
   <div className={`w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin ${className}`} />
 );
 
-/* ── Generic text / email input ── */
 const InputField = ({
   id, label, icon: Icon, type = "text",
   value, onChange, onBlur,
   placeholder, error: fieldError, valid,
   required, autoComplete, refProp,
-  isEmail = false, hint,
+  isEmail = false, hint, disabled = false,
   ...props
 }) => (
   <div className="space-y-1.5">
@@ -343,7 +342,8 @@ const InputField = ({
           placeholder={placeholder}
           autoComplete={autoComplete || "email"}
           required={required}
-          className={`w-full h-12 pl-11 pr-10 rounded-xl border-2 bg-gray-50/50 text-gray-900 text-sm placeholder:text-gray-400 outline-none transition-all duration-200 ${fieldError
+          disabled={disabled}
+          className={`w-full h-12 pl-11 pr-10 rounded-xl border-2 bg-gray-50/50 text-gray-900 text-sm placeholder:text-gray-400 outline-none transition-all duration-200 ${disabled ? "opacity-60 cursor-not-allowed bg-gray-100" : ""} ${fieldError
               ? "border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-100"
               : valid
                 ? "border-emerald-300 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
@@ -360,7 +360,8 @@ const InputField = ({
           placeholder={placeholder}
           autoComplete={autoComplete}
           required={required}
-          className={`w-full h-12 pl-11 pr-10 rounded-xl border-2 bg-gray-50/50 text-gray-900 text-sm placeholder:text-gray-400 outline-none transition-all duration-200 ${fieldError
+          disabled={disabled}
+          className={`w-full h-12 pl-11 pr-10 rounded-xl border-2 bg-gray-50/50 text-gray-900 text-sm placeholder:text-gray-400 outline-none transition-all duration-200 ${disabled ? "opacity-60 cursor-not-allowed bg-gray-100" : ""} ${fieldError
               ? "border-red-300 focus:border-red-400 focus:ring-4 focus:ring-red-100"
               : valid
                 ? "border-emerald-300 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-100"
@@ -387,7 +388,6 @@ const InputField = ({
   </div>
 );
 
-/* ── Native select ── */
 const SelectField = ({
   id, label, icon: Icon,
   value, onChange, children,
@@ -420,7 +420,6 @@ const SelectField = ({
   </div>
 );
 
-/* ── Social auth buttons ── */
 const SocialButtons = ({
   mode,
   googleLoading, githubLoading, loading,
@@ -469,7 +468,6 @@ export default function AuthModal() {
     email: "", fullName: "", phone: "", bio: "",
     role: "user", keepSignedIn: persistSession,
     avatarFile: null, avatarPreview: "",
-    // Extended fields
     dateOfBirth: "", nationality: "",
     residenceCountry: "", preferredLanguage: "",
     profession: "", travelStyles: [],
@@ -492,10 +490,24 @@ export default function AuthModal() {
   const [codeExpired, setCodeExpired] = useState(false);
   const [professionOpen, setProfessionOpen] = useState(false);
 
+  /* ── Forgot Username state ── */
+  const [forgotUsernameMode, setForgotUsernameMode] = useState(false); // true = show forgot username UI
+  const [forgotStep, setForgotStep] = useState("email"); // "email" | "code" | "success"
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotEmailTouched, setForgotEmailTouched] = useState(false);
+  const [forgotCode, setForgotCode] = useState(emptyCode());
+  const [forgotCodeState, setForgotCodeState] = useState(""); // "" | "verifying" | "success" | "error"
+  const [forgotResendTimer, setForgotResendTimer] = useState(0);
+  const [forgotCodeExpiry, setForgotCodeExpiry] = useState(CODE_TTL_LOGIN_REGISTER);
+  const [forgotCodeExpired, setForgotCodeExpired] = useState(false);
+
   /* ── Refs ── */
   const codeRefs = useRef([]);
+  const forgotCodeRefs = useRef([]);
   const firstInputRef = useRef(null);
+  const forgotEmailRef = useRef(null);
   const expiryTimerRef = useRef(null);
+  const forgotExpiryTimerRef = useRef(null);
 
   /* ── Derived ── */
   const isLogin = modalView === "login";
@@ -507,6 +519,7 @@ export default function AuthModal() {
   const nameOk = form.fullName.trim().length >= 2;
   const bioOk = form.bio.trim().length <= MAX_BIO;
   const isBusy = googleLoading || githubLoading || loading;
+  const forgotEmailOk = EMAIL_RE.test(forgotEmail.trim());
 
   const currentRole = useMemo(
     () => ROLES.find((r) => r.value === form.role) || ROLES[0],
@@ -523,7 +536,7 @@ export default function AuthModal() {
 
   const todayStr = new Date().toISOString().split("T")[0];
 
-  /* ── Expiry countdown ── */
+  /* ── Expiry countdown (main verify) ── */
   const startExpiryCountdown = useCallback((seconds = CODE_TTL_LOGIN_REGISTER) => {
     if (expiryTimerRef.current) clearInterval(expiryTimerRef.current);
     setCodeExpiry(seconds);
@@ -547,7 +560,34 @@ export default function AuthModal() {
     setCodeExpired(false);
   }, []);
 
-  useEffect(() => () => { if (expiryTimerRef.current) clearInterval(expiryTimerRef.current); }, []);
+  /* ── Forgot username expiry countdown ── */
+  const startForgotExpiryCountdown = useCallback((seconds = CODE_TTL_LOGIN_REGISTER) => {
+    if (forgotExpiryTimerRef.current) clearInterval(forgotExpiryTimerRef.current);
+    setForgotCodeExpiry(seconds);
+    setForgotCodeExpired(false);
+    forgotExpiryTimerRef.current = setInterval(() => {
+      setForgotCodeExpiry((prev) => {
+        if (prev <= 1) {
+          clearInterval(forgotExpiryTimerRef.current);
+          forgotExpiryTimerRef.current = null;
+          setForgotCodeExpired(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, []);
+
+  const stopForgotExpiryCountdown = useCallback(() => {
+    if (forgotExpiryTimerRef.current) { clearInterval(forgotExpiryTimerRef.current); forgotExpiryTimerRef.current = null; }
+    setForgotCodeExpiry(CODE_TTL_LOGIN_REGISTER);
+    setForgotCodeExpired(false);
+  }, []);
+
+  useEffect(() => () => {
+    if (expiryTimerRef.current) clearInterval(expiryTimerRef.current);
+    if (forgotExpiryTimerRef.current) clearInterval(forgotExpiryTimerRef.current);
+  }, []);
 
   /* ── Field helper ── */
   const set = useCallback((field, val) => {
@@ -566,9 +606,23 @@ export default function AuthModal() {
     }));
   }, []);
 
+  const resetForgotUsername = useCallback(() => {
+    setForgotUsernameMode(false);
+    setForgotStep("email");
+    setForgotEmail("");
+    setForgotEmailTouched(false);
+    setForgotCode(emptyCode());
+    setForgotCodeState("");
+    setForgotResendTimer(0);
+    stopForgotExpiryCountdown();
+    setError("");
+    setSuccess("");
+  }, [stopForgotExpiryCountdown]);
+
   const switchView = useCallback((view) => {
     if (loading) return;
     stopExpiryCountdown();
+    resetForgotUsername();
     setModalView(view);
     setError(""); setSuccess("");
     setCode(emptyCode());
@@ -576,7 +630,7 @@ export default function AuthModal() {
     setEmailTouched(false); setNameTouched(false);
     clearSocialAuthError?.();
     if (view === "login") clearGooglePending?.();
-  }, [clearGooglePending, clearSocialAuthError, loading, setModalView, stopExpiryCountdown]);
+  }, [clearGooglePending, clearSocialAuthError, loading, resetForgotUsername, setModalView, stopExpiryCountdown]);
 
   /* ── Effects ── */
   useEffect(() => {
@@ -594,6 +648,7 @@ export default function AuthModal() {
   useEffect(() => {
     if (!isModalOpen) return;
     stopExpiryCountdown();
+    resetForgotUsername();
     setError(""); setSuccess("");
     setCode(emptyCode()); setResendTimer(0);
     setAuthMethod("email"); setCodeState("");
@@ -601,7 +656,7 @@ export default function AuthModal() {
     if (isRegister && !hasGooglePending) setSignUpStep(1);
     setForm((p) => ({ ...p, keepSignedIn: persistSession }));
     setTimeout(() => firstInputRef.current?.focus(), 350);
-  }, [isLogin, isModalOpen, isRegister, persistSession, hasGooglePending, stopExpiryCountdown]);
+  }, [isLogin, isModalOpen, isRegister, persistSession, hasGooglePending, stopExpiryCountdown, resetForgotUsername]);
 
   useEffect(() => {
     if (!socialAuthError) return;
@@ -628,6 +683,12 @@ export default function AuthModal() {
     const t = setInterval(() => setResendTimer((p) => Math.max(0, p - 1)), 1000);
     return () => clearInterval(t);
   }, [resendTimer]);
+
+  useEffect(() => {
+    if (forgotResendTimer <= 0) return;
+    const t = setInterval(() => setForgotResendTimer((p) => Math.max(0, p - 1)), 1000);
+    return () => clearInterval(t);
+  }, [forgotResendTimer]);
 
   /* ── Social auth ── */
   const handleGoogleAuth = useCallback(async (mode = "signin") => {
@@ -674,29 +735,183 @@ export default function AuthModal() {
     finally { setAvatarUploading(false); }
   }, [currentRole?.color, form.avatarFile, form.avatarPreview, form.email, form.fullName, googleUser?.picture, uploadAvatar]);
 
-/* ── Sign In ── */
-const handleSignIn = useCallback(async (e) => {
-  e.preventDefault();
-  setEmailTouched(true); setNameTouched(true);
-  if (!emailOk) { setError("Please enter a valid email."); return; }
-  if (!nameOk) { setError("Please enter your full name."); return; }
-  try {
-    setLoading(true); setError(""); setSuccess("");
-    setSessionPreference(form.keepSignedIn);
-    await login({ 
-      email: form.email.trim(), 
-      fullName: form.fullName.trim(), 
-      persistSession: form.keepSignedIn 
-    });
-    // No OTP step — login resolves directly
-    setSuccess("Signed in successfully!");
-  } catch (err) { 
-    setError(err?.message || "Sign in failed."); 
-  } finally { 
-    setLoading(false); 
-  }
-}, [emailOk, nameOk, form.email, form.fullName, form.keepSignedIn, login, setSessionPreference]);
-  /* ── Verify ── */
+  /* ── Sign In ── */
+  const handleSignIn = useCallback(async (e) => {
+    e.preventDefault();
+    setEmailTouched(true); setNameTouched(true);
+    if (!emailOk) { setError("Please enter a valid email."); return; }
+    if (!nameOk) { setError("Please enter your full name."); return; }
+    try {
+      setLoading(true); setError(""); setSuccess("");
+      setSessionPreference(form.keepSignedIn);
+      await login({
+        email: form.email.trim(),
+        fullName: form.fullName.trim(),
+        persistSession: form.keepSignedIn,
+      });
+      setSuccess("Signed in successfully!");
+    } catch (err) {
+      setError(err?.message || "Sign in failed.");
+    } finally {
+      setLoading(false);
+    }
+  }, [emailOk, nameOk, form.email, form.fullName, form.keepSignedIn, login, setSessionPreference]);
+
+  /* ══════════════════════════════════════════════════════════
+     FORGOT USERNAME HANDLERS
+  ══════════════════════════════════════════════════════════ */
+  const handleForgotUsernameSendCode = useCallback(async (e) => {
+    e.preventDefault();
+    setForgotEmailTouched(true);
+    if (!forgotEmailOk) { setError("Please enter a valid email address."); return; }
+    try {
+      setLoading(true); setError(""); setSuccess("");
+      const res = await fetch(`${API_BASE}/forgot-username/send-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to send code.");
+      setForgotStep("code");
+      startForgotExpiryCountdown(CODE_TTL_LOGIN_REGISTER);
+      setSuccess("Verification code sent! Check your inbox.");
+      setTimeout(() => forgotCodeRefs.current[0]?.focus(), 300);
+    } catch (err) {
+      setError(err?.message || "Failed to send verification code.");
+    } finally {
+      setLoading(false);
+    }
+  }, [forgotEmailOk, forgotEmail, startForgotExpiryCountdown]);
+
+  const doForgotUsernameVerify = useCallback(async (val) => {
+    if (!forgotEmail.trim()) { setError("Missing email. Please restart."); return; }
+    if (val.length !== 6) { setError("Enter the full 6-digit code."); return; }
+    if (forgotCodeExpired) { setError("Code expired. Request a new one."); return; }
+    try {
+      setLoading(true); setForgotCodeState("verifying"); setError("");
+      const res = await fetch(`${API_BASE}/forgot-username/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail.trim(), code: val }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Verification failed.");
+
+      setForgotCodeState("success");
+      stopForgotExpiryCountdown();
+
+      const recoveredName = data.data?.fullName || data.data?.username || "";
+      const recoveredEmail = data.data?.email || forgotEmail.trim();
+
+      // Auto-fill the login form
+      setForm((p) => ({
+        ...p,
+        email: recoveredEmail,
+        fullName: recoveredName,
+      }));
+      setEmailTouched(true);
+      setNameTouched(true);
+
+      setSuccess(`Username recovered: "${recoveredName}". Signing you in…`);
+
+      // Auto-login: if the response includes tokens, log user in directly
+      if (data.data?.token && data.data?.user) {
+        // The context should have a method to set auth directly
+        // If login() from context accepts token data, use it
+        // Otherwise we store in localStorage and reload
+        try {
+          const authData = {
+            token: data.data.token,
+            refreshToken: data.data.refreshToken,
+            user: data.data.user,
+          };
+          // Store auth data
+          const storage = form.keepSignedIn ? localStorage : sessionStorage;
+          storage.setItem("auth_token", authData.token);
+          storage.setItem("refresh_token", authData.refreshToken);
+          storage.setItem("user", JSON.stringify(authData.user));
+
+          // Small delay for UX, then reload to pick up auth state
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        } catch {
+          // Fallback: just fill form and let user click sign in
+          setForgotStep("success");
+        }
+      } else {
+        setForgotStep("success");
+      }
+    } catch (err) {
+      setForgotCodeState("error");
+      setError(err?.message || "Verification failed.");
+      setTimeout(() => {
+        setForgotCodeState("");
+        setForgotCode(emptyCode());
+        forgotCodeRefs.current[0]?.focus();
+      }, 700);
+    } finally {
+      setLoading(false);
+    }
+  }, [forgotEmail, forgotCodeExpired, stopForgotExpiryCountdown, form.keepSignedIn]);
+
+  // Auto-submit forgot username code when 6 digits entered
+  useEffect(() => {
+    const val = forgotCode.join("");
+    if (val.length === 6 && forgotUsernameMode && forgotStep === "code" && !loading &&
+      forgotCodeState !== "verifying" && forgotCodeState !== "success" && !forgotCodeExpired) {
+      const t = setTimeout(() => doForgotUsernameVerify(val), 400);
+      return () => clearTimeout(t);
+    }
+  }, [forgotCode, forgotUsernameMode, forgotStep, loading, forgotCodeState, forgotCodeExpired, doForgotUsernameVerify]);
+
+  const handleForgotCodeChange = useCallback((i, val) => {
+    if (!/^[0-9]?$/.test(val)) return;
+    setForgotCode((p) => { const n = [...p]; n[i] = val; return n; });
+    setError(""); setForgotCodeState("");
+    if (val && i < 5) forgotCodeRefs.current[i + 1]?.focus();
+  }, []);
+
+  const handleForgotCodeKey = useCallback((i, e) => {
+    if (e.key === "Backspace" && !forgotCode[i] && i > 0) forgotCodeRefs.current[i - 1]?.focus();
+  }, [forgotCode]);
+
+  const handleForgotCodePaste = useCallback((e) => {
+    e.preventDefault();
+    const digits = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!digits) return;
+    const next = emptyCode();
+    digits.split("").forEach((d, i) => { next[i] = d; });
+    setForgotCode(next); setForgotCodeState("");
+    forgotCodeRefs.current[Math.min(digits.length, 5)]?.focus();
+  }, []);
+
+  const handleForgotResend = useCallback(async () => {
+    if (!forgotEmail.trim() || forgotResendTimer > 0 || loading) return;
+    try {
+      setLoading(true); setError(""); setSuccess("");
+      const res = await fetch(`${API_BASE}/forgot-username/send-code`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: forgotEmail.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to resend.");
+      startForgotExpiryCountdown(CODE_TTL_RESEND);
+      setForgotResendTimer(60);
+      setForgotCode(emptyCode());
+      setForgotCodeState("");
+      setSuccess(`New code sent to ${forgotEmail}. Valid for 15 min.`);
+      forgotCodeRefs.current[0]?.focus();
+    } catch (err) {
+      setError(err?.message || "Unable to resend.");
+    } finally {
+      setLoading(false);
+    }
+  }, [forgotEmail, forgotResendTimer, loading, startForgotExpiryCountdown]);
+
+  /* ── Verify (main) ── */
   const doVerify = useCallback(async (val) => {
     if (!activeEmail) { setError("Missing email. Please restart."); return; }
     if (val.length !== 6) { setError("Enter the full 6-digit code."); return; }
@@ -749,7 +964,7 @@ const handleSignIn = useCallback(async (e) => {
   }, [agreeTerms, authMethod, completeGoogleSignUp, form, hasGooglePending,
     register, resolveAvatar, setSessionPreference, startExpiryCountdown]);
 
-  /* ── OTP handlers ── */
+  /* ── OTP handlers (main) ── */
   const handleCodeChange = useCallback((i, val) => {
     if (!/^[0-9]?$/.test(val)) return;
     setCode((p) => { const n = [...p]; n[i] = val; return n; });
@@ -839,7 +1054,6 @@ const handleSignIn = useCallback(async (e) => {
         }
       `}</style>
 
-      {/* Profession picker portal */}
       <ProfessionPickerModal
         isOpen={professionOpen}
         onClose={() => setProfessionOpen(false)}
@@ -859,7 +1073,6 @@ const handleSignIn = useCallback(async (e) => {
           onClick={(e) => e.stopPropagation()}
           role="dialog" aria-modal="true" aria-labelledby="auth-title"
         >
-          {/* Top accent */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-400 z-50" />
 
           {/* ── Gallery — desktop ── */}
@@ -895,7 +1108,7 @@ const handleSignIn = useCallback(async (e) => {
             </div>
 
             {/* Tabs */}
-            {!isVerify && (
+            {!isVerify && !forgotUsernameMode && (
               <div className="flex border-b border-gray-100 px-4 sm:px-6 flex-shrink-0">
                 {[
                   { view: "login", label: "Sign In", icon: HiLockClosed },
@@ -935,8 +1148,216 @@ const handleSignIn = useCallback(async (e) => {
                 </div>
               )}
 
+              {/* ════════════════════════════════════════════════════
+                 FORGOT USERNAME FLOW
+              ════════════════════════════════════════════════════ */}
+              {forgotUsernameMode && isLogin && (
+                <div className="am-viewIn">
+
+                  {/* ── Forgot Step: Email ── */}
+                  {forgotStep === "email" && (
+                    <>
+                      <div className="text-center mb-6">
+                        <div className="inline-flex items-center justify-center w-13 h-13 rounded-2xl bg-gradient-to-br from-amber-100 to-amber-50 mb-3 p-3">
+                          <HiQuestionMarkCircle className="w-7 h-7 text-amber-600" />
+                        </div>
+                        <h2 id="auth-title" className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">
+                          Forgot Your Name?
+                        </h2>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Enter your email and we'll send a verification code to recover your account name.
+                        </p>
+                      </div>
+
+                      <form onSubmit={handleForgotUsernameSendCode} noValidate className="space-y-4">
+                        <InputField
+                          id="forgot-email" label="Email Address" icon={HiMail}
+                          value={forgotEmail}
+                          onChange={(v) => { setForgotEmail(v); setError(""); setSuccess(""); }}
+                          onBlur={() => setForgotEmailTouched(true)}
+                          placeholder="you@example.com" autoComplete="email"
+                          required isEmail refProp={forgotEmailRef}
+                          error={forgotEmailTouched && !forgotEmailOk ? "Please enter a valid email." : ""}
+                          valid={forgotEmailTouched && forgotEmailOk}
+                        />
+
+                        <button type="submit" disabled={loading}
+                          className="w-full h-12 rounded-xl bg-amber-500 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-amber-600 hover:shadow-lg hover:shadow-amber-200 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                        >
+                          {loading ? <><Spinner /><span>Sending Code…</span></> : <><HiMail className="w-4 h-4" /><span>Send Verification Code</span></>}
+                        </button>
+                      </form>
+
+                      <div className="text-center mt-5 pt-4 border-t border-gray-100">
+                        <button onClick={resetForgotUsername}
+                          className="text-sm font-semibold text-gray-500 hover:text-gray-700 hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1"
+                        >
+                          <HiArrowLeft className="w-3.5 h-3.5" /> Back to Sign In
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {/* ── Forgot Step: Code ── */}
+                  {forgotStep === "code" && (
+                    <>
+                      <div className="text-center mb-6">
+                        <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-indigo-100 to-indigo-50 mb-3 sm:mb-4 p-2.5">
+                          <HiMail className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-600" />
+                        </div>
+                        <h2 id="auth-title" className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">
+                          Verify Your Identity
+                        </h2>
+                        <p className="text-sm text-gray-500 mt-1">Enter the 6-digit code sent to:</p>
+                        <div className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-full bg-gray-100 border border-gray-200 text-sm font-semibold text-gray-800">
+                          <HiMail className="w-4 h-4 text-emerald-500" />
+                          <span className="break-all">{forgotEmail || "No email"}</span>
+                        </div>
+
+                        {forgotCodeState !== "success" && (
+                          <div className={`inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-full text-sm font-medium transition-all ${forgotCodeExpired
+                              ? "bg-red-50 text-red-600 border border-red-200"
+                              : forgotCodeExpiry <= 30
+                                ? "bg-red-50 text-red-600 border border-red-200 animate-pulse"
+                                : forgotCodeExpiry <= 120
+                                  ? "bg-amber-50 text-amber-700 border border-amber-200"
+                                  : "bg-gray-50 text-gray-600 border border-gray-200"
+                            }`}>
+                            {forgotCodeExpired ? (
+                              <><HiExclamationCircle className="w-4 h-4" /><span>Code expired — request a new one</span></>
+                            ) : (
+                              <><HiInformationCircle className="w-4 h-4" />
+                                <span>Expires in <strong className="tabular-nums font-bold">{formatExpiry(forgotCodeExpiry)}</strong></span>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <form onSubmit={(e) => { e.preventDefault(); doForgotUsernameVerify(forgotCode.join("")); }} noValidate className="space-y-5">
+                        <div
+                          className={`flex justify-center gap-2 sm:gap-3 ${forgotCodeState === "verifying" ? "animate-pulse" : ""} ${forgotCodeState === "error" ? "am-shake" : ""}`}
+                          onPaste={handleForgotCodePaste} role="group" aria-label="Verification code"
+                        >
+                          {forgotCode.map((digit, i) => (
+                            <input key={i}
+                              ref={(el) => { forgotCodeRefs.current[i] = el; }}
+                              type="text" inputMode="numeric" pattern="[0-9]"
+                              maxLength={1} value={digit}
+                              onChange={(e) => handleForgotCodeChange(i, e.target.value)}
+                              onKeyDown={(e) => handleForgotCodeKey(i, e)}
+                              disabled={forgotCodeState === "verifying" || forgotCodeState === "success" || forgotCodeExpired}
+                              className={`text-center text-xl sm:text-2xl font-bold font-mono rounded-xl border-2 outline-none transition-all duration-200 ${forgotCodeExpired
+                                  ? "border-red-200 bg-red-50/50 text-red-300 cursor-not-allowed"
+                                  : forgotCodeState === "success"
+                                    ? "border-emerald-400 bg-emerald-50 text-emerald-600"
+                                    : forgotCodeState === "error"
+                                      ? "border-red-300 bg-red-50"
+                                      : digit
+                                        ? "border-emerald-400 bg-emerald-50/50 text-gray-900"
+                                        : "border-gray-200 bg-gray-50/50 text-gray-900 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
+                                }`}
+                              style={{ width: "2.75rem", height: "3.25rem" }}
+                              aria-label={`Digit ${i + 1}`}
+                              autoComplete={i === 0 ? "one-time-code" : "off"}
+                            />
+                          ))}
+                        </div>
+
+                        {forgotCodeState === "verifying" && (
+                          <div className="am-slideDown flex items-center justify-center gap-2 p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-sm font-medium">
+                            <Spinner /> Verifying & recovering username…
+                          </div>
+                        )}
+                        {forgotCodeState === "success" && (
+                          <div className="am-slideDown flex items-center justify-center gap-2 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-medium">
+                            <HiCheckCircle className="w-5 h-5" /> Username recovered! Signing you in…
+                          </div>
+                        )}
+
+                        <button type="submit"
+                          disabled={loading || forgotCode.join("").length !== 6 || forgotCodeState === "verifying" || forgotCodeState === "success" || forgotCodeExpired}
+                          className="w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        >
+                          {loading || forgotCodeState === "verifying" ? (
+                            <><Spinner /><span>Verifying…</span></>
+                          ) : forgotCodeState === "success" ? (
+                            <><HiCheckCircle className="w-5 h-5" /><span>Recovered!</span></>
+                          ) : forgotCodeExpired ? (
+                            <><HiExclamationCircle className="w-5 h-5" /><span>Code Expired</span></>
+                          ) : (
+                            <><span>Verify & Recover Username</span><HiArrowRight className="w-4 h-4" /></>
+                          )}
+                        </button>
+
+                        <div className="flex flex-col sm:flex-row gap-3">
+                          <button type="button" onClick={() => { setForgotStep("email"); stopForgotExpiryCountdown(); setForgotCode(emptyCode()); setError(""); setSuccess(""); }} disabled={loading}
+                            className="flex items-center justify-center gap-2 px-5 h-11 rounded-xl text-gray-600 font-medium text-sm border border-gray-200 hover:bg-gray-50 transition-all sm:w-auto w-full"
+                          >
+                            <HiArrowLeft className="w-4 h-4" /> Back
+                          </button>
+                          <button type="button" onClick={handleForgotResend} disabled={forgotResendTimer > 0 || loading}
+                            className="flex-1 flex items-center justify-center gap-2 h-11 rounded-xl text-emerald-600 font-semibold text-sm border-2 border-emerald-200 hover:bg-emerald-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                          >
+                            <HiRefresh className={`w-4 h-4 ${forgotResendTimer > 0 || loading ? "animate-spin" : ""}`} />
+                            {forgotResendTimer > 0 ? `Resend in ${forgotResendTimer}s` : "Resend Code"}
+                          </button>
+                        </div>
+                      </form>
+
+                      <div className="text-center mt-5 pt-4 border-t border-gray-100">
+                        <button onClick={resetForgotUsername}
+                          className="text-sm font-semibold text-gray-500 hover:text-gray-700 hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1"
+                        >
+                          <HiArrowLeft className="w-3.5 h-3.5" /> Back to Sign In
+                        </button>
+                      </div>
+                    </>
+                  )}
+
+                  {/* ── Forgot Step: Success (fallback if no auto-login) ── */}
+                  {forgotStep === "success" && (
+                    <>
+                      <div className="text-center mb-6">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-100 mb-4">
+                          <HiCheckCircle className="w-9 h-9 text-emerald-600" />
+                        </div>
+                        <h2 className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">
+                          Username Recovered!
+                        </h2>
+                        <p className="text-sm text-gray-500 mt-2">
+                          Your username has been filled in. Click below to sign in.
+                        </p>
+                      </div>
+
+                      <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 mb-4">
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-gray-500">Full Name</span>
+                          <span className="text-sm font-bold text-gray-900">{form.fullName || "—"}</span>
+                        </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <span className="text-sm text-gray-500">Email</span>
+                          <span className="text-sm font-bold text-gray-900">{form.email || "—"}</span>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          resetForgotUsername();
+                          // Form fields are already filled, user can just click sign in
+                        }}
+                        className="w-full h-12 rounded-xl bg-emerald-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-700 hover:shadow-lg hover:shadow-emerald-200 active:scale-[0.98] transition-all duration-200"
+                      >
+                        <HiArrowRight className="w-4 h-4" />
+                        Continue to Sign In
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+
               {/* ════════ LOGIN ════════ */}
-              {isLogin && (
+              {isLogin && !forgotUsernameMode && (
                 <div className="am-viewIn">
                   <div className="text-center mb-6">
                     <div className="inline-flex items-center justify-center w-13 h-13 rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 mb-3 p-3">
@@ -958,14 +1379,33 @@ const handleSignIn = useCallback(async (e) => {
                       error={emailTouched && !emailOk ? "Please enter a valid email." : ""}
                       valid={emailTouched && emailOk}
                     />
-                    <InputField
-                      id="login-name" label="Full Name" icon={HiUser}
-                      value={form.fullName} onChange={(v) => set("fullName", v)}
-                      onBlur={() => setNameTouched(true)}
-                      placeholder="Your full name" autoComplete="name" required
-                      error={nameTouched && !nameOk ? "At least 2 characters required." : ""}
-                      valid={nameTouched && nameOk}
-                    />
+                    <div>
+                      <InputField
+                        id="login-name" label="Full Name" icon={HiUser}
+                        value={form.fullName} onChange={(v) => set("fullName", v)}
+                        onBlur={() => setNameTouched(true)}
+                        placeholder="Your full name" autoComplete="name" required
+                        error={nameTouched && !nameOk ? "At least 2 characters required." : ""}
+                        valid={nameTouched && nameOk}
+                      />
+                      {/* Forgot Username link */}
+                      <div className="flex justify-end mt-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setForgotUsernameMode(true);
+                            setForgotStep("email");
+                            setForgotEmail(form.email || ""); // pre-fill with current email
+                            setError(""); setSuccess("");
+                            setTimeout(() => forgotEmailRef.current?.focus(), 300);
+                          }}
+                          className="text-xs font-medium text-amber-600 hover:text-amber-700 hover:underline underline-offset-2 transition-colors inline-flex items-center gap-1"
+                        >
+                          <HiQuestionMarkCircle className="w-3.5 h-3.5" />
+                          Forgot your name?
+                        </button>
+                      </div>
+                    </div>
 
                     <label className="flex items-center gap-3 cursor-pointer group">
                       <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${form.keepSignedIn ? "bg-emerald-500 border-emerald-500" : "border-gray-300 group-hover:border-gray-400"
@@ -1032,7 +1472,7 @@ const handleSignIn = useCallback(async (e) => {
                     <p className="text-xs sm:text-sm text-gray-500 mt-1">{STEP_SUBTITLES[signUpStep - 1]}</p>
                   </div>
 
-                  {/* ── Stepper (4 steps) ── */}
+                  {/* Stepper */}
                   <div className="flex items-center justify-center mb-5 px-2">
                     {STEP_LABELS.map((label, i) => {
                       const n = i + 1;
@@ -1060,7 +1500,7 @@ const handleSignIn = useCallback(async (e) => {
                     })}
                   </div>
 
-                  {/* ── Step 1: Method ── */}
+                  {/* Step 1 */}
                   {signUpStep === 1 && (
                     <div className="space-y-4 am-stepIn">
                       {hasGooglePending ? (
@@ -1121,7 +1561,7 @@ const handleSignIn = useCallback(async (e) => {
                     </div>
                   )}
 
-                  {/* ── Step 2: Profile ── */}
+                  {/* Step 2 */}
                   {signUpStep === 2 && (
                     <div className="space-y-4 am-stepIn">
                       {googleUser && (
@@ -1136,8 +1576,6 @@ const handleSignIn = useCallback(async (e) => {
                           <MdVerified className="w-5 h-5 text-blue-500 flex-shrink-0" />
                         </div>
                       )}
-
-                      {/* Phone with country dial code */}
                       <div className="space-y-1.5">
                         <label className="block text-sm font-semibold text-gray-700">
                           Phone Number <span className="text-gray-400 font-normal text-xs">— Optional</span>
@@ -1153,8 +1591,6 @@ const handleSignIn = useCallback(async (e) => {
                           Used by guides/operators to reach you via WhatsApp
                         </p>
                       </div>
-
-                      {/* Role */}
                       <div className="space-y-2">
                         <span className="block text-sm font-semibold text-gray-700">I am a…</span>
                         <div className="grid grid-cols-3 gap-2">
@@ -1180,8 +1616,6 @@ const handleSignIn = useCallback(async (e) => {
                           ))}
                         </div>
                       </div>
-
-                      {/* Bio */}
                       <div className="space-y-1.5">
                         <label htmlFor="reg-bio" className="block text-sm font-semibold text-gray-700">
                           Short Bio <span className="text-gray-400 font-normal text-xs">— Optional</span>
@@ -1202,7 +1636,6 @@ const handleSignIn = useCallback(async (e) => {
                             }`}>{form.bio.length}/{MAX_BIO}</span>
                         </div>
                       </div>
-
                       <div className="flex gap-3 pt-1">
                         <button type="button" onClick={() => { setSignUpStep(1); clearGooglePending?.(); }}
                           className="flex items-center gap-2 px-4 h-11 rounded-xl text-gray-600 font-medium text-sm hover:bg-gray-100 transition-all"
@@ -1223,11 +1656,9 @@ const handleSignIn = useCallback(async (e) => {
                     </div>
                   )}
 
-                  {/* ── Step 3: Details ── */}
+                  {/* Step 3 */}
                   {signUpStep === 3 && (
                     <div className="space-y-4 am-stepIn">
-
-                      {/* Date of Birth */}
                       <InputField
                         id="reg-dob" label="Date of Birth" icon={HiCalendar}
                         type="date" value={form.dateOfBirth}
@@ -1235,8 +1666,6 @@ const handleSignIn = useCallback(async (e) => {
                         max={todayStr}
                         hint="Helps with age-restricted permits & park fees"
                       />
-
-                      {/* Nationality */}
                       <SelectField
                         id="reg-nationality" label="Nationality"
                         icon={HiLocationMarker} value={form.nationality}
@@ -1245,14 +1674,9 @@ const handleSignIn = useCallback(async (e) => {
                       >
                         <option value="">Select nationality…</option>
                         {COUNTRIES.map((c) => (
-                          // Native <select> can't render images — show code + name as text
-                          <option key={c.code} value={c.name}>
-                            {c.code}  {c.name}  {c.dial}
-                          </option>
+                          <option key={c.code} value={c.name}>{c.code}  {c.name}  {c.dial}</option>
                         ))}
                       </SelectField>
-
-                      {/* Country of Residence */}
                       <SelectField
                         id="reg-residence" label="Country of Residence"
                         icon={HiGlobe} value={form.residenceCountry}
@@ -1261,13 +1685,9 @@ const handleSignIn = useCallback(async (e) => {
                       >
                         <option value="">Select country…</option>
                         {COUNTRIES.map((c) => (
-                          <option key={c.code} value={c.name}>
-                            {c.code}  {c.name}
-                          </option>
+                          <option key={c.code} value={c.name}>{c.code}  {c.name}</option>
                         ))}
                       </SelectField>
-
-                      {/* Preferred Language */}
                       <SelectField
                         id="reg-lang" label="Preferred Language"
                         icon={HiTranslate} value={form.preferredLanguage}
@@ -1279,8 +1699,6 @@ const handleSignIn = useCallback(async (e) => {
                           <option key={l} value={l}>{l}</option>
                         ))}
                       </SelectField>
-
-                      {/* Profession picker button */}
                       <div className="space-y-1.5">
                         <label className="block text-sm font-semibold text-gray-700">
                           Profession <span className="text-gray-400 font-normal text-xs">— Optional</span>
@@ -1299,8 +1717,6 @@ const handleSignIn = useCallback(async (e) => {
                           }
                         </button>
                       </div>
-
-                      {/* Travel Styles */}
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className="text-sm font-semibold text-gray-700">
@@ -1336,7 +1752,6 @@ const handleSignIn = useCallback(async (e) => {
                           <HiInformationCircle className="w-3.5 h-3.5" />Select all that apply — or skip
                         </p>
                       </div>
-
                       <div className="flex gap-3 pt-1">
                         <button type="button" onClick={() => setSignUpStep(2)}
                           className="flex items-center gap-2 px-4 h-11 rounded-xl text-gray-600 font-medium text-sm hover:bg-gray-100 transition-all"
@@ -1352,11 +1767,9 @@ const handleSignIn = useCallback(async (e) => {
                     </div>
                   )}
 
-                  {/* ── Step 4: Confirm ── */}
+                  {/* Step 4 */}
                   {signUpStep === 4 && (
                     <form onSubmit={handleSignUp} noValidate className="space-y-4 am-stepIn">
-
-                      {/* Avatar card */}
                       <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-200">
                         <div className="relative flex-shrink-0">
                           <div className="rounded-full bg-gradient-to-br from-emerald-400 to-teal-500"
@@ -1384,8 +1797,6 @@ const handleSignIn = useCallback(async (e) => {
                           </span>
                         </div>
                       </div>
-
-                      {/* Summary */}
                       <div className="rounded-xl bg-gray-50 border border-gray-200 p-4">
                         <h4 className="text-sm font-bold text-gray-800 mb-3">Account Summary</h4>
                         <dl className="space-y-2">
@@ -1409,8 +1820,6 @@ const handleSignIn = useCallback(async (e) => {
                           ))}
                         </dl>
                       </div>
-
-                      {/* Keep signed in */}
                       <label className="flex items-center gap-3 cursor-pointer group">
                         <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${form.keepSignedIn ? "bg-emerald-500 border-emerald-500" : "border-gray-300 group-hover:border-gray-400"
                           }`}>
@@ -1420,8 +1829,6 @@ const handleSignIn = useCallback(async (e) => {
                           onChange={(e) => set("keepSignedIn", e.target.checked)} className="sr-only" />
                         <span className="text-sm text-gray-600">Keep me signed in</span>
                       </label>
-
-                      {/* Terms */}
                       <label className={`flex items-start gap-3 cursor-pointer p-4 rounded-xl border group transition-all ${agreeTerms ? "border-emerald-200 bg-emerald-50/50" : "border-gray-200 bg-gray-50"
                         }`}>
                         <div className={`w-5 h-5 mt-0.5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${agreeTerms ? "bg-emerald-500 border-emerald-500" : "border-gray-300 group-hover:border-gray-400"
@@ -1439,7 +1846,6 @@ const handleSignIn = useCallback(async (e) => {
                             className="text-emerald-600 font-medium underline underline-offset-2 hover:text-emerald-700">Privacy Policy</a>
                         </span>
                       </label>
-
                       <div className="flex gap-3">
                         <button type="button" onClick={() => setSignUpStep(3)} disabled={loading || avatarUploading}
                           className="flex items-center gap-2 px-4 h-11 rounded-xl text-gray-600 font-medium text-sm hover:bg-gray-100 transition-all"

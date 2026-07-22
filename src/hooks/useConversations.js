@@ -97,10 +97,10 @@ export function useConversations() {
       const res = await authFetch(`${API_BASE}/messages/conversations/${id}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      if (!mountedRef.current) return;
-      setActiveConv(data.data);
-      setMessages(data.data.messages || []);
-      // Mark as read on open
+      if (mountedRef.current) {
+        setActiveConv(data.data);
+        setMessages(data.data.messages || []);
+      }
       markRead(id).catch(() => {});
     } catch (err) {
       if (mountedRef.current) setError(err.message);
@@ -110,19 +110,19 @@ export function useConversations() {
   }, []);
 
   /* ── Send a message ── */
-  const sendMessage = useCallback(async (id, body) => {
+  const sendMessage = useCallback(async (id, body, replyToId = null) => {
     const text = (body || "").trim();
     if (!id || !text) return;
     setSending(true);
     const optimistic = {
       id: `tmp-${Date.now()}`, conversationId: id, senderType: "user",
-      body: text, isRead: false, createdAt: new Date().toISOString(),
+      body: text, isRead: false, reactions: {}, replyToId, createdAt: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, optimistic]);
     try {
       const res = await authFetch(
         `${API_BASE}/messages/conversations/${id}/messages`,
-        { method: "POST", body: JSON.stringify({ body: text }) },
+        { method: "POST", body: JSON.stringify({ body: text, ...(replyToId ? { replyToId } : {}) }) },
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
@@ -178,11 +178,15 @@ export function useConversations() {
 
         const onMessage = (msg) => {
           if (!mountedRef.current) return;
-          setMessages((prev) => {
-            if (msg.conversationId !== activeId) return prev;
-            if (prev.some((m) => m.id === msg.id)) return prev;
-            return [...prev, msg];
-          });
+          if (msg.conversationId === activeId) {
+            setMessages((prev) => {
+              if (prev.some((m) => m.id === msg.id)) return prev;
+              return [...prev, msg];
+            });
+          } else {
+            // Refresh conversations list so unread badge updates
+            fetchConversations().catch(() => {});
+          }
         };
         const onUpdated = (conv) => {
           if (!mountedRef.current) return;
@@ -192,24 +196,35 @@ export function useConversations() {
           if (conv.id === activeId) setActiveConv((p) => (p ? { ...p, ...conv } : p));
         };
         const onRead = ({ conversationId }) => {
-          if (!mountedRef.current || conversationId !== activeId) return;
-          setMessages((prev) => prev.map((m) => ({ ...m, isRead: true })));
+          if (!mountedRef.current) return;
+          const isActive = conversationId === activeId;
+          if (isActive) {
+            setMessages((prev) => prev.map((m) => ({ ...m, isRead: true })));
+          }
+        };
+        const onReaction = ({ messageId, reactions }) => {
+          if (!mountedRef.current) return;
+          setMessages((prev) =>
+            prev.map((m) => (String(m.id) === String(messageId) ? { ...m, reactions: reactions || {} } : m)),
+          );
         };
 
         socket.on("msg:message", onMessage);
         socket.on("msg:conversation-updated", onUpdated);
         socket.on("msg:read", onRead);
+        socket.on("msg:reaction", onReaction);
 
         return () => {
           socket.off("msg:message", onMessage);
           socket.off("msg:conversation-updated", onUpdated);
           socket.off("msg:read", onRead);
+          socket.off("msg:reaction", onReaction);
         };
       })
       .catch(() => { /* socket unavailable — polling covers it */ });
 
     return () => { cancelled = true; };
-  }, [isAuthenticated, activeId]);
+  }, [isAuthenticated, activeId, fetchConversations]);
 
   /* ── Lifecycle ── */
   useEffect(() => {

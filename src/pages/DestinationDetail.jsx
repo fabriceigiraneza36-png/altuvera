@@ -6,6 +6,7 @@ import React, {
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useDestination } from "../hooks/useDestinations";
 import { useDestinationComments } from "../hooks/useDestinationComments";
+import { useDestinationLikes } from "../hooks/useDestinationLikes";
 import { useUserAuth } from "../context/UserAuthContext";
 import { api } from "../utils/api";
 import PageHeader from "../components/common/PageHeader";
@@ -1599,12 +1600,14 @@ const CommentsSection = ({ d }) => {
      (adaptDestination maps `id` to the slug, with the real PK in `numericId`.) */
   const destId = d?.numericId || d?.id || d?._id || d?.slug;
   const { comments, loading, createComment, error } = useDestinationComments(destId);
+  const { likes, loading: likesLoading, toggleLike } = useDestinationLikes(destId);
   const { isAuthenticated = false, openModal } = useUserAuth() || {};
 
   const [text,       setText]       = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [localError, setLocalError] = useState("");
   const [rotIdx,     setRotIdx]     = useState(0);
+  const [likeBusy,  setLikeBusy]   = useState(false);
 
   useEffect(() => {
     if (comments.length <= ROTATE_WINDOW) { setRotIdx(0); return; }
@@ -1646,6 +1649,17 @@ const CommentsSection = ({ d }) => {
     finally { setSubmitting(false); }
   };
 
+  const handleLike = async () => {
+    if (!isAuthenticated) {
+      if (typeof openModal === "function") openModal("login");
+      return;
+    }
+    setLikeBusy(true);
+    try { await toggleLike(destId); }
+    catch { /* silent */ }
+    finally { setLikeBusy(false); }
+  };
+
   if (!destId) return null;
 
   return (
@@ -1669,9 +1683,24 @@ const CommentsSection = ({ d }) => {
                 <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 18, fontWeight: 800, color: "#fff" }}>Share Your Thoughts</div>
                 <div style={{ fontSize: 12.5, color: "rgba(255,255,255,.65)", marginTop: 2 }}>Join the conversation</div>
               </div>
-              <span style={{ padding: "5px 12px", borderRadius: 999, background: "rgba(255,255,255,.12)", color: "rgba(255,255,255,.9)", fontSize: 12, fontWeight: 700 }}>
-                {comments.length} comment{comments.length !== 1 ? "s" : ""}
-              </span>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <button type="button" onClick={handleLike} disabled={likeBusy || likesLoading} style={{
+                  display: "inline-flex", alignItems: "center", gap: 6,
+                  padding: "5px 12px", borderRadius: 999,
+                  background: likes.isLiked ? "rgba(244,63,94,.25)" : "rgba(255,255,255,.12)",
+                  color: likes.isLiked ? "#ffe4e6" : "rgba(255,255,255,.9)",
+                  border: likes.isLiked ? "1px solid rgba(244,63,94,.4)" : "1px solid rgba(255,255,255,.15)",
+                  fontSize: 12, fontWeight: 700, cursor: likeBusy || likesLoading ? "not-allowed" : "pointer",
+                  opacity: likeBusy || likesLoading ? 0.7 : 1,
+                  transition: "all .2s",
+                }} title={likes.isLiked ? "Remove like" : "Like this destination"}>
+                  <span style={{ fontSize: 16 }}>{likes.isLiked ? "❤️" : "🤍"}</span>
+                  <span>{likes.total}</span>
+                </button>
+                <span style={{ padding: "5px 12px", borderRadius: 999, background: "rgba(255,255,255,.12)", color: "rgba(255,255,255,.9)", fontSize: 12, fontWeight: 700 }}>
+                  {comments.length} comment{comments.length !== 1 ? "s" : ""}
+                </span>
+              </div>
             </div>
 
             <div style={{ padding: "18px 22px" }}>
