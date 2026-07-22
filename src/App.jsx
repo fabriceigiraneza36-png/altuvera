@@ -15,6 +15,7 @@ import {
   Routes, Route, useLocation,
   Navigate, Outlet,
 } from "react-router-dom";
+import { Analytics } from "@vercel/analytics/react"
 import { useApp }          from "./context/AppContext";
 import { useUserAuth }     from "./context/UserAuthContext";
 import ErrorBoundary       from "./components/common/ErrorBoundary";
