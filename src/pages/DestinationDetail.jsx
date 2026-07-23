@@ -8,7 +8,7 @@ import { useDestination } from "../hooks/useDestinations";
 import { useUserAuth } from "../context/UserAuthContext";
 import { api } from "../utils/api";
 import PageHeader from "../components/common/PageHeader";
-import CommentsCarousel from "../components/destinations/CommentsCarousel";
+import CommentsCarousel from "./CommentsCarousel";
 import "../styles/DestinationDetail.css";
 
 /* ══════════════════════════════════════════════════════════════
