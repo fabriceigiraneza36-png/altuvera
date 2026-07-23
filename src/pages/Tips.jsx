@@ -273,7 +273,7 @@ const Tips = () => {
         <PageHeader
           title="Travel Insights"
           subtitle="Curated professional advice for a seamless East African experience."
-          backgroundImage="https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=2000"
+          backgroundImage="https://i.pinimg.com/1200x/d3/bf/e6/d3bfe6268f474c5829874e436af921d2.jpg"
           breadcrumbs={[{ label: "Travel Tips" }]}
         />
         <div className="tips-container">

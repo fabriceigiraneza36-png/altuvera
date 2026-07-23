@@ -83,28 +83,28 @@ function useInView(options = {}) {
 ═══════════════════════════════════════════════════════════ */
 const HERO_SLIDES = [
   {
-    image: 'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1920&q=90',
+    image: 'https://i.pinimg.com/736x/62/e5/16/62e51677c4c82b392e217cb317b8b381.jpg',
     title: 'Explore Every Corner',
     subtitle: 'of East Africa',
     desc: 'From the thundering Serengeti plains to the misty gorilla forests of Rwanda — discover every handpicked destination in our collection.',
     location: 'East Africa',
   },
   {
-    image: 'https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?w=1920&q=90',
+    image: 'https://i.pinimg.com/736x/fa/02/5c/fa025c7189d3be96222a7a5d3167d3a5.jpg',
     title: 'Witness the Great',
     subtitle: 'Migration',
     desc: "Over two million wildebeest thunder across the Serengeti plains in one of nature's most breathtaking annual spectacles.",
     location: 'Tanzania & Kenya',
   },
   {
-    image: 'https://images.unsplash.com/photo-1504214208698-ea1916a2195a?w=1920&q=90',
+    image: 'https://i.pinimg.com/736x/de/f5/9c/def59c5b8ada86765cbfb235e1d6062b.jpg',
     title: "Conquer Africa's",
     subtitle: 'Highest Peak',
     desc: 'Standing at 5,895 metres above sea level, Kilimanjaro rises majestically above the clouds — calling to every adventurous soul.',
     location: 'Tanzania',
   },
   {
-    image: 'https://images.unsplash.com/photo-1551632436-cbf8dd35adfa?w=1920&q=90',
+    image: 'https://i.pinimg.com/1200x/75/ca/38/75ca38e363d078e400d289867e9f1e1e.jpg',
     title: 'Sapphire Seas &',
     subtitle: 'Spice Islands',
     desc: "Zanzibar's turquoise waters lap against powdery white shores while the scent of cloves drifts through Stone Town's medina.",

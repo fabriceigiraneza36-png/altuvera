@@ -632,14 +632,6 @@ export default function UserSettings() {
               </button>
             </div>
           </div>
-
-          {/* ── Account Control Link ── */}
-          <div>
-            <Link to="/auth/user-account-control" className="us-control-link">
-              Manage Account <FiChevronRight size={15} />
-            </Link>
-          </div>
-
         </div>
       </DashboardLayout>
     </>

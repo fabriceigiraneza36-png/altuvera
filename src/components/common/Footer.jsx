@@ -67,7 +67,6 @@ const Footer = () => {
   const quickLinks = [
     { name: "Destinations", path: "/destinations" },
     { name: "Services", path: "/services" },
-    { name: "Virtual Tours", path: "/virtual-tour" },
     { name: "Travel Tips", path: "/tips" },
     { name: "Gallery", path: "/gallery" },
     { name: "FAQ", path: "/faq" },

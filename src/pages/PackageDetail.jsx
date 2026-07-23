@@ -1,7 +1,4 @@
-// ============================================================================
-// src/pages/PackageDetail.jsx — Premium Green/White Redesign
-// ============================================================================
-
+// src/pages/PackageDetail.jsx — Premium Green/White Redesign (Fixed)
 import React, {
   useState, useEffect, useCallback, useRef, useMemo,
 } from 'react'
@@ -9,14 +6,14 @@ import { useParams, Link } from 'react-router-dom'
 import {
   MapPin, Clock, Users, Star, ChevronLeft, ChevronRight,
   ChevronDown, Check, X, BookOpen, Heart, Share2, Loader2,
-  Package, Phone, Mail, User, Sparkles, Shield, CheckCircle,
+  Phone, Mail, User, Sparkles, Shield, CheckCircle,
   XCircle, AlertCircle, Info, Camera,
-  ArrowRight, Zap, Globe, Calendar, Mountain, Compass,
-  Award, TrendingUp, Coffee, Sun, Wind, Leaf,
+  Zap, Globe, Calendar, Mountain, Compass,
+  Award, TrendingUp, Leaf,
 } from 'lucide-react'
 import { packagesAPI } from '../api/packages'
 import { createBooking } from '../api/bookingApi'
-import { useUserAuth }  from '../context/UserAuthContext'
+import { useUserAuth } from '../context/UserAuthContext'
 
 /* ── helpers ─────────────────────────────────────────────────────────── */
 const fmtPrice = (price, currency = 'USD') => {
@@ -28,23 +25,18 @@ const fmtPrice = (price, currency = 'USD') => {
   } catch { return `$${Number(price).toLocaleString()}` }
 }
 
-const fmtDate = (iso) => {
-  if (!iso) return ''
-  return new Date(iso).toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric',
-  })
-}
-
 const parseJson = (val, fallback = []) => {
   if (!val) return fallback
   if (Array.isArray(val)) return val
-  if (typeof val === 'string') { try { return JSON.parse(val) } catch { return fallback } }
+  if (typeof val === 'string') {
+    try { return JSON.parse(val) } catch { return fallback }
+  }
   return fallback
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   INJECT STYLES
-   ══════════════════════════════════════════════════════════════════════ */
+   STYLES
+══════════════════════════════════════════════════════════════════════ */
 const STYLES = `
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap');
 
@@ -55,7 +47,7 @@ const STYLES = `
     min-height: 100vh;
   }
 
-  /* ── Hero ── */
+  /* Hero */
   .pkd-hero {
     position: relative;
     height: 70vh;
@@ -64,58 +56,45 @@ const STYLES = `
     overflow: hidden;
   }
   .pkd-hero-img {
-    width: 100%;
-    height: 100%;
+    width: 100%; height: 100%;
     object-fit: cover;
     transition: transform 8s ease;
   }
   .pkd-hero:hover .pkd-hero-img { transform: scale(1.04); }
   .pkd-hero-overlay {
-    position: absolute;
-    inset: 0;
+    position: absolute; inset: 0;
     background: linear-gradient(
       160deg,
       rgba(2,44,22,0.18) 0%,
       rgba(4,47,31,0.55) 60%,
-      rgba(1,30,15,0.85) 100%
+      rgba(1,30,15,0.88) 100%
     );
   }
   .pkd-hero-content {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
     justify-content: flex-end;
     padding: clamp(24px, 5vw, 64px);
   }
   .pkd-hero-nav {
-    position: absolute;
-    top: 0; left: 0; right: 0;
+    position: absolute; top: 0; left: 0; right: 0;
     padding: clamp(16px, 3vw, 28px) clamp(20px, 5vw, 64px);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    display: flex; align-items: center; justify-content: space-between;
     z-index: 10;
     background: linear-gradient(to bottom, rgba(0,0,0,0.35), transparent);
   }
 
-  /* ── Layout ── */
-  .pkd-layout {
-    max-width: 1320px;
-    margin: 0 auto;
-    padding: 0 clamp(16px, 3vw, 40px);
-  }
+  /* Layout */
+  .pkd-layout { max-width: 1320px; margin: 0 auto; padding: 0 clamp(16px, 3vw, 40px); }
   .pkd-grid {
     display: grid;
     grid-template-columns: 1fr 400px;
     gap: 32px;
     align-items: start;
   }
-  @media (max-width: 1100px) {
-    .pkd-grid { grid-template-columns: 1fr; }
-  }
+  @media (max-width: 1100px) { .pkd-grid { grid-template-columns: 1fr; } }
 
-  /* ── Cards ── */
+  /* Cards */
   .pkd-card {
     background: #ffffff;
     border-radius: 24px;
@@ -125,50 +104,33 @@ const STYLES = `
   }
   .pkd-card-p { padding: clamp(20px, 4vw, 36px); }
 
-  /* ── Sidebar sticky ── */
+  /* Sidebar */
   .pkd-sidebar {
-    position: sticky;
-    top: 88px;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+    position: sticky; top: 88px;
+    display: flex; flex-direction: column; gap: 20px;
   }
-  @media (max-width: 1100px) {
-    .pkd-sidebar { position: static; }
-  }
+  @media (max-width: 1100px) { .pkd-sidebar { position: static; } }
 
-  /* ── Tabs ── */
+  /* Tabs */
   .pkd-tabs {
-    display: flex;
-    gap: 0;
-    background: #f0fdf4;
-    border-radius: 16px;
-    padding: 5px;
-    overflow-x: auto;
-    scrollbar-width: none;
+    display: flex; gap: 0;
+    background: #f0fdf4; border-radius: 16px;
+    padding: 5px; overflow-x: auto; scrollbar-width: none;
   }
   .pkd-tabs::-webkit-scrollbar { display: none; }
   .pkd-tab {
-    flex-shrink: 0;
-    padding: 10px 20px;
-    border-radius: 12px;
-    font-size: 13.5px;
-    font-weight: 600;
-    border: none;
-    cursor: pointer;
-    transition: all 0.22s ease;
-    color: #6b7280;
-    background: transparent;
-    white-space: nowrap;
+    flex-shrink: 0; padding: 10px 20px; border-radius: 12px;
+    font-size: 13.5px; font-weight: 600; border: none; cursor: pointer;
+    transition: all 0.22s ease; color: #6b7280;
+    background: transparent; white-space: nowrap;
   }
   .pkd-tab.active {
-    background: #ffffff;
-    color: #065f46;
+    background: #ffffff; color: #065f46;
     box-shadow: 0 2px 12px rgba(5,150,105,0.14);
   }
   .pkd-tab:not(.active):hover { color: #059669; background: rgba(255,255,255,0.5); }
 
-  /* ── Itinerary timeline ── */
+  /* Timeline */
   .pkd-timeline { display: flex; flex-direction: column; gap: 0; }
   .pkd-timeline-item { display: flex; gap: 20px; }
   .pkd-timeline-left {
@@ -178,26 +140,20 @@ const STYLES = `
   .pkd-timeline-dot {
     width: 44px; height: 44px; border-radius: 50%;
     background: linear-gradient(135deg, #059669, #065f46);
-    color: white;
-    display: flex; align-items: center; justify-content: center;
+    color: white; display: flex; align-items: center; justify-content: center;
     font-weight: 800; font-size: 13px;
     box-shadow: 0 4px 14px rgba(5,150,105,0.35);
     flex-shrink: 0; position: relative; z-index: 1;
   }
   .pkd-timeline-line {
     width: 2px; flex: 1; min-height: 24px;
-    background: linear-gradient(to bottom, #bbf7d0, #dcfce7);
-    margin: 4px 0;
+    background: linear-gradient(to bottom, #bbf7d0, #dcfce7); margin: 4px 0;
   }
-  .pkd-timeline-body {
-    flex: 1; padding-bottom: 28px;
-  }
+  .pkd-timeline-body { flex: 1; padding-bottom: 28px; }
   .pkd-timeline-card {
     background: linear-gradient(135deg, #f0fdf4, #ffffff);
-    border: 1px solid #bbf7d0;
-    border-radius: 18px;
-    padding: 18px 22px;
-    transition: all 0.2s ease;
+    border: 1px solid #bbf7d0; border-radius: 18px;
+    padding: 18px 22px; transition: all 0.2s ease;
   }
   .pkd-timeline-card:hover {
     border-color: #86efac;
@@ -205,68 +161,30 @@ const STYLES = `
     transform: translateX(4px);
   }
 
-  /* ── Gallery grid ── */
-  .pkd-gallery-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
-    gap: 8px;
-  }
-  .pkd-gallery-main {
-    grid-row: span 2;
-    border-radius: 18px 0 0 18px;
-    overflow: hidden;
-    position: relative;
-    min-height: 300px;
-    cursor: zoom-in;
-  }
-  .pkd-gallery-thumb {
-    border-radius: 0;
-    overflow: hidden;
-    cursor: pointer;
-    position: relative;
-  }
-  .pkd-gallery-thumb:first-of-type { border-radius: 0 18px 0 0; }
-  .pkd-gallery-thumb:last-of-type  { border-radius: 0 0 18px 0; }
-
-  /* ── Price badge ── */
-  .pkd-price-tag {
-    font-family: 'Playfair Display', Georgia, serif;
-  }
-
-  /* ── Inclusion items ── */
+  /* Inclusions */
   .pkd-inc-item {
     display: flex; align-items: flex-start; gap: 10px;
-    padding: 10px 14px;
-    border-radius: 12px;
-    background: #f0fdf4;
-    border: 1px solid #d1fae5;
-    font-size: 13.5px;
-    color: #1f2937;
-    line-height: 1.5;
+    padding: 10px 14px; border-radius: 12px;
+    background: #f0fdf4; border: 1px solid #d1fae5;
+    font-size: 13.5px; color: #1f2937; line-height: 1.5;
     transition: all 0.18s;
   }
   .pkd-inc-item:hover { background: #dcfce7; border-color: #86efac; }
   .pkd-exc-item {
     display: flex; align-items: flex-start; gap: 10px;
-    padding: 10px 14px;
-    border-radius: 12px;
-    background: #fef2f2;
-    border: 1px solid #fee2e2;
-    font-size: 13.5px;
-    color: #1f2937;
-    line-height: 1.5;
+    padding: 10px 14px; border-radius: 12px;
+    background: #fef2f2; border: 1px solid #fee2e2;
+    font-size: 13.5px; color: #1f2937; line-height: 1.5;
     transition: all 0.18s;
   }
   .pkd-exc-item:hover { background: #fee2e2; }
 
-  /* ── Highlight pill ── */
+  /* Highlight */
   .pkd-highlight {
     display: flex; align-items: center; gap: 10px;
     padding: 12px 16px;
     background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
-    border: 1px solid #a7f3d0;
-    border-radius: 14px;
+    border: 1px solid #a7f3d0; border-radius: 14px;
     transition: all 0.2s;
   }
   .pkd-highlight:hover {
@@ -275,229 +193,132 @@ const STYLES = `
     transform: translateY(-2px);
   }
 
-  /* ── Booking form inputs ── */
+  /* Inputs */
   .pkd-input {
-    width: 100%;
-    padding: 11px 14px;
-    border: 1.5px solid #d1fae5;
-    border-radius: 12px;
-    font-size: 13.5px;
-    color: #111827;
-    background: #f9fffe;
-    outline: none;
-    transition: all 0.2s ease;
-    box-sizing: border-box;
+    width: 100%; padding: 11px 14px;
+    border: 1.5px solid #d1fae5; border-radius: 12px;
+    font-size: 13.5px; color: #111827;
+    background: #f9fffe; outline: none;
+    transition: all 0.2s ease; box-sizing: border-box;
+    font-family: inherit;
   }
   .pkd-input:focus {
-    border-color: #059669;
-    background: #ffffff;
+    border-color: #059669; background: #ffffff;
     box-shadow: 0 0 0 3px rgba(5,150,105,0.10);
   }
   .pkd-input.error { border-color: #f87171; background: #fff5f5; }
-  .pkd-input-icon {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: #9ca3af;
-    pointer-events: none;
-  }
 
-  /* ── CTA button ── */
+  /* CTA */
   .pkd-cta {
-    width: 100%;
-    padding: 15px 24px;
+    width: 100%; padding: 15px 24px;
     background: linear-gradient(135deg, #059669 0%, #047857 50%, #065f46 100%);
-    color: white;
-    border: none;
-    border-radius: 14px;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    color: white; border: none; border-radius: 14px;
+    font-size: 15px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
     transition: all 0.25s ease;
     box-shadow: 0 8px 28px rgba(5,150,105,0.32);
     letter-spacing: 0.01em;
-    position: relative;
-    overflow: hidden;
+    position: relative; overflow: hidden;
+    text-decoration: none;
   }
   .pkd-cta::before {
-    content: '';
-    position: absolute;
-    top: 50%; left: 50%;
-    width: 0; height: 0;
-    background: rgba(255,255,255,0.15);
-    border-radius: 50%;
-    transform: translate(-50%,-50%);
+    content: ''; position: absolute; top: 50%; left: 50%;
+    width: 0; height: 0; background: rgba(255,255,255,0.15);
+    border-radius: 50%; transform: translate(-50%,-50%);
     transition: width 0.5s, height 0.5s;
   }
   .pkd-cta:hover::before { width: 400px; height: 400px; }
-  .pkd-cta:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 14px 40px rgba(5,150,105,0.42);
-  }
+  .pkd-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 40px rgba(5,150,105,0.42); }
   .pkd-cta:active { transform: translateY(0); }
-  .pkd-cta:disabled {
-    opacity: 0.65;
-    cursor: not-allowed;
-    transform: none;
-  }
+  .pkd-cta:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
 
-  /* ── Trust badges ── */
+  /* Trust */
   .pkd-trust-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 6px;
-    padding: 14px 10px;
-    border-radius: 14px;
-    transition: all 0.2s;
-    cursor: default;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 14px 10px; border-radius: 14px;
+    transition: all 0.2s; cursor: default;
   }
   .pkd-trust-item:hover { background: #f0fdf4; }
 
-  /* ── Stat chips ── */
-  .pkd-stat-chip {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    background: #f0fdf4;
-    border: 1px solid #a7f3d0;
-    border-radius: 50px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #065f46;
-    white-space: nowrap;
-    transition: all 0.2s;
-  }
-  .pkd-stat-chip:hover {
-    background: #dcfce7;
-    border-color: #6ee7b7;
-    transform: translateY(-1px);
-  }
-
-  /* ── FAQ ── */
+  /* FAQ */
   .pkd-faq {
-    border: 1.5px solid #d1fae5;
-    border-radius: 16px;
-    overflow: hidden;
-    transition: all 0.2s;
+    border: 1.5px solid #d1fae5; border-radius: 16px;
+    overflow: hidden; transition: all 0.2s;
   }
   .pkd-faq.open { border-color: #6ee7b7; box-shadow: 0 4px 20px rgba(5,150,105,0.10); }
   .pkd-faq-q {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 20px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    text-align: left;
-    gap: 12px;
-    transition: background 0.2s;
+    width: 100%; display: flex; align-items: center;
+    justify-content: space-between; padding: 16px 20px;
+    background: none; border: none; cursor: pointer;
+    text-align: left; gap: 12px; transition: background 0.2s;
   }
   .pkd-faq-q:hover { background: #f0fdf4; }
   .pkd-faq-a {
-    padding: 0 20px 16px;
-    font-size: 13.5px;
-    color: #4b5563;
-    line-height: 1.75;
+    padding: 14px 20px 16px;
+    font-size: 13.5px; color: #4b5563; line-height: 1.75;
     border-top: 1px solid #d1fae5;
-    padding-top: 14px;
   }
 
-  /* ── Photo counter ── */
+  /* Photo counter */
   .pkd-photo-counter {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: rgba(0,0,0,0.55);
-    backdrop-filter: blur(8px);
-    color: white;
-    font-size: 11px;
-    font-weight: 700;
-    padding: 5px 10px;
-    border-radius: 50px;
-    display: flex;
-    align-items: center;
-    gap: 5px;
+    position: absolute; top: 12px; right: 12px;
+    background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
+    color: white; font-size: 11px; font-weight: 700;
+    padding: 5px 10px; border-radius: 50px;
+    display: flex; align-items: center; gap: 5px;
   }
 
-  /* ── Scroll hide ── */
-  .hide-scroll { scrollbar-width: none; }
-  .hide-scroll::-webkit-scrollbar { display: none; }
+  /* Section label */
+  .pkd-section-label { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+  .pkd-section-label-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    background: linear-gradient(135deg, #059669, #065f46);
+    display: flex; align-items: center; justify-content: center;
+    color: white; flex-shrink: 0;
+  }
+  .pkd-section-label h2 {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(17px, 2.5vw, 22px);
+    font-weight: 700; color: #064e3b; margin: 0;
+  }
+  .pkd-section-label p { font-size: 12px; color: #9ca3af; margin: 0; }
 
-  /* ── Animations ── */
-  @keyframes pkd-fadeUp {
-    from { opacity: 0; transform: translateY(20px); }
-    to   { opacity: 1; transform: translateY(0); }
+  /* Lightbox */
+  .pkd-lightbox {
+    position: fixed; inset: 0; z-index: 9999;
+    background: rgba(0,0,0,0.96);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; backdrop-filter: blur(12px);
   }
-  @keyframes pkd-spin {
-    to { transform: rotate(360deg); }
+  .pkd-lightbox-img {
+    max-width: 100%; max-height: 90vh; object-fit: contain;
+    border-radius: 16px; box-shadow: 0 0 80px rgba(0,0,0,0.8);
   }
-  @keyframes pkd-pulse {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.5; }
-  }
-  .pkd-fadeup   { animation: pkd-fadeUp 0.5s ease forwards; }
-  .pkd-spin     { animation: pkd-spin 0.8s linear infinite; }
+
+  /* Skeleton */
   .pkd-skeleton {
     background: linear-gradient(110deg, #d1fae5 8%, #ecfdf5 18%, #d1fae5 33%);
     background-size: 200% 100%;
     animation: shimmer-pkd 1.5s ease infinite;
+    border-radius: 12px;
   }
   @keyframes shimmer-pkd {
     from { background-position: -200% 0; }
     to   { background-position:  200% 0; }
   }
 
-  /* ── Section label ── */
-  .pkd-section-label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 20px;
+  @keyframes pkd-fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
-  .pkd-section-label-icon {
-    width: 36px; height: 36px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, #059669, #065f46);
-    display: flex; align-items: center; justify-content: center;
-    color: white;
-    flex-shrink: 0;
-  }
-  .pkd-section-label h2 {
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: clamp(17px, 2.5vw, 22px);
-    font-weight: 700;
-    color: #064e3b;
-    margin: 0;
-  }
-  .pkd-section-label p {
-    font-size: 12px;
-    color: #9ca3af;
-    margin: 0;
+  @keyframes pkd-spin { to { transform: rotate(360deg); } }
+  @keyframes pkd-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.5; }
   }
 
-  /* ── Lightbox ── */
-  .pkd-lightbox {
-    position: fixed; inset: 0; z-index: 9999;
-    background: rgba(0,0,0,0.96);
-    display: flex; align-items: center; justify-content: center;
-    padding: 20px;
-    backdrop-filter: blur(12px);
-  }
-  .pkd-lightbox-img {
-    max-width: 100%; max-height: 90vh;
-    object-fit: contain;
-    border-radius: 16px;
-    box-shadow: 0 0 80px rgba(0,0,0,0.8);
-  }
+  .pkd-fadeup { animation: pkd-fadeUp 0.5s ease forwards; }
+  .pkd-spin   { animation: pkd-spin 0.8s linear infinite; }
 
   @media (max-width: 640px) {
     .pkd-hero { height: 55vh; min-height: 360px; }
@@ -520,14 +341,16 @@ function injectStyles() {
 
 /* ══════════════════════════════════════════════════════════════════════
    IMAGE GALLERY
-   ══════════════════════════════════════════════════════════════════════ */
+══════════════════════════════════════════════════════════════════════ */
 function ImageGallery({ images = [], cover, title }) {
   const [lightbox, setLightbox] = useState(null)
   const [mainIdx, setMainIdx]   = useState(0)
 
   const all = useMemo(() => {
     const parsed = parseJson(images)
-    const arr = cover ? [cover, ...parsed.filter(i => i !== cover)] : parsed
+    const arr = cover
+      ? [cover, ...parsed.filter(i => i !== cover)]
+      : parsed
     return arr.length ? arr : null
   }, [images, cover])
 
@@ -547,13 +370,29 @@ function ImageGallery({ images = [], cover, title }) {
     )
   }
 
-  const mainSrc  = all[mainIdx]
-  const thumbs   = all.filter((_, i) => i !== mainIdx).slice(0, 3)
+  const mainSrc   = all[mainIdx]
+  const thumbs    = all.filter((_, i) => i !== mainIdx).slice(0, 3)
   const remaining = all.length - 4
+
+  const navBtn = (onClick, children, extra = {}) => (
+    <button
+      onClick={onClick}
+      style={{
+        width: 40, height: 40, borderRadius: '50%',
+        background: 'rgba(255,255,255,0.92)', border: 'none',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        cursor: 'pointer', boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
+        color: '#065f46', transition: 'all 0.2s', position: 'absolute',
+        top: '50%', transform: 'translateY(-50%)',
+        ...extra,
+      }}
+    >
+      {children}
+    </button>
+  )
 
   return (
     <>
-      {/* Grid layout */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: all.length > 1 ? '1fr 1fr' : '1fr',
@@ -573,49 +412,24 @@ function ImageGallery({ images = [], cover, title }) {
         >
           <img
             src={mainSrc} alt={title}
-            style={{
-              width: '100%', height: '100%', objectFit: 'cover',
-              transition: 'transform 0.6s ease',
-            }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s ease' }}
             onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'}
             onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
           />
-          {/* Nav arrows */}
           {all.length > 1 && (
             <>
-              <button
-                onClick={e => { e.stopPropagation(); setMainIdx(i => (i - 1 + all.length) % all.length) }}
-                style={{
-                  position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                  width: 40, height: 40, borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.92)', border: 'none',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
-                  color: '#065f46', transition: 'all 0.2s',
-                }}
-                onMouseOver={e => e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)'}
-                onMouseOut={e => e.currentTarget.style.transform = 'translateY(-50%) scale(1)'}
-              >
-                <ChevronLeft size={18} />
-              </button>
-              <button
-                onClick={e => { e.stopPropagation(); setMainIdx(i => (i + 1) % all.length) }}
-                style={{
-                  position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
-                  width: 40, height: 40, borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.92)', border: 'none',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', boxShadow: '0 4px 16px rgba(0,0,0,0.18)',
-                  color: '#065f46', transition: 'all 0.2s',
-                }}
-                onMouseOver={e => e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)'}
-                onMouseOut={e => e.currentTarget.style.transform = 'translateY(-50%) scale(1)'}
-              >
-                <ChevronRight size={18} />
-              </button>
+              {navBtn(
+                e => { e.stopPropagation(); setMainIdx(i => (i - 1 + all.length) % all.length) },
+                <ChevronLeft size={18} />,
+                { left: 12 }
+              )}
+              {navBtn(
+                e => { e.stopPropagation(); setMainIdx(i => (i + 1) % all.length) },
+                <ChevronRight size={18} />,
+                { right: 12 }
+              )}
             </>
           )}
-          {/* Counter */}
           <div className="pkd-photo-counter">
             <Camera size={11} /> {mainIdx + 1} / {all.length}
           </div>
@@ -627,19 +441,15 @@ function ImageGallery({ images = [], cover, title }) {
           return (
             <div
               key={i}
-              onClick={() => isLast ? setLightbox(mainIdx + i + 1) : setMainIdx(
-                all.indexOf(src)
-              )}
-              style={{
-                position: 'relative', overflow: 'hidden', cursor: 'pointer',
+              onClick={() => {
+                const idx = all.indexOf(src)
+                isLast ? setLightbox(idx) : setMainIdx(idx)
               }}
+              style={{ position: 'relative', overflow: 'hidden', cursor: 'pointer' }}
             >
               <img
                 src={src} alt=""
-                style={{
-                  width: '100%', height: '100%', objectFit: 'cover',
-                  transition: 'transform 0.4s ease',
-                }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.4s ease' }}
                 onMouseOver={e => e.currentTarget.style.transform = 'scale(1.06)'}
                 onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
               />
@@ -648,8 +458,7 @@ function ImageGallery({ images = [], cover, title }) {
                   position: 'absolute', inset: 0,
                   background: 'rgba(4,47,31,0.72)',
                   display: 'flex', flexDirection: 'column',
-                  alignItems: 'center', justifyContent: 'center',
-                  color: 'white',
+                  alignItems: 'center', justifyContent: 'center', color: 'white',
                 }}>
                   <Camera size={22} style={{ marginBottom: 6 }} />
                   <span style={{ fontSize: 16, fontWeight: 800 }}>+{remaining + 1}</span>
@@ -685,14 +494,12 @@ function ImageGallery({ images = [], cover, title }) {
               background: 'rgba(255,255,255,0.12)', border: 'none',
               color: 'white', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              backdropFilter: 'blur(8px)',
             }}
           >
             <ChevronLeft size={22} />
           </button>
           <img
-            src={all[lightbox]}
-            alt={title}
+            src={all[lightbox]} alt={title}
             className="pkd-lightbox-img"
             onClick={e => e.stopPropagation()}
           />
@@ -704,7 +511,6 @@ function ImageGallery({ images = [], cover, title }) {
               background: 'rgba(255,255,255,0.12)', border: 'none',
               color: 'white', cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              backdropFilter: 'blur(8px)',
             }}
           >
             <ChevronRight size={22} />
@@ -723,7 +529,7 @@ function ImageGallery({ images = [], cover, title }) {
 
 /* ══════════════════════════════════════════════════════════════════════
    FAQ ITEM
-   ══════════════════════════════════════════════════════════════════════ */
+══════════════════════════════════════════════════════════════════════ */
 function FaqItem({ faq, index }) {
   const [open, setOpen] = useState(false)
   return (
@@ -736,10 +542,9 @@ function FaqItem({ faq, index }) {
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             transition: 'all 0.2s', flexShrink: 0,
           }}>
-            <span style={{
-              fontSize: 11, fontWeight: 800,
-              color: open ? 'white' : '#059669',
-            }}>Q{index + 1}</span>
+            <span style={{ fontSize: 11, fontWeight: 800, color: open ? 'white' : '#059669' }}>
+              Q{index + 1}
+            </span>
           </div>
           <span style={{ fontSize: 14, fontWeight: 600, color: '#1f2937', lineHeight: 1.5 }}>
             {faq.question || faq.title}
@@ -755,24 +560,39 @@ function FaqItem({ faq, index }) {
         />
       </button>
       {open && (
-        <div className="pkd-faq-a">
-          {faq.answer || faq.content}
-        </div>
+        <div className="pkd-faq-a">{faq.answer || faq.content}</div>
       )}
     </div>
   )
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   BOOKING FORM
-   ══════════════════════════════════════════════════════════════════════ */
+   SECTION LABEL
+══════════════════════════════════════════════════════════════════════ */
+function SectionLabel({ icon: Icon, title, subtitle }) {
+  return (
+    <div className="pkd-section-label">
+      <div className="pkd-section-label-icon"><Icon size={17} /></div>
+      <div>
+        <h2>{title}</h2>
+        {subtitle && <p>{subtitle}</p>}
+      </div>
+    </div>
+  )
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   BOOKING FORM — Fixed payload
+══════════════════════════════════════════════════════════════════════ */
 function BookingForm({ pkg, user }) {
+  const today = new Date().toISOString().split('T')[0]
+
   const [form, setForm] = useState({
-    guest_name:       user?.fullName || user?.full_name || user?.name || '',
-    guest_email:      user?.email  || '',
-    guest_phone:      user?.phone  || '',
-    adults:           1,
-    children:         0,
+    guest_name:       '',
+    guest_email:      '',
+    guest_phone:      '',
+    number_of_adults:    1,
+    number_of_children:  0,
     travel_date:      '',
     end_date:         '',
     special_requests: '',
@@ -782,6 +602,7 @@ function BookingForm({ pkg, user }) {
   const [success, setSuccess] = useState(false)
   const [bookingRef, setBookingRef] = useState('')
 
+  // Pre-fill from user
   useEffect(() => {
     if (!user) return
     setForm(p => ({
@@ -794,20 +615,21 @@ function BookingForm({ pkg, user }) {
 
   const upd = (k, v) => {
     setForm(p => ({ ...p, [k]: v }))
-    setErrors(p => ({ ...p, [k]: '' }))
+    setErrors(p => ({ ...p, [k]: undefined }))
   }
 
-  const total     = (parseInt(form.adults) || 1) + (parseInt(form.children) || 0)
-  const estimate  = Number(pkg.price) * total
-  const today     = new Date().toISOString().split('T')[0]
+  const adults   = Math.max(1, parseInt(form.number_of_adults)   || 1)
+  const children = Math.max(0, parseInt(form.number_of_children) || 0)
+  const total    = adults + children
+  const estimate = Number(pkg?.price || 0) * total
 
   const validate = () => {
     const e = {}
     if (!form.guest_name?.trim())  e.guest_name  = 'Full name is required'
     if (!form.guest_email?.trim()) e.guest_email = 'Email is required'
-    if (form.guest_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.guest_email))
-      e.guest_email = 'Enter a valid email'
-    if (!form.travel_date) e.travel_date = 'Please pick a start date'
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.guest_email))
+      e.guest_email = 'Enter a valid email address'
+    if (!form.travel_date) e.travel_date = 'Please select a start date'
     return e
   }
 
@@ -815,29 +637,75 @@ function BookingForm({ pkg, user }) {
     e.preventDefault()
     const errs = validate()
     if (Object.keys(errs).length) { setErrors(errs); return }
+
     setSending(true)
+    setErrors({})
+
     try {
       const payload = {
-        ...form,
-        booking_type:       'package',
-        package_id:         pkg.id,
-        package_title:      pkg.title,
-        package_price:      pkg.price,
-        currency:           pkg.currency || 'USD',
-        travelers_count:    total,
-        total_price:        estimate,
-        number_of_adults:   parseInt(form.adults) || 1,
-        number_of_children: parseInt(form.children) || 0,
+        // Guest info
+        guest_name:          form.guest_name.trim(),
+        guest_email:         form.guest_email.trim().toLowerCase(),
+        guest_phone:         form.guest_phone.trim() || undefined,
+
+        // Package
+        booking_type:        'package',
+        package_id:          pkg.id,
+        package_title:       pkg.title,
+        package_price:       pkg.price ? parseFloat(pkg.price) : undefined,
+        currency:            pkg.currency || 'USD',
+
+        // Travel
+        travel_date:         form.travel_date,
+        end_date:            form.end_date || undefined,
+
+        // Travelers
+        number_of_adults:    adults,
+        number_of_children:  children,
+        travelers_count:     total,
+
+        // Pricing
+        total_price:         estimate > 0 ? estimate : undefined,
+
+        // Extra
+        special_requests:    form.special_requests.trim() || undefined,
       }
+
       const body = await createBooking(payload)
+      setBookingRef(
+        body?.data?.booking_number ||
+        body?.data?.booking_ref    ||
+        body?.booking_number       || ''
+      )
       setSuccess(true)
-      setBookingRef(body?.data?.booking_number || body?.data?.booking_ref || '')
     } catch (err) {
-      setErrors({ _form: err?.message || 'Failed to submit booking.' })
+      console.error('[BookingForm] Error:', err)
+      setErrors({
+        _form: err?.message || 'Failed to submit booking. Please try again.',
+      })
     } finally {
       setSending(false)
     }
   }
+
+  const inputBase = (errKey) => ({
+    width: '100%',
+    padding: '10px 14px',
+    border: `1.5px solid ${errors[errKey] ? '#f87171' : '#d1fae5'}`,
+    borderRadius: 12, fontSize: 13.5, color: '#111827',
+    background: errors[errKey] ? '#fff5f5' : '#f9fffe',
+    outline: 'none', boxSizing: 'border-box',
+    transition: 'all 0.2s', fontFamily: 'inherit',
+  })
+
+  const inputWithIcon = (errKey) => ({ ...inputBase(errKey), paddingLeft: 36 })
+
+  const focusStyle = { borderColor: '#059669', boxShadow: '0 0 0 3px rgba(5,150,105,0.10)', background: '#fff' }
+  const blurStyle  = (errKey) => ({
+    borderColor: errors[errKey] ? '#f87171' : '#d1fae5',
+    boxShadow: 'none',
+    background: errors[errKey] ? '#fff5f5' : '#f9fffe',
+  })
 
   if (success) {
     return (
@@ -855,24 +723,24 @@ function BookingForm({ pkg, user }) {
           fontFamily: "'Playfair Display', serif",
           fontSize: 20, fontWeight: 700, color: '#064e3b', marginBottom: 8,
         }}>
-          Request Received!
+          Request Received! 🎉
         </h3>
         {bookingRef && (
           <div style={{
             display: 'inline-block',
             background: '#f0fdf4', border: '1px solid #a7f3d0',
             borderRadius: 10, padding: '6px 16px',
-            fontFamily: 'monospace', fontSize: 13, color: '#059669',
-            fontWeight: 700, marginBottom: 12,
+            fontFamily: 'monospace', fontSize: 13,
+            color: '#059669', fontWeight: 700, marginBottom: 12,
           }}>
             Ref: {bookingRef}
           </div>
         )}
         <p style={{ fontSize: 13.5, color: '#6b7280', lineHeight: 1.65, marginBottom: 20 }}>
-          Our team will review your booking and reach out within 24 hours to confirm details.
+          Our team will review your request and contact you within 24 hours to confirm details and availability.
         </p>
         <button
-          onClick={() => { setSuccess(false); setBookingRef('') }}
+          onClick={() => { setSuccess(false); setBookingRef(''); setForm(f => ({ ...f, travel_date: '', end_date: '', special_requests: '' })) }}
           style={{
             background: 'none', border: '1.5px solid #059669',
             color: '#059669', borderRadius: 10,
@@ -888,22 +756,16 @@ function BookingForm({ pkg, user }) {
     )
   }
 
-  const fieldStyle = (errKey) => ({
-    width: '100%', padding: '10px 14px', paddingLeft: errKey ? '14px' : undefined,
-    border: `1.5px solid ${errors[errKey] ? '#f87171' : '#d1fae5'}`,
-    borderRadius: 12, fontSize: 13.5, color: '#111827',
-    background: errors[errKey] ? '#fff5f5' : '#f9fffe',
-    outline: 'none', boxSizing: 'border-box', transition: 'all 0.2s',
-    fontFamily: 'inherit',
-  })
-
-  const iconFieldStyle = (errKey) => ({
-    ...fieldStyle(errKey),
-    paddingLeft: '36px',
-  })
+  const labelStyle = {
+    fontSize: 11.5, fontWeight: 700, color: '#374151',
+    marginBottom: 5, display: 'block',
+    textTransform: 'uppercase', letterSpacing: '0.05em',
+  }
 
   return (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+      {/* Form-level error */}
       {errors._form && (
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
@@ -919,36 +781,33 @@ function BookingForm({ pkg, user }) {
       {/* Name + Email */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div>
-          <label style={{ fontSize: 11.5, fontWeight: 700, color: '#374151', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Full Name *
-          </label>
+          <label style={labelStyle}>Full Name *</label>
           <div style={{ position: 'relative' }}>
-            <User size={13} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+            <User size={13} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', pointerEvents: 'none' }} />
             <input
               value={form.guest_name}
               onChange={e => upd('guest_name', e.target.value)}
               placeholder="Your name"
-              style={iconFieldStyle('guest_name')}
-              onFocus={e => { e.target.style.borderColor = '#059669'; e.target.style.boxShadow = '0 0 0 3px rgba(5,150,105,0.10)'; e.target.style.background = '#fff' }}
-              onBlur={e => { e.target.style.borderColor = errors.guest_name ? '#f87171' : '#d1fae5'; e.target.style.boxShadow = 'none'; e.target.style.background = errors.guest_name ? '#fff5f5' : '#f9fffe' }}
+              style={inputWithIcon('guest_name')}
+              onFocus={e => Object.assign(e.target.style, focusStyle)}
+              onBlur={e => Object.assign(e.target.style, blurStyle('guest_name'))}
             />
           </div>
           {errors.guest_name && <p style={{ fontSize: 11.5, color: '#ef4444', marginTop: 4 }}>{errors.guest_name}</p>}
         </div>
+
         <div>
-          <label style={{ fontSize: 11.5, fontWeight: 700, color: '#374151', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Email *
-          </label>
+          <label style={labelStyle}>Email *</label>
           <div style={{ position: 'relative' }}>
-            <Mail size={13} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+            <Mail size={13} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', pointerEvents: 'none' }} />
             <input
               type="email"
               value={form.guest_email}
               onChange={e => upd('guest_email', e.target.value)}
               placeholder="you@email.com"
-              style={iconFieldStyle('guest_email')}
-              onFocus={e => { e.target.style.borderColor = '#059669'; e.target.style.boxShadow = '0 0 0 3px rgba(5,150,105,0.10)'; e.target.style.background = '#fff' }}
-              onBlur={e => { e.target.style.borderColor = errors.guest_email ? '#f87171' : '#d1fae5'; e.target.style.boxShadow = 'none'; e.target.style.background = errors.guest_email ? '#fff5f5' : '#f9fffe' }}
+              style={inputWithIcon('guest_email')}
+              onFocus={e => Object.assign(e.target.style, focusStyle)}
+              onBlur={e => Object.assign(e.target.style, blurStyle('guest_email'))}
             />
           </div>
           {errors.guest_email && <p style={{ fontSize: 11.5, color: '#ef4444', marginTop: 4 }}>{errors.guest_email}</p>}
@@ -957,19 +816,17 @@ function BookingForm({ pkg, user }) {
 
       {/* Phone */}
       <div>
-        <label style={{ fontSize: 11.5, fontWeight: 700, color: '#374151', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Phone Number
-        </label>
+        <label style={labelStyle}>Phone Number</label>
         <div style={{ position: 'relative' }}>
-          <Phone size={13} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af' }} />
+          <Phone size={13} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: '#9ca3af', pointerEvents: 'none' }} />
           <input
             type="tel"
             value={form.guest_phone}
             onChange={e => upd('guest_phone', e.target.value)}
             placeholder="+1 234 567 8900"
-            style={iconFieldStyle()}
-            onFocus={e => { e.target.style.borderColor = '#059669'; e.target.style.boxShadow = '0 0 0 3px rgba(5,150,105,0.10)'; e.target.style.background = '#fff' }}
-            onBlur={e => { e.target.style.borderColor = '#d1fae5'; e.target.style.boxShadow = 'none'; e.target.style.background = '#f9fffe' }}
+            style={inputWithIcon()}
+            onFocus={e => Object.assign(e.target.style, focusStyle)}
+            onBlur={e => Object.assign(e.target.style, { borderColor: '#d1fae5', boxShadow: 'none', background: '#f9fffe' })}
           />
         </div>
       </div>
@@ -977,87 +834,77 @@ function BookingForm({ pkg, user }) {
       {/* Dates */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
         <div>
-          <label style={{ fontSize: 11.5, fontWeight: 700, color: '#374151', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Start Date *
-          </label>
+          <label style={labelStyle}>Start Date *</label>
           <input
             type="date"
             value={form.travel_date}
             onChange={e => upd('travel_date', e.target.value)}
             min={today}
-            style={fieldStyle('travel_date')}
-            onFocus={e => { e.target.style.borderColor = '#059669'; e.target.style.boxShadow = '0 0 0 3px rgba(5,150,105,0.10)'; e.target.style.background = '#fff' }}
-            onBlur={e => { e.target.style.borderColor = errors.travel_date ? '#f87171' : '#d1fae5'; e.target.style.boxShadow = 'none'; e.target.style.background = errors.travel_date ? '#fff5f5' : '#f9fffe' }}
+            style={inputBase('travel_date')}
+            onFocus={e => Object.assign(e.target.style, focusStyle)}
+            onBlur={e => Object.assign(e.target.style, blurStyle('travel_date'))}
           />
           {errors.travel_date && <p style={{ fontSize: 11.5, color: '#ef4444', marginTop: 4 }}>{errors.travel_date}</p>}
         </div>
         <div>
-          <label style={{ fontSize: 11.5, fontWeight: 700, color: '#374151', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            Return Date
-          </label>
+          <label style={labelStyle}>Return Date</label>
           <input
             type="date"
             value={form.end_date}
             onChange={e => upd('end_date', e.target.value)}
             min={form.travel_date || today}
-            style={fieldStyle()}
-            onFocus={e => { e.target.style.borderColor = '#059669'; e.target.style.boxShadow = '0 0 0 3px rgba(5,150,105,0.10)'; e.target.style.background = '#fff' }}
-            onBlur={e => { e.target.style.borderColor = '#d1fae5'; e.target.style.boxShadow = 'none'; e.target.style.background = '#f9fffe' }}
+            style={inputBase()}
+            onFocus={e => Object.assign(e.target.style, focusStyle)}
+            onBlur={e => Object.assign(e.target.style, { borderColor: '#d1fae5', boxShadow: 'none', background: '#f9fffe' })}
           />
         </div>
       </div>
 
       {/* Travelers */}
       <div>
-        <label style={{ fontSize: 11.5, fontWeight: 700, color: '#374151', marginBottom: 8, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Travelers
-        </label>
+        <label style={labelStyle}>Travelers</label>
         <div style={{
           display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12,
           background: '#f0fdf4', borderRadius: 14, padding: 14,
           border: '1px solid #d1fae5',
         }}>
           {[
-            { key: 'adults',   label: 'Adults',   sub: '18+ years', min: 1 },
-            { key: 'children', label: 'Children', sub: 'Under 18',  min: 0 },
+            { key: 'number_of_adults',   label: 'Adults',   sub: '18+ years', min: 1 },
+            { key: 'number_of_children', label: 'Children', sub: 'Under 18',  min: 0 },
           ].map(({ key, label, sub, min }) => (
             <div key={key}>
               <div style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>{label}</div>
               <div style={{ fontSize: 11, color: '#9ca3af', marginBottom: 6 }}>{sub}</div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <button
-                  type="button"
-                  onClick={() => upd(key, Math.max(min, parseInt(form[key]) - 1))}
-                  style={{
-                    width: 30, height: 30, borderRadius: 8,
-                    background: 'white', border: '1.5px solid #d1fae5',
-                    color: '#059669', fontWeight: 800, fontSize: 16,
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseOver={e => { e.currentTarget.style.background = '#059669'; e.currentTarget.style.color = 'white' }}
-                  onMouseOut={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#059669' }}
-                >
-                  −
-                </button>
-                <span style={{ fontSize: 16, fontWeight: 700, color: '#111827', minWidth: 24, textAlign: 'center' }}>
-                  {form[key]}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => upd(key, parseInt(form[key]) + 1)}
-                  style={{
-                    width: 30, height: 30, borderRadius: 8,
-                    background: 'white', border: '1.5px solid #d1fae5',
-                    color: '#059669', fontWeight: 800, fontSize: 16,
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseOver={e => { e.currentTarget.style.background = '#059669'; e.currentTarget.style.color = 'white' }}
-                  onMouseOut={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#059669' }}
-                >
-                  +
-                </button>
+                {[
+                  { label: '−', action: () => upd(key, Math.max(min, parseInt(form[key]) - 1)) },
+                  { label: '+', action: () => upd(key, parseInt(form[key]) + 1) },
+                ].reduce((acc, btn, i) => {
+                  const button = (
+                    <button
+                      key={btn.label}
+                      type="button"
+                      onClick={btn.action}
+                      style={{
+                        width: 30, height: 30, borderRadius: 8,
+                        background: 'white', border: '1.5px solid #d1fae5',
+                        color: '#059669', fontWeight: 800, fontSize: 16,
+                        cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'all 0.2s',
+                      }}
+                      onMouseOver={e => { e.currentTarget.style.background = '#059669'; e.currentTarget.style.color = 'white' }}
+                      onMouseOut={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.color = '#059669' }}
+                    >
+                      {btn.label}
+                    </button>
+                  )
+                  if (i === 0) return [...acc, button,
+                    <span key="val" style={{ fontSize: 16, fontWeight: 700, color: '#111827', minWidth: 24, textAlign: 'center' }}>
+                      {form[key]}
+                    </span>
+                  ]
+                  return [...acc, button]
+                }, [])}
               </div>
             </div>
           ))}
@@ -1066,30 +913,25 @@ function BookingForm({ pkg, user }) {
 
       {/* Special requests */}
       <div>
-        <label style={{ fontSize: 11.5, fontWeight: 700, color: '#374151', marginBottom: 5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-          Special Requests
-        </label>
+        <label style={labelStyle}>Special Requests</label>
         <textarea
           rows={3}
           value={form.special_requests}
           onChange={e => upd('special_requests', e.target.value)}
-          placeholder="Dietary needs, accessibility, special occasions…"
-          style={{
-            ...fieldStyle(),
-            resize: 'none', lineHeight: 1.6, paddingTop: 10,
-          }}
-          onFocus={e => { e.target.style.borderColor = '#059669'; e.target.style.boxShadow = '0 0 0 3px rgba(5,150,105,0.10)'; e.target.style.background = '#fff' }}
-          onBlur={e => { e.target.style.borderColor = '#d1fae5'; e.target.style.boxShadow = 'none'; e.target.style.background = '#f9fffe' }}
+          placeholder="Dietary needs, accessibility requirements, special occasions…"
+          style={{ ...inputBase(), resize: 'none', lineHeight: 1.6, paddingTop: 10 }}
+          onFocus={e => Object.assign(e.target.style, focusStyle)}
+          onBlur={e => Object.assign(e.target.style, { borderColor: '#d1fae5', boxShadow: 'none', background: '#f9fffe' })}
         />
       </div>
 
       {/* Price estimate */}
-      {pkg.is_price_visible !== false && Number(pkg.price) > 0 && (
+      {pkg.is_price_visible !== false && Number(pkg?.price) > 0 && (
         <div style={{
           background: 'linear-gradient(135deg, #f0fdf4, #ecfdf5)',
           border: '1px solid #a7f3d0', borderRadius: 14, padding: '14px 16px',
         }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
             <span style={{ fontSize: 13, color: '#6b7280' }}>
               {fmtPrice(pkg.price, pkg.currency)} × {total} traveler{total > 1 ? 's' : ''}
             </span>
@@ -1113,32 +955,15 @@ function BookingForm({ pkg, user }) {
 
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: '#9ca3af' }}>
         <Shield size={11} style={{ color: '#059669' }} />
-        No payment now · We confirm availability first
+        No payment required now · We confirm availability first
       </div>
     </form>
   )
 }
 
 /* ══════════════════════════════════════════════════════════════════════
-   SECTION LABEL
-   ══════════════════════════════════════════════════════════════════════ */
-function SectionLabel({ icon: Icon, title, subtitle }) {
-  return (
-    <div className="pkd-section-label">
-      <div className="pkd-section-label-icon">
-        <Icon size={17} />
-      </div>
-      <div>
-        <h2>{title}</h2>
-        {subtitle && <p>{subtitle}</p>}
-      </div>
-    </div>
-  )
-}
-
-/* ══════════════════════════════════════════════════════════════════════
-   LOADING STATE
-   ══════════════════════════════════════════════════════════════════════ */
+   LOADING / ERROR STATES
+══════════════════════════════════════════════════════════════════════ */
 function LoadingState() {
   return (
     <div style={{ minHeight: '100vh', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -1160,9 +985,6 @@ function LoadingState() {
   )
 }
 
-/* ══════════════════════════════════════════════════════════════════════
-   ERROR STATE
-   ══════════════════════════════════════════════════════════════════════ */
 function ErrorState({ message }) {
   return (
     <div style={{ minHeight: '100vh', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
@@ -1201,10 +1023,10 @@ function ErrorState({ message }) {
 
 /* ══════════════════════════════════════════════════════════════════════
    MAIN PAGE
-   ══════════════════════════════════════════════════════════════════════ */
+══════════════════════════════════════════════════════════════════════ */
 export default function PackageDetail() {
-  const { slug }                  = useParams()
-  const { user }                  = useUserAuth()
+  const { slug }   = useParams()
+  const { user }   = useUserAuth()
 
   const [pkg,       setPkg]       = useState(null)
   const [loading,   setLoading]   = useState(true)
@@ -1215,6 +1037,7 @@ export default function PackageDetail() {
 
   useEffect(() => { injectStyles() }, [])
 
+  /* Derived data */
   const images       = useMemo(() => parseJson(pkg?.images),        [pkg?.images])
   const features     = useMemo(() => parseJson(pkg?.features),      [pkg?.features])
   const inclusions   = useMemo(() => parseJson(pkg?.inclusions),    [pkg?.inclusions])
@@ -1224,17 +1047,21 @@ export default function PackageDetail() {
   const faqs         = useMemo(() => parseJson(pkg?.faqs),          [pkg?.faqs])
   const pricingTiers = useMemo(() => parseJson(pkg?.pricing_tiers), [pkg?.pricing_tiers])
 
-  const hasDisc  = Number(pkg?.discount_percent) > 0
+  const hasDisc   = Number(pkg?.discount_percent) > 0
   const origPrice = hasDisc
     ? Number(pkg.price) / (1 - Number(pkg.discount_percent) / 100)
     : null
 
+  /* Fetch package */
   useEffect(() => {
     if (!slug) return
-    setLoading(true); setError(null)
+    setLoading(true)
+    setError(null)
+
     const fn = /^\d+$/.test(slug)
       ? () => packagesAPI.getById(slug)
       : () => packagesAPI.getBySlug(slug)
+
     fn()
       .then(body => {
         const d = body?.data || body
@@ -1268,12 +1095,11 @@ export default function PackageDetail() {
 
   const handleShare = () => {
     if (navigator.share) {
-      navigator.share({ title: pkg.title, url: window.location.href }).catch(() => {})
+      navigator.share({ title: pkg?.title, url: window.location.href }).catch(() => {})
     } else {
-      navigator.clipboard.writeText(window.location.href).then(() => {
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
-      }).catch(() => {})
+      navigator.clipboard.writeText(window.location.href)
+        .then(() => { setCopied(true); setTimeout(() => setCopied(false), 2200) })
+        .catch(() => {})
     }
   }
 
@@ -1281,18 +1107,26 @@ export default function PackageDetail() {
   if (error || !pkg) return <ErrorState message={error} />
 
   const tabs = [
-    { id: 'overview',   label: 'Overview',                                    icon: BookOpen  },
-    { id: 'itinerary',  label: `Itinerary${itinerary.length ? ` (${itinerary.length}d)` : ''}`, icon: Calendar  },
-    { id: 'inclusions', label: 'Included',                                    icon: CheckCircle },
-    { id: 'faqs',       label: `FAQs${faqs.length ? ` (${faqs.length})` : ''}`, icon: Info },
+    { id: 'overview',   label: 'Overview',                                             icon: BookOpen    },
+    { id: 'itinerary',  label: `Itinerary${itinerary.length ? ` (${itinerary.length}d)` : ''}`, icon: Calendar    },
+    { id: 'inclusions', label: 'Included',                                             icon: CheckCircle },
+    { id: 'faqs',       label: `FAQs${faqs.length ? ` (${faqs.length})` : ''}`,        icon: Info        },
   ]
+
+  const chipStyle = {
+    display: 'flex', alignItems: 'center', gap: 6,
+    background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(12px)',
+    border: '1px solid rgba(255,255,255,0.22)',
+    color: 'white', padding: '7px 14px', borderRadius: 50,
+    fontSize: 13, fontWeight: 600,
+  }
 
   return (
     <div className="pkd-root">
 
-      {/* ── HERO GALLERY BANNER ── */}
+      {/* ── HERO ── */}
       <div className="pkd-hero">
-        {(pkg.cover_image_url || images[0]) ? (
+        {pkg.cover_image_url || images[0] ? (
           <img
             src={pkg.cover_image_url || images[0]}
             alt={pkg.title}
@@ -1306,19 +1140,17 @@ export default function PackageDetail() {
         )}
         <div className="pkd-hero-overlay" />
 
-        {/* Top nav bar */}
+        {/* Nav */}
         <div className="pkd-hero-nav">
           <Link
             to="/packages"
             style={{
               display: 'flex', alignItems: 'center', gap: 8,
-              background: 'rgba(255,255,255,0.14)',
-              backdropFilter: 'blur(12px)',
+              background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(12px)',
               border: '1px solid rgba(255,255,255,0.22)',
               color: 'white', textDecoration: 'none',
               padding: '9px 18px', borderRadius: 50,
-              fontSize: 13, fontWeight: 600,
-              transition: 'all 0.2s',
+              fontSize: 13, fontWeight: 600, transition: 'all 0.2s',
             }}
             onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.24)'}
             onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.14)'}
@@ -1327,15 +1159,12 @@ export default function PackageDetail() {
           </Link>
 
           <div style={{ display: 'flex', gap: 10 }}>
-            {/* Breadcrumb hints */}
             {pkg.category && (
               <div style={{
-                background: 'rgba(255,255,255,0.14)',
-                backdropFilter: 'blur(12px)',
+                background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(12px)',
                 border: '1px solid rgba(255,255,255,0.2)',
                 color: 'rgba(255,255,255,0.9)',
-                padding: '6px 14px', borderRadius: 50,
-                fontSize: 12, fontWeight: 600,
+                padding: '6px 14px', borderRadius: 50, fontSize: 12, fontWeight: 600,
               }}>
                 {pkg.category}
               </div>
@@ -1343,10 +1172,8 @@ export default function PackageDetail() {
             {pkg.is_featured && (
               <div style={{
                 background: 'linear-gradient(135deg, rgba(245,158,11,0.85), rgba(217,119,6,0.85))',
-                backdropFilter: 'blur(12px)',
-                color: 'white',
-                padding: '6px 14px', borderRadius: 50,
-                fontSize: 12, fontWeight: 700,
+                backdropFilter: 'blur(12px)', color: 'white',
+                padding: '6px 14px', borderRadius: 50, fontSize: 12, fontWeight: 700,
                 display: 'flex', alignItems: 'center', gap: 5,
               }}>
                 <Star size={10} fill="white" /> Featured
@@ -1355,71 +1182,39 @@ export default function PackageDetail() {
           </div>
         </div>
 
-        {/* Hero bottom content */}
+        {/* Hero content */}
         <div className="pkd-hero-content">
-          {/* Stat chips row */}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
-            {pkg.destination && (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255,255,255,0.22)',
-                color: 'white', padding: '7px 14px', borderRadius: 50,
-                fontSize: 13, fontWeight: 600,
-              }}>
-                <MapPin size={13} /> {pkg.destination}
-              </div>
-            )}
+            {pkg.destination   && <div style={chipStyle}><MapPin size={13} /> {pkg.destination}</div>}
             {pkg.duration_days && (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255,255,255,0.22)',
-                color: 'white', padding: '7px 14px', borderRadius: 50,
-                fontSize: 13, fontWeight: 600,
-              }}>
-                <Clock size={13} /> {pkg.duration_days} days
-                {pkg.duration_nights ? ` / ${pkg.duration_nights} nights` : ''}
+              <div style={chipStyle}>
+                <Clock size={13} /> {pkg.duration_days} days{pkg.duration_nights ? ` / ${pkg.duration_nights} nights` : ''}
               </div>
             )}
-            {pkg.max_travelers && (
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: 6,
-                background: 'rgba(255,255,255,0.14)', backdropFilter: 'blur(12px)',
-                border: '1px solid rgba(255,255,255,0.22)',
-                color: 'white', padding: '7px 14px', borderRadius: 50,
-                fontSize: 13, fontWeight: 600,
-              }}>
-                <Users size={13} /> Max {pkg.max_travelers}
-              </div>
-            )}
+            {pkg.max_travelers && <div style={chipStyle}><Users size={13} /> Max {pkg.max_travelers}</div>}
           </div>
-
           <h1 style={{
             fontFamily: "'Playfair Display', Georgia, serif",
-            fontSize: 'clamp(26px, 4.5vw, 52px)',
-            fontWeight: 900, color: 'white',
-            lineHeight: 1.15, letterSpacing: '-0.02em',
-            marginBottom: 0, textShadow: '0 2px 20px rgba(0,0,0,0.4)',
-            maxWidth: 760,
+            fontSize: 'clamp(26px, 4.5vw, 52px)', fontWeight: 900,
+            color: 'white', lineHeight: 1.15, letterSpacing: '-0.02em',
+            textShadow: '0 2px 20px rgba(0,0,0,0.4)', maxWidth: 760, margin: 0,
           }}>
             {pkg.title}
           </h1>
         </div>
       </div>
 
-      {/* ── MAIN CONTENT ── */}
+      {/* ── CONTENT ── */}
       <div className="pkd-layout" style={{ paddingTop: 32, paddingBottom: 64 }}>
         <div className="pkd-grid">
 
-          {/* ════ LEFT COLUMN ════ */}
+          {/* ════ LEFT ════ */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
             {/* Action bar */}
             <div style={{
-              display: 'flex', flexWrap: 'wrap', alignItems: 'center',
-              gap: 10, padding: '14px 20px',
-              background: 'white', borderRadius: 18,
+              display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 10,
+              padding: '14px 20px', background: 'white', borderRadius: 18,
               border: '1px solid #dcfce7',
               boxShadow: '0 2px 12px rgba(5,150,105,0.06)',
             }}>
@@ -1435,7 +1230,7 @@ export default function PackageDetail() {
                   transition: 'all 0.2s',
                 }}
                 onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-                onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
+                onMouseOut={e => e.currentTarget.style.transform = 'none'}
               >
                 <Heart size={15} fill={wishlist ? '#ef4444' : 'none'} />
                 {wishlist ? 'Saved' : 'Save'}
@@ -1453,24 +1248,7 @@ export default function PackageDetail() {
                   transition: 'all 0.2s',
                 }}
                 onMouseOver={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-                onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
-              >
-                {copied ? <Check size={15} /> : <Share2 size={15} />}
-                {copied ? 'Copied!' : 'Share'}
-              </button>
-
-              <button
-                onClick={handleShare}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: 7,
-                  padding: '9px 18px', borderRadius: 12,
-                  background: 'rgba(255,255,255,0.10)',
-                  border: '1.5px solid rgba(255,255,255,0.18)',
-                  color: 'white', fontSize: 13.5, fontWeight: 600,
-                  cursor: 'pointer', transition: 'all 0.2s',
-                }}
-                onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.18)'}
-                onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.10)'}
+                onMouseOut={e => e.currentTarget.style.transform = 'none'}
               >
                 {copied ? <Check size={15} /> : <Share2 size={15} />}
                 {copied ? 'Copied!' : 'Share'}
@@ -1485,6 +1263,17 @@ export default function PackageDetail() {
                   Sold Out
                 </span>
               )}
+
+              {pkg.difficulty && (
+                <span style={{
+                  padding: '6px 14px', borderRadius: 50,
+                  background: '#f0fdf4', border: '1.5px solid #a7f3d0',
+                  color: '#065f46', fontSize: 12, fontWeight: 700,
+                  marginLeft: 'auto',
+                }}>
+                  {pkg.difficulty}
+                </span>
+              )}
             </div>
 
             {/* Gallery */}
@@ -1494,7 +1283,7 @@ export default function PackageDetail() {
               title={pkg.title}
             />
 
-            {/* Description snippet */}
+            {/* Short description */}
             {pkg.short_description && (
               <div className="pkd-card pkd-card-p">
                 <p style={{ fontSize: 15.5, color: '#374151', lineHeight: 1.8, margin: 0 }}>
@@ -1513,8 +1302,7 @@ export default function PackageDetail() {
                       <div style={{
                         width: 30, height: 30, borderRadius: 9,
                         background: 'linear-gradient(135deg, #059669, #065f46)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        flexShrink: 0,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                       }}>
                         <Check size={14} color="white" strokeWidth={3} />
                       </div>
@@ -1543,7 +1331,7 @@ export default function PackageDetail() {
                         transition: 'all 0.2s', cursor: 'default',
                       }}
                       onMouseOver={e => { e.currentTarget.style.background = '#dcfce7'; e.currentTarget.style.transform = 'translateY(-2px)' }}
-                      onMouseOut={e => { e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.transform = 'translateY(0)' }}
+                      onMouseOut={e => { e.currentTarget.style.background = '#f0fdf4'; e.currentTarget.style.transform = 'none' }}
                     >
                       <Leaf size={12} style={{ color: '#059669' }} /> {f}
                     </div>
@@ -1554,7 +1342,6 @@ export default function PackageDetail() {
 
             {/* Tabbed content */}
             <div className="pkd-card" style={{ overflow: 'hidden' }}>
-              {/* Tab bar */}
               <div style={{ padding: '16px 20px 0', borderBottom: '1px solid #d1fae5' }}>
                 <div className="pkd-tabs">
                   {tabs.map(tab => (
@@ -1572,32 +1359,26 @@ export default function PackageDetail() {
 
               <div className="pkd-card-p">
 
-                {/* ── Overview ── */}
+                {/* Overview */}
                 {activeTab === 'overview' && (
                   <div>
-                    {(pkg.description || pkg.content)
-                      ? (
-                        <div
-                          style={{
-                            fontSize: 14.5, color: '#374151', lineHeight: 1.85,
-                            maxWidth: '72ch',
-                          }}
-                          dangerouslySetInnerHTML={{ __html: pkg.description || pkg.content }}
-                        />
-                      )
-                      : (
-                        <div style={{ textAlign: 'center', padding: '48px 24px' }}>
-                          <BookOpen size={40} style={{ color: '#d1fae5', margin: '0 auto 12px', display: 'block' }} />
-                          <p style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: 14 }}>
-                            No description available yet.
-                          </p>
-                        </div>
-                      )
-                    }
+                    {pkg.description || pkg.content ? (
+                      <div
+                        style={{ fontSize: 14.5, color: '#374151', lineHeight: 1.85, maxWidth: '72ch' }}
+                        dangerouslySetInnerHTML={{ __html: pkg.description || pkg.content }}
+                      />
+                    ) : (
+                      <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+                        <BookOpen size={40} style={{ color: '#d1fae5', margin: '0 auto 12px', display: 'block' }} />
+                        <p style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: 14 }}>
+                          No description available yet.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {/* ── Itinerary ── */}
+                {/* Itinerary */}
                 {activeTab === 'itinerary' && (
                   <div className="pkd-timeline">
                     {!itinerary.length ? (
@@ -1615,31 +1396,22 @@ export default function PackageDetail() {
                         </div>
                         <div className="pkd-timeline-body">
                           <div className="pkd-timeline-card">
-                            <div style={{
-                              display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8,
-                            }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                               <span style={{
                                 fontSize: 10.5, fontWeight: 800, letterSpacing: '0.08em',
-                                textTransform: 'uppercase',
-                                color: '#059669', background: '#f0fdf4',
-                                padding: '3px 10px', borderRadius: 50,
-                                border: '1px solid #a7f3d0',
+                                textTransform: 'uppercase', color: '#059669',
+                                background: '#f0fdf4', padding: '3px 10px',
+                                borderRadius: 50, border: '1px solid #a7f3d0',
                               }}>
                                 Day {day.day || i + 1}
                               </span>
                               {day.location && (
-                                <span style={{
-                                  fontSize: 11.5, color: '#9ca3af',
-                                  display: 'flex', alignItems: 'center', gap: 4,
-                                }}>
+                                <span style={{ fontSize: 11.5, color: '#9ca3af', display: 'flex', alignItems: 'center', gap: 4 }}>
                                   <MapPin size={10} /> {day.location}
                                 </span>
                               )}
                             </div>
-                            <h4 style={{
-                              fontSize: 15, fontWeight: 700, color: '#064e3b',
-                              marginBottom: 8, lineHeight: 1.4,
-                            }}>
+                            <h4 style={{ fontSize: 15, fontWeight: 700, color: '#064e3b', marginBottom: 8, lineHeight: 1.4 }}>
                               {day.title}
                             </h4>
                             <p style={{ fontSize: 13.5, color: '#6b7280', lineHeight: 1.7, margin: 0 }}>
@@ -1652,7 +1424,7 @@ export default function PackageDetail() {
                   </div>
                 )}
 
-                {/* ── Inclusions ── */}
+                {/* Inclusions */}
                 {activeTab === 'inclusions' && (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 32 }}>
                     <div>
@@ -1706,15 +1478,13 @@ export default function PackageDetail() {
                   </div>
                 )}
 
-                {/* ── FAQs ── */}
+                {/* FAQs */}
                 {activeTab === 'faqs' && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                     {!faqs.length ? (
                       <div style={{ textAlign: 'center', padding: '48px 24px' }}>
                         <Info size={40} style={{ color: '#d1fae5', margin: '0 auto 12px', display: 'block' }} />
-                        <p style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: 14 }}>
-                          No FAQs added yet.
-                        </p>
+                        <p style={{ color: '#9ca3af', fontStyle: 'italic', fontSize: 14 }}>No FAQs added yet.</p>
                       </div>
                     ) : faqs.map((faq, i) => (
                       <FaqItem key={i} faq={faq} index={i} />
@@ -1725,17 +1495,16 @@ export default function PackageDetail() {
             </div>
           </div>
 
-          {/* ════ RIGHT SIDEBAR ════ */}
+          {/* ════ SIDEBAR ════ */}
           <div className="pkd-sidebar">
 
-            {/* Price Card */}
+            {/* Price card */}
             <div style={{
               background: 'linear-gradient(165deg, #064e3b 0%, #022c22 100%)',
               borderRadius: 24, padding: 'clamp(22px, 3vw, 32px)',
               boxShadow: '0 20px 60px rgba(4,47,31,0.30)',
               position: 'relative', overflow: 'hidden',
             }}>
-              {/* Decorative blobs */}
               <div style={{
                 position: 'absolute', top: -40, right: -40, width: 160, height: 160,
                 borderRadius: '50%', background: 'rgba(16,185,129,0.08)',
@@ -1758,7 +1527,6 @@ export default function PackageDetail() {
                 </div>
               )}
 
-              {/* Price */}
               {pkg.is_price_visible !== false ? (
                 <div style={{ marginBottom: 20 }}>
                   {hasDisc && (
@@ -1769,8 +1537,8 @@ export default function PackageDetail() {
                   <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
                     <span style={{
                       fontFamily: "'Playfair Display', serif",
-                      fontSize: 'clamp(30px, 5vw, 44px)',
-                      fontWeight: 900, color: '#4ade80', lineHeight: 1,
+                      fontSize: 'clamp(30px, 5vw, 44px)', fontWeight: 900,
+                      color: '#4ade80', lineHeight: 1,
                     }}>
                       {fmtPrice(pkg.price, pkg.currency)}
                     </span>
@@ -1797,16 +1565,13 @@ export default function PackageDetail() {
                 </div>
               )}
 
-              {/* Quick stats grid */}
-              <div style={{
-                display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10,
-                marginBottom: 20,
-              }}>
+              {/* Quick stats */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
                 {[
-                  pkg.duration_days && { icon: Clock, label: 'Duration', val: `${pkg.duration_days}d${pkg.duration_nights ? ` / ${pkg.duration_nights}n` : ''}` },
-                  pkg.max_travelers && { icon: Users, label: 'Max Group', val: `${pkg.max_travelers} people` },
-                  pkg.destination   && { icon: MapPin, label: 'Destination', val: pkg.destination },
-                  pkg.difficulty    && { icon: TrendingUp, label: 'Difficulty', val: pkg.difficulty },
+                  pkg.duration_days && { icon: Clock,      label: 'Duration',    val: `${pkg.duration_days}d${pkg.duration_nights ? ` / ${pkg.duration_nights}n` : ''}` },
+                  pkg.max_travelers && { icon: Users,      label: 'Max Group',   val: `${pkg.max_travelers} people` },
+                  pkg.destination   && { icon: MapPin,     label: 'Destination', val: pkg.destination },
+                  pkg.difficulty    && { icon: TrendingUp, label: 'Difficulty',  val: pkg.difficulty },
                 ].filter(Boolean).map(({ icon: Ic, label, val }) => (
                   <div key={label} style={{
                     background: 'rgba(255,255,255,0.07)',
@@ -1819,20 +1584,17 @@ export default function PackageDetail() {
                         {label}
                       </span>
                     </div>
-                    <p style={{ fontSize: 13.5, fontWeight: 700, color: 'white', margin: 0, lineHeight: 1.3 }}>
-                      {val}
-                    </p>
+                    <p style={{ fontSize: 13.5, fontWeight: 700, color: 'white', margin: 0, lineHeight: 1.3 }}>{val}</p>
                   </div>
                 ))}
               </div>
 
-              {/* Availability note */}
               {pkg.availability_note && (
                 <div style={{
                   display: 'flex', alignItems: 'flex-start', gap: 8,
                   background: 'rgba(245,158,11,0.12)',
                   border: '1px solid rgba(245,158,11,0.25)',
-                  borderRadius: 12, padding: '10px 14px', marginBottom: 16,
+                  borderRadius: 12, padding: '10px 14px',
                 }}>
                   <Info size={13} style={{ color: '#fbbf24', flexShrink: 0, marginTop: 1 }} />
                   <p style={{ fontSize: 12.5, color: 'rgba(255,255,255,0.75)', margin: 0, lineHeight: 1.6 }}>
@@ -1840,7 +1602,6 @@ export default function PackageDetail() {
                   </p>
                 </div>
               )}
-
             </div>
 
             {/* Pricing tiers */}
@@ -1857,16 +1618,10 @@ export default function PackageDetail() {
                       borderRadius: 14, gap: 12,
                     }}>
                       <div>
-                        <p style={{ fontSize: 14, fontWeight: 700, color: '#064e3b', margin: '0 0 2px' }}>
-                          {tier.label}
-                        </p>
-                        {tier.description && (
-                          <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>{tier.description}</p>
-                        )}
+                        <p style={{ fontSize: 14, fontWeight: 700, color: '#064e3b', margin: '0 0 2px' }}>{tier.label}</p>
+                        {tier.description && <p style={{ fontSize: 12, color: '#9ca3af', margin: 0 }}>{tier.description}</p>}
                       </div>
-                      <span style={{
-                        fontSize: 16, fontWeight: 800, color: '#059669', flexShrink: 0,
-                      }}>
+                      <span style={{ fontSize: 16, fontWeight: 800, color: '#059669', flexShrink: 0 }}>
                         {fmtPrice(tier.price, pkg.currency)}
                       </span>
                     </div>
@@ -1875,7 +1630,7 @@ export default function PackageDetail() {
               </div>
             )}
 
-            {/* Booking Form Card */}
+            {/* Booking form */}
             <div className="pkd-card pkd-card-p">
               <SectionLabel
                 icon={BookOpen}
@@ -1899,12 +1654,7 @@ export default function PackageDetail() {
                   <p style={{ fontSize: 13, color: '#9ca3af', marginBottom: 18, lineHeight: 1.6 }}>
                     This package is fully booked. Contact us to join the waitlist.
                   </p>
-                  <a
-                    href="/contact"
-                    className="pkd-cta"
-                  >
-                    Contact Us
-                  </a>
+                  <a href="/contact" className="pkd-cta">Contact Us</a>
                 </div>
               ) : (
                 <BookingForm pkg={pkg} user={user} />
@@ -1922,12 +1672,12 @@ export default function PackageDetail() {
               </p>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 4 }}>
                 {[
-                  { icon: Shield,      label: 'Secure',      sub: 'Booking' },
-                  { icon: CheckCircle, label: 'Verified',    sub: 'Packages' },
-                  { icon: Users,       label: 'Expert',      sub: 'Guides' },
-                  { icon: Star,        label: '5-Star',      sub: 'Rated' },
-                  { icon: Globe,       label: 'Local',       sub: 'Knowledge' },
-                  { icon: Award,       label: 'Award',       sub: 'Winning' },
+                  { icon: Shield,      label: 'Secure',   sub: 'Booking'   },
+                  { icon: CheckCircle, label: 'Verified', sub: 'Packages'  },
+                  { icon: Users,       label: 'Expert',   sub: 'Guides'    },
+                  { icon: Star,        label: '5-Star',   sub: 'Rated'     },
+                  { icon: Globe,       label: 'Local',    sub: 'Knowledge' },
+                  { icon: Award,       label: 'Award',    sub: 'Winning'   },
                 ].map(({ icon: Ic, label, sub }) => (
                   <div key={label} className="pkd-trust-item">
                     <div style={{

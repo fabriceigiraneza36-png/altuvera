@@ -875,7 +875,7 @@ const Services = () => {
         <PageHeader
           title="Our Services"
           subtitle="Premium travel experiences crafted for the discerning East Africa adventurer"
-          backgroundImage="https://i.pinimg.com/1200x/1c/d9/96/1cd9962233acb19c410546340c0f8f39.jpg"
+          backgroundImage="https://i.pinimg.com/1200x/78/d8/01/78d801c73622b8511360d196394aa205.jpg"
           breadcrumbs={[{ label: "Services", path: "/services" }]}
         />
 

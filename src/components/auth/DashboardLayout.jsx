@@ -218,20 +218,6 @@ const DashboardLayout = ({ children, title, subtitle }) => {
           </button>
         </nav>
 
-        <div style={{ marginTop: 12 }}>
-          <Link
-            to="/auth/user-account-control"
-            style={{
-              display: "block", textAlign: "center", fontSize: 12,
-              color: "#059669", fontWeight: 600, padding: "8px",
-              borderRadius: 8, background: "#ecfdf5",
-              textDecoration: "none", marginBottom: 8,
-            }}
-          >
-            ⚙️ Manage Account
-          </Link>
-        </div>
-
         <div className="dashboard-version">Altuvera v2.0 • User Portal</div>
       </aside>
 

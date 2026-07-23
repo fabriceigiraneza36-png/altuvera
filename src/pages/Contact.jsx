@@ -464,14 +464,7 @@ const Contact = () => {
               <FiPhone size={14} /> Call Us Now
             </a>
           </motion.div>
-          <motion.div className="ct-hero-stats"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.62 }}>
-            {["2,400+ Happy Guests", "12 Countries", "< 2hr Response"].map((s, i) => (
-              <div key={i} className="ct-hero-stat">
-                <FiCheckCircle size={11} /> {s}
-              </div>
-            ))}
-          </motion.div>
+
         </motion.div>
 
         <motion.div className="ct-scroll-hint"
