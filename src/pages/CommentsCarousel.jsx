@@ -1,8 +1,8 @@
 // src/components/destinations/CommentsCarousel.jsx
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { useDestinationComments } from "../../hooks/useDestinationComments";
-import { useDestinationLikes } from "../../hooks/useDestinationLikes";
-import { useUserAuth } from "../../context/UserAuthContext";
+import { useDestinationComments } from "../hooks/useDestinationComments";
+import { useDestinationLikes } from "../hooks/useDestinationLikes";
+import { useUserAuth } from "../context/UserAuthContext";
 import "./CommentsCarousel.css";
 
 /* ─── SVG Icon (self-contained, no external dep) ─── */
