@@ -73,33 +73,33 @@ const Footer = () => {
     { name: "FAQ", path: "/faq" },
   ];
 
-  const socialIcons = [
-    {
-      icon: FiFacebook,
-      label: "Facebook",
-      url: "https://www.facebook.com/profile.php?id=61585299893450",
-    },
-    {
-      icon: FaXTwitter,
-      label: "X",
-      url: "https://x.com/altuverasafari",
-    },
-    {
-      icon: FiInstagram,
-      label: "Instagram",
-      url: "https://www.instagram.com/altu.vera1/",
-    },
-    {
-      icon: FiLinkedin,
-      label: "LinkedIn",
-      url: "https://www.linkedin.com/in/altuvera-safari-14b9033b5/",
-    },
-    {
-      icon: FiYoutube,
-      label: "YouTube",
-      url: "https://www.youtube.com/@altuverasafaris",
-    },
-  ];
+ const socialIcons = [
+  {
+    icon: FiFacebook,
+    label: "Facebook",
+    url: "https://www.facebook.com/profile.php?id=61591972225527",
+  },
+  {
+    icon: FaXTwitter,
+    label: "X",
+    url: "https://x.com/altuverasafari",
+  },
+  {
+    icon: FiInstagram,
+    label: "Instagram",
+    url: "https://www.instagram.com/altuverasafaris/",
+  },
+  {
+    icon: FiLinkedin,
+    label: "LinkedIn",
+    url: "https://www.linkedin.com/in/altuvera-safari-14b9033b5/",
+  },
+  {
+    icon: FiYoutube,
+    label: "YouTube",
+    url: "https://www.youtube.com/@altuverasafaris",
+  },
+];
 
   const styles = {
     footer: {

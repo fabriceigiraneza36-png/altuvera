@@ -1,600 +1,855 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+// src/pages/user/MyBookings.jsx
+// ═══════════════════════════════════════════════════════════════════════════════
+// MY BOOKINGS v3.0 — Green/White Theme, Online Icons, Fully Responsive
+// ═══════════════════════════════════════════════════════════════════════════════
+
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { useUserAuth } from "../../context/UserAuthContext";
 import DashboardLayout from "../../components/auth/DashboardLayout";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  FiCalendar, FiMapPin, FiUsers, FiClock,
-  FiCheckCircle, FiXCircle, FiAlertCircle,
-  FiRefreshCw, FiSearch, FiShield, FiUser,
-  FiChevronDown, FiChevronUp, FiExternalLink,
-  FiSlash, FiDollarSign, FiInfo, FiSend, FiFileText, FiRotateCcw,
-} from "react-icons/fi";
-import {
-  HiOutlineTicket, HiLocationMarker,
-} from "react-icons/hi";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-const UPCOMING_THRESHOLD_DAYS = 7;
-const LIMIT = 10;
-const API_BASE = process.env.REACT_APP_API_URL || "https://backend-jd8f.onrender.com/api";
+// ── Lucide React (online CDN-friendly, tree-shakeable) ─────────────────────
+import {
+  Calendar, MapPin, Users, Clock, CheckCircle, XCircle,
+  AlertCircle, RefreshCw, Search, Shield, User, ChevronDown,
+  ChevronUp, ExternalLink, DollarSign, Info, Send, RotateCcw,
+  Slash, Filter, Loader2, Plane, Award, TrendingUp, Star,
+  ArrowRight, X, ChevronRight, Package, FileText, Phone,
+  Mail, Hash, Bookmark, AlertTriangle, CheckCheck,
+} from "lucide-react";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONSTANTS
+═══════════════════════════════════════════════════════════════════════════ */
+
+const UPCOMING_DAYS = 7;
+const LIMIT         = 10;
+const API_BASE      =
+  process.env.REACT_APP_API_URL ||
+  "https://backend-jd8f.onrender.com/api";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   HELPERS
+═══════════════════════════════════════════════════════════════════════════ */
+
 const daysUntil = (d) => {
   if (!d) return null;
   return Math.ceil((new Date(d).getTime() - Date.now()) / 86_400_000);
 };
+
 const fmt = (d, opts) =>
   d ? new Date(d).toLocaleDateString("en-US", opts) : "—";
 const fmtFull  = (d) => fmt(d, { year: "numeric", month: "long",  day: "numeric" });
 const fmtShort = (d) => fmt(d, { year: "numeric", month: "short", day: "numeric" });
 
-// ─── Status config ────────────────────────────────────────────────────────────
-const STATUS = {
-  pending:   { label: "Pending Review", color: "#d97706", bg: "#fffbeb", border: "#fde68a", Icon: FiClock },
-  confirmed: { label: "Confirmed",      color: "#059669", bg: "#f0fdf4", border: "#bbf7d0", Icon: FiCheckCircle },
-  completed: { label: "Completed",      color: "#0891b2", bg: "#f0f9ff", border: "#bae6fd", Icon: FiCheckCircle },
-  cancelled: { label: "Cancelled",      color: "#dc2626", bg: "#fef2f2", border: "#fecaca", Icon: FiXCircle },
-  "on-hold": { label: "On Hold",        color: "#7c3aed", bg: "#faf5ff", border: "#ddd6fe", Icon: FiAlertCircle },
-};
-const getStatus = (s) =>
-  STATUS[s] || { label: s, color: "#64748b", bg: "#f8fafc", border: "#e2e8f0", Icon: FiClock };
-
-const isAdmin = (b) =>
-  b.source === "admin_manual" || b.source === "admin" ||
+const isAdminCreated = (b) =>
+  b.source === "admin_manual" ||
+  b.source === "admin" ||
   String(b.source || "").includes("admin");
 
-// ─── Safe authFetch wrapper ───────────────────────────────────────────────────
-// Prevents 403s from crashing the whole page
+/* ── Status config ── */
+const STATUS_MAP = {
+  pending:   { label: "Pending Review", color: "#d97706", bg: "#fffbeb", border: "#fde68a", Icon: Clock },
+  confirmed: { label: "Confirmed",      color: "#059669", bg: "#ecfdf5", border: "#6ee7b7", Icon: CheckCircle },
+  completed: { label: "Completed",      color: "#0369a1", bg: "#eff6ff", border: "#bfdbfe", Icon: CheckCheck },
+  cancelled: { label: "Cancelled",      color: "#dc2626", bg: "#fef2f2", border: "#fecaca", Icon: XCircle },
+  "on-hold": { label: "On Hold",        color: "#7c3aed", bg: "#faf5ff", border: "#e9d5ff", Icon: AlertCircle },
+  refunded:  { label: "Refunded",       color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc", Icon: DollarSign },
+};
+
+const getStatus = (s) =>
+  STATUS_MAP[s] || {
+    label: s || "Unknown", color: "#64748b",
+    bg: "#f8fafc", border: "#e2e8f0", Icon: Clock,
+  };
+
+/* ── Safe fetch ── */
 const safeFetch = async (authFetch, endpoint, options = {}) => {
   try {
     const result = await authFetch(endpoint, options);
     return { data: result, error: null };
   } catch (err) {
-    // 403 = forbidden (token expired / missing scope) — return gracefully
     const status = err?.status || err?.statusCode || 0;
     if (status === 403 || status === 401) {
       console.warn(`[MyBookings] Auth error on ${endpoint}:`, err.message);
-      return { data: null, error: `Auth error (${status})` };
+      return { data: null, error: `auth:${status}` };
     }
     return { data: null, error: err.message || "Request failed" };
   }
 };
 
-// ─── CSS ──────────────────────────────────────────────────────────────────────
-const css = `
-  .mb-root * { box-sizing: border-box; }
-  .mb-root { display: flex; flex-direction: column; gap: 1.5rem; animation: mbFadeIn 0.5s ease-out; }
+/* ═══════════════════════════════════════════════════════════════════════════
+   INLINE STYLES (single source of truth, no class collisions)
+═══════════════════════════════════════════════════════════════════════════ */
 
-  /* ── Stats ── */
-  .mb-stats {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 12px;
-  }
-  .mb-stat {
-    background: #fff; border-radius: 16px; padding: 16px 18px;
-    border: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  .mb-stat:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.07); }
-  .mb-stat-emoji { font-size: 1.5rem; margin-bottom: 6px; }
-  .mb-stat-value { font-size: 1.6rem; font-weight: 900; margin: 0; line-height: 1; }
-  .mb-stat-label { font-size: 0.72rem; color: #64748b; margin: 4px 0 0; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+const S = {
+  /* Root */
+  root: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "1.5rem",
+    fontFamily:
+      "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    maxWidth: 900,
+    margin: "0 auto",
+  },
 
-  /* ── Controls ── */
-  .mb-controls {
-    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
-  }
-  .mb-search-wrap { position: relative; flex: 1 1 200px; max-width: 320px; }
-  .mb-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; pointer-events: none; }
-  .mb-search {
-    width: 100%; padding: 10px 12px 10px 36px;
-    border-radius: 12px; border: 1.5px solid #e2e8f0;
-    font-size: 0.88rem; outline: none; background: #fff;
-    font-family: inherit; transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  .mb-search:focus { border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,0.1); }
+  /* Stats grid */
+  statsGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+    gap: 14,
+  },
+  statCard: {
+    background: "#fff",
+    borderRadius: 18,
+    padding: "18px 20px",
+    border: "1.5px solid #e2e8f0",
+    boxShadow: "0 2px 12px rgba(0,0,0,0.04)",
+    display: "flex",
+    flexDirection: "column",
+    gap: 6,
+    transition: "transform 0.2s, box-shadow 0.2s",
+    cursor: "default",
+  },
+  statIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 4,
+  },
+  statValue: {
+    fontSize: "1.8rem",
+    fontWeight: 900,
+    lineHeight: 1,
+    margin: 0,
+  },
+  statLabel: {
+    fontSize: "0.72rem",
+    color: "#64748b",
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
+    margin: 0,
+  },
 
-  .mb-filter-tabs {
-    display: flex; gap: 4px; background: #f1f5f9;
-    border-radius: 12px; padding: 4px; overflow-x: auto; flex-wrap: nowrap;
-  }
-  .mb-filter-tab {
-    padding: 8px 14px; border-radius: 9px; border: none;
-    font-size: 0.78rem; font-weight: 600; cursor: pointer;
-    white-space: nowrap; transition: all 0.18s; font-family: inherit;
-  }
-  .mb-filter-tab.active {
-    background: #fff; color: #059669; font-weight: 800;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-  }
-  .mb-filter-tab:not(.active) { background: transparent; color: #64748b; }
-  .mb-filter-tab:not(.active):hover { color: #0f172a; background: rgba(255,255,255,0.6); }
+  /* Controls bar */
+  controls: {
+    display: "flex",
+    gap: 10,
+    flexWrap: "wrap",
+    alignItems: "center",
+  },
+  searchWrap: {
+    position: "relative",
+    flex: "1 1 220px",
+    maxWidth: 340,
+  },
+  searchIcon: {
+    position: "absolute",
+    left: 13,
+    top: "50%",
+    transform: "translateY(-50%)",
+    color: "#94a3b8",
+    pointerEvents: "none",
+  },
+  searchInput: {
+    width: "100%",
+    padding: "11px 14px 11px 40px",
+    borderRadius: 13,
+    border: "1.5px solid #e2e8f0",
+    fontSize: "0.88rem",
+    outline: "none",
+    background: "#fff",
+    fontFamily: "inherit",
+    color: "#0f172a",
+    transition: "border-color 0.2s, box-shadow 0.2s",
+    boxSizing: "border-box",
+  },
+  filterRow: {
+    display: "flex",
+    gap: 4,
+    background: "#f1f5f9",
+    borderRadius: 13,
+    padding: 4,
+    overflowX: "auto",
+    flexWrap: "nowrap",
+  },
+  filterBtn: (active) => ({
+    padding: "8px 16px",
+    borderRadius: 10,
+    border: "none",
+    fontSize: "0.78rem",
+    fontWeight: active ? 800 : 600,
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+    transition: "all 0.18s",
+    fontFamily: "inherit",
+    background: active ? "#fff" : "transparent",
+    color: active ? "#059669" : "#64748b",
+    boxShadow: active ? "0 2px 10px rgba(0,0,0,0.07)" : "none",
+  }),
+  refreshBtn: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 7,
+    padding: "10px 16px",
+    borderRadius: 13,
+    border: "1.5px solid #e2e8f0",
+    background: "#fff",
+    color: "#64748b",
+    fontSize: "0.82rem",
+    fontWeight: 700,
+    cursor: "pointer",
+    transition: "all 0.2s",
+    fontFamily: "inherit",
+    flexShrink: 0,
+  },
 
-  .mb-refresh-btn {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 10px 14px; border-radius: 12px;
-    border: 1.5px solid #e2e8f0; background: #fff;
-    color: #64748b; font-size: 0.82rem; font-weight: 600;
-    cursor: pointer; transition: all 0.2s; font-family: inherit;
-  }
-  .mb-refresh-btn:hover:not(:disabled) { background: #f8fafc; color: #0f172a; }
-  .mb-refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  /* Section heading */
+  sectionHead: {
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    marginBottom: 12,
+  },
+  sectionTitle: {
+    margin: 0,
+    fontSize: "0.92rem",
+    fontWeight: 800,
+    color: "#0f172a",
+  },
+  sectionBadge: (bg, color) => ({
+    fontSize: "0.68rem",
+    fontWeight: 800,
+    padding: "2px 9px",
+    borderRadius: 20,
+    textTransform: "uppercase",
+    letterSpacing: "0.3px",
+    background: bg,
+    color,
+  }),
 
-  /* ── Section heading ── */
-  .mb-section-heading {
-    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
-  }
-  .mb-section-heading h3 { margin: 0; font-size: 0.9rem; font-weight: 800; color: #0f172a; }
-  .mb-section-count {
-    font-size: 0.68rem; font-weight: 800; padding: 2px 8px;
-    border-radius: 20px; text-transform: uppercase; letter-spacing: 0.3px;
-  }
+  /* Divider */
+  divider: {
+    border: "none",
+    borderTop: "2px dashed #e2e8f0",
+    margin: "8px 0 24px",
+  },
 
-  /* ── Card ── */
-  .mb-card {
-    background: #fff; border-radius: 18px;
-    border: 1.5px solid #e2e8f0; overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-    transition: box-shadow 0.2s, border-color 0.2s;
-    margin-bottom: 14px;
-  }
-  .mb-card:hover {
-    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-    border-color: #cbd5e1;
-  }
-  .mb-card.upcoming-confirmed {
-    border-color: #bbf7d0;
-    box-shadow: 0 4px 20px rgba(5,150,105,0.10);
-  }
-  .mb-card-strip { height: 4px; }
+  /* Empty */
+  empty: {
+    textAlign: "center",
+    padding: "72px 24px",
+    background: "#fff",
+    borderRadius: 22,
+    border: "1.5px dashed #e2e8f0",
+  },
+  emptyIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 24,
+    background: "linear-gradient(135deg, #ecfdf5, #d1fae5)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    margin: "0 auto 20px",
+  },
+  emptyTitle: {
+    margin: "0 0 8px",
+    fontSize: "1.1rem",
+    color: "#0f172a",
+    fontWeight: 800,
+  },
+  emptyText: {
+    margin: "0 0 24px",
+    color: "#64748b",
+    fontSize: "0.9rem",
+    lineHeight: 1.6,
+  },
+  emptyCta: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "12px 28px",
+    background: "linear-gradient(135deg, #059669, #047857)",
+    color: "#fff",
+    borderRadius: 14,
+    textDecoration: "none",
+    fontWeight: 800,
+    fontSize: "0.9rem",
+    boxShadow: "0 4px 14px rgba(5,150,105,0.3)",
+  },
 
-  /* ── Proximity Banner ── */
-  .mb-proximity {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px 16px; border-radius: 10px; margin: 14px 20px 0;
-    font-size: 0.82rem; font-weight: 700;
-  }
-  .mb-proximity-emoji { font-size: 1.1rem; }
+  /* Loading */
+  loadingWrap: { textAlign: "center", padding: "72px 24px" },
+  spinner: {
+    width: 44,
+    height: 44,
+    borderRadius: "50%",
+    border: "4px solid #e2e8f0",
+    borderTopColor: "#059669",
+    animation: "spin 0.8s linear infinite",
+    margin: "0 auto 16px",
+  },
 
-  /* ── Card main ── */
-  .mb-card-main { padding: 18px 22px; }
-  .mb-card-top {
-    display: flex; justify-content: space-between;
-    align-items: flex-start; gap: 12px; flex-wrap: wrap;
-  }
-  .mb-booking-num {
-    font-family: monospace; font-size: 0.9rem; font-weight: 900;
-    color: #059669; letter-spacing: 0.06em;
-  }
-  .mb-status-badge {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 4px 10px; border-radius: 8px;
-    font-size: 0.72rem; font-weight: 800; margin-top: 6px;
-    border: 1px solid;
-  }
-  .mb-admin-badge {
-    display: inline-flex; align-items: center; gap: 4px;
-    font-size: 0.65rem; font-weight: 800; color: #7c3aed;
-    background: #faf5ff; border: 1px solid #ddd6fe;
-    border-radius: 6px; padding: 2px 7px;
-    text-transform: uppercase; letter-spacing: 0.04em;
-    margin-left: 6px;
-  }
-  .mb-card-meta {
-    display: flex; gap: 18px; margin-top: 14px; flex-wrap: wrap;
-  }
-  .mb-meta-item {
-    display: flex; align-items: center; gap: 6px;
-    font-size: 0.85rem;
-  }
+  /* Error / warning banners */
+  errorBanner: {
+    padding: "14px 18px",
+    background: "#fef2f2",
+    border: "1px solid #fecaca",
+    borderRadius: 13,
+    color: "#991b1b",
+    fontSize: "0.88rem",
+    fontWeight: 600,
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+  },
+  warnBanner: {
+    padding: "12px 16px",
+    background: "#fffbeb",
+    border: "1px solid #fde68a",
+    borderRadius: 13,
+    color: "#92400e",
+    fontSize: "0.82rem",
+    fontWeight: 600,
+    display: "flex",
+    alignItems: "center",
+    gap: 8,
+  },
 
-  /* ── Admin notice ── */
-  .mb-admin-notice {
-    margin-top: 12px; padding: 10px 14px; border-radius: 10px;
-    background: #faf5ff; border: 1px solid #ddd6fe;
-    display: flex; gap: 8px; align-items: flex-start;
-  }
-  .mb-admin-notice p { margin: 0; font-size: 0.78rem; line-height: 1.5; }
+  /* Card */
+  card: (isUpcoming) => ({
+    background: "#fff",
+    borderRadius: 20,
+    border: `1.5px solid ${isUpcoming ? "#6ee7b7" : "#e2e8f0"}`,
+    overflow: "hidden",
+    boxShadow: isUpcoming
+      ? "0 4px 20px rgba(5,150,105,0.1)"
+      : "0 2px 12px rgba(0,0,0,0.04)",
+    marginBottom: 14,
+    transition: "box-shadow 0.2s, border-color 0.2s",
+  }),
+  cardStrip: (color, isAdmin) => ({
+    height: 4,
+    background: isAdmin
+      ? "linear-gradient(90deg, #7c3aed, #a855f7)"
+      : `linear-gradient(90deg, ${color}, ${color}88)`,
+  }),
 
-  /* ── Toggle button ── */
-  .mb-toggle-btn {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 7px 14px; border-radius: 9px; font-size: 0.78rem;
-    font-weight: 700; cursor: pointer; border: 1.5px solid #e2e8f0;
-    background: #f8fafc; color: #475569; transition: all 0.18s;
-    font-family: inherit;
-  }
-  .mb-toggle-btn:hover { background: #f1f5f9; color: #0f172a; }
+  /* Proximity banner */
+  proximity: (bg, border, color) => ({
+    display: "flex",
+    alignItems: "center",
+    gap: 10,
+    padding: "11px 20px",
+    borderRadius: 12,
+    margin: "14px 20px 0",
+    fontSize: "0.83rem",
+    fontWeight: 700,
+    background: bg,
+    border: `1px solid ${border}`,
+    color,
+  }),
 
-  /* ── Expanded details ── */
-  .mb-details {
-    padding: 16px 22px 20px; border-top: 1px solid #f1f5f9;
-  }
-  .mb-detail-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-    gap: 16px;
-  }
-  .mb-detail-field p:first-child {
-    margin: 0 0 3px; font-size: 0.65rem; font-weight: 800;
-    color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em;
-  }
-  .mb-detail-field p:last-child {
-    margin: 0; font-size: 0.88rem; color: #0f172a; font-weight: 600;
-  }
-  .mb-notes-block {
-    margin-top: 14px; padding: 12px 14px; border-radius: 10px;
-    font-size: 0.85rem; line-height: 1.65;
-  }
-  .mb-notes-block p:first-child {
-    margin: 0 0 5px; font-size: 0.65rem; font-weight: 800;
-    text-transform: uppercase; letter-spacing: 0.06em;
-  }
-  .mb-notes-block p:last-child { margin: 0; }
+  /* Card body */
+  cardMain: { padding: "20px 24px" },
+  cardTop: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    gap: 12,
+    flexWrap: "wrap",
+  },
+  bookingNum: {
+    fontFamily: "monospace",
+    fontSize: "0.95rem",
+    fontWeight: 900,
+    color: "#059669",
+    letterSpacing: "0.06em",
+  },
+  statusBadge: (color, bg, border) => ({
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 5,
+    padding: "4px 11px",
+    borderRadius: 9,
+    fontSize: "0.72rem",
+    fontWeight: 800,
+    marginTop: 6,
+    border: `1px solid ${border}`,
+    color,
+    background: bg,
+  }),
+  adminBadge: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
+    fontSize: "0.65rem",
+    fontWeight: 800,
+    color: "#7c3aed",
+    background: "#faf5ff",
+    border: "1px solid #e9d5ff",
+    borderRadius: 7,
+    padding: "2px 8px",
+    textTransform: "uppercase",
+    letterSpacing: "0.04em",
+    marginLeft: 7,
+  },
+  cardMeta: {
+    display: "flex",
+    gap: 20,
+    marginTop: 14,
+    flexWrap: "wrap",
+  },
+  metaItem: {
+    display: "flex",
+    alignItems: "center",
+    gap: 6,
+    fontSize: "0.85rem",
+  },
 
-  /* ── Divider ── */
-  .mb-divider {
-    border: none; border-top: 2px dashed #e2e8f0; margin: 8px 0 24px;
-  }
+  /* Admin notice */
+  adminNotice: {
+    marginTop: 14,
+    padding: "12px 16px",
+    borderRadius: 12,
+    background: "#faf5ff",
+    border: "1px solid #e9d5ff",
+    display: "flex",
+    gap: 10,
+    alignItems: "flex-start",
+  },
 
-  /* ── Empty / loading ── */
-  .mb-empty {
-    text-align: center; padding: 64px 24px;
-    background: #fff; border-radius: 20px;
-    border: 1.5px dashed #e2e8f0;
-  }
-  .mb-empty-icon { font-size: 3rem; margin-bottom: 14px; }
-  .mb-empty h3 { margin: 0 0 8px; font-size: 1.1rem; color: #0f172a; font-weight: 800; }
-  .mb-empty p { margin: 0 0 20px; color: #64748b; font-size: 0.9rem; }
-  .mb-empty-cta {
-    display: inline-block; padding: 11px 26px;
-    background: linear-gradient(135deg, #059669, #047857);
-    color: #fff; border-radius: 12px; text-decoration: none;
-    font-weight: 800; font-size: 0.9rem;
-    box-shadow: 0 4px 12px rgba(5,150,105,0.3);
-    transition: all 0.2s;
-  }
-  .mb-empty-cta:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(5,150,105,0.4); }
+  /* Action buttons */
+  cancelBtn: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 5,
+    padding: "8px 14px",
+    borderRadius: 10,
+    fontSize: "0.78rem",
+    fontWeight: 700,
+    cursor: "pointer",
+    fontFamily: "inherit",
+    border: "1.5px solid #fca5a5",
+    background: "#fef2f2",
+    color: "#b91c1c",
+    transition: "all 0.18s",
+  },
+  toggleBtn: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 5,
+    padding: "8px 14px",
+    borderRadius: 10,
+    fontSize: "0.78rem",
+    fontWeight: 700,
+    cursor: "pointer",
+    border: "1.5px solid #e2e8f0",
+    background: "#f8fafc",
+    color: "#475569",
+    transition: "all 0.18s",
+    fontFamily: "inherit",
+  },
 
-  .mb-loading { text-align: center; padding: 64px 24px; }
-  .mb-spinner {
-    width: 44px; height: 44px; border-radius: 50%;
-    border: 4px solid #e2e8f0; border-top-color: #059669;
-    animation: mbSpin 0.8s linear infinite; margin: 0 auto 16px;
-  }
-  .mb-loading p { color: #64748b; font-size: 0.9rem; margin: 0; }
+  /* Expanded details */
+  details: { padding: "18px 24px 22px", borderTop: "1px solid #f1f5f9" },
+  detailGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+    gap: 18,
+  },
+  detailLabel: {
+    margin: "0 0 3px",
+    fontSize: "0.65rem",
+    fontWeight: 800,
+    color: "#94a3b8",
+    textTransform: "uppercase",
+    letterSpacing: "0.07em",
+  },
+  detailValue: {
+    margin: 0,
+    fontSize: "0.87rem",
+    color: "#0f172a",
+    fontWeight: 600,
+  },
+  notesBlock: (bg, border) => ({
+    marginTop: 16,
+    padding: "13px 16px",
+    borderRadius: 12,
+    fontSize: "0.85rem",
+    lineHeight: 1.65,
+    background: bg,
+    border: `1px solid ${border}`,
+  }),
 
-  .mb-error {
-    padding: 14px 18px; background: #fef2f2;
-    border: 1px solid #fecaca; border-radius: 12px;
-    color: #991b1b; font-size: 0.88rem; font-weight: 600;
-    display: flex; align-items: center; gap: 10px;
-  }
+  /* Request banner */
+  reqBanner: (bg, border) => ({
+    margin: "14px 20px 0",
+    padding: "13px 18px",
+    borderRadius: 13,
+    fontSize: "0.82rem",
+    lineHeight: 1.5,
+    background: bg,
+    border: `1px solid ${border}`,
+  }),
 
-  /* ── Auth warning ── */
-  .mb-auth-warn {
-    padding: 12px 16px; background: #fffbeb;
-    border: 1px solid #fde68a; border-radius: 12px;
-    color: #92400e; font-size: 0.82rem; font-weight: 600;
-    display: flex; align-items: center; gap: 8px;
-  }
+  /* Modal */
+  overlay: {
+    position: "fixed",
+    inset: 0,
+    zIndex: 9999,
+    background: "rgba(15,23,42,0.6)",
+    backdropFilter: "blur(4px)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
+  modal: {
+    width: "100%",
+    maxWidth: 480,
+    background: "#fff",
+    borderRadius: 24,
+    padding: 28,
+    boxShadow: "0 24px 80px rgba(0,0,0,0.25)",
+    maxHeight: "90vh",
+    overflowY: "auto",
+  },
 
-  /* ── Load more ── */
-  .mb-load-more { text-align: center; margin-top: 8px; }
-  .mb-load-more-btn {
-    display: inline-flex; align-items: center; gap: 8px;
-    padding: 11px 30px; border-radius: 12px;
-    border: 1.5px solid #059669; background: #fff;
-    color: #059669; font-weight: 800; font-size: 0.88rem;
-    cursor: pointer; transition: all 0.2s; font-family: inherit;
-  }
-  .mb-load-more-btn:hover:not(:disabled) {
-    background: #ecfdf5; transform: translateY(-1px);
-  }
-  .mb-load-more-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  /* Load more */
+  loadMore: { textAlign: "center", marginTop: 8 },
+  loadMoreBtn: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 8,
+    padding: "12px 32px",
+    borderRadius: 14,
+    border: "1.5px solid #059669",
+    background: "#fff",
+    color: "#059669",
+    fontWeight: 800,
+    fontSize: "0.88rem",
+    cursor: "pointer",
+    transition: "all 0.2s",
+    fontFamily: "inherit",
+  },
+};
 
-  /* ── Keyframes ── */
-  .mb-spin-icon { animation: mbSpin 1s linear infinite; }
-  @keyframes mbFadeIn { from{opacity:0;transform:translateY(12px);} to{opacity:1;transform:translateY(0);} }
-  @keyframes mbSpin { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
-
-  /* ── Responsive ── */
+/* Keyframe injection */
+const KEYFRAMES = `
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
   @media (max-width: 640px) {
-    .mb-card-main { padding: 14px 16px; }
-    .mb-details { padding: 12px 16px 16px; }
-    .mb-card-top { flex-direction: column; }
-    .mb-filter-tabs { width: 100%; }
-    .mb-stats { grid-template-columns: repeat(2, 1fr); }
-  }
-
-  /* ── Request button ── */
-  .mb-req-btn {
-    display: inline-flex; align-items: center; gap: 5px;
-    padding: 7px 14px; border-radius: 9px; font-size: 0.78rem;
-    font-weight: 700; cursor: pointer; font-family: inherit;
-    border: 1.5px solid #fca5a5; background: #fef2f2; color: #b91c1c;
-    transition: all 0.18s;
-  }
-  .mb-req-btn:hover { background: #fee2e2; color: #991b1b; }
-
-  /* ── Request status banner ── */
-  .mb-request-banner {
-    margin: 14px 20px 0; padding: 12px 16px; border-radius: 12px;
-    font-size: 0.82rem; line-height: 1.5;
-  }
-  .mb-rb-head { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
-  .mb-rb-icon { display: inline-flex; }
-  .mb-rb-status {
-    margin-left: auto; font-size: 0.62rem; font-weight: 800;
-    padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.04em;
-  }
-  .mb-rb-reason {
-    margin: 8px 0 0; display: flex; gap: 6px; align-items: flex-start;
-    font-weight: 600; opacity: 0.92;
-  }
-  .mb-rb-reason svg { flex-shrink: 0; margin-top: 3px; }
-  .mb-rb-note { margin: 6px 0 0; opacity: 0.92; }
-
-  /* ── Request modal ── */
-  .mb-modal-overlay {
-    position: fixed; inset: 0; z-index: 9999;
-    background: rgba(15,23,42,0.55); backdrop-filter: blur(3px);
-    display: flex; align-items: center; justify-content: center; padding: 20px;
-    animation: mbFadeIn 0.2s ease-out;
-  }
-  .mb-modal {
-    width: 100%; max-width: 460px; background: #fff;
-    border-radius: 20px; padding: 24px; box-shadow: 0 24px 60px rgba(0,0,0,0.25);
-    animation: mbFadeIn 0.25s ease-out;
-  }
-  .mb-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-  .mb-modal-head h3 { margin: 0; font-size: 1.1rem; font-weight: 800; color: #0f172a; }
-  .mb-modal-x {
-    border: none; background: transparent; color: #94a3b8; cursor: pointer;
-    display: inline-flex; padding: 4px; border-radius: 8px;
-  }
-  .mb-modal-x:hover { background: #f1f5f9; color: #0f172a; }
-  .mb-modal-sub { margin: 8px 0 18px; color: #64748b; font-size: 0.85rem; }
-  .mb-modal-bk { font-family: monospace; font-weight: 800; color: #059669; }
-
-  .mb-req-types { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-  .mb-req-type {
-    display: flex; flex-direction: column; align-items: flex-start; gap: 4px;
-    padding: 14px; border-radius: 14px; cursor: pointer; text-align: left;
-    border: 2px solid #e2e8f0; background: #f8fafc; transition: all 0.18s; font-family: inherit;
-  }
-  .mb-req-type:hover { border-color: #fca5a5; }
-  .mb-req-type.active { border-color: #dc2626; background: #fef2f2; }
-  .mb-rt-title { font-size: 0.9rem; font-weight: 800; color: #0f172a; }
-  .mb-rt-desc { font-size: 0.72rem; color: #64748b; }
-
-  .mb-req-label {
-    display: block; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
-    letter-spacing: 0.06em; color: #94a3b8; margin-bottom: 6px;
-  }
-  .mb-req-req { color: #dc2626; }
-  .mb-req-textarea {
-    width: 100%; border-radius: 12px; border: 1.5px solid #e2e8f0;
-    padding: 12px 14px; font-size: 0.88rem; font-family: inherit; resize: vertical;
-    outline: none; box-sizing: border-box;
-  }
-  .mb-req-textarea:focus { border-color: #059669; box-shadow: 0 0 0 3px rgba(5,150,105,0.1); }
-
-  .mb-modal-actions { display: flex; gap: 10px; margin-top: 18px; }
-  .mb-req-cancel {
-    flex: 0 0 auto; padding: 11px 18px; border-radius: 12px;
-    border: 1.5px solid #e2e8f0; background: #fff; color: #475569;
-    font-weight: 700; font-size: 0.85rem; cursor: pointer; font-family: inherit;
-  }
-  .mb-req-cancel:hover:not(:disabled) { background: #f8fafc; }
-  .mb-req-submit {
-    flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 7px;
-    padding: 11px 18px; border-radius: 12px; border: none;
-    background: linear-gradient(135deg, #dc2626, #b91c1c); color: #fff;
-    font-weight: 800; font-size: 0.85rem; cursor: pointer; font-family: inherit;
-    box-shadow: 0 4px 12px rgba(220,38,38,0.3); transition: all 0.2s;
-  }
-  .mb-req-submit:hover:not(:disabled) { transform: translateY(-1px); }
-  .mb-req-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-  .mb-req-foot { margin: 12px 2px 0; font-size: 0.74rem; color: #64748b; display: flex; gap: 5px; align-items: center; }
-
-  @media (max-width: 640px) {
-    .mb-req-types { grid-template-columns: 1fr; }
+    .mb-card-main { padding: 14px 16px !important; }
+    .mb-details   { padding: 12px 16px 16px !important; }
+    .mb-req-banner { margin: 10px 14px 0 !important; }
+    .mb-proximity  { margin: 10px 14px 0 !important; }
   }
 `;
 
-// ─── Proximity Banner ─────────────────────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════════════════════
+   PROXIMITY BANNER
+═══════════════════════════════════════════════════════════════════════════ */
+
 function ProximityBanner({ days, dest }) {
   if (days === null || days < 0) return null;
+
   const cfg =
-    days === 0 ? { bg: "#fef2f2", border: "#fecaca", color: "#991b1b", emoji: "🛫", msg: `Your trip to ${dest || "your destination"} is TODAY!` } :
-    days === 1 ? { bg: "#fff7ed", border: "#fed7aa", color: "#9a3412", emoji: "✈️",  msg: `Your trip to ${dest || "your destination"} is TOMORROW!` } :
-    days <= 3  ? { bg: "#fffbeb", border: "#fde68a", color: "#92400e", emoji: "⏰", msg: `${days} days until your trip to ${dest || "your destination"}` } :
-    days <= 7  ? { bg: "#f0fdf4", border: "#bbf7d0", color: "#166534", emoji: "🗓️", msg: `${days} days until your trip to ${dest || "your destination"}` } :
-    null;
+    days === 0
+      ? { bg: "#fef2f2", border: "#fecaca", color: "#991b1b",
+          icon: <Plane size={15} />, msg: `Your trip to ${dest || "your destination"} is TODAY!` }
+    : days === 1
+      ? { bg: "#fff7ed", border: "#fed7aa", color: "#9a3412",
+          icon: <Plane size={15} />, msg: `Your trip to ${dest || "your destination"} is TOMORROW!` }
+    : days <= 3
+      ? { bg: "#fffbeb", border: "#fde68a", color: "#92400e",
+          icon: <Clock size={15} />, msg: `${days} days until your trip to ${dest || "your destination"}` }
+    : days <= 7
+      ? { bg: "#ecfdf5", border: "#6ee7b7", color: "#166534",
+          icon: <Calendar size={15} />, msg: `${days} days until your trip to ${dest || "your destination"}` }
+    : null;
+
   if (!cfg) return null;
+
   return (
     <div
       className="mb-proximity"
-      style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color }}
+      style={S.proximity(cfg.bg, cfg.border, cfg.color)}
     >
-      <span className="mb-proximity-emoji">{cfg.emoji}</span>
-      {cfg.msg}
+      {cfg.icon}
+      <span>{cfg.msg}</span>
     </div>
   );
 }
 
-// ─── Cancellation / Refund helpers ───────────────────────────────────────────
-const requestEligibility = (b) => {
-  const s = b.status;
-  const hasPending = b.cancel_request_status === "pending";
-  const finalized  =
-    ["cancelled", "refunded"].includes(s) || b.cancel_request_status === "approved";
-  const canCancel = ["pending", "confirmed", "on-hold"].includes(s);
-  const canRefund = ["confirmed", "completed"].includes(s);
-  return {
-    hasPending,
-    finalized,
-    canCancel,
-    canRefund,
-    canRequest: !finalized && (canCancel || canRefund),
-  };
-};
+/* ═══════════════════════════════════════════════════════════════════════════
+   REQUEST STATUS BANNER
+═══════════════════════════════════════════════════════════════════════════ */
 
-// ─── Request Status Banner ────────────────────────────────────────────────────
-function RequestStatusBanner({ booking }) {
-  if (!booking.cancel_request_status || booking.cancel_request_status === "none")
-    return null;
+function RequestBanner({ booking }) {
+  const status = booking.cancel_request_status;
+  if (!status || status === "none") return null;
+
   const isRefund = booking.cancel_request_type === "refund";
-  const status   = booking.cancel_request_status;
+
   const cfg =
-    status === "pending"  ? { bg: "#fffbeb", border: "#fde68a", color: "#92400e", badge: "#f59e0b", label: "Under Review" } :
-    status === "approved" ? { bg: "#f0fdf4", border: "#bbf7d0", color: "#166534", badge: "#059669", label: isRefund ? "Refund Approved" : "Cancellation Approved" } :
-                            { bg: "#fef2f2", border: "#fecaca", color: "#991b1b", badge: "#dc2626", label: "Request Declined" };
+    status === "pending"
+      ? { bg: "#fffbeb", border: "#fde68a", color: "#92400e",
+          badge: "#f59e0b", label: "Under Review" }
+    : status === "approved"
+      ? { bg: "#ecfdf5", border: "#6ee7b7", color: "#166534",
+          badge: "#059669", label: isRefund ? "Refund Approved" : "Cancellation Approved" }
+      : { bg: "#fef2f2", border: "#fecaca", color: "#991b1b",
+          badge: "#dc2626", label: "Declined" };
 
   return (
     <div
-      className="mb-request-banner"
-      style={{ background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color }}
+      className="mb-req-banner"
+      style={S.reqBanner(cfg.bg, cfg.border)}
     >
-      <div className="mb-rb-head">
-        <span className="mb-rb-icon">
-          {isRefund ? <FiDollarSign size={15} /> : <FiSlash size={15} />}
-        </span>
-        <strong>{isRefund ? "Refund" : "Cancellation"} Request</strong>
-        <span className="mb-rb-status" style={{ background: cfg.badge, color: "#fff" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, color: cfg.color }}>
+        {isRefund
+          ? <DollarSign size={15} />
+          : <Slash size={15} />}
+        <strong style={{ fontSize: "0.85rem" }}>
+          {isRefund ? "Refund" : "Cancellation"} Request
+        </strong>
+        <span style={{
+          marginLeft: "auto",
+          fontSize: "0.62rem",
+          fontWeight: 800,
+          padding: "3px 10px",
+          borderRadius: 20,
+          textTransform: "uppercase",
+          background: cfg.badge,
+          color: "#fff",
+        }}>
           {cfg.label}
         </span>
       </div>
+
       {booking.cancel_request_reason && (
-        <p className="mb-rb-reason"><FiInfo size={12} /> {booking.cancel_request_reason}</p>
-      )}
-      {status === "pending" && (
-        <p className="mb-rb-note">
-          We've notified our team. You'll see the outcome here as soon as it's reviewed.
+        <p style={{ margin: "8px 0 0", fontSize: "0.8rem", color: cfg.color, display: "flex", gap: 5 }}>
+          <Info size={12} style={{ flexShrink: 0, marginTop: 2 }} />
+          {booking.cancel_request_reason}
         </p>
       )}
+
+      {status === "pending" && (
+        <p style={{ margin: "6px 0 0", fontSize: "0.78rem", color: cfg.color }}>
+          Our team is reviewing your request. You'll be notified here.
+        </p>
+      )}
+
       {status === "approved" && (
-        <p className="mb-rb-note">
-          ✅ Your request was approved
+        <p style={{ margin: "6px 0 0", fontSize: "0.78rem", color: cfg.color }}>
+          Your request was approved
           {isRefund && booking.refund_amount != null
             ? ` — refund of ${booking.currency || ""} ${booking.refund_amount}`
             : ""}.
-          Booking is now <strong>{booking.status}</strong>.
         </p>
       )}
+
       {status === "rejected" && booking.cancel_admin_response && (
-        <p className="mb-rb-note">
-          <strong>Our note: </strong>{booking.cancel_admin_response}
+        <p style={{ margin: "6px 0 0", fontSize: "0.78rem", color: cfg.color }}>
+          <strong>Admin note: </strong>{booking.cancel_admin_response}
         </p>
       )}
     </div>
   );
 }
 
-// ─── Request Modal ────────────────────────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════════════════════
+   REQUEST MODAL
+═══════════════════════════════════════════════════════════════════════════ */
+
 function RequestModal({ booking, onClose, onSubmit, submitting, error }) {
+  const canCancel = ["pending", "confirmed", "on-hold"].includes(booking?.status);
+  const canRefund = ["confirmed", "completed"].includes(booking?.status);
+
   const [type,   setType]   = useState(
-    booking && booking.status === "completed" ? "refund" : "cancellation");
+    booking?.status === "completed" ? "refund" : "cancellation"
+  );
   const [reason, setReason] = useState("");
-  const elig = requestEligibility(booking);
 
   if (!booking) return null;
 
   return (
-    <div className="mb-modal-overlay" onClick={onClose}>
-      <div className="mb-modal" onClick={(e) => e.stopPropagation()}>
-        <div className="mb-modal-head">
-          <h3>
-            Request {booking.status === "completed" ? "Refund" : "Cancellation or Refund"}
+    <div style={S.overlay} onClick={onClose}>
+      <motion.div
+        style={S.modal}
+        onClick={(e) => e.stopPropagation()}
+        initial={{ opacity: 0, scale: 0.92, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: 20 }}
+        transition={{ duration: 0.22 }}
+      >
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
+          <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 800, color: "#0f172a" }}>
+            {booking.status === "completed" ? "Request Refund" : "Cancel or Refund"}
           </h3>
-          <button className="mb-modal-x" onClick={onClose} aria-label="Close">
-            <FiXCircle size={20} />
+          <button
+            onClick={onClose}
+            style={{ border: "none", background: "transparent", cursor: "pointer",
+                     color: "#94a3b8", padding: 4, borderRadius: 8, display: "flex" }}
+            aria-label="Close"
+          >
+            <X size={20} />
           </button>
         </div>
 
-        <p className="mb-modal-sub">
-          Booking <span className="mb-modal-bk">{booking.booking_number || `#${booking.id}`}</span>
-          {" "}· {booking.destination_name || "your trip"}
+        <p style={{ margin: "0 0 20px", color: "#64748b", fontSize: "0.85rem" }}>
+          Booking{" "}
+          <span style={{ fontFamily: "monospace", fontWeight: 800, color: "#059669" }}>
+            {booking.booking_number || `#${booking.id}`}
+          </span>
+          {" · "}{booking.destination_name || "your trip"}
         </p>
 
-        <div className="mb-req-types">
-          {elig.canCancel && (
+        {/* Type selector */}
+        <div style={{ display: "grid", gridTemplateColumns: canCancel && canRefund ? "1fr 1fr" : "1fr", gap: 10, marginBottom: 20 }}>
+          {canCancel && (
             <button
               type="button"
-              className={`mb-req-type ${type === "cancellation" ? "active" : ""}`}
               onClick={() => setType("cancellation")}
+              style={{
+                display: "flex", flexDirection: "column", alignItems: "flex-start",
+                gap: 5, padding: 16, borderRadius: 14, cursor: "pointer", textAlign: "left",
+                border: `2px solid ${type === "cancellation" ? "#dc2626" : "#e2e8f0"}`,
+                background: type === "cancellation" ? "#fef2f2" : "#f8fafc",
+                transition: "all 0.18s", fontFamily: "inherit",
+              }}
             >
-              <FiSlash size={18} />
-              <span className="mb-rt-title">Cancel Trip</span>
-              <span className="mb-rt-desc">Void this booking entirely</span>
+              <Slash size={18} color={type === "cancellation" ? "#dc2626" : "#94a3b8"} />
+              <span style={{ fontSize: "0.9rem", fontWeight: 800, color: "#0f172a" }}>Cancel Trip</span>
+              <span style={{ fontSize: "0.72rem", color: "#64748b" }}>Void this booking</span>
             </button>
           )}
-          {elig.canRefund && (
+          {canRefund && (
             <button
               type="button"
-              className={`mb-req-type ${type === "refund" ? "active" : ""}`}
               onClick={() => setType("refund")}
+              style={{
+                display: "flex", flexDirection: "column", alignItems: "flex-start",
+                gap: 5, padding: 16, borderRadius: 14, cursor: "pointer", textAlign: "left",
+                border: `2px solid ${type === "refund" ? "#dc2626" : "#e2e8f0"}`,
+                background: type === "refund" ? "#fef2f2" : "#f8fafc",
+                transition: "all 0.18s", fontFamily: "inherit",
+              }}
             >
-              <FiDollarSign size={18} />
-              <span className="mb-rt-title">Request Refund</span>
-              <span className="mb-rt-desc">For paid / completed trips</span>
+              <DollarSign size={18} color={type === "refund" ? "#dc2626" : "#94a3b8"} />
+              <span style={{ fontSize: "0.9rem", fontWeight: 800, color: "#0f172a" }}>Request Refund</span>
+              <span style={{ fontSize: "0.72rem", color: "#64748b" }}>For paid or completed trips</span>
             </button>
           )}
         </div>
 
-        <label className="mb-req-label">
-          Reason <span className="mb-req-req">*</span>
+        {/* Reason */}
+        <label style={{
+          display: "block", fontSize: "0.7rem", fontWeight: 800,
+          textTransform: "uppercase", letterSpacing: "0.06em",
+          color: "#94a3b8", marginBottom: 8,
+        }}>
+          Reason <span style={{ color: "#dc2626" }}>*</span>
         </label>
         <textarea
-          className="mb-req-textarea"
           rows={4}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          placeholder="Tell us why you'd like to cancel or request a refund…"
+          placeholder="Please explain why you'd like to cancel or request a refund…"
+          style={{
+            width: "100%", borderRadius: 13, border: "1.5px solid #e2e8f0",
+            padding: "12px 14px", fontSize: "0.88rem", fontFamily: "inherit",
+            resize: "vertical", outline: "none", boxSizing: "border-box",
+            transition: "border-color 0.2s",
+          }}
+          onFocus={(e) => { e.target.style.borderColor = "#059669"; }}
+          onBlur={(e)  => { e.target.style.borderColor = "#e2e8f0"; }}
         />
 
         {error && (
-          <div className="mb-error" style={{ marginTop: 10 }}>⚠️ {error}</div>
+          <div style={{ ...S.errorBanner, marginTop: 12 }}>
+            <AlertCircle size={15} /> {error}
+          </div>
         )}
 
-        <div className="mb-modal-actions">
-          <button className="mb-req-cancel" onClick={onClose} disabled={submitting}>
+        {/* Actions */}
+        <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+          <button
+            onClick={onClose}
+            disabled={submitting}
+            style={{
+              flexShrink: 0, padding: "11px 18px", borderRadius: 12,
+              border: "1.5px solid #e2e8f0", background: "#fff",
+              color: "#475569", fontWeight: 700, fontSize: "0.85rem",
+              cursor: "pointer", fontFamily: "inherit",
+            }}
+          >
             Cancel
           </button>
           <button
-            className="mb-req-submit"
             disabled={submitting || !reason.trim()}
             onClick={() => onSubmit(booking, type, reason.trim())}
+            style={{
+              flex: 1, display: "inline-flex", alignItems: "center",
+              justifyContent: "center", gap: 7, padding: "11px 18px",
+              borderRadius: 12, border: "none",
+              background: submitting || !reason.trim()
+                ? "#f87171"
+                : "linear-gradient(135deg, #dc2626, #b91c1c)",
+              color: "#fff", fontWeight: 800, fontSize: "0.85rem",
+              cursor: submitting || !reason.trim() ? "not-allowed" : "pointer",
+              fontFamily: "inherit", transition: "all 0.2s",
+              boxShadow: "0 4px 14px rgba(220,38,38,0.25)",
+              opacity: submitting || !reason.trim() ? 0.7 : 1,
+            }}
           >
-            {submitting ? (
-              <><FiRefreshCw size={15} className="mb-spin-icon" /> Submitting…</>
-            ) : (
-              <><FiSend size={15} /> Submit Request</>
-            )}
+            {submitting
+              ? <><Loader2 size={15} style={{ animation: "spin 1s linear infinite" }} /> Submitting…</>
+              : <><Send size={15} /> Submit Request</>}
           </button>
         </div>
-        <p className="mb-req-foot">
-          <FiInfo size={12} /> Our team reviews every request and replies here.
+
+        <p style={{ margin: "12px 0 0", fontSize: "0.74rem", color: "#64748b", display: "flex", gap: 5, alignItems: "center" }}>
+          <Info size={12} /> Our team reviews every request within 1–2 business days.
         </p>
-      </div>
+      </motion.div>
     </div>
   );
 }
 
-// ─── Booking Card ─────────────────────────────────────────────────────────────
-function BookingCard({ booking, onRequest }) {
+/* ═══════════════════════════════════════════════════════════════════════════
+   BOOKING CARD
+═══════════════════════════════════════════════════════════════════════════ */
+
+function BookingCard({ booking, onRequest, onMessage }) {
   const [expanded, setExpanded] = useState(false);
-  const st    = getStatus(booking.status);
-  const admin = isAdmin(booking);
-  const elig  = requestEligibility(booking);
-  const days  = daysUntil(booking.travel_date);
-  const upcomingConfirmed =
-    days !== null && days >= 0 && days <= UPCOMING_THRESHOLD_DAYS &&
+
+  const st        = getStatus(booking.status);
+  const admin     = isAdminCreated(booking);
+  const days      = daysUntil(booking.travel_date);
+  const isUpcoming =
+    days !== null && days >= 0 && days <= UPCOMING_DAYS &&
     booking.status === "confirmed";
 
-  const detailFields = [
+  const hasPending = booking.cancel_request_status === "pending";
+  const finalized  =
+    ["cancelled", "refunded"].includes(booking.status) ||
+    booking.cancel_request_status === "approved";
+  const canCancel  = ["pending", "confirmed", "on-hold"].includes(booking.status);
+  const canRefund  = ["confirmed", "completed"].includes(booking.status);
+  const canRequest = !finalized && (canCancel || canRefund) && !hasPending;
+
+  const fields = [
     ["Full Name",      booking.full_name],
     ["Email",          booking.email],
     ["Phone",          booking.phone],
@@ -603,121 +858,141 @@ function BookingCard({ booking, onRequest }) {
     ["Service",        booking.service_name],
     ["Travel Date",    fmtFull(booking.travel_date)],
     ["Return Date",    fmtFull(booking.return_date)],
-    ["Booking Date",   fmtFull(booking.created_at)],
+    ["Booked On",      fmtFull(booking.created_at)],
     ["Payment Status", booking.payment_status],
-  ].filter(([, val]) => val && val !== "—");
+  ].filter(([, v]) => v && v !== "—");
 
   return (
     <motion.div
       layout
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 18 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -8 }}
+      exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.25 }}
-      className={`mb-card ${upcomingConfirmed ? "upcoming-confirmed" : ""}`}
+      style={S.card(isUpcoming)}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.boxShadow = "0 10px 40px rgba(0,0,0,0.1)";
+        e.currentTarget.style.borderColor = isUpcoming ? "#34d399" : "#cbd5e1";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.boxShadow = isUpcoming
+          ? "0 4px 20px rgba(5,150,105,0.1)"
+          : "0 2px 12px rgba(0,0,0,0.04)";
+        e.currentTarget.style.borderColor = isUpcoming ? "#6ee7b7" : "#e2e8f0";
+      }}
     >
       {/* Color strip */}
-      <div
-        className="mb-card-strip"
-        style={{
-          background: admin
-            ? "linear-gradient(90deg, #7c3aed, #a855f7)"
-            : `linear-gradient(90deg, ${st.color}, ${st.color}99)`,
-        }}
-      />
+      <div style={S.cardStrip(st.color, admin)} />
 
       {/* Proximity banner */}
-      {upcomingConfirmed && (
-        <ProximityBanner days={days} dest={booking.destination_name} />
-      )}
+      {isUpcoming && <ProximityBanner days={days} dest={booking.destination_name} />}
 
-      {/* Request status */}
-      <RequestStatusBanner booking={booking} />
+      {/* Request status banner */}
+      <RequestBanner booking={booking} />
 
       {/* Main body */}
-      <div className="mb-card-main">
-        <div className="mb-card-top">
+      <div className="mb-card-main" style={S.cardMain}>
+        <div style={S.cardTop}>
+          {/* Left: ID + status */}
           <div>
             <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
-              <span className="mb-booking-num">
+              <span style={S.bookingNum}>
                 {booking.booking_number || `#${booking.id}`}
               </span>
               {admin && (
-                <span className="mb-admin-badge">
-                  <FiShield size={9} /> Admin Created
+                <span style={S.adminBadge}>
+                  <Shield size={9} /> Admin Created
                 </span>
               )}
             </div>
-            <div style={{ marginTop: 6 }}>
-              <span
-                className="mb-status-badge"
-                style={{ color: st.color, background: st.bg, borderColor: st.border }}
-              >
-                <st.Icon size={13} /> {st.label}
+            <div>
+              <span style={S.statusBadge(st.color, st.bg, st.border)}>
+                <st.Icon size={12} />
+                {st.label}
               </span>
             </div>
           </div>
 
+          {/* Right: actions */}
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            {elig.canRequest && (
+            {canRequest && (
               <button
-                className="mb-req-btn"
+                style={S.cancelBtn}
                 onClick={() => onRequest && onRequest(booking)}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#fee2e2"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#fef2f2"; }}
               >
-                <FiRotateCcw size={14} />
-                {elig.canRefund && elig.canCancel
+                <RotateCcw size={13} />
+                {canRefund && canCancel
                   ? "Cancel / Refund"
-                  : elig.canRefund ? "Request Refund" : "Request Cancellation"}
+                  : canRefund ? "Request Refund" : "Cancel Trip"}
               </button>
             )}
-            <button
-              className="mb-toggle-btn"
-              onClick={() => setExpanded((v) => !v)}
-              aria-expanded={expanded}
-            >
-              {expanded
-                ? <><FiChevronUp size={14} /> Less</>
-                : <><FiChevronDown size={14} /> Details</>}
-            </button>
-          </div>
+              <button
+                style={S.toggleBtn}
+                onClick={() => setExpanded((v) => !v)}
+                aria-expanded={expanded}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#f1f5f9"; e.currentTarget.style.color = "#0f172a"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.color = "#475569"; }}
+              >
+                {expanded ? <><ChevronUp size={14} /> Less</> : <><ChevronDown size={14} /> Details</>}
+              </button>
+              <button
+                onClick={() => onMessage && onMessage(booking)}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: 5,
+                  padding: "7px 14px", borderRadius: 9, fontSize: "0.78rem",
+                  fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+                  border: "1.5px solid #059669", background: "#fff", color: "#059669",
+                  transition: "all 0.2s",
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#ecfdf5"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#fff"; }}
+              >
+                <Send size={13} /> Message
+              </button>
+            </div>
         </div>
 
-        {/* Summary row */}
-        <div className="mb-card-meta">
+        {/* Meta row */}
+        <div style={S.cardMeta}>
           {booking.destination_name && (
-            <div className="mb-meta-item">
-              <FiMapPin size={14} color="#059669" />
-              <span style={{ fontWeight: 700, color: "#0f172a", fontSize: "0.9rem" }}>
+            <div style={S.metaItem}>
+              <MapPin size={14} color="#059669" />
+              <span style={{ fontWeight: 700, color: "#0f172a" }}>
                 {booking.destination_name}
               </span>
             </div>
           )}
           {booking.travel_date && (
-            <div className="mb-meta-item" style={{ color: "#475569" }}>
-              <FiCalendar size={14} color="#0891b2" />
-              {fmtShort(booking.travel_date)}
-              {booking.return_date && ` → ${fmtShort(booking.return_date)}`}
+            <div style={{ ...S.metaItem, color: "#475569" }}>
+              <Calendar size={14} color="#0369a1" />
+              <span>{fmtShort(booking.travel_date)}
+                {booking.return_date && ` → ${fmtShort(booking.return_date)}`}
+              </span>
             </div>
           )}
           {booking.number_of_travelers && (
-            <div className="mb-meta-item" style={{ color: "#475569" }}>
-              <FiUsers size={14} color="#7c3aed" />
-              {booking.number_of_travelers} traveler
-              {booking.number_of_travelers !== 1 ? "s" : ""}
+            <div style={{ ...S.metaItem, color: "#475569" }}>
+              <Users size={14} color="#7c3aed" />
+              <span>
+                {booking.number_of_travelers} traveler
+                {booking.number_of_travelers !== 1 ? "s" : ""}
+              </span>
             </div>
           )}
         </div>
 
         {/* Admin notice */}
         {admin && (
-          <div className="mb-admin-notice">
-            <FiShield size={15} color="#7c3aed" style={{ flexShrink: 0, marginTop: 1 }} />
+          <div style={S.adminNotice}>
+            <Shield size={15} color="#7c3aed" style={{ flexShrink: 0, marginTop: 1 }} />
             <div>
-              <p style={{ fontWeight: 800, color: "#7c3aed", marginBottom: 3 }}>
+              <p style={{ margin: "0 0 3px", fontWeight: 800, color: "#7c3aed", fontSize: "0.83rem" }}>
                 Created by Altuvera Team
               </p>
-              <p style={{ color: "#6d28d9" }}>
-                This booking was arranged on your behalf. Contact us if you have any questions.
+              <p style={{ margin: 0, color: "#6d28d9", fontSize: "0.8rem" }}>
+                This booking was arranged on your behalf. Contact us with any questions.
               </p>
             </div>
           </div>
@@ -735,32 +1010,33 @@ function BookingCard({ booking, onRequest }) {
             transition={{ duration: 0.22 }}
             style={{ overflow: "hidden" }}
           >
-            <div className="mb-details">
-              <div className="mb-detail-grid">
-                {detailFields.map(([label, value]) => (
-                  <div key={label} className="mb-detail-field">
-                    <p>{label}</p>
-                    <p>{value}</p>
+            <div className="mb-details" style={S.details}>
+              <div style={S.detailGrid}>
+                {fields.map(([label, value]) => (
+                  <div key={label}>
+                    <p style={S.detailLabel}>{label}</p>
+                    <p style={S.detailValue}>{value}</p>
                   </div>
                 ))}
               </div>
 
               {booking.special_requests && (
-                <div
-                  className="mb-notes-block"
-                  style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}
-                >
-                  <p style={{ color: "#64748b" }}>Special Requests</p>
-                  <p style={{ color: "#374151" }}>{booking.special_requests}</p>
+                <div style={S.notesBlock("#f8fafc", "#e2e8f0")}>
+                  <p style={{ ...S.detailLabel, marginBottom: 5 }}>Special Requests</p>
+                  <p style={{ margin: 0, color: "#374151", fontSize: "0.86rem" }}>
+                    {booking.special_requests}
+                  </p>
                 </div>
               )}
+
               {booking.admin_notes && (
-                <div
-                  className="mb-notes-block"
-                  style={{ background: "#faf5ff", border: "1px solid #ddd6fe" }}
-                >
-                  <p style={{ color: "#7c3aed" }}>Notes from Altuvera Team</p>
-                  <p style={{ color: "#6d28d9" }}>{booking.admin_notes}</p>
+                <div style={S.notesBlock("#faf5ff", "#e9d5ff")}>
+                  <p style={{ ...S.detailLabel, color: "#7c3aed", marginBottom: 5 }}>
+                    Notes from Altuvera Team
+                  </p>
+                  <p style={{ margin: 0, color: "#6d28d9", fontSize: "0.86rem" }}>
+                    {booking.admin_notes}
+                  </p>
                 </div>
               )}
             </div>
@@ -771,78 +1047,115 @@ function BookingCard({ booking, onRequest }) {
   );
 }
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
+/* ═══════════════════════════════════════════════════════════════════════════
+   STAT CARD
+═══════════════════════════════════════════════════════════════════════════ */
+
+function StatCard({ icon: Icon, value, label, color, iconBg }) {
+  return (
+    <div
+      style={S.statCard}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = "translateY(-3px)";
+        e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.08)";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = "translateY(0)";
+        e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.04)";
+      }}
+    >
+      <div style={{ ...S.statIcon, background: iconBg }}>
+        <Icon size={20} color={color} />
+      </div>
+      <p style={{ ...S.statValue, color }}>{value}</p>
+      <p style={S.statLabel}>{label}</p>
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MAIN PAGE
+═══════════════════════════════════════════════════════════════════════════ */
+
 export default function MyBookings() {
-  const { authFetch, user, token } = useUserAuth();
+  const { authFetch, user } = useUserAuth();
 
   const [bookings,    setBookings]    = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [error,       setError]       = useState(null);
-  const [authWarning, setAuthWarning] = useState(null);
+  const [authWarn,    setAuthWarn]    = useState(null);
   const [search,      setSearch]      = useState("");
   const [filter,      setFilter]      = useState("all");
   const [page,        setPage]        = useState(1);
   const [totalPages,  setTotalPages]  = useState(1);
   const [total,       setTotal]       = useState(0);
 
-  // Modal state
   const [reqBooking,    setReqBooking]    = useState(null);
   const [reqSubmitting, setReqSubmitting] = useState(false);
   const [reqError,      setReqError]      = useState(null);
 
-  // ── Fetch bookings ──────────────────────────────────────────────────────────
+  /* ── Fetch ─────────────────────────────────────────────────────────────── */
+
   const fetchBookings = useCallback(async (pageNum = 1) => {
     setLoading(true);
-    if (pageNum === 1) {
-      setError(null);
-      setAuthWarning(null);
-    }
+    if (pageNum === 1) { setError(null); setAuthWarn(null); }
 
     const params = new URLSearchParams({ page: pageNum, limit: LIMIT });
-    const { data, error: fetchErr } = await safeFetch(
+
+    // Try primary endpoint first
+    let { data, error: err } = await safeFetch(
       authFetch,
       `/bookings/my-bookings?${params}`
     );
 
-    if (fetchErr) {
-      // If it's an auth error, show a soft warning but don't crash
-      if (fetchErr.includes("Auth error")) {
-        setAuthWarning("Session may have expired. Please refresh or log in again.");
+    // Fallback: some backends use /bookings?user_id=me
+    if ((err || !data) && !err?.startsWith("auth:")) {
+      const fb = await safeFetch(authFetch, `/bookings?mine=true&${params}`);
+      if (!fb.error && fb.data) { data = fb.data; err = null; }
+    }
+
+    if (err) {
+      if (err.startsWith("auth:")) {
+        setAuthWarn("Session expired. Please refresh or log in again.");
       } else {
-        setError(fetchErr);
+        setError(err);
       }
       setLoading(false);
       return;
     }
 
-    const rows = data?.data || data?.bookings || [];
+    // Normalise response shape
+    const rows =
+      data?.data ||
+      data?.bookings ||
+      (Array.isArray(data) ? data : []);
+
     setBookings((prev) => (pageNum === 1 ? rows : [...prev, ...rows]));
-    setTotal(data?.pagination?.total ?? rows.length);
-    setTotalPages(data?.pagination?.total_pages ?? 1);
+    setTotal(data?.pagination?.total ?? data?.total ?? rows.length);
+    setTotalPages(data?.pagination?.total_pages ?? data?.totalPages ?? 1);
     setPage(pageNum);
     setLoading(false);
   }, [authFetch]);
 
-  useEffect(() => {
-    fetchBookings(1);
-  }, [fetchBookings]);
+  useEffect(() => { fetchBookings(1); }, [fetchBookings]);
 
-  // ── Derived lists ───────────────────────────────────────────────────────────
+  /* ── Derived ────────────────────────────────────────────────────────────── */
+
   const { selfB, adminB, upcomingB, displayed } = useMemo(() => {
     const q = search.toLowerCase().trim();
+
     const all = bookings.filter((b) =>
       !q ||
-      (b.booking_number  || "").toLowerCase().includes(q) ||
+      (b.booking_number   || "").toLowerCase().includes(q) ||
       (b.destination_name || "").toLowerCase().includes(q) ||
       (b.full_name        || "").toLowerCase().includes(q)
     );
 
-    const selfB     = all.filter((b) => !isAdmin(b));
-    const adminB    = all.filter((b) =>  isAdmin(b));
+    const selfB     = all.filter((b) => !isAdminCreated(b));
+    const adminB    = all.filter((b) =>  isAdminCreated(b));
     const upcomingB = all.filter((b) => {
       const d = daysUntil(b.travel_date);
-      return d !== null && d >= 0 && d <= UPCOMING_THRESHOLD_DAYS &&
-             b.status === "confirmed";
+      return d !== null && d >= 0 && d <= UPCOMING_DAYS && b.status === "confirmed";
     });
 
     const displayed =
@@ -853,25 +1166,8 @@ export default function MyBookings() {
     return { selfB, adminB, upcomingB, displayed };
   }, [bookings, search, filter]);
 
-  // ── Stats ───────────────────────────────────────────────────────────────────
-  const stats = [
-    { emoji: "📋", value: total || bookings.length, label: "Total",         color: "#059669" },
-    { emoji: "👤", value: selfB.length,              label: "Self-Booked",   color: "#0891b2" },
-    { emoji: "🛡️", value: adminB.length,             label: "Team-Arranged", color: "#7c3aed" },
-    { emoji: "✈️", value: upcomingB.length,           label: "Coming Soon",   color: "#d97706" },
-  ];
+  /* ── Request handlers ───────────────────────────────────────────────────── */
 
-  const filters = [
-    { key: "all",      label: "All" },
-    { key: "self",     label: "👤 My Bookings" },
-    { key: "admin",    label: "🛡️ Team Created" },
-    { key: "upcoming", label: "✈️ Coming Soon" },
-  ];
-
-  const showSplit =
-    filter === "all" && selfB.length > 0 && adminB.length > 0;
-
-  // ── Request handlers ────────────────────────────────────────────────────────
   const openRequest = useCallback((b) => {
     setReqError(null);
     setReqBooking(b);
@@ -880,102 +1176,231 @@ export default function MyBookings() {
   const submitRequest = useCallback(async (booking, type, reason) => {
     setReqSubmitting(true);
     setReqError(null);
+
     const { error: submitErr } = await safeFetch(
       authFetch,
       `/bookings/${booking.id}/request-cancellation`,
-      {
-        method: "POST",
-        body: JSON.stringify({ type, reason }),
-      }
+      { method: "POST", body: JSON.stringify({ type, reason }) }
     );
+
     if (submitErr) {
       setReqError(submitErr);
       setReqSubmitting(false);
       return;
     }
+
     setReqBooking(null);
     setReqSubmitting(false);
     await fetchBookings(1);
   }, [authFetch, fetchBookings]);
 
-  // ── Render ──────────────────────────────────────────────────────────────────
+  /* ── Message handlers ──────────────────────────────────────────────────── */
+
+  const [msgBooking, setMsgBooking] = useState(null);
+  const [msgConvo, setMsgConvo] = useState(null);
+  const [msgMessages, setMsgMessages] = useState([]);
+  const [msgLoading, setMsgLoading] = useState(false);
+  const [msgSending, setMsgSending] = useState(false);
+  const [msgDraft, setMsgDraft] = useState("");
+  const [msgError, setMsgError] = useState(null);
+  const msgScrollRef = useRef(null);
+
+  const openMessage = useCallback(async (booking) => {
+    setMsgBooking(booking);
+    setMsgConvo(null);
+    setMsgMessages([]);
+    setMsgDraft("");
+    setMsgError(null);
+    setMsgLoading(true);
+    try {
+      const res = await authFetch(
+        `/messages/conversations/by-booking/${booking.id}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setMsgConvo(data.data);
+        setMsgMessages(data.data?.messages || []);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 404) {
+          const createRes = await authFetch(`/messages/conversations`, {
+            method: "POST",
+            body: JSON.stringify({
+              bookingId: booking.id,
+              bookingNumber: booking.booking_number,
+              subject: `Booking ${booking.booking_number || booking.id}`,
+              firstMessage: "",
+            }),
+          });
+          const created = await createRes.json();
+          if (created.success) {
+            setMsgConvo(created.data);
+            setMsgMessages([]);
+          } else {
+            setMsgError(created.message || "Failed to open conversation");
+          }
+        } else {
+          setMsgError(data.message || "Failed to load conversation");
+        }
+      }
+    } catch {
+      setMsgError("Network error");
+    } finally {
+      setMsgLoading(false);
+      setTimeout(() => msgScrollRef.current?.scrollTo({ top: msgScrollRef.current.scrollHeight, behavior: "smooth" }), 50);
+    }
+  }, [authFetch]);
+
+  const closeMessage = useCallback(() => {
+    setMsgBooking(null);
+    setMsgConvo(null);
+    setMsgMessages([]);
+    setMsgDraft("");
+    setMsgError(null);
+    setMsgSending(false);
+  }, []);
+
+  const sendClientMessage = useCallback(async () => {
+    const text = msgDraft.trim();
+    if (!text || !msgConvo?.id || msgSending) return;
+    setMsgSending(true);
+    setMsgError(null);
+    const optimistic = {
+      id: `tmp-${Date.now()}`,
+      conversationId: msgConvo.id,
+      senderType: "user",
+      senderName: "You",
+      body: text,
+      isRead: false,
+      reactions: {},
+      replyToId: null,
+      createdAt: new Date().toISOString(),
+    };
+    setMsgMessages(prev => [...prev, optimistic]);
+    setMsgDraft("");
+    setTimeout(() => msgScrollRef.current?.scrollTo({ top: msgScrollRef.current.scrollHeight, behavior: "smooth" }), 50);
+    try {
+      const res = await authFetch(
+        `/messages/conversations/${msgConvo.id}/messages`,
+        { method: "POST", body: JSON.stringify({ body: text }) }
+      );
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to send");
+      setMsgMessages(prev => prev.map(m => m.id === optimistic.id ? { ...data.data, senderType: "user", senderName: "You" } : m));
+      setMsgConvo(prev => prev ? { ...prev, last_message: text, last_message_at: new Date().toISOString() } : prev);
+    } catch (e) {
+      setMsgMessages(prev => prev.filter(m => m.id !== optimistic.id));
+      setMsgError(e.message);
+      setMsgDraft(text);
+    } finally {
+      setMsgSending(false);
+    }
+  }, [msgDraft, msgConvo, msgSending, authFetch]);
+
+  /* ── Layout helpers ─────────────────────────────────────────────────────── */
+
+  const showSplit =
+    filter === "all" && selfB.length > 0 && adminB.length > 0;
+
+  const filters = [
+    { key: "all",      label: "All",          count: null },
+    { key: "self",     label: "My Bookings",  count: selfB.length },
+    { key: "admin",    label: "Team Created", count: adminB.length },
+    { key: "upcoming", label: "Coming Soon",  count: upcomingB.length },
+  ];
+
+  const stats = [
+    { icon: Bookmark, value: total || bookings.length, label: "Total Bookings",  color: "#059669", iconBg: "#ecfdf5" },
+    { icon: User,     value: selfB.length,              label: "Self-Booked",     color: "#0369a1", iconBg: "#eff6ff" },
+    { icon: Shield,   value: adminB.length,             label: "Team-Arranged",   color: "#7c3aed", iconBg: "#faf5ff" },
+    { icon: Plane,    value: upcomingB.length,          label: "Coming Soon",     color: "#d97706", iconBg: "#fffbeb" },
+  ];
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     RENDER
+  ══════════════════════════════════════════════════════════════════════════ */
+
   return (
     <>
       <Helmet>
         <title>My Bookings | Altuvera</title>
-        <meta name="description" content="View and manage all your travel bookings." />
+        <meta name="description" content="View and manage all your travel bookings with Altuvera." />
       </Helmet>
+
+      <style>{KEYFRAMES}</style>
 
       <DashboardLayout
         title="My Bookings"
         subtitle="Track all your adventures — self-booked and team-arranged."
       >
-        <style>{css}</style>
-        <div className="mb-root">
+        <div style={S.root}>
 
-          {/* Stats */}
-          <div className="mb-stats">
+          {/* ── Stats ──────────────────────────────────────────────────── */}
+          <div style={S.statsGrid}>
             {stats.map((s) => (
-              <div key={s.label} className="mb-stat">
-                <div className="mb-stat-emoji">{s.emoji}</div>
-                <p className="mb-stat-value" style={{ color: s.color }}>{s.value}</p>
-                <p className="mb-stat-label">{s.label}</p>
-              </div>
+              <StatCard key={s.label} {...s} />
             ))}
           </div>
 
-          {/* Controls */}
-          <div className="mb-controls">
-            <div className="mb-search-wrap">
-              <FiSearch size={15} className="mb-search-icon" />
+          {/* ── Controls ───────────────────────────────────────────────── */}
+          <div style={S.controls}>
+            {/* Search */}
+            <div style={S.searchWrap}>
+              <Search size={15} style={S.searchIcon} />
               <input
                 type="text"
-                className="mb-search"
+                style={S.searchInput}
                 placeholder="Search bookings…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 aria-label="Search bookings"
+                onFocus={(e)  => { e.target.style.borderColor = "#059669"; e.target.style.boxShadow = "0 0 0 3px rgba(5,150,105,0.1)"; }}
+                onBlur={(e)   => { e.target.style.borderColor = "#e2e8f0"; e.target.style.boxShadow = "none"; }}
               />
             </div>
 
-            <div className="mb-filter-tabs">
+            {/* Filter tabs */}
+            <div style={S.filterRow}>
               {filters.map((f) => (
                 <button
                   key={f.key}
-                  className={`mb-filter-tab ${filter === f.key ? "active" : ""}`}
+                  style={S.filterBtn(filter === f.key)}
                   onClick={() => setFilter(f.key)}
                 >
                   {f.label}
-                  {f.key !== "all" && (
-                    <span style={{ marginLeft: 4, opacity: 0.7 }}>
-                      ({f.key === "self" ? selfB.length
-                        : f.key === "admin" ? adminB.length
-                        : upcomingB.length})
+                  {f.count !== null && (
+                    <span style={{
+                      marginLeft: 5, opacity: 0.7, fontSize: "0.72rem",
+                    }}>
+                      ({f.count})
                     </span>
                   )}
                 </button>
               ))}
             </div>
 
+            {/* Refresh */}
             <button
-              className="mb-refresh-btn"
+              style={S.refreshBtn}
               onClick={() => fetchBookings(1)}
               disabled={loading}
-              aria-label="Refresh bookings"
+              aria-label="Refresh"
+              onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.background = "#f8fafc"; e.currentTarget.style.color = "#0f172a"; } }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.color = "#64748b"; }}
             >
-              <FiRefreshCw
+              <RefreshCw
                 size={14}
-                className={loading ? "mb-spin-icon" : ""}
+                style={loading ? { animation: "spin 1s linear infinite" } : undefined}
               />
               Refresh
             </button>
           </div>
 
-          {/* Auth warning (non-blocking) */}
-          {authWarning && (
-            <div className="mb-auth-warn">
-              <FiAlertCircle size={16} />
-              {authWarning}
+          {/* ── Auth warning ────────────────────────────────────────────── */}
+          {authWarn && (
+            <div style={S.warnBanner}>
+              <AlertTriangle size={16} />
+              {authWarn}
               <button
                 onClick={() => window.location.reload()}
                 style={{
@@ -989,10 +1414,10 @@ export default function MyBookings() {
             </div>
           )}
 
-          {/* Error */}
+          {/* ── Error ──────────────────────────────────────────────────── */}
           {error && (
-            <div className="mb-error">
-              <FiAlertCircle size={16} />
+            <div style={S.errorBanner}>
+              <AlertCircle size={16} />
               {error}
               <button
                 onClick={() => fetchBookings(1)}
@@ -1007,38 +1432,49 @@ export default function MyBookings() {
             </div>
           )}
 
-          {/* Loading */}
+          {/* ── Loading ─────────────────────────────────────────────────── */}
           {loading && displayed.length === 0 && (
-            <div className="mb-loading">
-              <div className="mb-spinner" />
-              <p>Loading your bookings…</p>
+            <div style={S.loadingWrap}>
+              <div style={S.spinner} />
+              <p style={{ color: "#64748b", fontSize: "0.9rem", margin: 0 }}>
+                Loading your bookings…
+              </p>
             </div>
           )}
 
-          {/* Empty state */}
+          {/* ── Empty state ─────────────────────────────────────────────── */}
           {!loading && !error && displayed.length === 0 && (
-            <div className="mb-empty">
-              <div className="mb-empty-icon">
-                {filter === "upcoming" ? "✈️" : "📋"}
-              </div>
-              <h3>
-                {filter === "upcoming" ? "No upcoming confirmed trips"
-                  : filter === "admin"   ? "No team-arranged bookings yet"
-                  : filter === "self"    ? "No self-booked trips yet"
-                  : "No bookings found"}
-              </h3>
-              <p>
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              style={S.empty}
+            >
+              <div style={S.emptyIconWrap}>
                 {filter === "upcoming"
-                  ? "Confirmed trips within 7 days will appear here."
+                  ? <Plane size={36} color="#059669" />
                   : filter === "admin"
-                  ? "When our team creates a booking for you, it will appear here."
+                  ? <Shield size={36} color="#059669" />
+                  : <Bookmark size={36} color="#059669" />}
+              </div>
+              <h3 style={S.emptyTitle}>
+                {filter === "upcoming" ? "No upcoming confirmed trips"
+                  : filter === "admin"   ? "No team-arranged bookings"
+                  : filter === "self"    ? "No self-booked trips yet"
+                  : search ? `No results for "${search}"`
+                  : "No bookings yet"}
+              </h3>
+              <p style={S.emptyText}>
+                {filter === "upcoming"
+                  ? "Confirmed trips within the next 7 days will appear here."
+                  : filter === "admin"
+                  ? "When our team creates a booking on your behalf, it appears here."
                   : search
-                  ? `No results for "${search}". Try a different search term.`
-                  : "Ready to plan your next adventure?"}
+                  ? "Try a different search term or clear the search."
+                  : "Ready to plan your next adventure? Book with Altuvera today!"}
               </p>
               {filter === "all" && !search && (
-                <a href="/booking" className="mb-empty-cta">
-                  Book an Adventure
+                <a href="/booking" style={S.emptyCta}>
+                  Book an Adventure <ArrowRight size={16} />
                 </a>
               )}
               {search && (
@@ -1052,52 +1488,42 @@ export default function MyBookings() {
                     fontFamily: "inherit",
                   }}
                 >
-                  <FiXCircle size={14} /> Clear Search
+                  <X size={14} /> Clear Search
                 </button>
               )}
-            </div>
+            </motion.div>
           )}
 
-          {/* Split view: self-booked + admin-created */}
+          {/* ── Split view ──────────────────────────────────────────────── */}
           {!loading && showSplit && (
             <>
-              <div className="mb-section-heading">
-                <FiUser size={16} color="#0891b2" />
-                <h3>My Self-Booked Adventures</h3>
-                <span
-                  className="mb-section-count"
-                  style={{ background: "#e0f2fe", color: "#0369a1" }}
-                >
-                  {selfB.length}
-                </span>
+              <div style={S.sectionHead}>
+                <User size={16} color="#0369a1" />
+                <h3 style={S.sectionTitle}>My Self-Booked Adventures</h3>
+                <span style={S.sectionBadge("#e0f2fe", "#0369a1")}>{selfB.length}</span>
               </div>
               <AnimatePresence>
                 {selfB.map((b) => (
-                  <BookingCard key={b.id} booking={b} onRequest={openRequest} />
+                  <BookingCard key={b.id} booking={b} onRequest={openRequest} onMessage={openMessage} />
                 ))}
               </AnimatePresence>
 
-              <hr className="mb-divider" />
+              <hr style={S.divider} />
 
-              <div className="mb-section-heading">
-                <FiShield size={16} color="#7c3aed" />
-                <h3>Arranged by Altuvera Team</h3>
-                <span
-                  className="mb-section-count"
-                  style={{ background: "#f3e8ff", color: "#7c3aed" }}
-                >
-                  {adminB.length}
-                </span>
+              <div style={S.sectionHead}>
+                <Shield size={16} color="#7c3aed" />
+                <h3 style={S.sectionTitle}>Arranged by Altuvera Team</h3>
+                <span style={S.sectionBadge("#f3e8ff", "#7c3aed")}>{adminB.length}</span>
               </div>
               <AnimatePresence>
                 {adminB.map((b) => (
-                  <BookingCard key={b.id} booking={b} onRequest={openRequest} />
+                  <BookingCard key={b.id} booking={b} onRequest={openRequest} onMessage={openMessage} />
                 ))}
               </AnimatePresence>
             </>
           )}
 
-          {/* Flat list (filtered view) */}
+          {/* ── Flat list ───────────────────────────────────────────────── */}
           {!loading && !showSplit && displayed.length > 0 && (
             <AnimatePresence>
               {displayed.map((b) => (
@@ -1106,30 +1532,149 @@ export default function MyBookings() {
             </AnimatePresence>
           )}
 
-          {/* Load more */}
+          {/* ── Load more ───────────────────────────────────────────────── */}
           {page < totalPages && !loading && (
-            <div className="mb-load-more">
+            <div style={S.loadMore}>
               <button
-                className="mb-load-more-btn"
+                style={S.loadMoreBtn}
                 onClick={() => fetchBookings(page + 1)}
                 disabled={loading}
+                onMouseEnter={(e) => { e.currentTarget.style.background = "#ecfdf5"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.transform = "translateY(0)"; }}
               >
-                <FiChevronDown size={16} /> Load More Bookings
+                <ChevronDown size={16} /> Load More
               </button>
             </div>
           )}
 
         </div>
 
-        {/* Request modal */}
-        {reqBooking && (
-          <RequestModal
-            booking={reqBooking}
-            onClose={() => setReqBooking(null)}
-            onSubmit={submitRequest}
-            submitting={reqSubmitting}
-            error={reqError}
-          />
+        {/* ── Request modal ──────────────────────────────────────────────── */}
+        <AnimatePresence>
+          {reqBooking && (
+            <div style={S.overlay} onClick={() => setReqBooking(null)}>
+              <RequestModal
+                booking={reqBooking}
+                onClose={() => setReqBooking(null)}
+                onSubmit={submitRequest}
+                submitting={reqSubmitting}
+                error={reqError}
+              />
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* ── Message modal ──────────────────────────────────────────────── */}
+        {msgBooking && (
+          <div style={{
+            position: "fixed", inset: 0, zIndex: 9999,
+            background: "rgba(15,23,42,0.55)", backdropFilter: "blur(3px)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: 20, animation: "mbFadeIn 0.2s ease-out",
+          }} onClick={closeMessage}>
+            <div style={{
+              width: "100%", maxWidth: 460, background: "#fff",
+              borderRadius: 20, padding: 24, boxShadow: "0 24px 60px rgba(0,0,0,0.25)",
+              display: "flex", flexDirection: "column", maxHeight: "85vh",
+              animation: "mbFadeIn 0.25s ease-out",
+            }} onClick={(e) => e.stopPropagation()}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 12 }}>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: "1.1rem", fontWeight: 800, color: "#0f172a" }}>
+                    Message Altuvera
+                  </h3>
+                  <p style={{ margin: "4px 0 0", fontSize: "0.82rem", color: "#64748b" }}>
+                    Booking {msgBooking.booking_number || `#${msgBooking.id}`} · {msgBooking.email}
+                  </p>
+                </div>
+                <button onClick={closeMessage} style={{ border: "none", background: "transparent", color: "#94a3b8", cursor: "pointer", display: "inline-flex", padding: 4, borderRadius: 8 }}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div ref={msgScrollRef} style={{ flex: 1, overflowY: "auto", marginBottom: 12, maxHeight: "40vh", minHeight: 160, padding: "8px 4px" }}>
+                {msgLoading ? (
+                  <div style={{ textAlign: "center", color: "#94a3b8", padding: 40 }}>
+                    <RefreshCw size={24} className="mb-2 animate-spin opacity-40" style={{ margin: "0 auto 12px", display: "block" }} />
+                    Loading conversation...
+                  </div>
+                ) : msgError ? (
+                  <div style={{ padding: "14px 18px", background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 12, color: "#991b1b", fontSize: "0.88rem", fontWeight: 600 }}>
+                    {msgError}
+                  </div>
+                ) : msgMessages.length === 0 ? (
+                  <div style={{ textAlign: "center", color: "#94a3b8", padding: 30, fontSize: "0.88rem" }}>
+                    No messages yet. Start the conversation below.
+                  </div>
+                ) : (
+                  msgMessages.map(m => {
+                    const mine = m.sender_type === "user" || m.senderType === "user";
+                    return (
+                      <div key={m.id} style={{ display: "flex", justifyContent: mine ? "flex-end" : "flex-start", marginBottom: 8 }}>
+                        <div style={{
+                          maxWidth: "80%", padding: "10px 14px", borderRadius: 16, fontSize: "0.88rem",
+                          lineHeight: 1.5, background: mine ? "#059669" : "#f1f5f9",
+                          color: mine ? "#fff" : "#0f172a",
+                          borderBottomRightRadius: mine ? 4 : 16,
+                          borderBottomLeftRadius: mine ? 16 : 4,
+                        }}>
+                          {!mine && (
+                            <p style={{ margin: "0 0 4px", fontSize: "0.65rem", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.06em", opacity: 0.7 }}>
+                              {m.sender_name || "Altuvera"}
+                            </p>
+                          )}
+                          <p style={{ margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{m.body}</p>
+                          <p style={{ margin: "4px 0 0", fontSize: "0.65rem", opacity: 0.6, textAlign: "right" }}>
+                            {new Date(m.created_at || m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+
+              <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: 12 }}>
+                {msgConvo?.status === "closed" && (
+                  <div style={{ marginBottom: 8, padding: "8px 14px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: 10, fontSize: "0.78rem", color: "#64748b", textAlign: "center" }}>
+                    This conversation is closed. Sending a message will reopen it.
+                  </div>
+                )}
+                <div style={{ display: "flex", alignItems: "flex-end", gap: 8 }}>
+                  <textarea
+                    value={msgDraft}
+                    onChange={e => setMsgDraft(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        sendClientMessage();
+                      }
+                    }}
+                    rows={1}
+                    placeholder="Type your message... (Enter to send)"
+                    style={{
+                      flex: 1, resize: "none", fontSize: "0.88rem", padding: "10px 14px",
+                      borderRadius: 14, border: "1.5px solid #e2e8f0", outline: "none",
+                      maxHeight: 120, fontFamily: "inherit",
+                    }}
+                  />
+                  <button
+                    onClick={sendClientMessage}
+                    disabled={!msgDraft.trim() || msgSending}
+                    style={{
+                      height: 40, padding: "0 18px", borderRadius: 14,
+                      background: "#059669", color: "#fff", fontWeight: 700, fontSize: "0.88rem",
+                      border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 6,
+                      opacity: (!msgDraft.trim() || msgSending) ? 0.5 : 1,
+                    }}
+                  >
+                    <Send size={15} />
+                    <span style={{ display: "none" }}>Send</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
       </DashboardLayout>
