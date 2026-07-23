@@ -226,7 +226,7 @@ const PAGE_CSS = `
 
 /* ═══════ SECTIONS ═══════ */
 .ex-section {
-  padding: clamp(52px,7vw,96px) clamp(16px,5vw,56px);
+  padding: clamp(32px,5vw,64px) clamp(16px,5vw,56px);
 }
 .ex-section--alt { background: var(--ex-surface); }
 .ex-section--mint { background: var(--ex-mint); }
@@ -238,7 +238,7 @@ const PAGE_CSS = `
 .ex-section-head {
   text-align: center;
   max-width: 780px;
-  margin: 0 auto clamp(32px, 4.5vw, 56px);
+  margin: 0 auto clamp(20px, 3vw, 36px);
 }
 .ex-section-head--left {
   text-align: left;
@@ -1369,9 +1369,6 @@ export default function Explore() {
           <div className="ex-inner">
             <AnimatedSection animation="fadeInUp">
               <div className="ex-section-head">
-                <div className="ex-section-label">
-                  <FiEye size={11} /> Discover
-                </div>
                 <h2 className="ex-section-title">
                   Places That Take Your Breath Away
                 </h2>
@@ -1418,9 +1415,6 @@ export default function Explore() {
               <div className="ex-why__left">
                 <AnimatedSection animation="fadeInUp">
                   <div className="ex-section-head ex-section-head--left" style={{ marginBottom: 0 }}>
-                    <div className="ex-section-label">
-                      <FiTarget size={11} /> Why East Africa
-                    </div>
                     <h2 className="ex-section-title">
                       A Region Like No Other
                     </h2>
@@ -1460,9 +1454,6 @@ export default function Explore() {
           <div className="ex-inner">
             <AnimatedSection animation="fadeInUp">
               <div className="ex-section-head">
-                <div className="ex-section-label">
-                  <FiCompass size={11} /> Featured Destinations
-                </div>
                 <h2 className="ex-section-title">
                   Unforgettable Adventures Await
                 </h2>
@@ -1513,9 +1504,6 @@ export default function Explore() {
           <div className="ex-inner">
             <AnimatedSection animation="fadeInUp">
               <div className="ex-section-head">
-                <div className="ex-section-label">
-                  <FiHeart size={11} /> Traveller Stories
-                </div>
                 <h2 className="ex-section-title">
                   Voices of Our Community
                 </h2>
@@ -1537,9 +1525,6 @@ export default function Explore() {
           <div className="ex-inner">
             <AnimatedSection animation="fadeInUp">
               <div className="ex-section-head">
-                <div className="ex-section-label">
-                  <FiShield size={11} /> Your Confidence
-                </div>
                 <h2 className="ex-section-title">
                   Travel With Complete Confidence
                 </h2>
@@ -1576,7 +1561,6 @@ export default function Explore() {
                 theme="dark"
                 title="Get Exclusive Travel Inspiration"
                 description="Join adventurers receiving hand-picked destination stories, insider tips, and members-only offers every week."
-                sectionLabel="Stay Inspired"
                 icon={<FiMail size={14} />}
               />
             </AnimatedSection>

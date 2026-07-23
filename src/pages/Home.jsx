@@ -99,10 +99,10 @@ const HOME_STYLES = `
    GLOBAL SECTION SPACING — COMPACT
 ══════════════════════════════════════════ */
 .home-section--compact {
-  padding: clamp(1.5rem, 3vw, 2.5rem) 0;
+  padding: clamp(1rem, 2vw, 1.5rem) 0;
 }
 .home-section--compact-top {
-  padding-top: clamp(1.5rem, 3vw, 2.5rem);
+  padding-top: clamp(1rem, 2vw, 1.5rem);
 }
 .home-section--compact-bottom {
   padding-bottom: clamp(1.5rem, 3vw, 2.5rem);
@@ -129,7 +129,7 @@ const HOME_STYLES = `
 .hsec-center { text-align: center; }
 .hsec-center .hsec-sub { margin: 0 auto; }
 .hsec-header {
-  margin-bottom: clamp(1rem, 2vw, 1.75rem);
+  margin-bottom: clamp(0.5rem, 1vw, 1rem);
 }
 
 /* ══════════════════════════════════════════
@@ -499,7 +499,7 @@ const HOME_STYLES = `
 /* ══════════════════════════════════════════
    WHY ALTUVERA
 ══════════════════════════════════════════ */
-.why-section{padding:clamp(1.5rem,3vw,2.5rem) 0;background:#f0fdf4;}
+.why-section{padding:clamp(1rem,2vw,1.5rem) 0;background:#f0fdf4;}
 .why-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.25rem;}
 .why-card{background:#fff;border-radius:1.5rem;overflow:hidden;border:1px solid #d1fae5;box-shadow:0 3px 16px rgba(5,150,105,.05);display:flex;flex-direction:column;transition:all .4s cubic-bezier(.4,0,.2,1);position:relative;text-decoration:none;color:inherit;}
 .why-card:hover{transform:translateY(-8px);box-shadow:0 20px 44px -8px rgba(16,185,129,.2);border-color:#a7f3d0;}
@@ -526,7 +526,7 @@ const HOME_STYLES = `
 .why-card-cta:hover{background:#047857;transform:translateY(-1px);box-shadow:0 3px 12px rgba(5,150,105,.3);}
 
 /* ── Feature blocks ── */
-.feature-block{display:grid;grid-template-columns:1fr 1fr;gap:clamp(1.5rem,4vw,3.5rem);align-items:center;padding:clamp(1.5rem,3vw,2.5rem) 0;}
+.feature-block{display:grid;grid-template-columns:1fr 1fr;gap:clamp(1rem,3vw,2rem);align-items:center;padding:clamp(1rem,2vw,1.5rem) 0;}
 .feature-block--reverse{direction:rtl;}.feature-block--reverse>*{direction:ltr;}
 .feature-block-media{position:relative;}
 .feature-block-img-wrap{border-radius:1.5rem;overflow:hidden;aspect-ratio:4/3;position:relative;box-shadow:0 10px 32px rgba(0,0,0,.08);}
@@ -1208,7 +1208,7 @@ const Home = () => {
   }, [destLoading, setIsLoading]);
 
   const featureBlocks = useMemo(() => [
-    { title: "Encounter Mountain Gorillas & Explore the Land of a Thousand Hills", description: "Rwanda offers one of Africa's most exclusive wildlife experiences. Trek through the misty forests of Volcanoes National Park to meet endangered mountain gorillas.", bullets: ["World-famous mountain gorilla trekking", "Nyungwe Forest canopy walk & chimpanzee tracking", "Big Five safaris in Akagera National Park", "Luxury eco-lodges with expert local guides"], ctaLabel: "Explore Rwanda", link: "/country/rwanda", images: ["https://i.pinimg.com/1200x/5d/1a/90/5d1a90a3a3f9ad6bcddf570344ff2fc4.jpg", "https://i.pinimg.com/736x/e0/83/c3/e083c397d1853489522b905f9da8ff52.jpg", "https://i.pinimg.com/736x/46/fe/c8/46fec850388090f1f6bbdd4246b9a049.jpg"] },
+    { title: "Encounter Mountain Gorillas & Explore the Land of a Thousand Hills", description: "Rwanda offers one of Africa's most exclusive wildlife experiences. Trek through the misty forests of Volcanoes National Park to meet endangered mountain gorillas.", bullets: ["World-famous mountain gorilla trekking", "Nyungwe Forest canopy walk & chimpanzee tracking", "Big Five safaris in Akagera National Park", "Luxury eco-lodges with expert local guides"], ctaLabel: "Explore Rwanda", link: "/country/rwanda", images: ["https://i.pinimg.com/1200x/5d/1a/90/5d1a90a3a3f9ad6bcddf570344ff2fc4.jpg", "https://i.pinimg.com/1200x/97/2b/c9/972bc93ffedafedeee61728f3a41fd74.jpg", "https://i.pinimg.com/736x/46/fe/c8/46fec850388090f1f6bbdd4246b9a049.jpg"] },
     { title: "Witness the Great Migration & Conquer Africa's Highest Peak", description: "From the endless plains of the Serengeti to the snow-capped summit of Mount Kilimanjaro, Tanzania delivers bucket-list adventures.", bullets: ["The Great Wildebeest Migration in Serengeti", "Mount Kilimanjaro climbing expeditions", "Ngorongoro Crater Big Five safaris", "Zanzibar beach escapes & cultural tours"], ctaLabel: "Explore Tanzania", link: "/country/tanzania", images: ["https://i.pinimg.com/1200x/d7/c2/55/d7c255030d2c381093145fc8409270b0.jpg", "https://i.pinimg.com/1200x/7c/5b/d9/7c5bd9c6303f68eec25ff948f1b0f11e.jpg", "https://i.pinimg.com/1200x/7b/7f/33/7b7f33e40af1ff8d756c610703f32f6e.jpg"] },
     { title: "Experience Legendary Safaris & Coastal Paradise", description: "Kenya combines iconic wildlife encounters with spectacular landscapes and pristine Indian Ocean beaches.", bullets: ["Maasai Mara Great Migration safaris", "Amboseli elephant encounters with Kilimanjaro views", "Sunrise hot-air balloon adventures", "Diani Beach & Swahili coastal experiences"], ctaLabel: "Explore Kenya", link: "/country/kenya", images: ["https://i.pinimg.com/1200x/82/1c/3c/821c3c64c9ef926ad79900314de0ea9b.jpg", "https://i.pinimg.com/1200x/0f/c4/6f/0fc46fc0a5e286b126ab6e78697c5e5f.jpg", "https://i.pinimg.com/736x/cc/5f/49/cc5f496af04db30b07c3559d5a708cb7.jpg"] },
   ], []);

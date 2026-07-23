@@ -263,10 +263,10 @@ const Navbar = () => {
         name: "About",
         path: "/about",
         dropdown: [
-          { name: "About", path: "/about" },
-          { name: "Services", path: "/services" },
+          { name: "About Us", path: "/about" },
+          { name: "Our Services", path: "/services" },
           { name: "Payment Terms", path: "/payment-terms" },
-          { name: "Team", path: "/team" },
+          { name: "Our Team", path: "/team" },
         ],
       },
       { name: "Contact", path: "/contact" },
@@ -276,10 +276,10 @@ const Navbar = () => {
 
   const userMenuItems = useMemo(() => {
     const items = [
-      { to: "/profile", icon: FiUser, label: "My Profile" },
-      { to: "/my-bookings", icon: FiCalendar, label: "My Bookings" },
-      { to: "/wishlist", icon: FiHeart, label: "Wishlist" },
-      { to: "/settings", icon: FiSettings, label: "Settings" },
+      { to: "/profile", icon: FiUser, label: "Profile" },
+      { to: "/my-bookings", icon: FiCalendar, label: "Your Bookings" },
+      { to: "/wishlist", icon: FiHeart, label: "Your Wishlist" },
+      { to: "/settings", icon: FiSettings, label: "Your Settings" },
     ];
     if (user?.role === "admin" || user?.role === "manager")
       items.push({
