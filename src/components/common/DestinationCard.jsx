@@ -1079,13 +1079,6 @@ const DestinationCard = memo(function DestinationCard({
   /* ── Render ── */
   return (
     <article
-      onClick={goToDetail}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      role="button"
-      tabIndex={0}
-      onKeyDown={e => e.key === "Enter" && goToDetail()}
-      aria-label={`Explore ${name}`}
       className={[
         "dc2-card",
         compact ? "dc2-card--compact" : "",
@@ -1159,105 +1152,95 @@ const DestinationCard = memo(function DestinationCard({
         </div>
       </div>
 
-      {/* ════ BODY ════ */}
-      <div className="dc2-body">
-        {/* Header */}
-        <div className="dc2-header">
-          <h3 className="dc2-name">{name}</h3>
-          {displayLocation && (
-            <div className="dc2-loc">
-              <FiMapPin size={12} className="dc2-loc__icon" />
-              <span>{displayLocation}</span>
-              {countryFlag && (
-                <span className="dc2-loc__flag">{countryFlag}</span>
-              )}
-            </div>
-          )}
-        </div>
+       {/* ════ BODY ════ */}
+       <div className="dc2-body">
+         {/* Header */}
+         <div className="dc2-header">
+           <h3 className="dc2-name">{name}</h3>
+           {displayLocation && (
+             <div className="dc2-loc">
+               <FiMapPin size={12} className="dc2-loc__icon" />
+               <span>{displayLocation}</span>
+               {countryFlag && (
+                 <span className="dc2-loc__flag">{countryFlag}</span>
+               )}
+             </div>
+           )}
+         </div>
 
-        {/* Stats row */}
-        <div className="dc2-stats">
-          <StarRating rating={rating} count={reviewCount} />
+         {/* Stats row */}
+         <div className="dc2-stats">
+           <StarRating rating={rating} count={reviewCount} />
 
-          {(duration || durationDays) && (
-            <>
-              <div className="dc2-stat-divider" />
-              <div className="dc2-stat">
-                <FiClock size={12} className="dc2-stat__icon" />
-                <span>{duration || `${durationDays} days`}</span>
-              </div>
-            </>
-          )}
+           {(duration || durationDays) && (
+             <>
+               <div className="dc2-stat-divider" />
+               <div className="dc2-stat">
+                 <FiClock size={12} className="dc2-stat__icon" />
+                 <span>{duration || `${durationDays} days`}</span>
+               </div>
+             </>
+           )}
 
-          {difficulty && (
-            <>
-              <div className="dc2-stat-divider" />
-              <span className={`dc2-diff ${DIFF_CLS[difficulty] || DIFF_CLS.moderate}`}>
-                <FiWind size={10} />
-                {DIFF_LABEL[difficulty] || difficulty}
-              </span>
-            </>
-          )}
-        </div>
+           {difficulty && (
+             <>
+               <div className="dc2-stat-divider" />
+               <span className={`dc2-diff ${DIFF_CLS[difficulty] || DIFF_CLS.moderate}`}>
+                 <FiWind size={10} />
+                 {DIFF_LABEL[difficulty] || difficulty}
+               </span>
+             </>
+           )}
+         </div>
 
-        {/* Category + meta chips */}
-        {(category || isEcoFriendly) && !compact && (
-          <div className="dc2-meta">
-            {category && (
-              <span className="dc2-chip dc2-chip--category">
-                <FiCompass size={10} />
-                {category.replace(/_/g, " ")}
-              </span>
-            )}
-          </div>
-        )}
+         {/* Category chip */}
+         {category && !compact && (
+           <div className="dc2-meta">
+             <span className="dc2-chip dc2-chip--category">
+               <FiCompass size={10} />
+               {category.replace(/_/g, " ")}
+             </span>
+           </div>
+         )}
 
-        {/* Description */}
-        {!compact && (
-          <p className="dc2-desc">
-            {shortDescription || description ||
-              "Experience unforgettable adventures, rich culture and breathtaking natural beauty in this remarkable destination."}
-          </p>
-        )}
+         {/* Highlights — limited */}
+         {!compact && highlights.length > 0 && (
+           <div className="dc2-highlights">
+             {highlights.slice(0, 2).map((h, i) => (
+               <span key={i} className="dc2-hl-chip">
+                 <FiSun size={9} />
+                 {h}
+               </span>
+             ))}
+             {highlights.length > 2 && (
+               <span className="dc2-hl-more">+{highlights.length - 2} more</span>
+             )}
+           </div>
+         )}
 
-        {/* Highlights */}
-        {!compact && highlights.length > 0 && (
-          <div className="dc2-highlights">
-            {highlights.slice(0, 3).map((h, i) => (
-              <span key={i} className="dc2-hl-chip">
-                <FiSun size={9} />
-                {h}
-              </span>
-            ))}
-            {highlights.length > 3 && (
-              <span className="dc2-hl-more">+{highlights.length - 3} more</span>
-            )}
-          </div>
-        )}
+         <hr className="dc2-sep" />
 
-        <hr className="dc2-sep" />
+         {/* CTA Footer */}
+         <div className="dc2-footer">
+           <button
+             className="dc2-btn-book"
+             onClick={goToBook}
+             aria-label={`Book ${name}`}
+           >
+             <FiCalendar size={13} />
+             <span>Book Now</span>
+           </button>
 
-        {/* CTA Footer */}
-        <div className="dc2-footer">
-          <button
-            className="dc2-btn-book"
-            onClick={goToBook}
-            aria-label={`Book ${name}`}
-          >
-            <FiCalendar size={13} />
-            <span>Book Now</span>
-          </button>
-
-          <button
-            className="dc2-btn-explore"
-            onClick={e => { e.stopPropagation(); goToDetail(); }}
-            aria-label={`Explore ${name}`}
-          >
-            Explore
-            <FiArrowRight size={13} className="dc2-btn-explore__arrow" />
-          </button>
-        </div>
-      </div>
+           <button
+             className="dc2-btn-explore"
+             onClick={(e) => { e.stopPropagation(); goToDetail(); }}
+             aria-label={`Learn more about ${name}`}
+           >
+             Learn More
+             <FiArrowRight size={13} className="dc2-btn-explore__arrow" />
+           </button>
+         </div>
+       </div>
     </article>
   );
 });

@@ -895,7 +895,28 @@ function HeroBanner() {
   const [active, setActive]   = useState(0);
   const [animKey, setAnimKey] = useState(0);
   const timerRef              = useRef(null);
-  const total                 = HERO_SLIDES.length;
+  const [slides, setSlides]   = useState(HERO_SLIDES);
+  const total                 = slides.length;
+
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch('/destinations/featured?limit=4')
+      .then(r => {
+        if (cancelled) return;
+        const dests = r.data || [];
+        if (dests.length) {
+          setSlides(dests.map(d => ({
+            image: d.heroImage || d.imageUrl || d.images?.[0] || FALLBACK,
+            title: d.name || 'Destination',
+            subtitle: d.country?.name || '',
+            desc: d.shortDescription || d.description || '',
+            location: d.country?.name || '',
+          })));
+        }
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   const advance = useCallback(() => {
     setActive(p => (p + 1) % total);
@@ -917,11 +938,11 @@ function HeroBanner() {
     document.getElementById('countries')?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const slide = HERO_SLIDES[active];
+  const slide = slides[active];
 
   return (
     <section className="dv-hero">
-      {HERO_SLIDES.map((sl, i) => (
+      {slides.map((sl, i) => (
         <div key={i} className={`dv-hero__slide${i === active ? ' dv-hero__slide--on' : ''}`}>
           <img src={sl.image} alt={sl.title} loading={i === 0 ? 'eager' : 'lazy'} draggable={false} />
         </div>

@@ -42,7 +42,7 @@ const css = `
   .up-root {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
     animation: upFadeIn 0.5s ease-out;
   }
 
