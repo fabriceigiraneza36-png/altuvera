@@ -12,7 +12,7 @@ import {
   Award, TrendingUp, Leaf,
 } from 'lucide-react'
 import { packagesAPI } from '../api/packages'
-import { createBooking } from '../api/bookiwngApi'
+import { createBooking } from '../api/bookingApi'
 import { useUserAuth } from '../context/UserAuthContext'
 
 /* ── helpers ─────────────────────────────────────────────────────────── */

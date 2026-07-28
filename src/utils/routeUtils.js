@@ -388,7 +388,6 @@ export const preloadRoute = (pathname) => {
     "/tips": () => import("../pages/Tips"),
     "/posts": () => import("../pages/Posts"),
     "/interactive-map": () => import("../pages/InteractiveMap"),
-    "/virtual-tour": () => import("../pages/VirtualTour"),
     "/team": () => import("../pages/Team"),
     "/faq": () => import("../pages/FAQ"),
     "/privacy": () => import("../pages/PrivacyPolicy"),
