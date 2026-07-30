@@ -692,6 +692,7 @@ export default function Messages() {
     conversations, messages, activeId, activeConversation,
     unreadCount, loading, loadingMsgs, sending, error,
     openConversation, sendMessage, fetchConversations, user,
+    adminTyping, typingConvs, emitTyping, socketRef, connected,
   } = useConversations();
 
   useEffect(() => { injectMsgStyles(); }, []);
@@ -702,57 +703,13 @@ export default function Messages() {
   const [showNewChat,  setShowNewChat]  = useState(false);
   const [atBottom,     setAtBottom]     = useState(true);
   const [showScrollBtn,setShowScrollBtn]= useState(false);
-  const [adminTyping,  setAdminTyping]  = useState(null);
-  const [typingConvs,  setTypingConvs]  = useState(new Set());
 
   const scrollRef      = useRef(null);
-  const textareaRef    = useRef(null);
-  const isTypingRef    = useRef(false);
-  const typingTimerRef = useRef(null);
-  const typingTimers   = useRef({});
+   const textareaRef    = useRef(null);
+   const isTypingRef    = useRef(false);
+   const typingTimerRef = useRef(null);
 
-  /* ── Socket handlers ── */
-  const handleSocketMsg = useCallback((msg) => {
-    if (!msg) return;
-    // Clear typing for that sender
-    const cid = String(msg.conversationId);
-    if (msg.senderType === "admin") {
-      clearTimeout(typingTimers.current[cid]);
-      delete typingTimers.current[cid];
-      setTypingConvs(prev => { const s = new Set(prev); s.delete(cid); return s; });
-      if (String(activeId) === cid) setAdminTyping(null);
-    }
-    fetchConversations();
-    // Hook's own state handles message append via reload
-    // but we also call openConversation to refresh if active
-  }, [activeId, fetchConversations]);
-
-  const handleAdminTyping = useCallback((payload) => {
-    if (payload.senderType !== "admin") return;
-    const cid = String(payload.conversationId);
-    if (payload.isTyping) {
-      setTypingConvs(prev => { const s = new Set(prev); s.add(cid); return s; });
-      if (cid === String(activeId)) setAdminTyping({ name: payload.senderName || "Altuvera" });
-      clearTimeout(typingTimers.current[cid]);
-      typingTimers.current[cid] = setTimeout(() => {
-        setTypingConvs(prev => { const s = new Set(prev); s.delete(cid); return s; });
-        setAdminTyping(prev => (prev && cid === String(activeId) ? null : prev));
-      }, 4000);
-    } else {
-      clearTimeout(typingTimers.current[cid]);
-      setTypingConvs(prev => { const s = new Set(prev); s.delete(cid); return s; });
-      if (cid === String(activeId)) setAdminTyping(null);
-    }
-  }, [activeId]);
-
-  const { connected, emitTyping } = useUserSocket(user?.id, activeId, {
-    onMessage:     handleSocketMsg,
-    onTyping:      handleAdminTyping,
-    onConvUpdated: fetchConversations,
-    onReaction:    fetchConversations,
-  });
-
-  /* ── Scroll helpers ── */
+   /* ── Scroll helpers ── */
   const scrollToBottom = useCallback((smooth = true) => {
     const el = scrollRef.current;
     if (!el) return;
@@ -781,7 +738,7 @@ export default function Messages() {
   /* ── Reset on conversation change ── */
   useEffect(() => {
     setDraft(""); setReplyToId(null); setShowEmoji(false);
-    setAdminTyping(null); setAtBottom(true); setShowScrollBtn(false);
+    setAtBottom(true); setShowScrollBtn(false);
     clearTimeout(typingTimerRef.current);
     isTypingRef.current = false;
   }, [activeId]);

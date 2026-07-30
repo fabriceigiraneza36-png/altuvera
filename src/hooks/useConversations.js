@@ -1,9 +1,14 @@
 // src/hooks/useConversations.js
 import { useState, useEffect, useCallback, useRef } from "react";
+import { io } from "socket.io-client";
 
 const API_BASE =
   import.meta.env.VITE_API_URL ||
   "https://backend-jd8f.onrender.com/api";
+
+const SOCKET_URL =
+  import.meta.env.VITE_SOCKET_URL ||
+  API_BASE.replace(/\/api\/?$/, "");
 
 const TOKEN_KEYS = [
   "altuvera_auth_token",
@@ -74,7 +79,7 @@ const normMsg = (m) => ({
 });
 
 /* ═══════════════════════════════════════════════════════════════════════
-   HOOK
+    HOOK
 ═══════════════════════════════════════════════════════════════════════ */
 export function useConversations() {
   const [conversations,      setConversations]      = useState([]);
@@ -83,12 +88,108 @@ export function useConversations() {
   const [activeConversation, setActiveConversation] = useState(null);
   const [loading,            setLoading]            = useState(false);
   const [loadingMsgs,        setLoadingMsgs]        = useState(false);
-  const [sending,            setSending]            = useState(false);
+  const [sending,            setSaving]             = useState(false);
   const [error,              setError]              = useState("");
 
   const pollRef = useRef(null);
+  const socketRef = useRef(null);
+  const activeIdRef = useRef(null);
+  const typingTimerCache = useRef({});
+  const [adminTyping, setAdminTyping] = useState(null);
+  const [typingConvs, setTypingConvs] = useState(new Set());
+  const [connected, setConnected] = useState(false);
 
-  /* ── Derived: total unread for user ──────────────────────────────── */
+  useEffect(() => { activeIdRef.current = activeId }, [activeId]);
+
+  /* ── Socket connection ── */
+  useEffect(() => {
+    const token = getToken();
+    const s = io(SOCKET_URL, {
+      auth: token ? { token } : {},
+      transports: ["websocket", "polling"],
+      reconnection: true,
+      reconnectionAttempts: 6,
+      reconnectionDelay: 1_000,
+    });
+    socketRef.current = s;
+
+    s.on("connect", () => {
+      setConnected(true);
+      if (import.meta.env.DEV) console.info("[Socket] Connected:", s.id);
+    });
+
+    s.on("disconnect", () => setConnected(false));
+
+    s.on("msg:message", (msg) => {
+      if (!msg) return;
+      setMessages((prev) => {
+        if (prev.some((m) => String(m.id) === String(msg.id))) return prev;
+        const cid = String(msg.conversationId);
+        if (cid !== String(activeIdRef.current)) return prev;
+        return [...prev, msg];
+      });
+      setConversations((prev) =>
+        prev.map((c) =>
+          String(c.id) === String(msg.conversationId)
+            ? {
+                ...c,
+                lastMessage: msg.body?.slice(0, 120) || c.lastMessage,
+                lastMessageAt: msg.createdAt || c.lastMessageAt,
+                unreadAdmin:
+                  String(msg.conversationId) !== String(activeIdRef.current)
+                    ? (c.unreadAdmin || 0) + 1
+                    : c.unreadAdmin,
+              }
+            : c
+        )
+      );
+    });
+
+    s.on("msg:typing", (payload) => {
+      if (!payload) return;
+      const cid = String(payload.conversationId);
+      if (payload.isTyping) {
+        setTypingConvs((prev) => { const s = new Set(prev); s.add(cid); return s; });
+        if (cid === String(activeIdRef.current))
+          setAdminTyping({ name: payload.senderName || "Altuvera" });
+        clearTimeout(typingTimerCache.current[cid]);
+        typingTimerCache.current[cid] = setTimeout(() => {
+          setTypingConvs((prev) => { const s = new Set(prev); s.delete(cid); return s; });
+          setAdminTyping((p) => (p && cid === String(activeIdRef.current) ? null : p));
+        }, 4000);
+      } else {
+        clearTimeout(typingTimerCache.current[cid]);
+        setTypingConvs((prev) => { const s = new Set(prev); s.delete(cid); return s; });
+        if (cid === String(activeIdRef.current)) setAdminTyping(null);
+      }
+    });
+
+    s.on("msg:conversation-updated", (conv) => {
+      if (!conv) return;
+      setConversations((prev) =>
+        prev.map((c) => (String(c.id) === String(conv.id) ? { ...c, ...conv } : c))
+      );
+    });
+
+    return () => {
+      s.disconnect();
+    };
+  }, []);
+
+  const emitTyping = useCallback(
+    (conversationId, isTyping) => {
+      const s = socketRef.current;
+      if (!s || !s.connected) return;
+      s.emit("msg:typing", {
+        conversationId,
+        isTyping,
+        senderName: "You",
+      });
+    },
+    []
+  );
+
+  /* ── Derived: total unread for user ───────────────────────────── */
   const unreadCount = conversations.reduce(
     (sum, c) => sum + (c.unreadUser || 0),
     0,
@@ -124,7 +225,7 @@ export function useConversations() {
     fetchConversations();
   }, [fetchConversations]);
 
-  /* Polling: refresh every 15 s when tab is visible */
+  /* Polling: refresh every 15 s when tab is visible  */
   useEffect(() => {
     const start = () => {
       pollRef.current = setInterval(() => {
@@ -143,18 +244,22 @@ export function useConversations() {
     };
   }, [fetchConversations]);
 
-  /* ── Open a conversation ─────────────────────────────────────────── */
+  /* ── Open a conversation ─────────────────────────────────── */
   const openConversation = useCallback(async (id) => {
     if (id === null) {
       setActiveId(null);
       setActiveConversation(null);
       setMessages([]);
+      setAdminTyping(null);
+      setTypingConvs(new Set());
       return;
     }
 
     setActiveId(id);
     setLoadingMsgs(true);
     setError("");
+    setAdminTyping(null);
+    setTypingConvs(new Set());
 
     try {
       const res = await authFetch(
@@ -168,6 +273,12 @@ export function useConversations() {
       const conv = normConv(data.data);
       setActiveConversation(conv);
       setMessages((data.data?.messages || []).map(normMsg));
+
+      /* Join socket room for this conversation */
+      const s = socketRef.current;
+      if (s && s.connected) {
+        s.emit("msg:client-join", { conversationId: id });
+      }
 
       // Mark as read
       authFetch(`${API_BASE}/messages/conversations/${id}/read`, {
@@ -185,12 +296,12 @@ export function useConversations() {
     }
   }, []);
 
-  /* ── Send message ────────────────────────────────────────────────── */
+  /* ── Send message ────────────────────────────────────────── */
   const sendMessage = useCallback(
     async (conversationId, body, replyToId = null) => {
       if (!body?.trim() || !conversationId) return;
 
-      setSending(true);
+      setSaving(true);
 
       /* Optimistic insert */
       const optimistic = {
@@ -243,7 +354,7 @@ export function useConversations() {
         setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
         setError(err.message || "Failed to send message.");
       } finally {
-        setSending(false);
+        setSaving(false);
       }
     },
     [],
@@ -262,5 +373,10 @@ export function useConversations() {
     openConversation,
     sendMessage,
     fetchConversations,
+    adminTyping,
+    typingConvs,
+    emitTyping,
+    socketRef,
+    connected,
   };
 }
