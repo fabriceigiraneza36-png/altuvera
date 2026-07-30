@@ -514,7 +514,7 @@ const CSS = `
 ═════════════════════════════════════════════════ */
 .dv-countries-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%,320px),1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%,260px),1fr));
   gap: clamp(14px,2vw,22px);
 }
 .dv-country-card {

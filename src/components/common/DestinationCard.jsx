@@ -181,12 +181,12 @@ const CSS = `
 }
 .dc2-visual__frame {
   position: relative;
-  padding-top: 64%;
+  padding-top: 50%;
   overflow: hidden;
   background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
 }
 .dc2-card--compact .dc2-visual__frame {
-  padding-top: 52%;
+  padding-top: 40%;
 }
 
 .dc2-visual__img {
@@ -436,14 +436,14 @@ const CSS = `
 }
 
 /* ══════════════════════════════════════════════════════════
-   CARD BODY
-══════════════════════════════════════════════════════════ */
+    CARD BODY
+═════════════════════════════════════════════════════════════ */
 .dc2-body {
-  padding: clamp(16px, 2.2vw, 22px);
+  padding: clamp(10px, 1.5vw, 16px);
   display: flex;
   flex-direction: column;
   flex: 1;
-  gap: clamp(10px, 1.4vw, 14px);
+  gap: clamp(6px, 1vw, 10px);
 }
 
 /* ── Header area ── */
