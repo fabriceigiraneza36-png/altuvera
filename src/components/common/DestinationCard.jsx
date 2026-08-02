@@ -579,10 +579,40 @@ const CSS = `
   line-height: 1.7;
   margin: 0;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   font-weight: 400;
+}
+
+/* ── Read more link ── */
+.dc2-read-more {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: clamp(12px, 1vw, 13px);
+  font-weight: 600;
+  color: var(--dc2-accent);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+.dc2-read-more:hover {
+  color: var(--dc2-accent-dark);
+  text-decoration: underline;
+}
+.dc2-read-more::after {
+  content: "";
+  transition: transform 0.2s ease;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(-45deg);
+}
+.dc2-read-more:hover::after {
+  transform: rotate(-45deg) translate(2px, -2px);
 }
 
 /* ── Highlights ── */
@@ -734,8 +764,14 @@ const CSS = `
   transform: translateY(-2px);
 }
 .dc2-btn-book:active {
-  transform: translateY(0) scale(0.97);
-}
+   transform: translateY(0) scale(0.97);
+ }
+
+ /* Read more link */
+ .dc2-read-more-link:hover {
+   text-decoration: underline;
+   opacity: 0.8;
+ }
 
 /* ══════════════════════════════════════════════════════════
    SKELETON LOADER
@@ -992,8 +1028,20 @@ const DestinationCard = memo(function DestinationCard({
   const [hovered, setHovered] = useState(false);
   const [copied, setCopied] = useState(false);
   const [heartAnim, setHeartAnim] = useState(false);
+  const [showReadMore, setShowReadMore] = useState(false);
+  const descRef = useRef(null);
 
   useEffect(() => { injectStyles(); }, []);
+
+  // Check if description needs "Read more" toggle
+  useEffect(() => {
+    if (descRef.current && description) {
+      const element = descRef.current;
+      const lineHeight = parseInt(window.getComputedStyle(element).lineHeight, 10);
+      const maxHeight = lineHeight * 3; // 3 lines
+      setShowReadMore(element.scrollHeight > maxHeight);
+    }
+  }, [description]);
 
   if (!destination) return null;
 
@@ -1203,22 +1251,63 @@ const DestinationCard = memo(function DestinationCard({
            </div>
          )}
 
-         {/* Highlights — limited */}
-         {!compact && highlights.length > 0 && (
-           <div className="dc2-highlights">
-             {highlights.slice(0, 2).map((h, i) => (
-               <span key={i} className="dc2-hl-chip">
-                 <FiSun size={9} />
-                 {h}
-               </span>
-             ))}
-             {highlights.length > 2 && (
-               <span className="dc2-hl-more">+{highlights.length - 2} more</span>
-             )}
-           </div>
-         )}
+{/* Highlights — limited */}
+          {!compact && highlights.length > 0 && (
+            <div className="dc2-highlights">
+              {highlights.slice(0, 2).map((h, i) => (
+                <span key={i} className="dc2-hl-chip">
+                  <FiSun size={9} />
+                  {h}
+                </span>
+              ))}
+              {highlights.length > 2 && (
+                <span className="dc2-hl-more">+{highlights.length - 2} more</span>
+              )}
+            </div>
+          )}
 
-         <hr className="dc2-sep" />
+          {/* Description */}
+          {description && (
+            <>
+              <p 
+                className="dc2-desc" 
+                style={{ 
+                  display: showReadMore ? 'block' : '-webkit-box', 
+                  webkitLineClamp: showReadMore ? 'none' : '3', 
+                  webkitBoxOrient: 'vertical', 
+                  overflow: 'hidden' 
+                }}
+              >
+                {description}
+              </p>
+              {showReadMore && (
+                <button 
+                  onClick={() => setShowReadMore(!showReadMore)} 
+                  className="dc2-read-more-link"
+                  style={{ marginTop: '8px', color: 'var(--dc2-accent)', fontSize: '12px', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: '0' }}
+                >
+                  {showReadMore ? 'Show less' : 'Read more'}
+                </button>
+              )}
+              {/* Hidden element for measurement */}
+              <div 
+                ref={descRef} 
+                style={{ 
+                  position: 'absolute', 
+                  visibility: 'hidden', 
+                  whiteSpace: 'pre-wrap', 
+                  wordWrap: 'break-word', 
+                  width: '1px', 
+                  height: 'auto' 
+                }} 
+                aria-hidden="true"
+              >
+                {description}
+              </div>
+            </>
+          )}
+
+          <hr className="dc2-sep" />
 
          {/* CTA Footer */}
          <div className="dc2-footer">
