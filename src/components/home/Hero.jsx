@@ -15,19 +15,19 @@ import { useApp } from "../../context/AppContext";
 import { useScrollTriggeredSlide } from "../../hooks/useScrollTriggeredSlide";
 
 export const HERO_SLIDES = [
-  {
-    image:
-      "https://res.cloudinary.com/doijjawna/image/upload/v1781342220/ChatGPT_Image_Jun_13_2026_11_16_51_AM_oibwwb.png",
-    fallback:
-      "https://drive.google.com/uc?export=view&id=15LlHLEX_dDLEqMVPX2C3M4Gz6FfsAkWY",
-    title: "Witness the Great Migration",
-    subtitle:
-      "Experience nature's greatest spectacle across the vast Serengeti and Maasai Mara plains",
-    location: "Rwanda & Tanzania",
-    animationPreset: "cinematicDrift",
-    overlayGradient:
-      "linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 50%, rgba(16,185,129,0.15) 100%)",
-  },
+{
+      image:
+        "https://i.pinimg.com/1200x/92/a2/11/92a2116ce3d13d9d01c3d2edb6a1d3da.jpg",
+      fallback:
+        "https://drive.google.com/uc?export=view&id=15LlHLEX_dDLEqMVPX2C3M4Gz6FfsAkWY",
+      title: "Witness the Great Migration",
+      subtitle:
+        "Experience nature's greatest spectacle across the vast Serengeti and Maasai Mara plains",
+      location: "Rwanda & Tanzania",
+      animationPreset: "cinematicDrift",
+      overlayGradient:
+        "linear-gradient(135deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 50%, rgba(16,185,129,0.15) 100%)",
+    },
   {
     image:
       "https://i.pinimg.com/1200x/f7/d8/79/f7d879d6a1486f026ba9ba9c30a3a125.jpg",
@@ -41,19 +41,19 @@ export const HERO_SLIDES = [
     overlayGradient:
       "linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(34,85,51,0.35) 100%)",
   },
-  {
-    image:
-      "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=3840",
-    fallback:
-      "https://www.andbeyond.com/wp-content/uploads/sites/5/Elephants-and-mount-kilimanjaro.jpg",
-    title: "Summit Mount Kilimanjaro",
-    subtitle:
-      "Conquer Africa's highest peak and stand at the legendary roof of the continent",
-    location: "Tanzania",
-    animationPreset: "risingHorizon",
-    overlayGradient:
-      "linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 60%, rgba(255,255,255,0.05) 100%)",
-  },
+{
+      image:
+        "https://i.pinimg.com/1200x/ac/76/7c/ac767c047f2e06026616a062101049c7.jpg",
+      fallback:
+        "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=3840",
+      title: "Summit Mount Kilimanjaro",
+      subtitle:
+        "Conquer Africa's highest peak and stand at the legendary roof of the continent",
+      location: "Tanzania",
+      animationPreset: "risingHorizon",
+      overlayGradient:
+        "linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.15) 60%, rgba(255,255,255,0.05) 100%)",
+    },
   {
     image:
       "https://i.pinimg.com/1200x/0a/43/ca/0a43cafc5ea639697427a07f078506e3.jpg",
@@ -80,19 +80,19 @@ export const HERO_SLIDES = [
     overlayGradient:
       "linear-gradient(180deg, rgba(255,140,0,0.15) 0%, rgba(0,0,0,0.5) 100%)",
   },
-  {
-    image:
-      "https://i.pinimg.com/736x/68/e6/cd/68e6cd9f11e9fd00ea3fb928103b8f2b.jpg",
-    fallback:
-      "https://copilot.microsoft.com/th/id/BCO.e252cb92-305d-4a41-905c-bf7924734ce6.png",
-    title: "Serengeti Grasslands",
-    subtitle:
-      "Endless grasslands and wildlife roaming under wide Tanzanian skies",
-    location: "Tanzania",
-    animationPreset: "horizontalPan",
-    overlayGradient:
-      "linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.15) 50%, rgba(218,165,32,0.15) 100%)",
-  },
+{
+      image:
+        "https://i.pinimg.com/1200x/ac/76/7c/ac767c047f2e06026616a062101049c7.jpg",
+      fallback:
+        "https://copilot.microsoft.com/th/id/BCO.e252cb92-305d-4a41-905c-bf7924734ce6.png",
+      title: "Serengeti Grasslands",
+      subtitle:
+        "Endless grasslands and wildlife roaming under wide Tanzanian skies",
+      location: "Tanzania",
+      animationPreset: "horizontalPan",
+      overlayGradient:
+        "linear-gradient(90deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.15) 50%, rgba(218,165,32,0.15) 100%)",
+    },
   {
     image:
       "https://i.pinimg.com/736x/7b/57/7e/7b577ea3d79d41336090cafb48ca1bc0.jpg",

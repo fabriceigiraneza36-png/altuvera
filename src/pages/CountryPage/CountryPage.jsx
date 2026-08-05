@@ -3,15 +3,7 @@ import React, {
   useState, useEffect, useRef, useCallback, useMemo,
 } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import {
-  FiArrowRight, FiArrowLeft, FiMapPin, FiCompass, FiClock,
-  FiGlobe, FiCalendar, FiChevronLeft, FiChevronRight,
-  FiShield, FiPhone, FiMail, FiBookOpen, FiSun, FiRefreshCw,
-  FiWifiOff, FiInfo, FiAlertTriangle, FiFlag, FiTrendingUp,
-  FiDroplet, FiCoffee, FiHeart, FiZap, FiCamera,
-  FiChevronDown, FiChevronUp, FiPlus, FiMinus, FiX,
-  FiExternalLink, FiUsers, FiSend,
-} from "react-icons/fi";
+import { motion, useVariants } from "framer-motion";
 import SEO from "@components/common/SEO";
 import AnimatedSection from "@components/common/AnimatedSection";
 import Loader from "@components/common/Loader";

@@ -856,20 +856,94 @@ function useDevPerfLog(pathname) {
 function App() {
   const location = useLocation();
   const { isLoading, setIsLoading } = useApp();
-  const {
-    isAuthenticated,
-    user,
-    showCongratulation,
-    congratulationType,
-    showNotLoggedInMessage,
-  } = useUserAuth();
+const {
+     isAuthenticated,
+     user,
+     showCongratulation,
+     congratulationType,
+     showNotLoggedInMessage,
+   } = useUserAuth();
 
-  useEffect(injectAppStyles, []);
-  useEffect(() => { initConsentMode(); }, []);
+   // Toast state
+   const [toasts, setToasts] = useState([]);
+   const addToast = (message, type = "info") => {
+     const id = Date.now() + Math.random();
+     setToasts(prev => [...prev, { id, message, type }]);
+     setTimeout(() => {
+       setToasts(prev => prev.filter(t => t.id !== id));
+     }, 5000);
+   };
 
-  usePrefetchCountries();
-  useRouteLoader({ location, isLoading, setIsLoading });
-  useDevPerfLog(location.pathname);
+useEffect(injectAppStyles, []);
+   useEffect(() => { initConsentMode(); }, []);
+
+   const lastPathnameRef = useRef(null);
+   useEffect(() => {
+     if (location.pathname === lastPathnameRef.current) return;
+     lastPathnameRef.current = location.pathname;
+
+     const toastMessages = {
+       "/destinations": "Embarking on destinations page",
+       "/country": "Exploring country wonders",
+       "/packages": "Browsing adventure packages",
+       "/posts": "Reading travel stories",
+       "/gallery": "Viewing the gallery",
+       "/about": "Learning about us",
+       "/contact": "Getting in touch",
+     };
+
+     for (const [path, message] of Object.entries(toastMessages)) {
+       if (location.pathname.startsWith(path)) {
+         addToast(message, "success");
+         break;
+       }
+     }
+   }, [location.pathname]);
+
+   usePrefetchCountries();
+   useRouteLoader({ location, isLoading, setIsLoading });
+   useDevPerfLog(location.pathname);
+
+   const Toast = ({ message, type = "info", onClose }) => {
+     const bgColors = {
+       info: "bg-blue-500",
+       success: "bg-green-500",
+       warning: "bg-yellow-500",
+       error: "bg-red-500",
+     };
+     const textColor = "text-white";
+     return (
+       <div
+         className={`fixed bottom-4 right-4 px-4 py-2 rounded-lg shadow-lg ${bgColors[type]} ${textColor} text-sm flex items-center gap-2 z-50`}
+         onClick={onClose}
+       >
+         <div className="flex-shrink-0">
+           {type === "info" && <i className="fas fa-info-circle" />}
+           {type === "success" && <i className="fas fa-check-circle" />}
+           {type === "warning" && <i className="fas fa-exclamation-triangle" />}
+           {type === "error" && <i className="fas fa-times-circle" />}
+         </div>
+         <span>{message}</span>
+       </div>
+     );
+   };
+
+   const ToastContainer = ({ toasts }) => {
+     return (
+       <>
+         {toasts.map((toast) => (
+           <Toast
+             key={toast.id}
+             message={toast.message}
+             type={toast.type}
+             onClose={() => {
+               setToasts((prev) => prev.filter((t) => t.id !== toast.id));
+             }}
+           />
+         ))}
+       </>
+     );
+   };
 
   const { showCelebration, dismiss: dismissCelebration } = useCelebration({
     isAuthenticated,
@@ -907,19 +981,20 @@ function App() {
       </Routes>
 
       {/* ── Global overlays ── */}
-      <OverlayLayer
-        isLoading={isLoading}
-        showCelebration={showCelebration}
-        userName={userName}
-        onDismissCelebration={dismissCelebration}
-      />
+<OverlayLayer
+           isLoading={isLoading}
+           showCelebration={showCelebration}
+           userName={userName}
+           onDismissCelebration={dismissCelebration}
+         />
+         <ToastContainer toasts={toasts} />
 
-      <CongratulationWindow
-        isVisible={showCongratulation}
-        type={congratulationType}
-        user={user}
-        onClose={() => {}}
-      />
+         <CongratulationWindow
+           isVisible={showCongratulation}
+           type={congratulationType}
+           user={user}
+           onClose={() => {}}
+         />
 
       <NotLoggedInMessage isVisible={showNotLoggedInMessage} />
     </div>
