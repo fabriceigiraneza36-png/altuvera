@@ -43,7 +43,7 @@ export const HERO_SLIDES = [
   },
 {
       image:
-        "https://i.pinimg.com/1200x/ac/76/7c/ac767c047f2e06026616a062101049c7.jpg",
+        "https://i.pinimg.com/736x/8d/bb/af/8dbbaf8e30584299b30a646aba53cc0d.jpg",
       fallback:
         "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=3840",
       title: "Summit Mount Kilimanjaro",

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import { JsonLd } from 'react-schemaorg';
 import { WebSite, Organization, BreadcrumbList, ListItem } from 'schema-dts';
@@ -22,8 +22,8 @@ const SEO = ({
 }) => {
   const siteName = 'Altuvera';
   const defaultDescription = 'Explore authentic East African safari adventures with Altuvera. Plan gorilla trekking, cultural tours, and personalized itineraries across Rwanda, Tanzania, Uganda, and Ethiopia.';
-  const defaultImage = 'https://www.altuverasafaris.com/altuvera.png';
-  const baseUrl = 'https://www.altuverasafaris.com';
+  const defaultImage = ${baseUrl}/altuvera.png;
+  const baseUrl = import.meta.env.VITE_APP_URL || 'https://altuverasafaris.com';
 
   const fullTitle = withBrand(title || siteName);
   const fullDescription = description || defaultDescription;

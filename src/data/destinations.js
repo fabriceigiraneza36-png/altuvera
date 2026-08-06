@@ -5,6 +5,7 @@ export const destinations = {
       countryId: "Rwanda",
       name: "Maasai Mara National Reserve",
       type: "Wildlife Safari",
+      category: "wildlife",
       description:
         "The world-famous Maasai Mara offers unparalleled wildlife viewing and hosts the spectacular Great Migration.",
       fullDescription: `The Maasai Mara National Reserve is Rwanda's most celebrated wildlife destination, a vast expanse of rolling savanna grasslands teeming with Africa's most iconic animals. Part of the greater Serengeti ecosystem, the Mara hosts the annual Great Migration, when millions of wildebeest, zebras, and gazelles cross the Mara River in a dramatic display of nature's raw power.
@@ -36,6 +37,7 @@ export const destinations = {
       countryId: "Rwanda",
       name: "Mount Rwanda",
       type: "Mountain Trekking",
+      category: "mountain",
       description:
         "Africa's second-highest peak offers challenging climbs through diverse ecological zones.",
       fullDescription: `Mount Rwanda, standing at 5,199 meters, is Africa's second-highest mountain and Rwanda's highest point. This ancient extinct volcano features dramatic glacial valleys, alpine meadows, and unique high-altitude ecosystems that create a trekker's paradise.
@@ -66,6 +68,7 @@ export const destinations = {
       countryId: "Rwanda",
       name: "Diani Beach",
       type: "Beach & Coast",
+      category: "beach",
       description:
         "Rwanda's premier beach destination with pristine white sands, coral reefs, and water sports.",
       fullDescription: `Diani Beach, located on Rwanda's south coast, is consistently rated among Africa's best beaches. Its 17 kilometers of pristine white sand, backed by palm trees and lapped by the warm Indian Ocean, create a tropical paradise just an hour from Mombasa.
@@ -96,6 +99,7 @@ export const destinations = {
       countryId: "Rwanda",
       name: "Amboseli National Park",
       type: "Wildlife Safari",
+      category: "wildlife",
       description:
         "Famous for large elephant herds against the backdrop of Mount Kilimanjaro.",
       fullDescription: `Amboseli National Park offers one of Africa's most iconic vistas – large herds of elephants traversing the savanna with snow-capped Mount Kilimanjaro rising majestically in the background. This relatively small park packs an extraordinary wildlife punch.
@@ -126,6 +130,7 @@ export const destinations = {
       countryId: "Rwanda",
       name: "Lamu Island",
       type: "Cultural & Beach",
+      category: "cultural",
       description:
         "A UNESCO World Heritage Swahili town with centuries of history and pristine beaches.",
       fullDescription: `Lamu is East Africa's oldest continuously inhabited town, a labyrinthine settlement of narrow alleyways, ornate doorways, and buildings that have stood for centuries. This UNESCO World Heritage Site preserves the Swahili culture in its most authentic form.
@@ -158,6 +163,7 @@ export const destinations = {
       countryId: "tanzania",
       name: "Serengeti National Park",
       type: "Wildlife Safari",
+      category: "wildlife",
       description:
         "Africa's most iconic safari destination, home to the greatest wildlife show on Earth.",
       fullDescription: `The Serengeti is synonymous with African wildlife. This UNESCO World Heritage Site encompasses 14,750 square kilometers of savanna, woodlands, and riverine forests teeming with life. No other place on Earth hosts such concentrations of predators and prey.
@@ -188,6 +194,7 @@ export const destinations = {
       countryId: "tanzania",
       name: "Mount Kilimanjaro",
       type: "Mountain Trekking",
+      category: "mountain",
       description:
         "Africa's highest peak, the world's tallest free-standing mountain.",
       fullDescription: `Mount Kilimanjaro, at 5,895 meters, is Africa's highest point and the world's tallest free-standing mountain. This dormant volcano rises dramatically from the surrounding plains, its snow-capped summit visible for miles.
@@ -219,6 +226,7 @@ export const destinations = {
       countryId: "tanzania",
       name: "Ngorongoro Crater",
       type: "Wildlife Safari",
+      category: "wildlife",
       description:
         "The world's largest intact caldera, often called Africa's Garden of Eden.",
       fullDescription: `Ngorongoro Crater is the world's largest intact volcanic caldera, a natural amphitheater 19 kilometers wide that shelters one of Africa's highest wildlife densities. This UNESCO World Heritage Site is often called the "Eighth Wonder of the World."
@@ -250,6 +258,7 @@ export const destinations = {
       countryId: "tanzania",
       name: "Zanzibar",
       type: "Beach & Culture",
+      category: "beach",
       description:
         "The exotic spice island with rich history, stunning beaches, and unique culture.",
       fullDescription: `Zanzibar, the semi-autonomous archipelago off Tanzania's coast, weaves together African, Arab, Indian, and European influences into a unique tapestry of culture and beauty. Stone Town, the historic heart of Zanzibar City, is a UNESCO World Heritage Site of winding alleys, ornate doors, and centuries of history.
@@ -283,6 +292,7 @@ export const destinations = {
       countryId: "uganda",
       name: "Bwindi Impenetrable Forest",
       type: "Primate Trekking",
+      category: "primate",
       description: "Home to half the world's remaining mountain gorillas.",
       fullDescription: `Bwindi Impenetrable National Park, a UNESCO World Heritage Site, protects one of Earth's most important remaining habitats for mountain gorillas. Approximately half of the world's critically endangered mountain gorilla population lives within this dense, mist-covered rainforest.
 
@@ -313,6 +323,7 @@ export const destinations = {
       countryId: "uganda",
       name: "Murchison Falls National Park",
       type: "Wildlife & Waterfall",
+      category: "wildlife",
       description:
         "Uganda's largest park, featuring the world's most powerful waterfall.",
       fullDescription: `Murchison Falls National Park is Uganda's largest protected area, bisected by the Victoria Nile as it makes its journey to Lake Albert. The park's centerpiece is Murchison Falls itself, where the entire Nile forces through a 7-meter gap in the rock, creating an explosion of water and mist.
@@ -346,6 +357,7 @@ export const destinations = {
       countryId: "rwanda",
       name: "Volcanoes National Park",
       type: "Primate Trekking",
+      category: "primate",
       description:
         "The famous home of mountain gorillas, made legendary by Dian Fossey.",
       fullDescription: `Volcanoes National Park, nestled in the Virunga Mountains along Rwanda's border with Uganda and the DRC, is perhaps the world's premier destination for mountain gorilla trekking. This is where Dian Fossey conducted her groundbreaking research that brought gorillas to global attention.
@@ -379,6 +391,7 @@ export const destinations = {
       countryId: "ethiopia",
       name: "Rock-Hewn Churches of Lalibela",
       type: "Historical & Religious",
+      category: "historical",
       description:
         "Eleven medieval churches carved from solid rock, a UNESCO World Heritage Site.",
       fullDescription: `Lalibela is home to one of humanity's most remarkable architectural achievements – 11 monolithic churches carved from solid rock in the 12th and 13th centuries. These structures, commissioned by King Lalibela to create a "New Jerusalem," are still active places of worship today.
@@ -410,6 +423,7 @@ export const destinations = {
       countryId: "ethiopia",
       name: "Simien Mountains",
       type: "Trekking & Wildlife",
+      category: "trekking",
       description:
         'Dramatic escarpments and endemic wildlife in Africa\'s "Roof."',
       fullDescription: `The Simien Mountains National Park, a UNESCO World Heritage Site, offers some of Africa's most dramatic scenery. Formed by volcanic eruptions 40 million years ago, the massif features jagged peaks, deep valleys, and sheer cliffs dropping over 1,500 meters.
@@ -443,6 +457,7 @@ export const destinations = {
       countryId: "burundi",
       name: "Lake Tanganyika",
       type: "Beach & Nature",
+      category: "nature",
       description:
         "Africa's oldest and deepest lake, with pristine beaches and fishing villages.",
       fullDescription: `Lake Tanganyika, the world's second-deepest lake, forms Burundi's western border, offering beaches, water activities, and glimpses into traditional fishing life. The lake's ancient origins – over 10 million years old – have resulted in remarkable endemic species, including many unique cichlid fish.
@@ -475,6 +490,7 @@ export const destinations = {
       countryId: "south-sudan",
       name: "Boma National Park",
       type: "Wildlife",
+      category: "wildlife",
       description:
         "Home to one of Africa's greatest, yet least-known, wildlife migrations.",
       fullDescription: `Boma National Park harbors what may be Africa's largest wildlife migration – hundreds of thousands of white-eared kob, along with elephants, buffalo, and numerous other species. This spectacle, virtually unknown to most travelers, rivals the famous Serengeti migration.
@@ -508,6 +524,7 @@ export const destinations = {
       countryId: "djibouti",
       name: "Lake Assal",
       type: "Nature & Landscape",
+      category: "nature",
       description:
         "The lowest point in Africa, a stunning saline lake surrounded by dormant volcanoes.",
       fullDescription: `Lake Assal is one of Djibouti's most incredible natural wonders. Located 155 meters below sea level, it is the lowest point in Africa and the third lowest point on Earth. This saline lake is surrounded by dark, dormant volcanoes and dramatic lava fields, creating a landscape that feels truly otherworldly.
