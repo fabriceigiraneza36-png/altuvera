@@ -22,7 +22,7 @@ const SEO = ({
 }) => {
   const siteName = 'Altuvera';
   const defaultDescription = 'Explore authentic East African safari adventures with Altuvera. Plan gorilla trekking, cultural tours, and personalized itineraries across Rwanda, Tanzania, Uganda, and Ethiopia.';
-  const defaultImage = ${baseUrl}/altuvera.png;
+    const defaultImage = `${baseUrl}/altuvera.png`;
   const baseUrl = import.meta.env.VITE_APP_URL || 'https://altuverasafaris.com';
 
   const fullTitle = withBrand(title || siteName);

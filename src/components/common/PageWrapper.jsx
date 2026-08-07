@@ -20,6 +20,48 @@ const PageWrapper = ({
   const metaDescription = String(description || DEFAULT_DESCRIPTION).trim();
   const metaImage = image || getBrandLogoUrl();
 
+  // Generate structured data (JSON-LD) for SEO
+  const generateStructuredData = () => {
+    // Default to WebPage schema
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "name": metaTitle,
+      "description": metaDescription,
+      "url": url,
+      "publisher": {
+        "@type": "Organization",
+        "name": "Altuvera",
+        "logo": {
+          "@type": "ImageObject",
+          "url": metaImage
+        }
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": `${url}?search={search_term_string}`,
+        "query-input": "required name=search_term_string"
+      }
+    };
+
+    // Adjust schema type based on page content
+    if (location.pathname.startsWith('/packages')) {
+      schema["@type"] = "ItemList";
+      schema["name"] = "Altuvera Travel Packages";
+    } else if (location.pathname.startsWith('/destinations')) {
+      schema["@type"] = "CollectionPage";
+      schema["name"] = "East Africa Travel Destinations";
+    } else if (location.pathname.startsWith('/posts') || location.pathname.startsWith('/post/')) {
+      schema["@type"] = "Blog";
+      schema["name"] = "Altuvera Travel Blog";
+    } else if (location.pathname === '/' || location.pathname === '') {
+      schema["@type"] = "WebSite";
+      schema["name"] = "Altuvera Safaris";
+    }
+
+    return JSON.stringify(schema, null, 2);
+  };
+
   return (
     <>
       <Helmet>
@@ -53,6 +95,11 @@ const PageWrapper = ({
           <meta name="twitter:description" content={metaDescription} />
         ) : null}
         <meta name="twitter:image" content={metaImage} />
+
+        {/* Structured Data (JSON-LD) */}
+        <script type="application/ld+json">
+          {generateStructuredData()}
+        </script>
       </Helmet>
       {children}
     </>
