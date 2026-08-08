@@ -130,34 +130,41 @@ export default function Step1Destination({
         )
       )}
 
-      <div className="space-y-2">
-        <span className="block text-sm font-semibold text-gray-700">
-          Group Type <span className="text-red-500 ml-0.5">*</span>
-        </span>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          {GROUPS.map(g => (
-            <button key={g.v} type="button"
-              onClick={() => { set("groupType", g.v); touch("groupType"); }}
-              className={`relative flex flex-col items-start text-left p-3 rounded-xl border-2
-                transition-all duration-200
-                ${data.groupType === g.v
-                  ? "border-emerald-400 bg-emerald-50/80 shadow-sm"
-                  : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50"}`}>
-              <span className="text-sm font-semibold text-gray-800">{g.l}</span>
-              <span className="text-[11px] text-gray-400 mt-0.5">{g.d}</span>
-              {data.groupType === g.v && (
-                <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full
-                                bg-emerald-500 flex items-center justify-center">
-                  <HiCheck className="w-2.5 h-2.5 text-white" />
-                </div>
-              )}
-            </button>
-          ))}
-        </div>
-        {touched.groupType && errors.groupType && (
-          <p className="text-xs text-red-500">{errors.groupType}</p>
-        )}
-      </div>
+       <div className="space-y-2">
+         <span className="block text-sm font-semibold text-gray-700">
+           Group Type <span className="text-red-500 ml-0.5">*</span>
+         </span>
+         <div className="space-y-2">
+           {/* Predefined options */}
+           <div className="flex flex-wrap gap-2 mb-3">
+             {GROUPS.map(g => (
+               <button key={g.v} type="button"
+                 onClick={() => { set("groupType", g.v); touch("groupType"); }}
+                 className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2
+                   transition-all duration-200
+                   ${data.groupType === g.v
+                     ? "border-emerald-400 bg-emerald-50/80 shadow-sm"
+                     : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50"}`}>
+                 <span className="text-sm font-semibold text-gray-800">{g.l}</span>
+                 {data.groupType === g.v && (
+                   <HiCheck className="w-4 h-4 text-emerald-600" />
+                 )}
+               </button>
+             ))}
+           </div>
+           {/* Custom input */}
+           <InputField
+             id="groupType"
+             label="Or enter custom group type"
+             value={data.groupType}
+             onChange={(v) => { set("groupType", v); touch("groupType"); }}
+             onBlur={() => touch("groupType")}
+             placeholder="e.g., Solo, Family, Corporate, Custom Group..."
+             error={touched.groupType && errors.groupType}
+             valid={touched.groupType && !errors.groupType && !!data.groupType}
+           />
+         </div>
+       </div>
     </div>
   );
 }
