@@ -1022,6 +1022,7 @@ const DestinationCard = memo(function DestinationCard({
   compact = false,
   priority = false,
   onWishlistToggle,
+  civilized = false, // New prop for minimalist view
 }) {
   const navigate = useNavigate();
   const { isWishlisted, toggleWishlist } = useWishlist();
@@ -1126,13 +1127,14 @@ const DestinationCard = memo(function DestinationCard({
 
   /* ── Render ── */
   return (
-    <article
-      className={[
-        "dc2-card",
-        compact ? "dc2-card--compact" : "",
-        hovered ? "dc2-card--hovered" : "",
-      ].filter(Boolean).join(" ")}
-    >
+     <article
+       className={[
+         "dc2-card",
+         compact ? "dc2-card--compact" : "",
+         civilized ? "dc2-card--civilized" : "",
+         hovered ? "dc2-card--hovered" : "",
+       ].filter(Boolean).join(" ")}
+     >
       {/* ════ VISUAL AREA ════ */}
       <div className="dc2-visual">
         <div className="dc2-visual__frame">
@@ -1140,195 +1142,204 @@ const DestinationCard = memo(function DestinationCard({
           <div className="dc2-visual__overlay-top" />
           <div className="dc2-visual__overlay" />
 
-          {/* Badges */}
-          {(activeBadges.length > 0 || isEcoFriendly) && (
-            <div className="dc2-badges">
-              {activeBadges.map((key, i) => {
-                const { Icon, label, cls } = BADGE_CFG[key];
-                return (
-                  <span
-                    key={key}
-                    className={`dc2-badge ${cls}`}
-                    style={{ animationDelay: `${i * 0.08}s` }}
-                  >
-                    <Icon size={10} /> {label}
-                  </span>
-                );
-              })}
-              {isEcoFriendly && (
-                <span className="dc2-badge dc2-badge--eco">🌿 Eco-Friendly</span>
-              )}
+           {/* Only show badges in non-civilized mode */}
+           {!civilized && (activeBadges.length > 0 || isEcoFriendly) && (
+             <div className="dc2-badges">
+               {activeBadges.map((key, i) => {
+                 const { Icon, label, cls } = BADGE_CFG[key];
+                 return (
+                   <span
+                     key={key}
+                     className={`dc2-badge ${cls}`}
+                     style={{ animationDelay: `${i * 0.08}s` }}
+                   >
+                     <Icon size={10} /> {label}
+                   </span>
+                 );
+               })}
+               {isEcoFriendly && (
+                 <span className="dc2-badge dc2-badge--eco">���🌿 Eco-Friendly</span>
+               )}
+             </div>
+           )}
             </div>
           )}
 
-          {/* Action cluster */}
-          <div className="dc2-actions">
-            <button
-              onClick={handleWishlist}
-              title={isLiked ? "Remove from wishlist" : "Save to wishlist"}
-              aria-label={isLiked ? "Remove from wishlist" : "Save to wishlist"}
-              className={[
-                "dc2-action-btn",
-                isLiked ? "dc2-action-btn--liked" : "",
-                heartAnim ? "dc2-action-btn--anim" : "",
-              ].filter(Boolean).join(" ")}
-            >
-              <FiHeart
-                size={15}
-                color={isLiked ? "#ef4444" : "#475569"}
-                fill={isLiked ? "#ef4444" : "none"}
-              />
-            </button>
+           {/* Only show action cluster in non-civilized mode */}
+           {!civilized && (
+             <div className="dc2-actions">
+               <button
+                 onClick={handleWishlist}
+                 title={isLiked ? "Remove from wishlist" : "Save to wishlist"}
+                 aria-label={isLiked ? "Remove from wishlist" : "Save to wishlist"}
+                 className={[
+                   "dc2-action-btn",
+                   isLiked ? "dc2-action-btn--liked" : "",
+                   heartAnim ? "dc2-action-btn--anim" : "",
+                 ].filter(Boolean).join(" ")}
+               >
+                 <FiHeart
+                   size={15}
+                   color={isLiked ? "#ef4444" : "#475569"}
+                   fill={isLiked ? "#ef4444" : "none"}
+                 />
+               </button>
 
-            <div style={{ position: "relative" }}>
-              <button
-                onClick={handleShare}
-                title="Share destination"
-                aria-label="Share destination"
-                className={[
-                  "dc2-action-btn",
-                  copied ? "dc2-action-btn--copied" : "",
-                ].filter(Boolean).join(" ")}
-              >
-                <FiShare2 size={14} color={copied ? "#059669" : "#475569"} />
-              </button>
-              {copied && (
-                <span className="dc2-share-toast">✓ Link copied</span>
-              )}
-            </div>
+               <div style={{ position: "relative" }}>
+                 <button
+                   onClick={handleShare}
+                   title="Share destination"
+                   aria-label="Share destination"
+                   className={[
+                     "dc2-action-btn",
+                     copied ? "dc2-action-btn--copied" : "",
+                   ].filter(Boolean).join(" ")}
+                 >
+                   <FiShare2 size={14} color={copied ? "#059669" : "#475569"} />
+                 </button>
+                 {copied && (
+                   <span className="dc2-share-toast">������✓ Link copied</span>
+                 )}
+               </div>
+             </div>
+           )}
           </div>
         </div>
       </div>
 
        {/* ════ BODY ════ */}
        <div className="dc2-body">
-         {/* Header */}
-         <div className="dc2-header">
-           <h3 className="dc2-name">{name}</h3>
-           {displayLocation && (
-             <div className="dc2-loc">
-               <FiMapPin size={12} className="dc2-loc__icon" />
-               <span>{displayLocation}</span>
-               {countryFlag && (
-                 <span className="dc2-loc__flag">{countryFlag}</span>
-               )}
-             </div>
-           )}
-         </div>
-
-         {/* Stats row */}
-         <div className="dc2-stats">
-           <StarRating rating={rating} count={reviewCount} />
-
-           {(duration || durationDays) && (
-             <>
-               <div className="dc2-stat-divider" />
-               <div className="dc2-stat">
-                 <FiClock size={12} className="dc2-stat__icon" />
-                 <span>{duration || `${durationDays} days`}</span>
-               </div>
-             </>
-           )}
-
-           {difficulty && (
-             <>
-               <div className="dc2-stat-divider" />
-               <span className={`dc2-diff ${DIFF_CLS[difficulty] || DIFF_CLS.moderate}`}>
-                 <FiWind size={10} />
-                 {DIFF_LABEL[difficulty] || difficulty}
-               </span>
-             </>
-           )}
-         </div>
-
-         {/* Category chip */}
-         {category && !compact && (
-           <div className="dc2-meta">
-             <span className="dc2-chip dc2-chip--category">
-               <FiCompass size={10} />
-               {category.replace(/_/g, " ")}
-             </span>
-           </div>
-         )}
-
-{/* Highlights — limited */}
-          {!compact && highlights.length > 0 && (
-            <div className="dc2-highlights">
-              {highlights.slice(0, 2).map((h, i) => (
-                <span key={i} className="dc2-hl-chip">
-                  <FiSun size={9} />
-                  {h}
-                </span>
-              ))}
-              {highlights.length > 2 && (
-                <span className="dc2-hl-more">+{highlights.length - 2} more</span>
+          {/* Only show header in non-civilized mode */}
+          {!civilized && (
+            <div className="dc2-header">
+              <h3 className="dc2-name">{name}</h3>
+              {displayLocation && (
+                <div className="dc2-loc">
+                  <FiMapPin size={12} className="dc2-loc__icon" />
+                  <span>{displayLocation}</span>
+                  {countryFlag && (
+                    <span className="dc2-loc__flag">{countryFlag}</span>
+                  )}
+                </div>
               )}
             </div>
           )}
 
-          {/* Description */}
-          {description && (
-            <>
-              <p 
-                className="dc2-desc" 
-                style={{ 
-                  display: showReadMore ? 'block' : '-webkit-box', 
-                  webkitLineClamp: showReadMore ? 'none' : '3', 
-                  webkitBoxOrient: 'vertical', 
-                  overflow: 'hidden' 
-                }}
-              >
-                {description}
-              </p>
-              {showReadMore && (
-                <button 
-                  onClick={() => setShowReadMore(!showReadMore)} 
-                  className="dc2-read-more-link"
-                  style={{ marginTop: '8px', color: 'var(--dc2-accent)', fontSize: '12px', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: '0' }}
-                >
-                  {showReadMore ? 'Show less' : 'Read more'}
-                </button>
+          {/* Only show stats row in non-civilized mode */}
+          {!civilized && (
+            <div className="dc2-stats">
+              <StarRating rating={rating} count={reviewCount} />
+
+              {(duration || durationDays) && (
+                <>
+                  <div className="dc2-stat-divider" />
+                  <div className="dc2-stat">
+                    <FiClock size={12} className="dc2-stat__icon" />
+                    <span>{duration || `${durationDays} days`}</span>
+                  </div>
+                </>
               )}
-              {/* Hidden element for measurement */}
-              <div 
-                ref={descRef} 
-                style={{ 
-                  position: 'absolute', 
-                  visibility: 'hidden', 
-                  whiteSpace: 'pre-wrap', 
-                  wordWrap: 'break-word', 
-                  width: '1px', 
-                  height: 'auto' 
-                }} 
-                aria-hidden="true"
-              >
-                {description}
-              </div>
-            </>
+
+              {difficulty && (
+                <>
+                  <div className="dc2-stat-divider" />
+                  <span className={`dc2-diff ${DIFF_CLS[difficulty] || DIFF_CLS.moderate}`}>
+                    <FiWind size={10} />
+                    {DIFF_LABEL[difficulty] || difficulty}
+                  </span>
+                </>
+              )}
+            </div>
           )}
 
-          <hr className="dc2-sep" />
+          {/* Only show category chip in non-civilized mode */}
+          {!civilized && category && !compact && (
+            <div className="dc2-meta">
+              <span className="dc2-chip dc2-chip--category">
+                <FiCompass size={10} />
+                {category.replace(/_/g, " ")}
+              </span>
+            </div>
+          )}
 
-         {/* CTA Footer */}
-         <div className="dc2-footer">
-           <button
-             className="dc2-btn-book"
-             onClick={goToBook}
-             aria-label={`Book ${name}`}
-           >
-             <FiCalendar size={13} />
-             <span>Book Now</span>
-           </button>
+{/* Only show highlights in non-civilized mode */}
+           {!civilized && !compact && highlights.length > 0 && (
+             <div className="dc2-highlights">
+               {highlights.slice(0, 2).map((h, i) => (
+                 <span key={i} className="dc2-hl-chip">
+                   <FiSun size={9} />
+                   {h}
+                 </span>
+               ))}
+               {highlights.length > 2 && (
+                 <span className="dc2-hl-more">+{highlights.length - 2} more</span>
+               )}
+             </div>
+           )}
 
-           <button
-             className="dc2-btn-explore"
-             onClick={(e) => { e.stopPropagation(); goToDetail(); }}
-             aria-label={`Learn more about ${name}`}
-           >
-             Learn More
-             <FiArrowRight size={13} className="dc2-btn-explore__arrow" />
-           </button>
-         </div>
+           {/* Only show description in non-civilized mode */}
+           {!civilized && description && (
+             <>
+               <p 
+                 className="dc2-desc" 
+                 style={{ 
+                   display: showReadMore ? 'block' : '-webkit-box', 
+                   webkitLineClamp: showReadMore ? 'none' : '3', 
+                   webkitBoxOrient: 'vertical', 
+                   overflow: 'hidden' 
+                 }}
+               >
+                 {description}
+               </p>
+               {showReadMore && (
+                 <button 
+                   onClick={() => setShowReadMore(!showReadMore)} 
+                   className="dc2-read-more-link"
+                   style={{ marginTop: '8px', color: 'var(--dc2-accent)', fontSize: '12px', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: '0' }}
+                 >
+                   {showReadMore ? 'Show less' : 'Read more'}
+                 </button>
+               )}
+               {/* Hidden element for measurement */}
+               <div 
+                 ref={descRef} 
+                 style={{ 
+                   position: 'absolute', 
+                   visibility: 'hidden', 
+                   whiteSpace: 'pre-wrap', 
+                   wordWrap: 'break-word', 
+                   width: '1px', 
+                   height: 'auto' 
+                 }} 
+                 aria-hidden="true"
+               >
+                 {description}
+               </div>
+             </>
+           )}
+
+          {!civilized && <hr className="dc2-sep" />}
+
+          {/* CTA Footer - Always show but simplified in civilized mode */}
+          <div className="dc2-footer">
+            <button
+              className="dc2-btn-book"
+              onClick={goToBook}
+              aria-label={`Book ${name}`}
+            >
+              <FiCalendar size={13} />
+              <span>Book Now</span>
+            </button>
+
+            <button
+              className="dc2-btn-explore"
+              onClick={(e) => { e.stopPropagation(); goToDetail(); }}
+              aria-label={`Learn more about ${name}`}
+            >
+              Learn More
+              <FiArrowRight size={13} className="dc2-btn-explore__arrow" />
+            </button>
+          </div>
        </div>
     </article>
   );
