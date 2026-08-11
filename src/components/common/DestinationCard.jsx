@@ -1,13 +1,22 @@
 // src/components/destinations/DestinationCard.jsx
-import {
-  useState, useEffect, useCallback, memo, useRef, useMemo,
-} from "react";
+import { useState, useEffect, useCallback, memo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  FiMapPin, FiClock, FiStar, FiHeart, FiShare2,
-  FiArrowRight, FiAward, FiTrendingUp, FiZap,
-  FiCalendar, FiUsers, FiWind, FiChevronLeft, FiChevronRight,
-  FiCompass, FiSun, FiCamera, FiBookmark, FiEye,
+  FiMapPin,
+  FiClock,
+  FiHeart,
+  FiShare2,
+  FiArrowRight,
+  FiAward,
+  FiTrendingUp,
+  FiZap,
+  FiCalendar,
+  FiWind,
+  FiChevronLeft,
+  FiChevronRight,
+  FiCompass,
+  FiSun,
+  FiCamera,
 } from "react-icons/fi";
 import { useWishlist } from "../../hooks/useWishlist";
 
@@ -18,866 +27,760 @@ const FALLBACK =
   "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=900&q=85";
 
 const BADGE_CFG = {
-  isFeatured: {
-    Icon: FiAward,
-    label: "Featured",
-    cls: "dc2-badge--featured",
-  },
-  isNew: {
-    Icon: FiZap,
-    label: "New",
-    cls: "dc2-badge--new",
-  },
-  isPopular: {
-    Icon: FiTrendingUp,
-    label: "Trending",
-    cls: "dc2-badge--popular",
-  },
+  isFeatured: { Icon: FiAward,      label: "Featured", cls: "dc-badge--featured" },
+  isNew:      { Icon: FiZap,        label: "New",      cls: "dc-badge--new"      },
+  isPopular:  { Icon: FiTrendingUp, label: "Trending", cls: "dc-badge--popular"  },
 };
 
-const DIFF_CLS = {
-  easy: "dc2-diff--easy",
-  moderate: "dc2-diff--moderate",
-  challenging: "dc2-diff--challenging",
-  difficult: "dc2-diff--difficult",
-  expert: "dc2-diff--expert",
-};
-
-const DIFF_LABEL = {
-  easy: "Easy",
-  moderate: "Moderate",
-  challenging: "Challenging",
-  difficult: "Difficult",
-  expert: "Expert",
+const DIFF_CFG = {
+  easy:        { cls: "dc-diff--easy",        label: "Easy"        },
+  moderate:    { cls: "dc-diff--moderate",    label: "Moderate"    },
+  challenging: { cls: "dc-diff--challenging", label: "Challenging" },
+  difficult:   { cls: "dc-diff--difficult",   label: "Difficult"   },
+  expert:      { cls: "dc-diff--expert",      label: "Expert"      },
 };
 
 /* ─────────────────────────────────────────────────────────────
-   INJECT STYLES (once)
+   STYLES
 ───────────────────────────────────────────────────────────── */
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
-/* ── Keyframes ── */
-@keyframes dc2-heart-burst {
-  0%   { transform:scale(1); }
-  15%  { transform:scale(0.85); }
-  30%  { transform:scale(1.35); }
-  50%  { transform:scale(0.92); }
-  70%  { transform:scale(1.12); }
-  100% { transform:scale(1); }
+@keyframes dc-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
-@keyframes dc2-toast-slide {
-  0%   { opacity:0; transform:translate(-50%,8px) scale(0.92); }
-  12%  { opacity:1; transform:translate(-50%,0) scale(1); }
-  82%  { opacity:1; }
-  100% { opacity:0; transform:translate(-50%,-4px) scale(0.96); }
+@keyframes dc-heart {
+  0%   { transform: scale(1); }
+  20%  { transform: scale(0.82); }
+  45%  { transform: scale(1.32); }
+  70%  { transform: scale(0.94); }
+  100% { transform: scale(1); }
 }
-@keyframes dc2-shimmer {
-  0%   { background-position:200% 0; }
-  100% { background-position:-200% 0; }
+@keyframes dc-arrow {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(5px); }
 }
-@keyframes dc2-badge-enter {
-  from { opacity:0; transform:translateY(-6px) scale(0.88); }
-  to   { opacity:1; transform:translateY(0) scale(1); }
+@keyframes dc-toast {
+  0%   { opacity: 0; transform: translateY(4px); }
+  15%  { opacity: 1; transform: translateY(0); }
+  80%  { opacity: 1; }
+  100% { opacity: 0; }
 }
-@keyframes dc2-float {
-  0%,100% { transform:translateY(0); }
-  50%     { transform:translateY(-3px); }
+@keyframes dc-badge-in {
+  from { opacity: 0; transform: translateY(-5px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
-@keyframes dc2-ring-pulse {
-  0%   { box-shadow:0 0 0 0 rgba(16,185,129,0.35); }
-  70%  { box-shadow:0 0 0 10px rgba(16,185,129,0); }
-  100% { box-shadow:0 0 0 0 rgba(16,185,129,0); }
-}
-@keyframes dc2-gradient-shift {
-  0%   { background-position:0% 50%; }
-  50%  { background-position:100% 50%; }
-  100% { background-position:0% 50%; }
-}
-@keyframes dc2-arrow-nudge {
-  0%,100% { transform:translateX(0); }
-  50%     { transform:translateX(4px); }
+@keyframes dc-spin {
+  to { transform: rotate(360deg); }
 }
 
-/* ══════════════════════════════════════════════════════════
+/* ══════════════════════════════
    CARD ROOT
-══════════════════════════════════════════════════════════ */
-.dc2-card {
-  --dc2-radius: 20px;
-  --dc2-accent: #059669;
-  --dc2-accent-light: #10b981;
-  --dc2-accent-dark: #047857;
-  --dc2-accent-bg: #ecfdf5;
-  --dc2-accent-border: #a7f3d0;
-  --dc2-surface: #ffffff;
-  --dc2-surface-2: #f8fafb;
-  --dc2-text-primary: #0f172a;
-  --dc2-text-secondary: #475569;
-  --dc2-text-muted: #94a3b8;
-  --dc2-border: #e2e8f0;
-  --dc2-shadow-sm: 0 1px 3px rgba(15,23,42,.04), 0 1px 2px rgba(15,23,42,.06);
-  --dc2-shadow-md: 0 4px 16px rgba(15,23,42,.06), 0 2px 6px rgba(15,23,42,.04);
-  --dc2-shadow-lg: 0 20px 50px rgba(15,23,42,.1), 0 8px 24px rgba(5,150,105,.08);
-  --dc2-shadow-xl: 0 28px 64px rgba(15,23,42,.12), 0 12px 32px rgba(5,150,105,.12);
-  --dc2-transition: cubic-bezier(0.22, 1, 0.36, 1);
-
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
-  position: relative;
+══════════════════════════════ */
+.dc-card {
+  font-family: 'Inter', system-ui, sans-serif;
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--dc2-surface);
-  border-radius: var(--dc2-radius);
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1.5px solid #e2e8f0;
+  box-shadow: 0 1px 4px rgba(15,23,42,.06);
   overflow: hidden;
-  border: 1px solid var(--dc2-border);
-  box-shadow: var(--dc2-shadow-sm);
   cursor: pointer;
-  transition:
-    border-color 0.5s var(--dc2-transition),
-    box-shadow 0.5s var(--dc2-transition),
-    transform 0.5s var(--dc2-transition);
   outline: none;
   isolation: isolate;
   -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.4s cubic-bezier(0.22,1,0.36,1),
+    box-shadow 0.4s cubic-bezier(0.22,1,0.36,1),
+    border-color 0.4s cubic-bezier(0.22,1,0.36,1);
 }
-.dc2-card::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: calc(var(--dc2-radius) + 1px);
-  padding: 1.5px;
-  background: linear-gradient(135deg, transparent 40%, rgba(16,185,129,0) 50%, transparent 60%);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  opacity: 0;
-  transition: opacity 0.5s var(--dc2-transition);
-  z-index: 1;
-  pointer-events: none;
+.dc-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 48px rgba(15,23,42,.12), 0 6px 20px rgba(5,150,105,.10);
+  border-color: rgba(5,150,105,0.25);
 }
-.dc2-card:hover::before,
-.dc2-card--hovered::before {
-  background: linear-gradient(135deg, rgba(16,185,129,0.4) 0%, rgba(5,150,105,0.2) 50%, rgba(16,185,129,0.4) 100%);
-  opacity: 1;
-}
-.dc2-card:focus-visible {
-  outline: 2.5px solid var(--dc2-accent);
+.dc-card:focus-visible {
+  outline: 2.5px solid #059669;
   outline-offset: 3px;
 }
-.dc2-card:hover,
-.dc2-card--hovered {
-  border-color: rgba(5,150,105,0.2);
-  box-shadow: var(--dc2-shadow-xl);
-  transform: translateY(-8px) scale(1.005);
-}
 
-/* ══════════════════════════════════════════════════════════
+/* ══════════════════════════════
    IMAGE AREA
-══════════════════════════════════════════════════════════ */
-.dc2-visual {
+══════════════════════════════ */
+.dc-img-wrap {
   position: relative;
   flex-shrink: 0;
   overflow: hidden;
 }
-.dc2-visual__frame {
+.dc-img-frame {
   position: relative;
-  padding-top: 50%;
+  width: 100%;
+  padding-top: 58%;
   overflow: hidden;
-  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
 }
-.dc2-card--compact .dc2-visual__frame {
-  padding-top: 40%;
-}
-
-.dc2-visual__img {
+.dc-img {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
-  transition:
-    opacity 0.8s ease,
-    transform 8s cubic-bezier(0.25, 0, 0.15, 1);
+  transition: opacity 0.6s ease, transform 6s cubic-bezier(0.25,0,0.15,1);
   will-change: transform, opacity;
 }
-.dc2-visual__img--hidden {
-  opacity: 0;
-  transform: scale(1.06);
-}
-.dc2-visual__img--visible {
-  opacity: 1;
-  transform: scale(1);
-}
-.dc2-card:hover .dc2-visual__img--visible,
-.dc2-card--hovered .dc2-visual__img--visible {
-  transform: scale(1.08);
-}
+.dc-img--hidden  { opacity: 0; transform: scale(1.05); }
+.dc-img--visible { opacity: 1; transform: scale(1); }
+.dc-card:hover .dc-img--visible { transform: scale(1.07); }
 
-/* Glass overlay */
-.dc2-visual__overlay {
+.dc-img-overlay {
   position: absolute;
   inset: 0;
-  z-index: 1;
   pointer-events: none;
-  background:
-    linear-gradient(180deg,
-      rgba(15,23,42,0.12) 0%,
-      transparent 35%,
-      transparent 55%,
-      rgba(15,23,42,0.55) 100%
-    );
-}
-.dc2-visual__overlay-top {
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 100px;
+  background: linear-gradient(
+    180deg,
+    rgba(15,23,42,.18) 0%,
+    transparent 30%,
+    transparent 52%,
+    rgba(15,23,42,.65) 100%
+  );
   z-index: 1;
-  pointer-events: none;
-  background: linear-gradient(180deg, rgba(15,23,42,0.18) 0%, transparent 100%);
 }
 
-/* ── Navigation arrows ── */
-.dc2-nav-arrows {
+.dc-img-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  color: #059669;
+}
+.dc-img-placeholder span {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.65;
+}
+
+/* ── Slider navigation ── */
+.dc-nav {
   position: absolute;
   inset: 0;
   z-index: 5;
-  pointer-events: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 10px;
+  pointer-events: none;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
-.dc2-card:hover .dc2-nav-arrows,
-.dc2-card--hovered .dc2-nav-arrows {
-  opacity: 1;
-}
-.dc2-nav-btn {
+.dc-card:hover .dc-nav { opacity: 1; }
+
+.dc-nav-btn {
   pointer-events: auto;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   border: none;
-  background: rgba(255,255,255,0.9);
-  backdrop-filter: blur(12px);
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.12);
-  transition: all 0.25s var(--dc2-transition);
-  color: #334155;
-}
-.dc2-nav-btn:hover {
-  background: #fff;
-  transform: scale(1.12);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.18);
-}
-
-/* ── Badges ── */
-.dc2-badges {
-  position: absolute;
-  top: 14px;
-  left: 14px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  z-index: 4;
-}
-.dc2-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 12px;
-  border-radius: 10px;
-  font-size: 10.5px;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  animation: dc2-badge-enter 0.4s var(--dc2-transition) both;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-.dc2-badge--featured {
-  background: linear-gradient(135deg, rgba(16,185,129,0.92), rgba(5,150,105,0.92));
-  color: #fff;
-  box-shadow: 0 4px 14px rgba(5,150,105,0.35);
-}
-.dc2-badge--new {
   background: rgba(255,255,255,0.88);
-  color: var(--dc2-accent-dark);
-  border: 1px solid rgba(167,243,208,0.5);
-  box-shadow: 0 2px 8px rgba(5,150,105,0.1);
-}
-.dc2-badge--popular {
-  background: linear-gradient(135deg, rgba(251,191,36,0.92), rgba(245,158,11,0.92));
-  color: #78350f;
-  box-shadow: 0 4px 14px rgba(245,158,11,0.3);
-}
-.dc2-badge--eco {
-  background: rgba(15,23,42,0.72);
-  color: #a7f3d0;
   backdrop-filter: blur(10px);
-}
-
-/* ── Action cluster ── */
-.dc2-actions {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  z-index: 6;
-}
-.dc2-action-btn {
-  width: 38px;
-  height: 38px;
-  border-radius: 12px;
-  border: none;
-  background: rgba(255,255,255,0.85);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(10px);
   display: grid;
   place-items: center;
   cursor: pointer;
-  box-shadow: 0 2px 10px rgba(15,23,42,0.1);
-  transition: all 0.3s var(--dc2-transition);
-  position: relative;
-  color: #475569;
+  color: #334155;
+  box-shadow: 0 2px 10px rgba(0,0,0,.12);
+  transition: all 0.25s cubic-bezier(0.22,1,0.36,1);
 }
-.dc2-action-btn:hover {
-  transform: scale(1.14) translateY(-1px);
-  box-shadow: 0 6px 20px rgba(15,23,42,0.16);
-  background: rgba(255,255,255,0.95);
-}
-.dc2-action-btn--liked {
-  background: rgba(254,226,226,0.92);
-  color: #ef4444;
-}
-.dc2-action-btn--liked:hover {
-  background: rgba(254,226,226,1);
-}
-.dc2-action-btn--anim {
-  animation: dc2-heart-burst 0.55s var(--dc2-transition);
-}
-.dc2-action-btn--copied {
-  background: rgba(236,253,245,0.95);
-  color: var(--dc2-accent);
+.dc-nav-btn:hover {
+  background: #fff;
+  transform: scale(1.1);
 }
 
-/* Toast */
-.dc2-share-toast {
+/* ── Dots ── */
+.dc-dots {
   position: absolute;
-  top: calc(100% + 8px);
-  left: 50%;
-  white-space: nowrap;
-  background: var(--dc2-text-primary);
-  color: #fff;
-  font-size: 10.5px;
-  font-weight: 700;
-  padding: 5px 12px;
-  border-radius: 8px;
-  pointer-events: none;
-  animation: dc2-toast-slide 2.2s ease forwards;
-  z-index: 10;
-  letter-spacing: 0.02em;
-}
-
-/* ── Image indicator ── */
-.dc2-indicators {
-  position: absolute;
-  bottom: 14px;
+  bottom: 12px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  align-items: center;
   gap: 5px;
+  align-items: center;
   z-index: 4;
-  padding: 4px 8px;
-  border-radius: 12px;
-  background: rgba(15,23,42,0.28);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: rgba(15,23,42,.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
-.dc2-indicator {
+.dc-dot {
   height: 4px;
   border-radius: 2px;
   border: none;
   padding: 0;
   cursor: pointer;
-  transition: all 0.4s var(--dc2-transition);
-  background: rgba(255,255,255,0.35);
+  background: rgba(255,255,255,.4);
+  transition: all 0.35s cubic-bezier(0.22,1,0.36,1);
 }
-.dc2-indicator--active {
-  width: 20px !important;
+.dc-dot--active {
+  width: 18px !important;
   background: #fff;
-  box-shadow: 0 0 6px rgba(255,255,255,0.5);
 }
 
-/* ── Image counter pill ── */
-.dc2-img-counter {
+/* ── Photo counter ── */
+.dc-photo-count {
   position: absolute;
-  bottom: 14px;
-  right: 14px;
+  bottom: 12px;
+  right: 12px;
   z-index: 4;
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 4px 10px;
+  padding: 3px 9px;
   border-radius: 8px;
-  background: rgba(15,23,42,0.5);
-  backdrop-filter: blur(10px);
-  color: rgba(255,255,255,0.92);
+  background: rgba(15,23,42,.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(255,255,255,.9);
   font-size: 10.5px;
   font-weight: 600;
 }
 
-/* ══════════════════════════════════════════════════════════
-    CARD BODY
-═════════════════════════════════════════════════════════════ */
-.dc2-body {
-  padding: clamp(10px, 1.5vw, 16px);
+/* ── Badges ── */
+.dc-badges {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.dc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: dc-badge-in 0.4s cubic-bezier(0.22,1,0.36,1) both;
+  white-space: nowrap;
+}
+.dc-badge--featured {
+  background: linear-gradient(135deg, rgba(16,185,129,.9), rgba(5,150,105,.9));
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(5,150,105,.3);
+}
+.dc-badge--new {
+  background: rgba(255,255,255,.88);
+  color: #047857;
+  border: 1px solid rgba(167,243,208,.6);
+}
+.dc-badge--popular {
+  background: linear-gradient(135deg, rgba(251,191,36,.9), rgba(245,158,11,.9));
+  color: #78350f;
+  box-shadow: 0 3px 10px rgba(245,158,11,.25);
+}
+.dc-badge--eco {
+  background: rgba(15,23,42,.65);
+  color: #a7f3d0;
+}
+
+/* ── Wishlist / Share ── */
+.dc-actions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.dc-action-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255,255,255,.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: #64748b;
+  box-shadow: 0 2px 8px rgba(15,23,42,.1);
+  transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+  position: relative;
+}
+.dc-action-btn:hover {
+  transform: scale(1.12) translateY(-1px);
+  box-shadow: 0 5px 16px rgba(15,23,42,.15);
+  background: rgba(255,255,255,.95);
+}
+.dc-action-btn--liked {
+  background: rgba(254,226,226,.92);
+  color: #ef4444;
+}
+.dc-action-btn--heart-anim {
+  animation: dc-heart 0.5s cubic-bezier(0.22,1,0.36,1);
+}
+.dc-action-btn--copied {
+  background: rgba(236,253,245,.95);
+  color: #059669;
+}
+
+/* ── Toast ── */
+.dc-toast {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  white-space: nowrap;
+  background: #0f172a;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 7px;
+  pointer-events: none;
+  animation: dc-toast 2s ease forwards;
+  z-index: 10;
+}
+
+/* ══════════════════════════════
+   CARD BODY
+══════════════════════════════ */
+.dc-body {
   display: flex;
   flex-direction: column;
   flex: 1;
-  gap: clamp(6px, 1vw, 10px);
+  padding: 16px;
+  gap: 10px;
 }
 
-/* ── Header area ── */
-.dc2-header {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.dc2-name {
+/* ── Name ── */
+.dc-name {
   margin: 0;
-  font-family: 'DM Serif Display', 'Georgia', serif;
-  font-size: clamp(18px, 2.2vw, 23px);
-  font-weight: 400;
-  line-height: 1.22;
-  letter-spacing: -0.01em;
-  color: var(--dc2-text-primary);
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(17px, 2vw, 21px);
+  font-weight: 700;
+  line-height: 1.25;
+  color: #0f172a;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
   transition: color 0.3s ease;
 }
-.dc2-card:hover .dc2-name {
-  color: var(--dc2-accent-dark);
-}
-.dc2-loc {
+.dc-card:hover .dc-name { color: #047857; }
+
+/* ── Location ── */
+.dc-location {
   display: flex;
   align-items: center;
   gap: 5px;
-  color: var(--dc2-text-muted);
+  color: #94a3b8;
   font-size: 12.5px;
   font-weight: 500;
+  flex-wrap: wrap;
 }
-.dc2-loc__icon {
-  color: var(--dc2-accent-light);
-  flex-shrink: 0;
-}
-.dc2-loc__flag {
-  margin-left: 2px;
-  line-height: 1;
-  font-size: 13px;
-}
+.dc-location svg { color: #10b981; flex-shrink: 0; }
+.dc-flag { font-size: 13px; margin-left: 2px; line-height: 1; }
 
 /* ── Stats row ── */
-.dc2-stats {
+.dc-stats {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
-.dc2-stat {
+.dc-stat {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   font-size: 12px;
-  color: var(--dc2-text-secondary);
   font-weight: 500;
+  color: #64748b;
 }
-.dc2-stat__icon {
-  flex-shrink: 0;
-  color: var(--dc2-text-muted);
-}
-.dc2-stat--rating .dc2-stat__icon {
-  color: #f59e0b;
-}
-.dc2-stat__value {
-  font-weight: 700;
-  color: var(--dc2-text-primary);
-}
-.dc2-stat__label {
-  color: var(--dc2-text-muted);
-  font-size: 11px;
-}
-.dc2-stat-divider {
+.dc-stat svg { color: #94a3b8; flex-shrink: 0; }
+.dc-stat strong { color: #0f172a; font-weight: 700; }
+.dc-divider {
   width: 1px;
-  height: 14px;
-  background: var(--dc2-border);
+  height: 12px;
+  background: #e2e8f0;
   flex-shrink: 0;
 }
 
-/* ── Meta chips ── */
-.dc2-meta {
+/* ── Chips ── */
+.dc-chips {
   display: flex;
-  align-items: center;
-  gap: 6px;
   flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
 }
-.dc2-chip {
+.dc-chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   padding: 4px 10px;
   border-radius: 8px;
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
-  transition: all 0.25s ease;
   letter-spacing: 0.01em;
 }
-.dc2-chip--duration {
-  background: var(--dc2-accent-bg);
-  color: var(--dc2-accent-dark);
-  border: 1px solid var(--dc2-accent-border);
-}
-.dc2-chip--category {
-  background: var(--dc2-surface-2);
-  color: var(--dc2-text-secondary);
-  border: 1px solid var(--dc2-border);
+.dc-chip--cat {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
   text-transform: capitalize;
 }
+.dc-chip--dur {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
 
-/* Difficulty */
-.dc2-diff {
+/* ── Difficulty ── */
+.dc-diff {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
   padding: 4px 10px;
   border-radius: 8px;
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.02em;
+  white-space: nowrap;
 }
-.dc2-diff--easy        { background:#d1fae5; color:#065f46; }
-.dc2-diff--moderate    { background:#fef3c7; color:#78350f; }
-.dc2-diff--challenging { background:#fed7aa; color:#7c2d12; }
-.dc2-diff--difficult   { background:#e9d5ff; color:#581c87; }
-.dc2-diff--expert      { background:#fce7f3; color:#831843; }
+.dc-diff--easy        { background: #d1fae5; color: #065f46; }
+.dc-diff--moderate    { background: #fef3c7; color: #78350f; }
+.dc-diff--challenging { background: #fed7aa; color: #7c2d12; }
+.dc-diff--difficult   { background: #e9d5ff; color: #581c87; }
+.dc-diff--expert      { background: #fce7f3; color: #831843; }
+
+/* ── Highlights ── */
+.dc-highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.dc-hl {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #ecfdf5;
+  color: #166534;
+  border: 1px solid #dcfce7;
+  padding: 3px 9px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+.dc-hl:hover { background: #dcfce7; }
+.dc-hl-more {
+  background: #f1f5f9;
+  color: #94a3b8;
+  border: 1px solid #e2e8f0;
+  padding: 3px 9px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 600;
+}
 
 /* ── Description ── */
-.dc2-desc {
-  color: var(--dc2-text-secondary);
-  font-size: clamp(12.5px, 1.1vw, 13.5px);
-  line-height: 1.7;
+.dc-desc {
   margin: 0;
+  font-size: clamp(12.5px, 1.1vw, 13.5px);
+  color: #64748b;
+  line-height: 1.7;
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  font-weight: 400;
-}
-
-/* ── Read more link ── */
-.dc2-read-more {
-  margin-top: 8px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: clamp(12px, 1vw, 13px);
-  font-weight: 600;
-  color: var(--dc2-accent);
-  text-decoration: none;
-  transition: all 0.2s ease;
-}
-.dc2-read-more:hover {
-  color: var(--dc2-accent-dark);
-  text-decoration: underline;
-}
-.dc2-read-more::after {
-  content: "";
-  transition: transform 0.2s ease;
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-right: 1px solid currentColor;
-  border-bottom: 1px solid currentColor;
-  transform: rotate(-45deg);
-}
-.dc2-read-more:hover::after {
-  transform: rotate(-45deg) translate(2px, -2px);
-}
-
-/* ── Highlights ── */
-.dc2-highlights {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-.dc2-hl-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--dc2-accent-bg);
-  color: #166534;
-  border: 1px solid #dcfce7;
-  padding: 3px 10px;
-  border-radius: 8px;
-  font-size: 11px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-}
-.dc2-hl-chip:hover {
-  background: #dcfce7;
-  border-color: #bbf7d0;
-}
-.dc2-hl-more {
-  background: var(--dc2-surface-2);
-  color: var(--dc2-text-muted);
-  border: 1px solid var(--dc2-border);
-  padding: 3px 10px;
-  border-radius: 8px;
-  font-size: 11px;
-  font-weight: 600;
 }
 
 /* ── Separator ── */
-.dc2-sep {
+.dc-sep {
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--dc2-border), transparent);
-  margin: 2px 0;
+  background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
   border: none;
   flex-shrink: 0;
+  margin: 2px 0;
 }
 
-/* ══════════════════════════════════════════════════════════
+/* ── Price ── */
+.dc-price-label {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+.dc-price-value {
+  font-size: 17px;
+  font-weight: 800;
+  color: #059669;
+  line-height: 1;
+  font-family: 'Playfair Display', serif;
+}
+.dc-price-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-left: 3px;
+}
+.dc-price-request {
+  font-size: 12.5px;
+  color: #94a3b8;
+  font-style: italic;
+  margin: 0;
+}
+
+/* ══════════════════════════════
    CTA FOOTER
-══════════════════════════════════════════════════════════ */
-.dc2-footer {
+══════════════════════════════ */
+.dc-footer {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   margin-top: auto;
 }
 
-.dc2-btn-explore {
+/* ── Learn More (outline) ── */
+.dc-btn-learn {
+  flex: 1;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: clamp(10px, 1.2vw, 13px) clamp(18px, 2.2vw, 26px);
+  justify-content: center;
+  gap: 6px;
+  padding: 11px 14px;
   border-radius: 12px;
-  border: none;
-  background: linear-gradient(135deg, var(--dc2-accent-light), var(--dc2-accent));
-  background-size: 200% 200%;
-  color: #fff;
+  border: 2px solid #a7f3d0;
+  background: #ffffff;
+  color: #059669;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
   font-weight: 700;
-  font-size: clamp(12px, 1vw, 13.5px);
-  font-family: inherit;
   cursor: pointer;
   white-space: nowrap;
-  flex-shrink: 0;
-  letter-spacing: 0.02em;
-  box-shadow:
-    0 4px 14px rgba(16,185,129,0.25),
-    inset 0 1px 0 rgba(255,255,255,0.15);
-  transition: all 0.35s var(--dc2-transition);
+  letter-spacing: 0.01em;
+  transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
   position: relative;
   overflow: hidden;
 }
-.dc2-btn-explore::before {
+.dc-btn-learn::before {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 50%);
+  background: #ecfdf5;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
+}
+.dc-btn-learn:hover::before { transform: scaleX(1); }
+.dc-btn-learn:hover {
+  border-color: #059669;
+  color: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(5,150,105,.15);
+}
+.dc-btn-learn:active { transform: scale(0.97); }
+.dc-btn-learn > * { position: relative; z-index: 1; }
+.dc-btn-learn:hover .dc-btn-arrow {
+  animation: dc-arrow 0.7s ease infinite;
+}
+
+/* ── Book Now (filled) ── */
+.dc-btn-book {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 14px rgba(16,185,129,.28), inset 0 1px 0 rgba(255,255,255,.15);
+  transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+  position: relative;
+  overflow: hidden;
+}
+.dc-btn-book::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.14) 0%, transparent 60%);
   opacity: 0;
   transition: opacity 0.3s ease;
 }
-.dc2-btn-explore:hover::before {
-  opacity: 1;
+.dc-btn-book:hover::before { opacity: 1; }
+.dc-btn-book:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(16,185,129,.4);
 }
-.dc2-btn-explore:hover {
-  box-shadow:
-    0 8px 28px rgba(16,185,129,0.4),
-    inset 0 1px 0 rgba(255,255,255,0.2);
-  transform: translateY(-2px);
-}
-.dc2-btn-explore:active {
-  transform: translateY(0) scale(0.97);
-}
-.dc2-btn-explore__arrow {
-  transition: transform 0.35s var(--dc2-transition);
-}
-.dc2-btn-explore:hover .dc2-btn-explore__arrow {
-  animation: dc2-arrow-nudge 0.7s ease infinite;
-}
+.dc-btn-book:active { transform: scale(0.97); }
+.dc-btn-book > * { position: relative; z-index: 1; }
 
-.dc2-btn-book {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: clamp(10px, 1.2vw, 13px) clamp(14px, 1.8vw, 20px);
-  border-radius: 12px;
-  border: 1.5px solid var(--dc2-accent-border);
-  background: var(--dc2-surface);
-  color: var(--dc2-accent);
-  font-weight: 700;
-  font-size: clamp(12px, 1vw, 13.5px);
-  font-family: inherit;
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-  letter-spacing: 0.02em;
-  transition: all 0.3s var(--dc2-transition);
-  position: relative;
+/* ══════════════════════════════
+   SKELETON
+══════════════════════════════ */
+.dc-skeleton {
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1.5px solid #e2e8f0;
   overflow: hidden;
 }
-.dc2-btn-book::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--dc2-accent);
-  transform: scaleX(0);
-  transform-origin: right;
-  transition: transform 0.35s var(--dc2-transition);
-  z-index: 0;
-}
-.dc2-btn-book:hover::after {
-  transform: scaleX(1);
-  transform-origin: left;
-}
-.dc2-btn-book > * {
-  position: relative;
-  z-index: 1;
-}
-.dc2-btn-book:hover {
-  color: #fff;
-  border-color: var(--dc2-accent);
-  box-shadow: 0 6px 20px rgba(5,150,105,0.2);
-  transform: translateY(-2px);
-}
-.dc2-btn-book:active {
-   transform: translateY(0) scale(0.97);
- }
-
- /* Read more link */
- .dc2-read-more-link:hover {
-   text-decoration: underline;
-   opacity: 0.8;
- }
-
-/* ══════════════════════════════════════════════════════════
-   SKELETON LOADER
-══════════════════════════════════════════════════════════ */
-.dc2-skeleton {
-  background: var(--dc2-surface);
-  border-radius: var(--dc2-radius, 20px);
-  overflow: hidden;
-  border: 1px solid var(--dc2-border, #e2e8f0);
-}
-.dc2-skeleton__visual {
+.dc-skel-img {
   width: 100%;
-  padding-top: 64%;
-  background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 40%, #f1f5f9 80%);
+  padding-top: 58%;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
   background-size: 200%;
-  animation: dc2-shimmer 1.6s ease infinite;
-  position: relative;
+  animation: dc-shimmer 1.6s ease infinite;
 }
-.dc2-skeleton__body {
-  padding: 20px;
+.dc-skel-body {
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 11px;
 }
-.dc2-skeleton__line {
-  height: 14px;
-  border-radius: 8px;
-  background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 40%, #f1f5f9 80%);
+.dc-skel-line {
+  border-radius: 7px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
   background-size: 200%;
-  animation: dc2-shimmer 1.6s ease infinite;
+  animation: dc-shimmer 1.6s ease infinite;
 }
-.dc2-skeleton__row {
-  display: flex;
-  gap: 8px;
-}
-.dc2-skeleton__chip {
-  height: 28px;
+.dc-skel-row { display: flex; gap: 8px; }
+.dc-skel-chip {
   border-radius: 8px;
-  background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 40%, #f1f5f9 80%);
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
   background-size: 200%;
-  animation: dc2-shimmer 1.6s ease infinite;
+  animation: dc-shimmer 1.6s ease infinite;
 }
 
-/* ══════════════════════════════════════════════════════════
+/* ══════════════════════════════
    RESPONSIVE
-══════════════════════════════════════════════════════════ */
-@media (max-width:640px) {
-  .dc2-body { padding: 14px; }
-  .dc2-footer { flex-wrap: wrap; }
-  .dc2-btn-explore,
-  .dc2-btn-book { flex: 1; justify-content: center; }
-  .dc2-name { font-size: 18px; }
-  .dc2-visual__frame { padding-top: 58%; }
-  .dc2-card--compact .dc2-visual__frame { padding-top: 48%; }
-  .dc2-nav-arrows { display: none; }
-  .dc2-action-btn { width: 34px; height: 34px; }
+══════════════════════════════ */
+@media (max-width: 480px) {
+  .dc-body      { padding: 13px; gap: 8px; }
+  .dc-name      { font-size: 17px; }
+  .dc-img-frame { padding-top: 62%; }
+  .dc-btn-learn,
+  .dc-btn-book  { padding: 10px 12px; font-size: 12.5px; }
+  .dc-stat      { font-size: 11.5px; }
+  .dc-nav       { display: none; }
+  .dc-footer    { gap: 6px; }
 }
-
-@media (max-width:380px) {
-  .dc2-stats { gap: 8px; }
-  .dc2-stat { font-size: 11px; }
-  .dc2-footer { gap: 6px; }
-  .dc2-btn-explore,
-  .dc2-btn-book { padding: 10px 14px; font-size: 12px; }
+@media (max-width: 360px) {
+  .dc-btn-learn,
+  .dc-btn-book  { padding: 9px 10px; font-size: 12px; gap: 4px; }
+  .dc-action-btn { width: 32px; height: 32px; }
+  .dc-stats     { gap: 6px; }
 }
-
-/* ── Reduced motion ── */
 @media (prefers-reduced-motion: reduce) {
-  .dc2-card,
-  .dc2-card::before,
-  .dc2-visual__img,
-  .dc2-action-btn,
-  .dc2-btn-explore,
-  .dc2-btn-book,
-  .dc2-nav-btn,
-  .dc2-chip,
-  .dc2-hl-chip {
+  .dc-card, .dc-img, .dc-btn-book,
+  .dc-btn-learn, .dc-action-btn, .dc-nav-btn {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
 }
 `;
 
+/* ─────────────────────────────────────────────────────────────
+   STYLE INJECTOR  (runs once per page)
+───────────────────────────────────────────────────────────── */
 function injectStyles() {
   if (typeof document === "undefined") return;
-  if (document.getElementById("dc2-styles")) return;
+  if (document.getElementById("dc-styles")) return;
   const el = document.createElement("style");
-  el.id = "dc2-styles";
+  el.id = "dc-styles";
   el.textContent = CSS;
   document.head.appendChild(el);
 }
 
 /* ─────────────────────────────────────────────────────────────
+   STAR SVG  (inline so fill works without react-icons quirks)
+───────────────────────────────────────────────────────────── */
+function StarSVG({ filled }) {
+  return (
+    <svg
+      width="11"
+      height="11"
+      viewBox="0 0 24 24"
+      fill={filled ? "#f59e0b" : "none"}
+      stroke={filled ? "#f59e0b" : "#cbd5e1"}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   STARS  component
+───────────────────────────────────────────────────────────── */
+function Stars({ rating, count }) {
+  const filled = Math.round((Number(rating) || 0) * 2) / 2;
+
+  return (
+    <div
+      className="dc-stat"
+      aria-label={`Rating: ${rating != null ? Number(rating).toFixed(1) : "New"} out of 5`}
+    >
+      <div style={{ display: "flex", gap: "2px", alignItems: "center" }}>
+        {[1, 2, 3, 4, 5].map((s) => (
+          <StarSVG key={s} filled={s <= filled} />
+        ))}
+      </div>
+
+      <strong style={{ marginLeft: 4 }}>
+        {rating != null ? Number(rating).toFixed(1) : "New"}
+      </strong>
+
+      {Number(count) > 0 && (
+        <span style={{ color: "#94a3b8", fontSize: "11px" }}>
+          ({Number(count) >= 1000
+            ? `${(Number(count) / 1000).toFixed(1)}k`
+            : count})
+        </span>
+      )}
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
    IMAGE SLIDER
 ───────────────────────────────────────────────────────────── */
-function ImageSlider({ images, name, hovered }) {
+function ImageSlider({ images, name }) {
   const [idx, setIdx] = useState(0);
-  const timerRef = useRef(null);
-  const total = images.length;
+  const timerRef      = useRef(null);
+  const total         = images.length;
 
   const startTimer = useCallback(() => {
     clearInterval(timerRef.current);
     if (total <= 1) return;
     timerRef.current = setInterval(
-      () => setIdx(p => (p + 1) % total),
-      5200,
+      () => setIdx((p) => (p + 1) % total),
+      5000,
     );
   }, [total]);
 
@@ -886,70 +789,75 @@ function ImageSlider({ images, name, hovered }) {
     return () => clearInterval(timerRef.current);
   }, [startTimer]);
 
-  const goTo = useCallback((e, i) => {
-    e.stopPropagation();
-    setIdx(i);
-    startTimer();
-  }, [startTimer]);
-
-  const goPrev = useCallback((e) => {
-    e.stopPropagation();
-    setIdx(p => (p - 1 + total) % total);
-    startTimer();
-  }, [total, startTimer]);
-
-  const goNext = useCallback((e) => {
-    e.stopPropagation();
-    setIdx(p => (p + 1) % total);
-    startTimer();
-  }, [total, startTimer]);
+  const go = useCallback(
+    (e, i) => { e.stopPropagation(); setIdx(i); startTimer(); },
+    [startTimer],
+  );
+  const prev = useCallback(
+    (e) => {
+      e.stopPropagation();
+      setIdx((p) => (p - 1 + total) % total);
+      startTimer();
+    },
+    [total, startTimer],
+  );
+  const next = useCallback(
+    (e) => {
+      e.stopPropagation();
+      setIdx((p) => (p + 1) % total);
+      startTimer();
+    },
+    [total, startTimer],
+  );
 
   return (
     <>
       {images.map((src, i) => (
         <img
-          key={src + i}
+          key={`slide-${i}`}
           src={src}
           alt={i === 0 ? name : ""}
           loading={i === 0 ? "eager" : "lazy"}
           draggable={false}
-          onError={e => { e.currentTarget.src = FALLBACK; }}
-          className={[
-            "dc2-visual__img",
-            idx === i ? "dc2-visual__img--visible" : "dc2-visual__img--hidden",
-          ].join(" ")}
+          onError={(ev) => { ev.currentTarget.src = FALLBACK; }}
+          className={`dc-img ${idx === i ? "dc-img--visible" : "dc-img--hidden"}`}
         />
       ))}
 
       {total > 1 && (
         <>
-          {/* Nav arrows */}
-          <div className="dc2-nav-arrows">
-            <button className="dc2-nav-btn" onClick={goPrev} aria-label="Previous image">
-              <FiChevronLeft size={15} />
+          <div className="dc-nav" aria-hidden="true">
+            <button
+              className="dc-nav-btn"
+              onClick={prev}
+              aria-label="Previous image"
+            >
+              <FiChevronLeft size={14} />
             </button>
-            <button className="dc2-nav-btn" onClick={goNext} aria-label="Next image">
-              <FiChevronRight size={15} />
+            <button
+              className="dc-nav-btn"
+              onClick={next}
+              aria-label="Next image"
+            >
+              <FiChevronRight size={14} />
             </button>
           </div>
 
-          {/* Dot indicators */}
-          <div className="dc2-indicators">
+          <div className="dc-dots" aria-hidden="true">
             {images.map((_, i) => (
               <button
-                key={i}
-                onClick={e => goTo(e, i)}
-                aria-label={`View image ${i + 1}`}
-                className={`dc2-indicator${idx === i ? " dc2-indicator--active" : ""}`}
-                style={{ width: idx === i ? 20 : 6 }}
+                key={`dot-${i}`}
+                onClick={(e) => go(e, i)}
+                aria-label={`Go to image ${i + 1}`}
+                className={`dc-dot${idx === i ? " dc-dot--active" : ""}`}
+                style={{ width: idx === i ? 18 : 6 }}
               />
             ))}
           </div>
 
-          {/* Counter pill */}
-          <div className="dc2-img-counter">
-            <FiCamera size={10} />
-            {idx + 1}/{total}
+          <div className="dc-photo-count" aria-hidden="true">
+            <FiCamera size={9} />
+            <span>{idx + 1}/{total}</span>
           </div>
         </>
       )}
@@ -958,29 +866,947 @@ function ImageSlider({ images, name, hovered }) {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   STAR RATING
+   SKELETON  (named export)
 ───────────────────────────────────────────────────────────── */
-function StarRating({ rating, count }) {
-  const filled = Math.round((rating || 0) * 2) / 2;
+export function DestinationCardSkeleton() {
+  useEffect(() => { injectStyles(); }, []);
+
   return (
-    <div className="dc2-stat dc2-stat--rating">
-      <div style={{ display: "flex", gap: 1.5, alignItems: "center" }}>
-        {[1, 2, 3, 4, 5].map(s => (
-          <FiStar
-            key={s}
-            size={12}
-            color="#f59e0b"
-            fill={s <= filled ? "#f59e0b" : "none"}
-            style={{ flexShrink: 0 }}
-          />
+    <div
+      className="dc-skeleton"
+      aria-busy="true"
+      aria-label="Loading destination card"
+    >
+      <div className="dc-skel-img" />
+      <div className="dc-skel-body">
+        <div className="dc-skel-line" style={{ width: "72%", height: 20 }} />
+        <div className="dc-skel-line" style={{ width: "44%", height: 12 }} />
+        <div className="dc-skel-row">
+          <div className="dc-skel-chip" style={{ width: 56, height: 26 }} />
+          <div className="dc-skel-chip" style={{ width: 76, height: 26 }} />
+          <div className="dc-skel-chip" style={{ width: 50, height: 26 }} />
+        </div>
+        <div className="dc-skel-line" style={{ width: "100%", height: 12 }} />
+        <div className="dc-skel-line" style={{ width: "80%",  height: 12 }} />
+        <div className="dc-skel-line" style={{ width: "60%",  height: 12 }} />
+        <div className="dc-skel-row" style={{ marginTop: 6 }}>
+          <div className="dc-skel-chip" style={{ flex: 1, height: 42, borderRadius: 12 }} />
+          <div className="dc-skel-chip" style={{ flex: 1, height: 42, borderRadius: 12 }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   MAIN CARD  (default export)
+───────────────────────────────────────────────────────────── */
+const DestinationCard = memo(function DestinationCard({
+  destination,
+  compact          = false,
+  onWishlistToggle,
+}) {
+  const navigate = useNavigate();
+
+  /* safe hook call ─ fallback if context missing */
+  const wishlistHook   = useWishlist?.() ?? {};
+  const isWishlisted   = wishlistHook.isWishlisted  ?? (() => false);
+  const toggleWishlist = wishlistHook.toggleWishlist ?? (() => {});
+
+  const [heartAnim, setHeartAnim] = useState(false);
+  const [copied,    setCopied]    = useState(false);
+
+  useEffect(() => { injectStyles(); }, []);
+
+  /* ── guard ── */
+  if (!destination) return <DestinationCardSkeleton />;
+
+  /* ── destructure destination safely ── */
+  const {
+    slug,
+    id,
+    name             = "Destination",
+    images           = [],
+    gallery          = [],
+    heroImage,
+    imageUrl,
+    thumbnailUrl,
+    location,
+    country,
+    countryName,
+    countryFlag,
+    region,
+    duration,
+    durationDays,
+    rating           = 0,
+    reviewCount      = 0,
+    highlights       = [],
+    shortDescription,
+    description,
+    isFeatured,
+    isNew,
+    isPopular,
+    isEcoFriendly,
+    difficulty,
+    category,
+    entranceFee,
+    minGroupSize,
+    maxGroupSize,
+  } = destination;
+
+  /* ── derived values ── */
+  const destId = slug || id;
+  const isLiked = isWishlisted(destId);
+
+  // Resolve country whether string or object
+  const resolvedCountry =
+    typeof country === "string"
+      ? country
+      : country?.name ?? country?.label ?? "";
+
+  // Build image array — prefer images/gallery arrays, fall back to singles
+  const safeImgs = (() => {
+    const merged = [
+      ...(Array.isArray(images)  ? images  : []),
+      ...(Array.isArray(gallery) ? gallery : []),
+    ].filter(Boolean);
+    if (merged.length > 0) return merged;
+    const singles = [heroImage, imageUrl, thumbnailUrl].filter(Boolean);
+    return singles.length > 0 ? singles : [FALLBACK];
+  })();
+
+  // Location string (deduplicated)
+  const locationStr = [region, location, countryName || resolvedCountry]
+    .filter(Boolean)
+    .filter((v, i, a) => a.indexOf(v) === i)
+    .join(" · ");
+
+  // Description blurb
+  const blurb =
+    shortDescription ||
+    (description
+      ? description.slice(0, 130) + (description.length > 130 ? "…" : "")
+      : "");
+
+  // Duration label
+  const durationStr =
+    duration ||
+    (durationDays
+      ? `${durationDays} day${Number(durationDays) !== 1 ? "s" : ""}`
+      : null);
+
+  // Group size label
+  const groupStr =
+    minGroupSize || maxGroupSize
+      ? `${minGroupSize ?? 1}–${maxGroupSize ?? "∞"}`
+      : null;
+
+  // Active badges
+  const activeBadges = Object.keys(BADGE_CFG).filter((k) => destination[k]);
+
+  // Difficulty config
+  const diffConf = DIFF_CFG[difficulty?.toLowerCase?.() ?? ""] ?? null;
+
+  /* ── handlers ── */
+  const goDetail = useCallback(
+    () => navigate(`/destinations/${destId}`),
+    [destId, navigate],
+  );
+
+  const goBook = useCallback(
+    (e) => {
+      e.stopPropagation();
+      const params = new URLSearchParams();
+      params.set("destination", String(destId));
+      if (name) params.set("destinationName", name);
+      navigate(`/booking?${params.toString()}`);
+    },
+    [destId, name, navigate],
+  );
+
+  const handleLearnMore = useCallback(
+    (e) => { e.stopPropagation(); goDetail(); },
+    [goDetail],
+  );
+
+  const handleWishlist = useCallback(
+    (e) => {
+      e.stopPropagation();
+      setHeartAnim(true);
+      setTimeout(() => setHeartAnim(false), 560);
+      toggleWishlist(destId);
+      onWishlistToggle?.(destId, !isLiked);
+    },
+    [destId, isLiked, toggleWishlist, onWishlistToggle],
+  );
+
+  const handleShare = useCallback(
+    async (e) => {
+      e.stopPropagation();
+      const url = `${window.location.origin}/destinations/${destId}`;
+      try {// src/components/destinations/DestinationCard.jsx
+import { useState, useEffect, useCallback, memo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  FiMapPin,
+  FiClock,
+  FiHeart,
+  FiShare2,
+  FiArrowRight,
+  FiAward,
+  FiTrendingUp,
+  FiZap,
+  FiCalendar,
+  FiWind,
+  FiChevronLeft,
+  FiChevronRight,
+  FiCompass,
+  FiSun,
+  FiCamera,
+} from "react-icons/fi";
+import { useWishlist } from "../../hooks/useWishlist";
+
+/* ─────────────────────────────────────────────────────────────
+   CONSTANTS
+───────────────────────────────────────────────────────────── */
+const FALLBACK =
+  "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=900&q=85";
+
+const BADGE_CFG = {
+  isFeatured: { Icon: FiAward,      label: "Featured", cls: "dc-badge--featured" },
+  isNew:      { Icon: FiZap,        label: "New",      cls: "dc-badge--new"      },
+  isPopular:  { Icon: FiTrendingUp, label: "Trending", cls: "dc-badge--popular"  },
+};
+
+const DIFF_CFG = {
+  easy:        { cls: "dc-diff--easy",        label: "Easy"        },
+  moderate:    { cls: "dc-diff--moderate",    label: "Moderate"    },
+  challenging: { cls: "dc-diff--challenging", label: "Challenging" },
+  difficult:   { cls: "dc-diff--difficult",   label: "Difficult"   },
+  expert:      { cls: "dc-diff--expert",      label: "Expert"      },
+};
+
+/* ─────────────────────────────────────────────────────────────
+   STYLES
+───────────────────────────────────────────────────────────── */
+const CSS = `
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@keyframes dc-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+@keyframes dc-heart {
+  0%   { transform: scale(1); }
+  20%  { transform: scale(0.82); }
+  45%  { transform: scale(1.32); }
+  70%  { transform: scale(0.94); }
+  100% { transform: scale(1); }
+}
+@keyframes dc-arrow {
+  0%, 100% { transform: translateX(0); }
+  50%      { transform: translateX(5px); }
+}
+@keyframes dc-toast {
+  0%   { opacity: 0; transform: translateY(4px); }
+  15%  { opacity: 1; transform: translateY(0); }
+  80%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+@keyframes dc-badge-in {
+  from { opacity: 0; transform: translateY(-5px) scale(0.9); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes dc-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ══════════════════════════════
+   CARD ROOT
+══════════════════════════════ */
+.dc-card {
+  font-family: 'Inter', system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1.5px solid #e2e8f0;
+  box-shadow: 0 1px 4px rgba(15,23,42,.06);
+  overflow: hidden;
+  cursor: pointer;
+  outline: none;
+  isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 0.4s cubic-bezier(0.22,1,0.36,1),
+    box-shadow 0.4s cubic-bezier(0.22,1,0.36,1),
+    border-color 0.4s cubic-bezier(0.22,1,0.36,1);
+}
+.dc-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 48px rgba(15,23,42,.12), 0 6px 20px rgba(5,150,105,.10);
+  border-color: rgba(5,150,105,0.25);
+}
+.dc-card:focus-visible {
+  outline: 2.5px solid #059669;
+  outline-offset: 3px;
+}
+
+/* ══════════════════════════════
+   IMAGE AREA
+══════════════════════════════ */
+.dc-img-wrap {
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.dc-img-frame {
+  position: relative;
+  width: 100%;
+  padding-top: 58%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+}
+.dc-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: opacity 0.6s ease, transform 6s cubic-bezier(0.25,0,0.15,1);
+  will-change: transform, opacity;
+}
+.dc-img--hidden  { opacity: 0; transform: scale(1.05); }
+.dc-img--visible { opacity: 1; transform: scale(1); }
+.dc-card:hover .dc-img--visible { transform: scale(1.07); }
+
+.dc-img-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(15,23,42,.18) 0%,
+    transparent 30%,
+    transparent 52%,
+    rgba(15,23,42,.65) 100%
+  );
+  z-index: 1;
+}
+
+.dc-img-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  color: #059669;
+}
+.dc-img-placeholder span {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.65;
+}
+
+/* ── Slider navigation ── */
+.dc-nav {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.dc-card:hover .dc-nav { opacity: 1; }
+
+.dc-nav-btn {
+  pointer-events: auto;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: #334155;
+  box-shadow: 0 2px 10px rgba(0,0,0,.12);
+  transition: all 0.25s cubic-bezier(0.22,1,0.36,1);
+}
+.dc-nav-btn:hover {
+  background: #fff;
+  transform: scale(1.1);
+}
+
+/* ── Dots ── */
+.dc-dots {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  z-index: 4;
+  padding: 3px 8px;
+  border-radius: 20px;
+  background: rgba(15,23,42,.3);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.dc-dot {
+  height: 4px;
+  border-radius: 2px;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: rgba(255,255,255,.4);
+  transition: all 0.35s cubic-bezier(0.22,1,0.36,1);
+}
+.dc-dot--active {
+  width: 18px !important;
+  background: #fff;
+}
+
+/* ── Photo counter ── */
+.dc-photo-count {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 8px;
+  background: rgba(15,23,42,.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: rgba(255,255,255,.9);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+/* ── Badges ── */
+.dc-badges {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 4;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.dc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: dc-badge-in 0.4s cubic-bezier(0.22,1,0.36,1) both;
+  white-space: nowrap;
+}
+.dc-badge--featured {
+  background: linear-gradient(135deg, rgba(16,185,129,.9), rgba(5,150,105,.9));
+  color: #fff;
+  box-shadow: 0 3px 10px rgba(5,150,105,.3);
+}
+.dc-badge--new {
+  background: rgba(255,255,255,.88);
+  color: #047857;
+  border: 1px solid rgba(167,243,208,.6);
+}
+.dc-badge--popular {
+  background: linear-gradient(135deg, rgba(251,191,36,.9), rgba(245,158,11,.9));
+  color: #78350f;
+  box-shadow: 0 3px 10px rgba(245,158,11,.25);
+}
+.dc-badge--eco {
+  background: rgba(15,23,42,.65);
+  color: #a7f3d0;
+}
+
+/* ── Wishlist / Share ── */
+.dc-actions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.dc-action-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: none;
+  background: rgba(255,255,255,.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: #64748b;
+  box-shadow: 0 2px 8px rgba(15,23,42,.1);
+  transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+  position: relative;
+}
+.dc-action-btn:hover {
+  transform: scale(1.12) translateY(-1px);
+  box-shadow: 0 5px 16px rgba(15,23,42,.15);
+  background: rgba(255,255,255,.95);
+}
+.dc-action-btn--liked {
+  background: rgba(254,226,226,.92);
+  color: #ef4444;
+}
+.dc-action-btn--heart-anim {
+  animation: dc-heart 0.5s cubic-bezier(0.22,1,0.36,1);
+}
+.dc-action-btn--copied {
+  background: rgba(236,253,245,.95);
+  color: #059669;
+}
+
+/* ── Toast ── */
+.dc-toast {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  white-space: nowrap;
+  background: #0f172a;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 7px;
+  pointer-events: none;
+  animation: dc-toast 2s ease forwards;
+  z-index: 10;
+}
+
+/* ══════════════════════════════
+   CARD BODY
+══════════════════════════════ */
+.dc-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 16px;
+  gap: 10px;
+}
+
+/* ── Name ── */
+.dc-name {
+  margin: 0;
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(17px, 2vw, 21px);
+  font-weight: 700;
+  line-height: 1.25;
+  color: #0f172a;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  transition: color 0.3s ease;
+}
+.dc-card:hover .dc-name { color: #047857; }
+
+/* ── Location ── */
+.dc-location {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #94a3b8;
+  font-size: 12.5px;
+  font-weight: 500;
+  flex-wrap: wrap;
+}
+.dc-location svg { color: #10b981; flex-shrink: 0; }
+.dc-flag { font-size: 13px; margin-left: 2px; line-height: 1; }
+
+/* ── Stats row ── */
+.dc-stats {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.dc-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+}
+.dc-stat svg { color: #94a3b8; flex-shrink: 0; }
+.dc-stat strong { color: #0f172a; font-weight: 700; }
+.dc-divider {
+  width: 1px;
+  height: 12px;
+  background: #e2e8f0;
+  flex-shrink: 0;
+}
+
+/* ── Chips ── */
+.dc-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.dc-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+.dc-chip--cat {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  text-transform: capitalize;
+}
+.dc-chip--dur {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+}
+
+/* ── Difficulty ── */
+.dc-diff {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.dc-diff--easy        { background: #d1fae5; color: #065f46; }
+.dc-diff--moderate    { background: #fef3c7; color: #78350f; }
+.dc-diff--challenging { background: #fed7aa; color: #7c2d12; }
+.dc-diff--difficult   { background: #e9d5ff; color: #581c87; }
+.dc-diff--expert      { background: #fce7f3; color: #831843; }
+
+/* ── Highlights ── */
+.dc-highlights {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.dc-hl {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #ecfdf5;
+  color: #166534;
+  border: 1px solid #dcfce7;
+  padding: 3px 9px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+.dc-hl:hover { background: #dcfce7; }
+.dc-hl-more {
+  background: #f1f5f9;
+  color: #94a3b8;
+  border: 1px solid #e2e8f0;
+  padding: 3px 9px;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* ── Description ── */
+.dc-desc {
+  margin: 0;
+  font-size: clamp(12.5px, 1.1vw, 13.5px);
+  color: #64748b;
+  line-height: 1.7;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ── Separator ── */
+.dc-sep {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+  border: none;
+  flex-shrink: 0;
+  margin: 2px 0;
+}
+
+/* ── Price ── */
+.dc-price-label {
+  font-size: 11px;
+  color: #94a3b8;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+.dc-price-value {
+  font-size: 17px;
+  font-weight: 800;
+  color: #059669;
+  line-height: 1;
+  font-family: 'Playfair Display', serif;
+}
+.dc-price-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-left: 3px;
+}
+.dc-price-request {
+  font-size: 12.5px;
+  color: #94a3b8;
+  font-style: italic;
+  margin: 0;
+}
+
+/* ══════════════════════════════
+   CTA FOOTER
+══════════════════════════════ */
+.dc-footer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+}
+
+/* ── Learn More (outline) ── */
+.dc-btn-learn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 2px solid #a7f3d0;
+  background: #ffffff;
+  color: #059669;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+  position: relative;
+  overflow: hidden;
+}
+.dc-btn-learn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: #ecfdf5;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
+}
+.dc-btn-learn:hover::before { transform: scaleX(1); }
+.dc-btn-learn:hover {
+  border-color: #059669;
+  color: #047857;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(5,150,105,.15);
+}
+.dc-btn-learn:active { transform: scale(0.97); }
+.dc-btn-learn > * { position: relative; z-index: 1; }
+.dc-btn-learn:hover .dc-btn-arrow {
+  animation: dc-arrow 0.7s ease infinite;
+}
+
+/* ── Book Now (filled) ── */
+.dc-btn-book {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+  box-shadow: 0 4px 14px rgba(16,185,129,.28), inset 0 1px 0 rgba(255,255,255,.15);
+  transition: all 0.3s cubic-bezier(0.22,1,0.36,1);
+  position: relative;
+  overflow: hidden;
+}
+.dc-btn-book::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,.14) 0%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.dc-btn-book:hover::before { opacity: 1; }
+.dc-btn-book:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(16,185,129,.4);
+}
+.dc-btn-book:active { transform: scale(0.97); }
+.dc-btn-book > * { position: relative; z-index: 1; }
+
+/* ══════════════════════════════
+   SKELETON
+══════════════════════════════ */
+.dc-skeleton {
+  background: #ffffff;
+  border-radius: 18px;
+  border: 1.5px solid #e2e8f0;
+  overflow: hidden;
+}
+.dc-skel-img {
+  width: 100%;
+  padding-top: 58%;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200%;
+  animation: dc-shimmer 1.6s ease infinite;
+}
+.dc-skel-body {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+.dc-skel-line {
+  border-radius: 7px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200%;
+  animation: dc-shimmer 1.6s ease infinite;
+}
+.dc-skel-row { display: flex; gap: 8px; }
+.dc-skel-chip {
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200%;
+  animation: dc-shimmer 1.6s ease infinite;
+}
+
+/* ══════════════════════════════
+   RESPONSIVE
+══════════════════════════════ */
+@media (max-width: 480px) {
+  .dc-body      { padding: 13px; gap: 8px; }
+  .dc-name      { font-size: 17px; }
+  .dc-img-frame { padding-top: 62%; }
+  .dc-btn-learn,
+  .dc-btn-book  { padding: 10px 12px; font-size: 12.5px; }
+  .dc-stat      { font-size: 11.5px; }
+  .dc-nav       { display: none; }
+  .dc-footer    { gap: 6px; }
+}
+@media (max-width: 360px) {
+  .dc-btn-learn,
+  .dc-btn-book  { padding: 9px 10px; font-size: 12px; gap: 4px; }
+  .dc-action-btn { width: 32px; height: 32px; }
+  .dc-stats     { gap: 6px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dc-card, .dc-img, .dc-btn-book,
+  .dc-btn-learn, .dc-action-btn, .dc-nav-btn {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
+`;
+
+/* ─────────────────────────────────────────────────────────────
+   STYLE INJECTOR  (runs once per page)
+───────────────────────────────────────────────────────────── */
+function injectStyles() {
+  if (typeof document === "undefined") return;
+  if (document.getElementById("dc-styles")) return;
+  const el = document.createElement("style");
+  el.id = "dc-styles";
+  el.textContent = CSS;
+  document.head.appendChild(el);
+}
+
+/* ─────────────────────────────────────────────────────────────
+   STAR SVG  (inline so fill works without react-icons quirks)
+───────────────────────────────────────────────────────────── */
+function StarSVG({ filled }) {
+  return (
+    <svg
+      width="11"
+      height="11"
+      viewBox="0 0 24 24"
+      fill={filled ? "#f59e0b" : "none"}
+      stroke={filled ? "#f59e0b" : "#cbd5e1"}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   STARS  component
+───────────────────────────────────────────────────────────── */
+function Stars({ rating, count }) {
+  const filled = Math.round((Number(rating) || 0) * 2) / 2;
+
+  return (
+    <div
+      className="dc-stat"
+      aria-label={`Rating: ${rating != null ? Number(rating).toFixed(1) : "New"} out of 5`}
+    >
+      <div style={{ display: "flex", gap: "2px", alignItems: "center" }}>
+        {[1, 2, 3, 4, 5].map((s) => (
+          <StarSVG key={s} filled={s <= filled} />
         ))}
       </div>
-      <span className="dc2-stat__value">
+
+      <strong style={{ marginLeft: 4 }}>
         {rating != null ? Number(rating).toFixed(1) : "New"}
-      </span>
-      {count > 0 && (
-        <span className="dc2-stat__label">
-          ({count >= 1000 ? `${(count / 1000).toFixed(1)}k` : count})
+      </strong>
+
+      {Number(count) > 0 && (
+        <span style={{ color: "#94a3b8", fontSize: "11px" }}>
+          ({Number(count) >= 1000
+            ? `${(Number(count) / 1000).toFixed(1)}k`
+            : count})
         </span>
       )}
     </div>
@@ -988,26 +1814,130 @@ function StarRating({ rating, count }) {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   SKELETON
+   IMAGE SLIDER
+───────────────────────────────────────────────────────────── */
+function ImageSlider({ images, name }) {
+  const [idx, setIdx] = useState(0);
+  const timerRef      = useRef(null);
+  const total         = images.length;
+
+  const startTimer = useCallback(() => {
+    clearInterval(timerRef.current);
+    if (total <= 1) return;
+    timerRef.current = setInterval(
+      () => setIdx((p) => (p + 1) % total),
+      5000,
+    );
+  }, [total]);
+
+  useEffect(() => {
+    startTimer();
+    return () => clearInterval(timerRef.current);
+  }, [startTimer]);
+
+  const go = useCallback(
+    (e, i) => { e.stopPropagation(); setIdx(i); startTimer(); },
+    [startTimer],
+  );
+  const prev = useCallback(
+    (e) => {
+      e.stopPropagation();
+      setIdx((p) => (p - 1 + total) % total);
+      startTimer();
+    },
+    [total, startTimer],
+  );
+  const next = useCallback(
+    (e) => {
+      e.stopPropagation();
+      setIdx((p) => (p + 1) % total);
+      startTimer();
+    },
+    [total, startTimer],
+  );
+
+  return (
+    <>
+      {images.map((src, i) => (
+        <img
+          key={`slide-${i}`}
+          src={src}
+          alt={i === 0 ? name : ""}
+          loading={i === 0 ? "eager" : "lazy"}
+          draggable={false}
+          onError={(ev) => { ev.currentTarget.src = FALLBACK; }}
+          className={`dc-img ${idx === i ? "dc-img--visible" : "dc-img--hidden"}`}
+        />
+      ))}
+
+      {total > 1 && (
+        <>
+          <div className="dc-nav" aria-hidden="true">
+            <button
+              className="dc-nav-btn"
+              onClick={prev}
+              aria-label="Previous image"
+            >
+              <FiChevronLeft size={14} />
+            </button>
+            <button
+              className="dc-nav-btn"
+              onClick={next}
+              aria-label="Next image"
+            >
+              <FiChevronRight size={14} />
+            </button>
+          </div>
+
+          <div className="dc-dots" aria-hidden="true">
+            {images.map((_, i) => (
+              <button
+                key={`dot-${i}`}
+                onClick={(e) => go(e, i)}
+                aria-label={`Go to image ${i + 1}`}
+                className={`dc-dot${idx === i ? " dc-dot--active" : ""}`}
+                style={{ width: idx === i ? 18 : 6 }}
+              />
+            ))}
+          </div>
+
+          <div className="dc-photo-count" aria-hidden="true">
+            <FiCamera size={9} />
+            <span>{idx + 1}/{total}</span>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
+/* ─────────────────────────────────────────────────────────────
+   SKELETON  (named export)
 ───────────────────────────────────────────────────────────── */
 export function DestinationCardSkeleton() {
   useEffect(() => { injectStyles(); }, []);
+
   return (
-    <div className="dc2-skeleton">
-      <div className="dc2-skeleton__visual" />
-      <div className="dc2-skeleton__body">
-        <div className="dc2-skeleton__line" style={{ width: "70%", height: 20 }} />
-        <div className="dc2-skeleton__line" style={{ width: "45%", height: 12 }} />
-        <div className="dc2-skeleton__row">
-          <div className="dc2-skeleton__chip" style={{ width: 60 }} />
-          <div className="dc2-skeleton__chip" style={{ width: 80 }} />
-          <div className="dc2-skeleton__chip" style={{ width: 50 }} />
+    <div
+      className="dc-skeleton"
+      aria-busy="true"
+      aria-label="Loading destination card"
+    >
+      <div className="dc-skel-img" />
+      <div className="dc-skel-body">
+        <div className="dc-skel-line" style={{ width: "72%", height: 20 }} />
+        <div className="dc-skel-line" style={{ width: "44%", height: 12 }} />
+        <div className="dc-skel-row">
+          <div className="dc-skel-chip" style={{ width: 56, height: 26 }} />
+          <div className="dc-skel-chip" style={{ width: 76, height: 26 }} />
+          <div className="dc-skel-chip" style={{ width: 50, height: 26 }} />
         </div>
-        <div className="dc2-skeleton__line" style={{ width: "100%", height: 12 }} />
-        <div className="dc2-skeleton__line" style={{ width: "82%", height: 12 }} />
-        <div className="dc2-skeleton__row" style={{ marginTop: 4 }}>
-          <div className="dc2-skeleton__chip" style={{ width: "48%", height: 40, borderRadius: 12 }} />
-          <div className="dc2-skeleton__chip" style={{ width: "48%", height: 40, borderRadius: 12 }} />
+        <div className="dc-skel-line" style={{ width: "100%", height: 12 }} />
+        <div className="dc-skel-line" style={{ width: "80%",  height: 12 }} />
+        <div className="dc-skel-line" style={{ width: "60%",  height: 12 }} />
+        <div className="dc-skel-row" style={{ marginTop: 6 }}>
+          <div className="dc-skel-chip" style={{ flex: 1, height: 42, borderRadius: 12 }} />
+          <div className="dc-skel-chip" style={{ flex: 1, height: 42, borderRadius: 12 }} />
         </div>
       </div>
     </div>
@@ -1015,93 +1945,141 @@ export function DestinationCardSkeleton() {
 }
 
 /* ─────────────────────────────────────────────────────────────
-   MAIN CARD
+   MAIN CARD  (default export)
 ───────────────────────────────────────────────────────────── */
 const DestinationCard = memo(function DestinationCard({
   destination,
-  compact = false,
-  priority = false,
+  compact          = false,
   onWishlistToggle,
-  civilized = false, // New prop for minimalist view
 }) {
   const navigate = useNavigate();
-  const { isWishlisted, toggleWishlist } = useWishlist();
-  const [hovered, setHovered] = useState(false);
-  const [copied, setCopied] = useState(false);
+
+  /* safe hook call ─ fallback if context missing */
+  const wishlistHook   = useWishlist?.() ?? {};
+  const isWishlisted   = wishlistHook.isWishlisted  ?? (() => false);
+  const toggleWishlist = wishlistHook.toggleWishlist ?? (() => {});
+
   const [heartAnim, setHeartAnim] = useState(false);
-  const [showReadMore, setShowReadMore] = useState(false);
-  const descRef = useRef(null);
+  const [copied,    setCopied]    = useState(false);
 
   useEffect(() => { injectStyles(); }, []);
 
-  // Check if description needs "Read more" toggle
-  useEffect(() => {
-    if (descRef.current && description) {
-      const element = descRef.current;
-      const lineHeight = parseInt(window.getComputedStyle(element).lineHeight, 10);
-      const maxHeight = lineHeight * 3; // 3 lines
-      setShowReadMore(element.scrollHeight > maxHeight);
-    }
-  }, [description]);
+  /* ── guard ── */
+  if (!destination) return <DestinationCardSkeleton />;
 
-  if (!destination) return null;
-
+  /* ── destructure destination safely ── */
   const {
-    slug, id,
-    name = "Destination",
-    images = [],
+    slug,
+    id,
+    name             = "Destination",
+    images           = [],
+    gallery          = [],
     heroImage,
+    imageUrl,
+    thumbnailUrl,
     location,
     country,
+    countryName,
     countryFlag,
+    region,
     duration,
     durationDays,
-    rating = 0,
-    reviewCount = 0,
-    highlights = [],
+    rating           = 0,
+    reviewCount      = 0,
+    highlights       = [],
     shortDescription,
     description,
     isFeatured,
     isNew,
     isPopular,
+    isEcoFriendly,
     difficulty,
     category,
-    isEcoFriendly,
+    entranceFee,
+    minGroupSize,
+    maxGroupSize,
   } = destination;
 
+  /* ── derived values ── */
   const destId = slug || id;
-  const bookId = String(slug || id);
   const isLiked = isWishlisted(destId);
-  const safeImgs = images.length > 0 ? images : [heroImage || FALLBACK];
-  const activeBadges = Object.keys(BADGE_CFG).filter(k => destination[k]);
 
-  const displayLocation = [location, country]
+  // Resolve country whether string or object
+  const resolvedCountry =
+    typeof country === "string"
+      ? country
+      : country?.name ?? country?.label ?? "";
+
+  // Build image array — prefer images/gallery arrays, fall back to singles
+  const safeImgs = (() => {
+    const merged = [
+      ...(Array.isArray(images)  ? images  : []),
+      ...(Array.isArray(gallery) ? gallery : []),
+    ].filter(Boolean);
+    if (merged.length > 0) return merged;
+    const singles = [heroImage, imageUrl, thumbnailUrl].filter(Boolean);
+    return singles.length > 0 ? singles : [FALLBACK];
+  })();
+
+  // Location string (deduplicated)
+  const locationStr = [region, location, countryName || resolvedCountry]
     .filter(Boolean)
     .filter((v, i, a) => a.indexOf(v) === i)
     .join(" · ");
 
-  /* ── Handlers ── */
-  const goToDetail = useCallback(
+  // Description blurb
+  const blurb =
+    shortDescription ||
+    (description
+      ? description.slice(0, 130) + (description.length > 130 ? "…" : "")
+      : "");
+
+  // Duration label
+  const durationStr =
+    duration ||
+    (durationDays
+      ? `${durationDays} day${Number(durationDays) !== 1 ? "s" : ""}`
+      : null);
+
+  // Group size label
+  const groupStr =
+    minGroupSize || maxGroupSize
+      ? `${minGroupSize ?? 1}–${maxGroupSize ?? "∞"}`
+      : null;
+
+  // Active badges
+  const activeBadges = Object.keys(BADGE_CFG).filter((k) => destination[k]);
+
+  // Difficulty config
+  const diffConf = DIFF_CFG[difficulty?.toLowerCase?.() ?? ""] ?? null;
+
+  /* ── handlers ── */
+  const goDetail = useCallback(
     () => navigate(`/destinations/${destId}`),
     [destId, navigate],
   );
 
-  const goToBook = useCallback(
+  const goBook = useCallback(
     (e) => {
       e.stopPropagation();
       const params = new URLSearchParams();
-      params.set("destination", bookId);
+      params.set("destination", String(destId));
       if (name) params.set("destinationName", name);
       navigate(`/booking?${params.toString()}`);
     },
-    [bookId, name, navigate],
+    [destId, name, navigate],
+  );
+
+  const handleLearnMore = useCallback(
+    (e) => { e.stopPropagation(); goDetail(); },
+    [goDetail],
   );
 
   const handleWishlist = useCallback(
     (e) => {
       e.stopPropagation();
       setHeartAnim(true);
-      setTimeout(() => setHeartAnim(false), 600);
+      setTimeout(() => setHeartAnim(false), 560);
       toggleWishlist(destId);
       onWishlistToggle?.(destId, !isLiked);
     },
@@ -1120,227 +2098,498 @@ const DestinationCard = memo(function DestinationCard({
           setCopied(true);
           setTimeout(() => setCopied(false), 2200);
         }
-      } catch { /* cancelled */ }
+      } catch {
+        /* user cancelled or API unavailable */
+      }
     },
     [destId, name],
   );
 
-  /* ── Render ── */
+  /* ── render ── */
   return (
-     <article
-       className={[
-         "dc2-card",
-         compact ? "dc2-card--compact" : "",
-         civilized ? "dc2-card--civilized" : "",
-         hovered ? "dc2-card--hovered" : "",
-       ].filter(Boolean).join(" ")}
-     >
-      {/* ════ VISUAL AREA ════ */}
-      <div className="dc2-visual">
-        <div className="dc2-visual__frame">
-          <ImageSlider images={safeImgs} name={name} hovered={hovered} />
-          <div className="dc2-visual__overlay-top" />
-          <div className="dc2-visual__overlay" />
+    <article
+      className={`dc-card${compact ? " dc-card--compact" : ""}`}
+      onClick={goDetail}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          goDetail();
+        }
+      }}
+      aria-label={`View details for ${name}`}
+    >
+      {/* ════ IMAGE SECTION ════ */}
+      <div className="dc-img-wrap">
+        <div className="dc-img-frame">
 
-           {/* Only show badges in non-civilized mode */}
-           {!civilized && (activeBadges.length > 0 || isEcoFriendly) && (
-             <div className="dc2-badges">
-               {activeBadges.map((key, i) => {
-                 const { Icon, label, cls } = BADGE_CFG[key];
-                 return (
-                   <span
-                     key={key}
-                     className={`dc2-badge ${cls}`}
-                     style={{ animationDelay: `${i * 0.08}s` }}
-                   >
-                     <Icon size={10} /> {label}
-                   </span>
-                 );
-               })}
-               {isEcoFriendly && (
-                 <span className="dc2-badge dc2-badge--eco">���🌿 Eco-Friendly</span>
-               )}
-             </div>
-           )}
+          {safeImgs.length > 0 ? (
+            <ImageSlider images={safeImgs} name={name} />
+          ) : (
+            <div className="dc-img-placeholder">
+              <FiCamera size={32} aria-hidden="true" />
+              <span>No photo yet</span>
             </div>
           )}
 
-           {/* Only show action cluster in non-civilized mode */}
-           {!civilized && (
-             <div className="dc2-actions">
-               <button
-                 onClick={handleWishlist}
-                 title={isLiked ? "Remove from wishlist" : "Save to wishlist"}
-                 aria-label={isLiked ? "Remove from wishlist" : "Save to wishlist"}
-                 className={[
-                   "dc2-action-btn",
-                   isLiked ? "dc2-action-btn--liked" : "",
-                   heartAnim ? "dc2-action-btn--anim" : "",
-                 ].filter(Boolean).join(" ")}
-               >
-                 <FiHeart
-                   size={15}
-                   color={isLiked ? "#ef4444" : "#475569"}
-                   fill={isLiked ? "#ef4444" : "none"}
-                 />
-               </button>
+          {/* Gradient overlay */}
+          <div className="dc-img-overlay" aria-hidden="true" />
 
-               <div style={{ position: "relative" }}>
-                 <button
-                   onClick={handleShare}
-                   title="Share destination"
-                   aria-label="Share destination"
-                   className={[
-                     "dc2-action-btn",
-                     copied ? "dc2-action-btn--copied" : "",
-                   ].filter(Boolean).join(" ")}
-                 >
-                   <FiShare2 size={14} color={copied ? "#059669" : "#475569"} />
-                 </button>
-                 {copied && (
-                   <span className="dc2-share-toast">������✓ Link copied</span>
-                 )}
-               </div>
-             </div>
-           )}
+          {/* Status badges */}
+          {(activeBadges.length > 0 || isEcoFriendly) && (
+            <div className="dc-badges">
+              {activeBadges.map((key, i) => {
+                const { Icon, label, cls } = BADGE_CFG[key];
+                return (
+                  <span
+                    key={key}
+                    className={`dc-badge ${cls}`}
+                    style={{ animationDelay: `${i * 0.07}s` }}
+                  >
+                    <Icon size={9} aria-hidden="true" />
+                    {label}
+                  </span>
+                );
+              })}
+              {isEcoFriendly && (
+                <span className="dc-badge dc-badge--eco">🌿 Eco</span>
+              )}
+            </div>
+          )}
+
+          {/* Wishlist + Share */}
+          <div className="dc-actions">
+            {/* Wishlist */}
+            <button
+              onClick={handleWishlist}
+              aria-label={isLiked ? "Remove from wishlist" : "Save to wishlist"}
+              aria-pressed={isLiked}
+              className={[
+                "dc-action-btn",
+                isLiked   ? "dc-action-btn--liked"      : "",
+                heartAnim ? "dc-action-btn--heart-anim" : "",
+              ].filter(Boolean).join(" ")}
+            >
+              <FiHeart
+                size={15}
+                aria-hidden="true"
+                style={{
+                  fill:       isLiked ? "#ef4444" : "none",
+                  color:      isLiked ? "#ef4444" : "#64748b",
+                  transition: "all 0.2s ease",
+                }}
+              />
+            </button>
+
+            {/* Share */}
+            <div style={{ position: "relative" }}>
+              <button
+                onClick={handleShare}
+                aria-label="Share this destination"
+                className={[
+                  "dc-action-btn",
+                  copied ? "dc-action-btn--copied" : "",
+                ].filter(Boolean).join(" ")}
+              >
+                <FiShare2
+                  size={14}
+                  aria-hidden="true"
+                  style={{ color: copied ? "#059669" : "#64748b" }}
+                />
+              </button>
+              {copied && (
+                <span className="dc-toast" role="status" aria-live="polite">
+                  ✓ Link copied
+                </span>
+              )}
+            </div>
           </div>
+
         </div>
       </div>
 
-       {/* ════ BODY ════ */}
-       <div className="dc2-body">
-          {/* Only show header in non-civilized mode */}
-          {!civilized && (
-            <div className="dc2-header">
-              <h3 className="dc2-name">{name}</h3>
-              {displayLocation && (
-                <div className="dc2-loc">
-                  <FiMapPin size={12} className="dc2-loc__icon" />
-                  <span>{displayLocation}</span>
-                  {countryFlag && (
-                    <span className="dc2-loc__flag">{countryFlag}</span>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+      {/* ════ CARD BODY ════ */}
+      <div className="dc-body">
 
-          {/* Only show stats row in non-civilized mode */}
-          {!civilized && (
-            <div className="dc2-stats">
-              <StarRating rating={rating} count={reviewCount} />
+        {/* Name */}
+        <h3 className="dc-name">{name}</h3>
 
-              {(duration || durationDays) && (
-                <>
-                  <div className="dc2-stat-divider" />
-                  <div className="dc2-stat">
-                    <FiClock size={12} className="dc2-stat__icon" />
-                    <span>{duration || `${durationDays} days`}</span>
-                  </div>
-                </>
-              )}
-
-              {difficulty && (
-                <>
-                  <div className="dc2-stat-divider" />
-                  <span className={`dc2-diff ${DIFF_CLS[difficulty] || DIFF_CLS.moderate}`}>
-                    <FiWind size={10} />
-                    {DIFF_LABEL[difficulty] || difficulty}
-                  </span>
-                </>
-              )}
-            </div>
-          )}
-
-          {/* Only show category chip in non-civilized mode */}
-          {!civilized && category && !compact && (
-            <div className="dc2-meta">
-              <span className="dc2-chip dc2-chip--category">
-                <FiCompass size={10} />
-                {category.replace(/_/g, " ")}
+        {/* Location */}
+        {locationStr && (
+          <div className="dc-location">
+            <FiMapPin size={12} aria-hidden="true" />
+            <span>{locationStr}</span>
+            {countryFlag && (
+              <span className="dc-flag" aria-hidden="true">
+                {countryFlag}
               </span>
+            )}
+          </div>
+        )}
+
+        {/* Rating + duration + group */}
+        <div className="dc-stats">
+          <Stars rating={rating} count={reviewCount} />
+
+          {durationStr && (
+            <>
+              <div className="dc-divider" aria-hidden="true" />
+              <div className="dc-stat">
+                <FiClock size={11} aria-hidden="true" />
+                <span>{durationStr}</span>
+              </div>
+            </>
+          )}
+
+          {groupStr && (
+            <>
+              <div className="dc-divider" aria-hidden="true" />
+              <div className="dc-stat">
+                <span aria-hidden="true" style={{ fontSize: 11 }}>👥</span>
+                <span>{groupStr} pax</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Category / duration chip / difficulty */}
+        {(category || diffConf || (durationStr && !compact)) && (
+          <div className="dc-chips">
+            {category && (
+              <span className="dc-chip dc-chip--cat">
+                <FiCompass size={10} aria-hidden="true" />
+                {String(category).replace(/_/g, " ")}
+              </span>
+            )}
+            {durationStr && !compact && (
+              <span className="dc-chip dc-chip--dur">
+                <FiSun size={10} aria-hidden="true" />
+                {durationStr}
+              </span>
+            )}
+            {diffConf && (
+              <span className={`dc-diff ${diffConf.cls}`}>
+                <FiWind size={9} aria-hidden="true" />
+                {diffConf.label}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Highlights */}
+        {!compact && highlights.length > 0 && (
+          <div className="dc-highlights">
+            {highlights.slice(0, 3).map((h, i) => (
+              <span key={`hl-${i}`} className="dc-hl">
+                <FiSun size={9} aria-hidden="true" />
+                {h}
+              </span>
+            ))}
+            {highlights.length > 3 && (
+              <span className="dc-hl-more">
+                +{highlights.length - 3}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Description */}
+        {blurb && <p className="dc-desc">{blurb}</p>}
+
+        {/* Price */}
+        {entranceFee ? (
+          <div>
+            <div className="dc-price-label">From</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+              <span className="dc-price-value">{entranceFee}</span>
+              <span className="dc-price-sub">/ person</span>
+            </div>
+          </div>
+        ) : (
+          <p className="dc-price-request">Price on request</p>
+        )}
+
+        <hr className="dc-sep" />
+
+        {/* ── CTA Buttons ── */}
+        <div className="dc-footer">
+          <button
+            className="dc-btn-learn"
+            onClick={handleLearnMore}
+            aria-label={`Learn more about ${name}`}
+          >
+            <span>Learn More</span>
+            <FiArrowRight
+              size={13}
+              aria-hidden="true"
+              className="dc-btn-arrow"
+            />
+          </button>
+
+          <button
+            className="dc-btn-book"
+            onClick={goBook}
+            aria-label={`Book ${name} now`}
+          >
+            <FiCalendar size={13} aria-hidden="true" />
+            <span>Book Now</span>
+          </button>
+        </div>
+
+      </div>
+    </article>
+  );
+});
+
+export default DestinationCard;
+        if (navigator.share) {
+          await navigator.share({ title: name, url });
+        } else {
+          await navigator.clipboard.writeText(url);
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2200);
+        }
+      } catch {
+        /* user cancelled or API unavailable */
+      }
+    },
+    [destId, name],
+  );
+
+  /* ── render ── */
+  return (
+    <article
+      className={`dc-card${compact ? " dc-card--compact" : ""}`}
+      onClick={goDetail}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          goDetail();
+        }
+      }}
+      aria-label={`View details for ${name}`}
+    >
+      {/* ════ IMAGE SECTION ════ */}
+      <div className="dc-img-wrap">
+        <div className="dc-img-frame">
+
+          {safeImgs.length > 0 ? (
+            <ImageSlider images={safeImgs} name={name} />
+          ) : (
+            <div className="dc-img-placeholder">
+              <FiCamera size={32} aria-hidden="true" />
+              <span>No photo yet</span>
             </div>
           )}
 
-{/* Only show highlights in non-civilized mode */}
-           {!civilized && !compact && highlights.length > 0 && (
-             <div className="dc2-highlights">
-               {highlights.slice(0, 2).map((h, i) => (
-                 <span key={i} className="dc2-hl-chip">
-                   <FiSun size={9} />
-                   {h}
-                 </span>
-               ))}
-               {highlights.length > 2 && (
-                 <span className="dc2-hl-more">+{highlights.length - 2} more</span>
-               )}
-             </div>
-           )}
+          {/* Gradient overlay */}
+          <div className="dc-img-overlay" aria-hidden="true" />
 
-           {/* Only show description in non-civilized mode */}
-           {!civilized && description && (
-             <>
-               <p 
-                 className="dc2-desc" 
-                 style={{ 
-                   display: showReadMore ? 'block' : '-webkit-box', 
-                   webkitLineClamp: showReadMore ? 'none' : '3', 
-                   webkitBoxOrient: 'vertical', 
-                   overflow: 'hidden' 
-                 }}
-               >
-                 {description}
-               </p>
-               {showReadMore && (
-                 <button 
-                   onClick={() => setShowReadMore(!showReadMore)} 
-                   className="dc2-read-more-link"
-                   style={{ marginTop: '8px', color: 'var(--dc2-accent)', fontSize: '12px', fontWeight: '600', background: 'none', border: 'none', cursor: 'pointer', padding: '0' }}
-                 >
-                   {showReadMore ? 'Show less' : 'Read more'}
-                 </button>
-               )}
-               {/* Hidden element for measurement */}
-               <div 
-                 ref={descRef} 
-                 style={{ 
-                   position: 'absolute', 
-                   visibility: 'hidden', 
-                   whiteSpace: 'pre-wrap', 
-                   wordWrap: 'break-word', 
-                   width: '1px', 
-                   height: 'auto' 
-                 }} 
-                 aria-hidden="true"
-               >
-                 {description}
-               </div>
-             </>
-           )}
+          {/* Status badges */}
+          {(activeBadges.length > 0 || isEcoFriendly) && (
+            <div className="dc-badges">
+              {activeBadges.map((key, i) => {
+                const { Icon, label, cls } = BADGE_CFG[key];
+                return (
+                  <span
+                    key={key}
+                    className={`dc-badge ${cls}`}
+                    style={{ animationDelay: `${i * 0.07}s` }}
+                  >
+                    <Icon size={9} aria-hidden="true" />
+                    {label}
+                  </span>
+                );
+              })}
+              {isEcoFriendly && (
+                <span className="dc-badge dc-badge--eco">🌿 Eco</span>
+              )}
+            </div>
+          )}
 
-          {!civilized && <hr className="dc2-sep" />}
-
-          {/* CTA Footer - Always show but simplified in civilized mode */}
-          <div className="dc2-footer">
+          {/* Wishlist + Share */}
+          <div className="dc-actions">
+            {/* Wishlist */}
             <button
-              className="dc2-btn-book"
-              onClick={goToBook}
-              aria-label={`Book ${name}`}
+              onClick={handleWishlist}
+              aria-label={isLiked ? "Remove from wishlist" : "Save to wishlist"}
+              aria-pressed={isLiked}
+              className={[
+                "dc-action-btn",
+                isLiked   ? "dc-action-btn--liked"      : "",
+                heartAnim ? "dc-action-btn--heart-anim" : "",
+              ].filter(Boolean).join(" ")}
             >
-              <FiCalendar size={13} />
-              <span>Book Now</span>
+              <FiHeart
+                size={15}
+                aria-hidden="true"
+                style={{
+                  fill:       isLiked ? "#ef4444" : "none",
+                  color:      isLiked ? "#ef4444" : "#64748b",
+                  transition: "all 0.2s ease",
+                }}
+              />
             </button>
 
-            <button
-              className="dc2-btn-explore"
-              onClick={(e) => { e.stopPropagation(); goToDetail(); }}
-              aria-label={`Learn more about ${name}`}
-            >
-              Learn More
-              <FiArrowRight size={13} className="dc2-btn-explore__arrow" />
-            </button>
+            {/* Share */}
+            <div style={{ position: "relative" }}>
+              <button
+                onClick={handleShare}
+                aria-label="Share this destination"
+                className={[
+                  "dc-action-btn",
+                  copied ? "dc-action-btn--copied" : "",
+                ].filter(Boolean).join(" ")}
+              >
+                <FiShare2
+                  size={14}
+                  aria-hidden="true"
+                  style={{ color: copied ? "#059669" : "#64748b" }}
+                />
+              </button>
+              {copied && (
+                <span className="dc-toast" role="status" aria-live="polite">
+                  ✓ Link copied
+                </span>
+              )}
+            </div>
           </div>
-       </div>
+
+        </div>
+      </div>
+
+      {/* ════ CARD BODY ════ */}
+      <div className="dc-body">
+
+        {/* Name */}
+        <h3 className="dc-name">{name}</h3>
+
+        {/* Location */}
+        {locationStr && (
+          <div className="dc-location">
+            <FiMapPin size={12} aria-hidden="true" />
+            <span>{locationStr}</span>
+            {countryFlag && (
+              <span className="dc-flag" aria-hidden="true">
+                {countryFlag}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Rating + duration + group */}
+        <div className="dc-stats">
+          <Stars rating={rating} count={reviewCount} />
+
+          {durationStr && (
+            <>
+              <div className="dc-divider" aria-hidden="true" />
+              <div className="dc-stat">
+                <FiClock size={11} aria-hidden="true" />
+                <span>{durationStr}</span>
+              </div>
+            </>
+          )}
+
+          {groupStr && (
+            <>
+              <div className="dc-divider" aria-hidden="true" />
+              <div className="dc-stat">
+                <span aria-hidden="true" style={{ fontSize: 11 }}>👥</span>
+                <span>{groupStr} pax</span>
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Category / duration chip / difficulty */}
+        {(category || diffConf || (durationStr && !compact)) && (
+          <div className="dc-chips">
+            {category && (
+              <span className="dc-chip dc-chip--cat">
+                <FiCompass size={10} aria-hidden="true" />
+                {String(category).replace(/_/g, " ")}
+              </span>
+            )}
+            {durationStr && !compact && (
+              <span className="dc-chip dc-chip--dur">
+                <FiSun size={10} aria-hidden="true" />
+                {durationStr}
+              </span>
+            )}
+            {diffConf && (
+              <span className={`dc-diff ${diffConf.cls}`}>
+                <FiWind size={9} aria-hidden="true" />
+                {diffConf.label}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Highlights */}
+        {!compact && highlights.length > 0 && (
+          <div className="dc-highlights">
+            {highlights.slice(0, 3).map((h, i) => (
+              <span key={`hl-${i}`} className="dc-hl">
+                <FiSun size={9} aria-hidden="true" />
+                {h}
+              </span>
+            ))}
+            {highlights.length > 3 && (
+              <span className="dc-hl-more">
+                +{highlights.length - 3}
+              </span>
+            )}
+          </div>
+        )}
+
+        {/* Description */}
+        {blurb && <p className="dc-desc">{blurb}</p>}
+
+        {/* Price */}
+        {entranceFee ? (
+          <div>
+            <div className="dc-price-label">From</div>
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
+              <span className="dc-price-value">{entranceFee}</span>
+              <span className="dc-price-sub">/ person</span>
+            </div>
+          </div>
+        ) : (
+          <p className="dc-price-request">Price on request</p>
+        )}
+
+        <hr className="dc-sep" />
+
+        {/* ── CTA Buttons ── */}
+        <div className="dc-footer">
+          <button
+            className="dc-btn-learn"
+            onClick={handleLearnMore}
+            aria-label={`Learn more about ${name}`}
+          >
+            <span>Learn More</span>
+            <FiArrowRight
+              size={13}
+              aria-hidden="true"
+              className="dc-btn-arrow"
+            />
+          </button>
+
+          <button
+            className="dc-btn-book"
+            onClick={goBook}
+            aria-label={`Book ${name} now`}
+          >
+            <FiCalendar size={13} aria-hidden="true" />
+            <span>Book Now</span>
+          </button>
+        </div>
+
+      </div>
     </article>
   );
 });
