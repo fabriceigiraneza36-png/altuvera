@@ -708,10 +708,10 @@ const CelebrationOverlay = React.memo(({ userName, onDismiss }) => {
           ))}
         </div>
 
-        <a href="/packages" className="cel-cta">
-          <ArrowRightIcon size={16} />
-          Explore Packages
-        </a>
+         <a href="/packages" className="cel-cta">
+           <ArrowRightIcon size={16} />
+           Discover Journeys
+         </a>
       </div>
     </div>
   );

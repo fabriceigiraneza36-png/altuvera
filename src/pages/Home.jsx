@@ -1283,16 +1283,16 @@ const Home = () => {
       {/* ── Testimonials ── */}
       <TestimonialShowcase />
 
-      {/* ── Packages & Stories ── */}
-      <section className="home-section home-section--compact">
-        <div className="home-container">
-          <div className="hsec-header">
-            <h2 className="hsec-title">Explore Packages & <span>Stories</span></h2>
-            <p className="hsec-sub">Curated adventures and field notes — scroll to discover.</p>
-          </div>
-          <MixedScrollRow packages={packages} posts={posts} loadingPkgs={loadingPkgs} loadingPosts={postsLoading} wishlist={pkgWishlist} onWishlist={handlePkgWishlist} />
-        </div>
-      </section>
+       {/* ── Packages & Stories ── */}
+       <section className="home-section home-section--compact">
+         <div className="home-container">
+           <div className="hsec-header">
+             <h2 className="hsec-title">Discover Adventures & <span>Travel Insights</span></h2>
+             <p className="hsec-sub">Curated journeys and expert guidance — scroll to explore.</p>
+           </div>
+           <MixedScrollRow packages={packages} posts={posts} loadingPkgs={loadingPkgs} loadingPosts={postsLoading} wishlist={pkgWishlist} onWishlist={handlePkgWishlist} />
+         </div>
+       </section>
     </div>
   );
 };

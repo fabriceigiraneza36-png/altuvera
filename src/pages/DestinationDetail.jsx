@@ -907,13 +907,9 @@ const DeepDiveSection = ({ d, navigate }) => {
     d.gettingThere || d.bestTimeToVisit ||
     d.highlights?.length || d.activities?.length || d.practicalInfo;
 
-  if (!hasAny) return null;
+   if (!hasAny) return null;
 
-  const pi      = d.practicalInfo;
-  const climate = pi?.climate;
-  const packing = pi?.packing;
-  const health  = pi?.healthAndSafety;
-  const permits = pi?.permitsAndRegulations;
+   const pi = d.practicalInfo;
 
   return (
     <section className="d-sec d-sec--leaf">
@@ -939,44 +935,11 @@ const DeepDiveSection = ({ d, navigate }) => {
             </Block>
           )}
 
-          {(d.bestTimeToVisit || climate) && (
-            <Block icon="thermometer" title="Climate & Best Time" from="right" delay={40}>
-              {d.bestTimeToVisit && (
-                <HighlightBox icon="calendar">
-                  <strong>Best Season:</strong> {d.bestTimeToVisit}
-                </HighlightBox>
-              )}
-              {climate?.climateNotes && (
-                <p className="d-deepdive__para">{climate.climateNotes}</p>
-              )}
-              {(climate?.avgTempLowC != null || climate?.avgTempHighC != null) && (
-                <div className="d-deepdive__temp-row">
-                  {climate.avgTempLowC  != null && (
-                    <span className="d-deepdive__temp-chip d-deepdive__temp-chip--low">
-                      <Ic n="snowflake" size={12} /> Low: {climate.avgTempLowC}°C
-                    </span>
-                  )}
-                  {climate.avgTempHighC != null && (
-                    <span className="d-deepdive__temp-chip d-deepdive__temp-chip--high">
-                      <Ic n="thermometer" size={12} /> High: {climate.avgTempHighC}°C
-                    </span>
-                  )}
-                </div>
-              )}
-              {climate?.bestMonths?.length > 0 && (
-                <><SubLabel>Best months</SubLabel><PillList items={climate.bestMonths} /></>
-              )}
-              {climate?.avoidMonths?.length  > 0 && (
-                <><SubLabel>Avoid</SubLabel><PillList items={climate.avoidMonths} danger /></>
-              )}
-            </Block>
-          )}
-
-          {d.highlights?.length > 0 && (
-            <Block icon="sparkles" title="Key Highlights" from="left" delay={60}>
-              <OL items={d.highlights} />
-            </Block>
-          )}
+           {d.highlights?.length > 0 && (
+             <Block icon="sparkles" title="Key Highlights" from="left" delay={60}>
+               <OL items={d.highlights} />
+             </Block>
+           )}
 
           {d.activities?.length > 0 && (
             <Block icon="compass" title="Activities" from="right" delay={60}>
@@ -1004,98 +967,31 @@ const DeepDiveSection = ({ d, navigate }) => {
             </Block>
           )}
 
-          {(health?.vaccinationsRequired?.length || health?.malariaRisk || health?.safetyNotes) && (
-            <Block icon="shield" title="Health & Safety" from="right" delay={80}>
-              {health.malariaRisk && (
-                <DDAlert warn>
-                  Malaria risk: <strong>{health.malariaRisk}</strong>
-                </DDAlert>
-              )}
-              {health.safetyNotes && <p className="d-deepdive__para">{health.safetyNotes}</p>}
-              {health.vaccinationsRequired?.length > 0 && (
-                <><SubLabel>Required vaccinations</SubLabel>
-                <UL items={health.vaccinationsRequired} icon="checkCircle" /></>
-              )}
-              {health.vaccinationsRecommended?.length > 0 && (
-                <><SubLabel>Recommended</SubLabel>
-                <UL items={health.vaccinationsRecommended} /></>
-              )}
-              {health.waterSafety && (
-                <HighlightBox icon="droplet">{health.waterSafety}</HighlightBox>
-              )}
-            </Block>
-          )}
+           {d.activities?.length > 0 && (
+             <Block icon="compass" title="Activities" from="right" delay={60}>
+               <UL items={d.activities} icon="checkCircle" />
+             </Block>
+           )}
 
-          {(packing?.essentials?.length || packing?.clothingTips) && (
-            <Block icon="backpack" title="What to Pack" from="left" delay={100}>
-              {packing.clothingTips && (
-                <p className="d-deepdive__para">{packing.clothingTips}</p>
-              )}
-              {packing.essentials?.length > 0 && (
-                <><SubLabel>Essentials</SubLabel>
-                <UL items={packing.essentials} cols icon="check" /></>
-              )}
-              {packing.gearRecommendations?.length > 0 && (
-                <><SubLabel>Gear</SubLabel>
-                <UL items={packing.gearRecommendations} /></>
-              )}
-            </Block>
-          )}
+           {(pi?.budget?.rangeUsd || pi?.budget?.entranceFeeUsd) && (
+             <Block icon="wallet" title="Budget Guide (USD)" from="left" delay={120}>
+               <div className="d-deepdive__budget-grid">
+                 {[
+                   ["Budget Range",  pi.budget.rangeUsd],
+                   ["Entrance Fee",  pi.budget.entranceFeeUsd],
+                   ["Guide Cost",    pi.budget.guideCostUsd],
+                   ["Meals",         pi.budget.mealCostRange],
+                 ].filter(([, v]) => v).map(([label, val]) => (
+                   <div key={label} className="d-deepdive__budget-item">
+                     <span className="d-deepdive__budget-label">{label}</span>
+                     <span className="d-deepdive__budget-val">{val}</span>
+                   </div>
+                 ))}
+               </div>
+             </Block>
+           )}
 
-          {permits?.permitsRequired?.length > 0 && (
-            <Block icon="flag" title="Permits & Regulations" from="right" delay={100}>
-              {permits.bookingLeadTime && (
-                <HighlightBox icon="calendar">
-                  <strong>Book ahead:</strong> {permits.bookingLeadTime}
-                </HighlightBox>
-              )}
-              <UL items={permits.permitsRequired} icon="checkCircle" />
-              {permits.permitCost && (
-                <HighlightBox icon="creditCard">
-                  Cost: <strong>{permits.permitCost}</strong>
-                </HighlightBox>
-              )}
-              {permits.visitorLimits && (
-                <DDAlert>Visitor limit: {permits.visitorLimits}</DDAlert>
-              )}
-            </Block>
-          )}
-
-          {(pi?.budget?.rangeUsd || pi?.budget?.entranceFeeUsd) && (
-            <Block icon="wallet" title="Budget Guide (USD)" from="left" delay={120}>
-              <div className="d-deepdive__budget-grid">
-                {[
-                  ["Budget Range",  pi.budget.rangeUsd],
-                  ["Entrance Fee",  pi.budget.entranceFeeUsd],
-                  ["Guide Cost",    pi.budget.guideCostUsd],
-                  ["Meals",         pi.budget.mealCostRange],
-                ].filter(([, v]) => v).map(([label, val]) => (
-                  <div key={label} className="d-deepdive__budget-item">
-                    <span className="d-deepdive__budget-label">{label}</span>
-                    <span className="d-deepdive__budget-val">{val}</span>
-                  </div>
-                ))}
-              </div>
-            </Block>
-          )}
-
-          {(pi?.culture?.localEtiquette?.length || pi?.culture?.tippingCulture) && (
-            <Block icon="coffee" title="Culture & Etiquette" from="right" delay={120}>
-              {pi.culture.tippingCulture && (
-                <p className="d-deepdive__para">
-                  <strong>Tipping:</strong> {pi.culture.tippingCulture}
-                </p>
-              )}
-              {pi.culture.photographyRules && (
-                <HighlightBox icon="camera">{pi.culture.photographyRules}</HighlightBox>
-              )}
-              {pi.culture.localEtiquette?.length > 0 && (
-                <><SubLabel>Local Etiquette</SubLabel>
-                <UL items={pi.culture.localEtiquette} icon="checkCircle" /></>
-              )}
-            </Block>
-          )}
-        </div>
+         </div>
 
         {/* In-section book CTA */}
         <Reveal from="bottom" delay={100}>
@@ -1301,14 +1197,14 @@ const FaqSection = ({ d, navigate }) => {
   const [openIdx, setOpenIdx] = useState(null);
 
   const displayFaqs = useMemo(() => {
-    if (d.faqs?.length) return d.faqs;
-    return [
-      { id: "f1", question: `What is the best time to visit ${d.name}?`,   answer: d.bestTimeToVisit || "Contact us for seasonal recommendations." },
-      { id: "f2", question: `How difficult is ${d.name}?`,                 answer: d.difficulty ? `Rated as ${d.difficulty}.` : "Difficulty varies by experience level. Contact us for details." },
-      { id: "f3", question: "What permits are required?",                   answer: (d.practicalInfo?.permitsAndRegulations?.permitsRequired || []).join(", ") || "Our team handles all necessary permits." },
-      { id: "f4", question: "Is it safe to visit?",                        answer: d.safetyInfo || "Safety is our top priority — our guides are trained to the highest standards." },
-      { id: "f5", question: "What should I pack?",                          answer: (d.practicalInfo?.packing?.essentials || []).join(", ") || "Warm layers, waterproof gear, sturdy boots, and sun protection." },
-    ];
+     if (d.faqs?.length) return d.faqs;
+     return [
+       { id: "f1", question: `What is the best time to visit ${d.name}?`,   answer: d.bestTimeToVisit || "Contact us for seasonal recommendations." },
+       { id: "f2", question: `How difficult is ${d.name}?`,                 answer: d.difficulty ? `Rated as ${d.difficulty}.` : "Difficulty varies by experience level. Contact us for details." },
+       { id: "f3", question: "What permits are required?",                   answer: "Our team handles all necessary permits." },
+       { id: "f4", question: "Is it safe to visit?",                        answer: "Safety is our top priority — our guides are trained to the highest standards." },
+       { id: "f5", question: "What should I pack?",                          answer: "We provide detailed packing lists upon booking confirmation." },
+     ];
   }, [d]);
 
   return (
