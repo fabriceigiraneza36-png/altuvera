@@ -1060,18 +1060,27 @@ function FilterPanel(props) {
                 </div>
                 <span style={{ fontSize: 14, fontWeight: 700, color: '#022c22' }}>Filters</span>
               </div>
-              <button
-                onClick={onClose}
-                style={{
-                  width: 34, height: 34, borderRadius: '50%', background: '#f1f5f9',
-                  border: 'none', cursor: 'pointer', display: 'flex',
-                  alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s',
-                }}
-                onMouseOver={e => e.currentTarget.style.background = '#e2e8f0'}
-                onMouseOut={e => e.currentTarget.style.background = '#f1f5f9'}
-              >
-                <FiX size={15} color="#64748b" />
-              </button>
+<button
+                   onClick={handleReset}
+                   style={{
+                     padding: '8px 18px', borderRadius: 999, border: 'none',
+                     background: '#fef2f2', color: '#dc2626', fontSize: 13,
+                     fontWeight: 700, cursor: 'pointer', transition: 'all 0.3s ease',
+                     fontFamily: "'Plus Jakarta Sans', sans-serif",
+                     backdropFilter: 'blur(10px)',
+                     boxShadow: '0 4px 12px rgba(5,150,105,0.08)'
+                   }}
+                   onMouseOver={e => {
+                     e.currentTarget.style.background = '#fee2e2';
+                     e.currentTarget.style.transform = 'translateY(-2px)';
+                   }}
+                   onMouseOut={e => {
+                     e.currentTarget.style.background = '#fef2f2';
+                     e.currentTarget.style.transform = 'translateY(0)';
+                   }}
+                 >
+                   Clear all
+                 </button>
             </div>
             <div
               style={{ flex: 1, overflowY: 'auto', padding: '16px 14px' }}
@@ -1100,6 +1109,7 @@ function Hero({ search, onSearch, total, loading }) {
     <div style={{
       position: 'relative',
       minHeight: 'clamp(540px, 68vh, 720px)',
+      paddingTop: '80px', /* Space for fixed header */
       display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
       overflow: 'hidden',
@@ -1484,22 +1494,157 @@ export default function Packages() {
 
   const hasActiveChips = dSearch || category || duration || priceRange?.label !== 'Any Price'
 
-  return (
+return (
     <div className="pk-root" ref={topRef}>
+      
+      {/* ── FIXED HEADER ── */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 1000,
+        background: 'linear-gradient(to right, rgba(255,255,255,0.95), rgba(255,255,255,0.8))',
+        backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(16,185,129,0.2)',
+        padding: '12px 0',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+      }}>
+        <div style={{
+          maxWidth: 1400,
+          margin: '0 auto',
+          padding: '0 clamp(16px,3vw,40px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between'
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 12
+          }}>
+            <FiCompass size={22} style={{ 
+              color: '#059669',
+              filter: 'drop-shadow(0 2px 4px rgba(5,150,105,0.2))'
+            }} />
+            <h1 style={{
+              fontFamily: "'DM Serif Display', Georgia, serif",
+              fontSize: 'clamp(20px, 3vw, 24px)',
+              fontWeight: 400,
+              color: '#022c22',
+              margin: 0,
+              letterSpacing: '-0.5px'
+            }}>
+              Altuvеrа Adventures
+            </h1>
+          </div>
+          
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 16
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              background: 'linear-gradient(to right, rgba(5,150,105,0.08), rgba(16,185,129,0.05))',
+              borderRadius: 14,
+              padding: '6px 12px',
+              border: '1px solid rgba(16,185,129,0.2)'
+            }}>
+              <FiSearch size={18} style={{ 
+                color: '#059669', 
+                flexShrink: 0,
+                filter: 'drop-shadow(0 1px 2px rgba(5,150,105,0.1))'
+              }} />
+              <input
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search packages, destinations…"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  outline: 'none',
+                  fontSize: 14,
+                  color: '#0f172a',
+                  fontFamily: "'Plus Jakarta Sans', sans-serif",
+                  fontWeight: 500,
+                  width: 220
+                }}
+              />
+            </div>
+            
+            <button
+              onClick={() => setFilterOpen(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 20px',
+                borderRadius: 12,
+                border: '1.5px solid #a7f3d0',
+                background: 'linear-gradient(to right, white, rgba(255,255,255,0.8))',
+                color: '#047857',
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                fontFamily: "'Plus Jakarta Sans', sans-serif",
+                boxShadow: '0 2px 8px rgba(5,150,105,0.1)'
+              }}
+              onMouseOver={e => {
+                e.currentTarget.style.background = 'linear-gradient(to right, #f0fdf4, #e0f2fe)';
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(5,150,105,0.1)'
+              }}
+              onMouseOut={e => {
+                e.currentTarget.style.background = 'linear-gradient(to right, white, rgba(255,255,255,0.8))';
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(5,150,105,0.08)'
+              }}
+            >
+              <FiFilter size={16} style={{ 
+                color: '#059669',
+                filter: 'drop-shadow(0 1px 2px rgba(5,150,105,0.1))'
+              }} />
+              <span>Filters</span>
+              {activeFilterCount > 0 && (
+                <span style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: 'linear-gradient(135deg,#10b981,#059669)',
+                  color: 'white',
+                  fontSize: 10,
+                  fontWeight: 800,
+                  width: 22,
+                  height: 22,
+                  borderRadius: 50%
+                }}>
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* ── HERO ── */}
       <Hero search={search} onSearch={setSearch} total={total} loading={loading} />
 
       {/* ── CATEGORY STRIP ── */}
       <div style={{
-        background: 'white', borderBottom: '1px solid #d1fae5',
-        boxShadow: '0 2px 14px rgba(5,150,105,0.07)',
-        position: 'sticky', top: 64, zIndex: 30,
+        background: 'linear-gradient(to bottom, white, rgba(255,255,255,0.8))',
+        borderBottom: '1px solid rgba(16,185,129,0.2)',
+        boxShadow: '0 4px 20px rgba(5,150,105,0.08)',
+        position: 'sticky', top: 80, zIndex: 30,
+        backdropFilter: 'blur(10px)'
       }}>
         <div style={{ maxWidth: 1400, margin: '0 auto', padding: '0 clamp(16px,3vw,40px)' }}>
           <div
             className="pk-hide-scroll"
-            style={{ display: 'flex', gap: 8, overflowX: 'auto', padding: '12px 0' }}
+            style={{ display: 'flex', gap: 10, overflowX: 'auto', padding: '14px 0' }}
           >
             {CATEGORIES.map(cat => {
               const active = cat.id === category
@@ -1509,9 +1654,17 @@ export default function Packages() {
                   key={cat.id}
                   onClick={() => handleCategory(cat.id)}
                   className={`pk-cat-pill ${active ? 'active' : ''}`}
+                  style={{
+                    transition: 'all 0.3s ease',
+                    fontWeight: active ? 700 : 600,
+                    letterSpacing: '-0.5px'
+                  }}
                 >
-                  <Icon size={12} style={{ flexShrink: 0 }} />
-                  {cat.label}
+                  <Icon size={14} style={{ 
+                    flexShrink: 0,
+                    filter: active ? 'drop-shadow(0 2px 4px rgba(5,150,105,0.3))' : 'none'
+                  }} />
+                  <span>{cat.label}</span>
                 </button>
               )
             })}
@@ -1538,11 +1691,17 @@ export default function Packages() {
           {/* Content */}
           <div style={{ flex: 1, minWidth: 0 }}>
 
-            {/* Toolbar */}
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              marginBottom: 20, gap: 12, flexWrap: 'wrap',
-            }}>
+{/* Toolbar */}
+             <div style={{
+               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+               marginBottom: 24, gap: 16, flexWrap: 'wrap',
+               background: 'linear-gradient(to bottom, rgba(255,255,255,0.8), rgba(248,250,252,0.5))',
+               backdropFilter: 'blur(10px)',
+               borderRadius: 16,
+               padding: '16px 20px',
+               border: '1px solid rgba(16,185,129,0.2)',
+               boxShadow: '0 4px 16px rgba(5,150,105,0.08)'
+             }}>
               <div style={{ minWidth: 0 }}>
                 {loading ? (
                   <div className="pk-skel" style={{ width: 150, height: 26 }} />
@@ -1573,60 +1732,91 @@ export default function Packages() {
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-                {/* Mobile filter button */}
-                <button
-                  id="pk-mobile-filter-btn"
-                  onClick={() => setFilterOpen(true)}
-                  style={{
-                    display: 'none', alignItems: 'center', gap: 8,
-                    padding: '10px 18px', borderRadius: 12,
-                    border: '1.5px solid #a7f3d0', background: 'white',
-                    color: '#047857', fontSize: 14, fontWeight: 600,
-                    cursor: 'pointer', boxShadow: '0 2px 10px rgba(5,150,105,0.08)',
-                    fontFamily: "'Plus Jakarta Sans', sans-serif", transition: 'all 0.2s',
-                  }}
-                  onMouseOver={e => e.currentTarget.style.background = '#f0fdf4'}
-                  onMouseOut={e => e.currentTarget.style.background = 'white'}
-                >
-                  <FiFilter size={14} style={{ color: '#059669' }} />
-                  Filters
-                  {activeFilterCount > 0 && (
-                    <span style={{
-                      width: 21, height: 21, borderRadius: '50%',
-                      background: 'linear-gradient(135deg,#10b981,#059669)', color: 'white',
-                      fontSize: 10, fontWeight: 800,
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    }}>
-                      {activeFilterCount}
-                    </span>
-                  )}
-                </button>
+{/* Mobile filter button */}
+                 <button
+                   id="pk-mobile-filter-btn"
+                   onClick={() => setFilterOpen(true)}
+                   style={{
+                     display: 'none', alignItems: 'center', gap: 10,
+                     padding: '12px 22px', borderRadius: 14,
+                     border: '1.5px solid #a7f3d0', 
+                     background: 'linear-gradient(to bottom, white, rgba(255,255,255,0.8))',
+                     color: '#047857', fontSize: 14, fontWeight: 600,
+                     cursor: 'pointer', 
+                     boxShadow: '0 4px 16px rgba(5,150,105,0.08)',
+                     fontFamily: "'Plus Jakarta Sans', sans-serif", 
+                     transition: 'all 0.3s ease',
+                     backdropFilter: 'blur(10px)'
+                   }}
+                   onMouseOver={e => {
+                     e.currentTarget.style.background = 'linear-gradient(to bottom, #f0fdf4, #e0f2fe)';
+                     e.currentTarget.style.transform = 'translateY(-2px)';
+                     e.currentTarget.style.boxShadow = '0 6px 20px rgba(5,150,105,0.12)'
+                   }}
+                   onMouseOut={e => {
+                     e.currentTarget.style.background = 'linear-gradient(to bottom, white, rgba(255,255,255,0.8))';
+                     e.currentTarget.style.transform = 'translateY(0)';
+                     e.currentTarget.style.boxShadow = '0 4px 16px rgba(5,150,105,0.08)'
+                   }}
+                 >
+                   <FiFilter size={16} style={{ color: '#059669' }} />
+                   <span>Filters</span>
+                   {activeFilterCount > 0 && (
+                     <span style={{
+                       width: 24, height: 24, borderRadius: '50%',
+                       background: 'linear-gradient(135deg,#10b981,#059669)', color: 'white',
+                       fontSize: 11, fontWeight: 800,
+                       display: 'flex', alignItems: 'center', justifyContent: 'center',
+                     }}>
+                       {activeFilterCount}
+                     </span>
+                   )}
+                 </button>
 
-                {/* View toggle */}
-                <div style={{
-                  display: 'flex', background: '#f0fdf4',
-                  border: '1.5px solid #d1fae5', borderRadius: 12, padding: 4,
-                }}>
-                  {[
-                    { id: 'grid', Icon: FiGrid },
-                    { id: 'list', Icon: FiList },
-                  ].map(({ id, Icon }) => (
-                    <button
-                      key={id}
-                      onClick={() => setView(id)}
-                      className={`pk-view-btn ${view === id ? 'active' : ''}`}
-                      style={{ color: view === id ? '#059669' : '#94a3b8' }}
-                    >
-                      <Icon size={15} />
-                    </button>
-                  ))}
-                </div>
+{/* View toggle */}
+                 <div style={{
+                   display: 'flex', 
+                   background: 'linear-gradient(to bottom, rgba(240,253,244,0.8), rgba(209,250,229,0.5))',
+                   border: '1.5px solid rgba(16,185,129,0.3)', 
+                   borderRadius: 14, 
+                   padding: 6,
+                   backdropFilter: 'blur(10px)',
+                   boxShadow: '0 4px 12px rgba(5,150,105,0.08)'
+                 }}>
+                   {[
+                     { id: 'grid', Icon: FiGrid },
+                     { id: 'list', Icon: FiList },
+                   ].map(({ id, Icon }) => (
+                     <button
+                       key={id}
+                       onClick={() => setView(id)}
+                       className={`pk-view-btn ${view === id ? 'active' : ''}`}
+                       style={{ 
+                         color: view === id ? '#059669' : '#94a3b8',
+                         transition: 'all 0.3s ease',
+                         transform: view === id ? 'scale(1.05)' : 'scale(1)'
+                       }}
+                     >
+                       <Icon size={17} style={{ 
+                         filter: view === id ? 'drop-shadow(0 2px 4px rgba(5,150,105,0.2))' : 'none'
+                       }} />
+                     </button>
+                   ))}
+                 </div>
               </div>
             </div>
 
-            {/* Active filter chips */}
-            {hasActiveChips && (
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+{/* Active filter chips */}
+             {hasActiveChips && (
+               <div style={{ 
+                 display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 24,
+                 background: 'rgba(248,250,252,0.5)', 
+                 backdropFilter: 'blur(10px)',
+                 borderRadius: 16,
+                 padding: '16px 20px',
+                 border: '1px solid rgba(16,185,129,0.2)',
+                 boxShadow: '0 4px 16px rgba(5,150,105,0.08)'
+               }}>
                 {dSearch && <ActiveChip label={`"${dSearch}"`} onRemove={() => setSearch('')} />}
                 {category && <ActiveChip label={category} onRemove={() => setCategory('')} />}
                 {duration && (
@@ -1747,87 +1937,124 @@ export default function Packages() {
               </>
             )}
 
-            {/* ── Final CTA Banner ── */}
-            {!loading && !error && packages.length > 0 && !hasMore && (
-              <div style={{
-                marginTop: 48,
-                padding: 'clamp(36px, 5vw, 56px) clamp(24px, 5vw, 56px)',
-                borderRadius: 24,
-                background: 'linear-gradient(160deg, #0f172a 0%, #022c22 45%, #064e3b 100%)',
-                backgroundSize: '200% 200%',
-                animation: 'pk-gradient-shift 14s ease infinite',
-                textAlign: 'center', position: 'relative', overflow: 'hidden',
-              }}>
-                {/* Decorative orbs */}
-                <div style={{
-                  position: 'absolute', top: '-20%', left: '-5%',
-                  width: 320, height: 320, borderRadius: '50%',
-                  background: 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)',
-                  pointerEvents: 'none',
-                }} />
-                <div style={{
-                  position: 'absolute', bottom: '-15%', right: '-3%',
-                  width: 240, height: 240, borderRadius: '50%',
-                  background: 'radial-gradient(circle, rgba(5,150,105,0.08) 0%, transparent 70%)',
-                  pointerEvents: 'none',
-                }} />
+{/* ── Final CTA Banner ── */}
+             {!loading && !error && packages.length > 0 && !hasMore && (
+               <div style={{
+                 marginTop: 48,
+                 padding: 'clamp(36px, 5vw, 56px) clamp(24px, 5vw, 56px)',
+                 borderRadius: 24,
+                 background: 'linear-gradient(160deg, #0f172a 0%, #022c22 45%, #064e3b 100%)',
+                 backgroundSize: '200% 200%',
+                 animation: 'pk-gradient-shift 14s ease infinite',
+                 textAlign: 'center', position: 'relative', overflow: 'hidden',
+                 boxShadow: '0 20px 40px rgba(0,0,0,0.15)'
+               }}>
+                 {/* Decorative orbs */}
+                 <div style={{
+                   position: 'absolute', top: '-20%', left: '-5%',
+                   width: 320, height: 320, borderRadius: '50%',
+                   background: 'radial-gradient(circle, rgba(16,185,129,0.1) 0%, transparent 70%)',
+                   pointerEvents: 'none',
+                   animation: 'float 6s ease-in-out infinite'
+                 }} />
+                 <div style={{
+                   position: 'absolute', bottom: '-15%', right: '-3%',
+                   width: 240, height: 240, borderRadius: '50%',
+                   background: 'radial-gradient(circle, rgba(5,150,105,0.08) 0%, transparent 70%)',
+                   pointerEvents: 'none',
+                   animation: 'float 6s ease-in-out infinite reverse'
+                 }} />
 
-                <div style={{ position: 'relative', zIndex: 1 }}>
-                  <div style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 8,
-                    padding: '6px 20px', borderRadius: 999,
-                    background: 'rgba(16,185,129,0.15)', backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(16,185,129,0.3)',
-                    color: '#86efac', fontSize: 11, fontWeight: 700,
-                    textTransform: 'uppercase', letterSpacing: '0.1em',
-                    marginBottom: 20,
-                  }}>
-                    <FiTarget size={11} style={{ color: '#4ade80' }} />
-                    Ready to Explore?
-                  </div>
+                 <div style={{ position: 'relative', zIndex: 1 }}>
+                   <div style={{
+                     display: 'inline-flex', alignItems: 'center', gap: 8,
+                     padding: '6px 20px', borderRadius: 999,
+                     background: 'rgba(16,185,129,0.15)', backdropFilter: 'blur(10px)',
+                     border: '1px solid rgba(16,185,129,0.3)',
+                     color: '#86efac', fontSize: 11, fontWeight: 700,
+                     textTransform: 'uppercase', letterSpacing: '0.1em',
+                     marginBottom: 20,
+                     animation: 'pulse 3s ease-in-out infinite'
+                   }}>
+                     <FiTarget size={11} style={{ color: '#4ade80' }} />
+                     Ready to Explore?
+                   </div>
 
-                  <h3 style={{
-                    fontFamily: "'DM Serif Display', Georgia, serif",
-                    fontSize: 'clamp(26px, 4vw, 42px)', fontWeight: 400,
-                    color: 'white', lineHeight: 1.15,
-                    marginBottom: 14, letterSpacing: '-0.02em',
-                  }}>
-                    Can't Find What You're Looking For?
-                  </h3>
+                   <h3 style={{
+                     fontFamily: "'DM Serif Display', Georgia, serif",
+                     fontSize: 'clamp(26px, 4vw, 42px)', fontWeight: 400,
+                     color: 'white', lineHeight: 1.15,
+                     marginBottom: 14, letterSpacing: '-0.02em',
+                     textShadow: '0 2px 8px rgba(0,0,0,0.3)'
+                   }}>
+                     Can't Find What You're Looking For?
+                   </h3>
 
-                  <p style={{
-                    fontSize: 'clamp(14px, 1.4vw, 16px)',
-                    color: 'rgba(255,255,255,0.68)', lineHeight: 1.78,
-                    maxWidth: 520, margin: '0 auto 32px', fontWeight: 300,
-                  }}>
-                    Our travel specialists craft bespoke African adventures tailored precisely to your
-                    dream — no detail too small, no wish too bold.
-                  </p>
+                   <p style={{
+                     fontSize: 'clamp(14px, 1.4vw, 16px)',
+                     color: 'rgba(255,255,255,0.68)', lineHeight: 1.78,
+                     maxWidth: 520, margin: '0 auto 32px', fontWeight: 300,
+                     textShadow: '0 1px 4px rgba(0,0,0,0.2)'
+                   }}>
+                     Our travel specialists craft bespoke African adventures tailored precisely to your
+                     dream — no detail too small, no wish too bold.
+                   </p>
 
-                  <div style={{
-                    display: 'flex', gap: 14,
-                    justifyContent: 'center', flexWrap: 'wrap',
-                  }}>
-                    <Link
-                      to="/contact"
-                      className="pk-cta"
-                      style={{ padding: '15px 36px', fontSize: 15 }}
-                    >
-                      <FiCompass size={17} />
-                      Plan My Trip
-                    </Link>
-                    <Link
-                      to="/contact"
-                      className="pk-cta pk-cta--outline"
-                      style={{ padding: '15px 32px', fontSize: 15, color: 'white' }}
-                    >
-                      <FiGlobe size={17} />
-                      Speak to an Expert
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
+                   <div style={{
+                     display: 'flex', gap: 14,
+                     justifyContent: 'center', flexWrap: 'wrap',
+                     marginTop: 24
+                   }}>
+                     <Link
+                       to="/contact"
+                       className="pk-cta"
+                       style={{ 
+                         padding: '15px 36px', fontSize: 15,
+                         boxShadow: '0 8px 24px rgba(16,185,129,0.35)',
+                         transform: 'translateY(0)'
+                       }}
+                       onMouseOver={e => {
+                         e.currentTarget.style.transform = 'translateY(-3px)';
+                         e.currentTarget.style.boxShadow = '0 12px 36px rgba(16,185,129,0.5)';
+                       }}
+                       onMouseOut={e => {
+                         e.currentTarget.style.transform = 'translateY(0)';
+                         e.currentTarget.style.boxShadow = '0 8px 24px rgba(16,185,129,0.35)';
+                       }}
+                     >
+                       <FiCompass size={17} style={{ 
+                         filter: 'drop-shadow(0 4px 8px rgba(16,185,129,0.4))'
+                       }} />
+                       Plan My Trip
+                     </Link>
+                     <Link
+                       to="/contact"
+                       className="pk-cta pk-cta--outline"
+                       style={{ 
+                         padding: '15px 32px', fontSize: 15, color: 'white',
+                         boxShadow: '0 4px 16px rgba(255,255,255,0.2)',
+                         transform: 'translateY(0)'
+                       }}
+                       onMouseOver={e => {
+                         e.currentTarget.style.background = 'rgba(255,255,255,0.15)';
+                         e.currentTarget.style.transform = 'translateY(-2px)';
+                         e.currentTarget.style.boxShadow = '0 8px 24px rgba(255,255,255,0.35)';
+                       }}
+                       onMouseOut={e => {
+                         e.currentTarget.style.background = 'transparent';
+                         e.currentTarget.style.transform = 'translateY(0)';
+                         e.currentTarget.style.boxShadow = '0 4px 16px rgba(255,255,255,0.2)';
+                       }}
+                     >
+                       <FiGlobe size={17} style={{ 
+                         filter: 'drop-shadow(0 4px 8px rgba(255,255,255,0.3))'
+                       }} />
+                       Speak to an Expert
+                     </Link>
+                   </div>
+                 </div>
+               </div>
+             )}
           </div>
         </div>
       </div>
