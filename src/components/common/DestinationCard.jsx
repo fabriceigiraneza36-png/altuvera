@@ -4830,132 +4830,38 @@ const DestinationCard = memo(function DestinationCard({
                 </span>
               )}
             </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* ════ CARD BODY ════ */}
-      <div className="dc-body">
-
-        <h3 className="dc-name">{name}</h3>
-
-        {locationStr && (
-          <div className="dc-location">
-            <FiMapPin size={12} aria-hidden="true" />
-            <span>{locationStr}</span>
-            {countryFlag && (
-              <span className="dc-flag" aria-hidden="true">
-                {countryFlag}
-              </span>
-            )}
-          </div>
-        )}
-
-        <div className="dc-stats">
-          <Stars rating={rating} count={reviewCount} />
-
-          {durationStr && (
-            <>
-              <div className="dc-divider" aria-hidden="true" />
-              <div className="dc-stat">
-                <FiClock size={11} aria-hidden="true" />
-                <span>{durationStr}</span>
-              </div>
-            </>
-          )}
-
-          {groupStr && (
-            <>
-              <div className="dc-divider" aria-hidden="true" />
-              <div className="dc-stat">
-                <span aria-hidden="true" style={{ fontSize: 11 }}>👥</span>
-                <span>{groupStr} pax</span>
-              </div>
-            </>
-          )}
-        </div>
-
-        {(category || diffConf || (durationStr && !compact)) && (
-          <div className="dc-chips">
-            {category && (
-              <span className="dc-chip dc-chip--cat">
-                <FiCompass size={10} aria-hidden="true" />
-                {String(category).replace(/_/g, " ")}
-              </span>
-            )}
-            {durationStr && !compact && (
-              <span className="dc-chip dc-chip--dur">
-                <FiSun size={10} aria-hidden="true" />
-                {durationStr}
-              </span>
-            )}
-            {diffConf && (
-              <span className={`dc-diff ${diffConf.cls}`}>
-                <FiWind size={9} aria-hidden="true" />
-                {diffConf.label}
-              </span>
-            )}
-          </div>
-        )}
-
-        {!compact && highlights.length > 0 && (
-          <div className="dc-highlights">
-            {highlights.slice(0, 3).map((h, i) => (
-              <span key={`hl-${i}`} className="dc-hl">
-                <FiSun size={9} aria-hidden="true" />
-                {h}
-              </span>
-            ))}
-            {highlights.length > 3 && (
-              <span className="dc-hl-more">+{highlights.length - 3}</span>
-            )}
-          </div>
-        )}
-
-        {blurb && <p className="dc-desc">{blurb}</p>}
-
-        {entranceFee ? (
-          <div>
-            <div className="dc-price-label">From</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-              <span className="dc-price-value">{entranceFee}</span>
-              <span className="dc-price-sub">/ person</span>
-            </div>
-          </div>
-        ) : (
-          <p className="dc-price-request">Price on request</p>
-        )}
-
-        <hr className="dc-sep" />
-
-        <div className="dc-footer">
-          <button
-            className="dc-btn-learn"
-            onClick={handleLearnMore}
-            aria-label={`Learn more about ${name}`}
-          >
-            <span>Learn More</span>
-            <FiArrowRight
-              size={13}
-              aria-hidden="true"
-              className="dc-btn-arrow"
-            />
-          </button>
-
-          <button
-            className="dc-btn-book"
-            onClick={goBook}
-            aria-label={`Book ${name} now`}
-          >
-            <FiCalendar size={13} aria-hidden="true" />
-            <span>Book Now</span>
-          </button>
-        </div>
-
-      </div>
-    </article>
-  );
-});
-
+</div>
+ 
+         </div>
+       </div>
+ 
+       {/* ════ CARD BODY ════ */}
+       <div className="dc-body">
+         <div className="dc-footer">
+           <button
+             className="dc-btn-learn"
+             onClick={handleLearnMore}
+             aria-label={`Learn more about ${name}`}
+           >
+             <span>Learn More</span>
+             <FiArrowRight
+               size={13}
+               aria-hidden="true"
+               className="dc-btn-arrow"
+             />
+           </button>
+ 
+           <button
+             className="dc-btn-book"
+             onClick={goBook}
+             aria-label={`Book ${name} now`}
+           >
+             <FiCalendar size={13} aria-hidden="true" />
+             <span>Book Now</span>
+           </button>
+         </div>
+       </div>
+     </article>
+   );
+ 
 export default DestinationCard;
