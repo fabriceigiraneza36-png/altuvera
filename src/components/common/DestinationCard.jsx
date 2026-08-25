@@ -4755,113 +4755,17 @@ const DestinationCard = memo(function DestinationCard({
       <div className="dc-img-wrap">
         <div className="dc-img-frame">
 
-          {safeImgs.length > 0 ? (
+{safeImgs.length > 0 ? (
             <ImageSlider images={safeImgs} name={name} />
           ) : (
             <div className="dc-img-placeholder">
               <FiCamera size={32} aria-hidden="true" />
-              <span>No photo yet</span>
             </div>
           )}
-
-          <div className="dc-img-overlay" aria-hidden="true" />
-
-          {(activeBadges.length > 0 || isEcoFriendly) && (
-            <div className="dc-badges">
-              {activeBadges.map((key, i) => {
-                const { Icon, label, cls } = BADGE_CFG[key];
-                return (
-                  <span
-                    key={key}
-                    className={`dc-badge ${cls}`}
-                    style={{ animationDelay: `${i * 0.07}s` }}
-                  >
-                    <Icon size={9} aria-hidden="true" />
-                    {label}
-                  </span>
-                );
-              })}
-              {isEcoFriendly && (
-                <span className="dc-badge dc-badge--eco">🌿 Eco</span>
-              )}
-            </div>
-          )}
-
-          <div className="dc-actions">
-            <button
-              onClick={handleWishlist}
-              aria-label={isLiked ? "Remove from wishlist" : "Save to wishlist"}
-              aria-pressed={isLiked}
-              className={[
-                "dc-action-btn",
-                isLiked   ? "dc-action-btn--liked"      : "",
-                heartAnim ? "dc-action-btn--heart-anim" : "",
-              ].filter(Boolean).join(" ")}
-            >
-              <FiHeart
-                size={15}
-                aria-hidden="true"
-                style={{
-                  fill:       isLiked ? "#ef4444" : "none",
-                  color:      isLiked ? "#ef4444" : "#64748b",
-                  transition: "all 0.2s ease",
-                }}
-              />
-            </button>
-
-            <div style={{ position: "relative" }}>
-              <button
-                onClick={handleShare}
-                aria-label="Share this destination"
-                className={[
-                  "dc-action-btn",
-                  copied ? "dc-action-btn--copied" : "",
-                ].filter(Boolean).join(" ")}
-              >
-                <FiShare2
-                  size={14}
-                  aria-hidden="true"
-                  style={{ color: copied ? "#059669" : "#64748b" }}
-                />
-              </button>
-              {copied && (
-                <span className="dc-toast" role="status" aria-live="polite">
-                  ✓ Link copied
-                </span>
-              )}
-            </div>
-</div>
+        
+          </div>
+        </div>
  
-         </div>
-       </div>
- 
-       {/* ════ CARD BODY ════ */}
-       <div className="dc-body">
-         <div className="dc-footer">
-           <button
-             className="dc-btn-learn"
-             onClick={handleLearnMore}
-             aria-label={`Learn more about ${name}`}
-           >
-             <span>Learn More</span>
-             <FiArrowRight
-               size={13}
-               aria-hidden="true"
-               className="dc-btn-arrow"
-             />
-           </button>
- 
-           <button
-             className="dc-btn-book"
-             onClick={goBook}
-             aria-label={`Book ${name} now`}
-           >
-             <FiCalendar size={13} aria-hidden="true" />
-             <span>Book Now</span>
-           </button>
-         </div>
-       </div>
-     </article>
-   );
+);
  
 export default DestinationCard;
