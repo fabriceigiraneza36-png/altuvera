@@ -133,182 +133,267 @@ const HOME_STYLES = `
 }
 
 /* ══════════════════════════════════════════
-   INTRO MEDIA PANEL — FIXED SIZE
+   INTRO MEDIA PANEL — DESTINATION CARDS w/ SLIDESHOW
 ══════════════════════════════════════════ */
 .intro-media-grid {
   width: 100%;
-  max-width: 520px;
-  height: 380px;
+  max-width: 540px;
+  height: 400px;
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: 1.35fr 1fr;
   grid-template-rows: 1fr 1fr;
-  gap: .65rem;
+  gap: .7rem;
   flex-shrink: 0;
   position: relative;
 }
-.intro-media-main {
-  grid-row: 1 / -1;
+
+/* — Shared card base — */
+.intro-dest-card {
   position: relative;
   border-radius: 1.25rem;
   overflow: hidden;
   background: #0f1b0f;
-  box-shadow: 0 12px 40px rgba(0,0,0,.16);
+  box-shadow: 0 10px 32px rgba(0,0,0,.14);
   cursor: pointer;
-  transition: box-shadow .4s ease;
+  transition: transform .5s cubic-bezier(.34,1.56,.64,1), box-shadow .4s ease;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  isolation: isolate;
 }
-.intro-media-main:hover {
-  box-shadow: 0 20px 56px rgba(0,0,0,.24);
+.intro-dest-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 22px 56px rgba(0,0,0,.24);
 }
-.intro-media-main::after {
+.intro-dest-card:focus-visible {
+  outline: 2px solid #22c55e;
+  outline-offset: 3px;
+}
+
+/* — Main (large) card — */
+.intro-dest-main {
+  grid-row: 1 / -1;
+}
+
+/* — Slideshow layer — */
+.intro-slideshow-stack {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+.intro-slideshow-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.08);
+  transition: opacity 1.1s ease, transform 6s ease-out;
+  will-change: opacity, transform;
+}
+.intro-slideshow-img.is-active {
+  opacity: 1;
+  transform: scale(1);
+}
+.intro-slideshow-img.is-prev {
+  opacity: 0;
+  transform: scale(1.02);
+  transition: opacity 1.1s ease, transform 1.1s ease;
+}
+
+/* — Card overlay gradient — */
+.intro-dest-card::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(5,37,20,.72) 0%, rgba(5,37,20,.12) 45%, transparent 100%);
+  background: linear-gradient(to top, rgba(5,37,20,.78) 0%, rgba(5,37,20,.18) 45%, transparent 100%);
   pointer-events: none;
   z-index: 2;
+  transition: background .35s ease;
 }
-.intro-media-main-label {
+.intro-dest-card:hover::after {
+  background: linear-gradient(to top, rgba(5,37,20,.88) 0%, rgba(5,37,20,.35) 50%, rgba(5,37,20,.08) 100%);
+}
+
+/* — Main card label — */
+.intro-dest-main-label {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
-  padding: 1rem;
+  padding: 1.1rem;
   z-index: 3;
   display: flex;
   flex-direction: column;
-  gap: .25rem;
+  gap: .3rem;
 }
-.intro-media-main-badge {
+.intro-dest-badge {
   display: inline-flex;
   align-items: center;
-  gap: .25rem;
+  gap: .3rem;
   width: fit-content;
   font-family: 'Inter', sans-serif;
   font-size: .55rem;
   font-weight: 800;
-  letter-spacing: .1em;
+  letter-spacing: .12em;
   text-transform: uppercase;
   color: #86efac;
-  background: rgba(16,185,129,.15);
+  background: rgba(16,185,129,.18);
   backdrop-filter: blur(8px);
-  padding: .2rem .5rem;
+  padding: .25rem .6rem;
   border-radius: 99px;
-  border: 1px solid rgba(134,239,172,.2);
+  border: 1px solid rgba(134,239,172,.25);
 }
-.intro-media-main-title {
+.intro-dest-main-title {
   font-family: 'Playfair Display', Georgia, serif;
-  font-size: 1rem;
+  font-size: 1.15rem;
   font-weight: 700;
   color: #fff;
   line-height: 1.2;
   margin: 0;
+  letter-spacing: -.01em;
+  text-shadow: 0 2px 12px rgba(0,0,0,.35);
 }
-.intro-media-main-sub {
-  font-family: 'Inter', sans-serif;
-  font-size: .68rem;
-  color: rgba(255,255,255,.6);
-  margin: 0;
-}
-.intro-media-play-ring {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 4;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  background: rgba(255,255,255,.15);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255,255,255,.3);
+.intro-dest-main-sub {
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all .3s cubic-bezier(.34,1.56,.64,1);
-  animation: introPlayPulse 2.5s ease-in-out infinite;
+  gap: .3rem;
+  font-family: 'Inter', sans-serif;
+  font-size: .72rem;
+  font-weight: 500;
+  color: rgba(255,255,255,.75);
+  margin: 0;
 }
-.intro-media-play-ring:hover {
-  background: rgba(16,185,129,.6);
-  border-color: #34d399;
-  transform: translate(-50%, -50%) scale(1.12);
-  animation: none;
+.intro-dest-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  width: fit-content;
+  font-family: 'Inter', sans-serif;
+  font-size: .68rem;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, #059669, #10b981);
+  padding: .45rem .85rem;
+  border-radius: 99px;
+  margin-top: .3rem;
+  box-shadow: 0 4px 14px rgba(5,150,105,.35);
+  transition: transform .25s ease, box-shadow .25s ease, gap .25s ease;
 }
-.intro-media-play-ring svg { color: #fff; margin-left: 2px; }
-@keyframes introPlayPulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(16,185,129,.4); }
-  50% { box-shadow: 0 0 0 12px rgba(16,185,129,0); }
+.intro-dest-card:hover .intro-dest-cta {
+  gap: .55rem;
+  box-shadow: 0 6px 20px rgba(5,150,105,.5);
+  transform: translateX(2px);
 }
-.intro-media-main-glow {
-  position: absolute;
-  top: -2.5rem;
-  right: -2.5rem;
-  width: 7rem;
-  height: 7rem;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(16,185,129,.2) 0%, transparent 70%);
-  pointer-events: none;
-  z-index: 1;
+.intro-dest-cta svg {
+  transition: transform .3s ease;
 }
-.intro-media-side {
-  position: relative;
-  border-radius: 1rem;
-  overflow: hidden;
-  background: #e2e8f0;
-  box-shadow: 0 6px 24px rgba(0,0,0,.1);
-  transition: all .4s cubic-bezier(.34,1.56,.64,1);
-  cursor: pointer;
+.intro-dest-card:hover .intro-dest-cta svg {
+  transform: translateX(2px);
 }
-.intro-media-side:hover {
-  transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 12px 36px rgba(0,0,0,.16);
+
+/* — Side (small) card — */
+.intro-dest-side .intro-dest-main-label {
+  padding: .75rem;
+  gap: .2rem;
 }
-.intro-media-side img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform .65s cubic-bezier(.25,.46,.45,.94);
-}
-.intro-media-side:hover img { transform: scale(1.07); }
-.intro-media-side::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(to top, rgba(5,37,20,.45) 0%, transparent 50%);
-  pointer-events: none;
-}
-.intro-media-side-label {
-  position: absolute;
-  bottom: .6rem;
-  left: .6rem;
-  z-index: 2;
-}
-.intro-media-side-tag {
+.intro-dest-side-tag {
   font-family: 'Inter', sans-serif;
   font-size: .5rem;
   font-weight: 800;
-  letter-spacing: .1em;
+  letter-spacing: .12em;
   text-transform: uppercase;
-  color: #fff;
-  background: rgba(0,0,0,.35);
+  color: #86efac;
+  background: rgba(16,185,129,.18);
   backdrop-filter: blur(6px);
-  padding: .18rem .45rem;
+  padding: .18rem .5rem;
   border-radius: 99px;
-  border: 1px solid rgba(255,255,255,.1);
+  border: 1px solid rgba(134,239,172,.22);
+  width: fit-content;
 }
+.intro-dest-side-title {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: .82rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+  margin: 0;
+  text-shadow: 0 2px 8px rgba(0,0,0,.35);
+}
+.intro-dest-side-sub {
+  display: flex;
+  align-items: center;
+  gap: .2rem;
+  font-family: 'Inter', sans-serif;
+  font-size: .6rem;
+  font-weight: 500;
+  color: rgba(255,255,255,.7);
+  margin: 0;
+}
+.intro-dest-side-arrow {
+  position: absolute;
+  top: .55rem;
+  right: .55rem;
+  z-index: 3;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  background: rgba(255,255,255,.15);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: all .3s cubic-bezier(.34,1.56,.64,1);
+}
+.intro-dest-card:hover .intro-dest-side-arrow {
+  background: #10b981;
+  border-color: #34d399;
+  transform: rotate(-45deg) scale(1.12);
+}
+
+/* — Slide indicator dots — */
+.intro-slide-dots {
+  position: absolute;
+  bottom: .6rem;
+  right: .8rem;
+  z-index: 4;
+  display: flex;
+  gap: .25rem;
+}
+.intro-dest-side .intro-slide-dots {
+  bottom: .5rem;
+  right: .5rem;
+}
+.intro-slide-dot {
+  width: .3rem;
+  height: .3rem;
+  border-radius: 99px;
+  background: rgba(255,255,255,.35);
+  transition: all .35s ease;
+}
+.intro-slide-dot.is-active {
+  width: .9rem;
+  background: #34d399;
+}
+
+/* — Floating badges — */
 .intro-media-float-badge {
   position: absolute;
   z-index: 10;
   background: #fff;
   border-radius: .85rem;
   padding: .45rem .7rem;
-  box-shadow: 0 6px 24px rgba(0,0,0,.13);
+  box-shadow: 0 8px 26px rgba(0,0,0,.14);
   display: flex;
   align-items: center;
   gap: .4rem;
   animation: introFloatBounce 4s ease-in-out infinite;
   border: 1px solid #f1f5f9;
+  pointer-events: none;
 }
 .intro-media-float-badge--top { top: -.6rem; right: -.4rem; animation-delay: 0s; }
 .intro-media-float-badge--bottom { bottom: -.6rem; left: 1.5rem; animation-delay: 1.5s; }
@@ -341,13 +426,15 @@ const HOME_STYLES = `
   color: #94a3b8;
   line-height: 1.2;
 }
-.intro-media-grid .intro-media-main {
+
+/* — Card entry animation — */
+.intro-media-grid .intro-dest-main {
   animation: introCardEnter .7s cubic-bezier(.34,1.56,.64,1) .2s both;
 }
-.intro-media-grid .intro-media-side:nth-child(2) {
+.intro-media-grid .intro-dest-side:nth-child(2) {
   animation: introCardEnter .7s cubic-bezier(.34,1.56,.64,1) .4s both;
 }
-.intro-media-grid .intro-media-side:nth-child(3) {
+.intro-media-grid .intro-dest-side:nth-child(3) {
   animation: introCardEnter .7s cubic-bezier(.34,1.56,.64,1) .55s both;
 }
 .intro-media-float-badge--top {
@@ -360,19 +447,24 @@ const HOME_STYLES = `
   from { opacity: 0; transform: translateY(24px) scale(.93); }
   to { opacity: 1; transform: translateY(0) scale(1); }
 }
+
+/* — Responsive — */
 @media (max-width: 1024px) {
-  .intro-media-grid { max-width: 440px; height: 340px; }
+  .intro-media-grid { max-width: 460px; height: 360px; }
+  .intro-dest-main-title { font-size: 1.05rem; }
 }
 @media (max-width: 900px) {
-  .intro-media-grid { max-width: 100%; height: 300px; margin-top: 1.25rem; }
+  .intro-media-grid { max-width: 100%; height: 320px; margin-top: 1.25rem; }
   .intro-media-float-badge { display: none; }
 }
 @media (max-width: 600px) {
-  .intro-media-grid { height: 240px; grid-template-columns: 1.3fr 1fr; gap: .4rem; }
-  .intro-media-main-title { font-size: .85rem; }
-  .intro-media-play-ring { width: 2.5rem; height: 2.5rem; }
-  .intro-media-main-label { padding: .75rem; }
-  .intro-media-side-tag { font-size: .45rem; }
+  .intro-media-grid { height: 260px; grid-template-columns: 1.25fr 1fr; gap: .45rem; }
+  .intro-dest-main-title { font-size: .92rem; }
+  .intro-dest-main-label { padding: .8rem; }
+  .intro-dest-cta { font-size: .62rem; padding: .38rem .7rem; }
+  .intro-dest-side-title { font-size: .72rem; }
+  .intro-dest-side-tag { font-size: .45rem; }
+  .intro-dest-side-arrow { width: 1.5rem; height: 1.5rem; }
 }
 
 /* ── Scroll row ── */
@@ -556,47 +648,6 @@ const HOME_STYLES = `
   .why-grid{grid-template-columns:1fr;}
 }
 
-/* Video modal */
-.vmodal-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.9);backdrop-filter:blur(14px);display:flex;align-items:center;justify-content:center;padding:1rem;}
-.vmodal-container{position:relative;width:100%;max-width:860px;background:#0a0a0a;border-radius:1.25rem;overflow:hidden;box-shadow:0 36px 90px rgba(0,0,0,.5);}
-.vmodal-close{position:absolute;top:.65rem;right:.65rem;z-index:20;width:2.25rem;height:2.25rem;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.07);backdrop-filter:blur(8px);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
-.vmodal-close:hover{background:rgba(255,255,255,.14);transform:scale(1.08);}
-.vmodal-video-area{position:relative;width:100%;aspect-ratio:16/9;background:#000;}
-.vmodal-yt-player{width:100%;height:100%;}
-.vmodal-loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.85rem;color:rgba(255,255,255,.65);font-family:'Inter',sans-serif;font-size:.8rem;}
-.vmodal-loading-spinner{width:2.25rem;height:2.25rem;border:2.5px solid rgba(255,255,255,.08);border-top-color:#16a34a;border-radius:50%;animation:vSpin .8s linear infinite;}
-@keyframes vSpin{to{transform:rotate(360deg)}}
-.vmodal-error-state{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.65rem;color:#fff;font-family:'Inter',sans-serif;}
-.vmodal-error-title{font-size:.92rem;font-weight:700;}
-.vmodal-error-actions{display:flex;gap:.65rem;}
-.vmodal-error-retry,.vmodal-error-skip{display:flex;align-items:center;gap:.3rem;padding:.45rem 1rem;border-radius:.65rem;border:none;font-family:'Inter',sans-serif;font-size:.75rem;font-weight:700;cursor:pointer;}
-.vmodal-error-retry{background:#16a34a;color:#fff;}
-.vmodal-error-skip{background:rgba(255,255,255,.08);color:#fff;}
-.vmodal-controls{padding:.7rem 1.1rem;background:#111;}
-.vmodal-controls-row{display:flex;align-items:center;gap:.65rem;}
-.vmodal-controls-left{display:flex;align-items:center;gap:.3rem;}
-.vmodal-btn{width:2rem;height:2rem;border-radius:50%;border:none;background:rgba(255,255,255,.07);color:rgba(255,255,255,.75);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;}
-.vmodal-btn:hover,.vmodal-btn.active{background:#16a34a;color:#fff;}
-.vmodal-btn--play{width:2.5rem;height:2.5rem;background:#16a34a;color:#fff;}
-.vmodal-track-info{flex:1;display:flex;flex-direction:column;gap:.05rem;overflow:hidden;}
-.vmodal-track-title{font-family:'Inter',sans-serif;font-size:.78rem;font-weight:700;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.vmodal-track-sub{font-family:'Inter',sans-serif;font-size:.65rem;color:rgba(255,255,255,.45);}
-.vmodal-playlist{background:#0d0d0d;border-top:1px solid rgba(255,255,255,.05);max-height:200px;overflow-y:auto;}
-.vmodal-playlist-header{display:flex;align-items:center;gap:.4rem;padding:.65rem 1.1rem;font-family:'Inter',sans-serif;font-size:.7rem;font-weight:700;color:rgba(255,255,255,.45);border-bottom:1px solid rgba(255,255,255,.05);}
-.vmodal-playlist-item{width:100%;display:flex;align-items:center;gap:.65rem;padding:.55rem 1.1rem;border:none;background:none;cursor:pointer;transition:background .2s;}
-.vmodal-playlist-item:hover,.vmodal-playlist-item.active{background:rgba(22,163,74,.08);}
-.vmodal-playlist-thumb{width:2.75rem;height:2.75rem;border-radius:.4rem;overflow:hidden;position:relative;flex-shrink:0;}
-.vmodal-playlist-thumb img{width:100%;height:100%;object-fit:cover;}
-.vmodal-playlist-playing{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;gap:2px;}
-.vmodal-playlist-playing span{width:2.5px;height:10px;background:#22c55e;border-radius:2px;animation:vBars .8s ease-in-out infinite alternate;}
-.vmodal-playlist-playing span:nth-child(2){animation-delay:.2s;}
-.vmodal-playlist-playing span:nth-child(3){animation-delay:.4s;}
-@keyframes vBars{from{transform:scaleY(.4)}to{transform:scaleY(1)}}
-.vmodal-playlist-meta{flex:1;text-align:left;}
-.vmodal-playlist-name{font-family:'Inter',sans-serif;font-size:.72rem;font-weight:600;color:#fff;display:block;}
-.vmodal-playlist-desc{font-family:'Inter',sans-serif;font-size:.62rem;color:rgba(255,255,255,.4);display:block;margin-top:.05rem;}
-.vmodal-playlist-num{font-family:'Inter',sans-serif;font-size:.6rem;color:rgba(255,255,255,.25);font-weight:700;}
-
 /* ── CTA row ── */
 .section-link-row{display:flex;gap:.45rem;flex-wrap:wrap;}
 .section-link-pill{font-family:'Inter',sans-serif;font-size:.72rem;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;gap:.25rem;padding:.35rem .75rem;border-radius:99px;transition:all .2s ease;}
@@ -618,18 +669,49 @@ function injectHomeStyles() {
 }
 
 /* ═══════════════════════════════════════════
-   VIDEO DATA
+   INTRO DESTINATION CARDS DATA
+   Each card links to a destination page and
+   cycles through a slideshow of images.
 ═══════════════════════════════════════════ */
-const VIDEO_PLAYLIST = [
-  { id: 1, title: "Serengeti Great Migration", subtitle: "Tanzania's endless plains", videoId: "jIwyy2D5iag", poster: "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=800&q=80" },
-  { id: 2, title: "Mountain Gorillas of Rwanda", subtitle: "Volcanoes National Park", videoId: "b1V4pzuncg", poster: "https://images.unsplash.com/photo-1602491453631-e2a5ad90a131?auto=format&fit=crop&w=800&q=80" },
-  { id: 3, title: "Zanzibar Paradise", subtitle: "Indian Ocean coastline", videoId: "DZnw2TeLuEU", poster: "https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?auto=format&fit=crop&w=800&q=80" },
-  { id: 4, title: "Masai Mara Sunset", subtitle: "Kenya's golden hour", videoId: "--rk-kMATUc", poster: "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=800&q=80" },
-];
-
-const INTRO_SIDE_IMAGES = [
-  { src: "https://i.pinimg.com/736x/aa/c0/4c/aac04c789034e5993003ddc53818a06d.jpg", alt: "East African Culture", tag: "Culture" },
-  { src: "https://i.pinimg.com/1200x/8f/f4/63/8ff463499be98f73c3c9626985e674ee.jpg", alt: "Safari Landscape", tag: "Safari" },
+const INTRO_DEST_CARDS = [
+  {
+    slug: "serengeti",
+    country: "Tanzania",
+    tag: "Featured Destination",
+    title: "Serengeti National Park",
+    subtitle: "Home of the Great Migration",
+    to: "/destinations/serengeti",
+    images: [
+      "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1200&q=80",
+      "https://i.pinimg.com/1200x/d7/c2/55/d7c255030d2c381093145fc8409270b0.jpg",
+      "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1200&q=80",
+      "https://i.pinimg.com/1200x/7c/5b/d9/7c5bd9c6303f68eec25ff948f1b0f11e.jpg",
+    ],
+  },
+  {
+    slug: "volcanoes-national-park",
+    country: "Rwanda",
+    tag: "Gorilla Trekking",
+    title: "Volcanoes Park",
+    to: "/destinations/volcanoes-national-park",
+    images: [
+      "https://i.pinimg.com/1200x/5d/1a/90/5d1a90a3a3f9ad6bcddf570344ff2fc4.jpg",
+      "https://i.pinimg.com/736x/ec/08/5a/ec085a82c2f390bef2b8f0eae2935b9e.jpg",
+      "https://images.unsplash.com/photo-1602491453631-e2a5ad90a131?auto=format&fit=crop&w=1200&q=80",
+    ],
+  },
+  {
+    slug: "zanzibar",
+    country: "Tanzania",
+    tag: "Coastal Escape",
+    title: "Zanzibar Islands",
+    to: "/destinations/zanzibar",
+    images: [
+      "https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?auto=format&fit=crop&w=1200&q=80",
+      "https://i.pinimg.com/736x/aa/c0/4c/aac04c789034e5993003ddc53818a06d.jpg",
+      "https://i.pinimg.com/1200x/8f/f4/63/8ff463499be98f73c3c9626985e674ee.jpg",
+    ],
+  },
 ];
 
 /* ═══════════════════════════════════════════
@@ -657,199 +739,128 @@ const WhyCardIcon = ({ type, size = 48 }) => {
 };
 
 /* ═══════════════════════════════════════════
-   VIDEO PLAYER MODAL
+   INTRO SLIDESHOW HOOK
+   Auto-rotates image index on interval
 ═══════════════════════════════════════════ */
-const VideoPlayerModal = ({ isOpen, onClose, playlist, startIndex = 0 }) => {
-  const [currentIdx, setCurrentIdx] = useState(startIndex);
-  const [showPlaylist, setShowPlaylist] = useState(false);
-  const [videoError, setVideoError] = useState(false);
-  const [isReady, setIsReady] = useState(false);
-  const playerRef = useRef(null);
-  const containerRef = useRef(null);
-
-  useEffect(() => { setCurrentIdx(startIndex); setVideoError(false); setIsReady(false); }, [startIndex]);
+const useSlideshow = (length, intervalMs = 4500, offsetMs = 0) => {
+  const [idx, setIdx] = useState(0);
   useEffect(() => {
-    if (!isOpen) return;
-    document.body.style.overflow = "hidden";
-    const h = (e) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", h);
-    return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", h); };
-  }, [isOpen, onClose]);
-
-  useEffect(() => {
-    if (!isOpen || !window.YT) return;
-    if (playerRef.current) { playerRef.current.destroy(); playerRef.current = null; }
-    setIsReady(false); setVideoError(false);
-    const hsc = (e) => {
-      if (e.data === window.YT.PlayerState.ENDED) setCurrentIdx((p) => (p + 1) % playlist.length);
-      if (e.data === window.YT.PlayerState.PLAYING) setVideoError(false);
-    };
-    const init = () => {
-      if (!containerRef.current) return;
-      try {
-        playerRef.current = new window.YT.Player(containerRef.current, {
-          height: "100%", width: "100%", videoId: playlist[currentIdx]?.videoId,
-          playerVars: { autoplay: 1, modestbranding: 1, rel: 0, fs: 1, enablejsapi: 1 },
-          events: { onReady: () => setIsReady(true), onStateChange: hsc, onError: () => setVideoError(true) },
-        });
-      } catch { setVideoError(true); }
-    };
-    const t = setTimeout(init, 300);
-    return () => { clearTimeout(t); if (playerRef.current) { try { playerRef.current.destroy(); } catch { } playerRef.current = null; } };
-  }, [isOpen, currentIdx, playlist]);
-
-  const playNext = useCallback(() => setCurrentIdx((p) => (p + 1) % playlist.length), [playlist.length]);
-  const playPrev = useCallback(() => setCurrentIdx((p) => (p - 1 + playlist.length) % playlist.length), [playlist.length]);
-
-  if (!isOpen) return null;
-  const current = playlist[currentIdx];
-
-  return (
-    <div className="vmodal-overlay" onClick={onClose}>
-      <div className="vmodal-container" onClick={(e) => e.stopPropagation()}>
-        <button className="vmodal-close" onClick={onClose}><MdClose size={20} /></button>
-        <div className="vmodal-video-area">
-          {videoError ? (
-            <div className="vmodal-error-state">
-              <h3 className="vmodal-error-title">Unable to Play Video</h3>
-              <div className="vmodal-error-actions">
-                <button className="vmodal-error-retry" onClick={() => setVideoError(false)}><MdPlayArrow size={16} /> Retry</button>
-                {playlist.length > 1 && <button className="vmodal-error-skip" onClick={playNext}><MdSkipNext size={16} /> Next</button>}
-              </div>
-            </div>
-          ) : (<div ref={containerRef} className="vmodal-yt-player" />)}
-          {!videoError && !isReady && (<div className="vmodal-loading"><div className="vmodal-loading-spinner" /><p>Loading…</p></div>)}
-        </div>
-        <div className="vmodal-controls">
-          <div className="vmodal-controls-row">
-            <div className="vmodal-controls-left">
-              <button className="vmodal-btn" onClick={playPrev}><MdSkipPrevious size={20} /></button>
-              <button className="vmodal-btn vmodal-btn--play" onClick={() => {
-                if (!playerRef.current || !window.YT) return;
-                const s = playerRef.current.getPlayerState();
-                s === window.YT.PlayerState.PLAYING ? playerRef.current.pauseVideo() : playerRef.current.playVideo();
-              }}><MdPlayArrow size={20} /></button>
-              <button className="vmodal-btn" onClick={playNext}><MdSkipNext size={20} /></button>
-            </div>
-            <div className="vmodal-track-info">
-              <span className="vmodal-track-title">{current.title}</span>
-              <span className="vmodal-track-sub">{current.subtitle}</span>
-            </div>
-            <button className={`vmodal-btn ${showPlaylist ? "active" : ""}`} onClick={() => setShowPlaylist((p) => !p)}><MdPlaylistPlay size={20} /></button>
-          </div>
-        </div>
-        {showPlaylist && (
-          <div className="vmodal-playlist">
-            <div className="vmodal-playlist-header"><MdPlaylistPlay size={16} /><span>Playlist ({playlist.length})</span></div>
-            {playlist.map((item, i) => (
-              <button key={item.id} className={`vmodal-playlist-item ${i === currentIdx ? "active" : ""}`} onClick={() => { setCurrentIdx(i); setVideoError(false); }}>
-                <div className="vmodal-playlist-thumb">
-                  <img src={item.poster} alt={item.title} />
-                  {i === currentIdx && isReady && (<div className="vmodal-playlist-playing"><span /><span /><span /></div>)}
-                </div>
-                <div className="vmodal-playlist-meta"><span className="vmodal-playlist-name">{item.title}</span><span className="vmodal-playlist-desc">{item.subtitle}</span></div>
-                <span className="vmodal-playlist-num">{String(i + 1).padStart(2, "0")}</span>
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+    if (!length || length < 2) return;
+    let iv;
+    const start = setTimeout(() => {
+      iv = setInterval(() => setIdx((p) => (p + 1) % length), intervalMs);
+    }, offsetMs);
+    return () => { clearTimeout(start); if (iv) clearInterval(iv); };
+  }, [length, intervalMs, offsetMs]);
+  return [idx, setIdx];
 };
 
 /* ═══════════════════════════════════════════
-   INLINE VIDEO PLAYER
+   INTRO DESTINATION CARD (with slideshow)
 ═══════════════════════════════════════════ */
-const InlineVideoPlayer = ({ playlist, startIndex = 0 }) => {
-  const [currentIdx, setCurrentIdx] = useState(startIndex);
-  const [isReady, setIsReady] = useState(false);
-  const [videoError, setVideoError] = useState(false);
-  const playerRef = useRef(null);
-  const containerRef = useRef(null);
-
-  useEffect(() => { setCurrentIdx(startIndex); }, [startIndex]);
-  useEffect(() => {
-    setIsReady(false); setVideoError(false);
-    const destroy = () => { if (playerRef.current) { try { playerRef.current.destroy(); } catch { } playerRef.current = null; } };
-    const init = () => {
-      if (!containerRef.current || !window.YT) return;
-      destroy();
-      try {
-        playerRef.current = new window.YT.Player(containerRef.current, {
-          height: "100%", width: "100%", videoId: playlist[currentIdx]?.videoId,
-          playerVars: { autoplay: 1, mute: 1, modestbranding: 1, rel: 0, fs: 0, enablejsapi: 1, playsinline: 1, iv_load_policy: 3, cc_load_policy: 0, controls: 0, showinfo: 0 },
-          events: {
-            onReady: () => setIsReady(true),
-            onStateChange: (e) => { if (e.data === window.YT.PlayerState.ENDED) setCurrentIdx((p) => (p + 1) % playlist.length); },
-            onError: () => setVideoError(true),
-          },
-        });
-      } catch { setVideoError(true); }
-    };
-    let tid;
-    if (window.YT) { tid = setTimeout(init, 300); }
-    else if (window._ytApiReadyCb) { window._ytApiReadyCb.push(() => { tid = setTimeout(init, 300); }); }
-    return () => { clearTimeout(tid); destroy(); };
-  }, [currentIdx, playlist]);
-
-  const current = playlist[currentIdx];
-  return (
-    <div style={{ position: "absolute", inset: 0 }}>
-      {(!isReady || videoError) && (
-        <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
-          <img src={current?.poster} alt={current?.title} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
-        </div>
-      )}
-      <div ref={containerRef} style={{ width: "100%", height: "100%", position: "absolute", inset: 0, zIndex: 1 }} />
-    </div>
-  );
-};
-
-/* ═══════════════════════════════════════════
-   INTRO MEDIA PANEL
-═══════════════════════════════════════════ */
-const IntroMediaPanel = () => {
-  const [videoModalOpen, setVideoModalOpen] = useState(false);
-  const [videoStartIdx, setVideoStartIdx] = useState(0);
-  const fv = VIDEO_PLAYLIST[0];
-
-  const openVideo = useCallback((idx = 0) => { setVideoStartIdx(idx); setVideoModalOpen(true); }, []);
+const IntroDestCard = ({ card, variant = "main", staggerOffset = 0 }) => {
+  const [activeIdx] = useSlideshow(card.images.length, 4500, staggerOffset);
+  const isMain = variant === "main";
 
   return (
-    <>
-      <div className="intro-media-grid">
-        <div className="intro-media-float-badge intro-media-float-badge--top">
-          <div className="intro-float-icon intro-float-icon--green">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" /></svg>
-          </div>
-          <div className="intro-float-text"><span className="intro-float-title">100% Trusted</span><span className="intro-float-sub">Verified local partners</span></div>
-        </div>
-        <div className="intro-media-float-badge intro-media-float-badge--bottom">
-          <div className="intro-float-icon intro-float-icon--amber">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
-          </div>
-          <div className="intro-float-text"><span className="intro-float-title">4.9★ Rated</span><span className="intro-float-sub">500+ happy travellers</span></div>
-        </div>
-        <div className="intro-media-main" onClick={() => openVideo(0)}>
-          <InlineVideoPlayer playlist={VIDEO_PLAYLIST} startIndex={0} />
-          <div className="intro-media-main-glow" />
-          <div className="intro-media-play-ring"><MdPlayArrow size={20} /></div>
-          <div className="intro-media-main-label">
-            <span className="intro-media-main-badge">▶ Watch Reel</span>
-            <h3 className="intro-media-main-title">{fv?.title}</h3>
-            <p className="intro-media-main-sub">{fv?.subtitle}</p>
-          </div>
-        </div>
-        {INTRO_SIDE_IMAGES.map((img, i) => (
-          <div key={i} className="intro-media-side">
-            <img src={img.src} alt={img.alt} loading="lazy" />
-            <div className="intro-media-side-label"><span className="intro-media-side-tag">{img.tag}</span></div>
-          </div>
+    <Link
+      to={card.to}
+      className={`intro-dest-card ${isMain ? "intro-dest-main" : "intro-dest-side"}`}
+      aria-label={`Explore ${card.title}`}
+    >
+      {/* Slideshow */}
+      <div className="intro-slideshow-stack">
+        {card.images.map((src, i) => (
+          <img
+            key={i}
+            src={src}
+            alt={`${card.title} — view ${i + 1}`}
+            className={`intro-slideshow-img ${i === activeIdx ? "is-active" : ""}`}
+            loading={i === 0 ? "eager" : "lazy"}
+            draggable={false}
+          />
         ))}
       </div>
-      <VideoPlayerModal isOpen={videoModalOpen} onClose={() => setVideoModalOpen(false)} playlist={VIDEO_PLAYLIST} startIndex={videoStartIdx} />
-    </>
+
+      {/* Slide indicator dots */}
+      {card.images.length > 1 && (
+        <div className="intro-slide-dots">
+          {card.images.map((_, i) => (
+            <span key={i} className={`intro-slide-dot ${i === activeIdx ? "is-active" : ""}`} />
+          ))}
+        </div>
+      )}
+
+      {/* Side card corner arrow */}
+      {!isMain && (
+        <div className="intro-dest-side-arrow">
+          <HiOutlineArrowRight size={12} />
+        </div>
+      )}
+
+      {/* Label content */}
+      <div className="intro-dest-main-label">
+        {isMain ? (
+          <>
+            <span className="intro-dest-badge">✦ {card.tag}</span>
+            <h3 className="intro-dest-main-title">{card.title}</h3>
+            <p className="intro-dest-main-sub">
+              <MdOutlineLocationOn size={12} /> {card.country}
+              {card.subtitle && <> · {card.subtitle}</>}
+            </p>
+            <span className="intro-dest-cta">
+              Dive In <HiOutlineArrowRight size={12} />
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="intro-dest-side-tag">{card.tag}</span>
+            <h4 className="intro-dest-side-title">{card.title}</h4>
+            <p className="intro-dest-side-sub">
+              <MdOutlineLocationOn size={10} /> {card.country}
+            </p>
+          </>
+        )}
+      </div>
+    </Link>
+  );
+};
+
+/* ═══════════════════════════════════════════
+   INTRO MEDIA PANEL — DESTINATION CARDS
+═══════════════════════════════════════════ */
+const IntroMediaPanel = () => {
+  const [mainCard, ...sideCards] = INTRO_DEST_CARDS;
+
+  return (
+    <div className="intro-media-grid">
+      {/* Floating trust badges */}
+      <div className="intro-media-float-badge intro-media-float-badge--top">
+        <div className="intro-float-icon intro-float-icon--green">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" /></svg>
+        </div>
+        <div className="intro-float-text"><span className="intro-float-title">100% Trusted</span><span className="intro-float-sub">Verified local partners</span></div>
+      </div>
+      <div className="intro-media-float-badge intro-media-float-badge--bottom">
+        <div className="intro-float-icon intro-float-icon--amber">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+        </div>
+        <div className="intro-float-text"><span className="intro-float-title">4.9★ Rated</span><span className="intro-float-sub">500+ happy travellers</span></div>
+      </div>
+
+      {/* Main destination card */}
+      <IntroDestCard card={mainCard} variant="main" staggerOffset={0} />
+
+      {/* Side destination cards */}
+      {sideCards.map((card, i) => (
+        <IntroDestCard
+          key={card.slug}
+          card={card}
+          variant="side"
+          staggerOffset={(i + 1) * 900}
+        />
+      ))}
+    </div>
   );
 };
 
