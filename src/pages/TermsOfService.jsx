@@ -521,6 +521,13 @@ const styles = {
     maxWidth: 1340,
     margin: "0 auto",
     padding: "0 24px",
+    // Responsive padding
+    "@media (max-width: 768px)": {
+      padding: "0 16px",
+    },
+    "@media (max-width: 480px)": {
+      padding: "0 12px",
+    },
   },
 
   // Summary Bar
@@ -528,12 +535,26 @@ const styles = {
     background: BRAND.green900,
     padding: "0 24px",
     boxShadow: "0 4px 20px rgba(6, 78, 59, 0.3)",
+    // Responsive padding
+    "@media (max-width: 768px)": {
+      padding: "0 16px",
+    },
+    "@media (max-width: 480px)": {
+      padding: "0 12px",
+    },
   },
   summaryGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(4, 1fr)",
     maxWidth: 1340,
     margin: "0 auto",
+    // Responsive grid
+    "@media (max-width: 1024px)": {
+      gridTemplateColumns: "repeat(2, 1fr)",
+    },
+    "@media (max-width: 640px)": {
+      gridTemplateColumns: "1fr",
+    },
   },
   summaryItem: {
     display: "flex",
@@ -541,6 +562,22 @@ const styles = {
     gap: 14,
     padding: "26px 20px",
     borderRight: "1px solid rgba(255, 255, 255, 0.07)",
+    // Responsive padding
+    "@media (max-width: 768px)": {
+      padding: "20px 16px",
+    },
+    "@media (max-width: 480px)": {
+      padding: "16px 12px",
+      gap: 10,
+    },
+    // Remove border on last item for mobile
+    "@media (max-width: 640px)": {
+      borderRight: "none",
+      borderBottom: "1px solid rgba(255, 255, 255, 0.07)",
+    },
+    "@media (max-width: 640px) and (max-width: 480px)": {
+      marginBottom: -1,
+    },
   },
   summaryIcon: {
     width: 44,
@@ -556,11 +593,19 @@ const styles = {
     fontSize: 14.5,
     fontWeight: 700,
     color: "#fff",
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontSize: 13,
+    },
   },
   summarySub: {
     fontSize: 12.5,
     color: "rgba(255, 255, 255, 0.55)",
     marginTop: 2,
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontSize: 11,
+    },
   },
 
   // Key Points
@@ -568,6 +613,13 @@ const styles = {
     background: "#fff",
     padding: "40px 24px",
     borderBottom: `1px solid ${BRAND.slate200}`,
+    // Responsive padding
+    "@media (max-width: 768px)": {
+      padding: "32px 16px",
+    },
+    "@media (max-width: 480px)": {
+      padding: "24px 12px",
+    },
   },
   keyPointsHeader: {
     display: "flex",
@@ -577,11 +629,20 @@ const styles = {
     fontWeight: 700,
     color: BRAND.slate900,
     marginBottom: 20,
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontSize: 13,
+      marginBottom: 16,
+    },
   },
   keyPointsGrid: {
     display: "grid",
     gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
     gap: 14,
+    // Responsive gap
+    "@media (max-width: 480px)": {
+      gap: 12,
+    },
   },
   keyPoint: {
     display: "flex",
@@ -592,6 +653,11 @@ const styles = {
     borderRadius: 14,
     border: `1px solid ${BRAND.slate200}`,
     transition: "all 0.3s",
+    // Responsive
+    "@media (max-width: 480px)": {
+      gap: 12,
+      padding: "16px 16px",
+    },
   },
   keyPointIcon: {
     width: 38,
@@ -603,6 +669,12 @@ const styles = {
     justifyContent: "center",
     color: BRAND.green800,
     flexShrink: 0,
+    // Responsive
+    "@media (max-width: 480px)": {
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+    },
   },
   keyPointTitle: {
     fontSize: 14,
@@ -614,6 +686,10 @@ const styles = {
     fontSize: 13,
     color: BRAND.slate500,
     lineHeight: 1.5,
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontSize: 12,
+    },
   },
 
   // Main Layout
@@ -621,18 +697,36 @@ const styles = {
     background: `linear-gradient(180deg, ${BRAND.slate50}, ${BRAND.green50} 30%, ${BRAND.slate50})`,
     padding: "48px 0 100px",
     position: "relative",
+    // Responsive padding
+    "@media (max-width: 768px)": {
+      padding: "32px 0 80px",
+    },
+    "@media (max-width: 480px)": {
+      padding: "24px 0 60px",
+    },
   },
   layout: {
     display: "grid",
     gridTemplateColumns: "300px 1fr",
     gap: 40,
     alignItems: "start",
+    // Responsive layout - stack on mobile
+    "@media (max-width: 1024px)": {
+      gridTemplateColumns: "1fr",
+      gap: 24,
+    },
   },
 
   // Sidebar
   sidebar: {
     position: "sticky",
     top: 100,
+    // Responsive - not sticky on mobile
+    "@media (max-width: 1024px)": {
+      position: "relative",
+      top: 0,
+      marginBottom: 24,
+    },
   },
   sidebarInner: {
     background: "#fff",
@@ -640,6 +734,14 @@ const styles = {
     padding: "24px 20px",
     boxShadow: "0 4px 20px rgba(0, 0, 0, 0.04)",
     border: "1px solid rgba(6, 78, 59, 0.06)",
+    // Responsive padding
+    "@media (max-width: 768px)": {
+      padding: "20px 16px",
+    },
+    "@media (max-width: 480px)": {
+      padding: "16px 12px",
+      borderRadius: 16,
+    },
   },
   sidebarHeader: {
     display: "flex",
@@ -651,10 +753,21 @@ const styles = {
     marginBottom: 18,
     paddingBottom: 14,
     borderBottom: `1px solid ${BRAND.slate200}`,
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontSize: 13,
+      marginBottom: 16,
+      paddingBottom: 12,
+      gap: 8,
+    },
   },
   searchBox: {
     position: "relative",
     marginBottom: 16,
+    // Responsive
+    "@media (max-width: 480px)": {
+      marginBottom: 12,
+    },
   },
   searchIcon: {
     position: "absolute",
@@ -662,6 +775,10 @@ const styles = {
     top: "50%",
     transform: "translateY(-50%)",
     color: BRAND.slate400,
+    // Responsive
+    "@media (max-width: 480px)": {
+      left: 10,
+    },
   },
   searchInput: {
     width: "100%",
@@ -673,6 +790,11 @@ const styles = {
     background: BRAND.slate50,
     color: BRAND.slate800,
     outline: "none",
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontSize: 12,
+      padding: "8px 10px 8px 30px",
+    },
   },
   nav: {
     display: "flex",
@@ -681,6 +803,11 @@ const styles = {
     marginBottom: 16,
     maxHeight: 400,
     overflowY: "auto",
+    // Responsive
+    "@media (max-width: 480px)": {
+      marginBottom: 12,
+      gap: 1.5,
+    },
   },
   navItem: {
     display: "flex",
@@ -698,24 +825,43 @@ const styles = {
     textAlign: "left",
     transition: "all 0.25s",
     width: "100%",
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontSize: 12,
+      padding: "8px 10px",
+      gap: 6,
+    },
   },
   navItemActive: {
     background: `linear-gradient(135deg, ${BRAND.green800}, ${BRAND.green700})`,
     color: "#fff",
     fontWeight: 600,
     boxShadow: "0 4px 14px rgba(6, 78, 59, 0.2)",
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontWeight: 550,
+    },
   },
   navNum: {
     fontSize: 10,
     fontWeight: 700,
     opacity: 0.5,
     minWidth: 18,
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontSize: 9,
+      minWidth: 16,
+    },
   },
   navText: {
     flex: 1,
     whiteSpace: "nowrap",
     overflow: "hidden",
     textOverflow: "ellipsis",
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontSize: 12,
+    },
   },
   navBadge: {
     fontSize: 9,
@@ -725,6 +871,11 @@ const styles = {
     background: BRAND.green100,
     color: BRAND.green800,
     borderRadius: 4,
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontSize: 8,
+      padding: "2px 5px",
+    },
   },
   sidebarActions: {
     display: "flex",
@@ -732,6 +883,11 @@ const styles = {
     gap: 8,
     paddingTop: 14,
     borderTop: `1px solid ${BRAND.slate200}`,
+    // Responsive
+    "@media (max-width: 480px)": {
+      gap: 6,
+      paddingTop: 12,
+    },
   },
   actionBtn: {
     display: "flex",
@@ -748,6 +904,12 @@ const styles = {
     cursor: "pointer",
     transition: "all 0.25s",
     width: "100%",
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontSize: 12,
+      padding: "8px 10px",
+      gap: 8,
+    },
   },
 
   // Content
@@ -756,6 +918,13 @@ const styles = {
     flexDirection: "column",
     gap: 24,
     minWidth: 0,
+    // Responsive gap
+    "@media (max-width: 768px)": {
+      gap: 16,
+    },
+    "@media (max-width: 480px)": {
+      gap: 12,
+    },
   },
 
   // Intro Card
@@ -767,6 +936,16 @@ const styles = {
     borderRadius: 20,
     border: "1px solid rgba(6, 78, 59, 0.06)",
     boxShadow: "0 4px 20px rgba(0, 0, 0, 0.03)",
+    // Responsive - stack on mobile
+    "@media (max-width: 768px)": {
+      flexDirection: "column",
+      textAlign: "center",
+      alignItems: "center",
+    },
+    "@media (max-width: 480px)": {
+      padding: "20px 16px",
+      gap: 16,
+    },
   },
   introIcon: {
     width: 56,
@@ -778,6 +957,12 @@ const styles = {
     justifyContent: "center",
     flexShrink: 0,
     border: "1px solid rgba(6, 78, 59, 0.08)",
+    // Responsive
+    "@media (max-width: 480px)": {
+      width: 48,
+      height: 48,
+      borderRadius: 14,
+    },
   },
   introTitle: {
     fontFamily: "'Playfair Display', serif",
@@ -785,17 +970,35 @@ const styles = {
     fontWeight: 700,
     color: BRAND.slate900,
     margin: "0 0 10px",
+    // Responsive
+    "@media (max-width: 768px)": {
+      fontSize: 20,
+    },
+    "@media (max-width: 480px)": {
+      fontSize: 18,
+    },
   },
   introText: {
     fontSize: 15,
     color: BRAND.slate600,
     lineHeight: 1.75,
     margin: "0 0 16px",
+    // Responsive
+    "@media (max-width: 768px)": {
+      fontSize: 14,
+    },
+    "@media (max-width: 480px)": {
+      fontSize: 13,
+    },
   },
   introMeta: {
     display: "flex",
     flexWrap: "wrap",
     gap: 10,
+    // Responsive
+    "@media (max-width: 480px)": {
+      justifyContent: "center",
+    },
   },
   metaChip: {
     display: "inline-flex",
@@ -808,6 +1011,11 @@ const styles = {
     fontSize: 12,
     fontWeight: 600,
     color: BRAND.green800,
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontSize: 11,
+      padding: "5px 12px",
+    },
   },
 
   // Agreement Notice
@@ -821,6 +1029,13 @@ const styles = {
     fontSize: 14,
     color: "#92400E",
     lineHeight: 1.65,
+    // Responsive - stack on mobile
+    "@media (max-width: 480px)": {
+      flexDirection: "column",
+      textAlign: "center",
+      alignItems: "center",
+      padding: "16px 20px",
+    },
   },
   noticeIcon: {
     width: 40,
@@ -832,6 +1047,12 @@ const styles = {
     justifyContent: "center",
     flexShrink: 0,
     color: "#92400E",
+    // Responsive
+    "@media (max-width: 480px)": {
+      width: 32,
+      height: 32,
+      borderRadius: 8,
+    },
   },
 
   // No Results
@@ -841,17 +1062,31 @@ const styles = {
     background: "#fff",
     borderRadius: 20,
     border: `1px solid ${BRAND.slate200}`,
+    // Responsive
+    "@media (max-width: 480px)": {
+      padding: "40px 16px",
+    },
   },
   noResultsTitle: {
     fontFamily: "'Playfair Display', serif",
     fontSize: 22,
     color: BRAND.slate900,
     margin: "16px 0 8px",
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontSize: 20,
+      margin: "12px 0 6px",
+    },
   },
   noResultsText: {
     fontSize: 14,
     color: BRAND.slate500,
     margin: "0 0 20px",
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontSize: 13,
+      margin: "0 0 16px",
+    },
   },
   clearBtn: {
     padding: "10px 24px",
@@ -863,6 +1098,11 @@ const styles = {
     fontSize: 13,
     fontWeight: 600,
     cursor: "pointer",
+    // Responsive
+    "@media (max-width: 480px)": {
+      padding: "8px 20px",
+      fontSize: 12,
+    },
   },
 
   // Section Cards
@@ -875,6 +1115,14 @@ const styles = {
     transition: "all 0.35s",
     scrollMarginTop: 90,
     position: "relative",
+    // Responsive
+    "@media (max-width: 768px)": {
+      padding: "24px 20px",
+    },
+    "@media (max-width: 480px)": {
+      padding: "20px 16px",
+      borderRadius: 16,
+    },
   },
   sectionCardImportant: {
     borderLeft: `4px solid ${BRAND.green600}`,
@@ -893,12 +1141,25 @@ const styles = {
     textTransform: "uppercase",
     letterSpacing: 0.5,
     marginBottom: 16,
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontSize: 10,
+      padding: "4px 10px",
+      letterSpacing: 0.4,
+    },
   },
   sectionHeader: {
     display: "flex",
     alignItems: "flex-start",
     gap: 16,
     marginBottom: 24,
+    // Responsive
+    "@media (max-width: 480px)": {
+      flexDirection: "column",
+      alignItems: "flex-start",
+      gap: 12,
+      marginBottom: 20,
+    },
   },
   sectionIcon: {
     width: 52,
@@ -908,6 +1169,12 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     flexShrink: 0,
+    // Responsive
+    "@media (max-width: 480px)": {
+      width: 44,
+      height: 44,
+      borderRadius: 12,
+    },
   },
   sectionNum: {
     display: "block",
@@ -917,6 +1184,11 @@ const styles = {
     letterSpacing: 1,
     color: BRAND.slate400,
     marginBottom: 4,
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontSize: 11,
+      letterSpacing: 0.8,
+    },
   },
   sectionTitle: {
     fontFamily: "'Playfair Display', serif",
@@ -925,10 +1197,21 @@ const styles = {
     color: BRAND.slate900,
     margin: 0,
     lineHeight: 1.3,
+    // Responsive
+    "@media (max-width: 768px)": {
+      fontSize: 20,
+    },
+    "@media (max-width: 480px)": {
+      fontSize: 18,
+    },
   },
   sectionBody: {
     borderTop: `1px solid ${BRAND.slate100}`,
     paddingTop: 20,
+    // Responsive
+    "@media (max-width: 480px)": {
+      paddingTop: 16,
+    },
   },
   paragraph: {
     fontFamily: "'Playfair Display', Georgia, serif",
@@ -936,6 +1219,13 @@ const styles = {
     color: BRAND.slate700,
     lineHeight: 1.8,
     margin: "0 0 14px",
+    // Responsive
+    "@media (max-width: 768px)": {
+      fontSize: 14,
+    },
+    "@media (max-width: 480px)": {
+      fontSize: 13,
+    },
   },
 
   // Contact Card
@@ -948,11 +1238,22 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     gap: 18,
+    // Responsive
+    "@media (max-width: 480px)": {
+      marginTop: 16,
+      padding: "20px 16px",
+      borderRadius: 14,
+      gap: 16,
+    },
   },
   contactRow: {
     display: "flex",
     alignItems: "flex-start",
     gap: 14,
+    // Responsive
+    "@media (max-width: 480px)": {
+      gap: 12,
+    },
   },
   contactLabel: {
     display: "block",
@@ -962,12 +1263,21 @@ const styles = {
     letterSpacing: 0.5,
     color: BRAND.slate400,
     marginBottom: 3,
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontSize: 11,
+      letterSpacing: 0.4,
+    },
   },
   contactLink: {
     fontSize: 14.5,
     fontWeight: 600,
     color: BRAND.green700,
     textDecoration: "none",
+    // Responsive
+    "@media (max-width: 480px)": {
+      fontSize: 14,
+    },
   },
 
   // Bottom CTA
@@ -979,6 +1289,15 @@ const styles = {
     position: "relative",
     overflow: "hidden",
     marginTop: 16,
+    // Responsive
+    "@media (max-width: 768px)": {
+      padding: "40px 24px",
+    },
+    "@media (max-width: 480px)": {
+      padding: "32px 20px",
+      borderRadius: 20,
+      marginTop: 12,
+    },
   },
   bottomIcon: {
     width: 68,
@@ -989,6 +1308,12 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
     margin: "0 auto 22px",
+    // Responsive
+    "@media (max-width: 480px)": {
+      width: 56,
+      height: 56,
+      margin: "0 auto 16px",
+    },
   },
   bottomTitle: {
     fontFamily: "'Playfair Display', serif",
@@ -996,6 +1321,13 @@ const styles = {
     fontWeight: 700,
     color: "#fff",
     margin: "0 0 12px",
+    // Responsive
+    "@media (max-width: 768px)": {
+      fontSize: 22,
+    },
+    "@media (max-width: 480px)": {
+      fontSize: 20,
+    },
   },
   bottomText: {
     fontSize: 15,
@@ -1003,12 +1335,24 @@ const styles = {
     lineHeight: 1.7,
     maxWidth: 460,
     margin: "0 auto 28px",
+    // Responsive
+    "@media (max-width: 768px)": {
+      fontSize: 14,
+      maxWidth: 100%,
+    },
+    "@media (max-width: 480px)": {
+      fontSize: 13,
+    },
   },
   bottomBtns: {
     display: "flex",
     gap: 14,
     justifyContent: "center",
     flexWrap: "wrap",
+    // Responsive
+    "@media (max-width: 480px)": {
+      gap: 10,
+    },
   },
   ctaBtnWhite: {
     display: "inline-flex",
@@ -1023,6 +1367,12 @@ const styles = {
     background: "#fff",
     color: BRAND.green800,
     boxShadow: "0 8px 28px rgba(0, 0, 0, 0.16)",
+    // Responsive
+    "@media (max-width: 480px)": {
+      padding: "12px 24px",
+      fontSize: 13,
+      borderRadius: 12,
+    },
   },
   ctaBtnGhost: {
     display: "inline-flex",
@@ -1037,5 +1387,11 @@ const styles = {
     background: "rgba(255, 255, 255, 0.08)",
     color: "#fff",
     border: "2px solid rgba(255, 255, 255, 0.18)",
+    // Responsive
+    "@media (max-width: 480px)": {
+      padding: "12px 24px",
+      fontSize: 13,
+      borderRadius: 12,
+    },
   },
 };
