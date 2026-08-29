@@ -754,9 +754,10 @@ function InfoPanel({ dest, onClose, onExplore, onBook }) {
           )}
         </div>
 
-        {dest.shortDescription && (
-          <p className="gm-info__desc">{dest.shortDescription}</p>
-        )}
+const cleanShortDescription = dest.shortDescription?.replace(/experience unforgattable adventures rich, culture and breathtaking naturel beauty/gi, '').trim() || '';
+         {cleanShortDescription && (
+           <p className="gm-info__desc">{cleanShortDescription}</p>
+         )}
 
         <div className="gm-info__actions">
           <button className="gm-info__btn gm-info__btn--secondary" onClick={onBook}>

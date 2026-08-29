@@ -1292,11 +1292,20 @@ const MoreInCountrySection = ({ d }) => {
     (async () => {
       try {
         const param = countryId ? `countryId=${countryId}` : `countrySlug=${countrySlug}`;
-        const res   = await api.get(`/destinations?${param}&limit=12&sort=rating`);
-        const data  = res.data?.destinations || res.data?.data || res.data || [];
-        setDestinations(
-          data.filter(dest => dest.slug !== d.slug && dest.id !== d.id).slice(0, 10)
-        );
+const cleanText = (text) => {
+           if (!text) return text;
+           return text.replace(/experience unforgattable adventures rich, culture and breathtaking naturel beauty/gi, '').trim();
+         };
+         const res   = await api.get(`/destinations?${param}&limit=12&sort=rating`);
+         const rawData = res.data?.destinations || res.data?.data || res.data || [];
+         const cleanedData = rawData.map(dest => ({
+           ...dest,
+           description: cleanText(dest.description),
+           shortDescription: cleanText(dest.shortDescription),
+         }));
+         setDestinations(
+           cleanedData.filter(dest => dest.slug !== d.slug && dest.id !== d.id).slice(0, 10)
+         );
       } catch { setDestinations([]); }
       finally  { setLoading(false); }
     })();
@@ -1558,7 +1567,16 @@ const DestinationDetail = () => {
   if (loading)              return <SkeletonPage />;
   if (error || !destination) return <ErrorPage error={error} navigate={navigate} />;
 
-  const d = destination;
+  const cleanText = (text) => {
+     if (!text) return text;
+     return text.replace(/experience unforgattable adventures rich, culture and breathtaking naturel beauty/gi, '').trim();
+   };
+   const d = {
+     ...destination,
+     description: cleanText(destination.description),
+     shortDescription: cleanText(destination.shortDescription),
+     overview: cleanText(destination.overview),
+   };
 
   return (
     <ScrollProvider>

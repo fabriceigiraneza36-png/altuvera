@@ -887,37 +887,45 @@ const DestinationCard = memo(function DestinationCard({
   if (!destination) return <DestinationCardSkeleton />;
 
   /* ── destructure destination safely ── */
-  const {
-    slug,
-    id,
-    name             = "Destination",
-    images           = [],
-    gallery          = [],
-    heroImage,
-    imageUrl,
-    thumbnailUrl,
-    location,
-    country,
-    countryName,
-    countryFlag,
-    region,
-    duration,
-    durationDays,
-    rating           = 0,
-    reviewCount      = 0,
-    highlights       = [],
-    shortDescription,
-    description,
-    isFeatured,
-    isNew,
-    isPopular,
-    isEcoFriendly,
-    difficulty,
-    category,
-    entranceFee,
-    minGroupSize,
-    maxGroupSize,
-  } = destination;
+const {
+     slug,
+     id,
+     name             = "Destination",
+     images           = [],
+     gallery          = [],
+     heroImage,
+     imageUrl,
+     thumbnailUrl,
+     location,
+     country,
+     countryName,
+     countryFlag,
+     region,
+     duration,
+     durationDays,
+     rating           = 0,
+     reviewCount      = 0,
+     highlights       = [],
+     shortDescription,
+     description,
+     isFeatured,
+     isNew,
+     isPopular,
+     isEcoFriendly,
+     difficulty,
+     category,
+     entranceFee,
+     minGroupSize,
+     maxGroupSize,
+   } = destination;
+
+   // Clean unwanted text from description fields
+   const cleanText = (text) => {
+     if (!text) return text;
+     return text.replace(/experience unforgattable adventures rich, culture and breathtaking naturel beauty/gi, '').trim();
+   };
+   const cleanShortDescription = cleanText(shortDescription);
+   const cleanDescription = cleanText(description);
 
   /* ── derived values ── */
   const destId = slug || id;
@@ -943,11 +951,11 @@ const DestinationCard = memo(function DestinationCard({
     .filter((v, i, a) => a.indexOf(v) === i)
     .join(" · ");
 
-  const blurb =
-    shortDescription ||
-    (description
-      ? description.slice(0, 130) + (description.length > 130 ? "…" : "")
-      : "");
+const blurb =
+     cleanShortDescription ||
+     (cleanDescription
+       ? cleanDescription.slice(0, 130) + (cleanDescription.length > 130 ? "…" : "")
+       : "");
 
   const durationStr =
     duration ||
