@@ -63,6 +63,7 @@ import AnimatedSection from "../components/common/AnimatedSection";
 import Button from "../components/common/Button";
 import { Helmet } from "react-helmet-async";
 import { useCountries } from "../hooks/useCountries";
+import { useDestinationMapData } from "../hooks/useDestinations";
 import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../utils/seo";
 import { toGoogleMapEmbedUrl } from "../utils/mediaEmbed";
 
@@ -479,6 +480,60 @@ const countryPositions = {
   eritrea: { top: "18%", left: "70%" },
   djibouti: { top: "22%", left: "78%" },
 };
+
+const destinationMapBounds = { minLat: -12, maxLat: 18, minLng: 28, maxLng: 52 };
+
+const coordinateToMapPosition = (lat, lng) => ({
+  top: `${((destinationMapBounds.maxLat - lat) / (destinationMapBounds.maxLat - destinationMapBounds.minLat)) * 100}%`,
+  left: `${((lng - destinationMapBounds.minLng) / (destinationMapBounds.maxLng - destinationMapBounds.minLng)) * 100}%`,
+});
+
+const DestinationMarker = React.memo(({ destination, position, isMobile, showLabel }) => (
+  <a
+    href={`/destinations/${destination.slug || destination.id}`}
+    onClick={(event) => event.stopPropagation()}
+    title={`${destination.name}${destination.country?.name ? `, ${destination.country.name}` : ""}`}
+    aria-label={`Open ${destination.name}`}
+    style={{
+      position: "absolute",
+      top: position.top,
+      left: position.left,
+      width: isMobile ? 12 : 16,
+      height: isMobile ? 12 : 16,
+      transform: "translate(-50%, -50%)",
+      borderRadius: "50%",
+      background: "#F59E0B",
+      border: "2px solid white",
+      boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
+      zIndex: 8,
+      cursor: "pointer",
+    }}
+  >
+    {showLabel && (
+      <span
+        style={{
+          position: "absolute",
+          top: "100%",
+          left: "50%",
+          transform: "translateX(-50%)",
+          marginTop: 5,
+          padding: "4px 7px",
+          borderRadius: 6,
+          background: "rgba(17,24,39,0.9)",
+          color: "white",
+          fontSize: 10,
+          fontWeight: 700,
+          whiteSpace: "nowrap",
+          pointerEvents: "none",
+        }}
+      >
+        {destination.name}
+      </span>
+    )}
+  </a>
+));
+
+DestinationMarker.displayName = "DestinationMarker";
 
 /* ═══════════════════════════════════════════════════════
    UTILITY HOOKS
@@ -1450,6 +1505,30 @@ const InteractiveMap = () => {
   const isDesktop = windowWidth >= 1200;
 
   const { countries, loading, error, refetch } = useCountries();
+  const { pins: destinationPins } = useDestinationMapData({ limit: 500 });
+
+  const mappedDestinations = useMemo(
+    () => destinationPins.filter((destination) => {
+      const lat = Number(destination.position?.lat);
+      const lng = Number(destination.position?.lng);
+      return Number.isFinite(lat) && Number.isFinite(lng);
+    }),
+    [destinationPins],
+  );
+
+  const visibleDestinations = useMemo(() => {
+    if (!selectedCountry) return mappedDestinations;
+    const countryValues = [selectedCountry.id, selectedCountry.slug, selectedCountry.name]
+      .map((value) => String(value || "").trim().toLowerCase())
+      .filter(Boolean);
+    return mappedDestinations.filter((destination) => [
+      destination.country?.id,
+      destination.country?.slug,
+      destination.country?.name,
+      destination.countryId,
+      destination.countrySlug,
+    ].some((value) => countryValues.includes(String(value || "").trim().toLowerCase())));
+  }, [mappedDestinations, selectedCountry]);
 
   /* ── Filtered countries ── */
   const filtered = useMemo(() => {
@@ -1496,6 +1575,20 @@ const InteractiveMap = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
   }, []);
+
+  useEffect(() => {
+    if (!selectedCountry || !mapRef.current) return;
+    const position = countryPositions[selectedCountry.slug] || countryPositions[selectedCountry.name];
+    if (!position) return;
+    const nextZoom = 1.7;
+    const left = Number.parseFloat(position.left);
+    const top = Number.parseFloat(position.top);
+    setZoom(nextZoom);
+    setPan({
+      x: ((50 - left) / 100) * mapRef.current.clientWidth * (nextZoom - 1),
+      y: ((50 - top) / 100) * mapRef.current.clientHeight * (nextZoom - 1),
+    });
+  }, [selectedCountry]);
 
   /* ── Panning Logic ── */
   const handleMapMouseDown = useCallback(
@@ -1862,6 +1955,18 @@ const InteractiveMap = () => {
                           zIndex: 10,
                         }}
                       >
+                        {visibleDestinations.map((destination) => (
+                          <DestinationMarker
+                            key={destination.id || destination.slug}
+                            destination={destination}
+                            position={coordinateToMapPosition(
+                              Number(destination.position.lat),
+                              Number(destination.position.lng),
+                            )}
+                            isMobile={isMobile}
+                            showLabel={Boolean(selectedCountry)}
+                          />
+                        ))}
                         {countries.map((country) => {
                           const pos = countryPositions[country.id] ||
                             countryPositions[country.slug] || {
@@ -1913,6 +2018,7 @@ const InteractiveMap = () => {
                         />
                         <span>
                           <strong>{countries.length}</strong> countries •{" "}
+                          <strong>{visibleDestinations.length}</strong> destinations •{" "}
                           {currentMap.name}
                         </span>
                       </div>

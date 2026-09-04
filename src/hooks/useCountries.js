@@ -10,9 +10,35 @@ import countryService from "../services/countryService";
 import countryInsightService from "../services/countryInsightService";
 import { multiBackendFetch } from "../utils/multiBackendFetch";
 import { adaptDestinationList } from "../utils/destinationAdapter";
+import { countries as staticCountries } from "../data/countries";
 
 /* ── Helpers ─────────────────────────────────────────────── */
 const toStr = (v) => (v == null ? "" : String(v).trim().toLowerCase());
+
+const hasMedia = (value) => {
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === "string") return value.trim().length > 0 && value !== "[]";
+  return Boolean(value);
+};
+
+const withCountryMediaFallback = (country) => {
+  if (!country) return country;
+  const fallback = staticCountries.find((item) =>
+    [item.id, item.slug, item.name].some((value) => toStr(value) === toStr(country.slug || country.name || country.id)),
+  );
+  if (!fallback) return country;
+
+  const hero = country.hero_image || country.hero_image_url || country.heroImage || fallback.heroImage || "";
+  const images = hasMedia(country.images) ? country.images : (fallback.images || []);
+  return {
+    ...fallback,
+    ...country,
+    images,
+    heroImage: hero,
+    hero_image: hero,
+    hero_image_url: hero,
+  };
+};
 
 /* Match an adapted destination to a country by id / slug / name */
 const destinationMatchesCountry = (dest, country, idOrSlug) => {
@@ -86,7 +112,7 @@ export function useCountries(params = {}) {
     try {
 
   const result = await countryService.getAll(paramsRef.current);
-  setCountries(result.data       ?? []);
+  setCountries((result.data ?? []).map(withCountryMediaFallback));
   setPagination(result.pagination ?? null);
 
     } catch (err) {
@@ -402,7 +428,7 @@ export function useCountry(idOrSlug, { withInsights = false } = {}) {
 
     countryService
       .getOne(idOrSlug, true)
-      .then((data) => { if (!cancelled) setCountry(data); })
+      .then((data) => { if (!cancelled) setCountry(withCountryMediaFallback(data)); })
       .catch((err) => {
         if (!cancelled) {
           setError(err?.message || "Country not found");
