@@ -2,7 +2,7 @@ import React, { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDestination } from "../hooks/useDestinations";
 import PageHeader from "../components/common/PageHeader";
-import "../styles/destinationDetail.css";
+import "./DestinationDetail.css";
 
 const slugify = value => String(value || "").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
