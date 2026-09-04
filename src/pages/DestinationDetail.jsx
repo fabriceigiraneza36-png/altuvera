@@ -33,7 +33,7 @@ const P = {
   checkCircle:   "M22 11.1V12a10 10 0 11-5.9-9.1M22 4L12 14l-3-3",
   shield:        "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
   mail:          "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zM22 6l-10 7L2 6",
-  phone:         "M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3.1-8.7A2 2 0 014.1 3h3a2 2 0 012 1.7c.1.9.4 1.7.7 2.5a2 2 0 01-.4 2.1l-1.3 1.3a16 16 0 006.3 6.3l1.3-1.3a2 2 0 012.1-.4c.8.3 1.6.5 2.5.7a2 2 0 011.7 2.1z",
+  phone:         "M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3.1-8.7A2 2 0 014.1 3h3a2 2 0 012 1.7c.1.9.4 1.7.7 2.5a2 2 0 01-.4 2.1l-1.3 1.3a16 16 0 006.3 6.3l1.3-1.3a2 2 0 012.1-.4c.8.3 1.6.5 2.5.7a2 2 0 011.7 2.1z",
   arrowRight:    "M5 12h14M12 5l7 7-7 7",
   sparkles:      "M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z",
   alertTri:      "M10.3 3.9L1.8 18a2 2 0 001.7 3h16.9a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0zM12 9v4m0 4h.01",
@@ -179,7 +179,7 @@ const Reveal = ({
 };
 
 /* ══════════════════════════════════════════════════════════════
-   SECTION HEADING  (uses .d-sh CSS)
+   SECTION HEADING
 ══════════════════════════════════════════════════════════════ */
 const SH = ({ title, sub, center = true, light = false, tag }) => (
   <div className={`d-sh${center ? " d-sh--c" : ""}${light ? " d-sh--light" : ""}`}>
@@ -234,7 +234,7 @@ const ErrorPage = ({ error, navigate }) => (
 /* ══════════════════════════════════════════════════════════════
    LIGHTBOX
 ══════════════════════════════════════════════════════════════ */
-const Lightbox = ({ images, idx, onClose, onPrev, onNext }) => {
+const Lightbox = ({ images, idx, onClose, onPrev, onNext, onGoTo }) => {
   useEffect(() => {
     const fn = e => {
       if (e.key === "Escape")      onClose();
@@ -255,9 +255,16 @@ const Lightbox = ({ images, idx, onClose, onPrev, onNext }) => {
       <button className="d-lb__x" onClick={onClose} aria-label="Close">
         <Ic n="x" size={18} />
       </button>
+      
       <div className="d-lb__stage">
-        <img src={images[idx]} alt="" className="d-lb__img" />
+        <img src={images[idx]?.url} alt={images[idx]?.caption || ""} className="d-lb__img" />
+        {images[idx]?.caption && (
+          <div className="d-lb__caption-banner">
+            <p className="d-lb__caption-text">{images[idx].caption}</p>
+          </div>
+        )}
       </div>
+
       {images.length > 1 && (
         <>
           <button className="d-lb__arr d-lb__arr--p" onClick={onPrev} aria-label="Previous">
@@ -268,16 +275,14 @@ const Lightbox = ({ images, idx, onClose, onPrev, onNext }) => {
           </button>
           <div className="d-lb__foot">
             <div className="d-lb__strip">
-              {images.map((src, i) => (
+              {images.map((img, i) => (
                 <button
                   key={i}
                   className={`d-lb__thumb${i === idx ? " on" : ""}`}
-                  onClick={() => {
-                    /* bubble up via onNext/onPrev proxy – simplest: call goTo */
-                  }}
+                  onClick={() => onGoTo(i)}
                   aria-label={`Image ${i + 1}`}
                 >
-                  <img src={src} alt="" />
+                  <img src={img.url} alt="" />
                 </button>
               ))}
             </div>
@@ -290,16 +295,19 @@ const Lightbox = ({ images, idx, onClose, onPrev, onNext }) => {
 };
 
 /* ══════════════════════════════════════════════════════════════
-   HERO
+   HERO (With mixed 10-gallery slideshow)
 ══════════════════════════════════════════════════════════════ */
 const Hero = ({ d, navigate }) => {
+  // Slideshow mixes Hero, Cover/Main, legacy images & the 10 gallery photos
   const slides = useMemo(() => {
-    const all = [
-      d.heroImage, d.imageUrl,
-      ...(d.images  || []),
-      ...(d.gallery || []).map(g => g.imageUrl),
-    ].filter(Boolean);
-    return [...new Set(all)].slice(0, 8);
+    const hero = d.heroImage || d.hero_image;
+    const cover = d.coverImageUrl || d.cover_image_url || d.imageUrl || d.image_url;
+    const main = d.image_url || d.imageUrl;
+    const galleryUrls = (d.gallery || []).map(g => g.url || g.imageUrl).filter(Boolean);
+    const legacyUrls = Array.isArray(d.images) ? d.images : [];
+
+    const merged = [hero, cover, main, ...galleryUrls, ...legacyUrls].filter(Boolean);
+    return [...new Set(merged)].slice(0, 13); // Primary set of distinct slide photos
   }, [d]);
 
   const { idx, goTo } = useSlideshow(slides.length, 6500);
@@ -312,7 +320,6 @@ const Hero = ({ d, navigate }) => {
 
   return (
     <header className="d-hero">
-      {/* Slides */}
       <div className="d-hero__slides">
         {slides.length > 0 ? slides.map((src, i) => (
           <div key={i} className={`d-hero__slide${i === idx ? " active" : ""}`}>
@@ -326,7 +333,6 @@ const Hero = ({ d, navigate }) => {
       </div>
       <div className="d-hero__ov" />
 
-      {/* Breadcrumb */}
       <nav className="d-hero__nav">
         <div className="d-wrap">
           <ol className="d-hero__crumbs">
@@ -344,7 +350,6 @@ const Hero = ({ d, navigate }) => {
         </div>
       </nav>
 
-      {/* Body */}
       <div className="d-wrap" style={{ position: "relative", zIndex: 5 }}>
         <div className="d-hero__body">
           {d.country?.name && (
@@ -358,7 +363,6 @@ const Hero = ({ d, navigate }) => {
           )}
 
           <h1 className="d-hero__title">{d.name}</h1>
-
           {d.tagline && <p className="d-hero__sub">{d.tagline}</p>}
 
           <div className="d-hero__ctas">
@@ -392,7 +396,6 @@ const Hero = ({ d, navigate }) => {
         </div>
       </div>
 
-      {/* Dots */}
       {slides.length > 1 && (
         <div className="d-hero__dots">
           {slides.map((_, i) => (
@@ -406,7 +409,6 @@ const Hero = ({ d, navigate }) => {
         </div>
       )}
 
-      {/* Scroll hint */}
       <div className="d-hero__scroll">
         <span>SCROLL</span>
         <Ic n="chevDown" size={16} cls="d-hero__bounce" />
@@ -422,15 +424,15 @@ const AboutSection = ({ d, navigate }) => {
   const desc = d.description || d.shortDescription || d.overview;
   if (!desc && !d.highlights?.length) return null;
 
-  /* Aside slider */
   const asideImgs = useMemo(() => {
     const all = [
       d.heroImage, d.imageUrl,
-      ...(d.gallery || []).map(g => g.imageUrl),
+      ...(d.gallery || []).map(g => g.url || g.imageUrl),
       ...(d.images  || []),
     ].filter(Boolean);
     return [...new Set(all)].slice(0, 8);
   }, [d]);
+  
   const { idx, goTo, goNext, goPrev } = useSlideshow(asideImgs.length, 4500);
 
   const statCards = [
@@ -448,7 +450,6 @@ const AboutSection = ({ d, navigate }) => {
     <section id="dd-about" className="d-sec d-sec--white">
       <div className="d-wrap">
         <div className="d-about">
-          {/* ── MAIN ── */}
           <div className="d-about__main">
             <Reveal from="left">
               {d.destinationType && (
@@ -508,7 +509,6 @@ const AboutSection = ({ d, navigate }) => {
             </Reveal>
           </div>
 
-          {/* ── ASIDE ── */}
           <aside className="d-about__aside">
             <Reveal from="right" delay={60}>
               {asideImgs.length > 0 && (
@@ -615,7 +615,7 @@ const HighlightsSection = ({ d }) => {
 
   const imgPool = useMemo(() => {
     const all = [
-      ...(d.gallery || []).map(g => g.imageUrl),
+      ...(d.gallery || []).map(g => g.url || g.imageUrl),
       ...(d.images  || []),
       d.heroImage, d.imageUrl,
     ].filter(Boolean);
@@ -697,27 +697,42 @@ const HighlightsSection = ({ d }) => {
 };
 
 /* ══════════════════════════════════════════════════════════════
-   GALLERY
+   PHOTO GALLERY (Showing 10 high-resolution admin gallery images)
 ══════════════════════════════════════════════════════════════ */
 const GallerySection = ({ d }) => {
-  const [view, setView]   = useState("mosaic"); // "mosaic" | "list"
-  const [lb, setLb]       = useState({ open: false, idx: 0 });
+  const [view, setView] = useState("mosaic"); // "mosaic" | "list"
+  const [lb, setLb]     = useState({ open: false, idx: 0 });
 
-  const imgs = useMemo(() => {
-    const all = [
-      ...(d.gallery || []).map(g => g.imageUrl),
-      ...(d.images  || []),
-      d.heroImage, d.imageUrl,
-    ].filter(Boolean);
-    return [...new Set(all)].slice(0, 12);
+  // Map exactly the 10 gallery photos with their optional captions
+  const galleryImages = useMemo(() => {
+    const list = (d.gallery || []).map(g => ({
+      url: g.url || g.imageUrl,
+      caption: g.caption || `${d.name} Experience`
+    })).filter(g => g.url);
+
+    // Fallback to library or general image array if gallery is empty
+    if (list.length === 0) {
+      const fallbackList = [
+        d.imageUrl || d.image_url,
+        d.heroImage || d.hero_image,
+        d.coverImageUrl || d.cover_image_url,
+        ...(d.images || [])
+      ].filter(Boolean);
+      return [...new Set(fallbackList)].map((url, i) => ({
+        url,
+        caption: `${d.name} View ${i + 1}`
+      }));
+    }
+    return list.slice(0, 10); // Capped to strictly the 10 gallery slots
   }, [d]);
 
-  if (!imgs.length) return null;
+  if (!galleryImages.length) return null;
 
   const open  = i => setLb({ open: true, idx: i });
   const close = ()  => setLb({ open: false, idx: 0 });
-  const prev  = ()  => setLb(p => ({ ...p, idx: (p.idx - 1 + imgs.length) % imgs.length }));
-  const next  = ()  => setLb(p => ({ ...p, idx: (p.idx + 1) % imgs.length }));
+  const prev  = ()  => setLb(p => ({ ...p, idx: (p.idx - 1 + galleryImages.length) % galleryImages.length }));
+  const next  = ()  => setLb(p => ({ ...p, idx: (p.idx + 1) % galleryImages.length }));
+  const goTo  = i => setLb(p => ({ ...p, idx: i }));
 
   return (
     <section className="d-sec d-sec--white">
@@ -726,7 +741,7 @@ const GallerySection = ({ d }) => {
           <Reveal from="left">
             <SH
               title="Photo Gallery"
-              sub={`${imgs.length} photos from ${d.name}`}
+              sub={`Captivating moments from ${d.name}`}
               center={false}
             />
           </Reveal>
@@ -750,12 +765,13 @@ const GallerySection = ({ d }) => {
 
         {view === "mosaic" ? (
           <div className="d-gal-mosaic">
-            {imgs.map((src, i) => (
+            {galleryImages.map((img, i) => (
               <Reveal key={i} from="scale" delay={i * 30}>
                 <button className="d-gal-cell" onClick={() => open(i)} aria-label={`View photo ${i + 1}`}>
-                  <img src={src} alt={`${d.name} photo ${i + 1}`} loading="lazy" />
+                  <img src={img.url} alt={img.caption} loading="lazy" />
                   <div className="d-gal-cell__ov">
                     <Ic n="zoomIn" size={22} />
+                    {img.caption && <span className="d-gal-cell__caption-hint">{img.caption}</span>}
                   </div>
                 </button>
               </Reveal>
@@ -763,15 +779,15 @@ const GallerySection = ({ d }) => {
           </div>
         ) : (
           <div className="d-gal-list">
-            {imgs.map((src, i) => (
+            {galleryImages.map((img, i) => (
               <Reveal key={i} from="left" delay={i * 25}>
                 <button className="d-gal-list__row" onClick={() => open(i)} aria-label={`View photo ${i + 1}`}>
                   <div className="d-gal-list__thumb">
-                    <img src={src} alt={`${d.name} ${i + 1}`} loading="lazy" />
+                    <img src={img.url} alt={img.caption} loading="lazy" />
                   </div>
                   <div className="d-gal-list__info">
                     <span className="d-gal-list__num">Photo {String(i + 1).padStart(2, "0")}</span>
-                    <span className="d-gal-list__name">{d.name} — View {i + 1}</span>
+                    <span className="d-gal-list__name">{img.caption}</span>
                   </div>
                   <Ic n="chevRight" size={16} cls="d-gal-list__icon" />
                 </button>
@@ -783,8 +799,8 @@ const GallerySection = ({ d }) => {
 
       {lb.open && (
         <Lightbox
-          images={imgs} idx={lb.idx}
-          onClose={close} onPrev={prev} onNext={next}
+          images={galleryImages} idx={lb.idx}
+          onClose={close} onPrev={prev} onNext={next} onGoTo={goTo}
         />
       )}
     </section>
@@ -800,7 +816,7 @@ const WildlifeSection = ({ d }) => {
 
   const imgPool = useMemo(() => {
     const all = [
-      ...(d.gallery || []).map(g => g.imageUrl),
+      ...(d.gallery || []).map(g => g.url || g.imageUrl),
       ...(d.images  || []),
       d.heroImage, d.imageUrl,
     ].filter(Boolean);
@@ -928,7 +944,6 @@ const DeepDiveSection = ({ d, navigate }) => {
     d.highlights?.length || d.activities?.length || d.practicalInfo;
 
    if (!hasAny) return null;
-
    const pi = d.practicalInfo;
 
   return (
@@ -942,7 +957,6 @@ const DeepDiveSection = ({ d, navigate }) => {
         </Reveal>
 
         <div className="d-deepdive__grid">
-
           {(d.overview || d.description) && (
             <Block icon="globe" title="Overview" full from="bottom">
               <Prose text={d.overview || d.description} />
@@ -987,12 +1001,6 @@ const DeepDiveSection = ({ d, navigate }) => {
             </Block>
           )}
 
-           {d.activities?.length > 0 && (
-             <Block icon="compass" title="Activities" from="right" delay={60}>
-               <UL items={d.activities} icon="checkCircle" />
-             </Block>
-           )}
-
            {(pi?.budget?.rangeUsd || pi?.budget?.entranceFeeUsd) && (
              <Block icon="wallet" title="Budget Guide (USD)" from="left" delay={120}>
                <div className="d-deepdive__budget-grid">
@@ -1010,10 +1018,8 @@ const DeepDiveSection = ({ d, navigate }) => {
                </div>
              </Block>
            )}
-
          </div>
 
-        {/* In-section book CTA */}
         <Reveal from="bottom" delay={100}>
           <div className="d-deepdive__book-cta">
             <div className="d-deepdive__book-cta__text">
@@ -1045,8 +1051,8 @@ const DeepDiveSection = ({ d, navigate }) => {
    TIPS & SAFETY
 ══════════════════════════════════════════════════════════════ */
 const TipsSafetySection = ({ d }) => {
-  const localTips  = d.localTips;
-  const safetyInfo = d.safetyInfo;
+  const localTips  = d.localTips || d.local_tips;
+  const safetyInfo = d.safetyInfo || d.safety_info;
   if (!localTips && !safetyInfo) return null;
 
   const parseTips = raw => {
@@ -1312,7 +1318,7 @@ const MoreInCountrySection = ({ d }) => {
     (async () => {
       try {
         const param = countryId ? `country_id=${encodeURIComponent(countryId)}` : `countrySlug=${encodeURIComponent(countrySlug)}`;
-const cleanText = (text) => {
+        const cleanText = (text) => {
            if (!text) return text;
            return text.replace(/experience unforgattable adventures rich, culture and breathtaking naturel beauty/gi, '').trim();
          };
@@ -1616,9 +1622,7 @@ const DestinationDetail = () => {
     <ScrollProvider>
       <div className="d-page">
         <ProgressBar />
-
         <Hero d={d} navigate={navigate} />
-
         <AboutSection       d={d} navigate={navigate} />
         <HighlightsSection  d={d} />
         <GallerySection     d={d} />
