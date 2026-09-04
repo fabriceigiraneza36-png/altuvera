@@ -65,6 +65,7 @@ const P = {
   list:          "M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01",
   sparkle2:      "M9.937 15.5A2 2 0 008.5 14.063l-6.135-1.582a.5.5 0 010-.962L8.5 9.936A2 2 0 009.937 8.5l1.582-6.135a.5.5 0 01.963 0L14.063 8.5A2 2 0 0015.5 9.937l6.135 1.581a.5.5 0 010 .964L15.5 14.063a2 2 0 00-1.437 1.437l-1.582 6.135a.5.5 0 01-.963 0z",
   binoculars:    "M21 12.5a3.5 3.5 0 11-7 0 3.5 3.5 0 017 0zM10 12.5a3.5 3.5 0 11-7 0 3.5 3.5 0 017 0zM10 12.5h4",
+  messageCircle: "M21 11.5a8.4 8.4 0 01-9 8.5 9.5 9.5 0 01-4.2-1L3 21l1.8-4.5A8.4 8.4 0 013 11.5a9 9 0 1118 0z",
 };
 
 const Ic = ({
@@ -350,7 +351,8 @@ const Hero = ({ d, navigate }) => {
             <div className="d-hero__loc">
               <Ic n="mapPin" size={12} />
               <span style={{ letterSpacing: "3px", fontSize: ".76rem", fontWeight: 700 }}>
-                {d.country.flag && `${d.country.flag} `}{d.country.name.toUpperCase()}
+                {d.country.flagUrl && <img src={d.country.flagUrl} alt="" style={{ width: 16, height: 11, objectFit: "cover", marginRight: 7, verticalAlign: "-1px" }} />}
+                {d.country.name.toUpperCase()}
               </span>
             </div>
           )}
@@ -608,7 +610,8 @@ const AboutSection = ({ d, navigate }) => {
 const HighlightsSection = ({ d }) => {
   const highlights = d.highlights || [];
   const activities = d.activities || [];
-  if (!highlights.length && !activities.length) return null;
+  const attractions = (d.attractions || []).filter(item => item && (item.name || item.title));
+  if (!highlights.length && !activities.length && !attractions.length) return null;
 
   const imgPool = useMemo(() => {
     const all = [
@@ -620,6 +623,13 @@ const HighlightsSection = ({ d }) => {
   }, [d]);
 
   const items = [
+    ...attractions.map((attraction, i) => ({
+      text: attraction.name || attraction.title,
+      type: "Attraction", icon: "camera",
+      img: attraction.imageUrl || attraction.image_url || attraction.image,
+      desc: attraction.description || `Explore ${attraction.name || attraction.title}.`,
+      slug: (attraction.slug || attraction.name || attraction.title).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+    })),
     ...highlights.map((h, i) => ({
       text: h, type: "Highlight", icon: "sparkles",
       img: imgPool[i % Math.max(imgPool.length, 1)],
@@ -662,6 +672,16 @@ const HighlightsSection = ({ d }) => {
                     </span>
                     <h4 className="d-exp-card__ov-title">{item.text}</h4>
                     <p className="d-exp-card__ov-desc">{item.desc}</p>
+                    <div className="d-exp-card__ov-actions">
+                      {item.slug && (
+                        <Link className="d-btn d-btn--white" to={`/destinations/${d.slug}/attractions/${item.slug}`}>
+                          Learn more
+                        </Link>
+                      )}
+                      <Link className="d-btn d-btn--emerald" to={`/booking?destination=${encodeURIComponent(d.slug)}&attraction=${encodeURIComponent(item.text)}`}>
+                        Book now
+                      </Link>
+                    </div>
                     <div className="d-exp-card__ov-icon">
                       <Ic n="arrowRight" size={14} />
                     </div>

@@ -10,7 +10,7 @@ const STORAGE_KEY = "altuvera_booking_v1";
 
 const INITIAL = {
   firstName: "", lastName: "", nationality: "",
-  countryId: "", destinationId: "", groupType: "",
+  countryId: "", destinationId: "", attractionName: "", groupType: "",
   startDate: "", endDate: "", flexibleDates: false, flexibleMonths: [],
   adults: 1, children: 0, specialRequests: "",
   email: "", phone: "", country: "",
@@ -151,6 +151,7 @@ export function BookingProvider({ children }) {
           nationality: data.nationality || undefined,
           countryId: data.countryId || undefined,
           destinationId: data.destinationId || undefined,
+          attractionName: data.attractionName || undefined,
           startDate: data.flexibleDates ? undefined : data.startDate || undefined,
           endDate:   data.flexibleDates ? undefined : data.endDate   || undefined,
           flexibleDates: data.flexibleDates,

@@ -1447,11 +1447,17 @@ function BookingPage() {
   const pfRef = useRef(null);
   useEffect(() => {
     const s = sp.get("destination");
+    const attraction = sp.get("attraction");
     if (!s || pfRef.current === s || !destinationsList.length) return;
     const m = destinationsList.find(
       d => d.label.toLowerCase().replace(/\s+/g, "-") === s || d.value === s,
     );
-    if (m) { pfRef.current = s; form.set("destinationId", m.value); if (m.countryId) form.set("countryId", m.countryId); }
+    if (m) {
+      pfRef.current = s;
+      form.set("destinationId", m.value);
+      if (m.countryId) form.set("countryId", m.countryId);
+      if (attraction) form.set("attractionName", attraction);
+    }
   }, [sp, destinationsList]); // eslint-disable-line
 
   const firstInputRef = useRef(null);

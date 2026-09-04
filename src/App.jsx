@@ -170,6 +170,11 @@ const publicRoutes = [
     },
   },
   {
+    path: "/destinations/:destinationId/attractions/:attractionSlug",
+    component: React.lazy(() => import("./pages/AttractionDetail")),
+    meta: { title: "Attraction" },
+  },
+  {
     path: "/destinations/:destinationId",
     component: React.lazy(() => import("./pages/DestinationDetail")),
     meta: { title: "Destination" },

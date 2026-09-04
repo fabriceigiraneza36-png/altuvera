@@ -127,6 +127,9 @@ export default function Step1Destination({
                     <HiCheck size={11} /> Selected
                   </p>
                   <p className="bk-selected__name">{selectedDest.label}</p>
+                  {data.attractionName && (
+                    <p className="bk-selected__ctry">Attraction: {data.attractionName}</p>
+                  )}
                   {selectedDest.country && (
                     <p className="bk-selected__ctry">{selectedDest.country}</p>
                   )}
