@@ -33,7 +33,7 @@ const P = {
   checkCircle:   "M22 11.1V12a10 10 0 11-5.9-9.1M22 4L12 14l-3-3",
   shield:        "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
   mail:          "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zM22 6l-10 7L2 6",
-  phone:         "M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3.1-8.7A2 2 0 014.1 3h3a2 2 0 012 1.7c.1.9.4 1.7.7 2.5a2 2 0 01-.4 2.1l-1.3 1.3a16 16 0 006.3 6.3l1.3-1.3a2 2 0 012.1-.4c.8.3 1.6.5 2.5.7a2 2 0 011.7 2.1z",
+  phone:         "M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6 19.8 19.8 0 01-3.1-8.7A2 2 0 014.1 3h3a2 2 0 012 1.7c.1.9.4 1.7.7 2.5a2 2 0 01-.4 2.1l-1.3 1.3a16 16 0 006.3 6.3l1.3-1.3a2 2 0 012.1-.4c.8.3 1.6.5 2.5.7a2 2 0 011.7 2.1z",
   arrowRight:    "M5 12h14M12 5l7 7-7 7",
   sparkles:      "M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z",
   alertTri:      "M10.3 3.9L1.8 18a2 2 0 001.7 3h16.9a2 2 0 001.7-3L13.7 3.9a2 2 0 00-3.4 0zM12 9v4m0 4h.01",
@@ -82,6 +82,38 @@ const Ic = ({
     <path d={P[n] || P.compass} />
   </svg>
 );
+
+/* ══════════════════════════════════════════════════════════════
+   IMAGE DEDUPLICATION UTILITY
+   Ensures absolute zero duplicates across galleries and slideshows
+══════════════════════════════════════════════════════════════ */
+const extractUniqueImages = (d, limit = 10) => {
+  if (!d) return [];
+  const unique = new Map();
+
+  const add = (url, caption) => {
+    if (!url || typeof url !== 'string' || url.trim() === '') return;
+    if (!unique.has(url)) {
+      unique.set(url, caption || `${d.name || 'Destination'} Experience`);
+    }
+  };
+
+  // 1. Core gallery images with their specific captions
+  (d.gallery || []).forEach(g => add(g.url || g.imageUrl, g.caption));
+  
+  // 2. Fallbacks: Main image, Hero image, Cover banner
+  add(d.imageUrl || d.image_url, "Main View");
+  add(d.heroImage || d.hero_image, "Hero View");
+  add(d.coverImageUrl || d.cover_image_url, "Cover View");
+
+  // 3. Legacy old images array
+  (d.images || []).forEach(url => add(url, null));
+
+  // Convert Map back to array format
+  return Array.from(unique.entries())
+    .map(([url, caption]) => ({ url, caption }))
+    .slice(0, limit);
+};
 
 /* ══════════════════════════════════════════════════════════════
    SCROLL PROGRESS
@@ -279,7 +311,7 @@ const Lightbox = ({ images, idx, onClose, onPrev, onNext, onGoTo }) => {
                 <button
                   key={i}
                   className={`d-lb__thumb${i === idx ? " on" : ""}`}
-                  onClick={() => onGoTo(i)}
+                  onClick={() => onGoTo && onGoTo(i)}
                   aria-label={`Image ${i + 1}`}
                 >
                   <img src={img.url} alt="" />
@@ -295,20 +327,11 @@ const Lightbox = ({ images, idx, onClose, onPrev, onNext, onGoTo }) => {
 };
 
 /* ══════════════════════════════════════════════════════════════
-   HERO (With mixed 10-gallery slideshow)
+   HERO (With mixed deduplicated slideshow)
 ══════════════════════════════════════════════════════════════ */
 const Hero = ({ d, navigate }) => {
-  // Slideshow mixes Hero, Cover/Main, legacy images & the 10 gallery photos
-  const slides = useMemo(() => {
-    const hero = d.heroImage || d.hero_image;
-    const cover = d.coverImageUrl || d.cover_image_url || d.imageUrl || d.image_url;
-    const main = d.image_url || d.imageUrl;
-    const galleryUrls = (d.gallery || []).map(g => g.url || g.imageUrl).filter(Boolean);
-    const legacyUrls = Array.isArray(d.images) ? d.images : [];
-
-    const merged = [hero, cover, main, ...galleryUrls, ...legacyUrls].filter(Boolean);
-    return [...new Set(merged)].slice(0, 13); // Primary set of distinct slide photos
-  }, [d]);
+  // Use extractUniqueImages to gather all unique URLs for the slideshow
+  const slides = useMemo(() => extractUniqueImages(d, 12).map(i => i.url), [d]);
 
   const { idx, goTo } = useSlideshow(slides.length, 6500);
 
@@ -424,14 +447,7 @@ const AboutSection = ({ d, navigate }) => {
   const desc = d.description || d.shortDescription || d.overview;
   if (!desc && !d.highlights?.length) return null;
 
-  const asideImgs = useMemo(() => {
-    const all = [
-      d.heroImage, d.imageUrl,
-      ...(d.gallery || []).map(g => g.url || g.imageUrl),
-      ...(d.images  || []),
-    ].filter(Boolean);
-    return [...new Set(all)].slice(0, 8);
-  }, [d]);
+  const asideImgs = useMemo(() => extractUniqueImages(d, 8).map(i => i.url), [d]);
   
   const { idx, goTo, goNext, goPrev } = useSlideshow(asideImgs.length, 4500);
 
@@ -613,14 +629,7 @@ const HighlightsSection = ({ d }) => {
   const attractions = (d.attractions || []).filter(item => item && (item.name || item.title));
   if (!highlights.length && !activities.length && !attractions.length) return null;
 
-  const imgPool = useMemo(() => {
-    const all = [
-      ...(d.gallery || []).map(g => g.url || g.imageUrl),
-      ...(d.images  || []),
-      d.heroImage, d.imageUrl,
-    ].filter(Boolean);
-    return [...new Set(all)];
-  }, [d]);
+  const imgPool = useMemo(() => extractUniqueImages(d, 20).map(i => i.url), [d]);
 
   const items = [
     ...attractions.map((attraction, i) => ({
@@ -697,34 +706,14 @@ const HighlightsSection = ({ d }) => {
 };
 
 /* ══════════════════════════════════════════════════════════════
-   PHOTO GALLERY (Showing 10 high-resolution admin gallery images)
+   PHOTO GALLERY (Showing 10 absolutely unique images)
 ══════════════════════════════════════════════════════════════ */
 const GallerySection = ({ d }) => {
-  const [view, setView] = useState("mosaic"); // "mosaic" | "list"
+  const [view, setView] = useState("mosaic");
   const [lb, setLb]     = useState({ open: false, idx: 0 });
 
-  // Map exactly the 10 gallery photos with their optional captions
-  const galleryImages = useMemo(() => {
-    const list = (d.gallery || []).map(g => ({
-      url: g.url || g.imageUrl,
-      caption: g.caption || `${d.name} Experience`
-    })).filter(g => g.url);
-
-    // Fallback to library or general image array if gallery is empty
-    if (list.length === 0) {
-      const fallbackList = [
-        d.imageUrl || d.image_url,
-        d.heroImage || d.hero_image,
-        d.coverImageUrl || d.cover_image_url,
-        ...(d.images || [])
-      ].filter(Boolean);
-      return [...new Set(fallbackList)].map((url, i) => ({
-        url,
-        caption: `${d.name} View ${i + 1}`
-      }));
-    }
-    return list.slice(0, 10); // Capped to strictly the 10 gallery slots
-  }, [d]);
+  // Use the deduplication utility specifically capped at 10 items
+  const galleryImages = useMemo(() => extractUniqueImages(d, 10), [d]);
 
   if (!galleryImages.length) return null;
 
@@ -767,11 +756,36 @@ const GallerySection = ({ d }) => {
           <div className="d-gal-mosaic">
             {galleryImages.map((img, i) => (
               <Reveal key={i} from="scale" delay={i * 30}>
-                <button className="d-gal-cell" onClick={() => open(i)} aria-label={`View photo ${i + 1}`}>
-                  <img src={img.url} alt={img.caption} loading="lazy" />
-                  <div className="d-gal-cell__ov">
-                    <Ic n="zoomIn" size={22} />
-                    {img.caption && <span className="d-gal-cell__caption-hint">{img.caption}</span>}
+                {/* Applied inline styles to ensure centering and clean hover */}
+                <button 
+                  className="d-gal-cell" 
+                  onClick={() => open(i)} 
+                  aria-label={`View photo ${i + 1}`}
+                  style={{ position: 'relative', display: 'block', overflow: 'hidden', borderRadius: '16px', border: 'none', padding: 0 }}
+                >
+                  <img 
+                    src={img.url} 
+                    alt={img.caption} 
+                    loading="lazy" 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                  />
+                  <div 
+                    className="d-gal-cell__ov" 
+                    style={{ 
+                      position: 'absolute', inset: 0, 
+                      background: 'rgba(0,0,0,0.4)', 
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', 
+                      opacity: 0, transition: 'opacity 0.3s ease', gap: '8px'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                    onMouseLeave={e => e.currentTarget.style.opacity = 0}
+                  >
+                    <Ic n="zoomIn" size={24} style={{ color: '#fff' }} />
+                    {img.caption && (
+                      <span style={{ color: '#fff', fontSize: '13px', fontWeight: 600, padding: '0 12px', textAlign: 'center', textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
+                        {img.caption}
+                      </span>
+                    )}
                   </div>
                 </button>
               </Reveal>
@@ -814,14 +828,7 @@ const WildlifeSection = ({ d }) => {
   const list = d.wildlife || [];
   if (!list.length) return null;
 
-  const imgPool = useMemo(() => {
-    const all = [
-      ...(d.gallery || []).map(g => g.url || g.imageUrl),
-      ...(d.images  || []),
-      d.heroImage, d.imageUrl,
-    ].filter(Boolean);
-    return [...new Set(all)];
-  }, [d]);
+  const imgPool = useMemo(() => extractUniqueImages(d, 20).map(i => i.url), [d]);
 
   return (
     <section className="d-sec d-sec--soft">
