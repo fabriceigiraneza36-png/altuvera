@@ -17,7 +17,6 @@ import Button from '../components/common/Button';
 import CookieSettingsButton from '../components/common/CookieSettingsButton';
 import ReviewModal from '../components/home/ReviewModal';
 import AnimatedSection from '../components/common/AnimatedSection';
-import TeamContent from '../components/common/TeamContent';
 import { useUserAuth } from '../context/UserAuthContext';
 import { useGallery } from '../hooks/useGallery';
 
@@ -1078,11 +1077,6 @@ const About = () => {
           </FadeInSection>
         </div>
       </section>
-
-      {/* ══════════════════════════════════════════
-          THE TEAM — from backend via TeamContent
-      ══════════════════════════════════════════ */}
-      <TeamContent />
 
       {/* ══════════════════════════════════════════
           MISSION & VISION
