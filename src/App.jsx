@@ -50,6 +50,41 @@ const PersistentMapViewer = React.lazy(() =>
 );
 const NotFound = React.lazy(() => import("./pages/NotFound"));
 
+const lazyWithChunkRecovery = (loader, key) => React.lazy(async () => {
+  const retryKey = `altuvera:chunk-retry:${key}`;
+  try {
+    const module = await loader();
+    try {
+      sessionStorage.removeItem(retryKey);
+      if (typeof window !== "undefined" && window.location.search.includes("_chunk_retry")) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete("_chunk_retry");
+        window.history.replaceState({}, "", url.toString());
+      }
+    } catch {
+      // Storage/history can be unavailable in privacy-restricted browsers.
+    }
+    return module;
+  } catch (error) {
+    let alreadyRetried = false;
+    try {
+      alreadyRetried = sessionStorage.getItem(retryKey) === "1";
+    } catch {
+      // Storage can be unavailable in privacy-restricted browsers.
+    }
+
+    if (!alreadyRetried && typeof window !== "undefined") {
+      try { sessionStorage.setItem(retryKey, "1"); } catch { /* continue */ }
+      const url = new URL(window.location.href);
+      url.searchParams.set("_chunk_retry", Date.now().toString());
+      window.location.replace(url.toString());
+      return new Promise(() => {});
+    }
+
+    throw error;
+  }
+});
+
 // ============================================================================
 // CONSTANTS
 // ============================================================================
@@ -263,7 +298,7 @@ const protectedRoutes = [
   },
   {
     path: "/wishlist",
-    component: React.lazy(() => import("./pages/auth/Wishlist")),
+    component: lazyWithChunkRecovery(() => import("./pages/auth/Wishlist"), "wishlist"),
     meta: { title: "Wishlist", noindex: true },
   },
   {
