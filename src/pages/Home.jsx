@@ -542,7 +542,7 @@ const HOME_STYLES = `
 ══════════════════════════════════════════ */
 .dest-slideshow-wrap{position:relative;width:100%;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;}
 .dest-slideshow-wrap::-webkit-scrollbar{display:none;}
-.dest-slideshow-track{display:flex;width:max-content;transition:transform .55s cubic-bezier(.77,0,.175,1);}
+.dest-slideshow-track{display:flex;width:max-content;transition:transform .55s cubic-bezier(.77,0,.175,1);align-items:center;}
 .dest-slide-card{flex:0 0 min(31vw,360px);position:relative;border-radius:1.5rem;overflow:hidden;cursor:pointer;background:#0f1b0f;box-shadow:0 6px 28px rgba(0,0,0,.1);transition:box-shadow .35s ease;}
 .dest-slide-card:hover{box-shadow:0 16px 48px rgba(0,0,0,.18);}
 .dest-slide-img{width:100%;height:100%;object-fit:cover;transition:transform .8s cubic-bezier(.25,.46,.45,.94);display:block;}
@@ -563,8 +563,13 @@ const HOME_STYLES = `
 .dest-dot.active{background:#15803d;width:1.5rem;}
 .dest-dot:not(.active){width:.4rem;}
 .dest-dot:not(.active):hover{background:#86efac;}
-@media (max-width: 900px){.dest-slide-card{width:min(43vw,360px)!important;}}
-@media (max-width: 600px){.dest-slide-card{width:min(84vw,360px)!important;}}
+@media (max-width: 900px){.dest-slide-card{flex-basis:min(43vw,360px);}}
+@media (max-width: 600px){
+  .dest-slideshow-wrap{padding:0 2.25rem!important;scroll-snap-type:x mandatory;}
+  .dest-slideshow-track{gap:.25rem;}
+  .dest-slide-card{flex:0 0 84vw;scroll-snap-align:center;transform:scale(.72);opacity:.5;filter:saturate(.75);transition:transform .55s cubic-bezier(.34,1.56,.64,1),opacity .4s ease,filter .4s ease,box-shadow .35s ease;}
+  .dest-slide-card.is-focused{transform:scale(1);opacity:1;filter:none;z-index:2;box-shadow:0 18px 42px rgba(0,0,0,.2);}
+}
 
 /* Dest modal */
 .dest-modal-overlay{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(5,37,20,.55);backdrop-filter:blur(12px);}
@@ -595,9 +600,10 @@ const HOME_STYLES = `
 .dest-modal-highlights ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:.35rem;}
 .dest-modal-highlights li{display:flex;align-items:center;gap:.45rem;font-family:'Inter',sans-serif;font-size:.78rem;color:#475569;}
 .dest-modal-highlight-dot{width:.35rem;height:.35rem;border-radius:50%;background:#15803d;flex-shrink:0;}
-.dest-modal-actions{margin-top:.35rem;}
+.dest-modal-actions{display:flex;flex-direction:column;gap:.6rem;margin-top:.35rem;}
 .dest-modal-cta{width:100%;display:flex;align-items:center;justify-content:center;gap:.4rem;padding:.8rem 1.25rem;border:none;border-radius:.85rem;background:linear-gradient(135deg,#15803d,#059669);color:#fff;font-family:'Inter',sans-serif;font-size:.82rem;font-weight:700;cursor:pointer;transition:all .25s ease;box-shadow:0 4px 14px rgba(21,128,61,.25);}
 .dest-modal-cta:hover{box-shadow:0 6px 22px rgba(21,128,61,.4);transform:translateY(-1px);}
+.dest-modal-cta--secondary{background:#fff;color:#166534;border:1px solid #bbf7d0;box-shadow:none;}
 .dest-modal-glow{position:absolute;bottom:-3rem;right:-3rem;width:10rem;height:10rem;border-radius:50%;background:radial-gradient(circle,rgba(21,128,61,.06) 0%,transparent 70%);pointer-events:none;}
 
 /* ══════════════════════════════════════════
@@ -803,7 +809,21 @@ const IntroDestCard = ({ card, variant = "main", staggerOffset = 0 }) => {
    INTRO MEDIA PANEL — DESTINATION CARDS
 ═══════════════════════════════════════════ */
 const IntroMediaPanel = () => {
-  const { destinations = [] } = useDestinations({ limit: 3, sort: "-featured" });
+  const { destinations = [] } = useDestinations({ limit: 100, sort: "-featured" });
+  const [activeStart, setActiveStart] = useState(0);
+
+  useEffect(() => {
+    setActiveStart(0);
+  }, [destinations.length]);
+
+  useEffect(() => {
+    if (destinations.length <= 1) return undefined;
+    const timer = window.setInterval(() => {
+      setActiveStart((current) => (current + 1) % destinations.length);
+    }, 5200);
+    return () => window.clearInterval(timer);
+  }, [destinations.length]);
+
   const cards = destinations.map((destination) => ({
     slug: destination.slug || destination.id,
     country: destination.country || destination.countryName || "",
@@ -817,7 +837,10 @@ const IntroMediaPanel = () => {
       ...(Array.isArray(destination.images) ? destination.images : []),
     ].filter(Boolean),
   }));
-  const [mainCard, ...sideCards] = cards;
+  const visibleCards = cards.length > 0
+    ? [0, 1, 2].map((offset) => cards[(activeStart + offset) % cards.length])
+    : [];
+  const [mainCard, ...sideCards] = visibleCards;
 
   if (!mainCard) return null;
 
@@ -833,7 +856,6 @@ const IntroMediaPanel = () => {
       {/* Main destination card */}
       <IntroDestCard card={mainCard} variant="main" staggerOffset={0} />
 
-      {/* Side destination cards */}
       {sideCards.map((card, i) => (
         <IntroDestCard
           key={card.slug}
@@ -864,6 +886,7 @@ const DestinationModal = ({ destination, isOpen, onClose, isWishlisted, onWishli
   const duration = destination?.duration || destination?.tripDuration || null;
   const category = destination?.category || destination?.type || "";
   const highlights = destination?.highlights || destination?.features || [];
+  const bookingUrl = slug ? `/booking?destination=${encodeURIComponent(slug)}` : "/booking";
 
   return (
     <div className="dest-modal-overlay" onClick={onClose}>
@@ -889,7 +912,10 @@ const DestinationModal = ({ destination, isOpen, onClose, isWishlisted, onWishli
           {duration && <div className="dest-modal-duration"><MdOutlineExplore /><span>{duration}</span></div>}
           {description && <p className="dest-modal-description">{description.length > 260 ? description.substring(0, 260) + "…" : description}</p>}
           {highlights.length > 0 && (<div className="dest-modal-highlights"><h4>Highlights</h4><ul>{highlights.slice(0, 4).map((h, i) => (<li key={i}><span className="dest-modal-highlight-dot" />{typeof h === "string" ? h : h.text || h.title || ""}</li>))}</ul></div>)}
-          <div className="dest-modal-actions"><button className="dest-modal-cta" onClick={() => { onClose(); if (slug) navigate(`/destinations/${slug}`); }}><span>Explore Destination</span><HiOutlineArrowRight /></button></div>
+          <div className="dest-modal-actions">
+            <button className="dest-modal-cta" onClick={() => { onClose(); navigate(bookingUrl); }}><span>Book Now</span><HiOutlineArrowRight /></button>
+            <button className="dest-modal-cta dest-modal-cta--secondary" onClick={() => { onClose(); if (slug) navigate(`/destinations/${slug}`); }}><span>Explore Destination</span><HiOutlineArrowRight /></button>
+          </div>
         </div>
         <div className="dest-modal-glow" />
       </div>
@@ -921,7 +947,19 @@ const DestinationSlideshow = ({ destinations, isWishlisted, onWishlistToggle }) 
 
   useEffect(() => { const h = (e) => { if (modalOpen) return; if (e.key === "ArrowLeft") goPrev(); if (e.key === "ArrowRight") goNext(); }; window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h); }, [goPrev, goNext, modalOpen]);
 
-  const cardWidthPct = 100 / cardsPerView;
+  useEffect(() => {
+    setCurrentIndex((index) => Math.min(index, maxIndex));
+  }, [maxIndex]);
+
+  useEffect(() => {
+    if (destinations.length <= cardsPerView) return undefined;
+    const timer = window.setInterval(() => {
+      setCurrentIndex((index) => (index >= maxIndex ? 0 : index + 1));
+    }, 5200);
+    return () => window.clearInterval(timer);
+  }, [cardsPerView, destinations.length, maxIndex]);
+
+  const cardWidthPct = 100 / Math.max(destinations.length, 1);
   const totalDots = maxIndex + 1;
   const getName = (d) => d?.name || d?.title || "Destination";
   const getCountry = (d) => (typeof d?.country === "object" && d.country?.name) || d?.countryObj?.name || (typeof d?.country === "string" ? d.country : "") || "";
@@ -939,7 +977,7 @@ const DestinationSlideshow = ({ destinations, isWishlisted, onWishlistToggle }) 
           {destinations.map((dest, idx) => {
             const name = getName(dest); const country = getCountry(dest); const img = getImage(dest); const category = getCategory(dest);
             return (
-              <div key={dest?._id || dest?.slug || idx} className="dest-slide-card" style={{ height: "380px", margin: "0 .375rem" }}
+              <div key={dest?._id || dest?.slug || idx} className={`dest-slide-card${idx === currentIndex ? " is-focused" : ""}`} style={{ height: "380px", margin: "0 .375rem" }}
                 onClick={() => { setSelectedDest(dest); setModalOpen(true); }} role="button" tabIndex={0}
                 onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (setSelectedDest(dest), setModalOpen(true))}>
                 {img ? <img src={img} alt={name} className="dest-slide-img" loading="lazy" /> : (

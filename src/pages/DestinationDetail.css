@@ -1208,4 +1208,51 @@
 
 /* ── FOCUS ────────────────────────────────────────────── */
 :focus-visible { outline: 2px solid #166534; outline-offset: 3px; border-radius: 8px; }
+
+/* Mobile destination carousel: show one generous card with the next card
+   peeking into view so horizontal navigation remains discoverable. */
+@media (max-width: 768px) {
+  .dd-more-track {
+    gap: 14px !important;
+    margin-right: -16px;
+    padding-right: 16px !important;
+    padding-left: 2px;
+    scroll-padding-left: 2px;
+    overscroll-behavior-inline: contain;
+  }
+
+  .dd-more-track > .d-rev-card {
+    flex: 0 0 calc(100vw - 58px) !important;
+    min-width: calc(100vw - 58px) !important;
+    max-width: calc(100vw - 58px) !important;
+    padding: 0 !important;
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(5, 46, 22, .1);
+  }
+
+  .dd-more-track > .d-rev-card > div:first-child {
+    height: clamp(190px, 54vw, 250px) !important;
+  }
+
+  .dd-more-track > .d-rev-card > div:last-child {
+    min-height: 168px;
+    padding: 16px !important;
+  }
+
+  .dd-more-track > .d-rev-card:active {
+    transform: scale(.985);
+  }
+}
+
+@media (max-width: 480px) {
+  .dd-more-track {
+    margin-right: -16px;
+  }
+
+  .dd-more-track > .d-rev-card {
+    flex-basis: calc(100vw - 46px) !important;
+    min-width: calc(100vw - 46px) !important;
+    max-width: calc(100vw - 46px) !important;
+  }
+}
 html { scroll-behavior: smooth; }

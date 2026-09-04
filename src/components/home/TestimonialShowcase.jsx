@@ -646,7 +646,7 @@ const TestimonialShowcase = () => {
       meta: [t.location, t.date_text].filter(Boolean).join(" · "),
       image: t.avatar_url || null,
       rating: parseInt(t.rating) || 5,
-      quote: t.testimonial_text,
+      quote: t.testimonial_text || t.testimonialText || t.quote || t.content || "",
     }));
   }, [testimonials, loading]);
 

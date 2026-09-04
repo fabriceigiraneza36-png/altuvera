@@ -1311,7 +1311,7 @@ const MoreInCountrySection = ({ d }) => {
     if (!countryId && !countrySlug) { setLoading(false); return; }
     (async () => {
       try {
-        const param = countryId ? `countryId=${countryId}` : `countrySlug=${countrySlug}`;
+        const param = countryId ? `country_id=${encodeURIComponent(countryId)}` : `countrySlug=${encodeURIComponent(countrySlug)}`;
 const cleanText = (text) => {
            if (!text) return text;
            return text.replace(/experience unforgattable adventures rich, culture and breathtaking naturel beauty/gi, '').trim();
@@ -1323,8 +1323,19 @@ const cleanText = (text) => {
            description: cleanText(dest.description),
            shortDescription: cleanText(dest.shortDescription),
          }));
+         const targetCountryId = countryId ? String(countryId) : "";
+         const targetCountrySlug = String(countrySlug || "").trim().toLowerCase();
+         const targetCountryName = String(countryName || "").trim().toLowerCase();
+         const sameCountry = dest => {
+           const candidateId = dest.countryId ?? dest.country_id ?? dest.country?.id;
+           const candidateSlug = dest.countrySlug || dest.country?.slug;
+           const candidateName = dest.countryName || dest.country?.name;
+           return (targetCountryId && candidateId != null && String(candidateId) === targetCountryId)
+             || (targetCountrySlug && String(candidateSlug || "").trim().toLowerCase() === targetCountrySlug)
+             || (targetCountryName && String(candidateName || "").trim().toLowerCase() === targetCountryName);
+         };
          setDestinations(
-           cleanedData.filter(dest => dest.slug !== d.slug && dest.id !== d.id).slice(0, 10)
+           cleanedData.filter(dest => sameCountry(dest) && dest.slug !== d.slug && dest.id !== d.id).slice(0, 10)
          );
       } catch { setDestinations([]); }
       finally  { setLoading(false); }

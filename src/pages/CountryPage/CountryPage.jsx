@@ -1,9 +1,21 @@
-// src/pages/CountryPage.jsx
 import React, {
   useState, useEffect, useRef, useCallback, useMemo,
 } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import {
+  MapPin as FiMapPin, Calendar as FiCalendar, TrendingUp as FiTrendingUp,
+  Globe as FiGlobe, Clock as FiClock, Shield as FiShield, Compass as FiCompass,
+  Users as FiUsers, Heart as FiHeart, BookOpen as FiBookOpen, Flag as FiFlag,
+  Phone as FiPhone, Droplet as FiDroplet, Zap as FiZap,
+  AlertTriangle as FiAlertTriangle, Camera as FiCamera, Coffee as FiCoffee,
+  Sun as FiSun, Info as FiInfo, Send as FiSend, ArrowRight as FiArrowRight,
+  X as FiX, ChevronLeft as FiChevronLeft, ChevronRight as FiChevronRight,
+  ChevronDown as FiChevronDown, Minus as FiMinus, Plus as FiPlus,
+  ChevronUp as FiChevronUp, Mail as FiMail, WifiOff as FiWifiOff,
+  ArrowLeft as FiArrowLeft, RefreshCw as FiRefreshCw,
+  ExternalLink as FiExternalLink
+} from "lucide-react";
 import SEO from "@components/common/SEO";
 import AnimatedSection from "@components/common/AnimatedSection";
 import Loader from "@components/common/Loader";
@@ -13,7 +25,6 @@ import DestinationCard, {
 import { useCountry, useCountryDestinations } from "../../hooks/useCountries";
 import { getCountrySlug } from "../../utils/countrySlugMap";
 import CommentsCarousel from "../CommentsCarousel";
-
 /* ═══════════════════════════════════════════════════════════
    CSS
 ═══════════════════════════════════════════════════════════ */
