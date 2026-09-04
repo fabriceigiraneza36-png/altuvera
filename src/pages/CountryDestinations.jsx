@@ -552,7 +552,11 @@ function injectCSS() {
 const pick = (...v) => { for (const x of v) { const t = (typeof x === "string" ? x : "").trim(); if (t) return t; } return ""; };
 const getFlag = (c) => pick(c?.flagUrl, c?.flag_url, c?.flag);
 const getRegion = (c) => pick(c?.region, c?.continent, c?.subRegion);
-const getHero = (c) => pick(c?.heroImage, c?.hero_image, c?.coverImage, c?.cover_image, c?.image, c?.bannerImage) || (Array.isArray(c?.images) ? c.images[0] : "");
+const getHero = (c) => pick(
+  c?.heroImage, c?.hero_image, c?.coverImage, c?.cover_image,
+  c?.coverImageUrl, c?.cover_image_url, c?.image, c?.image_url, c?.bannerImage,
+  ...(Array.isArray(c?.images) ? c.images : []),
+);
 const getCapital = (c) => pick(c?.capital, c?.capitalCity);
 const getRating = (c) => c?.averageRating ?? c?.average_rating ?? c?.rating ?? null;
 

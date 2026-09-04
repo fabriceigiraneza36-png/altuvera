@@ -902,7 +902,7 @@ const getHeroImages = (c) => {
     }
   };
   addMany(c?.hero_images);
-  a(c?.image_url); a(c?.heroImage); a(c?.coverImageUrl);
+  a(c?.image_url); a(c?.heroImage); a(c?.hero_image); a(c?.coverImageUrl); a(c?.cover_image_url); a(c?.image);
   addMany(c?.media?.hero_images);
   addMany(c?.media?.gallery);
   addMany(c?.images);

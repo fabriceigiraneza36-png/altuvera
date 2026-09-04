@@ -37,9 +37,22 @@ export const formatPopulation = (p) => {
   return String(n);
 };
 
-export const getHero = (c) =>
-  pick(c?.heroImage, c?.hero_image, c?.coverImage, c?.cover_image, c?.image, c?.bannerImage) ||
-  (Array.isArray(c?.images) ? c.images[0] : "");
+export const getHero = (c) => {
+  const candidates = [c?.heroImage, c?.hero_image, c?.coverImage, c?.cover_image,
+    c?.coverImageUrl, c?.cover_image_url, c?.image, c?.image_url, c?.bannerImage];
+  const heroImages = c?.hero_images;
+  const imageUrl = (value) => typeof value === "string"
+    ? value
+    : value?.url || value?.image_url || value?.imageUrl || value?.src || "";
+  if (typeof heroImages === "string") {
+    try { candidates.unshift(...JSON.parse(heroImages).map(imageUrl)); } catch { /* ignore malformed media */ }
+  } else if (Array.isArray(heroImages)) {
+    candidates.unshift(...heroImages.map(imageUrl));
+  }
+  if (Array.isArray(c?.images)) candidates.push(...c.images.map(imageUrl));
+  if (Array.isArray(c?.gallery)) candidates.push(...c.gallery.map(imageUrl));
+  return pick(...candidates);
+};
 export const getFlag = (c) => pick(c?.flagUrl, c?.flag_url, c?.flag);
 export const getRegion = (c) => pick(c?.region, c?.continent, c?.subRegion);
 export const getTagline = (c) => pick(c?.tagline, c?.shortDescription, c?.short_description, c?.intro);

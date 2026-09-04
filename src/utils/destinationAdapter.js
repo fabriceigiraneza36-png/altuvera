@@ -12,6 +12,28 @@ const toNum = (v, fb = 0) => {
 const toArr = (v) =>
   Array.isArray(v) ? v.filter(Boolean) : [];
 
+const slugify = (value) => String(value || "")
+  .toLowerCase()
+  .trim()
+  .replace(/[^a-z0-9]+/g, "-")
+  .replace(/(^-|-$)/g, "");
+
+const adaptAttraction = (raw) => {
+  if (typeof raw === "string") {
+    return { name: raw, title: raw, slug: slugify(raw), imageUrl: null, description: "" };
+  }
+  if (!raw || typeof raw !== "object") return null;
+  const name = raw.name || raw.title || "";
+  return {
+    ...raw,
+    name,
+    title: raw.title || name,
+    slug: raw.slug || slugify(name),
+    imageUrl: raw.imageUrl || raw.image_url || raw.image || null,
+    description: raw.description || raw.summary || "",
+  };
+};
+
 const toBool = (v) => {
   if (typeof v === "boolean") return v;
   if (typeof v === "string") return v === "true" || v === "1";
@@ -267,6 +289,7 @@ export const adaptDestination = (raw) => {
     // ── Extended Content ─────────────────────────────────────
     highlights:      toArr(raw.highlights),
     activities:      toArr(raw.activities),
+    attractions:     toArr(raw.attractions).map(adaptAttraction).filter(Boolean),
     wildlife:        toArr(raw.wildlife),
     bestTimeToVisit: raw.bestTimeToVisit || raw.best_time_to_visit || raw.bestTime || null,
     gettingThere:    raw.gettingThere    || null,

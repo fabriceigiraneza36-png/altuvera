@@ -1045,7 +1045,9 @@ function CountryCard({ country }) {
   const isImg     = flag && (flag.startsWith('http') || flag.includes('/'));
   const isEmoji   = flag && !isImg;
   const destCount = country.destinationsCount ?? country.destinations_count ?? country.destinationCount ?? null;
-  const heroImg   = country.hero_image_url || country.heroImage || country.coverImage || country.image || null;
+  const heroImg   = country.hero_image_url || country.heroImage || country.hero_image ||
+    country.coverImage || country.cover_image || country.cover_image_url ||
+    country.image_url || country.image || null;
 
   return (
     <div

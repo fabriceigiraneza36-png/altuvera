@@ -626,9 +626,9 @@ const HighlightsSection = ({ d }) => {
     ...attractions.map((attraction, i) => ({
       text: attraction.name || attraction.title,
       type: "Attraction", icon: "camera",
-      img: attraction.imageUrl || attraction.image_url || attraction.image,
+      img: attraction.imageUrl || attraction.image_url || attraction.image || imgPool[i % Math.max(imgPool.length, 1)],
       desc: attraction.description || `Explore ${attraction.name || attraction.title}.`,
-      slug: (attraction.slug || attraction.name || attraction.title).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
+      slug: attraction.slug || (attraction.name || attraction.title).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""),
     })),
     ...highlights.map((h, i) => ({
       text: h, type: "Highlight", icon: "sparkles",
