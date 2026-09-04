@@ -847,7 +847,7 @@ const TestimonialShowcase = () => {
                     />
                   )}
                 </button>
-              )}
+              ))}
             </div>
 
             <ProgressRing progress={progress} secondsLeft={secondsLeft} />

@@ -11,11 +11,23 @@ export default function HeroSection({ country, hero, flag, region, tagline, dest
 
   const allImgs = useMemo(() => {
     const imgs = [];
+    const addMany = (value) => {
+      let items = value;
+      if (typeof items === "string") {
+        try { items = JSON.parse(items); } catch { items = []; }
+      }
+      if (!Array.isArray(items)) return;
+      items.forEach(item => {
+        const url = typeof item === "string" ? item : item?.url || item?.image_url || item?.imageUrl || "";
+        if (url) imgs.push(url);
+      });
+    };
     if (hero) imgs.push(hero);
+    addMany(country.hero_images);
     if (Array.isArray(country.images)) imgs.push(...country.images.filter(Boolean));
     if (Array.isArray(country.gallery)) {
       country.gallery.forEach(g => {
-        const u = typeof g === "string" ? g : g?.url || g?.src || "";
+        const u = typeof g === "string" ? g : g?.url || g?.image_url || g?.imageUrl || g?.src || "";
         if (u) imgs.push(u);
       });
     }

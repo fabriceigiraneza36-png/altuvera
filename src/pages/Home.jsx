@@ -540,9 +540,10 @@ const HOME_STYLES = `
 /* ══════════════════════════════════════════
    DESTINATION SLIDESHOW
 ══════════════════════════════════════════ */
-.dest-slideshow-wrap{position:relative;width:100%;overflow:hidden;}
-.dest-slideshow-track{display:flex;transition:transform .55s cubic-bezier(.77,0,.175,1);}
-.dest-slide-card{flex-shrink:0;position:relative;border-radius:1.5rem;overflow:hidden;cursor:pointer;background:#0f1b0f;box-shadow:0 6px 28px rgba(0,0,0,.1);transition:box-shadow .35s ease;}
+.dest-slideshow-wrap{position:relative;width:100%;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;}
+.dest-slideshow-wrap::-webkit-scrollbar{display:none;}
+.dest-slideshow-track{display:flex;width:max-content;transition:transform .55s cubic-bezier(.77,0,.175,1);}
+.dest-slide-card{flex:0 0 min(31vw,360px);position:relative;border-radius:1.5rem;overflow:hidden;cursor:pointer;background:#0f1b0f;box-shadow:0 6px 28px rgba(0,0,0,.1);transition:box-shadow .35s ease;}
 .dest-slide-card:hover{box-shadow:0 16px 48px rgba(0,0,0,.18);}
 .dest-slide-img{width:100%;height:100%;object-fit:cover;transition:transform .8s cubic-bezier(.25,.46,.45,.94);display:block;}
 .dest-slide-card:hover .dest-slide-img{transform:scale(1.05);}
@@ -562,6 +563,8 @@ const HOME_STYLES = `
 .dest-dot.active{background:#15803d;width:1.5rem;}
 .dest-dot:not(.active){width:.4rem;}
 .dest-dot:not(.active):hover{background:#86efac;}
+@media (max-width: 900px){.dest-slide-card{width:min(43vw,360px)!important;}}
+@media (max-width: 600px){.dest-slide-card{width:min(84vw,360px)!important;}}
 
 /* Dest modal */
 .dest-modal-overlay{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(5,37,20,.55);backdrop-filter:blur(12px);}
@@ -936,7 +939,7 @@ const DestinationSlideshow = ({ destinations, isWishlisted, onWishlistToggle }) 
           {destinations.map((dest, idx) => {
             const name = getName(dest); const country = getCountry(dest); const img = getImage(dest); const category = getCategory(dest);
             return (
-              <div key={dest?._id || dest?.slug || idx} className="dest-slide-card" style={{ width: `calc(${cardWidthPct}% - .75rem)`, height: "380px", margin: "0 .375rem" }}
+              <div key={dest?._id || dest?.slug || idx} className="dest-slide-card" style={{ height: "380px", margin: "0 .375rem" }}
                 onClick={() => { setSelectedDest(dest); setModalOpen(true); }} role="button" tabIndex={0}
                 onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (setSelectedDest(dest), setModalOpen(true))}>
                 {img ? <img src={img} alt={name} className="dest-slide-img" loading="lazy" /> : (

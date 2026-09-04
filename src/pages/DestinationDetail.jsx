@@ -9,7 +9,7 @@ import { useUserAuth } from "../context/UserAuthContext";
 import { api } from "../utils/api";
 import PageHeader from "../components/common/PageHeader";
 import CommentsCarousel from "./CommentsCarousel";
-import "../styles/DestinationDetail.css";
+import "../styles/destinationDetail.css";
 
 /* ══════════════════════════════════════════════════════════════
    ICON SYSTEM — inline SVG, no emoji
