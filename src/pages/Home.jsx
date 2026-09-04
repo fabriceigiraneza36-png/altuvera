@@ -202,6 +202,16 @@ const HOME_STYLES = `
   transform: scale(1.02);
   transition: opacity 1.1s ease, transform 1.1s ease;
 }
+.intro-dest-video {
+  position: absolute;
+  inset: 0;
+  left: -38.9%;
+  width: 177.8%;
+  height: 100%;
+  border: 0;
+  transform: scale(1.01);
+  pointer-events: none;
+}
 
 /* — Card overlay gradient — */
 .intro-dest-card::after {
@@ -455,7 +465,6 @@ const HOME_STYLES = `
 }
 @media (max-width: 900px) {
   .intro-media-grid { max-width: 100%; height: 320px; margin-top: 1.25rem; }
-  .intro-media-float-badge { display: none; }
 }
 @media (max-width: 600px) {
   .intro-media-grid { height: 260px; grid-template-columns: 1.25fr 1fr; gap: .45rem; }
@@ -714,6 +723,8 @@ const INTRO_DEST_CARDS = [
   },
 ];
 
+const INTRO_REEL_VIDEO_ID = "X3MHIq09mnY";
+
 /* ═══════════════════════════════════════════
    WHY ALTUVERA DATA
 ═══════════════════════════════════════════ */
@@ -768,9 +779,16 @@ const IntroDestCard = ({ card, variant = "main", staggerOffset = 0 }) => {
       className={`intro-dest-card ${isMain ? "intro-dest-main" : "intro-dest-side"}`}
       aria-label={`Explore ${card.title}`}
     >
-      {/* Slideshow */}
       <div className="intro-slideshow-stack">
-        {card.images.map((src, i) => (
+        {isMain ? (
+          <iframe
+            className="intro-dest-video"
+            src={`https://www.youtube-nocookie.com/embed/${INTRO_REEL_VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${INTRO_REEL_VIDEO_ID}&controls=0&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&playsinline=1`}
+            title={`${card.title} video`}
+            allow="autoplay; encrypted-media; picture-in-picture"
+            tabIndex="-1"
+          />
+        ) : card.images.map((src, i) => (
           <img
             key={i}
             src={src}
@@ -783,7 +801,7 @@ const IntroDestCard = ({ card, variant = "main", staggerOffset = 0 }) => {
       </div>
 
       {/* Slide indicator dots */}
-      {card.images.length > 1 && (
+      {!isMain && card.images.length > 1 && (
         <div className="intro-slide-dots">
           {card.images.map((_, i) => (
             <span key={i} className={`intro-slide-dot ${i === activeIdx ? "is-active" : ""}`} />
@@ -802,7 +820,6 @@ const IntroDestCard = ({ card, variant = "main", staggerOffset = 0 }) => {
       <div className="intro-dest-main-label">
         {isMain ? (
           <>
-            <span className="intro-dest-badge">✦ {card.tag}</span>
             <h3 className="intro-dest-main-title">{card.title}</h3>
             <p className="intro-dest-main-sub">
               <MdOutlineLocationOn size={12} /> {card.country}
@@ -814,7 +831,6 @@ const IntroDestCard = ({ card, variant = "main", staggerOffset = 0 }) => {
           </>
         ) : (
           <>
-            <span className="intro-dest-side-tag">{card.tag}</span>
             <h4 className="intro-dest-side-title">{card.title}</h4>
             <p className="intro-dest-side-sub">
               <MdOutlineLocationOn size={10} /> {card.country}
@@ -841,13 +857,6 @@ const IntroMediaPanel = () => {
         </div>
         <div className="intro-float-text"><span className="intro-float-title">100% Trusted</span><span className="intro-float-sub">Verified local partners</span></div>
       </div>
-      <div className="intro-media-float-badge intro-media-float-badge--bottom">
-        <div className="intro-float-icon intro-float-icon--amber">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
-        </div>
-        <div className="intro-float-text"><span className="intro-float-title">4.9★ Rated</span><span className="intro-float-sub">500+ happy travellers</span></div>
-      </div>
-
       {/* Main destination card */}
       <IntroDestCard card={mainCard} variant="main" staggerOffset={0} />
 
