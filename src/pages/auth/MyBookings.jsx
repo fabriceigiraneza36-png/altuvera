@@ -65,6 +65,79 @@ const getStatus = (s) =>
     bg: "#f8fafc", border: "#e2e8f0", Icon: Clock,
   };
 
+const toUserErrorMessage = (error) => {
+  if (!error) return "Something went wrong. Please try again.";
+  if (typeof error === "string") return error;
+  if (error instanceof Error) return error.message || "Something went wrong. Please try again.";
+  if (typeof error === "object") {
+    if (error.message) return error.message;
+    if (error.error) {
+      if (typeof error.error === "string") return error.error;
+      if (error.error.message) return error.error.message;
+    }
+    if (Array.isArray(error.details)) {
+      return error.details
+        .map((detail) => detail?.message || detail?.msg || String(detail))
+        .join(" \n ");
+    }
+    if (Array.isArray(error.errors)) {
+      return error.errors
+        .map((detail) => detail?.message || detail?.msg || String(detail))
+        .join(" \n ");
+    }
+    return JSON.stringify(error);
+  }
+  return String(error);
+};
+
+const formatBookingValue = (value) => {
+  if (value === null || value === undefined || value === "") return "—";
+  if (Array.isArray(value)) return value.filter(Boolean).join(", ") || "—";
+  if (typeof value === "number") return Number.isInteger(value) ? String(value) : value.toFixed(2).replace(/\.00$/, "");
+  return String(value).trim();
+};
+
+const getBookingDetailFields = (booking = {}) => {
+  const travelDate = booking.travel_date || booking.trip_date || booking.departure_date;
+  const returnDate = booking.return_date || booking.end_date;
+  const guestCount = booking.number_of_travelers ?? booking.travelers_count ?? booking.guests ?? booking.number_of_guests ?? booking.total_travelers;
+  const adults = booking.number_of_adults ?? booking.adults;
+  const children = booking.number_of_children ?? booking.children;
+  const priceValue = booking.total_price ?? booking.package_price ?? booking.price ?? booking.amount;
+  const currency = booking.currency || "USD";
+
+  return [
+    ["Booking Ref", booking.booking_number || booking.booking_ref || `#${booking.id}`],
+    ["Booking Type", booking.booking_type || booking.trip_type || booking.source || "—"],
+    ["Status", booking.status || "—"],
+    ["Payment Status", booking.payment_status || booking.paymentState || "—"],
+    ["Destination", booking.destination_name || booking.destination || booking.package_title || booking.package_name || "—"],
+    ["Country", booking.country_name || booking.country || "—"],
+    ["Service", booking.service_name || booking.service || booking.attraction_name || booking.activity_name || "—"],
+    ["Travel Date", travelDate ? fmtFull(travelDate) : "—"],
+    ["Return Date", returnDate ? fmtFull(returnDate) : "—"],
+    ["Guests", guestCount ? String(guestCount) : "—"],
+    ["Adults", adults ? String(adults) : "—"],
+    ["Children", children ? String(children) : "—"],
+    ["Accommodation", booking.accommodation_type || booking.accommodation || booking.hotel_type || "—"],
+    ["Nationality", booking.nationality || "—"],
+    ["Full Name", booking.full_name || booking.guest_name || "—"],
+    ["Email", booking.email || "—"],
+    ["Phone", booking.phone || booking.phone_number || booking.whatsapp || "—"],
+    ["WhatsApp", booking.whatsapp || "—"],
+    ["Booked On", booking.created_at ? fmtFull(booking.created_at) : "—"],
+    ["Updated On", booking.updated_at ? fmtFull(booking.updated_at) : "—"],
+    ["Amount", priceValue ? `${currency} ${formatBookingValue(priceValue)}` : "—"],
+    ["Currency", booking.currency || "—"],
+    ["Source", booking.source || "—"],
+    ["Special Requests", booking.special_requests || booking.requests || "—"],
+    ["Admin Notes", booking.admin_notes || "—"],
+    ["Cancellation Status", booking.cancel_request_status || "none"],
+    ["Cancellation Reason", booking.cancel_request_reason || "—"],
+    ["Admin Response", booking.cancel_admin_response || "—"],
+  ].filter(([, value]) => formatBookingValue(value) !== "—");
+};
+
 /* ── Safe fetch ── */
 const safeFetch = async (authFetch, endpoint, options = {}) => {
   try {
@@ -849,18 +922,7 @@ function BookingCard({ booking, onRequest, onMessage }) {
   const canRefund  = ["confirmed", "completed"].includes(booking.status);
   const canRequest = !finalized && (canCancel || canRefund) && !hasPending;
 
-  const fields = [
-    ["Full Name",      booking.full_name],
-    ["Email",          booking.email],
-    ["Phone",          booking.phone],
-    ["Accommodation",  booking.accommodation_type],
-    ["Country",        booking.country_name],
-    ["Service",        booking.service_name],
-    ["Travel Date",    fmtFull(booking.travel_date)],
-    ["Return Date",    fmtFull(booking.return_date)],
-    ["Booked On",      fmtFull(booking.created_at)],
-    ["Payment Status", booking.payment_status],
-  ].filter(([, v]) => v && v !== "—");
+  const fields = getBookingDetailFields(booking);
 
   return (
     <motion.div
@@ -1184,7 +1246,7 @@ export default function MyBookings() {
     );
 
     if (submitErr) {
-      setReqError(submitErr);
+      setReqError(toUserErrorMessage(submitErr));
       setReqSubmitting(false);
       return;
     }
@@ -1310,10 +1372,10 @@ export default function MyBookings() {
   ];
 
   const stats = [
-    { icon: Bookmark, value: total || bookings.length, label: "Total Bookings",  color: "#059669", iconBg: "#ecfdf5" },
-    { icon: User,     value: selfB.length,              label: "Self-Booked",     color: "#0369a1", iconBg: "#eff6ff" },
-    { icon: Shield,   value: adminB.length,             label: "Team-Arranged",   color: "#7c3aed", iconBg: "#faf5ff" },
-    { icon: Plane,    value: upcomingB.length,          label: "Coming Soon",     color: "#d97706", iconBg: "#fffbeb" },
+    { icon: Bookmark, value: bookings.length || 0, label: "My Bookings", color: "#059669", iconBg: "#ecfdf5" },
+    { icon: User,     value: selfB.length,          label: "Self-Booked", color: "#0369a1", iconBg: "#eff6ff" },
+    { icon: Shield,   value: adminB.length,         label: "Team-Arranged", color: "#7c3aed", iconBg: "#faf5ff" },
+    { icon: Plane,    value: upcomingB.length,      label: "Coming Soon", color: "#d97706", iconBg: "#fffbeb" },
   ];
 
   /* ══════════════════════════════════════════════════════════════════════════
@@ -1527,7 +1589,7 @@ export default function MyBookings() {
           {!loading && !showSplit && displayed.length > 0 && (
             <AnimatePresence>
               {displayed.map((b) => (
-                <BookingCard key={b.id} booking={b} onRequest={openRequest} />
+                <BookingCard key={b.id} booking={b} onRequest={openRequest} onMessage={openMessage} />
               ))}
             </AnimatePresence>
           )}
