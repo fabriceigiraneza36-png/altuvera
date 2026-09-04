@@ -1,17 +1,43 @@
-// src/components/common/TeamContent.jsx — Dark Green & White Professional Redesign
+// src/components/common/TeamContent.jsx
+// ═══════════════════════════════════════════════════════════════════════════════
+// TEAM CONTENT v4.1 — Backend-Only, Premium Dark Green & White Cards
+// ═══════════════════════════════════════════════════════════════════════════════
+// • Fully backend-driven (no fallback data)
+// • Robust API_BASE resolution (handles VITE_API_URL with or without /api)
+// • Handles multiple backend response shapes ({data}, {success,data}, [])
+// • Maps backend field names (avatar_url → image_url, etc.)
+// • Professional, elegant card design with hover interactions
+// • Optimized responsive grid (1/2/3 columns)
+// ═══════════════════════════════════════════════════════════════════════════════
+
 import React, {
   useState, useEffect, useCallback, useMemo, useRef,
 } from "react";
 import {
   FiArrowRight, FiLinkedin, FiMail, FiTwitter, FiInstagram,
   FiExternalLink, FiMapPin, FiAward, FiUsers, FiGlobe,
-  FiPhone, FiCalendar, FiRefreshCw, FiAlertCircle, FiChevronDown,
+  FiPhone, FiCalendar, FiRefreshCw, FiChevronDown,
+  FiWifiOff, FiStar, FiFacebook,
 } from "react-icons/fi";
 import AnimatedSection from "./AnimatedSection";
 import Button from "./Button";
 
-/* ── API ── */
-const API_BASE = import.meta.env.VITE_API_URL || "https://backend-1-ghrv.onrender.com/api";
+/* ═══════════════════════════════════════════════════════════════════════════
+   API LAYER — robust base URL resolution
+═══════════════════════════════════════════════════════════════════════════ */
+
+// Resolves the correct API base:
+//   VITE_API_URL="https://backend-jd8f.onrender.com"        -> ".../api"
+//   VITE_API_URL="https://backend-jd8f.onrender.com/api"    -> ".../api"
+//   VITE_API_URL="https://backend-jd8f.onrender.com/api/"   -> ".../api"
+//   unset                                                    -> "https://backend-jd8f.onrender.com/api"
+const resolveApiBase = () => {
+  const raw = (import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com").trim();
+  const trimmed = raw.replace(/\/+$/, ""); // remove trailing slashes
+  return /\/api$/.test(trimmed) ? trimmed : `${trimmed}/api`;
+};
+
+const API_BASE = resolveApiBase();
 
 const teamAPI = {
   async _fetch(endpoint, options = {}, retries = 2) {
@@ -19,325 +45,545 @@ const teamAPI = {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 15000);
     try {
-      const res = await fetch(url, { ...options, signal: controller.signal, headers: { Accept: "application/json", ...options.headers } });
+      const res = await fetch(url, {
+        ...options,
+        signal: controller.signal,
+        headers: { Accept: "application/json", ...options.headers },
+      });
       clearTimeout(timeout);
-      if (!res.ok) { const e = await res.json().catch(() => ({})); throw new Error(e.message || `Status ${res.status}`); }
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error(
+          e.message || e.error || `Request failed with status ${res.status}`
+        );
+      }
       return res.json();
     } catch (err) {
       clearTimeout(timeout);
-      if (retries > 0 && err.name !== "AbortError" && !err.message.includes("status")) {
-        await new Promise(r => setTimeout(r, 1000));
+      if (
+        retries > 0 &&
+        err.name !== "AbortError" &&
+        !/status \d+/.test(err.message)
+      ) {
+        await new Promise((r) => setTimeout(r, 800));
         return this._fetch(endpoint, options, retries - 1);
       }
       throw err;
     }
   },
   getAll(params = {}) {
-    const q = new URLSearchParams(Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ""))).toString();
+    const q = new URLSearchParams(
+      Object.fromEntries(
+        Object.entries(params).filter(([, v]) => v !== undefined && v !== "")
+      )
+    ).toString();
     return this._fetch(`/team${q ? `?${q}` : ""}`);
   },
-  getDepartments() { return this._fetch("/team/departments/list"); },
+  getDepartments() {
+    return this._fetch("/team/departments/list");
+  },
 };
 
-/* ── Fallback ── */
-const FALLBACK_MEMBERS = [
-  { id: 1, name: "IGIRANEZA Fabrice", role: "Founder & CEO", department: "Leadership", image_url: "https://randomuser.me/api/portraits/men/32.jpg", bio: "Visionary entrepreneur leading Altuvera's mission to deliver transformative travel experiences across East Africa.", expertise: ["Strategic Planning", "Tourism Innovation"], languages: ["English", "French", "Kinyarwanda"], certifications: [], years_experience: 12, location: "Musanze, Rwanda", linkedin_url: "#", twitter_url: "#", email: "fabrice@altuvera.com", is_featured: true, is_active: true, display_order: 1 },
-  { id: 2, name: "UWIMANA Grace", role: "Head of Operations", department: "Operations", image_url: "https://randomuser.me/api/portraits/women/44.jpg", bio: "Ensures seamless coordination of every itinerary with precision and local expertise.", expertise: ["Logistics", "Quality Assurance"], languages: ["English", "Swahili"], certifications: [], years_experience: 8, location: "Musanze, Rwanda", linkedin_url: "#", email: "grace@altuvera.com", is_featured: false, is_active: true, display_order: 2 },
-  { id: 3, name: "MUTABAZI Jean", role: "Lead Safari Guide", department: "Guides", image_url: "https://randomuser.me/api/portraits/men/67.jpg", bio: "Expert wildlife guide combining extensive field knowledge with exceptional safety standards.", expertise: ["Wildlife Tracking", "Conservation"], languages: ["English", "Swahili", "French"], certifications: ["Certified Safari Guide"], years_experience: 15, location: "Serengeti, Tanzania", linkedin_url: "#", email: "jean@altuvera.com", is_featured: true, is_active: true, display_order: 3 },
-  { id: 4, name: "INGABIRE Diane", role: "Customer Experience Manager", department: "Customer Service", image_url: "https://randomuser.me/api/portraits/women/28.jpg", bio: "Designs guest-first service experiences from initial inquiry through post-trip follow-up.", expertise: ["Client Relations", "Service Design"], languages: ["English", "French"], certifications: [], years_experience: 6, location: "Kampala, Uganda", linkedin_url: "#", twitter_url: "#", email: "diane@altuvera.com", is_featured: false, is_active: true, display_order: 4 },
-  { id: 5, name: "HABIMANA Patrick", role: "Conservation Liaison", department: "Conservation", image_url: "https://randomuser.me/api/portraits/men/52.jpg", bio: "Manages partnerships with wildlife conservancies and oversees community development initiatives.", expertise: ["Conservation Strategy", "Community Engagement"], languages: ["English", "Rukiga"], certifications: ["Conservation Certificate"], years_experience: 10, location: "Bwindi, Uganda", linkedin_url: "#", email: "patrick@altuvera.com", is_featured: false, is_active: true, display_order: 5 },
-  { id: 6, name: "MUKAMANA Claudine", role: "Marketing Director", department: "Marketing", image_url: "https://randomuser.me/api/portraits/women/65.jpg", bio: "Leads brand strategy and digital marketing to connect travelers with authentic African experiences.", expertise: ["Digital Marketing", "Brand Strategy"], languages: ["English", "French", "Kinyarwanda"], certifications: [], years_experience: 7, location: "Musanze, Rwanda", linkedin_url: "#", twitter_url: "#", instagram_url: "#", email: "claudine@altuvera.com", is_featured: false, is_active: true, display_order: 6 },
-];
+/* ═══════════════════════════════════════════════════════════════════════════
+   NORMALIZERS — reconcile backend fields with what the UI expects
+═══════════════════════════════════════════════════════════════════════════ */
 
-/* ── Palette ── */
+const asArray = (v) => {
+  if (!v) return [];
+  if (Array.isArray(v)) return v;
+  if (typeof v === "string") {
+    try {
+      const p = JSON.parse(v);
+      return Array.isArray(p) ? p : [p];
+    } catch {
+      return v.split(",").map((s) => s.trim()).filter(Boolean);
+    }
+  }
+  return [];
+};
+
+const normalizeMember = (m = {}) => ({
+  id:            m.id,
+  name:          m.name || "",
+  role:          m.role || "",
+  department:    m.department || "",
+  bio:           m.bio || "",
+  // The backend may return image_url, avatar_url, imageUrl or image
+  image_url:     m.image_url || m.imageUrl || m.avatar_url || m.photo_url || m.profile_image_url || m.image || null,
+  email:         m.email || "",
+  phone:         m.phone || "",
+  linkedin_url:  m.linkedin_url || "",
+  twitter_url:   m.twitter_url || "",
+  instagram_url: m.instagram_url || "",
+  facebook_url:  m.facebook_url || "",
+  website_url:   m.website_url || "",
+  expertise:     asArray(m.expertise),
+  languages:     asArray(m.languages),
+  certifications:asArray(m.certifications),
+  years_experience: parseInt(m.years_experience) || 0,
+  location:      m.location || "",
+  country:       m.country || "",
+  display_order: parseInt(m.display_order) || 0,
+  is_active:     m.is_active !== false,
+  is_featured:   m.is_featured === true,
+});
+
+// Handle every possible backend response shape
+const extractList = (payload) => {
+  if (!payload) return [];
+  if (Array.isArray(payload)) return payload;
+  if (Array.isArray(payload.data)) return payload.data;
+  if (Array.isArray(payload.results)) return payload.results;
+  if (Array.isArray(payload.members)) return payload.members;
+  return [];
+};
+
+// Departments come back as either strings or { name, memberCount } objects
+const normalizeDepartments = (payload) => {
+  const list = extractList(payload);
+  return list
+    .map((d) => {
+      if (typeof d === "string") return d;
+      if (d && typeof d === "object") return d.name || d.department || "";
+      return "";
+    })
+    .filter((n) => n && n.toLowerCase() !== "all");
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════════════════════════════════════ */
+
 const C = {
-  darkGreen: "#064e3b",
-  green: "#065f46",
-  medGreen: "#047857",
-  lightGreen: "#059669",
-  paleGreen: "#d1fae5",
-  faintGreen: "#ecfdf5",
-  ghostGreen: "#f0fdf4",
-  white: "#ffffff",
-  offWhite: "#fafffe",
-  textDark: "#064e3b",
-  textMed: "#065f46",
-  textLight: "#047857",
-  textMuted: "#6b7280",
-  border: "#d1fae5",
-  borderLight: "#e5f5ee",
+  ink:         "#022c22",
+  darkGreen:   "#064e3b",
+  green:       "#065f46",
+  medGreen:    "#047857",
+  lightGreen:  "#059669",
+  brightGreen: "#10b981",
+  paleGreen:   "#a7f3d0",
+  softGreen:   "#d1fae5",
+  faintGreen:  "#ecfdf5",
+  ghostGreen:  "#f0fdf4",
+  white:       "#ffffff",
+  offWhite:    "#fafffe",
+  border:      "#d1fae5",
+  borderLight: "#e6f5ee",
+  divider:     "#e5e7eb",
+  textDark:    "#022c22",
+  textMed:     "#065f46",
+  textLight:   "#047857",
+  textMuted:   "#6b7280",
+  textFaint:   "#9ca3af",
+  amber:       "#f59e0b",
+  amberSoft:   "#fef3c7",
+  red:         "#dc2626",
+  redSoft:     "#fef2f2",
 };
 
-/* ── Styles ── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   STYLES
+═══════════════════════════════════════════════════════════════════════════ */
+
 const STYLES = `
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;600;700;800;900&display=swap');
 
 .tm-root{
   font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
   -webkit-font-smoothing:antialiased;
-  padding:clamp(40px,5vw,72px) clamp(16px,3vw,40px);
-  background:${C.white};
+  padding:clamp(48px,6vw,88px) clamp(16px,4vw,48px);
+  background:
+    radial-gradient(ellipse at top,${C.ghostGreen} 0%,transparent 55%),
+    radial-gradient(ellipse at bottom right,${C.faintGreen} 0%,transparent 45%),
+    ${C.white};
   position:relative;
+  overflow:hidden;
 }
+.tm-root::before{
+  content:'';position:absolute;inset:0;
+  background-image:
+    radial-gradient(circle at 20% 20%,${C.softGreen}22 1px,transparent 1px),
+    radial-gradient(circle at 80% 80%,${C.paleGreen}22 1px,transparent 1px);
+  background-size:60px 60px,80px 80px;
+  pointer-events:none;opacity:.4;
+}
+.tm-wrap{max-width:1200px;margin:0 auto;position:relative;z-index:1}
 
-.tm-wrap{max-width:1160px;margin:0 auto;position:relative;z-index:1}
-
-/* Heading */
-.tm-head{text-align:center;margin-bottom:28px}
+.tm-head{text-align:center;margin-bottom:32px}
+.tm-eyebrow{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 14px;border-radius:999px;
+  background:${C.faintGreen};border:1px solid ${C.softGreen};
+  color:${C.medGreen};font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px;
+}
 .tm-h2{
   font-family:'Playfair Display',serif;
-  font-size:clamp(26px,4.2vw,42px);font-weight:800;
-  color:${C.darkGreen};margin:0 0 10px;line-height:1.18;letter-spacing:-.02em;
+  font-size:clamp(28px,4.5vw,44px);font-weight:800;
+  color:${C.ink};margin:0 0 12px;line-height:1.15;letter-spacing:-.025em;
 }
-.tm-h2 em{font-style:normal;color:${C.lightGreen}}
+.tm-h2 em{
+  font-style:normal;
+  background:linear-gradient(135deg,${C.lightGreen} 0%,${C.medGreen} 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  position:relative;
+}
+.tm-h2 em::after{
+  content:'';position:absolute;left:0;right:0;bottom:-3px;height:3px;
+  background:linear-gradient(90deg,${C.brightGreen},${C.lightGreen});
+  border-radius:2px;opacity:.35;
+}
 .tm-sub{
-  font-size:clamp(13.5px,1.6vw,15.5px);color:${C.textMuted};
-  line-height:1.7;max-width:560px;margin:0 auto;
+  font-size:clamp(14px,1.7vw,16px);color:${C.textMuted};
+  line-height:1.75;max-width:600px;margin:0 auto;font-weight:400;
 }
 
-/* Banner */
-.tm-banner{
-  display:flex;align-items:center;justify-content:center;gap:7px;
-  padding:9px 16px;background:${C.ghostGreen};border:1px solid ${C.paleGreen};
-  border-radius:10px;margin-bottom:20px;color:${C.green};font-size:12.5px;
+.tm-filters{
+  display:flex;flex-wrap:wrap;justify-content:center;
+  gap:8px;margin-bottom:36px;
 }
-.tm-banner button{
-  background:none;border:none;color:${C.lightGreen};font-weight:700;
-  cursor:pointer;text-decoration:underline;font-family:inherit;font-size:12.5px;margin-left:3px;
-}
-
-/* Filters */
-.tm-filters{display:flex;flex-wrap:wrap;justify-content:center;gap:7px;margin-bottom:28px}
 .tm-fbtn{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:7px 16px;border-radius:8px;
-  border:1.5px solid ${C.paleGreen};background:${C.white};
-  color:${C.green};font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;
-  cursor:pointer;transition:all .18s ease;
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:10px;
+  border:1.5px solid ${C.softGreen};background:${C.white};
+  color:${C.green};font-family:'Inter',sans-serif;
+  font-size:13px;font-weight:600;
+  cursor:pointer;transition:all .2s cubic-bezier(.4,0,.2,1);
+  white-space:nowrap;
 }
-.tm-fbtn:hover{background:${C.ghostGreen};border-color:${C.paleGreen}}
+.tm-fbtn:hover{
+  background:${C.faintGreen};border-color:${C.paleGreen};
+  transform:translateY(-1px);
+}
 .tm-fbtn.on{
-  background:${C.darkGreen};border-color:${C.darkGreen};color:${C.white};
-  box-shadow:0 2px 8px rgba(6,78,59,.22);
+  background:linear-gradient(135deg,${C.darkGreen} 0%,${C.green} 100%);
+  border-color:${C.darkGreen};color:${C.white};
+  box-shadow:0 4px 12px rgba(6,78,59,.28);
 }
 .tm-fcount{
-  min-width:16px;height:16px;padding:0 4px;border-radius:4px;
-  background:rgba(6,78,59,.08);font-size:9.5px;font-weight:800;
+  min-width:20px;height:18px;padding:0 6px;border-radius:5px;
+  background:rgba(6,78,59,.1);font-size:10px;font-weight:800;
   display:inline-flex;align-items:center;justify-content:center;color:inherit;
 }
-.tm-fbtn.on .tm-fcount{background:rgba(255,255,255,.18);color:${C.white}}
+.tm-fbtn.on .tm-fcount{background:rgba(255,255,255,.22);color:${C.white}}
 .tm-fmore{
-  display:inline-flex;align-items:center;gap:4px;
-  padding:7px 13px;border-radius:8px;border:1.5px dashed ${C.paleGreen};
-  background:transparent;color:${C.lightGreen};font-family:'Inter',sans-serif;
-  font-size:12px;font-weight:600;cursor:pointer;transition:all .18s;
+  display:inline-flex;align-items:center;gap:5px;
+  padding:8px 14px;border-radius:10px;
+  border:1.5px dashed ${C.paleGreen};
+  background:transparent;color:${C.lightGreen};
+  font-family:'Inter',sans-serif;font-size:12.5px;font-weight:600;
+  cursor:pointer;transition:all .2s;
 }
-.tm-fmore:hover{background:${C.ghostGreen}}
+.tm-fmore:hover{background:${C.faintGreen};border-style:solid}
 
-/* Grid */
 .tm-grid{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:22px;margin-bottom:32px;
+  display:grid;grid-template-columns:repeat(3,1fr);
+  gap:24px;margin-bottom:44px;
 }
 
-/* ═══════════ CARD ═══════════ */
 .tm-card{
-  background:${C.white};
-  border-radius:16px;
-  border:1.5px solid ${C.borderLight};
-  padding:24px 20px 20px;
-  text-align:center;
+  background:${C.white};border-radius:20px;
+  border:1px solid ${C.borderLight};overflow:hidden;
   display:flex;flex-direction:column;
-  transition:all .28s cubic-bezier(.4,0,.2,1);
-  position:relative;
+  transition:all .35s cubic-bezier(.4,0,.2,1);
+  position:relative;isolation:isolate;
+}
+.tm-card::before{
+  content:'';position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(135deg,${C.faintGreen} 0%,${C.white} 60%);
+  opacity:0;transition:opacity .4s;
 }
 .tm-card:hover{
-  transform:translateY(-5px);
-  border-color:${C.paleGreen};
-  box-shadow:0 16px 40px rgba(6,78,59,.1);
+  transform:translateY(-6px);border-color:${C.paleGreen};
+  box-shadow:0 20px 45px -12px rgba(6,78,59,.15),0 8px 20px -8px rgba(6,78,59,.08);
 }
-.tm-card::after{
-  content:'';position:absolute;bottom:0;left:20px;right:20px;
-  height:2px;border-radius:2px;
-  background:linear-gradient(90deg,${C.lightGreen},${C.medGreen});
-  opacity:0;transition:opacity .25s;
-}
-.tm-card:hover::after{opacity:1}
+.tm-card:hover::before{opacity:1}
 
-/* Featured */
+.tm-card-band{
+  height:78px;
+  background:linear-gradient(135deg,${C.darkGreen} 0%,${C.green} 55%,${C.medGreen} 100%);
+  position:relative;overflow:hidden;
+}
+.tm-card-band::before{
+  content:'';position:absolute;inset:0;
+  background-image:
+    radial-gradient(circle at 15% 30%,rgba(255,255,255,.12) 0%,transparent 40%),
+    radial-gradient(circle at 85% 70%,rgba(255,255,255,.08) 0%,transparent 40%);
+}
+.tm-card-band::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,${C.paleGreen}66,transparent);
+}
+
 .tm-feat{
-  position:absolute;top:12px;right:12px;
-  display:flex;align-items:center;gap:3px;
-  padding:3px 9px;border-radius:6px;
-  background:${C.faintGreen};border:1px solid ${C.paleGreen};
-  color:${C.lightGreen};font-size:9.5px;font-weight:800;
-  text-transform:uppercase;letter-spacing:.03em;
+  position:absolute;top:12px;right:12px;z-index:2;
+  display:inline-flex;align-items:center;gap:4px;
+  padding:5px 10px;border-radius:6px;
+  background:rgba(255,255,255,.95);backdrop-filter:blur(8px);
+  color:${C.amber};font-size:10px;font-weight:800;
+  text-transform:uppercase;letter-spacing:.06em;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
 }
 
-/* Avatar */
+.tm-card-body{
+  padding:0 22px 22px;display:flex;flex-direction:column;
+  align-items:center;text-align:center;
+  flex:1;margin-top:-46px;position:relative;
+}
+
 .tm-avatar{
-  width:88px;height:88px;
-  border-radius:50%;
-  margin:0 auto 14px;
-  position:relative;
-  flex-shrink:0;
+  width:96px;height:96px;border-radius:50%;position:relative;
+  margin-bottom:16px;flex-shrink:0;
 }
 .tm-avatar-ring{
-  width:100%;height:100%;border-radius:50%;
-  overflow:hidden;
-  border:3px solid ${C.paleGreen};
-  background:${C.faintGreen};
-  transition:border-color .25s;
+  width:100%;height:100%;border-radius:50%;overflow:hidden;
+  border:4px solid ${C.white};background:${C.faintGreen};
+  box-shadow:0 4px 12px rgba(6,78,59,.15),0 0 0 1px ${C.softGreen};
+  transition:all .3s;position:relative;
 }
-.tm-card:hover .tm-avatar-ring{border-color:${C.lightGreen}}
+.tm-card:hover .tm-avatar-ring{
+  box-shadow:0 8px 20px rgba(6,78,59,.25),0 0 0 1px ${C.paleGreen};
+}
 .tm-avatar-img{
-  width:100%;height:100%;object-fit:cover;
-  display:block;
-  transition:transform .4s ease,opacity .35s ease;
+  width:100%;height:100%;object-fit:cover;display:block;
+  transition:transform .5s ease,opacity .35s ease;
 }
-.tm-card:hover .tm-avatar-img{transform:scale(1.06)}
+.tm-card:hover .tm-avatar-img{transform:scale(1.08)}
 .tm-avatar-fb{
-  width:100%;height:100%;
-  display:flex;align-items:center;justify-content:center;
-  background:linear-gradient(135deg,${C.faintGreen},${C.paleGreen});
-  border-radius:50%;
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,${C.faintGreen} 0%,${C.softGreen} 100%);
 }
 .tm-avatar-in{
   font-family:'Playfair Display',serif;
-  font-size:28px;font-weight:800;color:${C.lightGreen};
+  font-size:32px;font-weight:800;color:${C.lightGreen};
 }
 .tm-dot{
-  position:absolute;bottom:2px;right:2px;
-  width:12px;height:12px;border-radius:50%;
-  border:2.5px solid ${C.white};
+  position:absolute;bottom:4px;right:4px;
+  width:14px;height:14px;border-radius:50%;
+  border:3px solid ${C.white};box-shadow:0 1px 4px rgba(0,0,0,.15);
 }
 
-/* Text */
 .tm-name{
   font-family:'Playfair Display',serif;
-  font-size:17px;font-weight:700;color:${C.darkGreen};
-  margin:0 0 3px;line-height:1.25;
+  font-size:18px;font-weight:700;color:${C.ink};
+  margin:0 0 4px;line-height:1.25;letter-spacing:-.01em;
 }
-.tm-role{font-size:13px;color:${C.lightGreen};font-weight:600;margin:0 0 6px}
+.tm-role{
+  font-size:13.5px;color:${C.lightGreen};
+  font-weight:600;margin:0 0 10px;letter-spacing:.005em;
+}
 .tm-dept{
-  display:inline-block;padding:2px 10px;border-radius:5px;
-  background:${C.ghostGreen};border:1px solid ${C.paleGreen};
-  font-size:10px;color:${C.medGreen};font-weight:700;
-  text-transform:uppercase;letter-spacing:.03em;margin-bottom:10px;
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 11px;border-radius:6px;
+  background:${C.faintGreen};border:1px solid ${C.softGreen};
+  font-size:10.5px;color:${C.medGreen};font-weight:700;
+  text-transform:uppercase;letter-spacing:.04em;margin-bottom:14px;
 }
+.tm-dept::before{
+  content:'';width:5px;height:5px;border-radius:50%;background:${C.lightGreen};
+}
+
+.tm-divider{
+  width:36px;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,${C.paleGreen},${C.lightGreen},${C.paleGreen});
+  margin:0 auto 14px;
+}
+
 .tm-bio{
-  font-size:12.5px;color:${C.textMuted};line-height:1.65;
-  margin:0 0 12px;
-  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  font-size:13px;color:${C.textMuted};
+  line-height:1.65;margin:0 0 14px;
+  display:-webkit-box;-webkit-line-clamp:3;
+  -webkit-box-orient:vertical;overflow:hidden;
+  min-height:63px;
 }
 
-/* Tags */
-.tm-tags{display:flex;flex-wrap:wrap;justify-content:center;gap:4px;margin-bottom:10px}
+.tm-tags{
+  display:flex;flex-wrap:wrap;justify-content:center;
+  gap:5px;margin-bottom:14px;
+}
 .tm-tag{
-  padding:2px 8px;border-radius:5px;
-  background:${C.ghostGreen};border:1px solid ${C.borderLight};
-  font-size:10px;color:${C.green};font-weight:600;
+  padding:3px 9px;border-radius:6px;
+  background:${C.white};border:1px solid ${C.softGreen};
+  font-size:10.5px;color:${C.green};font-weight:600;
+  transition:all .2s;
 }
+.tm-tag:hover{background:${C.faintGreen};border-color:${C.paleGreen}}
 .tm-tag-x{
-  padding:2px 7px;border-radius:5px;
-  background:${C.faintGreen};font-size:10px;color:${C.lightGreen};font-weight:700;
+  padding:3px 8px;border-radius:6px;
+  background:${C.darkGreen};color:${C.white};
+  font-size:10px;font-weight:800;
 }
 
-/* Meta */
-.tm-meta{display:flex;flex-direction:column;gap:3px;margin-bottom:12px}
+.tm-meta{
+  display:flex;flex-direction:column;
+  gap:6px;margin-bottom:16px;width:100%;
+}
 .tm-mi{
   display:flex;align-items:center;justify-content:center;
-  gap:5px;font-size:11px;color:${C.textMuted};
+  gap:7px;font-size:11.5px;color:${C.textMuted};font-weight:500;
 }
-.tm-mi svg{flex-shrink:0;color:${C.paleGreen}}
+.tm-mi svg{flex-shrink:0;color:${C.lightGreen}}
+.tm-mi.tm-mi-award svg{color:${C.amber}}
+.tm-mi.tm-mi-award{color:#b45309}
 
-/* Socials */
 .tm-socials{
-  display:flex;justify-content:center;gap:6px;
-  padding-top:12px;border-top:1px solid ${C.borderLight};margin-top:auto;
+  display:flex;justify-content:center;gap:7px;
+  padding-top:16px;border-top:1px solid ${C.borderLight};
+  margin-top:auto;width:100%;
 }
 .tm-slink{
-  width:30px;height:30px;border-radius:8px;
-  border:1.5px solid ${C.borderLight};background:${C.white};
+  width:34px;height:34px;border-radius:9px;
+  border:1px solid ${C.borderLight};background:${C.white};
   color:${C.green};display:flex;align-items:center;justify-content:center;
-  text-decoration:none;transition:all .18s;
+  text-decoration:none;
+  transition:all .22s cubic-bezier(.4,0,.2,1);position:relative;
 }
 .tm-slink:hover{
-  background:${C.darkGreen};border-color:${C.darkGreen};color:${C.white};
-  transform:translateY(-1px);box-shadow:0 3px 8px rgba(6,78,59,.2);
+  background:linear-gradient(135deg,${C.darkGreen},${C.green});
+  border-color:${C.darkGreen};color:${C.white};
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(6,78,59,.28);
 }
 
-/* Skeleton */
 .tm-sk{
-  background:linear-gradient(110deg,${C.borderLight} 8%,${C.ghostGreen} 18%,${C.borderLight} 33%);
-  background-size:200% 100%;animation:tmShim 1.4s ease-in-out infinite;border-radius:6px;
+  background:linear-gradient(110deg,
+    ${C.borderLight} 8%,${C.faintGreen} 18%,${C.borderLight} 33%);
+  background-size:200% 100%;
+  animation:tmShim 1.5s ease-in-out infinite;
+  border-radius:6px;
 }
-@keyframes tmShim{from{background-position:-200% 0}to{background-position:200% 0}}
+@keyframes tmShim{
+  from{background-position:-200% 0}
+  to{background-position:200% 0}
+}
 .tm-sk-card{
-  background:${C.white};border-radius:16px;border:1.5px solid ${C.borderLight};
-  padding:24px 20px 20px;display:flex;flex-direction:column;align-items:center;gap:8px;
+  background:${C.white};border-radius:20px;
+  border:1px solid ${C.borderLight};overflow:hidden;
+  display:flex;flex-direction:column;
+}
+.tm-sk-band{height:78px;background:${C.faintGreen}}
+.tm-sk-body{
+  padding:0 22px 22px;display:flex;flex-direction:column;
+  align-items:center;gap:10px;margin-top:-46px;position:relative;
 }
 
-/* State boxes */
 .tm-state{
-  text-align:center;padding:44px 24px;border-radius:16px;
-  display:flex;flex-direction:column;align-items:center;margin-bottom:24px;
+  text-align:center;padding:56px 28px;border-radius:20px;
+  display:flex;flex-direction:column;align-items:center;
+  margin-bottom:32px;max-width:520px;margin-left:auto;margin-right:auto;
 }
-.tm-state.err{background:#fef2f2;border:1px solid #fecaca}
-.tm-state.nil{background:${C.ghostGreen};border:1px solid ${C.paleGreen}}
+.tm-state.err{background:${C.redSoft};border:1px solid #fecaca}
+.tm-state.nil{background:${C.ghostGreen};border:1px solid ${C.softGreen}}
+.tm-state-ic{
+  width:64px;height:64px;border-radius:16px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:16px;
+}
+.tm-state.err .tm-state-ic{background:#fee2e2;color:${C.red}}
+.tm-state.nil .tm-state-ic{
+  background:linear-gradient(135deg,${C.softGreen},${C.paleGreen});
+  color:${C.medGreen};
+}
 .tm-state h3{
-  font-family:'Playfair Display',serif;font-size:17px;font-weight:700;
-  color:${C.darkGreen};margin:10px 0 5px;
+  font-family:'Playfair Display',serif;
+  font-size:20px;font-weight:700;color:${C.ink};margin:0 0 8px;
 }
-.tm-state p{font-size:13px;color:${C.textMuted};margin:0 0 16px;line-height:1.55}
+.tm-state p{
+  font-size:14px;color:${C.textMuted};
+  margin:0 0 20px;line-height:1.6;max-width:400px;
+}
 .tm-abtn{
-  display:flex;align-items:center;gap:6px;
-  padding:9px 20px;border-radius:9px;font-family:'Inter',sans-serif;
-  font-size:12.5px;font-weight:700;cursor:pointer;transition:all .18s;border:none;
+  display:inline-flex;align-items:center;gap:7px;
+  padding:11px 22px;border-radius:10px;
+  font-family:'Inter',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;transition:all .2s;border:none;
 }
-.tm-abtn.retry{background:#fef2f2;border:1.5px solid #f87171;color:#dc2626}
-.tm-abtn.retry:hover{background:#fee2e2;transform:translateY(-1px)}
-.tm-abtn.reset{background:${C.darkGreen};color:${C.white};box-shadow:0 2px 8px rgba(6,78,59,.18)}
-.tm-abtn.reset:hover{background:${C.green};transform:translateY(-1px)}
+.tm-abtn.retry{background:${C.white};border:1.5px solid ${C.red};color:${C.red}}
+.tm-abtn.retry:hover{
+  background:${C.red};color:${C.white};transform:translateY(-1px);
+  box-shadow:0 4px 12px rgba(220,38,38,.25);
+}
+.tm-abtn.reset{
+  background:linear-gradient(135deg,${C.darkGreen},${C.green});
+  color:${C.white};box-shadow:0 4px 12px rgba(6,78,59,.22);
+}
+.tm-abtn.reset:hover{
+  transform:translateY(-1px);
+  box-shadow:0 6px 16px rgba(6,78,59,.32);
+}
 
-/* CTA */
 .tm-cta{
-  background:${C.darkGreen};border-radius:18px;
-  padding:clamp(32px,4.5vw,48px) clamp(20px,4vw,44px);
+  background:
+    radial-gradient(ellipse at top left,${C.green} 0%,transparent 55%),
+    radial-gradient(ellipse at bottom right,${C.medGreen} 0%,transparent 55%),
+    linear-gradient(135deg,${C.ink} 0%,${C.darkGreen} 100%);
+  border-radius:24px;
+  padding:clamp(36px,5vw,56px) clamp(24px,4vw,48px);
   text-align:center;position:relative;overflow:hidden;
 }
 .tm-cta::before{
   content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,${C.lightGreen},${C.paleGreen},${C.lightGreen});
+  background:linear-gradient(90deg,
+    transparent,${C.brightGreen},${C.paleGreen},${C.brightGreen},transparent);
+}
+.tm-cta::after{
+  content:'';position:absolute;inset:0;
+  background-image:
+    radial-gradient(circle at 20% 30%,rgba(16,185,129,.08) 0%,transparent 30%),
+    radial-gradient(circle at 80% 70%,rgba(167,243,208,.06) 0%,transparent 30%);
+  pointer-events:none;
+}
+.tm-cta-inner{position:relative;z-index:1}
+.tm-cta-eyebrow{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 14px;border-radius:999px;
+  background:rgba(16,185,129,.15);
+  border:1px solid rgba(167,243,208,.2);
+  color:${C.paleGreen};font-size:11px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.12em;margin-bottom:14px;
 }
 .tm-cta-h{
   font-family:'Playfair Display',serif;
-  font-size:clamp(19px,3.2vw,26px);font-weight:800;
-  color:${C.white};margin:0 0 8px;
+  font-size:clamp(22px,3.5vw,30px);font-weight:800;
+  color:${C.white};margin:0 0 10px;letter-spacing:-.015em;
 }
 .tm-cta-p{
-  font-size:14px;color:rgba(255,255,255,.6);
-  line-height:1.65;max-width:420px;margin:0 auto 20px;
+  font-size:14.5px;color:rgba(255,255,255,.72);
+  line-height:1.7;max-width:460px;margin:0 auto 24px;font-weight:400;
 }
-.tm-cta-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.tm-cta-row{
+  display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
+}
 
-/* Responsive */
-@media(max-width:960px){.tm-grid{grid-template-columns:repeat(2,1fr);gap:18px}}
-@media(max-width:580px){
-  .tm-grid{grid-template-columns:1fr;gap:14px}
-  .tm-cta-row{flex-direction:column;align-items:center}
+@media(max-width:1024px){
+  .tm-grid{grid-template-columns:repeat(2,1fr);gap:20px}
+}
+@media(max-width:640px){
+  .tm-grid{grid-template-columns:1fr;gap:18px}
+  .tm-cta-row{flex-direction:column;align-items:stretch;max-width:280px;margin:0 auto}
+  .tm-filters{gap:6px}
+  .tm-fbtn{padding:7px 13px;font-size:12px}
+  .tm-card-body{padding:0 18px 18px}
+  .tm-avatar{width:88px;height:88px}
+}
+@media(max-width:400px){
+  .tm-avatar{width:80px;height:80px}
+  .tm-name{font-size:16.5px}
 }
 @media(prefers-reduced-motion:reduce){
-  .tm-card,.tm-slink,.tm-avatar-img{transition:none!important}
+  .tm-card,.tm-slink,.tm-avatar-img,.tm-fbtn,.tm-abtn{transition:none!important}
   .tm-sk{animation:none!important}
+  .tm-card:hover{transform:none}
 }
 `;
 
 let _injected = false;
 function injectStyles() {
   if (_injected || typeof document === "undefined") return;
-  if (document.getElementById("tm-st")) { _injected = true; return; }
+  if (document.getElementById("tm-st")) {
+    _injected = true;
+    return;
+  }
   const s = document.createElement("style");
   s.id = "tm-st";
   s.textContent = STYLES;
@@ -345,122 +591,221 @@ function injectStyles() {
   _injected = true;
 }
 
-/* ── Skeleton ── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   SKELETON
+═══════════════════════════════════════════════════════════════════════════ */
+
 function Skeleton() {
-  const b = (w, h) => <div className="tm-sk" style={{ width: w, height: h }} />;
+  const b = (w, h, r = 6) => (
+    <div className="tm-sk" style={{ width: w, height: h, borderRadius: r }} />
+  );
   return (
     <div className="tm-sk-card" aria-hidden="true">
-      <div className="tm-sk" style={{ width: 88, height: 88, borderRadius: "50%" }} />
-      {b("60%", 16)}{b("40%", 13)}{b("30%", 18)}{b("85%", 11)}{b("70%", 11)}
-      <div style={{ display: "flex", gap: 6, paddingTop: 10, borderTop: `1px solid ${C.borderLight}`, marginTop: 6, width: "100%", justifyContent: "center" }}>
-        {[1, 2, 3].map(i => <div key={i} className="tm-sk" style={{ width: 30, height: 30, borderRadius: 8 }} />)}
+      <div className="tm-sk-band" />
+      <div className="tm-sk-body">
+        <div
+          className="tm-sk"
+          style={{
+            width: 96, height: 96, borderRadius: "50%",
+            border: `4px solid ${C.white}`, boxSizing: "content-box",
+          }}
+        />
+        {b("60%", 18)}
+        {b("40%", 13)}
+        {b("30%", 20, 6)}
+        <div style={{ height: 4 }} />
+        {b("90%", 12)}
+        {b("80%", 12)}
+        {b("70%", 12)}
+        <div
+          style={{
+            display: "flex", gap: 6, paddingTop: 14,
+            borderTop: `1px solid ${C.borderLight}`,
+            marginTop: 10, width: "100%", justifyContent: "center",
+          }}
+        >
+          {[1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="tm-sk"
+              style={{ width: 34, height: 34, borderRadius: 9 }}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
-/* ── Card ── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   CARD
+═══════════════════════════════════════════════════════════════════════════ */
+
 function Card({ member }) {
   const [imgState, setImgState] = useState("loading");
 
-  const expertise = Array.isArray(member.expertise) ? member.expertise : [];
-  const languages = Array.isArray(member.languages) ? member.languages : [];
-  const certs = Array.isArray(member.certifications) ? member.certifications : [];
+  const expertise = member.expertise || [];
+  const languages = member.languages || [];
+  const certs     = member.certifications || [];
 
   const socials = [
-    member.linkedin_url && { href: member.linkedin_url, icon: <FiLinkedin size={13} />, label: "LinkedIn" },
-    member.twitter_url && { href: member.twitter_url, icon: <FiTwitter size={13} />, label: "Twitter" },
-    member.instagram_url && { href: member.instagram_url, icon: <FiInstagram size={13} />, label: "Instagram" },
-    member.website_url && { href: member.website_url, icon: <FiExternalLink size={13} />, label: "Website" },
-    member.email && { href: `mailto:${member.email}`, icon: <FiMail size={13} />, label: "Email", int: true },
-    member.phone && { href: `tel:${member.phone}`, icon: <FiPhone size={13} />, label: "Phone", int: true },
+    member.linkedin_url && {
+      href: member.linkedin_url, icon: <FiLinkedin size={14} />, label: "LinkedIn",
+    },
+    member.twitter_url && {
+      href: member.twitter_url, icon: <FiTwitter size={14} />, label: "Twitter",
+    },
+    member.instagram_url && {
+      href: member.instagram_url, icon: <FiInstagram size={14} />, label: "Instagram",
+    },
+    member.facebook_url && {
+      href: member.facebook_url, icon: <FiFacebook size={14} />, label: "Facebook",
+    },
+    member.website_url && {
+      href: member.website_url, icon: <FiExternalLink size={14} />, label: "Website",
+    },
+    member.email && {
+      href: `mailto:${member.email}`, icon: <FiMail size={14} />, label: "Email", int: true,
+    },
+    member.phone && {
+      href: `tel:${member.phone}`, icon: <FiPhone size={14} />, label: "Phone", int: true,
+    },
   ].filter(Boolean);
 
   const initials = member.name
-    ? member.name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+    ? member.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "?";
+
+  const imageSrc = member.image_url;
 
   return (
     <article className="tm-card" role="listitem">
+      <div className="tm-card-band" aria-hidden="true" />
+
       {member.is_featured && (
-        <div className="tm-feat"><FiAward size={9} /> Featured</div>
-      )}
-
-      <div className="tm-avatar">
-        <div className="tm-avatar-ring">
-          {imgState === "loading" && member.image_url && (
-            <div className="tm-sk" style={{ position: "absolute", inset: 0, borderRadius: "50%" }} />
-          )}
-          {(imgState === "error" || !member.image_url) ? (
-            <div className="tm-avatar-fb">
-              <span className="tm-avatar-in">{initials}</span>
-            </div>
-          ) : (
-            <img
-              src={member.image_url}
-              alt={`${member.name}`}
-              className="tm-avatar-img"
-              style={{ opacity: imgState === "loaded" ? 1 : 0 }}
-              onLoad={() => setImgState("loaded")}
-              onError={() => setImgState("error")}
-              loading="lazy"
-              decoding="async"
-            />
-          )}
-        </div>
-        <div className="tm-dot" style={{ backgroundColor: member.is_active ? C.lightGreen : "#9ca3af" }} />
-      </div>
-
-      <h3 className="tm-name">{member.name}</h3>
-      <p className="tm-role">{member.role}</p>
-      {member.department && <span className="tm-dept">{member.department}</span>}
-      {member.bio && <p className="tm-bio">{member.bio}</p>}
-
-      {expertise.length > 0 && (
-        <div className="tm-tags">
-          {expertise.slice(0, 3).map((s, i) => <span key={i} className="tm-tag">{s}</span>)}
-          {expertise.length > 3 && <span className="tm-tag-x">+{expertise.length - 3}</span>}
+        <div className="tm-feat">
+          <FiStar size={10} fill="currentColor" /> Featured
         </div>
       )}
 
-      <div className="tm-meta">
-        {languages.length > 0 && (
-          <div className="tm-mi">
-            <FiGlobe size={10} />
-            <span>{languages.slice(0, 3).join(", ")}{languages.length > 3 ? ` +${languages.length - 3}` : ""}</span>
+      <div className="tm-card-body">
+        <div className="tm-avatar">
+          <div className="tm-avatar-ring">
+            {imgState === "loading" && imageSrc && (
+              <div
+                className="tm-sk"
+                style={{ position: "absolute", inset: 0, borderRadius: "50%" }}
+              />
+            )}
+            {imgState === "error" || !imageSrc ? (
+              <div className="tm-avatar-fb">
+                <span className="tm-avatar-in">{initials}</span>
+              </div>
+            ) : (
+              <img
+                src={imageSrc}
+                alt={`${member.name} profile`}
+                className="tm-avatar-img"
+                style={{ opacity: imgState === "loaded" ? 1 : 0 }}
+                onLoad={() => setImgState("loaded")}
+                onError={() => setImgState("error")}
+                loading="lazy"
+                decoding="async"
+              />
+            )}
+          </div>
+          <div
+            className="tm-dot"
+            style={{
+              backgroundColor: member.is_active ? C.brightGreen : "#9ca3af",
+            }}
+            title={member.is_active ? "Active" : "Inactive"}
+          />
+        </div>
+
+        <h3 className="tm-name">{member.name}</h3>
+        {member.role && <p className="tm-role">{member.role}</p>}
+        {member.department && (
+          <span className="tm-dept">{member.department}</span>
+        )}
+
+        <div className="tm-divider" />
+
+        {member.bio && <p className="tm-bio">{member.bio}</p>}
+
+        {expertise.length > 0 && (
+          <div className="tm-tags">
+            {expertise.slice(0, 3).map((s, i) => (
+              <span key={i} className="tm-tag">{s}</span>
+            ))}
+            {expertise.length > 3 && (
+              <span className="tm-tag-x">+{expertise.length - 3}</span>
+            )}
           </div>
         )}
-        {certs.length > 0 && (
-          <div className="tm-mi" style={{ color: "#b45309" }}>
-            <FiAward size={10} style={{ color: "#f59e0b" }} />
-            <span>{certs[0]}{certs.length > 1 ? ` +${certs.length - 1}` : ""}</span>
+
+        {(languages.length > 0 || certs.length > 0 ||
+          member.years_experience > 0 || member.location) && (
+          <div className="tm-meta">
+            {languages.length > 0 && (
+              <div className="tm-mi">
+                <FiGlobe size={11} />
+                <span>
+                  {languages.slice(0, 3).join(", ")}
+                  {languages.length > 3 && ` +${languages.length - 3}`}
+                </span>
+              </div>
+            )}
+            {certs.length > 0 && (
+              <div className="tm-mi tm-mi-award">
+                <FiAward size={11} />
+                <span>
+                  {certs[0]}
+                  {certs.length > 1 && ` +${certs.length - 1}`}
+                </span>
+              </div>
+            )}
+            {member.years_experience > 0 && (
+              <div className="tm-mi">
+                <FiCalendar size={11} />
+                <span>{member.years_experience}+ years experience</span>
+              </div>
+            )}
+            {member.location && (
+              <div className="tm-mi">
+                <FiMapPin size={11} />
+                <span>{member.location}</span>
+              </div>
+            )}
           </div>
         )}
-        {member.years_experience > 0 && (
-          <div className="tm-mi"><FiCalendar size={10} /><span>{member.years_experience}+ yrs experience</span></div>
-        )}
-        {member.location && (
-          <div className="tm-mi"><FiMapPin size={10} /><span>{member.location}</span></div>
+
+        {socials.length > 0 && (
+          <div className="tm-socials">
+            {socials.map((lk, i) => (
+              <a
+                key={i}
+                href={lk.href}
+                target={lk.int ? undefined : "_blank"}
+                rel={lk.int ? undefined : "noopener noreferrer"}
+                className="tm-slink"
+                aria-label={lk.label}
+                title={lk.label}
+              >
+                {lk.icon}
+              </a>
+            ))}
+          </div>
         )}
       </div>
-
-      {socials.length > 0 && (
-        <div className="tm-socials">
-          {socials.map((lk, i) => (
-            <a
-              key={i} href={lk.href}
-              target={lk.int ? undefined : "_blank"}
-              rel={lk.int ? undefined : "noopener noreferrer"}
-              className="tm-slink" aria-label={lk.label} title={lk.label}
-            >{lk.icon}</a>
-          ))}
-        </div>
-      )}
     </article>
   );
 }
 
-/* ── Filter bar ── */
+/* ═══════════════════════════════════════════════════════════════════════════
+   FILTERS
+═══════════════════════════════════════════════════════════════════════════ */
+
 function Filters({ departments, active, onFilter, counts }) {
   const [open, setOpen] = useState(false);
   const vis = open ? departments : departments.slice(0, 5);
@@ -468,28 +813,43 @@ function Filters({ departments, active, onFilter, counts }) {
 
   return (
     <div className="tm-filters">
-      <button onClick={() => onFilter("all")} className={`tm-fbtn ${active === "all" ? "on" : ""}`}>
-        All{counts.all > 0 && <span className="tm-fcount">{counts.all}</span>}
+      <button
+        onClick={() => onFilter("all")}
+        className={`tm-fbtn ${active === "all" ? "on" : ""}`}
+      >
+        All
+        {counts.all > 0 && <span className="tm-fcount">{counts.all}</span>}
       </button>
-      {vis.map(d => {
-        const n = typeof d === "string" ? d : d.name;
-        return (
-          <button key={n} onClick={() => onFilter(n)} className={`tm-fbtn ${active === n ? "on" : ""}`}>
-            {n}{counts[n] > 0 && <span className="tm-fcount">{counts[n]}</span>}
-          </button>
-        );
-      })}
+      {vis.map((n) => (
+        <button
+          key={n}
+          onClick={() => onFilter(n)}
+          className={`tm-fbtn ${active === n ? "on" : ""}`}
+        >
+          {n}
+          {counts[n] > 0 && <span className="tm-fcount">{counts[n]}</span>}
+        </button>
+      ))}
       {more && (
-        <button className="tm-fmore" onClick={() => setOpen(v => !v)}>
-          <FiChevronDown size={12} style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }} />
-          {open ? "Less" : `+${departments.length - 5}`}
+        <button className="tm-fmore" onClick={() => setOpen((v) => !v)}>
+          <FiChevronDown
+            size={13}
+            style={{
+              transform: open ? "rotate(180deg)" : "none",
+              transition: "transform .25s",
+            }}
+          />
+          {open ? "Show less" : `+${departments.length - 5} more`}
         </button>
       )}
     </div>
   );
 }
 
-/* ══════════ MAIN ══════════ */
+/* ═══════════════════════════════════════════════════════════════════════════
+   MAIN COMPONENT
+═══════════════════════════════════════════════════════════════════════════ */
+
 const TeamContent = () => {
   const [members, setMembers] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -497,115 +857,180 @@ const TeamContent = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [active, setActive] = useState("all");
-  const [fallback, setFallback] = useState(false);
   const mounted = useRef(true);
 
-  useEffect(() => { injectStyles(); }, []);
+  useEffect(() => {
+    injectStyles();
+  }, []);
 
   const load = useCallback(async () => {
     if (!mounted.current) return;
-    setLoading(true); setError(null); setFallback(false);
+    setLoading(true);
+    setError(null);
+
     try {
       const [mR, dR] = await Promise.allSettled([
-        teamAPI.getAll({ sort: "display_order", order: "ASC", limit: 100 }),
+        teamAPI.getAll({
+          sort: "display_order",
+          order: "ASC",
+          limit: 100,
+        }),
         teamAPI.getDepartments(),
       ]);
+
       if (!mounted.current) return;
+
+      // Members
       if (mR.status === "fulfilled") {
-        const a = Array.isArray(mR.value.data) ? mR.value.data : (Array.isArray(mR.value) ? mR.value : []);
-        setMembers(a); setFiltered(a);
-      } else throw new Error(mR.reason?.message || "Fetch failed");
-      if (dR.status === "fulfilled") {
-        setDepts(Array.isArray(dR.value.data) ? dR.value.data : []);
-      } else if (mR.status === "fulfilled") {
-        const a = Array.isArray(mR.value.data) ? mR.value.data : [];
-        setDepts([...new Set(a.map(m => m.department).filter(Boolean))].sort());
+        const raw = extractList(mR.value);
+        const normalized = raw.map(normalizeMember);
+        setMembers(normalized);
+        setFiltered(normalized);
+      } else {
+        throw new Error(
+          mR.reason?.message || "Failed to load team members from server"
+        );
       }
-    } catch {
+
+      // Departments
+      if (dR.status === "fulfilled") {
+        setDepts(normalizeDepartments(dR.value));
+      } else if (mR.status === "fulfilled") {
+        const raw = extractList(mR.value).map(normalizeMember);
+        setDepts(
+          [...new Set(raw.map((m) => m.department).filter(Boolean))].sort()
+        );
+      }
+    } catch (err) {
       if (!mounted.current) return;
-      setMembers(FALLBACK_MEMBERS); setFiltered(FALLBACK_MEMBERS);
-      setDepts([...new Set(FALLBACK_MEMBERS.map(m => m.department).filter(Boolean))].sort());
-      setFallback(true);
-    } finally { if (mounted.current) setLoading(false); }
+      setMembers([]);
+      setFiltered([]);
+      setDepts([]);
+      setError(err.message || "Unable to reach the server. Please try again.");
+    } finally {
+      if (mounted.current) setLoading(false);
+    }
   }, []);
 
-  useEffect(() => { mounted.current = true; load(); return () => { mounted.current = false; }; }, [load]);
+  useEffect(() => {
+    mounted.current = true;
+    load();
+    return () => {
+      mounted.current = false;
+    };
+  }, [load]);
 
   useEffect(() => {
-    setFiltered(active === "all" ? members : members.filter(m => m.department?.toLowerCase() === active.toLowerCase()));
+    setFiltered(
+      active === "all"
+        ? members
+        : members.filter(
+            (m) => (m.department || "").toLowerCase() === active.toLowerCase()
+          )
+    );
   }, [active, members]);
 
   const counts = useMemo(() => {
     const c = { all: members.length };
-    members.forEach(m => { if (m.department) c[m.department] = (c[m.department] || 0) + 1; });
+    members.forEach((m) => {
+      if (m.department) c[m.department] = (c[m.department] || 0) + 1;
+    });
     return c;
   }, [members]);
 
-  const retry = useCallback(() => { setActive("all"); load(); }, [load]);
+  const retry = useCallback(() => {
+    setActive("all");
+    load();
+  }, [load]);
 
   return (
     <section className="tm-root">
       <div className="tm-wrap">
-
         <AnimatedSection animation="fadeInUp">
           <div className="tm-head">
-            <h2 className="tm-h2">Meet Our <em>Team</em></h2>
+            <span className="tm-eyebrow">
+              <FiUsers size={12} /> Our Experts
+            </span>
+            <h2 className="tm-h2">
+              Meet Our <em>Team</em>
+            </h2>
             <p className="tm-sub">
-              Dedicated professionals delivering seamless and authentic East African travel experiences.
+              Dedicated professionals delivering seamless and authentic
+              East African travel experiences with passion, expertise,
+              and unwavering commitment.
             </p>
           </div>
         </AnimatedSection>
 
-        {fallback && !loading && (
+        {depts.length > 0 && !loading && !error && (
           <AnimatedSection animation="fadeInUp">
-            <div className="tm-banner">
-              <FiAlertCircle size={13} />
-              <span>Showing preview data — live data loads when the server is available.</span>
-              <button onClick={retry}>Retry</button>
-            </div>
+            <Filters
+              departments={depts}
+              active={active}
+              onFilter={setActive}
+              counts={counts}
+            />
           </AnimatedSection>
         )}
 
-        {depts.length > 0 && !loading && (
-          <AnimatedSection animation="fadeInUp">
-            <Filters departments={depts} active={active} onFilter={setActive} counts={counts} />
-          </AnimatedSection>
-        )}
-
-        {error && (
+        {error && !loading && (
           <AnimatedSection animation="fadeInUp">
             <div className="tm-state err">
-              <FiAlertCircle size={34} color="#f87171" />
-              <h3>Failed to Load Team</h3>
+              <div className="tm-state-ic">
+                <FiWifiOff size={30} />
+              </div>
+              <h3>Unable to Load Team</h3>
               <p>{error}</p>
-              <button className="tm-abtn retry" onClick={retry}><FiRefreshCw size={13} /> Try Again</button>
+              <button className="tm-abtn retry" onClick={retry}>
+                <FiRefreshCw size={14} /> Try Again
+              </button>
             </div>
           </AnimatedSection>
         )}
 
-        <div className="tm-grid" role="list">
-          {loading
-            ? Array.from({ length: 6 }).map((_, i) => (
-              <AnimatedSection key={i} animation="fadeInUp" delay={i * 0.05}>
-                <Skeleton />
-              </AnimatedSection>
-            ))
-            : filtered.map((m, i) => (
-              <AnimatedSection key={m.id || i} animation="fadeInUp" delay={i * 0.06}>
-                <Card member={m} />
-              </AnimatedSection>
-            ))
-          }
-        </div>
+        {!error && (
+          <div className="tm-grid" role="list">
+            {loading
+              ? Array.from({ length: 6 }).map((_, i) => (
+                  <AnimatedSection
+                    key={i}
+                    animation="fadeInUp"
+                    delay={i * 0.05}
+                  >
+                    <Skeleton />
+                  </AnimatedSection>
+                ))
+              : filtered.map((m, i) => (
+                  <AnimatedSection
+                    key={m.id || i}
+                    animation="fadeInUp"
+                    delay={i * 0.06}
+                  >
+                    <Card member={m} />
+                  </AnimatedSection>
+                ))}
+          </div>
+        )}
 
         {!loading && !error && filtered.length === 0 && (
           <AnimatedSection animation="fadeInUp">
             <div className="tm-state nil">
-              <FiUsers size={36} style={{ color: C.paleGreen }} />
+              <div className="tm-state-ic">
+                <FiUsers size={30} />
+              </div>
               <h3>No Team Members Found</h3>
-              <p>{active !== "all" ? `No members in "${active}".` : "Members will appear once added."}</p>
+              <p>
+                {active !== "all"
+                  ? `No members currently listed in the "${active}" department.`
+                  : "Our team roster is being prepared. Check back soon!"}
+              </p>
               {active !== "all" && (
-                <button className="tm-abtn reset" onClick={() => setActive("all")}>View All</button>
+                <button
+                  className="tm-abtn reset"
+                  onClick={() => setActive("all")}
+                >
+                  View All Members
+                </button>
               )}
             </div>
           </AnimatedSection>
@@ -613,15 +1038,31 @@ const TeamContent = () => {
 
         <AnimatedSection animation="fadeInUp">
           <div className="tm-cta">
-            <h3 className="tm-cta-h">Ready to Start Your Adventure?</h3>
-            <p className="tm-cta-p">Connect with our team to plan your transformative East African journey.</p>
-            <div className="tm-cta-row">
-              <Button to="/contact" variant="primary" icon={<FiArrowRight size={15} />}>Contact Our Team</Button>
-              <Button to="/destinations" variant="outline">Explore Destinations</Button>
+            <div className="tm-cta-inner">
+              <span className="tm-cta-eyebrow">
+                <FiArrowRight size={11} /> Get Started
+              </span>
+              <h3 className="tm-cta-h">Ready to Start Your Adventure?</h3>
+              <p className="tm-cta-p">
+                Connect with our team of experts to plan your
+                transformative East African journey — tailored to your
+                interests, pace, and passions.
+              </p>
+              <div className="tm-cta-row">
+                <Button
+                  to="/contact"
+                  variant="primary"
+                  icon={<FiArrowRight size={15} />}
+                >
+                  Contact Our Team
+                </Button>
+                <Button to="/destinations" variant="outline">
+                  Explore Destinations
+                </Button>
+              </div>
             </div>
           </div>
         </AnimatedSection>
-
       </div>
     </section>
   );

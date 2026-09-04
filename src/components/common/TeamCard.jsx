@@ -17,6 +17,7 @@ const TeamCard = ({ member }) => {
 
   const expertise = Array.isArray(member?.expertise) ? member.expertise : [];
   const languages = Array.isArray(member?.languages) ? member.languages : [];
+  const imageUrl = member?.image_url || member?.imageUrl || member?.avatar_url || member?.image || '';
   const initials = member?.name
     ? member.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
     : '?';
@@ -96,13 +97,13 @@ const TeamCard = ({ member }) => {
             />
           )}
 
-          {imgErr || !member?.image_url ? (
+          {imgErr || !imageUrl ? (
             <div style={{ fontSize: 28, fontWeight: 800, color: '#059669', fontFamily: 'Playfair Display, serif' }}>
               {initials}
             </div>
           ) : (
             <img
-              src={member.image_url}
+              src={imageUrl}
               alt={member.name}
               loading="lazy"
               onLoad={() => setImgLoaded(true)}

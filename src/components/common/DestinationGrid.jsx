@@ -88,7 +88,7 @@ const DestinationGrid = memo(({
   );
 
   return (
-    <div style={gridStyle}>
+    <div className="destination-horizontal-row" style={gridStyle}>
       {loading
         ? Array.from({ length: skeletonCount }, (_, i) => <Skeleton key={i} compact={compact} />)
         : destinations.length === 0

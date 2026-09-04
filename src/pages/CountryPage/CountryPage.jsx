@@ -3,7 +3,7 @@ import React, {
   useState, useEffect, useRef, useCallback, useMemo,
 } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { motion, useVariants } from "framer-motion";
+import { motion } from "framer-motion";
 import SEO from "@components/common/SEO";
 import AnimatedSection from "@components/common/AnimatedSection";
 import Loader from "@components/common/Loader";
@@ -12,6 +12,7 @@ import DestinationCard, {
 } from "@components/common/DestinationCard";
 import { useCountry, useCountryDestinations } from "../../hooks/useCountries";
 import { getCountrySlug } from "../../utils/countrySlugMap";
+import CommentsCarousel from "../CommentsCarousel";
 
 /* ═══════════════════════════════════════════════════════════
    CSS
@@ -879,22 +880,40 @@ const pick = (...v) => {
 
 const getHeroImages = (c) => {
   const s = new Set();
-  const a = (v) => { if (v && typeof v === "string" && v.trim()) s.add(v.trim()); };
-  if (Array.isArray(c?.hero_images)) c.hero_images.forEach(a);
+  const a = (v) => {
+    const url = typeof v === "string" ? v : v?.url || v?.image_url || v?.imageUrl;
+    if (url && typeof url === "string" && url.trim()) s.add(url.trim());
+  };
+  const addMany = (value) => {
+    if (Array.isArray(value)) return value.forEach(a);
+    if (typeof value === "string" && value.trim().startsWith("[")) {
+      try { JSON.parse(value).forEach(a); } catch { /* ignore malformed image data */ }
+    }
+  };
+  addMany(c?.hero_images);
   a(c?.image_url); a(c?.heroImage); a(c?.coverImageUrl);
-  c?.media?.hero_images?.forEach?.(a);
-  c?.media?.gallery?.forEach?.(a);
-  if (Array.isArray(c?.images)) c.images.forEach(a);
+  addMany(c?.media?.hero_images);
+  addMany(c?.media?.gallery);
+  addMany(c?.images);
   return [...s].filter(Boolean).slice(0, 8);
 };
 
 const getGalleryImages = (c) => {
   const s = new Set();
-  const a = (v) => { if (v && typeof v === "string" && v.trim()) s.add(v.trim()); };
-  c?.media?.gallery?.forEach?.(a);
-  c?.media?.hero_images?.forEach?.(a);
-  if (Array.isArray(c?.hero_images)) c.hero_images.forEach(a);
-  if (Array.isArray(c?.images)) c.images.forEach(a);
+  const a = (v) => {
+    const url = typeof v === "string" ? v : v?.url || v?.image_url || v?.imageUrl;
+    if (url && typeof url === "string" && url.trim()) s.add(url.trim());
+  };
+  const addMany = (value) => {
+    if (Array.isArray(value)) return value.forEach(a);
+    if (typeof value === "string" && value.trim().startsWith("[")) {
+      try { JSON.parse(value).forEach(a); } catch { /* ignore malformed image data */ }
+    }
+  };
+  addMany(c?.media?.gallery);
+  addMany(c?.media?.hero_images);
+  addMany(c?.hero_images);
+  addMany(c?.images);
   a(c?.image_url);
   return [...s].filter(Boolean);
 };
@@ -1519,6 +1538,7 @@ export default function CountryPage() {
       <DestinationsSection country={country} allDests={allDests} destsLoading={destsLoading} />
       <GallerySection country={country} />
       <InfoSection country={country} />
+      <CommentsCarousel destination={country} entityType="country" />
       <CtaSection country={country} />
     </div>
   );

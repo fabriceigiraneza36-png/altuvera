@@ -1620,7 +1620,7 @@ return (
                   fontWeight: 800,
                   width: 22,
                   height: 22,
-                  borderRadius: 50%
+                  borderRadius: '50%'
                 }}>
                   {activeFilterCount}
                 </span>

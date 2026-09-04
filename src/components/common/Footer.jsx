@@ -567,7 +567,7 @@ bottomLink: {
               <span style={styles.contactText}>
                 altuverasafari@gmail.com
                 <br />
-                info@altuverasafari.com
+                info@altuverasafaris.com
               </span>
             </div>
           </div>

@@ -629,7 +629,7 @@ const SkeletonPair = () => (
 /* ═══════════════════════════════════════════
    MAIN COMPONENT
 ═══════════════════════════════════════════ */
-const SLIDE_DURATION = 20; // seconds per pair
+const SLIDE_DURATION = 20; // seconds per slide
 
 const TestimonialShowcase = () => {
   useEffect(injectStyles, []);
@@ -650,17 +650,6 @@ const TestimonialShowcase = () => {
     }));
   }, [testimonials, loading]);
 
-  // Build pairs
-  const pairs = useMemo(() => {
-    const result = [];
-    for (let i = 0; i < slides.length; i += 2) {
-      const pair = [slides[i]];
-      if (slides[i + 1]) pair.push(slides[i + 1]);
-      result.push(pair);
-    }
-    return result;
-  }, [slides]);
-
   const [activeIdx, setActiveIdx] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -668,7 +657,7 @@ const TestimonialShowcase = () => {
   const pausedAtRef = useRef(0);
   const rafRef = useRef(null);
 
-  const totalPairs = pairs.length;
+  const totalSlides = slides.length;
 
   const goTo = useCallback((idx) => {
     setActiveIdx(idx);
@@ -678,12 +667,12 @@ const TestimonialShowcase = () => {
   }, []);
 
   const goNext = useCallback(() => {
-    goTo((activeIdx + 1) % totalPairs);
-  }, [activeIdx, totalPairs, goTo]);
+    goTo((activeIdx + 1) % totalSlides);
+  }, [activeIdx, totalSlides, goTo]);
 
   const goPrev = useCallback(() => {
-    goTo((activeIdx - 1 + totalPairs) % totalPairs);
-  }, [activeIdx, totalPairs, goTo]);
+    goTo((activeIdx - 1 + totalSlides) % totalSlides);
+  }, [activeIdx, totalSlides, goTo]);
 
   const togglePause = useCallback(() => {
     setIsPaused((prev) => {
@@ -701,7 +690,7 @@ const TestimonialShowcase = () => {
 
   // Auto-advance timer
   useEffect(() => {
-    if (totalPairs <= 0) return;
+    if (totalSlides <= 0) return;
 
     const animate = () => {
       if (!isPaused) {
@@ -720,7 +709,7 @@ const TestimonialShowcase = () => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
     };
-  }, [activeIdx, isPaused, totalPairs, goNext]);
+  }, [activeIdx, isPaused, totalSlides, goNext]);
 
   // Reset on slide change
   useEffect(() => {
@@ -756,7 +745,7 @@ const TestimonialShowcase = () => {
               Real stories from real travellers whose journeys became life-defining moments.
             </p>
           </div>
-          <SkeletonPair />
+          <div className="tshow-skeleton-card" style={{ animationDelay: "0s" }} />
         </div>
       </section>
     );
@@ -805,46 +794,51 @@ const TestimonialShowcase = () => {
 
         {/* Slideshow */}
         <div className="tshow-frame">
-          {pairs.map((pair, pairIdx) => (
+          {slides.map((slide, slideIdx) => (
             <div
-              key={pairIdx}
-              className={`tshow-pair ${
-                pairIdx === activeIdx
-                  ? "tshow-pair--active"
-                  : "tshow-pair--exit"
+              key={slideIdx}
+              className={`tshow-card-wrapper ${
+                slideIdx === activeIdx
+                  ? "tshow-card-wrapper--active"
+                  : "tshow-card-wrapper--exit"
               }`}
-              aria-hidden={pairIdx !== activeIdx}
+              style={{
+                opacity: slideIdx === activeIdx ? 1 : 0,
+                transform: slideIdx === activeIdx ? "translateY(0)" : "translateY(20px)",
+                transition: "opacity .6s cubic-bezier(.4,0,.2,1), transform .6s cubic-bezier(.4,0,.2,1)",
+                position: "absolute",
+                inset: 0,
+                pointerEvents: slideIdx === activeIdx ? "auto" : "none",
+              }}
             >
-              {pair.map((slide, cardIdx) => (
-                <TestimonialCard
-                  key={slide.id || `${pairIdx}-${cardIdx}`}
-                  slide={slide}
-                  isActive={pairIdx === activeIdx}
-                  typewriterSpeed={typewriterSpeed}
-                />
-              ))}
+              <TestimonialCard
+                key={slide.id}
+                slide={slide}
+                isActive={slideIdx === activeIdx}
+                typewriterSpeed={typewriterSpeed}
+              />
             </div>
           ))}
         </div>
 
         {/* Controls */}
-        {totalPairs > 1 && (
+        {totalSlides > 1 && (
           <div className="tshow-controls">
             <button
               className="tshow-nav-btn"
               onClick={goPrev}
-              aria-label="Previous testimonials"
+              aria-label="Previous testimonial"
             >
               <IoChevronBack size={16} />
             </button>
 
             <div className="tshow-dots">
-              {pairs.map((_, i) => (
+              {slides.map((_, i) => (
                 <button
                   key={i}
                   className={`tshow-dot ${i === activeIdx ? "active" : ""}`}
                   onClick={() => goTo(i)}
-                  aria-label={`Go to testimonial pair ${i + 1}`}
+                  aria-label={`Go to testimonial ${i + 1}`}
                 >
                   {i === activeIdx && (
                     <div
@@ -853,7 +847,7 @@ const TestimonialShowcase = () => {
                     />
                   )}
                 </button>
-              ))}
+              )}
             </div>
 
             <ProgressRing progress={progress} secondsLeft={secondsLeft} />
@@ -869,7 +863,7 @@ const TestimonialShowcase = () => {
             <button
               className="tshow-nav-btn"
               onClick={goNext}
-              aria-label="Next testimonials"
+              aria-label="Next testimonial"
             >
               <IoChevronForward size={16} />
             </button>

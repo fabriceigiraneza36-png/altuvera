@@ -673,7 +673,8 @@
   background: linear-gradient(to top, rgba(3,7,18,.8), transparent);
   display: flex; align-items: center; justify-content: center; gap: 12px;
 }
-.d-lb__strip { display: flex; gap: 6px; overflow-x: auto; max-width: calc(100vw - 100px); }
+.d-lb__strip { display: flex; gap: 6px; overflow-x: auto; max-width: calc(100vw - 100px); scrollbar-width: none; -ms-overflow-style: none; }
+.d-lb__strip::-webkit-scrollbar { display: none; }
 .d-lb__thumb {
   width: 50px; height: 38px; border-radius: 9px; overflow: hidden;
   border: 2px solid transparent; padding: 0; cursor: pointer; flex-shrink: 0; transition: all .2s;

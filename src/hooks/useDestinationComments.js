@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { apiFetch } from "../utils/apiBase";
 
-export function useDestinationComments(destinationId) {
+export function useDestinationComments(destinationId, resource = "destination") {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -12,10 +12,17 @@ export function useDestinationComments(destinationId) {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiFetch(`/destination-comments/${encodeURIComponent(destId)}/comments?limit=50`, { method: "GET" });
+      const res = await apiFetch(`/${resource}-comments/${encodeURIComponent(destId)}/comments?limit=50`, { method: "GET" });
       const data = await res.json();
       if (data.status === "success") {
-        setComments(Array.isArray(data.data?.comments) ? data.data.comments : []);
+        const list = Array.isArray(data.data?.comments) ? data.data.comments : [];
+        setComments(list.map((comment) => ({
+          ...comment,
+          user: comment.user || (comment.userId ? {
+            name: comment.fullName || comment.authorName || "Anonymous",
+            avatar: comment.avatarUrl || null,
+          } : null),
+        })));
       } else {
         setError(data.message || "Failed to load comments");
         setComments([]);
@@ -26,29 +33,37 @@ export function useDestinationComments(destinationId) {
     } finally {
       setLoading(false);
     }
-  }, [destinationId]);
+  }, [destinationId, resource]);
 
   useEffect(() => { fetchComments(); }, [fetchComments]);
 
   const createComment = useCallback(async (destId, content) => {
     setError(null);
     try {
-      const res = await apiFetch(`/destination-comments/${encodeURIComponent(destId)}/comments`, {
+      const res = await apiFetch(`/${resource}-comments/${encodeURIComponent(destId)}/comments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content }),
       });
       const data = await res.json();
       if (data.status === "success") {
-        setComments((prev) => [data.data, ...prev]);
-        return data.data;
+        const comment = data.data;
+        const normalized = {
+          ...comment,
+          user: comment?.user || (comment?.userId ? {
+            name: comment.fullName || comment.authorName || "Anonymous",
+            avatar: comment.avatarUrl || null,
+          } : null),
+        };
+        setComments((prev) => [normalized, ...prev]);
+        return normalized;
       }
       throw new Error(data.message || "Failed to post comment");
     } catch (err) {
       setError(err.message);
       throw err;
     }
-  }, []);
+  }, [resource]);
 
   const removeComment = useCallback(async (destId, commentId) => {
     setError(null);

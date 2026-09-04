@@ -174,21 +174,7 @@ class CountryService {
       return country;
     } catch (err) {
       if (err.name === "AbortError") throw err;
-
-      // Static fallback
-      console.warn(
-        `[countryService] API failed for "${idOrSlug}", trying static fallback:`,
-        err.message,
-      );
-      try {
-        const { getFallbackCountry } = await import("./staticCountries.js");
-        return await getFallbackCountry(idOrSlug);
-      } catch (fallbackErr) {
-        console.error("[countryService] Static fallback also failed:", fallbackErr);
-        throw new Error(
-          `Country not found: ${idOrSlug} (API & static fallback both failed)`,
-        );
-      }
+      throw new Error(`Country could not be loaded: ${err.message}`);
     }
   }
 

@@ -89,7 +89,7 @@ export default function AdventureGuide() {
         {loading ? (
           <p className="adventure-guide-empty">Loading destinations…</p>
         ) : matchedDestinations.length ? (
-          <div className="destinations-grid">
+          <div className="destinations-grid destination-horizontal-row">
 {matchedDestinations.slice(0, 6).map((destination, index) => (
                <DestinationCard
                  key={destination.slug || destination.id || index}

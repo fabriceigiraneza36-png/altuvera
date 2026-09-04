@@ -61,7 +61,7 @@ const ADMIN = {
   phone2: "+250 792352409",
   whatsapp: "+250785751391",
   whatsappDisplay: "+250 785751391",
-  email: "info@altuverasafari.com",
+  email: "info@altuverasafaris.com",
   office: "Musanze, Rwanda",
 };
 

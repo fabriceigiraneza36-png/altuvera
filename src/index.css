@@ -445,3 +445,26 @@ h1, h2, h3, h4, h5, h6,
     filter:     none !important;
   }
 }
+
+/* Destination collections remain swipeable on small screens without exposing a scrollbar. */
+@media (max-width: 640px) {
+  .destination-horizontal-row {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    overflow-y: visible;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+  }
+
+  .destination-horizontal-row::-webkit-scrollbar {
+    display: none;
+  }
+
+  .destination-horizontal-row > * {
+    flex: 0 0 min(84vw, 360px);
+    scroll-snap-align: start;
+  }
+}

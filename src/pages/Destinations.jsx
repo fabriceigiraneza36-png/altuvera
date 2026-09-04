@@ -913,7 +913,7 @@ function HeroBanner() {
   const [active, setActive]   = useState(0);
   const [animKey, setAnimKey] = useState(0);
   const timerRef              = useRef(null);
-  const [slides, setSlides]   = useState(HERO_SLIDES);
+  const [slides, setSlides]   = useState([]);
   const total                 = slides.length;
 
   useEffect(() => {
@@ -937,6 +937,7 @@ function HeroBanner() {
   }, []);
 
   const advance = useCallback(() => {
+    if (!total) return;
     setActive(p => (p + 1) % total);
     setAnimKey(k => k + 1);
   }, [total]);
@@ -957,6 +958,8 @@ function HeroBanner() {
   };
 
   const slide = slides[active];
+
+  if (!slide) return null;
 
   return (
     <section className="dv-hero">
@@ -1075,8 +1078,7 @@ function CountryCard({ country }) {
           </div>
         )}
         <p className="dv-country-card__desc">
-          {country.emotional_description || country.description ||
-           `Discover the breathtaking landscapes and vibrant cultures that make ${country.name} unforgettable.`}
+          {country.emotional_description || country.description || ""}
         </p>
         <Link to={`/country/${slug}`} className="dv-country-card__btn" onClick={e => e.stopPropagation()}>
           Explore {country.name} <FiArrowRight size={13} />

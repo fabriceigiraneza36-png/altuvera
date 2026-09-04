@@ -1394,6 +1394,7 @@ const cleanText = (text) => {
 
         <div
           ref={trackRef}
+          className="dd-more-track"
           onMouseDown={onMouseDown}
           onMouseMove={onMouseMove}
           onMouseUp={onMouseUp}
@@ -1402,7 +1403,7 @@ const cleanText = (text) => {
             display: "flex", gap: 18, overflowX: "auto",
             cursor: "grab", paddingBottom: 8, userSelect: "none",
             scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch",
-            touchAction: "pan-x", scrollbarWidth: "thin", scrollbarColor: "#a7f3d0 #f1f5f9",
+            touchAction: "pan-x", scrollbarWidth: "none", msOverflowStyle: "none",
           }}
         >
           {destinations.map((dest, i) => {

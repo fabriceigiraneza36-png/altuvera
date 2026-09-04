@@ -22,7 +22,7 @@ import {
   FiChevronLeft, FiChevronRight, FiMapPin,
 } from "react-icons/fi";
 
-import Hero, { HERO_SLIDES } from "../components/home/Hero";
+import Hero from "../components/home/Hero";
 import TestimonialShowcase from "../components/home/TestimonialShowcase";
 import Button from "../components/common/Button";
 import SEO from "../components/common/SEO";
@@ -1159,7 +1159,7 @@ const Home = () => {
   const { setIsLoading } = useApp();
   const hasCompletedRef = useRef(false);
 
-  const { destinations: allDest = [], loading: destLoading } = useDestinations({ limit: 100, sort: "-featured" });
+    const { destinations: allDest = [], loading: destLoading } = useDestinations({ limit: 100, sort: "engagement" });
   const { posts = [], loading: postsLoading } = usePosts({ limit: 12, sort: "created" });
   const { loadWishlist, toggleWishlist, isWishlisted } = useWishlist();
 
@@ -1190,12 +1190,15 @@ const Home = () => {
       setIsLoading(true);
       await new Promise((r) => requestAnimationFrame(r));
       const urls = new Set();
-      HERO_SLIDES?.forEach((s) => { if (s.image) urls.add(s.image); if (s.fallback) urls.add(s.fallback); });
+      allDest.slice(0, 8).forEach((destination) => {
+        const image = destination.heroImage || destination.imageUrl || destination.images?.[0];
+        if (image) urls.add(image);
+      });
       await Promise.all([...urls].filter(Boolean).slice(0, 5).map(preload));
       if (!cancelled) { hasCompletedRef.current = true; setIsLoading(false); }
     })();
     return () => { cancelled = true; };
-  }, [destLoading, setIsLoading]);
+  }, [allDest, destLoading, setIsLoading]);
 
   const featureBlocks = useMemo(() => [
     { title: "Encounter Mountain Gorillas & Explore the Land of a Thousand Hills", description: "Rwanda offers one of Africa's most exclusive wildlife experiences. Trek through the misty forests of Volcanoes National Park to meet endangered mountain gorillas.", bullets: ["World-famous mountain gorilla trekking", "Nyungwe Forest canopy walk & chimpanzee tracking", "Big Five safaris in Akagera National Park", "Luxury eco-lodges with expert local guides"], ctaLabel: "Explore Rwanda", link: "/country/rwanda", images: ["https://i.pinimg.com/1200x/5d/1a/90/5d1a90a3a3f9ad6bcddf570344ff2fc4.jpg", "https://i.pinimg.com/736x/ec/08/5a/ec085a82c2f390bef2b8f0eae2935b9e.jpg", "https://i.pinimg.com/736x/46/fe/c8/46fec850388090f1f6bbdd4246b9a049.jpg"] },
@@ -1206,7 +1209,7 @@ const Home = () => {
   return (
     <div className="home-root">
       <SEO title="Altuvera Safaris — True Adventures in High Places & Deep Culture" />
-      <Hero />
+      <Hero destinations={allDest} />
 
       {/* ── Intro ── */}
       <section className="home-section home-section--compact">

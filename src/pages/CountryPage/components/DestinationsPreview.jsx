@@ -23,7 +23,7 @@ export default function DestinationsPreview({ country, slug, allDests, previewDe
           </div>
         </AnimatedSection>
         {destsLoading ? (
-          <div className="cpx-dests-grid">
+          <div className="cpx-dests-grid destination-horizontal-row">
             {[1,2,3].map((_, i) => (
               <div key={i} className="cpx-dest-skel">
                 <div className="cpx-shimmer" style={{ aspectRatio:"16/10" }} />
@@ -36,7 +36,7 @@ export default function DestinationsPreview({ country, slug, allDests, previewDe
             ))}
           </div>
         ) : (
-          <div className="cpx-dests-grid">
+          <div className="cpx-dests-grid destination-horizontal-row">
             {previewDests.map((dest, i) => (
               <AnimatedSection key={dest.slug || dest.id || i}
                 animation={["fadeInUp","fadeInLeft","fadeInRight"][i % 3]} delay={0.07 + i * 0.07}>

@@ -467,7 +467,7 @@ export default function TermsOfService() {
                             <FiMail size={18} color={BRAND.green700} />
                             <div>
                               <span style={styles.contactLabel}>General Questions</span>
-                              <a href="mailto:info@altuverasafari.com" style={styles.contactLink}>
+                              <a href="mailto:info@altuverasafaris.com" style={styles.contactLink}>
                                 altuverasafari@gmail.com
                               </a>
                             </div>
@@ -1338,7 +1338,7 @@ const styles = {
     // Responsive
     "@media (max-width: 768px)": {
       fontSize: 14,
-      maxWidth: 100%,
+      maxWidth: "100%",
     },
     "@media (max-width: 480px)": {
       fontSize: 13,

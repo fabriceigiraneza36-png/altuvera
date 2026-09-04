@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { apiFetch } from "../utils/apiBase";
 
-export function useDestinationLikes(destinationId) {
+export function useDestinationLikes(destinationId, resource = "destination") {
   const [likes, setLikes] = useState({ total: 0, isLiked: false });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -12,7 +12,7 @@ export function useDestinationLikes(destinationId) {
     setLoading(true);
     setError(null);
     try {
-      const res = await apiFetch(`/destination-likes/${encodeURIComponent(destId)}/likes`, { method: "GET" });
+      const res = await apiFetch(`/${resource}-likes/${encodeURIComponent(destId)}/likes`, { method: "GET" });
       const data = await res.json();
       if (data.status === "success") {
         setLikes({ total: data.data?.totalLikes ?? 0, isLiked: false });
@@ -24,19 +24,19 @@ export function useDestinationLikes(destinationId) {
     } finally {
       setLoading(false);
     }
-  }, [destinationId]);
+  }, [destinationId, resource]);
 
   const checkUserLike = useCallback(async (id) => {
     const destId = id || destinationId;
     if (!destId) return;
     try {
-      const res = await apiFetch(`/destination-likes/${encodeURIComponent(destId)}/likes/check`, { method: "GET" });
+      const res = await apiFetch(`/${resource}-likes/${encodeURIComponent(destId)}/likes/check`, { method: "GET" });
       const data = await res.json();
       if (data.status === "success") {
         setLikes((prev) => ({ ...prev, isLiked: data.data?.isLiked ?? false }));
       }
     } catch { /* ignore */ }
-  }, [destinationId]);
+  }, [destinationId, resource]);
 
   useEffect(() => { fetchLikes(); checkUserLike(); }, [fetchLikes, checkUserLike]);
 
@@ -44,7 +44,7 @@ export function useDestinationLikes(destinationId) {
     setError(null);
     setLoading(true);
     try {
-      const res = await apiFetch(`/destination-likes/${encodeURIComponent(destId)}/likes`, {
+      const res = await apiFetch(`/${resource}-likes/${encodeURIComponent(destId)}/likes`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({}),
@@ -64,7 +64,7 @@ export function useDestinationLikes(destinationId) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [resource]);
 
   return { likes, loading, error, refetch: fetchLikes, toggleLike };
 }

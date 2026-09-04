@@ -100,7 +100,7 @@ Africa's natural wonders, wildlife, and cultural heritage.
 
 text
 
-    <div style={styles.grid}>
+    <div className="destination-horizontal-row" style={styles.grid}>
       {destinations.map((destination, index) => (
         <div key={destination.id} style={{ display: "flex", justifyContent: "center" }}>
 <DestinationCard key={destination.id} destination={destination} />

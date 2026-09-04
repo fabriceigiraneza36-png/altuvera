@@ -318,6 +318,8 @@ export const adaptDestination = (raw) => {
     thumbnailUrl:  raw.thumbnailUrl  || null,
     videoUrl:      raw.videoUrl      || null,
     virtualTourUrl:raw.virtualTourUrl || null,
+    likesCount:    toNum(raw.likesCount ?? raw.likes_count, 0),
+    commentsCount: toNum(raw.commentsCount ?? raw.comments_count, 0),
 
     // ── Duration & Group ─────────────────────────────────────
     duration:      raw.duration      || raw.durationDisplay || null,

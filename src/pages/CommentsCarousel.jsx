@@ -119,10 +119,10 @@ const CommentCard = ({ comment, isActive, onDoneTyping }) => {
 const SLIDE_INTERVAL = 8000;
 const VISIBLE_COUNT = 1;
 
-const CommentsCarousel = ({ destination }) => {
+const CommentsCarousel = ({ destination, entityType = "destination" }) => {
   const destId = destination?.numericId || destination?.id || destination?._id || destination?.slug;
-  const { comments, loading, createComment, error } = useDestinationComments(destId);
-  const { likes, loading: likesLoading, toggleLike } = useDestinationLikes(destId);
+  const { comments, loading, createComment, error } = useDestinationComments(destId, entityType);
+  const { likes, loading: likesLoading, toggleLike } = useDestinationLikes(destId, entityType);
   const { isAuthenticated = false, openModal } = useUserAuth() || {};
 
   const [text, setText] = useState("");

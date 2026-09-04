@@ -250,8 +250,18 @@ const AnimatedLocationPin = ({ size = 16 }) => (
   </motion.div>
 );
 
-const Hero = () => {
-  const slides = HERO_SLIDES;
+const Hero = ({ destinations = [] }) => {
+  const slides = destinations
+    .filter((destination) => destination?.heroImage || destination?.imageUrl || destination?.images?.[0])
+    .slice(0, 8)
+    .map((destination) => ({
+      image: destination.heroImage || destination.imageUrl || destination.images[0],
+      title: destination.name,
+      subtitle: destination.shortDescription || destination.description || "",
+      location: destination.country?.name || destination.countryName || "",
+      animationPreset: "cinematicDrift",
+      overlayGradient: "linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.62))",
+    }));
   const [currentSlide, setCurrentSlide] = useState(0);
   const [imageErrors, setImageErrors] = useState({});
   const { playVideo, isPlayerOpen } = useApp();
@@ -338,7 +348,9 @@ const Hero = () => {
         fallbackImg.src = slide.fallback;
       }
     });
-  }, []);
+  }, [slides]);
+
+  if (!slides.length) return null;
 
   const scrollToContent = () => {
     window.scrollTo({
