@@ -680,22 +680,20 @@ function InfoPanel({ dest, onClose, onExplore, onBook }) {
 
   const catIcon = CATEGORY_ICONS[dest.category] || CATEGORY_ICONS.default;
   const diffColor = DIFFICULTY_COLORS[dest.difficulty] || "#6b7280";
-  const imgUrl = dest.imageUrl || dest.image_url ||
-    "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=600&q=80";
+  const imgUrl = dest.imageUrl || dest.image_url || null;
 
   return (
     <div className="gm-info">
       <div style={{ position: "relative" }}>
-        <img
-          src={imgUrl}
-          alt={dest.name}
-          className="gm-info__img"
-          loading="lazy"
-          onError={(e) => {
-            e.currentTarget.src =
-              "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=600&q=80";
-          }}
-        />
+        {imgUrl ? (
+          <img
+            src={imgUrl}
+            alt={dest.name}
+            className="gm-info__img"
+            loading="lazy"
+            onError={(e) => { e.currentTarget.style.display = "none"; }}
+          />
+        ) : <div className="gm-info__img" aria-label="No photo yet" />}
         <div className="gm-info__category-icon">{catIcon}</div>
 
         <div className="gm-info__badges">

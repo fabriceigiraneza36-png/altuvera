@@ -307,7 +307,7 @@ const Step3 = ({ form, user, submitting, error, onDismissError }) => {
   const tripLine = [form.trip, form.location]
     .map((v) => String(v || "").trim())
     .filter(Boolean)
-    .join(" · ") || "Altuvera Traveler";
+    .join(" · ") || "Altuvera Safariser";
 
   return (
     <div className="rmod-step">

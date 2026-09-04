@@ -1,108 +1,141 @@
+// src/pages/Booking/steps/Step3Contact.jsx
 import React from "react";
-import { HiPhone, HiHome, HiCheck } from "react-icons/hi";
-import { EmailField, InputField } from "../components/FormComponents";
+import {
+  HiMail, HiPhone, HiHome, HiCheck, HiExclamationCircle,
+  HiChatAlt2, HiDeviceMobile,
+} from "react-icons/hi";
 
 const METHODS = [
-  { v: "whatsapp", l: "WhatsApp" },
-  { v: "email",    l: "Email" },
-  { v: "phone",    l: "Phone" },
+  { v: "whatsapp", l: "WhatsApp", icon: HiChatAlt2      },
+  { v: "email",    l: "Email",    icon: HiMail          },
+  { v: "phone",    l: "Phone",    icon: HiDeviceMobile  },
 ];
 
-export default function Step3Contact({
-  data, set, touch, errors, touched,
-}) {
+function Field({ id, label, icon: Icon, value, onChange, onBlur, placeholder,
+  autoComplete, required, error, valid, hint, type = "text" }) {
   return (
-    <div className="space-y-4">
-      <EmailField
-        id="email" label="Email Address" required
+    <div className="bk-field-group">
+      <label htmlFor={id} className="bk-label">
+        {label}
+        {required && <span className="bk-label-req">*</span>}
+      </label>
+      <div className="bk-input-wrap">
+        <span className="bk-input-ico"><Icon size={17} /></span>
+        <input
+          id={id}
+          type={type}
+          value={value}
+          onChange={e => onChange(e.target.value)}
+          onBlur={onBlur}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          className={`bk-input${error ? " bk-input--err" : ""}${valid ? " bk-input--valid" : ""}`}
+        />
+        {valid && <span className="bk-check-ico"><HiCheck size={18} /></span>}
+      </div>
+      {error && (
+        <p className="bk-field-err">
+          <HiExclamationCircle size={13} /> {error}
+        </p>
+      )}
+      {hint && !error && <p className="bk-hint">{hint}</p>}
+    </div>
+  );
+}
+
+export default function Step3Contact({ data, set, touch, errors, touched }) {
+  return (
+    <div>
+      <Field
+        id="email" label="Email Address" icon={HiMail} type="email"
         value={data.email}
-        onChange={(v) => set("email", v)}
+        onChange={v => set("email", v)}
         onBlur={() => touch("email")}
+        placeholder="you@example.com"
+        autoComplete="email" required
         error={touched.email && errors.email}
         valid={touched.email && !errors.email && !!data.email}
         hint="For your booking confirmation"
       />
-      <InputField
+      <Field
         id="phone" label="Phone / WhatsApp" icon={HiPhone}
         type="tel" autoComplete="tel" required
         value={data.phone}
-        onChange={(v) => set("phone", v)}
+        onChange={v => set("phone", v)}
         onBlur={() => touch("phone")}
         placeholder="+1 555 123 4567"
         error={touched.phone && errors.phone}
         valid={touched.phone && !errors.phone && data.phone.length > 6}
       />
-      <InputField
+      <Field
         id="country" label="Country of Residence" icon={HiHome}
         autoComplete="country-name" required
         value={data.country}
-        onChange={(v) => set("country", v)}
+        onChange={v => set("country", v)}
         onBlur={() => touch("country")}
         placeholder="United States"
         error={touched.country && errors.country}
         valid={touched.country && !errors.country && data.country.trim().length >= 2}
       />
 
-      {/* Contact method */}
-      <div className="space-y-2">
-        <span className="block text-sm font-semibold text-gray-700">Preferred contact</span>
-        <div className="grid grid-cols-3 gap-2">
-          {METHODS.map(m => (
-            <button key={m.v} type="button" onClick={() => set("preferredContactMethod", m.v)}
-              className={`relative h-11 rounded-xl border-2 text-sm font-semibold transition-all
-                ${data.preferredContactMethod === m.v
-                  ? "border-emerald-400 bg-emerald-50 text-emerald-700 shadow-sm"
-                  : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"}`}>
-              {m.l}
-              {data.preferredContactMethod === m.v && (
-                <div className="absolute top-1 right-1 w-3.5 h-3.5 rounded-full
-                                bg-emerald-500 flex items-center justify-center">
-                  <HiCheck className="w-2 h-2 text-white" />
-                </div>
-              )}
-            </button>
-          ))}
+      {/* Preferred contact */}
+      <div className="bk-field-group">
+        <label className="bk-label">Preferred Contact Method</label>
+        <div className="bk-chip-grid">
+          {METHODS.map(m => {
+            const Icon = m.icon;
+            const active = data.preferredContactMethod === m.v;
+            return (
+              <button key={m.v} type="button"
+                onClick={() => set("preferredContactMethod", m.v)}
+                className={`bk-chip${active ? " bk-chip--active" : ""}`}
+                style={{ flex: 1, justifyContent: "center" }}>
+                <Icon size={14} />
+                {m.l}
+                {active && <span className="bk-chip__check"><HiCheck size={11} /></span>}
+              </button>
+            );
+          })}
         </div>
       </div>
 
       {/* Checkboxes */}
-      <div className="space-y-2 pt-1">
-        <label className="flex items-center gap-3 cursor-pointer group">
-          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all
-            ${data.newsletterOptIn ? "bg-emerald-500 border-emerald-500" : "border-gray-300 group-hover:border-gray-400"}`}>
-            {data.newsletterOptIn && <HiCheck className="w-3 h-3 text-white" />}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="bk-check-row"
+          onClick={() => set("newsletterOptIn", !data.newsletterOptIn)}
+          role="checkbox" aria-checked={data.newsletterOptIn} tabIndex={0}>
+          <div className={`bk-check${data.newsletterOptIn ? " bk-check--on" : ""}`}>
+            {data.newsletterOptIn && <HiCheck size={13} />}
           </div>
-          <input type="checkbox" checked={data.newsletterOptIn}
-            onChange={(e) => set("newsletterOptIn", e.target.checked)} className="sr-only" />
-          <span className="text-sm text-gray-600">Send me safari tips and offers</span>
-        </label>
+          <span className="bk-check-txt">Send me safari tips and exclusive offers</span>
+        </div>
 
-        <label className={`flex items-start gap-3 cursor-pointer p-4 rounded-xl border group transition-all
-          ${data.agreeToTerms
-            ? "border-emerald-200 bg-emerald-50/50"
-            : touched.agreeToTerms && errors.agreeToTerms
-              ? "border-red-200 bg-red-50/50"
-              : "border-gray-200 bg-gray-50"}`}>
-          <div className={`w-5 h-5 mt-0.5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all
-            ${data.agreeToTerms ? "bg-emerald-500 border-emerald-500" : "border-gray-300 group-hover:border-gray-400"}`}>
-            {data.agreeToTerms && <HiCheck className="w-3 h-3 text-white" />}
+        <div
+          className={`bk-check-row bk-check-row--terms${data.agreeToTerms ? " bk-check-row--on" : ""}${touched.agreeToTerms && errors.agreeToTerms ? " bk-check-row--err" : ""}`}
+          onClick={e => {
+            if (e.target.tagName === "A") return;
+            set("agreeToTerms", !data.agreeToTerms);
+            touch("agreeToTerms");
+          }}
+          role="checkbox" aria-checked={data.agreeToTerms} tabIndex={0}
+        >
+          <div className={`bk-check${data.agreeToTerms ? " bk-check--on" : ""}`}>
+            {data.agreeToTerms && <HiCheck size={13} />}
           </div>
-          <input type="checkbox" checked={data.agreeToTerms}
-            onChange={(e) => { set("agreeToTerms", e.target.checked); touch("agreeToTerms"); }} className="sr-only" />
-          <span className="text-sm text-gray-600 leading-relaxed">
+          <span className="bk-check-txt">
             I agree to the{" "}
             <a href="/terms" target="_blank" rel="noopener noreferrer"
-              className="text-emerald-600 font-medium underline underline-offset-2 hover:text-emerald-700"
-              onClick={(e) => e.stopPropagation()}>Terms</a>
+              onClick={e => e.stopPropagation()}>Terms</a>
             {" "}and{" "}
             <a href="/privacy" target="_blank" rel="noopener noreferrer"
-              className="text-emerald-600 font-medium underline underline-offset-2 hover:text-emerald-700"
-              onClick={(e) => e.stopPropagation()}>Privacy Policy</a>
-            <span className="text-red-500 ml-0.5">*</span>
+              onClick={e => e.stopPropagation()}>Privacy Policy</a>
+            <span className="bk-label-req">*</span>
           </span>
-        </label>
+        </div>
         {touched.agreeToTerms && errors.agreeToTerms && (
-          <p className="text-xs text-red-500 pl-8">{errors.agreeToTerms}</p>
+          <p className="bk-field-err" style={{ paddingLeft: 46 }}>
+            <HiExclamationCircle size={13} /> {errors.agreeToTerms}
+          </p>
         )}
       </div>
     </div>

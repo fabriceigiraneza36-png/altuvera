@@ -23,9 +23,6 @@ import { useWishlist } from "../../hooks/useWishlist";
 /* ─────────────────────────────────────────────────────────────
    CONSTANTS
 ───────────────────────────────────────────────────────────── */
-const FALLBACK =
-  "https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=900&q=85";
-
 const BADGE_CFG = {
   isFeatured: { Icon: FiAward,      label: "Featured", cls: "dc-badge--featured" },
   isNew:      { Icon: FiZap,        label: "New",      cls: "dc-badge--new"      },
@@ -784,7 +781,7 @@ function ImageSlider({ images, name }) {
           alt={i === 0 ? name : ""}
           loading={i === 0 ? "eager" : "lazy"}
           draggable={false}
-          onError={(ev) => { ev.currentTarget.src = FALLBACK; }}
+          onError={(ev) => { ev.currentTarget.style.display = "none"; }}
           className={`dc-img ${idx === i ? "dc-img--visible" : "dc-img--hidden"}`}
         />
       ))}
@@ -943,7 +940,7 @@ const {
     ].filter(Boolean);
     if (merged.length > 0) return merged;
     const singles = [heroImage, imageUrl, thumbnailUrl].filter(Boolean);
-    return singles.length > 0 ? singles : [FALLBACK];
+    return singles;
   })();
 
   const locationStr = [region, location, countryName || resolvedCountry]

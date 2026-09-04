@@ -1192,7 +1192,7 @@ export default function UserDashboard() {
     <>
       <Helmet>
         <title>Dashboard | Altuvera</title>
-        <meta name="description" content="Your Altuvera travel dashboard." />
+        <meta name="description" content="Your Altuvera Safaris dashboard." />
       </Helmet>
 
       <style>{KEYFRAMES}</style>

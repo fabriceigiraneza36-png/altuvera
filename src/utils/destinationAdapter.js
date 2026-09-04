@@ -4,9 +4,6 @@
 // the exact shape consumed by DestinationCard + DestinationDetail
 // ============================================================
 
-export const FALLBACK_IMAGE =
-  "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?w=800";
-
 const toNum = (v, fb = 0) => {
   const n = Number(v);
   return isFinite(n) ? n : fb;
@@ -217,9 +214,7 @@ export const adaptDestination = (raw) => {
   if (!raw || typeof raw !== "object") return null;
 
   /* ── Images ─────────────────────────────────────────────── */
-  const images = toArr(raw.images).length
-    ? toArr(raw.images)
-    : [raw.heroImage || raw.imageUrl || raw.image_url || FALLBACK_IMAGE].filter(Boolean);
+  const images = toArr(raw.images);
 
   /* ── Country ────────────────────────────────────────────── */
   const country = raw.country && typeof raw.country === "object"
@@ -263,7 +258,7 @@ export const adaptDestination = (raw) => {
     numericId: raw.id,
 
     // ── Basic Content ────────────────────────────────────────
-    name:             raw.name             || raw.title || "Beautiful Destination",
+    name:             raw.name             || raw.title || "",
     tagline:          raw.tagline          || "",
     shortDescription: raw.shortDescription || raw.short_description || "",
     description:      raw.description      || "",
@@ -273,7 +268,7 @@ export const adaptDestination = (raw) => {
     highlights:      toArr(raw.highlights),
     activities:      toArr(raw.activities),
     wildlife:        toArr(raw.wildlife),
-    bestTimeToVisit: raw.bestTimeToVisit || raw.best_time_to_visit || raw.bestTime || "Year Round",
+    bestTimeToVisit: raw.bestTimeToVisit || raw.best_time_to_visit || raw.bestTime || null,
     gettingThere:    raw.gettingThere    || null,
     whatToExpect:    raw.whatToExpect    || null,
     localTips:       raw.localTips       || null,
@@ -281,13 +276,13 @@ export const adaptDestination = (raw) => {
 
     // ── Classification ───────────────────────────────────────
     category:       raw.category        || "",
-    classification: raw.classification || raw.adventureCategory || raw.category || raw.destinationType || "Adventure",
-    adventureCategory: raw.adventureCategory || raw.classification || raw.category || raw.destinationType || "Adventure",
-    difficulty:     raw.difficulty      || "moderate",
+    classification: raw.classification || raw.adventureCategory || raw.category || raw.destinationType || "",
+    adventureCategory: raw.adventureCategory || raw.classification || raw.category || raw.destinationType || "",
+    difficulty:     raw.difficulty      || "",
     destinationType:raw.destinationType || null,
 
     // ── Country (STRONG RELATIONSHIP) ────────────────────────
-    country:      country.name || raw.countryName || "East Africa",
+    country:      country.name || raw.countryName || "",
     countrySlug:  country.slug || raw.countrySlug || "",
     countryId:    country.id   || raw.countryId   || "",
     countryFlag:  country.flag || raw.countryFlag  || "",
@@ -302,7 +297,7 @@ export const adaptDestination = (raw) => {
     },
 
     // ── Location ─────────────────────────────────────────────
-    location:              raw.region || raw.nearestCity || country.name || "East Africa",
+    location:              raw.region || raw.nearestCity || "",
     region:                raw.region             || null,
     nearestCity:           raw.nearestCity         || null,
     nearestAirport:        raw.nearestAirport       || null,
@@ -318,9 +313,9 @@ export const adaptDestination = (raw) => {
 
     // ── Media ────────────────────────────────────────────────
     images,
-    imageUrl:      raw.imageUrl      || images[0] || FALLBACK_IMAGE,
-    heroImage:     raw.heroImage     || raw.imageUrl || images[0] || FALLBACK_IMAGE,
-    thumbnailUrl:  raw.thumbnailUrl  || images[0] || FALLBACK_IMAGE,
+    imageUrl:      raw.imageUrl      || raw.image_url || null,
+    heroImage:     raw.heroImage     || null,
+    thumbnailUrl:  raw.thumbnailUrl  || null,
     videoUrl:      raw.videoUrl      || null,
     virtualTourUrl:raw.virtualTourUrl || null,
 

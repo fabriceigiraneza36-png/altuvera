@@ -1,34 +1,15 @@
 // src/pages/About.jsx
+// ═══════════════════════════════════════════════════════════════════════════════
+// ABOUT PAGE v3.0 — Powerful Brand Story, Team from Backend, Horizontal Gallery
+// ═══════════════════════════════════════════════════════════════════════════════
+
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
-  Heart as LuHeart,
-  ShieldCheck as LuShieldCheck,
-  Globe2 as LuGlobe,
-  Zap as LuZap,
-  Users as LuUsers,
-  Compass as LuCompass,
-  ArrowRight as LuArrowRight,
-  Play as LuPlay,
-  X as LuX,
-  ChevronLeft as LuChevronLeft,
-  ChevronRight as LuChevronRight,
-  Target as LuTarget,
-  Eye as LuEye,
-  MessageCircle as LuMessageCircle,
-  Sparkles as LuSparkles,
-  Mountain as LuMountain,
-  Camera as LuCamera,
-  TrendingUp as LuTrendingUp,
-  MapPin as LuMapPin,
-  Star as LuStar,
-  Maximize2 as LuMaximize2,
-  Quote as LuQuote,
-  Rocket as LuRocket,
-  BadgeCheck as LuBadgeCheck,
-  Award as LuAward,
-  Crown as LuCrown,
+  Heart, ShieldCheck, Globe2, Zap, Users, Compass, ArrowRight, Play, X,
+  ChevronLeft, ChevronRight, Target, Eye, MessageCircle, Sparkles, Mountain,
+  Camera, TrendingUp, MapPin, Star, Maximize2, Quote, Rocket, BadgeCheck,
+  Award, Crown, Phone, Mail, Leaf, HandHeart, Trees, Sun,
 } from 'lucide-react';
-import { MdPlayArrow, MdSkipNext, MdSkipPrevious, MdPlaylistPlay } from "react-icons/md";
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import SEO from '../components/common/SEO';
 import PageHeader from '../components/common/PageHeader';
@@ -36,97 +17,15 @@ import Button from '../components/common/Button';
 import CookieSettingsButton from '../components/common/CookieSettingsButton';
 import ReviewModal from '../components/home/ReviewModal';
 import AnimatedSection from '../components/common/AnimatedSection';
-import TeamCard from '../components/common/TeamCard';
+import TeamContent from '../components/common/TeamContent';
 import { useUserAuth } from '../context/UserAuthContext';
 import { useGallery } from '../hooks/useGallery';
-
-/* ═══════════════════════════════════════════════════════
-   TEAM API
-   ═══════════════════════════════════════════════════════ */
-const API_BASE = import.meta.env.VITE_API_URL || "https://backend-1-ghrv.onrender.com/api";
-
-const teamAPI = {
-  async _fetch(endpoint, options = {}, retries = 2) {
-    const url = `${API_BASE}${endpoint}`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
-    try {
-      const res = await fetch(url, {
-        ...options,
-        signal: controller.signal,
-        headers: { Accept: "application/json", ...options.headers }
-      });
-      clearTimeout(timeout);
-      if (!res.ok) {
-        const e = await res.json().catch(() => ({}));
-        throw new Error(e.message || `Status ${res.status}`);
-      }
-      return res.json();
-    } catch (err) {
-      clearTimeout(timeout);
-      if (retries > 0 && err.name !== "AbortError") {
-        await new Promise(r => setTimeout(r, 1000));
-        return this._fetch(endpoint, options, retries - 1);
-      }
-      throw err;
-    }
-  },
-  getAll(params = {}) {
-    const q = new URLSearchParams(
-      Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ""))
-    ).toString();
-    return this._fetch(`/team${q ? `?${q}` : ""}`);
-  },
-};
-
-const FALLBACK_MEMBERS = [
-  {
-    id: 1, name: "IGIRANEZA Fabrice", role: "Founder & CEO", department: "Leadership",
-    image_url: "https://randomuser.me/api/portraits/men/32.jpg",
-    bio: "Visionary entrepreneur leading Altuvera's mission to deliver transformative travel experiences across East Africa.",
-    expertise: ["Strategic Planning", "Tourism Innovation", "Partnership Development"],
-    languages: ["English", "French", "Kinyarwanda"], certifications: [],
-    years_experience: 12, location: "Musanze, Rwanda",
-    linkedin_url: "#", twitter_url: "#", email: "fabrice@altuvera.com",
-    is_featured: true, is_active: true, display_order: 1
-  },
-  {
-    id: 2, name: "UWIMANA Grace", role: "Head of Operations", department: "Operations",
-    image_url: "https://randomuser.me/api/portraits/women/44.jpg",
-    bio: "Ensures seamless coordination of every itinerary with precision and local expertise.",
-    expertise: ["Logistics Management", "Quality Assurance"],
-    languages: ["English", "Swahili"], certifications: [],
-    years_experience: 8, location: "Musanze, Rwanda",
-    linkedin_url: "#", email: "grace@altuvera.com",
-    is_featured: false, is_active: true, display_order: 2
-  },
-  {
-    id: 3, name: "MUTABAZI Jean", role: "Lead Safari Guide", department: "Guides",
-    image_url: "https://randomuser.me/api/portraits/men/67.jpg",
-    bio: "Expert wildlife guide combining extensive field knowledge with exceptional safety standards.",
-    expertise: ["Wildlife Tracking", "Bird Identification", "Conservation Education"],
-    languages: ["English", "Swahili", "French"], certifications: ["Certified Safari Guide"],
-    years_experience: 15, location: "Serengeti, Tanzania",
-    linkedin_url: "#", email: "jean@altuvera.com",
-    is_featured: true, is_active: true, display_order: 3
-  },
-  {
-    id: 4, name: "INGABIRE Diane", role: "Customer Experience Manager", department: "Customer Service",
-    image_url: "https://randomuser.me/api/portraits/women/28.jpg",
-    bio: "Designs guest-first service experiences from initial inquiry through post-trip follow-up.",
-    expertise: ["Client Relations", "Service Design"],
-    languages: ["English", "French"], certifications: [],
-    years_experience: 6, location: "Kampala, Uganda",
-    linkedin_url: "#", email: "diane@altuvera.com",
-    is_featured: false, is_active: true, display_order: 4
-  },
-];
 
 /* ═══════════════════════════════════════════════════════
    STYLES
    ═══════════════════════════════════════════════════════ */
 const ABOUT_STYLES = `
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;600;700;800;900&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap');
 
   .about-root {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -136,57 +35,92 @@ const ABOUT_STYLES = `
     overflow-x: hidden;
   }
 
+  /* ── Sections ── */
+  .about-section {
+    padding: clamp(48px, 6vw, 88px) clamp(16px, 3vw, 32px);
+  }
+
+  .about-section-title {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(28px, 4.5vw, 46px);
+    font-weight: 800;
+    line-height: 1.15;
+    color: #064e3b;
+    margin: 0 0 20px;
+    letter-spacing: -0.02em;
+  }
+
+  .about-section-title em {
+    font-style: normal;
+    color: #059669;
+  }
+
+  .about-section-lead {
+    font-size: clamp(15px, 1.25vw, 17px);
+    line-height: 1.8;
+    color: #4b5563;
+    max-width: 720px;
+    margin: 0 auto;
+  }
+
+  .about-section-p {
+    font-size: clamp(15px, 1.15vw, 17px);
+    line-height: 1.85;
+    color: #4b5563;
+    margin: 0 0 18px;
+  }
+
   /* ── Video Cards ── */
   .about-video-wrap {
     position: relative;
-    border-radius: 32px;
+    border-radius: 24px;
     overflow: hidden;
     background: #000;
     cursor: pointer;
     isolation: isolate;
-  }
-  .about-video-wrap--sm {
-    border-radius: 24px;
-    box-shadow: 0 15px 40px rgba(5,150,105,0.12);
-  }
-  .about-video-wrap--hero {
-    box-shadow: 0 30px 60px rgba(5,150,105,0.15);
+    box-shadow: 0 20px 50px rgba(6, 78, 59, 0.15);
+    transition: transform 0.4s ease, box-shadow 0.4s ease;
   }
 
-  /* iframe fills parent absolutely */
+  .about-video-wrap:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 30px 60px rgba(6, 78, 59, 0.2);
+  }
+
+  .about-video-wrap--hero {
+    border-radius: 28px;
+  }
+
   .about-video-ratio {
     position: relative;
     width: 100%;
     overflow: hidden;
     background: #000;
   }
+
   .about-video-ratio--hero { padding-bottom: clamp(44%, 45vw, 56%); }
   .about-video-ratio--sm   { padding-bottom: 56.25%; }
 
   .about-video-iframe {
     position: absolute;
     top: 50%; left: 50%;
-    /* scale up so black bars are hidden and controls go off-screen */
-    width: 200%;
-    height: 200%;
+    width: 200%; height: 200%;
     transform: translate(-50%, -50%);
     border: 0;
-    pointer-events: none; /* no clicks → no controls */
+    pointer-events: none;
   }
 
-  /* overlay blocks clicks on iframe so card click works */
   .about-video-shield {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
+    position: absolute; inset: 0; z-index: 2;
     background: linear-gradient(
       to top,
-      rgba(4,55,40,0.80) 0%,
-      rgba(4,55,40,0.20) 45%,
+      rgba(4,55,40,0.82) 0%,
+      rgba(4,55,40,0.22) 45%,
       transparent 100%
     );
     transition: background 0.4s ease;
   }
+
   .about-video-wrap:hover .about-video-shield {
     background: linear-gradient(
       to top,
@@ -197,179 +131,197 @@ const ABOUT_STYLES = `
   }
 
   .about-video-meta {
-    position: absolute;
-    bottom: 0; left: 0; right: 0;
-    z-index: 3;
-    padding: clamp(14px,2vw,24px);
+    position: absolute; bottom: 0; left: 0; right: 0; z-index: 3;
+    padding: clamp(14px, 2vw, 24px);
     pointer-events: none;
   }
 
   .about-video-play-btn {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%,-50%);
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
     z-index: 3;
-    width: clamp(52px,8vw,80px);
-    height: clamp(52px,8vw,80px);
+    width: clamp(52px, 8vw, 78px);
+    height: clamp(52px, 8vw, 78px);
     border-radius: 50%;
-    background: rgba(5,150,105,0.9);
+    background: rgba(5, 150, 105, 0.92);
     display: flex; align-items: center; justify-content: center;
     color: white;
     box-shadow: 0 8px 32px rgba(5,150,105,0.5);
     transition: transform 0.3s ease, background 0.3s ease;
     pointer-events: none;
   }
+
   .about-video-wrap:hover .about-video-play-btn {
     background: #059669;
-    transform: translate(-50%,-50%) scale(1.12);
+    transform: translate(-50%, -50%) scale(1.12);
   }
 
-  /* ── Gallery ── */
-  .about-gallery-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
+  /* ══════════════════════════════════════════════════════
+     GALLERY — HORIZONTAL SLIDER (Mobile + Desktop)
+  ══════════════════════════════════════════════════════ */
+
+  .about-gallery-slider {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
   }
-  .about-gallery-card {
+
+  .about-gallery-track {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    padding: 8px 4px 20px;
+    scrollbar-width: thin;
+    scrollbar-color: #a7f3d0 transparent;
+    scroll-behavior: smooth;
+  }
+
+  .about-gallery-track::-webkit-scrollbar {
+    height: 6px;
+  }
+
+  .about-gallery-track::-webkit-scrollbar-track {
+    background: #f0fdf4;
+    border-radius: 99px;
+  }
+
+  .about-gallery-track::-webkit-scrollbar-thumb {
+    background: #a7f3d0;
+    border-radius: 99px;
+  }
+
+  .about-gallery-track::-webkit-scrollbar-thumb:hover {
+    background: #6ee7b7;
+  }
+
+  .about-gallery-slide {
+    flex: 0 0 auto;
+    width: clamp(240px, 30vw, 340px);
+    height: clamp(320px, 40vw, 420px);
     border-radius: 20px;
     overflow: hidden;
     position: relative;
     cursor: pointer;
-    box-shadow: 0 6px 24px rgba(5,150,105,0.08);
+    box-shadow: 0 8px 30px rgba(5, 150, 105, 0.08);
     border: 1px solid #f3f4f6;
-    transition: all 0.38s cubic-bezier(0.4,0,0.2,1);
+    scroll-snap-align: start;
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+                box-shadow 0.35s ease;
   }
-  .about-gallery-card:hover {
+
+  .about-gallery-slide:hover {
     transform: translateY(-6px);
-    box-shadow: 0 20px 48px rgba(5,150,105,0.16);
+    box-shadow: 0 20px 48px rgba(5, 150, 105, 0.18);
   }
-  .about-gallery-card:hover .about-gallery-overlay { opacity: 1; }
-  .about-gallery-card:hover .about-gallery-img { transform: scale(1.08); }
-  .about-gallery-card:hover .about-gallery-zoom { opacity: 1; transform: translateY(0); }
 
-  .about-gallery-img {
-    width: 100%; height: 240px; object-fit: cover; display: block;
-    transition: transform 0.6s cubic-bezier(0.4,0,0.2,1);
+  .about-gallery-slide:hover .about-gallery-slide-img { transform: scale(1.06); }
+  .about-gallery-slide:hover .about-gallery-slide-overlay { opacity: 1; }
+
+  .about-gallery-slide-img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .about-gallery-overlay {
+
+  .about-gallery-slide-overlay {
     position: absolute; inset: 0;
-    background: linear-gradient(to top, rgba(6,79,70,0.88) 0%, rgba(6,79,70,0.25) 50%, transparent 100%);
-    opacity: 0;
-    transition: opacity 0.38s ease;
-  }
-  .about-gallery-zoom {
-    opacity: 0;
-    transform: translateY(8px);
-    transition: all 0.3s ease;
+    background: linear-gradient(
+      to top,
+      rgba(6,79,70,0.9) 0%,
+      rgba(6,79,70,0.35) 40%,
+      transparent 100%
+    );
+    opacity: 0.6;
+    transition: opacity 0.35s ease;
+    pointer-events: none;
   }
 
-  /* ── Team ── */
-  .about-team-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 26px;
+  .about-gallery-slide-body {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 22px 18px 20px;
+    z-index: 2;
+    color: white;
   }
-  .about-team-card {
-    background: white;
-    border-radius: 24px;
-    border: 1px solid #d1fae5;
-    box-shadow: 0 6px 24px rgba(5,150,105,0.08);
-    padding: 28px 22px;
-    text-align: center;
-    transition: all 0.36s cubic-bezier(0.4,0,0.2,1);
-    position: relative;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-  .about-team-card:hover {
-    transform: translateY(-10px);
-    box-shadow: 0 28px 56px rgba(5,150,105,0.18);
-    border-color: #a7f3d0;
-  }
-  .about-team-card::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: linear-gradient(90deg, #059669, #4ade80, #059669);
-    opacity: 0; transition: opacity 0.3s;
-  }
-  .about-team-card:hover::before { opacity: 1; }
 
-  .about-team-avatar-ring {
-    width: 120px; height: 120px;
-    border-radius: 50%; overflow: hidden;
-    border: 4px solid #d1fae5;
-    transition: all 0.36s ease;
-    margin: 0 auto 18px;
-    position: relative;
-  }
-  .about-team-card:hover .about-team-avatar-ring {
-    border-color: #a7f3d0;
-    box-shadow: 0 0 0 6px rgba(5,150,105,0.10);
-  }
-  .about-team-avatar-img {
-    width: 100%; height: 100%; object-fit: cover;
-    transition: transform 0.5s ease;
-  }
-  .about-team-card:hover .about-team-avatar-img { transform: scale(1.07); }
-
-  .about-team-initials {
-    width: 100%; height: 100%; border-radius: 50%;
-    background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-    display: flex; align-items: center; justify-content: center;
+  .about-gallery-slide-title {
     font-family: 'Playfair Display', serif;
-    font-size: 34px; font-weight: 800; color: #059669;
+    font-size: 17px;
+    font-weight: 700;
+    margin: 0 0 5px;
+    line-height: 1.35;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
-  .about-team-socials {
-    display: flex; justify-content: center; flex-wrap: wrap;
-    gap: 9px; padding-top: 14px;
-    border-top: 1px solid #d1fae5; margin-top: auto;
+
+  .about-gallery-slide-meta {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12.5px;
+    color: rgba(255, 255, 255, 0.88);
+    font-weight: 500;
   }
-  .about-team-social-link {
-    width: 36px; height: 36px; border-radius: 50%;
-    border: 1.5px solid #a7f3d0; background: #f0fdf4; color: #047857;
+
+  .about-gallery-slide-zoom {
+    position: absolute;
+    top: 12px; right: 12px;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: white;
     display: flex; align-items: center; justify-content: center;
-    text-decoration: none; transition: all 0.22s;
+    z-index: 3;
+    opacity: 0;
+    transform: translateY(-4px);
+    transition: opacity 0.25s ease, transform 0.25s ease;
   }
-  .about-team-social-link:hover {
-    background: linear-gradient(135deg, #059669, #065f46);
-    border-color: #059669; color: white;
+
+  .about-gallery-slide:hover .about-gallery-slide-zoom {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .about-gallery-nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .about-gallery-nav-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1.5px solid #d1fae5;
+    background: white;
+    color: #065f46;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.08);
+  }
+
+  .about-gallery-nav-btn:hover:not(:disabled) {
+    background: #059669;
+    border-color: #059669;
+    color: white;
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(5,150,105,0.3);
+    box-shadow: 0 8px 20px rgba(5, 150, 105, 0.25);
   }
 
-  /* ── Value Cards ── */
-  .about-value-card {
-    background: white; border-radius: 24px;
-    border: 1px solid rgba(5,150,105,0.1);
-    position: relative; overflow: hidden;
-    transition: all 0.5s cubic-bezier(0.25,0.1,0.25,1);
-  }
-  .about-value-card:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 25px 50px rgba(5,150,105,0.15);
-  }
-  .about-value-card:hover .about-value-bar { transform: scaleX(1); }
-  .about-value-card:hover .about-value-icon {
-    background: #059669 !important;
-  }
-  .about-value-card:hover .about-value-icon svg { color: white !important; }
-  .about-value-bar {
-    position: absolute; top: 0; left: 0; right: 0; height: 4px;
-    background: linear-gradient(90deg, #059669, #10B981);
-    transform-origin: left; transform: scaleX(0);
-    transition: transform 0.4s ease;
-  }
-
-  /* ── Shimmer ── */
-  .about-shimmer {
-    background: linear-gradient(110deg, #d1fae5 8%, #ecfdf5 18%, #d1fae5 33%);
-    background-size: 200% 100%;
-    animation: aboutShimmer 1.5s ease infinite;
-  }
-  @keyframes aboutShimmer {
-    from { background-position: -200% 0; }
-    to   { background-position:  200% 0; }
+  .about-gallery-nav-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 
   /* ── Lightbox ── */
@@ -381,23 +333,150 @@ const ABOUT_STYLES = `
     padding: 24px;
   }
 
+  /* ── Value Cards ── */
+  .about-values-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 20px;
+  }
+
+  .about-value-card {
+    background: white;
+    border-radius: 20px;
+    padding: 28px 24px;
+    text-align: left;
+    border: 1.5px solid #e5f5ee;
+    box-shadow: 0 6px 20px rgba(5, 150, 105, 0.06);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .about-value-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #059669, #10b981);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.4s ease;
+  }
+
+  .about-value-card:hover {
+    transform: translateY(-6px);
+    border-color: #a7f3d0;
+    box-shadow: 0 20px 40px rgba(5, 150, 105, 0.15);
+  }
+
+  .about-value-card:hover::before {
+    transform: scaleX(1);
+  }
+
+  .about-value-icon-wrap {
+    width: 52px; height: 52px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+    display: flex; align-items: center; justify-content: center;
+    margin-bottom: 18px;
+    color: #059669;
+    transition: all 0.3s ease;
+  }
+
+  .about-value-card:hover .about-value-icon-wrap {
+    background: #059669;
+    color: white;
+    transform: scale(1.08);
+  }
+
+  .about-value-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #064e3b;
+    margin: 0 0 8px;
+  }
+
+  .about-value-desc {
+    font-size: 14px;
+    color: #6b7280;
+    line-height: 1.65;
+    margin: 0;
+  }
+
+  /* ── Contact Grid ── */
+  .about-contact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+    gap: 16px;
+    margin-top: 32px;
+  }
+
+  .about-contact-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 18px 20px;
+    background: white;
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    color: #064e3b;
+    text-decoration: none;
+    transition: all 0.25s ease;
+  }
+
+  .about-contact-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.1);
+  }
+
+  .about-contact-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+    display: flex; align-items: center; justify-content: center;
+    color: #059669;
+    flex-shrink: 0;
+  }
+
+  .about-contact-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #059669;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 3px;
+  }
+
+  .about-contact-val {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: #064e3b;
+    line-height: 1.3;
+  }
+
+  /* ── Shimmer ── */
+  .about-shimmer {
+    background: linear-gradient(110deg, #d1fae5 8%, #ecfdf5 18%, #d1fae5 33%);
+    background-size: 200% 100%;
+    animation: aboutShimmer 1.5s ease infinite;
+  }
+
+  @keyframes aboutShimmer {
+    from { background-position: -200% 0; }
+    to   { background-position:  200% 0; }
+  }
+
   /* ── Responsive ── */
-  @media (max-width: 1200px) {
-    .about-gallery-grid { grid-template-columns: repeat(3,1fr); }
-  }
-  @media (max-width: 900px) {
-    .about-gallery-grid { grid-template-columns: repeat(2,1fr); }
-    .about-team-grid    { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 600px) {
-    .about-gallery-grid { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 768px) {
-    .about-root section {
-      padding-left:  18px !important;
-      padding-right: 18px !important;
+  @media (max-width: 640px) {
+    .about-gallery-slide {
+      width: 78vw;
+      height: 78vw;
+      max-width: 320px;
+      max-height: 380px;
     }
   }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
@@ -409,14 +488,15 @@ const ABOUT_STYLES = `
 /* ═══════════════════════════════════════════════════════
    HELPERS
    ═══════════════════════════════════════════════════════ */
+
 const FadeInSection = ({ children, delay = 0, direction = 'up' }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-80px' });
   const dirs = {
-    up:    { y:  50, x:   0 },
-    down:  { y: -50, x:   0 },
-    left:  { y:   0, x: -50 },
-    right: { y:   0, x:  50 },
+    up:    { y:  40, x:   0 },
+    down:  { y: -40, x:   0 },
+    left:  { y:   0, x: -40 },
+    right: { y:   0, x:  40 },
   };
   return (
     <motion.div
@@ -430,36 +510,10 @@ const FadeInSection = ({ children, delay = 0, direction = 'up' }) => {
   );
 };
 
-const AnimatedCounter = ({ end, suffix = '', duration = 2000 }) => {
-  const [count, setCount] = useState(0);
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-  useEffect(() => {
-    if (!isInView) return;
-    let startTime;
-    const tick = (now) => {
-      if (!startTime) startTime = now;
-      const progress = Math.min((now - startTime) / duration, 1);
-      setCount(Math.floor(progress * end));
-      if (progress < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-  }, [isInView, end, duration]);
-  return <span ref={ref}>{count}{suffix}</span>;
-};
-
 /* ═══════════════════════════════════════════════════════
    AUTOPLAY VIDEO CARD
-   — iframe scaled 200 % so YouTube chrome is off-screen
-   — pointer-events:none on iframe → no controls visible
-   — click shield on top forwards clicks to card handler
    ═══════════════════════════════════════════════════════ */
 const AutoplayVideoCard = ({ video, onClick, isHero = false }) => {
-  /* YouTube embed params:
-     autoplay=1  mute=1  loop=1  playlist=<id>
-     controls=0  disablekb=1  modestbranding=1
-     showinfo=0  rel=0  iv_load_policy=3
-     playsinline=1  fs=0                          */
   const src = [
     `https://www.youtube.com/embed/${video.videoId}`,
     `?autoplay=1&mute=1&loop=1&playlist=${video.videoId}`,
@@ -470,7 +524,7 @@ const AutoplayVideoCard = ({ video, onClick, isHero = false }) => {
 
   return (
     <div
-      className={`about-video-wrap${isHero ? ' about-video-wrap--hero' : ' about-video-wrap--sm'}`}
+      className={`about-video-wrap${isHero ? ' about-video-wrap--hero' : ''}`}
       onClick={onClick}
       role="button"
       tabIndex={0}
@@ -486,20 +540,14 @@ const AutoplayVideoCard = ({ video, onClick, isHero = false }) => {
           allowFullScreen={false}
           loading="lazy"
         />
-
-        {/* gradient + click shield */}
         <div className="about-video-shield" />
-
-        {/* play button hint */}
         <div className="about-video-play-btn">
-          <LuPlay size={isHero ? 32 : 22} style={{ marginLeft: 3 }} />
+          <Play size={isHero ? 30 : 22} style={{ marginLeft: 3 }} />
         </div>
-
-        {/* title / subtitle */}
         <div className="about-video-meta">
           <h4 style={{
             color: 'white',
-            fontSize: isHero ? 'clamp(18px,2.8vw,32px)' : 'clamp(13px,1.4vw,16px)',
+            fontSize: isHero ? 'clamp(17px,2.5vw,28px)' : 'clamp(13px,1.4vw,16px)',
             fontWeight: 700,
             fontFamily: "'Playfair Display', serif",
             lineHeight: 1.3,
@@ -511,10 +559,9 @@ const AutoplayVideoCard = ({ video, onClick, isHero = false }) => {
           </h4>
           {video.subtitle && (
             <p style={{
-              color: 'rgba(255,255,255,0.82)',
-              fontSize: isHero ? 'clamp(13px,1.3vw,16px)' : '12px',
-              margin: 0,
-              lineHeight: 1.5,
+              color: 'rgba(255,255,255,0.85)',
+              fontSize: isHero ? 'clamp(13px,1.2vw,15px)' : '12px',
+              margin: 0, lineHeight: 1.5,
             }}>
               {video.subtitle}
             </p>
@@ -526,21 +573,121 @@ const AutoplayVideoCard = ({ video, onClick, isHero = false }) => {
 };
 
 /* ═══════════════════════════════════════════════════════
+   HORIZONTAL GALLERY SLIDER
+   ═══════════════════════════════════════════════════════ */
+const HorizontalGallery = ({ images, onImageClick }) => {
+  const trackRef = useRef(null);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(true);
+
+  const updateNav = useCallback(() => {
+    if (!trackRef.current) return;
+    const el = trackRef.current;
+    setCanPrev(el.scrollLeft > 5);
+    setCanNext(el.scrollLeft < el.scrollWidth - el.clientWidth - 5);
+  }, []);
+
+  useEffect(() => {
+    updateNav();
+    const el = trackRef.current;
+    if (!el) return;
+    el.addEventListener('scroll', updateNav, { passive: true });
+    window.addEventListener('resize', updateNav);
+    return () => {
+      el.removeEventListener('scroll', updateNav);
+      window.removeEventListener('resize', updateNav);
+    };
+  }, [updateNav, images]);
+
+  const scrollBy = (dir) => {
+    if (!trackRef.current) return;
+    const slideWidth = trackRef.current.querySelector('.about-gallery-slide')?.offsetWidth || 260;
+    trackRef.current.scrollBy({
+      left: dir === 'next' ? slideWidth + 16 : -(slideWidth + 16),
+      behavior: 'smooth',
+    });
+  };
+
+  return (
+    <>
+      <div className="about-gallery-slider">
+        <div className="about-gallery-track" ref={trackRef}>
+          {images.map((img) => (
+            <div
+              key={img.id}
+              className="about-gallery-slide"
+              onClick={() => onImageClick(img)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => { if (e.key === 'Enter') onImageClick(img); }}
+            >
+              <img
+                src={img.thumb || img.src}
+                alt={img.alt || img.title || 'Gallery image'}
+                loading="lazy"
+                className="about-gallery-slide-img"
+              />
+              <div className="about-gallery-slide-overlay" />
+              <div className="about-gallery-slide-zoom">
+                <Maximize2 size={15} />
+              </div>
+              <div className="about-gallery-slide-body">
+                {img.title && (
+                  <h4 className="about-gallery-slide-title">{img.title}</h4>
+                )}
+                {(img.location || img.countryName) && (
+                  <div className="about-gallery-slide-meta">
+                    <MapPin size={12} />
+                    <span>{img.location || img.countryName}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="about-gallery-nav">
+        <button
+          className="about-gallery-nav-btn"
+          onClick={() => scrollBy('prev')}
+          disabled={!canPrev}
+          aria-label="Previous images"
+        >
+          <ChevronLeft size={20} />
+        </button>
+        <button
+          className="about-gallery-nav-btn"
+          onClick={() => scrollBy('next')}
+          disabled={!canNext}
+          aria-label="Next images"
+        >
+          <ChevronRight size={20} />
+        </button>
+      </div>
+    </>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════
    GALLERY LIGHTBOX
    ═══════════════════════════════════════════════════════ */
 const GalleryLightbox = ({ image, images, onClose, onPrev, onNext }) => {
   useEffect(() => {
     const fn = (e) => {
-      if (e.key === 'Escape')      onClose();
-      if (e.key === 'ArrowLeft')   onPrev();
-      if (e.key === 'ArrowRight')  onNext();
+      if (e.key === 'Escape')     onClose();
+      if (e.key === 'ArrowLeft')  onPrev();
+      if (e.key === 'ArrowRight') onNext();
     };
     window.addEventListener('keydown', fn);
     document.body.style.overflow = 'hidden';
-    return () => { window.removeEventListener('keydown', fn); document.body.style.overflow = ''; };
+    return () => {
+      window.removeEventListener('keydown', fn);
+      document.body.style.overflow = '';
+    };
   }, [onClose, onPrev, onNext]);
 
-  const idx = images.findIndex(i => i.id === image.id);
+  const idx = images.findIndex((i) => i.id === image.id);
   const btnStyle = (disabled) => ({
     position: 'absolute', top: '50%', transform: 'translateY(-50%)',
     width: 50, height: 50, borderRadius: '50%',
@@ -559,35 +706,39 @@ const GalleryLightbox = ({ image, images, onClose, onPrev, onNext }) => {
       <button onClick={onClose} style={{
         position: 'absolute', top: 24, right: 24, width: 50, height: 50, borderRadius: '50%',
         background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)',
-        color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10,
+        color: 'white', cursor: 'pointer', display: 'flex',
+        alignItems: 'center', justifyContent: 'center', zIndex: 10,
       }}>
-        <LuX size={24} />
+        <X size={24} />
       </button>
 
       <button
-        onClick={e => { e.stopPropagation(); onPrev(); }}
+        onClick={(e) => { e.stopPropagation(); onPrev(); }}
         disabled={idx === 0}
         style={{ ...btnStyle(idx === 0), left: 24 }}
       >
-        <LuChevronLeft size={24} />
+        <ChevronLeft size={24} />
       </button>
 
       <button
-        onClick={e => { e.stopPropagation(); onNext(); }}
+        onClick={(e) => { e.stopPropagation(); onNext(); }}
         disabled={idx === images.length - 1}
         style={{ ...btnStyle(idx === images.length - 1), right: 24 }}
       >
-        <LuChevronRight size={24} />
+        <ChevronRight size={24} />
       </button>
 
-      <div onClick={e => e.stopPropagation()} style={{ maxWidth: '85%', maxHeight: '85vh', position: 'relative' }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ maxWidth: '85%', maxHeight: '85vh', position: 'relative' }}>
         <motion.img
           key={image.id}
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           src={image.src || image.thumb}
           alt={image.alt || image.title}
-          style={{ maxWidth: '100%', maxHeight: '80vh', objectFit: 'contain', borderRadius: 12, display: 'block' }}
+          style={{
+            maxWidth: '100%', maxHeight: '80vh',
+            objectFit: 'contain', borderRadius: 12, display: 'block',
+          }}
         />
         <div style={{
           position: 'absolute', bottom: -48, left: '50%', transform: 'translateX(-50%)',
@@ -602,402 +753,50 @@ const GalleryLightbox = ({ image, images, onClose, onPrev, onNext }) => {
 };
 
 /* ═══════════════════════════════════════════════════════
-   GALLERY CARD
-   ═══════════════════════════════════════════════════════ */
-const AboutGalleryCard = ({ image, onClick }) => {
-  const [loaded, setLoaded] = useState(false);
-  return (
-    <div className="about-gallery-card" onClick={() => onClick(image)}>
-      {!loaded && (
-        <div className="about-shimmer" style={{ height: 240, position: 'absolute', inset: 0, zIndex: 1 }} />
-      )}
-      <img
-        src={image.thumb || image.src}
-        alt={image.alt || image.title}
-        loading="lazy"
-        onLoad={() => setLoaded(true)}
-        className="about-gallery-img"
-      />
-      <div className="about-gallery-overlay" />
-
-      {image.isFeatured && (
-        <div style={{
-          position: 'absolute', top: 10, left: 10, zIndex: 3,
-          padding: '4px 10px', borderRadius: 9999,
-          background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(12px)',
-          border: '1px solid rgba(255,255,255,0.2)',
-          color: 'white', fontSize: 11, fontWeight: 700,
-          display: 'flex', alignItems: 'center', gap: 4,
-        }}>
-          <LuStar size={10} /> Featured
-        </div>
-      )}
-
-      {image.category && (
-        <div style={{
-          position: 'absolute', top: 10, right: 10, zIndex: 3,
-          padding: '4px 10px', borderRadius: 9999,
-          background: '#ECFDF5', border: '1px solid #D1FAE5',
-          color: '#059669', fontSize: 11, fontWeight: 600,
-        }}>
-          {image.category}
-        </div>
-      )}
-
-      <div className="about-gallery-zoom" style={{
-        position: 'absolute', top: image.isFeatured ? 42 : 10, right: 10, zIndex: 3,
-      }}>
-        <div style={{
-          width: 30, height: 30, borderRadius: '50%',
-          background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)',
-          border: '1px solid rgba(255,255,255,0.18)',
-          color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <LuMaximize2 size={13} />
-        </div>
-      </div>
-
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '20px 14px 14px', zIndex: 3 }}>
-        {image.title && (
-          <h4 style={{
-            color: 'white', fontSize: 14, fontWeight: 700, lineHeight: 1.3, marginBottom: 4,
-            textShadow: '0 1px 4px rgba(0,0,0,0.4)',
-            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-          }}>
-            {image.title}
-          </h4>
-        )}
-        {(image.location || image.countryName) && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: 'rgba(255,255,255,0.8)', fontSize: 11.5 }}>
-            <LuMapPin size={10} /> {image.location || image.countryName}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-/* ═══════════════════════════════════════════════════════
-   TEAM CARD
-   ═══════════════════════════════════════════════════════ */
-const AboutTeamCard = ({ member }) => {
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const [imgErr,    setImgErr]    = useState(false);
-
-  const expertise = Array.isArray(member.expertise) ? member.expertise : [];
-  const languages = Array.isArray(member.languages)  ? member.languages  : [];
-
-  const socials = [
-    member.linkedin_url && { href: member.linkedin_url, icon: <LuUsers size={15} />,       label: 'LinkedIn' },
-    member.twitter_url  && { href: member.twitter_url,  icon: <LuMessageCircle size={15} />, label: 'Twitter'  },
-    member.email        && { href: `mailto:${member.email}`, icon: <LuSparkles size={15} />, label: 'Email', internal: true },
-  ].filter(Boolean);
-
-  const initials = member.name
-    ? member.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-    : '?';
-
-  return (
-    <article className="about-team-card">
-      {member.is_featured && (
-        <div style={{
-          position: 'absolute', top: 14, right: 14,
-          display: 'flex', alignItems: 'center', gap: 4,
-          padding: '5px 11px', borderRadius: 9999,
-          background: 'linear-gradient(135deg,#fef3c7,#fde68a)',
-          color: '#d97706', fontSize: 10.5, fontWeight: 800,
-          textTransform: 'uppercase', letterSpacing: '0.05em',
-          border: '1px solid #fde68a',
-        }}>
-          <LuAward size={11} /> Featured
-        </div>
-      )}
-
-      {/* Avatar */}
-      <div className="about-team-avatar-ring">
-        {!imgLoaded && !imgErr && (
-          <div className="about-shimmer" style={{ position: 'absolute', inset: 0, borderRadius: '50%' }} />
-        )}
-        {imgErr ? (
-          <div className="about-team-initials">{initials}</div>
-        ) : member.image_url ? (
-          <img
-            src={member.image_url}
-            alt={`${member.name} – ${member.role}`}
-            className="about-team-avatar-img"
-            style={{ opacity: imgLoaded ? 1 : 0 }}
-            onLoad={() => setImgLoaded(true)}
-            onError={() => { setImgErr(true); setImgLoaded(true); }}
-            loading="lazy"
-          />
-        ) : (
-          <div className="about-team-initials">{initials}</div>
-        )}
-        <div style={{
-          position: 'absolute', bottom: 6, right: 6,
-          width: 15, height: 15, borderRadius: '50%',
-          border: '3px solid white',
-          backgroundColor: member.is_active ? '#10b981' : '#9ca3af',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.14)',
-        }} />
-      </div>
-
-      <h3 style={{
-        fontFamily: "'Playfair Display', serif", fontSize: 20, fontWeight: 700,
-        color: '#064e3b', marginBottom: 5, lineHeight: 1.25,
-      }}>{member.name}</h3>
-
-      <p style={{ fontSize: 14, color: '#059669', fontWeight: 600, marginBottom: 8 }}>{member.role}</p>
-
-      {member.department && (
-        <span style={{
-          display: 'inline-block', padding: '3px 12px', borderRadius: 9999,
-          background: '#f0fdf4', border: '1px solid #d1fae5',
-          fontSize: 11.5, color: '#047857', fontWeight: 600, marginBottom: 13,
-        }}>{member.department}</span>
-      )}
-
-      {member.bio && (
-        <p style={{ fontSize: 13.5, color: '#6b7280', lineHeight: 1.7, marginBottom: 14 }}>{member.bio}</p>
-      )}
-
-      {expertise.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 5, marginBottom: 12 }}>
-          {expertise.slice(0, 3).map((s, i) => (
-            <span key={i} style={{
-              padding: '3px 9px', borderRadius: 7,
-              background: '#ecfdf5', border: '1px solid #d1fae5',
-              fontSize: 10.5, color: '#059669', fontWeight: 600,
-            }}>{s}</span>
-          ))}
-          {expertise.length > 3 && (
-            <span style={{
-              padding: '3px 9px', borderRadius: 7, background: '#f3f4f6',
-              fontSize: 10.5, color: '#6b7280', fontWeight: 600,
-            }}>+{expertise.length - 3}</span>
-          )}
-        </div>
-      )}
-
-      {languages.length > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: '#6b7280', marginBottom: 6 }}>
-          <LuGlobe size={11} style={{ color: '#9ca3af', flexShrink: 0 }} />
-          <span>{languages.slice(0, 3).join(', ')}{languages.length > 3 ? ` +${languages.length - 3}` : ''}</span>
-        </div>
-      )}
-
-      {member.years_experience > 0 && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: '#6b7280', marginBottom: 6 }}>
-          <LuTrendingUp size={11} style={{ color: '#9ca3af', flexShrink: 0 }} />
-          <span>{member.years_experience}+ years experience</span>
-        </div>
-      )}
-
-      {member.location && (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 12, color: '#6b7280', marginBottom: 6 }}>
-          <LuMapPin size={11} style={{ color: '#9ca3af', flexShrink: 0 }} />
-          <span>{member.location}</span>
-        </div>
-      )}
-
-      {socials.length > 0 && (
-        <div className="about-team-socials">
-          {socials.map((lk, i) => (
-            <a
-              key={i} href={lk.href}
-              target={lk.internal ? undefined : '_blank'}
-              rel={lk.internal ? undefined : 'noopener noreferrer'}
-              className="about-team-social-link"
-              aria-label={lk.label} title={lk.label}
-            >
-              {lk.icon}
-            </a>
-          ))}
-        </div>
-      )}
-    </article>
-  );
-};
-
-/* ═══════════════════════════════════════════════════════
-    STAT CARD
-   ═══════════════════════════════════════════════════════ */
-const AboutStatCard = ({ value, suffix, label, description, icon: Icon }) => (
-  <FadeInSection>
-    <motion.div
-      whileHover={{ y: -5 }}
-      style={{
-        background: 'white', borderRadius: 24, padding: 'clamp(28px,4vw,40px)',
-        textAlign: 'center', boxShadow: '0 10px 30px rgba(5,150,105,0.08)',
-        border: '1px solid rgba(5,150,105,0.1)',
-      }}
-    >
-      <div style={{
-        width: 56, height: 56, background: '#ECFDF5', borderRadius: 16,
-        display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px',
-      }}>
-        <Icon size={26} color="#059669" />
-      </div>
-      <div style={{
-        fontSize: 'clamp(36px,5vw,52px)', fontWeight: 800, color: '#059669',
-        lineHeight: 1, marginBottom: 8, fontFamily: "'Playfair Display', serif",
-      }}>
-        <AnimatedCounter end={value} suffix={suffix} />
-      </div>
-      <div style={{
-        fontSize: 'clamp(14px,1.2vw,16px)', fontWeight: 700, color: '#0f172a',
-        marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1,
-      }}>{label}</div>
-      <p style={{ fontSize: 14, color: '#64748b', lineHeight: 1.6, margin: 0 }}>{description}</p>
-    </motion.div>
-  </FadeInSection>
-);
-
-/* ═══════════════════════════════════════════════════════
-   QUOTE BLOCK
-   ═══════════════════════════════════════════════════════ */
-const QuoteBlock = ({ quote, author, role, image }) => (
-  <FadeInSection>
-    <div style={{
-      background: 'linear-gradient(135deg,#ECFDF5,#D1FAE5)',
-      borderRadius: 32, padding: 'clamp(24px,4vw,42px)',
-      position: 'relative', overflow: 'hidden',
-    }}>
-      <div style={{
-        position: 'absolute', top: 20, left: 30, fontSize: 120,
-        color: 'rgba(5,150,105,0.1)', fontFamily: 'Georgia,serif', lineHeight: 1,
-        pointerEvents: 'none',
-      }}>"</div>
-      <LuQuote size={32} style={{ color: '#059669', marginBottom: 16, position: 'relative', zIndex: 1 }} />
-      <blockquote style={{
-        fontSize: 'clamp(18px,2.2vw,26px)', fontWeight: 500, color: '#0f172a',
-        lineHeight: 1.7, fontStyle: 'italic', marginBottom: 28,
-        fontFamily: "'Playfair Display', serif", position: 'relative', zIndex: 1,
-      }}>{quote}</blockquote>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-        <img src={image} alt={author} style={{
-          width: 60, height: 60, borderRadius: '50%', objectFit: 'cover', border: '3px solid white',
-        }} />
-        <div>
-          <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 18 }}>{author}</div>
-          <div style={{ color: '#059669', fontSize: 14, fontWeight: 600 }}>{role}</div>
-        </div>
-      </div>
-    </div>
-  </FadeInSection>
-);
-
-/* ═══════════════════════════════════════════════════════
-   SHARED STYLE OBJECT  (declared before JSX that uses it)
-   ═══════════════════════════════════════════════════════ */
-const S = {
-  h2: {
-    fontSize: 'clamp(28px,4.5vw,52px)', fontWeight: 800, lineHeight: 1.15,
-    color: '#0f172a', fontFamily: "'Playfair Display', serif", marginBottom: 20,
-  },
-  p: {
-    fontSize: 'clamp(15px,1.2vw,17px)', lineHeight: 1.85,
-    color: '#64748b', marginBottom: 18,
-  },
-};
-
-/* ═══════════════════════════════════════════════════════
    MAIN PAGE
    ═══════════════════════════════════════════════════════ */
 const About = () => {
   const [lightboxImage, setLightboxImage] = useState(null);
-  const [reviewOpen,    setReviewOpen]    = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
   const { isAuthenticated } = useUserAuth();
 
-  /* ── Team ── */
-  const [teamMembers, setTeamMembers] = useState([]);
-  const [teamLoading, setTeamLoading] = useState(true);
-  const isMounted = useRef(true);
-
-  /* ── Gallery (hook) ── */
   const { images: galleryImages, loading: galleryLoading, error: galleryError, refetch: galleryRefetch } = useGallery();
   const displayImages = useMemo(() => galleryImages.slice(0, 20), [galleryImages]);
 
-  /* lightbox nav */
-  const lbIndex  = useMemo(() => displayImages.findIndex(i => i.id === lightboxImage?.id), [displayImages, lightboxImage]);
-  const prevImage = useCallback(() => { if (lbIndex > 0) setLightboxImage(displayImages[lbIndex - 1]); }, [lbIndex, displayImages]);
-  const nextImage = useCallback(() => { if (lbIndex < displayImages.length - 1) setLightboxImage(displayImages[lbIndex + 1]); }, [lbIndex, displayImages]);
+  const lbIndex = useMemo(
+    () => displayImages.findIndex((i) => i.id === lightboxImage?.id),
+    [displayImages, lightboxImage]
+  );
+  const prevImage = useCallback(() => {
+    if (lbIndex > 0) setLightboxImage(displayImages[lbIndex - 1]);
+  }, [lbIndex, displayImages]);
+  const nextImage = useCallback(() => {
+    if (lbIndex < displayImages.length - 1) setLightboxImage(displayImages[lbIndex + 1]);
+  }, [lbIndex, displayImages]);
 
-  /* fetch team */
-  const fetchTeam = useCallback(async () => {
-    if (!isMounted.current) return;
-    setTeamLoading(true);
-    try {
-      const res = await teamAPI.getAll({ sort: 'display_order', order: 'ASC', limit: 100 });
-      if (!isMounted.current) return;
-      const arr = Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []);
-      setTeamMembers(arr.length > 0 ? arr : FALLBACK_MEMBERS);
-    } catch {
-      if (isMounted.current) setTeamMembers(FALLBACK_MEMBERS);
-    } finally {
-      if (isMounted.current) setTeamLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    isMounted.current = true;
-    fetchTeam();
-    return () => { isMounted.current = false; };
-  }, [fetchTeam]);
-
-  /* ── Data ── */
   const heroImage = 'https://i.pinimg.com/1200x/d6/fd/68/d6fd6828f6d716bf6786bdecef85e642.jpg';
 
   const VIDEO_PLAYLIST = [
-    { id: 1, title: 'The Wildlife Memories', subtitle: "Experience East africa's natural wonders", videoId: 'fKsrERSd_Lo', poster: 'https://i.ytimg.com/vi/dTlfCgkHN6s/hqdefault.jpg' },
-    { id: 2, title: "East Africa's Great Migration", subtitle: 'The Great Wildebeest Migration', videoId: 'IvCfINrZrLk', poster: 'https://i.ytimg.com/vi/IvCfINrZrLk/hqdefault.jpg' },
-    { id: 3, title: 'Lake Victoria', subtitle: "Africa's largest lake", videoId: 'xdFYFB3vyoo', poster: 'https://i.ytimg.com/vi/xdFYFB3vyoo/hqdefault.jpg' },
+    { id: 1, title: 'Wildlife Memories in Motion', subtitle: 'Experience East Africa through our lens', videoId: 'fKsrERSd_Lo' },
+    { id: 2, title: 'The Great Wildebeest Migration', subtitle: 'One of nature\'s most spectacular events', videoId: 'IvCfINrZrLk' },
+    { id: 3, title: 'Landscapes of East Africa', subtitle: 'From volcanoes to shorelines', videoId: 'xdFYFB3vyoo' },
   ];
 
-  /* ── Skeleton helpers ── */
-  const TeamSkeletons = () => (
-    <div className="about-team-grid">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="about-team-card" style={{ gap: 0 }}>
-          <div className="about-shimmer" style={{ width: 120, height: 120, borderRadius: '50%', margin: '0 auto 18px' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-            {[['65%', 22], ['45%', 14], ['38%', 20], ['90%', 13], ['75%', 13]].map(([w, h], j) => (
-              <div key={j} className="about-shimmer" style={{ width: w, height: h, borderRadius: 8 }} />
-            ))}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 8, paddingTop: 14, marginTop: 14, borderTop: '1px solid #d1fae5' }}>
-            {[1, 2, 3].map(j => <div key={j} className="about-shimmer" style={{ width: 36, height: 36, borderRadius: '50%' }} />)}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  const VALUES = [
+    { icon: <HandHeart size={22} />, title: 'Authentic Connection', desc: 'We facilitate meaningful encounters between travelers and local communities—never staged, always real.' },
+    { icon: <Leaf size={22} />, title: 'Conservation First', desc: 'Every journey contributes to wildlife protection and habitat preservation across East Africa.' },
+    { icon: <Trees size={22} />, title: 'Community Empowerment', desc: 'We partner with local guides, families, and cooperatives so that tourism uplifts entire villages.' },
+    { icon: <ShieldCheck size={22} />, title: 'Uncompromising Safety', desc: 'Licensed guides, vetted vehicles, and 24/7 support ensure your peace of mind at every step.' },
+  ];
 
-  const GallerySkeletons = () => (
-    <div className="about-gallery-grid">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div key={i} style={{ borderRadius: 20, overflow: 'hidden' }}>
-          <div className="about-shimmer" style={{ height: 240 }} />
-          <div style={{ padding: '14px 16px', background: 'white' }}>
-            <div className="about-shimmer" style={{ height: 14, width: '70%', borderRadius: 6, marginBottom: 8 }} />
-            <div className="about-shimmer" style={{ height: 12, width: '50%', borderRadius: 6 }} />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
-  /* ════════════════════════════════════════════════════
-     RENDER
-     ════════════════════════════════════════════════════ */
   return (
     <div className="about-root">
       <style>{ABOUT_STYLES}</style>
 
       <SEO
-        title="About Us"
-        description="Learn about Altuvera's mission to create transformative travel experiences through our 'High Places & Deep Culture' philosophy."
-        keywords={['about Altuvera', 'travel company', 'safari experts', 'East Africa', 'sustainable tourism']}
+        title="About Altuvera Safaris | Authentic East African Adventures"
+        description="Discover why travelers choose Altuvera Safaris — Rwanda-based experts in gorilla trekking, wildlife safaris, and cultural immersions across East Africa and beyond."
+        keywords={['Altuvera Safaris', 'about', 'gorilla trekking', 'East Africa', 'cultural tours', 'safari company Rwanda']}
         url="/about"
         image="/og-about.jpg"
         breadcrumbs={[{ name: 'Home', url: '/' }, { name: 'About', url: '/about' }]}
@@ -1006,8 +805,8 @@ const About = () => {
       <ReviewModal isOpen={reviewOpen} onClose={() => setReviewOpen(false)} />
 
       <PageHeader
-        title="Our Heritage"
-        subtitle="Discover the story of Altuvera—designed and created by IGIRANEZA Fabrice, where adventure meets preservation."
+        title="Our Story"
+        subtitle="Rwanda-born. East Africa-crafted. Travel that transforms lives — travelers and locals alike."
         backgroundImage={heroImage}
         breadcrumbs={[{ label: 'About Us' }]}
       />
@@ -1024,7 +823,6 @@ const About = () => {
         )}
       </AnimatePresence>
 
-      {/* Cookie Settings */}
       <section style={{ padding: '16px 24px 0', background: '#fff' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto' }}>
           <CookieSettingsButton />
@@ -1032,42 +830,38 @@ const About = () => {
       </section>
 
       {/* ══════════════════════════════════════════
-          INTRODUCTION
-          ══════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(20px,4vw,40px) 24px', background: 'linear-gradient(180deg,#fff 0%,#FAFFFE 100%)' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto', textAlign: 'center' }}>
+          WHO WE ARE — Core brand story
+      ══════════════════════════════════════════ */}
+      <section className="about-section" style={{ background: 'linear-gradient(180deg,#fff 0%,#f0fdf4 100%)' }}>
+        <div style={{ maxWidth: 920, margin: '0 auto', textAlign: 'center' }}>
           <FadeInSection>
-            <h2 style={{ ...S.h2, marginBottom: 32 }}>
-              More Than a Safari Company—<span style={{ color: '#059669' }}>A Movement</span>
+            <h2 className="about-section-title">
+              We don't just take travelers to Africa.<br />
+              <em>We connect them with what makes it extraordinary.</em>
             </h2>
-            <p style={{ ...S.p, fontSize: 'clamp(17px,1.5vw,20px)', maxWidth: 800, margin: '0 auto 28px' }}>
-              In 2026, <strong style={{ color: '#059669' }}>IGIRANEZA Fabrice</strong> transformed
-              his vision into reality by founding Altuvera. He believed that travel could be more
-              than sightseeing—it could be transformation.
+            <p className="about-section-lead" style={{ marginBottom: 24 }}>
+              Altuvera Safaris is a Rwandan travel company crafting adventures, wildlife encounters, and cultural immersions across East Africa and beyond.
             </p>
-            <p style={{ ...S.p, maxWidth: 800, margin: '0 auto 28px' }}>
-              We believe that true exploration forges deep, meaningful connections—with the land
-              beneath your feet, the wildlife that calls it home, and the communities that have
-              thrived here for countless generations.
+            <p className="about-section-lead" style={{ marginBottom: 24 }}>
+              Founded and headquartered in <strong style={{ color: '#059669' }}>Kinigi, Musanze</strong> — at the gateway to Volcanoes National Park — we design journeys that go far beyond sightseeing. Every itinerary is built around three things that never change: <strong>the wild landscapes</strong>, <strong>the incredible wildlife</strong>, and <strong>the resilient communities</strong> that make East Africa unforgettable.
             </p>
-            <p style={{ ...S.p, maxWidth: 800, margin: '0 auto' }}>
-              From the visionary mind of IGIRANEZA Fabrice emerged the "High Places & Deep Culture"
-              philosophy—a revolutionary approach that has redefined what experiential travel
-              means for the modern explorer.
+            <p className="about-section-lead">
+              With over a decade of combined local expertise, our team knows the terrain, speaks the languages, and holds the trust of the parks and communities we visit. That is why travelers choose Altuvera — and why they come back.
             </p>
             {isAuthenticated && (
               <motion.button
-                whileHover={{ scale: 1.03, y: -2 }} whileTap={{ scale: 0.98 }}
+                whileHover={{ scale: 1.03, y: -2 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setReviewOpen(true)}
                 style={{
-                  marginTop: 32, padding: '14px 24px', borderRadius: 9999, border: 'none',
-                  background: 'linear-gradient(135deg,#059669,#047857)',
-                  color: 'white', fontWeight: 700, fontSize: 15, cursor: 'pointer',
+                  marginTop: 32, padding: '14px 26px', borderRadius: 9999, border: 'none',
+                  background: 'linear-gradient(135deg,#059669,#047857)', color: 'white',
+                  fontWeight: 700, fontSize: 15, cursor: 'pointer',
                   boxShadow: '0 12px 30px rgba(5,150,105,0.22)',
                   display: 'inline-flex', alignItems: 'center', gap: 8,
                 }}
               >
-                <LuMessageCircle size={16} /> Share Your Experience
+                <MessageCircle size={16} /> Share Your Experience
               </motion.button>
             )}
           </FadeInSection>
@@ -1075,43 +869,35 @@ const About = () => {
       </section>
 
       {/* ══════════════════════════════════════════
-          VIDEO SECTION — autoplay iframe cards
-          ══════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(20px,4vw,40px) 24px', background: '#fff' }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 'clamp(22px,3vw,36px)' }}>
+          VIDEO SECTION
+      ══════════════════════════════════════════ */}
+      <section className="about-section" style={{ background: '#fff' }}>
+        <div style={{ maxWidth: 1320, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 36 }}>
             <FadeInSection>
-              <h2 style={S.h2}>Experience Altuvera <span style={{ color: '#059669' }}>Through Film</span></h2>
-              <p style={{ ...S.p, maxWidth: 650, margin: '0 auto' }}>
-                Immerse yourself in the sights and sounds of East Africa through our documentary content.
-                Every card plays its video live—click to open the full player.
+              <h2 className="about-section-title">
+                Feel East Africa <em>through film</em>
+              </h2>
+              <p className="about-section-lead">
+                Immerse yourself in the sights and sounds of the adventures that await you.
               </p>
             </FadeInSection>
           </div>
 
-          {/* Hero video */}
           <FadeInSection>
-            <div style={{ marginBottom: 'clamp(20px,3vw,32px)' }}>
-              <AutoplayVideoCard
-                video={VIDEO_PLAYLIST[0]}
-                isHero
-                onClick={() => {}}
-              />
+            <div style={{ marginBottom: 24 }}>
+              <AutoplayVideoCard video={VIDEO_PLAYLIST[0]} isHero onClick={() => {}} />
             </div>
           </FadeInSection>
 
-          {/* Small video grid */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%,280px),1fr))',
-            gap: 'clamp(16px,2vw,24px)',
+            gap: 20,
           }}>
             {VIDEO_PLAYLIST.slice(1).map((video, idx) => (
               <FadeInSection key={video.id} delay={idx * 0.1}>
-                <AutoplayVideoCard
-                  video={video}
-                  onClick={() => {}}
-                />
+                <AutoplayVideoCard video={video} onClick={() => {}} />
               </FadeInSection>
             ))}
           </div>
@@ -1119,94 +905,29 @@ const About = () => {
       </section>
 
       {/* ══════════════════════════════════════════
-          PHILOSOPHY
-          ══════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(18px,3.5vw,38px) 24px', background: '#F0FDF4', overflow: 'hidden' }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,480px),1fr))',
-            gap: 'clamp(40px,6vw,80px)', alignItems: 'center',
-          }}>
-            <FadeInSection direction="left">
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,1fr)', gap: 16, position: 'relative' }}>
-                <motion.div whileHover={{ scale: 1.03, rotate: -1 }} style={{ borderRadius: 24, overflow: 'hidden', boxShadow: '0 20px 40px rgba(5,150,105,0.15)', gridRow: 'span 2' }}>
-                  <img src="https://i.pinimg.com/736x/f3/8e/5d/f38e5ddcc6677a39515284b5c2c7a2e4.jpg" alt="Safari" style={{ width: '100%', height: '100%', minHeight: 380, objectFit: 'cover' }} />
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.03, rotate: 1 }} style={{ borderRadius: 24, overflow: 'hidden', boxShadow: '0 20px 40px rgba(5,150,105,0.15)' }}>
-                  <img src="https://i.pinimg.com/1200x/81/45/9e/81459ea63d041cdb6e64d080c07f4937.jpg" alt="Wildlife" style={{ width: '100%', height: '100%', minHeight: 180, objectFit: 'cover' }} />
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.03, rotate: -1 }} style={{ borderRadius: 24, overflow: 'hidden', boxShadow: '0 20px 40px rgba(5,150,105,0.15)' }}>
-                  <img src="https://i.pinimg.com/1200x/e8/c3/dc/e8c3dc61a18c07053646caddbc45a454.jpg" alt="Culture" style={{ width: '100%', height: '100%', minHeight: 180, objectFit: 'cover' }} />
-                </motion.div>
-                <motion.div
-                  initial={{ scale: 0 }} whileInView={{ scale: 1 }}
-                  transition={{ delay: 0.5, type: 'spring' }} viewport={{ once: true }}
-                  style={{
-                    position: 'absolute', bottom: -20, right: -20,
-                    background: 'linear-gradient(135deg,#059669,#047857)',
-                    borderRadius: 20, padding: '20px 28px', color: 'white',
-                    boxShadow: '0 20px 40px rgba(5,150,105,0.35)', zIndex: 10,
-                  }}
-                >
-                  <div style={{ fontSize: 13, opacity: 0.9, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <LuCrown size={12} /> Founded by
-                  </div>
-                  <div style={{ fontSize: 18, fontWeight: 800 }}>IGIRANEZA Fabrice</div>
-                  <div style={{ fontSize: 14, opacity: 0.9 }}>2026</div>
-                </motion.div>
-              </div>
-            </FadeInSection>
-
-            <FadeInSection direction="right" delay={0.15}>
-              <h2 style={S.h2}>
-                Understanding <span style={{ color: '#059669' }}>True Adventures In High Places & Deep Culture</span>
+          WHY ALTUVERA — Trust builder
+      ══════════════════════════════════════════ */}
+      <section className="about-section" style={{ background: '#f0fdf4' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: 44 }}>
+            <FadeInSection>
+              <h2 className="about-section-title">
+                Why travel with <em>Altuvera Safaris</em>?
               </h2>
-              <div style={{ width: 80, height: 4, background: 'linear-gradient(90deg,#059669,#10B981)', marginBottom: 28, borderRadius: 2 }} />
-              <p style={S.p}>
-                The concept of <strong style={{ color: '#059669' }}>"True Adventures In High Places & Deep Culture"</strong> is
-                the philosophical foundation designed by IGIRANEZA Fabrice.
-              </p>
-              <p style={S.p}>
-                <strong style={{ color: '#059669' }}>"True Adventures In High Places"</strong> represents our commitment
-                to excellence in every tangible aspect and the pursuit of extraordinary destinations.
-              </p>
-              <p style={S.p}>
-                <strong style={{ color: '#059669' }}>"Deep Culture"</strong> is where transformation
-                happens. Genuine human connection, sharing meals with local families, learning living traditions.
-              </p>
-              <p style={S.p}>
-                Together, they create journeys that are both comfortable and challenging, both luxurious
-                and authentic—invitations to engage more deeply with the world.
+              <p className="about-section-lead">
+                Four principles guide every decision we make — from the guides we hire to the lodges we recommend.
               </p>
             </FadeInSection>
           </div>
-        </div>
-      </section>
 
-      {/* ══════════════════════════════════════════
-          FOUNDER'S STORY
-          ══════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(18px,3.5vw,38px) 24px', background: '#fff' }}>
-        <div style={{ maxWidth: 1000, margin: '0 auto' }}>
-          <FadeInSection>
-            <div style={{ textAlign: 'center', marginBottom: 48 }}>
-              <h2 style={S.h2}>A Vision Born from <span style={{ color: '#059669' }}>IGIRANEZA Fabrice</span></h2>
-            </div>
-          </FadeInSection>
           <FadeInSection delay={0.1}>
-            <div style={{ background: 'linear-gradient(135deg,#ECFDF5,#D1FAE5)', borderRadius: 32, padding: 'clamp(20px,3vw,32px)', boxShadow: '0 20px 50px rgba(5,150,105,0.1)' }}>
-              {[
-                'In 2026, <strong style="color:#059669">IGIRANEZA Fabrice</strong> set out to revolutionize the travel industry. Having witnessed countless tourists pass through Africa\'s magnificent landscapes without truly connecting to their deeper meaning, Fabrice envisioned something radically different.',
-                '"I wanted to create experiences that don\'t just show people Africa," Fabrice explains. "I wanted to help them understand it, feel it, and carry a piece of it with them forever."',
-                'With this vision, Fabrice designed Altuvera from the ground up. The name itself—a fusion of "altitude" and "vera" (truth)—reflects this mission: reaching higher standards while staying grounded in authentic experience.',
-                "Today, under Fabrice's continued guidance as Co-Founder, Altuvera has grown into one of East Africa's most respected safari operators.",
-              ].map((text, i) => (
-                <p
-                  key={i}
-                  style={{ ...S.p, fontSize: 'clamp(16px,1.3vw,18px)', marginBottom: i < 3 ? 24 : 0 }}
-                  dangerouslySetInnerHTML={{ __html: text }}
-                />
+            <div className="about-values-grid">
+              {VALUES.map((v, i) => (
+                <div key={i} className="about-value-card">
+                  <div className="about-value-icon-wrap">{v.icon}</div>
+                  <h3 className="about-value-title">{v.title}</h3>
+                  <p className="about-value-desc">{v.desc}</p>
+                </div>
               ))}
             </div>
           </FadeInSection>
@@ -1214,23 +935,111 @@ const About = () => {
       </section>
 
       {/* ══════════════════════════════════════════
-          GALLERY — backend-fetched, max 20
-          ══════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(20px,4vw,40px) 24px', background: '#F0FDF4' }}>
+          OUR ADVENTURES — Quick showcase
+      ══════════════════════════════════════════ */}
+      <section className="about-section" style={{ background: '#fff' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 460px), 1fr))',
+            gap: 'clamp(32px, 5vw, 60px)',
+            alignItems: 'center',
+          }}>
+            <FadeInSection direction="left">
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2,1fr)',
+                gap: 14,
+                position: 'relative',
+              }}>
+                <motion.div whileHover={{ scale: 1.03 }} style={{
+                  borderRadius: 20, overflow: 'hidden',
+                  boxShadow: '0 20px 40px rgba(5,150,105,0.15)', gridRow: 'span 2',
+                }}>
+                  <img
+                    src="https://i.pinimg.com/736x/f3/8e/5d/f38e5ddcc6677a39515284b5c2c7a2e4.jpg"
+                    alt="Wildlife safari"
+                    style={{ width: '100%', height: '100%', minHeight: 380, objectFit: 'cover' }}
+                  />
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.03 }} style={{
+                  borderRadius: 20, overflow: 'hidden',
+                  boxShadow: '0 20px 40px rgba(5,150,105,0.15)',
+                }}>
+                  <img
+                    src="https://i.pinimg.com/1200x/81/45/9e/81459ea63d041cdb6e64d080c07f4937.jpg"
+                    alt="Gorilla trekking"
+                    style={{ width: '100%', height: '100%', minHeight: 180, objectFit: 'cover' }}
+                  />
+                </motion.div>
+                <motion.div whileHover={{ scale: 1.03 }} style={{
+                  borderRadius: 20, overflow: 'hidden',
+                  boxShadow: '0 20px 40px rgba(5,150,105,0.15)',
+                }}>
+                  <img
+                    src="https://i.pinimg.com/1200x/e8/c3/dc/e8c3dc61a18c07053646caddbc45a454.jpg"
+                    alt="Cultural immersion"
+                    style={{ width: '100%', height: '100%', minHeight: 180, objectFit: 'cover' }}
+                  />
+                </motion.div>
+              </div>
+            </FadeInSection>
+
+            <FadeInSection direction="right" delay={0.15}>
+              <h2 className="about-section-title">
+                <em>Adventures</em>, safaris & cultural immersions
+              </h2>
+              <div style={{
+                width: 60, height: 4, borderRadius: 2, marginBottom: 24,
+                background: 'linear-gradient(90deg,#059669,#10B981)',
+              }} />
+              <p className="about-section-p">
+                From tracking <strong style={{ color: '#065f46' }}>mountain gorillas</strong> in the misty forests of Volcanoes National Park to witnessing the <strong style={{ color: '#065f46' }}>Great Migration</strong> thunder across the Serengeti — our journeys are as diverse as the land itself.
+              </p>
+              <p className="about-section-p">
+                We craft personalized itineraries that blend <strong>wildlife adventures</strong>, <strong>cultural immersions</strong> in villages where traditions still shape daily life, and <strong>quiet luxury retreats</strong> where you can simply breathe in the beauty of Africa.
+              </p>
+              <p className="about-section-p">
+                Whether you're seeking the thrill of a Big Five safari, a soul-stirring cultural exchange, or the challenge of climbing Kilimanjaro — <strong style={{ color: '#059669' }}>we build the journey around you</strong>.
+              </p>
+            </FadeInSection>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════
+          GALLERY — Horizontal Slider
+      ══════════════════════════════════════════ */}
+      <section className="about-section" style={{ background: '#f0fdf4' }}>
         <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 'clamp(28px,4vw,44px)' }}>
+          <div style={{ textAlign: 'center', marginBottom: 32 }}>
             <FadeInSection>
-              <h2 style={S.h2}>Captured <span style={{ color: '#059669' }}>Moments</span></h2>
-              <p style={{ ...S.p, maxWidth: 600, margin: '0 auto' }}>
-                A curated collection of breathtaking moments from our East African journeys.
+              <h2 className="about-section-title">
+                Captured <em>moments</em>
+              </h2>
+              <p className="about-section-lead">
+                Real photographs from real journeys — swipe or scroll to explore.
               </p>
             </FadeInSection>
           </div>
 
-          {galleryLoading ? <GallerySkeletons /> : galleryError ? (
-            <div style={{ textAlign: 'center', padding: '56px 24px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 20 }}>
-              <LuMountain size={40} color="#EF4444" style={{ marginBottom: 16 }} />
-              <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: '#064e3b', marginBottom: 8 }}>Failed to Load Gallery</h3>
+          {galleryLoading ? (
+            <div className="about-gallery-slider">
+              <div className="about-gallery-track">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="about-gallery-slide about-shimmer" />
+                ))}
+              </div>
+            </div>
+          ) : galleryError ? (
+            <div style={{
+              textAlign: 'center', padding: '56px 24px',
+              background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 20,
+            }}>
+              <Mountain size={40} color="#EF4444" style={{ marginBottom: 16 }} />
+              <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 700, color: '#064e3b', marginBottom: 8 }}>
+                Failed to Load Gallery
+              </h3>
               <p style={{ fontSize: 14, color: '#9ca3af', marginBottom: 20 }}>{galleryError}</p>
               <button onClick={galleryRefetch} style={{
                 padding: '12px 28px', borderRadius: 9999, border: 'none',
@@ -1238,30 +1047,31 @@ const About = () => {
                 fontWeight: 700, fontSize: 14, cursor: 'pointer',
                 display: 'inline-flex', alignItems: 'center', gap: 8,
               }}>
-                <LuRocket size={15} /> Try Again
+                <Rocket size={15} /> Try Again
               </button>
             </div>
           ) : displayImages.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '56px 24px', background: '#f0fdf4', border: '1px solid #d1fae5', borderRadius: 20 }}>
-              <LuCamera size={44} style={{ color: '#a7f3d0', marginBottom: 16 }} />
-              <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, color: '#064e3b', marginBottom: 8 }}>No Images Yet</h3>
+            <div style={{
+              textAlign: 'center', padding: '56px 24px',
+              background: '#f0fdf4', border: '1px solid #d1fae5', borderRadius: 20,
+            }}>
+              <Camera size={44} style={{ color: '#a7f3d0', marginBottom: 16 }} />
+              <h3 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, color: '#064e3b', marginBottom: 8 }}>
+                No Images Yet
+              </h3>
               <p style={{ fontSize: 14, color: '#9ca3af' }}>Gallery images will appear here once added.</p>
             </div>
           ) : (
-            <div className="about-gallery-grid">
-              {displayImages.map((img, i) => (
-                <AnimatedSection key={img.id} animation="fadeInUp" delay={i * 0.04}>
-                  <AboutGalleryCard image={img} onClick={setLightboxImage} />
-                </AnimatedSection>
-              ))}
-            </div>
+            <FadeInSection delay={0.1}>
+              <HorizontalGallery images={displayImages} onImageClick={setLightboxImage} />
+            </FadeInSection>
           )}
 
           <FadeInSection delay={0.3}>
-            <div style={{ textAlign: 'center', marginTop: 'clamp(28px,4vw,44px)' }}>
+            <div style={{ textAlign: 'center', marginTop: 32 }}>
               <Button to="/gallery" variant="primary" size="large">
                 <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <LuCamera size={18} /> View Full Gallery
+                  <Camera size={18} /> Explore Full Gallery
                 </span>
               </Button>
             </div>
@@ -1269,91 +1079,72 @@ const About = () => {
         </div>
       </section>
 
-
       {/* ══════════════════════════════════════════
-          QUOTE
-          ══════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(18px,3.5vw,38px) 24px', background: '#FAFFFE' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <QuoteBlock
-            quote="I designed Altuvera to prove that travel can be more than tourism. It can be a force for transformation—changing travelers, empowering communities, and protecting the wild places that make Africa extraordinary."
-            author="IGIRANEZA Fabrice"
-            role="Co-Founder & Visionary, Altuvera (Est. 2026)"
-            image="https://drive.google.com/uc?export=download&id=1Ln8s-kXLgqffNvwKg7M3b7s9eIs3ed_n"
-          />
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════
-          TEAM — backend-fetched
-          ══════════════════════════════════════════ */}
-      <section style={{ padding: 'clamp(22px,5vw,52px) 24px', background: '#fff' }}>
-        <div style={{ maxWidth: 1400, margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: 'clamp(32px,5vw,56px)' }}>
-            <FadeInSection>
-              <h2 style={S.h2}>The <span style={{ color: '#059669' }}>People</span> Behind Your Journey</h2>
-              <p style={{ ...S.p, maxWidth: 750, margin: '0 auto' }}>
-                Led by Co-Founder IGIRANEZA Fabrice, our leadership team combines visionary thinking
-                with deep expertise in wildlife conservation, luxury hospitality, and sustainable tourism.
-              </p>
-            </FadeInSection>
-          </div>
-          {teamLoading ? <TeamSkeletons /> : (
-            <div className="about-team-grid">
-              {teamMembers.map((member, i) => (
-                <AnimatedSection key={member.id || i} animation="fadeInUp" delay={i * 0.08}>
-                  <TeamCard member={member} />
-                </AnimatedSection>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+          THE TEAM — from backend via TeamContent
+      ══════════════════════════════════════════ */}
+      <TeamContent />
 
       {/* ══════════════════════════════════════════
           MISSION & VISION
-          ══════════════════════════════════════════ */}
-      <section id="mission" style={{ padding: 'clamp(18px,3.5vw,38px) 24px', background: '#fff' }}>
+      ══════════════════════════════════════════ */}
+      <section className="about-section" style={{ background: '#fff' }}>
         <div style={{ maxWidth: 1200, margin: '0 auto' }}>
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,450px),1fr))',
-            gap: 'clamp(40px,6vw,80px)',
+            gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,440px),1fr))',
+            gap: 'clamp(28px,4vw,48px)',
           }}>
             <FadeInSection>
               <div style={{
                 background: 'linear-gradient(135deg,#059669,#047857)',
-                borderRadius: 32, padding: 'clamp(32px,5vw,48px)', height: '100%', color: 'white',
+                borderRadius: 24, padding: 'clamp(30px,4vw,42px)',
+                height: '100%', color: 'white',
               }}>
-                <div style={{ width: 64, height: 64, background: 'rgba(255,255,255,0.15)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 28 }}>
-                  <LuTarget size={32} />
+                <div style={{
+                  width: 56, height: 56,
+                  background: 'rgba(255,255,255,0.15)', borderRadius: 14,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  marginBottom: 24,
+                }}>
+                  <Target size={26} />
                 </div>
-                <h3 style={{ fontSize: 'clamp(24px,3vw,32px)', fontWeight: 700, marginBottom: 20, fontFamily: "'Playfair Display',serif" }}>Our Mission</h3>
-                <p style={{ fontSize: 'clamp(16px,1.3vw,18px)', lineHeight: 1.8, opacity: 0.95, marginBottom: 24 }}>
-                  To create transformative travel experiences that honor Africa's wildlife,
-                  empower its communities, and awaken in every traveler a profound connection
-                  to the natural world.
-                </p>
-                <p style={{ fontSize: 15, lineHeight: 1.8, opacity: 0.85 }}>
-                  Designed by IGIRANEZA Fabrice in 2026, this mission guides every decision we make.
+                <h3 style={{
+                  fontSize: 'clamp(22px,2.8vw,28px)', fontWeight: 700, marginBottom: 16,
+                  fontFamily: "'Playfair Display',serif",
+                }}>
+                  Our Mission
+                </h3>
+                <p style={{
+                  fontSize: 'clamp(15px,1.2vw,16.5px)', lineHeight: 1.8, opacity: 0.95,
+                }}>
+                  To design travel experiences that honor East Africa's wildlife, empower its communities, and awaken in every traveler a profound connection to the natural world.
                 </p>
               </div>
             </FadeInSection>
 
             <FadeInSection delay={0.15}>
-              <div style={{ background: 'white', borderRadius: 32, padding: 'clamp(32px,5vw,48px)', height: '100%', border: '1px solid rgba(5,150,105,0.15)' }}>
-                <div style={{ width: 64, height: 64, background: '#ECFDF5', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 28 }}>
-                  <LuEye size={32} color="#059669" />
+              <div style={{
+                background: 'white', borderRadius: 24, padding: 'clamp(30px,4vw,42px)',
+                height: '100%', border: '1px solid rgba(5,150,105,0.15)',
+                boxShadow: '0 12px 32px rgba(5,150,105,0.08)',
+              }}>
+                <div style={{
+                  width: 56, height: 56, background: '#ECFDF5', borderRadius: 14,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  marginBottom: 24,
+                }}>
+                  <Eye size={26} color="#059669" />
                 </div>
-                <h3 style={{ fontSize: 'clamp(24px,3vw,32px)', fontWeight: 700, marginBottom: 20, color: '#0f172a', fontFamily: "'Playfair Display',serif" }}>Our Vision</h3>
-                <p style={{ fontSize: 'clamp(16px,1.3vw,18px)', lineHeight: 1.8, color: '#374151', marginBottom: 24 }}>
-                  A world where travel is a force for conservation, cultural preservation,
-                  and human transformation—where every journey leaves both traveler and
-                  destination better than before.
-                </p>
-                <p style={{ fontSize: 15, lineHeight: 1.8, color: '#64748b' }}>
-                  We envision a future where sustainable tourism is the standard and
-                  communities thrive through ethical partnerships.
+                <h3 style={{
+                  fontSize: 'clamp(22px,2.8vw,28px)', fontWeight: 700, marginBottom: 16,
+                  color: '#064e3b', fontFamily: "'Playfair Display',serif",
+                }}>
+                  Our Vision
+                </h3>
+                <p style={{
+                  fontSize: 'clamp(15px,1.2vw,16.5px)', lineHeight: 1.8, color: '#374151',
+                }}>
+                  A world where travel is a force for conservation, cultural preservation, and human transformation — where every journey leaves both traveler and destination better than before.
                 </p>
               </div>
             </FadeInSection>
@@ -1362,46 +1153,78 @@ const About = () => {
       </section>
 
       {/* ══════════════════════════════════════════
-          CTA  (reduced height)
-          ══════════════════════════════════════════ */}
+          CONTACT + CTA
+      ══════════════════════════════════════════ */}
       <section style={{
-        padding: 'clamp(28px,4vw,52px) 24px',
-        background: 'linear-gradient(135deg,#059669,#047857)',
+        padding: 'clamp(56px,7vw,88px) clamp(16px,3vw,32px)',
+        background: 'linear-gradient(135deg,#065f46,#064e3b)',
         position: 'relative', overflow: 'hidden',
       }}>
         <div style={{
           position: 'absolute', inset: 0, pointerEvents: 'none',
           backgroundImage: `url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 80 80' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none'%3E%3Cg fill='%23fff' fill-opacity='.05'%3E%3Cpath d='M50 50c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10s-10-4.477-10-10 4.477-10 10-10zM10 10c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10c0 5.523-4.477 10-10 10S0 25.523 0 20s4.477-10 10-10z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
         }} />
-        <div style={{ maxWidth: 850, margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 1 }}>
+
+        <div style={{
+          maxWidth: 1000, margin: '0 auto',
+          textAlign: 'center', position: 'relative', zIndex: 1,
+        }}>
           <FadeInSection>
             <h2 style={{
-              fontSize: 'clamp(28px,4.5vw,44px)', fontWeight: 800, lineHeight: 1.15,
-              color: 'white', fontFamily: "'Playfair Display',serif", marginBottom: 20,
+              fontSize: 'clamp(28px,4.5vw,42px)', fontWeight: 800, lineHeight: 1.15,
+              color: 'white', fontFamily: "'Playfair Display',serif", marginBottom: 18,
             }}>
-              Experience Fabrice's Vision for Yourself
+              Let's craft your African journey
             </h2>
             <p style={{
               fontSize: 'clamp(15px,1.3vw,17px)', lineHeight: 1.8,
-              color: 'rgba(255,255,255,0.9)', maxWidth: 600, margin: '0 auto 32px',
+              color: 'rgba(255,255,255,0.88)',
+              maxWidth: 640, margin: '0 auto 36px',
             }}>
-              Join the explorers who have discovered the transformative power of
-              authentic African travel. Let us show you what's possible.
+              Reach us directly, or start planning your itinerary — we respond within 24 hours.
             </p>
-            <div style={{ display: 'flex', gap: 16, justifyContent: 'center', flexWrap: 'wrap' }}>
+
+            <div className="about-contact-grid">
+              <a href="tel:+250785751391" className="about-contact-card">
+                <div className="about-contact-icon"><Phone size={20} /></div>
+                <div>
+                  <div className="about-contact-label">Call Us</div>
+                  <div className="about-contact-val">+250 785 751 391</div>
+                </div>
+              </a>
+
+              <a href="mailto:altuverasafari@gmail.com" className="about-contact-card">
+                <div className="about-contact-icon"><Mail size={20} /></div>
+                <div>
+                  <div className="about-contact-label">Email</div>
+                  <div className="about-contact-val">altuverasafari@gmail.com</div>
+                </div>
+              </a>
+
+              <div className="about-contact-card" style={{ cursor: 'default' }}>
+                <div className="about-contact-icon"><MapPin size={20} /></div>
+                <div>
+                  <div className="about-contact-label">Visit Us</div>
+                  <div className="about-contact-val">Kinigi, Musanze, Rwanda</div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              display: 'flex', gap: 14, justifyContent: 'center',
+              flexWrap: 'wrap', marginTop: 40,
+            }}>
               <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
                 <Button to="/booking" variant="secondary" size="large"
-                  style={{ background: 'white', color: '#059669', border: 'none', fontWeight: 700 }}
-                >
+                  style={{ background: 'white', color: '#065f46', border: 'none', fontWeight: 700 }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    Start Planning My Journey <LuArrowRight size={18} />
+                    Start Planning My Journey <ArrowRight size={18} />
                   </span>
                 </Button>
               </motion.div>
               <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}>
                 <Button to="/contact" variant="outline" size="large"
-                  style={{ background: 'transparent', color: 'white', border: '2px solid rgba(255,255,255,0.5)' }}
-                >
+                  style={{ background: 'transparent', color: 'white', border: '2px solid rgba(255,255,255,0.5)' }}>
                   Schedule a Consultation
                 </Button>
               </motion.div>

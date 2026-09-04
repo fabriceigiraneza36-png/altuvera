@@ -677,52 +677,6 @@ function injectHomeStyles() {
   homeStylesInjected = true;
 }
 
-/* ═══════════════════════════════════════════
-   INTRO DESTINATION CARDS DATA
-   Each card links to a destination page and
-   cycles through a slideshow of images.
-═══════════════════════════════════════════ */
-const INTRO_DEST_CARDS = [
-  {
-    slug: "serengeti",
-    country: "Tanzania",
-    tag: "Featured Destination",
-    title: "Serengeti National Park",
-    subtitle: "Home of the Great Migration",
-    to: "/destinations/serengeti",
-    images: [
-      "https://images.unsplash.com/photo-1516426122078-c23e76319801?auto=format&fit=crop&w=1200&q=80",
-      "https://i.pinimg.com/1200x/d7/c2/55/d7c255030d2c381093145fc8409270b0.jpg",
-      "https://images.unsplash.com/photo-1547471080-7cc2caa01a7e?auto=format&fit=crop&w=1200&q=80",
-      "https://i.pinimg.com/1200x/7c/5b/d9/7c5bd9c6303f68eec25ff948f1b0f11e.jpg",
-    ],
-  },
-  {
-    slug: "volcanoes-national-park",
-    country: "Rwanda",
-    tag: "Gorilla Trekking",
-    title: "Volcanoes Park",
-    to: "/destinations/volcanoes-national-park",
-    images: [
-      "https://i.pinimg.com/1200x/5d/1a/90/5d1a90a3a3f9ad6bcddf570344ff2fc4.jpg",
-      "https://i.pinimg.com/736x/ec/08/5a/ec085a82c2f390bef2b8f0eae2935b9e.jpg",
-      "https://images.unsplash.com/photo-1602491453631-e2a5ad90a131?auto=format&fit=crop&w=1200&q=80",
-    ],
-  },
-  {
-    slug: "zanzibar",
-    country: "Tanzania",
-    tag: "Coastal Escape",
-    title: "Zanzibar Islands",
-    to: "/destinations/zanzibar",
-    images: [
-      "https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?auto=format&fit=crop&w=1200&q=80",
-      "https://i.pinimg.com/736x/aa/c0/4c/aac04c789034e5993003ddc53818a06d.jpg",
-      "https://i.pinimg.com/1200x/8f/f4/63/8ff463499be98f73c3c9626985e674ee.jpg",
-    ],
-  },
-];
-
 const INTRO_REEL_VIDEO_ID = "X3MHIq09mnY";
 
 /* ═══════════════════════════════════════════
@@ -846,7 +800,23 @@ const IntroDestCard = ({ card, variant = "main", staggerOffset = 0 }) => {
    INTRO MEDIA PANEL — DESTINATION CARDS
 ═══════════════════════════════════════════ */
 const IntroMediaPanel = () => {
-  const [mainCard, ...sideCards] = INTRO_DEST_CARDS;
+  const { destinations = [] } = useDestinations({ limit: 3, sort: "-featured" });
+  const cards = destinations.map((destination) => ({
+    slug: destination.slug || destination.id,
+    country: destination.country || destination.countryName || "",
+    tag: destination.category || "",
+    title: destination.name || "",
+    subtitle: destination.tagline || destination.shortDescription || "",
+    to: `/destinations/${destination.slug || destination.id}`,
+    images: [
+      destination.heroImage,
+      destination.imageUrl,
+      ...(Array.isArray(destination.images) ? destination.images : []),
+    ].filter(Boolean),
+  }));
+  const [mainCard, ...sideCards] = cards;
+
+  if (!mainCard) return null;
 
   return (
     <div className="intro-media-grid">
@@ -883,7 +853,7 @@ const DestinationModal = ({ destination, isOpen, onClose, isWishlisted, onWishli
   if (!isOpen || !destination) return null;
   const name = destination?.name || destination?.title || "Destination";
   const country = (typeof destination?.country === "object" && destination.country?.name) || destination?.countryObj?.name || (typeof destination?.country === "string" ? destination.country : "") || "";
-  const description = destination?.description || destination?.shortDescription || destination?.excerpt || "Discover this breathtaking destination.";
+  const description = destination?.description || destination?.shortDescription || destination?.excerpt || "";
   const img = destination?.heroImage || destination?.imageUrl || destination?.image_url || destination?.image || (Array.isArray(destination?.images) ? destination.images[0] : "") || (Array.isArray(destination?.gallery) ? destination.gallery[0]?.imageUrl : "");
   const slug = destination?.slug || destination?.id || destination?._id;
   const rating = destination?.rating || destination?.averageRating || 0;
@@ -914,7 +884,7 @@ const DestinationModal = ({ destination, isOpen, onClose, isWishlisted, onWishli
         <div className="dest-modal-body">
           {rating > 0 && (<div className="dest-modal-rating">{Array.from({ length: 5 }).map((_, i) => i < Math.round(rating) ? <FaStar key={i} className="dest-modal-star filled" /> : <FaRegStar key={i} className="dest-modal-star" />)}<span className="dest-modal-rating-text">{rating.toFixed(1)}</span></div>)}
           {duration && <div className="dest-modal-duration"><MdOutlineExplore /><span>{duration}</span></div>}
-          <p className="dest-modal-description">{description.length > 260 ? description.substring(0, 260) + "…" : description}</p>
+          {description && <p className="dest-modal-description">{description.length > 260 ? description.substring(0, 260) + "…" : description}</p>}
           {highlights.length > 0 && (<div className="dest-modal-highlights"><h4>Highlights</h4><ul>{highlights.slice(0, 4).map((h, i) => (<li key={i}><span className="dest-modal-highlight-dot" />{typeof h === "string" ? h : h.text || h.title || ""}</li>))}</ul></div>)}
           <div className="dest-modal-actions"><button className="dest-modal-cta" onClick={() => { onClose(); if (slug) navigate(`/destinations/${slug}`); }}><span>Explore Destination</span><HiOutlineArrowRight /></button></div>
         </div>
@@ -1235,7 +1205,7 @@ const Home = () => {
 
   return (
     <div className="home-root">
-      <SEO title="Altuvera Travel — True Adventures in High Places & Deep Culture" />
+      <SEO title="Altuvera Safaris — True Adventures in High Places & Deep Culture" />
       <Hero />
 
       {/* ── Intro ── */}

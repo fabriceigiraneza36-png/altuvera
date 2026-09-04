@@ -47,13 +47,13 @@ const PageWrapper = ({
     // Adjust schema type based on page content
     if (location.pathname.startsWith('/packages')) {
       schema["@type"] = "ItemList";
-      schema["name"] = "Altuvera Travel Packages";
+      schema["name"] = "Altuvera Safaris Packages";
     } else if (location.pathname.startsWith('/destinations')) {
       schema["@type"] = "CollectionPage";
       schema["name"] = "East Africa Travel Destinations";
     } else if (location.pathname.startsWith('/posts') || location.pathname.startsWith('/post/')) {
       schema["@type"] = "Blog";
-      schema["name"] = "Altuvera Travel Blog";
+      schema["name"] = "Altuvera Safaris Blog";
     } else if (location.pathname === '/' || location.pathname === '') {
       schema["@type"] = "WebSite";
       schema["name"] = "Altuvera Safaris";

@@ -1,14 +1,17 @@
+// src/pages/Booking/steps/Step1Destination.jsx
 import React, { useMemo } from "react";
-import { HiGlobe, HiLocationMarker, HiCheck } from "react-icons/hi";
-import { SelectField } from "../components/FormComponents";
+import {
+  HiGlobe, HiLocationMarker, HiCheck, HiExclamationCircle,
+  HiUser, HiUserGroup, HiUsers, HiOfficeBuilding, HiHeart, HiSparkles,
+} from "react-icons/hi";
 
 const GROUPS = [
-  { v: "solo",      l: "Solo",      d: "Just me" },
-  { v: "couple",    l: "Couple",    d: "Two of us" },
-  { v: "family",    l: "Family",    d: "Kids welcome" },
-  { v: "friends",   l: "Friends",   d: "Group trip" },
-  { v: "corporate", l: "Corporate", d: "Business" },
-  { v: "honeymoon", l: "Honeymoon", d: "Romantic" },
+  { v: "solo",      l: "Solo",      icon: HiUser         },
+  { v: "couple",    l: "Couple",    icon: HiHeart        },
+  { v: "family",    l: "Family",    icon: HiUserGroup    },
+  { v: "friends",   l: "Friends",   icon: HiUsers        },
+  { v: "corporate", l: "Corporate", icon: HiOfficeBuilding },
+  { v: "honeymoon", l: "Honeymoon", icon: HiSparkles     },
 ];
 
 export default function Step1Destination({
@@ -21,7 +24,6 @@ export default function Step1Destination({
       d => String(d.countryId) === String(data.countryId),
     );
     if (byId.length) return byId;
-    // Fallback: backend rows may not carry country_id — match by country name
     const country = countriesList.find(c => String(c.value) === String(data.countryId));
     const name = (country?.label || "").trim().toLowerCase();
     if (!name) return [];
@@ -36,92 +38,114 @@ export default function Step1Destination({
   );
 
   return (
-    <div className="space-y-4">
-      <SelectField
-        id="countryId" label="Destination Country" icon={HiGlobe}
-        value={data.countryId}
-        onChange={(v) => { set("countryId", v); set("destinationId", ""); }}
-        onBlur={() => touch("countryId")}
-        required
-        error={touched.countryId && errors.countryId}
-        valid={touched.countryId && !errors.countryId && !!data.countryId}
-      >
-        <option value="">— Select a country —</option>
-        {countriesList.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-      </SelectField>
+    <div>
+      {/* Country select */}
+      <div className="bk-field-group">
+        <label htmlFor="countryId" className="bk-label">
+          Destination Country <span className="bk-label-req">*</span>
+        </label>
+        <div className="bk-input-wrap">
+          <span className="bk-input-ico"><HiGlobe size={17} /></span>
+          <select
+            id="countryId"
+            value={data.countryId}
+            onChange={e => { set("countryId", e.target.value); set("destinationId", ""); }}
+            onBlur={() => touch("countryId")}
+            className={`bk-select${touched.countryId && errors.countryId ? " bk-input--err" : ""}`}
+          >
+            <option value="">— Select a country —</option>
+            {countriesList.map(c => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+        </div>
+        {touched.countryId && errors.countryId && (
+          <p className="bk-field-err">
+            <HiExclamationCircle size={13} /> {errors.countryId}
+          </p>
+        )}
+      </div>
 
+      {/* Destination cards */}
       {data.countryId && (
         filtered.length > 0 ? (
-          <div className="space-y-2">
-            <span className="block text-sm font-semibold text-gray-700">
-              Specific Destination <span className="text-red-500 ml-0.5">*</span>
-            </span>
-            <div className="grid grid-cols-2 gap-2">
-              {filtered.map(d => (
-                <button key={d.value} type="button"
-                  onClick={() => { set("destinationId", d.value); touch("destinationId"); }}
-                  className={`group relative flex items-center gap-2.5 text-left p-2.5 rounded-xl
-                    border-2 transition-all duration-200 overflow-hidden
-                    ${data.destinationId === d.value
-                      ? "border-emerald-400 bg-emerald-50/80 shadow-sm"
-                      : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50"}`}>
-                  <span className="w-11 h-11 rounded-lg bg-gray-100 overflow-hidden flex-shrink-0">
+          <div className="bk-field-group">
+            <label className="bk-label">
+              Specific Destination <span className="bk-label-req">*</span>
+            </label>
+            <div className="bk-dest-grid">
+              {filtered.map(d => {
+                const active = data.destinationId === d.value;
+                return (
+                  <button
+                    key={d.value} type="button"
+                    className={`bk-dest-card${active ? " bk-dest-card--active" : ""}`}
+                    onClick={() => { set("destinationId", d.value); touch("destinationId"); }}
+                  >
                     {d.image ? (
-                      <img src={d.image} alt="" loading="lazy" decoding="async"
-                        className="w-full h-full object-cover" />
+                      <img src={d.image} alt={d.label} loading="lazy"
+                        className="bk-dest-card__img" />
                     ) : (
-                      <HiLocationMarker className="w-5 h-5 text-gray-400 m-3" />
+                      <div className="bk-dest-card__img">
+                        <HiLocationMarker size={28} />
+                      </div>
                     )}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block text-sm font-semibold text-gray-800 truncate">
-                      {d.label}
-                    </span>
-                    {d.country && (
-                      <span className="block text-[11px] text-gray-400 truncate">{d.country}</span>
-                    )}
-                  </span>
-                  {data.destinationId === d.value && (
-                    <div className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full
-                                    bg-emerald-500 flex items-center justify-center">
-                      <HiCheck className="w-2.5 h-2.5 text-white" />
+                    <div className="bk-dest-card__body">
+                      <p className="bk-dest-card__name">{d.label}</p>
+                      {d.country && (
+                        <p className="bk-dest-card__ctry">
+                          <HiLocationMarker size={10} /> {d.country}
+                        </p>
+                      )}
                     </div>
-                  )}
-                </button>
-              ))}
+                    {active && (
+                      <div className="bk-dest-card__badge">
+                        <HiCheck size={14} />
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
             </div>
             {touched.destinationId && errors.destinationId && (
-              <p className="text-xs text-red-500">{errors.destinationId}</p>
+              <p className="bk-field-err">
+                <HiExclamationCircle size={13} /> {errors.destinationId}
+              </p>
             )}
 
             {selectedDest && (
-              <div className="am-slideDown flex items-center gap-3 rounded-xl bg-emerald-50/70
-                              border border-emerald-100 p-3">
-                <span className="w-14 h-14 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+              <div className="bk-selected">
+                <div className="bk-selected__img">
                   {selectedDest.image ? (
-                    <img src={selectedDest.image} alt={selectedDest.label}
-                      loading="lazy" decoding="async" className="w-full h-full object-cover" />
+                    <img src={selectedDest.image} alt={selectedDest.label} />
                   ) : (
-                    <HiLocationMarker className="w-6 h-6 text-gray-400 m-4" />
+                    <HiLocationMarker size={22} />
                   )}
-                </span>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-emerald-600">
-                    Selected
+                </div>
+                <div className="bk-selected__body">
+                  <p className="bk-selected__tag">
+                    <HiCheck size={11} /> Selected
                   </p>
-                  <p className="text-sm font-bold text-gray-900 truncate">{selectedDest.label}</p>
+                  <p className="bk-selected__name">{selectedDest.label}</p>
+                  {selectedDest.country && (
+                    <p className="bk-selected__ctry">{selectedDest.country}</p>
+                  )}
                 </div>
               </div>
             )}
           </div>
         ) : (
-          <div className="rounded-xl bg-amber-50 border border-amber-200 p-4">
-            <p className="text-sm font-semibold text-amber-800 mb-1">
-              No destinations listed for this country yet
+          <div style={{
+            padding: "14px 16px", borderRadius: 14,
+            background: "#fefce8", border: "1.5px solid #fde047",
+            marginBottom: 22,
+          }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: "#854d0e", marginBottom: 4 }}>
+              No destinations listed yet
             </p>
-            <p className="text-xs text-amber-700">
+            <p style={{ fontSize: 12, color: "#a16207" }}>
               <a href="https://wa.me/250785751391" target="_blank" rel="noopener noreferrer"
-                className="text-emerald-700 font-bold hover:underline">
+                style={{ color: "var(--g)", fontWeight: 700 }}>
                 Message us on WhatsApp
               </a>
               {" "}— we'll build a custom itinerary for you.
@@ -130,41 +154,38 @@ export default function Step1Destination({
         )
       )}
 
-       <div className="space-y-2">
-         <span className="block text-sm font-semibold text-gray-700">
-           Group Type <span className="text-red-500 ml-0.5">*</span>
-         </span>
-         <div className="space-y-2">
-           {/* Predefined options */}
-           <div className="flex flex-wrap gap-2 mb-3">
-             {GROUPS.map(g => (
-               <button key={g.v} type="button"
-                 onClick={() => { set("groupType", g.v); touch("groupType"); }}
-                 className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2
-                   transition-all duration-200
-                   ${data.groupType === g.v
-                     ? "border-emerald-400 bg-emerald-50/80 shadow-sm"
-                     : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50"}`}>
-                 <span className="text-sm font-semibold text-gray-800">{g.l}</span>
-                 {data.groupType === g.v && (
-                   <HiCheck className="w-4 h-4 text-emerald-600" />
-                 )}
-               </button>
-             ))}
-           </div>
-           {/* Custom input */}
-           <InputField
-             id="groupType"
-             label="Or enter custom group type"
-             value={data.groupType}
-             onChange={(v) => { set("groupType", v); touch("groupType"); }}
-             onBlur={() => touch("groupType")}
-             placeholder="e.g., Solo, Family, Corporate, Custom Group..."
-             error={touched.groupType && errors.groupType}
-             valid={touched.groupType && !errors.groupType && !!data.groupType}
-           />
-         </div>
-       </div>
+      {/* Group type chips */}
+      <div className="bk-field-group">
+        <label className="bk-label">
+          Group Type <span className="bk-label-req">*</span>
+        </label>
+        <div className="bk-chip-grid">
+          {GROUPS.map(g => {
+            const Icon = g.icon;
+            const active = data.groupType === g.v;
+            return (
+              <button
+                key={g.v} type="button"
+                className={`bk-chip${active ? " bk-chip--active" : ""}`}
+                onClick={() => { set("groupType", g.v); touch("groupType"); }}
+              >
+                <Icon size={15} />
+                {g.l}
+                {active && (
+                  <span className="bk-chip__check">
+                    <HiCheck size={11} />
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+        {touched.groupType && errors.groupType && (
+          <p className="bk-field-err">
+            <HiExclamationCircle size={13} /> {errors.groupType}
+          </p>
+        )}
+      </div>
     </div>
   );
 }

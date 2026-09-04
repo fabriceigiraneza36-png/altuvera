@@ -924,7 +924,7 @@ function HeroBanner() {
         const dests = r.data || [];
         if (dests.length) {
           setSlides(dests.map(d => ({
-            image: d.heroImage || d.imageUrl || d.images?.[0] || FALLBACK,
+            image: d.heroImage || d.imageUrl || d.images?.[0] || null,
             title: d.name || 'Destination',
             subtitle: d.country?.name || '',
             desc: d.shortDescription || d.description || '',
@@ -1042,8 +1042,7 @@ function CountryCard({ country }) {
   const isImg     = flag && (flag.startsWith('http') || flag.includes('/'));
   const isEmoji   = flag && !isImg;
   const destCount = country.destinationsCount ?? country.destinations_count ?? country.destinationCount ?? null;
-  const heroImg   = country.hero_image_url || country.heroImage || country.coverImage || country.image ||
-    'https://images.unsplash.com/photo-1516026672322-bc52d61a55d5?w=1200&q=85';
+  const heroImg   = country.hero_image_url || country.heroImage || country.coverImage || country.image || null;
 
   return (
     <div
@@ -1054,7 +1053,7 @@ function CountryCard({ country }) {
       onKeyDown={e => e.key === 'Enter' && navigate(`/country/${slug}`)}
     >
       <div className="dv-country-card__img-wrap">
-        <img className="dv-country-card__img" src={heroImg} alt={country.name} loading="lazy" draggable={false} />
+        {heroImg ? <img className="dv-country-card__img" src={heroImg} alt={country.name} loading="lazy" draggable={false} /> : <div className="dv-country-card__img" aria-label="No photo yet" />}
       </div>
       <div className="dv-country-card__overlay" />
 
