@@ -809,7 +809,20 @@ const PAGE_CSS = `
   .cp-about__highlights { grid-template-columns: 1fr; }
   .cp-facts-grid { grid-template-columns: 1fr 1fr; }
   .cp-gal-grid { grid-template-columns: 1fr; grid-auto-rows: 210px; }
-  .cp-dest-grid { grid-template-columns: 1fr; }
+  .cp-dest-grid {
+    display: flex;
+    overflow-x: auto;
+    gap: 16px;
+    padding-bottom: 12px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .cp-dest-grid::-webkit-scrollbar { display: none; }
+  .cp-dest-grid__item {
+    flex: 0 0 min(84vw, 360px);
+    scroll-snap-align: start;
+  }
 }
 @media (max-width: 480px) {
   .cp-hero__title { font-size: clamp(38px, 12vw, 58px); }

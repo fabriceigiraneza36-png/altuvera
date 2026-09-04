@@ -711,6 +711,24 @@ const CSS = `
 .dv-slider__item {
   flex: 0 0 clamp(260px,30vw,360px); min-width: 0;
 }
+@media (max-width: 639px) {
+  .dv-slider__viewport {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .dv-slider__viewport::-webkit-scrollbar { display: none; }
+  .dv-slider__track {
+    width: max-content;
+    transform: none !important;
+    transition: none;
+  }
+  .dv-slider__item {
+    flex-basis: min(84vw, 360px) !important;
+    scroll-snap-align: start;
+  }
+}
 .dv-arrow {
   width: 46px; height: 46px; border-radius: 50%;
   border: 1.5px solid var(--dv-border);

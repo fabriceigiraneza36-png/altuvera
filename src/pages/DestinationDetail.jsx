@@ -1401,7 +1401,8 @@ const cleanText = (text) => {
           style={{
             display: "flex", gap: 18, overflowX: "auto",
             cursor: "grab", paddingBottom: 8, userSelect: "none",
-            scrollbarWidth: "thin", scrollbarColor: "#a7f3d0 #f1f5f9",
+            scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch",
+            touchAction: "pan-x", scrollbarWidth: "thin", scrollbarColor: "#a7f3d0 #f1f5f9",
           }}
         >
           {destinations.map((dest, i) => {
@@ -1417,6 +1418,7 @@ const cleanText = (text) => {
                 style={{
                   minWidth: 280, maxWidth: 280, borderRadius: 18,
                   overflow: "hidden", flexShrink: 0,
+                  scrollSnapAlign: "start",
                   textDecoration: "none", display: "flex", flexDirection: "column",
                 }}
               >

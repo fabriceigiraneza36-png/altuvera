@@ -504,7 +504,22 @@ const PAGE_CSS = `
   }
   @media (max-width: 640px) {
     .cd-dest-grid {
-      grid-template-columns: 1fr;
+      display: flex;
+      overflow-x: auto;
+      gap: 16px;
+      padding-bottom: 12px;
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .cd-dest-grid::-webkit-scrollbar { display: none; }
+    .cd-dest-grid > * {
+      flex: 0 0 min(84vw, 360px);
+      scroll-snap-align: start;
+    }
+    .cd-dest-grid.cd-dest-list {
+      display: grid;
+      overflow: visible;
     }
     .cd-toolbar__controls {
       width: 100%;

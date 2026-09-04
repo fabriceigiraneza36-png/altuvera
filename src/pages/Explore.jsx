@@ -906,7 +906,20 @@ const PAGE_CSS = `
   .ex-testi__avatar-wrap { width: 72px; height: 72px; }
 }
 @media (max-width: 540px) {
-  .ex-dest-grid { grid-template-columns: 1fr; }
+  .ex-dest-grid {
+    display: flex;
+    gap: 18px;
+    overflow-x: auto;
+    padding-bottom: 12px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .ex-dest-grid::-webkit-scrollbar { display: none; }
+  .ex-dest-grid__card {
+    flex: 0 0 min(84vw, 360px);
+    scroll-snap-align: start;
+  }
   .ex-showcard { min-height: 360px; }
   .ex-videocard { min-height: 320px; }
   .ex-why__image-card { min-height: 360px; }

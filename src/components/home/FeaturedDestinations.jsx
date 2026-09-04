@@ -131,7 +131,21 @@ text
     }
     @media (max-width: 640px) {
       div[style*="grid-template-columns"] {
-        grid-template-columns: 1fr !important;
+        display: flex !important;
+        gap: 18px !important;
+        overflow-x: auto;
+        justify-content: flex-start !important;
+        padding: 0 0 12px;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      div[style*="grid-template-columns"]::-webkit-scrollbar {
+        display: none;
+      }
+      div[style*="grid-template-columns"] > div {
+        flex: 0 0 min(84vw, 360px);
+        scroll-snap-align: start;
       }
     }
   `}</style>
