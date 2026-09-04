@@ -126,6 +126,14 @@ export function useConversations() {
         if (prev.some((m) => String(m.id) === String(msg.id))) return prev;
         const cid = String(msg.conversationId);
         if (cid !== String(activeIdRef.current)) return prev;
+        const optimisticIndex = prev.findIndex(
+          (m) => String(m.id).startsWith("tmp-") && m.senderType === msg.senderType && m.body === msg.body,
+        );
+        if (optimisticIndex >= 0) {
+          const next = [...prev];
+          next[optimisticIndex] = msg;
+          return next;
+        }
         return [...prev, msg];
       });
       setConversations((prev) =>
@@ -274,12 +282,6 @@ export function useConversations() {
       setActiveConversation(conv);
       setMessages((data.data?.messages || []).map(normMsg));
 
-      /* Join socket room for this conversation */
-      const s = socketRef.current;
-      if (s && s.connected) {
-        s.emit("msg:client-join", { conversationId: id });
-      }
-
       // Mark as read
       authFetch(`${API_BASE}/messages/conversations/${id}/read`, {
         method: "PATCH",
@@ -295,6 +297,13 @@ export function useConversations() {
       setLoadingMsgs(false);
     }
   }, []);
+
+  useEffect(() => {
+    const s = socketRef.current;
+    if (s?.connected && activeId) {
+      s.emit("msg:client-join", { conversationId: activeId });
+    }
+  }, [activeId, connected]);
 
   /* ── Send message ────────────────────────────────────────── */
   const sendMessage = useCallback(
@@ -318,24 +327,33 @@ export function useConversations() {
       setMessages((prev) => [...prev, optimistic]);
 
       try {
-        const res = await authFetch(
-          `${API_BASE}/messages/conversations/${conversationId}/messages`,
-          {
-            method: "POST",
-            body: JSON.stringify({
+        const s = socketRef.current;
+        let saved;
+        if (s?.connected) {
+          const ack = await new Promise((resolve) => {
+            s.emit("msg:send", {
+              conversationId,
               body: body.trim(),
               ...(replyToId ? { replyToId } : {}),
-            }),
-          },
-        );
-
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.message || "Failed to send message.");
+            }, resolve);
+          });
+          if (!ack?.success || !ack.message) throw new Error(ack?.error || "Failed to send message.");
+          saved = normMsg(ack.message);
+        } else {
+          const res = await authFetch(
+            `${API_BASE}/messages/conversations/${conversationId}/messages`,
+            {
+              method: "POST",
+              body: JSON.stringify({ body: body.trim(), ...(replyToId ? { replyToId } : {}) }),
+            },
+          );
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || "Failed to send message.");
+          }
+          const data = await res.json();
+          saved = normMsg(data.data);
         }
-
-        const data = await res.json();
-        const saved = normMsg(data.data);
 
         setMessages((prev) =>
           prev.map((m) => (m.id === optimistic.id ? saved : m)),
