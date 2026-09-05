@@ -1,4 +1,4 @@
-// src/hooks/useCountries.js
+﻿// src/hooks/useCountries.js
 import {
   useState,
   useEffect,
@@ -12,7 +12,7 @@ import { multiBackendFetch } from "../utils/multiBackendFetch";
 import { adaptDestinationList } from "../utils/destinationAdapter";
 import { countries as staticCountries } from "../data/countries";
 
-/* ── Helpers ─────────────────────────────────────────────── */
+/* â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 const toStr = (v) => (v == null ? "" : String(v).trim().toLowerCase());
 
 const hasMedia = (value) => {
@@ -65,9 +65,9 @@ const destinationMatchesCountry = (dest, country, idOrSlug) => {
   return needles.some((n) => hay.includes(n));
 };
 
-/* ─────────────────────────────────────────────────────────
-   useCountries — paginated/filtered list of countries
-   ───────────────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   useCountries â€” paginated/filtered list of countries
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 let STATIC_CACHE = null;
 
 export function useCountries(params = {}) {
@@ -88,14 +88,14 @@ export function useCountries(params = {}) {
     }
   }, []);
 
-  // ✅ FIX: Serialize params to a stable string for comparison.
+  // âœ… FIX: Serialize params to a stable string for comparison.
   // This MUST be the dependency, not the params object itself,
   // because object identity changes on every render if caller
   // passes an inline literal like useCountries({ limit: 12 }).
   const paramsKey = useMemo(
     () => JSON.stringify(params),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [JSON.stringify(params)] // ← intentional: compare by value not reference
+    [JSON.stringify(params)] // â† intentional: compare by value not reference
   );
 
   // Keep a ref so fetchCountries closure always has the latest params
@@ -103,9 +103,9 @@ export function useCountries(params = {}) {
   const paramsRef = useRef(params);
   useEffect(() => {
     paramsRef.current = params;
-  }); // no deps — runs every render but is just a ref update
+  }); // no deps â€” runs every render but is just a ref update
 
-  // ✅ FIX: fetchCountries is stable — it only uses the ref, not params directly
+  // âœ… FIX: fetchCountries is stable â€” it only uses the ref, not params directly
   const fetchCountries = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -124,9 +124,9 @@ export function useCountries(params = {}) {
     } finally {
       setLoading(false);
     }
-  }, []); // ← intentionally empty: uses ref, never stale
+  }, []); // â† intentionally empty: uses ref, never stale
 
-  // ✅ FIX: Only re-fetch when the serialized params string actually changes
+  // âœ… FIX: Only re-fetch when the serialized params string actually changes
   useEffect(() => {
     fetchCountries();
     return () => {
@@ -135,13 +135,13 @@ export function useCountries(params = {}) {
     };
   }, [paramsKey, fetchCountries]);
   // Note: fetchCountries is stable (empty deps), so this effect only
-  // re-runs when paramsKey changes — which only happens when params
+  // re-runs when paramsKey changes â€” which only happens when params
   // VALUES change, not just references.
 
   // Real-time sync every 60s (only when tab is visible)
   useEffect(() => {
     const id = setInterval(() => {
-      // Don't refetch if tab is hidden — saves bandwidth
+      // Don't refetch if tab is hidden â€” saves bandwidth
       if (document.visibilityState === "visible") {
         fetchCountries();
       }
@@ -154,9 +154,9 @@ export function useCountries(params = {}) {
   return { countries, pagination, loading, error, refetch };
 }
 
-/* ─────────────────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    useFeaturedCountries
-   ───────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export function useFeaturedCountries(limit = 12) {
   const [countries, setCountries] = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -185,9 +185,9 @@ export function useFeaturedCountries(limit = 12) {
   return { countries, loading, error, refetch: fetchFeatured };
 }
 
-/* ─────────────────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    useCountrySearch
-   ───────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export function useCountrySearch(query, limit = 15) {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -223,9 +223,9 @@ export function useCountrySearch(query, limit = 15) {
   return { results, loading, error };
 }
 
-/* ─────────────────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    useCountryStats
-   ───────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export function useCountryStats() {
   const [stats, setStats]   = useState(null);
   const [loading, setLoading] = useState(true);
@@ -244,9 +244,9 @@ export function useCountryStats() {
   return { stats, loading, error };
 }
 
-/* ─────────────────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    useContinents
-   ───────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export function useContinents() {
   const [continents, setContinents] = useState([]);
   const [loading, setLoading]       = useState(true);
@@ -265,16 +265,16 @@ export function useContinents() {
   return { continents, loading, error };
 }
 
-/* ─────────────────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    useCountriesByContinent
-   ───────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export function useCountriesByContinent(continent, params = {}) {
   const [countries, setCountries]   = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading]       = useState(true);
   const [error, setError]           = useState(null);
 
-  // ✅ Same fix: serialize to string for stable comparison
+  // âœ… Same fix: serialize to string for stable comparison
   const paramsKey = useMemo(
     () => JSON.stringify({ continent, ...params }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -318,9 +318,227 @@ export function useCountriesByContinent(continent, params = {}) {
   return { countries, pagination, loading, error };
 }
 
-/* ─────────────────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    useCountryDestinations
-   ───────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+export function useCountryDestinations(idOrSlug, params = {}) {
+  const [destinations, setDestinations] = useState([]);
+  const [pagination, setPagination]     = useState(null);
+  const [countryMeta, setCountryMeta]   = useState(null);
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState(null);
+  const [source, setSource]             = useState("primary");
+
+  // Enhance params to always include gallery data
+  const includes = new Set((params.include || '').split("","").map(s => s.trim()).filter(Boolean));
+  includes.add('gallery');
+  const enhancedParams = { ...params, include: Array.from(includes).join("","") };
+
+  const paramsKey = useMemo(
+    () => JSON.stringify({ idOrSlug, ...enhancedParams }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!idOrSlug) {
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    setSource("primary");
+
+    const load = async () => {
+      // Primary: destinations embedded in /countries/:slug response
+      const res = await countryService.getDestinations(idOrSlug, paramsRef.current);
+      if (cancelled) return;
+
+      const primary = res.data ?? [];
+      const country = res.country ?? null;
+      setCountryMeta(country);
+
+      if (primary.length > 0) {
+        setDestinations(primary);
+        setPagination(res.pagination ?? null);
+        setSource("primary");
+        return;
+      }
+
+      // Fallback: fetch the global destinations catalogue and
+      // keep only those belonging to this country.
+      try {
+        // Build query string from enhancedParams
+        const queryString = new URLSearchParams(enhancedParams).toString();
+        const url = queryString ? `/destinations?${queryString}` : "/destinations";
+        const body = await multiBackendFetch(url);
+        const rawList = Array.isArray(body) ? body : (body?.data ?? []);
+        const all = adaptDestinationList(rawList);
+        const matched = all.filter((d) =>
+          destinationMatchesCountry(d, country, idOrSlug)
+        );
+        setDestinations(matched);
+        setPagination(null);
+        setSource("fallback");
+      } catch {
+        if (!cancelled) setDestinations([]);
+      }
+    };
+
+    load()
+      .catch((err) => {
+        if (cancelled) return;
+        if (err?.name !== "AbortError") {
+          setError(err?.message || "Failed to load destinations");
+          setDestinations([]);
+        }
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => {
+      cancelled = true;
+      try { countryService.cancelKey?.(`destinations-${idOrSlug}`); } catch { /* no-op */ }
+    };
+  }, [paramsKey]);
+
+  return { destinations, pagination, countryMeta, loading, error, source };
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   useCountry â€” single country + optional AI insights
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+export function useCountrySearch(query, limit = 15) {
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError]     = useState(null);
+
+  useEffect(() => {
+    const q = String(query || "").trim();
+    if (q.length < 2) {
+      setResults([]);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    countryService
+      .search(q, limit)
+      .then((res)  => { if (!cancelled) setResults(res.data ?? []); })
+      .catch((err) => {
+        if (!cancelled && err?.name !== "AbortError") {
+          setError(err?.message || "Search failed");
+        }
+      })
+      .finally(()  => { if (!cancelled) setLoading(false); });
+
+    return () => {
+      cancelled = true;
+      try { countryService.cancelKey?.("search"); } catch { /* no-op */ }
+    };
+  }, [query, limit]);
+
+  return { results, loading, error };
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   useCountryStats
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+export function useCountryStats() {
+  const [stats, setStats]   = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError]   = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    countryService
+      .getStats()
+      .then((res)  => { if (!cancelled) setStats(res.data ?? null); })
+      .catch((err) => { if (!cancelled) setError(err?.message || "Failed to load stats"); })
+      .finally(()  => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  return { stats, loading, error };
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   useContinents
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+export function useContinents() {
+  const [continents, setContinents] = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    countryService
+      .getContinents()
+      .then((res)  => { if (!cancelled) setContinents(res.data ?? []); })
+      .catch((err) => { if (!cancelled) setError(err?.message || "Failed to load continents"); })
+      .finally(()  => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  return { continents, loading, error };
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   useCountriesByContinent
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
+export function useCountriesByContinent(continent, params = {}) {
+  const [countries, setCountries]   = useState([]);
+  const [pagination, setPagination] = useState(null);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState(null);
+
+  // âœ… Same fix: serialize to string for stable comparison
+  const paramsKey = useMemo(
+    () => JSON.stringify({ continent, ...params }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [continent, JSON.stringify(params)]
+  );
+
+  const paramsRef = useRef({ continent, ...params });
+  useEffect(() => {
+    paramsRef.current = { continent, ...params };
+  });
+
+  useEffect(() => {
+    if (!continent) {
+      setLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    const { continent: c, ...rest } = paramsRef.current;
+    countryService
+      .getByContinent(c, rest)
+      .then((res) => {
+        if (!cancelled) {
+          setCountries(res.data       ?? []);
+          setPagination(res.pagination ?? null);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setError(err?.message || "Failed to load countries by continent");
+        }
+      })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
+  }, [paramsKey]);
+
+  return { countries, pagination, loading, error };
+}
+
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   useCountryDestinations
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export function useCountryDestinations(idOrSlug, params = {}) {
   const [destinations, setDestinations] = useState([]);
   const [pagination, setPagination]     = useState(null);
@@ -401,9 +619,9 @@ export function useCountryDestinations(idOrSlug, params = {}) {
   return { destinations, pagination, countryMeta, loading, error, source };
 }
 
-/* ─────────────────────────────────────────────────────────
-   useCountry — single country + optional AI insights
-   ───────────────────────────────────────────────────────── */
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+   useCountry â€” single country + optional AI insights
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 export function useCountry(idOrSlug, { withInsights = false } = {}) {
   const [country, setCountry]   = useState(null);
   const [loading, setLoading]   = useState(true);
@@ -467,7 +685,7 @@ export function useCountry(idOrSlug, { withInsights = false } = {}) {
     [withInsights]
   );
 
-  // ✅ FIX: Use country?.id (primitive) as dependency, not country (object)
+  // âœ… FIX: Use country?.id (primitive) as dependency, not country (object)
   useEffect(() => {
     if (country?.id && withInsights) {
       fetchInsights(country);
@@ -504,9 +722,9 @@ export function useCountry(idOrSlug, { withInsights = false } = {}) {
   };
 }
 
-/* ─────────────────────────────────────────────────────────
+/* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    Default export for legacy compat
-   ───────────────────────────────────────────────────────── */
+   â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
 
 export default {
   useCountries,
