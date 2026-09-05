@@ -19,6 +19,7 @@ import {
   FiCamera,
 } from "react-icons/fi";
 import { useWishlist } from "../../hooks/useWishlist";
+import { API_URL } from "../../utils/apiBase";
 
 /* ─────────────────────────────────────────────────────────────
    CONSTANTS
@@ -828,16 +829,27 @@ function ImageSlider({ images, name }) {
 }
 
 const getImageUrl = (image) => {
-  if (typeof image === "string") return image.trim();
+  const resolve = (value) => {
+    const url = String(value || "").trim();
+    if (!url || /^https?:\/\//i.test(url) || url.startsWith("data:")) return url;
+    try {
+      const apiOrigin = new URL(API_URL).origin;
+      return `${apiOrigin}${url.startsWith("/") ? url : `/${url}`}`;
+    } catch {
+      return url;
+    }
+  };
+
+  if (typeof image === "string") return resolve(image);
   if (!image || typeof image !== "object") return "";
-  return (
+  return resolve(
     image.imageUrl ||
     image.image_url ||
     image.url ||
     image.thumbnailUrl ||
     image.thumbnail_url ||
     ""
-  ).trim();
+  );
 };
 
 /* ─────────────────────────────────────────────────────────────

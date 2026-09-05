@@ -162,14 +162,9 @@ const adaptReview = (raw) => {
 };
 
 /* ── Gallery item sub-adapter ───────────────────────────── */
-const galleryUrl = (raw) =>
-  typeof raw === "string"
-    ? raw
-    : raw?.imageUrl || raw?.image_url || raw?.url || null;
-
 const adaptGalleryItem = (raw) => ({
   id:           raw.id,
-  imageUrl:     galleryUrl(raw),
+  imageUrl:     raw.imageUrl     || raw.image_url || null,
   thumbnailUrl: raw.thumbnailUrl || null,
   caption:      raw.caption      || null,
   altText:      raw.altText      || null,
@@ -241,7 +236,7 @@ export const adaptDestination = (raw) => {
   if (!raw || typeof raw !== "object") return null;
 
   /* ── Images ─────────────────────────────────────────────── */
-  const images = toArr(raw.images).map(galleryUrl).filter(Boolean);
+  const images = toArr(raw.images);
 
   /* ── Country ────────────────────────────────────────────── */
   const country = raw.country && typeof raw.country === "object"
@@ -251,7 +246,7 @@ export const adaptDestination = (raw) => {
       : {};
 
   /* ── Gallery ────────────────────────────────────────────── */
-  const gallery = toArr(raw.gallery).map(adaptGalleryItem).filter((item) => item.imageUrl);
+  const gallery = toArr(raw.gallery).map(adaptGalleryItem);
 
   /* ── Itinerary ──────────────────────────────────────────── */
   const itinerary = toArr(raw.itinerary).map(adaptItineraryDay);
@@ -341,8 +336,8 @@ export const adaptDestination = (raw) => {
 
     // ── Media ────────────────────────────────────────────────
     images,
-    imageUrl:      raw.imageUrl      || raw.image_url || gallery[0]?.imageUrl || images[0] || null,
-    heroImage:     raw.heroImage     || gallery[0]?.imageUrl || images[0] || null,
+    imageUrl:      raw.imageUrl      || raw.image_url || null,
+    heroImage:     raw.heroImage     || null,
     thumbnailUrl:  raw.thumbnailUrl  || null,
     videoUrl:      raw.videoUrl      || null,
     virtualTourUrl:raw.virtualTourUrl || null,
