@@ -827,6 +827,19 @@ function ImageSlider({ images, name }) {
   );
 }
 
+const getImageUrl = (image) => {
+  if (typeof image === "string") return image.trim();
+  if (!image || typeof image !== "object") return "";
+  return (
+    image.imageUrl ||
+    image.image_url ||
+    image.url ||
+    image.thumbnailUrl ||
+    image.thumbnail_url ||
+    ""
+  ).trim();
+};
+
 /* ─────────────────────────────────────────────────────────────
    SKELETON  (named export)
 ───────────────────────────────────────────────────────────── */
@@ -937,9 +950,9 @@ const {
     const merged = [
       ...(Array.isArray(images)  ? images  : []),
       ...(Array.isArray(gallery) ? gallery : []),
-    ].filter(Boolean);
+    ].map(getImageUrl).filter(Boolean);
     if (merged.length > 0) return merged;
-    const singles = [heroImage, imageUrl, thumbnailUrl].filter(Boolean);
+    const singles = [heroImage, imageUrl, thumbnailUrl].map(getImageUrl).filter(Boolean);
     return singles;
   })();
 

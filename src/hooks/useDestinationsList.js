@@ -14,7 +14,10 @@ export function useDestinationsList({ countrySlug, countryId, limit = 200 } = {}
     setError(null);
 
     // Build query params
-    const params = new URLSearchParams({ limit: String(limit) });
+    const params = new URLSearchParams({
+      limit: String(limit),
+      include: "gallery",
+    });
 
     // If we have a countrySlug, use the dedicated by-country endpoint
     // which applies its own is_active + status=published filters
