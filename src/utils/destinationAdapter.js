@@ -236,7 +236,7 @@ export const adaptDestination = (raw) => {
   if (!raw || typeof raw !== "object") return null;
 
   /* ── Images ─────────────────────────────────────────────── */
-  const images = toArr(raw.images);
+  const images = toArr(raw.images?.length ? raw.images : raw.gallery);
 
   /* ── Country ────────────────────────────────────────────── */
   const country = raw.country && typeof raw.country === "object"
