@@ -32,6 +32,8 @@ import { useDestinations } from "../hooks/useDestinations";
 import { usePosts } from "../hooks/usePosts";
 import { useWishlist } from "../hooks/useWishlist";
 
+import { API_URL } from "../utils/apiBase";
+
 import "../styles/Home.css";
 
 /* ═══════════════════════════════════════════
@@ -686,6 +688,34 @@ function injectHomeStyles() {
   homeStylesInjected = true;
 }
 
+/**
+ * Resolves image URLs to absolute paths, handling various image formats
+ * Similar to the getImageUrl function in DestinationCard.jsx
+ */
+const resolveImageUrl = (image) => {
+  const resolve = (value) => {
+    const url = String(value || "").trim();
+    if (!url || /^https?:\/\//i.test(url) || url.startsWith("data:")) return url;
+    try {
+      const apiOrigin = new URL(API_URL).origin;
+      return `${apiOrigin}${url.startsWith("/") ? url : `/${url}`}`;
+    } catch {
+      return url;
+    }
+  };
+
+  if (typeof image === "string") return resolve(image);
+  if (!image || typeof image !== "object") return "";
+  return resolve(
+    image.imageUrl ||
+    image.image_url ||
+    image.url ||
+    image.thumbnailUrl ||
+    image.thumbnail_url ||
+    ""
+  );
+};
+
 const INTRO_REEL_VIDEO_ID = "X3MHIq09mnY";
 
 /* ═══════════════════════════════════════════
@@ -743,24 +773,28 @@ const IntroDestCard = ({ card, variant = "main", staggerOffset = 0 }) => {
       aria-label={`Explore ${card.title}`}
     >
       <div className="intro-slideshow-stack">
-        {isMain ? (
-          <iframe
-            className="intro-dest-video"
-            src={`https://www.youtube-nocookie.com/embed/${INTRO_REEL_VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${INTRO_REEL_VIDEO_ID}&controls=0&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&playsinline=1`}
-            title={`${card.title} video`}
-            allow="autoplay; encrypted-media; picture-in-picture"
-            tabIndex="-1"
-          />
-        ) : card.images.map((src, i) => (
-          <img
-            key={i}
-            src={src}
-            alt={`${card.title} — view ${i + 1}`}
-            className={`intro-slideshow-img ${i === activeIdx ? "is-active" : ""}`}
-            loading={i === 0 ? "eager" : "lazy"}
-            draggable={false}
-          />
-        ))}
+{isMain ? (
+           <iframe
+             className="intro-dest-video"
+             src={`https://www.youtube-nocookie.com/embed/${INTRO_REEL_VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${INTRO_REEL_VIDEO_ID}&controls=0&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&playsinline=1`}
+             title={`${card.title} video`}
+             allow="autoplay; encrypted-media; picture-in-picture"
+             tabIndex="-1"
+           />
+         ) : card.images.map((src, i) => (
+           <img
+             key={i}
+             src={src}
+             alt={`${card.title} — view ${i + 1}`}
+             className={`intro-slideshow-img ${i === activeIdx ? "is-active" : ""}`}
+             loading={i === 0 ? "eager" : "lazy"}
+             draggable={false}
+             onError={(e) => {
+               // Hide broken image
+               e.target.style.display = 'none';
+             }}
+           />
+         ))}
       </div>
 
       {/* Slide indicator dots */}
@@ -832,9 +866,9 @@ const IntroMediaPanel = () => {
     subtitle: destination.tagline || destination.shortDescription || "",
     to: `/destinations/${destination.slug || destination.id}`,
     images: [
-      destination.heroImage,
-      destination.imageUrl,
-      ...(Array.isArray(destination.images) ? destination.images : []),
+      resolveImageUrl(destination.heroImage),
+      resolveImageUrl(destination.imageUrl),
+      ...(Array.isArray(destination.images) ? destination.images.map(resolveImageUrl) : []),
     ].filter(Boolean),
   }));
   const visibleCards = cards.length > 0
@@ -879,7 +913,14 @@ const DestinationModal = ({ destination, isOpen, onClose, isWishlisted, onWishli
   const name = destination?.name || destination?.title || "Destination";
   const country = (typeof destination?.country === "object" && destination.country?.name) || destination?.countryObj?.name || (typeof destination?.country === "string" ? destination.country : "") || "";
   const description = destination?.description || destination?.shortDescription || destination?.excerpt || "";
-  const img = destination?.heroImage || destination?.imageUrl || destination?.image_url || destination?.image || (Array.isArray(destination?.images) ? destination.images[0] : "") || (Array.isArray(destination?.gallery) ? destination.gallery[0]?.imageUrl : "");
+  const img = resolveImageUrl(destination?.heroImage) || 
+            resolveImageUrl(destination?.imageUrl) || 
+            resolveImageUrl(destination?.image_url) || 
+            resolveImageUrl(destination?.image) || 
+            (Array.isArray(destination?.images) && destination.images.length > 0 ? 
+              resolveImageUrl(destination.images[0]) : "") || 
+            (Array.isArray(destination?.gallery) && destination.gallery.length > 0 ? 
+              resolveImageUrl(destination.gallery[0]?.imageUrl) : "");
   const slug = destination?.slug || destination?.id || destination?._id;
   const rating = destination?.rating || destination?.averageRating || 0;
   const price = destination?.price || destination?.startingPrice || null;
@@ -893,7 +934,19 @@ const DestinationModal = ({ destination, isOpen, onClose, isWishlisted, onWishli
       <div className="dest-modal-card" onClick={(e) => e.stopPropagation()}>
         <button className="dest-modal-close" onClick={onClose}><MdClose size={18} /></button>
         <div className="dest-modal-image-section">
-          {img ? <img src={img} alt={name} className="dest-modal-image" /> : <div className="dest-modal-image-placeholder"><IoCompassOutline /></div>}
+          {img ? (
+            <img 
+              src={img} 
+              alt={name} 
+              className="dest-modal-image"
+              onError={(e) => {
+                // Hide broken image and show placeholder instead
+                e.target.style.display = 'none';
+              }}
+            />
+          ) : (
+            <div className="dest-modal-image-placeholder"><IoCompassOutline /></div>
+          )}
           <div className="dest-modal-image-overlay" />
           <div className="dest-modal-image-badges">
             {category && <span className="dest-modal-badge">{category}</span>}
@@ -1323,32 +1376,96 @@ const featureBlocks = useMemo(() => [
       <section className="home-section home-section--compact">
         <div className="home-container">
           <div className="hsec-header hsec-center">
-            <h2 className="hsec-title">Rwanda in Pictures</h2>
-            <p className="hsec-sub">Landscapes, wildlife and culture — a visual preview of what awaits.</p>
+            <h2 className="hsec-title">Destinations in Rwanda</h2>
+            <p className="hsec-sub">6 carefully selected destinations — each offering unique, authentic experiences</p>
           </div>
           <div className="rwanda-gallery" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', marginTop: '24px' }}>
-            {rwandaDestinations.slice(0, 8).map((dest, idx) => {
-              const img = dest.heroImage || dest.imageUrl || (Array.isArray(dest.images) ? dest.images[0] : '');
+            {rwandaDestinations.slice(0, 6).map((dest, idx) => {
+              // Get the first available image using the same logic as DestinationCard
+              const getFirstImage = (destination) => {
+                const images = [
+                  ...(Array.isArray(destination.images) ? destination.images : []),
+                  ...(Array.isArray(destination.gallery) ? destination.gallery : []),
+                  destination.heroImage,
+                  destination.imageUrl,
+                  destination.thumbnailUrl
+                ].filter(Boolean);
+                
+                if (images.length === 0) return "";
+                
+                // Use the first image, handling both string and object formats
+                const firstImage = images[0];
+                if (typeof firstImage === "string") return firstImage;
+                if (typeof firstImage === "object") {
+                  return firstImage.imageUrl || 
+                         firstImage.image_url || 
+                         firstImage.url || 
+                         firstImage.thumbnailUrl || 
+                         firstImage.thumbnail_url || 
+                         "";
+                }
+                return "";
+              };
+              
+              const imgSrc = getFirstImage(dest);
+              
               return (
-                <div key={dest.slug || dest.id || idx}>
-                  {img ? (
+                <div key={dest.slug || dest.id || idx} style={{ position: 'relative', overflow: 'hidden', borderRadius: '12px' }}>
+                  {imgSrc ? (
                     <img
-                      src={img}
-                      alt={dest.name || 'Destination'}
-                      loading="lazy"
-                      style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '12px', boxShadow: '0 1px 4px rgba(15,23,42,.06)' }}
+                      src={imgSrc}
+                      alt={dest.name || 'Rwanda Destination'}
+                      loading={idx === 0 ? "eager" : "lazy"}
+                      onError={(e) => {
+                        // Hide broken image and show placeholder instead
+                        e.target.style.display = 'none';
+                      }}
+                      style={{ 
+                        width: '100%', 
+                        height: '200px', 
+                        objectFit: 'cover', 
+                        display: 'block',
+                        backgroundColor: '#e2e8f0'
+                      }}
                     />
-                  ) : (
-                    <div style={{ width: '100%', height: '200px', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', color: '#94a3b8' }}>
-                      No image
+                  ) : null}
+                  {!imgSrc && (
+                    <div style={{ 
+                      width: '100%', 
+                      height: '200px', 
+                      background: '#e2e8f0', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center', 
+                      borderRadius: '12px', 
+                      color: '#94a3b8',
+                      fontSize: '14px'
+                    }}>
+                      No image available
                     </div>
-                  ))}
+                  )}
+                  {/* Destination name overlay */}
+                  <div style={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    background: 'rgba(0,0,0,0.6)',
+                    color: 'white',
+                    padding: '8px 12px',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    textAlign: 'center',
+                    backdropFilter: 'blur(4px)'
+                  }}>
+                    {dest.name || 'Rwanda Destination'}
+                  </div>
                 </div>
               );
             })}
           </div>
           <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-            <Button to="/country/rwanda" variant="primary" size="large" icon={<HiOutlineArrowRight size={16} />}>Explore Rwanda</Button>
+            <Button to="/country/rwanda" variant="primary" size="large" icon={<HiOutlineArrowRight size={16} />}>Explore All Rwanda Destinations</Button>
           </div>
         </div>
       </section>
