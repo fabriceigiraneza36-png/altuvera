@@ -1241,11 +1241,16 @@ const Home = () => {
     return () => { cancelled = true; };
   }, [allDest, destLoading, setIsLoading]);
 
-  const featureBlocks = useMemo(() => [
-    { title: "Encounter Mountain Gorillas & Explore the Land of a Thousand Hills", description: "Rwanda offers one of Africa's most exclusive wildlife experiences. Trek through the misty forests of Volcanoes National Park to meet endangered mountain gorillas.", bullets: ["World-famous mountain gorilla trekking", "Nyungwe Forest canopy walk & chimpanzee tracking", "Big Five safaris in Akagera National Park", "Luxury eco-lodges with expert local guides"], ctaLabel: "Explore Rwanda", link: "/country/rwanda", images: ["https://i.pinimg.com/1200x/5d/1a/90/5d1a90a3a3f9ad6bcddf570344ff2fc4.jpg", "https://i.pinimg.com/736x/ec/08/5a/ec085a82c2f390bef2b8f0eae2935b9e.jpg", "https://i.pinimg.com/736x/46/fe/c8/46fec850388090f1f6bbdd4246b9a049.jpg"] },
-    { title: "Witness the Great Migration & Conquer Africa's Highest Peak", description: "From the endless plains of the Serengeti to the snow-capped summit of Mount Kilimanjaro, Tanzania delivers bucket-list adventures.", bullets: ["The Great Wildebeest Migration in Serengeti", "Mount Kilimanjaro climbing expeditions", "Ngorongoro Crater Big Five safaris", "Zanzibar beach escapes & cultural tours"], ctaLabel: "Explore Tanzania", link: "/country/tanzania", images: ["https://i.pinimg.com/1200x/d7/c2/55/d7c255030d2c381093145fc8409270b0.jpg", "https://i.pinimg.com/1200x/7c/5b/d9/7c5bd9c6303f68eec25ff948f1b0f11e.jpg", "https://i.pinimg.com/1200x/7b/7f/33/7b7f33e40af1ff8d756c610703f32f6e.jpg"] },
-    { title: "Experience Legendary Safaris & Coastal Paradise", description: "Kenya combines iconic wildlife encounters with spectacular landscapes and pristine Indian Ocean beaches.", bullets: ["Maasai Mara Great Migration safaris", "Amboseli elephant encounters with Kilimanjaro views", "Sunrise hot-air balloon adventures", "Diani Beach & Swahili coastal experiences"], ctaLabel: "Explore Kenya", link: "/country/kenya", images: ["https://i.pinimg.com/1200x/74/7c/db/747cdb455c96a6286b2deff74a391e8f.jpg", "https://i.pinimg.com/1200x/0f/c4/6f/0fc46fc0a5e286b126ab6e78697c5e5f.jpg", "https://i.pinimg.com/736x/cc/5f/49/cc5f496af04db30b07c3559d5a708cb7.jpg"] },
-  ], []);
+const featureBlocks = useMemo(() => [
+     { title: "Encounter Mountain Gorillas & Explore the Land of a Thousand Hills", description: "Rwanda offers one of Africa's most exclusive wildlife experiences. Trek through the misty forests of Volcanoes National Park to meet endangered mountain gorillas.", bullets: ["World-famous mountain gorilla trekking", "Nyungwe Forest canopy walk & chimpanzee tracking", "Big Five safaris in Akagera National Park", "Luxury eco-lodges with expert local guides"], ctaLabel: "Explore Rwanda", link: "/country/rwanda", images: ["https://i.pinimg.com/1200x/5d/1a/90/5d1a90a3a3f9ad6bcddf570344ff2fc4.jpg", "https://i.pinimg.com/736x/ec/08/5a/ec085a82c2f390bef2b8f0eae2935b9e.jpg", "https://i.pinimg.com/736x/46/fe/c8/46fec850388090f1f6bbdd4246b9a049.jpg"] },
+     { title: "Witness the Great Migration & Conquer Africa's Highest Peak", description: "From the endless plains of the Serengeti to the snow-capped summit of Mount Kilimanjaro, Tanzania delivers bucket-list adventures.", bullets: ["The Great Wildebeest Migration in Serengeti", "Mount Kilimanjaro climbing expeditions", "Ngorongoro Crater Big Five safaris", "Zanzibar beach escapes & cultural tours"], ctaLabel: "Explore Tanzania", link: "/country/tanzania", images: ["https://i.pinimg.com/1200x/d7/c2/55/d7c255030d2c381093145fc8409270b0.jpg", "https://i.pinimg.com/1200x/7c/5b/d9/7c5bd9c6303f68eec25ff948f1b0f11e.jpg", "https://i.pinimg.com/1200x/7b/7f/33/7b7f33e40af1ff8d756c610703f32f6e.jpg"] },
+     { title: "Experience Legendary Safaris & Coastal Paradise", description: "Kenya combines iconic wildlife encounters with spectacular landscapes and pristine Indian Ocean beaches.", bullets: ["Maasai Mara Great Migration safaris", "Amboseli elephant encounters with Kilimanjaro views", "Sunrise hot-air balloon adventures", "Diani Beach & Swahili coastal experiences"], ctaLabel: "Explore Kenya", link: "/country/kenya", images: ["https://i.pinimg.com/1200x/74/7c/db/747cdb455c96a6286b2deff74a391e8f.jpg", "https://i.pinimg.com/1200x/0f/c4/6f/0fc46fc0a5e286b126ab6e78697c5e5f.jpg", "https://i.pinimg.com/736x/cc/5f/49/cc5f496af04db30b07c3559d5a708cb7.jpg"] }
+   ], []);
+
+  const rwandaDestinations = allDest.filter(d => {
+    const countryName = (d.countryName || d.country || '').toLowerCase();
+    return countryName.includes('rwanda');
+  });
 
   return (
     <div className="home-root">
@@ -1314,7 +1319,41 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ── Testimonials ── */}
+      {/* ── Rwanda in Pictures ── */}
+      <section className="home-section home-section--compact">
+        <div className="home-container">
+          <div className="hsec-header hsec-center">
+            <h2 className="hsec-title">Rwanda in Pictures</h2>
+            <p className="hsec-sub">Landscapes, wildlife and culture — a visual preview of what awaits.</p>
+          </div>
+          <div className="rwanda-gallery" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', marginTop: '24px' }}>
+            {rwandaDestinations.slice(0, 8).map((dest, idx) => {
+              const img = dest.heroImage || dest.imageUrl || (Array.isArray(dest.images) ? dest.images[0] : '');
+              return (
+                <div key={dest.slug || dest.id || idx}>
+                  {img ? (
+                    <img
+                      src={img}
+                      alt={dest.name || 'Destination'}
+                      loading="lazy"
+                      style={{ width: '100%', height: '200px', objectFit: 'cover', borderRadius: '12px', boxShadow: '0 1px 4px rgba(15,23,42,.06)' }}
+                    />
+                  ) : (
+                    <div style={{ width: '100%', height: '200px', background: '#e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', color: '#94a3b8' }}>
+                      No image
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+          <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
+            <Button to="/country/rwanda" variant="primary" size="large" icon={<HiOutlineArrowRight size={16} />}>Explore Rwanda</Button>
+          </div>
+        </div>
+      </section>
+      
+       {/* ── Testimonials ── */}
       <TestimonialShowcase />
 
        {/* ── Packages & Stories ── */}
