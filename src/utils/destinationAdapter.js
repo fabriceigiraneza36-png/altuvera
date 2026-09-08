@@ -236,7 +236,14 @@ export const adaptDestination = (raw) => {
   if (!raw || typeof raw !== "object") return null;
 
   /* ── Images ─────────────────────────────────────────────── */
-  const images = toArr(raw.images?.length ? raw.images : raw.gallery);
+  const imageSources = toArr(raw.images?.length ? raw.images : raw.gallery);
+  const images = [
+    ...imageSources,
+    raw.imageUrl || raw.image_url,
+    raw.heroImage || raw.hero_image,
+    raw.thumbnailUrl || raw.thumbnail_url,
+    raw.coverImageUrl || raw.cover_image_url,
+  ].filter(Boolean);
 
   /* ── Country ────────────────────────────────────────────── */
   const country = raw.country && typeof raw.country === "object"
@@ -337,8 +344,8 @@ export const adaptDestination = (raw) => {
     // ── Media ────────────────────────────────────────────────
     images,
     imageUrl:      raw.imageUrl      || raw.image_url || null,
-    heroImage:     raw.heroImage     || null,
-    thumbnailUrl:  raw.thumbnailUrl  || null,
+    heroImage:     raw.heroImage     || raw.hero_image || null,
+    thumbnailUrl:  raw.thumbnailUrl  || raw.thumbnail_url || null,
     videoUrl:      raw.videoUrl      || null,
     virtualTourUrl:raw.virtualTourUrl || null,
     likesCount:    toNum(raw.likesCount ?? raw.likes_count, 0),

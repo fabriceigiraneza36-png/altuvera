@@ -358,7 +358,7 @@ export function useCountryDestinations(idOrSlug, params = {}) {
       setCountryMeta(country);
 
       if (primary.length > 0) {
-        setDestinations(primary);
+        setDestinations(adaptDestinationList(primary));
         setPagination(res.pagination ?? null);
         setSource("primary");
         return;
