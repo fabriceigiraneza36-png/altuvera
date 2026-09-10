@@ -236,7 +236,13 @@ export const adaptDestination = (raw) => {
   if (!raw || typeof raw !== "object") return null;
 
   /* ── Images ─────────────────────────────────────────────── */
-  const imageSources = toArr(raw.images?.length ? raw.images : raw.gallery);
+  const imageSources = toArr(
+    raw.images?.length
+      ? raw.images
+      : raw.gallery?.length
+        ? raw.gallery
+        : raw.image_urls,
+  );
   const images = [
     ...imageSources,
     raw.imageUrl || raw.image_url,
@@ -343,7 +349,7 @@ export const adaptDestination = (raw) => {
 
     // ── Media ────────────────────────────────────────────────
     images,
-    imageUrl:      raw.imageUrl      || raw.image_url || null,
+    imageUrl:      images[0]        || raw.imageUrl || raw.image_url || null,
     heroImage:     raw.heroImage     || raw.hero_image || null,
     thumbnailUrl:  raw.thumbnailUrl  || raw.thumbnail_url || null,
     videoUrl:      raw.videoUrl      || null,
