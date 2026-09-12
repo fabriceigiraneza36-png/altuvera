@@ -829,27 +829,54 @@ function ImageSlider({ images, name }) {
 }
 
 const getImageUrl = (image) => {
-  const resolve = (value) => {
-    const url = String(value || "").trim();
-    if (!url || /^https?:\/\//i.test(url) || url.startsWith("data:")) return url;
-    try {
-      const apiOrigin = new URL(API_URL).origin;
-      return `${apiOrigin}${url.startsWith("/") ? url : `/${url}`}`;
-    } catch {
-      return url;
-    }
-  };
+    // Helper to resolve a relative URL against the web origin (backend origin)
+    const resolveRelative = (value) => {
+        const url = String(value || "").trim();
+        if (!url) return "";
+        
+        // If already absolute, return as-is
+        if (/^https?:\/\//i.test(url)) return url;
+        
+        // Handle data URLs
+        if (url.startsWith("data:")) return url;
+        
+        // Resolve relative URL against web origin
+        // Web origin is API_URL without the "/api" suffix
+        // Since API_URL always ends with "/api" due to buildBase logic
+        const webOrigin = API_URL.slice(0, -4); // Remove trailing "/api"
+        
+        try {
+            return new URL(url, webOrigin).toString();
+        } catch {
+            // Fallback to simple concatenation if URL constructor fails
+            const normalizedWebOrigin = webOrigin.endsWith('/') 
+                ? webOrigin.slice(0, -1) 
+                : webOrigin;
+            const normalizedUrl = url.startsWith('/') 
+                ? url.slice(1) 
+                : url;
+            return `${normalizedWebOrigin}/${normalizedUrl}`;
+        }
+    };
 
-  if (typeof image === "string") return resolve(image);
-  if (!image || typeof image !== "object") return "";
-  return resolve(
-    image.imageUrl ||
-    image.image_url ||
-    image.url ||
-    image.thumbnailUrl ||
-    image.thumbnail_url ||
-    ""
-  );
+    if (typeof image === "string") {
+        return resolveRelative(image);
+    }
+    
+    if (!image || typeof image !== "object") {
+        return "";
+    }
+    
+    // Extract URL from object, trying multiple possible field names
+    const url = 
+        image.imageUrl ||
+        image.image_url ||
+        image.url ||
+        image.thumbnailUrl ||
+        image.thumbnail_url ||
+        "";
+    
+    return resolveRelative(url);
 };
 
 /* ─────────────────────────────────────────────────────────────
@@ -958,7 +985,9 @@ const {
       ? country
       : country?.name ?? country?.label ?? "";
 
-const safeImgs = destination.images.map(getImageUrl).filter(Boolean);
+const safeImgs = Array.isArray(destination.images)
+    ? destination.images.map(getImageUrl).filter(Boolean)
+    : [];
 
   const locationStr = [region, location, countryName || resolvedCountry]
     .filter(Boolean)
