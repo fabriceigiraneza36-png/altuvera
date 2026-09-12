@@ -45,11 +45,6 @@ const THEME = {
   sunset: { accent: "#ea580c" }, minimal: { accent: "#334155" },
 };
 
-/* ═══════════════════════════════════════════
-    API / HELPERS
- ═══════════════════════════════════════════ */
-import { API_URL } from "../utils/apiBase";
-
 const API_BASE = API_URL;
 
 const apiGet = async (path, params = null) => {

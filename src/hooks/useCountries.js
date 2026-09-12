@@ -321,7 +321,7 @@ export function useCountriesByContinent(continent, params = {}) {
 /* â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
    useCountryDestinations
    â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
-export function useCountryDestinations(idOrSlug, params = {}) {
+function useCountryDestinationsLegacy(idOrSlug, params = {}) {
   const [destinations, setDestinations] = useState([]);
   const [pagination, setPagination]     = useState(null);
   const [countryMeta, setCountryMeta]   = useState(null);
@@ -330,13 +330,18 @@ export function useCountryDestinations(idOrSlug, params = {}) {
   const [source, setSource]             = useState("primary");
 
   // Enhance params to always include gallery data
-  const includes = new Set((params.include || '').split("","").map(s => s.trim()).filter(Boolean));
+  const includes = new Set((params.include || '').split(",").map(s => s.trim()).filter(Boolean));
   includes.add('gallery');
-  const enhancedParams = { ...params, include: Array.from(includes).join("","") };
+  const enhancedParams = { ...params, include: Array.from(includes).join(",") };
+
+  const paramsRef = useRef(params);
+  useEffect(() => { paramsRef.current = params; });
 
   const paramsKey = useMemo(
     () => JSON.stringify({ idOrSlug, ...enhancedParams }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
+    [idOrSlug, JSON.stringify(enhancedParams)]
+  );
   useEffect(() => {
     if (!idOrSlug) {
       setLoading(false);
