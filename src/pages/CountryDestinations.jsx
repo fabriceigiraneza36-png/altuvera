@@ -16,7 +16,8 @@ import {
 import PageHeader from "../components/common/PageHeader";
 import AnimatedSection from "../components/common/AnimatedSection";
 import DestinationCard from "../components/common/DestinationCard";
-import { useCountry, useCountryDestinations as useCountryDestsHook } from "../hooks/useCountries";
+import { useCountry } from "../hooks/useCountries";
+import { useCountryDestinations } from "../hooks/useDestinations";
 import { getCountrySlug } from "../utils/countrySlugMap";
 import Loader from "../components/common/Loader";
 
@@ -603,7 +604,7 @@ function CountryDestinationsPage() {
   useEffect(() => { injectCSS(); }, []);
 
   const { country, loading: countryLoading, error: countryError, refetch: retryCountry } = useCountry(countryId);
-  const { destinations: rawDests = [], loading: destsLoading, error: destsError, refetch: retryDests } = useCountryDestsHook(countryId, { include: "gallery" });
+  const { destinations: rawDests = [], loading: destsLoading, error: destsError, refetch: retryDests } = useCountryDestinations(countryId);
 
   const categories = useMemo(() => [...new Set(rawDests.map(d => d.category).filter(Boolean))], [rawDests]);
   const difficulties = useMemo(() => [...new Set(rawDests.map(d => d.difficulty).filter(Boolean))], [rawDests]);
