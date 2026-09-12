@@ -958,47 +958,7 @@ const {
       ? country
       : country?.name ?? country?.label ?? "";
 
-// Collect all possible image URLs from the destination object
-    const getImageUrls = (dest) => {
-        const urls = [];
-        // Images array (could be array of strings or objects)
-        if (Array.isArray(dest.images)) {
-            dest.images.forEach(img => {
-                if (typeof img === "string" && img.trim()) {
-                    urls.push(img.trim());
-                } else if (img && typeof img === "object") {
-                    const u = img.imageUrl || img.image_url || img.url || img.thumbnailUrl || img.thumbnail_url;
-                    if (typeof u === "string" && u.trim()) {
-                        urls.push(u.trim());
-                    }
-                }
-            });
-        }
-        // Gallery array (if present)
-        if (Array.isArray(dest.gallery)) {
-            dest.gallery.forEach(img => {
-                if (typeof img === "string" && img.trim()) {
-                    urls.push(img.trim());
-                } else if (img && typeof img === "object") {
-                    const u = img.imageUrl || img.image_url || img.url || img.thumbnailUrl || img.thumbnail_url;
-                    if (typeof u === "string" && u.trim()) {
-                        urls.push(u.trim());
-                    }
-                }
-            });
-        }
-        // Single image fields
-        const singles = [dest.heroImage, dest.imageUrl, dest.thumbnailUrl, dest.coverImageUrl];
-        singles.forEach(s => {
-            if (typeof s === "string" && s.trim()) {
-                urls.push(s.trim());
-            }
-        });
-        return urls;
-    };
-
-    const imageUrls = getImageUrls(destination).map(getImageUrl).filter(Boolean);
-    const safeImgs = imageUrls.length > 0 ? imageUrls : [];
+const safeImgs = destination.images.map(getImageUrl).filter(Boolean);
 
   const locationStr = [region, location, countryName || resolvedCountry]
     .filter(Boolean)

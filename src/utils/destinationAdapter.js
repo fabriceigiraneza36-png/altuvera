@@ -235,21 +235,46 @@ const adaptReviewAggregate = (raw) => {
 export const adaptDestination = (raw) => {
   if (!raw || typeof raw !== "object") return null;
 
-  /* ── Images ─────────────────────────────────────────────── */
-  const imageSources = toArr(
-    raw.images?.length
-      ? raw.images
-      : raw.gallery?.length
-        ? raw.gallery
-        : raw.image_urls,
-  );
-  const images = [
-    ...imageSources,
-    raw.imageUrl || raw.image_url,
-    raw.heroImage || raw.hero_image,
-    raw.thumbnailUrl || raw.thumbnail_url,
-    raw.coverImageUrl || raw.cover_image_url,
-  ].filter(Boolean);
+/* ── Images ─────────────────────────────────────────────── */
+   // Collect all possible image URLs from the destination object
+   const getImageUrls = (dest) => {
+        const urls = [];
+        // Images array (could be array of strings or objects)
+        if (Array.isArray(dest.images)) {
+            dest.images.forEach(img => {
+                if (typeof img === "string" && img.trim()) {
+                    urls.push(img.trim());
+                } else if (img && typeof img === "object") {
+                    const u = img.imageUrl || img.image_url || img.url || img.thumbnailUrl || img.thumbnail_url;
+                    if (typeof u === "string" && u.trim()) {
+                        urls.push(u.trim());
+                    }
+                }
+            });
+        }
+        // Gallery array (if present)
+        if (Array.isArray(dest.gallery)) {
+            dest.gallery.forEach(img => {
+                if (typeof img === "string" && img.trim()) {
+                    urls.push(img.trim());
+                } else if (img && typeof img === "object") {
+                    const u = img.imageUrl || img.image_url || img.url || img.thumbnailUrl || img.thumbnail_url;
+                    if (typeof u === "string" && u.trim()) {
+                        urls.push(u.trim());
+                    }
+                }
+            });
+        }
+        // Single image fields
+        const singles = [dest.heroImage, dest.imageUrl, dest.thumbnailUrl, dest.coverImageUrl];
+        singles.forEach(s => {
+            if (typeof s === "string" && s.trim()) {
+                urls.push(s.trim());
+            }
+        });
+        return urls;
+   };
+   const images = getImageUrls(raw).filter(Boolean);
 
   /* ── Country ────────────────────────────────────────────── */
   const country = raw.country && typeof raw.country === "object"
@@ -349,7 +374,7 @@ export const adaptDestination = (raw) => {
 
     // ── Media ────────────────────────────────────────────────
     images,
-    imageUrl:      images[0]        || raw.imageUrl || raw.image_url || null,
+    imageUrl:      raw.imageUrl      || raw.image_url || null,
     heroImage:     raw.heroImage     || raw.hero_image || null,
     thumbnailUrl:  raw.thumbnailUrl  || raw.thumbnail_url || null,
     videoUrl:      raw.videoUrl      || null,
