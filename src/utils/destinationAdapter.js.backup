@@ -270,11 +270,6 @@ export const adaptDestination = (raw) => {
         singles.forEach(s => {
             if (typeof s === "string" && s.trim()) {
                 urls.push(s.trim());
-            } else if (s && typeof s === "object") {
-                const u = s.imageUrl || s.image_url || s.url || s.thumbnailUrl || s.thumbnail_url;
-                if (typeof u === "string" && u.trim()) {
-                    urls.push(u.trim());
-                }
             }
         });
         return urls;
