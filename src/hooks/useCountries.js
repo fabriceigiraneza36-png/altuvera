@@ -552,14 +552,19 @@ export function useCountryDestinations(idOrSlug, params = {}) {
   const [error, setError]               = useState(null);
   const [source, setSource]             = useState("primary");
 
+  // Enhance params to always include gallery data
+  const includes = new Set((params.include || '').split(",").map(s => s.trim()).filter(Boolean));
+  includes.add('gallery');
+  const enhancedParams = { ...params, include: Array.from(includes).join(",") };
+
   const paramsKey = useMemo(
-    () => JSON.stringify({ idOrSlug, ...params }),
+    () => JSON.stringify({ idOrSlug, ...enhancedParams }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [idOrSlug, JSON.stringify(params)]
+    [idOrSlug, JSON.stringify(enhancedParams)]
   );
 
-  const paramsRef = useRef(params);
-  useEffect(() => { paramsRef.current = params; });
+  const paramsRef = useRef(enhancedParams);
+  useEffect(() => { paramsRef.current = enhancedParams; });
 
   useEffect(() => {
     if (!idOrSlug) {
@@ -582,7 +587,7 @@ export function useCountryDestinations(idOrSlug, params = {}) {
       setCountryMeta(country);
 
       if (primary.length > 0) {
-        setDestinations(primary);
+        setDestinations(adaptDestinationList(primary));
         setPagination(res.pagination ?? null);
         setSource("primary");
         return;
@@ -591,7 +596,10 @@ export function useCountryDestinations(idOrSlug, params = {}) {
       // Fallback: fetch the global destinations catalogue and
       // keep only those belonging to this country.
       try {
-        const body = await multiBackendFetch("/destinations");
+        // Build query string from enhancedParams
+        const queryString = new URLSearchParams(enhancedParams).toString();
+        const url = queryString ? `/destinations?${queryString}` : "/destinations";
+        const body = await multiBackendFetch(url);
         const rawList = Array.isArray(body) ? body : (body?.data ?? []);
         const all = adaptDestinationList(rawList);
         const matched = all.filter((d) =>

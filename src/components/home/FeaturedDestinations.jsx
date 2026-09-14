@@ -7,8 +7,9 @@ import DestinationCard from "../common/DestinationCard";
 
 const FeaturedDestinations = () => {
 const { destinations: allDestinations = [] } = useDestinations({
-limit: 6,
-sort: "-featured",
+  limit: 6,
+  sort: "-featured",
+  include: "gallery",
 });
 const destinations = allDestinations.slice(0, 6);
 

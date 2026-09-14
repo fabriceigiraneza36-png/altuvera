@@ -51,7 +51,7 @@ function useAllDestinations(limit = 10) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    apiFetch(`/destinations?limit=${limit}&sort=featured`)
+    apiFetch(`/destinations?limit=${limit}&sort=featured&include=gallery`)
       .then(r => { if (!cancelled) setData(r.data || []); })
       .catch(() => { if (!cancelled) setData([]); })
       .finally(() => { if (!cancelled) setLoading(false); });
@@ -68,7 +68,7 @@ function usePopularDestinations(limit = 10) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    apiFetch(`/destinations/popular?limit=${limit}`)
+    apiFetch(`/destinations/popular?limit=${limit}&include=gallery`)
       .then(r => { if (!cancelled) setData(r.data || []); })
       .catch(() => { if (!cancelled) setData([]); })
       .finally(() => { if (!cancelled) setLoading(false); });

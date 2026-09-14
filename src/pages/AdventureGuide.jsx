@@ -6,7 +6,7 @@ import DestinationCard from "../components/common/DestinationCard";
 
 export default function AdventureGuide() {
   const { slug } = useParams();
-  const { destinations = [], loading } = useDestinations({ limit: 100, sort: "-featured" });
+  const { destinations = [], loading } = useDestinations({ limit: 100, sort: "-featured", include: "gallery" });
 
   const adventure = useMemo(
     () => ADVENTURE_CATALOG.find((item) => item.slug === slug) || ADVENTURE_CATALOG[0],

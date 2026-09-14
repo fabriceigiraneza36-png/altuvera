@@ -838,7 +838,7 @@ const IntroDestCard = ({ card, variant = "main", staggerOffset = 0 }) => {
    INTRO MEDIA PANEL — DESTINATION CARDS
 ═══════════════════════════════════════════ */
 const IntroMediaPanel = () => {
-  const { destinations = [] } = useDestinations({ limit: 100, sort: "-featured" });
+  const { destinations = [] } = useDestinations({ limit: 100, sort: "-featured", include: "gallery" });
   const [activeStart, setActiveStart] = useState(0);
 
   useEffect(() => {
@@ -1248,7 +1248,7 @@ const Home = () => {
   const { setIsLoading } = useApp();
   const hasCompletedRef = useRef(false);
 
-    const { destinations: allDest = [], loading: destLoading } = useDestinations({ limit: 100, sort: "engagement" });
+    const { destinations: allDest = [], loading: destLoading } = useDestinations({ limit: 100, sort: "engagement", include: "gallery" });
   const { posts = [], loading: postsLoading } = usePosts({ limit: 12, sort: "created" });
   const { loadWishlist, toggleWishlist, isWishlisted } = useWishlist();
 
