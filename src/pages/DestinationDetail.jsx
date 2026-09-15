@@ -712,8 +712,8 @@ const GallerySection = ({ d }) => {
   const [view, setView] = useState("mosaic");
   const [lb, setLb]     = useState({ open: false, idx: 0 });
 
-  // Use the deduplication utility specifically capped at 10 items
-  const galleryImages = useMemo(() => extractUniqueImages(d, 10), [d]);
+  // Use the deduplication utility specifically capped at 60 items
+  const galleryImages = useMemo(() => extractUniqueImages(d, 60), [d]);
 
   if (!galleryImages.length) return null;
 
