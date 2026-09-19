@@ -279,7 +279,7 @@ export const adaptDestination = (raw) => {
         });
         return urls;
    };
-   const images = getImageUrls(raw).filter(Boolean);
+  const images = [...new Set(getImageUrls(raw).filter(Boolean))];
 
   /* ── Country ────────────────────────────────────────────── */
   const country = raw.country && typeof raw.country === "object"
@@ -289,7 +289,12 @@ export const adaptDestination = (raw) => {
       : {};
 
   /* ── Gallery ────────────────────────────────────────────── */
-  const gallery = toArr(raw.gallery).map(adaptGalleryItem);
+  const gallery = [...new Map(
+    toArr(raw.gallery)
+      .map(adaptGalleryItem)
+      .filter(item => item.imageUrl)
+      .map(item => [item.imageUrl, item])
+  ).values()];
 
   /* ── Itinerary ──────────────────────────────────────────── */
   const itinerary = toArr(raw.itinerary).map(adaptItineraryDay);
@@ -382,6 +387,7 @@ export const adaptDestination = (raw) => {
     imageUrl:      raw.imageUrl      || raw.image_url || null,
     heroImage:     raw.heroImage     || raw.hero_image || null,
     thumbnailUrl:  raw.thumbnailUrl  || raw.thumbnail_url || null,
+    coverImageUrl:  raw.coverImageUrl || raw.cover_image_url || null,
     videoUrl:      raw.videoUrl      || null,
     virtualTourUrl:raw.virtualTourUrl || null,
     likesCount:    toNum(raw.likesCount ?? raw.likes_count, 0),
