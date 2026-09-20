@@ -9,7 +9,21 @@ import { useUserAuth } from "../context/UserAuthContext";
 import { api } from "../utils/api";
 import PageHeader from "../components/common/PageHeader";
 import CommentsCarousel from "./CommentsCarousel";
+import { API_URL } from "../../utils/apiBase";
 import "./DestinationDetail.css";
+
+const resolveImageUrl = (url) => {
+  if (!url || typeof url !== "string") return "";
+  url = url.trim();
+  if (!url) return "";
+  if (/^https?:\/\//i.test(url) || url.startsWith("data:")) return url;
+  try {
+    const apiOrigin = new URL(API_URL).origin;
+    return `${apiOrigin}${url.startsWith("/") ? url : \`/\${url}\`}`;
+  } catch {
+    return url;
+  };
+};
 
 /* ══════════════════════════════════════════════════════════════
    ICON SYSTEM — inline SVG, no emoji
@@ -289,7 +303,7 @@ const Lightbox = ({ images, idx, onClose, onPrev, onNext, onGoTo }) => {
       </button>
       
       <div className="d-lb__stage">
-        <img src={images[idx]?.url} alt={images[idx]?.caption || ""} className="d-lb__img" />
+        <img src={resolveImageUrl(images[idx]?.url)} alt={images[idx]?.caption || ""} className="d-lb__img" />
         {images[idx]?.caption && (
           <div className="d-lb__caption-banner">
             <p className="d-lb__caption-text">{images[idx].caption}</p>
@@ -314,7 +328,7 @@ const Lightbox = ({ images, idx, onClose, onPrev, onNext, onGoTo }) => {
                   onClick={() => onGoTo && onGoTo(i)}
                   aria-label={`Image ${i + 1}`}
                 >
-                  <img src={img.url} alt="" />
+                  <img src={resolveImageUrl(img.url)} alt="" />
                 </button>
               ))}
             </div>
@@ -330,8 +344,8 @@ const Lightbox = ({ images, idx, onClose, onPrev, onNext, onGoTo }) => {
    HERO (With mixed deduplicated slideshow)
 ══════════════════════════════════════════════════════════════ */
 const Hero = ({ d, navigate }) => {
-  // Use extractUniqueImages to gather all unique URLs for the slideshow
-  const slides = useMemo(() => extractUniqueImages(d, 12).map(i => i.url), [d]);
+// Use extractUniqueImages to gather all unique URLs for the slideshow
+   const slides = useMemo(() => extractUniqueImages(d, 12).map(i => resolveImageUrl(i.url)), [d]);
 
   const { idx, goTo } = useSlideshow(slides.length, 6500);
 
@@ -447,7 +461,7 @@ const AboutSection = ({ d, navigate }) => {
   const desc = d.description || d.shortDescription || d.overview;
   if (!desc && !d.highlights?.length) return null;
 
-  const asideImgs = useMemo(() => extractUniqueImages(d, 8).map(i => i.url), [d]);
+  const asideImgs = useMemo(() => extractUniqueImages(d, 8).map(i => resolveImageUrl(i.url)), [d]);
   
   const { idx, goTo, goNext, goPrev } = useSlideshow(asideImgs.length, 4500);
 
@@ -629,7 +643,7 @@ const HighlightsSection = ({ d }) => {
   const attractions = (d.attractions || []).filter(item => item && (item.name || item.title));
   if (!highlights.length && !activities.length && !attractions.length) return null;
 
-  const imgPool = useMemo(() => extractUniqueImages(d, 20).map(i => i.url), [d]);
+  const imgPool = useMemo(() => extractUniqueImages(d, 20).map(i => resolveImageUrl(i.url)), [d]);
 
   const items = [
     ...attractions.map((attraction, i) => ({
@@ -763,12 +777,12 @@ const GallerySection = ({ d }) => {
                   aria-label={`View photo ${i + 1}`}
                   style={{ position: 'relative', display: 'block', overflow: 'hidden', borderRadius: '16px', border: 'none', padding: 0 }}
                 >
-                  <img 
-                    src={img.url} 
-                    alt={img.caption} 
-                    loading="lazy" 
-                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                  />
+<img 
+                     src={resolveImageUrl(img.url)} 
+                     alt={img.caption} 
+                     loading="lazy" 
+                     style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                   />
                   <div 
                     className="d-gal-cell__ov" 
                     style={{ 
@@ -796,9 +810,9 @@ const GallerySection = ({ d }) => {
             {galleryImages.map((img, i) => (
               <Reveal key={i} from="left" delay={i * 25}>
                 <button className="d-gal-list__row" onClick={() => open(i)} aria-label={`View photo ${i + 1}`}>
-                  <div className="d-gal-list__thumb">
-                    <img src={img.url} alt={img.caption} loading="lazy" />
-                  </div>
+<div className="d-gal-list__thumb">
+                     <img src={resolveImageUrl(img.url)} alt={img.caption} loading="lazy" />
+                   </div>
                   <div className="d-gal-list__info">
                     <span className="d-gal-list__num">Photo {String(i + 1).padStart(2, "0")}</span>
                     <span className="d-gal-list__name">{img.caption}</span>
@@ -828,7 +842,7 @@ const WildlifeSection = ({ d }) => {
   const list = d.wildlife || [];
   if (!list.length) return null;
 
-  const imgPool = useMemo(() => extractUniqueImages(d, 20).map(i => i.url), [d]);
+  const imgPool = useMemo(() => extractUniqueImages(d, 20).map(i => resolveImageUrl(i.url)), [d]);
 
   return (
     <section className="d-sec d-sec--soft">
