@@ -167,6 +167,10 @@ const URL_CORRECTIONS = {
   "/index": "/",
   "/index.html": "/",
 
+  // Legacy virtual-tour alias
+  "/virtual-tour": "/gallery",
+  "/virtual": "/gallery",
+
   // Destination typos
   "/destinations": "/destinations",
   "/destionation": "/destinations",
@@ -299,7 +303,6 @@ export const getRedirectUrl = (pathname) => {
     "/tips",
     "/posts",
     "/interactive-map",
-    "/virtual-tour",
     "/team",
     "/faq",
     "/privacy",
@@ -339,7 +342,6 @@ export const getAllKnownRoutes = () => [
   "/tips",
   "/posts",
   "/interactive-map",
-  "/virtual-tour",
   "/team",
   "/faq",
   "/privacy",
@@ -474,7 +476,6 @@ export const generateBreadcrumbs = (pathname) => {
     terms: "Terms of Service",
     "payment-terms": "Payment Terms",
     "interactive-map": "Interactive Map",
-    "virtual-tour": "Virtual Tour",
     explore: "Explore",
     profile: "My Profile",
     "my-bookings": "My Bookings",
