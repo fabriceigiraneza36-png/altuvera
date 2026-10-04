@@ -31,6 +31,7 @@ import {
   FiImage,
   FiChevronDown,
   FiSliders,
+  FiInfo,
 } from "react-icons/fi";
 import SEO from "../components/common/SEO";
 import PageHeader from "../components/common/PageHeader";
@@ -107,6 +108,13 @@ const STYLES = `
   @keyframes gLightboxIn {
     from { opacity:0; transform:scale(0.92) translateY(20px); }
     to   { opacity:1; transform:scale(1) translateY(0); }
+  }
+
+  /* ── Gradient animation for fullscreen modal ── */
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
   }
 
   /* ── Shimmer ── */
@@ -187,21 +195,16 @@ const STYLES = `
     transform: translateY(-1px) scale(1.03);
   }
 
-  /* ── Masonry grid ── */
-  .g-masonry {
-    columns: 4;
-    column-gap: 16px;
-  }
-  .g-masonry-item {
-    break-inside: avoid;
-    margin-bottom: 16px;
-    display: block;
+  /* ── Grid layout ── */
+  .g-grid-4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
   }
 
   /* ── Lightbox ── */
   .g-lightbox-backdrop {
     position: fixed; inset: 0; z-index: 9999;
-    background: rgba(0,0,0,0.96);
     display: flex; align-items: center; justify-content: center;
     padding: 20px;
     animation: gFadeUp 0.2s ease;
@@ -215,11 +218,9 @@ const STYLES = `
 
   /* ── Responsive ── */
   @media (max-width: 1200px) {
-    .g-masonry { columns: 3; }
     .g-grid-4  { grid-template-columns: repeat(3,1fr) !important; }
   }
   @media (max-width: 900px) {
-    .g-masonry { columns: 2; }
     .g-grid-4  { grid-template-columns: repeat(2,1fr) !important; }
     .g-filter-bar { flex-direction:column !important; align-items:stretch !important; }
     .g-search-wrap { max-width:100% !important; }
@@ -239,7 +240,6 @@ const STYLES = `
     }
   }
   @media (max-width: 600px) {
-    .g-masonry { columns: 1; }
     .g-grid-4  { grid-template-columns: 1fr !important; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -447,7 +447,7 @@ const StatCard = ({ icon, value, label }) => (
 );
 
 /* ═══════════════════════════════════════════════════════
-   GALLERY CARD — GRID / MASONRY
+   GALLERY CARD
    ═══════════════════════════════════════════════════════ */
 const GalleryCard = ({ image, index, onOpen, isFav, onFav }) => {
   const [loaded, setLoaded] = useState(false);
@@ -466,12 +466,10 @@ const GalleryCard = ({ image, index, onOpen, isFav, onFav }) => {
         animation: `gSlideUp 0.4s ease ${index * 0.04}s both`,
       }}
     >
-      {/* Skeleton */}
       {!loaded && (
         <div className="g-shimmer" style={{ height: 240, position: "absolute", inset: 0, zIndex: 1 }} />
       )}
 
-      {/* Image */}
       <img
         src={image.thumb || image.src}
         alt={image.alt}
@@ -483,24 +481,20 @@ const GalleryCard = ({ image, index, onOpen, isFav, onFav }) => {
         }}
       />
 
-      {/* Gradient overlay */}
       <div className="g-card-overlay" />
 
-      {/* Featured badge */}
       {image.isFeatured && (
         <div style={{ position: "absolute", top: 10, left: 10, zIndex: 3 }}>
           <Pill variant="glass" size="sm" icon={<FiStar size={10} />}>Featured</Pill>
         </div>
       )}
 
-      {/* Category badge */}
       <div style={{ position: "absolute", top: 10, right: 10, zIndex: 3 }}>
         <Pill variant="green" size="sm">
           {image.category}
         </Pill>
       </div>
 
-      {/* Action buttons */}
       <div
         className="g-card-actions"
         style={{
@@ -515,13 +509,6 @@ const GalleryCard = ({ image, index, onOpen, isFav, onFav }) => {
             bg: isFav ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.15)",
             label: "Favourite",
             onClick: (e) => { e.stopPropagation(); onFav(image.id); },
-          },
-          {
-            icon: <FiZoomIn size={13} />,
-            color: "rgba(255,255,255,0.9)",
-            bg: "rgba(255,255,255,0.15)",
-            label: "Zoom",
-            onClick: null,
           },
         ].map((btn) => (
           <button
@@ -545,11 +532,9 @@ const GalleryCard = ({ image, index, onOpen, isFav, onFav }) => {
         ))}
       </div>
 
-      {/* Bottom info */}
       <div style={{
         position: "absolute", bottom: 0, left: 0, right: 0,
         padding: "20px 14px 14px", zIndex: 3,
-        transform: "none",
       }}>
         {image.title && (
           <h4 style={{
@@ -571,74 +556,461 @@ const GalleryCard = ({ image, index, onOpen, isFav, onFav }) => {
             {image.location || image.countryName}
           </div>
         )}
-
-        {/* View count */}
-        <div style={{
-          position: "absolute", bottom: 14, right: 14,
-          display: "flex", alignItems: "center", gap: 4,
-          color: "rgba(255,255,255,0.7)", fontSize: 11,
-        }}>
-          <FiEye size={11} /> {image.viewCount}
-        </div>
       </div>
     </div>
   );
 };
 
 /* ═══════════════════════════════════════════════════════
-   MASONRY GALLERY CARD (variable height)
+   FULLSCREEN MODAL - INSTAGRAM STORIES STYLE
    ═══════════════════════════════════════════════════════ */
-const MasonryCard = ({ image, index, onOpen, isFav, onFav }) => {
-  const [loaded, setLoaded] = useState(false);
+const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext }) => {
+  const [showInfo, setShowInfo] = useState(false);
+  const currentImage = images[selectedIndex];
+  const scrollContainerRef = useRef(null);
+  const [scrollIndex, setScrollIndex] = useState(selectedIndex);
 
-  /* Calculate pseudo-random height based on index */
-  const heights = [260, 320, 200, 280, 360, 220, 300, 240];
-  const h = heights[index % heights.length];
+  // Sync scroll with selected index
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollToItem?.(selectedIndex, "auto");
+    }
+  }, [selectedIndex]);
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") onPrev();
+      if (e.key === "ArrowRight") onNext();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, onPrev, onNext]);
+
+  const handleWheel = (e) => {
+    e.preventDefault();
+    if (e.deltaY > 0) onNext();
+    else onPrev();
+  };
 
   return (
     <div
-      className="g-masonry-item g-card"
-      onClick={() => onOpen(image)}
       style={{
-        borderRadius: "var(--g-radius-lg)",
+        position: "fixed",
+        inset: 0,
+        zIndex: 9999,
         overflow: "hidden",
-        position: "relative",
-        backgroundColor: "white",
-        boxShadow: "var(--g-shadow-sm)",
-        border: "1px solid #F3F4F6",
-        animation: `gSlideUp 0.4s ease ${index * 0.05}s both`,
       }}
+      onWheel={handleWheel}
     >
-      {!loaded && (
-        <div className="g-shimmer" style={{ height: h, position: "absolute", inset: 0, zIndex: 1 }} />
-      )}
-      <img
-        src={image.thumb || image.src}
-        alt={image.alt}
-        loading="lazy"
-        onLoad={() => setLoaded(true)}
-        className="g-card-img"
-        style={{ width: "100%", height: h, objectFit: "cover", display: "block" }}
-      />
-      <div className="g-card-overlay" />
-
-      {image.isFeatured && (
-        <div style={{ position: "absolute", top: 10, left: 10, zIndex: 3 }}>
-          <Pill variant="glass" size="sm" icon={<FiStar size={10} />}>Featured</Pill>
-        </div>
-      )}
-      <div style={{ position: "absolute", top: 10, right: 10, zIndex: 3 }}>
-        <Pill variant="green" size="sm">{image.category}</Pill>
-      </div>
-
-      {/* Fav button */}
-      <button
-        onClick={(e) => { e.stopPropagation(); onFav(image.id); }}
-        className="g-card-actions g-focus"
-        aria-label="Favourite"
+      {/* Animated gradient background */}
+      <div
         style={{
-          position: "absolute", top: 44, right: 10, zIndex: 3,
-          width: 30, height: 30, borderRadius: "50%",
-          backgroundColor: "rgba(255,255,255,0.15)",
-          backdropFilter: "blur(8px)",
-          border: "1px solid rgba(255,255,255,0.18)"
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(45deg, #064E3B, #047857, #059669, #10B981, #064E3B)",
+          backgroundSize: "400% 400%",
+          animation: "gradientShift 15s ease infinite",
+          zIndex: 0,
+        }}
+      />
+
+      {/* Content wrapper */}
+      <div
+        style={{
+          position: "relative",
+          zIndex: 1,
+          display: "flex",
+          flexDirection: "column",
+          height: "100vh",
+          width: "100vw",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            padding: "16px 20px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            background: "rgba(0, 0, 0, 0.3)",
+            backdropFilter: "blur(10px)",
+          }}
+        >
+          <div style={{ color: "white", fontSize: 14, fontWeight: 600 }}>
+            {selectedIndex + 1} / {images.length}
+          </div>
+          <button
+            onClick={onClose}
+            style={{
+              background: "rgba(255, 255, 255, 0.2)",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              color: "white",
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              transition: "all 0.3s",
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.3)";
+              e.currentTarget.style.transform = "scale(1.1)";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)";
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+          >
+            <FiX size={18} />
+          </button>
+        </div>
+
+        {/* Image container */}
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: "20px",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          {currentImage && (
+            <img
+              src={currentImage.src}
+              alt={currentImage.alt}
+              style={{
+                maxWidth: "100%",
+                maxHeight: "100%",
+                objectFit: "contain",
+                borderRadius: "12px",
+                boxShadow: "0 20px 60px rgba(0, 0, 0, 0.4)",
+                animation: "gScaleIn 0.3s ease",
+              }}
+            />
+          )}
+        </div>
+
+        {/* Navigation and Info Section */}
+        <div
+          style={{
+            padding: "16px 20px",
+            background: "rgba(0, 0, 0, 0.3)",
+            backdropFilter: "blur(10px)",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <button
+            onClick={onPrev}
+            disabled={selectedIndex === 0}
+            style={{
+              background: selectedIndex === 0 ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.2)",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              color: "white",
+              width: 40,
+              height: 40,
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: selectedIndex === 0 ? "not-allowed" : "pointer",
+              transition: "all 0.3s",
+              opacity: selectedIndex === 0 ? 0.5 : 1,
+            }}
+            onMouseOver={(e) => {
+              if (selectedIndex > 0) {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.3)";
+                e.currentTarget.style.transform = "scale(1.1)";
+              }
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)";
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+          >
+            <FiChevronLeft size={20} />
+          </button>
+
+          <button
+            onClick={() => setShowInfo(!showInfo)}
+            style={{
+              background: "rgba(255, 255, 255, 0.2)",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              color: "white",
+              padding: "8px 16px",
+              borderRadius: "var(--g-radius-full)",
+              cursor: "pointer",
+              transition: "all 0.3s",
+              fontSize: 13,
+              fontWeight: 600,
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.3)";
+              e.currentTarget.style.transform = "scale(1.05)";
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)";
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+          >
+            <FiInfo size={14} />
+            {showInfo ? "Hide" : "Show"} Details
+          </button>
+
+          <button
+            onClick={onNext}
+            disabled={selectedIndex === images.length - 1}
+            style={{
+              background: selectedIndex === images.length - 1 ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.2)",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              color: "white",
+              width: 40,
+              height: 40,
+              borderRadius: "50%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: selectedIndex === images.length - 1 ? "not-allowed" : "pointer",
+              transition: "all 0.3s",
+              opacity: selectedIndex === images.length - 1 ? 0.5 : 1,
+            }}
+            onMouseOver={(e) => {
+              if (selectedIndex < images.length - 1) {
+                e.currentTarget.style.background = "rgba(255, 255, 255, 0.3)";
+                e.currentTarget.style.transform = "scale(1.1)";
+              }
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = "rgba(255, 255, 255, 0.2)";
+              e.currentTarget.style.transform = "scale(1)";
+            }}
+          >
+            <FiChevronRight size={20} />
+          </button>
+        </div>
+
+        {/* Info Panel - slides in from bottom */}
+        {showInfo && currentImage && (
+          <div
+            style={{
+              padding: "20px",
+              background: "rgba(0, 0, 0, 0.6)",
+              backdropFilter: "blur(10px)",
+              color: "white",
+              borderTop: "1px solid rgba(255, 255, 255, 0.1)",
+              animation: "gSlideUp 0.3s ease",
+              maxHeight: "200px",
+              overflowY: "auto",
+            }}
+          >
+            {currentImage.title && (
+              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
+                {currentImage.title}
+              </h3>
+            )}
+            {currentImage.description && (
+              <p style={{
+                fontSize: 14,
+                color: "rgba(255, 255, 255, 0.9)",
+                marginBottom: 12,
+                lineHeight: 1.6,
+              }}>
+                {currentImage.description}
+              </p>
+            )}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, fontSize: 13 }}>
+              {currentImage.location && (
+                <div>
+                  <span style={{ color: "rgba(255, 255, 255, 0.6)" }}>Location:</span>
+                  <div style={{ fontWeight: 600 }}>{currentImage.location}</div>
+                </div>
+              )}
+              {currentImage.countryName && (
+                <div>
+                  <span style={{ color: "rgba(255, 255, 255, 0.6)" }}>Country:</span>
+                  <div style={{ fontWeight: 600 }}>{currentImage.countryName}</div>
+                </div>
+              )}
+              {currentImage.photographer && (
+                <div>
+                  <span style={{ color: "rgba(255, 255, 255, 0.6)" }}>Photographer:</span>
+                  <div style={{ fontWeight: 600 }}>{currentImage.photographer}</div>
+                </div>
+              )}
+              {currentImage.category && (
+                <div>
+                  <span style={{ color: "rgba(255, 255, 255, 0.6)" }}>Category:</span>
+                  <div style={{ fontWeight: 600 }}>{currentImage.category}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+/* ═══════════════════════════════════════════════════════
+   MAIN GALLERY PAGE
+   ═══════════════════════════════════════════════════════ */
+export default function Gallery() {
+  const width = useWidth();
+  const {
+    images,
+    categories,
+    tags,
+    loading,
+    error,
+    pagination,
+    params,
+    setParams,
+    fetchImages,
+  } = useGallery();
+
+  const [favorites, setFavorites] = useState(new Set());
+  const [viewMode, setViewMode] = useState("grid");
+  const [selectedImageIndex, setSelectedImageIndex] = useState(null);
+
+  useEffect(() => {
+    fetchImages();
+  }, [params, fetchImages]);
+
+  const handleOpenImage = (image) => {
+    const index = images.findIndex((img) => img.id === image.id);
+    setSelectedImageIndex(index);
+    document.body.style.overflow = "hidden";
+  };
+
+  const handleCloseModal = () => {
+    setSelectedImageIndex(null);
+    document.body.style.overflow = "";
+  };
+
+  const handlePrevImage = () => {
+    setSelectedImageIndex((prev) => (prev > 0 ? prev - 1 : prev));
+  };
+
+  const handleNextImage = () => {
+    setSelectedImageIndex((prev) => (prev < images.length - 1 ? prev + 1 : prev));
+  };
+
+  const handleFav = (id) => {
+    const newFavs = new Set(favorites);
+    if (newFavs.has(id)) newFavs.delete(id);
+    else newFavs.add(id);
+    setFavorites(newFavs);
+  };
+
+  const isFav = (id) => favorites.has(id);
+
+  const clearFilters = () => {
+    setParams({
+      page: 1,
+      limit: 24,
+      sort: "featured",
+      category: "",
+      search: "",
+      tag: "",
+    });
+  };
+
+  return (
+    <>
+      <style>{STYLES}</style>
+      <SEO
+        title="Gallery | Altuvera"
+        description="Explore stunning photography from Rwanda's most beautiful destinations"
+        image="/og-image.jpg"
+      />
+      <PageHeader
+        title="Gallery"
+        subtitle="Discover the visual stories of Rwanda"
+        icon={<FiCamera size={32} />}
+        breadcrumbs={[{ label: "Home", href: "/" }, { label: "Gallery" }]}
+      />
+      <AnimatedSection animation="fadeInUp">
+        <div style={{ padding: "40px 24px", maxWidth: 1400, margin: "0 auto" }}>
+          {/* Stats */}
+          <div style={{
+            display: "flex", gap: 16, marginBottom: 40, flexWrap: "wrap",
+          }}>
+            <StatCard
+              icon={<FiCamera size={18} />}
+              value={images.length}
+              label="Total Images"
+            />
+            <StatCard
+              icon={<FiStar size={18} />}
+              value={images.filter((i) => i.isFeatured).length}
+              label="Featured"
+            />
+            <StatCard
+              icon={<FiHeart size={18} />}
+              value={favorites.size}
+              label="Favorites"
+            />
+          </div>
+
+          {/* Loading state */}
+          {loading && (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 16 }}>
+              {Array.from({ length: 12 }).map((_, i) => (
+                <SkeletonCard key={i} />
+              ))}
+            </div>
+          )}
+
+          {/* Error state */}
+          {error && !loading && (
+            <ErrorState message={error} onRetry={fetchImages} />
+          )}
+
+          {/* Empty state */}
+          {!loading && !error && images.length === 0 && (
+            <EmptyState onClear={clearFilters} />
+          )}
+
+          {/* Gallery grid */}
+          {!loading && !error && images.length > 0 && (
+            <div className="g-grid-4" style={{ gridTemplateColumns: viewMode === "grid" ? "repeat(auto-fill, minmax(280px, 1fr))" : "1fr" }}>
+              {images.map((image, index) => (
+                <GalleryCard
+                  key={image.id}
+                  image={image}
+                  index={index}
+                  onOpen={handleOpenImage}
+                  isFav={isFav(image.id)}
+                  onFav={handleFav}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      </AnimatedSection>
+
+      {/* Fullscreen Modal */}
+      {selectedImageIndex !== null && (
+        <FullscreenModal
+          images={images}
+          selectedIndex={selectedImageIndex}
+          onClose={handleCloseModal}
+          onPrev={handlePrevImage}
+          onNext={handleNextImage}
+        />
+      )}
+    </>
+  );
+}
