@@ -60,10 +60,37 @@ function BookingInner() {
       const ca=Array.isArray(c?.data)?c.data:Array.isArray(c)?c:[];
       const da=Array.isArray(d?.data)?d.data:Array.isArray(d)?d:[];
       setCountriesList(ca.map(x=>({value:String(x.id??x.value??x.code??""),label:String(x.name??x.label??"")})).filter(x=>x.value));
-      setDestinationsList(da.map(x=>({value:String(x.id??x.value??""),label:String(x.name??x.label??""),country:String(x.country?.name??x.countryName??x.country??""),countryId:String(x.country_id??x.countryId??""),image:String(x.image??x.thumbnail??x.imageUrl??"")})).filter(x=>x.value));
+      const mappedCountries = ca.map(x=>({value:String(x.id??x.value??x.code??""),label:String(x.name??x.label??"")})).filter(x=>x.value);
+      const mappedDestinations = da.map(x=>({
+        value:String(x.id??x.value??""),
+        label:String(x.name??x.label??""),
+        slug:String(x.slug??""),
+        country:String(x.country?.name??x.countryName??x.country??""),
+        countryId:String(x.country_id??x.countryId??x.country?.id??""),
+        image:String(x.image??x.thumbnail??x.imageUrl??x.image_url??"")
+      })).filter(x=>x.value);
+      setCountriesList(mappedCountries);
+      setDestinationsList(mappedDestinations);
+
+      // Destination cards pass the destination id/slug in the booking URL.
+      // Preselect it, together with its country, when the booking form opens.
+      try {
+        const params = new URLSearchParams(window.location.search);
+        const requested = String(params.get("destination") || "").trim();
+        const requestedName = String(params.get("destinationName") || "").trim().toLowerCase();
+        const match = mappedDestinations.find(d =>
+          (requested && (String(d.value) === requested || d.slug === requested)) ||
+          (requestedName && d.label.toLowerCase() === requestedName)
+        );
+        if (match) {
+          // The destination step is where the user will see the preselection.
+          set("destinationId", match.value);
+          if (match.countryId) set("countryId", match.countryId);
+        }
+      } catch {}
     }).catch(()=>{}).finally(()=>alive&&setLoadingRefs(false));
     return()=>{alive=false};
-  },[]);
+  },[set]);
 
   useEffect(()=>{ firstInputRef.current?.focus?.(); },[step]);
 
