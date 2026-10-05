@@ -149,9 +149,9 @@ const SH = ({ title, sub, center = true, light = false, tag }) => (
 );
 
 export default function DestinationDetail() {
-  const { slug, destinationSlug, id } = useParams();
+  const { slug, destinationSlug, destinationId, id } = useParams();
   const navigate = useNavigate();
-  const target = slug || destinationSlug || id;
+  const target = slug || destinationSlug || destinationId || id;
 
   const { destination, loading, error } = useDestination(target);
 
