@@ -1307,3 +1307,92 @@ html { scroll-behavior: smooth; }
   .d-hero__stats { gap:18px; margin-top:24px; padding-top:20px; flex-wrap:wrap; }
   .d-destination-gallery .d-gal-cell { border-radius:13px; }
 }
+
+
+/* ── Responsive photo lightbox ─────────────────────────── */
+.d-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(2, 12, 8, .94);
+  backdrop-filter: blur(14px);
+  animation: dLightboxIn .22s ease both;
+}
+@keyframes dLightboxIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+.d-lightbox__image {
+  max-width: min(1180px, 88vw);
+  max-height: 82vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 18px;
+  box-shadow: 0 28px 90px rgba(0,0,0,.5);
+  user-select: none;
+}
+.d-lightbox__close,
+.d-lightbox__arrow {
+  position: absolute;
+  z-index: 2;
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: rgba(255,255,255,.1);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: transform .2s ease, background .2s ease;
+}
+.d-lightbox__close:hover,
+.d-lightbox__arrow:hover {
+  background: rgba(255,255,255,.22);
+  transform: scale(1.06);
+}
+.d-lightbox__close { top: 22px; right: 22px; }
+.d-lightbox__arrow { top: 50%; transform: translateY(-50%); }
+.d-lightbox__arrow:hover { transform: translateY(-50%) scale(1.06); }
+.d-lightbox__arrow--p { left: 22px; }
+.d-lightbox__arrow--n { right: 22px; }
+.d-lightbox__counter {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 7px 12px;
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(0,0,0,.45);
+  border: 1px solid rgba(255,255,255,.12);
+  font-size: .72rem;
+  font-weight: 700;
+  backdrop-filter: blur(8px);
+}
+.d-gal-cell {
+  border: 0;
+  padding: 0;
+  width: 100%;
+  cursor: zoom-in;
+  background: #d1fae5;
+}
+.d-gal-cell:focus-visible {
+  outline: 3px solid #34d399;
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  .d-lightbox { padding: 12px; }
+  .d-lightbox__image { max-width: 94vw; max-height: 76vh; border-radius: 12px; }
+  .d-lightbox__close { top: 12px; right: 12px; width: 40px; height: 40px; }
+  .d-lightbox__arrow { width: 40px; height: 40px; }
+  .d-lightbox__arrow--p { left: 10px; }
+  .d-lightbox__arrow--n { right: 10px; }
+  .d-lightbox__counter { bottom: 12px; }
+}
