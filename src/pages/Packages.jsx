@@ -775,7 +775,7 @@ const ListCard = React.memo(function ListCard({ pkg, wishlist, onWishlist, index
           <span className="pk-cta">
             View Details <FiArrowRight size={14} />
           </span>
-        </div>        </div>
+        </div>
       </div>
     </Link>
   )
