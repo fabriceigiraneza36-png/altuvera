@@ -590,6 +590,12 @@ function BookingForm({ pkg, user }) {
     guest_name:       '',
     guest_email:      '',
     guest_phone:      '',
+    nationality:      '',
+    country_of_residence: '',
+    preferred_contact_method: 'email',
+    accommodation_preference: '',
+    trip_style: '',
+    budget_range: '',
     number_of_adults:    1,
     number_of_children:  0,
     travel_date:      '',
@@ -646,6 +652,12 @@ function BookingForm({ pkg, user }) {
         guest_name:          form.guest_name.trim(),
         guest_email:         form.guest_email.trim().toLowerCase(),
         guest_phone:         form.guest_phone.trim() || undefined,
+        nationality:         form.nationality.trim() || undefined,
+        country_of_residence: form.country_of_residence.trim() || undefined,
+        preferred_contact_method: form.preferred_contact_method,
+        accommodation_preference: form.accommodation_preference || undefined,
+        trip_style:            form.trip_style || undefined,
+        budget_range:          form.budget_range || undefined,
 
         // Package
         booking_type:        'package',
@@ -812,6 +824,23 @@ function BookingForm({ pkg, user }) {
           {errors.guest_email && <p style={{ fontSize: 11.5, color: '#ef4444', marginTop: 4 }}>{errors.guest_email}</p>}
         </div>
       </div>
+
+      {/* Planning profile */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+        <div><label style={labelStyle}>Nationality</label><input className="pkd-input" value={form.nationality} onChange={e=>upd('nationality',e.target.value)} placeholder="e.g. Rwandan" /></div>
+        <div><label style={labelStyle}>Country of Residence</label><input className="pkd-input" value={form.country_of_residence} onChange={e=>upd('country_of_residence',e.target.value)} placeholder="Where you live" /></div>
+      </div>
+      <div>
+        <label style={labelStyle}>Preferred communication method *</label>
+        <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:8}}>
+          {['email','phone','whatsapp'].map(m=><button type="button" key={m} onClick={()=>upd('preferred_contact_method',m)} style={{padding:'10px',borderRadius:10,border:`1.5px solid ${form.preferred_contact_method===m?'#059669':'#d1fae5'}`,background:form.preferred_contact_method===m?'#ecfdf5':'white',fontWeight:700,fontSize:12,textTransform:'capitalize'}}>{m}</button>)}
+        </div>
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:12}}>
+        <div><label style={labelStyle}>Accommodation preference</label><select className="pkd-input" value={form.accommodation_preference} onChange={e=>upd('accommodation_preference',e.target.value)}><option value="">Select</option><option>Budget</option><option>Mid-range</option><option>Luxury</option><option>Private villa</option></select></div>
+        <div><label style={labelStyle}>Trip style</label><select className="pkd-input" value={form.trip_style} onChange={e=>upd('trip_style',e.target.value)}><option value="">Select</option><option>Wildlife & safari</option><option>Culture</option><option>Adventure</option><option>Relaxation</option><option>Photography</option><option>Mixed</option></select></div>
+      </div>
+      <div><label style={labelStyle}>Budget range</label><select className="pkd-input" value={form.budget_range} onChange={e=>upd('budget_range',e.target.value)}><option value="">Prefer not to say</option><option>Under $1,000</option><option>$1,000–$2,500</option><option>$2,500–$5,000</option><option>$5,000+</option></select></div>
 
       {/* Phone */}
       <div>
