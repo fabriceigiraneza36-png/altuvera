@@ -1,4 +1,5 @@
 name: Altuvera Build Check
+# verified after Gallery source cleanup
 
 on:
   push:
