@@ -41,6 +41,7 @@ import WhatsAppButton       from "./components/common/WhatsAppButton";
 import UserNotifications    from "./pages/auth/UserNotifications";
 import Messages             from "./pages/auth/Messages";
 import Explore              from "./pages/Explore";
+import BookingIdentityVerification from "./pages/auth/BookingIdentityVerification";
 
 // ── Lazy imports ──────────────────────────────────────────────────────────────
 const PersistentVideoPlayer = React.lazy(() =>
@@ -321,6 +322,11 @@ const protectedRoutes = [
     path: "/notifications",
     component: UserNotifications,
     meta: { title: "Notifications", noindex: true },
+  },
+  {
+    path: "/booking-verification/:id",
+    component: BookingIdentityVerification,
+    meta: { title: "Traveller Verification", noindex: true },
   },
   {
     path: "/messages",
