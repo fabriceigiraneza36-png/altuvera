@@ -332,10 +332,19 @@ export default function DestinationDetail() {
         <ProgressBar />
 
         <header className="d-hero">
-          <div className="d-hero__slides">
+          <div
+            className="d-hero__slides"
+            style={{ transform: `translate3d(-${heroSlide * 100}%,0,0)` }}
+            aria-live="polite"
+          >
             {heroSlides.length > 0 ? heroSlides.map((src, index) => (
               <div key={src} className={`d-hero__slide ${index === heroSlide ? "active" : ""}`}>
-                <img src={src} alt={`${destination.name} — view ${index + 1}`} loading={index === 0 ? "eager" : "lazy"} />
+                <img
+                  src={src}
+                  alt={`${destination.name} — view ${index + 1} of ${heroSlides.length}`}
+                  loading={index === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                />
               </div>
             )) : (
               <div className="d-hero__slide d-hero__slide--empty active">
