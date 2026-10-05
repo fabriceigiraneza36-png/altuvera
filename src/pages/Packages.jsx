@@ -6,7 +6,7 @@
 import React, {
   useState, useEffect, useCallback, useRef, useMemo,
 } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import {
   FiSearch, FiSliders, FiX, FiClock, FiUsers, FiMapPin,
   FiArrowRight, FiPackage, FiLoader, FiHeart, FiGrid,
@@ -387,223 +387,249 @@ const MountainPlaceholder = React.memo(function MountainPlaceholder({ size = 48,
    GRID CARD
 ══════════════════════════════════════════════════════════════════════ */
 const GridCard = React.memo(function GridCard({ pkg, wishlist, onWishlist, index = 0 }) {
-   const isWish  = wishlist?.has(pkg.id)
-   const hasDisc = Number(pkg.discount_percent) > 0
-   const origPx  = hasDisc ? Number(pkg.price) / (1 - Number(pkg.discount_percent) / 100) : null
-   const cover   = pkg.cover_image_url || pkg.thumbnail_url || null
-   const feats   = useMemo(() => parseJsonField(pkg.features).slice(0, 3), [pkg.features])
-   const to      = `/packages/${pkg.slug || pkg.id}`
+  const navigate = useNavigate()
+  const isWish  = wishlist?.has(pkg.id)
+  const hasDisc = Number(pkg.discount_percent) > 0
+  const origPx  = hasDisc ? Number(pkg.price) / (1 - Number(pkg.discount_percent) / 100) : null
+  const cover   = pkg.cover_image_url || pkg.thumbnail_url || null
+  const feats   = useMemo(() => parseJsonField(pkg.features).slice(0, 3), [pkg.features])
+  const to      = `/packages/${pkg.slug || pkg.id}`
 
-   return (
-     <Link
-       to={to}
-       className="pk-card"
-       style={{ animationDelay: `${Math.min(index * 60, 360)}ms` }}
-     >
-       {/* ── Image Focused Display ── */}
-       <div style={{
-         position: 'relative', 
-         height: 280,
-         overflow: 'hidden', 
-         flexShrink: 0,
-         background: 'linear-gradient(135deg,#d1fae5,#f0fdf4)',
-         borderRadius: 'var(--pk-radius)',
-         border: '1.5px solid #dcfce7',
-       }}>
-         {cover
-           ? <img 
-               src={cover} 
-               alt={pkg.title} 
-               loading="lazy" 
-               className="pk-card-img"
-               style={{ 
-                 width: '100%', 
-                 height: '100%', 
-                 objectFit: 'cover', 
-                 display: 'block',
-                 transition: 'transform 0.7s cubic-bezier(0.25,0.46,0.45,0.94)'
-               }} 
-               onMouseEnter={(e) => { e.target.style.transform = 'scale(1.07)'; }}
-               onMouseLeave={(e) => { e.target.style.transform = 'scale(1)'; }}
-             />
-           : <div style={{
-               width: '100%', 
-               height: '100%',
-               display: 'flex', 
-               alignItems: 'center', 
-               justifyContent: 'center',
-               background: 'linear-gradient(135deg,#d1fae5,#f0fdf4)',
-             }}>
-               <MountainPlaceholder size={60} color="#a7f3d0" />
-             </div>
-         }
+  return (
+    <article
+      className="pk-card"
+      style={{
+        animationDelay: `${Math.min(index * 60, 360)}ms`,
+        position: 'relative',
+      }}
+    >
+      <Link
+        to={to}
+        aria-label={`View ${pkg.title}`}
+        style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
+      >
+        <div style={{
+          position: 'relative',
+          height: 250,
+          overflow: 'hidden',
+          background: 'linear-gradient(135deg,#d1fae5,#f0fdf4)',
+        }}>
+          {cover ? (
+            <img
+              src={cover}
+              alt={pkg.title}
+              loading="lazy"
+              className="pk-card-img"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+              }}
+            />
+          ) : (
+            <div style={{
+              width: '100%', height: '100%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'linear-gradient(135deg,#d1fae5,#f0fdf4)',
+            }}>
+              <MountainPlaceholder size={60} color="#a7f3d0" />
+            </div>
+          )}
 
-         {/* Minimal Overlay */}
-         <div style={{
-           position: 'absolute', 
-           inset: 0,
-           background: 'linear-gradient(to top, transparent 0%, rgba(0,0,0,0.3) 70%, transparent 100%)',
-           borderRadius: 'var(--pk-radius)',
-         }} />
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'linear-gradient(to bottom, rgba(0,0,0,0.12), transparent 45%, rgba(2,44,34,0.38))',
+            pointerEvents: 'none',
+          }} />
 
-         {/* Only essential badges - minimized */}
-         <div style={{ 
-           position: 'absolute', 
-           top: 16, 
-           left: 16, 
-           display: 'flex', 
-           flexDirection: 'column', 
-           gap: 4 
-         }}>
-           {hasDisc && (
-             <span style={{
-               fontSize: 9, 
-               fontWeight: 700, 
-               padding: '2px 8px',
-               borderRadius: '4px', 
-               color: 'white', 
-               background: '#ef4444',
-               boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-             }}>
-               -{pkg.discount_percent}%
-             </span>
-           )}
-           {pkg.is_featured && (
-             <span style={{
-               fontSize: 9, 
-               fontWeight: 700, 
-               padding: '2px 8px',
-               borderRadius: '4px', 
-               color: 'white', 
-               background: 'linear-gradient(135deg,#f59e0b,#d97706)',
-               boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-             }}>
-               Featured
-             </span>
-           )}
-         </div>
+          <div style={{
+            position: 'absolute', top: 14, left: 14,
+            display: 'flex', flexDirection: 'column', gap: 5,
+          }}>
+            {hasDisc && (
+              <span style={{
+                fontSize: 10, fontWeight: 800, padding: '4px 9px',
+                borderRadius: 999, color: 'white', background: '#ef4444',
+              }}>
+                -{pkg.discount_percent}%
+              </span>
+            )}
+            {pkg.is_featured && (
+              <span style={{
+                fontSize: 10, fontWeight: 800, padding: '4px 9px',
+                borderRadius: 999, color: 'white',
+                background: 'linear-gradient(135deg,#f59e0b,#d97706)',
+              }}>
+                Featured
+              </span>
+            )}
+          </div>
 
-         {/* Minimal Wishlist */}
-         <button
-           onClick={e => { e.preventDefault(); e.stopPropagation(); onWishlist?.(pkg.id) }}
-           style={{
-             position: 'absolute', 
-             top: 16, 
-             right: 16, 
-             width: 28, 
-             height: 28, 
-             borderRadius: '50%',
-             background: 'rgba(255,255,255,0.8)', 
-             backdropFilter: 'blur(6px)',
-             border: '1px solid rgba(255,255,255,0.3)',
-             display: 'flex', 
-             alignItems: 'center', 
-             justifyContent: 'center',
-             cursor: 'pointer', 
-             transition: 'all 0.2s',
-             boxShadow: '0 1px 4px rgba(0,0,0,0.1)',
-           }}
-           onMouseOver={e => e.currentTarget.style.background = 'rgba(255,255,255,0.9)'}
-           onMouseOut={e => e.currentTarget.style.background = 'rgba(255,255,255,0.8)'}
-         >
-           <FiHeart
-             size={12}
-             style={{
-               fill: isWish ? '#ef4444' : 'none',
-               color: isWish ? '#ef4444' : '#6b7280',
-               transition: 'all 0.2s',
-             }}
-           />
-         </button>
+          <button
+            type="button"
+            aria-label={isWish ? 'Remove from wishlist' : 'Add to wishlist'}
+            onClick={e => {
+              e.preventDefault()
+              e.stopPropagation()
+              onWishlist?.(pkg.id)
+            }}
+            style={{
+              position: 'absolute', top: 14, right: 14,
+              width: 38, height: 38, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.92)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid rgba(255,255,255,0.6)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              cursor: 'pointer', boxShadow: '0 3px 12px rgba(0,0,0,0.14)',
+            }}
+          >
+            <FiHeart
+              size={15}
+              style={{
+                fill: isWish ? '#ef4444' : 'none',
+                color: isWish ? '#ef4444' : '#64748b',
+              }}
+            />
+          </button>
 
-         {/* Sold out overlay */}
-         {pkg.is_sold_out && (
-           <div style={{
-             position: 'absolute', 
-             inset: 0,
-             background: 'rgba(0,0,0,0.5)',
-             display: 'flex', 
-             alignItems: 'center', 
-             justifyContent: 'center',
-           }}>
-             <span style={{
-               color: 'white', 
-               fontWeight: 700, 
-               fontSize: 11,
-               letterSpacing: '0.5px',
-               textTransform: 'uppercase',
-             }}>
-               SOLD OUT
-             </span>
-           </div>
-         )}
-       </div>
+          {pkg.is_sold_out && (
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'rgba(0,0,0,0.52)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <span style={{
+                color: 'white', fontWeight: 800, fontSize: 12,
+                letterSpacing: '0.08em', textTransform: 'uppercase',
+                border: '1px solid rgba(255,255,255,0.45)',
+                padding: '7px 16px', borderRadius: 999,
+              }}>
+                SOLD OUT
+              </span>
+            </div>
+          )}
+        </div>
 
-       {/* Minimal Text Overlay - Only on hover */}
-       <div style={{
-         position: 'absolute',
-         bottom: 0,
-         left: 0,
-         right: 0,
-         background: 'rgba(0,0,0,0.6)',
-         backdropFilter: 'blur(4px)',
-         padding: '12px 16px',
-         display: 'flex',
-         flexDirection: 'column',
-         gap: 6,
-         opacity: 0,
-         transition: 'opacity 0.3s ease',
-       }}>
-         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-           <h4 style={{
-             fontFamily: "'DM Serif Display', Georgia, serif",
-             fontSize: 16,
-             fontWeight: 400,
-             color: 'white',
-             margin: 0,
-             lineHeight: 1.2,
-             display: '-webkit-box',
-             WebkitLineClamp: 1,
-             WebkitBoxOrient: 'vertical',
-             overflow: 'hidden',
-           }}>
-             {pkg.title}
-           </h4>
-           <span className="pk-cta" style={{ 
-             padding: '6px 12px', 
-             fontSize: 11,
-             background: 'rgba(255,255,255,0.2)',
-             backdropFilter: 'blur(4px)',
-             borderRadius: '8px'
-           }}>
-             View
-           </span>
-         </div>
-         {pkg.category && (
-           <span style={{
-             fontSize: 10,
-             fontWeight: 600,
-             color: 'rgba(255,255,255,0.9)',
-             textTransform: 'uppercase',
-             letterSpacing: '0.5px',
-           }}>
-             {pkg.category}
-           </span>
-         )}
-       </div>
-       
-       {/* Hover effect for text overlay */}
-       <div style={{
-         position: 'absolute',
-         bottom: 0,
-         left: 0,
-         right: 0,
-         height: '60px',
-         pointerEvents: 'none',
-       }} />
-     </Link>
-   )
- })
+        <div style={{ padding: '18px 18px 8px' }}>
+          {pkg.category && (
+            <span style={{
+              display: 'inline-block', fontSize: 10, fontWeight: 800,
+              color: '#059669', textTransform: 'uppercase',
+              letterSpacing: '0.08em', marginBottom: 7,
+            }}>
+              {pkg.category}
+            </span>
+          )}
+
+          <h3 style={{
+            fontFamily: "'DM Serif Display', Georgia, serif",
+            fontSize: 21, fontWeight: 400, color: '#022c22',
+            lineHeight: 1.25, margin: '0 0 9px',
+            display: '-webkit-box', WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical', overflow: 'hidden',
+          }}>
+            {pkg.title}
+          </h3>
+
+          <div style={{
+            display: 'flex', flexWrap: 'wrap', gap: 9,
+            color: '#64748b', fontSize: 12.5, marginBottom: 9,
+          }}>
+            {pkg.destination && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <FiMapPin size={12} style={{ color: '#059669' }} />
+                {pkg.destination_name || pkg.destination}
+              </span>
+            )}
+            {pkg.duration_days && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <FiClock size={12} style={{ color: '#059669' }} />
+                {fmtDuration(pkg.duration_days, pkg.duration_nights)}
+              </span>
+            )}
+            {pkg.max_travelers && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <FiUsers size={12} style={{ color: '#059669' }} />
+                Up to {pkg.max_travelers}
+              </span>
+            )}
+          </div>
+
+          {pkg.short_description && (
+            <p style={{
+              margin: '0 0 10px', color: '#64748b', fontSize: 12.5,
+              lineHeight: 1.55, display: '-webkit-box',
+              WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+            }}>
+              {pkg.short_description}
+            </p>
+          )}
+
+          {feats.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
+              {feats.map((f, i) => (
+                <span key={i} style={{
+                  fontSize: 10.5, fontWeight: 600, padding: '3px 8px',
+                  borderRadius: 999, background: '#f0fdf4',
+                  color: '#047857', border: '1px solid #a7f3d0',
+                }}>
+                  {f}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      </Link>
+
+      <div style={{
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        gap: 12, padding: '12px 18px 18px',
+        borderTop: '1px solid #d1fae5',
+      }}>
+        <div>
+          <p style={{
+            margin: 0, fontFamily: "'DM Serif Display', Georgia, serif",
+            fontSize: 22, color: '#059669', lineHeight: 1,
+          }}>
+            {pkg.is_price_visible !== false
+              ? fmtPrice(pkg.price, pkg.currency)
+              : 'On Request'}
+          </p>
+          <span style={{ fontSize: 10.5, color: '#94a3b8' }}>
+            {pkg.price_label || 'per person'}
+          </span>
+          {hasDisc && (
+            <span style={{
+              display: 'block', fontSize: 10, color: '#94a3b8',
+              textDecoration: 'line-through', marginTop: 2,
+            }}>
+              {fmtPrice(origPx, pkg.currency)}
+            </span>
+          )}
+        </div>
+
+        <button
+          type="button"
+          disabled={Boolean(pkg.is_sold_out)}
+          onClick={() => {
+            if (!pkg.is_sold_out) navigate(to)
+          }}
+          className="pk-cta"
+          style={{
+            padding: '11px 14px',
+            fontSize: 12,
+            opacity: pkg.is_sold_out ? 0.55 : 1,
+            cursor: pkg.is_sold_out ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {pkg.is_sold_out ? 'Sold Out' : 'Request to Book'}
+          {!pkg.is_sold_out && <FiArrowRight size={14} />}
+        </button>
+      </div>
+    </article>
+  )
+})
 
 /* ══════════════════════════════════════════════════════════════════════
    LIST CARD
