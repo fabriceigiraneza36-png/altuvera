@@ -120,19 +120,24 @@ const CSS = `
   overflow: hidden;
   touch-action: pan-y;
 }
+.dc-track {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.9s cubic-bezier(0.22,1,0.36,1);
+  will-change: transform;
+}
 .dc-img {
-  position: absolute;
-  inset: 0;
+  flex: 0 0 100%;
   width: 100%;
   height: 100%;
   object-fit: cover;
   object-position: center;
-  transition: opacity 0.6s ease, transform 6s cubic-bezier(0.25,0,0.15,1);
-  will-change: transform, opacity;
+  transform: scale(1.03);
+  transition: transform 5.5s cubic-bezier(0.25,0,0.15,1);
+  will-change: transform;
 }
-.dc-img--hidden  { opacity: 0; transform: scale(1.05); }
-.dc-img--visible { opacity: 1; transform: scale(1); }
-.dc-card:hover .dc-img--visible { transform: scale(1.07); }
+.dc-card:hover .dc-img { transform: scale(1.07); }
 
 .dc-img-overlay {
   position: absolute;
@@ -640,7 +645,7 @@ const CSS = `
   .dc-stats     { gap: 6px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dc-card, .dc-img, .dc-btn-book,
+  .dc-card, .dc-track, .dc-img, .dc-btn-book,
   .dc-btn-learn, .dc-action-btn, .dc-nav-btn {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
@@ -778,18 +783,24 @@ function ImageSlider({ images, name }) {
       onTouchEnd={handleTouchEnd}
       onMouseEnter={() => clearInterval(timerRef.current)}
       onMouseLeave={startTimer}
+      aria-label={`${name} destination photos`}
     >
-      {images.map((src, i) => (
-        <img
-          key={`slide-${i}`}
-          src={src}
-          alt={i === 0 ? name : ""}
-          loading={i === 0 ? "eager" : "lazy"}
-          draggable={false}
-          onError={(ev) => { ev.currentTarget.style.display = "none"; }}
-          className={`dc-img ${idx === i ? "dc-img--visible" : "dc-img--hidden"}`}
-        />
-      ))}
+      <div
+        className="dc-track"
+        style={{ transform: `translate3d(-${idx * 100}%,0,0)` }}
+      >
+        {images.map((src, i) => (
+          <img
+            key={`slide-${i}`}
+            src={src}
+            alt={i === 0 ? name : `${name} — photo ${i + 1}`}
+            loading={i === 0 ? "eager" : "lazy"}
+            draggable={false}
+            onError={(ev) => { ev.currentTarget.style.display = "none"; }}
+            className="dc-img"
+          />
+        ))}
+      </div>
 
       {total > 1 && (
         <>
@@ -997,6 +1008,14 @@ const safeImgs = [...new Set([
     imageUrl,
     thumbnailUrl,
   ].map(getImageUrl).filter(Boolean))];
+
+  // Prefer the three dedicated hero images supplied by the admin, then fill
+  // remaining slots from the gallery. Existing destination data is read-only here.
+  const cardImages = [...new Set([
+    ...(Array.isArray(heroImages) ? heroImages : []),
+    ...(Array.isArray(hero_images) ? hero_images : []),
+    ...safeImgs,
+  ].map(getImageUrl).filter(Boolean))].slice(0, 3);
 
   const locationStr = [region, location, countryName || resolvedCountry]
     .filter(Boolean)
