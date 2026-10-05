@@ -194,7 +194,33 @@ export default function PackageSlider({ limit = 8 }) {
   const totalPages = Math.max(1, Math.ceil(packages.length / cardsPerPage));
 
   return (
-    <section className="pkg-slider-section">
+    <>
+      <style>{`
+        .pkg-slider-poster-overlay {
+          position:absolute; inset:0; display:flex; flex-direction:column;
+          justify-content:flex-end; gap:12px; padding:18px;
+          background:linear-gradient(180deg,rgba(2,44,22,0.02) 25%,rgba(2,44,22,0.88) 100%);
+          color:#fff; z-index:2; pointer-events:none;
+        }
+        .pkg-slider-poster-label { display:flex; flex-direction:column; gap:5px; min-width:0; }
+        .pkg-slider-poster-label span { font-size:9px; font-weight:800; letter-spacing:.14em; opacity:.78; }
+        .pkg-slider-poster-label strong { font-size:clamp(15px,1.5vw,19px); line-height:1.2; text-shadow:0 2px 12px rgba(0,0,0,.35); }
+        .pkg-slider-request-cta {
+          align-self:flex-start; display:inline-flex; align-items:center; gap:5px;
+          padding:8px 11px; border-radius:999px; background:rgba(255,255,255,.95);
+          color:#047857; font-size:11px; font-weight:800; box-shadow:0 6px 18px rgba(0,0,0,.18);
+        }
+        .pkg-slider-img-wrap { position:relative; overflow:hidden; }
+        .pkg-slider-img { transition:transform .6s ease; }
+        .pkg-slider-card:hover .pkg-slider-img { transform:scale(1.045); }
+        .pkg-slider-link { position:relative; display:block; height:100%; overflow:hidden; }
+        @media (max-width:640px) {
+          .pkg-slider-poster-overlay { padding:14px; gap:9px; }
+          .pkg-slider-poster-label strong { font-size:15px; }
+          .pkg-slider-request-cta { font-size:10.5px; padding:7px 10px; }
+        }
+      `}</style>
+      <section className="pkg-slider-section">
       <div className="home-container">
 <div className="section-header">
            <h2 className="section-title">
@@ -280,7 +306,8 @@ export default function PackageSlider({ limit = 8 }) {
           </Link>
         </div>
       </div>
-    </section>
+      </section>
+    </>
   );
 }
 
