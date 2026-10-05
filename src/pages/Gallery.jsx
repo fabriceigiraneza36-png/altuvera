@@ -1,4 +1,59 @@
-// src/pages/Gallery.jsx
+═══ ERROR REPORT ═══
+
+▸ NAME
+  TypeError
+
+▸ MESSAGE
+  h is not a function
+
+▸ URL
+  https://www.altuverasafaris.com/gallery
+
+▸ TIME
+  10/5/2026, 10:29:46 AM
+
+▸ RETRY ATTEMPTS
+  0 / 3
+
+▸ BROWSER
+  Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Mobile Safari/537.36
+
+▸ STACK TRACE
+TypeError: h is not a function
+    at https://www.altuverasafaris.com/assets/js/Gallery-BGKhqqEj.js:154:13164
+    at wl (https://www.altuverasafaris.com/assets/js/dist-DRkrc--g.js:8:24253)
+    at Mn (https://www.altuverasafaris.com/assets/js/dist-DRkrc--g.js:8:42437)
+    at Cs (https://www.altuverasafaris.com/assets/js/dist-DRkrc--g.js:8:36602)
+    at Rt (https://www.altuverasafaris.com/assets/js/dist-DRkrc--g.js:6:3271)
+    at If (https://www.altuverasafaris.com/assets/js/dist-DRkrc--g.js:8:41307)
+    at rn (https://www.altuverasafaris.com/assets/js/dist-DRkrc--g.js:8:40274)
+    at Es (https://www.altuverasafaris.com/assets/js/dist-DRkrc--g.js:8:35707)
+    at ue (https://www.altuverasafaris.com/assets/js/dist-DRkrc--g.js:1:1669)
+    at MessagePort.un (https://www.altuverasafaris.com/assets/js/dist-DRkrc--g.js:1:2048)
+
+▸ COMPONENT TREE
+at re (https://www.altuverasafaris.com/assets/js/Gallery-BGKhqqEj.js:154:12976)
+    at Suspense
+    at ln (https://www.altuverasafaris.com/assets/js/index-DkUrzUTc.js:287:6482)
+    at Id (https://www.altuverasafaris.com/assets/js/dist-DRkrc--g.js:8:70728)
+    at pp (https://www.altuverasafaris.com/assets/js/dist-DRkrc--g.js:8:75438)
+    at Suspense
+    at main
+    at Id (https://www.altuverasafaris.com/assets/js/dist-DRkrc--g.js:8:70728)
+    at hp (https://www.altuverasafaris.com/assets/js/dist-DRkrc--g.js:8:76113)
+    at div
+    at $v (https://www.altuverasafaris.com/assets/js/index-DkUrzUTc.js:2155:4499)
+    at gu (https://www.altuverasafaris.com/assets/js/index-DkUrzUTc.js:2:4687)
+    at Uv
+    at O (https://www.altuverasafaris.com/assets/js/WishlistContext-DNp70VJp.js:1:2775)
+    at ft (https://www.altuverasafaris.com/assets/js/UserAuthContext-DAiSOErp.js:1:7745)
+    at L (https://www.altuverasafaris.com/assets/js/WishlistContext-DNp70VJp.js:1:743)
+    at fu (https://www.altuverasafaris.com/assets/js/index-DkUrzUTc.js:2:2065)
+    at X (https://www.altuverasafaris.com/assets/js/index.esm-f_UtsdrK.js:1:9928)
+    at $d (https://www.altuverasafaris.com/assets/js/dist-DRkrc--g.js:8:75497)
+    at vp (https://www.altuverasafaris.com/assets/js/dist-DRkrc--g.js:8:79307)
+
+═══ END REPORT ═══ my file // src/pages/Gallery.jsx
 import React, {
   useState,
   useCallback,
@@ -315,6 +370,168 @@ const GalleryCard = ({ image, index, onOpen, isFav, onFav }) => {
       {!loaded && <div className="g-shimmer" style={{ height: 240, position: "absolute", inset: 0, zIndex: 1 }} />}
       <img src={image.thumb || image.src} alt={image.alt} loading="lazy" onLoad={() => setLoaded(true)}
         className="g-card-img" style={{ width: "100%", height: 240, objectFit: "cover", display: "block" }} />
+      <div className="g-card-overlay" />
+      {image.isFeatured && (
+        <div style={{ position: "absolute", top: 10, left: 10, zIndex: 3 }}>
+          <span style={{
+            background: "rgba(255,255,255,0.14)", backdropFilter: "blur(12px)",
+            color: "white", border: "1px solid rgba(255,255,255,0.2)",
+            padding: "4px 10px", borderRadius: "var(--g-radius-full)",
+            fontSize: 11.5, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4
+          }}>
+            <FiStar size={10} /> Featured
+          </span>
+        </div>
+      )}
+      <div style={{ position: "absolute", top: 10, right: 10, zIndex: 3 }}>
+        <span style={{
+          backgroundColor: "#ECFDF5", color: "#059669", border: "1px solid #D1FAE5",
+          padding: "4px 10px", borderRadius: "var(--g-radius-full)", fontSize: 11.5, fontWeight: 600
+        }}>
+          {image.category}
+        </span>
+      </div>
+      <div className="g-card-actions" style={{
+        position: "absolute", top: 42, right: 10, zIndex: 3, display: "flex", flexDirection: "column", gap: 6
+      }}>
+        <button onClick={(e) => { e.stopPropagation(); onFav(image.id); }} className="g-focus" style={{
+          width: 30, height: 30, borderRadius: "50%", backgroundColor: isFav(image.id) ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.15)",
+          backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.18)",
+          color: isFav(image.id) ? "#EF4444" : "rgba(255,255,255,0.9)",
+          cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+          transition: "all 0.25s",
+        }} onMouseOver={(e) => e.currentTarget.style.transform = "scale(1.18)"}
+          onMouseOut={(e) => e.currentTarget.style.transform = "scale(1)"}>
+          <FiHeart size={13} fill={isFav(image.id) ? "#EF4444" : "none"} />
+        </button>
+      </div>
+      <div style={{
+        position: "absolute", bottom: 0, left: 0, right: 0,
+        padding: "20px 14px 14px", zIndex: 3,
+      }}>
+        {image.title && (
+          <h4 style={{
+            color: "white", fontSize: 14, fontWeight: 700, lineHeight: 1.3, marginBottom: 4,
+            textShadow: "0 1px 4px rgba(0,0,0,0.4)",
+            display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden",
+          }}>
+            {image.title}
+          </h4>
+        )}
+        {(image.location || image.countryName) && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: 4, color: "rgba(255,255,255,0.8)", fontSize: 11.5,
+          }}>
+            <FiMapPin size={10} /> {image.location || image.countryName}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext }) => {
+  const [showDetails, setShowDetails] = useState(false);
+  const currentImage = images[selectedIndex];
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") onClose();
+      if (e.key === "ArrowLeft") onPrev();
+      if (e.key === "ArrowRight") onNext();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose, onPrev, onNext]);
+
+  const handleWheel = (e) => {
+    e.preventDefault();
+    if (e.deltaY > 0) onNext();
+    else onPrev();
+  };
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 9999, overflow: "hidden" }} onWheel={handleWheel}>
+      {/* Animated gradient background */}
+      <div style={{
+        position: "absolute", inset: 0,
+        background: "linear-gradient(45deg, #ECFDF5, #D1FAE5, #A7F3D0, #34D399, #ECFDF5)",
+        backgroundSize: "400% 400%",
+        animation: "gradientShift 15s ease infinite",
+        zIndex: 0,
+      }} />
+
+      <div style={{
+        position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100vh", width: "100vw",
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center",
+          background: "rgba(255, 255, 255, 0.95)", borderBottom: "1px solid #E5E7EB",
+        }}>
+          <div style={{ color: "#111827", fontSize: 14, fontWeight: 600 }}>
+            {selectedIndex + 1} / {images.length}
+          </div>
+          <button onClick={onClose} style={{
+            background: "linear-gradient(135deg, #059669, #047857)",
+            border: "none", color: "white", width: 36, height: 36, borderRadius: "50%",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            cursor: "pointer", transition: "all 0.3s", fontWeight: 700,
+          }} onMouseOver={(e) => {
+            e.currentTarget.style.transform = "scale(1.1)";
+            e.currentTarget.style.boxShadow = "var(--g-shadow-green)";
+          }} onMouseOut={(e) => {
+            e.currentTarget.style.transform = "scale(1)";
+            e.currentTarget.style.boxShadow = "none";
+          }}>
+            <FiX size={18} />
+          </button>
+        </div>
+
+        {/* Image container with dramatic zoom/blur */}
+        <div style={{
+          flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
+          padding: "20px", position: "relative", overflow: "hidden",
+        }}>
+          {currentImage && (
+            <img src={currentImage.src} alt={currentImage.alt} style={{
+              maxWidth: "100%", maxHeight: "100%", objectFit: "contain",
+              borderRadius: "12px", boxShadow: "0 20px 80px rgba(6, 78, 59, 0.3)",
+              animation: "gScaleIn 0.4s ease",
+            }} />
+          )}
+        </div>
+
+        {/* Navigation and details button */}
+        <div style={{
+          padding: "16px 20px", background: "rgba(255, 255, 255, 0.95)",
+          borderTop: "1px solid #E5E7EB", display: "flex", justifyContent: "space-between",
+          alignItems: "center", gap: 12, flexWrap: "wrap",
+        }}>
+          <button onClick={onPrev} disabled={selectedIndex === 0} className="g-btn-secondary" style={{
+            width: 40, height: 40, borderRadius: "50%", display: "flex", alignItems: "center",
+            justifyContent: "center", opacity: selectedIndex === 0 ? 0.5 : 1,
+            cursor: selectedIndex === 0 ? "not-allowed" : "pointer",
+          }} onMouseOver={(e) => {
+            if (selectedIndex > 0) e.currentTarget.style.background = "rgba(5, 150, 105, 0.15)";
+          }} onMouseOut={(e) => {
+            e.currentTarget.style.background = "rgba(255,255,255,0.2)";
+          }}>
+            <FiChevronLeft size={20} color="#059669" />
+          </button>
+
+          <button onClick={() => setShowDetails(!showDetails)} className="g-btn-primary" style={{
+            padding: "8px 16px", borderRadius: "var(--g-radius-full)", fontSize: 13, fontWeight: 600,
+            display: "flex", alignItems: "center", gap: 6, flex: 1, justifyContent: "center",
+          }}>
+            <FiInfo size={14} />
+            {showDetails ? "Hide" : "Show"} Details
+          </button>
+
+          <button onClick={onNext} disabled={selectedIndex === images.length - 1} className="g-btn-secondary" style={{
+            width: 40, height: 40, borderRadius: "50%", display: "flex", alignItems: "center",
+            justifyContent: "center", opacity: selectedIndex === images.length - 1 ? 0.5 : 1,
+            cursor: selectedIndex === images.length - 1 ? "not-allowed" : "pointer",: "cover", display: "block" }} />
       <div className="g-card-overlay" />
       {image.isFeatured && (
         <div style={{ position: "absolute", top: 10, left: 10, zIndex: 3 }}>
