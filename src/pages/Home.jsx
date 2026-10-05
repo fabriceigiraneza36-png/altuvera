@@ -1164,11 +1164,6 @@ const HorizontalPackageCard = React.memo(function HorizontalPackageCard({ pkg, i
         {pkg.short_description && <p className="hpkg-desc">{pkg.short_description}</p>}
         {feats.length > 0 && (<div style={{ display: "flex", flexWrap: "wrap", gap: ".3rem" }}>{feats.map((f, i) => (<span key={i} style={{ fontSize: ".6rem", fontWeight: 700, padding: ".18rem .5rem", borderRadius: "99px", background: `${accent}12`, color: accent, border: `1px solid ${accent}28`, fontFamily: "'Inter',sans-serif" }}>{f}</span>))}</div>)}
         <div className="hpkg-footer">
-          <div>
-            {hasDisc && (() => { const orig = Number(pkg.price) / (1 - Number(pkg.discount_percent) / 100); return <p style={{ fontSize: ".65rem", color: "#94a3b8", textDecoration: "line-through", lineHeight: 1, marginBottom: ".1rem", fontFamily: "'Inter',sans-serif" }}>{fmtPrice(orig, pkg.currency)}</p>; })()}
-            <p className="hpkg-price" style={{ color: accent }}>{pkg.is_price_visible !== false ? fmtPrice(pkg.price, pkg.currency) : "POA"}</p>
-            <p className="hpkg-price-label">{pkg.price_label || "per person"}</p>
-          </div>
           <span className="hpkg-cta">Explore <ArrowRight size={11} /></span>
         </div>
       </div>
