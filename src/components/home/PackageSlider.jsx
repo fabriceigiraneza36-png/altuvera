@@ -95,35 +95,14 @@ const PackageCard = ({ pkg, index, onWishlist, wishlist }) => {
             </span>
           )}
         </div>
-        <div className="pkg-slider-body">
-          <div className="pkg-slider-header">
-            <h3 className="pkg-slider-title">{pkg.title}</h3>
-            {(pkg.destination || pkg.country) && (
-              <span className="pkg-slider-location">
-                <MapPin size={12} />
-                {[pkg.destination, pkg.country].filter(Boolean).join(", ")}
-              </span>
-            )}
+        <div className="pkg-slider-poster-overlay">
+          <div className="pkg-slider-poster-label">
+            <span>ALTUVERA PACKAGE</span>
+            <strong>{pkg.title && pkg.title !== "Travel package" ? pkg.title : "Adventure Package"}</strong>
           </div>
-          <div className="pkg-slider-meta">
-            {pkg.duration_days && (
-              <span className="pkg-slider-meta-item">
-                <Clock size={12} />
-                {fmtDuration(pkg.duration_days)}
-              </span>
-            )}
-            {pkg.max_travelers && (
-              <span className="pkg-slider-meta-item">
-                <Users size={12} />
-                Max {pkg.max_travelers}
-              </span>
-            )}
-          </div>
-          <div className="pkg-slider-price-row">
-            <span className="pkg-slider-price">
-              {pkg.is_price_visible !== false ? fmtPrice(pkg.price, pkg.currency) : "POA"}
-            </span>
-          </div>
+          <span className="pkg-slider-request-cta">
+            Request this package <ChevronRight size={14} />
+          </span>
         </div>
         <button
           onClick={(e) => {
