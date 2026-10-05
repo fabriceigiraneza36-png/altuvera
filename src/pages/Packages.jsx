@@ -387,30 +387,22 @@ const MountainPlaceholder = React.memo(function MountainPlaceholder({ size = 48,
    GRID CARD
 ══════════════════════════════════════════════════════════════════════ */
 const GridCard = React.memo(function GridCard({ pkg, wishlist, onWishlist, index = 0 }) {
-  const navigate = useNavigate()
-  const isWish  = wishlist?.has(pkg.id)
-  const cover   = pkg.cover_image_url || pkg.thumbnail_url || null
-  const feats   = useMemo(() => parseJsonField(pkg.features).slice(0, 3), [pkg.features])
-  const to      = `/packages/${pkg.slug || pkg.id}`
+  const isWish = wishlist?.has(pkg.id);
+  const cover = pkg.cover_image_url || pkg.thumbnail_url || null;
+  const to = `/packages/${pkg.slug || pkg.id}`;
+  const destination = pkg.destination_name || pkg.destination || "East Africa";
+  const country = pkg.country_name || pkg.country || "";
+  const price = fmtPrice(pkg.price, pkg.currency || "USD");
 
   return (
     <article
       className="pk-card"
-      style={{
-        animationDelay: `${Math.min(index * 60, 360)}ms`,
-        position: 'relative',
-      }}
+      style={{ animationDelay: `${Math.min(index * 60, 360)}ms`, position: "relative" }}
     >
-      <Link
-        to={to}
-        aria-label={`View ${pkg.title}`}
-        style={{ display: 'block', textDecoration: 'none', color: 'inherit' }}
-      >
+      <Link to={to} aria-label={`Request ${pkg.title}`} style={{ textDecoration: "none", color: "inherit" }}>
         <div style={{
-          position: 'relative',
-          height: 250,
-          overflow: 'hidden',
-          background: 'linear-gradient(135deg,#d1fae5,#f0fdf4)',
+          position: "relative", height: 270, overflow: "hidden",
+          background: "linear-gradient(135deg,#064e3b,#10b981)",
         }}>
           {cover ? (
             <img
@@ -418,190 +410,69 @@ const GridCard = React.memo(function GridCard({ pkg, wishlist, onWishlist, index
               alt={pkg.title}
               loading="lazy"
               className="pk-card-img"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                display: 'block',
-              }}
+              style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
             />
           ) : (
-            <div style={{
-              width: '100%', height: '100%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'linear-gradient(135deg,#d1fae5,#f0fdf4)',
-            }}>
-              <MountainPlaceholder size={60} color="#a7f3d0" />
+            <div style={{ width:"100%",height:"100%",display:"grid",placeItems:"center" }}>
+              <MountainPlaceholder size={62} color="#a7f3d0" />
             </div>
           )}
-
           <div style={{
-            position: 'absolute', inset: 0,
-            background: 'linear-gradient(to bottom, rgba(0,0,0,0.12), transparent 45%, rgba(2,44,34,0.38))',
-            pointerEvents: 'none',
+            position:"absolute",inset:0,
+            background:"linear-gradient(to bottom,rgba(2,44,34,.05) 35%,rgba(2,44,34,.86) 100%)"
           }} />
-
-          <div style={{
-            position: 'absolute', top: 14, left: 14,
-            display: 'flex', flexDirection: 'column', gap: 5,
-          }}>
-            {pkg.is_featured && (
-              <span style={{
-                fontSize: 10, fontWeight: 800, padding: '4px 9px',
-                borderRadius: 999, color: 'white',
-                background: 'linear-gradient(135deg,#f59e0b,#d97706)',
-              }}>
-                Featured
-              </span>
-            )}
-          </div>
-
-          <button
-            type="button"
-            aria-label={isWish ? 'Remove from wishlist' : 'Add to wishlist'}
-            onClick={e => {
-              e.preventDefault()
-              e.stopPropagation()
-              onWishlist?.(pkg.id)
-            }}
-            style={{
-              position: 'absolute', top: 14, right: 14,
-              width: 38, height: 38, borderRadius: '50%',
-              background: 'rgba(255,255,255,0.92)',
-              backdropFilter: 'blur(8px)',
-              border: '1px solid rgba(255,255,255,0.6)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              cursor: 'pointer', boxShadow: '0 3px 12px rgba(0,0,0,0.14)',
-            }}
-          >
-            <FiHeart
-              size={15}
-              style={{
-                fill: isWish ? '#ef4444' : 'none',
-                color: isWish ? '#ef4444' : '#64748b',
-              }}
-            />
-          </button>
-
-          {pkg.is_sold_out && (
-            <div style={{
-              position: 'absolute', inset: 0,
-              background: 'rgba(0,0,0,0.52)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              <span style={{
-                color: 'white', fontWeight: 800, fontSize: 12,
-                letterSpacing: '0.08em', textTransform: 'uppercase',
-                border: '1px solid rgba(255,255,255,0.45)',
-                padding: '7px 16px', borderRadius: 999,
-              }}>
-                SOLD OUT
-              </span>
+          <div style={{ position:"absolute",top:14,left:14,right:14,display:"flex",justifyContent:"space-between",alignItems:"flex-start" }}>
+            <div style={{display:"flex",gap:7,flexWrap:"wrap"}}>
+              {pkg.is_featured && <span style={{padding:"6px 10px",borderRadius:999,background:"#f59e0b",color:"#fff",fontSize:10,fontWeight:800}}>FEATURED</span>}
+              <span style={{padding:"6px 10px",borderRadius:999,background:"rgba(255,255,255,.9)",color:"#047857",fontSize:10,fontWeight:800}}>REQUESTABLE</span>
             </div>
-          )}
+            <button
+              type="button"
+              aria-label={isWish ? "Remove from wishlist" : "Add to wishlist"}
+              onClick={e => { e.preventDefault(); e.stopPropagation(); onWishlist?.(pkg.id); }}
+              style={{
+                width:40,height:40,borderRadius:"50%",border:"1px solid rgba(255,255,255,.75)",
+                background:"rgba(255,255,255,.94)",display:"grid",placeItems:"center",
+                cursor:"pointer",boxShadow:"0 5px 16px rgba(0,0,0,.16)"
+              }}
+            >
+              <FiHeart size={16} style={{fill:isWish?"#ef4444":"none",color:isWish?"#ef4444":"#475569"}} />
+            </button>
+          </div>
+          <div style={{position:"absolute",left:18,right:18,bottom:17,color:"white"}}>
+            <div style={{display:"flex",alignItems:"center",gap:6,fontSize:11,fontWeight:700,opacity:.92}}>
+              <FiMapPin size={13}/> {destination}{country ? ` · ${country}` : ""}
+            </div>
+            <h3 style={{
+              fontFamily:"'DM Serif Display', Georgia, serif",fontSize:27,fontWeight:400,
+              lineHeight:1.05,margin:"7px 0 0",textShadow:"0 2px 12px rgba(0,0,0,.25)"
+            }}>{pkg.title}</h3>
+          </div>
         </div>
 
-        <div style={{ padding: '18px 18px 8px' }}>
-          {pkg.category && (
-            <span style={{
-              display: 'inline-block', fontSize: 10, fontWeight: 800,
-              color: '#059669', textTransform: 'uppercase',
-              letterSpacing: '0.08em', marginBottom: 7,
-            }}>
-              {pkg.category}
-            </span>
-          )}
-
-          <h3 style={{
-            fontFamily: "'DM Serif Display', Georgia, serif",
-            fontSize: 21, fontWeight: 400, color: '#022c22',
-            lineHeight: 1.25, margin: '0 0 9px',
-            display: '-webkit-box', WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical', overflow: 'hidden',
-          }}>
-            {pkg.title}
-          </h3>
-
-          <div style={{
-            display: 'flex', flexWrap: 'wrap', gap: 9,
-            color: '#64748b', fontSize: 12.5, marginBottom: 9,
-          }}>
-            {pkg.destination && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <FiMapPin size={12} style={{ color: '#059669' }} />
-                {pkg.destination_name || pkg.destination}
-              </span>
-            )}
-            {pkg.duration_days && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <FiClock size={12} style={{ color: '#059669' }} />
-                {fmtDuration(pkg.duration_days, pkg.duration_nights)}
-              </span>
-            )}
-            {pkg.max_travelers && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                <FiUsers size={12} style={{ color: '#059669' }} />
-                Up to {pkg.max_travelers}
-              </span>
-            )}
-          </div>
-
-          {pkg.short_description && (
-            <p style={{
-              margin: '0 0 10px', color: '#64748b', fontSize: 12.5,
-              lineHeight: 1.55, display: '-webkit-box',
-              WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-            }}>
-              {pkg.short_description}
-            </p>
-          )}
-
-          {feats.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
-              {feats.map((f, i) => (
-                <span key={i} style={{
-                  fontSize: 10.5, fontWeight: 600, padding: '3px 8px',
-                  borderRadius: 999, background: '#f0fdf4',
-                  color: '#047857', border: '1px solid #a7f3d0',
-                }}>
-                  {f}
-                </span>
-              ))}
+        <div style={{padding:"17px 18px 18px"}}>
+          <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:10,marginBottom:12}}>
+            <div style={{display:"flex",gap:9,flexWrap:"wrap",color:"#64748b",fontSize:11.5}}>
+              {pkg.duration_days && <span><FiClock size={12} style={{verticalAlign:"-2px",color:"#059669"}}/> {fmtDuration(pkg.duration_days,pkg.duration_nights)}</span>}
+              {pkg.max_travelers && <span><FiUsers size={12} style={{verticalAlign:"-2px",color:"#059669"}}/> Up to {pkg.max_travelers}</span>}
             </div>
-          )}
+            <strong style={{color:"#047857",fontSize:14}}>{price}</strong>
+          </div>
+          <div style={{
+            display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,
+            paddingTop:12,borderTop:"1px solid #ecfdf5"
+          }}>
+            <span style={{fontSize:11.5,color:"#64748b"}}>Tell us your dates & preferences</span>
+            <span style={{
+              display:"inline-flex",alignItems:"center",gap:5,padding:"8px 11px",borderRadius:10,
+              background:"#ecfdf5",color:"#047857",fontSize:11,fontWeight:800
+            }}>Request <FiArrowRight size={13}/></span>
+          </div>
         </div>
       </Link>
-
-      <div style={{
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        gap: 12, padding: '12px 18px 18px',
-        borderTop: '1px solid #d1fae5',
-      }}>
-        <button
-          type="button"
-          disabled={Boolean(pkg.is_sold_out)}
-          onClick={() => {
-            if (!pkg.is_sold_out) navigate(to)
-          }}
-          className="pk-cta"
-          style={{
-            padding: '11px 14px',
-            fontSize: 12,
-            opacity: pkg.is_sold_out ? 0.55 : 1,
-            cursor: pkg.is_sold_out ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {pkg.is_sold_out ? 'Sold Out' : 'Request to Book'}
-          {!pkg.is_sold_out && <FiArrowRight size={14} />}
-        </button>
-      </div>
     </article>
-  )
+  );
 })
-
-/* ══════════════════════════════════════════════════════════════════════
-   LIST CARD
-══════════════════════════════════════════════════════════════════════ */
 const ListCard = React.memo(function ListCard({ pkg, wishlist, onWishlist, index = 0 }) {
   const isWish  = wishlist?.has(pkg.id)
   const cover   = pkg.cover_image_url || pkg.thumbnail_url || null
