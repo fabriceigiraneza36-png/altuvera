@@ -124,22 +124,29 @@ const ProgressBar = ({ color = "#10b981", height = 3 }) => {
   );
 };
 
-const Reveal = ({ children, from = "up", delay = 0, duration = 400 }) => {
+const Reveal = ({ children, from = "up", delay = 0, duration = 500 }) => {
+  const [visible, setVisible] = React.useState(false);
   const transformMap = {
-    left: "translateX(-18px)",
-    right: "translateX(18px)",
-    up: "translateY(18px)",
-    bottom: "translateY(-18px)",
-    scale: "scale(0.98)",
+    left: "translateX(-22px)",
+    right: "translateX(22px)",
+    up: "translateY(22px)",
+    bottom: "translateY(-22px)",
+    scale: "scale(0.96)",
   };
+
+  React.useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setVisible(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   return (
     <div
       style={{
-        opacity: 1,
-        transform: transformMap[from] || "translateY(0)",
-        transition: `opacity ${duration}ms ease, transform ${duration}ms ease`,
+        opacity: visible ? 1 : 0,
+        transform: visible ? "translate3d(0,0,0) scale(1)" : (transformMap[from] || "translateY(22px)"),
+        transition: `opacity ${duration}ms cubic-bezier(.22,1,.36,1), transform ${duration}ms cubic-bezier(.22,1,.36,1)`,
         transitionDelay: `${delay}ms`,
+        willChange: "opacity, transform",
       }}
     >
       {children}
