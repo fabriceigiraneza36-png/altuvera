@@ -142,18 +142,23 @@ function BookingInner() {
             {step===3 && <Step3Contact data={data} set={set} touch={touch} errors={errors} touched={touched}/>}
             {review && <div>
               <div className="bk-review">
-                <div className="bk-review-card"><h4>Traveller identity</h4><p><strong>{data.firstName} {data.lastName}</strong></p><p>Nationality: {data.nationality}</p><p>Residence: {data.country}</p></div>
-                <div className="bk-review-card"><h4>Destination</h4><p><strong>{selectedDest?.label || "Selected destination"}</strong></p><p>Country: {countriesList.find(c=>c.value===data.countryId)?.label || ""}</p><p>Category: {selectedDest?.category || "—"}</p></div>
-                <div className="bk-review-card"><h4>Travel dates</h4><p><strong>{data.flexibleDates?"Flexible dates":`${pretty(data.startDate)} → ${pretty(data.endDate)}`}</strong></p><p>{data.flexibleDates ? `Months: ${(data.flexibleMonths||[]).join(", ") || "Not selected"}` : "Fixed travel dates"}</p></div>
-                <div className="bk-review-card"><h4>Travelers</h4><p><strong>{totalTravelers} traveler{totalTravelers!==1?"s":""}</strong></p><p>Adults: {data.adults} · Children: {data.children}</p><p>Group: {data.groupType}</p></div>
-                <div className="bk-review-card"><h4>Communication</h4><p><strong>{data.preferredContactMethod || "Not selected"}</strong></p><p>Email: {data.email}</p><p>Phone: {data.phone}</p></div>
-                <div className="bk-review-card"><h4>Requests & preferences</h4><p><strong>Special requests</strong></p><p>{data.specialRequests || "None provided"}</p><p>Selected attraction: {data.attractionName || "None"}</p><p>Accommodation: {data.accommodationType || "Not specified"}</p></div>
+                <div className="bk-review-card"><h4>Traveller identity</h4><p><strong>{data.firstName} {data.lastName}</strong></p><p>Nationality: {data.nationality || "Not provided"}</p><p>Country of residence: {data.country || "Not provided"}</p></div>
+                <div className="bk-review-card"><h4>Destination</h4><p><strong>{selectedDest?.label || "Selected destination"}</strong></p><p>Country: {countriesList.find(c=>c.value===data.countryId)?.label || "Not selected"}</p><p>Destination ID: {data.destinationId || "—"}</p><p>Category: {selectedDest?.category || "—"}</p></div>
+                <div className="bk-review-card"><h4>Travel dates</h4><p><strong>{data.flexibleDates ? "Flexible dates" : `${pretty(data.startDate)} → ${pretty(data.endDate)}`}</strong></p><p>{data.flexibleDates ? `Months: ${(data.flexibleMonths||[]).join(", ") || "Not selected"}` : "Fixed travel dates"}</p></div>
+                <div className="bk-review-card"><h4>Travelers</h4><p><strong>{totalTravelers} traveler{totalTravelers!==1?"s":""}</strong></p><p>Adults: {data.adults}</p><p>Children: {data.children}</p><p>Group type: {data.groupType || "Not selected"}</p></div>
+                <div className="bk-review-card"><h4>Contact</h4><p><strong>{data.email}</strong></p><p>Phone / WhatsApp: {data.phone || "Not provided"}</p><p>Preferred method: <strong>{data.preferredContactMethod || "Not selected"}</strong></p><p>Phone country code: {data.phoneCountryCode || "—"}</p></div>
+                <div className="bk-review-card"><h4>Experience & requests</h4><p>Attraction / experience: <strong>{data.attractionName || "Not selected"}</strong></p><p>Accommodation: {data.accommodationType || "Not specified"}</p><p>Special requests: {data.specialRequests || "None provided"}</p></div>
               </div>
               <div className="bk-review-card" style={{marginTop:12}}>
-                <h4>Consent & preferences</h4>
+                <h4>Submission preferences</h4>
                 <p>Safari tips and offers: <strong>{data.newsletterOptIn ? "Yes" : "No"}</strong></p>
                 <p>Terms & Privacy: <strong>{data.agreeToTerms ? "Accepted" : "Not accepted"}</strong></p>
-              </div>              <div style={{marginTop:14,padding:14,borderRadius:14,background:"#ecfdf5",color:"#35604e",fontSize:12,lineHeight:1.55}}><Check size={15} style={{verticalAlign:"-3px",marginRight:6,color:"#059669"}}/>Everything looks good. Press <strong>Confirm booking</strong> to submit the request. We will then email you a secure link asking you to confirm that you made this request from your real inbox before Altuvera begins operational planning.</div>
+                <p>Source: <strong>Website</strong></p>
+              </div>
+              <div style={{marginTop:14,padding:14,borderRadius:14,background:"#ecfdf5",color:"#35604e",fontSize:12,lineHeight:1.55}}>
+                <Check size={15} style={{verticalAlign:"-3px",marginRight:6,color:"#059669"}}/>
+                <strong>Final review:</strong> every value above is what will be sent to Altuvera. After submission, you will receive a secure email asking you to confirm that you personally requested this booking from your real inbox. Planning begins only after that confirmation.
+              </div>
             </div>}
           </div>
 
