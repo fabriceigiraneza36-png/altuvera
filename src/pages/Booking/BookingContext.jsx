@@ -152,27 +152,37 @@ export function BookingProvider({ children }) {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({
-          firstName: data.firstName, lastName: data.lastName,
-          full_name: `${data.firstName} ${data.lastName}`.trim(),
-          email: data.email, phone: data.phone, country: data.country,
-          nationality: data.nationality || undefined,
-          countryId: data.countryId || undefined,
-          destinationId: data.destinationId || undefined,
-          attractionName: data.attractionName || undefined,
-          startDate: data.flexibleDates ? undefined : data.startDate || undefined,
-          endDate:   data.flexibleDates ? undefined : data.endDate   || undefined,
-          flexibleDates: data.flexibleDates,
-          flexibleMonths: data.flexibleDates ? data.flexibleMonths : [],
-          adults: Number(data.adults), children: Number(data.children),
-          groupType: data.groupType,
-          specialRequests: data.specialRequests || undefined,
-          preferredContactMethod: data.preferredContactMethod,
-          newsletterOptIn: data.newsletterOptIn,
-          agreeToTerms: data.agreeToTerms,
-          source: "website", booking_type: "destination",
+          // Canonical names understood by the backend booking normalizer.
+          firstName: data.firstName,
+          lastName: data.lastName,
+          full_name: data.firstName + " " + data.lastName,
+          email: data.email.trim().toLowerCase(),
+          phone: data.phone.trim(),
+          country: data.country.trim(),
+          nationality: data.nationality.trim(),
+          country_id: data.countryId || undefined,
+          destination_id: data.destinationId || undefined,
+          attraction_name: data.attractionName.trim() || undefined,
+          travel_date: data.flexibleDates ? undefined : data.startDate || undefined,
+          return_date: data.flexibleDates ? undefined : data.endDate || undefined,
+          flexible_dates: Boolean(data.flexibleDates),
+          flexible_months: data.flexibleDates ? data.flexibleMonths : [],
+          number_of_adults: Number(data.adults),
+          number_of_children: Number(data.children),
+          number_of_travelers: Number(data.adults) + Number(data.children),
+          group_type: data.groupType,
+          special_requests: data.specialRequests.trim() || undefined,
+          preferred_contact_method: data.preferredContactMethod,
+          newsletter_opt_in: Boolean(data.newsletterOptIn),
+          agreeToTerms: Boolean(data.agreeToTerms),
+          source: "website",
+          booking_type: "destination",
         }),
       });
-      const json = await res.json();
+      const contentType = res.headers.get("content-type") || "";
+      const json = contentType.includes("application/json")
+        ? await res.json()
+        : { error: (await res.text()) || "Request failed" };
       if (!res.ok) throw new Error(
         (Array.isArray(json?.errors) ? json.errors[0]?.message : null) ||
         json?.error || json?.message || "Submission failed",
