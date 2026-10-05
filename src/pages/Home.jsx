@@ -977,6 +977,7 @@ const DestinationModal = ({ destination, isOpen, onClose, isWishlisted, onWishli
 const DestinationSlideshow = ({ destinations, isWishlisted, onWishlistToggle }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [cardsPerView, setCardsPerView] = useState(3);
+  const [slideOffset, setSlideOffset] = useState(0);
   const [selectedDest, setSelectedDest] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const trackRef = useRef(null);
@@ -993,6 +994,21 @@ const DestinationSlideshow = ({ destinations, isWishlisted, onWishlistToggle }) 
   const goPrev = useCallback(() => goTo(currentIndex - 1), [currentIndex, goTo]);
   const goNext = useCallback(() => goTo(currentIndex + 1), [currentIndex, goTo]);
 
+  // Measure the real card position instead of translating by a percentage of
+  // the whole track. This keeps the visible card and the active bottom dot
+  // perfectly synchronized at every breakpoint.
+  useEffect(() => {
+    const measure = () => {
+      const track = trackRef.current;
+      const card = track?.children?.[currentIndex];
+      if (!track || !card) return;
+      setSlideOffset(card.offsetLeft);
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, [currentIndex, cardsPerView, destinations.length]);
+
   useEffect(() => { const h = (e) => { if (modalOpen) return; if (e.key === "ArrowLeft") goPrev(); if (e.key === "ArrowRight") goNext(); }; window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h); }, [goPrev, goNext, modalOpen]);
 
   useEffect(() => {
@@ -1007,7 +1023,6 @@ const DestinationSlideshow = ({ destinations, isWishlisted, onWishlistToggle }) 
     return () => window.clearInterval(timer);
   }, [cardsPerView, destinations.length, maxIndex]);
 
-  const cardWidthPct = 100 / Math.max(destinations.length, 1);
   const totalDots = maxIndex + 1;
   const getName = (d) => d?.name || d?.title || "Destination";
   const getCountry = (d) => (typeof d?.country === "object" && d.country?.name) || d?.countryObj?.name || (typeof d?.country === "string" ? d.country : "") || "";
@@ -1021,7 +1036,7 @@ const DestinationSlideshow = ({ destinations, isWishlisted, onWishlistToggle }) 
       <button className="dest-arr dest-arr--left" onClick={goPrev} disabled={!canPrev} style={{ opacity: canPrev ? 1 : .3, pointerEvents: canPrev ? "auto" : "none" }}><FiChevronLeft size={20} /></button>
       <button className="dest-arr dest-arr--right" onClick={goNext} disabled={!canNext} style={{ opacity: canNext ? 1 : .3, pointerEvents: canNext ? "auto" : "none" }}><FiChevronRight size={20} /></button>
       <div className="dest-slideshow-wrap" style={{ padding: "0 3rem" }}>
-        <div ref={trackRef} className="dest-slideshow-track" style={{ transform: `translateX(-${currentIndex * cardWidthPct}%)` }}>
+        <div ref={trackRef} className="dest-slideshow-track" style={{ transform: `translate3d(-${slideOffset}px, 0, 0)` }}>
           {destinations.map((dest, idx) => {
             const name = getName(dest); const country = getCountry(dest); const img = getImage(dest); const category = getCategory(dest);
             return (
