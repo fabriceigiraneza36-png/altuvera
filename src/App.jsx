@@ -16,6 +16,7 @@ import {
   Navigate, Outlet,
 } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react"
+import { SpeedInsights } from "@vercel/speed-insights/react"
 import { useApp }          from "./context/AppContext";
 import { useUserAuth }     from "./context/UserAuthContext";
 import ErrorBoundary       from "./components/common/ErrorBoundary";
@@ -1049,6 +1050,8 @@ useEffect(injectAppStyles, []);
          />
 
       <NotLoggedInMessage isVisible={showNotLoggedInMessage} />
+      <Analytics />
+      <SpeedInsights />
     </div>
   );
 }
