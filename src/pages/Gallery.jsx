@@ -663,13 +663,10 @@ const SnapScrollGallery = ({ images, onImageClick }) => {
 
 export default function Gallery() {
   const width = useWidth();
-  const { images, categories, tags, loading, error, pagination, params, setParams, fetchImages } = useGallery();
+  const { images, categories, tags, loading, error, pagination, params, updateParams, refetch } = useGallery();
   const [favorites, setFavorites] = useState(new Set());
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
 
-  useEffect(() => {
-    fetchImages();
-  }, [params, fetchImages]);
 
   const handleOpenImage = (image) => {
     const index = images.findIndex((img) => img.id === image.id);
@@ -700,7 +697,7 @@ export default function Gallery() {
   const isFav = (id) => favorites.has(id);
 
   const clearFilters = () => {
-    setParams({ page: 1, limit: 24, sort: "featured", category: "", search: "", tag: "" });
+    updateParams({ page: 1, limit: 24, sort: "featured", category: "", search: "", tag: "" });
   };
 
   return (
@@ -743,7 +740,7 @@ export default function Gallery() {
           )}
 
           {/* Error */}
-          {error && !loading && <ErrorState message={error} onRetry={fetchImages} />}
+          {error && !loading && <ErrorState message={error} onRetry={refetch} />}
 
           {/* Empty */}
           {!loading && !error && images.length === 0 && <EmptyState onClear={clearFilters} />}
