@@ -109,6 +109,13 @@ const CSS = `
 }
 .dc-img-frame {
   position: relative;
+}
+.dc-slider {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  touch-action: pan-y;
+
   width: 100%;
   padding-top: 58%;
   overflow: hidden;
@@ -712,6 +719,7 @@ function Stars({ rating, count }) {
 ───────────────────────────────────────────────────────────── */
 function ImageSlider({ images, name }) {
   const [idx, setIdx] = useState(0);
+  const [touchStart, setTouchStart] = useState(null);
   const timerRef      = useRef(null);
   const total         = images.length;
 
@@ -750,8 +758,28 @@ function ImageSlider({ images, name }) {
     [total, startTimer],
   );
 
+  const handleTouchStart = useCallback((e) => {
+    setTouchStart(e.touches?.[0]?.clientX ?? null);
+  }, []);
+
+  const handleTouchEnd = useCallback((e) => {
+    if (touchStart == null || total < 2) return;
+    const end = e.changedTouches?.[0]?.clientX ?? touchStart;
+    const delta = end - touchStart;
+    setTouchStart(null);
+    if (Math.abs(delta) < 35) return;
+    setIdx((p) => (delta < 0 ? (p + 1) % total : (p - 1 + total) % total));
+    startTimer();
+  }, [startTimer, touchStart, total]);
+
   return (
-    <>
+    <div
+      className="dc-slider"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onMouseEnter={() => clearInterval(timerRef.current)}
+      onMouseLeave={startTimer}
+    >
       {images.map((src, i) => (
         <img
           key={`slide-${i}`}
@@ -801,7 +829,7 @@ function ImageSlider({ images, name }) {
           </div>
         </>
       )}
-    </>
+    </div>
   );
 }
 
@@ -919,6 +947,8 @@ const {
      name             = "Destination",
      images           = [],
      gallery          = [],
+     heroImages       = [],
+     hero_images,
      heroImage,
      imageUrl,
      thumbnailUrl,
@@ -1067,7 +1097,7 @@ const blurb =
         <div className="dc-img-frame">
 
           {safeImgs.length > 0 ? (
-            <ImageSlider images={safeImgs} name={name} />
+            <ImageSlider images={cardImages} name={name} />
           ) : (
             <div className="dc-img-placeholder">
               <FiCamera size={32} aria-hidden="true" />
