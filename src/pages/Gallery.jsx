@@ -173,7 +173,7 @@ const STYLES = `
     -webkit-overflow-scrolling:touch; touch-action:pan-x;
   }
   .g-story-slide {
-    flex:0 0 min(76vw, 820px); height:min(74vh, 760px); min-height:0;
+    flex:0 0 auto; width:auto; height:auto; min-height:0;
     scroll-snap-align:center; scroll-snap-stop:always; display:flex; align-items:center; justify-content:center;
     opacity:.28; filter:blur(7px) saturate(.65); transform:scale(.82);
     transition:transform .55s cubic-bezier(.2,.8,.2,1), opacity .55s ease, filter .55s ease;
@@ -186,7 +186,7 @@ const STYLES = `
     display:flex; align-items:center; justify-content:center;
   }
   .g-story-image-shell img {
-    width:100%; height:100%; max-width:100%; max-height:100%; display:block; object-fit:contain; user-select:none;
+    width:100%; height:100%; max-width:100%; max-height:100%; display:block; object-fit:cover; user-select:none;
     -webkit-user-drag:none; animation:gStoryImageIn .55s ease both;
   }
   .g-story-caption {
@@ -235,9 +235,7 @@ const STYLES = `
       scroll-padding-inline:52px;
     }
     .g-story-slide {
-      flex-basis:calc(100vw - 76px);
-      height:calc(100dvh - 190px);
-      max-height:74vh;
+      flex:0 0 auto; width:auto; height:auto;
       transform:scale(.82); filter:blur(5px) saturate(.55);
     }
     .g-story-slide.is-active { transform:scale(1); }
@@ -255,7 +253,7 @@ const STYLES = `
     .g-viewer-bottom { padding:10px 12px 16px; }
   }
   @media (max-width: 390px) {
-    .g-story-slide { flex-basis:calc(100vw - 64px); height:calc(100dvh - 205px); max-height:70vh; }
+    .g-story-slide { flex:0 0 auto; width:auto; height:auto; }
     .g-info-grid { grid-template-columns:1fr; }
   }
   .g-focus:focus-visible {
@@ -500,6 +498,7 @@ const GalleryCard = ({ image, index, onOpen, isFav, onFav }) => {
 
 const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext }) => {
   const [showDetails, setShowDetails] = useState(false);
+  const [storySizes, setStorySizes] = useState({});
   const trackRef = useRef(null);
   const touchStartX = useRef(null);
   const currentImage = images[selectedIndex];
@@ -567,6 +566,39 @@ const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext }) => 
     touchStartX.current = null;
   };
 
+  const getStorySize = (image, index) => {
+    const size = storySizes[image.id];
+    if (size) return size;
+
+    // A compact fallback keeps the first render responsive before the image reports
+    // its natural dimensions. Once loaded, the exact aspect ratio is used.
+    const mobile = typeof window !== "undefined" && window.innerWidth <= 700;
+    const maxW = Math.min(window.innerWidth * (mobile ? 0.88 : 0.76), mobile ? 680 : 900);
+    const maxH = Math.min(window.innerHeight * (mobile ? 0.68 : 0.72), mobile ? 560 : 760);
+    return { width: maxW, height: maxH };
+  };
+
+  const handleStoryImageLoad = (image, e) => {
+    const nw = e.currentTarget.naturalWidth;
+    const nh = e.currentTarget.naturalHeight;
+    if (!nw || !nh) return;
+
+    const mobile = typeof window !== "undefined" && window.innerWidth <= 700;
+    const maxW = Math.min(window.innerWidth * (mobile ? 0.88 : 0.76), mobile ? 680 : 900);
+    const maxH = Math.min(window.innerHeight * (mobile ? 0.68 : 0.72), mobile ? 560 : 760);
+    const scale = Math.min(maxW / nw, maxH / nh);
+    const next = {
+      width: Math.max(1, Math.round(nw * scale)),
+      height: Math.max(1, Math.round(nh * scale)),
+    };
+
+    setStorySizes((prev) => {
+      const oldSize = prev[image.id];
+      if (oldSize && oldSize.width === next.width && oldSize.height === next.height) return prev;
+      return { ...prev, [image.id]: next };
+    });
+  };
+
   if (!currentImage) return null;
 
   return (
@@ -603,11 +635,15 @@ const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext }) => 
               className={'g-story-slide ' + (i === selectedIndex ? "is-active" : "")}
               onClick={() => i === selectedIndex && setShowDetails(false)}
             >
-              <div className="g-story-image-shell">
+              <div
+                className="g-story-image-shell"
+                style={getStorySize(image, i)}
+              >
                 <img
                   src={image.src || image.thumb}
                   alt={image.alt || image.title || "Altuvera gallery image"}
                   draggable="false"
+                  onLoad={(e) => handleStoryImageLoad(image, e)}
                 />
                 <div className="g-story-caption">
                   {image.title && <h2>{image.title}</h2>}
