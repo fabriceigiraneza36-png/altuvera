@@ -1396,3 +1396,429 @@ html { scroll-behavior: smooth; }
   .d-lightbox__arrow--n { right: 10px; }
   .d-lightbox__counter { bottom: 12px; }
 }
+
+
+/* ═══════════════════════════════════════════════════════════
+   ALTUVERA DESTINATION DETAIL — PREMIUM POLISH
+   Consistent with the green / white safari brand language.
+═══════════════════════════════════════════════════════════ */
+
+.d-page {
+  background:
+    radial-gradient(circle at 10% 12%, rgba(220,252,231,.32), transparent 28%),
+    #fff;
+}
+
+.d-wrap { max-width: 1240px; }
+
+/* Hero: cinematic but still readable and elegant */
+.d-hero {
+  min-height: 720px;
+  isolation: isolate;
+}
+.d-hero__ov {
+  background:
+    linear-gradient(180deg, rgba(5,46,22,.28) 0%, rgba(5,46,22,.08) 34%, rgba(5,46,22,.82) 100%),
+    linear-gradient(90deg, rgba(5,46,22,.32), transparent 62%);
+}
+.d-hero__slide img {
+  filter: saturate(.96) contrast(1.02);
+}
+.d-hero__body {
+  padding-bottom: 108px;
+}
+.d-hero__title {
+  letter-spacing: -.045em;
+  text-wrap: balance;
+}
+.d-hero__sub {
+  text-wrap: balance;
+}
+.d-hero__loc {
+  box-shadow: 0 10px 30px rgba(0,0,0,.12);
+}
+.d-hero__ctas .d-btn {
+  min-height: 52px;
+}
+.d-hero__stats {
+  max-width: 720px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.d-hero__stat {
+  min-width: 120px;
+}
+.d-hero__arrow {
+  position: absolute;
+  top: 50%;
+  z-index: 8;
+  width: 46px;
+  height: 46px;
+  border: 1px solid rgba(255,255,255,.28);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: rgba(5,46,22,.28);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  cursor: pointer;
+  transition: transform .25s ease, background .25s ease, border-color .25s ease;
+}
+.d-hero__arrow:hover {
+  transform: translateY(-50%) scale(1.08);
+  background: rgba(255,255,255,.16);
+  border-color: rgba(255,255,255,.6);
+}
+.d-hero__arrow--p { left: 24px; transform: translateY(-50%); }
+.d-hero__arrow--n { right: 24px; transform: translateY(-50%); }
+.d-hero__arrow--p:hover,
+.d-hero__arrow--n:hover { transform: translateY(-50%) scale(1.08); }
+
+/* Content rhythm */
+.d-sec {
+  padding: clamp(56px, 7vw, 88px) 0;
+}
+.d-about {
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 410px);
+  gap: clamp(34px, 6vw, 76px);
+}
+.d-about__title {
+  max-width: 760px;
+  letter-spacing: -.025em;
+}
+.d-prose {
+  max-width: 760px;
+}
+.d-prose p {
+  font-size: clamp(.96rem, 1.25vw, 1.03rem);
+}
+
+/* Premium photo panel under the about section */
+.d-about-photo-panel {
+  position: relative;
+  aspect-ratio: 4 / 5;
+}
+.d-about-photo-panel > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .8s cubic-bezier(.22,1,.36,1);
+}
+.d-about-photo-panel:hover > img {
+  transform: scale(1.045);
+}
+.d-about-photo-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, transparent 42%, rgba(5,46,22,.82) 100%);
+  pointer-events: none;
+}
+.d-about-photo-panel__caption {
+  position: absolute;
+  left: 20px;
+  right: 20px;
+  bottom: 18px;
+  z-index: 2;
+  color: #fff;
+}
+.d-about-photo-panel__caption span {
+  display: block;
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: #bbf7d0;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.d-about-photo-panel__caption strong {
+  display: block;
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: 1.35rem;
+  line-height: 1.15;
+}
+
+/* Gallery: editorial travel-magazine composition */
+.d-destination-gallery {
+  background:
+    radial-gradient(circle at 8% 10%, rgba(134,239,172,.18), transparent 25%),
+    #ecfdf5;
+}
+.d-gal-mosaic {
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: minmax(150px, 210px);
+  gap: 12px;
+}
+.d-gal-cell {
+  grid-column: span 3;
+  aspect-ratio: auto;
+  min-height: 180px;
+  border-radius: 20px;
+}
+.d-gal-cell--wide {
+  grid-column: span 6;
+  grid-row: span 2;
+}
+.d-gal-cell__ov {
+  background: linear-gradient(180deg, transparent 35%, rgba(5,46,22,.72));
+  align-items: flex-end;
+  justify-content: flex-start;
+  padding: 18px;
+}
+.d-gal-cell__ov span {
+  padding: 7px 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.22);
+  background: rgba(255,255,255,.1);
+  backdrop-filter: blur(8px);
+  font-size: .72rem;
+  font-weight: 700;
+}
+
+/* Information cards */
+.d-deepdive__grid {
+  gap: 16px;
+}
+.d-deepdive__block {
+  border-color: #e5f4ea;
+  box-shadow: 0 3px 18px rgba(5,46,22,.035);
+}
+.d-deepdive__block:hover {
+  transform: translateY(-3px);
+  transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease;
+}
+.d-deepdive__block h3 {
+  letter-spacing: -.015em;
+}
+
+/* Highlight / attraction cards feel like the rest of the site */
+.d-exp-card {
+  border: 1px solid rgba(22,101,52,.08);
+}
+.d-exp-card__overlay {
+  backdrop-filter: blur(1px);
+}
+
+/* Lightbox */
+.d-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 72px 76px 88px;
+  background: rgba(3,10,6,.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  animation: dLightboxIn .28s ease both;
+}
+.d-lightbox__image {
+  max-width: min(1120px, 88vw);
+  max-height: calc(100vh - 150px);
+  object-fit: contain;
+  border-radius: 18px;
+  box-shadow: 0 30px 90px rgba(0,0,0,.48);
+  animation: dLightboxImageIn .38s cubic-bezier(.22,1,.36,1) both;
+}
+.d-lightbox__close,
+.d-lightbox__arrow {
+  position: absolute;
+  z-index: 3;
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: rgba(255,255,255,.09);
+  border: 1px solid rgba(255,255,255,.2);
+  backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all .22s ease;
+}
+.d-lightbox__close { top: 20px; right: 22px; }
+.d-lightbox__arrow { top: 50%; transform: translateY(-50%); }
+.d-lightbox__arrow--p { left: 24px; }
+.d-lightbox__arrow--n { right: 24px; }
+.d-lightbox__close:hover,
+.d-lightbox__arrow:hover {
+  background: rgba(255,255,255,.18);
+  border-color: rgba(255,255,255,.42);
+  transform: translateY(-50%) scale(1.07);
+}
+.d-lightbox__close:hover { transform: scale(1.07); }
+.d-lightbox__counter {
+  position: absolute;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  color: rgba(255,255,255,.78);
+  font-size: .78rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.14);
+}
+
+@keyframes dLightboxIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes dLightboxImageIn {
+  from { opacity: 0; transform: scale(.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Mobile-first polish */
+@media (max-width: 768px) {
+  .d-wrap { padding: 0 18px; }
+  .d-hero {
+    min-height: 690px;
+  }
+  .d-hero__body {
+    padding-bottom: 74px;
+  }
+  .d-hero__title {
+    font-size: clamp(2.65rem, 15vw, 4.2rem);
+  }
+  .d-hero__ctas {
+    width: 100%;
+    padding: 0 8px;
+  }
+  .d-hero__ctas .d-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .d-hero__stats {
+    gap: 0;
+    justify-content: space-around;
+    margin-top: 26px;
+    padding-top: 18px;
+  }
+  .d-hero__stat {
+    min-width: 0;
+    flex: 1;
+  }
+  .d-hero__stat-n {
+    font-size: 1.35rem;
+  }
+  .d-hero__stat-l {
+    font-size: .58rem;
+    letter-spacing: .06em;
+  }
+  .d-hero__arrow {
+    width: 40px;
+    height: 40px;
+    top: 42%;
+  }
+  .d-hero__arrow--p { left: 12px; }
+  .d-hero__arrow--n { right: 12px; }
+  .d-hero__dots {
+    bottom: 56px;
+    right: 50%;
+    transform: translateX(50%);
+  }
+
+  .d-about {
+    grid-template-columns: 1fr;
+    gap: 34px;
+  }
+  .d-about__aside {
+    position: static;
+  }
+  .d-about-photo-panel {
+    aspect-ratio: 16 / 10;
+  }
+  .d-about-photo-panel__caption strong {
+    font-size: 1.12rem;
+  }
+
+  .d-gal-mosaic {
+    grid-template-columns: repeat(2, 1fr);
+    grid-auto-rows: 150px;
+    gap: 9px;
+  }
+  .d-gal-cell,
+  .d-gal-cell--wide {
+    grid-column: span 1;
+    grid-row: span 1;
+    min-height: 0;
+  }
+  .d-gal-cell--wide {
+    grid-column: span 2;
+  }
+
+  .d-deepdive__grid {
+    grid-template-columns: 1fr;
+  }
+  .d-deepdive__block--full {
+    grid-column: auto;
+  }
+
+  .d-lightbox {
+    padding: 68px 12px 70px;
+  }
+  .d-lightbox__image {
+    max-width: 94vw;
+    max-height: 72vh;
+    border-radius: 12px;
+  }
+  .d-lightbox__arrow {
+    width: 40px;
+    height: 40px;
+  }
+  .d-lightbox__arrow--p { left: 8px; }
+  .d-lightbox__arrow--n { right: 8px; }
+  .d-lightbox__close { top: 14px; right: 14px; }
+}
+
+@media (max-width: 480px) {
+  .d-sec { padding: 48px 0; }
+  .d-hero {
+    min-height: 650px;
+  }
+  .d-hero__loc {
+    padding: 6px 13px;
+    letter-spacing: 2px;
+    font-size: .66rem;
+  }
+  .d-hero__sub {
+    font-size: .9rem;
+    margin-bottom: 20px;
+  }
+  .d-hero__stats {
+    display: flex;
+  }
+  .d-hero__stat-n {
+    font-size: 1.15rem;
+  }
+  .d-hero__stat-l {
+    font-size: .52rem;
+  }
+  .d-about__book-row {
+    flex-direction: column;
+  }
+  .d-about__book-row .d-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  .d-gal-mosaic {
+    grid-auto-rows: 135px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .d-hero__slide img,
+  .d-about-photo-panel > img {
+    transition: none !important;
+  }
+  .d-lightbox,
+  .d-lightbox__image {
+    animation: none !important;
+  }
+}
