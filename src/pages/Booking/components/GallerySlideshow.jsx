@@ -24,7 +24,7 @@ export default function GallerySlideshow({
 }) {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [heroShownAt, setHeroShownAt] = useState(0);
+  const [heroActive, setHeroActive] = useState(false);
   const timerRef = useRef(null);
 
   const advance = useCallback(
@@ -32,13 +32,16 @@ export default function GallerySlideshow({
     [],
   );
 
-  // When a hero image is supplied, show it up-front for heroMs, then
-  // silently resume the standard slideshow (without resetting its index).
-  const heroActive = !!hero && Date.now() - heroShownAt < heroMs;
-
+  // Show a selected destination briefly, then automatically resume the gallery.
   useEffect(() => {
-    if (hero) setHeroShownAt(Date.now());
-  }, [hero]);
+    if (!hero) {
+      setHeroActive(false);
+      return;
+    }
+    setHeroActive(true);
+    const timer = window.setTimeout(() => setHeroActive(false), heroMs);
+    return () => window.clearTimeout(timer);
+  }, [hero, heroMs]);
 
   useEffect(() => {
     if (isPaused || heroActive) return;
