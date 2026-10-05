@@ -215,7 +215,6 @@ const Card = ({
   reviews,
   duration,
   travelers,
-  price,
   type,
   to,
   badge,
@@ -415,27 +414,18 @@ const Card = ({
           )}
         </div>
 
-        {/* Footer */}
+        {/* Footer — pricing intentionally omitted from all public cards */}
         <div className="flex items-center justify-between pt-3.5 mt-3 border-t border-gray-100">
-          {price ? (
-            <div className="flex items-baseline gap-1">
-              <span className="text-lg font-bold text-emerald-600">
-                {price}
-              </span>
-              <span className="text-xs text-gray-400">/ person</span>
-            </div>
-          ) : (
-            <span className="text-[13px] font-semibold text-emerald-600 flex items-center gap-1.5">
-              Explore
-              <ArrowRight
-                size={14}
-                strokeWidth={2.5}
-                className={`transition-transform duration-300 ${
-                  isHovered ? "translate-x-[3px]" : "translate-x-0"
-                }`}
-              />
-            </span>
-          )}
+          <span className="text-[13px] font-semibold text-emerald-600 flex items-center gap-1.5">
+            Explore
+            <ArrowRight
+              size={14}
+              strokeWidth={2.5}
+              className={`transition-transform duration-300 ${
+                isHovered ? "translate-x-[3px]" : "translate-x-0"
+              }`}
+            />
+          </span>
 
           {/* Visual accent dots */}
           <div className="flex gap-1">
