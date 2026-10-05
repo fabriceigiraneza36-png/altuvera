@@ -645,6 +645,29 @@ function NewConvModal({ onClose, onCreated }) {
 
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+              Quick start
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                "I'd like help planning my safari.",
+                "Can you help me with my booking?",
+                "I'd like to ask about availability.",
+                "Can you recommend a destination?",
+              ].map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => setBody(suggestion)}
+                  className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1.5 text-[11px] font-semibold text-emerald-700 hover:bg-emerald-100 transition"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
               Message <span className="text-red-400">*</span>
             </label>
             <textarea ref={taRef} value={body} onChange={e=>setBody(e.target.value)}
