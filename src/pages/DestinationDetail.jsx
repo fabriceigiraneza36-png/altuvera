@@ -254,7 +254,7 @@ export default function DestinationDetail() {
     destination.metaDescription ||
     description ||
     `Explore ${destination.name} with Altuvera Safaris — curated East African wildlife, culture, nature and adventure experiences.`
-  ).replace(/\\s+/g, " ").trim().slice(0, 160);
+  ).replace(/\s+/g, " ").trim().slice(0, 160);
   const canonicalUrl = `https://www.altuverasafaris.com/destinations/${encodeURIComponent(destination.slug || target)}`;
   const seoImages = heroSlides.slice(0, 3);
   const seoKeywords = [
@@ -319,7 +319,10 @@ export default function DestinationDetail() {
         <meta property="og:description" content={seoDescription} />
         <meta property="og:url" content={canonicalUrl} />
         {seoImages.map((image, index) => (
-          <meta key={`og-image-${index}`} property="og:image" content={image} />
+          <React.Fragment key={`og-image-${index}`}>
+            <meta property="og:image" content={image} />
+            <meta property="og:image:alt" content={`${destination.name} — Altuvera Safaris destination photo ${index + 1}`} />
+          </React.Fragment>
         ))}
         <meta name="twitter:card" content="summary_large_image" />
         <meta name="twitter:title" content={seoTitle} />
