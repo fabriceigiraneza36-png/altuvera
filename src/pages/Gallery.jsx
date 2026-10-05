@@ -196,13 +196,41 @@ const STYLES = `
   .g-story-caption h2 { margin:0 0 5px; font:700 clamp(18px,2vw,27px) 'Playfair Display',serif; }
   .g-story-caption span { display:flex; align-items:center; gap:6px; font-size:13px; opacity:.9; }
   .g-viewer-arrow {
-    position:absolute; z-index:4; width:50px; height:50px; border-radius:50%;
-    border:1px solid rgba(255,255,255,.2); background:rgba(0,0,0,.28); color:#fff;
-    display:grid; place-items:center; cursor:pointer; backdrop-filter:blur(12px); transition:all .25s ease;
+    position:absolute; z-index:20; width:54px; height:54px; border-radius:50%;
+    border:1px solid rgba(255,255,255,.34); background:rgba(5,30,22,.62); color:#fff;
+    display:grid; place-items:center; cursor:pointer; backdrop-filter:blur(18px) saturate(140%);
+    -webkit-backdrop-filter:blur(18px) saturate(140%);
+    box-shadow:0 8px 28px rgba(0,0,0,.28);
+    transition:transform .25s cubic-bezier(.2,.8,.2,1), background .25s ease, border-color .25s ease,
+      box-shadow .25s ease, opacity .25s ease;
+    overflow:hidden; isolation:isolate;
+    animation:gArrowGlow 2.8s ease-in-out infinite;
   }
-  .g-viewer-arrow:hover:not(:disabled) { transform:scale(1.08); background:#059669; }
-  .g-viewer-arrow:disabled { opacity:.2; cursor:not-allowed; }
-  .g-viewer-arrow-left { left:18px; } .g-viewer-arrow-right { right:18px; }
+  .g-viewer-arrow::before {
+    content:""; position:absolute; inset:-45%;
+    background:radial-gradient(circle, rgba(52,211,153,.34) 0%, rgba(52,211,153,0) 62%);
+    opacity:.7; z-index:-1; transition:transform .35s ease, opacity .25s ease;
+  }
+  .g-viewer-arrow::after {
+    content:""; position:absolute; inset:2px; border-radius:50%;
+    border:1px solid rgba(255,255,255,.10); pointer-events:none;
+  }
+  .g-viewer-arrow:hover:not(:disabled) {
+    transform:scale(1.12);
+    background:linear-gradient(135deg,#10b981,#047857);
+    border-color:rgba(167,243,208,.7);
+    box-shadow:0 12px 34px rgba(0,0,0,.4), 0 0 28px rgba(16,185,129,.26);
+  }
+  .g-viewer-arrow:hover:not(:disabled)::before { transform:scale(1.35); opacity:1; }
+  .g-viewer-arrow:active:not(:disabled) { transform:scale(.91); }
+  .g-viewer-arrow:focus-visible {
+    outline:3px solid rgba(110,231,183,.9); outline-offset:4px;
+  }
+  .g-viewer-arrow:disabled {
+    opacity:.22; cursor:not-allowed; animation:none; pointer-events:none;
+  }
+  .g-viewer-arrow-left { left:clamp(8px,2vw,24px); animation-name:gArrowGlow,gArrowFloatLeft; animation-duration:2.8s,2.2s; animation-iteration-count:infinite; animation-timing-function:ease-in-out; }
+  .g-viewer-arrow-right { right:clamp(8px,2vw,24px); animation-name:gArrowGlow,gArrowFloatRight; animation-duration:2.8s,2.2s; animation-iteration-count:infinite; animation-timing-function:ease-in-out; }
   .g-viewer-bottom {
     bottom:0; padding:15px 22px 22px; background:linear-gradient(transparent,rgba(0,0,0,.78) 28%);
   }
@@ -225,6 +253,18 @@ const STYLES = `
   .g-info-tags span { padding:4px 9px; border-radius:99px; background:rgba(16,185,129,.18); color:#a7f3d0; font-size:11px; }
   @keyframes gViewerIn { from {opacity:0; transform:scale(1.015)} to {opacity:1; transform:scale(1)} }
   @keyframes gStoryImageIn { from {opacity:0; transform:scale(1.025)} to {opacity:1; transform:scale(1)} }
+  @keyframes gArrowFloatLeft {
+    0%,100% { transform:translate3d(0,0,0); }
+    50% { transform:translate3d(-3px,0,0); }
+  }
+  @keyframes gArrowFloatRight {
+    0%,100% { transform:translate3d(0,0,0); }
+    50% { transform:translate3d(3px,0,0); }
+  }
+  @keyframes gArrowGlow {
+    0%,100% { box-shadow:0 8px 28px rgba(0,0,0,.28), 0 0 0 0 rgba(16,185,129,0); }
+    50% { box-shadow:0 10px 32px rgba(0,0,0,.34), 0 0 0 5px rgba(16,185,129,.08); }
+  }
 
   @media (max-width: 700px) {
     .g-viewer-topbar { padding:12px 12px 10px; grid-template-columns:1fr auto; }
@@ -241,11 +281,11 @@ const STYLES = `
     .g-story-slide.is-active { transform:scale(1); }
     .g-story-image-shell { border-radius:18px; }
     .g-viewer-arrow {
-      display:grid; width:42px; height:42px; z-index:8;
-      background:rgba(0,0,0,.5); border-color:rgba(255,255,255,.3);
+      display:grid; width:46px; height:46px; z-index:30;
+      background:rgba(5,30,22,.68); border-color:rgba(255,255,255,.38);
     }
-    .g-viewer-arrow-left { left:8px; }
-    .g-viewer-arrow-right { right:8px; }
+    .g-viewer-arrow-left { left:7px; }
+    .g-viewer-arrow-right { right:7px; }
     .g-story-caption { padding:55px 16px 16px; }
     .g-story-caption h2 { font-size:19px; }
     .g-image-info { margin-left:0; margin-right:0; max-height:28vh; padding:14px; border-radius:15px; }
@@ -496,7 +536,7 @@ const GalleryCard = ({ image, index, onOpen, isFav, onFav }) => {
   );
 };
 
-const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext }) => {
+const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext, onIndexChange }) => {
   const [showDetails, setShowDetails] = useState(false);
   const [storySizes, setStorySizes] = useState({});
   const trackRef = useRef(null);
@@ -542,7 +582,7 @@ const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext }) => 
         });
 
         if (nearest !== selectedIndex) {
-          setSelectedIndex(nearest);
+          onIndexChange(nearest);
           setShowDetails(false);
         }
       });
@@ -553,7 +593,7 @@ const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext }) => 
       track.removeEventListener("scroll", syncActiveSlide);
       cancelAnimationFrame(raf);
     };
-  }, [selectedIndex]);
+  }, [selectedIndex, onIndexChange]);
 
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
@@ -624,7 +664,7 @@ const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext }) => 
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <button className="g-viewer-arrow g-viewer-arrow-left g-focus" onClick={onPrev} disabled={selectedIndex === 0} aria-label="Previous image">
+        <button className="g-viewer-arrow g-viewer-arrow-left g-focus" onClick={onPrev} disabled={selectedIndex === 0} aria-label="Previous image" title="Previous image">
           <FiChevronLeft size={27} />
         </button>
 
@@ -656,7 +696,7 @@ const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext }) => 
           ))}
         </div>
 
-        <button className="g-viewer-arrow g-viewer-arrow-right g-focus" onClick={onNext} disabled={selectedIndex === images.length - 1} aria-label="Next image">
+        <button className="g-viewer-arrow g-viewer-arrow-right g-focus" onClick={onNext} disabled={selectedIndex === images.length - 1} aria-label="Next image" title="Next image">
           <FiChevronRight size={27} />
         </button>
       </div>
@@ -864,6 +904,7 @@ export default function Gallery() {
           onClose={handleCloseModal}
           onPrev={handlePrevImage}
           onNext={handleNextImage}
+          onIndexChange={setSelectedImageIndex}
         />
       )}
     </>
