@@ -1,9 +1,11 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowDown,
   Calendar,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Clock3,
   Compass,
   Mail,
@@ -154,6 +156,7 @@ export default function DestinationDetail() {
   const target = slug || destinationSlug || destinationId || id;
 
   const { destination, loading, error } = useDestination(target);
+  const [heroSlide, setHeroSlide] = useState(0);
 
   const gallery = useMemo(
     () =>
@@ -165,6 +168,28 @@ export default function DestinationDetail() {
         : [],
     [destination]
   );
+  const heroSlides = useMemo(() => {
+    const preferred = [destination?.heroImage, ...(gallery.slice(0, 3).map((img) => img.url))].filter(Boolean);
+    return [...new Set(preferred.map(resolveImageUrl))].slice(0, 3);
+  }, [destination?.heroImage, gallery]);
+
+  const additionalImages = useMemo(
+    () => gallery.filter((img) => !heroSlides.includes(img.url)).slice(0, 5),
+    [gallery, heroSlides]
+  );
+
+  useEffect(() => {
+    setHeroSlide(0);
+  }, [target]);
+
+  useEffect(() => {
+    if (heroSlides.length < 2) return;
+    const timer = window.setInterval(() => {
+      setHeroSlide((current) => (current + 1) % heroSlides.length);
+    }, 5200);
+    return () => window.clearInterval(timer);
+  }, [heroSlides.length]);
+
 
   if (loading) {
     return (
@@ -189,7 +214,7 @@ export default function DestinationDetail() {
     );
   }
 
-  const heroImage = gallery[0]?.url || destination.heroImage || destination.imageUrl || destination.image || "";
+  const heroImage = heroSlides[heroSlide] || gallery[0]?.url || destination.heroImage || destination.imageUrl || destination.image || "";
   const description = destination.description || destination.shortDescription || destination.overview || "";
   const attractions = Array.isArray(destination.attractions) ? destination.attractions : [];
   const highlights = Array.isArray(destination.highlights) ? destination.highlights : [];
@@ -209,11 +234,11 @@ export default function DestinationDetail() {
 
         <header className="d-hero">
           <div className="d-hero__slides">
-            {heroImage ? (
-              <div className="d-hero__slide active">
-                <img src={heroImage} alt={destination.name} loading="eager" />
+            {heroSlides.length > 0 ? heroSlides.map((src, index) => (
+              <div key={src} className={`d-hero__slide ${index === heroSlide ? "active" : ""}`}>
+                <img src={src} alt={`${destination.name} — view ${index + 1}`} loading={index === 0 ? "eager" : "lazy"} />
               </div>
-            ) : (
+            )) : (
               <div className="d-hero__slide d-hero__slide--empty active">
                 <Ic n="mountain" size={80} />
               </div>
@@ -221,6 +246,22 @@ export default function DestinationDetail() {
           </div>
 
           <div className="d-hero__ov" />
+
+          {heroSlides.length > 1 && (
+            <>
+              <button type="button" className="d-hero__arrow d-hero__arrow--p" onClick={() => setHeroSlide((heroSlide - 1 + heroSlides.length) % heroSlides.length)} aria-label="Previous hero image">
+                <ChevronLeft size={20} />
+              </button>
+              <button type="button" className="d-hero__arrow d-hero__arrow--n" onClick={() => setHeroSlide((heroSlide + 1) % heroSlides.length)} aria-label="Next hero image">
+                <ChevronRight size={20} />
+              </button>
+              <div className="d-hero__dots" aria-label="Destination hero slideshow">
+                {heroSlides.map((_, index) => (
+                  <button key={index} type="button" className={`d-hero__dot ${index === heroSlide ? "on" : ""}`} onClick={() => setHeroSlide(index)} aria-label={`Show hero image ${index + 1}`} />
+                ))}
+              </div>
+            </>
+          )}
 
           <nav className="d-hero__nav">
             <div className="d-wrap">
@@ -325,20 +366,49 @@ export default function DestinationDetail() {
               </div>
 
               <aside className="d-about__aside">
-                {gallery.length > 0 && (
+                {additionalImages.length > 0 && (
                   <Reveal from="right" delay={60}>
-                    <div className="d-aside-slider">
-                      <div className="d-aside-slider__track">
-                        {gallery.map((img, index) => (
-                          <div key={index} className="d-aside-slider__slide active">
-                            <img src={img.url} alt={`${destination.name} ${index + 1}`} loading={index === 0 ? "eager" : "lazy"} />
-                          </div>
-                        ))}
+                    <div className="d-aside-slider d-about-photo-panel">
+                      <img src={additionalImages[0].url} alt={`${destination.name} experience`} loading="lazy" />
+                      <div className="d-about-photo-panel__caption">
+                        <span>More of {destination.name}</span>
+                        <strong>{additionalImages.length} additional photos</strong>
                       </div>
                     </div>
                   </Reveal>
                 )}
               </aside>
+            </div>
+          </div>
+        </section>
+
+        {additionalImages.length > 0 && (
+          <section className="d-sec d-sec--soft d-destination-gallery">
+            <div className="d-wrap">
+              <Reveal from="bottom">
+                <SH title="See More of the Journey" sub={`A closer look at ${destination.name}`} tag="Destination gallery" />
+              </Reveal>
+              <div className="d-gal-mosaic">
+                {additionalImages.map((img, index) => (
+                  <button key={img.url} type="button" className={`d-gal-cell ${index === 0 ? "d-gal-cell--wide" : ""}`} onClick={() => window.dispatchEvent(new CustomEvent("altuvera:destination-lightbox", { detail: { images: [...heroSlides, ...additionalImages], index: heroSlides.length + index } }))}>
+                    <img src={img.url} alt={img.caption || `${destination.name} gallery image ${index + 1}`} loading="lazy" />
+                    <span className="d-gal-cell__ov"><span>{img.caption || "Explore photo"}</span></span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        <section className="d-sec d-sec--white">
+          <div className="d-wrap">
+            <SH title={`Plan Your Visit to ${destination.name}`} sub="Useful information to help you prepare for the experience" />
+            <div className="d-deepdive__grid">
+              {destination.bestTimeToVisit && <div className="d-deepdive__block"><div className="d-deepdive__block-icon"><Calendar size={20}/></div><h3>Best Time to Visit</h3><p className="d-deepdive__para">{destination.bestTimeToVisit}</p></div>}
+              {destination.gettingThere && <div className="d-deepdive__block"><div className="d-deepdive__block-icon"><MapPin size={20}/></div><h3>Getting There</h3><p className="d-deepdive__para">{destination.gettingThere}</p></div>}
+              {destination.whatToExpect && <div className="d-deepdive__block"><div className="d-deepdive__block-icon"><Compass size={20}/></div><h3>What to Expect</h3><p className="d-deepdive__para">{destination.whatToExpect}</p></div>}
+              {destination.safetyInfo && <div className="d-deepdive__block"><div className="d-deepdive__block-icon"><Star size={20}/></div><h3>Safety</h3><p className="d-deepdive__para">{destination.safetyInfo}</p></div>}
+              {destination.localTips && <div className="d-deepdive__block d-deepdive__block--full"><div className="d-deepdive__block-icon"><Mountain size={20}/></div><h3>Local Tips</h3><p className="d-deepdive__para">{typeof destination.localTips === "string" ? destination.localTips : Array.isArray(destination.localTips) ? destination.localTips.join(" • ") : ""}</p></div>}
             </div>
           </div>
         </section>
