@@ -971,7 +971,7 @@ function ItineraryPanel({ booking, onApprove, onChangeRequest }) {
       {editing && (
         <div style={{marginTop:10}}>
           <textarea value={reason} onChange={e=>setReason(e.target.value)} placeholder="Tell Altuvera what you would like changed…" style={{width:"100%",minHeight:82,border:"1px solid #cbd5e1",borderRadius:11,padding:10,resize:"vertical",fontSize:12}}/>
-          <button disabled={busy || !reason.trim()} onClick={request} style={{marginTop:7,border:0,borderRadius:10,padding:"9px 13px",background:"#0f766e",color:"#fff",fontWeight:800,fontSize:11,opacity:busy||!reason.trim()?.5:1}}>Send change request</button>
+          <button disabled={busy || !reason.trim()} onClick={request} style={{marginTop:7,border:0,borderRadius:10,padding:"9px 13px",background:"#0f766e",color:"#fff",fontWeight:800,fontSize:11,opacity:busy || !reason.trim() ? .5 : 1}}>Send change request</button>
         </div>
       )}
     </div>
