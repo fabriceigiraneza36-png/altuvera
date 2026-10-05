@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FiChevronDown } from "react-icons/fi";
-import SEO from "../components/common/SEO";
-import PageHeader from "../components/common/PageHeader";
+import SEO from "../../components/common/SEO";
+import PageHeader from "../../components/common/PageHeader";
 
 const BK_CSS = `
   @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
@@ -35,19 +35,21 @@ const BK_CSS = `
 
 function injectStyles() {
   if (typeof document === "undefined") return;
+
   const ID = "bk-v8-styles";
   if (document.getElementById(ID)) return;
 
-  const s = document.createElement("style");
-  s.id = ID;
-  s.textContent = BK_CSS;
-  document.head.appendChild(s);
+  const style = document.createElement("style");
+  style.id = ID;
+  style.textContent = BK_CSS;
+  document.head.appendChild(style);
 }
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"
 ];
+
 const WDS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 
 const toStr = (y, m, d) => `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
@@ -92,7 +94,6 @@ const BkDatePicker = React.memo(function BkDatePicker({
   placeholder = "Select date",
   minDate = null,
   maxDate = null,
-  icon = null,
   quickPicks = [],
 }) {
   const [open, setOpen] = useState(false);
@@ -148,9 +149,9 @@ const BkDatePicker = React.memo(function BkDatePicker({
     return d < minD || (maxD && d > maxD);
   };
 
-  const isT = (day) => vy === tod.getFullYear() && vm === tod.getMonth() && day === tod.getDate();
+  const isToday = (day) => vy === tod.getFullYear() && vm === tod.getMonth() && day === tod.getDate();
 
-  const isS = (day) => {
+  const isSelected = (day) => {
     if (!value) return false;
     const s = new Date(value);
     if (Number.isNaN(s.getTime())) return false;
@@ -266,8 +267,8 @@ const BkDatePicker = React.memo(function BkDatePicker({
                     aspect: "1",
                     border: "none",
                     borderRadius: 6,
-                    background: isS(day) ? "#059669" : isT(day) ? "#d1fae5" : "transparent",
-                    color: isS(day) ? "white" : disabled ? "#d1d5db" : "#111827",
+                    background: isSelected(day) ? "#059669" : isToday(day) ? "#d1fae5" : "transparent",
+                    color: isSelected(day) ? "white" : disabled ? "#d1d5db" : "#111827",
                     fontSize: 12,
                     fontWeight: 600,
                     cursor: disabled ? "not-allowed" : "pointer",
@@ -335,6 +336,85 @@ export default function Booking() {
       />
 
       <PageHeader
+        title="Book Your Journey"
+        subtitle="Find and reserve your perfect Rwandan experience"
+      />
+
+      <div style={{ padding: "60px 24px", background: "linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)" }}>
+        <div className="bk-container">
+          <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 32, textAlign: "center", color: "#111827", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            Plan Your Perfect Escape
+          </h2>
+
+          <form onSubmit={handleSubmit} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#0f172a", marginBottom: 6 }}>
+                Destination
+              </label>
+              <input
+                type="text"
+                placeholder="Where to?"
+                value={destination}
+                onChange={(e) => setDestination(e.target.value)}
+                className="bk-input"
+                style={{ width: "100%" }}
+              />
+            </div>
+
+            <BkDatePicker
+              label="Arrival Date"
+              value={arrival}
+              onChange={setArrival}
+              placeholder="Check-in"
+              quickPicks={makeQuickPicks()}
+            />
+
+            <BkDatePicker
+              label="Departure Date"
+              value={departure}
+              onChange={setDeparture}
+              placeholder="Check-out"
+              minDate={arrival}
+              quickPicks={makeDepartureQuickPicks(arrival)}
+            />
+
+            <div>
+              <label style={{ display: "block", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#0f172a", marginBottom: 6 }}>
+                Guests
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={guests}
+                onChange={(e) => setGuests(parseInt(e.target.value) || 1)}
+                className="bk-input"
+                style={{ width: "100%" }}
+              />
+            </div>
+
+            <button
+              type="submit"
+              style={{
+                background: "#059669",
+                color: "#fff",
+                border: "none",
+                borderRadius: "10px",
+                padding: "12px 28px",
+                fontSize: "15px",
+                fontWeight: 700,
+                cursor: "pointer",
+                boxShadow: "0 4px 12px rgba(5,150,105,0.2)",
+                alignSelf: "flex-end",
+              }}
+            >
+              Search
+            </button>
+          </form>
+        </div>
+      </div>
+    </>
+  );
+      }ader
         title="Book Your Journey"
         subtitle="Find and reserve your perfect Rwandan experience"
       />
