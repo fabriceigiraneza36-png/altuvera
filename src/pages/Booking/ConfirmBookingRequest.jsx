@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { CheckCircle2, Loader2, ShieldCheck, XCircle } from "lucide-react";
+import BookingVerifyResult from "./BookingVerifyResult";
 
 const API = import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
 
 export default function ConfirmBookingRequest() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const status = params.get("status");
+  if (!params.get("token") && status) return <BookingVerifyResult />;
+
   const [state, setState] = useState("loading");
   const [message, setMessage] = useState("Confirming your booking request securely…");
 
