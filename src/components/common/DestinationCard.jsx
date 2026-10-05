@@ -494,30 +494,7 @@ const CSS = `
   margin: 2px 0;
 }
 
-.dc-price-label {
-  font-size: 11px;
-  color: #94a3b8;
-  font-weight: 500;
-  margin-bottom: 2px;
-}
-.dc-price-value {
-  font-size: 17px;
-  font-weight: 800;
-  color: #059669;
-  line-height: 1;
-  font-family: 'Playfair Display', serif;
-}
-.dc-price-sub {
-  font-size: 11px;
-  color: #94a3b8;
-  margin-left: 3px;
-}
-.dc-price-request {
-  font-size: 12.5px;
-  color: #94a3b8;
-  font-style: italic;
-  margin: 0;
-}
+
 
 .dc-footer {
   display: flex;
@@ -963,8 +940,7 @@ const {
      isEcoFriendly,
      difficulty,
      category,
-     entranceFee,
-     minGroupSize,
+       minGroupSize,
      maxGroupSize,
    } = destination;
 
@@ -1244,18 +1220,6 @@ const blurb =
           </div>
         )}
 
-
-        {entranceFee ? (
-          <div>
-            <div className="dc-price-label">From</div>
-            <div style={{ display: "flex", alignItems: "baseline", gap: 4 }}>
-              <span className="dc-price-value">{entranceFee}</span>
-              <span className="dc-price-sub">/ person</span>
-            </div>
-          </div>
-        ) : (
-          <p className="dc-price-request">Price on request</p>
-        )}
 
         <hr className="dc-sep" />
 
