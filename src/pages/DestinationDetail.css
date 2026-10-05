@@ -2059,3 +2059,36 @@ html { scroll-behavior: smooth; }
     justify-content: center;
   }
 }
+
+
+/* ── Premium three-image hero slider ───────────────────────── */
+.d-hero__slides {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  transition: transform 1.05s cubic-bezier(.22,1,.36,1);
+  will-change: transform;
+}
+.d-hero__slide {
+  position: relative;
+  inset: auto;
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  opacity: 1;
+  overflow: hidden;
+}
+.d-hero__slide img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.035);
+  transition: transform 7.5s cubic-bezier(.22,1,.36,1);
+}
+.d-hero__slide.active img {
+  transform: scale(1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .d-hero__slides { transition-duration: .01ms; }
+  .d-hero__slide img { transition-duration: .01ms; }
+}
