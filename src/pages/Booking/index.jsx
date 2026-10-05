@@ -1,417 +1,127 @@
-import React, { useState, useEffect, useRef } from "react";
-import { FiChevronDown } from "react-icons/fi";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Calendar, ChevronLeft, ChevronRight, Check, AlertCircle, MapPin, Users, Send, ShieldCheck } from "lucide-react";
 import SEO from "../../components/common/SEO";
 import PageHeader from "../../components/common/PageHeader";
+import { BookingProvider } from "./BookingContext";
+import { useBookingForm, STEPS } from "./useBookingForm";
+import Step0Identity from "./steps/Step0Identity";
+import Step1Destination from "./steps/Step1Destination";
+import Step2Trip from "./steps/Step2Trip";
+import Step3Contact from "./steps/Step3Contact";
+import GallerySlideshow from "./components/GallerySlideshow";
+import SuccessScreen from "./components/SuccessScreen";
 
-const BK_CSS = `
-  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+const API = import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
 
-  :root {
-    --bk-emerald: #059669;
-    --bk-mint: #ecfdf5;
-    --bk-gray: #e5e7eb;
-  }
-
-  .bk-container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 24px;
-  }
-
-  .bk-input {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    padding: 10px 14px;
-    border: 1px solid var(--bk-gray);
-    border-radius: 10px;
-    font-size: 14px;
-  }
-
-  .bk-input:focus {
-    outline: none;
-    border-color: var(--bk-emerald);
-    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
-  }
-`;
-
-function injectStyles() {
-  if (typeof document === "undefined") return;
-
-  const ID = "bk-v8-styles";
-  if (document.getElementById(ID)) return;
-
-  const style = document.createElement("style");
-  style.id = ID;
-  style.textContent = BK_CSS;
-  document.head.appendChild(style);
-}
-
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
-];
-
-const WDS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
-
-const toStr = (y, m, d) => `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-const fmtS = (v) => (v ? new Date(v).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "");
-
-const makeQuickPicks = (base = null) => {
-  const d = base ? new Date(base) : new Date();
-  const add = (n) => {
-    const r = new Date(d);
-    r.setDate(r.getDate() + n);
-    return toStr(r.getFullYear(), r.getMonth(), r.getDate());
-  };
-
-  return [
-    { label: "1 week", value: add(7) },
-    { label: "2 weeks", value: add(14) },
-    { label: "1 month", value: add(30) },
-  ];
+const isoToday = () => {
+  const d = new Date(); d.setHours(0,0,0,0);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 };
+const pretty = (v) => v ? new Date(`${v}T00:00:00`).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "Not selected";
 
-const makeDepartureQuickPicks = (arrival) => {
-  if (!arrival) return [];
-  const d = new Date(arrival);
-  const add = (n) => {
-    const r = new Date(d);
-    r.setDate(r.getDate() + n);
-    return toStr(r.getFullYear(), r.getMonth(), r.getDate());
-  };
-
-  return [
-    { label: "5 nights", value: add(5) },
-    { label: "7 nights", value: add(7) },
-    { label: "10 nights", value: add(10) },
-    { label: "14 nights", value: add(14) },
-  ];
-};
-
-const BkDatePicker = React.memo(function BkDatePicker({
-  label,
-  value,
-  onChange,
-  placeholder = "Select date",
-  minDate = null,
-  maxDate = null,
-  quickPicks = [],
-}) {
-  const [open, setOpen] = useState(false);
-  const [vy, setVy] = useState(() => (value ? new Date(value) : new Date()).getFullYear());
-  const [vm, setVm] = useState(() => (value ? new Date(value) : new Date()).getMonth());
-  const ref = useRef(null);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const handleClickOutside = (e) => {
-      if (!ref.current?.contains(e.target)) setOpen(false);
-    };
-
-    const handleKeyEscape = (e) => {
-      if (e.key === "Escape") setOpen(false);
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    document.addEventListener("keydown", handleKeyEscape);
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      document.removeEventListener("keydown", handleKeyEscape);
-    };
-  }, [open]);
-
-  const tod = new Date();
-  tod.setHours(0, 0, 0, 0);
-
-  const minD = minDate ? new Date(minDate) : tod;
-  minD.setHours(0, 0, 0, 0);
-
-  const maxD = maxDate ? new Date(maxDate) : null;
-  if (maxD) maxD.setHours(0, 0, 0, 0);
-
-  const fd = new Date(vy, vm, 1).getDay();
-  const dim = new Date(vy, vm + 1, 0).getDate();
-  const canP = new Date(vy, vm, 1) > minD;
-  const canN = !maxD || new Date(vy, vm + 1, 1) <= maxD;
-
-  const prev = () => (vm === 0 ? (setVm(11), setVy((y) => y - 1)) : setVm((m) => m - 1));
-  const next = () => (vm === 11 ? (setVm(0), setVy((y) => y + 1)) : setVm((m) => m + 1));
-
-  const pick = (day) => {
-    onChange(toStr(vy, vm, day));
-    setOpen(false);
-  };
-
-  const dis = (day) => {
-    const d = new Date(vy, vm, day);
-    d.setHours(0, 0, 0, 0);
-    return d < minD || (maxD && d > maxD);
-  };
-
-  const isToday = (day) => vy === tod.getFullYear() && vm === tod.getMonth() && day === tod.getDate();
-
-  const isSelected = (day) => {
-    if (!value) return false;
-    const s = new Date(value);
-    if (Number.isNaN(s.getTime())) return false;
-    return vy === s.getFullYear() && vm === s.getMonth() && day === s.getDate();
-  };
-
-  return (
-    <div ref={ref} style={{ position: "relative" }}>
-      {label && (
-        <label style={{ display: "block", fontSize: 12, fontWeight: 700, marginBottom: 6, color: "#4B5563", textTransform: "uppercase" }}>
-          {label}
-        </label>
-      )}
-
-      <button
-        type="button"
-        onClick={() => setOpen((p) => !p)}
-        className="bk-input"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          width: "100%",
-          cursor: "pointer",
-          background: "white",
-        }}
-      >
-        <span style={{ fontSize: 14, color: value ? "#111827" : "#9CA3AF" }}>
-          {value ? fmtS(value) : placeholder}
-        </span>
-        <FiChevronDown size={16} />
-      </button>
-
-      {open && (
-        <div
-          style={{
-            position: "absolute",
-            top: "calc(100% + 8px)",
-            left: 0,
-            right: 0,
-            zIndex: 100,
-            background: "white",
-            border: "1px solid var(--bk-gray)",
-            borderRadius: "14px",
-            boxShadow: "0 10px 25px rgba(0,0,0,0.08)",
-            padding: "16px",
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <h4 style={{ fontSize: 14, fontWeight: 700, margin: 0, color: "#111827" }}>
-              {MONTHS[vm]} {vy}
-            </h4>
-
-            <div style={{ display: "flex", gap: 8 }}>
-              <button
-                type="button"
-                onClick={prev}
-                disabled={!canP}
-                style={{
-                  width: 28,
-                  height: 28,
-                  border: "1px solid var(--bk-gray)",
-                  borderRadius: 6,
-                  background: "white",
-                  cursor: canP ? "pointer" : "not-allowed",
-                  opacity: canP ? 1 : 0.5,
-                }}
-              >
-                ←
-              </button>
-
-              <button
-                type="button"
-                onClick={next}
-                disabled={!canN}
-                style={{
-                  width: 28,
-                  height: 28,
-                  border: "1px solid var(--bk-gray)",
-                  borderRadius: 6,
-                  background: "white",
-                  cursor: canN ? "pointer" : "not-allowed",
-                  opacity: canN ? 1 : 0.5,
-                }}
-              >
-                →
-              </button>
-            </div>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", gap: 2, textAlign: "center", marginBottom: 12 }}>
-            {WDS.map((d) => (
-              <span key={d} style={{ fontSize: 11, fontWeight: 700, color: "#9CA3AF", padding: 4 }}>
-                {d}
-              </span>
-            ))}
-
-            {Array.from({ length: fd }).map((_, i) => (
-              <span key={`empty-${i}`} />
-            ))}
-
-            {Array.from({ length: dim }).map((_, i) => {
-              const day = i + 1;
-              const disabled = dis(day);
-
-              return (
-                <button
-                  key={day}
-                  type="button"
-                  disabled={disabled}
-                  onClick={() => !disabled && pick(day)}
-                  style={{
-                    aspect: "1",
-                    border: "none",
-                    borderRadius: 6,
-                    background: isSelected(day) ? "#059669" : isToday(day) ? "#d1fae5" : "transparent",
-                    color: isSelected(day) ? "white" : disabled ? "#d1d5db" : "#111827",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: disabled ? "not-allowed" : "pointer",
-                    opacity: disabled ? 0.35 : 1,
-                  }}
-                >
-                  {day}
-                </button>
-              );
-            })}
-          </div>
-
-          {quickPicks.length > 0 && (
-            <div style={{ display: "flex", gap: 8, marginTop: 12, paddingTop: 12, borderTop: "1px solid var(--bk-gray)", flexWrap: "wrap" }}>
-              {quickPicks.map((qp) => (
-                <button
-                  key={qp.label}
-                  type="button"
-                  onClick={() => {
-                    onChange(qp.value);
-                    setOpen(false);
-                  }}
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    padding: "6px 12px",
-                    borderRadius: 6,
-                    border: "1px solid var(--bk-gray)",
-                    background: "white",
-                    cursor: "pointer",
-                  }}
-                >
-                  {qp.label}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
+function DatePicker({ label, value, onChange, minDate, error }) {
+  return <div className="bk-field-group">
+    <label className="bk-label"><Calendar size={12} style={{verticalAlign:"-2px",marginRight:5}} />{label} <span className="bk-label-req">*</span></label>
+    <div className="bk-input-wrap">
+      <span className="bk-input-ico"><Calendar size={17}/></span>
+      <input className={`bk-input${error ? " bk-input--err":""}`} type="date" min={minDate || isoToday()} value={value || ""} onChange={e=>onChange(e.target.value)} />
     </div>
-  );
-});
-
-export default function Booking() {
-  const [destination, setDestination] = useState("");
-  const [arrival, setArrival] = useState("");
-  const [departure, setDeparture] = useState("");
-  const [guests, setGuests] = useState(2);
-
-  useEffect(() => {
-    injectStyles();
-  }, []);
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log({ destination, arrival, departure, guests });
-  };
-
-  return (
-    <>
-      <SEO
-        title="Book Your Adventure | Altuvera"
-        description="Plan and book your perfect Rwanda getaway"
-        image="/og-image.jpg"
-      />
-
-      <PageHeader
-        title="Book Your Journey"
-        subtitle="Find and reserve your perfect Rwandan experience"
-      />
-
-      <div style={{ padding: "60px 24px", background: "linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%)" }}>
-        <div className="bk-container">
-          <h2 style={{ fontSize: 28, fontWeight: 700, marginBottom: 32, textAlign: "center", color: "#111827", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-            Plan Your Perfect Escape
-          </h2>
-
-          <form onSubmit={handleSubmit} style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 16 }}>
-            <div>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#0f172a", marginBottom: 6 }}>
-                Destination
-              </label>
-              <input
-                type="text"
-                placeholder="Where to?"
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-                className="bk-input"
-                style={{ width: "100%" }}
-              />
-            </div>
-
-            <BkDatePicker
-              label="Arrival Date"
-              value={arrival}
-              onChange={setArrival}
-              placeholder="Check-in"
-              quickPicks={makeQuickPicks()}
-            />
-
-            <BkDatePicker
-              label="Departure Date"
-              value={departure}
-              onChange={setDeparture}
-              placeholder="Check-out"
-              minDate={arrival}
-              quickPicks={makeDepartureQuickPicks(arrival)}
-            />
-
-            <div>
-              <label style={{ display: "block", fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: "#0f172a", marginBottom: 6 }}>
-                Guests
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={guests}
-                onChange={(e) => setGuests(parseInt(e.target.value) || 1)}
-                className="bk-input"
-                style={{ width: "100%" }}
-              />
-            </div>
-
-            <button
-              type="submit"
-              style={{
-                background: "#059669",
-                color: "#fff",
-                border: "none",
-                borderRadius: "10px",
-                padding: "12px 28px",
-                fontSize: "15px",
-                fontWeight: 700,
-                cursor: "pointer",
-                boxShadow: "0 4px 12px rgba(5,150,105,0.2)",
-                alignSelf: "flex-end",
-              }}
-            >
-              Search
-            </button>
-          </form>
-        </div>
-      </div>
-    </>
-  );
+    {error && <p className="bk-field-err"><AlertCircle size={13}/>{error}</p>}
+  </div>;
 }
+
+function DateRangeBar({ arrival, departure }) {
+  if (!arrival && !departure) return null;
+  return <div style={{display:"flex",alignItems:"center",gap:10,padding:"11px 13px",borderRadius:13,background:"#ecfdf5",color:"#047857",fontSize:12,fontWeight:750,marginBottom:18}}>
+    <Calendar size={15}/>
+    <span>{pretty(arrival)} → {pretty(departure)}</span>
+    {arrival && departure && <span style={{marginLeft:"auto"}}>{Math.max(0,Math.round((new Date(departure)-new Date(arrival))/86400000))} nights</span>}
+  </div>;
+}
+
+function BookingInner() {
+  const { step, data, set, touch, errors, touched, tryNext, goBack, jumpTo, submit, reset, submitting, submitted, submitError, displayName, bookingRef, totalTravelers } = useBookingForm();
+  const [countriesList,setCountriesList]=useState([]);
+  const [destinationsList,setDestinationsList]=useState([]);
+  const [loadingRefs,setLoadingRefs]=useState(true);
+  const firstInputRef=useRef(null);
+
+  useEffect(()=>{
+    let alive=true;
+    Promise.all([
+      fetch(`${API}/countries?is_active=true&limit=200`).then(r=>r.json()),
+      fetch(`${API}/destinations?is_active=true&limit=200`).then(r=>r.json())
+    ]).then(([c,d])=>{
+      if(!alive)return;
+      const ca=Array.isArray(c?.data)?c.data:Array.isArray(c)?c:[];
+      const da=Array.isArray(d?.data)?d.data:Array.isArray(d)?d:[];
+      setCountriesList(ca.map(x=>({value:String(x.id??x.value??x.code??""),label:String(x.name??x.label??"")})).filter(x=>x.value));
+      setDestinationsList(da.map(x=>({value:String(x.id??x.value??""),label:String(x.name??x.label??""),country:String(x.country?.name??x.countryName??x.country??""),countryId:String(x.country_id??x.countryId??""),image:String(x.image??x.thumbnail??x.imageUrl??"")})).filter(x=>x.value));
+    }).catch(()=>{}).finally(()=>alive&&setLoadingRefs(false));
+    return()=>{alive=false};
+  },[]);
+
+  useEffect(()=>{ firstInputRef.current?.focus?.(); },[step]);
+
+  const selectedDest=useMemo(()=>destinationsList.find(d=>String(d.value)===String(data.destinationId)),[destinationsList,data.destinationId]);
+  const hero=selectedDest?.image?{src:selectedDest.image,caption:selectedDest.label,tag:"Your destination"}:null;
+
+  const quickArrival = [{label:"1 week",value:new Date(Date.now()+7*864e5).toISOString().slice(0,10)},{label:"2 weeks",value:new Date(Date.now()+14*864e5).toISOString().slice(0,10)}];
+  const quickDeparture = data.startDate ? [5,7,10,14].map(n=>({label:`${n} nights`,value:new Date(new Date(data.startDate+"T00:00:00").getTime()+n*864e5).toISOString().slice(0,10)})) : [];
+
+  const destinationForImage = selectedDest ? {src:selectedDest.image,alt:selectedDest.label,caption:selectedDest.label,tag:"Your selection"} : null;
+
+  if(submitted) return <div className="bk-success"><SuccessScreen displayName={displayName} bookingRef={bookingRef} email={data.email} onReset={reset}/></div>;
+
+  const title=STEPS[step]?.label || "Review";
+  const desc=STEPS[step]?.desc || "";
+  const review = step===4;
+
+  const next = () => { if(step===3){ tryNext(); } else tryNext(); };
+
+  return <div className="bk-page">
+    {css}
+    <SEO title="Book Your Adventure | Altuvera Safaris" description="Plan your East African adventure with Altuvera Safaris." image="/og-image.jpg"/>
+    <PageHeader title="Book Your Journey" subtitle="Build your East African adventure in a few simple steps"/>
+    <div className="bk-wrap">
+      <div className="bk-layout">
+        <aside className="bk-visual"><GallerySlideshow hero={destinationForImage}/></aside>
+        <main className="bk-form">
+          <div className="bk-progress">{STEPS.map((s,i)=><button key={s.id} type="button" className={`bk-pitem ${i===step?"on":""} ${i<step?"done":""}`} onClick={()=>jumpTo(i)} disabled={i>step} style={{border:0,background:"transparent",padding:0,cursor:i<=step?"pointer":"default"}}><div className="bk-dot"/><div className="bk-ptext">{i+1}. {s.label}</div></button>)}</div>
+          <div className="bk-heading"><div><p className="bk-eyebrow">Step {step+1} of {STEPS.length}</p><h1 className="bk-title">{title}</h1><p className="bk-sub">{desc}</p></div><ShieldCheck size={25} color="#059669"/></div>
+
+          {submitError && <div className="bk-error-box"><strong>We couldn't submit your booking.</strong><div style={{marginTop:4}}>{submitError}</div></div>}
+          {loadingRefs && step===1 && <div style={{fontSize:12,color:"#718078",marginBottom:15}}>Loading destinations…</div>}
+
+          <div className="bk-step" key={step}>
+            {step===0 && <Step0Identity data={data} set={set} touch={touch} errors={errors} touched={touched} firstInputRef={firstInputRef}/>}
+            {step===1 && <Step1Destination data={data} set={set} touch={touch} errors={errors} touched={touched} countriesList={countriesList} destinationsList={destinationsList}/>}
+            {step===2 && <Step2Trip data={data} set={set} touch={touch} errors={errors} touched={touched}
+              DatePicker={DatePicker}
+              DateRangeBar={DateRangeBar}
+              makeQuickPicks={()=>quickArrival}
+              makeDepartureQuickPicks={()=>quickDeparture}/>}
+            {step===3 && <Step3Contact data={data} set={set} touch={touch} errors={errors} touched={touched}/>}
+            {review && <div>
+              <div className="bk-review">
+                <div className="bk-review-card"><h4>Traveller</h4><p><strong>{data.firstName} {data.lastName}</strong></p><p>{data.nationality}</p></div>
+                <div className="bk-review-card"><h4>Destination</h4><p><strong>{selectedDest?.label || "Selected destination"}</strong></p><p>{countriesList.find(c=>c.value===data.countryId)?.label || ""}</p></div>
+                <div className="bk-review-card"><h4>Trip</h4><p><strong>{data.flexibleDates?"Flexible dates":`${pretty(data.startDate)} → ${pretty(data.endDate)}`}</strong></p><p>{totalTravelers} traveller{totalTravelers!==1?"s":""} · {data.groupType}</p></div>
+                <div className="bk-review-card"><h4>Contact</h4><p><strong>{data.email}</strong></p><p>{data.phone} · {data.preferredContactMethod}</p></div>
+              </div>
+              <div style={{marginTop:14,padding:14,borderRadius:14,background:"#ecfdf5",color:"#35604e",fontSize:12,lineHeight:1.55}}><Check size={15} style={{verticalAlign:"-3px",marginRight:6,color:"#059669"}}/>Everything looks good. Press <strong>Confirm booking</strong> to send your request securely to Altuvera Safaris.</div>
+            </div>}
+          </div>
+
+          <div className="bk-actions">
+            <button className="bk-btn bk-btn-secondary" type="button" onClick={goBack} disabled={step===0}><ChevronLeft size={17}/>Back</button>
+            {step<4 ? <button className="bk-btn bk-btn-primary" type="button" onClick={next}>Continue <ChevronRight size={17}/></button>
+              : <button className="bk-btn bk-btn-primary" type="button" onClick={submit} disabled={submitting}>{submitting?<><span>Submitting…</span></>:<><Send size={15}/>Confirm booking</>}</button>}
+          </div>
+        </main>
+      </div>
+    </div>
+  </div>;
+}
+
+export default function Booking(){ return <BookingProvider><BookingInner/></BookingProvider>; }
