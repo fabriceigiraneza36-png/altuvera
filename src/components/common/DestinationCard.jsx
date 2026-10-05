@@ -961,9 +961,13 @@ const {
       ? country
       : country?.name ?? country?.label ?? "";
 
-const safeImgs = Array.isArray(destination.images)
-    ? destination.images.map(getImageUrl).filter(Boolean)
-    : [];
+const safeImgs = [...new Set([
+    ...(Array.isArray(destination.images) ? destination.images : []),
+    ...(Array.isArray(gallery) ? gallery : []),
+    heroImage,
+    imageUrl,
+    thumbnailUrl,
+  ].map(getImageUrl).filter(Boolean))];
 
   const locationStr = [region, location, countryName || resolvedCountry]
     .filter(Boolean)
