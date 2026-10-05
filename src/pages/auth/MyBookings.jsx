@@ -1247,7 +1247,7 @@ export default function MyBookings() {
     // Try primary endpoint first
     let { data, error: err } = await safeFetch(
       authFetch,
-      `/bookings/my-bookings?${params}`
+      `/bookings/my?${params}`
     );
 
     // Fallback: some backends use /bookings?user_id=me
