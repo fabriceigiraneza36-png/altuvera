@@ -109,17 +109,16 @@ const CSS = `
 }
 .dc-img-frame {
   position: relative;
+  width: 100%;
+  padding-top: 58%;
+  overflow: hidden;
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
 }
 .dc-slider {
   position: absolute;
   inset: 0;
   overflow: hidden;
   touch-action: pan-y;
-
-  width: 100%;
-  padding-top: 58%;
-  overflow: hidden;
-  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
 }
 .dc-img {
   position: absolute;
