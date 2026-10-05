@@ -14,7 +14,7 @@ const INITIAL = {
   startDate: "", endDate: "", flexibleDates: false, flexibleMonths: [],
   adults: 1, children: 0, specialRequests: "",
   email: "", phone: "", country: "",
-  preferredContactMethod: "whatsapp",
+  preferredContactMethod: "",
   newsletterOptIn: false, agreeToTerms: false,
 };
 
@@ -57,6 +57,7 @@ const VALIDATORS = [
     if (!d.email.trim() || !EMAIL_RE.test(d.email)) e.email = "Valid email required";
     if (!d.phone.trim())   e.phone   = "Phone required";
     if (!d.country.trim()) e.country = "Country required";
+    if (!d.preferredContactMethod) e.preferredContactMethod = "Choose how Altuvera should contact you";
     if (!d.agreeToTerms)   e.agreeToTerms = "Please accept terms";
     return e;
   },
@@ -158,6 +159,7 @@ export function BookingProvider({ children }) {
           full_name: data.firstName + " " + data.lastName,
           email: data.email.trim().toLowerCase(),
           phone: data.phone.trim(),
+          whatsapp: data.preferredContactMethod === "whatsapp" ? data.phone.trim() : undefined,
           country: data.country.trim(),
           nationality: data.nationality.trim(),
           country_id: data.countryId || undefined,
