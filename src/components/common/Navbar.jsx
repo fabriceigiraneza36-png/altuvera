@@ -12,6 +12,8 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiMapPin,
+  FiStar,
+  FiClock,
   FiX,
   FiMenu,
   FiArrowRight,
@@ -175,11 +177,23 @@ const DestinationCard = ({ destination, onClick, style, index }) => {
       {/* Bottom info bar (always visible) */}
       <div className="srch-card__info">
         <h4 className="srch-card__name">{destination.name}</h4>
-        {destination.country && (
-          <p className="srch-card__location">
-            <FiMapPin size={11} /> {destination.country}
-          </p>
-        )}
+        <div className="srch-card__meta-row">
+          {destination.country && (
+            <p className="srch-card__location">
+              <FiMapPin size={11} /> {destination.country}
+            </p>
+          )}
+          {!destination.isCountry && Number(destination.rating) > 0 && (
+            <span className="srch-card__rating">
+              <FiStar size={10} fill="currentColor" /> {Number(destination.rating).toFixed(1)}
+            </span>
+          )}
+          {!destination.isCountry && destination.duration && (
+            <span className="srch-card__duration">
+              <FiClock size={10} /> {destination.duration}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -417,7 +431,6 @@ const Navbar = () => {
               heroImage: country.flag_url || country.flag,
               images: [],
               gallery: [],
-              price: undefined,
               isCountry: true,
             }))
           : [];
