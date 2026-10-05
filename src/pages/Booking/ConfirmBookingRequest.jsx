@@ -9,8 +9,6 @@ export default function ConfirmBookingRequest() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const status = params.get("status");
-  if (!params.get("token") && status) return <BookingVerifyResult />;
-
   const [state, setState] = useState("loading");
   const [message, setMessage] = useState("Confirming your booking request securely…");
 
@@ -36,6 +34,8 @@ export default function ConfirmBookingRequest() {
         setMessage(e.message || "This confirmation link is invalid or expired.");
       });
   }, [params, navigate]);
+
+  if (!params.get("token") && status) return <BookingVerifyResult />;
 
   return (
     <div style={{minHeight:"70vh",display:"grid",placeItems:"center",padding:"32px 16px",background:"#f6fbf8"}}>
