@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import {
   Calendar,
   ChevronDown,
@@ -247,6 +248,56 @@ export default function DestinationDetail() {
   const highlights = Array.isArray(destination.highlights) ? destination.highlights : [];
   const countryInfo = destination.countryObj || destination.country || {};
 
+  const seoTitle = `${destination.name} Safari & Travel Guide | Altuvera Safaris`;
+  const seoDescription = String(
+    destination.seoDescription ||
+    destination.metaDescription ||
+    description ||
+    `Explore ${destination.name} with Altuvera Safaris — curated East African wildlife, culture, nature and adventure experiences.`
+  ).replace(/\\s+/g, " ").trim().slice(0, 160);
+  const canonicalUrl = `https://www.altuverasafaris.com/destinations/${encodeURIComponent(destination.slug || target)}`;
+  const seoImages = heroSlides.slice(0, 3);
+  const seoKeywords = [
+    destination.name,
+    destination.countryObj?.name || destination.country?.name || destination.countryName,
+    "East Africa safari",
+    "East Africa travel",
+    "Altuvera Safaris",
+  ].filter(Boolean).join(", ");
+  const destinationSchema = {
+    "@context": "https://schema.org",
+    "@type": "TouristDestination",
+    name: destination.name,
+    description: seoDescription,
+    url: canonicalUrl,
+    touristType: ["Adventure tourists", "Safari travellers", "Cultural travellers"],
+    image: seoImages,
+    ...(countryInfo?.name ? { containedInPlace: { "@type": "Country", name: countryInfo.name } } : {}),
+    provider: {
+      "@type": "TravelAgency",
+      name: "Altuvera Safaris",
+      url: "https://www.altuverasafaris.com",
+    },
+    potentialAction: {
+      "@type": "ReserveAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `https://www.altuverasafaris.com/booking?destination=${encodeURIComponent(destination.slug || target)}`,
+        actionPlatform: ["https://schema.org/DesktopWebPlatform", "https://schema.org/MobileWebPlatform"],
+      },
+      result: { "@type": "Reservation", name: `Plan a journey to ${destination.name}` },
+    },
+  };
+  const breadcrumbSchema = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Explore", item: "https://www.altuverasafaris.com/explore" },
+      { "@type": "ListItem", position: 2, name: "Destinations", item: "https://www.altuverasafaris.com/destinations" },
+      { "@type": "ListItem", position: 3, name: destination.name, item: canonicalUrl },
+    ],
+  };
+
   const stats = [
     destination.durationDays && { label: "Days", value: destination.durationDays },
     destination.duration && { label: "Duration", value: destination.duration },
@@ -256,6 +307,27 @@ export default function DestinationDetail() {
 
   return (
     <ScrollProvider>
+      <Helmet>
+        <title>{seoTitle}</title>
+        <meta name="description" content={seoDescription} />
+        <meta name="keywords" content={seoKeywords} />
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:type" content="place" />
+        <meta property="og:site_name" content="Altuvera Safaris" />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        {seoImages.map((image, index) => (
+          <meta key={`og-image-${index}`} property="og:image" content={image} />
+        ))}
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDescription} />
+        {seoImages[0] && <meta name="twitter:image" content={seoImages[0]} />}
+        <script type="application/ld+json">{JSON.stringify(destinationSchema)}</script>
+        <script type="application/ld+json">{JSON.stringify(breadcrumbSchema)}</script>
+      </Helmet>
       <div className="d-page">
         <ProgressBar />
 
