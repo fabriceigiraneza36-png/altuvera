@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { useDestination } from "../hooks/useDestinations";
+import "./DestinationDetail.css";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://api.altuverasafaris.com";
 
