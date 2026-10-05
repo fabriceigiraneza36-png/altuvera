@@ -1,9 +1,17 @@
 import React, { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import {
+  ArrowDown,
+  Calendar,
+  ChevronDown,
+  Clock3,
+  Compass,
+  Mail,
+  MapPin,
+  Mountain,
+  Star,
+} from "lucide-react";
 import { useDestination } from "../hooks/useDestinations";
-import { extractUniqueImages } from "../utils/extractUniqueImages";
-import { Ic } from "../components/common/icons";
-import { ScrollProvider, ProgressBar, Reveal } from "../components/common/ScrollEffects";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://api.altuverasafaris.com";
 
@@ -11,7 +19,6 @@ const resolveImageUrl = (url) => {
   if (!url || typeof url !== "string") return "";
   const cleaned = url.trim();
   if (!cleaned) return "";
-
   if (/^https?:\/\//i.test(cleaned) || cleaned.startsWith("data:")) return cleaned;
 
   try {
@@ -20,6 +27,116 @@ const resolveImageUrl = (url) => {
   } catch {
     return cleaned;
   }
+};
+
+const extractUniqueImages = (destination, limit = 12) => {
+  if (!destination) return [];
+
+  const seen = new Set();
+  const push = (value) => {
+    if (!value || typeof value !== "string") return;
+    const clean = value.trim();
+    if (!clean || seen.has(clean)) return;
+    seen.add(clean);
+    result.push({ url: clean });
+  };
+
+  const result = [];
+  const sources = [];
+
+  sources.push(...(Array.isArray(destination.images) ? destination.images : []));
+  sources.push(...(Array.isArray(destination.gallery) ? destination.gallery : []));
+  if (Array.isArray(destination.attractions)) {
+    sources.push(...destination.attractions);
+  }
+
+  for (const item of sources) {
+    if (typeof item === "string") {
+      push(item);
+      continue;
+    }
+    if (item && typeof item === "object") {
+      push(item.url || item.imageUrl || item.image || item.image_url || item.src || item.thumbnailUrl);
+    }
+  }
+
+  if (!result.length) {
+    push(destination.heroImage || destination.imageUrl || destination.image || destination.thumbnailUrl || destination.coverImageUrl);
+  }
+
+  return result.slice(0, limit);
+};
+
+const Ic = ({ n, size = 16, style = {}, ...props }) => {
+  const map = {
+    calendar: Calendar,
+    clock: Clock3,
+    compass: Compass,
+    mail: Mail,
+    mapPin: MapPin,
+    mountain: Mountain,
+    star: Star,
+    chevDown: ChevronDown,
+  };
+  const Icon = map[n] || Mountain;
+  return <Icon size={size} {...props} style={{ flexShrink: 0, ...style }} />;
+};
+
+const ScrollContext = React.createContext({ progress: 0 });
+
+const ScrollProvider = ({ children }) => {
+  const [progress, setProgress] = React.useState(0);
+
+  React.useEffect(() => {
+    const update = () => {
+      const doc = document.documentElement;
+      const max = Math.max(doc.scrollHeight - window.innerHeight, 1);
+      const next = (window.scrollY / max) * 100;
+      setProgress(Math.min(Math.max(next, 0), 100));
+    };
+
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
+  }, []);
+
+  return <ScrollContext.Provider value={{ progress }}>{children}</ScrollContext.Provider>;
+};
+
+const ProgressBar = ({ color = "#10b981", height = 3 }) => {
+  const { progress } = React.useContext(ScrollContext);
+  return (
+    <div aria-hidden="true" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 50, height, background: "rgba(15, 23, 42, 0.08)" }}>
+      <div style={{ height: "100%", width: `${progress}%`, background: color, transition: "width 120ms ease-out" }} />
+    </div>
+  );
+};
+
+const Reveal = ({ children, from = "up", delay = 0, duration = 400 }) => {
+  const transformMap = {
+    left: "translateX(-18px)",
+    right: "translateX(18px)",
+    up: "translateY(18px)",
+    bottom: "translateY(-18px)",
+    scale: "scale(0.98)",
+  };
+
+  return (
+    <div
+      style={{
+        opacity: 1,
+        transform: transformMap[from] || "translateY(0)",
+        transition: `opacity ${duration}ms ease, transform ${duration}ms ease`,
+        transitionDelay: `${delay}ms`,
+      }}
+    >
+      {children}
+    </div>
+  );
 };
 
 const SH = ({ title, sub, center = true, light = false, tag }) => (
@@ -72,26 +189,16 @@ export default function DestinationDetail() {
     );
   }
 
-  const heroImage =
-    gallery[0]?.url ||
-    destination.heroImage ||
-    destination.imageUrl ||
-    destination.image ||
-    "";
-
-  const description =
-    destination.description ||
-    destination.shortDescription ||
-    destination.overview ||
-    "";
-
+  const heroImage = gallery[0]?.url || destination.heroImage || destination.imageUrl || destination.image || "";
+  const description = destination.description || destination.shortDescription || destination.overview || "";
   const attractions = Array.isArray(destination.attractions) ? destination.attractions : [];
   const highlights = Array.isArray(destination.highlights) ? destination.highlights : [];
+  const countryInfo = destination.countryObj || destination.country || {};
 
   const stats = [
     destination.durationDays && { label: "Days", value: destination.durationDays },
     destination.duration && { label: "Duration", value: destination.duration },
-    destination.rating && { label: "Rating", value: `${destination.rating.toFixed(1)} / 5` },
+    destination.rating && { label: "Rating", value: `${Number(destination.rating).toFixed(1)} / 5` },
     destination.bestTimeToVisit && { label: "Best time", value: destination.bestTimeToVisit },
   ].filter(Boolean);
 
@@ -131,24 +238,18 @@ export default function DestinationDetail() {
 
           <div className="d-wrap" style={{ position: "relative", zIndex: 5 }}>
             <div className="d-hero__body">
-              {destination.country?.name && (
+              {countryInfo?.name && (
                 <div className="d-hero__loc">
                   <Ic n="mapPin" size={12} />
                   <span style={{ letterSpacing: "3px", fontSize: ".76rem", fontWeight: 700 }}>
-                    {destination.country.flagUrl && (
+                    {countryInfo.flagUrl && (
                       <img
-                        src={destination.country.flagUrl}
+                        src={countryInfo.flagUrl}
                         alt=""
-                        style={{
-                          width: 16,
-                          height: 11,
-                          objectFit: "cover",
-                          marginRight: 7,
-                          verticalAlign: "-1px",
-                        }}
+                        style={{ width: 16, height: 11, objectFit: "cover", marginRight: 7, verticalAlign: "-1px" }}
                       />
                     )}
-                    {destination.country.name.toUpperCase()}
+                    {String(countryInfo.name).toUpperCase()}
                   </span>
                 </div>
               )}
@@ -157,19 +258,11 @@ export default function DestinationDetail() {
               {destination.tagline && <p className="d-hero__sub">{destination.tagline}</p>}
 
               <div className="d-hero__ctas">
-                <button
-                  className="d-btn d-btn--emerald d-btn--lg"
-                  onClick={() => navigate(`/booking?destination=${destination.slug}`)}
-                >
+                <button className="d-btn d-btn--emerald d-btn--lg" onClick={() => navigate(`/booking?destination=${destination.slug}`)}>
                   <Ic n="calendar" size={17} /> Book This Destination
                 </button>
 
-                <button
-                  className="d-btn d-btn--glass d-btn--lg"
-                  onClick={() =>
-                    document.getElementById("dd-about")?.scrollIntoView({ behavior: "smooth" })
-                  }
-                >
+                <button className="d-btn d-btn--glass d-btn--lg" onClick={() => document.getElementById("dd-about")?.scrollIntoView({ behavior: "smooth" })}>
                   <Ic n="chevDown" size={17} /> Explore
                 </button>
               </div>
@@ -181,13 +274,7 @@ export default function DestinationDetail() {
                       <div className="d-hero__stat-n">{s.value}</div>
                       <div className="d-hero__stat-l">
                         <Ic
-                          n={
-                            s.label === "Days" || s.label === "Duration"
-                              ? "clock"
-                              : s.label === "Rating"
-                              ? "star"
-                              : "calendar"
-                          }
+                          n={s.label === "Days" || s.label === "Duration" ? "clock" : s.label === "Rating" ? "star" : "calendar"}
                           size={12}
                           style={{ marginRight: 5, opacity: 0.7 }}
                         />
@@ -227,10 +314,7 @@ export default function DestinationDetail() {
 
                 <Reveal from="bottom" delay={180}>
                   <div className="d-about__book-row">
-                    <button
-                      className="d-btn d-btn--emerald"
-                      onClick={() => navigate(`/booking?destination=${destination.slug}`)}
-                    >
+                    <button className="d-btn d-btn--emerald" onClick={() => navigate(`/booking?destination=${destination.slug}`)}>
                       <Ic n="calendar" size={15} /> Reserve Your Spot
                     </button>
                     <button className="d-btn d-btn--outline" onClick={() => navigate("/contact")}>
@@ -247,11 +331,7 @@ export default function DestinationDetail() {
                       <div className="d-aside-slider__track">
                         {gallery.map((img, index) => (
                           <div key={index} className="d-aside-slider__slide active">
-                            <img
-                              src={img.url}
-                              alt={`${destination.name} ${index + 1}`}
-                              loading={index === 0 ? "eager" : "lazy"}
-                            />
+                            <img src={img.url} alt={`${destination.name} ${index + 1}`} loading={index === 0 ? "eager" : "lazy"} />
                           </div>
                         ))}
                       </div>
@@ -267,10 +347,7 @@ export default function DestinationDetail() {
           <section className="d-sec d-sec--soft">
             <div className="d-wrap">
               <Reveal from="bottom">
-                <SH
-                  title={`What Makes ${destination.name} Unforgettable`}
-                  sub="Explore the highlights of this unforgettable destination"
-                />
+                <SH title={`What Makes ${destination.name} Unforgettable`} sub="Explore the highlights of this unforgettable destination" />
               </Reveal>
 
               <div className="d-exp-grid">
@@ -278,11 +355,7 @@ export default function DestinationDetail() {
                   <Reveal key={index} from="scale" delay={index * 40}>
                     <div className="d-exp-card">
                       <div className="d-exp-card__media">
-                        <img
-                          src={gallery[index % Math.max(gallery.length, 1)]?.url || heroImage}
-                          alt={String(item)}
-                          loading="lazy"
-                        />
+                        <img src={gallery[index % Math.max(gallery.length, 1)]?.url || heroImage} alt={String(item)} loading="lazy" />
                         <div className="d-exp-card__overlay">
                           <h4 className="d-exp-card__ov-title">{item}</h4>
                           <p className="d-exp-card__ov-desc">Experience the wonder of {item}.</p>
@@ -300,15 +373,12 @@ export default function DestinationDetail() {
           <section className="d-sec d-sec--white">
             <div className="d-wrap">
               <Reveal from="bottom">
-                <SH
-                  title="Popular Attractions"
-                  sub="Discover the moments that define this destination"
-                />
+                <SH title="Popular Attractions" sub="Discover the moments that define this destination" />
               </Reveal>
 
               <div className="d-exp-grid">
                 {attractions.slice(0, 6).map((attraction, index) => {
-                  const name = attraction.name || attraction.title || "Attraction";
+                  const name = attraction.name || attraction.title || attraction || "Attraction";
                   const image =
                     attraction.imageUrl ||
                     attraction.image_url ||
@@ -318,7 +388,7 @@ export default function DestinationDetail() {
 
                   const slug =
                     attraction.slug ||
-                    name
+                    String(name)
                       .toLowerCase()
                       .trim()
                       .replace(/[^a-z0-9]+/g, "-")
@@ -328,24 +398,15 @@ export default function DestinationDetail() {
                     <Reveal key={`${name}-${index}`} from="scale" delay={index * 40}>
                       <div className="d-exp-card">
                         <div className="d-exp-card__media">
-                          <img src={image} alt={name} loading="lazy" />
+                          <img src={image} alt={String(name)} loading="lazy" />
                           <div className="d-exp-card__overlay">
                             <h4 className="d-exp-card__ov-title">{name}</h4>
-                            <p className="d-exp-card__ov-desc">
-                              {attraction.description || `Explore ${name}.`}
-                            </p>
+                            <p className="d-exp-card__ov-desc">{attraction.description || `Explore ${name}.`}</p>
                             <div className="d-exp-card__ov-actions">
-                              <Link
-                                className="d-btn d-btn--white"
-                                to={`/destinations/${destination.slug}/attractions/${slug}`}
-                              >
+                              <Link className="d-btn d-btn--white" to={`/destinations/${destination.slug}/attractions/${slug}`}>
                                 Learn more
                               </Link>
-
-                              <Link
-                                className="d-btn d-btn--emerald"
-                                to={`/booking?destination=${encodeURIComponent(destination.slug)}&attraction=${encodeURIComponent(name)}`}
-                              >
+                              <Link className="d-btn d-btn--emerald" to={`/booking?destination=${encodeURIComponent(destination.slug)}&attraction=${encodeURIComponent(String(name))}`}>
                                 Book now
                               </Link>
                             </div>
