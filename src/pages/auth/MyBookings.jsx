@@ -17,7 +17,7 @@ import {
   ChevronUp, ExternalLink, DollarSign, Info, Send, RotateCcw,
   Slash, Filter, Loader2, Plane, Award, TrendingUp, Star,
   ArrowRight, X, ChevronRight, Package, FileText, Phone,
-  Mail, Hash, Bookmark, AlertTriangle, CheckCheck,
+  Mail, Hash, Bookmark, AlertTriangle, CheckCheck, ClipboardCheck,
 } from "lucide-react";
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -901,10 +901,88 @@ function RequestModal({ booking, onClose, onSubmit, submitting, error }) {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   ITINERARY PANEL
+═══════════════════════════════════════════════════════════════════════════ */
+
+function ItineraryPanel({ booking, onApprove, onChangeRequest }) {
+  const [reason, setReason] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const itinerary = booking?.itinerary && typeof booking.itinerary === "object" ? booking.itinerary : null;
+  const status = booking?.itinerary_status || "not_started";
+
+  if (!itinerary?.days?.length && !["sent","change_requested","approved"].includes(status)) return null;
+
+  const request = async () => {
+    if (!reason.trim() || !onChangeRequest) return;
+    setBusy(true);
+    await onChangeRequest(booking, reason.trim());
+    setBusy(false);
+    setReason("");
+    setEditing(false);
+  };
+
+  return (
+    <div style={{marginTop:16,padding:16,borderRadius:16,border:"1px solid #a7f3d0",background:"linear-gradient(180deg,#f0fdf8,#fff)"}}>
+      <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,flexWrap:"wrap"}}>
+        <div style={{display:"flex",alignItems:"center",gap:9}}>
+          <div style={{width:36,height:36,borderRadius:11,background:"#dcfce7",display:"grid",placeItems:"center",color:"#059669"}}><ClipboardCheck size={18}/></div>
+          <div>
+            <p style={{margin:0,fontWeight:850,color:"#065f46",fontSize:13}}>Your personalized itinerary</p>
+            <p style={{margin:"2px 0 0",fontSize:11,color:"#64748b"}}>{status === "approved" ? "Approved and confirmed" : status === "change_requested" ? "Change request sent to Altuvera" : "Ready for your review"}</p>
+          </div>
+        </div>
+        <span style={{fontSize:10,fontWeight:800,textTransform:"uppercase",padding:"5px 9px",borderRadius:999,background:status==="approved"?"#dcfce7":"#ecfdf5",color:"#047857"}}>{status.replace("_"," ")}</span>
+      </div>
+
+      {itinerary.title && <h4 style={{margin:"15px 0 6px",fontSize:17,fontWeight:850,color:"#0f172a"}}>{itinerary.title}</h4>}
+      {itinerary.introduction && <p style={{margin:"0 0 14px",fontSize:12,color:"#475569",lineHeight:1.65}}>{itinerary.introduction}</p>}
+
+      <div style={{display:"grid",gap:10}}>
+        {(itinerary.days || []).map((day,i)=>(
+          <div key={i} style={{padding:12,borderRadius:12,border:"1px solid #e2e8f0",background:"#fff"}}>
+            <div style={{display:"flex",justifyContent:"space-between",gap:10}}>
+              <strong style={{fontSize:12,color:"#0f172a"}}>Day {i+1} · {day.title || "Adventure"}</strong>
+              {day.date && <span style={{fontSize:10,color:"#059669",fontWeight:750}}>{fmtShort(day.date)}</span>}
+            </div>
+            {day.location && <p style={{margin:"5px 0",fontSize:11,color:"#047857",fontWeight:700}}>📍 {day.location}</p>}
+            {Array.isArray(day.activities) && day.activities.length>0 && <ul style={{margin:"6px 0 0",paddingLeft:18,fontSize:11,color:"#475569",lineHeight:1.6}}>{day.activities.map((a,j)=><li key={j}>{a}</li>)}</ul>}
+            {day.transport && <p style={{margin:"6px 0 0",fontSize:11,color:"#64748b"}}><b>Transport:</b> {day.transport}</p>}
+            {day.accommodation && <p style={{margin:"6px 0 0",fontSize:11,color:"#64748b"}}><b>Stay:</b> {day.accommodation}</p>}
+            {day.meals && <p style={{margin:"6px 0 0",fontSize:11,color:"#64748b"}}><b>Meals:</b> {day.meals}</p>}
+            {day.notes && <p style={{margin:"7px 0 0",paddingTop:7,borderTop:"1px solid #f1f5f9",fontSize:11,color:"#64748b"}}>{day.notes}</p>}
+          </div>
+        ))}
+      </div>
+
+      {(itinerary.inclusions?.length || itinerary.essentials?.length) ? (
+        <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:10,marginTop:10}}>
+          {itinerary.inclusions?.length ? <div style={{padding:11,borderRadius:11,background:"#fff",border:"1px solid #e2e8f0"}}><b style={{fontSize:10,textTransform:"uppercase",color:"#64748b"}}>Included</b><ul style={{margin:"5px 0",paddingLeft:16,fontSize:11}}>{itinerary.inclusions.map((x,i)=><li key={i}>{x}</li>)}</ul></div> : null}
+          {itinerary.essentials?.length ? <div style={{padding:11,borderRadius:11,background:"#fff",border:"1px solid #e2e8f0"}}><b style={{fontSize:10,textTransform:"uppercase",color:"#64748b"}}>Essentials</b><ul style={{margin:"5px 0",paddingLeft:16,fontSize:11}}>{itinerary.essentials.map((x,i)=><li key={i}>{x}</li>)}</ul></div> : null}
+        </div>
+      ) : null}
+
+      {status !== "approved" && status !== "change_requested" && (
+        <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:14}}>
+          <button disabled={busy} onClick={async()=>{setBusy(true);await onApprove(booking);setBusy(false)}} style={{border:0,borderRadius:11,padding:"10px 14px",background:"#059669",color:"#fff",fontWeight:800,fontSize:12,cursor:"pointer"}}><CheckCircle size={14} style={{verticalAlign:"-2px",marginRight:5}}/>Approve itinerary</button>
+          <button onClick={()=>setEditing(v=>!v)} style={{border:"1px solid #cbd5e1",borderRadius:11,padding:"10px 14px",background:"#fff",color:"#475569",fontWeight:800,fontSize:12,cursor:"pointer"}}>{editing?"Cancel":"Request changes"}</button>
+        </div>
+      )}
+      {editing && (
+        <div style={{marginTop:10}}>
+          <textarea value={reason} onChange={e=>setReason(e.target.value)} placeholder="Tell Altuvera what you would like changed…" style={{width:"100%",minHeight:82,border:"1px solid #cbd5e1",borderRadius:11,padding:10,resize:"vertical",fontSize:12}}/>
+          <button disabled={busy || !reason.trim()} onClick={request} style={{marginTop:7,border:0,borderRadius:10,padding:"9px 13px",background:"#0f766e",color:"#fff",fontWeight:800,fontSize:11,opacity:busy||!reason.trim()?.5:1}}>Send change request</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    BOOKING CARD
 ═══════════════════════════════════════════════════════════════════════════ */
 
-function BookingCard({ booking, onRequest, onMessage }) {
+function BookingCard({ booking, onRequest, onMessage, onApprove, onChangeRequest }) {
   const [expanded, setExpanded] = useState(false);
 
   const st        = getStatus(booking.status);
@@ -1060,6 +1138,8 @@ function BookingCard({ booking, onRequest, onMessage }) {
           </div>
         )}
       </div>
+
+      <ItineraryPanel booking={booking} onApprove={onApprove} onChangeRequest={onChangeRequest} />
 
       {/* Expanded details */}
       <AnimatePresence initial={false}>
@@ -1227,6 +1307,18 @@ export default function MyBookings() {
 
     return { selfB, adminB, upcomingB, displayed };
   }, [bookings, search, filter]);
+
+  const approveItinerary = useCallback(async (booking) => {
+    const { error: err } = await safeFetch(authFetch, `/itineraries/${booking.id}/approve`, { method: "POST", body: JSON.stringify({}) });
+    if (err) { setError(toUserErrorMessage(err)); return; }
+    await fetchBookings(1);
+  }, [authFetch, fetchBookings]);
+
+  const requestItineraryChange = useCallback(async (booking, reason) => {
+    const { error: err } = await safeFetch(authFetch, `/itineraries/${booking.id}/change-request`, { method: "POST", body: JSON.stringify({ reason }) });
+    if (err) { setError(toUserErrorMessage(err)); return; }
+    await fetchBookings(1);
+  }, [authFetch, fetchBookings]);
 
   /* ── Request handlers ───────────────────────────────────────────────────── */
 
@@ -1566,7 +1658,7 @@ export default function MyBookings() {
               </div>
               <AnimatePresence>
                 {selfB.map((b) => (
-                  <BookingCard key={b.id} booking={b} onRequest={openRequest} onMessage={openMessage} />
+                  <BookingCard key={b.id} booking={b} onRequest={openRequest} onMessage={openMessage} onApprove={approveItinerary} onChangeRequest={requestItineraryChange} />
                 ))}
               </AnimatePresence>
 
