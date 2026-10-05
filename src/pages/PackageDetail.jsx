@@ -12,7 +12,6 @@ import {
   Award, TrendingUp, Leaf,
 } from 'lucide-react'
 import { packagesAPI } from '../api/packages'
-import { createBooking } from '../api/bookingApi'
 import { useUserAuth } from '../context/UserAuthContext'
 
 /* ── helpers ─────────────────────────────────────────────────────────── */
@@ -671,7 +670,7 @@ function BookingForm({ pkg, user }) {
         special_requests:    form.special_requests.trim() || undefined,
       }
 
-      const body = await createBooking(payload)
+      const body = await packagesAPI.createBooking(pkg.id, payload)
       setBookingRef(
         body?.data?.booking_number ||
         body?.data?.booking_ref    ||
