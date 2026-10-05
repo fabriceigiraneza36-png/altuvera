@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import {
-  ArrowDown,
   Calendar,
   ChevronDown,
   ChevronLeft,
@@ -12,6 +11,11 @@ import {
   MapPin,
   Mountain,
   Star,
+  Sparkles,
+  ShieldCheck,
+  Route,
+  Users,
+  Leaf,
   X,
 } from "lucide-react";
 import { useDestination } from "../hooks/useDestinations";
@@ -318,8 +322,15 @@ export default function DestinationDetail() {
                 </div>
               )}
 
+              <span className="d-hero__eyebrow"><Sparkles size={13} /> CURATED EAST AFRICAN EXPERIENCE</span>
               <h1 className="d-hero__title">{destination.name}</h1>
               {destination.tagline && <p className="d-hero__sub">{destination.tagline}</p>}
+              {description && (
+                <p className="d-hero__story">
+                  {description.replace(/\s+/g, " ").trim().slice(0, 220)}
+                  {description.replace(/\s+/g, " ").trim().length > 220 ? "…" : ""}
+                </p>
+              )}
 
               <div className="d-hero__ctas">
                 <button className="d-btn d-btn--emerald d-btn--lg" onClick={() => navigate(`/booking?destination=${destination.slug}`)}>
@@ -405,6 +416,38 @@ export default function DestinationDetail() {
           </div>
         </section>
 
+        <section className="d-sec d-sec--soft d-facts-section">
+          <div className="d-wrap">
+            <Reveal from="bottom">
+              <SH
+                title="Your Destination at a Glance"
+                sub="The essential details, thoughtfully presented before you travel."
+                tag="Destination facts"
+              />
+            </Reveal>
+            <div className="d-facts-grid">
+              {[
+                { icon: Clock3, label: "Typical duration", value: destination.durationDays ? `${destination.durationDays} days` : destination.duration || "Flexible" },
+                { icon: Calendar, label: "Best time", value: destination.bestTimeToVisit || "Year-round" },
+                { icon: Compass, label: "Experience", value: destination.destinationType || "Safari & discovery" },
+                { icon: Star, label: "Guest rating", value: destination.rating ? `${Number(destination.rating).toFixed(1)} / 5` : "Highly rated" },
+                { icon: MapPin, label: "Country", value: countryInfo?.name || "East Africa" },
+                { icon: ShieldCheck, label: "Travel style", value: "Curated with Altuvera" },
+              ].map(({ icon: Icon, label, value }, index) => (
+                <Reveal key={label} from="scale" delay={index * 45}>
+                  <article className="d-fact-card">
+                    <div className="d-fact-card__icon"><Icon size={18} /></div>
+                    <div>
+                      <span>{label}</span>
+                      <strong>{value}</strong>
+                    </div>
+                  </article>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {additionalImages.length > 0 && (
           <section className="d-sec d-sec--soft d-destination-gallery">
             <div className="d-wrap">
@@ -441,6 +484,36 @@ export default function DestinationDetail() {
             </div>
           </div>
         </section>
+
+        {highlights.length > 0 && (
+          <section className="d-sec d-sec--white d-experiences">
+            <div className="d-wrap">
+              <Reveal from="left">
+                <SH
+                  title={`Experiences that define ${destination.name}`}
+                  sub="Go beyond sightseeing. Discover the landscapes, wildlife, culture and moments that make the journey memorable."
+                  tag="The Altuvera experience"
+                  center={false}
+                />
+              </Reveal>
+              <div className="d-experience-list">
+                {highlights.slice(0, 6).map((item, index) => (
+                  <Reveal key={index} from={index % 2 ? "right" : "left"} delay={index * 45}>
+                    <article className="d-experience-row">
+                      <div className="d-experience-row__number">0{index + 1}</div>
+                      <div className="d-experience-row__content">
+                        <span className="d-experience-row__label"><Leaf size={13} /> Signature experience</span>
+                        <h3>{item}</h3>
+                        <p>Experience {item} as part of a thoughtfully planned East African journey, with space for discovery, connection and unforgettable moments.</p>
+                      </div>
+                      <div className="d-experience-row__icon"><Route size={22} /></div>
+                    </article>
+                  </Reveal>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
 
         {highlights.length > 0 && (
           <section className="d-sec d-sec--soft">
@@ -519,6 +592,27 @@ export default function DestinationDetail() {
             </div>
           </section>
         )}
+        <section className="d-final-cta">
+          <div className="d-final-cta__media">
+            <img src={heroSlides[heroSlides.length > 1 ? (heroSlide + 1) % heroSlides.length : 0] || heroImage} alt="" loading="lazy" />
+          </div>
+          <div className="d-final-cta__overlay" />
+          <div className="d-wrap d-final-cta__inner">
+            <Reveal from="up">
+              <span className="d-final-cta__eyebrow"><Users size={14} /> YOUR EAST AFRICAN JOURNEY STARTS HERE</span>
+              <h2>Make {destination.name} part of your story.</h2>
+              <p>Tell us what you want to experience. Our team will shape a thoughtful, responsive journey around your interests, timing and travel style.</p>
+              <div className="d-final-cta__actions">
+                <button className="d-btn d-btn--emerald d-btn--lg" onClick={() => navigate(`/booking?destination=${destination.slug}`)}>
+                  <Calendar size={17} /> Plan This Journey
+                </button>
+                <button className="d-btn d-btn--glass d-btn--lg" onClick={() => navigate("/contact")}>
+                  <Mail size={17} /> Talk to Altuvera
+                </button>
+              </div>
+            </Reveal>
+          </div>
+        </section>
       </div>
 
       {lightboxIndex !== null && additionalImages.length > 0 && (
