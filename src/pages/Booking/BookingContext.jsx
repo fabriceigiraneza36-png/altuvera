@@ -55,7 +55,7 @@ const VALIDATORS = [
   (d) => {
     const e = {};
     if (!d.email.trim() || !EMAIL_RE.test(d.email)) e.email = "Valid email required";
-    if (!d.phone.trim())   e.phone   = "Phone required";
+    if (["whatsapp","phone"].includes(d.preferredContactMethod) && !d.phone.trim()) e.phone = d.preferredContactMethod === "whatsapp" ? "Phone number required for WhatsApp" : "Phone number required";
     if (!d.country.trim()) e.country = "Country required";
     if (!d.preferredContactMethod) e.preferredContactMethod = "Choose how Altuvera should contact you";
     if (!d.agreeToTerms)   e.agreeToTerms = "Please accept terms";
