@@ -445,14 +445,6 @@ const GridCard = React.memo(function GridCard({ pkg, wishlist, onWishlist, index
             position: 'absolute', top: 14, left: 14,
             display: 'flex', flexDirection: 'column', gap: 5,
           }}>
-            {hasDisc && (
-              <span style={{
-                fontSize: 10, fontWeight: 800, padding: '4px 9px',
-                borderRadius: 999, color: 'white', background: '#ef4444',
-              }}>
-                -{pkg.discount_percent}%
-              </span>
-            )}
             {pkg.is_featured && (
               <span style={{
                 fontSize: 10, fontWeight: 800, padding: '4px 9px',
@@ -585,18 +577,79 @@ const GridCard = React.memo(function GridCard({ pkg, wishlist, onWishlist, index
         gap: 12, padding: '12px 18px 18px',
         borderTop: '1px solid #d1fae5',
       }}>
-        <div>
-          <p style={{
-            margin: 0, fontFamily: "'DM Serif Display', Georgia, serif",
-            fontSize: 22, color: '#059669', lineHeight: 1,
-          }}>
-            {pkg.is_price_visible !== false
-              ? fmtPrice(pkg.price, pkg.currency)
-              : 'On Request'}
-          </p>
-          <span style={{ fontSize: 10.5, color: '#94a3b8' }}>
-            {pkg.price_label || 'per person'}
-          </span>
+        <button
+          type="button"
+          disabled={Boolean(pkg.is_sold_out)}
+          onClick={() => {
+            if (!pkg.is_sold_out) navigate(to)
+          }}
+          className="pk-cta"
+          style={{
+            padding: '11px 14px',
+            fontSize: 12,
+            opacity: pkg.is_sold_out ? 0.55 : 1,
+            cursor: pkg.is_sold_out ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {pkg.is_sold_out ? 'Sold Out' : 'Request to Book'}
+          {!pkg.is_sold_out && <FiArrowRight size={14} />}
+        </button>
+      </div>
+    </article>
+  )
+})
+
+/* ══════════════════════════════════════════════════════════════════════
+   LIST CARD
+══════════════════════════════════════════════════════════════════════ */
+const ListCard = React.memo(function ListCard({ pkg, wishlist, onWishlist, index = 0 }) {
+  const isWish  = wishlist?.has(pkg.id)
+  const cover   = pkg.cover_image_url || pkg.thumbnail_url || null
+  const feats   = useMemo(() => parseJsonField(pkg.features).slice(0, 4), [pkg.features])
+  const to      = `/packages/${pkg.slug || pkg.id}`
+
+  return (
+    <Link
+      to={to}
+      className="pk-list-card"
+      style={{ animationDelay: `${Math.min(index * 50, 300)}ms` }}
+    >
+      {/* Image column */}
+      <div className="pk-list-img" style={{
+        position: 'relative', overflow: 'hidden',
+        background: 'linear-gradient(135deg,#d1fae5,#f0fdf4)', minHeight: 210,
+      }}>
+        {cover
+          ? <img src={cover} alt={pkg.title} loading="lazy" className="pk-card-img"
+              style={{
+                width: '100%', height: '100%', objectFit: 'cover',
+                display: 'block', position: 'absolute', inset: 0,
+              }} />
+          : <div style={{
+              width: '100%', height: '100%',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              position: 'absolute', inset: 0,
+            }}>
+              <MountainPlaceholder size={44} />
+            </div>
+        }
+
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'linear-gradient(to right, transparent 55%, rgba(2,44,34,0.2))',
+        }} />
+
+        {/* Badges */}
+        <div style={{ position: 'absolute', top: 12, left: 12, display: 'flex', flexDirection: 'column', gap: 5 }}>
+          {pkg.badge_label && (
+            <span style={{
+              fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase',
+              letterSpacing: '0.07em', padding: '3px 10px', borderRadius: 999,
+              color: 'white', background: pkg.badge_color || '#059669',
+            }}>
+              {pkg.badge_label}
+            </span>
+          )}
         </div>
 
         {/* Wishlist */}
@@ -715,15 +768,14 @@ const GridCard = React.memo(function GridCard({ pkg, wishlist, onWishlist, index
           )}
         </div>
 
-        {/* Price + CTA */}
         <div style={{
-          display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between',
+          display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end',
           paddingTop: 16, borderTop: '1px solid #d1fae5',
         }}>
           <span className="pk-cta">
             View Details <FiArrowRight size={14} />
           </span>
-        </div>
+        </div>        </div>
       </div>
     </Link>
   )
