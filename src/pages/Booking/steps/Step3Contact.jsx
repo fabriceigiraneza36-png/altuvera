@@ -157,20 +157,52 @@ export default function Step3Contact({ data, set, touch, errors, touched }) {
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-        <div className="bk-check-row" onClick={() => set("newsletterOptIn", !data.newsletterOptIn)}
-          role="checkbox" aria-checked={data.newsletterOptIn} tabIndex={0}>
-          <div className={`bk-check${data.newsletterOptIn ? " bk-check--on" : ""}`}>{data.newsletterOptIn && <Check size={13} />}</div>
+      <fieldset className="bk-consent-group">
+        <legend className="sr-only">Communication and consent preferences</legend>
+
+        <label className={`bk-check-row${data.newsletterOptIn ? " bk-check-row--on" : ""}`}>
+          <input
+            type="checkbox"
+            className="bk-checkbox"
+            checked={Boolean(data.newsletterOptIn)}
+            onChange={(e) => set("newsletterOptIn", e.target.checked)}
+          />
+          <span className="bk-check-box" aria-hidden="true">
+            {data.newsletterOptIn && <Check size={13} strokeWidth={3} />}
+          </span>
           <span className="bk-check-txt">Send me safari tips and exclusive offers</span>
-        </div>
-        <div className={`bk-check-row bk-check-row--terms${data.agreeToTerms ? " bk-check-row--on" : ""}${touched.agreeToTerms && errors.agreeToTerms ? " bk-check-row--err" : ""}`}
-          onClick={(e) => { if (e.target.tagName === "A") return; set("agreeToTerms", !data.agreeToTerms); touch("agreeToTerms"); }}
-          role="checkbox" aria-checked={data.agreeToTerms} tabIndex={0}>
-          <div className={`bk-check${data.agreeToTerms ? " bk-check--on" : ""}`}>{data.agreeToTerms && <Check size={13} />}</div>
-          <span className="bk-check-txt">I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>Terms</a> and <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>Privacy Policy</a><span className="bk-label-req">*</span></span>
-        </div>
-        {touched.agreeToTerms && errors.agreeToTerms && <p className="bk-field-err" style={{ paddingLeft: 46 }}><AlertCircle size={13} /> {errors.agreeToTerms}</p>}
-      </div>
+        </label>
+
+        <label className={`bk-check-row bk-check-row--terms${data.agreeToTerms ? " bk-check-row--on" : ""}${touched.agreeToTerms && errors.agreeToTerms ? " bk-check-row--err" : ""}`}>
+          <input
+            type="checkbox"
+            className="bk-checkbox"
+            checked={Boolean(data.agreeToTerms)}
+            onChange={(e) => {
+              set("agreeToTerms", e.target.checked);
+              touch("agreeToTerms");
+            }}
+            aria-invalid={Boolean(touched.agreeToTerms && errors.agreeToTerms)}
+            aria-describedby={touched.agreeToTerms && errors.agreeToTerms ? "agree-to-terms-error" : undefined}
+          />
+          <span className="bk-check-box" aria-hidden="true">
+            {data.agreeToTerms && <Check size={13} strokeWidth={3} />}
+          </span>
+          <span className="bk-check-txt">
+            I agree to the{" "}
+            <a href="/terms" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>Terms</a>
+            {" "}and{" "}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>Privacy Policy</a>
+            <span className="bk-label-req">*</span>
+          </span>
+        </label>
+
+        {touched.agreeToTerms && errors.agreeToTerms && (
+          <p id="agree-to-terms-error" className="bk-field-err bk-consent-error">
+            <AlertCircle size={13} /> {errors.agreeToTerms}
+          </p>
+        )}
+      </fieldset>
     </div>
   );
 }
