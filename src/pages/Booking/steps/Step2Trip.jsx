@@ -123,11 +123,12 @@ export default function Step2Trip({
                 label="Arrival"
                 value={data.arrivalDate || data.startDate}
                 onChange={(v) => {
-                  set("arrivalDate", v);
                   set("startDate", v);
+                  if (data.endDate && data.endDate <= v) set("endDate", "");
+                  touch("startDate");
                 }}
                 placeholder="Choose arrival date"
-                error={touched.arrivalDate && errors.arrivalDate}
+                error={touched.startDate && errors.startDate}
                 icon={<Calendar size={18} />}
                 quickPicks={makeQuickPicks?.() || []}
               />
@@ -135,12 +136,12 @@ export default function Step2Trip({
                 label="Departure"
                 value={data.departureDate || data.endDate}
                 onChange={(v) => {
-                  set("departureDate", v);
                   set("endDate", v);
+                  touch("endDate");
                 }}
                 placeholder="Choose departure date"
                 minDate={data.arrivalDate || data.startDate}
-                error={touched.departureDate && errors.departureDate}
+                error={touched.endDate && errors.endDate}
                 icon={<Calendar size={18} />}
                 quickPicks={makeDepartureQuickPicks?.(data.arrivalDate || data.startDate) || []}
               />
