@@ -5,6 +5,10 @@
 
   "rewrites": [
     {
+      "source": "/destinations-sitemap.xml",
+      "destination": "https://api.altuverasafaris.com/api/seo/destinations-sitemap.xml"
+    },
+    {
       "source": "/((?!assets|favicon|altuvera\\.png|site\\.webmanifest|sitemap\\.xml|rss\\.xml|robots\\.txt|_vercel).*)",
       "destination": "/index.html"
     }
