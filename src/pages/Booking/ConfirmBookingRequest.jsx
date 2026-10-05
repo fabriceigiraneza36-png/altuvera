@@ -15,6 +15,7 @@ export default function ConfirmBookingRequest() {
   useEffect(() => {
     const token = params.get("token");
     if (!token) {
+      if (status) return;
       setState("error");
       setMessage("This confirmation link is missing its security token.");
       return;
@@ -33,7 +34,7 @@ export default function ConfirmBookingRequest() {
         setState("error");
         setMessage(e.message || "This confirmation link is invalid or expired.");
       });
-  }, [params, navigate]);
+  }, [params, navigate, status]);
 
   if (!params.get("token") && status) return <BookingVerifyResult />;
 
