@@ -153,7 +153,7 @@ function BookingInner() {
                 <h4>Consent & preferences</h4>
                 <p>Safari tips and offers: <strong>{data.newsletterOptIn ? "Yes" : "No"}</strong></p>
                 <p>Terms & Privacy: <strong>{data.agreeToTerms ? "Accepted" : "Not accepted"}</strong></p>
-              </div>              <div style={{marginTop:14,padding:14,borderRadius:14,background:"#ecfdf5",color:"#35604e",fontSize:12,lineHeight:1.55}}><Check size={15} style={{verticalAlign:"-3px",marginRight:6,color:"#059669"}}/>Everything looks good. Press <strong>Confirm booking</strong> to send your request securely to Altuvera Safaris.</div>
+              </div>              <div style={{marginTop:14,padding:14,borderRadius:14,background:"#ecfdf5",color:"#35604e",fontSize:12,lineHeight:1.55}}><Check size={15} style={{verticalAlign:"-3px",marginRight:6,color:"#059669"}}/>Everything looks good. Press <strong>Confirm booking</strong> to submit the request. We will then email you a secure link asking you to confirm that you made this request from your real inbox before Altuvera begins operational planning.</div>
             </div>}
           </div>
 
