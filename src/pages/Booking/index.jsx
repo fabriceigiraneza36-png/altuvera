@@ -67,7 +67,8 @@ function BookingInner() {
         slug:String(x.slug??""),
         country:String(x.country?.name??x.countryName??x.country??""),
         countryId:String(x.country_id??x.countryId??x.country?.id??""),
-        image:String(x.image??x.thumbnail??x.imageUrl??x.image_url??"")
+        image:String(x.image??x.thumbnail??x.imageUrl??x.image_url??""),
+        category:String(x.category??x.type??x.destination_type??"").toLowerCase()
       })).filter(x=>x.value);
       setCountriesList(mappedCountries);
       setDestinationsList(mappedDestinations);
@@ -102,7 +103,13 @@ function BookingInner() {
 
   const destinationForImage = selectedDest ? {src:selectedDest.image,alt:selectedDest.label,caption:selectedDest.label,tag:"Your selection"} : null;
 
-  if(submitted) return <div className="bk-success"><SuccessScreen displayName={displayName} bookingRef={bookingRef} email={data.email} onReset={reset}/></div>;
+  if(submitted) return <div className="bk-success"><SuccessScreen
+        displayName={displayName}
+        bookingRef={bookingRef}
+        email={data.email}
+        category={selectedDest?.category || ""}
+        onReset={reset}
+      /></div>;
 
   const title=STEPS[step]?.label || "Review";
   const desc=STEPS[step]?.desc || "";
