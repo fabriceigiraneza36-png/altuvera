@@ -1,4 +1,4 @@
-destination.heroImageimport React, { useMemo } from "react";
+import React, { useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDestination } from "../hooks/useDestinations";
 import { extractUniqueImages } from "../utils/extractUniqueImages";
@@ -348,40 +348,6 @@ export default function DestinationDetail() {
                               >
                                 Book now
                               </Link>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </Reveal>
-                  );
-                })}
-              </div>
-            </div>
-          </section>
-        )}
-      </div>
-    </ScrollProvider>
-  );
-          }ation" />
-              </Reveal>
-
-              <div className="d-exp-grid">
-                {attractions.slice(0, 6).map((attraction, index) => {
-                  const name = attraction.name || attraction.title || "Attraction";
-                  const image = attraction.imageUrl || attraction.image_url || attraction.image || gallery[index % Math.max(gallery.length, 1)]?.url || heroImage;
-                  const slug = attraction.slug || name.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
-
-                  return (
-                    <Reveal key={`${name}-${index}`} from="scale" delay={index * 40}>
-                      <div className="d-exp-card">
-                        <div className="d-exp-card__media">
-                          <img src={image} alt={name} loading="lazy" />
-                          <div className="d-exp-card__overlay">
-                            <h4 className="d-exp-card__ov-title">{name}</h4>
-                            <p className="d-exp-card__ov-desc">{attraction.description || `Explore ${name}.`}</p>
-                            <div className="d-exp-card__ov-actions">
-                              <Link className="d-btn d-btn--white" to={`/destinations/${destination.slug}/attractions/${slug}`}>Learn more</Link>
-                              <Link className="d-btn d-btn--emerald" to={`/booking?destination=${encodeURIComponent(destination.slug)}&attraction=${encodeURIComponent(name)}`}>Book now</Link>
                             </div>
                           </div>
                         </div>
