@@ -252,6 +252,23 @@ export const adaptDestination = (raw) => {
                 }
             });
         }
+        // Explicit hero slideshow images (used by newly-created destinations)
+        const heroArray = dest.heroImages || dest.hero_images || dest.heroSlides || dest.hero_slides;
+        if (Array.isArray(heroArray)) {
+            heroArray.forEach(img => {
+                const u = typeof img === "string"
+                    ? img
+                    : img?.imageUrl || img?.image_url || img?.url || img?.thumbnailUrl || img?.thumbnail_url;
+                if (typeof u === "string" && u.trim()) urls.push(u.trim());
+            });
+        }
+        // PostgreSQL image_urls / camelCase imageUrls array
+        const imageUrlArray = dest.image_urls || dest.imageUrls;
+        if (Array.isArray(imageUrlArray)) {
+            imageUrlArray.forEach(u => {
+                if (typeof u === "string" && u.trim()) urls.push(u.trim());
+            });
+        }
         // Gallery array (if present)
         if (Array.isArray(dest.gallery)) {
             dest.gallery.forEach(img => {
@@ -385,8 +402,11 @@ export const adaptDestination = (raw) => {
     // ── Media ────────────────────────────────────────────────
     images,
     imageUrl:      raw.imageUrl      || raw.image_url || null,
-    heroImage:     raw.heroImage     || raw.hero_image || null,
-    thumbnailUrl:  raw.thumbnailUrl  || raw.thumbnail_url || null,
+    heroImage:     raw.heroImage     || raw.hero_image || images[0] || null,
+    heroImages:    toArr(raw.heroImages || raw.hero_images || raw.heroSlides || raw.hero_slides).length
+      ? toArr(raw.heroImages || raw.hero_images || raw.heroSlides || raw.hero_slides)
+      : images.slice(0, 3),
+    thumbnailUrl:  raw.thumbnailUrl  || raw.thumbnail_url || images[0] || null,
     coverImageUrl:  raw.coverImageUrl || raw.cover_image_url || null,
     videoUrl:      raw.videoUrl      || null,
     virtualTourUrl:raw.virtualTourUrl || null,
