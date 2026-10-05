@@ -66,15 +66,6 @@ const apiGet = async (path, params = null) => {
   return res.json();
 };
 
-const fmtPrice = (price, currency = "USD") => {
-  if (!price && price !== 0) return "Contact Us";
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency", currency, maximumFractionDigits: 0,
-    }).format(price);
-  } catch { return `$${Number(price).toLocaleString()}`; }
-};
-
 const fmtDuration = (days, nights) => {
   if (!days) return null;
   return `${days}D / ${(nights ?? days - 1)}N`;
@@ -499,8 +490,8 @@ const HOME_STYLES = `
 .hpkg-meta-item{display:flex;align-items:center;gap:.2rem;}
 .hpkg-desc{font-size:.75rem;color:#64748b;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1;font-family:'Inter',sans-serif;}
 .hpkg-footer{display:flex;align-items:flex-end;justify-content:space-between;margin-top:.4rem;padding-top:.6rem;border-top:1px solid #f1f5f9;gap:.4rem;}
-.hpkg-price{font-size:1.2rem;font-weight:900;line-height:1;color:#059669;font-family:'Inter',sans-serif;}
-.hpkg-price-label{font-size:.6rem;color:#94a3b8;margin-top:.15rem;font-family:'Inter',sans-serif;}
+nt-size:1.2rem;font-weight:900;line-height:1;color:#059669;font-family:'Inter',sans-serif;}
+nt-size:.6rem;color:#94a3b8;margin-top:.15rem;font-family:'Inter',sans-serif;}
 .hpkg-cta{display:inline-flex;align-items:center;gap:.3rem;font-size:.72rem;font-weight:700;color:#fff;padding:.45rem .85rem;border-radius:.65rem;background:linear-gradient(135deg,#059669,#047857);box-shadow:0 3px 12px rgba(5,150,105,.25);transition:all .25s ease;white-space:nowrap;flex-shrink:0;font-family:'Inter',sans-serif;}
 .hpkg-card:hover .hpkg-cta{box-shadow:0 6px 18px rgba(5,150,105,.4);transform:scale(1.03);}
 .hpkg-badge{position:absolute;top:.6rem;left:.6rem;font-size:.55rem;font-weight:900;letter-spacing:.1em;text-transform:uppercase;padding:.25rem .55rem;border-radius:99px;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.18);font-family:'Inter',sans-serif;}
@@ -579,7 +570,6 @@ const HOME_STYLES = `
 .dest-modal-image-placeholder{width:100%;height:100%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:#94a3b8;}
 .dest-modal-image-badges{position:absolute;top:.85rem;left:.85rem;display:flex;gap:.4rem;flex-wrap:wrap;}
 .dest-modal-badge{font-family:'Inter',sans-serif;font-size:.55rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;padding:.25rem .6rem;border-radius:99px;background:rgba(0,0,0,.45);backdrop-filter:blur(6px);color:#fff;border:1px solid rgba(255,255,255,.12);}
-.dest-modal-badge--price{background:rgba(21,128,61,.75);}
 .dest-modal-wishlist{position:absolute;top:.85rem;right:3.25rem;width:2rem;height:2rem;border-radius:50%;border:none;background:rgba(255,255,255,.9);backdrop-filter:blur(8px);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;color:#64748b;transition:all .2s;}
 .dest-modal-wishlist.active{color:#ef4444;}
 .dest-modal-wishlist:hover{transform:scale(1.1);}
@@ -918,7 +908,6 @@ const DestinationModal = ({ destination, isOpen, onClose, isWishlisted, onWishli
               resolveImageUrl(destination.gallery[0]?.imageUrl) : "");
   const slug = destination?.slug || destination?.id || destination?._id;
   const rating = destination?.rating || destination?.averageRating || 0;
-  const price = destination?.price || destination?.startingPrice || null;
   const duration = destination?.duration || destination?.tripDuration || null;
   const category = destination?.category || destination?.type || "";
   const highlights = destination?.highlights || destination?.features || [];
@@ -945,7 +934,6 @@ const DestinationModal = ({ destination, isOpen, onClose, isWishlisted, onWishli
           <div className="dest-modal-image-overlay" />
           <div className="dest-modal-image-badges">
             {category && <span className="dest-modal-badge">{category}</span>}
-            {price && <span className="dest-modal-badge dest-modal-badge--price">From ${typeof price === "number" ? price.toLocaleString() : price}</span>}
           </div>
           <button className={`dest-modal-wishlist ${isWishlisted ? "active" : ""}`} onClick={(e) => { e.stopPropagation(); onWishlistToggle(destination?._id || destination?.id || destination?.slug); }}>
             {isWishlisted ? <IoHeart /> : <IoHeartOutline />}
