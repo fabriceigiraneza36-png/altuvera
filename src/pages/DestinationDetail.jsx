@@ -390,7 +390,7 @@ export default function DestinationDetail() {
               </Reveal>
               <div className="d-gal-mosaic">
                 {additionalImages.map((img, index) => (
-                  <button key={img.url} type="button" className={`d-gal-cell ${index === 0 ? "d-gal-cell--wide" : ""}`} onClick={() => window.dispatchEvent(new CustomEvent("altuvera:destination-lightbox", { detail: { images: [...heroSlides, ...additionalImages], index: heroSlides.length + index } }))}>
+                  <button key={img.url} type="button" className={`d-gal-cell ${index === 0 ? "d-gal-cell--wide" : ""}`}>
                     <img src={img.url} alt={img.caption || `${destination.name} gallery image ${index + 1}`} loading="lazy" />
                     <span className="d-gal-cell__ov"><span>{img.caption || "Explore photo"}</span></span>
                   </button>
