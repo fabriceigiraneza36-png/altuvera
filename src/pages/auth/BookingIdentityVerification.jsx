@@ -26,7 +26,7 @@ export default function BookingIdentityVerification(){
               <input type="file" accept="image/jpeg,image/png,image/webp" onChange={choose} style={{display:"none"}}/>
             </label>
             {error&&<div style={{marginTop:12,padding:11,borderRadius:10,background:"#fef2f2",color:"#b91c1c",fontSize:13}}>{error}</div>}
-            <button onClick={submit} disabled={!file||sending} style={{width:"100%",marginTop:16,border:0,borderRadius:12,padding:13,background:"#059669",color:"#fff",fontWeight:800,fontSize:14,opacity:(!file||sending)?.5:1,cursor:!file||sending?"not-allowed":"pointer"}}><Upload size={15} style={{verticalAlign:"-2px",marginRight:6}}/>{sending?"Uploading securely…":"Send portrait to Altuvera"}</button>
+            <button onClick={submit} disabled={!file||sending} style={{width:"100%",marginTop:16,border:0,borderRadius:12,padding:13,background:"#059669",color:"#fff",fontWeight:800,fontSize:14,opacity: (!file || sending) ? 0.5 : 1,cursor:!file||sending?"not-allowed":"pointer"}}><Upload size={15} style={{verticalAlign:"-2px",marginRight:6}}/>{sending?"Uploading securely…":"Send portrait to Altuvera"}</button>
           </>}
         <button onClick={()=>window.history.back()} style={{marginTop:18,border:0,background:"transparent",color:"#64748b",fontWeight:700,cursor:"pointer"}}><ArrowLeft size={14} style={{verticalAlign:"-2px",marginRight:4}}/>Back</button>
       </div>
