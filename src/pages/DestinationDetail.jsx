@@ -12,6 +12,7 @@ import {
   MapPin,
   Mountain,
   Star,
+  X,
 } from "lucide-react";
 import { useDestination } from "../hooks/useDestinations";
 
@@ -46,7 +47,11 @@ const extractUniqueImages = (destination, limit = 12) => {
   const result = [];
   const sources = [];
 
+  sources.push(...(Array.isArray(destination.heroImages) ? destination.heroImages : []));
+  sources.push(...(Array.isArray(destination.hero_images) ? destination.hero_images : []));
   sources.push(...(Array.isArray(destination.images) ? destination.images : []));
+  sources.push(...(Array.isArray(destination.image_urls) ? destination.image_urls : []));
+  sources.push(...(Array.isArray(destination.imageUrls) ? destination.imageUrls : []));
   sources.push(...(Array.isArray(destination.gallery) ? destination.gallery : []));
   if (Array.isArray(destination.attractions)) {
     sources.push(...destination.attractions);
@@ -157,6 +162,7 @@ export default function DestinationDetail() {
 
   const { destination, loading, error } = useDestination(target);
   const [heroSlide, setHeroSlide] = useState(0);
+  const [lightboxIndex, setLightboxIndex] = useState(null);
 
   const gallery = useMemo(
     () =>
@@ -169,9 +175,17 @@ export default function DestinationDetail() {
     [destination]
   );
   const heroSlides = useMemo(() => {
-    const preferred = [destination?.heroImage, ...(gallery.slice(0, 3).map((img) => img.url))].filter(Boolean);
-    return [...new Set(preferred.map(resolveImageUrl))].slice(0, 3);
-  }, [destination?.heroImage, gallery]);
+    const preferred = [
+      ...(Array.isArray(destination?.heroImages) ? destination.heroImages : []),
+      destination?.heroImage,
+      ...gallery.map((img) => img.url),
+    ].filter(Boolean);
+
+    return [...new Set(preferred.map((value) => {
+      if (typeof value === "string") return resolveImageUrl(value);
+      return resolveImageUrl(value?.imageUrl || value?.image_url || value?.url || value?.image);
+    }).filter(Boolean))].slice(0, 3);
+  }, [destination?.heroImages, destination?.heroImage, gallery]);
 
   const additionalImages = useMemo(
     () => gallery.filter((img) => !heroSlides.includes(img.url)).slice(0, 5),
@@ -180,6 +194,7 @@ export default function DestinationDetail() {
 
   useEffect(() => {
     setHeroSlide(0);
+    setLightboxIndex(null);
   }, [target]);
 
   useEffect(() => {
@@ -390,9 +405,15 @@ export default function DestinationDetail() {
               </Reveal>
               <div className="d-gal-mosaic">
                 {additionalImages.map((img, index) => (
-                  <button key={img.url} type="button" className={`d-gal-cell ${index === 0 ? "d-gal-cell--wide" : ""}`}>
+                  <button
+                    key={img.url}
+                    type="button"
+                    className={`d-gal-cell ${index === 0 ? "d-gal-cell--wide" : ""}`}
+                    onClick={() => setLightboxIndex(index)}
+                    aria-label={`Open ${destination.name} gallery image ${index + 1}`}
+                  >
                     <img src={img.url} alt={img.caption || `${destination.name} gallery image ${index + 1}`} loading="lazy" />
-                    <span className="d-gal-cell__ov"><span>{img.caption || "Explore photo"}</span></span>
+                    <span className="d-gal-cell__ov"><span>View photo</span></span>
                   </button>
                 ))}
               </div>
@@ -491,6 +512,49 @@ export default function DestinationDetail() {
           </section>
         )}
       </div>
+
+      {lightboxIndex !== null && additionalImages.length > 0 && (
+        <div
+          className="d-lightbox"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${destination.name} photo gallery`}
+          onClick={() => setLightboxIndex(null)}
+        >
+          <button type="button" className="d-lightbox__close" onClick={() => setLightboxIndex(null)} aria-label="Close photo gallery">
+            <X size={22} />
+          </button>
+          <button
+            type="button"
+            className="d-lightbox__arrow d-lightbox__arrow--p"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxIndex((lightboxIndex - 1 + additionalImages.length) % additionalImages.length);
+            }}
+            aria-label="Previous photo"
+          >
+            <ChevronLeft size={24} />
+          </button>
+          <img
+            className="d-lightbox__image"
+            src={additionalImages[lightboxIndex]?.url}
+            alt={additionalImages[lightboxIndex]?.caption || `${destination.name} photo ${lightboxIndex + 1}`}
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            type="button"
+            className="d-lightbox__arrow d-lightbox__arrow--n"
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightboxIndex((lightboxIndex + 1) % additionalImages.length);
+            }}
+            aria-label="Next photo"
+          >
+            <ChevronRight size={24} />
+          </button>
+          <div className="d-lightbox__counter">{lightboxIndex + 1} / {additionalImages.length}</div>
+        </div>
+      )}
     </ScrollProvider>
   );
 }
