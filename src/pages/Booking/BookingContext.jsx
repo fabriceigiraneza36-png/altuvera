@@ -5,7 +5,7 @@ import { STEPS } from "./useBookingForm";
 
 const BookingContext = createContext(null);
 
-const API = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API = import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
 const STORAGE_KEY = "altuvera_booking_v1";
 
 const INITIAL = {
@@ -37,9 +37,16 @@ const VALIDATORS = [
   },
   (d) => {
     const e = {};
-    if (!d.flexibleDates && !d.startDate) e.startDate = "Pick a date";
-    if (!d.flexibleDates && d.startDate && d.endDate && d.endDate < d.startDate)
-      e.endDate = "Return must be after departure";
+    if (!d.flexibleDates) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const start = d.startDate ? new Date(d.startDate) : null;
+      const end = d.endDate ? new Date(d.endDate) : null;
+      if (!d.startDate) e.startDate = "Choose your arrival date";
+      else if (!start || Number.isNaN(start.getTime()) || start < today) e.startDate = "Arrival must be today or later";
+      if (!d.endDate) e.endDate = "Choose your departure date";
+      else if (!end || Number.isNaN(end.getTime()) || (start && end <= start)) e.endDate = "Departure must be after arrival";
+    }
     if (d.flexibleDates && (!d.flexibleMonths || !d.flexibleMonths.length))
       e.flexibleMonths = "Pick at least one month";
     if (!d.adults || Number(d.adults) < 1) e.adults = "At least 1 adult";
@@ -128,7 +135,7 @@ export function BookingProvider({ children }) {
   }, [step]);
 
   const submit = useCallback(async () => {
-    const errs = VALIDATORS[STEPS.length - 1]?.(data) || {};
+    const errs = VALIDATORS[3]?.(data) || {};
     if (Object.keys(errs).length) {
       setErrors(errs);
       setTouched(p => ({
