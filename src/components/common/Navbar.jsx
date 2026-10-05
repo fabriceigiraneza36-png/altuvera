@@ -167,11 +167,6 @@ const DestinationCard = ({ destination, onClick, style, index }) => {
             : destination.shortDescription ||
               "Discover this amazing destination"}
         </p>
-        {destination.price && (
-          <p className="srch-card__overlay-price">
-            From ${destination.price}
-          </p>
-        )}
         <span className="srch-card__overlay-cta">
           View Details <FiArrowRight size={14} />
         </span>
