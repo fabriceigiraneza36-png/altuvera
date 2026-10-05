@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { multiBackendFetch } from "../utils/multiBackendFetch";
+import { adaptDestinationList } from "../utils/destinationAdapter";
 
 // Service layer for country data
 const countryService = {
@@ -126,13 +127,23 @@ export function useCountryDestinations(countryIdOrSlug, limit = 12) {
     setLoading(true);
     setError(null);
 
-    const url = `/countries/${encodeURIComponent(countryIdOrSlug)}/destinations?limit=${limit}`;
+    // The backend exposes destinations on GET /countries/:slug,
+    // embedded in data.destinations. There is no
+    // /countries/:slug/destinations route.
+    const url = `/countries/${encodeURIComponent(countryIdOrSlug)}`;
 
     multiBackendFetch(url)
       .then((res) => {
         if (!cancelled) {
-          const data = Array.isArray(res) ? res : res?.data || [];
-          setDestinations(data);
+          const payload = res?.data ?? res ?? {};
+          const data = Array.isArray(payload)
+            ? payload
+            : Array.isArray(payload?.destinations)
+              ? payload.destinations
+              : [];
+          // Normalize backend snake_case fields to the shape consumed by
+          // DestinationCard (images, heroImage, countryName, etc.).
+          setDestinations(adaptDestinationList(data));
         }
       })
       .catch((err) => {
