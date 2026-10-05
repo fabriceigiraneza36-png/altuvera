@@ -4,6 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════════════════
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import ItineraryDownloadButton from "../../components/auth/ItineraryDownloadButton";
 import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
 import { useUserAuth } from "../../context/UserAuthContext";
@@ -954,6 +955,8 @@ function ItineraryPanel({ booking, onApprove, onChangeRequest }) {
           </div>
         ))}
       </div>
+
+      <div style={{display:"flex",justifyContent:"flex-end",marginTop:12}}><ItineraryDownloadButton booking={booking} itinerary={itinerary}/></div>
 
       {(itinerary.inclusions?.length || itinerary.essentials?.length) ? (
         <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))",gap:10,marginTop:10}}>
