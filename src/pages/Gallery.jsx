@@ -135,6 +135,114 @@ const STYLES = `
     transition: all 0.3s var(--g-ease);
   }
 
+
+  /* Immersive Instagram-style fullscreen viewer */
+  .g-viewer {
+    position: fixed; inset: 0; z-index: 99999; color: white;
+    overflow: hidden; background: #07130f;
+    animation: gViewerIn .35s ease both;
+  }
+  .g-viewer-backdrop {
+    position: absolute; inset: 0;
+    background: radial-gradient(circle at center, rgba(6,78,59,.35), rgba(2,12,9,.98) 72%);
+  }
+  .g-viewer-topbar, .g-viewer-bottom { position: absolute; z-index: 5; left: 0; right: 0; }
+  .g-viewer-topbar {
+    top: 0; padding: 18px 22px 14px;
+    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px;
+    background: linear-gradient(to bottom, rgba(0,0,0,.65), transparent);
+  }
+  .g-story-progress { display:flex; gap:5px; min-width:0; }
+  .g-story-progress button {
+    height: 3px; flex:1; min-width:8px; border:0; border-radius:99px;
+    background: rgba(255,255,255,.28); cursor:pointer; transition:all .3s ease;
+  }
+  .g-story-progress button.active { background:#fff; box-shadow:0 0 10px rgba(255,255,255,.45); }
+  .g-viewer-counter { font-size:12px; font-weight:700; letter-spacing:.08em; white-space:nowrap; }
+  .g-viewer-close {
+    justify-self:end; width:42px; height:42px; border:1px solid rgba(255,255,255,.18);
+    border-radius:50%; background:rgba(255,255,255,.1); color:#fff; display:grid; place-items:center;
+    cursor:pointer; backdrop-filter:blur(14px); transition:transform .25s ease, background .25s ease;
+  }
+  .g-viewer-close:hover { transform:scale(1.08); background:rgba(5,150,105,.8); }
+  .g-story-stage { position:absolute; inset:0; display:flex; align-items:center; }
+  .g-story-track {
+    width:100%; height:100%; display:flex; align-items:center; gap:clamp(16px,3vw,42px);
+    overflow-x:auto; overflow-y:hidden; scroll-snap-type:x mandatory; scroll-behavior:smooth;
+    overscroll-behavior-x:contain; padding:90px 0 135px;
+  }
+  .g-story-slide {
+    flex:0 0 min(72vw, 720px); height:min(76vh, 760px);
+    scroll-snap-align:center; scroll-snap-stop:always; display:flex; align-items:center; justify-content:center;
+    opacity:.28; filter:blur(7px) saturate(.65); transform:scale(.82);
+    transition:transform .55s cubic-bezier(.2,.8,.2,1), opacity .55s ease, filter .55s ease;
+    cursor:pointer;
+  }
+  .g-story-slide.is-active { opacity:1; filter:none; transform:scale(1); cursor:default; }
+  .g-story-image-shell {
+    position:relative; width:100%; height:100%; overflow:hidden; border-radius:24px;
+    box-shadow:0 30px 100px rgba(0,0,0,.55); background:#10241d;
+  }
+  .g-story-image-shell img {
+    width:100%; height:100%; display:block; object-fit:contain; user-select:none;
+    -webkit-user-drag:none; animation:gStoryImageIn .55s ease both;
+  }
+  .g-story-caption {
+    position:absolute; left:0; right:0; bottom:0; padding:65px 24px 22px;
+    background:linear-gradient(transparent,rgba(0,0,0,.82)); pointer-events:none;
+  }
+  .g-story-caption h2 { margin:0 0 5px; font:700 clamp(18px,2vw,27px) 'Playfair Display',serif; }
+  .g-story-caption span { display:flex; align-items:center; gap:6px; font-size:13px; opacity:.9; }
+  .g-viewer-arrow {
+    position:absolute; z-index:4; width:50px; height:50px; border-radius:50%;
+    border:1px solid rgba(255,255,255,.2); background:rgba(0,0,0,.28); color:#fff;
+    display:grid; place-items:center; cursor:pointer; backdrop-filter:blur(12px); transition:all .25s ease;
+  }
+  .g-viewer-arrow:hover:not(:disabled) { transform:scale(1.08); background:#059669; }
+  .g-viewer-arrow:disabled { opacity:.2; cursor:not-allowed; }
+  .g-viewer-arrow-left { left:22px; } .g-viewer-arrow-right { right:22px; }
+  .g-viewer-bottom {
+    bottom:0; padding:15px 22px 22px; background:linear-gradient(transparent,rgba(0,0,0,.78) 28%);
+  }
+  .g-info-link {
+    display:flex; align-items:center; gap:8px; margin:auto; border:0; color:#fff; background:none;
+    cursor:pointer; font-weight:700; font-size:13px; padding:8px 4px;
+  }
+  .g-info-chevron { transition:transform .25s ease; } .g-info-chevron.open { transform:rotate(180deg); }
+  .g-image-info {
+    max-width:850px; margin:8px auto 0; padding:17px 20px; border-radius:18px;
+    background:rgba(255,255,255,.1); border:1px solid rgba(255,255,255,.14); backdrop-filter:blur(18px);
+    animation:gSlideUp .3s ease both; max-height:30vh; overflow:auto;
+  }
+  .g-image-info h3 { margin:0 0 6px; font:700 20px 'Playfair Display',serif; }
+  .g-image-info p { margin:0 0 13px; color:rgba(255,255,255,.78); font-size:13px; line-height:1.6; }
+  .g-info-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  .g-info-grid div { min-width:0; } .g-info-grid small { display:block; color:#6ee7b7; font-size:10px; text-transform:uppercase; letter-spacing:.08em; margin-bottom:3px; }
+  .g-info-grid strong { display:block; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .g-info-tags { display:flex; flex-wrap:wrap; gap:6px; margin-top:12px; }
+  .g-info-tags span { padding:4px 9px; border-radius:99px; background:rgba(16,185,129,.18); color:#a7f3d0; font-size:11px; }
+  @keyframes gViewerIn { from {opacity:0; transform:scale(1.015)} to {opacity:1; transform:scale(1)} }
+  @keyframes gStoryImageIn { from {opacity:0; transform:scale(1.025)} to {opacity:1; transform:scale(1)} }
+
+  @media (max-width: 700px) {
+    .g-viewer-topbar { padding:12px 12px 10px; grid-template-columns:1fr auto; }
+    .g-viewer-counter { display:none; }
+    .g-viewer-close { width:38px; height:38px; }
+    .g-story-track { gap:12px; padding:70px 0 120px; }
+    .g-story-slide { flex-basis:88vw; height:72vh; transform:scale(.78); filter:blur(5px) saturate(.55); }
+    .g-story-slide.is-active { transform:scale(1); }
+    .g-story-image-shell { border-radius:18px; }
+    .g-viewer-arrow { display:none; }
+    .g-story-caption { padding:55px 16px 16px; }
+    .g-story-caption h2 { font-size:19px; }
+    .g-image-info { margin-left:0; margin-right:0; max-height:28vh; padding:14px; border-radius:15px; }
+    .g-info-grid { grid-template-columns:1fr 1fr; }
+    .g-viewer-bottom { padding:10px 12px 16px; }
+  }
+  @media (max-width: 390px) {
+    .g-story-slide { flex-basis:91vw; height:68vh; }
+    .g-info-grid { grid-template-columns:1fr; }
+  }
   .g-focus:focus-visible {
     outline: 2px solid var(--g-green-600);
     outline-offset: 2px;
@@ -377,6 +485,8 @@ const GalleryCard = ({ image, index, onOpen, isFav, onFav }) => {
 
 const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext }) => {
   const [showDetails, setShowDetails] = useState(false);
+  const trackRef = useRef(null);
+  const touchStartX = useRef(null);
   const currentImage = images[selectedIndex];
 
   useEffect(() => {
@@ -389,171 +499,102 @@ const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext }) => 
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose, onPrev, onNext]);
 
-  const handleWheel = (e) => {
-    e.preventDefault();
-    if (e.deltaY > 0) onNext();
-    else onPrev();
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const item = track.children[selectedIndex];
+    if (item) item.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [selectedIndex]);
+
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
   };
 
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null) return;
+    const distance = e.changedTouches[0].clientX - touchStartX.current;
+    if (Math.abs(distance) > 45) distance < 0 ? onNext() : onPrev();
+    touchStartX.current = null;
+  };
+
+  if (!currentImage) return null;
+
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 9999, overflow: "hidden" }} onWheel={handleWheel}>
-      {/* Animated gradient background */}
-      <div style={{
-        position: "absolute", inset: 0,
-        background: "linear-gradient(45deg, #ECFDF5, #D1FAE5, #A7F3D0, #34D399, #ECFDF5)",
-        backgroundSize: "400% 400%",
-        animation: "gradientShift 15s ease infinite",
-        zIndex: 0,
-      }} />
+    <div className="g-viewer" role="dialog" aria-modal="true" aria-label="Image viewer">
+      <div className="g-viewer-backdrop" />
+      <div className="g-viewer-topbar">
+        <div className="g-story-progress">
+          {images.map((_, i) => (
+            <button key={i} aria-label={'Open image ' + (i + 1)} onClick={() => {
+              if (i > selectedIndex) onNext();
+              else if (i < selectedIndex) onPrev();
+            }} className={i === selectedIndex ? "active" : ""} />
+          ))}
+        </div>
+        <div className="g-viewer-counter">{selectedIndex + 1} / {images.length}</div>
+        <button className="g-viewer-close g-focus" onClick={onClose} aria-label="Close image viewer">
+          <FiX size={21} />
+        </button>
+      </div>
 
-      <div style={{
-        position: "relative", zIndex: 1, display: "flex", flexDirection: "column", height: "100vh", width: "100vw",
-      }}>
-        {/* Header */}
-        <div style={{
-          padding: "16px 20px", display: "flex", justifyContent: "space-between", alignItems: "center",
-          background: "rgba(255, 255, 255, 0.95)", borderBottom: "1px solid #E5E7EB",
-        }}>
-          <div style={{ color: "#111827", fontSize: 14, fontWeight: 600 }}>
-            {selectedIndex + 1} / {images.length}
-          </div>
-          <button onClick={onClose} style={{
-            background: "linear-gradient(135deg, #059669, #047857)",
-            border: "none", color: "white", width: 36, height: 36, borderRadius: "50%",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            cursor: "pointer", transition: "all 0.3s", fontWeight: 700,
-          }} onMouseOver={(e) => {
-            e.currentTarget.style.transform = "scale(1.1)";
-            e.currentTarget.style.boxShadow = "var(--g-shadow-green)";
-          }} onMouseOut={(e) => {
-            e.currentTarget.style.transform = "scale(1)";
-            e.currentTarget.style.boxShadow = "none";
-          }}>
-            <FiX size={18} />
-          </button>
+      <div
+        className="g-story-stage"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
+        <button className="g-viewer-arrow g-viewer-arrow-left g-focus" onClick={onPrev} disabled={selectedIndex === 0} aria-label="Previous image">
+          <FiChevronLeft size={27} />
+        </button>
+
+        <div ref={trackRef} className="g-story-track g-scroll-hidden">
+          {images.map((image, i) => (
+            <article
+              key={image.id}
+              className={'g-story-slide ' + (i === selectedIndex ? "is-active" : "")}
+              onClick={() => i === selectedIndex && setShowDetails(false)}
+            >
+              <div className="g-story-image-shell">
+                <img
+                  src={image.src || image.thumb}
+                  alt={image.alt || image.title || "Altuvera gallery image"}
+                  draggable="false"
+                />
+                <div className="g-story-caption">
+                  {image.title && <h2>{image.title}</h2>}
+                  {(image.location || image.countryName) && (
+                    <span><FiMapPin size={13} /> {image.location || image.countryName}</span>
+                  )}
+                </div>
+              </div>
+            </article>
+          ))}
         </div>
 
-        {/* Image container with dramatic zoom/blur */}
-        <div style={{
-          flex: 1, display: "flex", alignItems: "center", justifyContent: "center",
-          padding: "20px", position: "relative", overflow: "hidden",
-        }}>
-          {currentImage && (
-            <img src={currentImage.src} alt={currentImage.alt} style={{
-              maxWidth: "100%", maxHeight: "100%", objectFit: "contain",
-              borderRadius: "12px", boxShadow: "0 20px 80px rgba(6, 78, 59, 0.3)",
-              animation: "gScaleIn 0.4s ease",
-            }} />
-          )}
-        </div>
+        <button className="g-viewer-arrow g-viewer-arrow-right g-focus" onClick={onNext} disabled={selectedIndex === images.length - 1} aria-label="Next image">
+          <FiChevronRight size={27} />
+        </button>
+      </div>
 
-        {/* Navigation and details button */}
-        <div style={{
-          padding: "16px 20px", background: "rgba(255, 255, 255, 0.95)",
-          borderTop: "1px solid #E5E7EB", display: "flex", justifyContent: "space-between",
-          alignItems: "center", gap: 12, flexWrap: "wrap",
-        }}>
-          <button onClick={onPrev} disabled={selectedIndex === 0} className="g-btn-secondary" style={{
-            width: 40, height: 40, borderRadius: "50%", display: "flex", alignItems: "center",
-            justifyContent: "center", opacity: selectedIndex === 0 ? 0.5 : 1,
-            cursor: selectedIndex === 0 ? "not-allowed" : "pointer",
-          }} onMouseOver={(e) => {
-            if (selectedIndex > 0) e.currentTarget.style.background = "rgba(5, 150, 105, 0.15)";
-          }} onMouseOut={(e) => {
-            e.currentTarget.style.background = "rgba(255,255,255,0.2)";
-          }}>
-            <FiChevronLeft size={20} color="#059669" />
-          </button>
+      <div className="g-viewer-bottom">
+        <button className="g-info-link g-focus" onClick={() => setShowDetails((v) => !v)}>
+          <FiInfo size={16} />
+          {showDetails ? "Hide image information" : "View image information"}
+          <FiChevronDown className={showDetails ? "g-info-chevron open" : "g-info-chevron"} size={15} />
+        </button>
 
-          <button onClick={() => setShowDetails(!showDetails)} className="g-btn-primary" style={{
-            padding: "8px 16px", borderRadius: "var(--g-radius-full)", fontSize: 13, fontWeight: 600,
-            display: "flex", alignItems: "center", gap: 6, flex: 1, justifyContent: "center",
-          }}>
-            <FiInfo size={14} />
-            {showDetails ? "Hide" : "Show"} Details
-          </button>
-
-          <button onClick={onNext} disabled={selectedIndex === images.length - 1} className="g-btn-secondary" style={{
-            width: 40, height: 40, borderRadius: "50%", display: "flex", alignItems: "center",
-            justifyContent: "center", opacity: selectedIndex === images.length - 1 ? 0.5 : 1,
-            cursor: selectedIndex === images.length - 1 ? "not-allowed" : "pointer",
-          }} onMouseOver={(e) => {
-            if (selectedIndex < images.length - 1) e.currentTarget.style.background = "rgba(5, 150, 105, 0.15)";
-          }} onMouseOut={(e) => {
-            e.currentTarget.style.background = "rgba(255,255,255,0.2)";
-          }}>
-            <FiChevronRight size={20} color="#059669" />
-          </button>
-        </div>
-
-        {/* Details panel */}
-        {showDetails && currentImage && (
-          <div style={{
-            padding: "20px", background: "rgba(236, 253, 245, 0.98)",
-            borderTop: "2px solid #10B981", color: "#111827",
-            maxHeight: "250px", overflowY: "auto", animation: "gSlideUp 0.3s ease",
-          }}>
-            {currentImage.title && (
-              <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8, color: "#059669" }}>
-                {currentImage.title}
-              </h3>
-            )}
-            {currentImage.description && (
-              <p style={{
-                fontSize: 14, color: "#4B5563", marginBottom: 16, lineHeight: 1.6,
-              }}>
-                {currentImage.description}
-              </p>
-            )}
-            <div style={{
-              display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, fontSize: 13, marginBottom: 16,
-            }}>
-              {currentImage.location && (
-                <div>
-                  <span style={{ color: "#059669", fontWeight: 600 }}>📍 Location</span>
-                  <div style={{ fontWeight: 600, color: "#111827", marginTop: 4 }}>
-                    {currentImage.location}
-                  </div>
-                </div>
-              )}
-              {currentImage.countryName && (
-                <div>
-                  <span style={{ color: "#059669", fontWeight: 600 }}>🌍 Country</span>
-                  <div style={{ fontWeight: 600, color: "#111827", marginTop: 4 }}>
-                    {currentImage.countryName}
-                  </div>
-                </div>
-              )}
-              {currentImage.photographer && (
-                <div>
-                  <span style={{ color: "#059669", fontWeight: 600 }}>📷 Photographer</span>
-                  <div style={{ fontWeight: 600, color: "#111827", marginTop: 4 }}>
-                    {currentImage.photographer}
-                  </div>
-                </div>
-              )}
-              {currentImage.category && (
-                <div>
-                  <span style={{ color: "#059669", fontWeight: 600 }}>🏷️ Category</span>
-                  <div style={{ fontWeight: 600, color: "#111827", marginTop: 4 }}>
-                    {currentImage.category}
-                  </div>
-                </div>
-              )}
+        {showDetails && (
+          <div className="g-image-info">
+            {currentImage.title && <h3>{currentImage.title}</h3>}
+            {currentImage.description && <p>{currentImage.description}</p>}
+            <div className="g-info-grid">
+              {currentImage.location && <div><small>Location</small><strong>{currentImage.location}</strong></div>}
+              {currentImage.countryName && <div><small>Country</small><strong>{currentImage.countryName}</strong></div>}
+              {currentImage.category && <div><small>Category</small><strong>{currentImage.category}</strong></div>}
+              {currentImage.photographer && <div><small>Photographer</small><strong>{currentImage.photographer}</strong></div>}
             </div>
-            {currentImage.tags && currentImage.tags.length > 0 && (
-              <div>
-                <span style={{ color: "#059669", fontWeight: 600, fontSize: 12 }}>TAGS</span>
-                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 8 }}>
-                  {currentImage.tags.map((tag) => (
-                    <span key={tag} style={{
-                      background: "#D1FAE5", color: "#059669", padding: "4px 10px",
-                      borderRadius: "var(--g-radius-full)", fontSize: 12, fontWeight: 600,
-                    }}>
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
+            {currentImage.tags?.length > 0 && (
+              <div className="g-info-tags">
+                {currentImage.tags.map((tag) => <span key={tag}>#{tag}</span>)}
               </div>
             )}
           </div>
@@ -562,7 +603,6 @@ const FullscreenModal = ({ images, selectedIndex, onClose, onPrev, onNext }) => 
     </div>
   );
 };
-
 const SnapScrollGallery = ({ images, onImageClick }) => {
   const scrollContainerRef = useRef(null);
   const [scrollPosition, setScrollPosition] = useState(0);
