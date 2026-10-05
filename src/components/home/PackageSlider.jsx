@@ -5,19 +5,6 @@ import { ChevronLeft, ChevronRight, Clock, Users, MapPin, Heart } from "lucide-r
 import { motion, AnimatePresence } from "framer-motion";
 import packagesAPI from "../../api/packages";
 
-const fmtPrice = (price, currency = "USD") => {
-  if (!price && price !== 0) return "Contact Us";
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency,
-      maximumFractionDigits: 0,
-    }).format(price);
-  } catch {
-    return `$${Number(price).toLocaleString()}`;
-  }
-};
-
 const fmtDuration = (days) => {
   if (!days) return null;
   const n = days - 1;
