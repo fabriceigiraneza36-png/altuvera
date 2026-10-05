@@ -158,7 +158,7 @@ export default function SuccessScreen({ displayName, bookingRef, email, category
         <div className="relative z-10 max-w-md mx-auto mb-6 rounded-2xl border border-emerald-100 bg-emerald-50/80 p-4 text-left">
           <p className="text-sm font-bold text-emerald-800 mb-1">Your request is safely with our team.</p>
           <p className="text-xs text-emerald-700 leading-relaxed">
-            No email confirmation step is required. Keep your booking reference for follow-up.
+            We sent a secure confirmation link to your real inbox. Please confirm that you made this booking request; Altuvera will begin operational planning after you confirm.
           </p>
         </div>
 
