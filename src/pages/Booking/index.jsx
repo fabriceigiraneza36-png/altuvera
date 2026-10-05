@@ -147,7 +147,7 @@ function BookingInner() {
                 <div className="bk-review-card"><h4>Travel dates</h4><p><strong>{data.flexibleDates?"Flexible dates":`${pretty(data.startDate)} → ${pretty(data.endDate)}`}</strong></p><p>{data.flexibleDates ? `Months: ${(data.flexibleMonths||[]).join(", ") || "Not selected"}` : "Fixed travel dates"}</p></div>
                 <div className="bk-review-card"><h4>Travelers</h4><p><strong>{totalTravelers} traveler{totalTravelers!==1?"s":""}</strong></p><p>Adults: {data.adults} · Children: {data.children}</p><p>Group: {data.groupType}</p></div>
                 <div className="bk-review-card"><h4>Communication</h4><p><strong>{data.preferredContactMethod || "Not selected"}</strong></p><p>Email: {data.email}</p><p>Phone: {data.phone}</p></div>
-                <div className="bk-review-card"><h4>Requests</h4><p><strong>Special requests</strong></p><p>{data.specialRequests || "None provided"}</p></div>
+                <div className="bk-review-card"><h4>Requests & preferences</h4><p><strong>Special requests</strong></p><p>{data.specialRequests || "None provided"}</p><p>Selected attraction: {data.attractionName || "None"}</p><p>Accommodation: {data.accommodationType || "Not specified"}</p></div>
               </div>
               <div className="bk-review-card" style={{marginTop:12}}>
                 <h4>Consent & preferences</h4>
