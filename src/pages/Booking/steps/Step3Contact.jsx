@@ -144,7 +144,8 @@ export default function Step3Contact({ data, set, touch, errors, touched }) {
       </div>
 
       <div className="bk-field-group">
-        <label className="bk-label">Preferred Contact Method</label>
+        <label className="bk-label">Preferred Contact Method <span className="bk-label-req">*</span></label>
+        <p className="bk-hint">Choose how our travel team should contact you for questions, availability and planning.</p>
         <div className="bk-chip-grid">
           {METHODS.map((m) => {
             const Icon = m.icon;
@@ -155,6 +156,9 @@ export default function Step3Contact({ data, set, touch, errors, touched }) {
             </button>;
           })}
         </div>
+        {touched.preferredContactMethod && errors.preferredContactMethod && (
+          <p className="bk-field-err"><AlertCircle size={13} /> {errors.preferredContactMethod}</p>
+        )}
       </div>
 
       <fieldset className="bk-consent-group">
