@@ -2833,3 +2833,35 @@
   .srch-card { border-radius: 17px; }
   .srch-card__img-wrap { aspect-ratio: 16 / 10; }
 }
+
+/* Premium search-card metadata — no pricing */
+.srch-card__meta-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+.srch-card__meta-row .srch-card__location {
+  margin: 0;
+}
+.srch-card__rating,
+.srch-card__duration {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #047857;
+  background: #ecfdf5;
+  border: 1px solid #d1fae5;
+  border-radius: 999px;
+  padding: 4px 7px;
+}
+.srch-card__rating { color: #b45309; background: #fffbeb; border-color: #fde68a; }
+@media (max-width: 640px) {
+  .srch-card__meta-row { gap: 6px; }
+  .srch-card__rating,
+  .srch-card__duration { font-size: 9.5px; padding: 3px 6px; }
+}
