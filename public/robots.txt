@@ -77,3 +77,4 @@ Crawl-delay: 2
 
 # Sitemaps
 Sitemap: https://www.altuverasafaris.com/sitemap.xml
+Sitemap: https://www.altuverasafaris.com/destinations-sitemap.xml
