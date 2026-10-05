@@ -98,6 +98,7 @@ export function useConversations() {
   const [adminTyping, setAdminTyping] = useState(null);
   const [typingConvs, setTypingConvs] = useState(new Set());
   const [connected, setConnected] = useState(false);
+  const [adminOnline, setAdminOnline] = useState(false);
 
   useEffect(() => { activeIdRef.current = activeId }, [activeId]);
 
@@ -118,7 +119,11 @@ export function useConversations() {
       if (import.meta.env.DEV) console.info("[Socket] Connected:", s.id);
     });
 
-    s.on("disconnect", () => setConnected(false));
+    s.on("disconnect", () => {
+      setConnected(false);
+      setAdminOnline(false);
+    });
+    s.on("msg:admin-online", (payload) => setAdminOnline(Boolean(payload?.online)));
 
     s.on("msg:message", (msg) => {
       if (!msg) return;
@@ -396,5 +401,6 @@ export function useConversations() {
     emitTyping,
     socketRef,
     connected,
+    adminOnline,
   };
 }
