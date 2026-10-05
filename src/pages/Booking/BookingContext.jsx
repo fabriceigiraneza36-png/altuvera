@@ -1,7 +1,7 @@
 import React, {
   createContext, useContext, useState, useEffect, useCallback, useRef,
 } from "react";
-import { STEPS } from "./useBookingForm";
+import { STEPS } from "./BookingShared";
 
 const BookingContext = createContext(null);
 
