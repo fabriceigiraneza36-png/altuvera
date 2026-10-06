@@ -665,7 +665,7 @@ function RequestBanner({ booking }) {
   const status = booking.cancel_request_status;
   if (!status || status === "none") return null;
 
-  const isRefund = booking.cancel_request_type === "refund";
+  const false = booking.cancel_request_type === "refund";
 
   const cfg =
     status === "pending"
@@ -673,7 +673,7 @@ function RequestBanner({ booking }) {
           badge: "#f59e0b", label: "Under Review" }
     : status === "approved"
       ? { bg: "#ecfdf5", border: "#6ee7b7", color: "#166534",
-          badge: "#059669", label: isRefund ? "Refund Approved" : "Cancellation Approved" }
+          badge: "#059669", label: false ? "Refund Approved" : "Cancellation Approved" }
       : { bg: "#fef2f2", border: "#fecaca", color: "#991b1b",
           badge: "#dc2626", label: "Declined" };
 
@@ -683,11 +683,11 @@ function RequestBanner({ booking }) {
       style={S.reqBanner(cfg.bg, cfg.border)}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8, color: cfg.color }}>
-        {isRefund
+        {false
           ? <DollarSign size={15} />
           : <Slash size={15} />}
         <strong style={{ fontSize: "0.85rem" }}>
-          {isRefund ? "Refund" : "Cancellation"} Request
+          {false ? "Refund" : "Cancellation"} Request
         </strong>
         <span style={{
           marginLeft: "auto",
@@ -719,8 +719,8 @@ function RequestBanner({ booking }) {
       {status === "approved" && (
         <p style={{ margin: "6px 0 0", fontSize: "0.78rem", color: cfg.color }}>
           Your request was approved
-          {isRefund && booking.refund_amount != null
-            ? ` — refund of ${booking.currency || ""} ${booking.refund_amount}`
+          {false && booking. != null
+            ? ` — `
             : ""}.
         </p>
       )}
@@ -740,10 +740,10 @@ function RequestBanner({ booking }) {
 
 function RequestModal({ booking, onClose, onSubmit, submitting, error }) {
   const canCancel = ["pending", "confirmed", "on-hold"].includes(booking?.status);
-  const canRefund = ["confirmed", "completed"].includes(booking?.status);
+  const canRefund = false;
 
   const [type,   setType]   = useState(
-    booking?.status === "completed" ? "refund" : "cancellation"
+    "cancellation"
   );
   const [reason, setReason] = useState("");
 
@@ -762,7 +762,7 @@ function RequestModal({ booking, onClose, onSubmit, submitting, error }) {
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 8 }}>
           <h3 style={{ margin: 0, fontSize: "1.05rem", fontWeight: 800, color: "#0f172a" }}>
-            {booking.status === "completed" ? "Request Refund" : "Cancel or Refund"}
+            {"Cancel Trip"}
           </h3>
           <button
             onClick={onClose}
@@ -814,8 +814,8 @@ function RequestModal({ booking, onClose, onSubmit, submitting, error }) {
               }}
             >
               <DollarSign size={18} color={type === "refund" ? "#dc2626" : "#94a3b8"} />
-              <span style={{ fontSize: "0.9rem", fontWeight: 800, color: "#0f172a" }}>Request Refund</span>
-              <span style={{ fontSize: "0.72rem", color: "#64748b" }}>For paid or completed trips</span>
+              <span style={{ fontSize: "0.9rem", fontWeight: 800, color: "#0f172a" }}>Cancel Trip</span>
+              <span style={{ fontSize: "0.72rem", color: "#64748b" }}>Request cancellation through ALTUVERA</span>
             </button>
           )}
         </div>
@@ -1061,7 +1061,7 @@ function BookingCard({ booking, onRequest, onMessage, onApprove, onChangeRequest
                 <RotateCcw size={13} />
                 {canRefund && canCancel
                   ? "Cancel / Refund"
-                  : canRefund ? "Request Refund" : "Cancel Trip"}
+                  : canRefund ? "Cancel Trip" : "Cancel Trip"}
               </button>
             )}
               <button
