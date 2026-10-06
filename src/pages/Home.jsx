@@ -194,16 +194,6 @@ const HOME_STYLES = `
   transform: scale(1.02);
   transition: opacity 1.1s ease, transform 1.1s ease;
 }
-.intro-dest-video {
-  position: absolute;
-  inset: 0;
-  left: -38.9%;
-  width: 177.8%;
-  height: 100%;
-  border: 0;
-  transform: scale(1.01);
-  pointer-events: none;
-}
 
 /* — Card overlay gradient — */
 .intro-dest-card::after {
@@ -763,7 +753,6 @@ const resolveImageUrl = (image) => {
   );
 };
 
-const INTRO_REEL_VIDEO_ID = "X3MHIq09mnY";
 
 /* ═══════════════════════════════════════════
    WHY ALTUVERA DATA
