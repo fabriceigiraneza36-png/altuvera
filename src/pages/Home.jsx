@@ -820,6 +820,7 @@ const IntroDestCard = ({ card, variant = "main", staggerOffset = 0 }) => {
             onError={(e) => { e.currentTarget.style.display = "none"; }}
           />
         ))}
+      </div>
 
       {/* Side card corner arrow */}
       {!isMain && (
