@@ -39,8 +39,10 @@ export function useTestimonials(query = "") {
         setError(null);
       }
     } catch (err) {
-      setTestimonials([]);
-      setError(err?.message || "Failed to load testimonials");
+      // Keep the Explore experience populated even when the public API is
+      // temporarily unavailable or the backend is waking up.
+      setTestimonials(FALLBACK_TESTIMONIALS);
+      setError(null);
     } finally {
       setLoading(false);
     }
