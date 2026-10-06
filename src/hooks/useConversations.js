@@ -117,6 +117,7 @@ export function useConversations() {
 
     s.on("connect", () => {
       setConnected(true);
+      s.emit("msg:inbox-open", { open: true });
       if (import.meta.env.DEV) console.info("[Socket] Connected:", s.id);
     });
 
@@ -169,8 +170,12 @@ export function useConversations() {
                 ...c,
                 lastMessage: msg.body?.slice(0, 120) || c.lastMessage,
                 lastMessageAt: msg.createdAt || c.lastMessageAt,
+                unreadUser:
+                  msg.senderType === "admin" && String(msg.conversationId) !== String(activeIdRef.current)
+                    ? (c.unreadUser || 0) + 1
+                    : c.unreadUser,
                 unreadAdmin:
-                  String(msg.conversationId) !== String(activeIdRef.current)
+                  msg.senderType !== "admin" && String(msg.conversationId) !== String(activeIdRef.current)
                     ? (c.unreadAdmin || 0) + 1
                     : c.unreadAdmin,
               }
@@ -206,6 +211,7 @@ export function useConversations() {
     });
 
     return () => {
+      s.emit("msg:inbox-open", { open: false });
       s.disconnect();
     };
   }, []);
