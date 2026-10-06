@@ -99,6 +99,7 @@ export function useConversations() {
   const [typingConvs, setTypingConvs] = useState(new Set());
   const [connected, setConnected] = useState(false);
   const [adminOnline, setAdminOnline] = useState(false);
+  const [adminPresence, setAdminPresence] = useState({ active: false, activeSince: null, lastSeenAt: null });
 
   useEffect(() => { activeIdRef.current = activeId }, [activeId]);
 
@@ -122,6 +123,7 @@ export function useConversations() {
     s.on("disconnect", () => {
       setConnected(false);
       setAdminOnline(false);
+      setAdminPresence({ active: false, activeSince: null, lastSeenAt: new Date().toISOString() });
     });
     s.on("msg:admin-online", (payload) => setAdminOnline(Boolean(payload?.online)));
     s.on("msg:presence", (payload) => {
@@ -279,6 +281,7 @@ export function useConversations() {
   /* ── Open a conversation ─────────────────────────────────── */
   const openConversation = useCallback(async (id) => {
     if (id === null) {
+      setAdminPresence({ active: false, activeSince: null, lastSeenAt: null });
       setActiveId(null);
       setActiveConversation(null);
       setMessages([]);
@@ -292,6 +295,7 @@ export function useConversations() {
     setError("");
     setAdminTyping(null);
     setTypingConvs(new Set());
+    setAdminPresence({ active: false, activeSince: null, lastSeenAt: null });
 
     try {
       const res = await authFetch(
