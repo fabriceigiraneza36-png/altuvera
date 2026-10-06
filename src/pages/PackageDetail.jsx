@@ -193,9 +193,7 @@ export default function PackageDetail() {
     preferred_contact_method: "email",
     guest_phone: "",
     accommodation_preference: "",
-    trip_style: "",
-    budget_range: "",
-    special_requests: "",
+    trip_style: "",    special_requests: "",
   });
 
   const [errors, setErrors] = useState({});
@@ -275,9 +273,7 @@ export default function PackageDetail() {
         preferred_contact_method: form.preferred_contact_method,
         guest_phone: needsPhone ? form.guest_phone.trim() : undefined,
         accommodation_preference: form.accommodation_preference || undefined,
-        trip_style: form.trip_style || undefined,
-        budget_range: form.budget_range || undefined,
-        special_requests: form.special_requests.trim() || undefined,
+        trip_style: form.trip_style || undefined,        special_requests: form.special_requests.trim() || undefined,
       };
 
       const body = await packagesAPI.createBooking(pkg.id, payload);
@@ -308,9 +304,7 @@ export default function PackageDetail() {
   }
   if (loadError || !pkg) return <ErrorState message={loadError} />;
 
-  const cover = pkg.cover_image_url || pkg.image_url || pkg.thumbnail_url;
-  const price = money(pkg.price, pkg.currency || "USD");
-  const destination = pkg.destination_name || pkg.destination || "East Africa";
+  const cover = pkg.cover_image_url || pkg.image_url || pkg.thumbnail_url;  const destination = pkg.destination_name || pkg.destination || "East Africa";
   const country = pkg.country_name || pkg.country || "";
   const highlights = firstArray(pkg.features || pkg.highlights).slice(0, 3);
 
@@ -362,7 +356,6 @@ export default function PackageDetail() {
             <div className="pkg-meta">
               <span><MapPin size={15} /> {destination}{country ? `, ${country}` : ""}</span>
               {pkg.duration_days && <span><CalendarDays size={15} /> {pkg.duration_days} days</span>}
-              {price && <strong>{price}</strong>}
             </div>
           </div>
         </div>
@@ -434,9 +427,7 @@ export default function PackageDetail() {
           <div className="pkg-section">
             <div className="pkg-section-title"><span>04</span><div><b>Trip preferences</b><small>Optional — helps us personalize your proposal</small></div></div>
             <ChoiceGroup label="Accommodation" value={form.accommodation_preference} onChange={(v) => update("accommodation_preference", v)} options={ACCOMMODATION} />
-            <ChoiceGroup label="Travel style" value={form.trip_style} onChange={(v) => update("trip_style", v)} options={TRIP_STYLES} />
-            <ChoiceGroup label="Budget" value={form.budget_range} onChange={(v) => update("budget_range", v)} options={[]} />
-          </div>
+            <ChoiceGroup label="Travel style" value={form.trip_style} onChange={(v) => update("trip_style", v)} options={TRIP_STYLES} />          </div>
 
           <div className="pkg-section">
             <div className="pkg-section-title"><span>05</span><div><b>Special request</b><small>Anything our travel team should know?</small></div></div>
