@@ -1069,7 +1069,9 @@ export default function Messages() {
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <p className="text-[11px] text-slate-400 truncate">
-                        Altuvera Support
+                        <span className={adminPresence.active ? "text-emerald-600 font-semibold" : ""}>
+                          {adminPresence.active ? "Active " + fmtElapsed(adminPresence.activeSince, now) : "Altuvera Support"}
+                        </span>
                         {activeConversation.bookingNumber &&
                           <span className="font-mono ml-1">
                             · #{activeConversation.bookingNumber}
