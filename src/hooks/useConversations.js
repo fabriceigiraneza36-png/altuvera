@@ -236,22 +236,26 @@ export function useConversations() {
   );
 
   /* ── Fetch conversation list ─────────────────────────────────────── */
+  const cachedJsonGet = async (url) => {
+    const cached = userDataCache.get(url);
+    if (cached) return cached;
+    const pending = userDataCache.getPending(url);
+    if (pending) return pending;
+    const request = authFetch(url).then(async (res) => {
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const data = await res.json();
+      userDataCache.set(url, data, 30 * 1000);
+      return data;
+    }).finally(() => userDataCache.clearPending(url));
+    userDataCache.setPending(url, request);
+    return request;
+  };
+
   const fetchConversations = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
-      const res = await authFetch(
-        `${API_BASE}/messages/conversations?limit=100`,
-      );
-      if (res.status === 401) {
-        setError("Please log in to view messages.");
-        return;
-      }
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.message || `Server error ${res.status}`);
-      }
-      const data = await res.json();
+      const data = await cachedJsonGet(`${API_BASE}/messages/conversations?limit=100`);
       setConversations((data.data || []).map(normConv));
     } catch (err) {
       setError(err.message || "Failed to load conversations.");
