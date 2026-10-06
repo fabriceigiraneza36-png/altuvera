@@ -723,6 +723,8 @@ function NewConvModal({ onClose, onCreated }) {
 ══════════════════════════════════════════════════════════════════════════ */
 
 export default function Messages() {
+  const [searchParams] = useSearchParams();
+  const requestedConversationId = searchParams.get("conversationId");
   const {
     conversations, messages, activeId, activeConversation,
     unreadCount, loading, loadingMsgs, sending, error,
@@ -731,6 +733,13 @@ export default function Messages() {
   } = useConversations();
 
   useEffect(() => { injectMsgStyles(); }, []);
+  useEffect(() => {
+    if (!requestedConversationId || !conversations.length) return;
+    const target = conversations.find(c => String(c.id) === String(requestedConversationId));
+    if (target && String(activeId) !== String(target.id)) openConversation(target.id);
+  }, [requestedConversationId, conversations, activeId, openConversation]);
+
+
 
   const [draft,        setDraft]        = useState("");
   const [replyToId,    setReplyToId]    = useState(null);
