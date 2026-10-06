@@ -741,17 +741,13 @@ export function UserAuthProvider({ children }) {
     if (cacheable) {
       const cached = userDataCache.get(cacheKey);
       if (cached) return cached;
-      const pending = userDataCache.getPending(cacheKey);
-      if (pending) return pending;
     }
     const execute = (requestToken = tok) => fetch(url, { ...opts, headers: makeHeaders(requestToken) });
     let res;
     try {
       const request = execute(tok);
-      if (cacheable) userDataCache.setPending(cacheKey, request);
       res = await request;
     } catch {
-      if (cacheable) userDataCache.clearPending(cacheKey);
       throw new Error("Network error. Please check your connection.");
     }
 
@@ -811,7 +807,6 @@ export function UserAuthProvider({ children }) {
 
     const finalData = resData || {};
     if (cacheable) {
-      userDataCache.clearPending(cacheKey);
       userDataCache.set(cacheKey, finalData, opts.cacheTime || 30 * 1000);
     } else {
       userDataCache.clear();
