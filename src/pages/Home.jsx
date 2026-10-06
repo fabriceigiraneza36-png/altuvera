@@ -747,9 +747,9 @@ const useSlideshow = (length, intervalMs = 4500, offsetMs = 0) => {
 /* ═══════════════════════════════════════════
    INTRO DESTINATION CARD (with slideshow)
 ═══════════════════════════════════════════ */
-const IntroDestCard = ({ card, variant = "main", staggerOffset = 0 }) => {
+const IntroDestCard = ({ card, variant = "main", staggerOffset = 0, story = false }) => {
   const [activeIdx] = useSlideshow(card.images.length, 4500, staggerOffset);
-  const isMain = variant === "main";
+  const isMain = variant === "main" && !story;
 
   return (
     <Link
@@ -827,23 +827,51 @@ const IntroDestCard = ({ card, variant = "main", staggerOffset = 0 }) => {
 /* ═══════════════════════════════════════════
    INTRO MEDIA PANEL — DESTINATION CARDS
 ═══════════════════════════════════════════ */
+/* ═══════════════════════════════════════════
+   STORIES-STYLE DESTINATION CAROUSEL
+═══════════════════════════════════════════ */
+.intro-story-wrap { width:100%; max-width:720px; position:relative; }
+.intro-story-track {
+  display:flex; align-items:center; gap:1rem;
+  width:100%; overflow-x:auto; overflow-y:visible;
+  padding:1rem max(1rem, calc((100% - 68%)/2));
+  scroll-snap-type:x mandatory; scroll-behavior:smooth;
+  scrollbar-width:none; overscroll-behavior-x:contain;
+}
+.intro-story-track::-webkit-scrollbar { display:none; }
+.intro-story-item {
+  flex:0 0 68%; min-width:0; height:400px;
+  scroll-snap-align:center;
+  transform:scale(.9); opacity:.58;
+  transition:transform .55s cubic-bezier(.22,1,.36,1), opacity .45s ease, filter .45s ease;
+  filter:saturate(.78);
+}
+.intro-story-item.is-active { transform:scale(1); opacity:1; filter:saturate(1); z-index:2; }
+.intro-story-item .intro-dest-card {
+  width:100%; height:100%; border-radius:1.35rem;
+}
+.intro-story-item .intro-slideshow-stack img { display:block; }
+.intro-story-dots { display:flex; justify-content:center; gap:.35rem; margin-top:.2rem; }
+.intro-story-dot { width:.35rem; height:.35rem; border-radius:999px; background:#cbd5e1; transition:all .3s ease; }
+.intro-story-dot.is-active { width:1.15rem; background:#059669; }
+
+@media (max-width: 900px) {
+  .intro-story-item { flex-basis:76%; height:360px; }
+  .intro-story-track { padding-left:12%; padding-right:12%; }
+}
+@media (max-width: 640px) {
+  .intro-story-item { flex-basis:82%; height:330px; }
+  .intro-story-track { gap:.7rem; padding-left:9%; padding-right:9%; }
+  .intro-story-item .intro-dest-main-title { font-size:1rem; }
+  .intro-story-item .intro-dest-main-label { padding:.9rem; }
+}
+
 const IntroMediaPanel = () => {
   const { destinations = [] } = useDestinations({ limit: 100, sort: "-featured", include: "gallery" });
-  const [activeStart, setActiveStart] = useState(0);
+  const trackRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(0);
 
-  useEffect(() => {
-    setActiveStart(0);
-  }, [destinations.length]);
-
-  useEffect(() => {
-    if (destinations.length <= 1) return undefined;
-    const timer = window.setInterval(() => {
-      setActiveStart((current) => (current + 1) % destinations.length);
-    }, 5200);
-    return () => window.clearInterval(timer);
-  }, [destinations.length]);
-
-  const cards = destinations.map((destination) => ({
+  const cards = useMemo(() => destinations.map((destination) => ({
     slug: destination.slug || destination.id,
     country: destination.country || destination.countryName || "",
     tag: destination.category || "",
@@ -855,34 +883,59 @@ const IntroMediaPanel = () => {
       resolveImageUrl(destination.imageUrl),
       ...(Array.isArray(destination.images) ? destination.images.map(resolveImageUrl) : []),
     ].filter(Boolean),
-  }));
-  const visibleCards = cards.length > 0
-    ? [0, 1, 2].map((offset) => cards[(activeStart + offset) % cards.length])
-    : [];
-  const [mainCard, ...sideCards] = visibleCards;
+  })), [destinations]);
 
-  if (!mainCard) return null;
+  useEffect(() => {
+    if (cards.length <= 1) return undefined;
+    const timer = window.setInterval(() => {
+      const next = (activeIndex + 1) % cards.length;
+      const el = trackRef.current?.children?.[next];
+      el?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    }, 5200);
+    return () => window.clearInterval(timer);
+  }, [cards.length, activeIndex]);
+
+  const handleScroll = useCallback(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const center = track.scrollLeft + track.clientWidth / 2;
+    let nearest = 0;
+    let distance = Infinity;
+    Array.from(track.children).forEach((el, i) => {
+      const elCenter = el.offsetLeft + el.offsetWidth / 2;
+      const d = Math.abs(elCenter - center);
+      if (d < distance) { distance = d; nearest = i; }
+    });
+    setActiveIndex(nearest);
+  }, []);
+
+  if (!cards.length) return null;
 
   return (
-    <div className="intro-media-grid">
-      {/* Floating trust badges */}
-      <div className="intro-media-float-badge intro-media-float-badge--top">
-        <div className="intro-float-icon intro-float-icon--green">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" /></svg>
-        </div>
-        <div className="intro-float-text"><span className="intro-float-title">100% Trusted</span><span className="intro-float-sub">Verified local partners</span></div>
+    <div className="intro-story-wrap">
+      <div
+        ref={trackRef}
+        className="intro-story-track"
+        onScroll={handleScroll}
+        role="region"
+        aria-label="Explore destinations"
+      >
+        {cards.map((card, i) => (
+          <div
+            key={card.slug}
+            className={`intro-story-item ${i === activeIndex ? "is-active" : ""}`}
+          >
+            <IntroDestCard card={card} story />
+          </div>
+        ))}
       </div>
-      {/* Main destination card */}
-      <IntroDestCard card={mainCard} variant="main" staggerOffset={0} />
-
-      {sideCards.map((card, i) => (
-        <IntroDestCard
-          key={card.slug}
-          card={card}
-          variant="side"
-          staggerOffset={(i + 1) * 900}
-        />
-      ))}
+      {cards.length > 1 && (
+        <div className="intro-story-dots" aria-hidden="true">
+          {cards.map((_, i) => (
+            <span key={i} className={`intro-story-dot ${i === activeIndex ? "is-active" : ""}`} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
