@@ -463,30 +463,6 @@ const TestimonialCard = React.memo(function TestimonialCard({
 });
 
 /* ═══════════════════════════════════════════
-   PROGRESS RING
-═══════════════════════════════════════════ */
-const ProgressRing = ({ progress, secondsLeft }) => {
-  const radius = 16;
-  const circumference = 2 * Math.PI * radius;
-  const offset = circumference - (progress / 100) * circumference;
-
-  return (
-    <div className="tshow-progress-ring">
-      <svg width="40" height="40" viewBox="0 0 40 40">
-        <circle cx="20" cy="20" r={radius} className="tshow-progress-track" />
-        <circle
-          cx="20" cy="20" r={radius}
-          className="tshow-progress-bar"
-          strokeDasharray={circumference}
-          strokeDashoffset={offset}
-        />
-      </svg>
-      <span className="tshow-progress-time">{secondsLeft}s</span>
-    </div>
-  );
-};
-
-/* ═══════════════════════════════════════════
    SKELETON
 ═══════════════════════════════════════════ */
 const SkeletonPair = () => (
@@ -642,52 +618,11 @@ const TestimonialShowcase = () => {
           ))}
         </div>
 
-        {/* Controls */}
         {totalSlides > 1 && (
-          <div className="tshow-controls">
-            <button
-              className="tshow-nav-btn"
-              onClick={goPrev}
-              aria-label="Previous testimonial"
-            >
-              <IoChevronBack size={16} />
-            </button>
-
-            <div className="tshow-dots">
-              {slides.map((_, i) => (
-                <button
-                  key={i}
-                  className={`tshow-dot ${i === activeIdx ? "active" : ""}`}
-                  onClick={() => goTo(i)}
-                  aria-label={`Go to testimonial ${i + 1}`}
-                >
-                  {i === activeIdx && (
-                    <div
-                      className="tshow-dot-fill"
-                      style={{ width: `${progress}%` }}
-                    />
-                  )}
-                </button>
-              ))}
-            </div>
-
-            <ProgressRing progress={progress} secondsLeft={secondsLeft} />
-
-            <button
-              className="tshow-pause-btn"
-              onClick={togglePause}
-              aria-label={isPaused ? "Resume slideshow" : "Pause slideshow"}
-            >
-              {isPaused ? <IoPlay size={14} /> : <IoPause size={14} />}
-            </button>
-
-            <button
-              className="tshow-nav-btn"
-              onClick={goNext}
-              aria-label="Next testimonial"
-            >
-              <IoChevronForward size={16} />
-            </button>
+          <div className="tshow-story-dots" aria-hidden="true">
+            {slides.map((_, i) => (
+              <span key={i} className={`tshow-story-dot ${i === activeIdx ? "active" : ""}`} />
+            ))}
           </div>
         )}
       </div>
