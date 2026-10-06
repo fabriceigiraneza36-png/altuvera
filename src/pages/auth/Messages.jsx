@@ -1204,7 +1204,7 @@ export default function Messages() {
                   )}
 
                   {/* Input row */}
-                  <div className="msg-composer-row flex items-end gap-2">
+                  <div className="msg-composer-row flex items-end gap-2 rounded-2xl border border-slate-200 bg-slate-50/90 p-1.5 shadow-sm focus-within:border-emerald-300 focus-within:bg-white focus-within:shadow-md transition-all">
                     {/* Emoji toggle */}
                     <div className="relative flex-shrink-0">
                       <button
