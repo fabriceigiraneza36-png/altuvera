@@ -123,6 +123,11 @@ const HOME_STYLES = `
 /* ══════════════════════════════════════════
    INTRO MEDIA PANEL — DESTINATION CARDS w/ SLIDESHOW
 ══════════════════════════════════════════ */
+.intro-slot{min-width:0;min-height:0;position:relative;}
+.intro-slot--main{grid-row:1 / -1;}
+.intro-slot--side{min-height:0;}
+.intro-slot > .intro-dest-card{width:100%;height:100%;}
+
 .intro-media-grid {
   width: 100%;
   max-width: 540px;
@@ -159,9 +164,7 @@ const HOME_STYLES = `
 }
 
 /* — Main (large) card — */
-.intro-dest-main {
-  grid-row: 1 / -1;
-}
+.intro-dest-main { grid-row: auto; }
 
 /* — Slideshow layer — */
 .intro-slideshow-stack {
@@ -184,6 +187,7 @@ const HOME_STYLES = `
 .intro-slideshow-img.is-active {
   opacity: 1;
   transform: scale(1);
+  animation: introDestinationSwap .9s ease both;
 }
 .intro-slideshow-img.is-prev {
   opacity: 0;
@@ -440,6 +444,10 @@ const HOME_STYLES = `
 }
 .intro-media-float-badge--bottom {
   animation: introCardEnter .7s cubic-bezier(.34,1.56,.64,1) .85s both, introFloatBounce 4s ease-in-out 2.35s infinite;
+}
+@keyframes introDestinationSwap {
+  0% { opacity: .72; transform: scale(.985); }
+  100% { opacity: 1; transform: scale(1); }
 }
 @keyframes introCardEnter {
   from { opacity: 0; transform: translateY(24px) scale(.93); }
@@ -812,38 +820,17 @@ const IntroDestCard = ({ card, variant = "main", staggerOffset = 0 }) => {
       aria-label={`Explore ${card.title}`}
     >
       <div className="intro-slideshow-stack">
-{isMain ? (
-           <iframe
-             className="intro-dest-video"
-             src={`https://www.youtube-nocookie.com/embed/${INTRO_REEL_VIDEO_ID}?autoplay=1&mute=1&loop=1&playlist=${INTRO_REEL_VIDEO_ID}&controls=0&rel=0&modestbranding=1&iv_load_policy=3&disablekb=1&playsinline=1`}
-             title={`${card.title} video`}
-             allow="autoplay; encrypted-media; picture-in-picture"
-             tabIndex="-1"
-           />
-         ) : card.images.map((src, i) => (
-           <img
-             key={i}
-             src={src}
-             alt={`${card.title} — view ${i + 1}`}
-             className={`intro-slideshow-img ${i === activeIdx ? "is-active" : ""}`}
-             loading={i === 0 ? "eager" : "lazy"}
-             draggable={false}
-             onError={(e) => {
-               // Hide broken image
-               e.target.style.display = 'none';
-             }}
-           />
-         ))}
-      </div>
-
-      {/* Slide indicator dots */}
-      {!isMain && card.images.length > 1 && (
-        <div className="intro-slide-dots">
-          {card.images.map((_, i) => (
-            <span key={i} className={`intro-slide-dot ${i === activeIdx ? "is-active" : ""}`} />
-          ))}
-        </div>
-      )}
+{card.images.map((src, i) => (
+          <img
+            key={`${card.slug || card.to}-${i}`}
+            src={src}
+            alt={`${card.title} — view ${i + 1}`}
+            className={`intro-slideshow-img ${i === activeIdx ? "is-active" : ""}`}
+            loading={i === 0 ? "eager" : "lazy"}
+            draggable={false}
+            onError={(e) => { e.currentTarget.style.display = "none"; }}
+          />
+        ))}
 
       {/* Side card corner arrow */}
       {!isMain && (
@@ -862,7 +849,7 @@ const IntroDestCard = ({ card, variant = "main", staggerOffset = 0 }) => {
               {card.subtitle && <> · {card.subtitle}</>}
             </p>
             <span className="intro-dest-cta">
-              Dive In <HiOutlineArrowRight size={12} />
+              Discover More <HiOutlineArrowRight size={12} />
             </span>
           </>
         ) : (
@@ -927,15 +914,14 @@ const IntroMediaPanel = () => {
         <div className="intro-float-text"><span className="intro-float-title">100% Trusted</span><span className="intro-float-sub">Verified local partners</span></div>
       </div>
       {/* Main destination card */}
-      <IntroDestCard card={mainCard} variant="main" staggerOffset={0} />
+      <div className="intro-slot intro-slot--main" key="main-slot">
+        <IntroDestCard card={mainCard} variant="main" staggerOffset={0} />
+      </div>
 
       {sideCards.map((card, i) => (
-        <IntroDestCard
-          key={card.slug}
-          card={card}
-          variant="side"
-          staggerOffset={(i + 1) * 900}
-        />
+        <div className="intro-slot intro-slot--side" key={`side-slot-${i}`}>
+          <IntroDestCard card={card} variant="side" staggerOffset={(i + 1) * 900} />
+        </div>
       ))}
     </div>
   );
