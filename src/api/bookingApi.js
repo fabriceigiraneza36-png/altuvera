@@ -252,8 +252,7 @@ const VALID_BOOKING_TYPES = ["destination", "service", "custom", "package"];
  * Backend fields (routes/bookings.js):
  *   guest_name, guest_email, guest_phone,
  *   booking_type,
- *   package_id, package_title, package_price, currency,
- *   travel_date, end_date,
+ *   package_id, package_title, *   travel_date, end_date,
  *   number_of_adults, number_of_children, travelers_count,
  *   total_price, special_requests
  *
@@ -304,9 +303,7 @@ const normaliseBookingPayload = (formData) => {
     // Package reference
     package_id:           d.package_id   ? toInt(d.package_id)          : undefined,
     package_title:        trimStr(d.package_title)                       || undefined,
-    package_price:        toFloat(d.package_price ?? d.price)            ?? undefined,
-    currency:             trimStr(d.currency)?.toUpperCase()             || "USD",
-
+    
     // Travel dates
     travel_date:          trimStr(d.travel_date)                         || undefined,
     end_date:             trimStr(d.end_date)                            || undefined,
@@ -316,12 +313,7 @@ const normaliseBookingPayload = (formData) => {
     number_of_children:   children,
     travelers_count:      travelers,
 
-    // Pricing
-    total_price:          toFloat(d.total_price)                         ?? undefined,
-
-    // Extras
-    special_requests:     trimStr(d.special_requests)                    || undefined,
-  };
+    // Extras */
 
   /* ── strip undefined values (keep 0 and false) ── */
   return Object.fromEntries(
@@ -412,7 +404,7 @@ export const trackBooking = async (bookingNumber) => {
  * Update booking status (admin).
  *
  * @param {number|string} id
- * @param {string}        status  "pending" | "confirmed" | "cancelled" | "completed" | "waitlisted"
+ * @param {string}        status  "new" | "under_review" | "itinerary_preparing" | "itinerary_sent" | "awaiting_confirmation" | "confirmed" | "in_progress" | "completed"
  * @returns {Promise<object>}
  * @throws {ApiError}
  */
