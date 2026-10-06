@@ -515,7 +515,6 @@ const TestimonialShowcase = () => {
   const timerRef = useRef(null);
   const totalSlides = slides.length;
 
-  const goTo = useCallback((idx) => setActiveIdx(idx), []);
   const goNext = useCallback(() => {
     if (totalSlides > 1) setActiveIdx((p) => (p + 1) % totalSlides);
   }, [totalSlides]);
@@ -618,13 +617,7 @@ const TestimonialShowcase = () => {
           ))}
         </div>
 
-        {totalSlides > 1 && (
-          <div className="tshow-story-dots" aria-hidden="true">
-            {slides.map((_, i) => (
-              <span key={i} className={`tshow-story-dot ${i === activeIdx ? "active" : ""}`} />
-            ))}
-          </div>
-        )}
+
       </div>
     </section>
   );
