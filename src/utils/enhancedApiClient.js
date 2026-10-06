@@ -53,9 +53,13 @@ this.responseInterceptors = [
     const cacheKey = this.getCacheKey(endpoint, config);
 
     // Check cache for GET requests
-    if (config.method === 'GET' && config.cache) {
+    if (config.method === 'GET' && config.cache && !config._skipCacheRead) {
       const cached = this.getCache(cacheKey);
       if (cached) {
+        // Stale-while-revalidate: return instantly, then synchronize with the
+        // backend without blocking the current page.
+        void this.request(endpoint, { ...config, _skipCacheRead: true })
+          .catch(() => {});
         return cached;
       }
     }
