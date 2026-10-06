@@ -776,6 +776,7 @@ CelebrationOverlay.displayName = "CelebrationOverlay";
 const AppLayout = React.memo(() => (
   <>
     <Navbar />
+    <GlobalUserNotifications />
     <main
       id="main-content"
       style={{ flex: 1, display: "flex", flexDirection: "column" }}
