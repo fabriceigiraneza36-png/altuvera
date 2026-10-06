@@ -7,6 +7,7 @@ import {
   useMemo,
 } from "react";
 import { useUserAuth } from "../context/UserAuthContext";
+import userDataCache from "../utils/userDataCache";
 
 /* ─────────────────────────────────────────────────────────────
    CONFIG
@@ -35,7 +36,15 @@ const getToken = () => {
 
 const authFetch = (url, opts = {}) => {
   const token = getToken();
-  return fetch(url, {
+  const method = String(opts.method || "GET").toUpperCase();
+  const cacheable = method === "GET" && opts.cache !== false;
+  if (cacheable) {
+    const cached = userDataCache.get(url);
+    if (cached) return Promise.resolve(cached);
+    const pending = userDataCache.getPending(url);
+    if (pending) return pending;
+  }
+  const request = fetch(url, {
     credentials: "include",
     ...opts,
     headers: {
@@ -44,6 +53,18 @@ const authFetch = (url, opts = {}) => {
       ...opts.headers,
     },
   });
+  if (!cacheable) {
+    userDataCache.clear();
+    return request;
+  }
+  const parsed = request.then(async (res) => {
+    if (!res.ok) return res;
+    const data = await res.clone().json().catch(() => null);
+    if (data !== null) userDataCache.set(url, data, 30 * 1000);
+    return res;
+  }).finally(() => userDataCache.clearPending(url));
+  userDataCache.setPending(url, parsed);
+  return parsed;
 };
 
 const daysUntil = (dateStr) =>
