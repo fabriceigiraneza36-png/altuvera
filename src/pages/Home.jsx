@@ -749,7 +749,8 @@ const useSlideshow = (length, intervalMs = 4500, offsetMs = 0) => {
 ═══════════════════════════════════════════ */
 const IntroDestCard = ({ card, variant = "main", staggerOffset = 0, story = false }) => {
   const [activeIdx] = useSlideshow(card.images.length, 4500, staggerOffset);
-  const isMain = variant === "main" && !story;
+  const isMain = variant === "main";
+  const useVideo = isMain && !story;
 
   return (
     <Link
