@@ -1024,7 +1024,7 @@ export default function Messages() {
               <>
                 {!sidebarOpen && !showMobile && <button onClick={() => setSidebarOpen(true)} className="absolute left-3 top-3 z-30 w-9 h-9 rounded-xl bg-white border border-slate-200 shadow-sm text-slate-600 flex items-center justify-center hover:text-emerald-600" aria-label="Show conversations" title="Show conversations"><PanelLeftOpen size={17}/></button>}
 
-                {/* ── FIXED CHAT HEADER ── */
+                {/* ── FIXED CHAT HEADER ── */}
                 <div className="msg-chat-head px-4 py-3 flex items-center gap-3 shadow-sm">
                   {/* Back button — mobile */}
                   <button onClick={()=>openConversation(null)} aria-label="Back"
