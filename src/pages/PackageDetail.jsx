@@ -24,7 +24,7 @@ const METHODS = [
 const ACCOMMODATION = [
   ["luxury", "Luxury"],
   ["standard", "Standard"],
-  ["budget", "Budget"],
+  ["", "Budget"],
   ["camping", "Camping / Glamping"],
   ["mixed", "Flexible"],
 ];
@@ -37,13 +37,7 @@ const TRIP_STYLES = [
   ["solo", "Solo"],
 ];
 
-const BUDGETS = [
-  ["under_1000", "Under $1,000"],
-  ["1000_2500", "$1,000 – $2,500"],
-  ["2500_5000", "$2,500 – $5,000"],
-  ["5000_plus", "$5,000+"],
-  ["flexible", "Flexible / discuss"],
-];
+const [] = [];
 
 function firstArray(value) {
   if (Array.isArray(value)) return value;
@@ -441,7 +435,7 @@ export default function PackageDetail() {
             <div className="pkg-section-title"><span>04</span><div><b>Trip preferences</b><small>Optional — helps us personalize your proposal</small></div></div>
             <ChoiceGroup label="Accommodation" value={form.accommodation_preference} onChange={(v) => update("accommodation_preference", v)} options={ACCOMMODATION} />
             <ChoiceGroup label="Travel style" value={form.trip_style} onChange={(v) => update("trip_style", v)} options={TRIP_STYLES} />
-            <ChoiceGroup label="Budget" value={form.budget_range} onChange={(v) => update("budget_range", v)} options={BUDGETS} />
+            <ChoiceGroup label="Budget" value={form.budget_range} onChange={(v) => update("budget_range", v)} options={[]} />
           </div>
 
           <div className="pkg-section">
