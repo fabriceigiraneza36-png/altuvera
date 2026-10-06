@@ -39,6 +39,7 @@ import BookingVerifyResult  from "./pages/Booking/BookingVerifyResult";
 import ConfirmBookingRequest from "./pages/Booking/ConfirmBookingRequest";
 import WhatsAppButton       from "./components/common/WhatsAppButton";
 import UserNotifications    from "./pages/auth/UserNotifications";
+import GlobalUserNotifications from "./components/auth/GlobalUserNotifications";
 import Messages             from "./pages/auth/Messages";
 import Explore              from "./pages/Explore";
 import BookingIdentityVerification from "./pages/auth/BookingIdentityVerification";
