@@ -27,8 +27,9 @@ const getToken = () => {
   return "";
 };
 
-const authFetch = (url, opts = {}) =>
-  fetch(url, {
+const authFetch = (url, opts = {}) => {
+  if (String(opts.method || "GET").toUpperCase() !== "GET") userDataCache.clear();
+  return fetch(url, {
     credentials: "include",
     ...opts,
     headers: {
@@ -37,6 +38,7 @@ const authFetch = (url, opts = {}) =>
       ...opts.headers,
     },
   });
+};
 
 /* ─── Serialise snake_case → camelCase ──────────────────────────────── */
 const normConv = (c) => ({
