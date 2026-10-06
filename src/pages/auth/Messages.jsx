@@ -1,4 +1,5 @@
 // src/pages/auth/Messages.jsx
+import EmojiPickerNative from "emoji-picker-react";
 import React, {
   useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect,
 } from "react";
@@ -346,24 +347,35 @@ function TypingDots({ name = "Altuvera" }) {
 function EmojiPicker({ onPick, onClose }) {
   const ref = useRef(null);
   useEffect(() => {
-    const h = e => { if (ref.current && !ref.current.contains(e.target)) onClose(); };
+    const h = e => {
+      if (ref.current && !ref.current.contains(e.target)) onClose();
+    };
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, [onClose]);
+
   return (
-    <div ref={ref}
-      className="absolute bottom-full left-0 mb-2 z-50 bg-white border border-slate-200
-                 rounded-2xl shadow-2xl p-2.5 grid grid-cols-4 gap-1 w-44">
-      {QUICK_EMOJIS.map(e=>(
-        <button key={e} onClick={()=>onPick(e)}
-          className="text-xl p-1.5 rounded-xl hover:bg-slate-100 transition leading-none">
-          {e}
-        </button>
-      ))}
+    <div
+      ref={ref}
+      role="dialog"
+      aria-label="Searchable emoji picker"
+      className="absolute bottom-full left-0 mb-2 z-[70] max-w-[calc(100vw-24px)]"
+    >
+      <EmojiPickerNative
+        onEmojiClick={(emojiData) => onPick(emojiData.emoji)}
+        emojiStyle="native"
+        theme="light"
+        width={340}
+        height={420}
+        lazyLoadEmojis
+        autoFocusSearch
+        searchPlaceHolder="Search emojis..."
+        previewConfig={{ showPreview: false }}
+        skinTonesDisabled={false}
+      />
     </div>
   );
 }
-
 function ScrollToBottomBtn({ visible, onClick }) {
   return (
     <button onClick={onClick} aria-label="Scroll to bottom"
