@@ -12,7 +12,7 @@ import NotificationBell from "./NotificationBell";
 import { useNotifications } from "../../hooks/useNotifications";
 import { useConversations } from "../../hooks/useConversations";
 
-const DashboardLayout = ({ children, title, subtitle }) => {
+const DashboardLayout = ({ children, title, subtitle, noPadding = false }) => {
   const { user, logout }    = useUserAuth();
   const navigate             = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -222,7 +222,7 @@ const DashboardLayout = ({ children, title, subtitle }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="dashboard-content">
+      <main className={`dashboard-content ${noPadding ? "dashboard-no-padding" : ""}`}>
         <AnimatedSection animation="fadeInUp">
           {(title || subtitle) && (
             <header className="dashboard-header">
