@@ -54,6 +54,16 @@ const authFetch = (url, opts = {}) =>
 const fmtShort = (d) =>
   d ? new Date(d).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }) : "";
 
+const fmtElapsed = (d, now = Date.now()) => {
+  if (!d) return "";
+  const mins = Math.max(0, Math.floor((now - new Date(d).getTime()) / 60000));
+  if (mins < 1) return "just now";
+  if (mins < 60) return mins + "m ago";
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return hrs + "h " + (mins % 60) + "m ago";
+  return Math.floor(hrs / 24) + "d ago";
+};
+
 const fmtRelative = (d) => {
   if (!d) return "";
   const diff = Date.now() - new Date(d).getTime();
@@ -475,7 +485,7 @@ const ConvRow = React.memo(function ConvRow({ conv, active, onSelect, isTyping }
    MESSAGE BUBBLE
 ══════════════════════════════════════════════════════════════════════════ */
 
-const MsgBubble = React.memo(function MsgBubble({ message, mine, replyTo, onReact, onReply }) {
+const MsgBubble = React.memo(function MsgBubble({ message, mine, replyTo, onReact, onReply, now }) {
   const reactions = useMemo(() => {
     const r = message.reactions || {};
     return Object.entries(r).filter(([,ids]) => ids?.length > 0);
@@ -551,8 +561,8 @@ const MsgBubble = React.memo(function MsgBubble({ message, mine, replyTo, onReac
             isPending
               ? <Circle size={9} className="text-slate-300 animate-pulse" />
               : message.isRead
-                ? <CheckCheck size={11} className="text-emerald-500" />
-                : <Check size={11} />
+                ? <><CheckCheck size={11} className="text-emerald-500" /><span className="text-emerald-600">Seen {fmtElapsed(message.readAt, now)}</span></>
+                : <Check size={11} className="text-slate-400" />
           )}
         </div>
 
@@ -1133,6 +1143,7 @@ export default function Messages() {
                             }
                             onReact={toggleReaction}
                             onReply={setReplyToId}
+                            now={now}
                           />
                         )
                       )}
@@ -1213,7 +1224,6 @@ export default function Messages() {
                             const val = draft + emoji;
                             setDraft(val);
                             emitUserTyping(val);
-                            setShowEmoji(false);
                             textareaRef.current?.focus();
                           }}
                           onClose={()=>setShowEmoji(false)}
