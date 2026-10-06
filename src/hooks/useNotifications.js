@@ -36,6 +36,7 @@ const getToken = () => {
 
 const authFetch = (url, opts = {}) => {
   const token = getToken();
+  if (String(opts.method || "GET").toUpperCase() !== "GET") userDataCache.clear();
   return fetch(url, {
     credentials: "include",
     ...opts,
