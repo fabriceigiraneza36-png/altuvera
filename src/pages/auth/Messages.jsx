@@ -368,6 +368,8 @@ function EmojiPicker({ onPick, onClose }) {
     <div
       ref={ref}
       role="dialog"
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
       aria-label="Searchable emoji picker"
       className="absolute bottom-full left-0 mb-2 z-[70] max-w-[calc(100vw-24px)]"
     >
