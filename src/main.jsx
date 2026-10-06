@@ -15,6 +15,7 @@ import { ToastProvider } from "./context/ToastContext.jsx";
 import { initConsentMode } from "./utils/cookiePreferences.js";
 import "./index.css";
 import { generateSvgPlaceholder } from "./utils/placeholderImage";
+import enhancedApiClient from "./utils/enhancedApiClient";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSENT MODE — Must run BEFORE any tracking scripts load
@@ -110,6 +111,44 @@ if (!rootElement) {
     '[App] Root element "#root" not found. Check your index.html.'
   );
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SHARED PUBLIC DATA WARMUP
+// ─────────────────────────────────────────────────────────────────────────────
+// Warm the datasets used across the public site once after startup. The API
+// client keeps successful GETs in memory, so route changes can reuse them.
+// Failures are intentionally ignored; individual pages still fetch on demand.
+
+const warmPublicData = () => {
+  const endpoints = [
+    "/countries",
+    "/destinations",
+    "/posts",
+    "/services",
+    "/team",
+    "/gallery",
+    "/faqs",
+    "/testimonials",
+    "/tips",
+    "/pages",
+    "/virtual-tours",
+  ];
+
+  const run = () => {
+    endpoints.forEach((endpoint) => {
+      enhancedApiClient.get(endpoint, { cacheTime: 5 * 60 * 1000 })
+        .catch(() => {});
+    });
+  };
+
+  if ("requestIdleCallback" in window) {
+    window.requestIdleCallback(run, { timeout: 2500 });
+  } else {
+    setTimeout(run, 1200);
+  }
+};
+
+warmPublicData();
 
 // ─────────────────────────────────────────────────────────────────────────────
 // RENDER
