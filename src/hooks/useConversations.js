@@ -305,9 +305,13 @@ export function useConversations() {
 
   useEffect(() => {
     const s = socketRef.current;
-    if (s?.connected && activeId) {
-      s.emit("msg:client-join", { conversationId: activeId });
-    }
+    if (!s?.connected || !activeId) return;
+    s.emit("msg:client-join", { conversationId: activeId }, (ack) => {
+      if (!ack?.success) console.warn("[Messages] conversation join failed:", ack?.error);
+    });
+    return () => {
+      s.emit("msg:leave-conversation", { conversationId: activeId });
+    };
   }, [activeId, connected]);
 
   /* ── Send message ────────────────────────────────────────── */
