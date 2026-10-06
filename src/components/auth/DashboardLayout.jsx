@@ -94,8 +94,21 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false }) => {
         }
         .dashboard-logout-btn:hover { background-color: #fef2f2; }
         .dashboard-content {
-          flex: 1; padding: 36px 32px; max-width: 1100px;
-          margin: 0 auto; width: 100%;
+          flex: 1 1 auto; padding: 36px 32px; max-width: 1100px;
+          margin: 0 auto; width: 100%; min-width: 0; min-height: 0;
+        }
+        .dashboard-content.dashboard-no-padding {
+          display: flex; flex-direction: column;
+          padding: 0; max-width: none; margin: 0;
+          height: calc(100vh - 80px); min-height: 0;
+          overflow: hidden;
+        }
+        .dashboard-content.dashboard-no-padding > .dashboard-inner-content {
+          display: flex; flex: 1 1 auto; flex-direction: column;
+          min-height: 0; overflow: hidden;
+        }
+        .dashboard-content.dashboard-no-padding > .dashboard-inner-content > * {
+          min-height: 0;
         }
         .dashboard-content.dashboard-no-padding {\n          padding: 24px; max-width: none; display: flex; flex-direction: column;\n          min-width: 0; min-height: 0;\n        }\n        .dashboard-content.dashboard-no-padding .dashboard-header {\n          flex-shrink: 0; margin-bottom: 18px;\n        }\n        .dashboard-content.dashboard-no-padding .dashboard-inner-content {\n          flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column;\n        }\n        .dashboard-header { margin-bottom: 28px; }
         .dashboard-title {
@@ -127,6 +140,9 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false }) => {
           .dashboard-overlay.open { display: block; }
           .mobile-menu-toggle { display: flex; }
           .dashboard-content { padding: 20px 16px 80px; }
+          .dashboard-content.dashboard-no-padding {
+            padding: 0; height: calc(100vh - 80px); overflow: hidden;
+          }
         }
         @media (max-width: 1024px) { .dashboard-content { padding: 28px 20px; } }
       `}</style>
