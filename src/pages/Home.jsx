@@ -528,13 +528,24 @@ nt-size:.6rem;color:#94a3b8;margin-top:.15rem;font-family:'Inter',sans-serif;}
 /* ══════════════════════════════════════════
    DESTINATION SLIDESHOW
 ══════════════════════════════════════════ */
-.dest-slideshow-wrap{position:relative;width:100%;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none;}
-.dest-slideshow-wrap::-webkit-scrollbar{display:none;}
-.dest-slideshow-track{display:flex;width:max-content;transition:transform .55s cubic-bezier(.77,0,.175,1);align-items:center;}
-.dest-slide-card{flex:0 0 min(31vw,360px);position:relative;border-radius:1.5rem;overflow:hidden;cursor:pointer;background:#0f1b0f;box-shadow:0 6px 28px rgba(0,0,0,.1);transition:box-shadow .35s ease;}
-.dest-slide-card:hover{box-shadow:0 16px 48px rgba(0,0,0,.18);}
-.dest-slide-img{width:100%;height:100%;object-fit:cover;transition:transform .8s cubic-bezier(.25,.46,.45,.94);display:block;}
-.dest-slide-card:hover .dest-slide-img{transform:scale(1.05);}
+.handpicked-story-carousel{position:relative;width:100%;padding:0 2.5rem;}
+.handpicked-story-track{
+  display:flex;align-items:center;gap:1rem;width:100%;overflow-x:auto;overflow-y:visible;
+  padding:1.1rem max(1rem, calc((100% - 48%)/2));scroll-snap-type:x mandatory;
+  scroll-behavior:smooth;scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior-x:contain;
+}
+.handpicked-story-track::-webkit-scrollbar{display:none;}
+.handpicked-story-card{
+  flex:0 0 min(48vw,420px);height:380px;position:relative;border-radius:1.5rem;overflow:hidden;
+  scroll-snap-align:center;cursor:pointer;background:#0f1b0f;box-shadow:0 8px 28px rgba(0,0,0,.12);
+  transform:scale(.88);opacity:.58;filter:saturate(.78);
+  transition:transform .55s cubic-bezier(.22,1,.36,1),opacity .45s ease,filter .45s ease,box-shadow .4s ease;
+}
+.handpicked-story-card.is-focused{transform:scale(1);opacity:1;filter:saturate(1);z-index:2;box-shadow:0 18px 50px rgba(0,0,0,.2);}
+.handpicked-story-card:hover{box-shadow:0 22px 58px rgba(0,0,0,.24);}
+.handpicked-story-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#14532d,#166534);color:rgba(255,255,255,.3);}
+.dest-slide-img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s cubic-bezier(.25,.46,.45,.94);}
+.handpicked-story-card:hover .dest-slide-img{transform:scale(1.05);}
 .dest-slide-gradient{position:absolute;inset:0;background:linear-gradient(to top,rgba(5,37,20,.85) 0%,rgba(5,37,20,.25) 50%,transparent 100%);pointer-events:none;}
 .dest-slide-content{position:absolute;bottom:0;left:0;right:0;padding:clamp(1rem,2.5vw,1.5rem);z-index:2;}
 .dest-slide-tag{display:inline-block;font-family:'Inter',sans-serif;font-size:.55rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#86efac;margin-bottom:.4rem;}
@@ -545,20 +556,19 @@ nt-size:.6rem;color:#94a3b8;margin-top:.15rem;font-family:'Inter',sans-serif;}
 .dest-slide-num{position:absolute;top:.9rem;right:.9rem;font-family:'Inter',sans-serif;font-size:.6rem;font-weight:900;letter-spacing:.08em;color:rgba(255,255,255,.45);background:rgba(0,0,0,.25);backdrop-filter:blur(6px);padding:.2rem .5rem;border-radius:99px;border:1px solid rgba(255,255,255,.1);}
 .dest-arr{position:absolute;top:50%;transform:translateY(-50%);z-index:10;width:2.75rem;height:2.75rem;border-radius:50%;border:none;cursor:pointer;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;color:#15803d;box-shadow:0 4px 16px rgba(0,0,0,.12);transition:all .25s cubic-bezier(.34,1.56,.64,1);}
 .dest-arr:hover{background:#15803d;color:#fff;transform:translateY(-50%) scale(1.08);box-shadow:0 6px 24px rgba(21,128,61,.35);}
-.dest-arr--left{left:.75rem;}.dest-arr--right{right:.75rem;}
-.dest-dots{display:flex;justify-content:center;gap:.45rem;margin-top:1.25rem;}
+.dest-arr--left{left:.25rem;}.dest-arr--right{right:.25rem;}
+.dest-dots{display:flex;justify-content:center;gap:.45rem;margin-top:1.1rem;}
 .dest-dot{height:.4rem;border-radius:99px;border:none;cursor:pointer;background:#d0e3d0;transition:all .3s ease;padding:0;}
-.dest-dot.active{background:#15803d;width:1.5rem;}
-.dest-dot:not(.active){width:.4rem;}
+.dest-dot.active{background:#15803d;width:1.5rem;}.dest-dot:not(.active){width:.4rem;}
 .dest-dot:not(.active):hover{background:#86efac;}
-@media (max-width: 900px){.dest-slide-card{flex-basis:min(43vw,360px);}}
-@media (max-width: 600px){
-  .dest-slideshow-wrap{padding:0 2.25rem!important;scroll-snap-type:x mandatory;}
-  .dest-slideshow-track{gap:.25rem;}
-  .dest-slide-card{flex:0 0 84vw;scroll-snap-align:center;transform:scale(.72);opacity:.5;filter:saturate(.75);transition:transform .55s cubic-bezier(.34,1.56,.64,1),opacity .4s ease,filter .4s ease,box-shadow .35s ease;}
-  .dest-slide-card.is-focused{transform:scale(1);opacity:1;filter:none;z-index:2;box-shadow:0 18px 42px rgba(0,0,0,.2);}
+@media(max-width:900px){.handpicked-story-card{flex-basis:62vw;}}
+@media(max-width:600px){
+  .handpicked-story-carousel{padding:0 .5rem;}
+  .handpicked-story-track{gap:.7rem;padding-left:9%;padding-right:9%;}
+  .handpicked-story-card{flex-basis:82vw;height:350px;transform:scale(.9);}
+  .handpicked-story-card.is-focused{transform:scale(1);}
+  .dest-arr{width:2.4rem;height:2.4rem;}
 }
-
 /* Dest modal */
 .dest-modal-overlay{position:fixed;inset:0;z-index:9000;display:flex;align-items:center;justify-content:center;padding:1rem;background:rgba(5,37,20,.55);backdrop-filter:blur(12px);}
 .dest-modal-card{position:relative;width:100%;max-width:520px;max-height:88vh;border-radius:1.75rem;overflow:hidden;background:#fff;box-shadow:0 36px 90px rgba(0,0,0,.28);display:flex;flex-direction:column;}
@@ -1008,54 +1018,62 @@ const DestinationModal = ({ destination, isOpen, onClose, isWishlisted, onWishli
 ═══════════════════════════════════════════ */
 const DestinationSlideshow = ({ destinations, isWishlisted, onWishlistToggle }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [cardsPerView, setCardsPerView] = useState(3);
-  const [slideOffset, setSlideOffset] = useState(0);
   const [selectedDest, setSelectedDest] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const trackRef = useRef(null);
 
-  useEffect(() => {
-    const update = () => { const w = window.innerWidth; setCardsPerView(w < 600 ? 1 : w < 900 ? 2 : 3); };
-    update(); window.addEventListener("resize", update); return () => window.removeEventListener("resize", update);
-  }, []);
+  const goTo = useCallback((idx) => {
+    const next = Math.max(0, Math.min(idx, destinations.length - 1));
+    setCurrentIndex(next);
+    trackRef.current?.children?.[next]?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  }, [destinations.length]);
 
-  const maxIndex = Math.max(0, destinations.length - cardsPerView);
-  const canPrev = currentIndex > 0;
-  const canNext = currentIndex < maxIndex;
-  const goTo = useCallback((idx) => setCurrentIndex(Math.max(0, Math.min(idx, maxIndex))), [maxIndex]);
-  const goPrev = useCallback(() => goTo(currentIndex - 1), [currentIndex, goTo]);
-  const goNext = useCallback(() => goTo(currentIndex + 1), [currentIndex, goTo]);
-
-  // Measure the real card position instead of translating by a percentage of
-  // the whole track. This keeps the visible card and the active bottom dot
-  // perfectly synchronized at every breakpoint.
-  useEffect(() => {
-    const measure = () => {
-      const track = trackRef.current;
-      const card = track?.children?.[currentIndex];
-      if (!track || !card) return;
-      setSlideOffset(card.offsetLeft);
-    };
-    measure();
-    window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
-  }, [currentIndex, cardsPerView, destinations.length]);
-
-  useEffect(() => { const h = (e) => { if (modalOpen) return; if (e.key === "ArrowLeft") goPrev(); if (e.key === "ArrowRight") goNext(); }; window.addEventListener("keydown", h); return () => window.removeEventListener("keydown", h); }, [goPrev, goNext, modalOpen]);
+  const goPrev = useCallback(() => goTo(currentIndex <= 0 ? destinations.length - 1 : currentIndex - 1), [currentIndex, destinations.length, goTo]);
+  const goNext = useCallback(() => goTo(currentIndex >= destinations.length - 1 ? 0 : currentIndex + 1), [currentIndex, destinations.length, goTo]);
 
   useEffect(() => {
-    setCurrentIndex((index) => Math.min(index, maxIndex));
-  }, [maxIndex]);
-
-  useEffect(() => {
-    if (destinations.length <= cardsPerView) return undefined;
+    if (destinations.length <= 1) return undefined;
     const timer = window.setInterval(() => {
-      setCurrentIndex((index) => (index >= maxIndex ? 0 : index + 1));
+      setCurrentIndex((index) => {
+        const next = index >= destinations.length - 1 ? 0 : index + 1;
+        trackRef.current?.children?.[next]?.scrollIntoView({
+          behavior: "smooth",
+          block: "nearest",
+          inline: "center",
+        });
+        return next;
+      });
     }, 5200);
     return () => window.clearInterval(timer);
-  }, [cardsPerView, destinations.length, maxIndex]);
+  }, [destinations.length]);
 
-  const totalDots = maxIndex + 1;
+  const handleScroll = useCallback(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const center = track.scrollLeft + track.clientWidth / 2;
+    let nearest = 0;
+    let distance = Infinity;
+    Array.from(track.children).forEach((el, i) => {
+      const d = Math.abs((el.offsetLeft + el.offsetWidth / 2) - center);
+      if (d < distance) { distance = d; nearest = i; }
+    });
+    setCurrentIndex(nearest);
+  }, []);
+
+  useEffect(() => {
+    const h = (e) => {
+      if (modalOpen) return;
+      if (e.key === "ArrowLeft") goPrev();
+      if (e.key === "ArrowRight") goNext();
+    };
+    window.addEventListener("keydown", h);
+    return () => window.removeEventListener("keydown", h);
+  }, [goPrev, goNext, modalOpen]);
+
   const getName = (d) => d?.name || d?.title || "Destination";
   const getCountry = (d) => (typeof d?.country === "object" && d.country?.name) || d?.countryObj?.name || (typeof d?.country === "string" ? d.country : "") || "";
   const getImage = (d) => d?.heroImage || d?.imageUrl || d?.image_url || d?.image || (Array.isArray(d?.images) ? d.images[0] : "") || (Array.isArray(d?.gallery) ? d.gallery[0]?.imageUrl : "");
@@ -1064,36 +1082,51 @@ const DestinationSlideshow = ({ destinations, isWishlisted, onWishlistToggle }) 
   if (!destinations.length) return null;
 
   return (
-    <div style={{ position: "relative" }}>
-      <button className="dest-arr dest-arr--left" onClick={goPrev} disabled={!canPrev} style={{ opacity: canPrev ? 1 : .3, pointerEvents: canPrev ? "auto" : "none" }}><FiChevronLeft size={20} /></button>
-      <button className="dest-arr dest-arr--right" onClick={goNext} disabled={!canNext} style={{ opacity: canNext ? 1 : .3, pointerEvents: canNext ? "auto" : "none" }}><FiChevronRight size={20} /></button>
-      <div className="dest-slideshow-wrap" style={{ padding: "0 3rem" }}>
-        <div ref={trackRef} className="dest-slideshow-track" style={{ transform: `translate3d(-${slideOffset}px, 0, 0)` }}>
-          {destinations.map((dest, idx) => {
-            const name = getName(dest); const country = getCountry(dest); const img = getImage(dest); const category = getCategory(dest);
-            return (
-              <div key={dest?._id || dest?.slug || idx} className={`dest-slide-card${idx === currentIndex ? " is-focused" : ""}`} style={{ height: "380px", margin: "0 .375rem" }}
-                onClick={() => { setSelectedDest(dest); setModalOpen(true); }} role="button" tabIndex={0}
-                onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (setSelectedDest(dest), setModalOpen(true))}>
-                {img ? <img src={img} alt={name} className="dest-slide-img" loading="lazy" /> : (
-                  <div style={{ width: "100%", height: "100%", background: "linear-gradient(135deg,#14532d,#166534)", display: "flex", alignItems: "center", justifyContent: "center" }}><IoEarthOutline size={56} style={{ color: "rgba(255,255,255,.25)" }} /></div>
-                )}
-                <div className="dest-slide-gradient" />
-                <span className="dest-slide-num">{String(idx + 1).padStart(2, "0")}</span>
-                <div className="dest-slide-content">
-                  {category && <span className="dest-slide-tag">{category}</span>}
-                  <h3 className="dest-slide-name">{name}</h3>
-                  {country && <div className="dest-slide-country"><FiMapPin size={11} />{country}</div>}
-                  <div className="dest-slide-cta">Discover <HiOutlineArrowRight size={12} /></div>
-                </div>
+    <div className="handpicked-story-carousel">
+      <button className="dest-arr dest-arr--left" onClick={goPrev} aria-label="Previous destination"><FiChevronLeft size={20} /></button>
+      <div ref={trackRef} className="handpicked-story-track" onScroll={handleScroll} role="region" aria-label="Handpicked destinations">
+        {destinations.map((dest, idx) => {
+          const name = getName(dest);
+          const country = getCountry(dest);
+          const img = getImage(dest);
+          const category = getCategory(dest);
+          return (
+            <div
+              key={dest?._id || dest?.slug || idx}
+              className={`handpicked-story-card${idx === currentIndex ? " is-focused" : ""}`}
+              onClick={() => { setSelectedDest(dest); setModalOpen(true); }}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && (setSelectedDest(dest), setModalOpen(true))}
+            >
+              {img ? <img src={img} alt={name} className="dest-slide-img" loading={idx < 3 ? "eager" : "lazy"} /> : (
+                <div className="handpicked-story-placeholder"><IoEarthOutline size={56} /></div>
+              )}
+              <div className="dest-slide-gradient" />
+              <span className="dest-slide-num">{String(idx + 1).padStart(2, "0")}</span>
+              <div className="dest-slide-content">
+                {category && <span className="dest-slide-tag">{category}</span>}
+                <h3 className="dest-slide-name">{name}</h3>
+                {country && <div className="dest-slide-country"><FiMapPin size={11} />{country}</div>}
+                <div className="dest-slide-cta">Discover <HiOutlineArrowRight size={12} /></div>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
       </div>
-      {totalDots > 1 && (<div className="dest-dots">{Array.from({ length: totalDots }).map((_, i) => (<button key={i} className={`dest-dot ${i === currentIndex ? "active" : ""}`} onClick={() => goTo(i)} />))}</div>)}
-      <DestinationModal destination={selectedDest} isOpen={modalOpen} onClose={() => { setModalOpen(false); setSelectedDest(null); }}
-        isWishlisted={selectedDest ? isWishlisted(selectedDest?._id || selectedDest?.id || selectedDest?.slug) : false} onWishlistToggle={onWishlistToggle} />
+      <button className="dest-arr dest-arr--right" onClick={goNext} aria-label="Next destination"><FiChevronRight size={20} /></button>
+      {destinations.length > 1 && (
+        <div className="dest-dots">
+          {destinations.map((_, i) => <button key={i} aria-label={`Go to destination ${i + 1}`} className={`dest-dot ${i === currentIndex ? "active" : ""}`} onClick={() => goTo(i)} />)}
+        </div>
+      )}
+      <DestinationModal
+        destination={selectedDest}
+        isOpen={modalOpen}
+        onClose={() => { setModalOpen(false); setSelectedDest(null); }}
+        isWishlisted={selectedDest ? isWishlisted(selectedDest?._id || selectedDest?.id || selectedDest?.slug) : false}
+        onWishlistToggle={onWishlistToggle}
+      />
     </div>
   );
 };
