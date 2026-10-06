@@ -48,9 +48,12 @@ const authFetch = (url, opts = {}) => {
   });
 };
 
-const cachedJsonGet = async (url) => {
+const cachedJsonGet = async (url, options = {}) => {
   const cached = userDataCache.get(url);
-  if (cached) return cached;
+  if (cached && !options.forceRefresh) {
+    void cachedJsonGet(url, { forceRefresh: true }).catch(() => {});
+    return cached;
+  }
   const pending = userDataCache.getPending(url);
   if (pending) return pending;
   const request = authFetch(url).then(async (res) => {
