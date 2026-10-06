@@ -3,6 +3,7 @@ import React, {
   useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect,
 } from "react";
 import { Helmet } from "react-helmet-async";
+import { useSearchParams } from "react-router-dom";
 import {
   MessageSquare, Send, Smile, X, CornerUpLeft,
   Check, CheckCheck, RefreshCw, ArrowLeft, Plus, PanelLeftClose, PanelLeftOpen,
