@@ -5,7 +5,7 @@ import React, {
 import { Helmet } from "react-helmet-async";
 import {
   MessageSquare, Send, Smile, X, CornerUpLeft,
-  Check, CheckCheck, RefreshCw, ArrowLeft, Plus,
+  Check, CheckCheck, RefreshCw, ArrowLeft, Plus, PanelLeftClose, PanelLeftOpen,
   ChevronDown, Circle,
 } from "lucide-react";
 import DashboardLayout      from "../../components/auth/DashboardLayout";
@@ -724,10 +724,12 @@ export default function Messages() {
   const [replyToId,    setReplyToId]    = useState(null);
   const [showEmoji,    setShowEmoji]    = useState(false);
   const [showNewChat,  setShowNewChat]  = useState(false);
+  const [sidebarOpen,  setSidebarOpen]  = useState(true);
   const [atBottom,     setAtBottom]     = useState(true);
   const [showScrollBtn,setShowScrollBtn]= useState(false);
 
   const scrollRef      = useRef(null);
+  const draftStorageKey = activeId ? `altuvera:user-chat-draft:${activeId}` : null;
    const textareaRef    = useRef(null);
    const isTypingRef    = useRef(false);
    const typingTimerRef = useRef(null);
@@ -758,9 +760,19 @@ export default function Messages() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [messages.length]);
 
+  /* ── Persist draft per conversation ── */
+  useEffect(() => {
+    if (!draftStorageKey) return;
+    try { setDraft(localStorage.getItem(draftStorageKey) || ""); } catch {}
+  }, [draftStorageKey]);
+  useEffect(() => {
+    if (!draftStorageKey) return;
+    try { if (draft) localStorage.setItem(draftStorageKey, draft); else localStorage.removeItem(draftStorageKey); } catch {}
+  }, [draft, draftStorageKey]);
+
   /* ── Reset on conversation change ── */
   useEffect(() => {
-    setDraft(""); setReplyToId(null); setShowEmoji(false);
+    setReplyToId(null); setShowEmoji(false);
     setAtBottom(true); setShowScrollBtn(false);
     clearTimeout(typingTimerRef.current);
     isTypingRef.current = false;
@@ -879,14 +891,14 @@ export default function Messages() {
         <div className="msg-layout w-full h-full">
 
           {/* ═══════════════ SIDEBAR ═══════════════ */}
-          <div className={`msg-sidebar ${showMobile ? "hidden md:flex" : "flex"} flex-col`}>
+          <div className={`msg-sidebar ${showMobile ? "hidden md:flex" : "flex"} flex-col transition-all duration-200 ${sidebarOpen ? "" : "md:hidden"}`}>
 
             {/* Sidebar fixed header */}
             <div className="msg-sidebar-head px-3 pt-3 pb-2 space-y-2">
               {/* Title row */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <h3 className="font-bold text-slate-800 text-sm">Conversations</h3>
+                  <button onClick={() => setSidebarOpen(v => !v)} className="w-7 h-7 rounded-lg hover:bg-slate-100 text-slate-500 flex items-center justify-center" aria-label="Toggle conversations" title="Toggle conversations">{sidebarOpen ? <PanelLeftClose size={14}/> : <PanelLeftOpen size={14}/>}</button><h3 className="font-bold text-slate-800 text-sm">Conversations</h3>
                   {unreadCount > 0 && (
                     <span className="bg-emerald-600 text-white rounded-full text-[10px] font-bold
                                      min-w-[18px] h-[18px] px-1 inline-flex items-center justify-center">
@@ -989,7 +1001,9 @@ export default function Messages() {
               </div>
             ) : (
               <>
-                {/* ── FIXED CHAT HEADER ── */}
+                {!sidebarOpen && !showMobile && <button onClick={() => setSidebarOpen(true)} className="absolute left-3 top-3 z-30 w-9 h-9 rounded-xl bg-white border border-slate-200 shadow-sm text-slate-600 flex items-center justify-center hover:text-emerald-600" aria-label="Show conversations" title="Show conversations"><PanelLeftOpen size={17}/></button>}
+
+                {/* ── FIXED CHAT HEADER ── */
                 <div className="msg-chat-head px-4 py-3 flex items-center gap-3 shadow-sm">
                   {/* Back button — mobile */}
                   <button onClick={()=>openConversation(null)} aria-label="Back"
