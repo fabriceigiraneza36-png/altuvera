@@ -1234,7 +1234,7 @@ export default function MyBookings() {
 
   /* ── Fetch ─────────────────────────────────────────────────────────────── */
 
-  const fetchBookings = useCallback(async (pageNum = 1) => {
+  const fetchBookings = useCallback(async (pageNum = 1, requestOptions = {}) => {
     setLoading(true);
     if (pageNum === 1) { setError(null); setAuthWarn(null); }
 
@@ -1243,12 +1243,13 @@ export default function MyBookings() {
     // Try primary endpoint first
     let { data, error: err } = await safeFetch(
       authFetch,
-      `/bookings/my?${params}`
+      `/bookings/my?${params}`,
+      requestOptions
     );
 
     // Fallback: some backends use /bookings?user_id=me
     if ((err || !data) && !err?.startsWith("auth:")) {
-      const fb = await safeFetch(authFetch, `/bookings?mine=true&${params}`);
+      const fb = await safeFetch(authFetch, `/bookings?mine=true&${params}`, requestOptions);
       if (!fb.error && fb.data) { data = fb.data; err = null; }
     }
 
@@ -1275,7 +1276,23 @@ export default function MyBookings() {
     setLoading(false);
   }, [authFetch]);
 
-  useEffect(() => { fetchBookings(1); }, [fetchBookings]);
+  useEffect(() => {
+    fetchBookings(1);
+
+    // Cached data paints immediately; this interval explicitly bypasses the
+    // cache so an already-open My Bookings screen also receives fresh status.
+    const refreshId = window.setInterval(() => {
+      fetchBookings(1, { cache: false });
+    }, 30_000);
+
+    const onFocus = () => fetchBookings(1, { cache: false });
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      window.clearInterval(refreshId);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [fetchBookings]);
 
   /* ── Derived ────────────────────────────────────────────────────────────── */
 
