@@ -1017,11 +1017,12 @@ const DestinationSlideshow = ({ destinations, isWishlisted, onWishlistToggle }) 
     const timer = window.setInterval(() => {
       setCurrentIndex((index) => {
         const next = index >= destinations.length - 1 ? 0 : index + 1;
-        trackRef.current?.children?.[next]?.scrollIntoView({
-          behavior: "smooth",
-          block: "nearest",
-          inline: "center",
-        });
+        const track = trackRef.current;
+        const card = track?.children?.[next];
+        if (track && card) {
+          const left = card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2;
+          track.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+        }
         return next;
       });
     }, 5200);
