@@ -542,8 +542,20 @@ export function UserAuthProvider({ children }) {
     const run = () => endpoints.forEach((endpoint) =>
       authFetch(endpoint, { cacheTime: 30 * 1000 }).catch(() => {})
     );
-    if ("requestIdleCallback" in window) window.requestIdleCallback(run, { timeout: 1500 });
-    else setTimeout(run, 600);
+    let idleId = null;
+    let timeoutId = null;
+    if ("requestIdleCallback" in window) idleId = window.requestIdleCallback(run, { timeout: 1500 });
+    else timeoutId = window.setTimeout(run, 600);
+
+    // Keep the shared dashboard cache fresh while the session is open. Cached
+    // values remain instant, but every cycle still revalidates against server.
+    const refreshId = window.setInterval(run, 30_000);
+
+    return () => {
+      if (idleId !== null && window.cancelIdleCallback) window.cancelIdleCallback(idleId);
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+      window.clearInterval(refreshId);
+    };
   }, [isAuthenticated, token, authFetch]);
   const hasGooglePending = useMemo(
     () => !!googleUser?.email && !!googleUser?.credential,
