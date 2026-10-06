@@ -109,25 +109,6 @@ export function useNotifications() {
       try {
         const data = await cachedJsonGet(`${API_BASE}/notifications/my?page=${pageNum}&limit=20`);
 
-        // Not logged in
-        if (res.status === 401 || res.status === 403) {
-          failsRef.current = MAX_FAILS;
-          if (mountedRef.current) {
-            setNotifications([]);
-            setUnreadCount(0);
-          }
-          return;
-        }
-
-        // Route missing — back off silently
-        if (res.status === 404) {
-          failsRef.current += 1;
-          return;
-        }
-
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-        const data = await res.json();
         if (!mountedRef.current) return;
 
         failsRef.current = 0;
