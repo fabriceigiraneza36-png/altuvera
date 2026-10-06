@@ -37,8 +37,13 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false }) => {
     <div className="dashboard-layout">
       <style>{`
         .dashboard-layout {
-          display: flex; min-height: calc(100vh - 80px);
-          background-color: #f8fafc; padding-top: 80px;
+          display: flex;
+          height: 100vh;
+          min-height: 100vh;
+          box-sizing: border-box;
+          background-color: #f8fafc;
+          padding-top: 80px;
+          overflow: hidden;
         }
         .dashboard-sidebar {
           width: 260px; background: #ffffff;
@@ -98,19 +103,40 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false }) => {
           margin: 0 auto; width: 100%; min-width: 0; min-height: 0;
         }
         .dashboard-content.dashboard-no-padding {
-          display: flex; flex-direction: column;
-          padding: 0; max-width: none; margin: 0;
-          height: calc(100vh - 80px); min-height: 0;
+          display: flex;
+          flex: 1 1 auto;
+          flex-direction: column;
+          padding: 0;
+          max-width: none;
+          margin: 0;
+          width: 100%;
+          height: calc(100vh - 80px);
+          height: calc(100dvh - 80px);
+          min-width: 0;
+          min-height: 0;
+          overflow: hidden;
+          box-sizing: border-box;
+        }
+        .dashboard-content.dashboard-no-padding .dashboard-header {
+          flex-shrink: 0;
+          margin: 0;
+          padding: 16px 20px;
+          background: #f8fafc;
+          border-bottom: 1px solid #e2e8f0;
+        }
+        .dashboard-content.dashboard-no-padding .dashboard-inner-content {
+          display: flex;
+          flex: 1 1 auto;
+          flex-direction: column;
+          min-width: 0;
+          min-height: 0;
           overflow: hidden;
         }
-        .dashboard-content.dashboard-no-padding > .dashboard-inner-content {
-          display: flex; flex: 1 1 auto; flex-direction: column;
-          min-height: 0; overflow: hidden;
-        }
-        .dashboard-content.dashboard-no-padding > .dashboard-inner-content > * {
+        .dashboard-content.dashboard-no-padding .dashboard-inner-content > * {
+          min-width: 0;
           min-height: 0;
         }
-        .dashboard-content.dashboard-no-padding {\n          padding: 24px; max-width: none; display: flex; flex-direction: column;\n          min-width: 0; min-height: 0;\n        }\n        .dashboard-content.dashboard-no-padding .dashboard-header {\n          flex-shrink: 0; margin-bottom: 18px;\n        }\n        .dashboard-content.dashboard-no-padding .dashboard-inner-content {\n          flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column;\n        }\n        .dashboard-header { margin-bottom: 28px; }
+        .dashboard-header { margin-bottom: 28px; }
         .dashboard-title {
           font-family: 'Playfair Display', serif;
           font-size: 28px; color: #0f172a; margin: 0 0 6px;
@@ -132,6 +158,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false }) => {
           padding-top: 12px; margin-top: 12px; border-top: 1px solid #f1f5f9;
         }
         @media (max-width: 768px) {
+          .dashboard-layout { height: 100dvh; min-height: 100dvh; }
           .dashboard-sidebar {
             position: fixed; top: 0; left: 0; height: 100vh;
             transform: translateX(-100%); z-index: 50; padding-top: 20px;
@@ -141,8 +168,12 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false }) => {
           .mobile-menu-toggle { display: flex; }
           .dashboard-content { padding: 20px 16px 80px; }
           .dashboard-content.dashboard-no-padding {
-            padding: 0; height: calc(100vh - 80px); overflow: hidden;
+            padding: 0;
+            height: calc(100vh - 80px);
+            height: calc(100dvh - 80px);
+            overflow: hidden;
           }
+          .dashboard-content.dashboard-no-padding .dashboard-header { padding: 12px 14px; }
         }
         @media (max-width: 1024px) { .dashboard-content { padding: 28px 20px; } }
       `}</style>
@@ -239,7 +270,11 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false }) => {
 
       {/* Main Content */}
       <main className={`dashboard-content ${noPadding ? "dashboard-no-padding" : ""}`}>
-        <AnimatedSection animation="fadeInUp">
+        <AnimatedSection
+          animation="fadeInUp"
+          className={noPadding ? "dashboard-animated-fill" : ""}
+          style={noPadding ? { display: "flex", flex: "1 1 auto", flexDirection: "column", minWidth: 0, minHeight: 0, overflow: "hidden" } : undefined}
+        >
           {(title || subtitle) && (
             <header className="dashboard-header">
               {title    && <h1 className="dashboard-title">{title}</h1>}
