@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { HiCheckCircle, HiChatAlt2, HiPlus } from "react-icons/hi";
+import { HiCheckCircle, HiChatAlt2, HiPlus, HiOutlineMail, HiOutlineClock, HiOutlineShieldCheck } from "react-icons/hi";
 
 const WA = "250785751391";
 
@@ -127,55 +127,70 @@ function Confetti({ category }) {
 
 export default function SuccessScreen({ displayName, bookingRef, email, category, onReset }) {
   return (
-    <div className="relative overflow-hidden">
+    <div className="relative overflow-hidden bg-white">
       <Confetti category={category} />
-      <div className="relative z-10 p-6 sm:p-10 text-center">
-        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full
-                        bg-gradient-to-br from-emerald-400 to-emerald-600
-                        shadow-2xl shadow-emerald-200 mb-6">
-          <HiCheckCircle className="w-12 h-12 text-white" />
-        </div>
+      <div className="relative z-10 px-4 py-8 sm:px-8 sm:py-12 lg:px-12">
+        <div className="mx-auto max-w-3xl">
+          <div className="text-center">
+            <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-2xl shadow-emerald-200 ring-8 ring-emerald-50">
+              <HiCheckCircle className="h-12 w-12 text-white" />
+            </div>
 
-        <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 mb-2 tracking-tight">
-          {displayName ? `You're set, ${displayName}!` : "Booking submitted!"}
-        </h2>
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-emerald-700">
+              Booking request received
+            </span>
+            <h2 className="mt-4 text-2xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
+              {displayName ? `You're set, ${displayName}!` : "Your adventure request is in."}
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-gray-600 sm:text-base">
+              Thank you for choosing Altuvera. Your request is safely with our travel team, and we’ll help shape the next steps into a memorable East African journey.
+            </p>
+          </div>
 
-        <p className="text-gray-500 text-sm sm:text-base leading-relaxed mb-6 max-w-md mx-auto">
-          Our expert team will reach out within{" "}
-          <strong className="text-gray-700">24 hours</strong> to craft your perfect itinerary — at no cost.
-        </p>
-
-        {bookingRef && (
-          <div className="inline-flex items-center gap-2.5 bg-emerald-50 border border-emerald-200
-                          rounded-2xl px-5 py-3 mb-5 shadow-sm">
-            <div className="text-left">
-              <p className="text-[10px] uppercase tracking-widest font-bold text-gray-400">Booking Ref</p>
-              <p className="text-sm font-extrabold text-emerald-700 tracking-wide font-mono">{bookingRef}</p>
+          <div className="mt-7 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/80 p-4 text-left">
+              <HiOutlineMail className="mb-2 h-5 w-5 text-emerald-600" />
+              <p className="text-xs font-extrabold uppercase tracking-wider text-gray-500">Check your inbox</p>
+              <p className="mt-1 text-xs leading-5 text-gray-700">Confirm that you personally made this booking request.</p>
+            </div>
+            <div className="rounded-2xl border border-emerald-100 bg-white p-4 text-left shadow-sm">
+              <HiOutlineClock className="mb-2 h-5 w-5 text-emerald-600" />
+              <p className="text-xs font-extrabold uppercase tracking-wider text-gray-500">Next step</p>
+              <p className="mt-1 text-xs leading-5 text-gray-700">Our travel team will respond within 24 hours.</p>
+            </div>
+            <div className="rounded-2xl border border-emerald-100 bg-white p-4 text-left shadow-sm">
+              <HiOutlineShieldCheck className="mb-2 h-5 w-5 text-emerald-600" />
+              <p className="text-xs font-extrabold uppercase tracking-wider text-gray-500">Secure request</p>
+              <p className="mt-1 text-xs leading-5 text-gray-700">Planning begins after your email confirmation.</p>
             </div>
           </div>
-        )}
 
-        <div className="relative z-10 max-w-md mx-auto mb-6 rounded-2xl border border-emerald-100 bg-emerald-50/80 p-4 text-left">
-          <p className="text-sm font-bold text-emerald-800 mb-1">Your request is safely with our team.</p>
-          <p className="text-xs text-emerald-700 leading-relaxed">
-            We sent a secure confirmation link to your real inbox. Please confirm that you made this booking request; Altuvera will begin operational planning after you confirm.
-          </p>
-        </div>
+          {bookingRef && (
+            <div className="mx-auto mt-5 flex max-w-xl flex-col items-center justify-between gap-2 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4 sm:flex-row sm:px-5">
+              <div className="text-center sm:text-left">
+                <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-gray-400">Booking reference</p>
+                <p className="mt-1 break-all font-mono text-sm font-extrabold tracking-wide text-emerald-700">{bookingRef}</p>
+              </div>
+              <span className="rounded-full bg-white px-3 py-1 text-[11px] font-bold text-gray-500 shadow-sm">Keep this reference</span>
+            </div>
+          )}
 
-        <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
-          <a href={`https://wa.me/${WA}`} target="_blank" rel="noopener noreferrer"
-            className="flex-1 inline-flex items-center justify-center gap-2
-                       bg-[#25D366] hover:bg-[#1ebe5d] text-white
-                       font-bold text-sm px-6 py-3.5 rounded-xl
-                       shadow-lg shadow-green-100 transition-all hover:-translate-y-0.5">
-            <HiChatAlt2 className="w-5 h-5" /> WhatsApp Us
-          </a>
-          <button type="button" onClick={onReset}
-            className="flex-1 inline-flex items-center justify-center gap-2 bg-white border-2 border-gray-200
-                       hover:border-emerald-300 hover:text-emerald-700 text-gray-600 font-bold text-sm
-                       px-6 py-3.5 rounded-xl transition-all">
-            <HiPlus className="w-4 h-4" /> New Booking
-          </button>
+          {email && (
+            <p className="mt-4 text-center text-xs text-gray-500">
+              Confirmation sent to <span className="font-semibold text-gray-700 break-all">{email}</span>
+            </p>
+          )}
+
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <a href={`https://wa.me/${WA}`} target="_blank" rel="noopener noreferrer"
+              className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#25D366] px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-green-100 transition-all hover:-translate-y-0.5 hover:bg-[#1ebe5d] sm:max-w-xs">
+              <HiChatAlt2 className="h-5 w-5" /> WhatsApp Us
+            </a>
+            <button type="button" onClick={onReset}
+              className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-6 py-3.5 text-sm font-bold text-gray-600 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:text-emerald-700 sm:max-w-xs">
+              <HiPlus className="h-4 w-4" /> Start another booking
+            </button>
+          </div>
         </div>
       </div>
     </div>
