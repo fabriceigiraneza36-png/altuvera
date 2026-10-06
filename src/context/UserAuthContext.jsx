@@ -738,9 +738,14 @@ export function UserAuthProvider({ children }) {
     const method = String(opts.method || "GET").toUpperCase();
     const cacheable = method === "GET" && opts.cache !== false && !opts._retry;
     const cacheKey = url;
-    if (cacheable) {
+    if (cacheable && !opts._skipCacheRead) {
       const cached = userDataCache.get(cacheKey);
-      if (cached) return cached;
+      if (cached) {
+        // Stale-while-revalidate: render cached data immediately, but ALWAYS
+        // synchronize it with the server in the background.
+        void authFetch(endpoint, { ...opts, _skipCacheRead: true }).catch(() => {});
+        return cached;
+      }
     }
     const execute = (requestToken = tok) => fetch(url, { ...opts, headers: makeHeaders(requestToken) });
     let res;
