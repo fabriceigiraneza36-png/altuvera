@@ -1001,11 +1001,12 @@ const DestinationSlideshow = ({ destinations, isWishlisted, onWishlistToggle }) 
   const goTo = useCallback((idx) => {
     const next = Math.max(0, Math.min(idx, destinations.length - 1));
     setCurrentIndex(next);
-    trackRef.current?.children?.[next]?.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-      inline: "center",
-    });
+    const track = trackRef.current;
+    const card = track?.children?.[next];
+    if (track && card) {
+      const left = card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2;
+      track.scrollTo({ left: Math.max(0, left), behavior: "smooth" });
+    }
   }, [destinations.length]);
 
   const goPrev = useCallback(() => goTo(currentIndex <= 0 ? destinations.length - 1 : currentIndex - 1), [currentIndex, destinations.length, goTo]);
