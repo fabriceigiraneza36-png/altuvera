@@ -36,15 +36,7 @@ const getToken = () => {
 
 const authFetch = (url, opts = {}) => {
   const token = getToken();
-  const method = String(opts.method || "GET").toUpperCase();
-  const cacheable = method === "GET" && opts.cache !== false;
-  if (cacheable) {
-    const cached = userDataCache.get(url);
-    if (cached) return Promise.resolve(cached);
-    const pending = userDataCache.getPending(url);
-    if (pending) return pending;
-  }
-  const request = fetch(url, {
+  return fetch(url, {
     credentials: "include",
     ...opts,
     headers: {
@@ -53,18 +45,21 @@ const authFetch = (url, opts = {}) => {
       ...opts.headers,
     },
   });
-  if (!cacheable) {
-    userDataCache.clear();
-    return request;
-  }
-  const parsed = request.then(async (res) => {
-    if (!res.ok) return res;
-    const data = await res.clone().json().catch(() => null);
-    if (data !== null) userDataCache.set(url, data, 30 * 1000);
-    return res;
+};
+
+const cachedJsonGet = async (url) => {
+  const cached = userDataCache.get(url);
+  if (cached) return cached;
+  const pending = userDataCache.getPending(url);
+  if (pending) return pending;
+  const request = authFetch(url).then(async (res) => {
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    userDataCache.set(url, data, 30 * 1000);
+    return data;
   }).finally(() => userDataCache.clearPending(url));
-  userDataCache.setPending(url, parsed);
-  return parsed;
+  userDataCache.setPending(url, request);
+  return request;
 };
 
 const daysUntil = (dateStr) =>
@@ -112,10 +107,7 @@ export function useNotifications() {
       setError(null);
 
       try {
-        const res = await authFetch(
-          `${API_BASE}/notifications/my?page=${pageNum}&limit=20`,
-          { signal: abortRef.current.signal },
-        );
+        const data = await cachedJsonGet(`${API_BASE}/notifications/my?page=${pageNum}&limit=20`);
 
         // Not logged in
         if (res.status === 401 || res.status === 403) {
@@ -180,11 +172,7 @@ export function useNotifications() {
     if (!isAuthenticated)              return;
     if (failsRef.current >= MAX_FAILS) return;
     try {
-      const res = await authFetch(
-        `${API_BASE}/notifications/my/unread-count`,
-      );
-      if (!res.ok) return;
-      const data = await res.json();
+      const data = await cachedJsonGet(`${API_BASE}/notifications/my/unread-count`);
       if (mountedRef.current) setUnreadCount(data.count ?? 0);
     } catch { /* silent */ }
   }, [isAuthenticated]);
@@ -205,11 +193,7 @@ export function useNotifications() {
   const checkUpcomingBookings = useCallback(async () => {
     if (!isAuthenticated || !user?.id) return;
     try {
-      const res = await authFetch(
-        `${API_BASE}/bookings/my-bookings?status=confirmed&limit=20`,
-      );
-      if (!res.ok) return;
-      const data     = await res.json();
+      const data = await cachedJsonGet(`${API_BASE}/bookings/my-bookings?status=confirmed&limit=20`);
       const bookings = data.data || data.bookings || [];
       const fresh    = [];
 
