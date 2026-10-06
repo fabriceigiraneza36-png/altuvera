@@ -124,6 +124,25 @@ export function useConversations() {
       setAdminOnline(false);
     });
     s.on("msg:admin-online", (payload) => setAdminOnline(Boolean(payload?.online)));
+    s.on("msg:presence", (payload) => {
+      if (String(payload?.conversationId) !== String(activeIdRef.current)) return;
+      if (payload.senderType !== "admin") return;
+      setAdminPresence({
+        active: Boolean(payload.active),
+        activeSince: payload.activeSince || null,
+        lastSeenAt: payload.lastSeenAt || null,
+      });
+    });
+    s.on("msg:read", (payload) => {
+      if (String(payload?.conversationId) !== String(activeIdRef.current)) return;
+      if (payload.readBy !== "admin") return;
+      const ids = new Set((payload.messageIds || []).map(String));
+      setMessages(prev => prev.map(m =>
+        ids.has(String(m.id)) || m.senderType === "user"
+          ? { ...m, isRead: true, readAt: m.readAt || payload.readAt || new Date().toISOString() }
+          : m
+      ));
+    });
 
     s.on("msg:message", (msg) => {
       if (!msg) return;
@@ -309,6 +328,7 @@ export function useConversations() {
     s.emit("msg:client-join", { conversationId: activeId }, (ack) => {
       if (!ack?.success) console.warn("[Messages] conversation join failed:", ack?.error);
     });
+    s.emit("msg:mark-read", { conversationId: activeId });
     return () => {
       s.emit("msg:leave-conversation", { conversationId: activeId });
     };
@@ -406,5 +426,6 @@ export function useConversations() {
     socketRef,
     connected,
     adminOnline,
+    adminPresence,
   };
 }
