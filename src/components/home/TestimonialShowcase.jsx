@@ -3,9 +3,6 @@ import React, {
   useState, useEffect, useRef, useMemo, useCallback,
 } from "react";
 import { FaStar, FaRegStar, FaQuoteRight } from "react-icons/fa6";
-import {
-  IoChevronBack, IoChevronForward, IoPause, IoPlay,
-} from "react-icons/io5";
 import { useTestimonials } from "../../hooks/useTestimonials";
 
 /* ═══════════════════════════════════════════
@@ -276,127 +273,15 @@ const TESTIMONIAL_STYLES = `
   width: fit-content;
 }
 
-/* ── Controls ── */
-.tshow-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: clamp(1.25rem, 2.5vw, 2rem);
+/* ── Stories indicator ── */
+.tshow-story-dots {
+  display:flex; justify-content:center; gap:.35rem; margin-top:1.15rem;
 }
-.tshow-nav-btn {
-  width: 2.5rem;
-  height: 2.5rem;
-  border-radius: 50%;
-  border: 1.5px solid rgba(255,255,255,.15);
-  background: rgba(255,255,255,.06);
-  backdrop-filter: blur(8px);
-  color: rgba(255,255,255,.7);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all .25s cubic-bezier(.34,1.56,.64,1);
+.tshow-story-dot {
+  width:.35rem; height:.35rem; border:0; padding:0; border-radius:999px;
+  background:rgba(255,255,255,.28); transition:width .35s ease, background .35s ease;
 }
-.tshow-nav-btn:hover {
-  background: rgba(255,255,255,.15);
-  border-color: rgba(255,255,255,.3);
-  color: #fff;
-  transform: scale(1.08);
-}
-.tshow-nav-btn:disabled {
-  opacity: .3;
-  cursor: not-allowed;
-  transform: none;
-}
-.tshow-pause-btn {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 50%;
-  border: 1.5px solid rgba(52,211,153,.3);
-  background: rgba(52,211,153,.1);
-  color: #34d399;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all .25s ease;
-}
-.tshow-pause-btn:hover {
-  background: rgba(52,211,153,.2);
-  border-color: rgba(52,211,153,.5);
-}
-
-/* ── Dots ── */
-.tshow-dots {
-  display: flex;
-  gap: .4rem;
-  align-items: center;
-}
-.tshow-dot {
-  height: .35rem;
-  border-radius: 99px;
-  border: none;
-  cursor: pointer;
-  transition: all .35s ease;
-  padding: 0;
-  position: relative;
-  overflow: hidden;
-}
-.tshow-dot.active {
-  width: 2rem;
-  background: rgba(52,211,153,.25);
-}
-.tshow-dot:not(.active) {
-  width: .35rem;
-  background: rgba(255,255,255,.2);
-}
-.tshow-dot:not(.active):hover {
-  background: rgba(255,255,255,.4);
-}
-.tshow-dot-fill {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  background: #34d399;
-  border-radius: 99px;
-  transition: width .3s linear;
-}
-
-/* ── Progress ring ── */
-.tshow-progress-ring {
-  position: relative;
-  width: 2.5rem;
-  height: 2.5rem;
-  flex-shrink: 0;
-}
-.tshow-progress-ring svg {
-  transform: rotate(-90deg);
-}
-.tshow-progress-track {
-  fill: none;
-  stroke: rgba(255,255,255,.08);
-  stroke-width: 2.5;
-}
-.tshow-progress-bar {
-  fill: none;
-  stroke: #34d399;
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  transition: stroke-dashoffset .3s linear;
-}
-.tshow-progress-time {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Inter', sans-serif;
-  font-size: .55rem;
-  font-weight: 700;
-  color: rgba(255,255,255,.5);
-}
+.tshow-story-dot.active { width:1.25rem; background:#6ee7b7; }
 
 /* ── Skeleton ── */
 .tshow-skeleton-pair {
@@ -651,85 +536,21 @@ const TestimonialShowcase = () => {
   }, [testimonials, loading]);
 
   const [activeIdx, setActiveIdx] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const startTimeRef = useRef(Date.now());
-  const pausedAtRef = useRef(0);
-  const rafRef = useRef(null);
-
+  const timerRef = useRef(null);
   const totalSlides = slides.length;
 
-  const goTo = useCallback((idx) => {
-    setActiveIdx(idx);
-    setProgress(0);
-    startTimeRef.current = Date.now();
-    pausedAtRef.current = 0;
-  }, []);
-
+  const goTo = useCallback((idx) => setActiveIdx(idx), []);
   const goNext = useCallback(() => {
-    goTo((activeIdx + 1) % totalSlides);
-  }, [activeIdx, totalSlides, goTo]);
+    if (totalSlides > 1) setActiveIdx((p) => (p + 1) % totalSlides);
+  }, [totalSlides]);
 
-  const goPrev = useCallback(() => {
-    goTo((activeIdx - 1 + totalSlides) % totalSlides);
-  }, [activeIdx, totalSlides, goTo]);
-
-  const togglePause = useCallback(() => {
-    setIsPaused((prev) => {
-      if (!prev) {
-        // Pausing: record how much progress has elapsed
-        pausedAtRef.current = progress;
-      } else {
-        // Resuming: reset start time accounting for elapsed progress
-        const elapsedMs = (pausedAtRef.current / 100) * SLIDE_DURATION * 1000;
-        startTimeRef.current = Date.now() - elapsedMs;
-      }
-      return !prev;
-    });
-  }, [progress]);
-
-  // Auto-advance timer
+  // Quiet automatic Stories-style rotation — no pause/play controls.
   useEffect(() => {
-    if (totalSlides <= 0) return;
-
-    const animate = () => {
-      if (!isPaused) {
-        const elapsed = Date.now() - startTimeRef.current;
-        const pct = Math.min((elapsed / (SLIDE_DURATION * 1000)) * 100, 100);
-        setProgress(pct);
-        if (pct >= 100) {
-          goNext();
-          return;
-        }
-      }
-      rafRef.current = requestAnimationFrame(animate);
-    };
-
-    rafRef.current = requestAnimationFrame(animate);
-    return () => {
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [activeIdx, isPaused, totalSlides, goNext]);
-
-  // Reset on slide change
-  useEffect(() => {
-    startTimeRef.current = Date.now();
-    pausedAtRef.current = 0;
-    setProgress(0);
-  }, [activeIdx]);
-
-  const secondsLeft = Math.max(0, Math.ceil(SLIDE_DURATION - (progress / 100) * SLIDE_DURATION));
-
-  // Keyboard navigation
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.key === "ArrowLeft") goPrev();
-      else if (e.key === "ArrowRight") goNext();
-      else if (e.key === " ") { e.preventDefault(); togglePause(); }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [goPrev, goNext, togglePause]);
+    clearInterval(timerRef.current);
+    if (totalSlides <= 1) return undefined;
+    timerRef.current = setInterval(goNext, SLIDE_DURATION * 1000);
+    return () => clearInterval(timerRef.current);
+  }, [totalSlides, activeIdx, goNext]);
 
   // Typewriter speed — calculate so text finishes within ~60% of slide duration
   const typewriterSpeed = 28;
