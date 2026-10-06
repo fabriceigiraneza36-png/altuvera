@@ -1,6 +1,7 @@
 // src/hooks/useConversations.js
 import { useState, useEffect, useCallback, useRef } from "react";
 import { io } from "socket.io-client";
+import userDataCache from "../utils/userDataCache";
 
 const API_BASE =
   import.meta.env.VITE_API_URL ||
