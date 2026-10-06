@@ -15,8 +15,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Calendar, MapPin, Users, Clock, CheckCircle, XCircle,
   AlertCircle, RefreshCw, Search, Shield, User, ChevronDown,
-  ChevronUp, ExternalLink, DollarSign, Info, Send, RotateCcw,
-  Slash, Filter, Loader2, Plane, Award, TrendingUp, Star,
+  ChevronUp, ExternalLink, Info, Send, Slash, Filter, Loader2, Plane, Award, TrendingUp, Star,
   ArrowRight, X, ChevronRight, Package, FileText, Phone,
   Mail, Hash, Bookmark, AlertTriangle, CheckCheck, ClipboardCheck,
 } from "lucide-react";
@@ -56,8 +55,7 @@ const STATUS_MAP = {
   confirmed: { label: "Confirmed",      color: "#059669", bg: "#ecfdf5", border: "#6ee7b7", Icon: CheckCircle },
   completed: { label: "Completed",      color: "#0369a1", bg: "#eff6ff", border: "#bfdbfe", Icon: CheckCheck },
   cancelled: { label: "Cancelled",      color: "#dc2626", bg: "#fef2f2", border: "#fecaca", Icon: XCircle },
-  "on-hold": { label: "On Hold",        color: "#7c3aed", bg: "#faf5ff", border: "#e9d5ff", Icon: AlertCircle },
-  refunded:  { label: "Refunded",       color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc", Icon: DollarSign },
+  
 };
 
 const getStatus = (s) =>
@@ -104,14 +102,11 @@ const getBookingDetailFields = (booking = {}) => {
   const guestCount = booking.number_of_travelers ?? booking.travelers_count ?? booking.guests ?? booking.number_of_guests ?? booking.total_travelers;
   const adults = booking.number_of_adults ?? booking.adults;
   const children = booking.number_of_children ?? booking.children;
-  const priceValue = booking.total_price ?? booking.package_price ?? booking.price ?? booking.amount;
-  const currency = booking.currency || "USD";
-
+  
   return [
     ["Booking Ref", booking.booking_number || booking.booking_ref || `#${booking.id}`],
     ["Booking Type", booking.booking_type || booking.trip_type || booking.source || "—"],
     ["Status", booking.status || "—"],
-    ["Payment Status", booking.payment_status || booking.paymentState || "—"],
     ["Destination", booking.destination_name || booking.destination || booking.package_title || booking.package_name || "—"],
     ["Country", booking.country_name || booking.country || "—"],
     ["Service", booking.service_name || booking.service || booking.attraction_name || booking.activity_name || "—"],
@@ -128,8 +123,6 @@ const getBookingDetailFields = (booking = {}) => {
     ["WhatsApp", booking.whatsapp || "—"],
     ["Booked On", booking.created_at ? fmtFull(booking.created_at) : "—"],
     ["Updated On", booking.updated_at ? fmtFull(booking.updated_at) : "—"],
-    ["Amount", priceValue ? `${currency} ${formatBookingValue(priceValue)}` : "—"],
-    ["Currency", booking.currency || "—"],
     ["Source", booking.source || "—"],
     ["Special Requests", booking.special_requests || booking.requests || "—"],
     ["Admin Notes", booking.admin_notes || "—"],
