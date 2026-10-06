@@ -213,10 +213,15 @@ const MSG_STYLES = `
 .msg-chat-body:hover::-webkit-scrollbar-thumb { background: #cbd5e1; }
 .msg-chat-foot {
   flex-shrink: 0;
+  width: 100%;
   background: #ffffff;
   border-top: 1px solid #e2e8f0;
   z-index: 2;
+  box-sizing: border-box;
 }
+.msg-composer-row { min-width: 0; }
+.msg-composer-row textarea { min-width: 0; }
+.msg-chat-head > * { min-width: 0; }
 
 /* MOBILE: full panel swap */
 @media (max-width: 767px) {
@@ -1164,7 +1169,7 @@ export default function Messages() {
                   )}
 
                   {/* Input row */}
-                  <div className="flex items-end gap-2">
+                  <div className="msg-composer-row flex items-end gap-2">
                     {/* Emoji toggle */}
                     <div className="relative flex-shrink-0">
                       <button
