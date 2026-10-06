@@ -791,10 +791,9 @@ const useSlideshow = (length, intervalMs = 4500, offsetMs = 0) => {
 /* ═══════════════════════════════════════════
    INTRO DESTINATION CARD (with slideshow)
 ═══════════════════════════════════════════ */
-const IntroDestCard = ({ card, variant = "main", staggerOffset = 0, story = false }) => {
+const IntroDestCard = ({ card, variant = "main", staggerOffset = 0 }) => {
   const [activeIdx] = useSlideshow(card.images.length, 4500, staggerOffset);
   const isMain = variant === "main";
-  const useVideo = isMain && !story;
 
   return (
     <Link
@@ -869,12 +868,26 @@ const IntroDestCard = ({ card, variant = "main", staggerOffset = 0, story = fals
   );
 };
 
+/* ═══════════════════════════════════════════
+   INTRO MEDIA PANEL — DESTINATION CARDS
+═══════════════════════════════════════════ */
 const IntroMediaPanel = () => {
   const { destinations = [] } = useDestinations({ limit: 100, sort: "-featured", include: "gallery" });
-  const trackRef = useRef(null);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [activeStart, setActiveStart] = useState(0);
 
-  const cards = useMemo(() => destinations.map((destination) => ({
+  useEffect(() => {
+    setActiveStart(0);
+  }, [destinations.length]);
+
+  useEffect(() => {
+    if (destinations.length <= 1) return undefined;
+    const timer = window.setInterval(() => {
+      setActiveStart((current) => (current + 1) % destinations.length);
+    }, 5200);
+    return () => window.clearInterval(timer);
+  }, [destinations.length]);
+
+  const cards = destinations.map((destination) => ({
     slug: destination.slug || destination.id,
     country: destination.country || destination.countryName || "",
     tag: destination.category || "",
@@ -886,59 +899,34 @@ const IntroMediaPanel = () => {
       resolveImageUrl(destination.imageUrl),
       ...(Array.isArray(destination.images) ? destination.images.map(resolveImageUrl) : []),
     ].filter(Boolean),
-  })), [destinations]);
+  }));
+  const visibleCards = cards.length > 0
+    ? [0, 1, 2].map((offset) => cards[(activeStart + offset) % cards.length])
+    : [];
+  const [mainCard, ...sideCards] = visibleCards;
 
-  useEffect(() => {
-    if (cards.length <= 1) return undefined;
-    const timer = window.setInterval(() => {
-      const next = (activeIndex + 1) % cards.length;
-      const el = trackRef.current?.children?.[next];
-      el?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
-    }, 5200);
-    return () => window.clearInterval(timer);
-  }, [cards.length, activeIndex]);
-
-  const handleScroll = useCallback(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    const center = track.scrollLeft + track.clientWidth / 2;
-    let nearest = 0;
-    let distance = Infinity;
-    Array.from(track.children).forEach((el, i) => {
-      const elCenter = el.offsetLeft + el.offsetWidth / 2;
-      const d = Math.abs(elCenter - center);
-      if (d < distance) { distance = d; nearest = i; }
-    });
-    setActiveIndex(nearest);
-  }, []);
-
-  if (!cards.length) return null;
+  if (!mainCard) return null;
 
   return (
-    <div className="intro-story-wrap">
-      <div
-        ref={trackRef}
-        className="intro-story-track"
-        onScroll={handleScroll}
-        role="region"
-        aria-label="Explore destinations"
-      >
-        {cards.map((card, i) => (
-          <div
-            key={card.slug}
-            className={`intro-story-item ${i === activeIndex ? "is-active" : ""}`}
-          >
-            <IntroDestCard card={card} story />
-          </div>
-        ))}
-      </div>
-      {cards.length > 1 && (
-        <div className="intro-story-dots" aria-hidden="true">
-          {cards.map((_, i) => (
-            <span key={i} className={`intro-story-dot ${i === activeIndex ? "is-active" : ""}`} />
-          ))}
+    <div className="intro-media-grid">
+      {/* Floating trust badges */}
+      <div className="intro-media-float-badge intro-media-float-badge--top">
+        <div className="intro-float-icon intro-float-icon--green">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="M9 12l2 2 4-4" /></svg>
         </div>
-      )}
+        <div className="intro-float-text"><span className="intro-float-title">100% Trusted</span><span className="intro-float-sub">Verified local partners</span></div>
+      </div>
+      {/* Main destination card */}
+      <IntroDestCard card={mainCard} variant="main" staggerOffset={0} />
+
+      {sideCards.map((card, i) => (
+        <IntroDestCard
+          key={card.slug}
+          card={card}
+          variant="side"
+          staggerOffset={(i + 1) * 900}
+        />
+      ))}
     </div>
   );
 };
