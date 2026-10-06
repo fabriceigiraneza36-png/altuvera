@@ -1082,18 +1082,18 @@ export default function UserDashboard() {
   const [fetchErr,  setFetchErr]  = useState(null);
 
   /* ── Fetch bookings ── */
-  const fetchBookings = useCallback(async () => {
+  const fetchBookings = useCallback(async (requestOptions = {}) => {
     setLoadingB(true);
     setAuthWarn(null);
     setFetchErr(null);
 
     let { data, error } = await safeFetch(
-      authFetch, "/bookings/my-bookings?limit=50&page=1",
+      authFetch, "/bookings/my-bookings?limit=50&page=1", requestOptions,
     );
 
     if ((error || !data) && !error?.startsWith("auth:")) {
       const fb = await safeFetch(
-        authFetch, "/bookings?mine=true&limit=50&page=1",
+        authFetch, "/bookings?mine=true&limit=50&page=1", requestOptions,
       );
       if (!fb.error && fb.data) { data = fb.data; error = null; }
     }
@@ -1112,7 +1112,18 @@ export default function UserDashboard() {
     setLoadingB(false);
   }, [authFetch]);
 
-  useEffect(() => { fetchBookings(); }, [fetchBookings]);
+  useEffect(() => {
+    fetchBookings();
+
+    const refreshId = window.setInterval(() => fetchBookings({ cache: false }), 30_000);
+    const onFocus = () => fetchBookings({ cache: false });
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      window.clearInterval(refreshId);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [fetchBookings]);
 
   /* ── Derived stats ── */
   const {
