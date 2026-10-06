@@ -28,7 +28,16 @@
 }
 
 /* ── BASE ── */
-.home-root { background: var(--surface); color: var(--text-primary); overflow-x: hidden; min-height: 100vh; }
+.home-root {
+  background: var(--surface);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  min-height: 100vh;
+  /* Prevent browser scroll anchoring from moving the page while home
+     sections/images/sliders update during normal scrolling. */
+  overflow-anchor: none;
+}
+.home-root img { overflow-anchor: none; }
 .home-section { padding: var(--home-section-py) 0; position: relative; }
 .home-container { max-width: var(--home-max-width); margin: 0 auto; padding: 0 clamp(1.25rem, 4vw, 3rem); }
 
