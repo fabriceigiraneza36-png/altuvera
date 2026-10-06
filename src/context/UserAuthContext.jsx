@@ -12,6 +12,7 @@ import React, {
   useMemo,
 } from "react";
 import { connectSocket, disconnectSocket, getSocket } from "../utils/socket";
+import userDataCache from "../utils/userDataCache";
 
 // ============================================================================
 // Configuration
@@ -527,6 +528,23 @@ export function UserAuthProvider({ children }) {
 
   // ── Computed ──────────────────────────────────────────────────────────────
   const isAuthenticated  = useMemo(() => !!user && !!token, [user, token]);
+
+  useEffect(() => {
+    if (!isAuthenticated || !token) return;
+    const endpoints = [
+      "/users/me",
+      "/bookings/my-bookings?limit=50&page=1",
+      "/bookings/my?limit=10&page=1",
+      "/notifications/my?page=1&limit=20",
+      "/notifications/my/unread-count",
+      "/messages/conversations?limit=100",
+    ];
+    const run = () => endpoints.forEach((endpoint) =>
+      authFetch(endpoint, { cacheTime: 30 * 1000 }).catch(() => {})
+    );
+    if ("requestIdleCallback" in window) window.requestIdleCallback(run, { timeout: 1500 });
+    else setTimeout(run, 600);
+  }, [isAuthenticated, token, authFetch]);
   const hasGooglePending = useMemo(
     () => !!googleUser?.email && !!googleUser?.credential,
     [googleUser],
@@ -717,10 +735,23 @@ export function UserAuthProvider({ children }) {
       ...opts.headers,
     });
 
+    const method = String(opts.method || "GET").toUpperCase();
+    const cacheable = method === "GET" && opts.cache !== false && !opts._retry;
+    const cacheKey = url;
+    if (cacheable) {
+      const cached = userDataCache.get(cacheKey);
+      if (cached) return cached;
+      const pending = userDataCache.getPending(cacheKey);
+      if (pending) return pending;
+    }
+    const execute = (requestToken = tok) => fetch(url, { ...opts, headers: makeHeaders(requestToken) });
     let res;
     try {
-      res = await fetch(url, { ...opts, headers: makeHeaders(tok) });
+      const request = execute(tok);
+      if (cacheable) userDataCache.setPending(cacheKey, request);
+      res = await request;
     } catch {
+      if (cacheable) userDataCache.clearPending(cacheKey);
       throw new Error("Network error. Please check your connection.");
     }
 
@@ -778,7 +809,14 @@ export function UserAuthProvider({ children }) {
       throw err;
     }
 
-    return resData || {};
+    const finalData = resData || {};
+    if (cacheable) {
+      userDataCache.clearPending(cacheKey);
+      userDataCache.set(cacheKey, finalData, opts.cacheTime || 30 * 1000);
+    } else {
+      userDataCache.clear();
+    }
+    return finalData;
   }, [clearAuth, persistSession, saveAuth, token]);
 
   // ============================================================================
