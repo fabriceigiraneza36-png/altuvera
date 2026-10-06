@@ -20,6 +20,7 @@
     checklist_request: { icon: '📋', color: '#059669' },
     checklist_ready:   { icon: '✅', color: '#16a34a' },
     promotion:         { icon: '🎉', color: '#db2777' },
+    newsletter:        { icon: '📰', color: '#059669' },
     warning:           { icon: '⚠️', color: '#f59e0b' },
     alert:             { icon: '🚨', color: '#dc2626' },
     system:            { icon: '⚙️', color: '#64748b' },
