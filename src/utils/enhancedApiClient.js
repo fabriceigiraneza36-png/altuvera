@@ -16,8 +16,9 @@ class EnhancedApiClient {
     // Request interceptor
     this.requestInterceptors = [
       (config) => {
-        // Add timestamp for cache busting unless explicitly disabled
-        if (config.method === 'GET' && config.cacheBust !== false) {
+        // Keep GET requests cacheable. A cache-buster here defeated the client's
+        // own cache and caused every page navigation to hit the backend again.
+        if (config.method === 'GET' && config.cacheBust === true) {
           config.params = config.params || {};
           config.params._t = Date.now();
         }
@@ -84,9 +85,11 @@ promise.finally(() => clearTimeout(timeoutId));
 
     // ✅ Cache successful GET responses here
     // result is raw JSON — not axios, so no result.data wrapper
-    if (config.method === 'GET' && processedResult) {
+    if (config.method === 'GET' && processedResult && config.cache !== false) {
       const ttl = config.cacheTime || this.cacheTimeout;
       this.setCache(cacheKey, processedResult, ttl);
+    } else if (config.method !== 'GET') {
+      this.clearCache();
     }
 
     this.pendingRequests.delete(cacheKey);
