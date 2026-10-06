@@ -149,9 +149,12 @@ function useUserSocket(userId, activeConvId, handlers) {
 const MSG_STYLES = `
 .msg-layout {
   display: flex;
+  flex: 1 1 auto;
+  width: 100%;
   height: 100%;
   min-height: 0;
   overflow: hidden;
+  position: relative;
 }
 /* SIDEBAR */
 .msg-sidebar {
@@ -217,9 +220,13 @@ const MSG_STYLES = `
 
 /* MOBILE: full panel swap */
 @media (max-width: 767px) {
-  .msg-sidebar { width: 100%; border-right: none; }
-  .msg-chat    { position: absolute; inset: 0; z-index: 10; }
-  .msg-layout  { position: relative; }
+  .msg-layout { width: 100%; height: 100%; min-height: 0; }
+  .msg-sidebar { width: 100%; min-width: 0; border-right: none; }
+  .msg-chat { position: absolute; inset: 0; z-index: 10; width: 100%; min-width: 0; }
+  .msg-chat-head { min-height: 64px; padding-left: 12px; padding-right: 12px; }
+  .msg-chat-body { padding: 12px; }
+  .msg-chat-foot { padding: 8px 10px max(10px, env(safe-area-inset-bottom)); }
+  .msg-chat-foot textarea { min-width: 0; width: 100%; }
 }
 
 /* Typing dots */
@@ -888,7 +895,7 @@ export default function Messages() {
           │  gives us. Everything inside is flex and never overflows.   │
           └─────────────────────────────────────────────────────────────┘
         */}
-        <div className="msg-layout w-full h-full">
+        <div className="msg-layout w-full h-full min-h-0">
 
           {/* ═══════════════ SIDEBAR ═══════════════ */}
           <div className={`msg-sidebar ${showMobile ? "hidden md:flex" : "flex"} flex-col transition-all duration-200 ${sidebarOpen ? "" : "md:hidden"}`}>
@@ -978,7 +985,7 @@ export default function Messages() {
           </div>
 
           {/* ═══════════════ CHAT PANEL ═══════════════ */}
-          <div className={`msg-chat ${showMobile ? "flex" : "hidden md:flex"} flex-col`}>
+          <div className={`msg-chat ${showMobile ? "flex" : "hidden md:flex"} flex-col min-h-0 min-w-0`}>
 
             {!activeConversation ? (
               /* ── Empty State ── */
