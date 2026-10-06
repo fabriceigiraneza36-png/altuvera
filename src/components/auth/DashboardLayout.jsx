@@ -39,7 +39,9 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false }) => {
         .dashboard-layout {
           display: flex;
           height: 100vh;
+          height: 100dvh;
           min-height: 100vh;
+          min-height: 100dvh;
           box-sizing: border-box;
           background-color: #f8fafc;
           padding-top: 80px;
@@ -131,6 +133,13 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false }) => {
           min-width: 0;
           min-height: 0;
           overflow: hidden;
+        }
+        .dashboard-content.dashboard-no-padding > div {
+          min-width: 0;
+          min-height: 0;
+        }
+        .dashboard-content.dashboard-no-padding > div > .dashboard-inner-content {
+          min-height: 0;
         }
         .dashboard-content.dashboard-no-padding .dashboard-inner-content > * {
           min-width: 0;
