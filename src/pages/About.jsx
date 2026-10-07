@@ -17,6 +17,7 @@ import Button from '../components/common/Button';
 import CookieSettingsButton from '../components/common/CookieSettingsButton';
 import ReviewModal from '../components/home/ReviewModal';
 import AnimatedSection from '../components/common/AnimatedSection';
+import TeamContent from '../components/common/TeamContent';
 import { useUserAuth } from '../context/UserAuthContext';
 import { useGallery } from '../hooks/useGallery';
 
@@ -865,6 +866,23 @@ const About = () => {
             )}
           </FadeInSection>
         </div>
+      </section>
+
+      {/* ══════════════════════════════════════════
+          OUR TEAM — Live CMS team profiles
+      ══════════════════════════════════════════ */}
+      <section aria-labelledby="about-team-heading" style={{ background: '#fafffe' }}>
+        <div style={{ textAlign: 'center', padding: '64px 24px 0' }}>
+          <FadeInSection>
+            <h2 id="about-team-heading" className="about-section-title">
+              Meet the people behind <em>your journey</em>
+            </h2>
+            <p className="about-section-lead">
+              Get to know the Altuvera specialists who help turn your East African travel ideas into thoughtful, authentic experiences.
+            </p>
+          </FadeInSection>
+        </div>
+        <TeamContent />
       </section>
 
       {/* ══════════════════════════════════════════
