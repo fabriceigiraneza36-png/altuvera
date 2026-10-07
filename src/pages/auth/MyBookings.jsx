@@ -665,7 +665,7 @@ function RequestBanner({ booking }) {
   const status = booking.cancel_request_status;
   if (!status || status === "none") return null;
 
-  const false = booking.cancel_request_type === "refund";
+  const isRefundRequest = booking.cancel_request_type === "refund";
 
   const cfg =
     status === "pending"
