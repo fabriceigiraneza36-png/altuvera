@@ -1189,7 +1189,7 @@ function DestinationsSection({ country, allDests, destsLoading }) {
           <div>
             
             <h2 className="cp-title">Destinations in {country.name}</h2>
-            <p className="cp-desc">Swipe through the country like an Instagram story reel — the destination in focus leads the journey.</p>
+            <p className="cp-desc">Explore curated destinations across the country, with the same premium card experience used on Explore.</p>
           </div>
 
         </div>
