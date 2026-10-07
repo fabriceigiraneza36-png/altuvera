@@ -249,7 +249,10 @@ export function useConversations() {
 
       setConversations((prev) => {
         const idx = prev.findIndex((c) => String(c.id) === cid);
-        if (idx < 0) return prev;
+        if (idx < 0) {
+          fetchConversations();
+          return prev;
+        }
         const next = prev.map((c) => String(c.id) === cid
           ? {
               ...c,
