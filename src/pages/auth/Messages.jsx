@@ -1034,8 +1034,52 @@ export default function Messages() {
           {/* ═══════════════ CHAT PANEL ═══════════════ */}
           <div className={`msg-chat ${showMobile ? "flex" : "hidden md:flex"} flex-col min-h-0 min-w-0`}>
 
-            {!activeConversation ? (
-              /* ── Empty State ── */
+            {loadingMsgs && activeId ? (
+              /* ── Conversation Loading State ── */
+              <div className="flex-1 flex flex-col min-h-0 bg-slate-50">
+                <div className="msg-chat-head px-4 py-3 flex items-center gap-3 shadow-sm bg-white">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-100 animate-pulse flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-3.5 w-40 max-w-[65%] rounded bg-slate-200 animate-pulse" />
+                    <div className="h-2.5 w-24 rounded bg-slate-100 animate-pulse" />
+                  </div>
+                  <div className="w-14 h-5 rounded-full bg-slate-100 animate-pulse" />
+                </div>
+                <div className="flex-1 overflow-hidden px-4 py-5 space-y-4">
+                  {[0,1,2,3,4,5].map((i) => (
+                    <div key={i}
+                      className={`flex ${i % 2 ? "justify-end" : "justify-start"} animate-pulse`}>
+                      <div
+                        className={`rounded-2xl bg-slate-200 ${i % 2 ? "" : "ml-9"}`}
+                        style={{ width: `${150 + (i % 3) * 45}px`, height: `${38 + (i % 2) * 12}px` }}
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="msg-chat-foot px-3 pt-2.5 pb-3 bg-white">
+                  <div className="h-11 w-full rounded-2xl bg-slate-100 animate-pulse" />
+                </div>
+              </div>
+            ) : loading && conversations.length === 0 ? (
+              /* ── Inbox Loading State ── */
+              <div className="flex-1 flex flex-col items-center justify-center p-8 text-center bg-slate-50">
+                <div className="w-20 h-20 rounded-3xl bg-white border border-emerald-100 shadow-sm
+                                flex items-center justify-center mb-5 animate-pulse">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700
+                                  flex items-center justify-center shadow-md">
+                    <MessageSquare size={24} className="text-white" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 text-emerald-700 font-semibold text-sm">
+                  <RefreshCw size={15} className="animate-spin" />
+                  Loading your conversations…
+                </div>
+                <div className="mt-5 w-48 h-2 rounded-full bg-slate-200 overflow-hidden">
+                  <div className="h-full w-1/2 bg-emerald-500 rounded-full animate-pulse" />
+                </div>
+              </div>
+            ) : !activeConversation ? (
+              /* ── Genuine Empty State ── */
               <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
                 <div className="w-20 h-20 rounded-3xl bg-gradient-to-br from-emerald-50 to-emerald-100
                                 flex items-center justify-center mb-5 shadow-inner">
