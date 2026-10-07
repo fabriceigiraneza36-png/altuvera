@@ -16,6 +16,7 @@ import { initConsentMode } from "./utils/cookiePreferences.js";
 import "./index.css";
 import { generateSvgPlaceholder } from "./utils/placeholderImage";
 import enhancedApiClient from "./utils/enhancedApiClient";
+import ErrorBoundary from "./components/common/ErrorBoundary.jsx";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSENT MODE — Must run BEFORE any tracking scripts load
@@ -156,6 +157,7 @@ warmPublicData();
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
+    <ErrorBoundary>
     <BrowserRouter
       future={{
         v7_startTransition: true,
@@ -174,6 +176,7 @@ ReactDOM.createRoot(rootElement).render(
         </AppProvider>
       </HelmetProvider>
     </BrowserRouter>
+    </ErrorBoundary>
   </React.StrictMode>
 );
 
