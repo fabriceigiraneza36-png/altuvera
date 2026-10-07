@@ -129,29 +129,41 @@ const ProgressBar = ({ color = "#10b981", height = 3 }) => {
   );
 };
 
-const Reveal = ({ children, from = "up", delay = 0, duration = 500 }) => {
+const Reveal = ({ children, from = "up", delay = 0, duration = 650 }) => {
   const [visible, setVisible] = React.useState(false);
+  const ref = React.useRef(null);
   const transformMap = {
-    left: "translateX(-22px)",
-    right: "translateX(22px)",
-    up: "translateY(22px)",
-    bottom: "translateY(-22px)",
-    scale: "scale(0.96)",
+    left: "translate3d(-28px,0,0)",
+    right: "translate3d(28px,0,0)",
+    up: "translate3d(0,28px,0)",
+    bottom: "translate3d(0,-28px,0)",
+    scale: "scale(.94)",
   };
 
   React.useEffect(() => {
-    const frame = window.requestAnimationFrame(() => setVisible(true));
-    return () => window.cancelAnimationFrame(frame);
+    if (!ref.current || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setVisible(true);
+      return undefined;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting) {
+        setVisible(true);
+        observer.disconnect();
+      }
+    }, { threshold: 0.12, rootMargin: "0px 0px -8% 0px" });
+    observer.observe(ref.current);
+    return () => observer.disconnect();
   }, []);
 
   return (
     <div
+      ref={ref}
       style={{
         opacity: visible ? 1 : 0,
-        transform: visible ? "translate3d(0,0,0) scale(1)" : (transformMap[from] || "translateY(22px)"),
+        transform: visible ? "translate3d(0,0,0) scale(1)" : (transformMap[from] || transformMap.up),
         transition: `opacity ${duration}ms cubic-bezier(.22,1,.36,1), transform ${duration}ms cubic-bezier(.22,1,.36,1)`,
-        transitionDelay: `${delay}ms`,
-        willChange: "opacity, transform",
+        transitionDelay: visible ? `${delay}ms` : "0ms",
+        willChange: visible ? "auto" : "opacity, transform",
       }}
     >
       {children}
@@ -176,6 +188,8 @@ export default function DestinationDetail() {
   const { destination, loading, error } = useDestination(target);
   const [heroSlide, setHeroSlide] = useState(0);
   const [lightboxIndex, setLightboxIndex] = useState(null);
+  const [saved, setSaved] = useState(false);
+  const [shareState, setShareState] = useState("Share");
 
   const gallery = useMemo(
     () =>
@@ -208,7 +222,30 @@ export default function DestinationDetail() {
   useEffect(() => {
     setHeroSlide(0);
     setLightboxIndex(null);
+    setShareState("Share");
+    try {
+      setSaved(localStorage.getItem(`altuvera:saved-destination:${target}`) === "1");
+    } catch { setSaved(false); }
   }, [target]);
+
+  const toggleSaved = () => {
+    const next = !saved;
+    setSaved(next);
+    try { localStorage.setItem(`altuvera:saved-destination:${target}`, next ? "1" : "0"); } catch {}
+  };
+
+  const shareDestination = async () => {
+    const url = window.location.href;
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: destination?.name || "Altuvera destination", text: destination?.tagline || `Explore ${destination?.name || "this destination"} with Altuvera Safaris.`, url });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(url);
+      }
+      setShareState("Copied");
+      window.setTimeout(() => setShareState("Share"), 1800);
+    } catch {}
+  };
 
   useEffect(() => {
     if (heroSlides.length < 2) return;
@@ -371,6 +408,13 @@ export default function DestinationDetail() {
                   <button key={index} type="button" className={`d-hero__dot ${index === heroSlide ? "on" : ""}`} onClick={() => setHeroSlide(index)} aria-label={`Show hero image ${index + 1}`} />
                 ))}
               </div>
+              <div className="d-hero__thumbs" aria-label="Choose destination hero image">
+                {heroSlides.map((src, index) => (
+                  <button key={src} type="button" className={`d-hero__thumb ${index === heroSlide ? "active" : ""}`} onClick={() => setHeroSlide(index)} aria-label={`Show image ${index + 1}`}>
+                    <img src={src} alt="" loading="lazy" />
+                  </button>
+                ))}
+              </div>
             </>
           )}
 
@@ -420,9 +464,14 @@ export default function DestinationDetail() {
                 <button className="d-btn d-btn--emerald d-btn--lg" onClick={() => navigate(`/booking?destination=${destination.slug}`)}>
                   <Ic n="calendar" size={17} /> Book This Destination
                 </button>
-
                 <button className="d-btn d-btn--glass d-btn--lg" onClick={() => document.getElementById("dd-about")?.scrollIntoView({ behavior: "smooth" })}>
-                  <Ic n="chevDown" size={17} /> Explore
+                  <Ic n="chevDown" size={17} /> Explore story
+                </button>
+                <button type="button" className="d-hero-tool" onClick={toggleSaved} aria-pressed={saved} title={saved ? "Remove from saved destinations" : "Save destination"}>
+                  <span aria-hidden="true">{saved ? "♥" : "♡"}</span><span className="d-hero-tool__label">{saved ? "Saved" : "Save"}</span>
+                </button>
+                <button type="button" className="d-hero-tool" onClick={shareDestination} title="Share destination">
+                  <span aria-hidden="true">↗</span><span className="d-hero-tool__label">{shareState}</span>
                 </button>
               </div>
 
@@ -446,6 +495,22 @@ export default function DestinationDetail() {
             </div>
           </div>
         </header>
+
+        <nav className="d-quicknav" aria-label="Destination sections">
+          <div className="d-wrap d-quicknav__inner">
+            <Link to="/destinations" className="d-quicknav__back"><ChevronLeft size={15} /> Destinations</Link>
+            <div className="d-quicknav__links">
+              <a href="#dd-about">Story</a>
+              <a href="#dd-facts">Facts</a>
+              {additionalImages.length > 0 && <a href="#dd-gallery">Gallery</a>}
+              {highlights.length > 0 && <a href="#dd-experiences">Experiences</a>}
+              <a href="#dd-plan">Plan</a>
+            </div>
+            <button type="button" className="d-quicknav__save" onClick={toggleSaved} aria-pressed={saved}>
+              {saved ? "♥ Saved" : "♡ Save"}
+            </button>
+          </div>
+        </nav>
 
         <section id="dd-about" className="d-sec d-sec--white">
           <div className="d-wrap">
@@ -500,7 +565,7 @@ export default function DestinationDetail() {
           </div>
         </section>
 
-        <section className="d-sec d-sec--soft d-facts-section">
+        <section id="dd-facts" className="d-sec d-sec--soft d-facts-section">
           <div className="d-wrap">
             <Reveal from="bottom">
               <SH
@@ -533,7 +598,7 @@ export default function DestinationDetail() {
         </section>
 
         {additionalImages.length > 0 && (
-          <section className="d-sec d-sec--soft d-destination-gallery">
+          <section id="dd-gallery" className="d-sec d-sec--soft d-destination-gallery">
             <div className="d-wrap">
               <Reveal from="bottom">
                 <SH title="See More of the Journey" sub={`A closer look at ${destination.name}`} tag="Destination gallery" />
@@ -556,7 +621,7 @@ export default function DestinationDetail() {
           </section>
         )}
 
-        <section className="d-sec d-sec--white">
+        <section id="dd-plan" className="d-sec d-sec--white">
           <div className="d-wrap">
             <SH title={`Plan Your Visit to ${destination.name}`} sub="Useful information to help you prepare for the experience" />
             <div className="d-deepdive__grid">
@@ -570,7 +635,7 @@ export default function DestinationDetail() {
         </section>
 
         {highlights.length > 0 && (
-          <section className="d-sec d-sec--white d-experiences">
+          <section id="dd-experiences" className="d-sec d-sec--white d-experiences">
             <div className="d-wrap">
               <Reveal from="left">
                 <SH
