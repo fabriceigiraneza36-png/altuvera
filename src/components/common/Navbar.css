@@ -2869,7 +2869,7 @@
 
 /* Mobile expanding search beside hamburger */
 .nav__mobile-search { display: none; }
-@media (max-width: 767px) {
+@media (max-width: 1024px) {
   .nav__mobile-search {
     position: relative;
     display: flex;
@@ -2918,5 +2918,30 @@
     border: 0; background: #ecfdf5; color: #047857;
     border-radius: 9px; display: grid; place-items: center;
     margin-right: 6px; cursor: pointer;
+  }
+}
+
+/* Ensure the compact mobile search is always available beside the hamburger. */
+@media (max-width: 1024px) {
+  .nav__inner { gap: 8px; }
+  .nav__mobile-search {
+    order: 2;
+    flex: 0 0 46px;
+    margin-left: auto;
+    margin-right: 4px;
+    z-index: 110;
+  }
+  .nav__mobile-search:hover,
+  .nav__mobile-search:focus-within {
+    flex-basis: min(52vw, 230px);
+    width: min(52vw, 230px);
+  }
+  .nav__hamburger { order: 3; flex-shrink: 0; }
+}
+@media (max-width: 480px) {
+  .nav__mobile-search:hover,
+  .nav__mobile-search:focus-within {
+    flex-basis: min(62vw, 220px);
+    width: min(62vw, 220px);
   }
 }
