@@ -102,14 +102,26 @@ const asArray = (v) => {
   return [];
 };
 
+const getAssetUrl = (value) => {
+  if (!value || typeof value !== "string") return null;
+  const raw = value.trim();
+  if (/^https?:\/\//i.test(raw) || raw.startsWith("data:") || raw.startsWith("blob:")) return raw;
+
+  // Uploaded team portraits are served by the backend origin, not /api.
+  const apiOrigin = API_BASE.replace(/\/api\/?$/i, "");
+  const clean = raw.replace(/^\/api\//i, "/").replace(/^\/+/, "/");
+  return clean.startsWith("/uploads/") || clean.startsWith("/storage/")
+    ? apiOrigin + clean
+    : raw;
+};
+
 const normalizeMember = (m = {}) => ({
   id:            m.id,
   name:          m.name || "",
   role:          m.role || "",
   department:    m.department || "",
   bio:           m.bio || "",
-  // The backend may return image_url, avatar_url, imageUrl or image
-  image_url:     m.image_url || m.imageUrl || m.avatar_url || m.photo_url || m.profile_image_url || m.image || null,
+  image_url:     getAssetUrl(m.image_url || m.imageUrl || m.avatar_url || m.photo_url || m.profile_image_url || m.image),
   email:         m.email || "",
   phone:         m.phone || "",
   linkedin_url:  m.linkedin_url || "",
@@ -120,10 +132,10 @@ const normalizeMember = (m = {}) => ({
   expertise:     asArray(m.expertise),
   languages:     asArray(m.languages),
   certifications:asArray(m.certifications),
-  years_experience: parseInt(m.years_experience) || 0,
+  years_experience: parseInt(m.years_experience, 10) || 0,
   location:      m.location || "",
   country:       m.country || "",
-  display_order: parseInt(m.display_order) || 0,
+  display_order: parseInt(m.display_order, 10) || 0,
   is_active:     m.is_active !== false,
   is_featured:   m.is_featured === true,
 });
