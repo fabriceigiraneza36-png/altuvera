@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import enhancedApiClient from "../utils/enhancedApiClient";
 
-// Resilient presentation fallback: keeps public testimonials visible while the
-// API is waking up, temporarily unavailable, or the database has no seeded rows.
+// Testimonials are CMS-owned content. Public pages must display the live API
+// data and must never invent or substitute customer stories.
 
 const extractList = (result) => {
   const data = result && typeof result === "object" && "success" in result
