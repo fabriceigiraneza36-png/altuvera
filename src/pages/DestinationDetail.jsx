@@ -186,7 +186,6 @@ export default function DestinationDetail() {
   const target = slug || destinationSlug || destinationId || id;
 
   const { destination, loading, error } = useDestination(target);
-  const [heroSlide, setHeroSlide] = useState(0);
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const [saved, setSaved] = useState(false);
   const [shareState, setShareState] = useState("Share");
@@ -220,7 +219,6 @@ export default function DestinationDetail() {
   );
 
   useEffect(() => {
-    setHeroSlide(0);
     setLightboxIndex(null);
     setShareState("Share");
     try {
@@ -247,15 +245,6 @@ export default function DestinationDetail() {
     } catch {}
   };
 
-  useEffect(() => {
-    if (heroSlides.length < 2) return;
-    const timer = window.setInterval(() => {
-      setHeroSlide((current) => (current + 1) % heroSlides.length);
-    }, 5200);
-    return () => window.clearInterval(timer);
-  }, [heroSlides.length]);
-
-
   if (loading) {
     return (
       <div className="d-page">
@@ -279,7 +268,7 @@ export default function DestinationDetail() {
     );
   }
 
-  const heroImage = heroSlides[heroSlide] || gallery[0]?.url || destination.heroImage || destination.imageUrl || destination.image || "";
+  const heroImage = heroSlides[0] || gallery[0]?.url || destination.heroImage || destination.imageUrl || destination.image || "";
   const description = destination.description || destination.shortDescription || destination.overview || "";
   const attractions = Array.isArray(destination.attractions) ? destination.attractions : [];
   const highlights = Array.isArray(destination.highlights) ? destination.highlights : [];
@@ -372,50 +361,37 @@ export default function DestinationDetail() {
         <ProgressBar />
 
         <header className="d-hero">
-          <div
-            className="d-hero__slides"
-            style={{ transform: `translate3d(-${heroSlide * 100}%,0,0)` }}
-            aria-live="polite"
-          >
-            {heroSlides.length > 0 ? heroSlides.map((src, index) => (
-              <div key={src} className={`d-hero__slide ${index === heroSlide ? "active" : ""}`}>
-                <img
-                  src={src}
-                  alt={`${destination.name} — view ${index + 1} of ${heroSlides.length}`}
-                  loading={index === 0 ? "eager" : "lazy"}
-                  decoding="async"
-                />
-              </div>
-            )) : (
-              <div className="d-hero__slide d-hero__slide--empty active">
-                <Ic n="mountain" size={80} />
-              </div>
+          <div className="d-hero__image" aria-hidden="true">
+            {heroImage ? (
+              <img src={heroImage} alt="" loading="eager" decoding="async" />
+            ) : (
+              <div className="d-hero__image--empty" />
             )}
           </div>
-
           <div className="d-hero__ov" />
 
           <div className="d-wrap d-hero__clean-wrap">
             <div className="d-hero__body">
+              <span className="d-hero__eyebrow">
+                <MapPin size={14} /> {countryInfo?.name || "East Africa"}
+              </span>
               <h1 className="d-hero__title">{destination.name}</h1>
               {destination.tagline && <p className="d-hero__sub">{destination.tagline}</p>}
-              <div className="d-hero__ctas">
+              <div className="d-hero__ctas" aria-label="Destination actions">
                 <button className="d-btn d-btn--emerald d-btn--lg" onClick={() => navigate(`/booking?destination=${destination.slug}`)}>
-                  <Ic n="calendar" size={17} /> Book This Destination
+                  <Calendar size={17} /> Book This Destination
                 </button>
-                <button className="d-btn d-btn--glass d-btn--lg" onClick={() => document.getElementById("dd-about")?.scrollIntoView({ behavior: "smooth" })}>
-                  <Ic n="chevDown" size={17} /> Explore story
+                <button type="button" className="d-hero-tool" onClick={toggleSaved} aria-pressed={saved}>
+                  <span aria-hidden="true">{saved ? "♥" : "♡"}</span>
+                  <span className="d-hero-tool__label">{saved ? "Saved" : "Save"}</span>
                 </button>
-                <button type="button" className="d-hero-tool" onClick={toggleSaved} aria-pressed={saved} title={saved ? "Remove from saved destinations" : "Save destination"}>
-                  <span aria-hidden="true">{saved ? "♥" : "♡"}</span><span className="d-hero-tool__label">{saved ? "Saved" : "Save"}</span>
-                </button>
-                <button type="button" className="d-hero-tool" onClick={shareDestination} title="Share destination">
-                  <span aria-hidden="true">↗</span><span className="d-hero-tool__label">{shareState}</span>
+                <button type="button" className="d-hero-tool" onClick={shareDestination}>
+                  <span aria-hidden="true">↗</span>
+                  <span className="d-hero-tool__label">{shareState}</span>
                 </button>
               </div>
             </div>
           </div>
-
         </header>
 
         <nav className="d-quicknav" aria-label="Destination sections">
@@ -665,7 +641,7 @@ export default function DestinationDetail() {
         )}
         <section className="d-final-cta">
           <div className="d-final-cta__media">
-            <img src={heroSlides[heroSlides.length > 1 ? (heroSlide + 1) % heroSlides.length : 0] || heroImage} alt="" loading="lazy" />
+            <img src={heroImage} alt="" loading="lazy" />
           </div>
           <div className="d-final-cta__overlay" />
           <div className="d-wrap d-final-cta__inner">
