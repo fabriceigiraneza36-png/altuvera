@@ -74,24 +74,76 @@ export function useCountry(idOrSlug) {
   const [loading, setLoading] = useState(!!idOrSlug);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (!idOrSlug) {
-      setCountry(null);
-      setLoading(false);
-      return;
-    }
+  const loadCountry = useCallback(async (identifier, signal) => {
+    if (!identifier) return null;
 
-    let cancelled = false;
+    // Primary path: canonical country endpoint.
+    try {
+      const res = await countryService.getCountry(identifier);
+      return res?.data || res || null;
+    } catch (primaryError) {
+      if (primaryError?.name === "AbortError") throw primaryError;
+
+      // Recovery path: resolve the country from the public country index.
+      // This protects country pages when an older DB record has a mismatched
+      // slug/casing while keeping the live backend as the source of truth.
+      const indexed = await countryService.listCountries({
+        search: String(identifier).trim(),
+        limit: 50,
+      });
+
+      const rows = Array.isArray(indexed) ? indexed : indexed?.data || [];
+      const wanted = String(identifier).trim().toLowerCase();
+      const match = rows.find((item) => {
+        const slug = String(item?.slug || "").trim().toLowerCase();
+        const name = String(item?.name || "").trim().toLowerCase();
+        return slug === wanted || name === wanted;
+      });
+
+      if (!match) throw primaryError;
+
+      // Re-read the canonical record using the resolved DB slug/id so the
+      // page still receives destinations, similar countries and services.
+      const resolved = await countryService.getCountry(match.slug || match.id);
+      return resolved?.data || resolved || match;
+    }
+  }, []);
+
+  const refetch = useCallback(() => {
+    if (!idOrSlug) return Promise.resolve(null);
 
     setLoading(true);
     setError(null);
 
-    countryService
-      .getCountry(idOrSlug)
-      .then((res) => {
-        if (!cancelled) {
-          setCountry(res?.data || res || null);
+    return loadCountry(idOrSlug)
+      .then((data) => {
+        setCountry(data);
+        return data;
+      })
+      .catch((err) => {
+        if (err?.name !== "AbortError") {
+          setError(err?.message || "Failed to load country");
         }
+        return null;
+      })
+      .finally(() => setLoading(false));
+  }, [idOrSlug, loadCountry]);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!idOrSlug) {
+      setCountry(null);
+      setLoading(false);
+      setError(null);
+      return undefined;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    loadCountry(idOrSlug)
+      .then((data) => {
+        if (!cancelled) setCountry(data);
       })
       .catch((err) => {
         if (!cancelled && err?.name !== "AbortError") {
@@ -105,9 +157,9 @@ export function useCountry(idOrSlug) {
     return () => {
       cancelled = true;
     };
-  }, [idOrSlug]);
+  }, [idOrSlug, loadCountry]);
 
-  return { country, loading, error };
+  return { country, loading, error, refetch };
 }
 
 export function useCountryDestinations(countryIdOrSlug, limit = 12) {
