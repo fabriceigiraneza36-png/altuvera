@@ -1,17 +1,20 @@
 import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
-  FiAward, FiCheckCircle, FiGlobe, FiInstagram, FiLinkedin,
+  FiAward, FiGlobe, FiInstagram, FiLinkedin,
   FiMail, FiPhone, FiTwitter, FiBriefcase,
 } from "react-icons/fi";
 
 const TeamCard = ({ member }) => {
   const [imageFailed, setImageFailed] = useState(false);
-  const imageUrl = member?.image_url || member?.imageUrl || member?.avatar_url || member?.photo_url || member?.image || "";
+  const rawImageUrl = member?.image_url || member?.imageUrl || member?.avatar_url || member?.photo_url || member?.image || "";
+  const apiOrigin = (import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com").replace(/\/+$/, "").replace(/\/api$/, "");
+  const imageUrl = rawImageUrl.startsWith("/uploads/") || rawImageUrl.startsWith("/storage/")
+    ? apiOrigin + rawImageUrl
+    : rawImageUrl;
 
   const expertise = Array.isArray(member?.expertise) ? member.expertise.filter(Boolean) : [];
   const languages = Array.isArray(member?.languages) ? member.languages.filter(Boolean) : [];
-  const certifications = Array.isArray(member?.certifications) ? member.certifications.filter(Boolean) : [];
 
   const socials = useMemo(() => [
     member?.linkedin_url && { href: member.linkedin_url, icon: <FiLinkedin />, label: "LinkedIn" },
@@ -107,14 +110,6 @@ const TeamCard = ({ member }) => {
             <div style={{ padding:"11px 12px", borderRadius:14, background:"#f0fdf4", border:"1px solid #d1fae5" }}>
               <div style={{ fontSize:18, fontWeight:800, color:"#064e3b" }}>{member.years_experience}+</div>
               <div style={{ fontSize:10.5, color:"#64748b", fontWeight:700 }}>Years experience</div>
-            </div>
-          )}
-          {(member?.location || member?.country) && (
-            <div style={{ padding:"11px 12px", borderRadius:14, background:"#f8fafc", border:"1px solid #e2e8f0" }}>
-              <div style={{ display:"flex", alignItems:"center", gap:5, color:"#047857", fontSize:12, fontWeight:800 }}>
-                <FiMapPin size={13}/> {member.location || member.country}
-              </div>
-              <div style={{ fontSize:10.5, color:"#64748b", fontWeight:700, marginTop:4 }}>Base / region</div>
             </div>
           )}
         </div>
