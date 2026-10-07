@@ -171,9 +171,8 @@ const Reveal = ({ children, from = "up", delay = 0, duration = 650 }) => {
   );
 };
 
-const SH = ({ title, sub, center = true, light = false, tag }) => (
+const SH = ({ title, sub, center = true, light = false }) => (
   <div className={`d-sh${center ? " d-sh--c" : ""}${light ? " d-sh--light" : ""}`}>
-    {tag && <span className="d-stag">{tag}</span>}
     <h2 className="d-sh__t">{title}</h2>
     {sub && <p className="d-sh__s">{sub}</p>}
     <div className="d-sh__bar" />
@@ -444,12 +443,6 @@ export default function DestinationDetail() {
             <div className="d-about">
               <div className="d-about__main">
                 <Reveal from="left">
-                  {destination.destinationType && (
-                    <span className="d-stag">
-                      <Ic n="compass" size={11} style={{ marginRight: 5 }} />
-                      {destination.destinationType}
-                    </span>
-                  )}
                   <h2 className="d-about__title">Discover {destination.name}</h2>
                 </Reveal>
 
@@ -498,7 +491,6 @@ export default function DestinationDetail() {
               <SH
                 title="Your Destination at a Glance"
                 sub="The essential details, thoughtfully presented before you travel."
-                tag="Destination facts"
               />
             </Reveal>
             <div className="d-facts-grid">
@@ -528,7 +520,7 @@ export default function DestinationDetail() {
           <section id="dd-gallery" className="d-sec d-sec--soft d-destination-gallery">
             <div className="d-wrap">
               <Reveal from="bottom">
-                <SH title="See More of the Journey" sub={`A closer look at ${destination.name}`} tag="Destination gallery" />
+                <SH title="See More of the Journey" sub={`A closer look at ${destination.name}`} />
               </Reveal>
               <div className="d-gal-mosaic">
                 {additionalImages.map((img, index) => (
