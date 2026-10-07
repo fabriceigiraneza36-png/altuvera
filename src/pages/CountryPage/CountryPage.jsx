@@ -1214,7 +1214,7 @@ function DestinationsSection({ country, allDests, destsLoading }) {
       <div className="cp-inner">
         <div className="cp-head cp-head--split">
           <div>
-            <span className="d-stag" style={{ color: "var(--cp-green)", fontWeight: 800, fontSize: 11, letterSpacing: 2, textTransform: "uppercase" }}>Explore by story</span>
+            
             <h2 className="cp-title">Destinations in {country.name}</h2>
             <p className="cp-desc">Swipe through the country like an Instagram story reel — the destination in focus leads the journey.</p>
           </div>
@@ -1321,7 +1321,7 @@ function CountryAttractionsSection({ country }) {
     <section className="cp-sec cp-sec--white">
       <div className="cp-inner">
         <div className="cp-head cp-head--center">
-          <span className="d-stag" style={{ color: "var(--cp-green)", fontWeight: 800, fontSize: 11, letterSpacing: 2, textTransform: "uppercase" }}>Places & experiences</span>
+          
           <h2 className="cp-title">Attractions in {country.name}</h2>
           <p className="cp-desc cp-desc--center">Explore the signature places and experiences curated for this country.</p>
         </div>
