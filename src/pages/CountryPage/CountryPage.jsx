@@ -1314,6 +1314,38 @@ function LightboxModal({ images, startIdx, onClose }) {
   );
 }
 
+function CountryAttractionsSection({ country }) {
+  const attractions = Array.isArray(country?.attractions) ? country.attractions : [];
+  if (!attractions.length) return null;
+  return (
+    <section className="cp-sec cp-sec--white">
+      <div className="cp-inner">
+        <div className="cp-head cp-head--center">
+          <span className="d-stag" style={{ color: "var(--cp-green)", fontWeight: 800, fontSize: 11, letterSpacing: 2, textTransform: "uppercase" }}>Places & experiences</span>
+          <h2 className="cp-title">Attractions in {country.name}</h2>
+          <p className="cp-desc cp-desc--center">Explore the signature places and experiences curated for this country.</p>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(220px,1fr))", gap: 16 }}>
+          {attractions.map((item, index) => {
+            const image = item?.imageUrl || item?.image_url || item?.image || "";
+            return (
+              <article key={item?.id || item?.name || index} style={{ borderRadius: 20, overflow: "hidden", background: "#fff", border: "1px solid var(--cp-border)", boxShadow: "0 8px 28px rgba(15,23,42,.06)" }}>
+                <div style={{ aspectRatio: "16/10", background: "#ecfdf5", overflow: "hidden" }}>
+                  {image ? <img src={image} alt={item?.name || `Attraction in ${country.name}`} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : null}
+                </div>
+                <div style={{ padding: 16 }}>
+                  <h3 style={{ margin: 0, color: "var(--cp-text)", fontSize: 16, fontWeight: 800 }}>{item?.name || "Attraction"}</h3>
+                  {item?.description && <p style={{ margin: "8px 0 0", color: "var(--cp-text2)", fontSize: 13, lineHeight: 1.65 }}>{item.description}</p>}
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function GallerySection({ country }) {
   const images = useMemo(() => getGalleryImages(country), [country]);
   const [lbIdx, setLbIdx] = useState(null);
@@ -1577,6 +1609,7 @@ export default function CountryPage() {
       <HeroSection country={country} navigate={navigate} />
       <AboutSection country={country} />
       <DestinationsSection country={country} allDests={allDests} destsLoading={destsLoading} />
+      <CountryAttractionsSection country={country} />
       <GallerySection country={country} />
       <InfoSection country={country} />
       <CommentsCarousel destination={country} entityType="country" />
