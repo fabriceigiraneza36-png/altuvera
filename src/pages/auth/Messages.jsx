@@ -8,7 +8,7 @@ import { useSearchParams } from "react-router-dom";
 import {
   MessageSquare, Send, Smile, X, CornerUpLeft,
   Check, CheckCheck, RefreshCw, ArrowLeft, Plus, PanelLeftClose, PanelLeftOpen,
-  ChevronDown, Circle,
+  ChevronDown, Circle, MoreHorizontal, Edit3, Pin, Highlighter, Undo2,
 } from "lucide-react";
 import DashboardLayout      from "../../components/auth/DashboardLayout";
 import { useConversations } from "../../hooks/useConversations";
@@ -487,104 +487,87 @@ const ConvRow = React.memo(function ConvRow({ conv, active, onSelect, isTyping }
    MESSAGE BUBBLE
 ══════════════════════════════════════════════════════════════════════════ */
 
-const MsgBubble = React.memo(function MsgBubble({ message, mine, replyTo, onReact, onReply, now }) {
+const MsgBubble = React.memo(function MsgBubble({
+  message, mine, replyTo, onReact, onReply, now,
+  editingId, editText, setEditText, onStartEdit, onSaveEdit, onCancelEdit,
+  onUnsend, onPin, onHighlight,
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const reactions = useMemo(() => {
     const r = message.reactions || {};
     return Object.entries(r).filter(([,ids]) => ids?.length > 0);
   }, [message.reactions]);
   const isPending = String(message.id).startsWith("tmp-");
+  const isDeleted = Boolean(message.deleted);
+  const isEditing = String(editingId) === String(message.id);
 
   return (
     <div className={`msg-bubble-wrap flex ${mine ? "justify-end" : "justify-start"} mb-1`}>
-      {/* Avatar for other side */}
-      {!mine && (
-        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-slate-600 to-slate-800
-                        text-white text-[10px] font-bold flex items-center justify-center
-                        flex-shrink-0 mr-2 self-end mb-6">
-          A
-        </div>
-      )}
+      {!mine && <div className="w-7 h-7 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mr-2 self-end mb-6">A</div>}
 
-      <div className={`flex flex-col ${mine ? "items-end" : "items-start"} max-w-[78%] sm:max-w-[65%]`}>
-        {/* Sender label */}
-        {!mine && (
-          <span className="text-[10px] font-bold text-emerald-700 mb-1 ml-1 uppercase tracking-wider">
-            Altuvera Team
-          </span>
-        )}
+      <div className={`flex flex-col ${mine ? "items-end" : "items-start"} max-w-[90%] sm:max-w-[72%]`}>
+        {!mine && <span className="text-[10px] font-bold text-emerald-700 mb-1 ml-1 uppercase tracking-wider">Altuvera Team</span>}
 
-        {/* Reply reference */}
         {replyTo && (
           <div className={`text-[11px] mb-1.5 max-w-full ${mine ? "self-end" : "self-start"}`}>
-            <div className={`border-l-2 pl-2 py-0.5 pr-3 rounded-lg truncate max-w-[280px]
-                             ${mine
-                               ? "border-emerald-300 bg-emerald-700/15 text-emerald-100"
-                               : "border-slate-300 bg-slate-100/80 text-slate-500"
-                             }`}>
-              <span className="font-semibold block text-[10px] mb-0.5 opacity-70">
-                ↩ {replyTo.senderType==="admin" ? "Altuvera" : (replyTo.senderName||"You")}
-              </span>
+            <div className={`border-l-2 pl-2 py-0.5 pr-3 rounded-lg truncate max-w-[280px] ${mine ? "border-emerald-300 bg-emerald-700/15 text-emerald-100" : "border-slate-300 bg-slate-100/80 text-slate-500"}`}>
+              <span className="font-semibold block text-[10px] mb-0.5 opacity-70">↩ {replyTo.senderType==="admin" ? "Altuvera" : (replyTo.senderName||"You")}</span>
               <span className="block truncate">{(replyTo.body||"").slice(0,60)}</span>
             </div>
           </div>
         )}
 
-        {/* Bubble */}
-        <div className={`
-          px-4 py-2.5 text-sm leading-relaxed break-words whitespace-pre-wrap
-          rounded-2xl shadow-sm select-text
-          ${mine
-            ? "bg-emerald-600 text-white rounded-br-sm"
-            : "bg-white text-slate-800 border border-slate-200/80 rounded-bl-sm"
-          }
-          ${isPending ? "opacity-60" : ""}
-        `} style={{ wordBreak:"break-word", maxWidth:"100%" }}>
-          {message.body}
-        </div>
+        <div className={`relative flex items-center gap-1.5 ${message.isHighlighted ? "ring-2 ring-amber-300 ring-offset-2 rounded-2xl" : ""}`}>
+          {isEditing ? (
+            <div className="w-full min-w-[220px] bg-white border border-emerald-300 rounded-2xl p-2 shadow-md">
+              <textarea autoFocus value={editText} onChange={e=>setEditText(e.target.value)} className="w-full min-h-[74px] resize-none outline-none text-sm text-slate-800 bg-slate-50 rounded-xl p-2.5"/>
+              <div className="flex justify-end gap-2 mt-2">
+                <button onClick={onCancelEdit} className="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-200">Cancel</button>
+                <button onClick={()=>onSaveEdit(message.id)} disabled={!editText.trim()} className="px-3 py-1.5 text-xs font-bold rounded-lg bg-emerald-600 text-white disabled:opacity-40">Save</button>
+              </div>
+            </div>
+          ) : (
+            <div className={`px-4 py-2.5 text-sm leading-relaxed break-words whitespace-pre-wrap rounded-2xl shadow-sm select-text ${mine ? "bg-emerald-600 text-white rounded-br-sm" : "bg-white text-slate-800 border border-slate-200/80 rounded-bl-sm"} ${isPending ? "opacity-60" : ""} ${isDeleted ? "italic opacity-60" : ""}`}
+              style={{ wordBreak:"break-word", maxWidth:"100%" }}>
+              {isDeleted ? "This message was unsent" : message.body}
+              {message.edited && !isDeleted && <span className={`ml-2 text-[9px] ${mine ? "text-emerald-100" : "text-slate-400"}`}>edited</span>}
+            </div>
+          )}
 
-        {/* Reactions */}
-        {reactions.length > 0 && (
-          <div className={`flex flex-wrap gap-1 mt-1.5 ${mine ? "justify-end" : ""}`}>
-            {reactions.map(([emoji,ids])=>(
-              <button key={emoji} onClick={()=>onReact(message.id,emoji)}
-                className="bg-white border border-slate-200 rounded-full px-2 py-0.5 text-xs
-                           hover:bg-slate-50 transition shadow-sm">
-                {emoji} <span className="text-slate-500 font-medium">{ids.length}</span>
+          {!isPending && !isDeleted && !isEditing && (
+            <div className="relative flex-shrink-0">
+              <button onClick={()=>setMenuOpen(v=>!v)} aria-label="Message actions" className="w-8 h-8 rounded-full bg-white border border-slate-200 shadow-sm text-slate-500 flex items-center justify-center sm:opacity-0 sm:group-hover/bubble:opacity-100 transition">
+                <MoreHorizontal size={15}/>
               </button>
-            ))}
-          </div>
-        )}
-
-        {/* Meta (time + read) — visible on hover via CSS */}
-        <div className={`msg-meta flex items-center gap-1 mt-1 text-[10px] text-slate-400
-                         ${mine ? "justify-end" : ""}`}>
-          <span>{mine ? "You · " : ""}{fmtShort(message.createdAt)}</span>
-          {mine && (
-            isPending
-              ? <Circle size={9} className="text-slate-300 animate-pulse" />
-              : message.isRead
-                ? <><CheckCheck size={11} className="text-emerald-500" /><span className="text-emerald-600">Seen {fmtElapsed(message.readAt, now)}</span></>
-                : <Check size={11} className="text-slate-400" />
+              {menuOpen && (
+                <div className={`absolute top-full mt-1 z-40 w-48 rounded-xl border border-slate-200 bg-white shadow-xl p-1 ${mine ? "right-0" : "left-0"}`}>
+                  {INLINE_REACT_EMOJIS.map(e=><button key={e} onClick={()=>{onReact(message.id,e);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-sm hover:bg-slate-50">{e}<span className="text-xs text-slate-500">React</span></button>)}
+                  <button onClick={()=>{onReply(message.id);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold hover:bg-emerald-50"><CornerUpLeft size={15}/> Reply</button>
+                  {mine && <>
+                    <button onClick={()=>{onStartEdit(message);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold hover:bg-slate-50"><Edit3 size={15}/> Edit</button>
+                    <button onClick={()=>{onUnsend(message.id);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold text-rose-600 hover:bg-rose-50"><Undo2 size={15}/> Unsend</button>
+                  </>}
+                  <button onClick={()=>{onPin(message.id,!message.isPinned);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold hover:bg-slate-50"><Pin size={15}/> {message.isPinned ? "Unpin" : "Pin"}</button>
+                  <button onClick={()=>{onHighlight(message.id,!message.isHighlighted);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold hover:bg-amber-50"><Highlighter size={15}/> {message.isHighlighted ? "Remove highlight" : "Highlight"}</button>
+                </div>
+              )}
+            </div>
           )}
         </div>
 
-        {/* Hover quick actions — visible on hover via CSS */}
-        <div className={`bubble-actions flex items-center gap-0.5 mt-0.5
-                         ${mine ? "flex-row-reverse self-end" : "self-start"}`}>
-          {INLINE_REACT_EMOJIS.map(e=>(
-            <button key={e}
-              onMouseDown={ev=>{ev.preventDefault();onReact(message.id,e)}}
-              className="text-base p-1 rounded-lg hover:bg-white hover:shadow-sm transition-all">
-              {e}
-            </button>
-          ))}
-          <button
-            onMouseDown={ev=>{ev.preventDefault();onReply(message.id)}}
-            className="inline-flex items-center gap-1 text-[10px] text-slate-500
-                       hover:text-emerald-700 px-1.5 py-1 rounded-lg
-                       hover:bg-white hover:shadow-sm transition-all">
-            <CornerUpLeft size={11} /> Reply
-          </button>
+        {reactions.length > 0 && <div className={`flex flex-wrap gap-1 mt-1.5 ${mine ? "justify-end" : ""}`}>
+          {reactions.map(([emoji,ids])=><button key={emoji} onClick={()=>onReact(message.id,emoji)} className="bg-white border border-slate-200 rounded-full px-2 py-0.5 text-xs hover:bg-slate-50 transition shadow-sm">{emoji} <span className="text-slate-500 font-medium">{ids.length}</span></button>)}
+        </div>}
+
+        {(message.isPinned || message.isHighlighted) && !isDeleted && <div className="flex items-center gap-2 mt-1">
+          {message.isPinned && <span className="text-[9px] font-bold text-slate-500 inline-flex items-center gap-1"><Pin size={10}/> Pinned</span>}
+          {message.isHighlighted && <span className="text-[9px] font-bold text-amber-600 inline-flex items-center gap-1"><Highlighter size={10}/> Highlighted</span>}
+        </div>}
+
+        <div className={`msg-meta flex items-center gap-1 mt-1 text-[10px] text-slate-400 ${mine ? "justify-end" : ""}`}>
+          <span>{mine ? "You · " : ""}{fmtShort(message.createdAt)}</span>
+          {mine && !isPending && (message.isRead ? <><CheckCheck size={11} className="text-emerald-500"/><span className="text-emerald-600">Seen {fmtElapsed(message.readAt, now)}</span></> : <Check size={11} className="text-slate-400"/>)}
+          {isPending && <Circle size={9} className="text-slate-300 animate-pulse"/>}
         </div>
       </div>
     </div>
