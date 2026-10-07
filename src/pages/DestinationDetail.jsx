@@ -213,6 +213,20 @@ export default function DestinationDetail() {
     }).filter(Boolean))].slice(0, 4);
   }, [destination?.heroImages, destination?.heroImage, gallery]);
 
+  const [heroSlide, setHeroSlide] = useState(0);
+
+  useEffect(() => {
+    setHeroSlide(0);
+  }, [target]);
+
+  useEffect(() => {
+    if (heroSlides.length < 2) return undefined;
+    const timer = window.setInterval(() => {
+      setHeroSlide((current) => (current + 1) % heroSlides.length);
+    }, 5200);
+    return () => window.clearInterval(timer);
+  }, [heroSlides.length]);
+
   const additionalImages = useMemo(
     () => gallery.filter((img) => !heroSlides.includes(img.url)).slice(0, 5),
     [gallery, heroSlides]
