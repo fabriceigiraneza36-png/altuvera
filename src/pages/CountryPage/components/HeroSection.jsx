@@ -31,7 +31,7 @@ export default function HeroSection({ country, hero, flag, region, tagline, dest
         if (u) imgs.push(u);
       });
     }
-    return [...new Set(imgs)].slice(0, 5);
+    return [...new Set(imgs)].slice(0, 4);
   }, [country, hero]);
 
   useEffect(() => {
