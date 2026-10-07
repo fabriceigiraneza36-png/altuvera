@@ -22,7 +22,7 @@ export const HERO_SLIDES = [
         "https://drive.google.com/uc?export=view&id=15LlHLEX_dDLEqMVPX2C3M4Gz6FfsAkWY",
       title: "Witness the Great Migration",
       subtitle:
-        "Experience nature's greatest spectacle across the vast Serengeti and Maasai Mara plains",
+        "Discover idyllic landscapes and unforgettable adventures across East Africa.",
       location: "Rwanda & Tanzania",
       animationPreset: "cinematicDrift",
       overlayGradient:
