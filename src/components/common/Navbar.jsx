@@ -227,6 +227,7 @@ const Navbar = () => {
   const headerRef = useRef(null);
   const userMenuRef = useRef(null);
   const searchInputRef = useRef(null);
+  const mobileSearchInputRef = useRef(null);
   const dropdownTimer = useRef(null);
   const searchAbortRef = useRef(null);
   const latestSearchRef = useRef("");
@@ -859,13 +860,13 @@ const handleResultClick = useCallback(
             <button
               type="button"
               className="nav__mobile-search-icon"
-              onClick={() => searchInputRef.current?.focus()}
+              onClick={() => mobileSearchInputRef.current?.focus()}
               aria-label="Search destinations"
             >
               <FiSearch size={19} />
             </button>
             <input
-              ref={searchInputRef}
+              ref={mobileSearchInputRef}
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               placeholder="Search destinations…"
