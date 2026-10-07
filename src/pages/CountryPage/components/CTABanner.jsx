@@ -14,9 +14,6 @@ export default function CTABanner({ country, slug, navigate }) {
         ].map((o,i) => <div key={i} className="cpx-cta__orb" style={{width:o.s,height:o.s,...o.style}} />)}
       </div>
       <div className="cpx-cta__inner">
-        <span className="cpx-label cpx-label--dark" style={{marginBottom:28}}>
-          <FiCompass size={13} /> Begin Your Story
-        </span>
         <h2 className="cpx-cta__title">
           Your {country.name}<br />Adventure Starts Here
         </h2>
