@@ -1182,16 +1182,47 @@ function AboutSection({ country }) {
    3. DESTINATIONS
 ═══════════════════════════════════════════════════════════ */
 function DestinationsSection({ country, allDests, destsLoading }) {
+  const trackRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const scrollTo = useCallback((index) => {
+    if (!allDests.length) return;
+    const next = Math.max(0, Math.min(index, allDests.length - 1));
+    setActiveIndex(next);
+    const node = trackRef.current?.querySelector(`[data-destination-index="${next}"]`);
+    node?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [allDests.length]);
+
+  const onScroll = useCallback(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const center = track.scrollLeft + track.clientWidth / 2;
+    const cards = [...track.querySelectorAll("[data-destination-index]")];
+    if (!cards.length) return;
+    let nearest = 0;
+    let distance = Infinity;
+    cards.forEach((card) => {
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      const d = Math.abs(cardCenter - center);
+      if (d < distance) { distance = d; nearest = Number(card.dataset.destinationIndex); }
+    });
+    setActiveIndex(nearest);
+  }, []);
+
   return (
     <section id="cp-destinations" className="cp-sec cp-sec--bg">
       <div className="cp-inner">
         <div className="cp-head cp-head--split">
           <div>
-            
             <h2 className="cp-title">Destinations in {country.name}</h2>
             <p className="cp-desc">Explore curated destinations across the country, with the same premium card experience used on Explore.</p>
           </div>
-
+          {allDests.length > 1 && (
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="button" className="cp-btn cp-btn--outline" onClick={() => scrollTo(activeIndex - 1)} aria-label="Previous destination"><FiChevronLeft size={18}/></button>
+              <button type="button" className="cp-btn cp-btn--outline" onClick={() => scrollTo(activeIndex + 1)} aria-label="Next destination"><FiChevronRight size={18}/></button>
+            </div>
+          )}
         </div>
 
         {destsLoading ? (
@@ -1203,23 +1234,34 @@ function DestinationsSection({ country, allDests, destsLoading }) {
             <Link to="/destinations" className="cp-btn cp-btn--outline">Browse All Destinations <FiArrowRight size={14}/></Link>
           </div>
         ) : (
-          <div className="cp-dest-grid">
-            {allDests.map((dest, i) => (
-              <div
-                key={dest.id || dest.slug || i}
-                className="cp-dest-grid__item"
-                style={{ animationDelay: `${Math.min(i, 5) * 0.06}s` }}
-              >
-                <DestinationCard destination={dest} priority={i < 4} />
-              </div>
-            ))}
+          <div ref={trackRef} onScroll={onScroll} className="cp-destination-story-track" style={{
+            display: "flex", gap: 18, overflowX: "auto", overflowY: "visible",
+            scrollSnapType: "x mandatory", scrollPaddingInline: "calc(50% - 150px)",
+            padding: "18px max(12px, calc(50% - 150px)) 34px", marginInline: -12,
+            scrollbarWidth: "none", WebkitOverflowScrolling: "touch", alignItems: "center",
+          }}>
+            {allDests.map((dest, i) => {
+              const focused = i === activeIndex;
+              return (
+                <div key={dest.id || dest.slug || i} data-destination-index={i} style={{
+                  flex: "0 0 clamp(270px, 34vw, 360px)",
+                  scrollSnapAlign: "center",
+                  transform: focused ? "scale(1.04)" : "scale(.91)",
+                  opacity: focused ? 1 : .46,
+                  filter: focused ? "none" : "blur(2.5px) saturate(.75)",
+                  transition: "transform .45s cubic-bezier(.22,1,.36,1), opacity .45s ease, filter .45s ease",
+                  zIndex: focused ? 3 : 1,
+                }}>
+                  <DestinationCard destination={dest} priority={i < 3} />
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
     </section>
   );
 }
-
 /* ═══════════════════════════════════════════════════════════
    4. GALLERY
 ═══════════════════════════════════════════════════════════ */
