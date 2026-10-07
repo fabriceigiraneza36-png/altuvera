@@ -1015,7 +1015,7 @@ const safeImgs = [...new Set([
     ...(Array.isArray(heroImages) ? heroImages : []),
     ...(Array.isArray(hero_images) ? hero_images : []),
     ...safeImgs,
-  ].map(getImageUrl).filter(Boolean))].slice(0, 3);
+  ].map(getImageUrl).filter(Boolean))].slice(0, 4);
 
   const locationStr = [region, location, countryName || resolvedCountry]
     .filter(Boolean)
@@ -1114,7 +1114,7 @@ const blurb =
       <div className="dc-img-wrap">
         <div className="dc-img-frame">
 
-          {safeImgs.length > 0 ? (
+          {cardImages.length > 0 ? (
             <ImageSlider images={cardImages} name={name} />
           ) : (
             <div className="dc-img-placeholder">
@@ -1234,6 +1234,10 @@ const blurb =
             </>
           )}
         </div>
+
+        {!compact && blurb && (
+          <p className="dc-desc">{blurb}</p>
+        )}
 
         {(category || diffConf || (durationStr && !compact)) && (
           <div className="dc-chips">
