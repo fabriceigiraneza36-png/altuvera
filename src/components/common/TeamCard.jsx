@@ -1,210 +1,156 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import {
-  FiAward,
-  FiCheck,
-  FiInstagram,
-  FiLinkedin,
-  FiMail,
-  FiMapPin,
-  FiTwitter,
-  FiUsers,
-} from 'react-icons/fi';
+  FiAward, FiCheckCircle, FiGlobe, FiInstagram, FiLinkedin,
+  FiMail, FiMapPin, FiPhone, FiTwitter, FiBriefcase,
+} from "react-icons/fi";
 
 const TeamCard = ({ member }) => {
-  const [imgLoaded, setImgLoaded] = useState(false);
-  const [imgErr, setImgErr] = useState(false);
+  const [imageFailed, setImageFailed] = useState(false);
+  const imageUrl = member?.image_url || member?.imageUrl || member?.avatar_url || member?.photo_url || member?.image || "";
 
-  const expertise = Array.isArray(member?.expertise) ? member.expertise : [];
-  const languages = Array.isArray(member?.languages) ? member.languages : [];
-  const imageUrl = member?.image_url || member?.imageUrl || member?.avatar_url || member?.image || '';
-  const initials = member?.name
-    ? member.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
-    : '?';
+  const expertise = Array.isArray(member?.expertise) ? member.expertise.filter(Boolean) : [];
+  const languages = Array.isArray(member?.languages) ? member.languages.filter(Boolean) : [];
+  const certifications = Array.isArray(member?.certifications) ? member.certifications.filter(Boolean) : [];
 
-  const socials = [
-    member?.linkedin_url && { href: member.linkedin_url, icon: <FiLinkedin size={14} />, label: 'LinkedIn' },
-    member?.twitter_url && { href: member.twitter_url, icon: <FiTwitter size={14} />, label: 'Twitter' },
-    member?.instagram_url && { href: member.instagram_url, icon: <FiInstagram size={14} />, label: 'Instagram' },
-    member?.email && { href: `mailto:${member.email}`, icon: <FiMail size={14} />, label: 'Email' },
-  ].filter(Boolean);
+  const socials = useMemo(() => [
+    member?.linkedin_url && { href: member.linkedin_url, icon: <FiLinkedin />, label: "LinkedIn" },
+    member?.twitter_url && { href: member.twitter_url, icon: <FiTwitter />, label: "X / Twitter" },
+    member?.instagram_url && { href: member.instagram_url, icon: <FiInstagram />, label: "Instagram" },
+    member?.email && { href: `mailto:${member.email}`, icon: <FiMail />, label: "Email" },
+  ].filter(Boolean), [member]);
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.35 }}
-      whileHover={{ y: -6, scale: 1.01 }}
+      viewport={{ once: true, amount: 0.12 }}
+      transition={{ duration: 0.45 }}
+      whileHover={{ y: -8 }}
       style={{
-        position: 'relative',
-        height: '100%',
-        background: 'linear-gradient(180deg, #ffffff 0%, #f8fffb 100%)',
-        border: '1.5px solid #d1fae5',
-        borderRadius: 24,
-        padding: '28px 22px 22px',
-        boxShadow: '0 10px 32px rgba(5, 150, 105, 0.08)',
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        textAlign: 'center',
+        position: "relative", height: "100%", overflow: "hidden",
+        borderRadius: 28, background: "#fff",
+        border: "1px solid rgba(5,150,105,.14)",
+        boxShadow: "0 18px 55px rgba(2,44,34,.10)",
+        display: "flex", flexDirection: "column",
       }}
     >
-      <div
-        style={{
-          position: 'absolute',
-          inset: 0,
-          background: 'radial-gradient(circle at top right, rgba(16, 185, 129, 0.10), transparent 48%)',
-          pointerEvents: 'none',
-        }}
-      />
-
-      {member?.is_featured && (
-        <div
-          style={{
-            position: 'absolute', top: 14, right: 14,
-            display: 'inline-flex', alignItems: 'center', gap: 5,
-            padding: '5px 10px', borderRadius: 999,
-            background: 'linear-gradient(135deg, #fef3c7, #fde68a)',
-            color: '#92400e', fontSize: 10.5, fontWeight: 800,
-            textTransform: 'uppercase', letterSpacing: '0.05em',
-            border: '1px solid #fde68a',
-          }}
-        >
-          <FiAward size={10} /> Featured
-        </div>
-      )}
-
-      <div style={{ position: 'relative', width: 112, height: 112, marginBottom: 16 }}>
-        <div
-          style={{
-            width: '100%', height: '100%', borderRadius: '50%', overflow: 'hidden',
-            border: '4px solid #d1fae5', boxShadow: '0 0 0 6px rgba(5, 150, 105, 0.08)',
-            background: 'linear-gradient(135deg, #ecfdf5, #d1fae5)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            position: 'relative',
-          }}
-        >
-          {!imgLoaded && !imgErr && (
-            <div
-              style={{
-                position: 'absolute', inset: 0,
-                background: 'linear-gradient(110deg, #d1fae5 8%, #ecfdf5 18%, #d1fae5 33%)',
-                backgroundSize: '200% 100%',
-                animation: 'sv-shimmer 1.4s linear infinite',
-              }}
-            />
-          )}
-
-          {imgErr || !imageUrl ? (
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#059669', fontFamily: 'Playfair Display, serif' }}>
-              {initials}
+      <div style={{
+        position: "relative", height: 330, minHeight: 300, overflow: "hidden",
+        background: "linear-gradient(145deg,#064e3b,#059669)",
+      }}>
+        {imageUrl && !imageFailed ? (
+          <img
+            src={imageUrl}
+            alt={member?.name ? `${member.name} — ${member.role || "Altuvera Safaris team member"}` : "Altuvera Safaris team member"}
+            loading="lazy"
+            onError={() => setImageFailed(true)}
+            style={{
+              width:"100%", height:"100%", objectFit:"cover", display:"block",
+              transition:"transform .6s ease",
+            }}
+          />
+        ) : (
+          <div style={{
+            width:"100%", height:"100%", display:"flex", alignItems:"center", justifyContent:"center",
+            color:"rgba(255,255,255,.92)", padding:28, textAlign:"center",
+            background:"radial-gradient(circle at 50% 30%,rgba(255,255,255,.18),transparent 35%),linear-gradient(145deg,#022c22,#047857)",
+          }}>
+            <div>
+              <FiGlobe size={48} style={{ opacity:.75, marginBottom:12 }} />
+              <div style={{ fontWeight:800, fontSize:13, letterSpacing:".12em", textTransform:"uppercase" }}>
+                Altuvera Safaris
+              </div>
+              <div style={{ opacity:.75, fontSize:12, marginTop:6 }}>Team portrait coming soon</div>
             </div>
-          ) : (
-            <img
-              src={imageUrl}
-              alt={member.name}
-              loading="lazy"
-              onLoad={() => setImgLoaded(true)}
-              onError={() => {
-                setImgErr(true);
-                setImgLoaded(true);
-              }}
-              style={{
-                width: '100%', height: '100%', objectFit: 'cover', opacity: imgLoaded ? 1 : 0,
-                transition: 'opacity 0.3s ease',
-              }}
-            />
+          </div>
+        )}
+
+        <div style={{
+          position:"absolute", inset:0,
+          background:"linear-gradient(180deg,rgba(2,44,34,0) 35%,rgba(2,44,34,.82) 100%)",
+          pointerEvents:"none",
+        }} />
+
+        {member?.is_featured && (
+          <span style={{
+            position:"absolute", top:16, left:16, display:"inline-flex", alignItems:"center", gap:6,
+            padding:"7px 11px", borderRadius:999, background:"rgba(255,255,255,.94)",
+            color:"#065f46", fontSize:11, fontWeight:800, boxShadow:"0 8px 20px rgba(0,0,0,.12)",
+          }}>
+            <FiAward size={13}/> Featured specialist
+          </span>
+        )}
+
+        <div style={{ position:"absolute", left:20, right:20, bottom:18, color:"#fff" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:7, fontSize:11, fontWeight:700, letterSpacing:".09em", textTransform:"uppercase", opacity:.9 }}>
+            <FiBriefcase size={13}/> {member?.department || "Altuvera Safaris"}
+          </div>
+          <h3 style={{ margin:0, fontFamily:"'Playfair Display',serif", fontSize:"clamp(24px,2.4vw,31px)", lineHeight:1.08, fontWeight:800 }}>
+            {member?.name || "Altuvera Travel Specialist"}
+          </h3>
+          <div style={{ marginTop:7, fontSize:14, fontWeight:700, color:"#a7f3d0" }}>
+            {member?.role || "Travel Specialist"}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding:"22px 22px 20px", display:"flex", flexDirection:"column", flex:1 }}>
+        {member?.bio && (
+          <p style={{ margin:"0 0 18px", color:"#475569", fontSize:14, lineHeight:1.72 }}>
+            {member.bio}
+          </p>
+        )}
+
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(2,minmax(0,1fr))", gap:10, marginBottom:18 }}>
+          {member?.years_experience > 0 && (
+            <div style={{ padding:"11px 12px", borderRadius:14, background:"#f0fdf4", border:"1px solid #d1fae5" }}>
+              <div style={{ fontSize:18, fontWeight:800, color:"#064e3b" }}>{member.years_experience}+</div>
+              <div style={{ fontSize:10.5, color:"#64748b", fontWeight:700 }}>Years experience</div>
+            </div>
+          )}
+          {(member?.location || member?.country) && (
+            <div style={{ padding:"11px 12px", borderRadius:14, background:"#f8fafc", border:"1px solid #e2e8f0" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:5, color:"#047857", fontSize:12, fontWeight:800 }}>
+                <FiMapPin size={13}/> {member.location || member.country}
+              </div>
+              <div style={{ fontSize:10.5, color:"#64748b", fontWeight:700, marginTop:4 }}>Base / region</div>
+            </div>
           )}
         </div>
 
-        <div
-          style={{
-            position: 'absolute', bottom: 4, right: 4,
-            width: 16, height: 16, borderRadius: '50%',
-            border: '3px solid white',
-            backgroundColor: member?.is_active === false ? '#9ca3af' : '#10b981',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.16)',
-          }}
-        />
+        {expertise.length > 0 && (
+          <div style={{ marginBottom:15 }}>
+            <div style={{ fontSize:10.5, fontWeight:800, color:"#064e3b", textTransform:"uppercase", letterSpacing:".09em", marginBottom:8 }}>Travel expertise</div>
+            <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+              {expertise.slice(0,5).map((item,i)=><span key={`${item}-${i}`} style={{ padding:"6px 9px", borderRadius:9, background:"#ecfdf5", color:"#047857", border:"1px solid #d1fae5", fontSize:11, fontWeight:700 }}>{item}</span>)}
+            </div>
+          </div>
+        )}
+
+        {languages.length > 0 && (
+          <div style={{ display:"flex", alignItems:"flex-start", gap:8, marginBottom:12, color:"#475569", fontSize:12 }}>
+            <FiGlobe size={14} color="#059669" style={{ marginTop:2, flexShrink:0 }}/>
+            <span><strong style={{ color:"#064e3b" }}>Languages:</strong> {languages.join(" • ")}</span>
+          </div>
+        )}
+
+        {certifications.length > 0 && (
+          <div style={{ display:"flex", alignItems:"flex-start", gap:8, marginBottom:16, color:"#475569", fontSize:12 }}>
+            <FiCheckCircle size={14} color="#059669" style={{ marginTop:2, flexShrink:0 }}/>
+            <span><strong style={{ color:"#064e3b" }}>Credentials:</strong> {certifications.slice(0,3).join(" • ")}</span>
+          </div>
+        )}
+
+        <div style={{ marginTop:"auto", paddingTop:15, borderTop:"1px solid #e5e7eb", display:"flex", alignItems:"center", justifyContent:"space-between", gap:12 }}>
+          <div style={{ display:"flex", gap:7, flexWrap:"wrap" }}>
+            {member?.email && <a href={`mailto:${member.email}`} aria-label={`Email ${member.name}`} style={{ width:34,height:34,borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",background:"#ecfdf5",color:"#047857",border:"1px solid #d1fae5" }}><FiMail size={15}/></a>}
+            {member?.phone && <a href={`tel:${member.phone}`} aria-label={`Call ${member.name}`} style={{ width:34,height:34,borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",background:"#ecfdf5",color:"#047857",border:"1px solid #d1fae5" }}><FiPhone size={15}/></a>}
+            {socials.filter(s=>!s.label.includes("Email")).map((s,i)=><a key={i} href={s.href} target="_blank" rel="noreferrer" aria-label={s.label} style={{ width:34,height:34,borderRadius:10,display:"flex",alignItems:"center",justifyContent:"center",background:"#ecfdf5",color:"#047857",border:"1px solid #d1fae5" }}>{s.icon}</a>)}
+          </div>
+          <span style={{ fontSize:10.5, color:"#64748b", fontWeight:700, textAlign:"right" }}>Here to help plan<br/>your journey</span>
+        </div>
       </div>
-
-      <h3 style={{ fontFamily: 'Playfair Display, serif', fontSize: 20, fontWeight: 700, color: '#064e3b', marginBottom: 5, lineHeight: 1.25 }}>
-        {member?.name || 'Team Member'}
-      </h3>
-
-      <p style={{ fontSize: 14, fontWeight: 700, color: '#059669', marginBottom: 8 }}>
-        {member?.role || 'Travel Specialist'}
-      </p>
-
-      {member?.department && (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 12px', borderRadius: 999, background: '#f0fdf4', border: '1px solid #d1fae5', color: '#047857', fontSize: 11.5, fontWeight: 700, marginBottom: 12 }}>
-          <FiUsers size={11} /> {member.department}
-        </span>
-      )}
-
-      {member?.bio && (
-        <p style={{ fontSize: 13.5, lineHeight: 1.7, color: '#6b7280', marginBottom: 12, minHeight: 64 }}>
-          {member.bio}
-        </p>
-      )}
-
-      {expertise.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 6, marginBottom: 12 }}>
-          {expertise.slice(0, 3).map((item, i) => (
-            <span key={`${item}-${i}`} style={{ padding: '4px 9px', borderRadius: 999, background: '#ecfdf5', border: '1px solid #d1fae5', color: '#059669', fontSize: 10.5, fontWeight: 700 }}>
-              {item}
-            </span>
-          ))}
-          {expertise.length > 3 && (
-            <span style={{ padding: '4px 9px', borderRadius: 999, background: '#f3f4f6', color: '#6b7280', fontSize: 10.5, fontWeight: 700 }}>
-              +{expertise.length - 3}
-            </span>
-          )}
-        </div>
-      )}
-
-      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, color: '#64748b', fontSize: 12, marginBottom: 14 }}>
-        <FiMapPin size={12} /> {member?.location || 'East Africa'}
-      </div>
-
-      {languages.length > 0 && (
-        <div style={{ fontSize: 11.5, color: '#64748b', marginBottom: 14 }}>
-          {languages.slice(0, 3).join(' • ')}
-        </div>
-      )}
-
-      {socials.length > 0 && (
-        <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: 8, marginTop: 'auto', paddingTop: 12, borderTop: '1px solid #d1fae5', width: '100%' }}>
-          {socials.map((social, i) => (
-            <a
-              key={`${social.label}-${i}`}
-              href={social.href}
-              target="_blank"
-              rel="noreferrer"
-              aria-label={social.label}
-              style={{
-                width: 34, height: 34, borderRadius: '50%', border: '1.5px solid #a7f3d0',
-                background: '#f0fdf4', color: '#047857', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                transition: 'transform 0.2s ease, background 0.2s ease, color 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.background = 'linear-gradient(135deg, #059669, #065f46)';
-                e.currentTarget.style.color = '#fff';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.background = '#f0fdf4';
-                e.currentTarget.style.color = '#047857';
-              }}
-            >
-              {social.icon}
-            </a>
-          ))}
-        </div>
-      )}
     </motion.article>
   );
 };
