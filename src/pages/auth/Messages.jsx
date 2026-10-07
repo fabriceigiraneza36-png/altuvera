@@ -1156,6 +1156,15 @@ export default function Messages() {
                             onReact={toggleReaction}
                             onReply={setReplyToId}
                             now={now}
+                            editingId={editingMessageId}
+                            editText={editText}
+                            setEditText={setEditText}
+                            onStartEdit={startEditMessage}
+                            onSaveEdit={saveEditMessage}
+                            onCancelEdit={() => { setEditingMessageId(null); setEditText(""); }}
+                            onUnsend={handleUnsend}
+                            onPin={(id, value) => handleMessageFlag(id, "pin", value)}
+                            onHighlight={(id, value) => handleMessageFlag(id, "highlight", value)}
                           />
                         )
                       )}
