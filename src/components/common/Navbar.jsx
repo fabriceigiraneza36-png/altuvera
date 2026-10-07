@@ -726,15 +726,6 @@ const handleResultClick = useCallback(
 
           {/* ── Actions ── */}
           <div className="nav__actions">
-            <button
-              className="nav__icon-btn"
-              onClick={() => setSearchOpen(true)}
-              aria-label="Search destinations"
-            >
-              <FiSearch size={19} />
-              <span className="nav__icon-ripple" />
-            </button>
-
             <Link to="/gallery" className="nav__icon-link">
               <span
                 className="nav__icon-btn"
