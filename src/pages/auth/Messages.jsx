@@ -755,6 +755,7 @@ export default function Messages() {
     unreadCount, loading, loadingMsgs, sending, error,
     openConversation, sendMessage, fetchConversations, user,
     adminTyping, typingConvs, emitTyping, socketRef, connected, adminOnline,
+    adminPresence,
   } = useConversations();
 
   useEffect(() => { injectMsgStyles(); }, []);
