@@ -673,7 +673,7 @@ function RequestBanner({ booking }) {
           badge: "#f59e0b", label: "Under Review" }
     : status === "approved"
       ? { bg: "#ecfdf5", border: "#6ee7b7", color: "#166534",
-          badge: "#059669", label: false ? "Refund Approved" : "Cancellation Approved" }
+          badge: "#059669", label: isRefundRequest ? "Refund Approved" : "Cancellation Approved" }
       : { bg: "#fef2f2", border: "#fecaca", color: "#991b1b",
           badge: "#dc2626", label: "Declined" };
 
