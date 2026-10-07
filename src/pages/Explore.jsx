@@ -1144,7 +1144,7 @@ function WhyImageSlideshow() {
    TESTIMONIALS SLIDER
 ═══════════════════════════════════════════════════════════ */
 function TestimonialsSlider() {
-  const { testimonials, loading, error } = useTestimonials();
+  const { testimonials, loading, error } = useTestimonials("active=all");
   const [idx, setIdx] = useState(0);
   const timerRef = useRef(null);
 
