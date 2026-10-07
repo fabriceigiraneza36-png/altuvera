@@ -115,6 +115,57 @@ export function useConversations() {
 
   useEffect(() => { activeIdRef.current = activeId }, [activeId]);
 
+  const emitTyping = useCallback(
+    (conversationId, isTyping) => {
+      const s = socketRef.current;
+      if (!s || !s.connected) return;
+      s.emit("msg:typing", {
+        conversationId,
+        isTyping,
+        senderName: "You",
+      });
+    },
+    []
+  );
+
+  /* ── Derived: total unread for user ───────────────────────────── */
+  const unreadCount = conversations.reduce(
+    (sum, c) => sum + (c.unreadUser || 0),
+    0,
+  );
+
+  /* ── Fetch conversation list ─────────────────────────────────────── */
+  const cachedJsonGet = async (url, options = {}) => {
+    const cached = userDataCache.get(url);
+    if (cached && !options.forceRefresh) {
+      void cachedJsonGet(url, { forceRefresh: true }).catch(() => {});
+      return cached;
+    }
+    const pending = userDataCache.getPending(url);
+    if (pending) return pending;
+    const request = authFetch(url).then(async (res) => {
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const data = await res.json();
+      userDataCache.set(url, data, 30 * 1000);
+      return data;
+    }).finally(() => userDataCache.clearPending(url));
+    userDataCache.setPending(url, request);
+    return request;
+  };
+
+  const fetchConversations = useCallback(async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await cachedJsonGet(`${API_BASE}/messages/conversations?limit=100&status=all`, { forceRefresh: true });
+      setConversations((data.data || []).map(normConv));
+    } catch (err) {
+      setError(err.message || "Failed to load conversations.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   /* ── Socket connection ── */
   useEffect(() => {
     const token = getToken();
@@ -294,56 +345,6 @@ export function useConversations() {
     };
   }, [fetchConversations]);
 
-  const emitTyping = useCallback(
-    (conversationId, isTyping) => {
-      const s = socketRef.current;
-      if (!s || !s.connected) return;
-      s.emit("msg:typing", {
-        conversationId,
-        isTyping,
-        senderName: "You",
-      });
-    },
-    []
-  );
-
-  /* ── Derived: total unread for user ───────────────────────────── */
-  const unreadCount = conversations.reduce(
-    (sum, c) => sum + (c.unreadUser || 0),
-    0,
-  );
-
-  /* ── Fetch conversation list ─────────────────────────────────────── */
-  const cachedJsonGet = async (url, options = {}) => {
-    const cached = userDataCache.get(url);
-    if (cached && !options.forceRefresh) {
-      void cachedJsonGet(url, { forceRefresh: true }).catch(() => {});
-      return cached;
-    }
-    const pending = userDataCache.getPending(url);
-    if (pending) return pending;
-    const request = authFetch(url).then(async (res) => {
-      if (!res.ok) throw new Error(`Server error ${res.status}`);
-      const data = await res.json();
-      userDataCache.set(url, data, 30 * 1000);
-      return data;
-    }).finally(() => userDataCache.clearPending(url));
-    userDataCache.setPending(url, request);
-    return request;
-  };
-
-  const fetchConversations = useCallback(async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const data = await cachedJsonGet(`${API_BASE}/messages/conversations?limit=100&status=all`, { forceRefresh: true });
-      setConversations((data.data || []).map(normConv));
-    } catch (err) {
-      setError(err.message || "Failed to load conversations.");
-    } finally {
-      setLoading(false);
-    }
-  }, []);
 
   /* Initial load */
   useEffect(() => {
