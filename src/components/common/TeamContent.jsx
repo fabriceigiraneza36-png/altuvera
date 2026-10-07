@@ -15,7 +15,7 @@ import React, {
 } from "react";
 import {
   FiArrowRight, FiLinkedin, FiMail, FiTwitter, FiInstagram,
-  FiExternalLink, FiMapPin, FiAward, FiUsers, FiGlobe,
+  FiExternalLink, FiUsers, FiGlobe,
   FiPhone, FiCalendar, FiRefreshCw, FiChevronDown,
   FiWifiOff, FiStar, FiFacebook,
 } from "react-icons/fi";
@@ -132,7 +132,6 @@ const normalizeMember = (m = {}) => ({
   expertise:     asArray(m.expertise),
   languages:     asArray(m.languages),
   years_experience: parseInt(m.years_experience, 10) || 0,
-  country:       m.country || "",
   display_order: parseInt(m.display_order, 10) || 0,
   is_active:     m.is_active !== false,
   is_featured:   m.is_featured === true,
@@ -656,7 +655,6 @@ function Card({ member }) {
 
   const expertise = member.expertise || [];
   const languages = member.languages || [];
-  const certs     = member.certifications || [];
 
   const socials = [
     member.linkedin_url && {
@@ -682,10 +680,6 @@ function Card({ member }) {
     },
   ].filter(Boolean);
 
-  const initials = member.name
-    ? member.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
-    : "?";
-
   const imageSrc = member.image_url;
 
   return (
@@ -708,9 +702,7 @@ function Card({ member }) {
               />
             )}
             {imgState === "error" || !imageSrc ? (
-              <div className="tm-avatar-fb">
-                <span className="tm-avatar-in">{initials}</span>
-              </div>
+              <div className="tm-avatar-fb"><FiUsers size={26} /><span>Portrait unavailable</span></div>
             ) : (
               <img
                 src={imageSrc}
@@ -754,8 +746,7 @@ function Card({ member }) {
           </div>
         )}
 
-        {(languages.length > 0 || certs.length > 0 ||
-          member.years_experience > 0 || member.location) && (
+        {(languages.length > 0 || member.years_experience > 0) && (
           <div className="tm-meta">
             {languages.length > 0 && (
               <div className="tm-mi">
@@ -766,25 +757,10 @@ function Card({ member }) {
                 </span>
               </div>
             )}
-            {certs.length > 0 && (
-              <div className="tm-mi tm-mi-award">
-                <FiAward size={11} />
-                <span>
-                  {certs[0]}
-                  {certs.length > 1 && ` +${certs.length - 1}`}
-                </span>
-              </div>
-            )}
             {member.years_experience > 0 && (
               <div className="tm-mi">
                 <FiCalendar size={11} />
                 <span>{member.years_experience}+ years experience</span>
-              </div>
-            )}
-            {member.location && (
-              <div className="tm-mi">
-                <FiMapPin size={11} />
-                <span>{member.location}</span>
               </div>
             )}
           </div>
