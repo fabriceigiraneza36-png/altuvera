@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
-  FiSearch,
   FiHeart,
   FiUser,
   FiLogOut,
@@ -208,15 +207,8 @@ const Navbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
-  const [searchSort, setSearchSort] = useState("engagement");
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
-
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
   const location = useLocation();
   const navigate = useNavigate();
   const { favorites } = useApp();
@@ -226,11 +218,7 @@ const Navbar = () => {
 
   const headerRef = useRef(null);
   const userMenuRef = useRef(null);
-  const searchInputRef = useRef(null);
-  const mobileSearchInputRef = useRef(null);
   const dropdownTimer = useRef(null);
-  const searchAbortRef = useRef(null);
-  const latestSearchRef = useRef("");
   const lastScrollYRef = useRef(0);
   const prevNavHiddenRef = useRef(false);
   const logoDetachedTimerRef = useRef(null);
@@ -356,109 +344,10 @@ const Navbar = () => {
     setActiveDropdown(null);
     setActiveMobileDropdown(null);
     setUserMenuOpen(false);
-    setSearchOpen(false);
   }, []);
 
   useEffect(() => closeAll(), [location.pathname, closeAll]);
   useEffect(() => setAvatarLoaded(false), [user?.avatar]);
-
-  useEffect(() => {
-    document.body.style.overflow =
-      isMobileMenuOpen || searchOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isMobileMenuOpen, searchOpen]);
-
-  useEffect(() => {
-    if (searchOpen) setTimeout(() => searchInputRef.current?.focus(), 150);
-  }, [searchOpen]);
-
-/* ── Search — live backend ── */
-  useEffect(() => {
-    const q = searchValue.trim();
-    latestSearchRef.current = q;
-
-    // Abort any ongoing requests
-    if (searchAbortRef.current) {
-      searchAbortRef.current.destinationsCtrl.abort();
-      searchAbortRef.current.countriesCtrl.abort();
-    }
-    searchAbortRef.current = null; // Reset until we set new ones
-
-    if (q.length < 2) {
-      setSearchResults([]);
-      setIsSearching(false);
-      return;
-    }
-
-    const tid = setTimeout(async () => {
-      setIsSearching(true);
-      const destinationsCtrl = new AbortController();
-      const countriesCtrl = new AbortController();
-      searchAbortRef.current = { destinationsCtrl, countriesCtrl };
-      try {
-        // Fetch destinations suggestions
-        const destRes = await fetch(
-          `${API_URL}/destinations/suggestions?q=${encodeURIComponent(q)}&limit=8`,
-          { signal: destinationsCtrl.signal }
-        );
-        if (!destRes.ok) throw new Error("Destinations search failed");
-        const destData = await destRes.json();
-        // Fetch countries suggestions
-        const countryRes = await fetch(
-          `${API_URL}/countries?search=${encodeURIComponent(q)}&limit=8`,
-          { signal: countriesCtrl.signal }
-        );
-        if (!countryRes.ok) throw new Error("Countries search failed");
-        const countryData = await countryRes.json();
-
-        if (latestSearchRef.current !== q) return;
-
-        const destRaw = destData?.data || destData?.results || destData || [];
-        const destAdapted = Array.isArray(destRaw)
-          ? destRaw.map(adaptDestination).filter(Boolean)
-          : [];
-        const destinations = destAdapted.slice(0, 8);
-
-        const countryRaw = countryData?.data || countryData || [];
-        const countries = Array.isArray(countryRaw)
-          ? countryRaw.slice(0, 8).map(country => ({
-              id: country.slug || String(country.id),
-              slug: country.slug || String(country.id),
-              name: country.name,
-              country: country.name,
-              description: country.description || country.short_notes || '',
-              heroImage: country.flag_url || country.flag,
-              images: [],
-              gallery: [],
-              isCountry: true,
-            }))
-          : [];
-
-        setSearchResults([...destinations, ...countries]);
-      } catch (err) {
-        if (err.name !== "AbortError") {
-          if (latestSearchRef.current === q) setSearchResults([]);
-        }
-      } finally {
-        if (latestSearchRef.current === q) setIsSearching(false);
-      }
-    }, 250);
-
-    return () => {
-      if (searchAbortRef.current) {
-        searchAbortRef.current.destinationsCtrl.abort();
-        searchAbortRef.current.countriesCtrl.abort();
-      }
-    };
-  }, [searchValue, API_URL]);
-
-  useEffect(() => {
-    const fn = (e) => e.key === "Escape" && closeAll();
-    window.addEventListener("keydown", fn);
-    return () => window.removeEventListener("keydown", fn);
-  }, [closeAll]);
 
   useEffect(() => {
     const fn = (e) => {
@@ -472,32 +361,6 @@ const Navbar = () => {
   }, []);
 
   /* ── Handlers ── */
-  const handleSearchSubmit = useCallback(
-    (e) => {
-      e.preventDefault();
-      const q = searchValue.trim();
-      if (q) {
-        navigate(`/destinations?search=${encodeURIComponent(q)}&sort=${encodeURIComponent(searchSort)}`);
-        setSearchOpen(false);
-        setSearchValue("");
-      }
-    },
-    [searchValue, searchSort, navigate]
-  );
-
-const handleResultClick = useCallback(
-     (dest) => {
-       if (dest.isCountry) {
-         navigate(`/country/${dest.slug}`);
-       } else {
-         navigate(`/destinations/${dest.slug || dest.id}`);
-       }
-       setSearchOpen(false);
-       setSearchValue("");
-       setSearchResults([]);
-     },
-     [navigate]
-   );
 
   const toggleMobileDropdown = useCallback(
     (n) => setActiveMobileDropdown((p) => (p === n ? null : n)),
@@ -846,31 +709,6 @@ const handleResultClick = useCallback(
             </Link>
           </div>
 
-          {/* Mobile expanding search */}
-          <form className="nav__mobile-search" onSubmit={handleSearchSubmit} role="search">
-            <button
-              type="button"
-              className="nav__mobile-search-icon"
-              onClick={() => mobileSearchInputRef.current?.focus()}
-              aria-label="Search destinations"
-            >
-              <FiSearch size={19} />
-            </button>
-            <input
-              ref={mobileSearchInputRef}
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              placeholder="Search destinations…"
-              aria-label="Search destinations"
-              autoComplete="off"
-            />
-            {searchValue && (
-              <button type="button" className="nav__mobile-search-clear" onClick={() => setSearchValue("")} aria-label="Clear search">
-                <FiX size={15} />
-              </button>
-            )}
-          </form>
-
           {/* Hamburger */}
           <button
             className={cn(
@@ -889,135 +727,6 @@ const handleResultClick = useCallback(
           </button>
         </div>
       </nav>
-
-      {/* ══════ SEARCH OVERLAY ══════ */}
-      <div
-        className={cn("srch", searchOpen && "srch--open")}
-        onClick={() => setSearchOpen(false)}
-      >
-        <div className="srch__container" onClick={(e) => e.stopPropagation()}>
-          {/* Search Header */}
-          <div className="srch__header">
-            <button
-              className="srch__back"
-              onClick={() => setSearchOpen(false)}
-              aria-label="Close search"
-            >
-              <FiChevronLeft size={24} />
-            </button>
-            <form onSubmit={handleSearchSubmit} className="srch__form">
-              <FiSearch className="srch__icon" size={20} />
-              <input
-                ref={searchInputRef}
-                type="text"
-                placeholder="Search destinations, experiences..."
-                value={searchValue}
-                onChange={(e) => setSearchValue(e.target.value)}
-                className="srch__input"
-                autoComplete="off"
-              />
-              {searchValue && (
-                <button
-                  type="button"
-                  className="srch__clear"
-                  onClick={() => {
-                    setSearchValue("");
-                    searchInputRef.current?.focus();
-                  }}
-                  aria-label="Clear search"
-                >
-                  <FiX size={18} />
-                </button>
-              )}
-            </form>
-            <select
-              className="srch__sort"
-              value={searchSort}
-              onChange={(e) => setSearchSort(e.target.value)}
-              aria-label="Sort search results"
-            >
-              <option value="engagement">Top picks</option>
-              <option value="likes">Most liked</option>
-              <option value="comments">Most commented</option>
-              <option value="featured">Featured</option>
-              <option value="newest">Newest</option>
-            </select>
-            <button
-              className="srch__cancel"
-              onClick={() => setSearchOpen(false)}
-            >
-              Cancel
-            </button>
-          </div>
-
-          {/* Search Results */}
-          <div className="srch__body">
-{/* Loading */}
-             {isSearching && (
-               <div className="srch__loading">
-                 <div className="srch__loading-spinner" />
-                 <p>Searching…</p>
-               </div>
-             )}
-
-{/* Empty */}
-             {!isSearching &&
-               searchValue.trim().length >= 2 &&
-               searchResults.length === 0 && (
-                 <div className="srch__empty">
-                   <FiSearch size={48} />
-                   <h3>No results found</h3>
-                   <p>
-                     Try different keywords or{" "}
-                     <Link
-                       to="/destinations"
-                       onClick={() => {
-                         setSearchOpen(false);
-                         setSearchValue("");
-                       }}
-                     >
-                       browse all destinations
-                     </Link>
-                   </p>
-                 </div>
-               )}
-
-{/* Prompt */}
-             {!isSearching &&
-               searchValue.trim().length < 2 &&
-               searchResults.length === 0 && (
-                 <div className="srch__prompt">
-                   <FiMapPin size={40} />
-                   <h3>Discover your next adventure</h3>
-                   <p>Type at least 2 characters to search destinations and countries</p>
-                 </div>
-               )}
-
-            {/* Results Grid */}
-            {searchResults.length > 0 && (
-              <>
-<div className="srch__results-header">
-                   <h3>
-                     {searchResults.length} result
-                     {searchResults.length !== 1 ? "s" : ""} found
-                   </h3>
-                 </div>
-                <div className="srch__grid">
-                  {searchResults.map((dest, idx) => (
-                    <DestinationCard
-                      key={dest.id || dest.slug || idx}
-                      destination={dest}
-                      index={idx}
-                      onClick={() => handleResultClick(dest)}
-                    />
-                  ))}
-                </div>
-
-              </>
-            )}
-          </div>
-        </div>
-      </div>
 
       {/* ── BACKDROP ── */}
       <div
@@ -1052,20 +761,6 @@ const handleResultClick = useCallback(
             aria-label="Close"
           >
             <FiX size={22} />
-          </button>
-        </div>
-
-        {/* Mobile Quick Search */}
-        <div className="mm__search-bar">
-          <button
-            className="mm__search-trigger"
-            onClick={() => {
-              setIsMobileMenuOpen(false);
-              setTimeout(() => setSearchOpen(true), 200);
-            }}
-          >
-            <FiSearch size={18} />
-            <span>Search destinations…</span>
           </button>
         </div>
 
