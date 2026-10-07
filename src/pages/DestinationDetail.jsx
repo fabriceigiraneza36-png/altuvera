@@ -395,71 +395,10 @@ export default function DestinationDetail() {
 
           <div className="d-hero__ov" />
 
-          {heroSlides.length > 1 && (
-            <>
-              <button type="button" className="d-hero__arrow d-hero__arrow--p" onClick={() => setHeroSlide((heroSlide - 1 + heroSlides.length) % heroSlides.length)} aria-label="Previous hero image">
-                <ChevronLeft size={20} />
-              </button>
-              <button type="button" className="d-hero__arrow d-hero__arrow--n" onClick={() => setHeroSlide((heroSlide + 1) % heroSlides.length)} aria-label="Next hero image">
-                <ChevronRight size={20} />
-              </button>
-              <div className="d-hero__dots" aria-label="Destination hero slideshow">
-                {heroSlides.map((_, index) => (
-                  <button key={index} type="button" className={`d-hero__dot ${index === heroSlide ? "on" : ""}`} onClick={() => setHeroSlide(index)} aria-label={`Show hero image ${index + 1}`} />
-                ))}
-              </div>
-              <div className="d-hero__thumbs" aria-label="Choose destination hero image">
-                {heroSlides.map((src, index) => (
-                  <button key={src} type="button" className={`d-hero__thumb ${index === heroSlide ? "active" : ""}`} onClick={() => setHeroSlide(index)} aria-label={`Show image ${index + 1}`}>
-                    <img src={src} alt="" loading="lazy" />
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-
-          <nav className="d-hero__nav">
-            <div className="d-wrap">
-              <ol className="d-hero__crumbs">
-                <li>
-                  <Link to="/explore">Explore</Link>
-                </li>
-                <li>
-                  <Link to="/destinations">Destinations</Link>
-                </li>
-                <li aria-current="page">{destination.name}</li>
-              </ol>
-            </div>
-          </nav>
-
-          <div className="d-wrap" style={{ position: "relative", zIndex: 5 }}>
+          <div className="d-wrap d-hero__clean-wrap">
             <div className="d-hero__body">
-              {countryInfo?.name && (
-                <div className="d-hero__loc">
-                  <Ic n="mapPin" size={12} />
-                  <span style={{ letterSpacing: "3px", fontSize: ".76rem", fontWeight: 700 }}>
-                    {countryInfo.flagUrl && (
-                      <img
-                        src={countryInfo.flagUrl}
-                        alt=""
-                        style={{ width: 16, height: 11, objectFit: "cover", marginRight: 7, verticalAlign: "-1px" }}
-                      />
-                    )}
-                    {String(countryInfo.name).toUpperCase()}
-                  </span>
-                </div>
-              )}
-
-              <span className="d-hero__eyebrow"><Sparkles size={13} /> CURATED EAST AFRICAN EXPERIENCE</span>
               <h1 className="d-hero__title">{destination.name}</h1>
               {destination.tagline && <p className="d-hero__sub">{destination.tagline}</p>}
-              {description && (
-                <p className="d-hero__story">
-                  {description.replace(/\s+/g, " ").trim().slice(0, 220)}
-                  {description.replace(/\s+/g, " ").trim().length > 220 ? "…" : ""}
-                </p>
-              )}
-
               <div className="d-hero__ctas">
                 <button className="d-btn d-btn--emerald d-btn--lg" onClick={() => navigate(`/booking?destination=${destination.slug}`)}>
                   <Ic n="calendar" size={17} /> Book This Destination
@@ -474,27 +413,8 @@ export default function DestinationDetail() {
                   <span aria-hidden="true">↗</span><span className="d-hero-tool__label">{shareState}</span>
                 </button>
               </div>
-
-              {stats.length > 0 && (
-                <div className="d-hero__stats">
-                  {stats.map((s, i) => (
-                    <div key={i} className="d-hero__stat">
-                      <div className="d-hero__stat-n">{s.value}</div>
-                      <div className="d-hero__stat-l">
-                        <Ic
-                          n={s.label === "Days" || s.label === "Duration" ? "clock" : s.label === "Rating" ? "star" : "calendar"}
-                          size={12}
-                          style={{ marginRight: 5, opacity: 0.7 }}
-                        />
-                        {s.label}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
-        </header>
 
         <nav className="d-quicknav" aria-label="Destination sections">
           <div className="d-wrap d-quicknav__inner">
