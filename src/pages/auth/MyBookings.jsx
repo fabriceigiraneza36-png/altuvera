@@ -718,10 +718,7 @@ function RequestBanner({ booking }) {
 
       {status === "approved" && (
         <p style={{ margin: "6px 0 0", fontSize: "0.78rem", color: cfg.color }}>
-          Your request was approved
-          {false && booking. != null
-            ? ` — `
-            : ""}.
+          Your request was approved{isRefundRequest ? " — refund processing will follow the booking policy." : "."}
         </p>
       )}
 
