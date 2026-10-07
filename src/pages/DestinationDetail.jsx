@@ -416,6 +416,8 @@ export default function DestinationDetail() {
             </div>
           </div>
 
+        </header>
+
         <nav className="d-quicknav" aria-label="Destination sections">
           <div className="d-wrap d-quicknav__inner">
             <Link to="/destinations" className="d-quicknav__back"><ChevronLeft size={15} /> Destinations</Link>
