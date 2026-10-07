@@ -1077,11 +1077,6 @@ function Hero({ search, onSearch, total, loading }) {
             Search <FiArrowRight size={15} />
           </button>
         </form>
-        <div className="pk-hero__meta">
-          <span><FiPackage size={13} /> {loading ? 'Loading packages…' : `${total.toLocaleString()} curated package${total === 1 ? '' : 's'}`}</span>
-          <span><FiShield size={13} /> Flexible planning</span>
-          <span><FiCalendar size={13} /> Tailored dates</span>
-        </div>
       </div>
     </header>
   )
@@ -1735,4 +1730,31 @@ return (
       </div>
     </div>
   )
+}
+/* Country-page visual alignment + mobile-first package layout */
+.pk-root {
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  background: #f8fafb;
+}
+.pk-hero { min-height: min(78svh, 760px); height: auto; }
+.pk-hero__content { max-width: 1320px; padding: 120px clamp(16px,5vw,56px) 68px; }
+.pk-hero__eyebrow { color: #a7f3d0; font-family: 'Plus Jakarta Sans',system-ui,sans-serif; }
+.pk-hero__title { font-family: 'DM Serif Display', Georgia, serif; font-weight: 400; letter-spacing: -.035em; text-wrap: balance; }
+.pk-hero__subtitle { font-family: 'Plus Jakarta Sans',system-ui,sans-serif; }
+.pk-hero__search { width: min(760px,100%); border-radius: 999px; overflow: hidden; }
+.pk-hero__search-submit { border-radius: 0 999px 999px 0; }
+.pk-cat-pill { font-family: 'Plus Jakarta Sans',system-ui,sans-serif; }
+@media (max-width: 700px) {
+  .pk-hero { min-height: 610px; }
+  .pk-hero__content { padding: 106px 16px 42px; }
+  .pk-hero__title { font-size: clamp(46px,14vw,70px); line-height: .94; }
+  .pk-hero__subtitle { max-width: 560px; font-size: 13px; line-height: 1.62; margin-bottom: 20px; }
+  .pk-hero__search { min-height: 52px; border-radius: 999px; }
+  .pk-hero__search input { min-width: 0; font-size: 12px; }
+  .pk-hero__search-submit { min-height: 52px; padding: 0 15px; font-size: 11px; }
+}
+@media (max-width: 480px) {
+  .pk-hero__content { padding-left: 14px; padding-right: 14px; }
+  .pk-hero__search-submit { font-size: 0; width: 48px; padding: 0; justify-content: center; }
+  .pk-hero__search-submit svg { display: block; }
 }
