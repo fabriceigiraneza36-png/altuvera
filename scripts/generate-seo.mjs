@@ -31,7 +31,32 @@ const escapeXml = (s) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
 
-const isIsoDate = (s) => /^\d{4}-\d{2}-\d{2}$/.test(String(s || ""));
+const isIsoDate = (s) => /^\\d{4}-\\d{2}-\\d{2}$/.test(String(s || ""));
+
+const apiBase = String(process.env.VITE_API_URL || process.env.API_URL || "https://backend-jd8f.onrender.com/api").replace(/\\/+$/, "");
+const fetchJson = async (path) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+  try {
+    const response = await fetch(apiBase + path, { signal: controller.signal });
+    if (!response.ok) throw new Error("HTTP " + response.status);
+    return await response.json();
+  } finally { clearTimeout(timer); }
+};
+const getLiveSeoData = async () => {
+  try {
+    const results = await Promise.all([
+      fetchJson("/countries?limit=500&is_active=true"),
+      fetchJson("/destinations?limit=1000&is_active=true"),
+    ]);
+    const countries = Array.isArray(results[0]) ? results[0] : (Array.isArray(results[0]?.data) ? results[0].data : []);
+    const destinations = Array.isArray(results[1]) ? results[1] : (Array.isArray(results[1]?.data) ? results[1].data : []);
+    return { countries, destinations };
+  } catch (error) {
+    console.warn("[seo] Live API unavailable; using static SEO fallback:", error?.message || error);
+    return null;
+  }
+};
 
 const buildSitemap = () => {
   const staticRoutes = [
@@ -53,18 +78,33 @@ const buildSitemap = () => {
     "/payment-terms",
   ];
 
+  const live = await getLiveSeoData();
+  const countryRows = live?.countries?.length
+    ? live.countries
+    : Array.from(new Set(Object.keys(destinations || {}).map((k) => String(k))))
+        .map((slug) => ({ slug, name: slug }));
+
+  const liveDestinationRows = live?.destinations?.length
+    ? live.destinations
+    : getAllDestinations().filter((d) => d && d.id);
+
   const countryIds = Array.from(
-    new Set(Object.keys(destinations || {}).map((k) => String(k))),
+    new Set(
+      countryRows
+        .map((c) => String(c.slug || c.name || c.id || "").trim().toLowerCase())
+        .filter(Boolean),
+    ),
   ).sort();
 
-  const destinationItems = getAllDestinations()
-    .filter((d) => d && d.id)
+  const destinationItems = liveDestinationRows
+    .filter((d) => d && (d.slug || d.id))
     .map((d) => ({
-      loc: `/destinations/${d.id}`,
+      loc: "/destinations/" + String(d.slug || d.id).trim(),
       lastmod: today,
       changefreq: "monthly",
       priority: 0.8,
-      image: Array.isArray(d.images) ? d.images[0] : undefined,
+      image: d.image_url || d.hero_image || d.cover_image_url ||
+        (Array.isArray(d.images) ? d.images[0] : undefined),
       imageTitle: d.name,
     }));
 
