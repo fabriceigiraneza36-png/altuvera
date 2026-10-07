@@ -1182,62 +1182,98 @@ function AboutSection({ country }) {
    3. DESTINATIONS
 ═══════════════════════════════════════════════════════════ */
 function DestinationsSection({ country, allDests, destsLoading }) {
-  const [showAll, setShowAll] = useState(false);
-  const INIT = 6;
-  const shown = showAll ? allDests : allDests.slice(0, INIT);
-  const hasMore = allDests.length > INIT;
+  const trackRef = useRef(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const scrollTo = useCallback((index) => {
+    if (!allDests.length) return;
+    const next = Math.max(0, Math.min(index, allDests.length - 1));
+    setActiveIndex(next);
+    const node = trackRef.current?.querySelector(`[data-destination-index="${next}"]`);
+    node?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+  }, [allDests.length]);
+
+  const onScroll = useCallback(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    const center = track.scrollLeft + track.clientWidth / 2;
+    const cards = [...track.querySelectorAll("[data-destination-index]")];
+    if (!cards.length) return;
+    let nearest = 0;
+    let distance = Infinity;
+    cards.forEach((card) => {
+      const cardCenter = card.offsetLeft + card.offsetWidth / 2;
+      const d = Math.abs(cardCenter - center);
+      if (d < distance) { distance = d; nearest = Number(card.dataset.destinationIndex); }
+    });
+    setActiveIndex(nearest);
+  }, []);
 
   return (
     <section id="cp-destinations" className="cp-sec cp-sec--bg">
       <div className="cp-inner">
-        <div className="cp-head cp-head--center">
-          <h2 className="cp-title">Destinations in {country.name}</h2>
-          <p className="cp-desc cp-desc--center">
-            {allDests.length > 0
-              ? `${allDests.length} carefully selected destination${allDests.length !== 1 ? "s" : ""} — each offering unique, authentic experiences.`
-              : "Curated destinations crafted for unforgettable journeys."}
-          </p>
+        <div className="cp-head cp-head--split">
+          <div>
+            <span className="d-stag" style={{ color: "var(--cp-green)", fontWeight: 800, fontSize: 11, letterSpacing: 2, textTransform: "uppercase" }}>Explore by story</span>
+            <h2 className="cp-title">Destinations in {country.name}</h2>
+            <p className="cp-desc">Swipe through the country like an Instagram story reel — the destination in focus leads the journey.</p>
+          </div>
+          {allDests.length > 1 && (
+            <div style={{ display: "flex", gap: 8 }}>
+              <button type="button" className="cp-btn cp-btn--outline" onClick={() => scrollTo(activeIndex - 1)} aria-label="Previous destination"><FiChevronLeft size={18}/></button>
+              <button type="button" className="cp-btn cp-btn--outline" onClick={() => scrollTo(activeIndex + 1)} aria-label="Next destination"><FiChevronRight size={18}/></button>
+            </div>
+          )}
         </div>
 
         {destsLoading ? (
-          <div className="cp-dest-grid">
-            {Array.from({ length: 6 }, (_, i) => (
-              <div key={i} className="cp-dest-grid__item" style={{ animationDelay: `${i * 60}ms` }}>
-                <DestinationCardSkeleton />
-              </div>
-            ))}
-          </div>
+          <div className="cp-dest-grid">{Array.from({ length: 5 }, (_, i) => <div key={i} className="cp-dest-grid__item"><DestinationCardSkeleton /></div>)}</div>
         ) : allDests.length === 0 ? (
           <div className="cp-dest-empty">
             <h3>Destinations Coming Soon</h3>
-            <p>
-              We're curating incredible experiences in {country.name}.
-              In the meantime, explore our full collection of handpicked destinations.
-            </p>
-            <div className="cp-show-more">
-              <Link to="/destinations" className="cp-btn cp-btn--outline">
-                Browse All Destinations <FiArrowRight size={14} />
-              </Link>
-            </div>
+            <p>We're curating incredible experiences in {country.name}.</p>
+            <Link to="/destinations" className="cp-btn cp-btn--outline">Browse All Destinations <FiArrowRight size={14}/></Link>
           </div>
         ) : (
-          <>
-            <div className="cp-dest-grid">
-              {shown.map((dest, i) => (
-                <div key={dest.id || dest.slug || i} className="cp-dest-grid__item"
-                  style={{ animationDelay: `${Math.min(i, 5) * 60}ms` }}>
-                  <DestinationCard destination={dest} priority={i < 4} />
+          <div
+            ref={trackRef}
+            onScroll={onScroll}
+            className="cp-destination-story-track"
+            style={{
+              display: "flex",
+              gap: 18,
+              overflowX: "auto",
+              overflowY: "visible",
+              scrollSnapType: "x mandatory",
+              scrollPaddingInline: "calc(50% - 150px)",
+              padding: "18px max(12px, calc(50% - 150px)) 34px",
+              marginInline: -12,
+              scrollbarWidth: "none",
+              WebkitOverflowScrolling: "touch",
+              alignItems: "center",
+            }}
+          >
+            {allDests.map((dest, i) => {
+              const focused = i === activeIndex;
+              return (
+                <div
+                  key={dest.id || dest.slug || i}
+                  data-destination-index={i}
+                  style={{
+                    flex: "0 0 clamp(270px, 34vw, 360px)",
+                    scrollSnapAlign: "center",
+                    transform: focused ? "scale(1.04)" : "scale(.91)",
+                    opacity: focused ? 1 : .46,
+                    filter: focused ? "none" : "blur(2.5px) saturate(.75)",
+                    transition: "transform .45s cubic-bezier(.22,1,.36,1), opacity .45s ease, filter .45s ease",
+                    zIndex: focused ? 3 : 1,
+                  }}
+                >
+                  <DestinationCard destination={dest} priority={i < 3} />
                 </div>
-              ))}
-            </div>
-            {hasMore && !showAll && (
-              <div className="cp-show-more">
-                <button className="cp-btn cp-btn--outline" onClick={() => setShowAll(true)}>
-                  View All {allDests.length} Destinations <FiArrowRight size={14} />
-                </button>
-              </div>
-            )}
-          </>
+              );
+            })}
+          </div>
         )}
       </div>
     </section>
