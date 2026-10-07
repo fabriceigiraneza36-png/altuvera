@@ -336,7 +336,7 @@ export function useConversations() {
     setLoading(true);
     setError("");
     try {
-      const data = await cachedJsonGet(`${API_BASE}/messages/conversations?limit=100`, { forceRefresh: true });
+      const data = await cachedJsonGet(`${API_BASE}/messages/conversations?limit=100&status=all`, { forceRefresh: true });
       setConversations((data.data || []).map(normConv));
     } catch (err) {
       setError(err.message || "Failed to load conversations.");
