@@ -2739,3 +2739,75 @@ html { scroll-behavior: smooth; }
   .d-hero__sub { padding-left: 0; }
   .d-hero__ctas { justify-content: flex-start; }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Destination hero actions — balanced two-row composition
+   Book remains primary; Save + Share sit side-by-side.
+───────────────────────────────────────────────────────────── */
+.d-hero__ctas {
+  width: min(100%, 620px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-areas:
+    "book book"
+    "save share";
+  gap: 10px;
+  align-items: stretch;
+}
+.d-hero__ctas .d-btn--lg {
+  grid-area: book;
+  width: 100%;
+  justify-content: center;
+  min-height: 52px;
+  box-shadow: 0 12px 28px rgba(0,0,0,.16);
+}
+.d-hero__ctas .d-hero-tool:nth-child(2) {
+  grid-area: save;
+}
+.d-hero__ctas .d-hero-tool:nth-child(3) {
+  grid-area: share;
+}
+.d-hero-tool {
+  width: 100%;
+  min-height: 50px;
+  padding: 0 20px;
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,.34);
+  background: rgba(255,255,255,.13);
+  box-shadow: 0 8px 24px rgba(0,0,0,.10);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: transform .25s ease, background .25s ease, border-color .25s ease, box-shadow .25s ease;
+}
+.d-hero-tool:hover,
+.d-hero-tool:focus-visible {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,.22);
+  border-color: rgba(255,255,255,.58);
+  box-shadow: 0 12px 28px rgba(0,0,0,.16);
+}
+.d-hero-tool span:first-child {
+  font-size: 19px;
+  line-height: 1;
+}
+@media (max-width:700px) {
+  .d-hero__ctas {
+    width: min(100%, 390px);
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .d-hero__ctas .d-btn--lg {
+    min-height: 50px;
+    padding: 12px 14px;
+    font-size: 12px;
+  }
+  .d-hero-tool {
+    min-height: 48px;
+    border-radius: 14px;
+    padding: 0 12px;
+    font-size: 11px;
+  }
+  .d-hero-tool span:first-child {
+    font-size: 18px;
+  }
+}
