@@ -211,7 +211,7 @@ export default function DestinationDetail() {
     return [...new Set(preferred.map((value) => {
       if (typeof value === "string") return resolveImageUrl(value);
       return resolveImageUrl(value?.imageUrl || value?.image_url || value?.url || value?.image);
-    }).filter(Boolean))].slice(0, 3);
+    }).filter(Boolean))].slice(0, 4);
   }, [destination?.heroImages, destination?.heroImage, gallery]);
 
   const additionalImages = useMemo(
