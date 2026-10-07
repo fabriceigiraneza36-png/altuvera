@@ -854,6 +854,31 @@ const handleResultClick = useCallback(
             </Link>
           </div>
 
+          {/* Mobile expanding search */}
+          <form className="nav__mobile-search" onSubmit={handleSearchSubmit} role="search">
+            <button
+              type="button"
+              className="nav__mobile-search-icon"
+              onClick={() => searchInputRef.current?.focus()}
+              aria-label="Search destinations"
+            >
+              <FiSearch size={19} />
+            </button>
+            <input
+              ref={searchInputRef}
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              placeholder="Search destinations…"
+              aria-label="Search destinations"
+              autoComplete="off"
+            />
+            {searchValue && (
+              <button type="button" className="nav__mobile-search-clear" onClick={() => setSearchValue("")} aria-label="Clear search">
+                <FiX size={15} />
+              </button>
+            )}
+          </form>
+
           {/* Hamburger */}
           <button
             className={cn(
