@@ -736,7 +736,8 @@ export default function Messages() {
   const {
     conversations, messages, activeId, activeConversation,
     unreadCount, loading, loadingMsgs, sending, error,
-    openConversation, sendMessage, fetchConversations, user,
+    openConversation, sendMessage, fetchConversations,
+    editMessage, unsendMessage, toggleMessageFlag, reactToMessage,
     adminTyping, typingConvs, emitTyping, socketRef, connected, adminOnline,
     adminPresence,
   } = useConversations();
@@ -752,6 +753,8 @@ export default function Messages() {
 
   const [draft,        setDraft]        = useState("");
   const [replyToId,    setReplyToId]    = useState(null);
+  const [editingMessageId, setEditingMessageId] = useState(null);
+  const [editText, setEditText] = useState("");
   const [showEmoji,    setShowEmoji]    = useState(false);
   const [showNewChat,  setShowNewChat]  = useState(false);
   const [sidebarOpen,  setSidebarOpen]  = useState(true);
@@ -848,14 +851,35 @@ export default function Messages() {
   /* ── Reactions ── */
   const toggleReaction = useCallback(async (messageId, emoji) => {
     if (!activeId) return;
+    try { await reactToMessage(activeId, messageId, emoji); }
+    catch (e) { console.warn("[Messages] reaction failed:", e.message); }
+  }, [activeId, reactToMessage]);
+
+  const startEditMessage = useCallback((message) => {
+    setEditingMessageId(message?.id || null);
+    setEditText(message?.body || "");
+  }, []);
+
+  const saveEditMessage = useCallback(async (messageId) => {
+    const body = editText.trim();
+    if (!activeId || !body) return;
     try {
-      await authFetch(
-        `${API_BASE}/messages/conversations/${activeId}/messages/${messageId}/react`,
-        { method:"PATCH", body:JSON.stringify({ emoji }) },
-      );
-      fetchConversations();
-    } catch { /* non-fatal */ }
-  }, [activeId, fetchConversations]);
+      await editMessage(activeId, messageId, body);
+      setEditingMessageId(null); setEditText("");
+    } catch (e) { console.warn("[Messages] edit failed:", e.message); }
+  }, [activeId, editText, editMessage]);
+
+  const handleUnsend = useCallback(async (messageId) => {
+    if (!activeId || !window.confirm("Unsend this message?")) return;
+    try { await unsendMessage(activeId, messageId); }
+    catch (e) { console.warn("[Messages] unsend failed:", e.message); }
+  }, [activeId, unsendMessage]);
+
+  const handleMessageFlag = useCallback(async (messageId, flag, value) => {
+    if (!activeId) return;
+    try { await toggleMessageFlag(activeId, messageId, flag, value); }
+    catch (e) { console.warn("[Messages] message flag failed:", e.message); }
+  }, [activeId, toggleMessageFlag]);
 
   /* ── New conv ── */
   const handleNewConvCreated = useCallback((conv) => {
