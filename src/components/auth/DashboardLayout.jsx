@@ -38,14 +38,16 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false }) => {
       <style>{`
         .dashboard-layout {
           display: flex;
-          height: 100vh;
-          height: 100dvh;
-          min-height: 100vh;
-          min-height: 100dvh;
+          /* Regular dashboard pages must participate in the document flow so
+             the browser owns the page scroll and the global footer stays after
+             all profile/content sections. Only noPadding pages (e.g. Messages)
+             use their own viewport-sized scroll surface below. */
+          min-height: calc(100vh - 80px);
+          min-height: calc(100dvh - 80px);
           box-sizing: border-box;
           background-color: #f8fafc;
           padding-top: 80px;
-          overflow: hidden;
+          overflow: visible;
         }
         .dashboard-sidebar {
           width: 260px; background: #ffffff;
