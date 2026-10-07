@@ -42,6 +42,15 @@ const authFetch = (url, opts = {}) => {
 };
 
 /* ─── Serialise snake_case → camelCase ──────────────────────────────── */
+const getCurrentUserId = () => {
+  try {
+    const token = getToken();
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    return JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/"))).id || null;
+  } catch { return null; }
+};
+
 const normConv = (c) => ({
   id:             c.id,
   sessionId:      c.session_id      || c.sessionId,
@@ -209,15 +218,78 @@ export function useConversations() {
     s.on("msg:conversation-updated", (conv) => {
       if (!conv) return;
       setConversations((prev) =>
-        prev.map((c) => (String(c.id) === String(conv.id) ? { ...c, ...conv } : c))
+        prev.map((c) => (String(c.id) === String(conv.id) ? { ...c, ...normConv(conv) } : c))
       );
+      if (String(conv.id) === String(activeIdRef.current)) {
+        setActiveConversation((prev) => prev ? { ...prev, ...normConv(conv) } : prev);
+      }
+    });
+
+    s.on("msg:reaction", ({ messageId, reactions }) => {
+      if (!messageId) return;
+      setMessages((prev) => prev.map((m) =>
+        String(m.id) === String(messageId) ? { ...m, reactions: reactions || {} } : m
+      ));
+    });
+
+    const applyMessageMutation = (raw) => {
+      const msg = normMsg(raw);
+      if (!msg?.id) return;
+      setMessages((prev) => prev.map((m) => String(m.id) === String(msg.id) ? { ...m, ...msg } : m));
+    };
+    s.on("msg:message-edited", applyMessageMutation);
+    s.on("msg:message-deleted", applyMessageMutation);
+    s.on("msg:message-pinned", applyMessageMutation);
+    s.on("msg:message-highlighted", applyMessageMutation);
+
+    const onGroupMessage = (payload) => {
+      const msg = normMsg(payload?.message || payload);
+      const cid = String(payload?.conversationId || msg?.conversationId || "");
+      if (!msg?.id || !cid) return;
+
+      setConversations((prev) => {
+        const idx = prev.findIndex((c) => String(c.id) === cid);
+        if (idx < 0) return prev;
+        const next = prev.map((c) => String(c.id) === cid
+          ? {
+              ...c,
+              lastMessage: msg.body?.slice(0, 120) || c.lastMessage,
+              lastMessageAt: msg.createdAt || c.lastMessageAt,
+              unreadUser: cid === String(activeIdRef.current) ? 0 : (c.unreadUser || 0) + (msg.senderType === "admin" ? 1 : 0),
+            }
+          : c
+        );
+        const i = next.findIndex((c) => String(c.id) === cid);
+        if (i > 0) {
+          const [item] = next.splice(i, 1);
+          next.unshift(item);
+        }
+        return next;
+      });
+
+      if (cid === String(activeIdRef.current)) {
+        setMessages((prev) => prev.some((m) => String(m.id) === String(msg.id)) ? prev : [...prev, msg]);
+      }
+    };
+    s.on("msg:group-message", onGroupMessage);
+
+    s.on("msg:groups-updated", ({ groupId } = {}) => {
+      if (groupId) s.emit("msg:join-group", { groupId });
+      fetchConversations();
     });
 
     return () => {
       s.emit("msg:inbox-open", { open: false });
+      s.off("msg:reaction");
+      s.off("msg:message-edited", applyMessageMutation);
+      s.off("msg:message-deleted", applyMessageMutation);
+      s.off("msg:message-pinned", applyMessageMutation);
+      s.off("msg:message-highlighted", applyMessageMutation);
+      s.off("msg:group-message", onGroupMessage);
+      s.off("msg:groups-updated");
       s.disconnect();
     };
-  }, []);
+  }, [fetchConversations]);
 
   const emitTyping = useCallback(
     (conversationId, isTyping) => {
@@ -261,7 +333,7 @@ export function useConversations() {
     setLoading(true);
     setError("");
     try {
-      const data = await cachedJsonGet(`${API_BASE}/messages/conversations?limit=100`);
+      const data = await cachedJsonGet(`${API_BASE}/messages/conversations?limit=100`, { forceRefresh: true });
       setConversations((data.data || []).map(normConv));
     } catch (err) {
       setError(err.message || "Failed to load conversations.");
@@ -285,12 +357,17 @@ export function useConversations() {
     const stop = () => clearInterval(pollRef.current);
 
     start();
-    document.addEventListener("visibilitychange", () => {
-      document.hidden ? stop() : start();
-    });
+    const onVisibility = () => {
+      if (document.hidden) stop();
+      else {
+        start();
+        fetchConversations();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       stop();
-      document.removeEventListener("visibilitychange", () => {});
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [fetchConversations]);
 
@@ -427,6 +504,47 @@ export function useConversations() {
     [],
   );
 
+  const mutateMessage = useCallback(async (conversationId, messageId, url, options = {}) => {
+    const res = await authFetch(
+      API_BASE + "/messages/conversations/" + conversationId + "/messages/" + messageId + (url || ""),
+      options,
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || "Message operation failed");
+    const next = normMsg(data.data);
+    setMessages((prev) => prev.map((m) => String(m.id) === String(messageId) ? { ...m, ...next } : m));
+    return next;
+  }, []);
+
+  const editMessage = useCallback((conversationId, messageId, body) =>
+    mutateMessage(conversationId, messageId, "", {
+      method: "PATCH", body: JSON.stringify({ body }),
+    }), [mutateMessage]);
+
+  const unsendMessage = useCallback((conversationId, messageId) =>
+    mutateMessage(conversationId, messageId, "", { method: "DELETE" }), [mutateMessage]);
+
+  const toggleMessageFlag = useCallback((conversationId, messageId, flag, value) =>
+    mutateMessage(conversationId, messageId, "/" + flag, {
+      method: "PATCH", body: JSON.stringify({ value }),
+    }), [mutateMessage]);
+
+  const reactToMessage = useCallback(async (conversationId, messageId, emoji) => {
+    const currentUserId = getCurrentUserId();
+    const current = messages.find((m) => String(m.id) === String(messageId));
+    const ids = current?.reactions?.[emoji] || [];
+    const add = currentUserId == null ? true : !ids.map(String).includes(String(currentUserId));
+    const res = await authFetch(
+      API_BASE + "/messages/conversations/" + conversationId + "/messages/" + messageId + "/react",
+      { method: "PATCH", body: JSON.stringify({ emoji, add }) },
+    );
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || "Failed to react");
+    setMessages((prev) => prev.map((m) => String(m.id) === String(messageId)
+      ? { ...m, reactions: data.data?.reactions || {} } : m));
+    return data.data?.reactions || {};
+  }, [messages]);
+
   return {
     conversations,
     messages,
@@ -440,6 +558,10 @@ export function useConversations() {
     openConversation,
     sendMessage,
     fetchConversations,
+    editMessage,
+    unsendMessage,
+    toggleMessageFlag,
+    reactToMessage,
     adminTyping,
     typingConvs,
     emitTyping,
