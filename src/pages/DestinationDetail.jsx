@@ -361,11 +361,26 @@ export default function DestinationDetail() {
         <ProgressBar />
 
         <header className="d-hero">
-          <div className="d-hero__image" aria-hidden="true">
-            {heroImage ? (
-              <img src={heroImage} alt="" loading="eager" decoding="async" />
+          <div className="d-hero__slides" aria-hidden="true">
+            {heroSlides.length > 0 ? (
+              heroSlides.map((image, index) => (
+                <div
+                  key={`hero-slide-${image}-${index}`}
+                  className={`d-hero__slide${index === heroSlide ? " active" : ""}`}
+                >
+                  <img
+                    src={image}
+                    alt=""
+                    loading={index === 0 ? "eager" : "lazy"}
+                    decoding="async"
+                    onError={(event) => {
+                      event.currentTarget.style.display = "none";
+                    }}
+                  />
+                </div>
+              ))
             ) : (
-              <div className="d-hero__image--empty" />
+              <div className="d-hero__slide d-hero__slide--empty" />
             )}
           </div>
           <div className="d-hero__ov" />
