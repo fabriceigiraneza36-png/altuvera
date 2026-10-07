@@ -1517,6 +1517,7 @@ const InteractiveMap = () => {
   );
 
   const visibleDestinations = useMemo(() => {
+    if (zoom < 1.35 && !selectedCountry) return [];
     if (!selectedCountry) return mappedDestinations;
     const countryValues = [selectedCountry.id, selectedCountry.slug, selectedCountry.name]
       .map((value) => String(value || "").trim().toLowerCase())
@@ -1528,7 +1529,7 @@ const InteractiveMap = () => {
       destination.countryId,
       destination.countrySlug,
     ].some((value) => countryValues.includes(String(value || "").trim().toLowerCase())));
-  }, [mappedDestinations, selectedCountry]);
+  }, [mappedDestinations, selectedCountry, zoom]);
 
   /* ── Filtered countries ── */
   const filtered = useMemo(() => {
@@ -1944,6 +1945,24 @@ const InteractiveMap = () => {
                         }}
                       />
 
+                      {/* East Africa service region — intentionally highlighted because Altuvera operates only in East Africa. */}
+                      <svg
+                        aria-hidden="true"
+                        viewBox="0 0 100 100"
+                        preserveAspectRatio="none"
+                        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", zIndex: 6, pointerEvents: "none", opacity: 0.9 }}
+                      >
+                        <polygon
+                          points="17,12 52,10 86,28 94,55 72,83 48,93 22,70 14,46"
+                          fill="rgba(16,185,129,0.045)"
+                          stroke="#10b981"
+                          strokeWidth="0.35"
+                          strokeDasharray="1.2 1"
+                          vectorEffect="non-scaling-stroke"
+                        />
+                        <text x="72" y="18" fill="#047857" fontSize="2.2" fontWeight="700" letterSpacing=".35">ALTUVERA • EAST AFRICA</text>
+                      </svg>
+
                       {/* Markers layer */}
                       <div
                         style={{
@@ -1955,7 +1974,7 @@ const InteractiveMap = () => {
                           zIndex: 10,
                         }}
                       >
-                        {visibleDestinations.map((destination) => (
+                        {zoom >= 1.35 && visibleDestinations.map((destination) => (
                           <DestinationMarker
                             key={destination.id || destination.slug}
                             destination={destination}
@@ -1968,11 +1987,11 @@ const InteractiveMap = () => {
                           />
                         ))}
                         {countries.map((country) => {
-                          const pos = countryPositions[country.id] ||
-                            countryPositions[country.slug] || {
-                              top: "50%",
-                              left: "50%",
-                            };
+                          const lat = Number(country.latitude);
+                          const lng = Number(country.longitude);
+                          const pos = Number.isFinite(lat) && Number.isFinite(lng)
+                            ? coordinateToMapPosition(lat, lng)
+                            : countryPositions[country.slug] || countryPositions[country.name] || { top: "50%", left: "50%" };
                           return (
                             <MapMarker
                               key={country.id}
@@ -3250,425 +3269,6 @@ const InteractiveMap = () => {
                   </div>
                 </div>
               </AnimatedSection>
-
-              {/* ═══════ STATS GRID ═══════ */}
-              <AnimatedSection animation="fadeInUp">
-                <div
-                  className="im-stats-grid"
-                  style={{
-                    marginTop: 32,
-                    display: "grid",
-                    gridTemplateColumns: "repeat(4, 1fr)",
-                    gap: 20,
-                  }}
-                >
-                  <StatCard
-                    icon={<FiGlobe size={24} />}
-                    value={countries.length}
-                    label="Countries"
-                    color="#059669"
-                    bg="#ECFDF5"
-                  />
-                  <StatCard
-                    icon={<FiMapPin size={24} />}
-                    value="5+"
-                    label="Destinations"
-                    color="#0891B2"
-                    bg="#ECFEFF"
-                  />
-                  <StatCard
-                    icon={<FiLayers size={24} />}
-                    value="3"
-                    label="Map Views"
-                    color="#7C3AED"
-                    bg="#F5F3FF"
-                  />
-                  <StatCard
-                    icon={<FiHeart size={24} />}
-                    value={favorites.size || "∞"}
-                    label="Favorites"
-                    color="#DB2777"
-                    bg="#FDF2F8"
-                  />
-                </div>
-              </AnimatedSection>
-
-              {/* ═══════ FEATURES SECTION ═══════ */}
-              <AnimatedSection animation="fadeInUp">
-                <div style={{ marginTop: 48 }}>
-                  <div style={{ textAlign: "center", marginBottom: 32 }}>
-                    <Pill variant="solid" size="md" icon={<FiZap size={12} />}>
-                      Map Features
-                    </Pill>
-                    <h3
-                      style={{
-                        fontFamily: "'Playfair Display', serif",
-                        fontSize: isMobile ? "26px" : "clamp(30px, 3vw, 40px)",
-                        fontWeight: 800,
-                        color: "#111827",
-                        marginTop: 20,
-                        marginBottom: 12,
-                        letterSpacing: "-0.02em",
-                      }}
-                    >
-                      Explore With Confidence
-                    </h3>
-                    <p
-                      style={{
-                        fontSize: 16,
-                        color: "#6B7280",
-                        maxWidth: 520,
-                        margin: "0 auto",
-                        lineHeight: 1.7,
-                      }}
-                    >
-                      Our interactive map is designed to make discovering East
-                      Africa effortless and inspiring
-                    </p>
-                  </div>
-
-                  <div
-                    className="im-features-grid"
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns:
-                        "repeat(auto-fill, minmax(280px, 1fr))",
-                      gap: 20,
-                    }}
-                  >
-                    {features.map((feature, i) => (
-                      <div
-                        key={i}
-                        className="im-card-hover"
-                        style={{
-                          backgroundColor: "white",
-                          borderRadius: "var(--im-radius-xl)",
-                          padding: "36px 28px",
-                          textAlign: "center",
-                          boxShadow: "var(--im-shadow-sm)",
-                          border: "1px solid #F3F4F6",
-                          cursor: "default",
-                          position: "relative",
-                          overflow: "hidden",
-                          animation: `slideUp 0.4s ease ${i * 0.06}s both`,
-                        }}
-                      >
-                        <div
-                          style={{
-                            position: "absolute",
-                            top: -25,
-                            right: -25,
-                            width: 100,
-                            height: 100,
-                            borderRadius: "50%",
-                            background: `${feature.color}06`,
-                          }}
-                        />
-                        <div
-                          style={{
-                            width: 68,
-                            height: 68,
-                            borderRadius: 20,
-                            background: `linear-gradient(135deg, ${feature.color}12, ${feature.color}06)`,
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            margin: "0 auto 18px",
-                            color: feature.color,
-                            position: "relative",
-                            zIndex: 1,
-                          }}
-                        >
-                          {feature.icon}
-                        </div>
-                        <h4
-                          style={{
-                            fontFamily: "'Inter', sans-serif",
-                            fontSize: 17,
-                            fontWeight: 700,
-                            color: "#111827",
-                            marginBottom: 8,
-                            position: "relative",
-                            zIndex: 1,
-                          }}
-                        >
-                          {feature.title}
-                        </h4>
-                        <p
-                          style={{
-                            fontSize: 13,
-                            color: "#6B7280",
-                            lineHeight: 1.7,
-                            position: "relative",
-                            zIndex: 1,
-                          }}
-                        >
-                          {feature.desc}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </AnimatedSection>
-
-              {/* ═══════ KEYBOARD SHORTCUTS (Desktop) ═══════ */}
-              {isDesktop && (
-                <AnimatedSection animation="fadeInUp">
-                  <div
-                    style={{
-                      marginTop: 48,
-                      padding: "24px 32px",
-                      backgroundColor: "white",
-                      borderRadius: "var(--im-radius-xl)",
-                      border: "1px solid #F3F4F6",
-                      boxShadow: "var(--im-shadow-sm)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 12,
-                        marginBottom: 16,
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: 10,
-                          backgroundColor: "#ECFDF5",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          color: "#059669",
-                        }}
-                      >
-                        <FiInfo size={16} />
-                      </div>
-                      <h4
-                        style={{
-                          fontSize: 15,
-                          fontWeight: 700,
-                          color: "#111827",
-                        }}
-                      >
-                        Keyboard Shortcuts
-                      </h4>
-                    </div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: 24 }}>
-                      {[
-                        { keys: "Ctrl +/-", label: "Zoom in/out" },
-                        { keys: "Ctrl 0", label: "Reset zoom" },
-                        { keys: "F", label: "Fullscreen" },
-                        { keys: "R", label: "Random country" },
-                        { keys: "Esc", label: "Deselect" },
-                      ].map(({ keys, label }) => (
-                        <div
-                          key={keys}
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                          }}
-                        >
-                          <kbd
-                            style={{
-                              padding: "4px 10px",
-                              backgroundColor: "#F3F4F6",
-                              borderRadius: 6,
-                              fontSize: 12,
-                              fontWeight: 700,
-                              color: "#374151",
-                              border: "1px solid #E5E7EB",
-                              fontFamily: "'Inter', monospace",
-                              boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
-                            }}
-                          >
-                            {keys}
-                          </kbd>
-                          <span
-                            style={{
-                              fontSize: 13,
-                              color: "#6B7280",
-                              fontWeight: 500,
-                            }}
-                          >
-                            {label}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </AnimatedSection>
-              )}
-
-              {/* ═══════ CTA SECTION ═══════ */}
-              <AnimatedSection animation="fadeInUp">
-                <div
-                  className="im-cta-section"
-                  style={{
-                    marginTop: 80,
-                    padding: isMobile ? "48px 24px" : "64px 48px",
-                    background:
-                      "linear-gradient(135deg, #064E3B 0%, #065F46 40%, #047857 100%)",
-                    borderRadius: "var(--im-radius-xl)",
-                    textAlign: "center",
-                    position: "relative",
-                    overflow: "hidden",
-                  }}
-                >
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: -80,
-                      right: -80,
-                      width: 250,
-                      height: 250,
-                      borderRadius: "50%",
-                      background: "rgba(52,211,153,0.08)",
-                    }}
-                  />
-                  <div
-                    style={{
-                      position: "absolute",
-                      bottom: -50,
-                      left: -50,
-                      width: 180,
-                      height: 180,
-                      borderRadius: "50%",
-                      background: "rgba(110,231,183,0.06)",
-                    }}
-                  />
-
-                  <div style={{ position: "relative", zIndex: 1 }}>
-                    <div
-                      style={{
-                        width: 72,
-                        height: 72,
-                        borderRadius: 22,
-                        background: "rgba(255,255,255,0.1)",
-                        backdropFilter: "blur(12px)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        margin: "0 auto 28px",
-                        animation: "float 3s ease infinite",
-                      }}
-                    >
-                      <FiCompass size={32} color="#34D399" />
-                    </div>
-
-                    <h3
-                      style={{
-                        fontFamily: "'Playfair Display', serif",
-                        fontSize: isMobile
-                          ? "26px"
-                          : "clamp(30px, 3.5vw, 42px)",
-                        fontWeight: 800,
-                        color: "white",
-                        marginBottom: 14,
-                        letterSpacing: "-0.02em",
-                        lineHeight: 1.15,
-                      }}
-                    >
-                      Ready to Start Your Journey?
-                    </h3>
-
-                    <p
-                      style={{
-                        fontSize: isMobile ? "15px" : "17px",
-                        color: "rgba(255,255,255,0.8)",
-                        maxWidth: 500,
-                        margin: "0 auto 36px",
-                        lineHeight: 1.7,
-                      }}
-                    >
-                      From the savannahs of Rwanda to the gorilla forests of
-                      Rwanda — your East African adventure begins here.
-                    </p>
-
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 16,
-                        justifyContent: "center",
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <button
-                        className="im-focus"
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 10,
-                          padding: "16px 36px",
-                          background: "linear-gradient(135deg, white, #F9FAFB)",
-                          color: "#065F46",
-                          border: "none",
-                          borderRadius: "var(--im-radius-full)",
-                          cursor: "pointer",
-                          fontSize: 16,
-                          fontWeight: 800,
-                          transition: "all 0.3s",
-                          boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
-                          fontFamily: "'Inter', sans-serif",
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.transform =
-                            "translateY(-3px) scale(1.03)";
-                          e.currentTarget.style.boxShadow =
-                            "0 8px 30px rgba(0,0,0,0.2)";
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.transform =
-                            "translateY(0) scale(1)";
-                          e.currentTarget.style.boxShadow =
-                            "0 4px 20px rgba(0,0,0,0.15)";
-                        }}
-                      >
-                        <FiNavigation size={18} /> Plan Your Safari
-                      </button>
-
-                      <button
-                        className="im-focus"
-                        style={{
-                          display: "inline-flex",
-                          alignItems: "center",
-                          gap: 10,
-                          padding: "16px 36px",
-                          background: "transparent",
-                          color: "white",
-                          border: "2px solid rgba(255,255,255,0.3)",
-                          borderRadius: "var(--im-radius-full)",
-                          cursor: "pointer",
-                          fontSize: 16,
-                          fontWeight: 700,
-                          transition: "all 0.3s",
-                          fontFamily: "'Inter', sans-serif",
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.borderColor =
-                            "rgba(255,255,255,0.6)";
-                          e.currentTarget.style.backgroundColor =
-                            "rgba(255,255,255,0.1)";
-                          e.currentTarget.style.transform = "translateY(-2px)";
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.borderColor =
-                            "rgba(255,255,255,0.3)";
-                          e.currentTarget.style.backgroundColor = "transparent";
-                          e.currentTarget.style.transform = "translateY(0)";
-                        }}
-                      >
-                        <FiMessageCircle size={16} /> Contact Us
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </AnimatedSection>
-            </>
-          )}
 
           {/* ── EMPTY STATE ── */}
           {!loading && !error && countries.length === 0 && (
