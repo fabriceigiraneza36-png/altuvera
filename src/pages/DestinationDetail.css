@@ -2721,3 +2721,21 @@ html { scroll-behavior: smooth; }
   .d-sec { padding: 46px 0; }
   .d-wrap { padding-left: 16px; padding-right: 16px; }
 }
+
+/* Final country-page alignment: editorial left-bottom hero, uncluttered controls. */
+.d-hero__clean-wrap { padding-left: clamp(20px,5vw,60px); padding-right: clamp(20px,5vw,60px); }
+.d-hero__body {
+  max-width: 920px;
+  margin: 0;
+  text-align: left;
+  padding-bottom: clamp(54px,9vh,92px);
+}
+.d-hero__title { margin-left: 0; }
+.d-hero__sub { margin-left: 0; }
+.d-hero__ctas { justify-content: flex-start; }
+@media (max-width:700px) {
+  .d-hero__clean-wrap { padding-left: 16px; padding-right: 16px; }
+  .d-hero__body { padding-bottom: 32px; }
+  .d-hero__sub { padding-left: 0; }
+  .d-hero__ctas { justify-content: flex-start; }
+}
