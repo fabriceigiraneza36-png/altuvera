@@ -150,9 +150,24 @@
 .d-hero__slide.active { opacity: 1; }
 .d-hero__slide img {
   width: 100%; height: 100%; object-fit: cover;
-  transform: scale(1.04); transition: transform 7.5s ease;
+  object-position: center;
+  transform: scale(1.07);
+  transition: transform 7.5s cubic-bezier(.22,1,.36,1);
+  will-change: transform;
 }
-.d-hero__slide.active img { transform: scale(1); }
+.d-hero__slide.active img {
+  transform: scale(1);
+}
+.d-hero__slide:not(.active) img {
+  transition: none;
+}
+.d-hero__slide::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(5,46,22,.12) 0%, rgba(5,46,22,.08) 38%, rgba(5,46,22,.28) 100%);
+  pointer-events: none;
+}
 .d-hero__slide--empty {
   background: linear-gradient(135deg, #052e16, #14532d);
   display: flex; align-items: center; justify-content: center; color: #fff;
@@ -2496,6 +2511,14 @@ html { scroll-behavior: smooth; }
 .d-sh__t, .d-about__heading, .d-card__title, .d-cta__title {
   font-family: 'DM Serif Display', Georgia, serif !important;
 }
+.d-hero__slides,
+.d-hero__slide { min-height: 100%; }
+
+@media (prefers-reduced-motion: reduce) {
+  .d-hero__slide,
+  .d-hero__slide img { transition: none !important; }
+}
+
 @media (max-width: 700px) {
   .d-hero {
     min-height: 590px;
