@@ -3175,6 +3175,8 @@ const InteractiveMap = () => {
                   </div>
                 </AnimatedSection>
               </div>
+            </>
+          )}
 
           {/* ── EMPTY STATE ── */}
           {!loading && !error && countries.length === 0 && (
