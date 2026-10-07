@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { multiBackendFetch } from "../utils/multiBackendFetch";
 import { adaptDestinationList } from "../utils/destinationAdapter";
 
