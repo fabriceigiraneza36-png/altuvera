@@ -529,34 +529,6 @@ export function UserAuthProvider({ children }) {
   // ── Computed ──────────────────────────────────────────────────────────────
   const isAuthenticated  = useMemo(() => !!user && !!token, [user, token]);
 
-  useEffect(() => {
-    if (!isAuthenticated || !token) return;
-    const endpoints = [
-      "/users/me",
-      "/bookings/my-bookings?limit=50&page=1",
-      "/bookings/my?limit=10&page=1",
-      "/notifications/my?page=1&limit=20",
-      "/notifications/my/unread-count",
-      "/messages/conversations?limit=100",
-    ];
-    const run = () => endpoints.forEach((endpoint) =>
-      authFetch(endpoint, { cacheTime: 30 * 1000 }).catch(() => {})
-    );
-    let idleId = null;
-    let timeoutId = null;
-    if ("requestIdleCallback" in window) idleId = window.requestIdleCallback(run, { timeout: 1500 });
-    else timeoutId = window.setTimeout(run, 600);
-
-    // Keep the shared dashboard cache fresh while the session is open. Cached
-    // values remain instant, but every cycle still revalidates against server.
-    const refreshId = window.setInterval(run, 30_000);
-
-    return () => {
-      if (idleId !== null && window.cancelIdleCallback) window.cancelIdleCallback(idleId);
-      if (timeoutId !== null) window.clearTimeout(timeoutId);
-      window.clearInterval(refreshId);
-    };
-  }, [isAuthenticated, token, authFetch]);
   const hasGooglePending = useMemo(
     () => !!googleUser?.email && !!googleUser?.credential,
     [googleUser],
@@ -830,6 +802,36 @@ export function UserAuthProvider({ children }) {
     }
     return finalData;
   }, [clearAuth, persistSession, saveAuth, token]);
+
+  // Revalidate dashboard data only after authFetch has been initialized.
+  useEffect(() => {
+    if (!isAuthenticated || !token) return;
+    const endpoints = [
+      "/users/me",
+      "/bookings/my-bookings?limit=50&page=1",
+      "/bookings/my?limit=10&page=1",
+      "/notifications/my?page=1&limit=20",
+      "/notifications/my/unread-count",
+      "/messages/conversations?limit=100",
+    ];
+    const run = () => endpoints.forEach((endpoint) =>
+      authFetch(endpoint, { cacheTime: 30 * 1000 }).catch(() => {})
+    );
+    let idleId = null;
+    let timeoutId = null;
+    if ("requestIdleCallback" in window) idleId = window.requestIdleCallback(run, { timeout: 1500 });
+    else timeoutId = window.setTimeout(run, 600);
+
+    // Keep the shared dashboard cache fresh while the session is open. Cached
+    // values remain instant, but every cycle still revalidates against server.
+    const refreshId = window.setInterval(run, 30_000);
+
+    return () => {
+      if (idleId !== null && window.cancelIdleCallback) window.cancelIdleCallback(idleId);
+      if (timeoutId !== null) window.clearTimeout(timeoutId);
+      window.clearInterval(refreshId);
+    };
+  }, [isAuthenticated, token, authFetch]);
 
   // ============================================================================
   // Session Restore
