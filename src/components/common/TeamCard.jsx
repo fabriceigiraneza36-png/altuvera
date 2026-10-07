@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   FiAward, FiCheckCircle, FiGlobe, FiInstagram, FiLinkedin,
-  FiMail, FiMapPin, FiPhone, FiTwitter, FiBriefcase,
+  FiMail, FiPhone, FiTwitter, FiBriefcase,
 } from "react-icons/fi";
 
 const TeamCard = ({ member }) => {
@@ -135,12 +135,7 @@ const TeamCard = ({ member }) => {
           </div>
         )}
 
-        {certifications.length > 0 && (
-          <div style={{ display:"flex", alignItems:"flex-start", gap:8, marginBottom:16, color:"#475569", fontSize:12 }}>
-            <FiCheckCircle size={14} color="#059669" style={{ marginTop:2, flexShrink:0 }}/>
-            <span><strong style={{ color:"#064e3b" }}>Credentials:</strong> {certifications.slice(0,3).join(" • ")}</span>
-          </div>
-        )}
+        
 
         <div style={{ marginTop:"auto", paddingTop:15, borderTop:"1px solid #e5e7eb", display:"flex", alignItems:"center", justifyContent:"space-between", gap:12 }}>
           <div style={{ display:"flex", gap:7, flexWrap:"wrap" }}>
