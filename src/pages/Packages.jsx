@@ -334,6 +334,110 @@ const PKG_CSS = `
   margin-bottom: 16px;
 }
 
+.pk-hero {
+  position: relative;
+  min-height: clamp(560px, 72vh, 760px);
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  background: var(--pk-forest);
+}
+.pk-hero__bg {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+}
+.pk-hero__overlay {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, rgba(2,44,34,.22), rgba(2,44,34,.30) 36%, rgba(2,44,34,.90) 100%),
+    linear-gradient(90deg, rgba(2,44,34,.40), transparent 70%);
+}
+.pk-hero__content {
+  position: relative; z-index: 2;
+  width: min(1200px, 100%);
+  margin: 0 auto;
+  padding: 120px clamp(18px, 6vw, 72px) 72px;
+}
+.pk-hero__eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: #86efac; font-size: 11px; font-weight: 800;
+  letter-spacing: .14em; text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.pk-hero__title {
+  font-family: 'DM Serif Display', Georgia, serif;
+  font-size: clamp(48px, 8vw, 96px);
+  line-height: .98; font-weight: 400;
+  letter-spacing: -.035em; color: #fff;
+  margin: 0 0 16px;
+  text-wrap: balance;
+}
+.pk-hero__subtitle {
+  max-width: 690px;
+  color: rgba(255,255,255,.76);
+  font-size: clamp(14px, 1.6vw, 19px);
+  line-height: 1.7; margin: 0 0 28px;
+}
+.pk-hero__search {
+  display: flex; align-items: center;
+  width: min(760px, 100%);
+  min-height: 58px;
+  padding-left: 18px;
+  background: rgba(255,255,255,.97);
+  border: 1px solid rgba(255,255,255,.7);
+  border-radius: 16px;
+  box-shadow: 0 18px 50px rgba(0,0,0,.24);
+}
+.pk-hero__search > svg { color: var(--pk-green); flex-shrink: 0; }
+.pk-hero__search input {
+  flex: 1; min-width: 0;
+  border: 0; outline: 0; background: transparent;
+  padding: 16px 12px;
+  font: 500 14px 'Plus Jakarta Sans', system-ui, sans-serif;
+  color: #0f172a;
+}
+.pk-hero__search input::placeholder { color: #94a3b8; }
+.pk-hero__search > button:not(.pk-hero__search-submit) {
+  width: 34px; height: 34px; border: 0; border-radius: 50%;
+  background: #e2e8f0; color: #475569; display: grid; place-items: center;
+  cursor: pointer; flex-shrink: 0;
+}
+.pk-hero__search-submit {
+  min-height: 58px; padding: 0 24px;
+  border: 0; border-radius: 0 15px 15px 0;
+  background: linear-gradient(135deg,#10b981,#059669);
+  color: #fff; font: 700 14px 'Plus Jakarta Sans', system-ui, sans-serif;
+  display: inline-flex; align-items: center; gap: 7px;
+  cursor: pointer; flex-shrink: 0;
+}
+.pk-hero__meta {
+  display: flex; flex-wrap: wrap; gap: 10px;
+  margin-top: 18px;
+}
+.pk-hero__meta span {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 7px 13px; border-radius: 999px;
+  border: 1px solid rgba(255,255,255,.16);
+  background: rgba(255,255,255,.08);
+  color: rgba(255,255,255,.78);
+  backdrop-filter: blur(10px);
+  font-size: 11px; font-weight: 600;
+}
+@media (max-width: 700px) {
+  .pk-hero { min-height: 620px; }
+  .pk-hero__content { padding: 108px 18px 46px; }
+  .pk-hero__title { font-size: clamp(46px, 14vw, 68px); }
+  .pk-hero__subtitle { font-size: 14px; line-height: 1.62; }
+  .pk-hero__search { min-height: 54px; border-radius: 14px; }
+  .pk-hero__search input { font-size: 13px; padding: 14px 7px; }
+  .pk-hero__search-submit {
+    min-height: 54px; padding: 0 15px; font-size: 12px;
+  }
+  .pk-hero__meta { gap: 7px; }
+  .pk-hero__meta span { font-size: 10px; padding: 6px 9px; }
+  .pk-cat-pill { padding: 8px 14px; }
+}
 @media (max-width: 640px) {
   .pk-grid { grid-template-columns: 1fr !important; }
   .pk-list-card { grid-template-columns: 1fr !important; }
@@ -935,181 +1039,51 @@ function FilterPanel(props) {
 ══════════════════════════════════════════════════════════════════════ */
 function Hero({ search, onSearch, total, loading }) {
   const [local, setLocal] = useState(search)
-  const inputRef = useRef(null)
-
   useEffect(() => setLocal(search), [search])
-  const handleSubmit = e => { e.preventDefault(); onSearch(local) }
+
+  const handleSubmit = e => {
+    e.preventDefault()
+    onSearch(local)
+  }
 
   return (
-    <div style={{
-      position: 'relative',
-      minHeight: 'clamp(540px, 68vh, 720px)',
-      paddingTop: '80px', /* Space for fixed header */
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center',
-      overflow: 'hidden',
-    }}>
-      {/* BG image */}
-      <img
-        src={HERO_BG}
-        alt="African safari landscape"
-        style={{
-          position: 'absolute', inset: 0,
-          width: '100%', height: '100%', objectFit: 'cover',
-        }}
-      />
-
-      {/* Overlays */}
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: 'linear-gradient(160deg, rgba(2,44,22,0.25) 0%, rgba(2,44,34,0.65) 55%, rgba(1,30,15,0.92) 100%)',
-      }} />
-      <div style={{
-        position: 'absolute', inset: 0,
-        background: 'linear-gradient(to right, rgba(2,44,34,0.3), transparent 65%)',
-      }} />
-
-      {/* Content */}
-      <div style={{
-        position: 'relative', zIndex: 2,
-        width: '100%', maxWidth: 800, margin: '0 auto',
-        padding: 'clamp(52px, 9vh, 100px) clamp(20px, 5vw, 60px)',
-        textAlign: 'center',
-      }}>
-        {/* Section label badge */}
-        <div style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8,
-          padding: '7px 22px', borderRadius: 999,
-          background: 'rgba(16,185,129,0.15)', backdropFilter: 'blur(14px)',
-          border: '1px solid rgba(74,222,128,0.35)',
-          color: '#86efac', fontSize: 11, fontWeight: 700,
-          textTransform: 'uppercase', letterSpacing: '0.1em',
-          marginBottom: 28,
-        }}>
-          <FiCompass size={12} style={{ color: '#4ade80' }} />
-          {loading ? 'Loading…' : `${total > 0 ? `${total} Curated` : 'Curated'} Adventures`}
-        </div>
-
-        {/* Headline */}
-        <h1 style={{
-          fontFamily: "'DM Serif Display', Georgia, serif",
-          fontSize: 'clamp(36px, 6vw, 64px)',
-          fontWeight: 400, color: 'white', lineHeight: 1.1,
-          letterSpacing: '-0.02em', marginBottom: 20,
-          textShadow: '0 2px 28px rgba(0,0,0,0.4)',
-        }}>
-          Your Perfect
-          <span style={{
-            display: 'block', marginTop: 8,
-            backgroundImage: 'linear-gradient(135deg, #86efac 0%, #4ade80 50%, #22c55e 100%)',
-            WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-          }}>
-            African Adventure
-          </span>
+    <header className="pk-hero">
+      <img className="pk-hero__bg" src={HERO_BG} alt="" aria-hidden="true" />
+      <div className="pk-hero__overlay" />
+      <div className="pk-hero__content">
+        <span className="pk-hero__eyebrow">
+          <FiCompass size={13} /> CURATED EAST AFRICAN JOURNEYS
+        </span>
+        <h1 className="pk-hero__title">
+          Safari Packages
         </h1>
-
-        <p style={{
-          fontSize: 'clamp(14px, 1.8vw, 18px)',
-          color: 'rgba(255,255,255,0.72)', lineHeight: 1.78,
-          marginBottom: 40, fontWeight: 300,
-          textShadow: '0 1px 14px rgba(0,0,0,0.3)',
-        }}>
-          Handcrafted safari experiences across Africa's most breathtaking landscapes —
-          built for extraordinary, life-changing journeys.
+        <p className="pk-hero__subtitle">
+          Thoughtfully crafted journeys across East Africa, ready to shape around your dates, interests and style of travel.
         </p>
-
-        {/* Search bar */}
-        <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: 600, margin: '0 auto 34px' }}>
-          <div style={{
-            display: 'flex', alignItems: 'center',
-            background: 'rgba(255,255,255,0.97)', backdropFilter: 'blur(20px)',
-            borderRadius: 18, overflow: 'hidden',
-            boxShadow: '0 24px 64px rgba(0,0,0,0.28)',
-            border: '1.5px solid rgba(255,255,255,0.55)',
-          }}>
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 12, padding: '0 20px' }}>
-              <FiSearch size={18} style={{ color: '#059669', flexShrink: 0 }} />
-              <input
-                ref={inputRef}
-                value={local}
-                onChange={e => setLocal(e.target.value)}
-                placeholder="Search destinations, safaris, activities…"
-                style={{
-                  flex: 1, padding: '18px 0', background: 'transparent',
-                  border: 'none', outline: 'none', fontSize: 15,
-                  color: '#0f172a', fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontWeight: 500,
-                }}
-              />
-              {local && (
-                <button
-                  type="button"
-                  onClick={() => { setLocal(''); onSearch('') }}
-                  style={{
-                    width: 24, height: 24, borderRadius: '50%', background: '#e2e8f0',
-                    border: 'none', cursor: 'pointer', display: 'flex',
-                    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-                    transition: 'all 0.2s',
-                  }}
-                  onMouseOver={e => e.currentTarget.style.background = '#cbd5e1'}
-                  onMouseOut={e => e.currentTarget.style.background = '#e2e8f0'}
-                >
-                  <FiX size={12} color="#64748b" />
-                </button>
-              )}
-            </div>
-            <button
-              type="submit"
-              style={{
-                flexShrink: 0, padding: '18px clamp(18px, 3vw, 36px)',
-                background: 'linear-gradient(135deg, #10b981, #059669)',
-                border: 'none', color: 'white', fontWeight: 700, fontSize: 15,
-                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-                fontFamily: "'Plus Jakarta Sans', sans-serif", transition: 'all 0.25s',
-              }}
-              onMouseOver={e => e.currentTarget.style.background = 'linear-gradient(135deg, #059669, #047857)'}
-              onMouseOut={e => e.currentTarget.style.background = 'linear-gradient(135deg, #10b981, #059669)'}
-            >
-              Search <FiArrowRight size={16} />
+        <form className="pk-hero__search" onSubmit={handleSubmit}>
+          <FiSearch size={18} />
+          <input
+            value={local}
+            onChange={e => setLocal(e.target.value)}
+            placeholder="Search packages, destinations and experiences…"
+            aria-label="Search packages"
+          />
+          {local && (
+            <button type="button" onClick={() => { setLocal(''); onSearch('') }} aria-label="Clear search">
+              <FiX size={14} />
             </button>
-          </div>
+          )}
+          <button type="submit" className="pk-hero__search-submit">
+            Search <FiArrowRight size={15} />
+          </button>
         </form>
-
-        {/* Trust pills */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          flexWrap: 'wrap', gap: 10,
-        }}>
-          {[
-            { Icon: FiStar,     label: '5-Star Rated'   },
-            { Icon: FiShield,   label: 'Safe & Secure'  },
-            { Icon: FiCalendar, label: 'Flexible Dates' },
-            { Icon: FiAward,    label: 'Expert Guides'  },
-          ].map(({ Icon, label }) => (
-            <div key={label} style={{
-              display: 'flex', alignItems: 'center', gap: 7, padding: '7px 17px',
-              background: 'rgba(255,255,255,0.09)', backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.15)',
-              borderRadius: 999, color: 'rgba(255,255,255,0.82)',
-              fontSize: 13, fontWeight: 600,
-            }}>
-              <Icon size={12} style={{ color: '#4ade80' }} />
-              {label}
-            </div>
-          ))}
+        <div className="pk-hero__meta">
+          <span><FiPackage size={13} /> {loading ? 'Loading packages…' : `${total.toLocaleString()} curated package${total === 1 ? '' : 's'}`}</span>
+          <span><FiShield size={13} /> Flexible planning</span>
+          <span><FiCalendar size={13} /> Tailored dates</span>
         </div>
       </div>
-
-      {/* Wave transition */}
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, lineHeight: 0 }}>
-        <svg
-          viewBox="0 0 1440 54" fill="none" xmlns="http://www.w3.org/2000/svg"
-          style={{ width: '100%', display: 'block' }} preserveAspectRatio="none"
-        >
-          <path d="M0,54 C480,0 960,0 1440,54 L1440,54 L0,54 Z" fill="#f0fdf4" />
-        </svg>
-      </div>
-    </div>
+    </header>
   )
 }
 
@@ -1332,140 +1306,6 @@ export default function Packages() {
 return (
     <div className="pk-root" ref={topRef}>
       
-      {/* ── FIXED HEADER ── */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 1000,
-        background: 'linear-gradient(to right, rgba(255,255,255,0.95), rgba(255,255,255,0.8))',
-        backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(16,185,129,0.2)',
-        padding: '12px 0',
-        boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
-      }}>
-        <div style={{
-          maxWidth: 1400,
-          margin: '0 auto',
-          padding: '0 clamp(16px,3vw,40px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 12
-          }}>
-            <FiCompass size={22} style={{ 
-              color: '#059669',
-              filter: 'drop-shadow(0 2px 4px rgba(5,150,105,0.2))'
-            }} />
-            <h1 style={{
-              fontFamily: "'DM Serif Display', Georgia, serif",
-              fontSize: 'clamp(20px, 3vw, 24px)',
-              fontWeight: 400,
-              color: '#022c22',
-              margin: 0,
-              letterSpacing: '-0.5px'
-            }}>
-              Altuvеrа Adventures
-            </h1>
-          </div>
-          
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 16
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              background: 'linear-gradient(to right, rgba(5,150,105,0.08), rgba(16,185,129,0.05))',
-              borderRadius: 14,
-              padding: '6px 12px',
-              border: '1px solid rgba(16,185,129,0.2)'
-            }}>
-              <FiSearch size={18} style={{ 
-                color: '#059669', 
-                flexShrink: 0,
-                filter: 'drop-shadow(0 1px 2px rgba(5,150,105,0.1))'
-              }} />
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search packages, destinations…"
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  outline: 'none',
-                  fontSize: 14,
-                  color: '#0f172a',
-                  fontFamily: "'Plus Jakarta Sans', sans-serif",
-                  fontWeight: 500,
-                  width: 220
-                }}
-              />
-            </div>
-            
-            <button
-              onClick={() => setFilterOpen(true)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                padding: '10px 20px',
-                borderRadius: 12,
-                border: '1.5px solid #a7f3d0',
-                background: 'linear-gradient(to right, white, rgba(255,255,255,0.8))',
-                color: '#047857',
-                fontSize: 13,
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-                fontFamily: "'Plus Jakarta Sans', sans-serif",
-                boxShadow: '0 2px 8px rgba(5,150,105,0.1)'
-              }}
-              onMouseOver={e => {
-                e.currentTarget.style.background = 'linear-gradient(to right, #f0fdf4, #e0f2fe)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(5,150,105,0.1)'
-              }}
-              onMouseOut={e => {
-                e.currentTarget.style.background = 'linear-gradient(to right, white, rgba(255,255,255,0.8))';
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(5,150,105,0.08)'
-              }}
-            >
-              <FiFilter size={16} style={{ 
-                color: '#059669',
-                filter: 'drop-shadow(0 1px 2px rgba(5,150,105,0.1))'
-              }} />
-              <span>Filters</span>
-              {activeFilterCount > 0 && (
-                <span style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  background: 'linear-gradient(135deg,#10b981,#059669)',
-                  color: 'white',
-                  fontSize: 10,
-                  fontWeight: 800,
-                  width: 22,
-                  height: 22,
-                  borderRadius: '50%'
-                }}>
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* ── HERO ── */}
       <Hero search={search} onSearch={setSearch} total={total} loading={loading} />
 
       {/* ── CATEGORY STRIP ── */}
