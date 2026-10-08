@@ -1348,11 +1348,6 @@ const featureBlocks = useMemo(() => [
      { title: "Experience Legendary Safaris & Coastal Paradise", description: "Kenya combines iconic wildlife encounters with spectacular landscapes and pristine Indian Ocean beaches.", bullets: ["Maasai Mara Great Migration safaris", "Amboseli elephant encounters with Kilimanjaro views", "Sunrise hot-air balloon adventures", "Diani Beach & Swahili coastal experiences"], ctaLabel: "Explore Kenya", link: "/country/kenya", images: ["https://i.pinimg.com/1200x/74/7c/db/747cdb455c96a6286b2deff74a391e8f.jpg", "https://i.pinimg.com/1200x/0f/c4/6f/0fc46fc0a5e286b126ab6e78697c5e5f.jpg", "https://i.pinimg.com/736x/cc/5f/49/cc5f496af04db30b07c3559d5a708cb7.jpg"] }
    ], []);
 
-  const rwandaDestinations = allDest.filter(d => {
-    const countryName = (d.countryName || d.country || '').toLowerCase();
-    return countryName.includes('rwanda');
-  });
-
   return (
     <div className="home-root">
       <SEO title="Altuvera Safaris — True Adventures in High Places & Deep Culture" />
@@ -1424,11 +1419,11 @@ const featureBlocks = useMemo(() => [
       <section className="home-section home-section--compact">
         <div className="home-container">
           <div className="hsec-header hsec-center">
-            <h2 className="hsec-title">Destinations in Rwanda</h2>
-            <p className="hsec-sub">6 carefully selected destinations — each offering unique, authentic experiences</p>
+            <h2 className="hsec-title">Destinations Across East Africa</h2>
+            <p className="hsec-sub">Explore selected destinations across East Africa — each offering unique, authentic experiences.</p>
           </div>
-          <div className="rwanda-gallery" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', marginTop: '24px' }}>
-            {rwandaDestinations.slice(0, 6).map((dest, idx) => {
+          <div className="east-africa-gallery" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '16px', marginTop: '24px' }}>
+            {allDest.slice(0, 12).map((dest, idx) => {
               // Get the first available image using the same logic as DestinationCard
               const getFirstImage = (destination) => {
                 const images = [
@@ -1462,7 +1457,7 @@ const featureBlocks = useMemo(() => [
                   {imgSrc ? (
                     <img
                       src={imgSrc}
-                      alt={dest.name || 'Rwanda Destination'}
+                      alt={dest.name || 'East Africa Destination'}
                       loading={idx === 0 ? "eager" : "lazy"}
                       onError={(e) => {
                         // Hide broken image and show placeholder instead
@@ -1506,14 +1501,14 @@ const featureBlocks = useMemo(() => [
                     textAlign: 'center',
                     backdropFilter: 'blur(4px)'
                   }}>
-                    {dest.name || 'Rwanda Destination'}
+                    {dest.name || 'East Africa Destination'}
                   </div>
                 </div>
               );
             })}
           </div>
           <div style={{ textAlign: 'center', marginTop: '1.5rem' }}>
-            <Button to="/country/rwanda" variant="primary" size="large" icon={<HiOutlineArrowRight size={16} />}>Explore All Rwanda Destinations</Button>
+            <Button to="/destinations" variant="primary" size="large" icon={<HiOutlineArrowRight size={16} />}>Explore All Destinations</Button>
           </div>
         </div>
       </section>
