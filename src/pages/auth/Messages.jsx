@@ -731,6 +731,13 @@ function NewConvModal({ onClose, onCreated }) {
 ══════════════════════════════════════════════════════════════════════════ */
 
 export default function Messages() {
+  // Stable clock value used by message receipts and presence labels.
+  // Avoids a runtime ReferenceError during message-list rendering.
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(Date.now()), 30_000);
+    return () => window.clearInterval(timer);
+  }, []);
   const [searchParams] = useSearchParams();
   const requestedConversationId = searchParams.get("conversationId");
   const {
