@@ -21,8 +21,10 @@ import {
 // Using FiTriangle as mountain substitute throughout
 
 /* ── API ─────────────────────────────────────────────────────────────── */
-const API_BASE =
-  import.meta.env.VITE_API_URL || 'https://backend-jd8f.onrender.com/api'
+const API_BASE = (() => {
+  const raw = (import.meta.env.VITE_API_URL || 'https://backend-jd8f.onrender.com').replace(/\/+$/, '')
+  return raw.endsWith('/api') ? raw : `${raw}/api`
+})()
 
 const getToken = () =>
   localStorage.getItem('altuvera_auth_token') ||
