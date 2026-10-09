@@ -578,11 +578,16 @@ const MsgBubble = React.memo(function MsgBubble({
    NEW CONVERSATION MODAL
 ══════════════════════════════════════════════════════════════════════════ */
 
-function NewConvModal({ onClose, onCreated }) {
-  const [subject,  setSubject]  = useState("");
-  const [body,     setBody]     = useState("");
+function NewConvModal({ onClose, onCreated, initialContext = null }) {
+  const [subject, setSubject] = useState(initialContext?.name ? `About ${initialContext.type}: ${initialContext.name}` : "");
+  const [body, setBody] = useState("");
   const [creating, setCreating] = useState(false);
-  const [error,    setError]    = useState("");
+  const [error, setError] = useState("");
+  const [contextType, setContextType] = useState(initialContext?.type || "");
+  const [contextId, setContextId] = useState(initialContext?.id || "");
+  const [contextName, setContextName] = useState(initialContext?.name || "");
+  const [contextOptions, setContextOptions] = useState([]);
+  const [contextLoading, setContextLoading] = useState(false);
   const taRef = useRef(null);
 
   useEffect(() => { taRef.current?.focus(); }, []);
@@ -592,16 +597,44 @@ function NewConvModal({ onClose, onCreated }) {
     return () => window.removeEventListener("keydown", h);
   }, [onClose]);
 
+  useEffect(() => {
+    if (!contextType) { setContextOptions([]); return; }
+    let alive = true;
+    const endpoint = contextType === "country" ? "countries"
+      : contextType === "destination" ? "destinations" : "packages";
+    setContextLoading(true);
+    fetch(`${API_BASE}/${endpoint}?limit=100`)
+      .then((res) => res.json())
+      .then((body) => {
+        if (!alive) return;
+        const candidate = body?.data?.data || body?.data || body?.countries || body?.destinations || body?.packages || [];
+        setContextOptions(Array.isArray(candidate) ? candidate : []);
+      })
+      .catch(() => alive && setContextOptions([]))
+      .finally(() => alive && setContextLoading(false));
+    return () => { alive = false; };
+  }, [contextType]);
+
+  const contextLabel = (item) => item?.name || item?.title || item?.country_name || item?.destination_name || "";
+  const contextValue = (item) => String(item?.id ?? item?.value ?? item?.slug ?? "");
+
   const handle = async () => {
     if (!body.trim()) { setError("Please enter a message."); return; }
+    if (contextType && (!contextId || !contextName.trim())) {
+      setError(`Please select a ${contextType} for this enquiry.`);
+      return;
+    }
     setError(""); setCreating(true);
     try {
       const res  = await authFetch(`${API_BASE}/messages/conversations`, {
         method:"POST",
         body: JSON.stringify({
-          subject: subject.trim() || "General Enquiry",
-          body:    body.trim(),
-          kind:    "general",
+          subject: subject.trim() || (contextName ? `About ${contextType}: ${contextName}` : "General Enquiry"),
+          firstMessage: body.trim(),
+          contextType: contextType || undefined,
+          contextId: contextId || undefined,
+          contextName: contextName || undefined,
+          kind: "general",
         }),
       });
       const data = await res.json();
@@ -650,6 +683,54 @@ function NewConvModal({ onClose, onCreated }) {
               Send a message to the <strong>Altuvera support team</strong>.
               We typically reply within a few hours.
             </p>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+              What is this enquiry about?
+            </label>
+            <select
+              value={contextType}
+              onChange={(e) => {
+                setContextType(e.target.value);
+                setContextId("");
+                setContextName("");
+                setSubject("");
+              }}
+              className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl outline-none bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+            >
+              <option value="">General enquiry</option>
+              <option value="country">A country</option>
+              <option value="destination">A destination</option>
+              <option value="package">A package</option>
+            </select>
+            {contextType && (
+              <div className="mt-2">
+                <label className="block text-xs font-semibold text-slate-500 mb-1.5">Select {contextType}</label>
+                <select
+                  value={contextId}
+                  onChange={(e) => {
+                    const selected = contextOptions.find((item) => contextValue(item) === e.target.value);
+                    setContextId(e.target.value);
+                    setContextName(selected ? contextLabel(selected) : "");
+                    if (selected) setSubject(`About ${contextType}: ${contextLabel(selected)}`);
+                  }}
+                  disabled={contextLoading}
+                  className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl outline-none bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 disabled:opacity-60"
+                >
+                  <option value="">{contextLoading ? "Loading options…" : `Choose a ${contextType}`}</option>
+                  {contextName && contextId && !contextOptions.some((item) => contextValue(item) === String(contextId)) && (
+                    <option value={contextId}>{contextName}</option>
+                  )}
+                  {contextOptions.map((item) => {
+                    const value = contextValue(item);
+                    const label = contextLabel(item);
+                    return value && label ? <option key={value} value={value}>{label}</option> : null;
+                  })}
+                </select>
+                <p className="mt-1.5 text-[11px] text-slate-400">This selection will be attached to your conversation so the team knows exactly what you mean.</p>
+              </div>
+            )}
           </div>
 
           <div>
@@ -740,6 +821,12 @@ export default function Messages() {
   }, []);
   const [searchParams] = useSearchParams();
   const requestedConversationId = searchParams.get("conversationId");
+  const requestedContextType = searchParams.get("contextType");
+  const requestedContextId = searchParams.get("contextId");
+  const requestedContextName = searchParams.get("contextName");
+  const requestedContext = requestedContextType && requestedContextName
+    ? { type: requestedContextType, id: requestedContextId || "", name: requestedContextName }
+    : null;
   const {
     conversations, messages, activeId, activeConversation,
     unreadCount, loading, loadingMsgs, sending, error,
@@ -763,7 +850,7 @@ export default function Messages() {
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editText, setEditText] = useState("");
   const [showEmoji,    setShowEmoji]    = useState(false);
-  const [showNewChat,  setShowNewChat]  = useState(false);
+  const [showNewChat, setShowNewChat] = useState(() => Boolean(requestedContext));
   const [sidebarOpen,  setSidebarOpen]  = useState(true);
   const [atBottom,     setAtBottom]     = useState(true);
   const [showScrollBtn,setShowScrollBtn]= useState(false);
@@ -925,7 +1012,11 @@ export default function Messages() {
       <Helmet><title>Messages | Altuvera</title></Helmet>
 
       {showNewChat && (
-        <NewConvModal onClose={()=>setShowNewChat(false)} onCreated={handleNewConvCreated} />
+        <NewConvModal
+          initialContext={requestedContext}
+          onClose={() => setShowNewChat(false)}
+          onCreated={handleNewConvCreated}
+        />
       )}
 
       <DashboardLayout
