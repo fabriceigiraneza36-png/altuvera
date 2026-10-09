@@ -85,6 +85,7 @@ export const packagesAPI = {
   getBySlug:     (slug)       => get(`/packages/slug/${slug}`),
   getFeatured:   (params)     => get('/packages/featured', params),
   getCategories: ()           => get('/packages/categories'),
+  getFAQs:       (category)    => get('/faqs', { category }),
   incrementView: (id)         => post(`/packages/${id}/view`),
 
   // ── CRUD (admin) ──────────────────────────────────────────────────────────

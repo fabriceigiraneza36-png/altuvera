@@ -6,7 +6,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import {
   ArrowLeft, CalendarDays, Check, ChevronDown, Globe2, Loader2,
-  Mail, MapPin, MessageCircle, Send, Users, Phone as PhoneIcon,
+  Mail, MapPin, MessageCircle, Send, Users, Phone as PhoneIcon, HelpCircle,
   Sparkles, ShieldCheck, AlertCircle,
 } from "lucide-react";
 import { packagesAPI } from "../api/packages";
@@ -180,6 +180,8 @@ export default function PackageDetail() {
   const [pkg, setPkg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
+  const [packageFaqs, setPackageFaqs] = useState([]);
+  const [faqLoading, setFaqLoading] = useState(false);
 
   const [form, setForm] = useState({
     guest_name: "",
@@ -220,6 +222,21 @@ export default function PackageDetail() {
 
     return () => { alive = false; };
   }, [slug]);
+
+  useEffect(() => {
+    if (!pkg?.id) return;
+    let alive = true;
+    setFaqLoading(true);
+    packagesAPI.getFAQs(`package:${pkg.id}`)
+      .then((body) => {
+        if (!alive) return;
+        const data = body?.data || body;
+        setPackageFaqs(Array.isArray(data) ? data : []);
+      })
+      .catch(() => alive && setPackageFaqs([]))
+      .finally(() => alive && setFaqLoading(false));
+    return () => { alive = false; };
+  }, [pkg?.id]);
 
   const update = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -447,6 +464,43 @@ export default function PackageDetail() {
           </div>
         </form>
       </section>
+
+      <section className="pkg-faq-section" aria-labelledby="pkg-faq-title">
+        <div className="pkg-faq-heading">
+          <div>
+            <span className="pkg-eyebrow">Package information</span>
+            <h2 id="pkg-faq-title">Frequently asked questions</h2>
+            <p>Answers to common questions about {pkg.title}. Need something more specific? Ask our team directly.</p>
+          </div>
+          <Link
+            className="pkg-faq-ask"
+            to={`/messages?contextType=package&contextId=${encodeURIComponent(pkg.id)}&contextName=${encodeURIComponent(pkg.title)}`}
+          >
+            <MessageCircle size={17} /> Ask about this package
+          </Link>
+        </div>
+
+        {faqLoading ? (
+          <p className="pkg-faq-empty" role="status">Loading package questions…</p>
+        ) : packageFaqs.length ? (
+          <div className="pkg-faq-list">
+            {packageFaqs.map((faq) => (
+              <details className="pkg-faq-item" key={faq.id}>
+                <summary>{faq.question}<ChevronDown size={18} /></summary>
+                <p>{faq.answer}</p>
+              </details>
+            ))}
+          </div>
+        ) : (
+          <div className="pkg-faq-empty">
+            <HelpCircle size={22} />
+            <p>No questions have been published for this package yet.</p>
+            <Link to={`/messages?contextType=package&contextId=${encodeURIComponent(pkg.id)}&contextName=${encodeURIComponent(pkg.title)}`}>
+              Be the first to ask a question <ArrowLeft size={14} />
+            </Link>
+          </div>
+        )}
+      </section>
     </main>
   );
 }
@@ -465,6 +519,21 @@ const CSS = `
 .pkg-poster-copy h1{font:400 clamp(32px,4vw,58px)/1.05 "DM Serif Display",serif;margin:10px 0 18px;max-width:760px}
 .pkg-meta{display:flex;flex-wrap:wrap;gap:10px}.pkg-meta span,.pkg-meta strong{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border-radius:999px;background:rgba(255,255,255,.13);backdrop-filter:blur(12px);font-size:12px}.pkg-meta strong{background:#10b981}
 .pkg-form-card{background:white;border:1px solid #d7eee1;border-radius:28px;box-shadow:0 18px 60px rgba(2,44,34,.09);overflow:visible}
+.pkg-faq-section{max-width:1400px;margin:34px auto 72px;padding:0 clamp(16px,4vw,48px);color:#123b2b}
+.pkg-faq-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;margin-bottom:22px}
+.pkg-faq-heading h2{font-size:clamp(26px,3vw,38px);line-height:1.12;margin:8px 0;font-family:"DM Serif Display",serif}
+.pkg-faq-heading p{color:#64776c;max-width:650px;line-height:1.7;margin:0}
+.pkg-faq-ask{display:inline-flex;align-items:center;justify-content:center;gap:9px;white-space:nowrap;background:#137547;color:white;padding:13px 18px;border-radius:14px;font-weight:700;text-decoration:none;box-shadow:0 8px 22px rgba(19,117,71,.16)}
+.pkg-faq-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.pkg-faq-item{background:#fff;border:1px solid #d9e9df;border-radius:16px;padding:0 18px;box-shadow:0 5px 20px rgba(12,57,36,.04)}
+.pkg-faq-item summary{display:flex;align-items:center;justify-content:space-between;gap:12px;cursor:pointer;list-style:none;padding:18px 0;font-weight:700;color:#183e2c}
+.pkg-faq-item summary::-webkit-details-marker{display:none}
+.pkg-faq-item summary svg{flex-shrink:0;color:#16804a;transition:transform .2s}
+.pkg-faq-item[open] summary svg{transform:rotate(180deg)}
+.pkg-faq-item p{margin:0;padding:0 0 18px;color:#5b6e62;line-height:1.75;white-space:pre-wrap}
+.pkg-faq-empty{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:22px;border:1px dashed #c5ddce;border-radius:16px;background:#f7fbf8;color:#597164}
+.pkg-faq-empty p{margin:0}
+.pkg-faq-empty a{display:inline-flex;align-items:center;gap:7px;color:#137547;font-weight:700;text-decoration:none}
 .pkg-form-head{padding:30px 30px 22px;border-bottom:1px solid #e7f4ec}.pkg-form-head h2{font:400 clamp(25px,3vw,36px)/1.1 "DM Serif Display",serif;color:#064e3b;margin:8px 0}.pkg-form-head p{margin:0;color:#64748b;font-size:13px;line-height:1.6}
 .pkg-eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.15em;font-weight:800;color:#059669}
 .pkg-section{padding:25px 30px;border-bottom:1px solid #e7f4ec}.pkg-section:last-of-type{border-bottom:0}
@@ -482,6 +551,6 @@ const CSS = `
 .pkg-loading{max-width:1400px;margin:auto;padding:40px clamp(16px,4vw,48px);display:grid;grid-template-columns:1.08fr .92fr;gap:28px}.pkg-loading-image,.pkg-loading-form{border-radius:28px;background:linear-gradient(110deg,#dcfce7,#f0fdf4,#dcfce7);background-size:200% 100%;animation:pkg-shimmer 1.5s infinite}.pkg-loading-image{height:70vh}.pkg-loading-form{height:720px}@keyframes pkg-shimmer{to{background-position:-200% 0}}
 .pkg-error-page{display:grid;place-items:center;padding:70px 20px}.pkg-error-card{text-align:center;background:white;border:1px solid #d7eee1;border-radius:24px;padding:42px;max-width:500px;box-shadow:0 20px 50px rgba(2,44,34,.08)}.pkg-error-card>svg{color:#dc2626}.pkg-error-card h1{font:400 34px "DM Serif Display";color:#064e3b}.pkg-error-card p{color:#64748b;line-height:1.6}
 @media(max-width:1000px){.pkg-layout,.pkg-loading{grid-template-columns:1fr}.pkg-poster{position:relative;top:auto;height:55vh;min-height:420px}.pkg-form-card{margin-top:0}}
-@media(max-width:640px){.pkg-topbar{padding:16px}.pkg-layout{padding:0 12px}.pkg-poster{height:58vh;min-height:400px;border-radius:20px}.pkg-poster-copy h1{font-size:38px}.pkg-form-head,.pkg-section{padding:22px 18px}.pkg-two,.pkg-three{grid-template-columns:1fr}.pkg-choice-grid{grid-template-columns:1fr}.pkg-submit-row{padding:18px;display:block}.pkg-submit-row>div{margin-bottom:14px;max-width:none}.pkg-submit{width:100%}.pkg-alert{margin-left:18px;margin-right:18px}.pkg-success{margin:8vh 14px;padding:36px 20px}}
+@media(max-width:640px){.pkg-topbar{padding:16px}.pkg-layout{padding:0 12px}.pkg-poster{height:58vh;min-height:400px;border-radius:20px}.pkg-poster-copy h1{font-size:38px}.pkg-form-head,.pkg-section{padding:22px 18px}.pkg-two,.pkg-three{grid-template-columns:1fr}.pkg-faq-heading{align-items:stretch;flex-direction:column}.pkg-faq-ask{width:100%}.pkg-faq-list{grid-template-columns:1fr}.pkg-faq-section{padding:0 12px;margin-top:28px}}.pkg-choice-grid{grid-template-columns:1fr}.pkg-submit-row{padding:18px;display:block}.pkg-submit-row>div{margin-bottom:14px;max-width:none}.pkg-submit{width:100%}.pkg-alert{margin-left:18px;margin-right:18px}.pkg-success{margin:8vh 14px;padding:36px 20px}}
 `;
 
