@@ -58,7 +58,7 @@ const getLiveSeoData = async () => {
   }
 };
 
-const buildSitemap = () => {
+const buildSitemap = async () => {
   const staticRoutes = [
     "/",
     "/destinations",
