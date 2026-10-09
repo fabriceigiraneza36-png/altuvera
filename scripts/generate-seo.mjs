@@ -232,7 +232,7 @@ const buildRss = () => {
 
 const main = async () => {
   await fs.mkdir(publicDir, { recursive: true });
-  await fs.writeFile(path.join(publicDir, "sitemap.xml"), buildSitemap(), "utf8");
+  await fs.writeFile(path.join(publicDir, "sitemap.xml"), await buildSitemap(), "utf8");
   await fs.writeFile(path.join(publicDir, "rss.xml"), buildRss(), "utf8");
 };
 
