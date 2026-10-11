@@ -958,6 +958,8 @@ const {
      images           = [],
      gallery          = [],
      heroImages       = [],
+     bannerImages     = [],
+     banner_images,
      hero_images,
      heroImage,
      imageUrl,
@@ -1009,13 +1011,21 @@ const safeImgs = [...new Set([
     thumbnailUrl,
   ].map(getImageUrl).filter(Boolean))];
 
-  // Prefer the three dedicated hero images supplied by the admin, then fill
-  // remaining slots from the gallery. Existing destination data is read-only here.
+  // New destinations use their own banner images for the card carousel.
+  // Older destinations remain fully supported through the existing hero/gallery fallback.
+  const dedicatedBanners = Array.isArray(bannerImages) && bannerImages.length
+    ? bannerImages
+    : Array.isArray(banner_images) && banner_images.length
+      ? banner_images
+      : [];
   const cardImages = [...new Set([
-    ...(Array.isArray(heroImages) ? heroImages : []),
-    ...(Array.isArray(hero_images) ? hero_images : []),
-    ...safeImgs,
-  ].map(getImageUrl).filter(Boolean))].slice(0, 4);
+    ...dedicatedBanners,
+    ...(dedicatedBanners.length ? [] : [
+      ...(Array.isArray(heroImages) ? heroImages : []),
+      ...(Array.isArray(hero_images) ? hero_images : []),
+      ...safeImgs,
+    ]),
+  ].map(getImageUrl).filter(Boolean))].slice(0, 3);
 
   const locationStr = [region, location, countryName || resolvedCountry]
     .filter(Boolean)
