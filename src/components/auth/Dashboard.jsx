@@ -1080,6 +1080,8 @@ export default function UserDashboard() {
   const [loadingB,  setLoadingB]  = useState(true);
   const [authWarn,  setAuthWarn]  = useState(null);
   const [fetchErr,  setFetchErr]  = useState(null);
+  const [discovery, setDiscovery] = useState({ destinations: [], posts: [], packages: [] });
+  const [discoveryLoading, setDiscoveryLoading] = useState(true);
 
   /* ── Fetch bookings ── */
   const fetchBookings = useCallback(async (requestOptions = {}) => {
@@ -1113,6 +1115,32 @@ export default function UserDashboard() {
   }, [authFetch]);
 
   useEffect(() => {
+    let active = true;
+    const unwrapRows = (payload) => {
+      const value = payload?.data ?? payload?.results ?? payload;
+      if (Array.isArray(value)) return value;
+      for (const key of ["destinations", "posts", "packages", "items", "rows"]) {
+        if (Array.isArray(value?.[key])) return value[key];
+        if (Array.isArray(value?.data?.[key])) return value.data[key];
+      }
+      return [];
+    };
+    const loadDiscovery = async () => {
+      setDiscoveryLoading(true);
+      const [destinations, posts, packages] = await Promise.all([
+        safeFetch(authFetch, "/destinations?limit=12&page=1"),
+        safeFetch(authFetch, "/posts?limit=8&page=1"),
+        safeFetch(authFetch, "/packages?limit=8&page=1"),
+      ]);
+      if (!active) return;
+      setDiscovery({
+        destinations: unwrapRows(destinations.data).slice(0, 12),
+        posts: unwrapRows(posts.data).slice(0, 8),
+        packages: unwrapRows(packages.data).slice(0, 8),
+      });
+      setDiscoveryLoading(false);
+    };
+    loadDiscovery();
     fetchBookings();
 
     const refreshId = window.setInterval(() => fetchBookings({ cache: false }), 30_000);
@@ -1120,10 +1148,11 @@ export default function UserDashboard() {
     window.addEventListener("focus", onFocus);
 
     return () => {
+      active = false;
       window.clearInterval(refreshId);
       window.removeEventListener("focus", onFocus);
     };
-  }, [fetchBookings]);
+  }, [fetchBookings, authFetch]);
 
   /* ── Derived stats ── */
   const {
@@ -1291,6 +1320,52 @@ export default function UserDashboard() {
               </Link>
             </div>
           </motion.div>
+
+          {/* ── Personalized discovery stories ───────────────────────────── */}
+          <section aria-label="Discover more with Altuvera" style={{ minWidth: 0 }}>
+            <div style={{ display: "flex", alignItems: "end", justifyContent: "space-between", gap: 12, marginBottom: 12 }}>
+              <div>
+                <p style={{ ...S.sectionLabel, marginBottom: 5 }}>Picked for your next adventure</p>
+                <h2 style={{ margin: 0, fontSize: "clamp(1.05rem, 2.4vw, 1.35rem)", color: "#064e3b", fontWeight: 850 }}>Discover more</h2>
+              </div>
+              <Link to="/explore" style={{ color: "#047857", fontSize: "0.82rem", fontWeight: 750, textDecoration: "none", whiteSpace: "nowrap" }}>Explore all <ArrowRight size={14} style={{ verticalAlign: "middle" }} /></Link>
+            </div>
+            {discoveryLoading ? (
+              <div style={{ display: "flex", gap: 12, overflow: "hidden", padding: "2px 1px 10px" }} aria-label="Loading discoveries">
+                {[0, 1, 2, 3].map((i) => <div key={i} className="db-skeleton" style={{ width: 178, height: 224, borderRadius: 18, flex: "0 0 178px" }} />)}
+              </div>
+            ) : (
+              <div style={{ display: "flex", gap: 12, overflowX: "auto", overflowY: "hidden", padding: "2px 1px 12px", scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
+                {[
+                  ...discovery.destinations.map((item) => ({ item, type: "Destination", to: "/destinations/" + encodeURIComponent(item.slug || item.id || item._id || ""), title: item.name || item.title || item.destination_name })),
+                  ...discovery.packages.map((item) => ({ item, type: "Travel package", to: "/packages/" + encodeURIComponent(item.slug || item.id || item._id || ""), title: item.title || item.name || item.package_name })),
+                  ...discovery.posts.map((item) => ({ item, type: "Travel story", to: "/post/" + encodeURIComponent(item.slug || item.id || item._id || ""), title: item.title || item.name })),
+                ].filter((card) => card.title && card.to.split("/").pop()).map((card, index) => {
+                  const item = card.item;
+                  const rawImage = item.image_url || item.imageUrl || item.cover_image || item.coverImage || item.featured_image || item.featuredImage || item.hero_image || item.heroImage || item.banner_image || item.bannerImage || item.thumbnail || (Array.isArray(item.images) ? item.images[0] : "");
+                  const image = typeof rawImage === "string" ? rawImage : rawImage?.url || rawImage?.secure_url || "";
+                  return (
+                    <Link key={card.type + "-" + (item.id || item._id || item.slug || index)} to={card.to} style={{ flex: "0 0 clamp(156px, 22vw, 190px)", minWidth: 0, height: 224, borderRadius: 18, overflow: "hidden", position: "relative", scrollSnapAlign: "start", textDecoration: "none", color: "#fff", background: "linear-gradient(145deg,#064e3b,#10b981)", boxShadow: "0 5px 18px rgba(6,78,59,.13)", isolation: "isolate" }}>
+                      {image ? <img src={image} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.display = "none"; }} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover", zIndex: -2, transition: "transform .45s ease" }} /> : null}
+                      <div style={{ position: "absolute", inset: 0, zIndex: -1, background: "linear-gradient(180deg,rgba(2,44,34,.04) 10%,rgba(2,44,34,.9) 100%)" }} />
+                      <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", justifyContent: "end", padding: 14 }}>
+                        <span style={{ alignSelf: "start", border: "1px solid rgba(255,255,255,.4)", background: "rgba(2,44,34,.4)", backdropFilter: "blur(8px)", borderRadius: 99, padding: "5px 8px", fontSize: ".65rem", fontWeight: 800, marginBottom: 8 }}>{card.type}</span>
+                        <span style={{ fontWeight: 850, fontSize: ".95rem", lineHeight: 1.25, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}>{card.title}</span>
+                        <span style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 5, fontSize: ".75rem", fontWeight: 750 }}>Discover <ArrowRight size={13} /></span>
+                      </div>
+                    </Link>
+                  );
+                })}
+                {!discovery.destinations.length && !discovery.posts.length && !discovery.packages.length && (
+                  <div style={{ border: "1px dashed #a7f3d0", borderRadius: 16, padding: "18px 20px", color: "#64748b", minWidth: 0, width: "100%", background: "#f8fffb" }}>
+                    <p style={{ margin: "0 0 5px", color: "#065f46", fontWeight: 800 }}>Your next adventure is waiting</p>
+                    <p style={{ margin: "0 0 12px", fontSize: ".84rem" }}>Explore destinations and travel inspiration from Altuvera.</p>
+                    <Link to="/destinations" style={{ color: "#047857", fontWeight: 800, textDecoration: "none" }}>Browse destinations <ArrowRight size={13} style={{ verticalAlign: "middle" }} /></Link>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
 
           {/* ── Stat Cards ──────────────────────────────────────────────── */}
           <div>
