@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Compass, RefreshCw } from "lucide-react";
+import { ArrowLeft, ArrowRight, Compass, RefreshCw } from "lucide-react";
 import DestinationCard from "../common/DestinationCard";
 import { useDestinations } from "../../hooks/useDestinations";
 import { usePosts } from "../../hooks/usePosts";
@@ -30,6 +30,20 @@ const styles = `
 .db-live-heading>div{min-width:0}
 .db-live-title{overflow-wrap:anywhere}
 .db-live-track{width:100%;max-width:100%;box-sizing:border-box;align-items:stretch;scroll-padding-inline:4px}
+.db-live-carousel-shell{position:relative;min-width:0;width:100%;max-width:100%}
+.db-live-carousel-shell:before,.db-live-carousel-shell:after{content:"";position:absolute;top:0;bottom:14px;width:26px;z-index:2;pointer-events:none;opacity:0;transition:opacity .25s ease}
+.db-live-carousel-shell:before{left:0;background:linear-gradient(90deg,#fff,transparent)}
+.db-live-carousel-shell:after{right:0;background:linear-gradient(270deg,#fff,transparent)}
+.db-live-carousel-shell.has-left:before,.db-live-carousel-shell.has-right:after{opacity:1}
+.db-live-arrow{position:absolute;top:calc(50% - 10px);z-index:4;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(5,150,105,.22);background:rgba(255,255,255,.94);color:#047857;box-shadow:0 8px 24px rgba(15,23,42,.14);backdrop-filter:blur(12px);cursor:pointer;transition:transform .28s cubic-bezier(.2,.8,.2,1),background .25s ease,color .25s ease,box-shadow .25s ease,opacity .2s ease;animation:dbArrowIn .35s ease both}
+.db-live-arrow--prev{left:-13px}.db-live-arrow--next{right:-13px}
+.db-live-arrow:hover:not(:disabled){transform:translateY(-50%) scale(1.08);background:#059669;color:#fff;box-shadow:0 10px 26px rgba(5,150,105,.28)}
+.db-live-arrow:active:not(:disabled){transform:translateY(-50%) scale(.94)}
+.db-live-arrow:disabled{opacity:0;pointer-events:none}
+.db-live-arrow:focus-visible{outline:3px solid #34d399;outline-offset:3px}
+@keyframes dbArrowIn{from{opacity:0;transform:translateY(-46%) scale(.8)}to{opacity:1;transform:translateY(-50%) scale(1)}}
+@media(max-width:760px){.db-live-arrow,.db-live-carousel-shell:before,.db-live-carousel-shell:after{display:none}}
+
 .db-live-package,.db-live-story{display:flex;align-items:stretch;min-width:0}
 .db-live-package>.hpkg-card,.db-live-story>.hpost-card{width:100%;min-width:0;max-width:100%;height:100%;box-sizing:border-box;flex:1 1 auto;border-radius:18px;border:1px solid #e2e8f0;box-shadow:0 5px 18px rgba(15,23,42,.055);overflow:hidden}
 .db-live-package>.hpkg-card:hover,.db-live-story>.hpost-card:hover{box-shadow:0 14px 30px rgba(15,23,42,.12);transform:translateY(-3px);border-color:#a7f3d0}
@@ -71,11 +85,41 @@ function SkeletonCard({ kind = "card" }) {
 }
 
 function LiveRow({ title, eyebrow, to, loading, error, items, renderItem, kind, onRetry, emptyText }) {
+  const trackRef = useRef(null);
+  const [canPrev, setCanPrev] = useState(false);
+  const [canNext, setCanNext] = useState(false);
+  const updateArrows = useCallback(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    const max = Math.max(0, el.scrollWidth - el.clientWidth);
+    setCanPrev(el.scrollLeft > 3);
+    setCanNext(max > 3 && el.scrollLeft < max - 3);
+  }, []);
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el) return undefined;
+    updateArrows();
+    el.addEventListener("scroll", updateArrows, { passive: true });
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateArrows) : null;
+    observer?.observe(el);
+    return () => { el.removeEventListener("scroll", updateArrows); observer?.disconnect(); };
+  }, [updateArrows, loading, items.length]);
+  const move = (direction) => {
+    const el = trackRef.current;
+    if (!el) return;
+    const card = el.querySelector(":scope > *");
+    const distance = Math.max(220, (card?.getBoundingClientRect().width || 280) + 16) * 2;
+    el.scrollBy({ left: direction * distance, behavior: "smooth" });
+  };
   return <section className="db-live-subsection" aria-label={title}>
     <div className="db-live-heading"><div><p className="db-live-eyebrow">{eyebrow}</p><h2 className="db-live-title">{title}</h2></div><Link className="db-live-link" to={to}>View all <ArrowRight size={14}/></Link></div>
     {loading ? <div className="db-live-track" aria-busy="true">{Array.from({length:3},(_,i)=><SkeletonCard key={`${kind}-skeleton-${i}`} kind={kind}/>)}</div>
       : error ? <div className="db-live-state" role="alert"><span>{error}</span><button className="db-live-retry" onClick={onRetry}><RefreshCw size={14}/> Retry</button></div>
-      : items.length ? <div className="db-live-track" aria-label={`${title} carousel`}>{items.map(renderItem)}</div>
+      : items.length ? <div className={`db-live-carousel-shell ${canPrev ? "has-left" : ""} ${canNext ? "has-right" : ""}`}>
+          <button type="button" className="db-live-arrow db-live-arrow--prev" aria-label={`Previous ${title}`} title="Previous" onClick={() => move(-1)} disabled={!canPrev}><ArrowLeft size={19}/></button>
+          <div ref={trackRef} className="db-live-track" aria-label={`${title} carousel`} tabIndex={0}>{items.map(renderItem)}</div>
+          <button type="button" className="db-live-arrow db-live-arrow--next" aria-label={`Next ${title}`} title="Next" onClick={() => move(1)} disabled={!canNext}><ArrowRight size={19}/></button>
+        </div>
       : <div className="db-live-state">{emptyText}</div>}
   </section>;
 }
