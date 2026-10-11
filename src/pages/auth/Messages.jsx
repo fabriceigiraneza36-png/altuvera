@@ -358,16 +358,21 @@ function EmojiPicker({ onPick, onClose }) {
   const ref = useRef(null);
   useEffect(() => {
     const h = e => {
-      if (ref.current && !ref.current.contains(e.target)) onClose();
+      const root = ref.current;
+      if (!root) return;
+      const path = typeof e.composedPath === "function" ? e.composedPath() : [];
+      if (path.includes(root) || root.contains(e.target)) return;
+      onClose();
     };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
+    document.addEventListener("pointerdown", h, true);
+    return () => document.removeEventListener("pointerdown", h, true);
   }, [onClose]);
 
   return (
     <div
       ref={ref}
       role="dialog"
+      onPointerDown={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
       aria-label="Searchable emoji picker"
@@ -751,8 +756,10 @@ export default function Messages() {
 
   useEffect(() => { injectMsgStyles(); }, []);
   useEffect(() => {
-    if (!requestedConversationId || !conversations.length) return;
-    const target = conversations.find(c => String(c.id) === String(requestedConversationId));
+    if (!conversations.length) return;
+    const target = requestedConversationId
+      ? conversations.find(c => String(c.id) === String(requestedConversationId))
+      : conversations[0];
     if (target && String(activeId) !== String(target.id)) openConversation(target.id);
   }, [requestedConversationId, conversations, activeId, openConversation]);
 
@@ -763,7 +770,6 @@ export default function Messages() {
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editText, setEditText] = useState("");
   const [showEmoji,    setShowEmoji]    = useState(false);
-  const [showNewChat,  setShowNewChat]  = useState(false);
   const [sidebarOpen,  setSidebarOpen]  = useState(true);
   const [atBottom,     setAtBottom]     = useState(true);
   const [showScrollBtn,setShowScrollBtn]= useState(false);
@@ -924,10 +930,6 @@ export default function Messages() {
     <>
       <Helmet><title>Messages | Altuvera</title></Helmet>
 
-      {showNewChat && (
-        <NewConvModal onClose={()=>setShowNewChat(false)} onCreated={handleNewConvCreated} />
-      )}
-
       <DashboardLayout
         title="Messages"
         subtitle="Chat directly with the Altuvera team about your bookings."
@@ -979,11 +981,6 @@ export default function Messages() {
                                hover:bg-slate-100 text-slate-400 transition disabled:opacity-40">
                     <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
                   </button>
-                  <button onClick={()=>setShowNewChat(true)}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold px-2.5 py-1.5
-                               bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
-                    <Plus size={11}/> New
-                  </button>
                 </div>
               </div>
             </div>
@@ -1016,12 +1013,9 @@ export default function Messages() {
                   <p className="text-xs text-slate-400 mb-4 leading-relaxed">
                     Book a safari or reach out to us directly.
                   </p>
-                  <button onClick={()=>setShowNewChat(true)}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-2
-                               bg-emerald-50 text-emerald-700 border border-emerald-200
-                               rounded-xl hover:bg-emerald-100 transition">
-                    <Plus size={12}/> Message us
-                  </button>
+                  <p className="text-xs text-slate-400 leading-relaxed">
+                    Your Altuvera support conversation will appear here when the team opens it.
+                  </p>
                 </div>
               ) : (
                 conversations.map(c=>(
