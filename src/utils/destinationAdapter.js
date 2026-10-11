@@ -403,9 +403,11 @@ export const adaptDestination = (raw) => {
     images,
     imageUrl:      raw.imageUrl      || raw.image_url || null,
     heroImage:     raw.heroImage     || raw.hero_image || images[0] || null,
-    heroImages:    toArr(raw.heroImages || raw.hero_images || raw.heroSlides || raw.hero_slides).length
+    heroImages:    (toArr(raw.heroImages || raw.hero_images || raw.heroSlides || raw.hero_slides).length
       ? toArr(raw.heroImages || raw.hero_images || raw.heroSlides || raw.hero_slides)
-      : images.slice(0, 3),
+      : images.slice(0, 3)).slice(0, 3),
+    bannerImages:  toArr(raw.bannerImages || raw.banner_images || raw.cardBannerImages || raw.card_banner_images).slice(0, 3),
+    galleryImages: toArr(raw.galleryImages || raw.gallery_images),
     thumbnailUrl:  raw.thumbnailUrl  || raw.thumbnail_url || images[0] || null,
     coverImageUrl:  raw.coverImageUrl || raw.cover_image_url || null,
     videoUrl:      raw.videoUrl      || null,
