@@ -11,6 +11,7 @@ import { Link }             from "react-router-dom";
 import { useUserAuth }      from "../../context/UserAuthContext";
 import { useNotifications } from "../../hooks/useNotifications";
 import DashboardLayout      from "../../components/auth/DashboardLayout";
+import DashboardDiscoveryCarousel from "./DashboardDiscoveryCarousel";
 import { motion, AnimatePresence } from "framer-motion";
 
 import {
@@ -1342,6 +1343,9 @@ export default function UserDashboard() {
               ))}
             </div>
           </div>
+
+          {/* ── Swipeable destinations, packages and travel stories ─────── */}
+          <DashboardDiscoveryCarousel />
 
           {/* ── Charts Row ───────────────────────────────────────────────── */}
           <div>
