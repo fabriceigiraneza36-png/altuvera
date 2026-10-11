@@ -773,6 +773,8 @@ export default function Messages() {
   const [sidebarOpen,  setSidebarOpen]  = useState(true);
   const [atBottom,     setAtBottom]     = useState(true);
   const [showScrollBtn,setShowScrollBtn]= useState(false);
+  const [composerVisible, setComposerVisible] = useState(true);
+  const lastScrollTopRef = useRef(0);
 
   const scrollRef      = useRef(null);
   const draftStorageKey = activeId ? `altuvera:user-chat-draft:${activeId}` : null;
@@ -791,6 +793,10 @@ export default function Messages() {
     const el = scrollRef.current;
     if (!el) return;
     const bottom = el.scrollHeight - el.scrollTop - el.clientHeight < 80;
+    const previousTop = lastScrollTopRef.current;
+    if (bottom || el.scrollTop < previousTop - 2) setComposerVisible(true);
+    else if (el.scrollTop > previousTop + 2) setComposerVisible(false);
+    lastScrollTopRef.current = el.scrollTop;
     setAtBottom(bottom);
     setShowScrollBtn(!bottom);
   }, []);
@@ -819,7 +825,8 @@ export default function Messages() {
   /* ── Reset on conversation change ── */
   useEffect(() => {
     setReplyToId(null); setShowEmoji(false);
-    setAtBottom(true); setShowScrollBtn(false);
+    setAtBottom(true); setShowScrollBtn(false); setComposerVisible(true);
+    lastScrollTopRef.current = 0;
     clearTimeout(typingTimerRef.current);
     isTypingRef.current = false;
   }, [activeId]);
@@ -1057,7 +1064,7 @@ export default function Messages() {
                     </div>
                   ))}
                 </div>
-                <div className="msg-chat-foot px-3 pt-2.5 pb-3 bg-white">
+                <div className="msg-chat-foot px-3 pt-2.5 pb-3 bg-white" style={{ transform: composerVisible ? "translateY(0)" : "translateY(110%)", opacity: composerVisible ? 1 : 0, pointerEvents: composerVisible ? "auto" : "none", transition: "transform 180ms ease, opacity 180ms ease" }}>
                   <div className="h-11 w-full rounded-2xl bg-slate-100 animate-pulse" />
                 </div>
               </div>
@@ -1236,7 +1243,7 @@ export default function Messages() {
                 </div>
 
                 {/* ── FIXED COMPOSER ── */}
-                <div className="msg-chat-foot px-3 pt-2.5 pb-3">
+                <div className="msg-chat-foot px-3 pt-2.5 pb-3" style={{ transform: composerVisible ? "translateY(0)" : "translateY(110%)", opacity: composerVisible ? 1 : 0, pointerEvents: composerVisible ? "auto" : "none", transition: "transform 180ms ease, opacity 180ms ease" }}>
 
                   {/* Closed conversation notice */}
                   {activeConversation.status === "closed" && (
