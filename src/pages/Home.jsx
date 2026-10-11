@@ -1178,7 +1178,7 @@ const FeatureBlock = ({ data, index }) => {
 /* ═══════════════════════════════════════════
    PACKAGE + POST CARDS
 ═══════════════════════════════════════════ */
-const HorizontalPackageCard = React.memo(function HorizontalPackageCard({ pkg, index, wishlist, onWishlist }) {
+export const HorizontalPackageCard = React.memo(function HorizontalPackageCard({ pkg, index, wishlist, onWishlist }) {
   const t = THEME[pkg.card_theme] || THEME.default;
   const isWish = wishlist?.has(pkg.id);
   const accent = pkg.accent_color || t.accent || "#059669";
@@ -1214,7 +1214,7 @@ const HorizontalPackageCard = React.memo(function HorizontalPackageCard({ pkg, i
   );
 });
 
-const HorizontalPostCard = React.memo(function HorizontalPostCard({ post, index }) {
+export const HorizontalPostCard = React.memo(function HorizontalPostCard({ post, index }) {
   const date = post.published_at || post.created_at;
   const formatted = date ? new Date(date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "";
   return (
