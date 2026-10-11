@@ -10,7 +10,7 @@ import {
 } from "react-icons/hi";
 import {
   FiSave, FiLayout, FiCheck, FiAlertCircle,
-  FiToggleLeft, FiToggleRight, FiChevronRight,
+  FiChevronRight,
   FiLogOut, FiShield, FiGlobe, FiBell,
   FiZap,
 } from "react-icons/fi";
@@ -329,9 +329,6 @@ export default function UserSettings() {
     travelUpdates:      user?.preferences?.travelUpdates      ?? true,
     autoFillForms:      user?.preferences?.autoFillForms      ?? true,
     defaultCategory:    user?.preferences?.defaultCategory    || "all",
-    loaderPreference:   user?.preferences?.loaderPreference   || "default",
-    customLoaderText:   user?.preferences?.customLoaderText   || "",
-    reducedAnimations:  user?.preferences?.reducedAnimations  ?? false,
     defaultView:        user?.preferences?.defaultView        || "grid",
   }), [user]);
 
@@ -456,7 +453,7 @@ export default function UserSettings() {
           <SectionCard
             icon={<FiGlobe size={18} />}
             title="Experience"
-            subtitle="Language, appearance, and defaults"
+            subtitle="Language and useful travel defaults"
           >
             {/* Language */}
             <div className="us-select-wrap">
@@ -488,7 +485,7 @@ export default function UserSettings() {
               icon={<FiLayout size={16} />}
               label="Default Destination View"
               desc="Choose how destinations are displayed."
-              checked={false}
+              checked={true}
               right={
                 <select
                   className="us-select-inline"
@@ -510,7 +507,7 @@ export default function UserSettings() {
           <SectionCard
             icon={<HiSparkles size={18} />}
             title="Personalization"
-            subtitle="Tailor your Altuvera experience"
+            subtitle="Choose the destinations and experiences you want to discover"
           >
             {/* Default Category */}
             <div className="us-select-wrap">
@@ -531,49 +528,6 @@ export default function UserSettings() {
               </select>
             </div>
 
-            {/* Loader Preference */}
-            <div className="us-select-wrap">
-              <label>
-                <FiZap /> Loading Screen Style
-              </label>
-              <select
-                className="us-select"
-                value={preferences.loaderPreference}
-                onChange={(e) => updatePreference("loaderPreference", e.target.value)}
-              >
-                <option value="default">Default Altuvera</option>
-                <option value="personalized">Personalized (with your name)</option>
-                <option value="minimal">Minimal</option>
-              </select>
-            </div>
-
-            {/* Custom Loader Text */}
-            {preferences.loaderPreference === "personalized" && (
-              <div className="us-select-wrap">
-                <label>Custom Loader Message</label>
-                <input
-                  type="text"
-                  className="us-input"
-                  value={preferences.customLoaderText || ""}
-                  onChange={(e) =>
-                    updatePreference("customLoaderText", e.target.value.slice(0, 100))
-                  }
-                  placeholder={`e.g. "Ready for adventure, ${user?.fullName?.split(" ")[0] || "Traveler"}?"`}
-                />
-                <p className="us-input-hint">
-                  Shown on the loading screen when you're signed in. Max 100 characters.
-                </p>
-              </div>
-            )}
-
-            {/* Reduced Animations */}
-            <ToggleRow
-              icon={<HiDeviceMobile size={16} />}
-              label="Reduced Animations"
-              desc="Improve performance on slower devices."
-              checked={Boolean(preferences.reducedAnimations)}
-              onChange={(e) => updatePreference("reducedAnimations", e.target.checked)}
-            />
           </SectionCard>
 
           {/* ── Security ── */}
