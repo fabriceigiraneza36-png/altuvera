@@ -1080,6 +1080,8 @@ export default function UserDashboard() {
   const [loadingB,  setLoadingB]  = useState(true);
   const [authWarn,  setAuthWarn]  = useState(null);
   const [fetchErr,  setFetchErr]  = useState(null);
+  const [discovery, setDiscovery] = useState({ destinations: [], posts: [], packages: [] });
+  const [discoveryLoading, setDiscoveryLoading] = useState(true);
 
   /* ── Fetch bookings ── */
   const fetchBookings = useCallback(async (requestOptions = {}) => {
@@ -1113,6 +1115,32 @@ export default function UserDashboard() {
   }, [authFetch]);
 
   useEffect(() => {
+    let active = true;
+    const unwrapRows = (payload) => {
+      const value = payload?.data ?? payload?.results ?? payload;
+      if (Array.isArray(value)) return value;
+      for (const key of ["destinations", "posts", "packages", "items", "rows"]) {
+        if (Array.isArray(value?.[key])) return value[key];
+        if (Array.isArray(value?.data?.[key])) return value.data[key];
+      }
+      return [];
+    };
+    const loadDiscovery = async () => {
+      setDiscoveryLoading(true);
+      const [destinations, posts, packages] = await Promise.all([
+        safeFetch(authFetch, "/destinations?limit=12&page=1"),
+        safeFetch(authFetch, "/posts?limit=8&page=1"),
+        safeFetch(authFetch, "/packages?limit=8&page=1"),
+      ]);
+      if (!active) return;
+      setDiscovery({
+        destinations: unwrapRows(destinations.data).slice(0, 12),
+        posts: unwrapRows(posts.data).slice(0, 8),
+        packages: unwrapRows(packages.data).slice(0, 8),
+      });
+      setDiscoveryLoading(false);
+    };
+    loadDiscovery();
     fetchBookings();
 
     const refreshId = window.setInterval(() => fetchBookings({ cache: false }), 30_000);
@@ -1120,10 +1148,11 @@ export default function UserDashboard() {
     window.addEventListener("focus", onFocus);
 
     return () => {
+      active = false;
       window.clearInterval(refreshId);
       window.removeEventListener("focus", onFocus);
     };
-  }, [fetchBookings]);
+  }, [fetchBookings, authFetch]);
 
   /* ── Derived stats ── */
   const {
