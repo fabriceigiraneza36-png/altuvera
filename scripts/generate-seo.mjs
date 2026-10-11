@@ -33,7 +33,7 @@ const escapeXml = (s) =>
 
 const isIsoDate = (s) => /^\\d{4}-\\d{2}-\\d{2}$/.test(String(s || ""));
 
-const apiBase = String(process.env.VITE_API_URL || process.env.API_URL || "https://backend-jd8f.onrender.com/api").replace(/\\/+$/, "");
+const apiBase = String(process.env.VITE_API_URL || process.env.API_URL || "https://backend-jd8f.onrender.com/api").replace(/\/+$/, "");
 const fetchJson = async (path) => {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 5000);
