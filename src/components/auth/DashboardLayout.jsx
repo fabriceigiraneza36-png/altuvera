@@ -169,7 +169,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false }) => {
           padding-top: 12px; margin-top: 12px; border-top: 1px solid #f1f5f9;
         }
         @media (max-width: 768px) {
-          .dashboard-layout { height: 100dvh; min-height: 100dvh; }
+          .dashboard-layout { height: auto; min-height: calc(100dvh - 80px); overflow: visible; }
           .dashboard-sidebar {
             position: fixed; top: 0; left: 0; height: 100vh;
             transform: translateX(-100%); z-index: 50; padding-top: 20px;
@@ -177,7 +177,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false }) => {
           .dashboard-sidebar.open { transform: translateX(0); }
           .dashboard-overlay.open { display: block; }
           .mobile-menu-toggle { display: flex; }
-          .dashboard-content { padding: 20px 16px 80px; }
+          .dashboard-content { padding: 20px 16px 80px; min-height: 0; }
           .dashboard-content.dashboard-no-padding {
             padding: 0;
             height: calc(100vh - 80px);
