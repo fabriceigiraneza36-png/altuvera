@@ -1078,7 +1078,7 @@ export default function Messages() {
         conversationSearchRef.current?.select();
         return;
       }
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "n") {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "n" && !typingTarget) {
         event.preventDefault();
         setShowNewChat(true);
         return;
