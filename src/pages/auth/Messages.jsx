@@ -8,8 +8,9 @@ import { useSearchParams } from "react-router-dom";
 import {
   MessageSquare, Send, Smile, X, CornerUpLeft,
   Check, CheckCheck, RefreshCw, ArrowLeft, Plus, PanelLeftClose, PanelLeftOpen,
-  ChevronDown, Circle, MoreHorizontal, Edit3, Pin, Highlighter, Undo2,
+  ChevronDown, Circle, MoreHorizontal, Edit3, Pin, Highlighter, Undo2, Search, MapPin,
 } from "lucide-react";
+import ChatPreferencesPanel from "../../components/auth/ChatPreferencesPanel";
 import DashboardLayout      from "../../components/auth/DashboardLayout";
 import { useConversations } from "../../hooks/useConversations";
 
@@ -38,6 +39,16 @@ const getToken = () => {
       ""
     );
   } catch { return ""; }
+};
+
+const getAccountChatKey = () => {
+  try {
+    const payload = getToken().split(".")[1];
+    if (!payload) return "account";
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const decoded = JSON.parse(atob(normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=")));
+    return String(decoded.id ?? decoded.userId ?? decoded.sub ?? decoded.email ?? "account");
+  } catch { return "account"; }
 };
 
 const authFetch = (url, opts = {}) =>
@@ -270,6 +281,41 @@ const MSG_STYLES = `
   transition: opacity .18s;
 }
 .msg-bubble-wrap:hover .msg-meta { opacity: 1; }
+
+/* Account-level chat personalization */
+.msg-chat[data-theme="ocean"] { background:#eff8ff; }
+.msg-chat[data-theme="ocean"] .msg-chat-head,
+.msg-chat[data-theme="ocean"] .msg-chat-foot { background:#fff; border-color:#cfe7fb; }
+.msg-chat[data-theme="ocean"] .msg-chat-body { background:#eff8ff; }
+.msg-chat[data-theme="ocean"] .bg-emerald-600 { background-color:#0284c7 !important; }
+.msg-chat[data-theme="ocean"] .text-emerald-600 { color:#0284c7 !important; }
+.msg-chat[data-theme="rose"] { background:#fff1f2; }
+.msg-chat[data-theme="rose"] .msg-chat-head,
+.msg-chat[data-theme="rose"] .msg-chat-foot { background:#fff; border-color:#fecdd3; }
+.msg-chat[data-theme="rose"] .msg-chat-body { background:#fff1f2; }
+.msg-chat[data-theme="rose"] .bg-emerald-600 { background-color:#e11d48 !important; }
+.msg-chat[data-theme="rose"] .text-emerald-600 { color:#e11d48 !important; }
+.msg-chat[data-theme="midnight"] { background:#0d1729; color:#e2e8f0; }
+.msg-chat[data-theme="midnight"] .msg-chat-head,
+.msg-chat[data-theme="midnight"] .msg-chat-foot { background:#101d32 !important; border-color:#263750 !important; }
+.msg-chat[data-theme="midnight"] .msg-chat-body { background:#0d1729 !important; }
+.msg-chat[data-theme="midnight"] .msg-chat-head p { color:#e2e8f0 !important; }
+.msg-chat[data-theme="midnight"] .msg-chat-head button { background:#17263d; border-color:#30435d; color:#e2e8f0; }
+.msg-chat[data-theme="midnight"] .msg-bubble-wrap .bg-white { background:#17263d !important; color:#e3edf9 !important; border-color:#30435d !important; }
+.msg-chat[data-theme="midnight"] .msg-bubble-wrap .text-slate-400,
+.msg-chat[data-theme="midnight"] .msg-bubble-wrap .text-slate-500 { color:#9fb1ca !important; }
+.msg-chat[data-theme="midnight"] .msg-bubble-wrap .bg-emerald-600 { background:#596be8 !important; }
+.msg-chat[data-theme="midnight"] .msg-chat-foot textarea { background:#17263d !important; border-color:#30435d !important; color:#e2e8f0 !important; }
+.msg-chat[data-font="serif"] { font-family:Georgia,"Times New Roman",serif; }
+.msg-chat[data-font="rounded"] { font-family:"Trebuchet MS",system-ui,sans-serif; }
+.msg-chat[data-font="mono"] { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+.msg-chat[data-density="compact"] .msg-chat-body { padding:8px; }
+.msg-chat[data-density="compact"] .msg-bubble-wrap { margin-bottom:0; }
+.msg-chat[data-density="spacious"] .msg-chat-body { padding:24px; }
+.msg-chat[data-density="spacious"] .msg-bubble-wrap { margin-bottom:6px; }
+@media (prefers-reduced-motion: reduce) {
+  .bubble-actions, .msg-meta { transition:none !important; }
+}
 `;
 
 let stylesInjected = false;
@@ -498,6 +544,7 @@ const MsgBubble = React.memo(function MsgBubble({
   onUnsend, onPin, onHighlight,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const touchStartX = useRef(null);
   const reactions = useMemo(() => {
     const r = message.reactions || {};
     return Object.entries(r).filter(([,ids]) => ids?.length > 0);
@@ -505,9 +552,18 @@ const MsgBubble = React.memo(function MsgBubble({
   const isPending = String(message.id).startsWith("tmp-");
   const isDeleted = Boolean(message.deleted);
   const isEditing = String(editingId) === String(message.id);
+  const destinationName = message.metadata?.destinationName || message.metadata?.destination_name || null;
 
   return (
-    <div className={`msg-bubble-wrap flex ${mine ? "justify-end" : "justify-start"} mb-1`}>
+    <div
+      className={`msg-bubble-wrap flex ${mine ? "justify-end" : "justify-start"} mb-1`}
+      onTouchStart={event => { touchStartX.current = event.changedTouches?.[0]?.clientX ?? null; }}
+      onTouchEnd={event => {
+        const endX = event.changedTouches?.[0]?.clientX;
+        if (touchStartX.current != null && endX != null && touchStartX.current - endX > 55) onReply(message.id);
+        touchStartX.current = null;
+      }}
+      title="Swipe left to reply on touch screens">
       {!mine && <div className="w-7 h-7 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mr-2 self-end mb-6">A</div>}
 
       <div className={`flex flex-col ${mine ? "items-end" : "items-start"} max-w-[90%] sm:max-w-[72%]`}>
@@ -534,7 +590,12 @@ const MsgBubble = React.memo(function MsgBubble({
           ) : (
             <div className={`px-4 py-2.5 text-sm leading-relaxed break-words whitespace-pre-wrap rounded-2xl shadow-sm select-text ${mine ? "bg-emerald-600 text-white rounded-br-sm" : "bg-white text-slate-800 border border-slate-200/80 rounded-bl-sm"} ${isPending ? "opacity-60" : ""} ${isDeleted ? "italic opacity-60" : ""}`}
               style={{ wordBreak:"break-word", maxWidth:"100%" }}>
-              {isDeleted ? "This message was unsent" : message.body}
+              {!isDeleted && destinationName && (
+                <span className={`mb-2 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-bold ${mine ? "bg-white/15 text-white" : "bg-emerald-50 text-emerald-700"}`}>
+                  <MapPin size={12}/> Destination · {destinationName}
+                </span>
+              )}
+              <span>{isDeleted ? "This message was unsent" : message.body}</span>
               {message.edited && !isDeleted && <span className={`ml-2 text-[9px] ${mine ? "text-emerald-100" : "text-slate-400"}`}>edited</span>}
             </div>
           )}
@@ -585,6 +646,7 @@ const MsgBubble = React.memo(function MsgBubble({
 
 function NewConvModal({ onClose, onCreated }) {
   const [subject,  setSubject]  = useState("");
+  const [destinationName, setDestinationName] = useState("");
   const [body,     setBody]     = useState("");
   const [creating, setCreating] = useState(false);
   const [error,    setError]    = useState("");
@@ -604,9 +666,12 @@ function NewConvModal({ onClose, onCreated }) {
       const res  = await authFetch(`${API_BASE}/messages/conversations`, {
         method:"POST",
         body: JSON.stringify({
-          subject: subject.trim() || "General Enquiry",
-          body:    body.trim(),
-          kind:    "general",
+          subject: subject.trim() || (destinationName.trim() ? `Question about ${destinationName.trim()}` : "General Enquiry"),
+          body: body.trim(),
+          firstMessage: body.trim(),
+          destinationName: destinationName.trim() || null,
+          metadata: destinationName.trim() ? { destinationName: destinationName.trim() } : {},
+          kind: "general",
         }),
       });
       const data = await res.json();
@@ -666,6 +731,19 @@ function NewConvModal({ onClose, onCreated }) {
               className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-xl outline-none
                          focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
                          transition placeholder:text-slate-400" />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+              Destination <span className="text-slate-300 normal-case font-normal">(optional)</span>
+            </label>
+            <div className="relative">
+              <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600" />
+              <input value={destinationName} onChange={e => setDestinationName(e.target.value)}
+                placeholder="e.g. Volcanoes National Park"
+                className="w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" />
+            </div>
+            <p className="mt-1.5 text-[11px] text-slate-400">Attach a place to your question, even when you have not used the contact form.</p>
           </div>
 
           <div>
@@ -745,6 +823,15 @@ export default function Messages() {
   }, []);
   const [searchParams] = useSearchParams();
   const requestedConversationId = searchParams.get("conversationId");
+  const chatPreferencesKey = `altuvera:chat-preferences:${getAccountChatKey()}`;
+  const [chatPrefs, setChatPrefs] = useState(() => {
+    const defaults = { theme: "emerald", font: "system", density: "comfortable" };
+    try { return { ...defaults, ...JSON.parse(localStorage.getItem(chatPreferencesKey) || "{}") }; }
+    catch { return defaults; }
+  });
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
+  const [conversationSearch, setConversationSearch] = useState("");
+  const [showNewChat, setShowNewChat] = useState(false);
   const {
     conversations, messages, activeId, activeConversation,
     unreadCount, loading, loadingMsgs, sending, error,
@@ -755,12 +842,69 @@ export default function Messages() {
   } = useConversations();
 
   useEffect(() => { injectMsgStyles(); }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await authFetch(`${API_BASE}/messages/preferences`);
+        if (!res.ok) return;
+        const payload = await res.json();
+        const remote = payload?.data && typeof payload.data === "object" ? payload.data : {};
+        if (!cancelled) setChatPrefs(current => ({
+          theme: remote.theme || current.theme,
+          font: remote.font || current.font,
+          density: remote.density || current.density,
+        }));
+      } catch (err) {
+        console.warn("[Messages] Could not load account chat preferences:", err.message);
+      } finally {
+        if (!cancelled) setPreferencesLoaded(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    if (!preferencesLoaded) return;
+    try { localStorage.setItem(chatPreferencesKey, JSON.stringify(chatPrefs)); } catch {}
+    authFetch(`${API_BASE}/messages/preferences`, {
+      method: "PATCH",
+      body: JSON.stringify({ settings: chatPrefs }),
+    }).catch(err => console.warn("[Messages] Could not sync chat preferences:", err.message));
+  }, [chatPrefs, chatPreferencesKey, preferencesLoaded]);
+
+  const saveChatPrefs = useCallback(async (next) => {
+    setChatPrefs(next);
+    try { localStorage.setItem(chatPreferencesKey, JSON.stringify(next)); } catch {}
+    const res = await authFetch(`${API_BASE}/messages/preferences`, {
+      method: "PATCH",
+      body: JSON.stringify({ settings: next }),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || "Preferences could not be synced. Your choices are saved on this device.");
+    }
+  }, [chatPreferencesKey]);
+
+  const visibleConversations = useMemo(() => {
+    const query = conversationSearch.trim().toLocaleLowerCase();
+    if (!query) return conversations;
+    return conversations.filter(c => [
+      c.subject, c.guestName, c.guestEmail, c.lastMessage, c.bookingNumber,
+    ].some(value => String(value || "").toLocaleLowerCase().includes(query)));
+  }, [conversations, conversationSearch]);
+
   useEffect(() => {
     if (!conversations.length) return;
-    const target = requestedConversationId
-      ? conversations.find(c => String(c.id) === String(requestedConversationId))
-      : conversations[0];
-    if (target && String(activeId) !== String(target.id)) openConversation(target.id);
+    if (requestedConversationId) {
+      const target = conversations.find(c => String(c.id) === String(requestedConversationId));
+      if (target && String(activeId) !== String(target.id)) openConversation(target.id);
+      return;
+    }
+    // Select a default only when nothing is active; don't override a newly
+    // created/opened thread while the conversation list refreshes.
+    if (!activeId) openConversation(conversations[0].id);
   }, [requestedConversationId, conversations, activeId, openConversation]);
 
 
@@ -777,6 +921,7 @@ export default function Messages() {
   const lastScrollTopRef = useRef(0);
 
   const scrollRef      = useRef(null);
+  const conversationSearchRef = useRef(null);
   const draftStorageKey = activeId ? `altuvera:user-chat-draft:${activeId}` : null;
    const textareaRef    = useRef(null);
    const isTypingRef    = useRef(false);
@@ -920,6 +1065,33 @@ export default function Messages() {
     return () => window.removeEventListener("keydown", h);
   }, [showEmoji, replyToId]);
 
+  useEffect(() => {
+    const onShortcut = event => {
+      const target = event.target;
+      const typingTarget = target && (
+        target.tagName === "INPUT" || target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      );
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        conversationSearchRef.current?.focus();
+        conversationSearchRef.current?.select();
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "n" && !typingTarget) {
+        event.preventDefault();
+        setShowNewChat(true);
+        return;
+      }
+      if (event.key === "/" && !typingTarget && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        event.preventDefault();
+        conversationSearchRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onShortcut);
+    return () => window.removeEventListener("keydown", onShortcut);
+  }, []);
+
   /* ── Derived ── */
   const replyMap   = useMemo(() => new Map(messages.map(m=>[String(m.id),m])), [messages]);
   const msgGroups  = useMemo(() => groupMessages(messages), [messages]);
@@ -982,6 +1154,10 @@ export default function Messages() {
                   )}
                 </div>
                 <div className="flex items-center gap-1">
+                  <button onClick={() => setShowNewChat(true)} aria-label="New conversation" title="New conversation (Ctrl/⌘+N)"
+                    className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+                    <Plus size={15} />
+                  </button>
                   <button onClick={fetchConversations} disabled={loading}
                     aria-label="Refresh" title="Refresh"
                     className="w-7 h-7 rounded-lg flex items-center justify-center
@@ -990,6 +1166,16 @@ export default function Messages() {
                   </button>
                 </div>
               </div>
+            </div>
+
+            <div className="px-3 pb-2">
+              <label className="relative block">
+                <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                <input ref={conversationSearchRef} value={conversationSearch} onChange={e => setConversationSearch(e.target.value)}
+                  type="search" aria-label="Search conversations" placeholder="Search people, destinations, latest message…"
+                  title="Shortcut: Ctrl/⌘+K"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-500/10" />
+              </label>
             </div>
 
             {/* Scrollable conversation list */}
@@ -1021,11 +1207,21 @@ export default function Messages() {
                     Book a safari or reach out to us directly.
                   </p>
                   <p className="text-xs text-slate-400 leading-relaxed">
-                    Your Altuvera support conversation will appear here when the team opens it.
+                    Start a private conversation with the Altuvera team, right here.
                   </p>
+                  <button onClick={() => setShowNewChat(true)}
+                    className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700">
+                    <Plus size={14}/> Start a conversation
+                  </button>
+                </div>
+              ) : visibleConversations.length === 0 ? (
+                <div className="px-4 py-10 text-center">
+                  <Search size={20} className="mx-auto mb-2 text-slate-300" />
+                  <p className="text-sm font-semibold text-slate-500">No matching conversations</p>
+                  <p className="mt-1 text-xs text-slate-400">Try another name, destination, or phrase.</p>
                 </div>
               ) : (
-                conversations.map(c=>(
+                visibleConversations.map(c=>(
                   <div role="listitem" key={c.id}>
                     <ConvRow
                       conv={c}
@@ -1040,7 +1236,8 @@ export default function Messages() {
           </div>
 
           {/* ═══════════════ CHAT PANEL ═══════════════ */}
-          <div className={`msg-chat ${showMobile ? "flex" : "hidden md:flex"} flex-col min-h-0 min-w-0`}>
+          <div className={`msg-chat ${showMobile ? "flex" : "hidden md:flex"} flex-col min-h-0 min-w-0`}
+            data-theme={chatPrefs.theme} data-font={chatPrefs.font} data-density={chatPrefs.density}>
 
             {loadingMsgs && activeId ? (
               /* ── Conversation Loading State ── */
@@ -1148,6 +1345,8 @@ export default function Messages() {
                       )}
                     </div>
                   </div>
+
+                  <ChatPreferencesPanel value={chatPrefs} onSave={saveChatPrefs} />
 
                   {/* Status pill */}
                   <StatusPill status={activeConversation.status || "open"} />
@@ -1353,13 +1552,19 @@ export default function Messages() {
 
                   {/* Keyboard hint */}
                   <p className="text-center text-[10px] text-slate-300 mt-1.5 select-none">
-                    Enter ↵ to send · Shift+Enter for new line · Esc to cancel reply
+                    Enter ↵ to send · Shift+Enter for new line · Esc to cancel reply · Ctrl/⌘+K search · Ctrl/⌘+N new chat
                   </p>
                 </div>
               </>
             )}
           </div>
         </div>
+        {showNewChat && (
+          <NewConvModal
+            onClose={() => setShowNewChat(false)}
+            onCreated={handleNewConvCreated}
+          />
+        )}
       </DashboardLayout>
     </>
   );
