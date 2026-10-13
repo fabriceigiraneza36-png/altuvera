@@ -897,10 +897,14 @@ export default function Messages() {
 
   useEffect(() => {
     if (!conversations.length) return;
-    const target = requestedConversationId
-      ? conversations.find(c => String(c.id) === String(requestedConversationId))
-      : conversations[0];
-    if (target && String(activeId) !== String(target.id)) openConversation(target.id);
+    if (requestedConversationId) {
+      const target = conversations.find(c => String(c.id) === String(requestedConversationId));
+      if (target && String(activeId) !== String(target.id)) openConversation(target.id);
+      return;
+    }
+    // Select a default only when nothing is active; don't override a newly
+    // created/opened thread while the conversation list refreshes.
+    if (!activeId) openConversation(conversations[0].id);
   }, [requestedConversationId, conversations, activeId, openConversation]);
 
 
@@ -1168,7 +1172,7 @@ export default function Messages() {
               <label className="relative block">
                 <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input ref={conversationSearchRef} value={conversationSearch} onChange={e => setConversationSearch(e.target.value)}
-                  type="search" aria-label="Search conversations" placeholder="Search chats or messages…"
+                  type="search" aria-label="Search conversations" placeholder="Search people, destinations, latest message…"
                   title="Shortcut: Ctrl/⌘+K"
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-500/10" />
               </label>
