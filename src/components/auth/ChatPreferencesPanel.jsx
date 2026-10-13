@@ -23,6 +23,7 @@ export default function ChatPreferencesPanel({ value, onSave }) {
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState(value);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => setDraft(value), [value]);
   useEffect(() => {
@@ -34,12 +35,18 @@ export default function ChatPreferencesPanel({ value, onSave }) {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [open]);
 
-  const update = (key, selected) => setDraft((current) => ({ ...current, [key]: selected }));
+  const update = (key, selected) => {
+    setSaveError("");
+    setDraft((current) => ({ ...current, [key]: selected }));
+  };
   const save = async () => {
     setSaving(true);
+    setSaveError("");
     try {
       await onSave(draft);
       setOpen(false);
+    } catch (error) {
+      setSaveError(error.message || "Could not sync your preferences. Please try again.");
     } finally {
       setSaving(false);
     }
@@ -119,6 +126,7 @@ export default function ChatPreferencesPanel({ value, onSave }) {
                 </div>
               </section>
             </div>
+            {saveError && <p role="alert" className="mx-5 mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 sm:mx-6">{saveError}</p>}
             <footer className="flex gap-2 border-t border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">
               <button type="button" onClick={() => setDraft(value)} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100">Reset</button>
               <button type="button" onClick={save} disabled={saving}
