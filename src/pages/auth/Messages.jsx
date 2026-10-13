@@ -551,6 +551,7 @@ const MsgBubble = React.memo(function MsgBubble({
   const isPending = String(message.id).startsWith("tmp-");
   const isDeleted = Boolean(message.deleted);
   const isEditing = String(editingId) === String(message.id);
+  const destinationName = message.metadata?.destinationName || message.metadata?.destination_name || null;
 
   return (
     <div className={`msg-bubble-wrap flex ${mine ? "justify-end" : "justify-start"} mb-1`}>
@@ -580,7 +581,12 @@ const MsgBubble = React.memo(function MsgBubble({
           ) : (
             <div className={`px-4 py-2.5 text-sm leading-relaxed break-words whitespace-pre-wrap rounded-2xl shadow-sm select-text ${mine ? "bg-emerald-600 text-white rounded-br-sm" : "bg-white text-slate-800 border border-slate-200/80 rounded-bl-sm"} ${isPending ? "opacity-60" : ""} ${isDeleted ? "italic opacity-60" : ""}`}
               style={{ wordBreak:"break-word", maxWidth:"100%" }}>
-              {isDeleted ? "This message was unsent" : message.body}
+              {!isDeleted && destinationName && (
+                <span className={`mb-2 flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[10px] font-bold ${mine ? "bg-white/15 text-white" : "bg-emerald-50 text-emerald-700"}`}>
+                  <MapPin size={12}/> Destination · {destinationName}
+                </span>
+              )}
+              <span>{isDeleted ? "This message was unsent" : message.body}</span>
               {message.edited && !isDeleted && <span className={`ml-2 text-[9px] ${mine ? "text-emerald-100" : "text-slate-400"}`}>edited</span>}
             </div>
           )}
