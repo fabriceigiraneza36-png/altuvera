@@ -544,6 +544,7 @@ const MsgBubble = React.memo(function MsgBubble({
   onUnsend, onPin, onHighlight,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const touchStartX = useRef(null);
   const reactions = useMemo(() => {
     const r = message.reactions || {};
     return Object.entries(r).filter(([,ids]) => ids?.length > 0);
@@ -554,7 +555,15 @@ const MsgBubble = React.memo(function MsgBubble({
   const destinationName = message.metadata?.destinationName || message.metadata?.destination_name || null;
 
   return (
-    <div className={`msg-bubble-wrap flex ${mine ? "justify-end" : "justify-start"} mb-1`}>
+    <div
+      className={`msg-bubble-wrap flex ${mine ? "justify-end" : "justify-start"} mb-1`}
+      onTouchStart={event => { touchStartX.current = event.changedTouches?.[0]?.clientX ?? null; }}
+      onTouchEnd={event => {
+        const endX = event.changedTouches?.[0]?.clientX;
+        if (touchStartX.current != null && endX != null && touchStartX.current - endX > 55) onReply(message.id);
+        touchStartX.current = null;
+      }}
+      title="Swipe left to reply on touch screens">
       {!mine && <div className="w-7 h-7 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mr-2 self-end mb-6">A</div>}
 
       <div className={`flex flex-col ${mine ? "items-end" : "items-start"} max-w-[90%] sm:max-w-[72%]`}>
@@ -908,6 +917,7 @@ export default function Messages() {
   const lastScrollTopRef = useRef(0);
 
   const scrollRef      = useRef(null);
+  const conversationSearchRef = useRef(null);
   const draftStorageKey = activeId ? `altuvera:user-chat-draft:${activeId}` : null;
    const textareaRef    = useRef(null);
    const isTypingRef    = useRef(false);
@@ -1051,6 +1061,33 @@ export default function Messages() {
     return () => window.removeEventListener("keydown", h);
   }, [showEmoji, replyToId]);
 
+  useEffect(() => {
+    const onShortcut = event => {
+      const target = event.target;
+      const typingTarget = target && (
+        target.tagName === "INPUT" || target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      );
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        conversationSearchRef.current?.focus();
+        conversationSearchRef.current?.select();
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "n") {
+        event.preventDefault();
+        setShowNewChat(true);
+        return;
+      }
+      if (event.key === "/" && !typingTarget && !event.ctrlKey && !event.metaKey && !event.altKey) {
+        event.preventDefault();
+        conversationSearchRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onShortcut);
+    return () => window.removeEventListener("keydown", onShortcut);
+  }, []);
+
   /* ── Derived ── */
   const replyMap   = useMemo(() => new Map(messages.map(m=>[String(m.id),m])), [messages]);
   const msgGroups  = useMemo(() => groupMessages(messages), [messages]);
@@ -1113,6 +1150,10 @@ export default function Messages() {
                   )}
                 </div>
                 <div className="flex items-center gap-1">
+                  <button onClick={() => setShowNewChat(true)} aria-label="New conversation" title="New conversation (Ctrl/⌘+N)"
+                    className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+                    <Plus size={15} />
+                  </button>
                   <button onClick={fetchConversations} disabled={loading}
                     aria-label="Refresh" title="Refresh"
                     className="w-7 h-7 rounded-lg flex items-center justify-center
@@ -1126,8 +1167,9 @@ export default function Messages() {
             <div className="px-3 pb-2">
               <label className="relative block">
                 <Search size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input value={conversationSearch} onChange={e => setConversationSearch(e.target.value)}
+                <input ref={conversationSearchRef} value={conversationSearch} onChange={e => setConversationSearch(e.target.value)}
                   type="search" aria-label="Search conversations" placeholder="Search chats or messages…"
+                  title="Shortcut: Ctrl/⌘+K"
                   className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-emerald-400 focus:bg-white focus:ring-2 focus:ring-emerald-500/10" />
               </label>
             </div>
@@ -1506,7 +1548,7 @@ export default function Messages() {
 
                   {/* Keyboard hint */}
                   <p className="text-center text-[10px] text-slate-300 mt-1.5 select-none">
-                    Enter ↵ to send · Shift+Enter for new line · Esc to cancel reply
+                    Enter ↵ to send · Shift+Enter for new line · Esc to cancel reply · Ctrl/⌘+K search · Ctrl/⌘+N new chat
                   </p>
                 </div>
               </>
