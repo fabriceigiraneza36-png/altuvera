@@ -64,10 +64,14 @@ export default function GlobalUserNotifications() {
   useEffect(() => {
     if (!visible) return undefined;
     const timer = window.setTimeout(() => {
+      // A toast is considered seen after it has remained visible. Clear the
+      // persisted alert as well as dismissing the visual toast.
+      markRead(visible.id);
+      deleteOne(visible.id);
       setVisible((current) => current?.id === visible.id ? null : current);
     }, 18000);
     return () => window.clearTimeout(timer);
-  }, [visible]);
+  }, [visible, markRead, deleteOne]);
 
   const meta = useMemo(
     () => TYPE_META[visible?.type] || TYPE_META.general,
@@ -93,9 +97,10 @@ export default function GlobalUserNotifications() {
       navigate(`/messages?conversationId=${encodeURIComponent(conversationIdOf(item))}`);
       return;
     }
-    if (item.action_url) {
-      if (item.action_url.startsWith("/")) navigate(item.action_url);
-      else window.location.href = item.action_url;
+    const actionUrl = item.action_url || item.actionUrl;
+    if (actionUrl) {
+      if (actionUrl.startsWith("/")) navigate(actionUrl);
+      else window.location.href = actionUrl;
       return;
     }
     navigate("/notifications");
