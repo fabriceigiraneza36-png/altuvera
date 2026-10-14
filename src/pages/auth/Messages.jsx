@@ -1219,9 +1219,7 @@ export default function Messages() {
       <Helmet><title>Messages | Altuvera</title></Helmet>
 
       <DashboardLayout
-        title="Messages"
-        hideMobileMenuToggle
-        /* Keep the chat in a viewport-sized surface without extra page copy */
+        /* Keep the chat in a viewport-sized surface without duplicate page headings. */
         noPadding
       >
         {/* Error */}
