@@ -10,6 +10,7 @@ import {
   Sparkles, ShieldCheck, AlertCircle,
 } from "lucide-react";
 import { packagesAPI } from "../api/packages";
+import { useUserAuth } from "../context/UserAuthContext";
 import CountryPhoneSelect, {
   COUNTRIES,
   FlagImg,
@@ -177,6 +178,7 @@ function ErrorState({ message }) {
 
 export default function PackageDetail() {
   const { slug } = useParams();
+  const { user, isAuthenticated, authLoading, openModal } = useUserAuth();
   const [pkg, setPkg] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -199,6 +201,19 @@ export default function PackageDetail() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(null);
+  const canRequest = isAuthenticated && !authLoading;
+  const accountName = String(user?.fullName || user?.full_name || user?.name || "").trim();
+  const accountEmail = String(user?.email || "").trim().toLowerCase();
+  const accountAvatar = user?.avatar || user?.avatarUrl || user?.avatar_url || user?.picture || "";
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    setForm((current) => ({
+      ...current,
+      guest_name: accountName || current.guest_name,
+      guest_email: accountEmail || current.guest_email,
+    }));
+  }, [isAuthenticated, accountName, accountEmail]);
 
   useEffect(() => {
     let alive = true;
@@ -236,9 +251,9 @@ export default function PackageDetail() {
 
   const validate = () => {
     const next = {};
-    if (!form.guest_name.trim()) next.guest_name = "Please enter your name.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.guest_email.trim()))
-      next.guest_email = "Please enter a valid email address.";
+    if (!accountName) next.guest_name = "Please complete your name in your Altuvera profile.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(accountEmail))
+      next.guest_email = "Your account must have a valid email address.";
     if (!form.nationality) next.nationality = "Please select your nationality.";
     if (!form.country_of_residence) next.country_of_residence = "Please select your country of residence.";
     if (Number(form.adults) < 1) next.adults = "At least one adult is required.";
@@ -261,8 +276,8 @@ export default function PackageDetail() {
     setErrors({});
     try {
       const payload = {
-        guest_name: form.guest_name.trim(),
-        guest_email: form.guest_email.trim(),
+        guest_name: accountName,
+        guest_email: accountEmail,
         adults: Math.max(1, Number(form.adults) || 1),
         children: Math.max(0, Number(form.children) || 0),
         travelers_count: Math.max(1, (Number(form.adults) || 1) + (Number(form.children) || 0)),
@@ -360,7 +375,7 @@ export default function PackageDetail() {
           </div>
         </div>
 
-        <form className="pkg-form-card" onSubmit={submit} noValidate>
+        {canRequest ? (<form className="pkg-form-card" onSubmit={submit} noValidate>
           <div className="pkg-form-head">
             <div>
               <span className="pkg-eyebrow">Request this package</span>
@@ -371,14 +386,18 @@ export default function PackageDetail() {
 
           {errors.general && <div className="pkg-alert"><AlertCircle size={17} /> {errors.general}</div>}
 
+          <div className="pkg-account-chip">
+            {accountAvatar ? <img src={accountAvatar} alt="" /> : <span className="pkg-account-fallback">{(accountName || "U").charAt(0).toUpperCase()}</span>}
+            <div><b>{accountName || "Your Altuvera account"}</b><small>{accountEmail}</small><small className="pkg-account-secure">Request will be attached to your account</small></div>
+          </div>
           <div className="pkg-section">
             <div className="pkg-section-title"><span>01</span><div><b>Your details</b><small>Who should we respond to?</small></div></div>
             <div className="pkg-two">
               <Field label="Full name" required error={errors.guest_name}>
-                <input value={form.guest_name} onChange={(e) => update("guest_name", e.target.value)} placeholder="Your full name" autoComplete="name" />
+                <input value={accountName} readOnly aria-readonly="true" title="Taken from your signed-in Altuvera account" placeholder="Your full name" autoComplete="name" />
               </Field>
               <Field label="Email address" required error={errors.guest_email}>
-                <input type="email" value={form.guest_email} onChange={(e) => update("guest_email", e.target.value)} placeholder="you@example.com" autoComplete="email" />
+                <input type="email" value={accountEmail} readOnly aria-readonly="true" title="Taken from your signed-in Altuvera account" placeholder="you@example.com" autoComplete="email" />
               </Field>
             </div>
             <div className="pkg-two">
@@ -445,7 +464,20 @@ export default function PackageDetail() {
               {submitting ? <><Loader2 size={18} className="spin" /> Sending request…</> : <><Send size={18} /> Request this package</>}
             </button>
           </div>
-        </form>
+        </form>) : (
+          <div className="pkg-form-card pkg-auth-required">
+            <div className="pkg-form-head">
+              <span className="pkg-eyebrow">Account required</span>
+              <h2>{authLoading ? "Checking your account…" : "Sign in to request this package"}</h2>
+              <p>To protect your travel requests and keep them in your Altuvera dashboard, you must be signed in. Your name, email, and profile photo will be attached automatically.</p>
+            </div>
+            <div className="pkg-auth-required-body">
+              <ShieldCheck size={34} />
+              <button type="button" className="pkg-primary" onClick={() => openModal("login")} disabled={authLoading}>Sign in or create account</button>
+              <small>Google fast sign-in may be available, so you can continue without filling out the standard login form.</small>
+            </div>
+          </div>
+        )}
       </section>
     </main>
   );
@@ -464,7 +496,7 @@ const CSS = `
 .pkg-poster-copy{position:absolute;left:clamp(22px,4vw,48px);right:24px;bottom:clamp(24px,4vw,48px);color:white}
 .pkg-poster-copy h1{font:400 clamp(32px,4vw,58px)/1.05 "DM Serif Display",serif;margin:10px 0 18px;max-width:760px}
 .pkg-meta{display:flex;flex-wrap:wrap;gap:10px}.pkg-meta span,.pkg-meta strong{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border-radius:999px;background:rgba(255,255,255,.13);backdrop-filter:blur(12px);font-size:12px}.pkg-meta strong{background:#10b981}
-.pkg-form-card{background:white;border:1px solid #d7eee1;border-radius:28px;box-shadow:0 18px 60px rgba(2,44,34,.09);overflow:visible}
+.pkg-form-card{background:white;border:1px solid #d7eee1;border-radius:28px;box-shadow:0 18px 60px rgba(2,44,34,.09);overflow:visible}.pkg-account-chip{display:flex;align-items:center;gap:12px;margin:20px 30px 0;padding:12px;border:1px solid #d7eee1;border-radius:15px;background:#f6fbf8}.pkg-account-chip img,.pkg-account-fallback{width:44px;height:44px;flex:0 0 44px;border-radius:50%;object-fit:cover}.pkg-account-fallback{display:grid;place-items:center;background:#d1fae5;color:#047857;font-weight:800}.pkg-account-chip b,.pkg-account-chip small{display:block;overflow-wrap:anywhere}.pkg-account-chip b{font-size:13px;color:#064e3b}.pkg-account-chip small{font-size:11px;color:#64756b;margin-top:3px}.pkg-account-chip .pkg-account-secure{color:#059669;font-weight:700}.pkg-auth-required-body{padding:30px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:16px;color:#059669}.pkg-auth-required-body small{max-width:320px;color:#64756b;line-height:1.6}.pkg-auth-required .pkg-form-head{border-bottom:0}.pkg-auth-required-body .pkg-primary{min-height:46px}
 .pkg-form-head{padding:30px 30px 22px;border-bottom:1px solid #e7f4ec}.pkg-form-head h2{font:400 clamp(25px,3vw,36px)/1.1 "DM Serif Display",serif;color:#064e3b;margin:8px 0}.pkg-form-head p{margin:0;color:#64748b;font-size:13px;line-height:1.6}
 .pkg-eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.15em;font-weight:800;color:#059669}
 .pkg-section{padding:25px 30px;border-bottom:1px solid #e7f4ec}.pkg-section:last-of-type{border-bottom:0}
