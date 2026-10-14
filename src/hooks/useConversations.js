@@ -212,6 +212,12 @@ export function useConversations() {
 
     s.on("msg:message", (msg) => {
       if (!msg) return;
+      // An admin may create the user's first conversation while this portal is
+      // already open. Refresh immediately so the default-selection effect can
+      // open that conversation without waiting for the 15-second poll.
+      if (msg.senderType === "admin" && String(msg.conversationId) !== String(activeIdRef.current)) {
+        fetchConversations();
+      }
       setMessages((prev) => {
         if (prev.some((m) => String(m.id) === String(msg.id))) return prev;
         const cid = String(msg.conversationId);
