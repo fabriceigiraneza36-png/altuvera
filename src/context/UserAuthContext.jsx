@@ -1061,6 +1061,7 @@ export function UserAuthProvider({ children }) {
         setGoogleUser(pending);
         store.setJSON(KEYS.GOOGLE_PENDING, pending);
         setModalView("register");
+        openModal("register", { skipNotLoggedInMessage: true });
         return { ...data, requiresProfile: true, googleUser: pending };
       }
 
@@ -1088,7 +1089,7 @@ export function UserAuthProvider({ children }) {
     } finally {
       setGoogleLoading(false);
     }
-  }, [authFetch, closeModal, persistSession, saveAuth, triggerCongratulation]);
+  }, [authFetch, closeModal, openModal, persistSession, saveAuth, triggerCongratulation]);
 
   // ============================================================================
   // One Tap Response Handler
@@ -1263,6 +1264,10 @@ export function UserAuthProvider({ children }) {
 
         const oneTapTimeout = setTimeout(() => {
           googleCbRef.current = null;
+          if (opts.autoPrompt) {
+            settle(resolve, { dismissed: true, reason: "one_tap_timeout" });
+            return;
+          }
           runPopup("timeout");
         }, 8_000);
 
@@ -1296,12 +1301,20 @@ export function UserAuthProvider({ children }) {
             if (outcome === "dismissed" || outcome === "unavailable") {
               clearTimeout(oneTapTimeout);
               googleCbRef.current = null;
+              if (opts.autoPrompt) {
+                settle(resolve, { dismissed: true, reason: outcome });
+                return;
+              }
               runPopup(outcome);
             }
           });
         } catch {
           clearTimeout(oneTapTimeout);
           googleCbRef.current = null;
+          if (opts.autoPrompt) {
+            settle(resolve, { dismissed: true, reason: "one_tap_error" });
+            return;
+          }
           runPopup("one_tap_error");
         }
       }),
@@ -1589,6 +1602,26 @@ export function UserAuthProvider({ children }) {
   useEffect(() => { fetchUser(); },            [fetchUser]);
   useEffect(() => { initGoogleSdk(); },        [initGoogleSdk]);
   useEffect(() => { consumeGithubCallback(); }, [consumeGithubCallback]);
+
+  // Offer Google's native One Tap prompt without forcing a login modal or
+  // opening a popup. A visitor who dismisses it can continue browsing normally.
+  useEffect(() => {
+    if (authLoading || isAuthenticated || isModalOpen || !googleLoaded) return;
+    try {
+      if (sessionStorage.getItem("altuvera_google_one_tap_prompted") === "true") return;
+      sessionStorage.setItem("altuvera_google_one_tap_prompted", "true");
+    } catch { /* session storage may be unavailable */ }
+
+    const promptTimer = setTimeout(() => {
+      if (!isAuthenticated && !isModalOpen) {
+        promptGoogleAuth({ mode: "signin", autoPrompt: true }).catch((err) => {
+          if (import.meta.env.DEV) console.info("[Auth] One Tap unavailable:", err?.message || err);
+        });
+      }
+    }, 900);
+
+    return () => clearTimeout(promptTimer);
+  }, [authLoading, googleLoaded, isAuthenticated, isModalOpen, promptGoogleAuth]);
 
   // ============================================================================
   // Context Value
