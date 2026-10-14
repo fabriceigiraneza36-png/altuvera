@@ -240,8 +240,8 @@ import { Bell, CalendarDays, Check, CheckCheck, CircleAlert, CreditCard, Gift, G
 
                         <div style={{ flex: 1, minWidth: 0 }}>
                           {/* Title + time */}
-                          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                            <p className="user-notification-title-row" style={{ margin: 0, fontSize: 15, fontWeight: n.is_read ? 600 : 800, color: '#0f172a' }}>
+                          <div className="user-notification-title-row" style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                            <p style={{ margin: 0, fontSize: 15, fontWeight: n.is_read ? 600 : 800, color: '#0f172a' }}>
                               {n.title}
                             </p>
                             <span style={{ fontSize: 12, color: '#94a3b8', flexShrink: 0 }}>
