@@ -98,7 +98,8 @@ export function useConversations() {
   const [messages,           setMessages]           = useState([]);
   const [activeId,           setActiveId]           = useState(null);
   const [activeConversation, setActiveConversation] = useState(null);
-  const [loading,            setLoading]            = useState(false);
+  const [loading,            setLoading]            = useState(true);
+  const [conversationsLoaded, setConversationsLoaded] = useState(false);
   const [loadingMsgs,        setLoadingMsgs]        = useState(false);
   const [sending,            setSaving]             = useState(false);
   const [error,              setError]              = useState("");
@@ -106,6 +107,7 @@ export function useConversations() {
   const pollRef = useRef(null);
   const socketRef = useRef(null);
   const activeIdRef = useRef(null);
+  const conversationsLoadedRef = useRef(false);
   const typingTimerCache = useRef({});
   const [adminTyping, setAdminTyping] = useState(null);
   const [typingConvs, setTypingConvs] = useState(new Set());
@@ -142,7 +144,9 @@ export function useConversations() {
       return cached;
     }
     const pending = userDataCache.getPending(url);
-    if (pending) return pending;
+    // Explicit refreshes (including post-delete recovery) must not reuse an
+    // older in-flight inbox response that can still contain a deleted thread.
+    if (pending && !options.forceRefresh) return pending;
     const request = authFetch(url).then(async (res) => {
       if (!res.ok) throw new Error(`Server error ${res.status}`);
       const data = await res.json();
@@ -154,11 +158,24 @@ export function useConversations() {
   };
 
   const fetchConversations = useCallback(async () => {
-    setLoading(true);
+    if (!conversationsLoadedRef.current) setLoading(true);
     setError("");
     try {
       const data = await cachedJsonGet(`${API_BASE}/messages/conversations?limit=100&status=all`, { forceRefresh: true });
-      setConversations((data.data || []).map(normConv));
+      const nextConversations = (data.data || []).map(normConv);
+      setConversations(nextConversations);
+      conversationsLoadedRef.current = true;
+      setConversationsLoaded(true);
+
+      // Recover when an admin soft-deletes the active thread.
+      const currentId = activeIdRef.current;
+      if (currentId && !nextConversations.some(c => String(c.id) === String(currentId))) {
+        activeIdRef.current = null;
+        setActiveId(null);
+        setActiveConversation(null);
+        setMessages([]);
+        setAdminTyping(null);
+      }
     } catch (err) {
       setError(err.message || "Failed to load conversations.");
     } finally {
@@ -276,6 +293,22 @@ export function useConversations() {
       }
     });
 
+    s.on("msg:conversation-deleted", (payload) => {
+      const deletedId = String(payload?.conversationId ?? "");
+      if (!deletedId) return;
+      setConversations((prev) => prev.filter(c => String(c.id) !== deletedId));
+      if (deletedId === String(activeIdRef.current)) {
+        activeIdRef.current = null;
+        setActiveId(null);
+        setActiveConversation(null);
+        setMessages([]);
+        setAdminTyping(null);
+      }
+      // The REST list is authoritative; only show create after it confirms
+      // there are no remaining valid conversations.
+      fetchConversations();
+    });
+
     s.on("msg:reaction", ({ messageId, reactions }) => {
       if (!messageId) return;
       setMessages((prev) => prev.map((m) =>
@@ -335,6 +368,7 @@ export function useConversations() {
     return () => {
       s.emit("msg:inbox-open", { open: false });
       s.off("msg:reaction");
+      s.off("msg:conversation-deleted");
       s.off("msg:message-edited", applyMessageMutation);
       s.off("msg:message-deleted", applyMessageMutation);
       s.off("msg:message-pinned", applyMessageMutation);
@@ -551,6 +585,7 @@ export function useConversations() {
 
   return {
     conversations,
+    conversationsLoaded,
     messages,
     activeId,
     activeConversation,
