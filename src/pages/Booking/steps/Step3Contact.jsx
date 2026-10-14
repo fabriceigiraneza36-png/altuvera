@@ -121,7 +121,7 @@ export default function Step3Contact({ data, set, touch, errors, touched }) {
     <div>
       <Field id="email" label="Email Address" icon={Mail} type="email" value={data.email}
         onChange={(v) => set("email", v)} onBlur={() => touch("email")} placeholder="you@example.com"
-        autoComplete="email" required error={touched.email && errors.email}
+        autoComplete="email" readOnly required error={touched.email && errors.email}
         valid={touched.email && !errors.email && !!data.email} hint="For your booking confirmation" />
 
       <PhoneField data={data} set={set} touch={touch} errors={errors} touched={touched} />
