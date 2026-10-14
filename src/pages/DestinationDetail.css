@@ -2834,3 +2834,51 @@ html { scroll-behavior: smooth; }
     font-size: 18px;
   }
 }
+
+
+/* ── Responsive destination attraction carousel ─────────────────────────── */
+.d-attraction-section { overflow: hidden; }
+.d-attraction-carousel {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(12px, 1.8vw, 22px);
+  align-items: stretch;
+}
+.d-attraction-card { height: 100%; min-width: 0; }
+.d-attraction-card .d-exp-card__media { aspect-ratio: 4 / 3; }
+.d-attraction-card .d-exp-card__media > img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+@media (min-width: 1180px) {
+  .d-attraction-carousel { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+@media (max-width: 760px) {
+  .d-attraction-carousel {
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 4px 2px 18px;
+    margin-right: calc(-1 * clamp(16px, 5vw, 28px));
+    padding-right: clamp(16px, 5vw, 28px);
+    scroll-snap-type: x mandatory;
+    scroll-padding-left: 2px;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #a7f3d0 transparent;
+  }
+  .d-attraction-carousel > * {
+    flex: 0 0 min(78vw, 310px);
+    min-width: 0;
+    scroll-snap-align: start;
+  }
+  .d-attraction-card .d-exp-card__media { aspect-ratio: 4 / 3; }
+}
+@media (max-width: 420px) {
+  .d-attraction-carousel { gap: 12px; }
+  .d-attraction-carousel > * { flex-basis: 82vw; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .d-attraction-carousel { scroll-behavior: auto; }
+}
