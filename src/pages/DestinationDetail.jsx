@@ -205,17 +205,26 @@ export default function DestinationDetail() {
     [destination]
   );
   const heroSlides = useMemo(() => {
-    const preferred = [
-      ...(Array.isArray(destination?.heroImages) ? destination.heroImages : []),
-      destination?.heroImage,
-      ...gallery.map((img) => img.url),
-    ].filter(Boolean);
-
-    return [...new Set(preferred.map((value) => {
+    const list = (value) => Array.isArray(value) ? value : [];
+    const urls = (items) => items.map((value) => {
       if (typeof value === "string") return resolveImageUrl(value);
-      return resolveImageUrl(value?.imageUrl || value?.image_url || value?.url || value?.image);
-    }).filter(Boolean))].slice(0, 4);
-  }, [destination?.heroImages, destination?.heroImage, gallery]);
+      return resolveImageUrl(value?.imageUrl || value?.image_url || value?.url || value?.image || value?.src);
+    }).filter(Boolean);
+    // Respect the image order configured by the admin. Use banner slides only
+    // when no explicit hero images exist, then fall back to the destination gallery.
+    const explicitHero = urls([
+      ...list(destination?.heroImages), ...list(destination?.hero_images),
+      ...list(destination?.heroSlides), ...list(destination?.hero_slides),
+    ]);
+    const banners = urls([
+      ...list(destination?.bannerSlides), ...list(destination?.banner_slides),
+      ...list(destination?.bannerImages), ...list(destination?.banner_images),
+    ]);
+    const fallback = urls([
+      destination?.heroImage, destination?.hero_image, ...gallery.map((img) => img.url),
+    ]);
+    return [...new Set(explicitHero.length ? explicitHero : banners.length ? banners : fallback)].slice(0, 6);
+  }, [destination, gallery]);
 
   const [heroSlide, setHeroSlide] = useState(0);
 
@@ -741,12 +750,14 @@ export default function DestinationDetail() {
               <div className="d-exp-grid">
                 {attractions.map((attraction, index) => {
                   const name = attraction.name || attraction.title || attraction || "Attraction";
-                  const image =
+                  const image = resolveImageUrl(
                     attraction.imageUrl ||
                     attraction.image_url ||
                     attraction.image ||
+                    attraction.thumbnailUrl ||
                     gallery[index % Math.max(gallery.length, 1)]?.url ||
-                    heroImage;
+                    heroImage
+                  );
 
                   const slug =
                     attraction.slug ||

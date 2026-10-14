@@ -2834,3 +2834,29 @@ html { scroll-behavior: smooth; }
     font-size: 18px;
   }
 }
+
+
+/* Responsive attraction gallery: preserve the desktop grid and enable native
+   touch scrolling with snap points on phones. */
+@media (max-width: 767px) {
+  .d-exp-grid {
+    display: flex !important;
+    gap: 14px !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    margin-right: -24px;
+    padding: 4px 24px 18px 0;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .d-exp-grid::-webkit-scrollbar { display: none; }
+  .d-exp-grid > * { flex: 0 0 min(82vw, 340px); min-width: 0; scroll-snap-align: start; }
+  .d-exp-card { height: 100%; }
+  .d-exp-card__media { min-height: 300px; }
+  .d-exp-card__overlay { opacity: 1; }
+}
+@media (min-width: 768px) {
+  .d-exp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+}

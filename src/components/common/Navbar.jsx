@@ -17,6 +17,7 @@ import {
   FiMenu,
   FiArrowRight,
   FiCamera,
+  FiSearch,
 } from "react-icons/fi";
 import { useApp } from "../../context/AppContext";
 import { useUserAuth } from "../../context/UserAuthContext";
@@ -24,6 +25,8 @@ import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 import { preloadRoute } from "../../utils/routeUtils";
 import { getCountrySlug } from "../../utils/countrySlugMap";
 import { useCountries } from "../../hooks/useCountries";
+import { useDestinationSuggestions } from "../../hooks/useDestinations";
+import { multiBackendFetch } from "../../utils/multiBackendFetch";
 import { adaptDestination } from "../../utils/destinationAdapter";
 import "./Navbar.css";
 
@@ -234,6 +237,13 @@ const Navbar = () => {
   const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchExpanded, setSearchExpanded] = useState(false);
+  const [searchCountries, setSearchCountries] = useState([]);
+  const [searchCountriesLoading, setSearchCountriesLoading] = useState(false);
+  const searchInputRef = useRef(null);
+  const { suggestions: searchDestinations = [], loading: searchDestinationsLoading = false } = useDestinationSuggestions(searchQuery, 8);
   const location = useLocation();
   const navigate = useNavigate();
   const { favorites } = useApp();
@@ -313,6 +323,64 @@ const Navbar = () => {
       });
     return items;
   }, [user?.role]);
+
+  useEffect(() => {
+    if (searchQuery.trim().length < 2) {
+      setSearchCountries([]);
+      setSearchCountriesLoading(false);
+      return undefined;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      setSearchCountriesLoading(true);
+      try {
+        const response = await multiBackendFetch(`/countries/search?q=${encodeURIComponent(searchQuery.trim())}&limit=8`);
+        const rows = Array.isArray(response) ? response : response?.data || response?.countries || [];
+        if (!cancelled) setSearchCountries(rows);
+      } catch {
+        if (!cancelled) setSearchCountries([]);
+      } finally {
+        if (!cancelled) setSearchCountriesLoading(false);
+      }
+    }, 180);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [searchQuery]);
+
+  useEffect(() => {
+    if (searchOpen) window.setTimeout(() => searchInputRef.current?.focus(), 50);
+  }, [searchOpen]);
+
+  const closeSearch = useCallback(() => {
+    setSearchOpen(false);
+    setSearchExpanded(false);
+    setSearchQuery("");
+  }, []);
+
+  useEffect(() => {
+    let startX = 0;
+    let startY = 0;
+    const onStart = (event) => {
+      const touch = event.touches?.[0];
+      if (!touch) return;
+      startX = touch.clientX;
+      startY = touch.clientY;
+    };
+    const onEnd = (event) => {
+      const touch = event.changedTouches?.[0];
+      if (!touch) return;
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+      if (Math.abs(dx) < 75 || Math.abs(dx) < Math.abs(dy) * 1.25) return;
+      if (!isMobileMenuOpen && startX < 28 && dx > 0) setIsMobileMenuOpen(true);
+      else if (isMobileMenuOpen && dx < 0) setIsMobileMenuOpen(false);
+    };
+    window.addEventListener("touchstart", onStart, { passive: true });
+    window.addEventListener("touchend", onEnd, { passive: true });
+    return () => {
+      window.removeEventListener("touchstart", onStart);
+      window.removeEventListener("touchend", onEnd);
+    };
+  }, [isMobileMenuOpen]);
 
   /* ── Scroll Logic ── */
   useEffect(() => {
@@ -614,6 +682,12 @@ const Navbar = () => {
 
           {/* ── Actions ── */}
           <div className="nav__actions">
+            <div className={cn("nav__search-control", searchExpanded && "nav__search-control--expanded")} onMouseEnter={() => setSearchExpanded(true)} onMouseLeave={() => { if (!searchQuery) setSearchExpanded(false); }}>
+              <button type="button" className="nav__search-trigger" aria-label="Search destinations and countries" onFocus={() => setSearchExpanded(true)} onClick={() => { setSearchOpen(true); setSearchExpanded(true); }}>
+                <FiSearch size={19} />
+              </button>
+              <input className="nav__search-inline" aria-label="Search destinations" placeholder="Search places…" value={searchQuery} onFocus={() => { setSearchExpanded(true); setSearchOpen(true); }} onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }} />
+            </div>
             <Link to="/gallery" className="nav__icon-link">
               <span
                 className="nav__icon-btn"
@@ -753,6 +827,34 @@ const Navbar = () => {
         </div>
       </nav>
 
+      {/* Live search results are sourced from the destination and country APIs. */}
+      <div className={cn("alt-search", searchOpen && "alt-search--open")} aria-hidden={!searchOpen} onMouseDown={(e) => { if (e.target === e.currentTarget) closeSearch(); }}>
+        <section className="alt-search__panel" role="dialog" aria-modal="true" aria-label="Search destinations and countries">
+          <header className="alt-search__header">
+            <div className="alt-search__input">
+              <FiSearch size={20} />
+              <input ref={searchInputRef} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => e.key === "Escape" && closeSearch()} placeholder="Where would you like to go?" autoComplete="off" />
+              {searchQuery && <button type="button" aria-label="Clear search" onClick={() => setSearchQuery("")}><FiX size={17} /></button>}
+            </div>
+            <button type="button" className="alt-search__close" aria-label="Close search" onClick={closeSearch}><FiX size={21} /></button>
+          </header>
+          <div className="alt-search__results">
+            {searchQuery.trim().length < 2 ? (
+              <div className="alt-search__hint"><FiMapPin size={22} /><strong>Find your next adventure</strong><span>Type at least two characters to search live database results.</span></div>
+            ) : (searchDestinationsLoading || searchCountriesLoading) && !searchDestinations.length && !searchCountries.length ? (
+              <div className="alt-search__hint"><span className="alt-search__spinner" /><strong>Searching live results…</strong></div>
+            ) : !searchDestinations.length && !searchCountries.length ? (
+              <div className="alt-search__hint"><FiSearch size={22} /><strong>No matching results</strong><span>Try another destination or country name.</span></div>
+            ) : (
+              <>
+                {searchDestinations.length > 0 && <section className="alt-search__group"><h3>Destinations</h3><div className="alt-search__grid">{searchDestinations.map((destination, index) => <DestinationCard key={destination.id || destination.slug || destination.name || index} destination={destination} index={index} onClick={() => { closeSearch(); navigate(`/destinations/${destination.slug || destination.id}`); }} />)}</div></section>}
+                {searchCountries.length > 0 && <section className="alt-search__group"><h3>Countries</h3><div className="alt-search__grid">{searchCountries.map((country, index) => <DestinationCard key={country.id || country.slug || country.name || index} destination={{ ...country, isCountry: true, country: country.region || country.continent || "Explore country", heroImage: country.heroImage || country.hero_image || country.coverImageUrl || country.imageUrl || country.image_url || country.flagUrl || country.flag_url }} index={index} onClick={() => { closeSearch(); navigate(`/country/${getCountrySlug(country)}`); }} />)}</div></section>}
+              </>
+            )}
+          </div>
+        </section>
+      </div>
+
       {/* ── BACKDROP ── */}
       <div
         className={cn("backdrop", isMobileMenuOpen && "backdrop--open")}
@@ -791,6 +893,10 @@ const Navbar = () => {
 
         {/* Mobile Body */}
         <div className="mm__body">
+          <div className="mm__search">
+            <FiSearch size={17} />
+            <input aria-label="Search destinations and countries" value={searchQuery} onFocus={() => setSearchOpen(true)} onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }} placeholder="Search destinations or countries…" />
+          </div>
           {navLinks.map((link, idx) => (
             <div key={link.name} className="mm__item" style={{ "--idx": idx }}>
               {link.dropdown ? (
