@@ -183,7 +183,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
           .dashboard-overlay.open { display: block; }
            .mobile-menu-toggle { display: flex; }
           .dashboard-layout-no-padding .mobile-menu-toggle {
-            top: 92px; bottom: auto; right: 14px;
+            top: auto; bottom: 112px; right: 14px;
             width: 44px; height: 44px; z-index: 80;
             box-shadow: 0 3px 12px rgba(5,150,105,0.25);
           }
