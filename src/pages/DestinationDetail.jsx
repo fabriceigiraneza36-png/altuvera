@@ -215,13 +215,14 @@ export default function DestinationDetail() {
     const explicitHero = urls([
       ...list(destination?.heroImages), ...list(destination?.hero_images),
       ...list(destination?.heroSlides), ...list(destination?.hero_slides),
-      destination?.heroImage, destination?.hero_image,
     ]);
     const banners = urls([
       ...list(destination?.bannerSlides), ...list(destination?.banner_slides),
       ...list(destination?.bannerImages), ...list(destination?.banner_images),
     ]);
-    const fallback = urls(gallery.map((img) => img.url));
+    const fallback = urls([
+      destination?.heroImage, destination?.hero_image, ...gallery.map((img) => img.url),
+    ]);
     return [...new Set(explicitHero.length ? explicitHero : banners.length ? banners : fallback)].slice(0, 6);
   }, [destination, gallery]);
 
