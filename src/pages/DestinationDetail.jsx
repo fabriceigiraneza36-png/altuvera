@@ -58,6 +58,7 @@ const extractUniqueImages = (destination, limit = Number.POSITIVE_INFINITY) => {
   sources.push(...(Array.isArray(destination.hero_images) ? destination.hero_images : []));
   sources.push(...(Array.isArray(destination.bannerSlides) ? destination.bannerSlides : []));
   sources.push(...(Array.isArray(destination.banner_slides) ? destination.banner_slides : []));
+  sources.push(...(Array.isArray(destination.attractionImages) ? destination.attractionImages : []));
   sources.push(...(Array.isArray(destination.images) ? destination.images : []));
   sources.push(...(Array.isArray(destination.image_urls) ? destination.image_urls : []));
   sources.push(...(Array.isArray(destination.imageUrls) ? destination.imageUrls : []));
@@ -205,17 +206,17 @@ export default function DestinationDetail() {
     [destination]
   );
   const heroSlides = useMemo(() => {
-    const preferred = [
-      ...(Array.isArray(destination?.heroImages) ? destination.heroImages : []),
+    const explicitHero = Array.isArray(destination?.heroImages) ? destination.heroImages : [];
+    const banners = Array.isArray(destination?.bannerSlides) ? destination.bannerSlides : [];
+    const primary = explicitHero.length ? explicitHero : banners.length ? banners : [
       destination?.heroImage,
       ...gallery.map((img) => img.url),
-    ].filter(Boolean);
-
-    return [...new Set(preferred.map((value) => {
+    ];
+    return [...new Set(primary.map((value) => {
       if (typeof value === "string") return resolveImageUrl(value);
       return resolveImageUrl(value?.imageUrl || value?.image_url || value?.url || value?.image);
     }).filter(Boolean))].slice(0, 4);
-  }, [destination?.heroImages, destination?.heroImage, gallery]);
+  }, [destination?.heroImages, destination?.bannerSlides, destination?.heroImage, gallery]);
 
   const [heroSlide, setHeroSlide] = useState(0);
 
@@ -231,10 +232,43 @@ export default function DestinationDetail() {
     return () => window.clearInterval(timer);
   }, [heroSlides.length]);
 
+  const bannerSlideUrls = useMemo(
+    () => (Array.isArray(destination?.bannerSlides) ? destination.bannerSlides : [])
+      .map((item) => resolveImageUrl(typeof item === "string" ? item : item?.imageUrl || item?.image_url || item?.url || item?.image))
+      .filter(Boolean),
+    [destination?.bannerSlides]
+  );
+
   const additionalImages = useMemo(
     () => gallery.filter((img) => !heroSlides.includes(img.url)),
     [gallery, heroSlides]
   );
+
+  const attractionPhotoCards = useMemo(() => {
+    const seen = new Set();
+    const cards = [];
+    const add = (item, index, isNamedAttraction = false) => {
+      const url = resolveImageUrl(typeof item === "string" ? item : item?.imageUrl || item?.image_url || item?.url || item?.image || item?.src);
+      if (!url || seen.has(url) || heroSlides.includes(url) || bannerSlideUrls.includes(url)) return;
+      seen.add(url);
+      const name = typeof item === "object" ? item?.name || item?.title || item?.caption || item?.altText || item?.alt_text : "";
+      cards.push({
+        id: item?.id || `${url}-${index}`,
+        name: name || (isNamedAttraction ? `Attraction ${index + 1}` : `Discover ${destination?.name || "this destination"}`),
+        description: typeof item === "object" ? item?.description || item?.summary || "" : "",
+        slug: typeof item === "object" ? item?.slug : "",
+        url,
+        named: isNamedAttraction,
+      });
+    };
+    (Array.isArray(destination?.attractions) ? destination.attractions : []).forEach((item, index) => {
+      const image = item?.imageUrl || item?.image_url || item?.image || item?.url;
+      if (image) add({ ...item, imageUrl: image }, index, true);
+    });
+    (Array.isArray(destination?.attractionImages) ? destination.attractionImages : []).forEach((item, index) => add(item, index));
+    additionalImages.forEach((item, index) => add(item, index));
+    return cards;
+  }, [destination?.attractions, destination?.attractionImages, destination?.name, heroSlides, bannerSlideUrls, additionalImages]);
 
   useEffect(() => {
     setLightboxIndex(null);
@@ -731,50 +765,30 @@ export default function DestinationDetail() {
           </section>
         )}
 
-        {attractions.length > 0 && (
-          <section className="d-sec d-sec--white">
+        {attractionPhotoCards.length > 0 && (
+          <section className="d-sec d-sec--white d-attraction-section">
             <div className="d-wrap">
               <Reveal from="bottom">
                 <SH title="Popular Attractions" sub="Discover the moments that define this destination" />
               </Reveal>
-
-              <div className="d-exp-grid">
-                {attractions.map((attraction, index) => {
-                  const name = attraction.name || attraction.title || attraction || "Attraction";
-                  const image =
-                    attraction.imageUrl ||
-                    attraction.image_url ||
-                    attraction.image ||
-                    gallery[index % Math.max(gallery.length, 1)]?.url ||
-                    heroImage;
-
-                  const slug =
-                    attraction.slug ||
-                    String(name)
-                      .toLowerCase()
-                      .trim()
-                      .replace(/[^a-z0-9]+/g, "-")
-                      .replace(/(^-|-$)/g, "");
-
+              <div className="d-attraction-carousel" aria-label="Attraction photos">
+                {attractionPhotoCards.map((item, index) => {
+                  const slug = item.slug || String(item.name).toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
                   return (
-                    <Reveal key={`${name}-${index}`} from="scale" delay={index * 40}>
-                      <div className="d-exp-card">
+                    <Reveal key={item.id || `${item.url}-${index}`} from="scale" delay={Math.min(index * 35, 210)}>
+                      <article className="d-exp-card d-attraction-card">
                         <div className="d-exp-card__media">
-                          <img src={image} alt={String(name)} loading="lazy" />
+                          <img src={item.url} alt={String(item.name)} loading="lazy" decoding="async" />
                           <div className="d-exp-card__overlay">
-                            <h4 className="d-exp-card__ov-title">{name}</h4>
-                            <p className="d-exp-card__ov-desc">{attraction.description || `Explore ${name}.`}</p>
+                            <h4 className="d-exp-card__ov-title">{item.name}</h4>
+                            <p className="d-exp-card__ov-desc">{item.description || `Explore ${item.name} in ${destination.name}.`}</p>
                             <div className="d-exp-card__ov-actions">
-                              <Link className="d-btn d-btn--white" to={`/destinations/${destination.slug}/attractions/${slug}`}>
-                                Learn more
-                              </Link>
-                              <Link className="d-btn d-btn--emerald" to={`/booking?destination=${encodeURIComponent(destination.slug)}&attraction=${encodeURIComponent(String(name))}`}>
-                                Book now
-                              </Link>
+                              {item.named && <Link className="d-btn d-btn--white" to={`/destinations/${destination.slug}/attractions/${slug}`}>Learn more</Link>}
+                              <Link className="d-btn d-btn--emerald" to={`/booking?destination=${encodeURIComponent(destination.slug)}&attraction=${encodeURIComponent(String(item.name))}`}>Explore</Link>
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </article>
                     </Reveal>
                   );
                 })}
