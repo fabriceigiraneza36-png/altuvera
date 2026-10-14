@@ -593,10 +593,10 @@ const MsgBubble = React.memo(function MsgBubble({
       onTouchStart={event => { touchStartX.current = event.changedTouches?.[0]?.clientX ?? null; }}
       onTouchEnd={event => {
         const endX = event.changedTouches?.[0]?.clientX;
-        if (touchStartX.current != null && endX != null && touchStartX.current - endX > 55) onReply(message.id);
+        if (touchStartX.current != null && endX != null && Math.abs(touchStartX.current - endX) > 55) onReply(message.id);
         touchStartX.current = null;
       }}
-      title="Swipe left to reply on touch screens">
+      title="Swipe horizontally to reply on touch screens">
       {!mine && <div className="w-7 h-7 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mr-2 self-end mb-6">A</div>}
 
       <div className={`flex flex-col ${mine ? "items-end" : "items-start"} max-w-[90%] sm:max-w-[72%]`}>
