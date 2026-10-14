@@ -144,7 +144,9 @@ export function useConversations() {
       return cached;
     }
     const pending = userDataCache.getPending(url);
-    if (pending) return pending;
+    // Explicit refreshes (including post-delete recovery) must not reuse an
+    // older in-flight inbox response that can still contain a deleted thread.
+    if (pending && !options.forceRefresh) return pending;
     const request = authFetch(url).then(async (res) => {
       if (!res.ok) throw new Error(`Server error ${res.status}`);
       const data = await res.json();
