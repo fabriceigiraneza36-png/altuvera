@@ -185,7 +185,7 @@ export default function GlobalUserNotifications() {
         }}>
           <div style={{ padding: "15px 16px 12px", display: "flex", alignItems: "flex-start", gap: 11 }}>
             <div aria-hidden="true" style={{
-              width: 42, height: 42, borderRadius: 14, background: `${meta[1]}15`,
+              width: 42, height: 42, borderRadius: 14, background: `${meta.color}15`,
               display: "grid", placeItems: "center", flexShrink: 0, position: "relative",
             }}>
               <meta.Icon size={21} strokeWidth={2.2} />
