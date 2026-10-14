@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowUpRight, BellRing, Check, MessageCircle, Send, X } from "lucide-react";
+import { ArrowUpRight, BellRing, Check, MessageCircle, Send, X, CalendarDays, CheckCircle2, CreditCard, Gift, Globe2, MapPinned, Newspaper, Package, ShieldAlert, Sparkles, ClipboardList, CircleAlert } from "lucide-react";
+import { motion } from "framer-motion";
 import { useNotifications } from "../../hooks/useNotifications";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
@@ -13,16 +14,24 @@ const getToken = () => {
 };
 
 const TYPE_META = {
-  booking_created: ["📅", "#059669"],
-  booking_updated: ["✏️", "#0ea5e9"],
-  booking_confirmed: ["✅", "#16a34a"],
-  checklist_request: ["📋", "#059669"],
-  checklist_ready: ["✅", "#16a34a"],
-  warning: ["⚠️", "#d97706"],
-  alert: ["🚨", "#dc2626"],
-  system: ["⚙️", "#64748b"],
-  message_received: ["💬", "#059669"],
-  general: ["💬", "#059669"],
+  booking_created: { Icon: CalendarDays, color: "#059669" },
+  booking_updated: { Icon: CalendarDays, color: "#0ea5e9" },
+  booking_confirmed: { Icon: CheckCircle2, color: "#16a34a" },
+  booking_cancelled: { Icon: CalendarDays, color: "#dc2626" },
+  payment_confirmed: { Icon: CreditCard, color: "#059669" },
+  payment_request: { Icon: CreditCard, color: "#d97706" },
+  new_destination: { Icon: MapPinned, color: "#0891b2" },
+  new_country: { Icon: Globe2, color: "#0891b2" },
+  new_post: { Icon: Newspaper, color: "#7c3aed" },
+  new_package: { Icon: Package, color: "#d97706" },
+  checklist_request: { Icon: ClipboardList, color: "#059669" },
+  checklist_ready: { Icon: CheckCircle2, color: "#16a34a" },
+  promotion: { Icon: Gift, color: "#db2777" },
+  warning: { Icon: CircleAlert, color: "#d97706" },
+  alert: { Icon: ShieldAlert, color: "#dc2626" },
+  system: { Icon: Sparkles, color: "#64748b" },
+  message_received: { Icon: MessageCircle, color: "#059669" },
+  general: { Icon: BellRing, color: "#059669" },
 };
 
 const conversationIdOf = (notification) =>
@@ -160,16 +169,18 @@ export default function GlobalUserNotifications() {
           .altuvera-user-toast { animation: none !important; transition: none !important; }
         }
       `}</style>
-      <section aria-label="New notification" aria-live="polite"
+      <motion.section aria-label="New notification" aria-live="polite"
         className="altuvera-user-toast"
-        style={{
+        drag="x" dragConstraints={{ left: 0, right: 0 }} dragElastic={0.18}
+        onDragEnd={(event, info) => { if (info.offset.x < -90 || info.velocity.x < -500) dismissNotification(); }}
+        style={{ touchAction: "pan-y",
           position: "fixed", right: 16, bottom: "max(16px, env(safe-area-inset-bottom))",
           zIndex: 9999, width: "min(410px, calc(100vw - 24px))",
           animation: "altuvera-user-toast-in 240ms cubic-bezier(.2,.8,.2,1)",
           fontFamily: "Inter, system-ui, sans-serif",
         }}>
         <div style={{
-          background: "#fff", border: "1px solid #dbe7e0", borderLeft: `4px solid ${meta[1]}`,
+          background: "#fff", border: "1px solid #dbe7e0", borderLeft: `4px solid ${meta.color}`,
           borderRadius: 19, boxShadow: "0 22px 65px rgba(15,23,42,.2)", overflow: "hidden",
         }}>
           <div style={{ padding: "15px 16px 12px", display: "flex", alignItems: "flex-start", gap: 11 }}>
@@ -177,7 +188,7 @@ export default function GlobalUserNotifications() {
               width: 42, height: 42, borderRadius: 14, background: `${meta[1]}15`,
               display: "grid", placeItems: "center", flexShrink: 0, position: "relative",
             }}>
-              <span style={{ fontSize: 20 }}>{meta[0]}</span>
+              <meta.Icon size={21} strokeWidth={2.2} />
               <span style={{ position: "absolute", right: -2, top: -2, width: 9, height: 9, borderRadius: 99, background: "#10b981", border: "2px solid white" }}/>
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -222,7 +233,7 @@ export default function GlobalUserNotifications() {
           </div>
           {unreadCount > 1 && <div style={{ padding: "0 16px 10px", color: "#94a3b8", fontSize: 10 }}>{unreadCount} unread notifications in your inbox</div>}
         </div>
-      </section>
+      </motion.section>
     </>
   );
 }
