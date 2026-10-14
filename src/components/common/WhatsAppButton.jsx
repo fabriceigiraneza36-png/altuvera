@@ -780,7 +780,8 @@ const WhatsAppButton = () => {
   }, [selectedPreset, customMessage, makeURL, closeModal]);
 
   const canSend = selectedPreset || customMessage.trim();
-  const showFAB = isVisible && !isModalOpen && !location.pathname.startsWith("/messages");
+  const isMessagesRoute = /(^|\/)messages(\/|$)/i.test(location.pathname);
+  const showFAB = isVisible && !isModalOpen && !isMessagesRoute;
 
   const focusStyle = (e) => {
     e.target.style.borderColor = "#25D366";
