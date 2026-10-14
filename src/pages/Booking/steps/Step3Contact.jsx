@@ -10,14 +10,14 @@ const METHODS = [
   { v: "phone", l: "Phone", icon: Smartphone },
 ];
 
-function Field({ id, label, icon: Icon, value, onChange, onBlur, placeholder, autoComplete, required, error, valid, hint, type = "text" }) {
+function Field({ id, label, icon: Icon, value, onChange, onBlur, placeholder, autoComplete, required, error, valid, hint, type = "text", readOnly = false }) {
   return (
     <div className="bk-field-group">
       <label htmlFor={id} className="bk-label">{label}{required && <span className="bk-label-req">*</span>}</label>
       <div className="bk-input-wrap">
         <span className="bk-input-ico"><Icon size={17} /></span>
         <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} onBlur={onBlur}
-          placeholder={placeholder} autoComplete={autoComplete}
+          placeholder={placeholder} autoComplete={autoComplete} readOnly={readOnly} aria-readonly={readOnly || undefined}
           className={`bk-input${error ? " bk-input--err" : ""}${valid ? " bk-input--valid" : ""}`} />
         {valid && <span className="bk-check-ico"><Check size={18} /></span>}
       </div>
@@ -121,7 +121,7 @@ export default function Step3Contact({ data, set, touch, errors, touched }) {
     <div>
       <Field id="email" label="Email Address" icon={Mail} type="email" value={data.email}
         onChange={(v) => set("email", v)} onBlur={() => touch("email")} placeholder="you@example.com"
-        autoComplete="email" required error={touched.email && errors.email}
+        autoComplete="email" readOnly required error={touched.email && errors.email}
         valid={touched.email && !errors.email && !!data.email} hint="For your booking confirmation" />
 
       <PhoneField data={data} set={set} touch={touch} errors={errors} touched={touched} />

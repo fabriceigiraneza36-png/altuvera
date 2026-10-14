@@ -992,8 +992,17 @@ export default function AuthModal() {
       const avatar = await resolveAvatar();
       if (authMethod === "google") {
         await completeGoogleSignUp({
-          fullName: form.fullName.trim(), phone: form.phone.trim(),
-          bio: form.bio.trim(), role: form.role, avatar,
+          fullName: form.fullName.trim(),
+          phone: form.phone.trim(),
+          bio: form.bio.trim(),
+          role: form.role,
+          avatar,
+          dateOfBirth: form.dateOfBirth,
+          nationality: form.nationality,
+          residenceCountry: form.residenceCountry,
+          preferredLanguage: form.preferredLanguage,
+          profession: form.profession,
+          travelStyles: form.travelStyles,
         });
         setSuccess("Account created! Welcome to Altuvera.");
       } else {
