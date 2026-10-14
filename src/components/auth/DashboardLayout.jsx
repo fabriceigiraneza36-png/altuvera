@@ -34,7 +34,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
   ];
 
   return (
-    <div className="dashboard-layout">
+    <div className={`dashboard-layout ${noPadding ? "dashboard-layout-no-padding" : ""}`}>
       <style>{`
         .dashboard-layout {
           display: flex;
@@ -181,7 +181,12 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
           }
           .dashboard-sidebar.open { transform: translateX(0); }
           .dashboard-overlay.open { display: block; }
-          .mobile-menu-toggle { display: flex; }
+           .mobile-menu-toggle { display: flex; }
+          .dashboard-layout-no-padding .mobile-menu-toggle {
+            top: 92px; bottom: auto; right: 14px;
+            width: 44px; height: 44px; z-index: 80;
+            box-shadow: 0 3px 12px rgba(5,150,105,0.25);
+          }
           .dashboard-content { padding: 20px 16px 80px; min-height: 0; }
           .dashboard-content.dashboard-no-padding {
             padding: 0;
