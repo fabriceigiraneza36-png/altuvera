@@ -19,7 +19,6 @@ import { useConversations } from "../../hooks/useConversations";
 ══════════════════════════════════════════════════════════════════════════ */
 
 const QUICK_EMOJIS        = ["👍","❤️","😂","🎉","👏","😮","🙏","🔥"];
-const INLINE_REACT_EMOJIS = ["👍","❤️","😂","🎉"];
 
 const API_BASE =
   import.meta.env.VITE_API_URL ||
@@ -200,7 +199,7 @@ const MSG_STYLES = `
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: clip;
   overscroll-behavior: contain;
 }
 .msg-sidebar-list::-webkit-scrollbar { width: 4px; }
@@ -271,7 +270,7 @@ const MSG_STYLES = `
   .msg-chat-body { padding:10px 9px; }
   .msg-chat-foot { padding:8px 9px max(10px, env(safe-area-inset-bottom)); }
   .msg-composer-row { gap:5px; padding:5px; border-radius:18px; }
-  .msg-composer-row textarea { padding:9px 8px; font-size:16px; }
+  .msg-composer-row textarea { padding:8px 7px; font-size:16px; max-width:100%; }
   .msg-composer-row button { flex-shrink:0; }
   .msg-meta { opacity:1; }
 }
@@ -577,6 +576,7 @@ const MsgBubble = React.memo(function MsgBubble({
   onUnsend, onPin, onHighlight,
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
   const touchStartX = useRef(null);
   const reactions = useMemo(() => {
     const r = message.reactions || {};
@@ -639,15 +639,25 @@ const MsgBubble = React.memo(function MsgBubble({
                 <MoreHorizontal size={15}/>
               </button>
               {menuOpen && (
-                <div className={`absolute top-full mt-1 z-40 w-48 rounded-xl border border-slate-200 bg-white shadow-xl p-1 ${mine ? "right-0" : "left-0"}`}>
-                  {INLINE_REACT_EMOJIS.map(e=><button key={e} onClick={()=>{onReact(message.id,e);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-sm hover:bg-slate-50">{e}<span className="text-xs text-slate-500">React</span></button>)}
-                  <button onClick={()=>{onReply(message.id);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold hover:bg-emerald-50"><CornerUpLeft size={15}/> Reply</button>
+                <div className={`absolute top-full mt-1 z-40 w-40 max-w-[calc(100vw-2rem)] rounded-xl border border-slate-200 bg-white shadow-xl p-1 ${mine ? "right-0" : "left-0"}`}>
+                  <button type="button" onClick={()=>{setMenuOpen(false);setReactionPickerOpen(true)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold hover:bg-emerald-50"><Smile size={15}/> React</button>
+                  <button type="button" onClick={()=>{onReply(message.id);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold hover:bg-emerald-50"><CornerUpLeft size={15}/> Reply</button>
                   {mine && <>
-                    <button onClick={()=>{onStartEdit(message);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold hover:bg-slate-50"><Edit3 size={15}/> Edit</button>
-                    <button onClick={()=>{onUnsend(message.id);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold text-rose-600 hover:bg-rose-50"><Undo2 size={15}/> Unsend</button>
+                    <button type="button" onClick={()=>{onStartEdit(message);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold hover:bg-slate-50"><Edit3 size={15}/> Edit</button>
+                    <button type="button" onClick={()=>{onUnsend(message.id);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold text-rose-600 hover:bg-rose-50"><Undo2 size={15}/> Unsend</button>
                   </>}
-                  <button onClick={()=>{onPin(message.id,!message.isPinned);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold hover:bg-slate-50"><Pin size={15}/> {message.isPinned ? "Unpin" : "Pin"}</button>
-                  <button onClick={()=>{onHighlight(message.id,!message.isHighlighted);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold hover:bg-amber-50"><Highlighter size={15}/> {message.isHighlighted ? "Remove highlight" : "Highlight"}</button>
+                  <button type="button" onClick={()=>{onPin(message.id,!message.isPinned);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold hover:bg-slate-50"><Pin size={15}/> {message.isPinned ? "Unpin" : "Pin"}</button>
+                  <button type="button" onClick={()=>{onHighlight(message.id,!message.isHighlighted);setMenuOpen(false)}} className="w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left text-xs font-semibold hover:bg-amber-50"><Highlighter size={15}/> {message.isHighlighted ? "Remove highlight" : "Highlight"}</button>
+                </div>
+              )}
+              {reactionPickerOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/25 p-4" role="presentation" onMouseDown={event=>{if(event.target===event.currentTarget)setReactionPickerOpen(false)}}>
+                  <section role="dialog" aria-modal="true" aria-label="Choose a reaction" className="w-full max-w-[260px] rounded-2xl border border-slate-200 bg-white p-3 shadow-2xl">
+                    <div className="mb-2 flex items-center justify-between"><span className="text-xs font-bold text-slate-800">React to message</span><button type="button" aria-label="Close reactions" onClick={()=>setReactionPickerOpen(false)} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100"><X size={15}/></button></div>
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {QUICK_EMOJIS.map(emoji=><button type="button" key={emoji} aria-label={`React with ${emoji}`} onClick={()=>{onReact(message.id,emoji);setReactionPickerOpen(false)}} className="flex h-10 items-center justify-center rounded-xl border border-slate-100 text-xl transition hover:border-emerald-300 hover:bg-emerald-50 active:scale-95">{emoji}</button>)}
+                    </div>
+                  </section>
                 </div>
               )}
             </div>
@@ -1630,9 +1640,9 @@ export default function Messages() {
                         }
                       }}
                       rows={1}
-                      placeholder="Type your message… (Enter to send)"
+                      placeholder="Message Altuvera…"
                       aria-label="Message input"
-                      className="flex-1 resize-none text-sm px-3.5 py-2.5 rounded-xl bg-transparent outline-none leading-relaxed placeholder:text-slate-400"
+                      className="flex-1 min-w-0 w-full resize-none text-[14px] px-2.5 py-2.5 rounded-xl border-0 bg-transparent outline-none leading-relaxed placeholder:text-slate-400"
                       style={{ minHeight:40, maxHeight:128 }}
                     />
 
