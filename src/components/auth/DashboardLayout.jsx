@@ -12,7 +12,7 @@ import NotificationBell from "./NotificationBell";
 import { useNotifications } from "../../hooks/useNotifications";
 import { useConversations } from "../../hooks/useConversations";
 
-const DashboardLayout = ({ children, title, subtitle, noPadding = false }) => {
+const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMobileMenuToggle = false }) => {
   const { user, logout }    = useUserAuth();
   const navigate             = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -124,9 +124,14 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false }) => {
         .dashboard-content.dashboard-no-padding .dashboard-header {
           flex-shrink: 0;
           margin: 0;
-          padding: 16px 20px;
+          padding: 8px 16px;
           background: #f8fafc;
           border-bottom: 1px solid #e2e8f0;
+        }
+        .dashboard-content.dashboard-no-padding .dashboard-title {
+          font-size: clamp(22px, 3vw, 26px);
+          line-height: 1.2;
+          margin: 0;
         }
         .dashboard-content.dashboard-no-padding .dashboard-inner-content {
           display: flex;
@@ -184,7 +189,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false }) => {
             height: calc(100dvh - 80px);
             overflow: hidden;
           }
-          .dashboard-content.dashboard-no-padding .dashboard-header { padding: 12px 14px; }
+          .dashboard-content.dashboard-no-padding .dashboard-header { padding: 8px 12px; }
         }
         @media (max-width: 1024px) { .dashboard-content { padding: 28px 20px; } }
       `}</style>
@@ -296,13 +301,15 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false }) => {
         </AnimatedSection>
       </main>
 
-      <button
-        className="mobile-menu-toggle"
-        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        aria-label="Toggle Dashboard Menu"
-      >
-        {mobileMenuOpen ? <FiX size={22} /> : <FiMenu size={22} />}
-      </button>
+      {!hideMobileMenuToggle && (
+        <button
+          className="mobile-menu-toggle"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label="Toggle Dashboard Menu"
+        >
+          {mobileMenuOpen ? <FiX size={22} /> : <FiMenu size={22} />}
+        </button>
+      )}
     </div>
   );
 };
