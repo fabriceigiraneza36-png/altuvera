@@ -63,7 +63,7 @@ export default function ChatPreferencesPanel({ value, onSave }) {
         <div className="fixed inset-0 z-[120] flex items-end justify-center bg-slate-950/45 p-0 backdrop-blur-sm sm:items-center sm:p-5"
           role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setOpen(false); }}>
           <section role="dialog" aria-modal="true" aria-labelledby="chat-preferences-title"
-            className="w-full max-w-lg overflow-hidden rounded-t-3xl border border-white/70 bg-white shadow-2xl sm:rounded-3xl"
+            className="flex w-full max-w-lg flex-col overflow-hidden rounded-t-3xl border border-white/70 bg-white shadow-2xl sm:rounded-3xl"
             style={{ maxHeight: "min(88dvh, 720px)" }}>
             <header className="flex items-center justify-between border-b border-slate-100 px-5 py-4 sm:px-6">
               <div>
@@ -74,7 +74,7 @@ export default function ChatPreferencesPanel({ value, onSave }) {
               <button type="button" onClick={() => setOpen(false)} aria-label="Close settings"
                 className="flex h-9 w-9 items-center justify-center rounded-xl text-slate-500 hover:bg-slate-100"><X size={18}/></button>
             </header>
-            <div className="space-y-6 overflow-y-auto px-5 py-5 sm:px-6">
+            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto overscroll-contain px-5 py-5 sm:px-6">
               <section>
                 <div className="mb-3 flex items-center gap-2 text-sm font-bold text-slate-800"><Palette size={16} className="text-emerald-600"/> Color theme</div>
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -127,7 +127,7 @@ export default function ChatPreferencesPanel({ value, onSave }) {
               </section>
             </div>
             {saveError && <p role="alert" className="mx-5 mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800 sm:mx-6">{saveError}</p>}
-            <footer className="flex gap-2 border-t border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">
+            <footer className="flex flex-shrink-0 gap-2 border-t border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">
               <button type="button" onClick={() => setDraft(value)} className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-100">Reset</button>
               <button type="button" onClick={save} disabled={saving}
                 className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60">
