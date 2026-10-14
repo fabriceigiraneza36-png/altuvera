@@ -3,6 +3,8 @@ import { Calendar, ChevronLeft, ChevronRight, Check, AlertCircle, MapPin, Users,
 import SEO from "../../components/common/SEO";
 import PageHeader from "../../components/common/PageHeader";
 import { BookingProvider } from "./BookingContext";
+import { useUserAuth } from "../../context/UserAuthContext";
+import Loader from "../../components/common/Loader";
 import { useBookingForm, STEPS } from "./useBookingForm";
 import Step0Identity from "./steps/Step0Identity";
 import Step1Destination from "./steps/Step1Destination";
@@ -43,7 +45,7 @@ function DateRangeBar({ arrival, departure }) {
   </div>;
 }
 
-function BookingInner() {
+function BookingInner({ user }) {
   const { step, data, set, touch, errors, touched, tryNext, goBack, jumpTo, submit, reset, submitting, submitted, submitError, displayName, bookingRef, totalTravelers } = useBookingForm();
   const [countriesList,setCountriesList]=useState([]);
   const [destinationsList,setDestinationsList]=useState([]);
@@ -173,4 +175,24 @@ function BookingInner() {
   </div>;
 }
 
-export default function Booking(){ return <BookingProvider><BookingInner/></BookingProvider>; }
+function BookingSignInGate({ openModal }) {
+  return (
+    <main style={{minHeight:"60vh",display:"grid",placeItems:"center",padding:"40px 18px",background:"#f6fbf8"}}>
+      <section style={{width:"100%",maxWidth:520,background:"#fff",border:"1px solid #dceee4",borderRadius:24,padding:28,textAlign:"center",boxShadow:"0 20px 55px rgba(15,118,110,.10)"}}>
+        <div style={{width:58,height:58,margin:"0 auto 16px",borderRadius:18,display:"grid",placeItems:"center",background:"#d1fae5",color:"#047857"}}><ShieldCheck size={28}/></div>
+        <p style={{fontSize:11,fontWeight:850,letterSpacing:".14em",textTransform:"uppercase",color:"#059669"}}>Your Altuvera account</p>
+        <h1 style={{fontSize:28,fontWeight:850,color:"#10221a",margin:"8px 0"}}>Sign in to book your adventure</h1>
+        <p style={{fontSize:14,lineHeight:1.7,color:"#64756c",margin:"0 auto 22px",maxWidth:410}}>Booking requests are linked to your account so Altuvera can safely identify you, show your booking history, and send your request with your profile photo and account details.</p>
+        <button type="button" onClick={() => openModal("login")} style={{border:0,borderRadius:12,padding:"13px 22px",background:"#059669",color:"#fff",fontWeight:850,cursor:"pointer"}}>Sign in or create account</button>
+        <p style={{fontSize:11,color:"#87958e",marginTop:14}}>You can also use Google fast sign-in when available.</p>
+      </section>
+    </main>
+  );
+}
+
+export default function Booking() {
+  const { user, isAuthenticated, authLoading, openModal } = useUserAuth();
+  if (authLoading) return <Loader />;
+  if (!isAuthenticated) return <BookingSignInGate openModal={openModal} />;
+  return <BookingProvider user={user}><BookingInner user={user} /></BookingProvider>;
+}
