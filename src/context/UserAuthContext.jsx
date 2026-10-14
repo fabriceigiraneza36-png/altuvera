@@ -1339,14 +1339,22 @@ export function UserAuthProvider({ children }) {
 
     let data;
     try {
-      data = await authFetch("/users/google", {
+      data = await authFetch("/users/google/signup-complete", {
         method: "POST",
         body:   JSON.stringify({
           credential: pending.credential,
           idToken:    pending.credential,
+          fullName,
           phone:      trim(profileData?.phone),
           bio:        trim(profileData?.bio),
           avatar,
+          role:      trim(profileData?.role) || "user",
+          dateOfBirth: trim(profileData?.dateOfBirth),
+          nationality: trim(profileData?.nationality),
+          residenceCountry: trim(profileData?.residenceCountry),
+          preferredLanguage: trim(profileData?.preferredLanguage),
+          profession: trim(profileData?.profession),
+          travelStyles: Array.isArray(profileData?.travelStyles) ? profileData.travelStyles : [],
         }),
       });
     } catch (err) {
