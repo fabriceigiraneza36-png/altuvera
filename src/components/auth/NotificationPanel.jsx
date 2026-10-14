@@ -60,9 +60,12 @@ const NotifItem = ({
   return (
     <motion.div
       layout
+      drag="x" dragConstraints={{ left: 0, right: 0 }} dragElastic={0.16}
+      onDragEnd={(event, info) => { if (info.offset.x < -90 || info.velocity.x < -500) onDelete(notif.id) }}
+      style={{ touchAction: 'pan-y' }}
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0    }}
-      exit={{    opacity: 0, x:  10  }}
+      exit={{    opacity: 0, x: -140, height: 0, paddingTop: 0, paddingBottom: 0 }}
       style={{
         padding:      '14px 16px',
         borderBottom: '1px solid #f1f5f9',
