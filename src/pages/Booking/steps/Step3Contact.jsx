@@ -16,7 +16,7 @@ function Field({ id, label, icon: Icon, value, onChange, onBlur, onFocus, placeh
       <label htmlFor={id} className="bk-label">{label}{required && <span className="bk-label-req">*</span>}</label>
       <div className="bk-input-wrap">
         <span className="bk-input-ico"><Icon size={17} /></span>
-        <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} onBlur={onBlur}
+        <input id={id} type={type} value={value} onChange={(e) => onChange(e.target.value)} onBlur={onBlur} onFocus={onFocus}
           placeholder={placeholder} autoComplete={autoComplete} readOnly={readOnly} aria-readonly={readOnly || undefined}
           className={`bk-input${error ? " bk-input--err" : ""}${valid ? " bk-input--valid" : ""}`} />
         {valid && <span className="bk-check-ico"><Check size={18} /></span>}
@@ -128,7 +128,7 @@ export default function Step3Contact({ data, set, touch, errors, touched }) {
 
       <div className="bk-field-group" style={{ position: "relative" }}>
         <Field id="country" label="Country of Residence" icon={Home} autoComplete="country-name" required
-          value={data.country} onChange={(v) => set("country", v)} onBlur={() => touch("country")}
+          value={data.country} onChange={(v) => { set("country", v); setCountrySuggestionsOpen(true); }} onFocus={() => setCountrySuggestionsOpen(true)} onBlur={() => touch("country")}
           placeholder="Start typing your country..." error={touched.country && errors.country}
           valid={touched.country && !errors.country && !!country} />
         <CountrySuggestions value={data.country} open={countrySuggestionsOpen} onSelect={selectResidence} />
