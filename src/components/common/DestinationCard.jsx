@@ -888,6 +888,7 @@ const getImageUrl = (image) => {
     const url = 
         image.imageUrl ||
         image.image_url ||
+        image.image ||
         image.url ||
         image.thumbnailUrl ||
         image.thumbnail_url ||
