@@ -25,7 +25,13 @@ export default function ChatPreferencesPanel({ value, onSave }) {
 
   const update = (key, selected) => {
     setSaveError("");
-    setDraft((current) => ({ theme: selected }));
+    const next = { theme: selected };
+    // Apply immediately so theme selection visibly updates the chat without
+    // requiring a second Save click. The parent updates local state first.
+    setDraft(next);
+    Promise.resolve(onSave(next)).catch((error) => {
+      setSaveError(error?.message || "The theme is applied on this device but could not sync to your account.");
+    });
   };
   const save = async () => {
     setSaving(true);
