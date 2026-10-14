@@ -73,6 +73,7 @@ export default function Step0Identity({ data, set, touch, errors, touched, first
           onBlur={() => touch("firstName")}
           placeholder="Sarah"
           autoComplete="given-name"
+          readOnly
           required
           error={touched.firstName && errors.firstName}
           valid={touched.firstName && !errors.firstName && data.firstName.trim().length >= 2}
@@ -87,6 +88,7 @@ export default function Step0Identity({ data, set, touch, errors, touched, first
           onBlur={() => touch("lastName")}
           placeholder="Johnson"
           autoComplete="family-name"
+          readOnly
           required
           error={touched.lastName && errors.lastName}
           valid={touched.lastName && !errors.lastName && data.lastName.trim().length >= 2}
