@@ -224,13 +224,19 @@ const MSG_STYLES = `
   z-index: 2;
 }
 .msg-chat-body {
-  flex: 1;
+  flex: 1 1 0%;
   min-height: 0;
+  min-width: 0;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
   padding: 16px;
+  scrollbar-gutter: stable;
 }
+.msg-bubble-wrap { max-width: 100%; min-width: 0; overflow-wrap: anywhere; }
+.msg-bubble-wrap [style*="word-break"] { overflow-wrap: anywhere; max-width: 100%; }
+.msg-chat-foot, .msg-chat-head { min-width: 0; }
+.msg-chat-head > * { min-width: 0; }
 .msg-chat-body::-webkit-scrollbar { width: 4px; }
 .msg-chat-body::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
 .msg-chat-body:hover::-webkit-scrollbar-thumb { background: #cbd5e1; }
@@ -821,7 +827,7 @@ export default function Messages() {
     const timer = window.setInterval(() => setNow(Date.now()), 30_000);
     return () => window.clearInterval(timer);
   }, []);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const requestedConversationId = searchParams.get("conversationId");
   const chatPreferencesKey = `altuvera:chat-preferences:${getAccountChatKey()}`;
   const [chatPrefs, setChatPrefs] = useState(() => {
@@ -833,7 +839,7 @@ export default function Messages() {
   const [conversationSearch, setConversationSearch] = useState("");
   const [showNewChat, setShowNewChat] = useState(false);
   const {
-    conversations, messages, activeId, activeConversation,
+    conversations, conversationsLoaded, messages, activeId, activeConversation,
     unreadCount, loading, loadingMsgs, sending, error,
     openConversation, sendMessage, fetchConversations,
     editMessage, unsendMessage, toggleMessageFlag, reactToMessage,
@@ -865,13 +871,11 @@ export default function Messages() {
     return () => { cancelled = true; };
   }, []);
 
+  // Keep a local copy whenever preferences change. Server persistence is
+  // handled by saveChatPrefs only, avoiding duplicate PATCH requests racing.
   useEffect(() => {
     if (!preferencesLoaded) return;
     try { localStorage.setItem(chatPreferencesKey, JSON.stringify(chatPrefs)); } catch {}
-    authFetch(`${API_BASE}/messages/preferences`, {
-      method: "PATCH",
-      body: JSON.stringify({ settings: chatPrefs }),
-    }).catch(err => console.warn("[Messages] Could not sync chat preferences:", err.message));
   }, [chatPrefs, chatPreferencesKey, preferencesLoaded]);
 
   const saveChatPrefs = useCallback(async (next) => {
@@ -896,16 +900,36 @@ export default function Messages() {
   }, [conversations, conversationSearch]);
 
   useEffect(() => {
-    if (!conversations.length) return;
+    if (!conversationsLoaded || loading) return;
+
     if (requestedConversationId) {
-      const target = conversations.find(c => String(c.id) === String(requestedConversationId));
-      if (target && String(activeId) !== String(target.id)) openConversation(target.id);
+      const requested = conversations.find(c => String(c.id) === String(requestedConversationId));
+      if (requested) {
+        if (String(activeId) !== String(requested.id)) openConversation(requested.id);
+        return;
+      }
+
+      // A notification can point to a thread deleted by an admin. Recover to a
+      // valid remaining thread, or clear the stale link after a confirmed empty list.
+      if (conversations.length > 0) {
+        if (String(activeId) !== String(conversations[0].id)) openConversation(conversations[0].id);
+      } else if (activeId) {
+        openConversation(null);
+      }
+      setSearchParams(current => {
+        const next = new URLSearchParams(current);
+        next.delete("conversationId");
+        return next;
+      }, { replace: true });
       return;
     }
-    // Select a default only when nothing is active; don't override a newly
-    // created/opened thread while the conversation list refreshes.
-    if (!activeId) openConversation(conversations[0].id);
-  }, [requestedConversationId, conversations, activeId, openConversation]);
+
+    if (!activeId && conversations.length > 0) {
+      openConversation(conversations[0].id);
+    } else if (activeId && !conversations.some(c => String(c.id) === String(activeId))) {
+      openConversation(conversations.length > 0 ? conversations[0].id : null);
+    }
+  }, [requestedConversationId, conversations, activeId, openConversation, conversationsLoaded, loading, setSearchParams]);
 
 
 
@@ -1154,10 +1178,12 @@ export default function Messages() {
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => setShowNewChat(true)} aria-label="New conversation" title="New conversation (Ctrl/⌘+N)"
-                    className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-                    <Plus size={15} />
-                  </button>
+                  {conversationsLoaded && !loading && conversations.length === 0 && !error && (
+                    <button onClick={() => setShowNewChat(true)} aria-label="New conversation" title="New conversation (Ctrl/⌘+N)"
+                      className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+                      <Plus size={15} />
+                    </button>
+                  )}
                   <button onClick={fetchConversations} disabled={loading}
                     aria-label="Refresh" title="Refresh"
                     className="w-7 h-7 rounded-lg flex items-center justify-center
@@ -1209,10 +1235,18 @@ export default function Messages() {
                   <p className="text-xs text-slate-400 leading-relaxed">
                     Start a private conversation with the Altuvera team, right here.
                   </p>
-                  <button onClick={() => setShowNewChat(true)}
-                    className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700">
-                    <Plus size={14}/> Start a conversation
-                  </button>
+                  {conversationsLoaded && !loading && !error && (
+                     <button onClick={() => setShowNewChat(true)}
+                       className="mt-4 inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700">
+                       <Plus size={14}/> Start a conversation
+                     </button>
+                   )}
+                   {error && (
+                     <button onClick={fetchConversations}
+                       className="mt-4 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50">
+                       Retry loading conversations
+                     </button>
+                   )}
                 </div>
               ) : visibleConversations.length === 0 ? (
                 <div className="px-4 py-10 text-center">
@@ -1296,11 +1330,19 @@ export default function Messages() {
                 <p className="text-sm text-slate-400 mb-6 max-w-[200px] leading-relaxed">
                   Select one from the list or start a new conversation.
                 </p>
-                <button onClick={()=>setShowNewChat(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white
-                             text-sm font-bold rounded-xl hover:bg-emerald-700 transition shadow-sm">
-                  <Plus size={15}/> New Conversation
-                </button>
+                {conversationsLoaded && !loading && conversations.length === 0 && !error ? (
+                  <button onClick={()=>setShowNewChat(true)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white
+                               text-sm font-bold rounded-xl hover:bg-emerald-700 transition shadow-sm">
+                    <Plus size={15}/> New Conversation
+                  </button>
+                ) : error ? (
+                  <button onClick={fetchConversations}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 border border-slate-200 bg-white text-slate-600
+                               text-sm font-bold rounded-xl hover:bg-slate-50 transition">
+                    <RefreshCw size={15}/> Retry loading
+                  </button>
+                ) : null}
               </div>
             ) : (
               <>
