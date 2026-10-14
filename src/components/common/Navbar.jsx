@@ -27,6 +27,7 @@ import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 import { preloadRoute } from "../../utils/routeUtils";
 import { getCountrySlug } from "../../utils/countrySlugMap";
 import { useCountries } from "../../hooks/useCountries";
+import { useDestinations } from "../../hooks/useDestinations";
 import { adaptDestination } from "../../utils/destinationAdapter";
 import { multiBackendFetch } from "../../utils/multiBackendFetch";
 import "./Navbar.css";
@@ -232,6 +233,8 @@ const DestinationCard = ({ destination, onClick, style, index }) => {
    ══════════════════════════════════════════════════════ */
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [navSearchOpen, setNavSearchOpen] = useState(false);
+  const [navSearchQuery, setNavSearchQuery] = useState("");
   const [navHidden, setNavHidden] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
@@ -251,7 +254,8 @@ const Navbar = () => {
   const { favorites } = useApp();
   const { user, isAuthenticated, authLoading, openModal, logout } =
     useUserAuth();
-  const { countries: backendCountries } = useCountries({ limit: 12 });
+  const { countries: backendCountries } = useCountries({ limit: 50 });
+  const { data: searchDestinations = [] } = useDestinations({ limit: 100 });
 
   const headerRef = useRef(null);
   const drawerRef = useRef(null);
@@ -760,6 +764,31 @@ const Navbar = () => {
                 )}
               </div>
             ))}
+          </div>
+
+          <div className={cn("nav-live-search", navSearchOpen && "nav-live-search--open")}>
+            <button type="button" className="nav-live-search__toggle" aria-label="Search destinations and countries" aria-expanded={navSearchOpen} onMouseEnter={() => window.matchMedia("(hover:hover) and (min-width: 769px)").matches && setNavSearchOpen(true)} onFocus={() => setNavSearchOpen(true)} onClick={() => setNavSearchOpen(v => !v)}><FiSearch size={19}/></button>
+            <div className="nav-live-search__field">
+              <FiSearch size={17} aria-hidden="true"/>
+              <input value={navSearchQuery} onChange={e=>setNavSearchQuery(e.target.value)} onFocus={()=>setNavSearchOpen(true)} placeholder="Search destinations or countries…" aria-label="Search destinations or countries"/>
+              {navSearchQuery && <button type="button" aria-label="Clear search" onClick={()=>setNavSearchQuery("")}><FiX size={16}/></button>}
+            </div>
+            {navSearchOpen && navSearchQuery.trim().length > 0 && (
+              <div className="nav-live-search__results" role="listbox">
+                {searchDestinations.filter(d=>String(d?.name||"").toLowerCase().includes(navSearchQuery.trim().toLowerCase()) || String(d?.country||d?.countryName||"").toLowerCase().includes(navSearchQuery.trim().toLowerCase())).slice(0,6).map(d=>(
+                  <button type="button" role="option" key={d.id || d.slug || d.name} onClick={()=>{setNavSearchOpen(false);setNavSearchQuery("");navigate(`/destinations/${d.slug || d.id}`)}}>
+                    <img src={d.heroImage || d.coverImageUrl || d.imageUrl || d.image_urls?.[0] || "/images/destination-placeholder.jpg"} alt="" loading="lazy"/>
+                    <span><strong>{d.name}</strong><small>{d.country || d.countryName || "Destination"}</small></span>
+                  </button>
+                ))}
+                {backendCountries.filter(x=>String(x.name||"").toLowerCase().includes(navSearchQuery.trim().toLowerCase())).slice(0,4).map(x=>(
+                  <button type="button" role="option" key={x.id || x.slug || x.name} onClick={()=>{setNavSearchOpen(false);setNavSearchQuery("");navigate(`/country/${getCountrySlug(x)}`)}}>
+                    <span className="nav-live-search__country">{x.flagUrl || x.flag_url ? <img src={x.flagUrl || x.flag_url} alt="" /> : "◎"}</span><span><strong>{x.name}</strong><small>Country</small></span>
+                  </button>
+                ))}
+                {!searchDestinations.some(d=>String(d?.name||"").toLowerCase().includes(navSearchQuery.trim().toLowerCase()) || String(d?.country||d?.countryName||"").toLowerCase().includes(navSearchQuery.trim().toLowerCase())) && !backendCountries.some(x=>String(x.name||"").toLowerCase().includes(navSearchQuery.trim().toLowerCase())) && <p className="nav-live-search__empty">No matching destinations or countries found.</p>}
+              </div>
+            )}
           </div>
 
           {/* ── Actions ── */}
