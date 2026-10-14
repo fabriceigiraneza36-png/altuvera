@@ -338,13 +338,6 @@ const MSG_STYLES = `
 .msg-chat[data-theme="midnight"] .msg-bubble-wrap .text-slate-500 { color:#9fb1ca !important; }
 .msg-chat[data-theme="midnight"] .msg-bubble-wrap .bg-emerald-600 { background:#596be8 !important; }
 .msg-chat[data-theme="midnight"] .msg-chat-foot textarea { background:#17263d !important; border-color:#30435d !important; color:#e2e8f0 !important; }
-.msg-chat[data-font="serif"] { font-family:Georgia,"Times New Roman",serif; }
-.msg-chat[data-font="rounded"] { font-family:"Trebuchet MS",system-ui,sans-serif; }
-.msg-chat[data-font="mono"] { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
-.msg-chat[data-density="compact"] .msg-chat-body { padding:8px; }
-.msg-chat[data-density="compact"] .msg-bubble-wrap { margin-bottom:0; }
-.msg-chat[data-density="spacious"] .msg-chat-body { padding:24px; }
-.msg-chat[data-density="spacious"] .msg-bubble-wrap { margin-bottom:6px; }
 @media (prefers-reduced-motion: reduce) {
   .bubble-actions, .msg-meta { transition:none !important; }
 }
@@ -921,9 +914,10 @@ export default function Messages() {
   const requestedConversationId = searchParams.get("conversationId");
   const chatPreferencesKey = `altuvera:chat-preferences:${getAccountChatKey()}`;
   const [chatPrefs, setChatPrefs] = useState(() => {
-    const defaults = { theme: "emerald", font: "system", density: "comfortable" };
-    try { return { ...defaults, ...JSON.parse(localStorage.getItem(chatPreferencesKey) || "{}") }; }
-    catch { return defaults; }
+    try {
+      const stored = JSON.parse(localStorage.getItem(chatPreferencesKey) || "{}");
+      return { theme: stored.theme || "emerald" };
+    } catch { return { theme: "emerald" }; }
   });
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const [conversationSearch, setConversationSearch] = useState("");
@@ -948,11 +942,7 @@ export default function Messages() {
         if (!res.ok) return;
         const payload = await res.json();
         const remote = payload?.data && typeof payload.data === "object" ? payload.data : {};
-        if (!cancelled) setChatPrefs(current => ({
-          theme: remote.theme || current.theme,
-          font: remote.font || current.font,
-          density: remote.density || current.density,
-        }));
+        if (!cancelled) setChatPrefs(current => ({ theme: remote.theme || current.theme }));
       } catch (err) {
         console.warn("[Messages] Could not load account chat preferences:", err.message);
       } finally {
@@ -972,11 +962,12 @@ export default function Messages() {
   }, [chatPrefs, chatPreferencesKey, preferencesLoaded]);
 
   const saveChatPrefs = useCallback(async (next) => {
-    setChatPrefs(next);
-    try { localStorage.setItem(chatPreferencesKey, JSON.stringify(next)); } catch {}
+    const themeOnly = { theme: next.theme || "emerald" };
+    setChatPrefs(themeOnly);
+    try { localStorage.setItem(chatPreferencesKey, JSON.stringify(themeOnly)); } catch {}
     const res = await authFetch(`${API_BASE}/messages/preferences`, {
       method: "PATCH",
-      body: JSON.stringify({ settings: next }),
+      body: JSON.stringify({ settings: themeOnly }),
     });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
@@ -1344,7 +1335,7 @@ export default function Messages() {
 
           {/* ═══════════════ CHAT PANEL ═══════════════ */}
           <div className={`msg-chat ${showMobile ? "flex" : "hidden md:flex"} flex-col min-h-0 min-w-0`}
-            data-theme={chatPrefs.theme} data-font={chatPrefs.font} data-density={chatPrefs.density}>
+            data-theme={chatPrefs.theme}>
 
             {loadingMsgs && activeId ? (
               /* ── Conversation Loading State ── */
