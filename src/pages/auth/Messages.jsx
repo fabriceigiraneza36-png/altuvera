@@ -647,12 +647,40 @@ const MsgBubble = React.memo(function MsgBubble({
 function NewConvModal({ onClose, onCreated }) {
   const [subject,  setSubject]  = useState("");
   const [destinationName, setDestinationName] = useState("");
+  const [destinationOptions, setDestinationOptions] = useState([]);
+  const [destinationPickerOpen, setDestinationPickerOpen] = useState(false);
   const [body,     setBody]     = useState("");
   const [creating, setCreating] = useState(false);
   const [error,    setError]    = useState("");
   const taRef = useRef(null);
 
   useEffect(() => { taRef.current?.focus(); }, []);
+  useEffect(() => {
+    let alive = true;
+    fetch(`${API_BASE}/destinations?is_active=true&limit=200`, {
+      headers: { Authorization: `Bearer ${getToken()}` },
+      credentials: "include",
+    }).then(res => res.ok ? res.json() : Promise.reject(new Error("Destination list unavailable")))
+      .then(payload => {
+        const rows = Array.isArray(payload) ? payload
+          : Array.isArray(payload?.data) ? payload.data
+          : Array.isArray(payload?.rows) ? payload.rows
+          : Array.isArray(payload?.data?.rows) ? payload.data.rows : [];
+        if (alive) setDestinationOptions(rows.map(d => ({
+          id: d.id ?? d.value ?? d.slug,
+          name: String(d.name ?? d.title ?? d.label ?? "").trim(),
+          country: String(d.country?.name ?? d.country_name ?? d.countryName ?? (typeof d.country === "string" ? d.country : "")).trim(),
+        })).filter(d => d.name));
+      }).catch(() => { if (alive) setDestinationOptions([]); });
+    return () => { alive = false; };
+  }, []);
+  const destinationMatches = useMemo(() => {
+    const q = destinationName.trim().toLowerCase();
+    if (!q) return destinationOptions.slice(0, 8);
+    return destinationOptions.filter(d =>
+      d.name.toLowerCase().includes(q) || d.country.toLowerCase().includes(q)
+    ).slice(0, 8);
+  }, [destinationName, destinationOptions]);
   useEffect(() => {
     const h = e => { if (e.key==="Escape") onClose(); };
     window.addEventListener("keydown", h);
@@ -739,11 +767,36 @@ function NewConvModal({ onClose, onCreated }) {
             </label>
             <div className="relative">
               <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600" />
-              <input value={destinationName} onChange={e => setDestinationName(e.target.value)}
-                placeholder="e.g. Volcanoes National Park"
+              <input value={destinationName}
+                onFocus={() => setDestinationPickerOpen(true)}
+                onChange={e => { setDestinationName(e.target.value); setDestinationPickerOpen(true); }}
+                onKeyDown={e => { if (e.key === "Escape") setDestinationPickerOpen(false); }}
+                autoComplete="off"
+                placeholder="Search live destinations…"
+                aria-label="Search destinations in Altuvera"
+                aria-expanded={destinationPickerOpen && destinationMatches.length > 0}
                 className="w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-3 text-sm outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20" />
+              {destinationPickerOpen && destinationMatches.length > 0 && (
+                <div className="absolute left-0 right-0 top-full mt-1 z-30 max-h-52 overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-xl">
+                  {destinationMatches.map((destination, index) => (
+                    <button key={String(destination.id ?? destination.name) + index} type="button"
+                      onClick={() => {
+                        setDestinationName(destination.name);
+                        setDestinationPickerOpen(false);
+                        if (!subject.trim()) setSubject(`Question about ${destination.name}`);
+                      }}
+                      className="flex w-full items-start gap-2 px-3 py-2.5 text-left hover:bg-emerald-50 border-b border-slate-100 last:border-0">
+                      <MapPin size={14} className="mt-0.5 text-emerald-600 flex-shrink-0" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-xs font-semibold text-slate-800">{destination.name}</span>
+                        {destination.country && <span className="block truncate text-[10px] text-slate-400">{destination.country}</span>}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-            <p className="mt-1.5 text-[11px] text-slate-400">Attach a place to your question, even when you have not used the contact form.</p>
+            <p className="mt-1.5 text-[11px] text-slate-400">Searches destinations currently available in Altuvera. Choose a suggestion to attach it to your message.</p>
           </div>
 
           <div>
