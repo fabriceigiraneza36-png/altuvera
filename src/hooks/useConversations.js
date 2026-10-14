@@ -100,6 +100,9 @@ export function useConversations() {
   const [activeConversation, setActiveConversation] = useState(null);
   const [loading,            setLoading]            = useState(false);
   const [loadingMsgs,        setLoadingMsgs]        = useState(false);
+  const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const loadingOlderRef = useRef(false);
   const [sending,            setSaving]             = useState(false);
   const [error,              setError]              = useState("");
 
@@ -395,6 +398,9 @@ export function useConversations() {
 
     setActiveId(id);
     setLoadingMsgs(true);
+    setLoadingOlderMessages(false);
+    loadingOlderRef.current = false;
+    setHasMoreMessages(false);
     setError("");
     setAdminTyping(null);
     setTypingConvs(new Set());
@@ -402,7 +408,7 @@ export function useConversations() {
 
     try {
       const res = await authFetch(
-        `${API_BASE}/messages/conversations/${id}`,
+        `${API_BASE}/messages/conversations/${id}?limit=10`,
       );
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -412,6 +418,7 @@ export function useConversations() {
       const conv = normConv(data.data);
       setActiveConversation(conv);
       setMessages((data.data?.messages || []).map(normMsg));
+      setHasMoreMessages(Boolean(data.data?.hasMoreMessages));
 
       // Mark as read
       authFetch(`${API_BASE}/messages/conversations/${id}/read`, {
@@ -428,6 +435,45 @@ export function useConversations() {
       setLoadingMsgs(false);
     }
   }, []);
+
+  /* Load older messages on demand, preserving a small initial payload. */
+  const loadOlderMessages = useCallback(async () => {
+    if (!activeId || !hasMoreMessages || loadingOlderRef.current || !messages.length) return;
+    const conversationId = activeId;
+    const oldest = messages[0];
+    if (!oldest?.createdAt || oldest.id == null) return;
+
+    loadingOlderRef.current = true;
+    setLoadingOlderMessages(true);
+    try {
+      const params = new URLSearchParams({
+        limit: "10",
+        beforeCreatedAt: oldest.createdAt,
+        beforeId: String(oldest.id),
+      });
+      const res = await authFetch(
+        `${API_BASE}/messages/conversations/${conversationId}?${params.toString()}`,
+      );
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.message || "Could not load older messages.");
+      }
+      const payload = await res.json();
+      if (String(activeIdRef.current) !== String(conversationId)) return;
+      const older = (payload.data?.messages || []).map(normMsg);
+      setMessages((current) => {
+        const known = new Set(current.map((message) => String(message.id)));
+        const uniqueOlder = older.filter((message) => !known.has(String(message.id)));
+        return [...uniqueOlder, ...current];
+      });
+      setHasMoreMessages(Boolean(payload.data?.hasMoreMessages));
+    } catch (err) {
+      setError(err.message || "Could not load older messages.");
+    } finally {
+      loadingOlderRef.current = false;
+      setLoadingOlderMessages(false);
+    }
+  }, [activeId, hasMoreMessages, messages]);
 
   useEffect(() => {
     const s = socketRef.current;
@@ -563,6 +609,9 @@ export function useConversations() {
     unreadCount,
     loading,
     loadingMsgs,
+    loadingOlderMessages,
+    hasMoreMessages,
+    loadOlderMessages,
     sending,
     error,
     openConversation,
