@@ -249,7 +249,8 @@ export default function DestinationDetail() {
     const cards = [];
     const add = (item, index, isNamedAttraction = false) => {
       const url = resolveImageUrl(typeof item === "string" ? item : item?.imageUrl || item?.image_url || item?.url || item?.image || item?.src);
-      if (!url || seen.has(url) || heroSlides.includes(url) || bannerSlideUrls.includes(url)) return;
+      const bannerCanBeReused = !destination?.hasExplicitHeroSlides && bannerSlideUrls.includes(url);
+      if (!url || seen.has(url) || (heroSlides.includes(url) && !bannerCanBeReused) || (bannerSlideUrls.includes(url) && !bannerCanBeReused)) return;
       seen.add(url);
       const name = typeof item === "object" ? item?.name || item?.title || item?.caption || item?.altText || item?.alt_text : "";
       cards.push({
@@ -268,7 +269,7 @@ export default function DestinationDetail() {
     (Array.isArray(destination?.attractionImages) ? destination.attractionImages : []).forEach((item, index) => add(item, index));
     additionalImages.forEach((item, index) => add(item, index));
     return cards;
-  }, [destination?.attractions, destination?.attractionImages, destination?.name, heroSlides, bannerSlideUrls, additionalImages]);
+  }, [destination?.attractions, destination?.attractionImages, destination?.name, destination?.hasExplicitHeroSlides, heroSlides, bannerSlideUrls, additionalImages]);
 
   useEffect(() => {
     setLightboxIndex(null);
