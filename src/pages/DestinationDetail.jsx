@@ -215,8 +215,8 @@ export default function DestinationDetail() {
     return [...new Set(primary.map((value) => {
       if (typeof value === "string") return resolveImageUrl(value);
       return resolveImageUrl(value?.imageUrl || value?.image_url || value?.url || value?.image);
-    }).filter(Boolean))].slice(0, 4);
-  }, [destination?.heroImages, destination?.bannerSlides, destination?.heroImage, gallery]);
+    }).filter(Boolean))].slice(0, 8);
+  }, [destination?.heroImages, destination?.hero_images, destination?.bannerSlides, destination?.banner_slides, destination?.heroImage, destination?.hero_image, gallery]);
 
   const [heroSlide, setHeroSlide] = useState(0);
 
@@ -793,6 +793,26 @@ export default function DestinationDetail() {
                     </Reveal>
                   );
                 })}
+              </div>
+            </div>
+          </section>
+        )}
+        {additionalImages.length > 0 && (
+          <section className="d-attraction-gallery" aria-labelledby="d-attraction-gallery-title">
+            <div className="d-wrap">
+              <div className="d-attraction-gallery__heading">
+                <span className="d-attraction-gallery__eyebrow">EXPLORE THE DETAILS</span>
+                <h2 id="d-attraction-gallery-title">Discover {destination.name}</h2>
+                <p>Explore more views and attractions from this destination.</p>
+                <span className="d-attraction-gallery__count">{additionalImages.length} {additionalImages.length === 1 ? "photo" : "photos"}</span>
+              </div>
+              <div className="d-attraction-gallery__grid">
+                {additionalImages.map((item, index) => (
+                  <button type="button" className="d-attraction-gallery__card" key={item.url} onClick={() => setLightboxIndex(index)} aria-label={`View photo ${index + 1} of ${destination.name}`}>
+                    <img src={item.url} alt={item.caption || `${destination.name} attraction ${index + 1}`} loading="lazy" />
+                    <span className="d-attraction-gallery__label">{item.caption || `${destination.name} · View ${index + 1}`}</span>
+                  </button>
+                ))}
               </div>
             </div>
           </section>
