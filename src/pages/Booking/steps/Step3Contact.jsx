@@ -139,7 +139,7 @@ export default function Step3Contact({ data, set, touch, errors, touched }) {
 
       <div className="bk-field-group" style={{ position: "relative" }}>
         <Field id="nationality" label="Nationality" icon={Home} autoComplete="country-name" required
-          value={data.nationality} onChange={(v) => set("nationality", v)}
+          value={data.nationality} onChange={(v) => { set("nationality", v); setNationalitySuggestionsOpen(true); }} onFocus={() => setNationalitySuggestionsOpen(true)}
           onBlur={() => touch("nationality")} placeholder="Start typing your nationality..."
           error={touched.nationality && errors.nationality}
           valid={touched.nationality && !errors.nationality && data.nationality.trim().length >= 2} />
