@@ -1,6 +1,7 @@
 // WhatsAppButton.jsx
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import confetti from "canvas-confetti";
 
@@ -672,6 +673,7 @@ const S = {
 // COMPONENT
 // ============================================================
 const WhatsAppButton = () => {
+  const location = useLocation();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [selectedPreset, setSelectedPreset] = useState(null);
@@ -778,7 +780,7 @@ const WhatsAppButton = () => {
   }, [selectedPreset, customMessage, makeURL, closeModal]);
 
   const canSend = selectedPreset || customMessage.trim();
-  const showFAB = isVisible && !isModalOpen;
+  const showFAB = isVisible && !isModalOpen && !location.pathname.startsWith("/messages");
 
   const focusStyle = (e) => {
     e.target.style.borderColor = "#25D366";
