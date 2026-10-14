@@ -464,6 +464,22 @@ export default function DestinationDetail() {
                     </div>
                   </Reveal>
                 )}
+                {destination.shortDescription && destination.shortDescription !== description && (
+                  <Reveal from="left" delay={90}>
+                    <div className="d-prose">
+                      <h3>In brief</h3>
+                      {destination.shortDescription.split("\n\n").filter(Boolean).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+                    </div>
+                  </Reveal>
+                )}
+                {destination.overview && destination.overview !== description && (
+                  <Reveal from="left" delay={120}>
+                    <div className="d-prose">
+                      <h3>Destination overview</h3>
+                      {destination.overview.split("\n\n").filter(Boolean).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+                    </div>
+                  </Reveal>
+                )}
 
                 <Reveal from="bottom" delay={180}>
                   <div className="d-about__book-row">
@@ -661,6 +677,55 @@ export default function DestinationDetail() {
                     </div>
                   </Reveal>
                 ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {Array.isArray(destination.activities) && destination.activities.length > 0 && (
+          <section className="d-sec d-sec--soft">
+            <div className="d-wrap">
+              <SH title="Activities" sub={`Things you can experience at ${destination.name}`} />
+              <div className="d-facts-grid">
+                {destination.activities.map((activity, index) => {
+                  const label = typeof activity === "string" ? activity : activity?.name || activity?.title || activity?.label || "";
+                  const detail = typeof activity === "object" ? activity?.description || activity?.details : "";
+                  if (!label) return null;
+                  return <article key={`${label}-${index}`} className="d-fact-card"><div className="d-fact-card__icon"><Compass size={18}/></div><div><span>Activity</span><strong style={{whiteSpace:"normal",overflowWrap:"anywhere"}}>{label}</strong>{detail && <p style={{marginTop:6,color:"#64748b",lineHeight:1.6}}>{detail}</p>}</div></article>;
+                })}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {Array.isArray(destination.wildlife) && destination.wildlife.length > 0 && (
+          <section className="d-sec d-sec--white">
+            <div className="d-wrap">
+              <SH title="Wildlife & nature" sub={`Nature highlights around ${destination.name}`} />
+              <div className="d-chips" style={{display:"flex",flexWrap:"wrap",gap:10}}>
+                {destination.wildlife.map((item, index) => <span key={index} className="d-chip" style={{display:"inline-flex",padding:"9px 13px",borderRadius:999,background:"#ecfdf5",border:"1px solid #a7f3d0",color:"#065f46",whiteSpace:"normal"}}>{typeof item === "string" ? item : item?.name || item?.title || JSON.stringify(item)}</span>)}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {Array.isArray(destination.itinerary) && destination.itinerary.length > 0 && (
+          <section className="d-sec d-sec--soft">
+            <div className="d-wrap">
+              <SH title="Suggested itinerary" sub={`Explore ${destination.name} day by day`} />
+              <div className="d-deepdive__grid">
+                {destination.itinerary.map((day, index) => <article key={day.id || index} className="d-deepdive__block"><div className="d-deepdive__block-icon"><Calendar size={20}/></div><h3>{day.title || `Day ${day.dayNumber || index + 1}`}</h3>{day.description && <p className="d-deepdive__para">{day.description}</p>}{Array.isArray(day.activities) && day.activities.length > 0 && <p className="d-deepdive__para">{day.activities.join(" · ")}</p>}{day.accommodation && <p className="d-deepdive__para"><strong>Accommodation:</strong> {day.accommodation}</p>}</article>)}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {Array.isArray(destination.faqs) && destination.faqs.length > 0 && (
+          <section className="d-sec d-sec--white">
+            <div className="d-wrap">
+              <SH title="Frequently asked questions" sub={`Helpful answers before visiting ${destination.name}`} />
+              <div className="d-deepdive__grid">
+                {destination.faqs.map((faq, index) => <article key={faq.id || index} className="d-deepdive__block"><h3>{faq.question || faq.title || `Question ${index + 1}`}</h3><p className="d-deepdive__para">{faq.answer || faq.description || ""}</p></article>)}
               </div>
             </div>
           </section>
