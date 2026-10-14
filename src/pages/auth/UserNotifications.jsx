@@ -141,7 +141,13 @@ import { Bell, CalendarDays, Check, CheckCheck, CircleAlert, CreditCard, Gift, G
             )}
           </AnimatePresence>
 
-          <style>{`\n            .user-notification-card { touch-action: pan-y; }\n            @media (max-width: 640px) { .user-notification-card { padding: 14px 12px !important; } .user-notification-toolbar { width: 100%; flex-wrap: wrap; } .user-notification-toolbar button { flex: 1; } .user-notification-title-row { flex-direction: column; align-items: flex-start !important; gap: 4px !important; } }\n            @media (prefers-reduced-motion: reduce) { .user-notification-card { transition: none !important; } }\n          `}</style>\n\n          {/* ── Header ── */}
+          <style>{`
+            .user-notification-card { touch-action: pan-y; }
+            @media (max-width: 640px) { .user-notification-card { padding: 14px 12px !important; } .user-notification-toolbar { width: 100%; flex-wrap: wrap; } .user-notification-toolbar button { flex: 1; } .user-notification-title-row { flex-direction: column; align-items: flex-start !important; gap: 4px !important; } }
+            @media (prefers-reduced-motion: reduce) { .user-notification-card { transition: none !important; } }
+          `}</style>
+
+          {/* ── Header ── */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 22 }}>🔔</span>
@@ -191,7 +197,9 @@ import { Bell, CalendarDays, Check, CheckCheck, CircleAlert, CreditCard, Gift, G
             ))}
           </div>
 
-          <p style={{ margin: '0 0 12px', textAlign: 'right', color: '#94a3b8', fontSize: 11 }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span aria-hidden="true">←</span> Swipe a notification left to dismiss</span></p>\n\n          {/* ── List ── */}
+          <p style={{ margin: '0 0 12px', textAlign: 'right', color: '#94a3b8', fontSize: 11 }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span aria-hidden="true">←</span> Swipe a notification left to dismiss</span></p>
+
+          {/* ── List ── */}
           {loading && displayed.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '64px 24px' }}>
               <div style={{ width: 48, height: 48, borderRadius: '50%', border: '4px solid #e5e7eb', borderTopColor: '#059669', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
