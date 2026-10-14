@@ -34,7 +34,6 @@ export default function Step1Destination({
 
   useEffect(() => {
     if (selectedCountry) setCountryQuery(selectedCountry.label);
-    else if (!data.countryId) setCountryQuery("");
   }, [selectedCountry?.value, selectedCountry?.label, data.countryId]);
 
   const filtered = useMemo(() => {
@@ -61,7 +60,6 @@ export default function Step1Destination({
 
   useEffect(() => {
     if (selectedDest) setDestinationQuery(selectedDest.label);
-    else if (!data.destinationId) setDestinationQuery("");
   }, [selectedDest?.value, selectedDest?.label, data.destinationId]);
 
   const matchingCountries = useMemo(() => {
