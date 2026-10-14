@@ -391,12 +391,16 @@ export function useConversations() {
       setActiveId(null);
       setActiveConversation(null);
       setMessages([]);
+      setHasMoreMessages(false);
+      setLoadingOlderMessages(false);
+      loadingOlderRef.current = false;
       setAdminTyping(null);
       setTypingConvs(new Set());
       return;
     }
 
     setActiveId(id);
+    setMessages([]);
     setLoadingMsgs(true);
     setLoadingOlderMessages(false);
     loadingOlderRef.current = false;
