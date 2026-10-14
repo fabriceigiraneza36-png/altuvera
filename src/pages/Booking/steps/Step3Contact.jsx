@@ -10,7 +10,7 @@ const METHODS = [
   { v: "phone", l: "Phone", icon: Smartphone },
 ];
 
-function Field({ id, label, icon: Icon, value, onChange, onBlur, placeholder, autoComplete, required, error, valid, hint, type = "text", readOnly = false }) {
+function Field({ id, label, icon: Icon, value, onChange, onBlur, onFocus, placeholder, autoComplete, required, error, valid, hint, type = "text", readOnly = false }) {
   return (
     <div className="bk-field-group">
       <label htmlFor={id} className="bk-label">{label}{required && <span className="bk-label-req">*</span>}</label>
@@ -131,7 +131,7 @@ export default function Step3Contact({ data, set, touch, errors, touched }) {
           value={data.country} onChange={(v) => set("country", v)} onBlur={() => touch("country")}
           placeholder="Start typing your country..." error={touched.country && errors.country}
           valid={touched.country && !errors.country && !!country} />
-        <CountrySuggestions value={data.country} onSelect={selectResidence} />
+        <CountrySuggestions value={data.country} open={countrySuggestionsOpen} onSelect={selectResidence} />
       </div>
 
       <div className="bk-field-group" style={{ position: "relative" }}>
@@ -140,7 +140,7 @@ export default function Step3Contact({ data, set, touch, errors, touched }) {
           onBlur={() => touch("nationality")} placeholder="Start typing your nationality..."
           error={touched.nationality && errors.nationality}
           valid={touched.nationality && !errors.nationality && data.nationality.trim().length >= 2} />
-        <CountrySuggestions value={data.nationality} onSelect={(c) => { set("nationality", c.name); touch("nationality"); }} />
+        <CountrySuggestions value={data.nationality} open={nationalitySuggestionsOpen} onSelect={(c) => { set("nationality", c.name); setNationalitySuggestionsOpen(false); touch("nationality"); }} />
       </div>
 
       <div className="bk-field-group">
