@@ -3,6 +3,8 @@ import React, {
 } from "react";
 import { STEPS } from "./BookingShared";
 
+const getToken = () => localStorage.getItem("altuvera_auth_token") || localStorage.getItem("altuvera_token") || localStorage.getItem("token") || "";
+
 const BookingContext = createContext(null);
 
 const API = import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
@@ -73,7 +75,7 @@ const restore = () => {
   } catch { return null; }
 };
 
-export function BookingProvider({ children }) {
+export function BookingProvider({ children, user }) {
   const saved = useRef(restore());
 
   const [step, setStep]         = useState(saved.current?.step ?? 0);
@@ -86,6 +88,19 @@ export function BookingProvider({ children }) {
   const [bookingRef, setBookingRef]   = useState(null);
 
   const retryRef = useRef(0);
+
+  useEffect(() => {
+    if (!user) return;
+    const name = String(user.fullName || user.full_name || user.name || "").trim();
+    const parts = name.split(/\s+/).filter(Boolean);
+    const email = String(user.email || "").trim().toLowerCase();
+    setData((current) => ({
+      ...current,
+      firstName: parts[0] || current.firstName,
+      lastName: parts.slice(1).join(" ") || current.lastName,
+      email: email || current.email,
+    }));
+  }, [user]);
 
   useEffect(() => {
     persist({ step, data });
@@ -150,7 +165,7 @@ export function BookingProvider({ children }) {
     try {
       const res = await fetch(`${API}/bookings`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}) },
         credentials: "include",
         body: JSON.stringify({
           // Canonical names understood by the backend booking normalizer.
