@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { Navigate, useLocation } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import { useUserAuth } from "../../context/UserAuthContext";
 import { useToast } from "../../context/ToastContext";
 import Loader from "../common/Loader";
@@ -7,7 +7,6 @@ import Loader from "../common/Loader";
 export default function ProtectedRoute({ children, requiredRole, fallback = "/" }) {
   const { user, isAuthenticated, authLoading, openModal } = useUserAuth();
   const toast = useToast();
-  const location = useLocation();
   const openRef = useRef(false);
 
   useEffect(() => {
