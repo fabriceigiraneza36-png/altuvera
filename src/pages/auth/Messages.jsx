@@ -821,7 +821,7 @@ export default function Messages() {
     const timer = window.setInterval(() => setNow(Date.now()), 30_000);
     return () => window.clearInterval(timer);
   }, []);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const requestedConversationId = searchParams.get("conversationId");
   const chatPreferencesKey = `altuvera:chat-preferences:${getAccountChatKey()}`;
   const [chatPrefs, setChatPrefs] = useState(() => {
@@ -831,6 +831,7 @@ export default function Messages() {
   });
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
   const [conversationSearch, setConversationSearch] = useState("");
+  const initialConversationAutoOpened = useRef(false);
   const [showNewChat, setShowNewChat] = useState(false);
   const {
     conversations, messages, activeId, activeConversation,
@@ -903,7 +904,10 @@ export default function Messages() {
     }
     // Users should land in their existing admin thread, but never force-open
     // an unrelated/stale thread after it has been removed by an administrator.
-    if (conversations.length && !activeId) openConversation(conversations[0].id);
+    if (conversations.length && !activeId && !initialConversationAutoOpened.current) {
+      initialConversationAutoOpened.current = true;
+      openConversation(conversations[0].id);
+    }
   }, [requestedConversationId, conversations, activeId, openConversation]);
 
   useEffect(() => {
@@ -1324,7 +1328,7 @@ export default function Messages() {
                 {/* ── FIXED CHAT HEADER ── */}
                 <div className="msg-chat-head px-4 py-3 flex items-center gap-3 shadow-sm">
                   {/* Back button — mobile */}
-                  <button onClick={()=>openConversation(null)} aria-label="Back"
+                  <button onClick={() => { openConversation(null); if (requestedConversationId) setSearchParams(params => { params.delete("conversationId"); return params; }); }} aria-label="Back"
                     className="md:hidden p-2 -ml-1 rounded-xl hover:bg-slate-100 transition
                                text-slate-600 flex-shrink-0">
                     <ArrowLeft size={18}/>
