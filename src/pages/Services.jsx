@@ -56,7 +56,7 @@ import { useFeaturedTestimonials } from "../hooks/useTestimonials";
 const API_BASE =
   import.meta.env.VITE_API_URL ||
   import.meta.env.VITE_API_BASE_URL ||
-  "https://backend-1-ghrv.onrender.com/api";
+  "https://backend-jd8f.onrender.com/api";
 
 /* ═══════════════════════════════════════════════
    TEAM API — safe fetch with retry
