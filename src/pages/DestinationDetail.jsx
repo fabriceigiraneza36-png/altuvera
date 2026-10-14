@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
   Calendar,
+  Camera,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -38,7 +39,7 @@ const resolveImageUrl = (url) => {
   }
 };
 
-const extractUniqueImages = (destination, limit = 12) => {
+const extractUniqueImages = (destination, limit = Number.POSITIVE_INFINITY) => {
   if (!destination) return [];
 
   const seen = new Set();
@@ -55,10 +56,13 @@ const extractUniqueImages = (destination, limit = 12) => {
 
   sources.push(...(Array.isArray(destination.heroImages) ? destination.heroImages : []));
   sources.push(...(Array.isArray(destination.hero_images) ? destination.hero_images : []));
+  sources.push(...(Array.isArray(destination.bannerSlides) ? destination.bannerSlides : []));
+  sources.push(...(Array.isArray(destination.banner_slides) ? destination.banner_slides : []));
   sources.push(...(Array.isArray(destination.images) ? destination.images : []));
   sources.push(...(Array.isArray(destination.image_urls) ? destination.image_urls : []));
   sources.push(...(Array.isArray(destination.imageUrls) ? destination.imageUrls : []));
   sources.push(...(Array.isArray(destination.gallery) ? destination.gallery : []));
+  sources.push(destination.heroImage, destination.hero_image, destination.coverImageUrl, destination.cover_image_url, destination.imageUrl, destination.image_url, destination.thumbnailUrl, destination.thumbnail_url);
   if (Array.isArray(destination.attractions)) {
     sources.push(...destination.attractions);
   }
@@ -90,6 +94,7 @@ const Ic = ({ n, size = 16, style = {}, ...props }) => {
     mountain: Mountain,
     star: Star,
     chevDown: ChevronDown,
+    camera: Camera,
   };
   const Icon = map[n] || Mountain;
   return <Icon size={size} {...props} style={{ flexShrink: 0, ...style }} />;
@@ -227,7 +232,7 @@ export default function DestinationDetail() {
   }, [heroSlides.length]);
 
   const additionalImages = useMemo(
-    () => gallery.filter((img) => !heroSlides.includes(img.url)).slice(0, 5),
+    () => gallery.filter((img) => !heroSlides.includes(img.url)),
     [gallery, heroSlides]
   );
 
@@ -406,6 +411,10 @@ export default function DestinationDetail() {
               <h1 className="d-hero__title">{destination.name}</h1>
               {destination.tagline && <p className="d-hero__sub">{destination.tagline}</p>}
               <div className="d-hero__ctas" aria-label="Destination actions">
+                <span className="d-hero-tool" aria-label={`${gallery.length} destination photos`}>
+                  <span aria-hidden="true"><Ic n="camera" size={15}/></span>
+                  <span className="d-hero-tool__label">{gallery.length} {gallery.length === 1 ? "photo" : "photos"}</span>
+                </span>
                 <button className="d-btn d-btn--emerald d-btn--lg" onClick={() => navigate(`/booking?destination=${destination.slug}`)}>
                   <Calendar size={17} /> Book This Destination
                 </button>
@@ -455,6 +464,22 @@ export default function DestinationDetail() {
                     </div>
                   </Reveal>
                 )}
+                {destination.shortDescription && destination.shortDescription !== description && (
+                  <Reveal from="left" delay={90}>
+                    <div className="d-prose">
+                      <h3>In brief</h3>
+                      {destination.shortDescription.split("\n\n").filter(Boolean).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+                    </div>
+                  </Reveal>
+                )}
+                {destination.overview && destination.overview !== description && (
+                  <Reveal from="left" delay={120}>
+                    <div className="d-prose">
+                      <h3>Destination overview</h3>
+                      {destination.overview.split("\n\n").filter(Boolean).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+                    </div>
+                  </Reveal>
+                )}
 
                 <Reveal from="bottom" delay={180}>
                   <div className="d-about__book-row">
@@ -475,7 +500,7 @@ export default function DestinationDetail() {
                       <img src={additionalImages[0].url} alt={`${destination.name} experience`} loading="lazy" />
                       <div className="d-about-photo-panel__caption">
                         <span>More of {destination.name}</span>
-                        <strong>{additionalImages.length} additional photos</strong>
+                        <strong>{gallery.length} photos in the destination gallery</strong>
                       </div>
                     </div>
                   </Reveal>
@@ -553,6 +578,54 @@ export default function DestinationDetail() {
           </div>
         </section>
 
+        {[
+          ["Nearest city", destination.nearestCity],
+          ["Nearest airport", destination.nearestAirport],
+          ["Address", destination.address],
+          ["Altitude", destination.altitudeMeters != null ? `${destination.altitudeMeters.toLocaleString()} m` : null],
+          ["Distance from airport", destination.distanceFromAirportKm != null ? `${destination.distanceFromAirportKm} km` : null],
+          ["Duration", destination.duration || (destination.durationDays ? `${destination.durationDays} days` : null)],
+          ["Nights", destination.durationNights != null && destination.durationNights > 0 ? destination.durationNights : null],
+          ["Entrance fee", destination.entranceFee],
+          ["Operating hours", destination.operatingHours],
+          ["Minimum age", destination.minAge != null ? `${destination.minAge}+` : null],
+          ["Group size", destination.maxGroupSize ? `${destination.minGroupSize || 1}–${destination.maxGroupSize} guests` : (destination.minGroupSize ? `From ${destination.minGroupSize} guests` : null)],
+          ["Fitness level", destination.fitnessLevel],
+          ["Category", destination.category],
+          ["Classification", destination.classification],
+          ["Coordinates", destination.latitude != null && destination.longitude != null ? `${destination.latitude}, ${destination.longitude}` : null],
+        ].filter(([, value]) => value !== null && value !== undefined && value !== "").length > 0 && (
+          <section className="d-sec d-sec--soft">
+            <div className="d-wrap">
+              <SH title="Practical destination details" sub="Useful specifics to help you plan confidently." />
+              <div className="d-facts-grid">
+                {[
+                  ["Nearest city", destination.nearestCity],
+                  ["Nearest airport", destination.nearestAirport],
+                  ["Address", destination.address],
+                  ["Altitude", destination.altitudeMeters != null ? `${destination.altitudeMeters.toLocaleString()} m` : null],
+                  ["Distance from airport", destination.distanceFromAirportKm != null ? `${destination.distanceFromAirportKm} km` : null],
+                  ["Duration", destination.duration || (destination.durationDays ? `${destination.durationDays} days` : null)],
+                  ["Nights", destination.durationNights != null && destination.durationNights > 0 ? destination.durationNights : null],
+                  ["Entrance fee", destination.entranceFee],
+                  ["Operating hours", destination.operatingHours],
+                  ["Minimum age", destination.minAge != null ? `${destination.minAge}+` : null],
+                  ["Group size", destination.maxGroupSize ? `${destination.minGroupSize || 1}–${destination.maxGroupSize} guests` : (destination.minGroupSize ? `From ${destination.minGroupSize} guests` : null)],
+                  ["Fitness level", destination.fitnessLevel],
+                  ["Category", destination.category],
+                  ["Classification", destination.classification],
+                  ["Coordinates", destination.latitude != null && destination.longitude != null ? `${destination.latitude}, ${destination.longitude}` : null],
+                ].filter(([, value]) => value !== null && value !== undefined && value !== "").map(([label, value]) => (
+                  <article key={label} className="d-fact-card">
+                    <div className="d-fact-card__icon"><MapPin size={18}/></div>
+                    <div><span>{label}</span><strong style={{whiteSpace:"normal",overflowWrap:"anywhere"}}>{String(value)}</strong></div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
         {highlights.length > 0 && (
           <section id="dd-experiences" className="d-sec d-sec--white d-experiences">
             <div className="d-wrap">
@@ -565,7 +638,7 @@ export default function DestinationDetail() {
                 />
               </Reveal>
               <div className="d-experience-list">
-                {highlights.slice(0, 6).map((item, index) => (
+                {highlights.map((item, index) => (
                   <Reveal key={index} from={index % 2 ? "right" : "left"} delay={index * 45}>
                     <article className="d-experience-row">
                       <div className="d-experience-row__number">0{index + 1}</div>
@@ -609,6 +682,55 @@ export default function DestinationDetail() {
           </section>
         )}
 
+        {Array.isArray(destination.activities) && destination.activities.length > 0 && (
+          <section className="d-sec d-sec--soft">
+            <div className="d-wrap">
+              <SH title="Activities" sub={`Things you can experience at ${destination.name}`} />
+              <div className="d-facts-grid">
+                {destination.activities.map((activity, index) => {
+                  const label = typeof activity === "string" ? activity : activity?.name || activity?.title || activity?.label || "";
+                  const detail = typeof activity === "object" ? activity?.description || activity?.details : "";
+                  if (!label) return null;
+                  return <article key={`${label}-${index}`} className="d-fact-card"><div className="d-fact-card__icon"><Compass size={18}/></div><div><span>Activity</span><strong style={{whiteSpace:"normal",overflowWrap:"anywhere"}}>{label}</strong>{detail && <p style={{marginTop:6,color:"#64748b",lineHeight:1.6}}>{detail}</p>}</div></article>;
+                })}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {Array.isArray(destination.wildlife) && destination.wildlife.length > 0 && (
+          <section className="d-sec d-sec--white">
+            <div className="d-wrap">
+              <SH title="Wildlife & nature" sub={`Nature highlights around ${destination.name}`} />
+              <div className="d-chips" style={{display:"flex",flexWrap:"wrap",gap:10}}>
+                {destination.wildlife.map((item, index) => <span key={index} className="d-chip" style={{display:"inline-flex",padding:"9px 13px",borderRadius:999,background:"#ecfdf5",border:"1px solid #a7f3d0",color:"#065f46",whiteSpace:"normal"}}>{typeof item === "string" ? item : item?.name || item?.title || JSON.stringify(item)}</span>)}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {Array.isArray(destination.itinerary) && destination.itinerary.length > 0 && (
+          <section className="d-sec d-sec--soft">
+            <div className="d-wrap">
+              <SH title="Suggested itinerary" sub={`Explore ${destination.name} day by day`} />
+              <div className="d-deepdive__grid">
+                {destination.itinerary.map((day, index) => <article key={day.id || index} className="d-deepdive__block"><div className="d-deepdive__block-icon"><Calendar size={20}/></div><h3>{day.title || `Day ${day.dayNumber || index + 1}`}</h3>{day.description && <p className="d-deepdive__para">{day.description}</p>}{Array.isArray(day.activities) && day.activities.length > 0 && <p className="d-deepdive__para">{day.activities.join(" · ")}</p>}{day.accommodation && <p className="d-deepdive__para"><strong>Accommodation:</strong> {day.accommodation}</p>}</article>)}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {Array.isArray(destination.faqs) && destination.faqs.length > 0 && (
+          <section className="d-sec d-sec--white">
+            <div className="d-wrap">
+              <SH title="Frequently asked questions" sub={`Helpful answers before visiting ${destination.name}`} />
+              <div className="d-deepdive__grid">
+                {destination.faqs.map((faq, index) => <article key={faq.id || index} className="d-deepdive__block"><h3>{faq.question || faq.title || `Question ${index + 1}`}</h3><p className="d-deepdive__para">{faq.answer || faq.description || ""}</p></article>)}
+              </div>
+            </div>
+          </section>
+        )}
+
         {attractions.length > 0 && (
           <section className="d-sec d-sec--white">
             <div className="d-wrap">
@@ -617,7 +739,7 @@ export default function DestinationDetail() {
               </Reveal>
 
               <div className="d-exp-grid">
-                {attractions.slice(0, 6).map((attraction, index) => {
+                {attractions.map((attraction, index) => {
                   const name = attraction.name || attraction.title || attraction || "Attraction";
                   const image =
                     attraction.imageUrl ||

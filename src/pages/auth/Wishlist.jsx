@@ -8,7 +8,7 @@ import DashboardLayout from "../../components/auth/DashboardLayout";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   FiHeart, FiMapPin, FiTrash2, FiExternalLink,
-  FiSearch, FiRefreshCw, FiGrid, FiList,
+  FiSearch, FiRefreshCw, FiGrid, FiList, FiCamera,
 } from "react-icons/fi";
 import { HiOutlineLocationMarker } from "react-icons/hi";
 
@@ -296,6 +296,18 @@ const css = `
   }
 `;
 
+const getDestinationPhotoCount = (destination) => {
+  const raw = [
+    destination?.thumbnail_url, destination?.cover_image_url, destination?.hero_image,
+    ...(Array.isArray(destination?.images) ? destination.images : []),
+    ...(Array.isArray(destination?.gallery) ? destination.gallery : []),
+    ...(Array.isArray(destination?.image_urls) ? destination.image_urls : []),
+    ...(Array.isArray(destination?.hero_images) ? destination.hero_images : []),
+  ];
+  const urls = raw.map((item) => typeof item === "string" ? item : item?.url || item?.imageUrl || item?.image_url || item?.image).filter(Boolean);
+  return new Set(urls).size;
+};
+
 // ─── Destination Card (Grid) ───────────────────────────────────────────────────
 function DestinationCard({ destination, onRemove }) {
   const [removing, setRemoving] = useState(false);
@@ -310,6 +322,7 @@ function DestinationCard({ destination, onRemove }) {
   const slug = destination.slug || destination.id;
   const img  = destination.thumbnail_url || destination.cover_image_url
              || destination.images?.[0]?.url || null;
+  const photoCount = getDestinationPhotoCount(destination);
 
   return (
     <motion.div
@@ -343,6 +356,7 @@ function DestinationCard({ destination, onRemove }) {
             {destination.country_name}
           </div>
         )}
+        {photoCount > 0 && <div style={{position:"absolute",right:10,bottom:10,display:"inline-flex",alignItems:"center",gap:5,padding:"5px 8px",borderRadius:999,background:"rgba(15,23,42,.76)",color:"#fff",fontSize:11,fontWeight:700}}><FiCamera size={12}/>{photoCount} {photoCount===1?"photo":"photos"}</div>}
       </div>
 
       <div className="wl-card-body">
@@ -391,6 +405,7 @@ function DestinationRow({ destination, onRemove }) {
   const slug = destination.slug || destination.id;
   const img  = destination.thumbnail_url || destination.cover_image_url
              || destination.images?.[0]?.url || null;
+  const photoCount = getDestinationPhotoCount(destination);
 
   return (
     <motion.div
@@ -420,6 +435,7 @@ function DestinationRow({ destination, onRemove }) {
           {destination.category && (
             <span className="wl-card-tag">{destination.category}</span>
           )}
+          {photoCount > 0 && <span className="wl-card-tag" style={{display:"inline-flex",alignItems:"center",gap:5}}><FiCamera size={12}/>{photoCount} {photoCount===1?"photo":"photos"}</span>}
         </div>
       </div>
 

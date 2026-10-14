@@ -16,6 +16,7 @@ import {
   FiX,
   FiMenu,
   FiArrowRight,
+  FiCamera,
 } from "react-icons/fi";
 import { useApp } from "../../context/AppContext";
 import { useUserAuth } from "../../context/UserAuthContext";
@@ -37,6 +38,9 @@ const DestinationCard = ({ destination, onClick, style, index }) => {
   const images = useMemo(() => {
     const imgs = [];
     if (destination.heroImage) imgs.push(destination.heroImage);
+    if (Array.isArray(destination.heroImages)) destination.heroImages.forEach((img) => { const url = typeof img === "string" ? img : img?.url || img?.imageUrl || img?.image_url; if (url && !imgs.includes(url)) imgs.push(url); });
+    if (Array.isArray(destination.image_urls)) destination.image_urls.forEach((url) => { if (typeof url === "string" && url && !imgs.includes(url)) imgs.push(url); });
+    if (destination.coverImageUrl && !imgs.includes(destination.coverImageUrl)) imgs.push(destination.coverImageUrl);
     if (destination.images && Array.isArray(destination.images)) {
       destination.images.forEach((img) => {
         const url = typeof img === "string" ? img : img?.url || img?.src;
@@ -59,6 +63,20 @@ const DestinationCard = ({ destination, onClick, style, index }) => {
     }, 3000);
     return () => clearInterval(slideTimer.current);
   }, [images.length]);
+
+  const totalPhotoCount = useMemo(() => {
+    const raw = [
+      destination.heroImage,
+      destination.coverImageUrl,
+      ...(Array.isArray(destination.heroImages) ? destination.heroImages : []),
+      ...(Array.isArray(destination.images) ? destination.images : []),
+      ...(Array.isArray(destination.image_urls) ? destination.image_urls : []),
+      ...(Array.isArray(destination.gallery) ? destination.gallery : []),
+      ...(Array.isArray(destination.attractions) ? destination.attractions : []),
+    ];
+    const urls = raw.map((item) => typeof item === "string" ? item : item?.url || item?.imageUrl || item?.image_url || item?.image).filter(Boolean);
+    return new Set(urls).size;
+  }, [destination]);
 
   const goSlide = (dir, e) => {
     e.stopPropagation();
@@ -141,6 +159,13 @@ const DestinationCard = ({ destination, onClick, style, index }) => {
               <FiChevronRight size={16} />
             </button>
           </>
+        )}
+
+        {/* Destination photo count */}
+        {images.length > 0 && (
+          <span style={{position:"absolute",right:10,bottom:10,zIndex:5,display:"inline-flex",alignItems:"center",gap:5,padding:"5px 8px",borderRadius:999,background:"rgba(15,23,42,.72)",color:"#fff",fontSize:11,fontWeight:700,backdropFilter:"blur(8px)"}}>
+            <FiCamera size={12}/>{totalPhotoCount} {totalPhotoCount === 1 ? "photo" : "photos"}
+          </span>
         )}
 
         {/* Category badge */}
