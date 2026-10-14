@@ -896,16 +896,21 @@ export default function Messages() {
   }, [conversations, conversationSearch]);
 
   useEffect(() => {
-    if (!conversations.length) return;
     if (requestedConversationId) {
       const target = conversations.find(c => String(c.id) === String(requestedConversationId));
       if (target && String(activeId) !== String(target.id)) openConversation(target.id);
       return;
     }
-    // Select a default only when nothing is active; don't override a newly
-    // created/opened thread while the conversation list refreshes.
-    if (!activeId) openConversation(conversations[0].id);
+    // Users should land in their existing admin thread, but never force-open
+    // an unrelated/stale thread after it has been removed by an administrator.
+    if (conversations.length && !activeId) openConversation(conversations[0].id);
   }, [requestedConversationId, conversations, activeId, openConversation]);
+
+  useEffect(() => {
+    if (loading || !activeId) return;
+    const stillExists = conversations.some(c => String(c.id) === String(activeId));
+    if (!stillExists) openConversation(null);
+  }, [conversations, activeId, loading, openConversation]);
 
 
 
@@ -1154,10 +1159,12 @@ export default function Messages() {
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <button onClick={() => setShowNewChat(true)} aria-label="New conversation" title="New conversation (Ctrl/⌘+N)"
-                    className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-                    <Plus size={15} />
-                  </button>
+                  {conversations.length === 0 && (
+                    <button onClick={() => setShowNewChat(true)} aria-label="New conversation" title="New conversation"
+                      className="w-8 h-8 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+                      <Plus size={15} />
+                    </button>
+                  )}
                   <button onClick={fetchConversations} disabled={loading}
                     aria-label="Refresh" title="Refresh"
                     className="w-7 h-7 rounded-lg flex items-center justify-center
@@ -1296,11 +1303,19 @@ export default function Messages() {
                 <p className="text-sm text-slate-400 mb-6 max-w-[200px] leading-relaxed">
                   Select one from the list or start a new conversation.
                 </p>
-                <button onClick={()=>setShowNewChat(true)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white
-                             text-sm font-bold rounded-xl hover:bg-emerald-700 transition shadow-sm">
-                  <Plus size={15}/> New Conversation
-                </button>
+                {conversations.length === 0 ? (
+                  <button onClick={() => setShowNewChat(true)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white
+                               text-sm font-bold rounded-xl hover:bg-emerald-700 transition shadow-sm">
+                    <Plus size={15}/> Start a conversation
+                  </button>
+                ) : (
+                  <button onClick={() => setSidebarOpen(true)}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white
+                               text-sm font-bold rounded-xl hover:bg-emerald-700 transition shadow-sm">
+                    <MessageSquare size={15}/> View conversations
+                  </button>
+                )}
               </div>
             ) : (
               <>
@@ -1559,7 +1574,7 @@ export default function Messages() {
             )}
           </div>
         </div>
-        {showNewChat && (
+        {showNewChat && conversations.length === 0 && (
           <NewConvModal
             onClose={() => setShowNewChat(false)}
             onCreated={handleNewConvCreated}
