@@ -721,7 +721,7 @@ function Stars({ rating, count }) {
 /* ─────────────────────────────────────────────────────────────
    IMAGE SLIDER
 ───────────────────────────────────────────────────────────── */
-function ImageSlider({ images, name }) {
+function ImageSlider({ images, name, totalPhotoCount = images.length }) {
   const [idx, setIdx] = useState(0);
   const [touchStart, setTouchStart] = useState(null);
   const timerRef      = useRef(null);
@@ -833,11 +833,13 @@ function ImageSlider({ images, name }) {
             ))}
           </div>
 
-          <div className="dc-photo-count" aria-hidden="true">
-            <FiCamera size={9} />
-            <span>{idx + 1}/{total}</span>
-          </div>
         </>
+      )}
+      {totalPhotoCount > 0 && (
+        <div className="dc-photo-count" aria-label={`${totalPhotoCount} destination photos`}>
+          <FiCamera size={10} />
+          <span>{totalPhotoCount} {totalPhotoCount === 1 ? "photo" : "photos"}</span>
+        </div>
       )}
     </div>
   );
@@ -1004,9 +1006,15 @@ const {
 const safeImgs = [...new Set([
     ...(Array.isArray(destination.images) ? destination.images : []),
     ...(Array.isArray(gallery) ? gallery : []),
+    ...(Array.isArray(destination.image_urls) ? destination.image_urls : []),
+    ...(Array.isArray(destination.imageUrls) ? destination.imageUrls : []),
+    ...(Array.isArray(heroImages) ? heroImages : []),
+    ...(Array.isArray(hero_images) ? hero_images : []),
     heroImage,
     imageUrl,
     thumbnailUrl,
+    destination.coverImageUrl,
+    destination.cover_image_url,
   ].map(getImageUrl).filter(Boolean))];
 
   // Prefer the three dedicated hero images supplied by the admin, then fill
@@ -1115,7 +1123,7 @@ const blurb =
         <div className="dc-img-frame">
 
           {cardImages.length > 0 ? (
-            <ImageSlider images={cardImages} name={name} />
+            <ImageSlider images={cardImages} name={name} totalPhotoCount={safeImgs.length} />
           ) : (
             <div className="dc-img-placeholder">
               <FiCamera size={32} aria-hidden="true" />
