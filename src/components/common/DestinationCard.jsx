@@ -1010,6 +1010,7 @@ const safeImgs = [...new Set([
     ...(Array.isArray(destination.imageUrls) ? destination.imageUrls : []),
     ...(Array.isArray(heroImages) ? heroImages : []),
     ...(Array.isArray(hero_images) ? hero_images : []),
+    ...(Array.isArray(destination.attractions) ? destination.attractions : []),
     heroImage,
     imageUrl,
     thumbnailUrl,
