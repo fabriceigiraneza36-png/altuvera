@@ -16,6 +16,7 @@ function Field({
   hint,
   refProp,
   type = "text",
+  readOnly = false,
 }) {
   return (
     <div className="bk-field-group">
@@ -38,6 +39,8 @@ function Field({
           onBlur={onBlur}
           placeholder={placeholder}
           autoComplete={autoComplete}
+          readOnly={readOnly}
+          aria-readonly={readOnly || undefined}
           className={`bk-input${error ? " bk-input--err" : ""}${valid ? " bk-input--valid" : ""}`}
         />
 
