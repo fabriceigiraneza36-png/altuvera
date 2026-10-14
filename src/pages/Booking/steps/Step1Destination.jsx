@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Globe, MapPin, Check, AlertCircle,
   User, Users, Heart, Building2, Sparkles, UsersRound,
@@ -22,6 +22,21 @@ export default function Step1Destination({
   countriesList,
   destinationsList,
 }) {
+  const [countryQuery, setCountryQuery] = useState("");
+  const [countryPickerOpen, setCountryPickerOpen] = useState(false);
+  const [destinationQuery, setDestinationQuery] = useState("");
+  const [destinationPickerOpen, setDestinationPickerOpen] = useState(false);
+
+  const selectedCountry = useMemo(
+    () => countriesList.find(c => String(c.value) === String(data.countryId)) || null,
+    [countriesList, data.countryId]
+  );
+
+  useEffect(() => {
+    if (selectedCountry) setCountryQuery(selectedCountry.label);
+    else if (!data.countryId) setCountryQuery("");
+  }, [selectedCountry?.value, selectedCountry?.label, data.countryId]);
+
   const filtered = useMemo(() => {
     if (!data.countryId) return [];
     const byId = destinationsList.filter(
@@ -44,6 +59,21 @@ export default function Step1Destination({
     [filtered, data.destinationId]
   );
 
+  useEffect(() => {
+    if (selectedDest) setDestinationQuery(selectedDest.label);
+    else if (!data.destinationId) setDestinationQuery("");
+  }, [selectedDest?.value, selectedDest?.label, data.destinationId]);
+
+  const matchingCountries = useMemo(() => {
+    const q = countryQuery.trim().toLowerCase();
+    return countriesList.filter(c => !q || c.label.toLowerCase().includes(q)).slice(0, 8);
+  }, [countriesList, countryQuery]);
+
+  const matchingDestinations = useMemo(() => {
+    const q = destinationQuery.trim().toLowerCase();
+    return filtered.filter(d => !q || d.label.toLowerCase().includes(q) || String(d.country || "").toLowerCase().includes(q)).slice(0, 8);
+  }, [filtered, destinationQuery]);
+
   return (
     <div>
       <div className="bk-field-group">
@@ -51,28 +81,35 @@ export default function Step1Destination({
           Destination Country <span className="bk-label-req">*</span>
         </label>
 
-        <div className="bk-input-wrap">
-          <span className="bk-input-ico">
-            <Globe size={17} />
-          </span>
-
-          <select
-            id="countryId"
-            value={data.countryId}
-            onChange={(e) => {
-              set("countryId", e.target.value);
-              set("destinationId", "");
-            }}
-            onBlur={() => touch("countryId")}
-            className={`bk-select${touched.countryId && errors.countryId ? " bk-input--err" : ""}`}
-          >
-            <option value="">— Select a country —</option>
-            {countriesList.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
-              </option>
-            ))}
-          </select>
+        <div className="bk-input-wrap" style={{ position: "relative" }}>
+          <span className="bk-input-ico"><Globe size={17} /></span>
+          <input id="countryId" role="combobox" aria-expanded={countryPickerOpen && matchingCountries.length > 0}
+            aria-autocomplete="list" autoComplete="off" value={countryQuery}
+            placeholder="Search countries…"
+            onFocus={() => setCountryPickerOpen(true)}
+            onChange={(e) => { setCountryQuery(e.target.value); setCountryPickerOpen(true); set("countryId", ""); set("destinationId", ""); }}
+            onKeyDown={(e) => { if (e.key === "Escape") setCountryPickerOpen(false); }}
+            className={`bk-input${touched.countryId && errors.countryId ? " bk-input--err" : ""}`} />
+          {countryPickerOpen && matchingCountries.length > 0 && (
+            <div role="listbox" className="bk-country-suggest" style={{ top: "50px" }}>
+              {matchingCountries.map(country => (
+                <button key={country.value} type="button" role="option" aria-selected={String(country.value) === String(data.countryId)}
+                  className="bk-country-suggest__item"
+                  onMouseDown={e => e.preventDefault()}
+                  onClick={() => {
+                    set("countryId", country.value);
+                    set("destinationId", "");
+                    setCountryQuery(country.label);
+                    setDestinationQuery("");
+                    setCountryPickerOpen(false);
+                    setDestinationPickerOpen(false);
+                    touch("countryId");
+                  }}>
+                  <span>{country.label}</span><strong>{String(country.value) === String(data.countryId) ? "Selected" : ""}</strong>
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         {touched.countryId && errors.countryId && (
@@ -89,7 +126,36 @@ export default function Step1Destination({
               Specific Destination <span className="bk-label-req">*</span>
             </label>
 
-            <div className="bk-dest-grid">
+            <div className="bk-field-group" style={{ position: "relative" }}>
+              <div className="bk-input-wrap" style={{ position: "relative" }}>
+                <span className="bk-input-ico"><MapPin size={17} /></span>
+                <input role="combobox" aria-label="Search destination" aria-expanded={destinationPickerOpen && matchingDestinations.length > 0}
+                  aria-autocomplete="list" autoComplete="off" value={destinationQuery}
+                  placeholder="Search destinations in this country…"
+                  onFocus={() => setDestinationPickerOpen(true)}
+                  onChange={e => { setDestinationQuery(e.target.value); setDestinationPickerOpen(true); set("destinationId", ""); }}
+                  onKeyDown={e => { if (e.key === "Escape") setDestinationPickerOpen(false); }}
+                  className={`bk-input${touched.destinationId && errors.destinationId ? " bk-input--err" : ""}`} />
+                {destinationPickerOpen && matchingDestinations.length > 0 && (
+                  <div role="listbox" className="bk-country-suggest" style={{ top: "50px" }}>
+                    {matchingDestinations.map(d => (
+                      <button key={d.value} type="button" role="option" aria-selected={String(data.destinationId) === String(d.value)}
+                        className="bk-country-suggest__item" onMouseDown={e => e.preventDefault()}
+                        onClick={() => {
+                          set("destinationId", d.value);
+                          setDestinationQuery(d.label);
+                          setDestinationPickerOpen(false);
+                          touch("destinationId");
+                        }}>
+                        <span>{d.label}</span><strong>{d.country || ""}</strong>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {!selectedDest && <div className="bk-dest-grid">
               {filtered.map((d) => {
                 const active = data.destinationId === d.value;
 
@@ -159,7 +225,7 @@ export default function Step1Destination({
                   </button>
                 );
               })}
-            </div>
+            </div>}
 
             {touched.destinationId && errors.destinationId && (
               <p className="bk-field-err">
@@ -167,7 +233,7 @@ export default function Step1Destination({
               </p>
             )}
 
-            {selectedDest && (
+            {selectedDest && false && (
               <div
                 className="bk-selected"
                 style={{
