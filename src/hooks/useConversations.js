@@ -177,7 +177,7 @@ export function useConversations() {
     } catch (err) {
       setError(err.message || "Failed to load conversations.");
     } finally {
-      if (!conversationsLoadedRef.current) setLoading(false);
+      setLoading(false);
     }
   }, []);
 
