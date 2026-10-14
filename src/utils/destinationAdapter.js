@@ -373,6 +373,7 @@ export const adaptDestination = (raw) => {
     imageUrl:      raw.imageUrl      || raw.image_url || null,
     heroImage:     raw.heroImage     || raw.hero_image || urlOf(explicitHeroImages[0]) || urlOf(bannerSlides[0]) || images[0] || null,
     heroImages:    explicitHeroImages.length ? explicitHeroImages : bannerSlides.length ? bannerSlides : images.slice(0, 3),
+    hasExplicitHeroSlides: explicitHeroImages.length > 0,
     bannerSlides,
     attractionImages: attractionImages.map((item) => ({ ...item, imageUrl: urlOf(item) })).filter((item) => item.imageUrl),
     thumbnailUrl:  raw.thumbnailUrl  || raw.thumbnail_url || images[0] || null,
