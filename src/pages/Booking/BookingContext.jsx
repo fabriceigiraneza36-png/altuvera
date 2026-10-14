@@ -200,10 +200,23 @@ export function BookingProvider({ children, user }) {
       const json = contentType.includes("application/json")
         ? await res.json()
         : { error: (await res.text()) || "Request failed" };
-      if (!res.ok) throw new Error(
-        (Array.isArray(json?.errors) ? json.errors[0]?.message : null) ||
-        json?.error || json?.message || "Submission failed",
-      );
+      if (!res.ok) {
+        const validationMessage = Array.isArray(json?.errors)
+          ? json.errors.find((item) => typeof item?.message === "string" && item.message.trim())?.message
+          : null;
+        const rawMessage = json?.message ?? json?.error ?? json?.detail;
+        const readableMessage = typeof rawMessage === "string"
+          ? rawMessage
+          : rawMessage && typeof rawMessage === "object"
+            ? (rawMessage.message || rawMessage.detail || rawMessage.error ||
+               (Array.isArray(rawMessage.errors) ? rawMessage.errors.map((item) => item?.message || item).join(", ") : null))
+            : null;
+        throw new Error(
+          validationMessage ||
+          readableMessage ||
+          `We couldn't submit your booking (HTTP ${res.status}). Please try again.`,
+        );
+      }
       setBookingRef(json.data?.booking_number || null);
       setSubmitted(true);
       retryRef.current = 0;
