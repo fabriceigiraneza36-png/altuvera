@@ -17,6 +17,9 @@ import {
   FiMenu,
   FiArrowRight,
   FiCamera,
+  FiSearch,
+  FiLoader,
+  FiGlobe,
 } from "react-icons/fi";
 import { useApp } from "../../context/AppContext";
 import { useUserAuth } from "../../context/UserAuthContext";
@@ -24,7 +27,9 @@ import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 import { preloadRoute } from "../../utils/routeUtils";
 import { getCountrySlug } from "../../utils/countrySlugMap";
 import { useCountries } from "../../hooks/useCountries";
+import { useDestinations } from "../../hooks/useDestinations";
 import { adaptDestination } from "../../utils/destinationAdapter";
+import { multiBackendFetch } from "../../utils/multiBackendFetch";
 import "./Navbar.css";
 
 const cn = (...c) => c.filter(Boolean).join(" ");
@@ -228,20 +233,34 @@ const DestinationCard = ({ destination, onClick, style, index }) => {
    ══════════════════════════════════════════════════════ */
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
+  const [navSearchOpen, setNavSearchOpen] = useState(false);
+  const [navSearchQuery, setNavSearchQuery] = useState("");
   const [navHidden, setNavHidden] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState({ destinations: [], countries: [] });
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState("");
+  const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
+  const [drawerDragX, setDrawerDragX] = useState(null);
+  const [drawerDragMode, setDrawerDragMode] = useState(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { favorites } = useApp();
   const { user, isAuthenticated, authLoading, openModal, logout } =
     useUserAuth();
-  const { countries: backendCountries } = useCountries({ limit: 12 });
+  const { countries: backendCountries } = useCountries({ limit: 50 });
+  const { data: searchDestinations = [] } = useDestinations({ limit: 100 });
 
   const headerRef = useRef(null);
+  const drawerRef = useRef(null);
+  const searchInputRef = useRef(null);
+  const drawerGestureRef = useRef(null);
   const userMenuRef = useRef(null);
   const dropdownTimer = useRef(null);
   const lastScrollYRef = useRef(0);
@@ -373,6 +392,141 @@ const Navbar = () => {
 
   useEffect(() => closeAll(), [location.pathname, closeAll]);
   useEffect(() => setAvatarLoaded(false), [user?.avatar]);
+
+  // Live search uses real API results only; no hard-coded or fallback suggestions.
+  useEffect(() => {
+    const query = searchQuery.trim();
+    if (!searchOpen || query.length < 2) {
+      setSearchResults({ destinations: [], countries: [] });
+      setSearchLoading(false);
+      setSearchError("");
+      return undefined;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      setSearchLoading(true);
+      setSearchError("");
+      const rows = (payload) => Array.isArray(payload) ? payload : Array.isArray(payload?.data) ? payload.data : Array.isArray(payload?.results) ? payload.results : [];
+      try {
+        const [destinationPayload, countryPayload] = await Promise.all([
+          multiBackendFetch(`/destinations/suggestions?q=${encodeURIComponent(query)}&limit=8`),
+          multiBackendFetch(`/countries/search?q=${encodeURIComponent(query)}&limit=6`),
+        ]);
+        if (cancelled) return;
+        const destinations = rows(destinationPayload).map(adaptDestination).filter(Boolean);
+        const countries = rows(countryPayload).map((country) => {
+          const rawImage = country.heroImage || country.hero_image || country.coverImageUrl || country.cover_image_url || country.imageUrl || country.image_url || country.image;
+          const image = typeof rawImage === "string" && (/^https?:\/\//i.test(rawImage) || rawImage.startsWith("/")) ? rawImage : "";
+          return {
+            ...country,
+            id: country.id || country.slug || country.name,
+            slug: country.slug || getCountrySlug(country),
+            name: country.name || country.countryName || "",
+            isCountry: true,
+            heroImage: image,
+            heroImages: Array.isArray(country.heroImages || country.hero_images) ? (country.heroImages || country.hero_images) : [],
+            images: Array.isArray(country.images) ? country.images : [],
+            image_urls: Array.isArray(country.image_urls) ? country.image_urls : [],
+            country: country.continent || country.region || "Country",
+            description: country.description || country.shortDescription || country.short_description || country.tagline || "",
+          };
+        }).filter((country) => country.name);
+        setSearchResults({ destinations, countries });
+      } catch {
+        if (!cancelled) {
+          setSearchResults({ destinations: [], countries: [] });
+          setSearchError("Live search is temporarily unavailable. Please try again.");
+        }
+      } finally {
+        if (!cancelled) setSearchLoading(false);
+      }
+    }, 260);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [searchQuery, searchOpen]);
+
+  useEffect(() => {
+    if (!searchOpen) return undefined;
+    const timer = window.setTimeout(() => searchInputRef.current?.focus(), 80);
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setSearchOpen(false);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [searchOpen]);
+
+  // Edge-swipe opens the right drawer; swiping it back closes it while preserving buttons.
+  useEffect(() => {
+    const onTouchStart = (event) => {
+      if (window.innerWidth > 1024 || !event.touches?.length) return;
+      const touch = event.touches[0];
+      if (!isMobileMenuOpen && touch.clientX >= window.innerWidth - 26) {
+        drawerGestureRef.current = { mode: "open", startX: touch.clientX, startY: touch.clientY };
+        setDrawerDragMode("open");
+        setDrawerDragX(0);
+      } else if (isMobileMenuOpen && drawerRef.current?.contains(event.target)) {
+        drawerGestureRef.current = { mode: "close", startX: touch.clientX, startY: touch.clientY };
+        setDrawerDragMode("close");
+        setDrawerDragX(0);
+      }
+    };
+    const onTouchMove = (event) => {
+      const gesture = drawerGestureRef.current;
+      if (!gesture || !event.touches?.length) return;
+      const touch = event.touches[0];
+      const dx = touch.clientX - gesture.startX;
+      const dy = touch.clientY - gesture.startY;
+      if (Math.abs(dy) > Math.abs(dx) * 1.2 && Math.abs(dy) > 8) {
+        drawerGestureRef.current = null;
+        setDrawerDragMode(null);
+        setDrawerDragX(null);
+        return;
+      }
+      if (Math.abs(dx) > 8) {
+        if (event.cancelable) event.preventDefault();
+        setDrawerDragX(gesture.mode === "open" ? Math.min(0, dx) : Math.max(0, dx));
+      }
+    };
+    const onTouchEnd = () => {
+      const gesture = drawerGestureRef.current;
+      if (!gesture) return;
+      const dx = drawerDragX || 0;
+      if (gesture.mode === "open" && dx < -64) setIsMobileMenuOpen(true);
+      if (gesture.mode === "close" && dx > 72) setIsMobileMenuOpen(false);
+      drawerGestureRef.current = null;
+      setDrawerDragMode(null);
+      setDrawerDragX(null);
+    };
+    document.addEventListener("touchstart", onTouchStart, { passive: true });
+    document.addEventListener("touchmove", onTouchMove, { passive: false });
+    document.addEventListener("touchend", onTouchEnd, { passive: true });
+    document.addEventListener("touchcancel", onTouchEnd, { passive: true });
+    return () => {
+      document.removeEventListener("touchstart", onTouchStart);
+      document.removeEventListener("touchmove", onTouchMove);
+      document.removeEventListener("touchend", onTouchEnd);
+      document.removeEventListener("touchcancel", onTouchEnd);
+    };
+  }, [isMobileMenuOpen, drawerDragX]);
+
+  const openLiveSearch = useCallback(() => {
+    setIsMobileMenuOpen(false);
+    setMobileProfileOpen(false);
+    setSearchOpen(true);
+  }, []);
+
+  const closeLiveSearch = useCallback(() => setSearchOpen(false), []);
+
+  const goToSearchResult = useCallback((item, isCountry = false) => {
+    setSearchOpen(false);
+    setSearchQuery("");
+    navigate(isCountry ? `/country/${item.slug || getCountrySlug(item)}` : `/destinations/${item.slug || item.id}`);
+  }, [navigate]);
 
   useEffect(() => {
     const fn = (e) => {
@@ -610,6 +764,31 @@ const Navbar = () => {
                 )}
               </div>
             ))}
+          </div>
+
+          <div className={cn("nav-live-search", navSearchOpen && "nav-live-search--open")}>
+            <button type="button" className="nav-live-search__toggle" aria-label="Search destinations and countries" aria-expanded={navSearchOpen} onMouseEnter={() => window.matchMedia("(hover:hover) and (min-width: 769px)").matches && setNavSearchOpen(true)} onFocus={() => setNavSearchOpen(true)} onClick={() => setNavSearchOpen(v => !v)}><FiSearch size={19}/></button>
+            <div className="nav-live-search__field">
+              <FiSearch size={17} aria-hidden="true"/>
+              <input value={navSearchQuery} onChange={e=>setNavSearchQuery(e.target.value)} onFocus={()=>setNavSearchOpen(true)} placeholder="Search destinations or countries…" aria-label="Search destinations or countries"/>
+              {navSearchQuery && <button type="button" aria-label="Clear search" onClick={()=>setNavSearchQuery("")}><FiX size={16}/></button>}
+            </div>
+            {navSearchOpen && navSearchQuery.trim().length > 0 && (
+              <div className="nav-live-search__results" role="listbox">
+                {searchDestinations.filter(d=>String(d?.name||"").toLowerCase().includes(navSearchQuery.trim().toLowerCase()) || String(d?.country||d?.countryName||"").toLowerCase().includes(navSearchQuery.trim().toLowerCase())).slice(0,6).map(d=>(
+                  <button type="button" role="option" key={d.id || d.slug || d.name} onClick={()=>{setNavSearchOpen(false);setNavSearchQuery("");navigate(`/destinations/${d.slug || d.id}`)}}>
+                    <img src={d.heroImage || d.coverImageUrl || d.imageUrl || d.image_urls?.[0] || "/images/destination-placeholder.jpg"} alt="" loading="lazy"/>
+                    <span><strong>{d.name}</strong><small>{d.country || d.countryName || "Destination"}</small></span>
+                  </button>
+                ))}
+                {backendCountries.filter(x=>String(x.name||"").toLowerCase().includes(navSearchQuery.trim().toLowerCase())).slice(0,4).map(x=>(
+                  <button type="button" role="option" key={x.id || x.slug || x.name} onClick={()=>{setNavSearchOpen(false);setNavSearchQuery("");navigate(`/country/${getCountrySlug(x)}`)}}>
+                    <span className="nav-live-search__country">{x.flagUrl || x.flag_url ? <img src={x.flagUrl || x.flag_url} alt="" /> : "◎"}</span><span><strong>{x.name}</strong><small>Country</small></span>
+                  </button>
+                ))}
+                {!searchDestinations.some(d=>String(d?.name||"").toLowerCase().includes(navSearchQuery.trim().toLowerCase()) || String(d?.country||d?.countryName||"").toLowerCase().includes(navSearchQuery.trim().toLowerCase())) && !backendCountries.some(x=>String(x.name||"").toLowerCase().includes(navSearchQuery.trim().toLowerCase())) && <p className="nav-live-search__empty">No matching destinations or countries found.</p>}
+              </div>
+            )}
           </div>
 
           {/* ── Actions ── */}
