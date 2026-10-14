@@ -2,29 +2,30 @@
   import React, { useState, useMemo } from 'react';
   import { Helmet }     from 'react-helmet-async';
   import { motion, AnimatePresence } from 'framer-motion';
+import { Bell, CalendarDays, Check, CheckCheck, CircleAlert, CreditCard, Gift, Globe2, MapPinned, Newspaper, Package, ShieldAlert, Sparkles, ClipboardList, Compass, Heart, MessageCircle, RefreshCw, Send, Trash2, X, LoaderCircle } from 'lucide-react';
   import DashboardLayout from '../../components/auth/DashboardLayout';
   import { useNotifications } from '../../hooks/useNotifications';
 
   const TYPE_META = {
-    booking_created:   { icon: '📅', color: '#059669' },
-    booking_updated:   { icon: '✏️', color: '#0ea5e9' },
-    booking_confirmed: { icon: '✅', color: '#16a34a' },
-    booking_cancelled: { icon: '❌', color: '#dc2626' },
-    booking_deleted:   { icon: '🗑️', color: '#7c3aed' },
-    payment_confirmed: { icon: '💳', color: '#059669' },
-    payment_request:   { icon: '💰', color: '#d97706' },
-    new_destination:   { icon: '🗺️', color: '#0891b2' },
-    new_country:       { icon: '🌍', color: '#0891b2' },
-    new_post:          { icon: '📝', color: '#7c3aed' },
-    new_package:       { icon: '📦', color: '#d97706' },
-    checklist_request: { icon: '📋', color: '#059669' },
-    checklist_ready:   { icon: '✅', color: '#16a34a' },
-    promotion:         { icon: '🎉', color: '#db2777' },
-    newsletter:        { icon: '📰', color: '#059669' },
-    warning:           { icon: '⚠️', color: '#f59e0b' },
-    alert:             { icon: '🚨', color: '#dc2626' },
-    system:            { icon: '⚙️', color: '#64748b' },
-    general:           { icon: '💬', color: '#059669' },
+    booking_created:   { Icon: CalendarDays, color: '#059669' },
+    booking_updated:   { Icon: CalendarDays, color: '#0ea5e9' },
+    booking_confirmed: { Icon: CheckCheck, color: '#16a34a' },
+    booking_cancelled: { Icon: CalendarDays, color: '#dc2626' },
+    booking_deleted:   { Icon: CalendarDays, color: '#7c3aed' },
+    payment_confirmed: { Icon: CreditCard, color: '#059669' },
+    payment_request:   { Icon: CreditCard, color: '#d97706' },
+    new_destination:   { Icon: MapPinned, color: '#0891b2' },
+    new_country:       { Icon: Globe2, color: '#0891b2' },
+    new_post:          { Icon: Newspaper, color: '#7c3aed' },
+    new_package:       { Icon: Package, color: '#d97706' },
+    checklist_request: { Icon: ClipboardList, color: '#059669' },
+    checklist_ready:   { Icon: Check, color: '#16a34a' },
+    promotion:         { Icon: Gift, color: '#db2777' },
+    newsletter:        { Icon: Newspaper, color: '#059669' },
+    warning:           { Icon: CircleAlert, color: '#f59e0b' },
+    alert:             { Icon: ShieldAlert, color: '#dc2626' },
+    system:            { Icon: Sparkles, color: '#64748b' },
+    general:           { Icon: MessageCircle, color: '#059669' },
   };
 
   const formatDate = (d) => {
@@ -74,6 +75,10 @@
       { key: 'bookings', label: '📅 Bookings',  count: grouped.booking.length },
       { key: 'updates',  label: '📢 Updates',   count: grouped.system.length  },
     ], [grouped]);
+
+    const handleSwipeDismiss = (id, info) => {
+      if (info.offset.x < -100 || info.velocity.x < -550) deleteOne(id);
+    };
 
     const handleReply = async (id) => {
       const text = replyTexts[id]?.trim();
@@ -136,7 +141,7 @@
             )}
           </AnimatePresence>
 
-          {/* ── Header ── */}
+          <style>{`\n            .user-notification-card { touch-action: pan-y; }\n            @media (max-width: 640px) { .user-notification-card { padding: 14px 12px !important; } .user-notification-toolbar { width: 100%; flex-wrap: wrap; } .user-notification-toolbar button { flex: 1; } .user-notification-title-row { flex-direction: column; align-items: flex-start !important; gap: 4px !important; } }\n            @media (prefers-reduced-motion: reduce) { .user-notification-card { transition: none !important; } }\n          `}</style>\n\n          {/* ── Header ── */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 22 }}>🔔</span>
@@ -149,7 +154,7 @@
                 )}
               </p>
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="user-notification-toolbar" style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {unreadCount > 0 && (
                 <button onClick={markAllRead} style={{ padding: '8px 14px', borderRadius: 10, border: '1.5px solid #059669', background: '#ecfdf5', color: '#059669', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
                   ✓ Mark all read
@@ -167,7 +172,7 @@
           </div>
 
           {/* ── Tabs ── */}
-          <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: '#f1f5f9', borderRadius: 12, padding: 4, width: 'fit-content' }}>
+          <div style={{ display: 'flex', gap: 4, marginBottom: 8, background: '#f1f5f9', borderRadius: 12, padding: 4, width: 'fit-content', maxWidth: '100%', overflowX: 'auto' }}>
             {tabs.map(t => (
               <button key={t.key} onClick={() => setTab(t.key)} style={{
                 padding: '8px 16px', borderRadius: 10, border: 'none',
@@ -186,7 +191,7 @@
             ))}
           </div>
 
-          {/* ── List ── */}
+          <p style={{ margin: '0 0 12px', textAlign: 'right', color: '#94a3b8', fontSize: 11 }}><span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}><span aria-hidden="true">←</span> Swipe a notification left to dismiss</span></p>\n\n          {/* ── List ── */}
           {loading && displayed.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '64px 24px' }}>
               <div style={{ width: 48, height: 48, borderRadius: '50%', border: '4px solid #e5e7eb', borderTopColor: '#059669', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
@@ -205,9 +210,9 @@
                   const meta = TYPE_META[n.type] || TYPE_META.general;
                   return (
                     <motion.div
-                      key={n.id} layout
+                      key={n.id} layout drag="x" dragConstraints={{ left: 0, right: 0 }} dragElastic={0.16} onDragEnd={(event, info) => handleSwipeDismiss(n.id, info)} className="user-notification-card"
                       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: 30 }}
+                      exit={{ opacity: 0, x: -160, height: 0, paddingTop: 0, paddingBottom: 0, marginBottom: 0 }}
                       style={{
                         padding: '18px 24px',
                         borderBottom: idx < displayed.length - 1 ? '1px solid #f1f5f9' : 'none',
@@ -222,13 +227,13 @@
                       <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                         {/* Icon */}
                         <div style={{ width: 44, height: 44, borderRadius: 12, flexShrink: 0, background: `${meta.color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>
-                          {meta.icon}
+                          {meta.Icon ? <meta.Icon size={21} strokeWidth={2.2} /> : <MessageCircle size={21} />}
                         </div>
 
                         <div style={{ flex: 1, minWidth: 0 }}>
                           {/* Title + time */}
                           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                            <p style={{ margin: 0, fontSize: 15, fontWeight: n.is_read ? 600 : 800, color: '#0f172a' }}>
+                            <p className="user-notification-title-row" style={{ margin: 0, fontSize: 15, fontWeight: n.is_read ? 600 : 800, color: '#0f172a' }}>
                               {n.title}
                             </p>
                             <span style={{ fontSize: 12, color: '#94a3b8', flexShrink: 0 }}>
