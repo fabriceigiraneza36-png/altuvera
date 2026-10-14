@@ -27,9 +27,9 @@ function Field({ id, label, icon: Icon, value, onChange, onBlur, onFocus, placeh
   );
 }
 
-function CountrySuggestions({ value, onSelect }) {
+function CountrySuggestions({ value, onSelect, open }) {
   const q = value.trim().toLowerCase();
-  if (!q) return null;
+  if (!open || !q) return null;
   const matches = COUNTRY_PHONE_CODES.filter((c) => c.name.toLowerCase().includes(q)).slice(0, 7);
   if (!matches.length) return null;
   return (
@@ -107,6 +107,8 @@ function PhoneField({ data, set, touch, errors, touched }) {
 }
 
 export default function Step3Contact({ data, set, touch, errors, touched }) {
+  const [countrySuggestionsOpen, setCountrySuggestionsOpen] = useState(false);
+  const [nationalitySuggestionsOpen, setNationalitySuggestionsOpen] = useState(false);
   const country = COUNTRY_PHONE_CODES.find((c) => c.name.toLowerCase() === data.country.trim().toLowerCase());
   const selectResidence = (c) => {
     set("country", c.name);
@@ -114,6 +116,7 @@ export default function Step3Contact({ data, set, touch, errors, touched }) {
     set("phoneCountryQuery", c.name);
     const currentDigits = String(data.phone || "").replace(/^\\+?[0-9\\s().-]+/, "").replace(/\\D/g, "");
     set("phone", currentDigits ? `${c.dialCode} ${currentDigits}` : "");
+    setCountrySuggestionsOpen(false);
     touch("country");
   };
 
