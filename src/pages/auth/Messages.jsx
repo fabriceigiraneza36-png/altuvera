@@ -1196,6 +1196,20 @@ export default function Messages() {
                     </div>
                   </div>
                 ))
+              ) : error && conversations.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 px-5 text-center" role="alert">
+                  <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center mb-3">
+                    <MessageSquare size={22} className="text-amber-500"/>
+                  </div>
+                  <p className="text-sm font-semibold text-slate-700 mb-1">We couldn't check your conversations</p>
+                  <p className="text-xs text-slate-500 mb-4 leading-relaxed">
+                    Your conversations may still exist. Please retry before starting a new chat.
+                  </p>
+                  <button onClick={fetchConversations} disabled={loading}
+                    className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 disabled:opacity-50">
+                    <RefreshCw size={13} className={loading ? "animate-spin" : ""}/> Try again
+                  </button>
+                </div>
               ) : conversations.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 px-5 text-center">
                   <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center
