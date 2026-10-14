@@ -224,27 +224,60 @@ const MSG_STYLES = `
   z-index: 2;
 }
 .msg-chat-body {
-  flex: 1;
+  flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
   padding: 16px;
 }
+.msg-load-older { display:flex; justify-content:center; padding:4px 0 14px; }
+.msg-load-older button {
+  border:1px solid #d1fae5; border-radius:999px; background:rgba(255,255,255,.92);
+  color:#047857; font-size:11px; font-weight:700; padding:7px 12px;
+  box-shadow:0 2px 8px rgba(15,23,42,.04);
+}
+.msg-load-older button:disabled { opacity:.65; }
 .msg-chat-body::-webkit-scrollbar { width: 4px; }
 .msg-chat-body::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 4px; }
 .msg-chat-body:hover::-webkit-scrollbar-thumb { background: #cbd5e1; }
 .msg-chat-foot {
-  flex-shrink: 0;
-  width: 100%;
-  background: #ffffff;
-  border-top: 1px solid #e2e8f0;
-  z-index: 2;
-  box-sizing: border-box;
+  flex-shrink: 0; width:100%; background:rgba(255,255,255,.97);
+  border-top:1px solid #e2e8f0; z-index:2; box-sizing:border-box;
+  padding-bottom:max(10px, env(safe-area-inset-bottom));
 }
-.msg-composer-row { min-width: 0; }
-.msg-composer-row textarea { min-width: 0; }
-.msg-chat-head > * { min-width: 0; }
+.msg-composer-row {
+  min-width:0; border:1px solid transparent; background:#fff;
+  box-shadow:0 3px 14px rgba(15,23,42,.06);
+  transition:border-color .18s, box-shadow .18s, background .18s;
+}
+.msg-composer-row:focus-within {
+  border-color:#10b981;
+  box-shadow:0 0 0 3px rgba(16,185,129,.10), 0 5px 18px rgba(15,23,42,.07);
+}
+.msg-composer-row textarea {
+  min-width:0; border:0 !important; outline:none !important;
+  box-shadow:none !important; background:transparent !important;
+}
+.msg-chat-head > * { min-width:0; }
+.msg-chat { position:relative; }
+.msg-chat .msg-scroll-layer { position:absolute; inset:0; pointer-events:none; z-index:5; }
+.msg-chat .msg-scroll-layer > * { pointer-events:auto; }
+.msg-bubble-wrap { touch-action:pan-y; }
+@media (max-width:767px) {
+  .msg-chat-head { gap:8px; padding-top:10px; padding-bottom:10px; }
+  .msg-chat-body { padding:10px 9px; }
+  .msg-chat-foot { padding:8px 9px max(10px, env(safe-area-inset-bottom)); }
+  .msg-composer-row { gap:5px; padding:5px; border-radius:18px; }
+  .msg-composer-row textarea { padding:9px 8px; font-size:16px; }
+  .msg-composer-row button { flex-shrink:0; }
+  .msg-meta { opacity:1; }
+}
+@media (min-width:768px) {
+  .msg-chat-body { padding:clamp(14px, 2vw, 24px); }
+}
 
 /* MOBILE: full panel swap */
 @media (max-width: 767px) {
@@ -439,11 +472,11 @@ function EmojiPicker({ onPick, onClose }) {
     </div>
   );
 }
-function ScrollToBottomBtn({ visible, onClick }) {
+function ScrollToBottomBtn({ visible, onClick, composerVisible = true }) {
   return (
     <button onClick={onClick} aria-label="Scroll to bottom"
       style={{
-        position:"absolute", bottom:16, right:16, zIndex:10,
+        position:"absolute", bottom: composerVisible ? 92 : 18, right:16, zIndex:10,
         transition:"opacity .25s, transform .25s",
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(12px)",
@@ -887,7 +920,8 @@ export default function Messages() {
   const [showNewChat, setShowNewChat] = useState(false);
   const {
     conversations, messages, activeId, activeConversation,
-    unreadCount, loading, loadingMsgs, sending, error,
+    unreadCount, loading, loadingMsgs, loadingOlderMessages, hasMoreMessages,
+    loadOlderMessages, sending, error,
     openConversation, sendMessage, fetchConversations,
     editMessage, unsendMessage, toggleMessageFlag, reactToMessage,
     adminTyping, typingConvs, emitTyping, socketRef, connected, adminOnline,
@@ -997,7 +1031,19 @@ export default function Messages() {
     lastScrollTopRef.current = el.scrollTop;
     setAtBottom(bottom);
     setShowScrollBtn(!bottom);
-  }, []);
+
+    if (el.scrollTop <= 48 && hasMoreMessages && !loadingOlderMessages) {
+      const previousHeight = el.scrollHeight;
+      const previousOffset = el.scrollTop;
+      setAtBottom(false);
+      loadOlderMessages().then(() => {
+        requestAnimationFrame(() => {
+          const current = scrollRef.current;
+          if (current) current.scrollTop = previousOffset + current.scrollHeight - previousHeight;
+        });
+      });
+    }
+  }, [hasMoreMessages, loadingOlderMessages, loadOlderMessages]);
 
   /* ── Auto-scroll on new messages ── */
   useEffect(() => {
@@ -1164,8 +1210,8 @@ export default function Messages() {
 
       <DashboardLayout
         title="Messages"
-        subtitle="Chat directly with the Altuvera team about your bookings."
-        /* Tell the layout NOT to add its own padding/overflow so we control it */
+        hideMobileMenuToggle
+        /* Keep the chat in a viewport-sized surface without extra page copy */
         noPadding
       >
         {/* Error */}
@@ -1418,6 +1464,13 @@ export default function Messages() {
                   aria-live="polite"
                   aria-label="Messages"
                 >
+                  {loadingOlderMessages && (
+                    <div className="msg-load-older" aria-live="polite">
+                      <span className="inline-flex items-center gap-2 text-[11px] font-semibold text-emerald-700">
+                        <RefreshCw size={13} className="animate-spin" /> Loading earlier messages…
+                      </span>
+                    </div>
+                  )}
                   {loadingMsgs && messages.length === 0 ? (
                     /* Message skeletons */
                     <div className="space-y-3 pt-2">
@@ -1445,6 +1498,11 @@ export default function Messages() {
                     </div>
                   ) : (
                     <div className="space-y-0.5">
+                      {hasMoreMessages && !loadingOlderMessages && (
+                        <div className="msg-load-older">
+                          <button type="button" onClick={loadOlderMessages}>Load earlier messages</button>
+                        </div>
+                      )}
                       {msgGroups.map(item=>
                         item.type==="sep" ? (
                           <DateSep key={item.key} label={item.label}/>
@@ -1486,10 +1544,10 @@ export default function Messages() {
                   )}
                 </div>
 
-                {/* Scroll-to-bottom button (absolute within msg-chat) */}
-                <div style={{ position:"relative", height:0, overflow:"visible" }}>
+                <div className="msg-scroll-layer" aria-hidden={!showScrollBtn}>
                   <ScrollToBottomBtn
                     visible={showScrollBtn}
+                    composerVisible={composerVisible}
                     onClick={()=>scrollToBottom(true)}
                   />
                 </div>
@@ -1527,7 +1585,7 @@ export default function Messages() {
                   )}
 
                   {/* Input row */}
-                  <div className="msg-composer-row flex items-end gap-2 rounded-2xl border border-slate-200 bg-slate-50/90 p-1.5 shadow-sm focus-within:border-emerald-300 focus-within:bg-white focus-within:shadow-md transition-all">
+                  <div className="msg-composer-row flex items-end gap-2 rounded-2xl p-1.5">
                     {/* Emoji toggle */}
                     <div className="relative flex-shrink-0">
                       <button
@@ -1574,10 +1632,7 @@ export default function Messages() {
                       rows={1}
                       placeholder="Type your message… (Enter to send)"
                       aria-label="Message input"
-                      className="flex-1 resize-none text-sm px-3.5 py-2.5 rounded-xl border
-                                 border-slate-200 bg-slate-50 outline-none leading-relaxed
-                                 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20
-                                 focus:bg-white transition placeholder:text-slate-400"
+                      className="flex-1 resize-none text-sm px-3.5 py-2.5 rounded-xl bg-transparent outline-none leading-relaxed placeholder:text-slate-400"
                       style={{ minHeight:40, maxHeight:128 }}
                     />
 
