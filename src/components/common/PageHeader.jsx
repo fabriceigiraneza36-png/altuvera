@@ -59,8 +59,8 @@ const PageHeader = ({
   const styles = {
     header: {
       position: "relative",
-      height: isMobile ? "auto" : height,
-      minHeight: isMobile ? (isCompactMobile ? "280px" : "340px") : "450px",
+      height: height === "99svh" || height === "99vh" ? "99svh" : (isMobile ? "auto" : height),
+      minHeight: height === "99svh" || height === "99vh" ? "99svh" : (isMobile ? (isCompactMobile ? "280px" : "340px") : "450px"),
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
