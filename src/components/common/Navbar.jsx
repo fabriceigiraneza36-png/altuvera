@@ -240,6 +240,7 @@ const Navbar = () => {
   const [searchOpen, setSearchOpen] = useState(false);
   const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchSort, setSearchSort] = useState("featured");
   const searchInputRef = useRef(null);
   const touchStartRef = useRef(null);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
@@ -290,8 +291,12 @@ const Navbar = () => {
     const query = searchQuery.trim().toLowerCase();
     const countries = (backendCountries || []).map(country => ({ ...country, _isCountry: true, _label: country.name || country.title || "" }));
     const destinations = (searchDestinations || []).map(item => ({ ...adaptDestination(item), ...item, _isCountry: false, _label: item.name || item.title || item.destination_name || "" }));
-    const matches = item => !query || `${item._label} ${item.country || item.country_name || item.region || item.continent || ""}`.toLowerCase().includes(query);
-    return { countries: countries.filter(matches).slice(0, 8), destinations: destinations.filter(matches).slice(0, 12) };
+    const matches = item => !query || `${item._label} ${item.country || item.country_name || item.region || item.continent || ""} ${item.description || item.shortDescription || ""}`.toLowerCase().includes(query);
+    const metric = (item, fields) => fields.reduce((score, field) => score + (Number(item[field]) || 0), 0);
+    const ranked = (items, fields) => [...items].filter(matches).sort((a,b) => metric(b, fields) - metric(a, fields));
+    const countryFields = searchSort === "searched" ? ["search_count","searchCount","searches","views"] : ["featured_score","is_featured","featured","visit_count","visits","popularity"];
+    const destinationFields = searchSort === "searched" ? ["search_count","searchCount","searches","searches_count"] : searchSort === "visited" ? ["visit_count","visitCount","visits","views","view_count","popularity"] : ["featured_score","is_featured","featured","isFeatured","visit_count","visits","rating"];
+    return { countries: ranked(countries, countryFields).slice(0, 8), destinations: ranked(destinations, destinationFields).slice(0, 12) };
   }, [backendCountries, searchDestinations, searchQuery]);
 
   const navLinks = useMemo(
@@ -981,7 +986,7 @@ const Navbar = () => {
             <motion.section className="nav-search-modal" role="dialog" aria-modal="true" aria-label="Search countries and destinations" initial={{ opacity: 0, y: 18, scale: .98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12, scale: .98 }} transition={{ duration: .2 }}>
               <div className="nav-search-top"><div><span className="nav-search-eyebrow">DISCOVER ALTUVERA</span><h2>Where would you like to go?</h2></div><button className="nav-search-close" aria-label="Close search" onClick={() => { setSearchOpen(false); setSearchQuery(""); }}><FiX size={20}/></button></div>
               <div className="nav-search-input-wrap"><FiSearch size={19}/><input ref={searchInputRef} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search countries, destinations, places..." aria-label="Search destinations"/>{searchQuery && <button onClick={() => setSearchQuery("")} aria-label="Clear search"><FiX size={17}/></button>}</div>
-              {!searchQuery.trim() && <div className="nav-search-quick"><span>Quick filters</span>{["Safari","Wildlife","Nature","Adventure"].map(term=><button key={term} onClick={()=>setSearchQuery(term)}>{term}</button>)}</div>}
+              {!searchQuery.trim() && <div className="nav-search-quick"><span>Discover</span>{[{label:"Featured",value:"featured"},{label:"Most visited",value:"visited"},{label:"Most searched",value:"searched"}].map(option=><button className={searchSort===option.value?"is-active":""} key={option.value} onClick={()=>setSearchSort(option.value)}>{option.label}</button>)}{["Safari","Wildlife","Nature","Adventure"].map(term=><button key={term} onClick={()=>setSearchQuery(term)}>{term}</button>)}</div>}
               <div className="nav-search-results">
                 <div className="nav-search-section"><h3><FiTrendingUp size={16}/> Countries</h3><div className="nav-search-grid">{searchResults.countries.map((item,i)=><button className="nav-search-card nav-search-country" key={item.id || item.slug || item._label+i} onClick={()=>{setSearchOpen(false);navigate(`/country/${getCountrySlug(item)}`)}}>{(item.coverImage || item.cover_image || item.image || item.flagUrl || item.flag_url) && <img src={item.coverImage || item.cover_image || item.image || item.flagUrl || item.flag_url} alt="" loading="lazy"/>}<span><strong>{item._label}</strong><small>{item.region || item.continent || item.capital || "Explore country"}</small></span><FiArrowRight size={16}/></button>)}</div></div>
                 <div className="nav-search-section"><h3><FiMapPin size={16}/> Destinations</h3><div className="nav-search-grid nav-search-destinations">{searchResults.destinations.map((item,i)=><button className="nav-search-card nav-search-destination" key={item.id || item.slug || item._label+i} onClick={()=>{setSearchOpen(false);navigate(`/destinations/${item.id || item.slug}`)}}>{(item.image || item.image_url || item.coverImage || item.cover_image || item.thumbnail || item.heroImage) && <img src={item.image || item.image_url || item.coverImage || item.cover_image || item.thumbnail || item.heroImage} alt="" loading="lazy"/>}<span><strong>{item._label}</strong><small>{item.country_name || item.country || item.region || "Explore destination"}</small></span><FiArrowRight size={16}/></button>)}</div></div>
