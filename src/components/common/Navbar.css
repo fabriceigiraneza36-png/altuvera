@@ -3028,3 +3028,34 @@
 }
 
 .nav-search-desktop-results{max-height:min(70vh,520px);overflow:auto;padding:8px;gap:2px}.nav-search-desktop-results>button{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:11px 12px;border:0;border-radius:10px;background:transparent;text-align:left;color:#173b2b;cursor:pointer;transition:background .18s ease,transform .18s ease}.nav-search-desktop-results>button:hover,.nav-search-desktop-results>button:focus-visible{background:#ecfdf5;outline:0}.nav-search-desktop-results>button span{min-width:0;overflow-wrap:anywhere;font-weight:650}.nav-search-desktop-results>button small{flex-shrink:0;color:#0b946b;font-size:10px;text-transform:uppercase;letter-spacing:.06em}.nav-search-suggestion-hint{display:flex;align-items:center;gap:12px;padding:18px 4px;color:#718579;font-size:14px;line-height:1.55}.nav-search-suggestion-group{margin-top:16px}.nav-search-suggestion-label{display:flex;align-items:center;gap:7px;margin-bottom:8px;color:#527062;font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.nav-search-inline{display:flex;flex-wrap:wrap;gap:8px}.nav-search-inline button{display:inline-flex;align-items:center;gap:7px;max-width:100%;padding:9px 12px;border:1px solid #d8e9e0;border-radius:999px;background:#fff;color:#164b36;font-size:13px;font-weight:600;cursor:pointer;transition:background .2s ease,border-color .2s ease,transform .2s ease}.nav-search-inline button:hover,.nav-search-inline button:focus-visible{background:#ecfdf5;border-color:#6ee7b7;transform:translateY(-1px);outline:none}.nav-search-inline button small{color:#0b946b;font-size:9px;letter-spacing:.04em;text-transform:uppercase}.nav-search-view-all{display:flex;align-items:center;justify-content:center;gap:8px;margin:16px 0 4px;padding:12px 15px;width:100%;border:1px solid #bde8d2;border-radius:12px;background:#ecfdf5;color:#047857;font-weight:750;cursor:pointer}.nav-search-empty{padding:16px 4px;color:#718579;font-size:14px}@media(max-width:760px){.nav-search-results{overflow-y:auto;padding:0 2px calc(22px + env(safe-area-inset-bottom))}.nav-search-inline{gap:7px}.nav-search-inline button{font-size:12px;padding:9px 11px}.nav-search-suggestion-group{margin-top:18px}}
+
+
+/* Discovery experience lives only inside the navbar search modal. */
+.nav-search-section-title{font-family:var(--font-heading,'Playfair Display',serif);font-size:clamp(18px,2vw,24px);color:#173b2b;margin:20px 0 12px}
+.nav-search-back{border:0;background:transparent;color:#087f58;font-weight:750;padding:8px 0;cursor:pointer}
+.nav-search-story-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:20px 0 10px}
+.nav-search-story-heading small{font-size:11px;color:#81958a}
+.nav-search-story-rail{display:flex;gap:14px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;padding:8px 5px 18px;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.nav-search-story-card{position:relative;flex:0 0 clamp(150px,22vw,210px);height:clamp(190px,27vw,250px);overflow:hidden;border:0;border-radius:18px;background:#dbece2;box-shadow:0 8px 22px #123b2518;scroll-snap-align:center;cursor:pointer;isolation:isolate;transition:transform .35s ease,filter .35s ease,opacity .35s ease}
+.nav-search-story-card:focus-visible,.nav-search-story-card:hover{transform:translateY(-5px) scale(1.025);outline:2px solid #10a778;outline-offset:2px}
+.nav-search-story-card:after{content:"";position:absolute;inset:20% 0 0;background:linear-gradient(transparent,#071b12dc);z-index:0}
+.nav-search-story-card>img{width:100%;height:100%;object-fit:cover;position:absolute;inset:0;transition:transform .7s ease,filter .4s ease}
+.nav-search-story-card:hover>img{transform:scale(1.08)}
+.nav-search-story-card>strong{position:absolute;z-index:1;left:13px;right:13px;bottom:14px;color:#fff;text-align:left;font-size:15px;line-height:1.3}
+.nav-search-story-placeholder{position:absolute;inset:0;display:grid;place-items:center;color:#0b805b;font-size:34px;background:linear-gradient(140deg,#e1f5e9,#aacdb8)}
+.nav-search-story-float{position:absolute;z-index:1;right:12px;top:12px;width:32px;height:32px;display:grid;place-items:center;border-radius:50%;color:white;background:#ffffff2c;backdrop-filter:blur(6px);animation:navStoryFloat 3.4s ease-in-out infinite}
+@keyframes navStoryFloat{0%,100%{transform:translateY(0);opacity:.58}50%{transform:translateY(-7px);opacity:1}}
+.nav-search-country-rail{display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;padding:4px 2px 14px;-webkit-overflow-scrolling:touch}
+.nav-search-country-rail::-webkit-scrollbar{display:none}
+.nav-search-country-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,145px),1fr));gap:12px}
+.nav-search-country-card{min-width:145px;display:flex;flex-direction:column;align-items:flex-start;gap:7px;padding:14px;border:1px solid #dbeae1;border-radius:16px;background:linear-gradient(145deg,#fff,#f2faf5);text-align:left;color:#173b2b;cursor:pointer;scroll-snap-align:start;transition:transform .25s ease,box-shadow .25s ease,border-color .25s ease}
+.nav-search-country-card:hover,.nav-search-country-card:focus-visible{transform:translateY(-3px);border-color:#8ad8b5;box-shadow:0 10px 24px #0b805b15;outline:none}
+.nav-search-country-flag{width:40px;height:30px;display:grid;place-items:center;border-radius:7px;overflow:hidden;color:#0b805b;background:#e4f6ed}
+.nav-search-country-flag img{width:100%;height:100%;object-fit:cover}
+.nav-search-country-card strong{font-size:14px;line-height:1.3}
+.nav-search-country-card small{font-size:11px;color:#6d8476}
+.nav-search-destination-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
+.nav-search-destination-grid>*{min-width:0}
+.nav-search-results{overflow-x:hidden}
+@media(max-width:600px){.nav-search-destination-grid{grid-template-columns:minmax(0,1fr);gap:14px}.nav-search-story-card{flex-basis:150px;height:205px}.nav-search-country-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nav-search-country-card{min-width:0;padding:12px}.nav-search-section-title{margin-top:18px}.nav-search-story-heading{margin-top:16px}}
+@media(prefers-reduced-motion:reduce){.nav-search-story-card,.nav-search-story-card>img,.nav-search-story-float,.nav-search-country-card{animation:none!important;transition:none!important}}
