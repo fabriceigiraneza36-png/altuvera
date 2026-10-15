@@ -436,51 +436,22 @@ const coordinateToMapPosition = (lat, lng) => ({
   left: `${((lng - destinationMapBounds.minLng) / (destinationMapBounds.maxLng - destinationMapBounds.minLng)) * 100}%`,
 });
 
-const DestinationMarker = React.memo(({ destination, position, isMobile, showLabel }) => (
-  <a
-    href={`/destinations/${destination.slug || destination.id}`}
-    onClick={(event) => event.stopPropagation()}
-    title={`${destination.name}${destination.country?.name ? `, ${destination.country.name}` : ""}`}
-    aria-label={`Open ${destination.name}`}
-    style={{
-      position: "absolute",
-      top: position.top,
-      left: position.left,
-      width: isMobile ? 12 : 16,
-      height: isMobile ? 12 : 16,
-      transform: "translate(-50%, -50%)",
-      borderRadius: "50%",
-      background: "#F59E0B",
-      border: "2px solid white",
-      boxShadow: "0 2px 10px rgba(0,0,0,0.3)",
-      zIndex: 8,
-      cursor: "pointer",
-    }}
-  >
-    {showLabel && (
-      <span
-        style={{
-          position: "absolute",
-          top: "100%",
-          left: "50%",
-          transform: "translateX(-50%)",
-          marginTop: 5,
-          padding: "4px 7px",
-          borderRadius: 6,
-          background: "rgba(17,24,39,0.9)",
-          color: "white",
-          fontSize: 10,
-          fontWeight: 700,
-          whiteSpace: "nowrap",
-          pointerEvents: "none",
-        }}
-      >
-        {destination.name}
-      </span>
-    )}
-  </a>
-));
-
+const DestinationMarker = React.memo(({ destination, position, isMobile, showLabel }) => {
+  const [open, setOpen] = useState(false);
+  const lat = Number(destination.position?.lat ?? destination.latitude ?? destination.lat);
+  const lng = Number(destination.position?.lng ?? destination.longitude ?? destination.lng);
+  const href = `/destinations/${destination.slug || destination.id}`;
+  return (
+    <div style={{ position: "absolute", top: position.top, left: position.left, transform: "translate(-50%, -50%)", zIndex: open ? 40 : 8 }}>
+      <button type="button" onClick={(event) => { event.stopPropagation(); setOpen((value) => !value); }} title={destination.name} aria-label={`Show coordinates for ${destination.name}`} aria-expanded={open} style={{ width: isMobile ? 18 : 22, height: isMobile ? 18 : 22, padding: 0, borderRadius: "50%", background: open ? "#047857" : "#F59E0B", border: "3px solid white", boxShadow: "0 2px 12px rgba(0,0,0,.34)", cursor: "pointer", display: "block" }} />
+      {(open || showLabel) && <div style={{ position: "absolute", top: 25, left: "50%", transform: "translateX(-50%)", width: "min(250px, calc(100vw - 44px))", padding: 13, borderRadius: 13, background: "white", color: "#1f2937", boxShadow: "0 12px 35px rgba(0,0,0,.24)", border: "1px solid #d1fae5", fontFamily: "Inter, sans-serif", whiteSpace: "normal", textAlign: "left" }}>
+        <strong style={{ display: "block", fontSize: 13, lineHeight: 1.35, marginBottom: 6 }}>{destination.name || "Destination"}</strong>
+        <span style={{ display: "block", fontSize: 11, color: "#4b6359", marginBottom: 10 }}>Latitude: {Number.isFinite(lat) ? lat.toFixed(5) : "Unavailable"}<br/>Longitude: {Number.isFinite(lng) ? lng.toFixed(5) : "Unavailable"}</span>
+        <a href={href} onClick={(event) => event.stopPropagation()} style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, padding: "9px 11px", background: "linear-gradient(135deg,#059669,#047857)", color: "#fff", borderRadius: 9, fontSize: 12, fontWeight: 700, textDecoration: "none" }}>Explore destination <FiArrowRight size={13}/></a>
+      </div>}
+    </div>
+  );
+});
 DestinationMarker.displayName = "DestinationMarker";
 
 /* ═══════════════════════════════════════════════════════
@@ -1538,7 +1509,11 @@ const InteractiveMap = () => {
 
   useEffect(() => {
     if (!selectedCountry || !mapRef.current) return;
-    const position = countryPositions[selectedCountry.slug] || countryPositions[selectedCountry.name];
+    const countryLat = Number(selectedCountry.latitude ?? selectedCountry.lat ?? selectedCountry.coordinates?.lat ?? selectedCountry.location?.lat);
+    const countryLng = Number(selectedCountry.longitude ?? selectedCountry.lng ?? selectedCountry.coordinates?.lng ?? selectedCountry.coordinates?.lon ?? selectedCountry.location?.lng);
+    const position = Number.isFinite(countryLat) && Number.isFinite(countryLng)
+      ? coordinateToMapPosition(countryLat, countryLng)
+      : countryPositions[selectedCountry.slug] || countryPositions[selectedCountry.name];
     if (!position) return;
     const nextZoom = 1.7;
     const left = Number.parseFloat(position.left);
