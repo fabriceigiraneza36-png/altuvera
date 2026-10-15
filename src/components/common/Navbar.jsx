@@ -21,6 +21,7 @@ import {
   FiSearch,
   FiTrendingUp,
   FiGlobe,
+  FiCompass,
 } from "react-icons/fi";
 import { useApp } from "../../context/AppContext";
 import { useUserAuth } from "../../context/UserAuthContext";
