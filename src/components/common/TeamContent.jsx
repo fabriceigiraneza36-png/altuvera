@@ -579,6 +579,44 @@ const STYLES = `
   .tm-avatar{width:80px;height:80px}
   .tm-name{font-size:16.5px}
 }
+
+/* Portrait-first cards: full-bleed profile image, with details revealed on intent. */
+.tm-card{min-height:390px;aspect-ratio:4/5;display:block;overflow:hidden;border-radius:22px;border:1px solid rgba(255,255,255,.72);background:#022c22;box-shadow:0 12px 30px rgba(2,44,34,.12);cursor:pointer;isolation:isolate;transform:translateZ(0)}
+.tm-card::before{content:"";position:absolute;inset:0;z-index:1;opacity:1;background:linear-gradient(180deg,rgba(2,20,16,.06) 30%,rgba(2,20,16,.72) 100%);transition:opacity .35s ease}
+.tm-card-band{display:none}
+.tm-card-body{position:absolute;inset:0;z-index:2;margin:0;padding:24px 22px 22px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;text-align:center;color:#fff;background:linear-gradient(180deg,rgba(2,44,34,.08) 10%,rgba(2,44,34,.96) 100%);opacity:0;transform:translateY(18px);transition:opacity .35s ease,transform .45s cubic-bezier(.2,.75,.25,1);overflow-y:auto}
+.tm-card:focus{outline:none}
+.tm-card:hover .tm-card-body,.tm-card:focus-visible .tm-card-body,.tm-card:focus-within .tm-card-body{opacity:1;transform:translateY(0)}
+.tm-card:hover::before,.tm-card:focus-visible::before,.tm-card:focus-within::before{opacity:.35}
+.tm-card:hover{transform:translateY(-5px) scale(1.012);box-shadow:0 24px 52px rgba(2,44,34,.25)}
+.tm-card .tm-avatar{position:absolute;inset:0;width:100%;height:100%;margin:0;border-radius:0;z-index:-1;pointer-events:none}
+.tm-card .tm-avatar-ring{width:100%;height:100%;border:0;border-radius:0;box-shadow:none;background:#022c22;overflow:hidden}
+.tm-card .tm-avatar-img{width:100%;height:100%;object-fit:cover;object-position:center 28%;transform:scale(1.001);opacity:1!important;transition:transform .8s cubic-bezier(.2,.75,.25,1),filter .4s ease}
+.tm-card:hover .tm-avatar-img,.tm-card:focus-visible .tm-avatar-img{transform:scale(1.07);filter:saturate(1.08)}
+.tm-card .tm-avatar-fb{height:100%;width:100%;border-radius:0;color:#d1fae5}
+.tm-card .tm-avatar-fb span,.tm-card .tm-dot{display:none}
+.tm-card .tm-name{color:#fff;font-size:clamp(19px,2vw,25px);margin:0 0 5px;text-shadow:0 2px 14px rgba(0,0,0,.2)}
+.tm-card .tm-role{color:#a7f3d0;font-size:13px;margin-bottom:9px}
+.tm-card .tm-dept{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:#fff;margin-bottom:10px}
+.tm-card .tm-dept::before{background:#6ee7b7}
+.tm-card .tm-divider{background:#6ee7b7;margin-bottom:10px}
+.tm-card .tm-bio{color:rgba(255,255,255,.88);font-size:12px;line-height:1.55;min-height:0;margin-bottom:10px;-webkit-line-clamp:3}
+.tm-card .tm-tags{gap:5px;margin-bottom:10px}
+.tm-card .tm-tag{color:#fff;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.18)}
+.tm-card .tm-tag-x{background:#a7f3d0;color:#022c22}
+.tm-card .tm-meta{gap:5px;margin-bottom:10px}
+.tm-card .tm-mi{color:rgba(255,255,255,.82);font-size:11px}
+.tm-card .tm-mi svg{color:#a7f3d0}
+.tm-card .tm-socials{padding-top:10px;border-color:rgba(255,255,255,.2);margin-top:0}
+.tm-card .tm-slink{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25);color:#fff}
+.tm-card .tm-slink:hover,.tm-card .tm-slink:focus-visible{background:#a7f3d0;color:#022c22}
+.tm-card .tm-feat{z-index:3}
+.tm-card:hover .tm-feat,.tm-card:focus-visible .tm-feat{opacity:0;transition:opacity .2s}
+@media(max-width:640px){.tm-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.tm-card{min-height:280px;aspect-ratio:3/4;border-radius:17px}.tm-card-body{padding:15px 12px 13px}.tm-card .tm-name{font-size:16px}.tm-card .tm-role{font-size:11px;margin-bottom:5px}.tm-card .tm-dept{font-size:9px;padding:3px 7px;margin-bottom:6px}.tm-card .tm-bio{-webkit-line-clamp:2;font-size:10.5px;line-height:1.4;margin-bottom:7px}.tm-card .tm-divider{margin-bottom:7px}.tm-card .tm-tags{margin-bottom:6px}.tm-card .tm-meta{margin-bottom:6px}.tm-card .tm-socials{gap:5px;padding-top:7px}.tm-card .tm-slink{width:28px;height:28px}}
+@media(max-width:360px){.tm-grid{grid-template-columns:1fr}.tm-card{aspect-ratio:4/5;min-height:330px}}
+@media(hover:none){.tm-card:active .tm-card-body{opacity:1;transform:translateY(0)}.tm-card:active::before{opacity:.35}}
+@media(prefers-reduced-motion:reduce){.tm-card,.tm-card::before,.tm-card .tm-card-body,.tm-card .tm-avatar-img{transition:none!important}}
+
 @media(prefers-reduced-motion:reduce){
   .tm-card,.tm-slink,.tm-avatar-img,.tm-fbtn,.tm-abtn{transition:none!important}
   .tm-sk{animation:none!important}
@@ -683,7 +721,7 @@ function Card({ member }) {
   const imageSrc = member.image_url;
 
   return (
-    <article className="tm-card" role="listitem">
+    <article className="tm-card" role="listitem" tabIndex={0} aria-label={`${member.name || "Team member"} — focus or hover to view profile details`}>
       <div className="tm-card-band" aria-hidden="true" />
 
       {member.is_featured && (
