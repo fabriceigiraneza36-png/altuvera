@@ -1009,9 +1009,10 @@
 
 /* Premium image treatment while preserving the original full-height hero layout. */
 .home-hero-premium{
-  height:100vh!important;
-  height:100svh!important;
-  min-height:800px!important;
+  height:99vh!important;
+  height:99svh!important;
+  min-height:99vh!important;
+  min-height:99svh!important;
   max-height:none!important;
   isolation:isolate;
   width:100%;
