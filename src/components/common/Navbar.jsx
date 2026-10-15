@@ -1,6 +1,7 @@
 // src/components/common/Navbar.jsx
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   FiHeart,
   FiUser,
@@ -237,6 +238,7 @@ const Navbar = () => {
   const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchInputRef = useRef(null);
   const touchStartRef = useRef(null);
@@ -388,6 +390,7 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => closeAll(), [location.pathname, closeAll]);
+  useEffect(() => { setSearchOpen(false); setDesktopSearchOpen(false); setSearchQuery(""); }, [location.pathname]);
   useEffect(() => { if (searchOpen) requestAnimationFrame(() => searchInputRef.current?.focus()); }, [searchOpen]);
   useEffect(() => {
     const start = e => { touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; };
@@ -647,7 +650,11 @@ const Navbar = () => {
 
           {/* ── Actions ── */}
           <div className="nav__actions">
-            <button type="button" className="nav__search-trigger" aria-label="Search destinations and countries" onClick={() => setSearchOpen(true)}><FiSearch size={19} /></button>
+            <div className={cn("nav-search-desktop", desktopSearchOpen && "nav-search-desktop--open")} onMouseEnter={() => { if (window.innerWidth > 760) setDesktopSearchOpen(true); }} onMouseLeave={() => { if (window.innerWidth > 760 && !searchQuery) setDesktopSearchOpen(false); }}>
+              <button type="button" className="nav__search-trigger" aria-label="Search destinations and countries" onClick={() => { if (window.innerWidth <= 760) setSearchOpen(true); else setDesktopSearchOpen(true); }} onFocus={() => { if (window.innerWidth > 760) setDesktopSearchOpen(true); }}><FiSearch size={19} /></button>
+              <input className="nav-search-desktop-input" aria-label="Search destinations and countries" placeholder="Search places..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onFocus={() => setDesktopSearchOpen(true)} onKeyDown={e => { if (e.key === "Escape") { setDesktopSearchOpen(false); setSearchQuery(""); } if (e.key === "Enter") setSearchOpen(true); }} />
+              {desktopSearchOpen && searchQuery.trim() && <div className="nav-search-desktop-results">{searchResults.countries.slice(0,3).map((item,i)=><button key={item.id || item._label+i} onClick={()=>{navigate(`/country/${getCountrySlug(item)}`);setDesktopSearchOpen(false);setSearchQuery("");}}><FiMapPin size={14}/><span>{item._label}</span><small>Country</small></button>)}{searchResults.destinations.slice(0,4).map((item,i)=><button key={item.id || item._label+i} onClick={()=>{navigate(`/destinations/${item.id || item.slug}`);setDesktopSearchOpen(false);setSearchQuery("");}}><FiMapPin size={14}/><span>{item._label}</span><small>Destination</small></button>)}<button className="nav-search-view-all" onClick={()=>setSearchOpen(true)}>View all results <FiArrowRight size={14}/></button></div>}
+            </div>
             <Link to="/gallery" className="nav__icon-link">
               <span
                 className="nav__icon-btn"
