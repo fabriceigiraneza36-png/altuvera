@@ -63,7 +63,7 @@ import AnimatedSection from "../components/common/AnimatedSection";
 import Button from "../components/common/Button";
 import { Helmet } from "react-helmet-async";
 import { useCountries } from "../hooks/useCountries";
-import { useDestinationMapData } from "../hooks/useDestinations";
+import { useDestinationMapData, useDestinations } from "../hooks/useDestinations";
 import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../utils/seo";
 import { toGoogleMapEmbedUrl } from "../utils/mediaEmbed";
 
@@ -313,6 +313,10 @@ const injectStyles = `
     overflow: hidden;
   }
 
+  .im-page-root, .im-page-root * { box-sizing: border-box; }
+  .im-page-root { overflow-x: clip; }
+  .im-page-root .im-main-grid, .im-page-root .im-main-grid > * { min-width: 0; max-width: 100%; }
+  .im-map-area { width: 100%; max-width: 100%; }
   /* Responsive */
   @media (max-width: 1200px) {
     .im-main-grid {
@@ -328,6 +332,9 @@ const injectStyles = `
   }
 
   @media (max-width: 768px) {
+    .im-page-root { overflow-x: clip; }
+    .im-page-root section { padding-left: 12px !important; padding-right: 12px !important; }
+    .im-page-root .im-main-grid { width: 100%; gap: 16px !important; }
     .im-map-area {
       height: 400px !important;
       border-radius: var(--im-radius-lg) !important;
@@ -402,68 +409,9 @@ const injectStyles = `
    MAP VIEWS
    ═══════════════════════════════════════════════════════ */
 const mapViews = {
-  physical: {
-    name: "Terrain",
-    type: "google",
-    mapType: "p", // Terrain
-    icon: <FiMap size={14} />,
-    overlay: "rgba(5, 150, 105, 0.05)",
-    description: "Live Google Terrain with elevation and natural features",
-  },
-  satellite: {
-    name: "Satellite",
-    type: "google",
-    mapType: "k", // Satellite
-    icon: <FiGlobe size={14} />,
-    overlay: "rgba(15, 23, 42, 0.1)",
-    description: "Real-time high-resolution orbital imagery",
-  },
-  hybrid: {
-    name: "Hybrid",
-    type: "google",
-    mapType: "h", // Hybrid
-    icon: <FiLayers size={14} />,
-    overlay: "rgba(15, 23, 42, 0.05)",
-    description: "Satellite imagery with geographic labels and infrastructure",
-  },
-  political: {
-    name: "Roadmap",
-    type: "google",
-    mapType: "m", // Roadmap
-    icon: <FiNavigation size={14} />,
-    overlay: "rgba(30, 41, 59, 0.05)",
-    description:
-      "Standard political map with regional administrative boundaries",
-  },
-  topographic: {
-    name: "Topographic",
-    type: "image",
-    image:
-      "https://images.unsplash.com/photo-1580060839134-75a5edca2e99?w=1400&q=85",
-    icon: <FiTarget size={14} />,
-    overlay:
-      "linear-gradient(135deg, rgba(2,44,34,0.4) 0%, rgba(5,150,105,0.2) 100%)",
-    description: "Stylized artistic representation of vertical relief",
-  },
-  vintage: {
-    name: "Vintage",
-    type: "image",
-    image:
-      "https://images.unsplash.com/photo-1532153975070-2e9ab71f1b14?w=1400&q=85",
-    icon: <FiBookmark size={14} />,
-    overlay: "rgba(107, 73, 43, 0.35)",
-    description:
-      "Exploring East Africa through a lens of history and exploration",
-  },
-  dark: {
-    name: "Midnight",
-    type: "image",
-    image:
-      "https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?w=1400&q=85",
-    icon: <FiZap size={14} />,
-    overlay: "rgba(10, 10, 25, 0.75)",
-    description: "Clean, high-contrast dark mode optimized for night browsing",
-  },
+  physical: { name: "Terrain", type: "google", mapType: "p", icon: <FiMap size={14} />, overlay: "rgba(5,150,105,0.035)", description: "Terrain, elevation and natural features" },
+  satellite: { name: "Satellite", type: "google", mapType: "k", icon: <FiGlobe size={14} />, overlay: "rgba(15,23,42,0.035)", description: "Satellite imagery" },
+  hybrid: { name: "Hybrid", type: "google", mapType: "h", icon: <FiLayers size={14} />, overlay: "rgba(15,23,42,0.02)", description: "Satellite imagery with geographic labels" },
 };
 
 /* ═══════════════════════════════════════════════════════
@@ -1504,20 +1452,31 @@ const InteractiveMap = () => {
   const isTablet = windowWidth < 1024;
   const isDesktop = windowWidth >= 1200;
 
-  const { countries, loading, error, refetch } = useCountries();
+  const { countries, loading, error, refetch } = useCountries({ limit: 500 });
   const { pins: destinationPins } = useDestinationMapData({ limit: 500 });
-
-  const mappedDestinations = useMemo(
-    () => destinationPins.filter((destination) => {
-      const lat = Number(destination.position?.lat);
-      const lng = Number(destination.position?.lng);
-      return Number.isFinite(lat) && Number.isFinite(lng);
-    }),
-    [destinationPins],
-  );
+  const { destinations: allDestinations } = useDestinations({ limit: 500, include: "gallery" });
+  const coordinatePair = useCallback((item) => {
+    const pos = item?.position || item?.mapPosition || item?.coordinates || item?.location || {};
+    const lat = Number(pos.lat ?? pos.latitude ?? item?.latitude ?? item?.lat);
+    const lng = Number(pos.lng ?? pos.lon ?? pos.longitude ?? item?.longitude ?? item?.lng ?? item?.lon);
+    return Number.isFinite(lat) && Number.isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180 ? { lat, lng } : null;
+  }, []);
+  const mappedDestinations = useMemo(() => {
+    const source = destinationPins.length ? destinationPins : allDestinations;
+    const seen = new Set();
+    return source.flatMap((d) => {
+      const position = coordinatePair(d);
+      if (!position) return [];
+      const id = String(d.id ?? d._id ?? d.slug ?? d.name ?? (position.lat + "," + position.lng));
+      if (seen.has(id)) return [];
+      seen.add(id);
+      const rawCountry = d.country || d.countryData || {};
+      return [{ ...d, id, name: d.name || d.title || d.destination_name || "Destination", slug: d.slug || d.id || d._id, position, country: typeof rawCountry === "string" ? { name: rawCountry, slug: rawCountry.toLowerCase().replace(/[^a-z0-9]+/g, "-") } : rawCountry, countryId: d.countryId ?? d.country_id ?? rawCountry.id, countrySlug: d.countrySlug ?? d.country_slug ?? rawCountry.slug }];
+    });
+  }, [destinationPins, allDestinations, coordinatePair]);
 
   const visibleDestinations = useMemo(() => {
-    if (zoom < 1.35 && !selectedCountry) return [];
+    if (!selectedCountry) return mappedDestinations;
     if (!selectedCountry) return mappedDestinations;
     const countryValues = [selectedCountry.id, selectedCountry.slug, selectedCountry.name]
       .map((value) => String(value || "").trim().toLowerCase())
@@ -1529,7 +1488,7 @@ const InteractiveMap = () => {
       destination.countryId,
       destination.countrySlug,
     ].some((value) => countryValues.includes(String(value || "").trim().toLowerCase())));
-  }, [mappedDestinations, selectedCountry, zoom]);
+  }, [mappedDestinations, selectedCountry]);
 
   /* ── Filtered countries ── */
   const filtered = useMemo(() => {
@@ -1786,7 +1745,7 @@ const InteractiveMap = () => {
      RENDER
      ═══════════════════════════════════════════════════ */
   return (
-    <div style={{ backgroundColor: "var(--im-off-white)", minHeight: "100vh" }}>
+    <div className="im-page-root" style={{ backgroundColor: "var(--im-off-white)", minHeight: "100vh", width: "100%", maxWidth: "100%", overflowX: "clip", boxSizing: "border-box" }}>
       <style>{injectStyles}</style>
 
       <PageHeader
@@ -1897,8 +1856,8 @@ const InteractiveMap = () => {
                                   : "none",
                             }}
                             src={toGoogleMapEmbedUrl({
-                              query: "East Africa",
-                              zoom: 4,
+                              query: selectedCountry ? (selectedCountry.name || selectedCountry.slug) : "Africa",
+                              zoom: selectedCountry ? 7 : 3,
                               mapType: currentMap.mapType,
                             })}
                             allowFullScreen
@@ -1974,7 +1933,7 @@ const InteractiveMap = () => {
                           zIndex: 10,
                         }}
                       >
-                        {zoom >= 1.35 && visibleDestinations.map((destination) => (
+                        {visibleDestinations.map((destination) => (
                           <DestinationMarker
                             key={destination.id || destination.slug}
                             destination={destination}
@@ -1987,8 +1946,8 @@ const InteractiveMap = () => {
                           />
                         ))}
                         {countries.map((country) => {
-                          const lat = Number(country.latitude);
-                          const lng = Number(country.longitude);
+                          const lat = Number(country.latitude ?? country.lat ?? country.coordinates?.lat ?? country.coordinates?.latitude ?? country.location?.lat);
+                          const lng = Number(country.longitude ?? country.lng ?? country.coordinates?.lng ?? country.coordinates?.lon ?? country.coordinates?.longitude ?? country.location?.lng);
                           const pos = Number.isFinite(lat) && Number.isFinite(lng)
                             ? coordinateToMapPosition(lat, lng)
                             : countryPositions[country.slug] || countryPositions[country.name] || { top: "50%", left: "50%" };
@@ -2037,7 +1996,7 @@ const InteractiveMap = () => {
                         />
                         <span>
                           <strong>{countries.length}</strong> countries •{" "}
-                          <strong>{visibleDestinations.length}</strong> destinations •{" "}
+                          <strong>{mappedDestinations.length}</strong> destinations •{" "}
                           {currentMap.name}
                         </span>
                       </div>
@@ -2047,10 +2006,12 @@ const InteractiveMap = () => {
                         className="im-glass"
                         style={{
                           position: "absolute",
-                          top: 20,
-                          right: 20,
+                          top: 12,
+                          right: 12,
+                          maxWidth: "calc(100% - 24px)",
                           display: "flex",
-                          gap: 4,
+                          flexWrap: "nowrap",
+                          gap: 3,
                           padding: 5,
                           borderRadius: "var(--im-radius-lg)",
                           boxShadow: "var(--im-shadow-md)",
