@@ -188,7 +188,7 @@ const DestinationCard = ({ destination, onClick, style, index }) => {
 
         {/* Category badge */}
         {destination.category && (
-          <span className="srch-card__badge">{destination.category}</span>
+          <span className="srch-card__badge">{safeText(destination.category)}</span>
         )}
       </div>
 
@@ -202,13 +202,13 @@ const DestinationCard = ({ destination, onClick, style, index }) => {
         <h4 className="srch-card__overlay-title">{safeText(destination.name, "Destination")}</h4>
         {destination.country && (
           <p className="srch-card__overlay-loc">
-            <FiMapPin size={12} /> {destination.country}
+            <FiMapPin size={12} /> {safeText(destination.country)}
           </p>
         )}
         <p className="srch-card__overlay-desc">
-          {destination.description
-            ? destination.description.slice(0, 120) + "…"
-            : destination.shortDescription ||
+          {safeText(destination.description)
+            ? safeText(destination.description).slice(0, 120) + "…"
+            : safeText(destination.shortDescription) ||
               "Discover this amazing destination"}
         </p>
         <span className="srch-card__overlay-cta">
@@ -218,11 +218,11 @@ const DestinationCard = ({ destination, onClick, style, index }) => {
 
       {/* Bottom info bar (always visible) */}
       <div className="srch-card__info">
-        <h4 className="srch-card__name">{destination.name}</h4>
+        <h4 className="srch-card__name">{safeText(destination.name, "Destination")}</h4>
         <div className="srch-card__meta-row">
           {destination.country && (
             <p className="srch-card__location">
-              <FiMapPin size={11} /> {destination.country}
+              <FiMapPin size={11} /> {safeText(destination.country)}
             </p>
           )}
           {!destination.isCountry && Number(destination.rating) > 0 && (
