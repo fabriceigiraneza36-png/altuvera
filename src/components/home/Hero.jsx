@@ -343,8 +343,14 @@ const Hero = ({ destinations = [] }) => {
   if (!slides.length) return null;
 
   const scrollToContent = () => {
+    const hero = containerRef.current;
+    const nextSection = hero?.nextElementSibling;
+    if (nextSection) {
+      nextSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     window.scrollTo({
-      top: window.innerHeight,
+      top: hero ? hero.offsetTop + hero.offsetHeight : window.innerHeight,
       behavior: "smooth",
     });
   };
@@ -558,7 +564,7 @@ const Hero = ({ destinations = [] }) => {
   };
 
   return (
-    <section style={styles.hero} ref={containerRef}>
+    <section className="home-hero-premium" style={styles.hero} ref={containerRef} aria-label="Featured travel destinations">
       <style>
         {`
           @keyframes bounce {
@@ -623,7 +629,7 @@ const Hero = ({ destinations = [] }) => {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{
-                    opacity: { duration: 1.2, ease: "easeInOut" },
+                    opacity: { duration: 1.55, ease: [0.22, 1, 0.36, 1] },
                   }}
                   style={{
                     ...styles.slide,
@@ -637,10 +643,14 @@ const Hero = ({ destinations = [] }) => {
                     initial={getCurrentAnimation(index).initial}
                     animate={getCurrentAnimation(index).animate}
                     transition={{
-                      duration: 12,
-                      ease: "linear",
+                      duration: 14,
+                      ease: [0.16, 1, 0.3, 1],
                     }}
                     style={styles.slideImage}
+                    className="home-hero-image"
+                    loading={index === currentSlide ? "eager" : "lazy"}
+                    fetchPriority={index === currentSlide ? "high" : "auto"}
+                    decoding="async"
                   />
                   <div
                     style={{
@@ -783,6 +793,9 @@ const Hero = ({ destinations = [] }) => {
 
       {/* Scroll Indicator */}
       <motion.button
+        type="button"
+        aria-label="Scroll to explore what is below the hero"
+        title="Explore what is below"
         style={styles.scrollIndicator}
         onClick={scrollToContent}
         className="scroll-indicator-btn"
@@ -791,7 +804,7 @@ const Hero = ({ destinations = [] }) => {
         transition={{ delay: 1.5 }}
         whileHover={{ scale: 1.1 }}
       >
-        <span style={styles.scrollText}>Scroll Down</span>
+        <span style={styles.scrollText}>Explore Below</span>
         <motion.div
           animate={{ y: [0, 6, 0] }}
           transition={{ duration: 1.5, repeat: Infinity }}

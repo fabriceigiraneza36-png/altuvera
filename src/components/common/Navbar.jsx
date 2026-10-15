@@ -1,6 +1,7 @@
 // src/components/common/Navbar.jsx
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   FiHeart,
   FiUser,
@@ -17,6 +18,8 @@ import {
   FiMenu,
   FiArrowRight,
   FiCamera,
+  FiSearch,
+  FiTrendingUp,
 } from "react-icons/fi";
 import { useApp } from "../../context/AppContext";
 import { useUserAuth } from "../../context/UserAuthContext";
@@ -24,6 +27,7 @@ import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 import { preloadRoute } from "../../utils/routeUtils";
 import { getCountrySlug } from "../../utils/countrySlugMap";
 import { useCountries } from "../../hooks/useCountries";
+import { useDestinationsList } from "../../hooks/useDestinationsList";
 import { adaptDestination } from "../../utils/destinationAdapter";
 import "./Navbar.css";
 
@@ -233,13 +237,20 @@ const Navbar = () => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchSort, setSearchSort] = useState("featured");
+  const searchInputRef = useRef(null);
+  const touchStartRef = useRef(null);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { favorites } = useApp();
   const { user, isAuthenticated, authLoading, openModal, logout } =
     useUserAuth();
-  const { countries: backendCountries } = useCountries({ limit: 12 });
+  const { countries: backendCountries } = useCountries({ limit: 100 });
+  const { data: searchDestinations = [] } = useDestinationsList({ limit: 200 });
 
   const headerRef = useRef(null);
   const userMenuRef = useRef(null);
@@ -275,6 +286,18 @@ const Navbar = () => {
     }
     return items;
   }, [backendCountries]);
+
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const countries = (backendCountries || []).map(country => ({ ...country, _isCountry: true, _label: country.name || country.title || "" }));
+    const destinations = (searchDestinations || []).map(item => ({ ...adaptDestination(item), ...item, _isCountry: false, _label: item.name || item.title || item.destination_name || "" }));
+    const matches = item => !query || `${item._label} ${item.country || item.country_name || item.region || item.continent || ""} ${item.description || item.shortDescription || ""}`.toLowerCase().includes(query);
+    const metric = (item, fields) => fields.reduce((score, field) => score + (Number(item[field]) || 0), 0);
+    const ranked = (items, fields) => [...items].filter(matches).sort((a,b) => metric(b, fields) - metric(a, fields));
+    const countryFields = searchSort === "searched" ? ["search_count","searchCount","searches","views"] : ["featured_score","is_featured","featured","visit_count","visits","popularity"];
+    const destinationFields = searchSort === "searched" ? ["search_count","searchCount","searches","searches_count"] : searchSort === "visited" ? ["visit_count","visitCount","visits","views","view_count","popularity"] : ["featured_score","is_featured","featured","isFeatured","visit_count","visits","rating"];
+    return { countries: ranked(countries, countryFields).slice(0, 8), destinations: ranked(destinations, destinationFields).slice(0, 12) };
+  }, [backendCountries, searchDestinations, searchQuery]);
 
   const navLinks = useMemo(
     () => [
@@ -372,6 +395,24 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => closeAll(), [location.pathname, closeAll]);
+  useEffect(() => { setSearchOpen(false); setDesktopSearchOpen(false); setSearchQuery(""); }, [location.pathname]);
+  useEffect(() => { if (searchOpen) requestAnimationFrame(() => searchInputRef.current?.focus()); }, [searchOpen]);
+  useEffect(() => {
+    const start = e => { touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; };
+    const end = e => {
+      if (!touchStartRef.current) return;
+      const start = touchStartRef.current;
+      const dx = e.changedTouches[0].clientX - start.x;
+      const dy = e.changedTouches[0].clientY - start.y;
+      touchStartRef.current = null;
+      if (Math.abs(dx) < 75 || Math.abs(dx) < Math.abs(dy) * 1.25 || window.innerWidth > 760) return;
+      if (dx < 0 && start.x > window.innerWidth - 70) setIsMobileMenuOpen(true);
+      else if (dx > 0 && isMobileMenuOpen) setIsMobileMenuOpen(false);
+      else if (dx > 0 && start.x < 70) setIsMobileMenuOpen(false);
+    };
+    document.addEventListener("touchstart", start, { passive: true }); document.addEventListener("touchend", end, { passive: true });
+    return () => { document.removeEventListener("touchstart", start); document.removeEventListener("touchend", end); };
+  }, [isMobileMenuOpen]);
   useEffect(() => setAvatarLoaded(false), [user?.avatar]);
 
   useEffect(() => {
@@ -614,6 +655,11 @@ const Navbar = () => {
 
           {/* ── Actions ── */}
           <div className="nav__actions">
+            <div className={cn("nav-search-desktop", desktopSearchOpen && "nav-search-desktop--open")} onMouseEnter={() => { if (window.innerWidth > 760) setDesktopSearchOpen(true); }} onMouseLeave={() => { if (window.innerWidth > 760 && !searchQuery) setDesktopSearchOpen(false); }}>
+              <button type="button" className="nav__search-trigger" aria-label="Search destinations and countries" onClick={() => { if (window.innerWidth <= 760) setSearchOpen(true); else setDesktopSearchOpen(true); }} onFocus={() => { if (window.innerWidth > 760) setDesktopSearchOpen(true); }}><FiSearch size={19} /></button>
+              <input className="nav-search-desktop-input" aria-label="Search destinations and countries" placeholder="Search places..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onFocus={() => setDesktopSearchOpen(true)} onKeyDown={e => { if (e.key === "Escape") { setDesktopSearchOpen(false); setSearchQuery(""); } if (e.key === "Enter") setSearchOpen(true); }} />
+              {desktopSearchOpen && searchQuery.trim() && <div className="nav-search-desktop-results">{searchResults.countries.slice(0,3).map((item,i)=><button key={item.id || item._label+i} onClick={()=>{navigate(`/country/${getCountrySlug(item)}`);setDesktopSearchOpen(false);setSearchQuery("");}}><FiMapPin size={14}/><span>{item._label}</span><small>Country</small></button>)}{searchResults.destinations.slice(0,4).map((item,i)=><button key={item.id || item._label+i} onClick={()=>{navigate(`/destinations/${item.id || item.slug}`);setDesktopSearchOpen(false);setSearchQuery("");}}><FiMapPin size={14}/><span>{item._label}</span><small>Destination</small></button>)}<button className="nav-search-view-all" onClick={()=>setSearchOpen(true)}>View all results <FiArrowRight size={14}/></button></div>}
+            </div>
             <Link to="/gallery" className="nav__icon-link">
               <span
                 className="nav__icon-btn"
@@ -934,6 +980,22 @@ const Navbar = () => {
           </Link>
         </div>
       </aside>
+      <AnimatePresence>
+        {searchOpen && (
+          <motion.div className="nav-search-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={e => { if (e.target === e.currentTarget) setSearchOpen(false); }}>
+            <motion.section className="nav-search-modal" role="dialog" aria-modal="true" aria-label="Search countries and destinations" initial={{ opacity: 0, y: 18, scale: .98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12, scale: .98 }} transition={{ duration: .2 }}>
+              <div className="nav-search-top"><div><span className="nav-search-eyebrow">DISCOVER ALTUVERA</span><h2>Where would you like to go?</h2></div><button className="nav-search-close" aria-label="Close search" onClick={() => { setSearchOpen(false); setSearchQuery(""); }}><FiX size={20}/></button></div>
+              <div className="nav-search-input-wrap"><FiSearch size={19}/><input ref={searchInputRef} value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Search countries, destinations, places..." aria-label="Search destinations"/>{searchQuery && <button onClick={() => setSearchQuery("")} aria-label="Clear search"><FiX size={17}/></button>}</div>
+              {!searchQuery.trim() && <div className="nav-search-quick"><span>Discover</span>{[{label:"Featured",value:"featured"},{label:"Most visited",value:"visited"},{label:"Most searched",value:"searched"}].map(option=><button className={searchSort===option.value?"is-active":""} key={option.value} onClick={()=>setSearchSort(option.value)}>{option.label}</button>)}{["Safari","Wildlife","Nature","Adventure"].map(term=><button key={term} onClick={()=>setSearchQuery(term)}>{term}</button>)}</div>}
+              <div className="nav-search-results">
+                <div className="nav-search-section"><h3><FiTrendingUp size={16}/> Countries</h3><div className="nav-search-grid">{searchResults.countries.map((item,i)=><button className="nav-search-card nav-search-country" key={item.id || item.slug || item._label+i} onClick={()=>{setSearchOpen(false);navigate(`/country/${getCountrySlug(item)}`)}}>{(item.coverImage || item.cover_image || item.image || item.flagUrl || item.flag_url) && <img src={item.coverImage || item.cover_image || item.image || item.flagUrl || item.flag_url} alt="" loading="lazy"/>}<span><strong>{item._label}</strong><small>{item.region || item.continent || item.capital || "Explore country"}</small></span><FiArrowRight size={16}/></button>)}</div></div>
+                <div className="nav-search-section"><h3><FiMapPin size={16}/> Destinations</h3><div className="nav-search-grid nav-search-destinations">{searchResults.destinations.map((item,i)=><button className="nav-search-card nav-search-destination" key={item.id || item.slug || item._label+i} onClick={()=>{setSearchOpen(false);navigate(`/destinations/${item.id || item.slug}`)}}>{(item.image || item.image_url || item.coverImage || item.cover_image || item.thumbnail || item.heroImage) && <img src={item.image || item.image_url || item.coverImage || item.cover_image || item.thumbnail || item.heroImage} alt="" loading="lazy"/>}<span><strong>{item._label}</strong><small>{item.country_name || item.country || item.region || "Explore destination"}</small></span><FiArrowRight size={16}/></button>)}</div></div>
+                {!searchResults.countries.length && !searchResults.destinations.length && <p className="nav-search-empty">No matches yet. Try another country or destination.</p>}
+              </div>
+            </motion.section>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };
