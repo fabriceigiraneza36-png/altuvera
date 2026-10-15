@@ -17,6 +17,8 @@ import {
   FiMenu,
   FiArrowRight,
   FiCamera,
+  FiSearch,
+  FiTrendingUp,
 } from "react-icons/fi";
 import { useApp } from "../../context/AppContext";
 import { useUserAuth } from "../../context/UserAuthContext";
@@ -24,6 +26,7 @@ import { getBrandLogoUrl, BRAND_LOGO_ALT } from "../../utils/seo";
 import { preloadRoute } from "../../utils/routeUtils";
 import { getCountrySlug } from "../../utils/countrySlugMap";
 import { useCountries } from "../../hooks/useCountries";
+import { useDestinationsList } from "../../hooks/useDestinationsList";
 import { adaptDestination } from "../../utils/destinationAdapter";
 import "./Navbar.css";
 
@@ -233,13 +236,18 @@ const Navbar = () => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchInputRef = useRef(null);
+  const touchStartRef = useRef(null);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { favorites } = useApp();
   const { user, isAuthenticated, authLoading, openModal, logout } =
     useUserAuth();
-  const { countries: backendCountries } = useCountries({ limit: 12 });
+  const { countries: backendCountries } = useCountries({ limit: 100 });
+  const { data: searchDestinations = [] } = useDestinationsList({ limit: 200 });
 
   const headerRef = useRef(null);
   const userMenuRef = useRef(null);
@@ -275,6 +283,14 @@ const Navbar = () => {
     }
     return items;
   }, [backendCountries]);
+
+  const searchResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const countries = (backendCountries || []).map(country => ({ ...country, _isCountry: true, _label: country.name || country.title || "" }));
+    const destinations = (searchDestinations || []).map(item => ({ ...adaptDestination(item), ...item, _isCountry: false, _label: item.name || item.title || item.destination_name || "" }));
+    const matches = item => !query || `${item._label} ${item.country || item.country_name || item.region || item.continent || ""}`.toLowerCase().includes(query);
+    return { countries: countries.filter(matches).slice(0, 8), destinations: destinations.filter(matches).slice(0, 12) };
+  }, [backendCountries, searchDestinations, searchQuery]);
 
   const navLinks = useMemo(
     () => [
@@ -372,6 +388,23 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => closeAll(), [location.pathname, closeAll]);
+  useEffect(() => { if (searchOpen) requestAnimationFrame(() => searchInputRef.current?.focus()); }, [searchOpen]);
+  useEffect(() => {
+    const start = e => { touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; };
+    const end = e => {
+      if (!touchStartRef.current) return;
+      const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
+      const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+      touchStartRef.current = null;
+      if (Math.abs(dx) < 75 || Math.abs(dx) < Math.abs(dy) * 1.25 || window.innerWidth > 760) return;
+      if (dx < 0 && touchStartRef.current?.x > window.innerWidth - 70) setIsMobileMenuOpen(true);
+      else if (dx < 0 && e.changedTouches[0].clientX > window.innerWidth - 80) setIsMobileMenuOpen(true);
+      else if (dx > 0 && isMobileMenuOpen) setIsMobileMenuOpen(false);
+      else if (dx > 0 && touchStartRef.current?.x < 70) setIsMobileMenuOpen(false);
+    };
+    document.addEventListener("touchstart", start, { passive: true }); document.addEventListener("touchend", end, { passive: true });
+    return () => { document.removeEventListener("touchstart", start); document.removeEventListener("touchend", end); };
+  }, [isMobileMenuOpen]);
   useEffect(() => setAvatarLoaded(false), [user?.avatar]);
 
   useEffect(() => {
