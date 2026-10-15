@@ -2945,3 +2945,159 @@
     width: min(62vw, 220px);
   }
 }
+
+
+/* Mobile navigation repair: compact rhythm, explicit typography and safe account actions.
+   Kept at the end of the stylesheet so these scoped rules win over older overrides. */
+@media (max-width: 1024px) {
+  .mm,
+  .mm * {
+    box-sizing: border-box;
+  }
+  .mm {
+    width: min(100vw, 440px);
+    max-width: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    background: #fff;
+    color: #17231d;
+    font-family: var(--nav-fb, system-ui, sans-serif);
+  }
+  .mm__head {
+    min-height: 76px;
+    padding: 12px 18px;
+    border-bottom: 1px solid #e5eee9;
+    background: rgba(255,255,255,.98);
+  }
+  .mm__body {
+    height: calc(100dvh - 76px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 12px 18px calc(28px + env(safe-area-inset-bottom, 0px));
+    scrollbar-width: thin;
+  }
+  .mm__item {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+  .mm__link,
+  .mm__toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 10px;
+    margin: 2px 0;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #26352d;
+    font-family: var(--nav-fb, system-ui, sans-serif);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: 0;
+    text-align: left;
+    text-decoration: none;
+  }
+  .mm__link--active,
+  .mm__toggle--on {
+    color: #047857;
+    background: #ecfdf5;
+  }
+  .mm__divider {
+    margin: 14px 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, #d8eee4, transparent);
+  }
+  .mm__auth {
+    padding: 0;
+    margin: 0;
+  }
+  .mm__profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #edf2ef;
+  }
+  .mm__pname {
+    margin: 0 0 3px;
+    color: #17231d;
+    font-family: var(--nav-fb, system-ui, sans-serif);
+    font-size: 17px;
+    font-weight: 750;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+  .mm__pemail {
+    margin: 0 0 5px;
+    color: #77827b;
+    font-family: var(--nav-fb, system-ui, sans-serif);
+    font-size: 12px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+  .mm__pprov {
+    margin: 0;
+    color: #047857;
+    font-family: var(--nav-fb, system-ui, sans-serif);
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .mm__auth-link,
+  .mm__out {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 10px;
+    margin: 2px 0;
+    border: 0;
+    border-bottom: 1px solid #edf2ef;
+    border-radius: 0;
+    background: transparent;
+    color: #34423a;
+    font-family: var(--nav-fb, system-ui, sans-serif);
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.35;
+    text-align: left;
+    text-decoration: none;
+  }
+  .mm__auth-link svg,
+  .mm__out svg {
+    flex: 0 0 20px;
+    color: #52645a;
+  }
+  .mm__cta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 48px;
+    margin: 16px 0 0;
+    padding: 13px 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #047857, #10b981);
+    color: #fff;
+    font-family: var(--nav-fb, system-ui, sans-serif);
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+  }
+}
+/* Never let the floating contact control obscure an open mobile navigation drawer. */
+@supports selector(body:has(.mm--open)) {
+  @media (max-width: 1024px) {
+    body:has(.mm--open) [style*="position: fixed"][style*="z-index: 999999"] {
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+  }
+}
