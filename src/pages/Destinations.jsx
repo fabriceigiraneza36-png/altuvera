@@ -1047,11 +1047,15 @@ function HeroBanner() {
 
         <p className="dv-hero__desc" key={`d-${animKey}`}>{slide.desc}</p>
 
-        <div className="dv-hero__location" key={`l-${animKey}`}>
-          <LocationPin size={17} />
-          <div className="dv-hero__loc-divider" />
-          <span className="dv-hero__loc-text">{slide.location}</span>
-        </div>
+        {slide.location && ![slide.title, slide.subtitle].some(value =>
+          String(value || "").trim().toLowerCase() === String(slide.location || "").trim().toLowerCase()
+        ) && (
+          <div className="dv-hero__location" key={`l-${animKey}`}>
+            <LocationPin size={17} />
+            <div className="dv-hero__loc-divider" />
+            <span className="dv-hero__loc-text">{slide.location}</span>
+          </div>
+        )}
 
         <div className="dv-hero__actions" key={`a-${animKey}`}>
           <a href="#countries" className="dv-hero__btn-primary">
@@ -1345,8 +1349,30 @@ function PopularSlideshow() {
 @keyframes dv-slide-enter-13 { from{opacity:0;transform:scale(.92) translateX(-3%);filter:blur(10px) saturate(.65)} to{opacity:1;transform:scale(1) translateX(0);filter:blur(0) saturate(1)} }
 @keyframes dv-slide-exit-13 { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(1.06) translateX(3%)} }
 
+/* Final viewport-height override comes after responsive size presets. */
+.dv-hero {
+  height: 99vh !important;
+  height: 99svh !important;
+  min-height: 0 !important;
+}
+.dv-hero__scroll {
+  bottom: max(18px, env(safe-area-inset-bottom));
+  gap: 9px;
+  animation: dv-fade-up .9s var(--dv-ease) .6s forwards, dv-scroll-float 2.1s ease-in-out 1.5s infinite;
+}
+.dv-hero__scroll-line { height: 30px; }
+.dv-hero__scroll-icon { width: 19px; height: 19px; animation: dv-scroll-bounce 1.5s ease-in-out infinite; }
+@keyframes dv-scroll-float {
+  0%,100% { transform: translate(-50%,0); }
+  50% { transform: translate(-50%,-5px); }
+}
+@media(max-width:767px) {
+  .dv-hero { height: 99vh !important; height: 99svh !important; }
+  .dv-hero__body { padding-top: max(74px, calc(env(safe-area-inset-top) + 60px)); padding-bottom: 100px; }
+  .dv-hero__scroll { bottom: max(14px, env(safe-area-inset-bottom)); }
+}
 @media(prefers-reduced-motion:reduce){
- .dv-hero__slide--on,.dv-hero__slide--exit,.dv-hero__slide--on img { animation:none!important; transition:opacity .2s ease!important; }
+ .dv-hero__slide--on,.dv-hero__slide--exit,.dv-hero__slide--on img,.dv-hero__scroll { animation:none!important; transition:opacity .2s ease!important; }
 }
 `}
               />
