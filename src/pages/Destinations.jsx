@@ -1015,7 +1015,7 @@ function HeroBanner() {
   return (
     <section className="dv-hero">
       {slides.map((sl, i) => (
-        <div key={sl.key || `${sl.title}-${i}`} className={`dv-hero__slide dv-hero__slide--anim-${i % 10}${i === active ? ' dv-hero__slide--on' : ''}${i === exiting ? ' dv-hero__slide--exit' : ''}`} aria-hidden={i !== active}>
+        <div key={sl.key || `${sl.title}-${i}`} className={`dv-hero__slide dv-hero__slide--anim-${i % 14}${i === active ? ' dv-hero__slide--on' : ''}${i === exiting ? ' dv-hero__slide--exit' : ''}`} aria-hidden={i !== active}>
           <img src={sl.image} alt={sl.title} loading={i === 0 ? 'eager' : 'lazy'} draggable={false} />
         </div>
       ))}
@@ -1327,6 +1327,24 @@ function PopularSlideshow() {
 @keyframes dv-slide-exit-9 { from{opacity:1;filter:brightness(1)} to{opacity:0;filter:brightness(.7)} }
 .dv-hero__dots { max-width:min(92vw,680px); overflow-x:auto; scrollbar-width:none; }
 .dv-hero__dots::-webkit-scrollbar { display:none; }
+
+.dv-hero__slide--anim-10.dv-hero__slide--on { animation:dv-slide-enter-10 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-11.dv-hero__slide--on { animation:dv-slide-enter-11 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-12.dv-hero__slide--on { animation:dv-slide-enter-12 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-13.dv-hero__slide--on { animation:dv-slide-enter-13 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-10.dv-hero__slide--exit { animation-name:dv-slide-exit-10; }
+.dv-hero__slide--anim-11.dv-hero__slide--exit { animation-name:dv-slide-exit-11; }
+.dv-hero__slide--anim-12.dv-hero__slide--exit { animation-name:dv-slide-exit-12; }
+.dv-hero__slide--anim-13.dv-hero__slide--exit { animation-name:dv-slide-exit-13; }
+@keyframes dv-slide-enter-10 { from{opacity:0;transform:perspective(900px) rotateY(9deg) scale(1.05);filter:brightness(.7)} to{opacity:1;transform:perspective(900px) rotateY(0) scale(1);filter:brightness(1)} }
+@keyframes dv-slide-exit-10 { from{opacity:1;transform:perspective(900px) rotateY(0)} to{opacity:0;transform:perspective(900px) rotateY(-8deg)} }
+@keyframes dv-slide-enter-11 { from{opacity:0;transform:scale(1.13) translateY(-2%);clip-path:polygon(0 0,100% 0,100% 70%,0 100%)} to{opacity:1;transform:scale(1) translateY(0);clip-path:polygon(0 0,100% 0,100% 100%,0 100%)} }
+@keyframes dv-slide-exit-11 { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(.97) translateY(3%)} }
+@keyframes dv-slide-enter-12 { from{opacity:0;transform:translateX(0) scale(1.12);clip-path:inset(0 50% 0 50%)} to{opacity:1;transform:translateX(0) scale(1);clip-path:inset(0)} }
+@keyframes dv-slide-exit-12 { from{opacity:1;clip-path:inset(0)} to{opacity:0;clip-path:inset(0 50% 0 50%)} }
+@keyframes dv-slide-enter-13 { from{opacity:0;transform:scale(.92) translateX(-3%);filter:blur(10px) saturate(.65)} to{opacity:1;transform:scale(1) translateX(0);filter:blur(0) saturate(1)} }
+@keyframes dv-slide-exit-13 { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(1.06) translateX(3%)} }
+
 @media(prefers-reduced-motion:reduce){
  .dv-hero__slide--on,.dv-hero__slide--exit,.dv-hero__slide--on img { animation:none!important; transition:opacity .2s ease!important; }
 }
