@@ -31,6 +31,7 @@ import { getCountrySlug } from "../../utils/countrySlugMap";
 import { useCountries } from "../../hooks/useCountries";
 import { useDestinationsList } from "../../hooks/useDestinationsList";
 import { adaptDestination } from "../../utils/destinationAdapter";
+import ExploreDestinationCard from "../destinations/DestinationCard";
 import "./Navbar.css";
 
 const cn = (...c) => c.filter(Boolean).join(" ");
@@ -256,6 +257,9 @@ const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchSort, setSearchSort] = useState("featured");
   const [searchResultsView, setSearchResultsView] = useState(false);
+  const [searchFiltersOpen, setSearchFiltersOpen] = useState(true);
+  const [activeStoryIndex, setActiveStoryIndex] = useState(0);
+  const storyRailRef = useRef(null);
   const [mobileDragX, setMobileDragX] = useState(0);
   const [isDraggingMenu, setIsDraggingMenu] = useState(false);
   const searchInputRef = useRef(null);
@@ -310,24 +314,85 @@ const Navbar = () => {
     if (Array.isArray(value)) return value.map(item => displaySearchText(item)).filter(Boolean).join(", ") || fallback;
     if (typeof value === "object") {
       const readable = value.name ?? value.title ?? value.label ?? value.slug ?? value.region ?? value.continent;
-      return readable == null ? fallback : displaySearchText(readable, fallback);
+      return readable == null || readable === value ? fallback : displaySearchText(readable, fallback);
     }
     return fallback;
   };
 
+  const getCountryFlagUrl = (country) => {
+    const value = country?.flagUrl || country?.flag_url || country?.flag;
+    return typeof value === "string" && /^https?:\/\//i.test(value) ? value : "";
+  };
+
   const searchResults = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-    const countries = (backendCountries || []).map(country => ({ ...country, _isCountry: true, _label: country.name || country.title || "" }));
-    const destinations = (searchDestinations || []).map(item => ({ ...adaptDestination(item), ...item, _isCountry: false, _label: item.name || item.title || item.destination_name || "" }));
-    const flatten = (value, seen = new WeakSet()) => { if (value == null || typeof value === "boolean") return ""; if (typeof value === "string" || typeof value === "number") return String(value); if (typeof value !== "object" || seen.has(value)) return ""; seen.add(value); if (Array.isArray(value)) return value.map(v => flatten(v, seen)).join(" "); return Object.entries(value).filter(([key]) => !/^(?:image|images|gallery|heroImage|hero_images|imageUrl|image_url|thumbnailUrl|createdAt|updatedAt|__v)$/i.test(key)).map(([key,val]) => `${key} ${flatten(val, seen)}`).join(" "); };
-    const matches = item => !query || flatten(item).toLowerCase().includes(query);
+    const query = searchQuery.trim().toLocaleLowerCase();
+    const mediaKey = /^(?:image|images|gallery|heroImage|heroImages|hero_images|imageUrl|image_url|imageUrls|thumbnailUrl|thumbnail_url|coverImage|cover_image|coverImageUrl|cover_image_url|video|videos|createdAt|updatedAt|__v)$/i;
+    const flatten = (value, seen = new WeakSet()) => {
+      if (value == null || typeof value === "boolean" || typeof value === "function") return "";
+      if (typeof value === "string" || typeof value === "number") return String(value);
+      if (typeof value !== "object" || seen.has(value)) return "";
+      seen.add(value);
+      if (Array.isArray(value)) return value.map(v => flatten(v, seen)).filter(Boolean).join(" ");
+      return Object.entries(value).filter(([key]) => !mediaKey.test(key)).map(([key, val]) => key.replace(/[_-]/g, " ") + " " + flatten(val, seen)).filter(Boolean).join(" ");
+    };
+    const countries = (backendCountries || []).map(country => ({
+      ...country, _isCountry: true,
+      _label: displaySearchText(country.name || country.title || country.slug, "Country"),
+    }));
+    const destinations = (searchDestinations || []).map(item => {
+      const adapted = { ...adaptDestination(item), ...item };
+      const label = displaySearchText(item.name || item.title || item.destination_name || adapted.name, "Destination");
+      return {
+        ...adapted,
+        name: label,
+        shortDescription: displaySearchText(item.shortDescription || item.short_description || item.summary || adapted.shortDescription),
+        description: displaySearchText(item.description || item.details || item.overview || adapted.description),
+        category: displaySearchText(item.category || item.type || item.activityType || adapted.category),
+        duration: displaySearchText(item.duration || item.durationText || adapted.duration),
+        _isCountry: false, _label: label,
+      };
+    });
+    const matches = item => !query || flatten(item).toLocaleLowerCase().includes(query);
     const metric = (item, fields) => fields.reduce((score, field) => score + (Number(item[field]) || 0), 0);
-    const ranked = (items, fields) => [...items].filter(matches).sort((a,b) => metric(b, fields) - metric(a, fields));
-    const countryFields = searchSort === "searched" ? ["search_count","searchCount","searches","views"] : ["featured_score","is_featured","featured","visit_count","visits","popularity"];
-    const destinationFields = searchSort === "searched" ? ["search_count","searchCount","searches","searches_count"] : searchSort === "visited" ? ["visit_count","visitCount","visits","views","view_count","popularity"] : ["featured_score","is_featured","featured","isFeatured","visit_count","visits","rating"];
-    return { countries: ranked(countries, countryFields), destinations: ranked(destinations, destinationFields) };
+    const ranked = (items, fields) => [...items].filter(matches).sort((a, b) => metric(b, fields) - metric(a, fields));
+    const countryFields = searchSort === "searched" ? ["search_count", "searchCount", "searches", "views"] : ["featured_score", "is_featured", "featured", "visit_count", "visits", "popularity"];
+    const destinationFields = searchSort === "searched" ? ["search_count", "searchCount", "searches", "searches_count"] : searchSort === "visited" ? ["visit_count", "visitCount", "visits", "views", "view_count", "popularity"] : ["featured_score", "is_featured", "featured", "isFeatured", "visit_count", "visits", "rating"];
+    const matchedDestinations = ranked(destinations, destinationFields);
+    const matchedCountries = ranked(countries, countryFields);
+    const countryNames = new Set();
+    matchedDestinations.forEach(destination => [destination.country, destination.countryName, destination.country_name, destination.countryObj, destination.country_id, destination.countryId].forEach(value => {
+      const text = displaySearchText(value).trim().toLocaleLowerCase();
+      if (text) countryNames.add(text);
+    }));
+    const relatedCountries = query ? countries.filter(country => {
+      const name = displaySearchText(country.name || country.title || country.slug).trim().toLocaleLowerCase();
+      const slug = displaySearchText(country.slug).trim().toLocaleLowerCase();
+      return matchedCountries.some(match => match.id === country.id || match._label === country._label) || countryNames.has(name) || (slug && countryNames.has(slug));
+    }).sort((a, b) => metric(b, countryFields) - metric(a, countryFields)) : matchedCountries;
+    return { countries: matchedCountries, destinations: matchedDestinations, relatedCountries };
   }, [backendCountries, searchDestinations, searchQuery, searchSort]);
-  const selectSearchSuggestion = (item) => { const term = String(item?._label || "").trim(); if (!term) return; setSearchQuery(term); setSearchResultsView(true); if (searchInputRef.current) searchInputRef.current.blur(); };
+
+  const selectSearchSuggestion = (item) => {
+    const term = String(item?._label || "").trim();
+    if (!term) return;
+    setSearchQuery(term); setSearchResultsView(true);
+    if (searchInputRef.current) searchInputRef.current.blur();
+  };
+
+  const handleStoryRailScroll = useCallback(() => {
+    const rail = storyRailRef.current;
+    if (!rail) return;
+    const cards = Array.from(rail.querySelectorAll(".nav-search-story-card"));
+    if (!cards.length) return;
+    const center = rail.getBoundingClientRect().left + rail.clientWidth / 2;
+    let nearest = 0; let nearestDistance = Infinity;
+    cards.forEach((card, index) => {
+      const rect = card.getBoundingClientRect();
+      const distance = Math.abs(rect.left + rect.width / 2 - center);
+      if (distance < nearestDistance) { nearestDistance = distance; nearest = index; }
+    });
+    setActiveStoryIndex(nearest);
+  }, []);
 
 
   const navLinks = useMemo(
@@ -426,7 +491,7 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => closeAll(), [location.pathname, closeAll]);
-  useEffect(() => { setSearchOpen(false); setDesktopSearchOpen(false); setSearchQuery(""); setSearchResultsView(false); }, [location.pathname]);
+  useEffect(() => { setSearchOpen(false); setDesktopSearchOpen(false); setSearchQuery(""); setSearchResultsView(false); setActiveStoryIndex(0); }, [location.pathname]);
   useEffect(() => { if (searchOpen) requestAnimationFrame(() => searchInputRef.current?.focus()); }, [searchOpen]);
   useEffect(() => {
     const start = e => {
@@ -1059,9 +1124,27 @@ const Navbar = () => {
         {searchOpen && (
           <motion.div className="nav-search-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={e => { if (e.target === e.currentTarget) setSearchOpen(false); }}>
             <motion.section className="nav-search-modal" role="dialog" aria-modal="true" aria-label="Search countries and destinations" initial={{ opacity: 0, y: 18, scale: .98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12, scale: .98 }} transition={{ duration: .2 }}>
-              <div className="nav-search-top"><div><span className="nav-search-eyebrow">DISCOVER ALTUVERA</span><h2>Where would you like to go?</h2></div><button className="nav-search-close" aria-label="Close search" onClick={() => { setSearchOpen(false); setSearchQuery(""); setSearchResultsView(false); }}><FiX size={20}/></button></div>
+              <div className="nav-search-top"><div><span className="nav-search-eyebrow">DISCOVER ALTUVERA</span><h2>Where would you like to go?</h2></div><button className="nav-search-close" aria-label="Close search" onClick={() => { setSearchOpen(false); setSearchQuery(""); setSearchResultsView(false); setActiveStoryIndex(0); }}><FiX size={20}/></button></div>
               <div className="nav-search-input-wrap"><FiSearch size={19}/><input ref={searchInputRef} value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setSearchResultsView(false); }} placeholder="Search countries, destinations, places..." aria-label="Search destinations"/>{searchQuery && <button onClick={() => setSearchQuery("")} aria-label="Clear search"><FiX size={17}/></button>}</div>
-              {!searchResultsView && !searchQuery.trim() && <div className="nav-search-quick"><span>Discover</span>{[{label:"Featured",value:"featured"},{label:"Most visited",value:"visited"},{label:"Most searched",value:"searched"}].map(option=><button className={searchSort===option.value?"is-active":""} key={option.value} onClick={()=>setSearchSort(option.value)}>{option.label}</button>)}{["Safari","Wildlife","Nature","Adventure"].map(term=><button key={term} onClick={()=>{setSearchQuery(term);setSearchResultsView(true);}}>{term}</button>)}</div>}
+              <div className="nav-search-filter-shell">
+                <button type="button" className="nav-search-filter-toggle" aria-expanded={searchFiltersOpen} onClick={() => setSearchFiltersOpen(open => !open)}>
+                  <span className="nav-search-filter-toggle__icon"><FiTrendingUp size={15}/></span>
+                  <span><strong>Discovery filters</strong><small>Sort and explore by interest</small></span>
+                  <FiChevronDown className={searchFiltersOpen ? "is-open" : ""} size={17}/>
+                </button>
+                <AnimatePresence initial={false}>
+                  {searchFiltersOpen && (
+                    <motion.div className="nav-search-quick nav-search-filter-panel" initial={{height:0,opacity:0,y:-6}} animate={{height:"auto",opacity:1,y:0}} exit={{height:0,opacity:0,y:-6}} transition={{duration:.24,ease:[.22,1,.36,1]}}>
+                      <div className="nav-search-filter-sort" role="group" aria-label="Sort discovery results">
+                        {[{label:"Featured",value:"featured"},{label:"Most visited",value:"visited"},{label:"Most searched",value:"searched"}].map(option=><button className={searchSort===option.value?"is-active":""} key={option.value} onClick={()=>setSearchSort(option.value)}>{option.label}</button>)}
+                      </div>
+                      <div className="nav-search-filter-tags" aria-label="Popular searches">
+                        {["Safari","Wildlife","Nature","Adventure"].map(term=><button key={term} onClick={()=>{setSearchQuery(term);setSearchResultsView(true);}}>{term}<FiArrowRight size={12}/></button>)}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
               <div className="nav-search-results">
                 {searchQuery.trim() && !searchResultsView ? <>
                   <div className="nav-search-suggestion-group"><span className="nav-search-suggestion-label"><FiGlobe size={13}/> Countries</span><div className="nav-search-inline">{searchResults.countries.slice(0,8).map((item,i)=><button type="button" key={item.id || item.slug || item._label+i} onClick={()=>selectSearchSuggestion(item)}>{displaySearchText(item._label,"Country")}<small>Country</small></button>)}</div></div>
@@ -1071,17 +1154,17 @@ const Navbar = () => {
                 </> : searchResultsView ? <>
                   <button type="button" className="nav-search-back" onClick={()=>{setSearchResultsView(false);searchInputRef.current?.focus();}}>← Edit search</button>
                   <h3 className="nav-search-section-title">Destinations matching “{searchQuery}”</h3>
-                  <div className="nav-search-destination-grid">{searchResults.destinations.slice(0,20).map((item,i)=><DestinationCard key={item.id||item._id||item.slug||item._label+i} destination={item} priority={i<4}/>)}</div>
+                  <div className="nav-search-destination-grid">{searchResults.destinations.slice(0,20).map((item,i)=><div className="nav-search-explore-card" key={item.id||item._id||item.slug||item._label+i}><ExploreDestinationCard destination={item}/></div>)}</div>
                   {!searchResults.destinations.length && <p className="nav-search-empty">No matching destinations found. Try a broader search.</p>}
                   <h3 className="nav-search-section-title">Related countries</h3>
-                  <div className="nav-search-country-grid">{searchResults.countries.slice(0,20).map((item,i)=><button type="button" className="nav-search-country-card" key={item.id||item.slug||item._label+i} onClick={()=>navigate(`/country/${getCountrySlug(item)}`)}><span className="nav-search-country-flag">{item.flagUrl||item.flag_url ? <img src={item.flagUrl||item.flag_url} alt="" loading="lazy"/> : <FiGlobe/>}</span><strong>{displaySearchText(item._label,"Country")}</strong><small>{displaySearchText(item.region||item.continent,"Explore country")}</small></button>)}</div>
+                  <div className="nav-search-country-grid">{searchResults.relatedCountries.slice(0,20).map((item,i)=><button type="button" className="nav-search-country-card" key={item.id||item.slug||item._label+i} onClick={()=>navigate(`/country/${getCountrySlug(item)}`)}><span className="nav-search-country-flag">{getCountryFlagUrl(item) ? <img src={getCountryFlagUrl(item)} alt="" loading="lazy"/> : <FiGlobe/>}</span><strong>{displaySearchText(item._label,"Country")}</strong><small>{displaySearchText(item.region||item.continent,"Explore country")}</small><span className="nav-search-country-cta">Explore country <FiArrowRight size={12}/></span></button>)}</div>
                 </> : <>
                   <div className="nav-search-story-heading"><span className="nav-search-suggestion-label">DESTINATION STORIES</span><small>Swipe to explore</small></div>
-                  <div className="nav-search-story-rail">{searchResults.destinations.slice(0,20).map((item,i)=>{const rawImage=item.heroImage||item.hero_image||item.imageUrl||item.image_url||item.thumbnailUrl||item.coverImage;const img=typeof rawImage==="string"?rawImage:(item.images?.[0]?.url||item.images?.[0]?.imageUrl||"");return <button type="button" className="nav-search-story-card" key={item.id||item._id||item.slug||item._label+i} onClick={()=>selectSearchSuggestion(item)}>{img?<img src={img} alt="" loading="lazy"/>:<span className="nav-search-story-placeholder"><FiMapPin/></span>}<span className="nav-search-story-float"><FiCompass/></span><strong>{displaySearchText(item._label,"Destination")}</strong></button>;})}</div>
+                  <div className="nav-search-story-rail" ref={storyRailRef} onScroll={handleStoryRailScroll}>{searchResults.destinations.slice(0,20).map((item,i)=>{const rawImage=item.heroImage||item.hero_image||item.imageUrl||item.image_url||item.thumbnailUrl||item.coverImage;const img=typeof rawImage==="string"?rawImage:(item.images?.[0]?.url||item.images?.[0]?.imageUrl||"");return <button type="button" className={`nav-search-story-card${i===activeStoryIndex?" is-active":""}`} key={item.id||item._id||item.slug||item._label+i} onClick={()=>selectSearchSuggestion(item)}>{img?<img src={img} alt="" loading="lazy"/>:<span className="nav-search-story-placeholder"><FiMapPin/></span>}<span className="nav-search-story-float"><FiCompass/></span><strong>{displaySearchText(item._label,"Destination")}</strong></button>;})}</div>
                   <div className="nav-search-story-heading"><span className="nav-search-suggestion-label"><FiGlobe size={13}/> COUNTRIES</span><small>Featured places</small></div>
-                  <div className="nav-search-country-rail">{[...searchResults.countries,...searchResults.countries].slice(0,Math.max(12,searchResults.countries.length*2)).map((item,i)=><button type="button" className="nav-search-country-card" key={(item.id||item.slug||item._label)+i} onClick={()=>navigate(`/country/${getCountrySlug(item)}`)}><span className="nav-search-country-flag">{item.flagUrl||item.flag_url ? <img src={item.flagUrl||item.flag_url} alt="" loading="lazy"/> : <FiGlobe/>}</span><strong>{displaySearchText(item._label,"Country")}</strong><small>{displaySearchText(item.region||item.continent,"Explore country")}</small></button>)}</div>
+                  <div className="nav-search-country-rail" tabIndex={0} aria-label="Countries carousel"><div className="nav-search-country-track">{[...searchResults.countries,...searchResults.countries,...searchResults.countries].map((item,i)=><button type="button" className="nav-search-country-card" key={(item.id||item.slug||item._label)+i} onClick={()=>navigate(`/country/${getCountrySlug(item)}`)}><span className="nav-search-country-flag">{getCountryFlagUrl(item) ? <img src={getCountryFlagUrl(item)} alt="" loading="lazy"/> : <FiGlobe/>}</span><strong>{displaySearchText(item._label,"Country")}</strong><small>{displaySearchText(item.region||item.continent,"Explore country")}</small><span className="nav-search-country-cta">Explore country <FiArrowRight size={12}/></span></button>)}</div></div>
                   <h3 className="nav-search-section-title">Explore destinations</h3>
-                  <div className="nav-search-destination-grid">{searchResults.destinations.slice(0,20).map((item,i)=><DestinationCard key={item.id||item._id||item.slug||item._label+i} destination={item} priority={i<4}/>)}</div>
+                  <div className="nav-search-destination-grid">{searchResults.destinations.slice(0,20).map((item,i)=><div className="nav-search-explore-card" key={item.id||item._id||item.slug||item._label+i}><ExploreDestinationCard destination={item}/></div>)}</div>
                 </>}
               </div>
             </motion.section>
