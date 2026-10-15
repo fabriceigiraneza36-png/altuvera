@@ -35,6 +35,18 @@ import "./Navbar.css";
 
 const cn = (...c) => c.filter(Boolean).join(" ");
 
+// API country/destination fields can be populated objects; never render them directly.
+const safeText = (value, fallback = "") => {
+  if (value == null) return fallback;
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  if (Array.isArray(value)) return value.map((item) => safeText(item)).filter(Boolean).join(", ") || fallback;
+  if (typeof value === "object") {
+    const candidate = value.name ?? value.label ?? value.title ?? value.slug ?? value.region ?? value.continent;
+    return candidate == null || candidate === value ? fallback : safeText(candidate, fallback);
+  }
+  return fallback;
+};
+
 /* ── Slideshow Card Component ── */
 const DestinationCard = ({ destination, onClick, style, index }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -115,7 +127,7 @@ const DestinationCard = ({ destination, onClick, style, index }) => {
             <img
               key={i}
               src={img}
-              alt={`${destination.name} ${i + 1}`}
+              alt={`${safeText(destination.name, "Destination")} ${i + 1}`}
               className={cn(
                 "srch-card__img",
                 i === currentSlide && "srch-card__img--active"
@@ -187,7 +199,7 @@ const DestinationCard = ({ destination, onClick, style, index }) => {
           isHovered && "srch-card__overlay--visible"
         )}
       >
-        <h4 className="srch-card__overlay-title">{destination.name}</h4>
+        <h4 className="srch-card__overlay-title">{safeText(destination.name, "Destination")}</h4>
         {destination.country && (
           <p className="srch-card__overlay-loc">
             <FiMapPin size={12} /> {destination.country}
