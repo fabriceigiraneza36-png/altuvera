@@ -3217,3 +3217,4 @@ const InteractiveMap = () => {
 };
 
 export default InteractiveMap;
+// Map interaction update: coordinate popovers and responsive view controls.
