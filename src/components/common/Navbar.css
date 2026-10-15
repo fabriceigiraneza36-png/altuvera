@@ -3073,7 +3073,7 @@
 .nav-search-filter-panel{display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:0 13px 13px;overflow:hidden}
 .nav-search-filter-sort,.nav-search-filter-tags{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
 .nav-search-filter-sort{padding-right:10px;border-right:1px solid #d9e9df}
-.nav-search-filter-sort button,.nav-search-filter-tags button{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 11px;border:1px solid #d6e8dc;border-radius:999px;background:#fff;color:#315b45;font:600 11px/1.2 inherit;cursor:pointer;white-space:nowrap;transition:transform .2s ease,background .2s ease,border-color .2s ease,color .2s ease}
+.nav-search-filter-sort button,.nav-search-filter-tags button{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:8px 11px;border:1px solid #d6e8dc;border-radius:999px;background:#fff;color:#315b45;font-family:inherit;font-size:11px;font-weight:600;line-height:1.2;cursor:pointer;white-space:nowrap;transition:transform .2s ease,background .2s ease,border-color .2s ease,color .2s ease}
 .nav-search-filter-sort button:hover,.nav-search-filter-tags button:hover{transform:translateY(-1px);border-color:#7bd4a9;background:#eafaf1}
 .nav-search-filter-sort button.is-active{border-color:#087f58;background:linear-gradient(135deg,#07865c,#056c4a);color:#fff;box-shadow:0 4px 12px #07865c20}
 .nav-search-filter-tags button{background:#f8fcf9;color:#537464}
