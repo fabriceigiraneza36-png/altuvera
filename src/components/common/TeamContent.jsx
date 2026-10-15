@@ -584,15 +584,15 @@ const STYLES = `
 .tm-card{min-height:390px;aspect-ratio:4/5;display:block;overflow:hidden;border-radius:22px;border:1px solid rgba(255,255,255,.72);background:#022c22;box-shadow:0 12px 30px rgba(2,44,34,.12);cursor:pointer;isolation:isolate;transform:translateZ(0)}
 .tm-card::before{content:"";position:absolute;inset:0;z-index:1;opacity:1;background:linear-gradient(180deg,rgba(2,20,16,.06) 30%,rgba(2,20,16,.72) 100%);transition:opacity .35s ease}
 .tm-card-band{display:none}
-.tm-card-body{position:absolute;inset:0;z-index:2;margin:0;padding:24px 22px 22px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;text-align:center;color:#fff;background:linear-gradient(180deg,rgba(2,44,34,.08) 10%,rgba(2,44,34,.96) 100%);opacity:0;transform:translateY(18px);transition:opacity .35s ease,transform .45s cubic-bezier(.2,.75,.25,1);overflow-y:auto}
+.tm-card-body{position:absolute;inset:0;z-index:2;margin:0;padding:24px 22px 22px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;text-align:center;color:#fff;background:linear-gradient(180deg,rgba(2,44,34,.08) 10%,rgba(2,44,34,.97) 100%);opacity:1;visibility:hidden;transform:translateY(101%);transition:transform .62s cubic-bezier(.22,.8,.25,1),visibility 0s linear .62s;overflow-y:auto;overscroll-behavior:contain}
 .tm-card:focus{outline:none}
-.tm-card:hover .tm-card-body,.tm-card:focus-visible .tm-card-body,.tm-card:focus-within .tm-card-body{opacity:1;transform:translateY(0)}
+.tm-card:hover .tm-card-body,.tm-card:focus-visible .tm-card-body,.tm-card:focus-within .tm-card-body{visibility:visible;transform:translateY(0);transition-delay:0s}
 .tm-card:hover::before,.tm-card:focus-visible::before,.tm-card:focus-within::before{opacity:.35}
 .tm-card:hover{transform:translateY(-5px) scale(1.012);box-shadow:0 24px 52px rgba(2,44,34,.25)}
-.tm-card .tm-avatar{position:absolute;inset:0;width:100%;height:100%;margin:0;border-radius:0;z-index:-1;pointer-events:none}
+.tm-card .tm-avatar{position:absolute;inset:0;width:100%;height:100%;margin:0;border-radius:0;z-index:0;pointer-events:none}
 .tm-card .tm-avatar-ring{width:100%;height:100%;border:0;border-radius:0;box-shadow:none;background:#022c22;overflow:hidden}
 .tm-card .tm-avatar-img{width:100%;height:100%;object-fit:cover;object-position:center 28%;transform:scale(1.001);opacity:1!important;transition:transform .8s cubic-bezier(.2,.75,.25,1),filter .4s ease}
-.tm-card:hover .tm-avatar-img,.tm-card:focus-visible .tm-avatar-img{transform:scale(1.07);filter:saturate(1.08)}
+.tm-card:hover .tm-avatar-img,.tm-card:focus-visible .tm-avatar-img{transform:scale(1.035);filter:saturate(1.08)}
 .tm-card .tm-avatar-fb{height:100%;width:100%;border-radius:0;color:#d1fae5}
 .tm-card .tm-avatar-fb span,.tm-card .tm-dot{display:none}
 .tm-card .tm-name{color:#fff;font-size:clamp(19px,2vw,25px);margin:0 0 5px;text-shadow:0 2px 14px rgba(0,0,0,.2)}
@@ -614,7 +614,7 @@ const STYLES = `
 .tm-card:hover .tm-feat,.tm-card:focus-visible .tm-feat{opacity:0;transition:opacity .2s}
 @media(max-width:640px){.tm-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.tm-card{min-height:280px;aspect-ratio:3/4;border-radius:17px}.tm-card-body{padding:15px 12px 13px}.tm-card .tm-name{font-size:16px}.tm-card .tm-role{font-size:11px;margin-bottom:5px}.tm-card .tm-dept{font-size:9px;padding:3px 7px;margin-bottom:6px}.tm-card .tm-bio{-webkit-line-clamp:2;font-size:10.5px;line-height:1.4;margin-bottom:7px}.tm-card .tm-divider{margin-bottom:7px}.tm-card .tm-tags{margin-bottom:6px}.tm-card .tm-meta{margin-bottom:6px}.tm-card .tm-socials{gap:5px;padding-top:7px}.tm-card .tm-slink{width:28px;height:28px}}
 @media(max-width:360px){.tm-grid{grid-template-columns:1fr}.tm-card{aspect-ratio:4/5;min-height:330px}}
-@media(hover:none){.tm-card:active .tm-card-body{opacity:1;transform:translateY(0)}.tm-card:active::before{opacity:.35}}
+@media(hover:none){.tm-card:active .tm-card-body{visibility:visible;transform:translateY(0);transition-delay:0s}.tm-card:active::before{opacity:.35}}
 @media(prefers-reduced-motion:reduce){.tm-card,.tm-card::before,.tm-card .tm-card-body,.tm-card .tm-avatar-img{transition:none!important}}
 
 @media(prefers-reduced-motion:reduce){
@@ -730,38 +730,39 @@ function Card({ member }) {
         </div>
       )}
 
-      <div className="tm-card-body">
-        <div className="tm-avatar">
-          <div className="tm-avatar-ring">
-            {imgState === "loading" && imageSrc && (
-              <div
-                className="tm-sk"
-                style={{ position: "absolute", inset: 0, borderRadius: "50%" }}
-              />
-            )}
-            {imgState === "error" || !imageSrc ? (
-              <div className="tm-avatar-fb"><FiUsers size={26} /><span>Portrait unavailable</span></div>
-            ) : (
-              <img
-                src={imageSrc}
-                alt={`${member.name} profile`}
-                className="tm-avatar-img"
-                style={{ opacity: imgState === "loaded" ? 1 : 0 }}
-                onLoad={() => setImgState("loaded")}
-                onError={() => setImgState("error")}
-                loading="lazy"
-                decoding="async"
-              />
-            )}
-          </div>
-          <div
-            className="tm-dot"
-            style={{
-              backgroundColor: member.is_active ? C.brightGreen : "#9ca3af",
-            }}
-            title={member.is_active ? "Active" : "Inactive"}
-          />
+      <div className="tm-avatar">
+        <div className="tm-avatar-ring">
+          {imgState === "loading" && imageSrc && (
+            <div
+              className="tm-sk"
+              style={{ position: "absolute", inset: 0, borderRadius: "50%" }}
+            />
+          )}
+          {imgState === "error" || !imageSrc ? (
+            <div className="tm-avatar-fb"><FiUsers size={26} /><span>Portrait unavailable</span></div>
+          ) : (
+            <img
+              src={imageSrc}
+              alt={`${member.name} profile`}
+              className="tm-avatar-img"
+              style={{ opacity: imgState === "loaded" ? 1 : 0 }}
+              onLoad={() => setImgState("loaded")}
+              onError={() => setImgState("error")}
+              loading="lazy"
+              decoding="async"
+            />
+          )}
         </div>
+        <div
+          className="tm-dot"
+          style={{
+            backgroundColor: member.is_active ? C.brightGreen : "#9ca3af",
+          }}
+          title={member.is_active ? "Active" : "Inactive"}
+        />
+      </div>
+
+      <div className="tm-card-body">
 
         <h3 className="tm-name">{member.name}</h3>
         {member.role && <p className="tm-role">{member.role}</p>}
