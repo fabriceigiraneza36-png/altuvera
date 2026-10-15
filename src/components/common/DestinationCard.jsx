@@ -999,10 +999,21 @@ const {
   const destId = slug || id;
   const isLiked = isWishlisted(destId);
 
-  const resolvedCountry =
-    typeof country === "string"
-      ? country
-      : country?.name ?? country?.label ?? "";
+  const toDisplayText = (value) => {
+    if (value == null) return "";
+    if (typeof value === "string" || typeof value === "number") return String(value);
+    if (Array.isArray(value)) return value.map(toDisplayText).filter(Boolean).join(", ");
+    if (typeof value === "object") {
+      const candidate = value.name ?? value.label ?? value.title ?? value.region ?? value.continent;
+      return candidate == null || candidate === value ? "" : toDisplayText(candidate);
+    }
+    return "";
+  };
+
+  const resolvedCountry = toDisplayText(country);
+  // API responses can accidentally place a full country object in countryFlag.
+  // Normalize it before rendering so React never receives an object child.
+  const safeCountryFlag = toDisplayText(countryFlag) || toDisplayText(country?.flag) || "";
 
 const safeImgs = [...new Set([
     ...(Array.isArray(destination.images) ? destination.images : []),
@@ -1028,6 +1039,7 @@ const safeImgs = [...new Set([
   ].map(getImageUrl).filter(Boolean))].slice(0, 4);
 
   const locationStr = [region, location, countryName || resolvedCountry]
+    .map(toDisplayText)
     .filter(Boolean)
     .filter((v, i, a) => a.indexOf(v) === i)
     .join(" · ");
@@ -1213,9 +1225,9 @@ const blurb =
           <div className="dc-location">
             <FiMapPin size={12} aria-hidden="true" />
             <span>{locationStr}</span>
-            {countryFlag && (
+            {safeCountryFlag && (
               <span className="dc-flag" aria-hidden="true">
-                {countryFlag}
+                {safeCountryFlag}
               </span>
             )}
           </div>
