@@ -1354,6 +1354,28 @@ function PopularSlideshow() {
   height: 99vh !important;
   height: 99svh !important;
   min-height: 0 !important;
+  isolation: isolate;
+}
+.dv-hero__fog-bottom {
+  height: 34% !important;
+  z-index: 5 !important;
+  mix-blend-mode: normal !important;
+  background:
+    linear-gradient(180deg,
+      rgba(255,255,255,0) 0%,
+      rgba(238,255,246,.08) 24%,
+      rgba(235,253,243,.24) 48%,
+      rgba(245,255,249,.72) 78%,
+      #fff 100%) !important;
+  pointer-events: none;
+}
+.dv-hero__ov-bottom {
+  background: linear-gradient(180deg,
+    rgba(2,44,34,.30) 0%,
+    rgba(2,44,34,.15) 45%,
+    rgba(2,44,34,.38) 72%,
+    rgba(2,44,34,.48) 82%,
+    rgba(2,44,34,.08) 100%) !important;
 }
 .dv-hero__scroll {
   bottom: max(18px, env(safe-area-inset-bottom));
