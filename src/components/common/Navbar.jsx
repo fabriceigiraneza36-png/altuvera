@@ -270,8 +270,8 @@ const Navbar = () => {
   const { favorites } = useApp();
   const { user, isAuthenticated, authLoading, openModal, logout } =
     useUserAuth();
-  const { countries: backendCountries } = useCountries({ limit: 100 });
-  const { data: searchDestinations = [] } = useDestinationsList({ limit: 200 });
+  const { countries: backendCountries } = useCountries({ limit: 500 });
+  const { data: searchDestinations = [] } = useDestinationsList({ limit: 1000 });
 
   const headerRef = useRef(null);
   const userMenuRef = useRef(null);
@@ -349,6 +349,15 @@ const Navbar = () => {
         description: displaySearchText(item.description || item.details || item.overview || adapted.description),
         category: displaySearchText(item.category || item.type || item.activityType || adapted.category),
         duration: displaySearchText(item.duration || item.durationText || adapted.duration),
+        location: displaySearchText(item.location || item.city || adapted.location),
+        region: displaySearchText(item.region || item.region_name || adapted.region),
+        countryName: displaySearchText(item.countryName || item.country_name || adapted.countryName),
+        countryFlag: displaySearchText(item.countryFlag || item.country_flag || adapted.countryFlag),
+        difficulty: displaySearchText(item.difficulty || adapted.difficulty),
+        highlights: Array.isArray(item.highlights || item.highlights_list) ? (item.highlights || item.highlights_list).map(value => displaySearchText(value)).filter(Boolean) : [],
+        durationDays: Number(item.durationDays || item.duration_days || adapted.durationDays) || undefined,
+        minGroupSize: Number(item.minGroupSize || item.min_group_size || adapted.minGroupSize) || undefined,
+        maxGroupSize: Number(item.maxGroupSize || item.max_group_size || adapted.maxGroupSize) || undefined,
         _isCountry: false, _label: label,
       };
     });
@@ -393,6 +402,12 @@ const Navbar = () => {
     });
     setActiveStoryIndex(nearest);
   }, []);
+
+  useEffect(() => {
+    if (!searchOpen || searchResultsView || searchQuery.trim()) return undefined;
+    const frame = requestAnimationFrame(handleStoryRailScroll);
+    return () => cancelAnimationFrame(frame);
+  }, [searchOpen, searchResultsView, searchQuery, searchResults.destinations.length, handleStoryRailScroll]);
 
 
   const navLinks = useMemo(
@@ -1160,7 +1175,7 @@ const Navbar = () => {
                   <div className="nav-search-country-grid">{searchResults.relatedCountries.slice(0,20).map((item,i)=><button type="button" className="nav-search-country-card" key={item.id||item.slug||item._label+i} onClick={()=>navigate(`/country/${getCountrySlug(item)}`)}><span className="nav-search-country-flag">{getCountryFlagUrl(item) ? <img src={getCountryFlagUrl(item)} alt="" loading="lazy"/> : <FiGlobe/>}</span><strong>{displaySearchText(item._label,"Country")}</strong><small>{displaySearchText(item.region||item.continent,"Explore country")}</small><span className="nav-search-country-cta">Explore country <FiArrowRight size={12}/></span></button>)}</div>
                 </> : <>
                   <div className="nav-search-story-heading"><span className="nav-search-suggestion-label">DESTINATION STORIES</span><small>Swipe to explore</small></div>
-                  <div className="nav-search-story-rail" ref={storyRailRef} onScroll={handleStoryRailScroll}>{searchResults.destinations.slice(0,20).map((item,i)=>{const rawImage=item.heroImage||item.hero_image||item.imageUrl||item.image_url||item.thumbnailUrl||item.coverImage;const img=typeof rawImage==="string"?rawImage:(item.images?.[0]?.url||item.images?.[0]?.imageUrl||"");return <button type="button" className={`nav-search-story-card${i===activeStoryIndex?" is-active":""}`} key={item.id||item._id||item.slug||item._label+i} onClick={()=>selectSearchSuggestion(item)}>{img?<img src={img} alt="" loading="lazy"/>:<span className="nav-search-story-placeholder"><FiMapPin/></span>}<span className="nav-search-story-float"><FiCompass/></span><strong>{displaySearchText(item._label,"Destination")}</strong></button>;})}</div>
+                  <div className="nav-search-story-rail" ref={storyRailRef} onScroll={handleStoryRailScroll}>{searchResults.destinations.slice(0,20).map((item,i)=>{const rawImage=item.heroImage||item.hero_image||item.imageUrl||item.image_url||item.thumbnailUrl||item.coverImageUrl||item.cover_image_url||item.coverImage||item.images?.[0]||item.gallery?.[0]||item.heroImages?.[0]||item.hero_images?.[0];const img=typeof rawImage==="string"?rawImage:(rawImage?.url||rawImage?.imageUrl||rawImage?.image_url||rawImage?.src||"");return <button type="button" className={`nav-search-story-card${i===activeStoryIndex?" is-active":""}`} key={item.id||item._id||item.slug||item._label+i} onClick={()=>selectSearchSuggestion(item)}>{img?<img src={img} alt="" loading="lazy"/>:<span className="nav-search-story-placeholder"><FiMapPin/></span>}<span className="nav-search-story-float"><FiCompass/></span><strong>{displaySearchText(item._label,"Destination")}</strong></button>;})}</div>
                   <div className="nav-search-story-heading"><span className="nav-search-suggestion-label"><FiGlobe size={13}/> COUNTRIES</span><small>Featured places</small></div>
                   <div className="nav-search-country-rail" tabIndex={0} aria-label="Countries carousel"><div className="nav-search-country-track">{[...searchResults.countries,...searchResults.countries,...searchResults.countries].map((item,i)=><button type="button" className="nav-search-country-card" key={(item.id||item.slug||item._label)+i} onClick={()=>navigate(`/country/${getCountrySlug(item)}`)}><span className="nav-search-country-flag">{getCountryFlagUrl(item) ? <img src={getCountryFlagUrl(item)} alt="" loading="lazy"/> : <FiGlobe/>}</span><strong>{displaySearchText(item._label,"Country")}</strong><small>{displaySearchText(item.region||item.continent,"Explore country")}</small><span className="nav-search-country-cta">Explore country <FiArrowRight size={12}/></span></button>)}</div></div>
                   <h3 className="nav-search-section-title">Explore destinations</h3>
