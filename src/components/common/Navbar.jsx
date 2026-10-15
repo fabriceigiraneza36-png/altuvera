@@ -1055,7 +1055,7 @@ const Navbar = () => {
                   {!searchResults.countries.length && !searchResults.destinations.length && <p className="nav-search-empty">No suggestions found. Try another name, activity, feature, or detail.</p>}
                   <button type="button" className="nav-search-view-all" onClick={()=>selectSearchSuggestion({_label:searchQuery})}>View all matching destinations and countries <FiArrowRight size={14}/></button>
                 </>}
-              </div>>
+              </div>
             </motion.section>
           </motion.div>
         )}
