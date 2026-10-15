@@ -199,7 +199,9 @@ const CSS = `
 ═════════════════════════════════════════════════ */
 .dv-hero {
   position: relative;
-  height: clamp(460px, 65vh, 640px);
+  height: 99vh;
+  height: 99svh;
+  min-height: 0;
   overflow: hidden;
   background: var(--dv-forest);
 }
@@ -913,34 +915,85 @@ function HeroBanner() {
   const [active, setActive]   = useState(0);
   const [animKey, setAnimKey] = useState(0);
   const timerRef              = useRef(null);
-  const [slides, setSlides]   = useState([]);
+  const [slides, setSlides]   = useState(HERO_SLIDES);
+  const [exiting, setExiting] = useState(null);
+  const exitTimerRef          = useRef(null);
   const total                 = slides.length;
 
   useEffect(() => {
     let cancelled = false;
-    apiFetch('/destinations/featured?limit=4')
+    apiFetch('/destinations?limit=200&include=gallery')
       .then(r => {
         if (cancelled) return;
-        const dests = r.data || [];
-        if (dests.length) {
-          setSlides(dests.map(d => ({
-            image: d.heroImage || d.imageUrl || d.images?.[0] || null,
-            title: d.name || 'Destination',
-            subtitle: d.country?.name || '',
-            desc: d.shortDescription || d.description || '',
-            location: d.country?.name || '',
-          })));
-        }
+        const dests = Array.isArray(r.data)
+          ? r.data
+          : Array.isArray(r.data?.destinations) ? r.data.destinations : [];
+        const asText = value => {
+          if (typeof value === 'string' || typeof value === 'number') return String(value);
+          if (value && typeof value === 'object') return asText(value.name || value.title || value.label || value.slug || '');
+          return '';
+        };
+        const asImage = value => {
+          if (typeof value === 'string') return value;
+          if (Array.isArray(value)) return asImage(value[0]);
+          if (value && typeof value === 'object') return asImage(value.url || value.imageUrl || value.image_url || value.src || value.path || '');
+          return '';
+        };
+        const candidates = dests.map((d, index) => {
+          const rawImage = d.heroImage || d.hero_image || d.hero_image_url ||
+            d.imageUrl || d.image_url || d.coverImage || d.cover_image ||
+            d.cover_image_url || d.thumbnailUrl || d.thumbnail_url ||
+            d.images || d.gallery || d.heroImages || d.hero_images;
+          const country = asText(d.country || d.countryName || d.country_name || d.countryObj);
+          const image = asImage(rawImage);
+          const title = asText(d.name || d.title || d.destination_name);
+          if (!image || !title) return null;
+          return {
+            key: String(d.id || d._id || d.slug || title + '-' + index),
+            image, title, subtitle: country, location: country,
+            desc: asText(d.shortDescription || d.short_description || d.summary || d.description || d.overview),
+            countryKey: country.toLowerCase(),
+          };
+        }).filter(Boolean);
+        const unique = [];
+        const usedDestinations = new Set(HERO_SLIDES.map(slide => slide.title.toLowerCase()));
+        const usedCountries = new Set();
+        // Prioritize one real destination image per country for geographic variety.
+        candidates.forEach(item => {
+          if (unique.length >= 10 || !item.countryKey || usedCountries.has(item.countryKey) || usedDestinations.has(item.title.toLowerCase())) return;
+          usedCountries.add(item.countryKey);
+          usedDestinations.add(item.title.toLowerCase());
+          unique.push(item);
+        });
+        // If fewer than ten countries have image-backed destinations, fill from other unique destinations.
+        candidates.forEach(item => {
+          if (unique.length >= 10 || usedDestinations.has(item.title.toLowerCase())) return;
+          usedDestinations.add(item.title.toLowerCase());
+          unique.push(item);
+        });
+        if (!cancelled && unique.length) setSlides([...HERO_SLIDES, ...unique]);
       })
-      .catch(() => {});
-    return () => { cancelled = true; };
+      .catch(() => {
+        // Keep the original curated slides if the live destination list is unavailable.
+      });
+    return () => {
+      cancelled = true;
+      if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+    };
   }, []);
 
-  const advance = useCallback(() => {
-    if (!total) return;
-    setActive(p => (p + 1) % total);
+  const transitionTo = useCallback((next) => {
+    if (!total || next === active) return;
+    setExiting(active);
+    setActive(next);
     setAnimKey(k => k + 1);
-  }, [total]);
+    if (exitTimerRef.current) clearTimeout(exitTimerRef.current);
+    exitTimerRef.current = setTimeout(() => setExiting(null), 1350);
+  }, [active, total]);
+
+  const advance = useCallback(() => {
+    if (total > 1) transitionTo((active + 1) % total);
+  }, [active, total, transitionTo]);
 
   useEffect(() => {
     timerRef.current = setInterval(advance, 8000);
@@ -948,10 +1001,8 @@ function HeroBanner() {
   }, [advance]);
 
   const goTo = useCallback((i) => {
-    setActive(i); setAnimKey(k => k + 1);
-    clearInterval(timerRef.current);
-    timerRef.current = setInterval(advance, 8000);
-  }, [advance]);
+    transitionTo(i);
+  }, [transitionTo]);
 
   const scrollToCountries = () => {
     document.getElementById('countries')?.scrollIntoView({ behavior: 'smooth' });
@@ -964,7 +1015,7 @@ function HeroBanner() {
   return (
     <section className="dv-hero">
       {slides.map((sl, i) => (
-        <div key={i} className={`dv-hero__slide${i === active ? ' dv-hero__slide--on' : ''}`}>
+        <div key={sl.key || `${sl.title}-${i}`} className={`dv-hero__slide dv-hero__slide--anim-${i % 10}${i === active ? ' dv-hero__slide--on' : ''}${i === exiting ? ' dv-hero__slide--exit' : ''}`} aria-hidden={i !== active}>
           <img src={sl.image} alt={sl.title} loading={i === 0 ? 'eager' : 'lazy'} draggable={false} />
         </div>
       ))}
@@ -1014,12 +1065,13 @@ function HeroBanner() {
 
       {/* Dots */}
       <div className="dv-hero__dots">
-        {HERO_SLIDES.map((_, i) => (
+        {slides.map((item, i) => (
           <button
-            key={i}
+            key={item.key || `${item.title}-dot-${i}`}
             className={`dv-hero__dot${i === active ? ' dv-hero__dot--on' : ''}`}
             onClick={() => goTo(i)}
-            aria-label={`Slide ${i + 1}`}
+            aria-label={`Slide ${i + 1}: ${item.title}`}
+            aria-current={i === active ? 'true' : undefined}
           />
         ))}
       </div>
@@ -1228,7 +1280,57 @@ function PopularSlideshow() {
                 key={i}
                 className={`dv-slider__dot${i === idx ? ' dv-slider__dot--on' : ''}`}
                 onClick={() => setIdx(i)}
-                aria-label={`Slide ${i + 1}`}
+                aria-label={`Slide ${i + 1}
+/* Full-screen destination discovery hero with distinct slide transitions. */
+.dv-hero { isolation:isolate; }
+.dv-hero__slide--on { z-index:3; }
+.dv-hero__slide--exit { opacity:1; z-index:2; pointer-events:none; animation-duration:1.2s; animation-timing-function:cubic-bezier(.22,1,.36,1); animation-fill-mode:forwards; }
+.dv-hero__slide--anim-0.dv-hero__slide--on { animation:dv-slide-enter-0 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-1.dv-hero__slide--on { animation:dv-slide-enter-1 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-2.dv-hero__slide--on { animation:dv-slide-enter-2 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-3.dv-hero__slide--on { animation:dv-slide-enter-3 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-4.dv-hero__slide--on { animation:dv-slide-enter-4 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-5.dv-hero__slide--on { animation:dv-slide-enter-5 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-6.dv-hero__slide--on { animation:dv-slide-enter-6 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-7.dv-hero__slide--on { animation:dv-slide-enter-7 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-8.dv-hero__slide--on { animation:dv-slide-enter-8 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-9.dv-hero__slide--on { animation:dv-slide-enter-9 1.25s cubic-bezier(.22,1,.36,1) both; }
+.dv-hero__slide--anim-0.dv-hero__slide--exit { animation-name:dv-slide-exit-0; }
+.dv-hero__slide--anim-1.dv-hero__slide--exit { animation-name:dv-slide-exit-1; }
+.dv-hero__slide--anim-2.dv-hero__slide--exit { animation-name:dv-slide-exit-2; }
+.dv-hero__slide--anim-3.dv-hero__slide--exit { animation-name:dv-slide-exit-3; }
+.dv-hero__slide--anim-4.dv-hero__slide--exit { animation-name:dv-slide-exit-4; }
+.dv-hero__slide--anim-5.dv-hero__slide--exit { animation-name:dv-slide-exit-5; }
+.dv-hero__slide--anim-6.dv-hero__slide--exit { animation-name:dv-slide-exit-6; }
+.dv-hero__slide--anim-7.dv-hero__slide--exit { animation-name:dv-slide-exit-7; }
+.dv-hero__slide--anim-8.dv-hero__slide--exit { animation-name:dv-slide-exit-8; }
+.dv-hero__slide--anim-9.dv-hero__slide--exit { animation-name:dv-slide-exit-9; }
+@keyframes dv-slide-enter-0 { from{opacity:0;transform:scale(1.12)} to{opacity:1;transform:scale(1)} }
+@keyframes dv-slide-exit-0 { from{opacity:1;transform:scale(1)} to{opacity:0;transform:scale(.94)} }
+@keyframes dv-slide-enter-1 { from{opacity:0;transform:translateX(7%) scale(1.04);clip-path:inset(0 0 0 12%)} to{opacity:1;transform:translateX(0) scale(1);clip-path:inset(0)} }
+@keyframes dv-slide-exit-1 { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(-5%)} }
+@keyframes dv-slide-enter-2 { from{opacity:0;transform:translateY(5%) scale(1.03);clip-path:inset(12% 0 0)} to{opacity:1;transform:translateY(0) scale(1);clip-path:inset(0)} }
+@keyframes dv-slide-exit-2 { from{opacity:1;transform:translateY(0)} to{opacity:0;transform:translateY(-3%)} }
+@keyframes dv-slide-enter-3 { from{opacity:0;transform:translateX(-7%) scale(1.04);clip-path:inset(0 12% 0 0)} to{opacity:1;transform:translateX(0) scale(1);clip-path:inset(0)} }
+@keyframes dv-slide-exit-3 { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(5%)} }
+@keyframes dv-slide-enter-4 { from{opacity:0;transform:scale(1.16) rotate(.8deg);filter:blur(7px)} to{opacity:1;transform:scale(1) rotate(0);filter:blur(0)} }
+@keyframes dv-slide-exit-4 { from{opacity:1;filter:blur(0)} to{opacity:0;filter:blur(5px)} }
+@keyframes dv-slide-enter-5 { from{opacity:0;transform:scale(.94) rotate(-.6deg);clip-path:circle(30% at 50% 50%)} to{opacity:1;transform:scale(1) rotate(0);clip-path:circle(100% at 50% 50%)} }
+@keyframes dv-slide-exit-5 { from{opacity:1;clip-path:circle(100% at 50% 50%)} to{opacity:0;clip-path:circle(20% at 50% 50%)} }
+@keyframes dv-slide-enter-6 { from{opacity:0;transform:translateY(-5%) scale(1.04)} to{opacity:1;transform:translateY(0) scale(1)} }
+@keyframes dv-slide-exit-6 { from{opacity:1;transform:translateY(0)} to{opacity:0;transform:translateY(4%)} }
+@keyframes dv-slide-enter-7 { from{opacity:0;transform:translateX(6%) scale(1.08);filter:saturate(.5)} to{opacity:1;transform:translateX(0) scale(1);filter:saturate(1)} }
+@keyframes dv-slide-exit-7 { from{opacity:1;transform:translateX(0)} to{opacity:0;transform:translateX(-6%)} }
+@keyframes dv-slide-enter-8 { from{opacity:0;transform:scale(1.1);clip-path:inset(0 0 18%)} to{opacity:1;transform:scale(1);clip-path:inset(0)} }
+@keyframes dv-slide-exit-8 { from{opacity:1;clip-path:inset(0)} to{opacity:0;clip-path:inset(0 0 20%)} }
+@keyframes dv-slide-enter-9 { from{opacity:0;transform:scale(.96) translateY(2%);filter:brightness(.65)} to{opacity:1;transform:scale(1) translateY(0);filter:brightness(1)} }
+@keyframes dv-slide-exit-9 { from{opacity:1;filter:brightness(1)} to{opacity:0;filter:brightness(.7)} }
+.dv-hero__dots { max-width:min(92vw,680px); overflow-x:auto; scrollbar-width:none; }
+.dv-hero__dots::-webkit-scrollbar { display:none; }
+@media(prefers-reduced-motion:reduce){
+ .dv-hero__slide--on,.dv-hero__slide--exit,.dv-hero__slide--on img { animation:none!important; transition:opacity .2s ease!important; }
+}
+`}
               />
             ))}
           </div>
