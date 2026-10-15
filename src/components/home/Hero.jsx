@@ -343,8 +343,14 @@ const Hero = ({ destinations = [] }) => {
   if (!slides.length) return null;
 
   const scrollToContent = () => {
+    const hero = containerRef.current;
+    const nextSection = hero?.nextElementSibling;
+    if (nextSection) {
+      nextSection.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     window.scrollTo({
-      top: window.innerHeight,
+      top: hero ? hero.offsetTop + hero.offsetHeight : window.innerHeight,
       behavior: "smooth",
     });
   };
@@ -787,6 +793,9 @@ const Hero = ({ destinations = [] }) => {
 
       {/* Scroll Indicator */}
       <motion.button
+        type="button"
+        aria-label="Scroll to explore what is below the hero"
+        title="Explore what is below"
         style={styles.scrollIndicator}
         onClick={scrollToContent}
         className="scroll-indicator-btn"
@@ -795,7 +804,7 @@ const Hero = ({ destinations = [] }) => {
         transition={{ delay: 1.5 }}
         whileHover={{ scale: 1.1 }}
       >
-        <span style={styles.scrollText}>Scroll Down</span>
+        <span style={styles.scrollText}>Explore Below</span>
         <motion.div
           animate={{ y: [0, 6, 0] }}
           transition={{ duration: 1.5, repeat: Infinity }}
