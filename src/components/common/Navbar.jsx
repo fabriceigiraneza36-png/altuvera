@@ -20,6 +20,7 @@ import {
   FiCamera,
   FiSearch,
   FiTrendingUp,
+  FiGlobe,
 } from "react-icons/fi";
 import { useApp } from "../../context/AppContext";
 import { useUserAuth } from "../../context/UserAuthContext";
