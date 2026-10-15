@@ -1078,3 +1078,13 @@
  .home-hero-premium .home-hero-image{transform:none!important;filter:none;animation:none!important}
  .home-hero-premium .scroll-indicator-btn{animation:none!important;transition:none!important}
 }
+
+/* Keep the legacy Scroll Down cue clear of the story action on small screens. */
+.home-hero-premium .scroll-indicator-btn{bottom:clamp(4px,1.2vh,12px);border:0!important;outline:0!important;box-shadow:none!important;-webkit-tap-highlight-color:transparent}
+.home-hero-premium .scroll-indicator-btn:hover,.home-hero-premium .scroll-indicator-btn:focus,.home-hero-premium .scroll-indicator-btn:focus-visible{border:0!important;outline:0!important;outline-offset:0!important;box-shadow:none!important}
+.home-hero-premium .scroll-indicator-btn:focus-visible{filter:drop-shadow(0 0 4px rgba(5,150,105,.65))}
+@media(max-width:600px){
+ .home-hero-premium .scroll-indicator-btn{bottom:clamp(3px,1vh,8px);padding:6px 10px;gap:2px}
+ .home-hero-premium .scroll-indicator-btn span{font-size:10px;letter-spacing:.18em}
+ .home-hero-premium .scroll-indicator-btn svg{width:20px;height:20px}
+}
