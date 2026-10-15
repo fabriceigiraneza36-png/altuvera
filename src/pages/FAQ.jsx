@@ -686,6 +686,7 @@ const FAQ = () => {
         title="Frequently Asked Questions"
         subtitle="Find answers to common questions about traveling with Altuvera."
         backgroundImage="https://images.unsplash.com/photo-1489392191049-fc10c97e64b6?w=1920"
+        height="99svh"
         breadcrumbs={[{ label: 'FAQ' }]}
       />
 
