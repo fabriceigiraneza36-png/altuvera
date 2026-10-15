@@ -263,9 +263,9 @@ const PageHeader = ({
       bottom: 0,
       left: 0,
       right: 0,
-      height: "120px",
-      background: "linear-gradient(180deg, transparent 0%, rgba(255, 255, 255, 0.02) 50%, white 100%)",
-      zIndex: 3,
+      height: "clamp(170px, 24vh, 260px)",
+      background: "linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(225,255,241,0.04) 22%, rgba(226,250,239,0.22) 48%, rgba(244,255,249,0.68) 76%, #fff 100%)",
+      zIndex: 4,
       pointerEvents: "none",
     },
 
