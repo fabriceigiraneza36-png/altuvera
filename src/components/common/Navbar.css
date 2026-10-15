@@ -2974,3 +2974,19 @@
 .nav__user-drop--open{transform:translateY(0) scale(1)}
 @media(max-width:760px){.nav-search-desktop-input,.nav-search-desktop-results{display:none!important}.nav-search-desktop--open .nav-search-desktop-input{display:none!important}}
 @media(prefers-reduced-motion:reduce){.nav-search-desktop-input,.nav__user-drop{transition:none!important}}
+
+/* Search is part of the primary desktop navigation, before Home. */
+.nav__links>.nav-search-desktop{order:-1;flex:0 0 auto;margin-right:clamp(4px,.8vw,12px)}
+.nav__links>.nav-search-desktop .nav__search-trigger{width:38px;height:38px;border-radius:50%;background:rgba(5,150,105,.08)}
+.nav-search-quick button.is-active{background:#087f58;color:#fff;border-color:#087f58;box-shadow:0 4px 12px rgba(8,127,88,.18)}
+.mm__search-link{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:0 14px;margin:0 0 12px;border:1px solid rgba(5,150,105,.18);border-radius:14px;background:linear-gradient(115deg,#f1faf5,#fff);color:#087f58;font:inherit;font-weight:700;text-align:left;cursor:pointer}
+.mm__search-link span{flex:1}
+.mm__search-link:active{transform:scale(.985);background:#e4f6ed}
+.mm.mm--dragging{will-change:transform;user-select:none}
+@media(max-width:1024px){
+ .nav__links>.nav-search-desktop{display:none!important}
+ .mm__search-link{position:sticky;top:0;z-index:2}
+}
+@media(min-width:1025px){
+ .nav__actions .nav-search-desktop{display:none}
+}

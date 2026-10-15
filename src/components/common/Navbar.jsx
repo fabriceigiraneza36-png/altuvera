@@ -241,6 +241,8 @@ const Navbar = () => {
   const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchSort, setSearchSort] = useState("featured");
+  const [mobileDragX, setMobileDragX] = useState(0);
+  const [isDraggingMenu, setIsDraggingMenu] = useState(false);
   const searchInputRef = useRef(null);
   const touchStartRef = useRef(null);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
@@ -398,20 +400,61 @@ const Navbar = () => {
   useEffect(() => { setSearchOpen(false); setDesktopSearchOpen(false); setSearchQuery(""); }, [location.pathname]);
   useEffect(() => { if (searchOpen) requestAnimationFrame(() => searchInputRef.current?.focus()); }, [searchOpen]);
   useEffect(() => {
-    const start = e => { touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; };
-    const end = e => {
-      if (!touchStartRef.current) return;
-      const start = touchStartRef.current;
-      const dx = e.changedTouches[0].clientX - start.x;
-      const dy = e.changedTouches[0].clientY - start.y;
-      touchStartRef.current = null;
-      if (Math.abs(dx) < 75 || Math.abs(dx) < Math.abs(dy) * 1.25 || window.innerWidth > 760) return;
-      if (dx < 0 && start.x > window.innerWidth - 70) setIsMobileMenuOpen(true);
-      else if (dx > 0 && isMobileMenuOpen) setIsMobileMenuOpen(false);
-      else if (dx > 0 && start.x < 70) setIsMobileMenuOpen(false);
+    const start = e => {
+      if (window.innerWidth > 1024 || !e.touches?.length) return;
+      const touch = e.touches[0];
+      const drawer = document.querySelector(".mm");
+      const inDrawer = drawer?.contains(e.target);
+      const fromRightEdge = touch.clientX >= window.innerWidth - 36;
+      if ((isMobileMenuOpen && inDrawer) || (!isMobileMenuOpen && fromRightEdge)) {
+        touchStartRef.current = { x: touch.clientX, y: touch.clientY, opened: isMobileMenuOpen, horizontal: false };
+        setMobileDragX(0);
+        setIsDraggingMenu(true);
+      } else {
+        touchStartRef.current = null;
+        setIsDraggingMenu(false);
+      }
     };
-    document.addEventListener("touchstart", start, { passive: true }); document.addEventListener("touchend", end, { passive: true });
-    return () => { document.removeEventListener("touchstart", start); document.removeEventListener("touchend", end); };
+    const move = e => {
+      if (!touchStartRef.current || !e.touches?.length || window.innerWidth > 1024) return;
+      const touch = e.touches[0];
+      const dx = touch.clientX - touchStartRef.current.x;
+      const dy = touch.clientY - touchStartRef.current.y;
+      if (!touchStartRef.current.horizontal && Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      if (Math.abs(dy) > Math.abs(dx) * 1.15) {
+        touchStartRef.current = null;
+        setIsDraggingMenu(false);
+        setMobileDragX(0);
+        return;
+      }
+      touchStartRef.current.horizontal = true;
+      const width = Math.min(400, window.innerWidth * .92);
+      const offset = touchStartRef.current.opened ? Math.max(0, Math.min(width, dx)) : Math.max(-width, Math.min(0, dx));
+      setMobileDragX(offset);
+    };
+    const end = e => {
+      if (!touchStartRef.current) { setIsDraggingMenu(false); setMobileDragX(0); return; }
+      const start = touchStartRef.current;
+      const dx = e.changedTouches?.[0]?.clientX - start.x || 0;
+      const dy = e.changedTouches?.[0]?.clientY - start.y || 0;
+      const horizontal = start.horizontal && Math.abs(dx) > Math.abs(dy) * 1.15;
+      touchStartRef.current = null;
+      setIsDraggingMenu(false);
+      setMobileDragX(0);
+      if (!horizontal) return;
+      if (start.opened && dx > 70) setIsMobileMenuOpen(false);
+      else if (!start.opened && dx < -70) setIsMobileMenuOpen(true);
+    };
+    document.addEventListener("touchstart", start, { passive: true });
+    document.addEventListener("touchmove", move, { passive: true });
+    document.addEventListener("touchend", end, { passive: true });
+    document.addEventListener("touchcancel", end, { passive: true });
+    return () => {
+      document.removeEventListener("touchstart", start);
+      document.removeEventListener("touchmove", move);
+      document.removeEventListener("touchend", end);
+      document.removeEventListener("touchcancel", end);
+    };
   }, [isMobileMenuOpen]);
   useEffect(() => setAvatarLoaded(false), [user?.avatar]);
 
@@ -563,6 +606,11 @@ const Navbar = () => {
 
           {/* ── Desktop Links ── */}
           <div className="nav__links">
+                        <div className={cn("nav-search-desktop", desktopSearchOpen && "nav-search-desktop--open")} onMouseEnter={() => { if (window.innerWidth > 760) setDesktopSearchOpen(true); }} onMouseLeave={() => { if (window.innerWidth > 760 && !searchQuery) setDesktopSearchOpen(false); }}>
+              <button type="button" className="nav__search-trigger" aria-label="Search destinations and countries" onClick={() => { if (window.innerWidth <= 760) setSearchOpen(true); else setDesktopSearchOpen(true); }} onFocus={() => { if (window.innerWidth > 760) setDesktopSearchOpen(true); }}><FiSearch size={19} /></button>
+              <input className="nav-search-desktop-input" aria-label="Search destinations and countries" placeholder="Search places..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onFocus={() => setDesktopSearchOpen(true)} onKeyDown={e => { if (e.key === "Escape") { setDesktopSearchOpen(false); setSearchQuery(""); } if (e.key === "Enter") setSearchOpen(true); }} />
+              {desktopSearchOpen && searchQuery.trim() && <div className="nav-search-desktop-results">{searchResults.countries.slice(0,3).map((item,i)=><button key={item.id || item._label+i} onClick={()=>{navigate(`/country/${getCountrySlug(item)}`);setDesktopSearchOpen(false);setSearchQuery("");}}><FiMapPin size={14}/><span>{item._label}</span><small>Country</small></button>)}{searchResults.destinations.slice(0,4).map((item,i)=><button key={item.id || item._label+i} onClick={()=>{navigate(`/destinations/${item.id || item.slug}`);setDesktopSearchOpen(false);setSearchQuery("");}}><FiMapPin size={14}/><span>{item._label}</span><small>Destination</small></button>)}<button className="nav-search-view-all" onClick={()=>setSearchOpen(true)}>View all results <FiArrowRight size={14}/></button></div>}
+            </div>
             {navLinks.map((link, i) => (
               <div
                 key={link.name}
@@ -655,11 +703,7 @@ const Navbar = () => {
 
           {/* ── Actions ── */}
           <div className="nav__actions">
-            <div className={cn("nav-search-desktop", desktopSearchOpen && "nav-search-desktop--open")} onMouseEnter={() => { if (window.innerWidth > 760) setDesktopSearchOpen(true); }} onMouseLeave={() => { if (window.innerWidth > 760 && !searchQuery) setDesktopSearchOpen(false); }}>
-              <button type="button" className="nav__search-trigger" aria-label="Search destinations and countries" onClick={() => { if (window.innerWidth <= 760) setSearchOpen(true); else setDesktopSearchOpen(true); }} onFocus={() => { if (window.innerWidth > 760) setDesktopSearchOpen(true); }}><FiSearch size={19} /></button>
-              <input className="nav-search-desktop-input" aria-label="Search destinations and countries" placeholder="Search places..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onFocus={() => setDesktopSearchOpen(true)} onKeyDown={e => { if (e.key === "Escape") { setDesktopSearchOpen(false); setSearchQuery(""); } if (e.key === "Enter") setSearchOpen(true); }} />
-              {desktopSearchOpen && searchQuery.trim() && <div className="nav-search-desktop-results">{searchResults.countries.slice(0,3).map((item,i)=><button key={item.id || item._label+i} onClick={()=>{navigate(`/country/${getCountrySlug(item)}`);setDesktopSearchOpen(false);setSearchQuery("");}}><FiMapPin size={14}/><span>{item._label}</span><small>Country</small></button>)}{searchResults.destinations.slice(0,4).map((item,i)=><button key={item.id || item._label+i} onClick={()=>{navigate(`/destinations/${item.id || item.slug}`);setDesktopSearchOpen(false);setSearchQuery("");}}><FiMapPin size={14}/><span>{item._label}</span><small>Destination</small></button>)}<button className="nav-search-view-all" onClick={()=>setSearchOpen(true)}>View all results <FiArrowRight size={14}/></button></div>}
-            </div>
+
             <Link to="/gallery" className="nav__icon-link">
               <span
                 className="nav__icon-btn"
@@ -807,7 +851,8 @@ const Navbar = () => {
 
       {/* ══════ MOBILE MENU ══════ */}
       <aside
-        className={cn("mm", isMobileMenuOpen && "mm--open")}
+        className={cn("mm", isMobileMenuOpen && "mm--open", isDraggingMenu && "mm--dragging")}
+        style={isDraggingMenu ? { transform: `translateX(calc(${isMobileMenuOpen ? "0%" : "100%"} + ${mobileDragX}px))`, transition: "none", touchAction: "pan-y" } : undefined}
         aria-hidden={!isMobileMenuOpen}
       >
         {/* Mobile Header */}
@@ -837,6 +882,7 @@ const Navbar = () => {
 
         {/* Mobile Body */}
         <div className="mm__body">
+          <button type="button" className="mm__search-link" onClick={() => { setIsMobileMenuOpen(false); setSearchOpen(true); }}><FiSearch size={19}/><span>Search destinations & countries</span><FiArrowRight size={17}/></button>
           {navLinks.map((link, idx) => (
             <div key={link.name} className="mm__item" style={{ "--idx": idx }}>
               {link.dropdown ? (
