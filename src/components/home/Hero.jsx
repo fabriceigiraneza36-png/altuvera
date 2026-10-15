@@ -558,7 +558,7 @@ const Hero = ({ destinations = [] }) => {
   };
 
   return (
-    <section style={styles.hero} ref={containerRef}>
+    <section className="home-hero-premium" style={styles.hero} ref={containerRef} aria-label="Featured travel destinations">
       <style>
         {`
           @keyframes bounce {
@@ -623,7 +623,7 @@ const Hero = ({ destinations = [] }) => {
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
                   transition={{
-                    opacity: { duration: 1.2, ease: "easeInOut" },
+                    opacity: { duration: 1.55, ease: [0.22, 1, 0.36, 1] },
                   }}
                   style={{
                     ...styles.slide,
@@ -637,10 +637,14 @@ const Hero = ({ destinations = [] }) => {
                     initial={getCurrentAnimation(index).initial}
                     animate={getCurrentAnimation(index).animate}
                     transition={{
-                      duration: 12,
-                      ease: "linear",
+                      duration: 14,
+                      ease: [0.16, 1, 0.3, 1],
                     }}
                     style={styles.slideImage}
+                    className="home-hero-image"
+                    loading={index === currentSlide ? "eager" : "lazy"}
+                    fetchPriority={index === currentSlide ? "high" : "auto"}
+                    decoding="async"
                   />
                   <div
                     style={{
