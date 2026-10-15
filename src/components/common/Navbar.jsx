@@ -30,7 +30,6 @@ import { getCountrySlug } from "../../utils/countrySlugMap";
 import { useCountries } from "../../hooks/useCountries";
 import { useDestinationsList } from "../../hooks/useDestinationsList";
 import { adaptDestination } from "../../utils/destinationAdapter";
-import DestinationCard from "./DestinationCard";
 import "./Navbar.css";
 
 const cn = (...c) => c.filter(Boolean).join(" ");
