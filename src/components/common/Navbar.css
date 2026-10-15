@@ -3128,3 +3128,49 @@
  .nav-search-story-card,.nav-search-story-card>img,.nav-search-story-float,.nav-search-country-card,.nav-search-explore-card,.nav-search-filter-toggle>svg:last-child{animation:none!important;transition:none!important}
  .nav-search-results{scroll-behavior:auto}
 }
+
+/* Premium navigation typography, hover motion and keyboard focus states. */
+.nav__link{
+  font-family:var(--nav-fb);
+  font-size:clamp(12px,.92vw,14px);
+  font-weight:650;
+  letter-spacing:-.018em;
+  padding:10px 13px;
+  border:1px solid transparent;
+  border-radius:11px;
+  transform:translateY(0);
+  transition:background .28s var(--nav-expo),color .25s ease,transform .28s var(--nav-expo),border-color .25s ease,box-shadow .28s ease;
+}
+.nav__link-text{position:relative;z-index:1;transition:transform .28s var(--nav-expo),letter-spacing .28s ease}
+.nav__link:hover .nav__link-text,.nav__link:focus-visible .nav__link-text{transform:translateY(-1px);letter-spacing:-.008em}
+.nav__link:hover{
+  background:linear-gradient(135deg,rgba(16,185,129,.2),rgba(255,255,255,.11));
+  border-color:rgba(167,243,208,.26);
+  box-shadow:0 8px 22px rgba(2,44,34,.12),inset 0 1px 0 rgba(255,255,255,.14);
+  transform:translateY(-2px);
+}
+.nav--scrolled .nav__link:hover{
+  background:linear-gradient(135deg,rgba(16,185,129,.12),rgba(5,150,105,.045));
+  border-color:rgba(5,150,105,.2);
+  box-shadow:0 7px 18px rgba(5,150,105,.09);
+  color:var(--nav-ch);
+}
+.nav__link:focus-visible{
+  outline:3px solid rgba(52,211,153,.88);
+  outline-offset:3px;
+  background:rgba(16,185,129,.16);
+  border-color:rgba(167,243,208,.7);
+  box-shadow:0 0 0 5px rgba(16,185,129,.12),0 8px 24px rgba(2,44,34,.13);
+  transform:translateY(-1px);
+}
+.nav--scrolled .nav__link:focus-visible{color:var(--nav-ch);background:rgba(16,185,129,.1)}
+.nav__link:focus-visible .nav__link-underline{transform:scaleX(1);transform-origin:left}
+.nav__link-shine{opacity:.8}
+.nav__item:focus-within{z-index:30}
+.nav__link--active{font-weight:750}
+@media(max-width:1023px){
+ .nav__link{font-size:13px;padding:9px 10px;letter-spacing:-.012em}
+}
+@media(prefers-reduced-motion:reduce){
+ .nav__link,.nav__link-text,.nav__link-underline,.nav__chevron{transition:none!important;animation:none!important}
+}
