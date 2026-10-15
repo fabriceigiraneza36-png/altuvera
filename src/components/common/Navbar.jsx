@@ -393,14 +393,14 @@ const Navbar = () => {
     const start = e => { touchStartRef.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; };
     const end = e => {
       if (!touchStartRef.current) return;
-      const dx = e.changedTouches[0].clientX - touchStartRef.current.x;
-      const dy = e.changedTouches[0].clientY - touchStartRef.current.y;
+      const start = touchStartRef.current;
+      const dx = e.changedTouches[0].clientX - start.x;
+      const dy = e.changedTouches[0].clientY - start.y;
       touchStartRef.current = null;
       if (Math.abs(dx) < 75 || Math.abs(dx) < Math.abs(dy) * 1.25 || window.innerWidth > 760) return;
-      if (dx < 0 && touchStartRef.current?.x > window.innerWidth - 70) setIsMobileMenuOpen(true);
-      else if (dx < 0 && e.changedTouches[0].clientX > window.innerWidth - 80) setIsMobileMenuOpen(true);
+      if (dx < 0 && start.x > window.innerWidth - 70) setIsMobileMenuOpen(true);
       else if (dx > 0 && isMobileMenuOpen) setIsMobileMenuOpen(false);
-      else if (dx > 0 && touchStartRef.current?.x < 70) setIsMobileMenuOpen(false);
+      else if (dx > 0 && start.x < 70) setIsMobileMenuOpen(false);
     };
     document.addEventListener("touchstart", start, { passive: true }); document.addEventListener("touchend", end, { passive: true });
     return () => { document.removeEventListener("touchstart", start); document.removeEventListener("touchend", end); };
