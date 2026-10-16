@@ -1058,33 +1058,6 @@ const TeamContent = () => {
           </AnimatedSection>
         )}
 
-        <AnimatedSection animation="fadeInUp">
-          <div className="tm-cta">
-            <div className="tm-cta-inner">
-              <span className="tm-cta-eyebrow">
-                <FiArrowRight size={11} /> Get Started
-              </span>
-              <h3 className="tm-cta-h">Ready to Start Your Adventure?</h3>
-              <p className="tm-cta-p">
-                Connect with our team of experts to plan your
-                transformative East African journey — tailored to your
-                interests, pace, and passions.
-              </p>
-              <div className="tm-cta-row">
-                <Button
-                  to="/contact"
-                  variant="primary"
-                  icon={<FiArrowRight size={15} />}
-                >
-                  Contact Our Team
-                </Button>
-                <Button to="/destinations" variant="outline">
-                  Explore Destinations
-                </Button>
-              </div>
-            </div>
-          </div>
-        </AnimatedSection>
       </div>
     </section>
   );
