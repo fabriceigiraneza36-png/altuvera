@@ -4,15 +4,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { useUserAuth } from "../../context/UserAuthContext";
 import DashboardLayout from "../../components/auth/DashboardLayout";
 import {
-  HiLogout, HiShieldCheck, HiBell, HiGlobeAlt,
-  HiMoon, HiDeviceMobile, HiCheckCircle,
-  HiExclamationCircle, HiSparkles, HiRefresh,
+  HiLogout, HiBell, HiDeviceMobile, HiCheckCircle,
+  HiExclamationCircle,
 } from "react-icons/hi";
 import {
-  FiSave, FiLayout, FiCheck, FiAlertCircle,
-  FiToggleLeft, FiToggleRight, FiChevronRight,
-  FiLogOut, FiShield, FiGlobe, FiBell,
-  FiZap,
+  FiSave, FiLogOut, FiShield, FiBell,
 } from "react-icons/fi";
 
 // ─── Inline CSS ───────────────────────────────────────────────────────────────
@@ -323,16 +319,9 @@ export default function UserSettings() {
 
   const initialPrefs = useMemo(() => ({
     emailNotifications: user?.preferences?.emailNotifications ?? true,
-    smsNotifications:   user?.preferences?.smsNotifications   ?? false,
-    marketingEmails:    user?.preferences?.marketingEmails    ?? true,
-    language:           user?.preferences?.language           || "en",
-    travelUpdates:      user?.preferences?.travelUpdates      ?? true,
-    autoFillForms:      user?.preferences?.autoFillForms      ?? true,
-    defaultCategory:    user?.preferences?.defaultCategory    || "all",
-    loaderPreference:   user?.preferences?.loaderPreference   || "default",
-    customLoaderText:   user?.preferences?.customLoaderText   || "",
-    reducedAnimations:  user?.preferences?.reducedAnimations  ?? false,
-    defaultView:        user?.preferences?.defaultView        || "grid",
+    smsNotifications: user?.preferences?.smsNotifications ?? false,
+    marketingEmails: user?.preferences?.marketingEmails ?? true,
+    travelUpdates: user?.preferences?.travelUpdates ?? true,
   }), [user]);
 
   const [preferences, setPreferences] = useState(initialPrefs);
@@ -452,129 +441,8 @@ export default function UserSettings() {
             ))}
           </SectionCard>
 
-          {/* ── Experience ── */}
-          <SectionCard
-            icon={<FiGlobe size={18} />}
-            title="Experience"
-            subtitle="Language, appearance, and defaults"
-          >
-            {/* Language */}
-            <div className="us-select-wrap">
-              <label>
-                <HiGlobeAlt /> Language
-              </label>
-              <select
-                className="us-select"
-                value={preferences.language}
-                onChange={(e) => updatePreference("language", e.target.value)}
-              >
-                <option value="en">🇬🇧 English</option>
-                <option value="fr">🇫🇷 French</option>
-                <option value="sw">🇰🇪 Swahili</option>
-              </select>
-            </div>
-
-            {/* Auto-fill */}
-            <ToggleRow
-              icon={<HiRefresh size={16} />}
-              label="Auto-fill Forms"
-              desc="Pre-fill booking forms with your saved information."
-              checked={Boolean(preferences.autoFillForms)}
-              onChange={(e) => updatePreference("autoFillForms", e.target.checked)}
-            />
-
-            {/* Default View */}
-            <ToggleRow
-              icon={<FiLayout size={16} />}
-              label="Default Destination View"
-              desc="Choose how destinations are displayed."
-              checked={false}
-              right={
-                <select
-                  className="us-select-inline"
-                  value={preferences.defaultView}
-                  onChange={(e) => {
-                    e.stopPropagation();
-                    updatePreference("defaultView", e.target.value);
-                  }}
-                >
-                  <option value="grid">Grid</option>
-                  <option value="list">List</option>
-                  <option value="map">Map</option>
-                </select>
-              }
-            />
-          </SectionCard>
-
-          {/* ── Personalization ── */}
-          <SectionCard
-            icon={<HiSparkles size={18} />}
-            title="Personalization"
-            subtitle="Tailor your Altuvera experience"
-          >
-            {/* Default Category */}
-            <div className="us-select-wrap">
-              <label>
-                <HiSparkles /> Default Destination Category
-              </label>
-              <select
-                className="us-select"
-                value={preferences.defaultCategory}
-                onChange={(e) => updatePreference("defaultCategory", e.target.value)}
-              >
-                <option value="all">All Categories</option>
-                <option value="safari">🦁 Safari Adventures</option>
-                <option value="beach">🏖️ Beach Escapes</option>
-                <option value="cultural">🏛️ Cultural Immersion</option>
-                <option value="trekking">🏔️ Mountain Trekking</option>
-                <option value="photography">📸 Photography Tours</option>
-              </select>
-            </div>
-
-            {/* Loader Preference */}
-            <div className="us-select-wrap">
-              <label>
-                <FiZap /> Loading Screen Style
-              </label>
-              <select
-                className="us-select"
-                value={preferences.loaderPreference}
-                onChange={(e) => updatePreference("loaderPreference", e.target.value)}
-              >
-                <option value="default">Default Altuvera</option>
-                <option value="personalized">Personalized (with your name)</option>
-                <option value="minimal">Minimal</option>
-              </select>
-            </div>
-
-            {/* Custom Loader Text */}
-            {preferences.loaderPreference === "personalized" && (
-              <div className="us-select-wrap">
-                <label>Custom Loader Message</label>
-                <input
-                  type="text"
-                  className="us-input"
-                  value={preferences.customLoaderText || ""}
-                  onChange={(e) =>
-                    updatePreference("customLoaderText", e.target.value.slice(0, 100))
-                  }
-                  placeholder={`e.g. "Ready for adventure, ${user?.fullName?.split(" ")[0] || "Traveler"}?"`}
-                />
-                <p className="us-input-hint">
-                  Shown on the loading screen when you're signed in. Max 100 characters.
-                </p>
-              </div>
-            )}
-
-            {/* Reduced Animations */}
-            <ToggleRow
-              icon={<HiDeviceMobile size={16} />}
-              label="Reduced Animations"
-              desc="Improve performance on slower devices."
-              checked={Boolean(preferences.reducedAnimations)}
-              onChange={(e) => updatePreference("reducedAnimations", e.target.checked)}
-            />
-          </SectionCard>
+          {/* Experience and personalization controls that were not connected to
+              working site behavior have been removed. */}
 
           {/* ── Security ── */}
           <SectionCard
