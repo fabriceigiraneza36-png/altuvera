@@ -218,6 +218,14 @@ const PKG_CSS = `
 }
 
 /* Premium responsive package cards */
+.pk-poster-card { position:relative; min-width:0; overflow:hidden; border-radius:22px; background:#ecfdf5; box-shadow:0 10px 30px rgba(2,44,34,.12); animation:pkCardIn .55s both; transition:transform .25s,box-shadow .25s; }
+.pk-poster-card:hover { transform:translateY(-5px); box-shadow:0 18px 38px rgba(2,44,34,.18); }
+.pk-poster-link { display:block; width:100%; aspect-ratio:3/4; overflow:hidden; }
+.pk-poster-link img { display:block; width:100%; height:100%; object-fit:cover; transition:transform .7s cubic-bezier(.22,1,.36,1); }
+.pk-poster-card:hover .pk-poster-link img { transform:scale(1.035); }
+.pk-poster-wish { position:absolute; top:12px; right:12px; width:40px; height:40px; border:1px solid rgba(255,255,255,.8); border-radius:50%; display:grid; place-items:center; color:#334155; background:rgba(255,255,255,.95); cursor:pointer; }
+.pk-poster-wish.is-wish { color:#e11d48; }
+@keyframes pkCardIn { from { opacity:0; transform:translateY(14px) } to { opacity:1; transform:translateY(0) } }
 .pk-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:clamp(16px,2.2vw,28px); align-items:stretch; }
 .pk-card { min-width:0; height:100%; border-radius:24px; border:1px solid #dcefe6; box-shadow:0 8px 26px rgba(2,44,34,.07); }
 .pk-card-media { position:relative; height:clamp(190px,20vw,260px); overflow:hidden; background:#064e3b; isolation:isolate; }
@@ -589,11 +597,28 @@ const GridCard = React.memo(function GridCard({ pkg, wishlist, onWishlist, index
   const summary = pkg.short_description || pkg.description || pkg.overview || "A thoughtfully planned journey with local expertise and unforgettable experiences.";
   const excerpt = String(summary).replace(/<[^>]*>/g, "").trim();
   const category = pkg.category || pkg.package_type || "Curated journey";
+  const posterOnly = pkg.poster_mode === "poster";
+  const gallery = Array.isArray(pkg.image_gallery) ? pkg.image_gallery.filter(Boolean) : (Array.isArray(pkg.images) ? pkg.images.filter(Boolean) : []);
+  const [slide, setSlide] = React.useState(0);
+  const slides = [...new Set([cover, ...gallery].filter(Boolean))];
+  React.useEffect(() => {
+    if (posterOnly || slides.length < 2) return;
+    const timer = setInterval(() => setSlide(n => (n + 1) % slides.length), 4200);
+    return () => clearInterval(timer);
+  }, [posterOnly, slides.length]);
+  if (posterOnly) return (
+    <article className="pk-poster-card" style={{ animationDelay: `${Math.min(index * 65, 390)}ms` }}>
+      <Link to={to} className="pk-poster-link" aria-label={`View ${title}`}>
+        {cover ? <img src={cover} alt={title} loading="lazy" /> : <div className="pk-card-placeholder"><MountainPlaceholder size={58} /></div>}
+      </Link>
+      <button type="button" className={`pk-poster-wish ${isWish ? "is-wish" : ""}`} aria-label={isWish ? "Remove from wishlist" : "Add to wishlist"} onClick={e => { e.preventDefault(); e.stopPropagation(); onWishlist?.(pkg.id); }}><FiHeart size={17} /></button>
+    </article>
+  );
   return (
     <article className="pk-card" style={{ animationDelay: `${Math.min(index * 65, 390)}ms` }}>
       <div className="pk-card-media">
         <Link to={to} aria-label={`Explore ${title}`} className="pk-card-media-link">
-          {cover ? <img src={cover} alt={title} loading="lazy" className="pk-card-img" /> :
+          {slides.length ? slides.map((src, idx) => <img key={src} src={src} alt={title} loading="lazy" className="pk-card-img" style={{ opacity: idx === slide ? 1 : 0, position: idx === slide ? 'relative' : 'absolute', inset: 0 }} />) :
             <div className="pk-card-placeholder"><MountainPlaceholder size={58} color="#a7f3d0" /></div>}
           <div className="pk-card-image-shade" />
         </Link>
