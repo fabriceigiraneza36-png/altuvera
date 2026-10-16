@@ -37,7 +37,7 @@ const ABOUT_STYLES = `
 
   /* ── Sections ── */
   .about-section {
-    padding: clamp(28px, 3.5vw, 48px) clamp(16px, 3vw, 32px);
+    padding: clamp(14px, 1.8vw, 24px) clamp(16px, 3vw, 32px);
   }
 
   .about-section-title {
@@ -1094,7 +1094,7 @@ const About = () => {
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit,minmax(min(100%,440px),1fr))',
-            gap: 'clamp(28px,4vw,48px)',
+            gap: 'clamp(16px,2vw,26px)',
           }}>
             <FadeInSection>
               <div style={{
