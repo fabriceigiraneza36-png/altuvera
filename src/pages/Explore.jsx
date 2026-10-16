@@ -1105,10 +1105,10 @@ function VideoShowcaseCard({
         className="ex-videocard__iframe"
         src={embedSrc}
         title={title}
-        allow="autoplay; encrypted-media; picture-in-picture"
+        allow="autoplay; encrypted-media"
         referrerPolicy="strict-origin-when-cross-origin"
         loading="eager"
-        allowFullScreen
+        allowFullScreen={false}
       />
       <div className="ex-videocard__overlay" />
       <div className="ex-videocard__content">
