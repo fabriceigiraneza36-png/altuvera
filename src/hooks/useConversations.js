@@ -527,12 +527,18 @@ export function useConversations() {
         const s = socketRef.current;
         let saved;
         if (s?.connected) {
-          const ack = await new Promise((resolve) => {
+          const ack = await new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              reject(new Error("The server did not confirm delivery. Check your connection and try again."));
+            }, 12_000);
             s.emit("msg:send", {
               conversationId,
               body: body.trim(),
               ...(replyToId ? { replyToId } : {}),
-            }, resolve);
+            }, (response) => {
+              clearTimeout(timeout);
+              resolve(response);
+            });
           });
           if (!ack?.success || !ack.message) throw new Error(ack?.error || "Failed to send message.");
           saved = normMsg(ack.message);
