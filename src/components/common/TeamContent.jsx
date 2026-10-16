@@ -249,7 +249,7 @@ const STYLES = `
 
 .tm-filters{
   display:flex;flex-wrap:wrap;justify-content:center;
-  gap:8px;margin-bottom:36px;
+  gap:8px;margin: 16px auto 24px;
 }
 .tm-fbtn{
   display:inline-flex;align-items:center;gap:6px;
@@ -973,9 +973,6 @@ const TeamContent = () => {
       <div className="tm-wrap">
         <AnimatedSection animation="fadeInUp">
           <div className="tm-head">
-            <span className="tm-eyebrow">
-              <FiUsers size={12} /> Our Experts
-            </span>
             <h2 className="tm-h2">
               Meet Our <em>Team</em>
             </h2>
