@@ -1022,6 +1022,30 @@ export default function Messages() {
 
 
   const [draft,        setDraft]        = useState("");
+  const [aiSuggestions, setAiSuggestions] = useState([]);
+  const [aiSuggestionLanguage, setAiSuggestionLanguage] = useState("");
+  const aiSuggestionRequestRef = useRef(0);
+  useEffect(() => {
+    const value = draft.trim();
+    if (value.length < 12 || value.length > 700) { setAiSuggestions([]); return; }
+    const requestId = ++aiSuggestionRequestRef.current;
+    const timer = setTimeout(async () => {
+      try {
+        const token = getToken();
+        const response = await fetch(API_BASE + "/ai/message-suggestions", {
+          method: "POST", headers: { "Content-Type": "application/json", ...(token ? { Authorization: "Bearer " + token } : {}) },
+          body: JSON.stringify({ text: value }), signal: AbortSignal.timeout(5000),
+        });
+        if (!response.ok) return;
+        const result = await response.json();
+        if (requestId === aiSuggestionRequestRef.current) {
+          setAiSuggestions(Array.isArray(result.suggestions) ? result.suggestions.slice(0, 2) : []);
+          setAiSuggestionLanguage(result.language || "");
+        }
+      } catch (_) { /* Suggestions are best-effort; never interrupt chat. */ }
+    }, 650);
+    return () => clearTimeout(timer);
+  }, [draft]);
   const [replyToId,    setReplyToId]    = useState(null);
   const [editingMessageId, setEditingMessageId] = useState(null);
   const [editText, setEditText] = useState("");
@@ -1623,7 +1647,7 @@ export default function Messages() {
                   )}
 
                   {/* Input row */}
-                  <div className="msg-composer-row flex items-end gap-2 rounded-2xl p-1.5">
+                  <div className="msg-composer-row relative flex items-end gap-2 rounded-2xl p-1.5">
                     {/* Emoji toggle */}
                     <div className="relative flex-shrink-0">
                       <button
@@ -1673,6 +1697,13 @@ export default function Messages() {
                       className="flex-1 min-w-0 w-full resize-none text-[14px] px-2.5 py-2.5 rounded-xl border-0 bg-transparent outline-none leading-relaxed placeholder:text-slate-400"
                       style={{ minHeight:40, maxHeight:128 }}
                     />
+                    {aiSuggestions.length > 0 && (
+                      <div className="absolute bottom-[calc(100%+8px)] left-2 right-2 z-30 rounded-xl border border-emerald-100 bg-white p-2 shadow-xl shadow-slate-900/10 sm:left-12" role="group" aria-label="Optional writing suggestions">
+                        <div className="mb-1 px-2 text-[10px] font-bold uppercase tracking-wide text-emerald-700">{aiSuggestionLanguage ? "Suggestion · " + aiSuggestionLanguage : "Writing suggestion"}</div>
+                        {aiSuggestions.map((suggestion, index) => <button key={index} type="button" onClick={() => { setDraft(suggestion); setAiSuggestions([]); textareaRef.current?.focus(); }} className="block w-full rounded-lg px-2 py-2 text-left text-xs leading-relaxed text-slate-700 transition hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">{suggestion}</button>)}
+                        <button type="button" onClick={() => setAiSuggestions([])} className="mt-1 px-2 py-1 text-[10px] font-semibold text-slate-400 hover:text-slate-700">Dismiss</button>
+                      </div>
+                    )}
 
                     {/* Send button */}
                     <button
