@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 // ─── Type config ──────────────────────────────────────────────────────────────
@@ -40,6 +40,8 @@ const NotifItem = ({
   onReply,
   onDelete,
 }) => {
+  const swipeStartX = useRef(null)
+  const swipeDeltaX = useRef(0)
   const [showReply,  setShowReply]  = useState(false)
   const [replyText,  setReplyText]  = useState('')
   const [replying,   setReplying]   = useState(false)
@@ -69,7 +71,12 @@ const NotifItem = ({
         background:   notif.is_read ? '#fff' : '#f0fdf4',
         cursor:       'default',
         position:     'relative',
+        touchAction:  'pan-y',
+        transition:   'transform 120ms ease-out, opacity 120ms ease-out',
       }}
+      onTouchStart={(e) => { swipeStartX.current = e.touches[0]?.clientX ?? null; swipeDeltaX.current = 0; }}
+      onTouchMove={(e) => { if (swipeStartX.current === null) return; swipeDeltaX.current = e.touches[0].clientX - swipeStartX.current; e.currentTarget.style.transform = 'translateX(' + swipeDeltaX.current + 'px)'; e.currentTarget.style.opacity = String(Math.max(.25, 1 - Math.abs(swipeDeltaX.current) / 260)); }}
+      onTouchEnd={(e) => { const delta = swipeDeltaX.current; swipeStartX.current = null; swipeDeltaX.current = 0; if (Math.abs(delta) > 95) { onDelete(notif.id); } else { e.currentTarget.style.transform = ''; e.currentTarget.style.opacity = ''; } }}
     >
       {/* Unread dot */}
       {!notif.is_read && (
