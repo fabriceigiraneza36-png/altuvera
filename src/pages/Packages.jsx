@@ -217,6 +217,60 @@ const PKG_CSS = `
   color: var(--pk-green-dk); transform: translateY(-1px);
 }
 
+/* Premium responsive package cards */
+.pk-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:clamp(16px,2.2vw,28px); align-items:stretch; }
+.pk-card { min-width:0; height:100%; border-radius:24px; border:1px solid #dcefe6; box-shadow:0 8px 26px rgba(2,44,34,.07); }
+.pk-card-media { position:relative; height:clamp(190px,20vw,260px); overflow:hidden; background:#064e3b; isolation:isolate; }
+.pk-card-media-link { display:block; position:absolute; inset:0; overflow:hidden; }
+.pk-card-media .pk-card-img { width:100%; height:100%; object-fit:cover; display:block; transition:transform .7s cubic-bezier(.22,1,.36,1); }
+.pk-card:hover .pk-card-media .pk-card-img { transform:scale(1.07); }
+.pk-card-placeholder { position:absolute; inset:0; display:grid; place-items:center; background:linear-gradient(135deg,#064e3b,#10b981); }
+.pk-card-image-shade { position:absolute; inset:0; background:linear-gradient(180deg,rgba(2,44,34,.2),transparent 35%,rgba(2,44,34,.78)); pointer-events:none; }
+.pk-card-category { position:absolute; left:14px; top:14px; max-width:calc(100% - 76px); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; border-radius:999px; padding:7px 11px; color:#064e3b; background:rgba(255,255,255,.94); font-size:10px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }
+.pk-card-wish { position:absolute; top:12px; right:12px; z-index:2; width:40px; height:40px; display:grid; place-items:center; border:1px solid rgba(255,255,255,.75); border-radius:50%; color:#334155; background:rgba(255,255,255,.95); cursor:pointer; transition:transform .22s,background .22s,color .22s; }
+.pk-card-wish:hover { transform:scale(1.08); }
+.pk-card-wish.is-wish { color:#e11d48; background:#fff1f2; }
+.pk-card-wish.is-wish svg { fill:currentColor; }
+.pk-card-destination { position:absolute; z-index:1; left:17px; right:17px; bottom:15px; display:flex; align-items:center; gap:7px; color:white; font-size:12px; font-weight:700; text-shadow:0 1px 6px rgba(0,0,0,.3); }
+.pk-card-body { display:flex; flex-direction:column; gap:12px; padding:20px; min-width:0; flex:1; }
+.pk-card-title { color:#073b2e; text-decoration:none; font-family:'DM Serif Display',Georgia,serif; font-size:clamp(21px,2vw,27px); line-height:1.15; letter-spacing:-.02em; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; transition:color .2s; }
+.pk-card-title:hover { color:#059669; }
+.pk-card-description { color:#64748b; font-size:13px; line-height:1.65; margin:0; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; min-height:64px; overflow-wrap:anywhere; }
+.pk-card-facts { display:flex; flex-wrap:wrap; gap:8px 14px; color:#52665f; font-size:11px; font-weight:650; }
+.pk-card-facts span { display:inline-flex; align-items:center; gap:6px; }
+.pk-card-facts svg { color:#059669; flex-shrink:0; }
+.pk-card-footer { margin-top:auto; padding-top:15px; border-top:1px solid #e6f3ec; display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.pk-card-price { min-width:0; display:flex; flex-direction:column; gap:2px; }
+.pk-card-price small { color:#84938d; font-size:10px; line-height:1.3; }
+.pk-card-price strong { color:#064e3b; font-size:clamp(17px,1.5vw,21px); font-weight:800; white-space:nowrap; }
+.pk-card-action { display:inline-flex; align-items:center; justify-content:center; gap:7px; padding:11px 13px; border-radius:12px; background:linear-gradient(135deg,#10b981,#047857); color:white; text-decoration:none; font-size:12px; font-weight:800; white-space:nowrap; box-shadow:0 5px 14px rgba(5,150,105,.2); transition:transform .22s,box-shadow .22s; }
+.pk-card-action:hover { transform:translateY(-2px); box-shadow:0 9px 20px rgba(5,150,105,.28); }
+.pk-list-card { grid-template-columns:minmax(210px,32%) minmax(0,1fr); }
+.pk-list-media { position:relative; min-height:100%; overflow:hidden; background:#064e3b; display:block; }
+.pk-list-media .pk-card-img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:transform .7s cubic-bezier(.22,1,.36,1); }
+.pk-list-card:hover .pk-list-media .pk-card-img { transform:scale(1.06); }
+.pk-list-body { padding:clamp(18px,2.5vw,28px); display:flex; flex-direction:column; gap:12px; min-width:0; }
+.pk-list-topline { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.pk-card-category-inline { color:#047857; background:#ecfdf5; border:1px solid #d1fae5; padding:6px 10px; border-radius:999px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; }
+.pk-list-body .pk-card-wish { position:static; flex-shrink:0; border-color:#e2e8f0; }
+.pk-list-body .pk-card-description { -webkit-line-clamp:4; min-height:0; }
+@media(max-width:1050px) { .pk-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:640px) {
+ .pk-grid { grid-template-columns:minmax(0,1fr)!important; gap:18px; }
+ .pk-card { border-radius:20px; }
+ .pk-card-media { height:230px; }
+ .pk-card-body { padding:17px; gap:10px; }
+ .pk-card-description { min-height:0; }
+ .pk-card-footer { align-items:flex-end; gap:8px; }
+ .pk-card-action { padding:10px 11px; font-size:11px; }
+ .pk-list-card { grid-template-columns:minmax(0,1fr)!important; }
+ .pk-list-media { height:220px; min-height:220px; }
+ .pk-list-body { padding:17px; }
+}
+@media(prefers-reduced-motion:reduce) {
+ .pk-card,.pk-card-img,.pk-card-action,.pk-card-wish { animation:none!important; transition:none!important; }
+}
+
 .pk-card {
   background: var(--pk-surface);
   border-radius: var(--pk-radius);
@@ -526,78 +580,79 @@ const GridCard = React.memo(function GridCard({ pkg, wishlist, onWishlist, index
   const isWish = wishlist?.has(pkg.id);
   const cover = pkg.cover_image_url || pkg.thumbnail_url || null;
   const to = `/packages/${pkg.slug || pkg.id}`;
-  const destinationRaw = pkg.destination_name || pkg.destination || pkg.destination?.name || "East Africa";
-  const destination = typeof destinationRaw === 'string'
-    ? destinationRaw
-    : String(destinationRaw?.name || destinationRaw?.title || destinationRaw?.slug || "East Africa");
-
+  const rawDestination = pkg.destination_name || pkg.destination || pkg.destination?.name || "East Africa";
+  const destination = typeof rawDestination === "string" ? rawDestination : String(rawDestination?.name || rawDestination?.title || "East Africa");
+  const title = pkg.title || pkg.name || "Discover East Africa";
+  const duration = pkg.duration_days ? fmtDuration(pkg.duration_days, pkg.duration_nights) : null;
+  const price = pkg.price_from ?? pkg.price ?? pkg.base_price;
+  const currency = pkg.currency || "USD";
+  const summary = pkg.short_description || pkg.description || pkg.overview || "A thoughtfully planned journey with local expertise and unforgettable experiences.";
+  const excerpt = String(summary).replace(/<[^>]*>/g, "").trim();
+  const category = pkg.category || pkg.package_type || "Curated journey";
   return (
-    <article className="pk-card" style={{ animationDelay: `${Math.min(index * 60, 360)}ms`, position: "relative" }}>
-      <Link to={to} aria-label={`View package for ${destination}`} style={{ textDecoration: "none", color: "inherit" }}>
-        <div style={{ position:"relative", overflow:"hidden", background:"#064e3b" }}>
-          {cover ? (
-            <img src={cover} alt={`Package poster for ${destination}`} loading="lazy"
-              className="pk-card-img" style={{ width:"100%", height:"auto", minHeight:220, objectFit:"cover", display:"block" }} />
-          ) : (
-            <div style={{ minHeight:220, display:"grid", placeItems:"center" }}>
-              <MountainPlaceholder size={62} color="#a7f3d0" />
-            </div>
-          )}
-          <div style={{ position:"absolute", inset:0, background:"linear-gradient(to bottom,transparent 58%,rgba(2,44,34,.78) 100%)" }} />
-          <div style={{ position:"absolute", top:14, right:14 }}>
-            <button type="button" aria-label={isWish ? "Remove from wishlist" : "Add to wishlist"}
-              onClick={e => { e.preventDefault(); e.stopPropagation(); onWishlist?.(pkg.id); }}
-              style={{ width:40,height:40,borderRadius:"50%",border:"1px solid rgba(255,255,255,.75)",
-                background:"rgba(255,255,255,.94)",display:"grid",placeItems:"center",cursor:"pointer",
-                boxShadow:"0 5px 16px rgba(0,0,0,.16)" }}>
-              <FiHeart size={16} style={{fill:isWish?"#ef4444":"none",color:isWish?"#ef4444":"#475569"}} />
-            </button>
-          </div>
-          <div style={{position:"absolute",left:18,right:18,bottom:16,color:"white",fontSize:13,fontWeight:800,
-            textShadow:"0 2px 10px rgba(0,0,0,.35)",display:"flex",alignItems:"center",gap:6}}>
-            <FiMapPin size={14}/> {destination}
-          </div>
+    <article className="pk-card" style={{ animationDelay: `${Math.min(index * 65, 390)}ms` }}>
+      <div className="pk-card-media">
+        <Link to={to} aria-label={`Explore ${title}`} className="pk-card-media-link">
+          {cover ? <img src={cover} alt={title} loading="lazy" className="pk-card-img" /> :
+            <div className="pk-card-placeholder"><MountainPlaceholder size={58} color="#a7f3d0" /></div>}
+          <div className="pk-card-image-shade" />
+        </Link>
+        <span className="pk-card-category">{category}</span>
+        <button type="button" className={`pk-card-wish ${isWish ? "is-wish" : ""}`}
+          aria-label={isWish ? "Remove from wishlist" : "Add to wishlist"}
+          onClick={e => { e.preventDefault(); e.stopPropagation(); onWishlist?.(pkg.id); }}>
+          <FiHeart size={17} />
+        </button>
+        <div className="pk-card-destination"><FiMapPin size={14} />{destination}</div>
+      </div>
+      <div className="pk-card-body">
+        <Link to={to} className="pk-card-title">{title}</Link>
+        <p className="pk-card-description">{excerpt}</p>
+        <div className="pk-card-facts">
+          {duration && <span><FiClock size={15} />{duration.replace(" / ", " · ")}</span>}
+          <span><FiUsers size={15} />Small-group friendly</span>
         </div>
-      </Link>
+        <div className="pk-card-footer">
+          <div className="pk-card-price">
+            <small>Starting from</small>
+            <strong>{fmtPrice(price, currency)}</strong>
+            <small>per person</small>
+          </div>
+          <Link to={to} className="pk-card-action">Explore trip <FiArrowRight size={16} /></Link>
+        </div>
+      </div>
     </article>
   );
-})
+});
 const ListCard = React.memo(function ListCard({ pkg, wishlist, onWishlist, index = 0 }) {
   const isWish = wishlist?.has(pkg.id);
   const cover = pkg.cover_image_url || pkg.thumbnail_url || null;
   const to = `/packages/${pkg.slug || pkg.id}`;
-  const destinationRaw = pkg.destination_name || pkg.destination || pkg.destination?.name || "East Africa";
-  const destination = typeof destinationRaw === 'string'
-    ? destinationRaw
-    : String(destinationRaw?.name || destinationRaw?.title || destinationRaw?.slug || "East Africa");
-
+  const rawDestination = pkg.destination_name || pkg.destination || pkg.destination?.name || "East Africa";
+  const destination = typeof rawDestination === "string" ? rawDestination : String(rawDestination?.name || rawDestination?.title || "East Africa");
+  const title = pkg.title || pkg.name || "Discover East Africa";
+  const duration = pkg.duration_days ? fmtDuration(pkg.duration_days, pkg.duration_nights) : null;
+  const price = pkg.price_from ?? pkg.price ?? pkg.base_price;
+  const summary = String(pkg.short_description || pkg.description || pkg.overview || "A thoughtfully planned journey with local expertise and unforgettable experiences.").replace(/<[^>]*>/g, "").trim();
   return (
-    <Link to={to} className="pk-list-card" style={{ animationDelay: `${Math.min(index * 50, 300)}ms` }}>
-      <div className="pk-list-img" style={{ position:'relative', overflow:'hidden', background:'#d1fae5', minHeight:210 }}>
-        {cover ? (
-          <img src={cover} alt={`Package poster for ${destination}`} loading="lazy" className="pk-card-img"
-            style={{ width:'100%', height:'100%', objectFit:'cover', display:'block', position:'absolute', inset:0 }} />
-        ) : (
-          <div style={{ width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',position:'absolute',inset:0 }}>
-            <MountainPlaceholder size={44} />
-          </div>
-        )}
-        <div style={{ position:'absolute', inset:0, background:'linear-gradient(to bottom,transparent 55%,rgba(2,44,34,.78))' }} />
-        <div style={{ position:'absolute', left:16, right:16, bottom:14, color:'white', fontSize:13, fontWeight:800,
-          textShadow:'0 2px 10px rgba(0,0,0,.35)', display:'flex', alignItems:'center', gap:6 }}>
-          <FiMapPin size={14}/> {destination}
+    <article className="pk-list-card" style={{ animationDelay: `${Math.min(index * 55, 330)}ms` }}>
+      <Link to={to} className="pk-list-media" aria-label={`Explore ${title}`}>
+        {cover ? <img src={cover} alt={title} loading="lazy" className="pk-card-img" /> : <div className="pk-card-placeholder"><MountainPlaceholder size={46} /></div>}
+        <div className="pk-card-image-shade" />
+        <div className="pk-card-destination"><FiMapPin size={14} />{destination}</div>
+      </Link>
+      <div className="pk-list-body">
+        <div className="pk-list-topline"><span className="pk-card-category-inline">{pkg.category || pkg.package_type || "Curated journey"}</span>
+          <button type="button" className={`pk-card-wish ${isWish ? "is-wish" : ""}`} aria-label={isWish ? "Remove from wishlist" : "Add to wishlist"} onClick={() => onWishlist?.(pkg.id)}><FiHeart size={17} /></button>
         </div>
-        <button type="button" aria-label={isWish ? "Remove from wishlist" : "Add to wishlist"}
-          onClick={e => { e.preventDefault(); e.stopPropagation(); onWishlist?.(pkg.id) }}
-          style={{ position:'absolute', top:12, right:12, width:34, height:34, borderRadius:'50%',
-            background:'rgba(255,255,255,0.92)', border:'none', display:'flex', alignItems:'center', justifyContent:'center',
-            cursor:'pointer', boxShadow:'0 2px 10px rgba(0,0,0,.1)' }}>
-          <FiHeart size={13} style={{ fill:isWish?'#ef4444':'none', color:isWish?'#ef4444':'#6b7280' }} />
-        </button>
+        <Link to={to} className="pk-card-title">{title}</Link>
+        <p className="pk-card-description">{summary}</p>
+        <div className="pk-card-facts">{duration && <span><FiClock size={15} />{duration.replace(" / ", " · ")}</span>}<span><FiMapPin size={15} />{destination}</span></div>
+        <div className="pk-card-footer"><div className="pk-card-price"><small>Starting from</small><strong>{fmtPrice(price, pkg.currency || "USD")}</strong><small>per person</small></div><Link to={to} className="pk-card-action">Explore trip <FiArrowRight size={16} /></Link></div>
       </div>
-    </Link>
+    </article>
   );
-})
+});
 /* ══════════════════════════════════════════════════════════════════════
    SKELETON CARDS
 ══════════════════════════════════════════════════════════════════════ */
