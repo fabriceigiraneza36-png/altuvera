@@ -3452,3 +3452,106 @@
   .mm__account-links--open>.mm__out{animation:none!important}
   .nav-search-story-rail,.nav-search-country-rail{scroll-behavior:auto}
 }
+
+/* Premium mobile account modal and avatar treatment. Desktop nav remains untouched. */
+@media(max-width:1024px){
+  .mm__profile{
+    display:flex;align-items:center;gap:14px;width:100%;min-width:0;
+    padding:13px 48px 13px 12px;margin:10px 0 2px;border:1px solid rgba(16,145,98,.13);
+    border-radius:20px;text-align:left;position:relative;isolation:isolate;overflow:hidden;
+    background:linear-gradient(120deg,rgba(240,252,246,.98),rgba(255,255,255,.96) 68%,rgba(226,248,238,.92));
+    box-shadow:0 9px 26px rgba(12,90,61,.065),inset 0 1px 0 rgba(255,255,255,.95);
+    -webkit-tap-highlight-color:transparent;
+  }
+  .mm__profile:before{
+    content:"";position:absolute;inset:0 auto 0 0;width:3px;border-radius:0 5px 5px 0;
+    background:linear-gradient(180deg,#14b884,#087f58);opacity:.75;
+  }
+  .mm__profile:after{
+    content:"";position:absolute;width:110px;height:110px;right:-42px;top:-64px;border-radius:50%;
+    background:radial-gradient(circle,rgba(21,184,132,.14),transparent 70%);pointer-events:none;
+  }
+  .mm__profile--open{border-color:rgba(8,127,88,.38);box-shadow:0 12px 30px rgba(8,127,88,.12),inset 0 0 0 1px rgba(8,127,88,.05)}
+  .mm__profile-avatar-frame{
+    position:relative;display:grid;place-items:center;flex:0 0 58px;width:58px;height:58px;
+    border-radius:50%;padding:3px;background:conic-gradient(from 25deg,#13b981,#d4f7e6,#0c8158,#8ce8c0,#13b981);
+    box-shadow:0 5px 16px rgba(4,120,87,.2);isolation:isolate;
+    animation:mmAvatarFloat 4.5s ease-in-out infinite;
+  }
+  .mm__profile-avatar-frame .mm__pav-img,.mm__profile-avatar-frame .mm__pav-init{
+    width:100%;height:100%;border:2px solid #fff;border-radius:50%;object-fit:cover;position:relative;z-index:1;
+  }
+  .mm__profile-avatar-frame .mm__pav-init{display:grid;place-items:center}
+  .mm__avatar-glow{position:absolute;inset:-5px;border-radius:50%;border:1px solid rgba(16,185,129,.34);animation:mmAvatarPulse 2.8s ease-out infinite;pointer-events:none}
+  .mm__avatar-edit-mark{
+    position:absolute;right:-1px;bottom:0;z-index:2;display:grid;place-items:center;width:22px;height:22px;
+    border:2px solid white;border-radius:50%;background:linear-gradient(135deg,#12b981,#087f58);color:white;
+    box-shadow:0 2px 8px rgba(4,120,87,.2)
+  }
+  .mm__profile-copy{position:relative;z-index:1;display:flex;flex:1;min-width:0;flex-direction:column;gap:3px;align-items:flex-start}
+  .mm__pname{font-size:16px;line-height:1.25;font-weight:780;letter-spacing:-.025em;color:#102d22}
+  .mm__pemail{max-width:100%;width:100%;font-size:12px;line-height:1.45;color:#66796f}
+  .mm__pprov{margin-top:2px;padding:4px 9px;border:1px solid #d4f1e2;border-radius:999px;background:#effaf4;color:#087f58;font-size:10px;line-height:1;font-weight:750}
+  .mm__profile-open-indicator{
+    position:absolute;z-index:2;right:13px;top:50%;transform:translateY(-50%);
+    display:grid;place-items:center;width:29px;height:29px;border:1px solid rgba(8,127,88,.12);
+    border-radius:10px;background:rgba(255,255,255,.78);color:#087f58;
+    transition:transform .3s cubic-bezier(.2,.8,.2,1),background .25s ease;
+  }
+  .mm__profile--open .mm__profile-open-indicator{transform:translateY(-50%) rotate(180deg);background:#e1f7ec}
+  .mm__account-overlay{
+    position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;
+    padding: max(18px,env(safe-area-inset-top)) 16px max(18px,env(safe-area-inset-bottom));
+    background:rgba(4,24,17,.48);backdrop-filter:blur(9px) saturate(125%);-webkit-backdrop-filter:blur(9px) saturate(125%);
+    overflow-y:auto;overscroll-behavior:contain;
+  }
+  .mm__account-modal{
+    position:relative;width:min(100%,370px);max-height:min(86dvh,760px);overflow-y:auto;overscroll-behavior:contain;
+    margin:auto;padding:19px;border:1px solid rgba(255,255,255,.82);border-radius:27px;
+    background:linear-gradient(155deg,#fff 0%,#fbfffd 48%,#f0faf5 100%);
+    box-shadow:0 32px 100px rgba(0,35,23,.32),0 8px 24px rgba(4,120,87,.1),inset 0 1px 0 #fff;
+    -webkit-overflow-scrolling:touch;scrollbar-width:thin;outline:none;
+  }
+  .mm__account-modal:before{content:"";position:absolute;top:0;left:15%;right:15%;height:3px;border-radius:0 0 8px 8px;background:linear-gradient(90deg,transparent,#12b981,#087f58,transparent)}
+  .mm__account-modal-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+  .mm__account-modal-kicker{font-size:10px;font-weight:850;letter-spacing:.18em;color:#087f58}
+  .mm__account-modal-close{display:grid;place-items:center;width:38px;height:38px;border:1px solid #e5eee8;border-radius:13px;background:#fff;color:#1b3529;box-shadow:0 3px 12px rgba(11,67,44,.06);transition:transform .2s ease,background .2s ease}
+  .mm__account-modal-close:active{transform:scale(.92);background:#eaf8f0}
+  .mm__account-hero{display:flex;align-items:center;gap:15px;padding:15px 13px;margin-bottom:15px;border:1px solid #dcefe4;border-radius:21px;background:linear-gradient(125deg,#eaf9f1,#fff 70%);box-shadow:inset 0 1px 0 #fff}
+  .mm__account-avatar-wrap{position:relative;flex:0 0 76px;width:76px;height:76px;padding:4px;border-radius:50%;background:conic-gradient(from 30deg,#10b981,#d9f7e7,#087f58,#a7f0cd,#10b981);box-shadow:0 8px 22px rgba(8,127,88,.2);animation:mmAvatarFloat 4.5s ease-in-out infinite}
+  .mm__account-avatar{width:100%;height:100%;display:grid;place-items:center;object-fit:cover;border:3px solid white;border-radius:50%}
+  .mm__account-avatar--initials{background:linear-gradient(145deg,#10b981,#087f58);color:white;font-size:22px;font-weight:800}
+  .mm__account-avatar-ring{position:absolute;inset:-5px;border:1px solid rgba(16,185,129,.28);border-radius:50%;pointer-events:none}
+  .mm__account-online{position:absolute;right:1px;bottom:3px;width:15px;height:15px;border:3px solid white;border-radius:50%;background:#20bd80}
+  .mm__account-hero-copy{min-width:0;flex:1}
+  .mm__account-hero-copy h3{margin:0 0 5px;font-size:18px;line-height:1.2;letter-spacing:-.035em;font-weight:800;color:#153a2a;overflow-wrap:anywhere}
+  .mm__account-hero-copy p{margin:0;color:#718278;font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+  .mm__account-provider{display:inline-flex;align-items:center;gap:5px;margin-top:9px;padding:5px 8px;border-radius:999px;background:#e0f6e9;color:#087f58;font-size:10px;font-weight:800}
+  .mm__account-modal-links{display:flex;flex-direction:column;gap:7px}
+  .mm__account-modal-link{
+    display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 11px;border:1px solid #e9f0eb;border-radius:16px;
+    background:rgba(255,255,255,.88);color:#20372b;text-decoration:none;font-size:14px;font-weight:680;
+    box-shadow:0 2px 7px rgba(8,70,45,.025);opacity:0;transform:translateY(9px);
+    animation:mmAccountModalItem .36s cubic-bezier(.2,.8,.2,1) calc(var(--account-i,0)*55ms + 80ms) forwards;
+    transition:transform .2s ease,border-color .2s ease,background .2s ease,box-shadow .2s ease;
+  }
+  .mm__account-modal-link:active{transform:scale(.985);background:#effaf4;border-color:#b9e8d0}
+  .mm__account-modal-icon{display:grid;place-items:center;flex:0 0 38px;width:38px;height:38px;border-radius:13px;background:linear-gradient(145deg,#effaf4,#e1f6ea);color:#07865c}
+  .mm__account-modal-arrow{margin-left:auto;color:#91a69a;transition:transform .2s ease,color .2s ease}
+  .mm__account-modal-link:active .mm__account-modal-arrow{transform:translateX(3px);color:#087f58}
+  .mm__account-modal-signout{display:flex;align-items:center;justify-content:center;gap:9px;width:100%;min-height:49px;margin-top:13px;border:1px solid #f3d8d8;border-radius:15px;background:linear-gradient(120deg,#fffafa,#fff);color:#c43c43;font:inherit;font-size:14px;font-weight:750;transition:background .2s ease,transform .2s ease}
+  .mm__account-modal-signout:active{transform:scale(.985);background:#fff0f0}
+  .mm__account-modal-foot{margin:14px 0 1px;text-align:center;font-size:11px;color:#8a9b91;letter-spacing:.01em}
+}
+@keyframes mmAvatarFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+@keyframes mmAvatarPulse{0%{transform:scale(.94);opacity:.65}75%,100%{transform:scale(1.13);opacity:0}}
+@keyframes mmAccountModalItem{to{opacity:1;transform:translateY(0)}}
+@media(max-width:380px){
+ .mm__account-modal{padding:15px;border-radius:23px}
+ .mm__account-hero{gap:11px;padding:12px 10px}
+ .mm__account-avatar-wrap{flex-basis:64px;width:64px;height:64px}
+ .mm__account-hero-copy h3{font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){
+ .mm__profile-avatar-frame,.mm__avatar-glow,.mm__account-avatar-wrap,.mm__account-modal-link{animation:none!important;opacity:1;transform:none;transition:none!important}
+}
