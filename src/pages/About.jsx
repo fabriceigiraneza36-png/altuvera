@@ -843,7 +843,7 @@ const About = () => {
               Altuvera Safaris is a Rwandan travel company crafting adventures, wildlife encounters, and cultural immersions across East Africa and beyond.
             </p>
             <p className="about-section-lead" style={{ marginBottom: 24 }}>
-              Founded and headquartered in <strong style={{ color: '#059669' }}>Kinigi, Musanze</strong> — at the gateway to Volcanoes National Park — we design journeys that go far beyond sightseeing. Every itinerary is built around three things that never change: <strong>the wild landscapes</strong>, <strong>the incredible wildlife</strong>, and <strong>the resilient communities</strong> that make East Africa unforgettable.
+              Based in <strong style={{ color: '#059669' }}>Musanze, Rwanda</strong>, we design journeys that go far beyond sightseeing. Every itinerary is built around three things that never change: <strong>the wild landscapes</strong>, <strong>the incredible wildlife</strong>, and <strong>the resilient communities</strong> that make East Africa unforgettable.
             </p>
             <p className="about-section-lead">
               With over a decade of combined local expertise, our team knows the terrain, speaks the languages, and holds the trust of the parks and communities we visit. That is why travelers choose Altuvera — and why they come back.
@@ -1217,7 +1217,7 @@ const About = () => {
                 <div className="about-contact-icon"><MapPin size={20} /></div>
                 <div>
                   <div className="about-contact-label">Visit Us</div>
-                  <div className="about-contact-val">Kinigi, Musanze, Rwanda</div>
+                  <div className="about-contact-val">Musanze, Rwanda</div>
                 </div>
               </div>
             </div>
