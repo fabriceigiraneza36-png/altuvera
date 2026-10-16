@@ -272,7 +272,7 @@ export default function CookieDocumentation() {
                     },
                     {
                       title: "Right to Access",
-                      desc: "You can request a copy of all personal data we hold about you by contacting privacy@altuvera.com.",
+                      desc: "You can request a copy of all personal data we hold about you by contacting altuverasafari@gmail.com.",
                     },
                     {
                       title: "Right to Erasure",
@@ -355,16 +355,16 @@ export default function CookieDocumentation() {
               <DocSection title="Contact">
                 <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3">
                   <p className="text-[12px] text-slate-600 leading-relaxed">
-                    For privacy enquiries, contact our Data Protection Officer:
+                    For privacy enquiries, contact Altuvera Safaris:
                   </p>
                   <a
-                    href="mailto:privacy@altuvera.com"
+                    href="mailto:altuverasafari@gmail.com"
                     className="text-[12px] text-emerald-600 font-bold hover:text-emerald-700 focus:outline-none underline-offset-2 hover:underline"
                   >
-                    privacy@altuvera.com
+                    altuverasafari@gmail.com
                   </a>
                   <p className="text-[11px] text-slate-400 mt-1">
-                    Altuvera Safaris Ltd, Nairobi, Kenya
+                    Altuvera Safaris, Musanze, Rwanda
                   </p>
                 </div>
               </DocSection>
