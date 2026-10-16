@@ -181,7 +181,7 @@ const SECTIONS = [
     title: "Contact Us",
     color: BRAND.green700,
     body: [
-      "If you have any questions about these Terms of Service, please contact us at altuverasafari@gmail.com or altuverasafari@gmail.com.",
+      "If you have any questions about these Terms of Service, please contact us at altuverasafari@gmail.com.",
     ],
     isContact: true,
   },
@@ -467,7 +467,7 @@ export default function TermsOfService() {
                             <FiMail size={18} color={BRAND.green700} />
                             <div>
                               <span style={styles.contactLabel}>General Questions</span>
-                              <a href="mailto:info@altuverasafaris.com" style={styles.contactLink}>
+                              <a href="mailto:altuverasafari@gmail.com" style={styles.contactLink}>
                                 altuverasafari@gmail.com
                               </a>
                             </div>
