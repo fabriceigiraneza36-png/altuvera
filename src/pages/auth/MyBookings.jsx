@@ -975,8 +975,9 @@ function ItineraryPanel({ booking, onApprove, onChangeRequest }) {
    BOOKING CARD
 ═══════════════════════════════════════════════════════════════════════════ */
 
-function BookingCard({ booking, onRequest, onMessage, onApprove, onChangeRequest }) {
-  const [expanded, setExpanded] = useState(false);
+function BookingCard({ booking, onRequest, onMessage, onApprove, onChangeRequest, autoOpen = false }) {
+  const [expanded, setExpanded] = useState(Boolean(autoOpen));
+  useEffect(() => { if (autoOpen) setExpanded(true); }, [autoOpen]);
 
   const st        = getStatus(booking.status);
   const admin     = isAdminCreated(booking);
@@ -1668,7 +1669,7 @@ export default function MyBookings() {
               </div>
               <AnimatePresence>
                 {selfB.map((b) => (
-                  <BookingCard key={b.id} booking={b} onRequest={openRequest} onMessage={openMessage} onApprove={approveItinerary} onChangeRequest={requestItineraryChange} />
+                  <BookingCard key={b.id} booking={b} autoOpen={String(new URLSearchParams(window.location.search).get("bookingId") || "") === String(b.id)} onRequest={openRequest} onMessage={openMessage} onApprove={approveItinerary} onChangeRequest={requestItineraryChange} />
                 ))}
               </AnimatePresence>
 
