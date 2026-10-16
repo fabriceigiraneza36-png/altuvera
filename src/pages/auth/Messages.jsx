@@ -4,7 +4,7 @@ import React, {
   useState, useEffect, useRef, useMemo, useCallback, useLayoutEffect,
 } from "react";
 import { Helmet } from "react-helmet-async";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   MessageSquare, Send, Smile, X, CornerUpLeft,
   Check, CheckCheck, RefreshCw, ArrowLeft, Plus, PanelLeftClose, PanelLeftOpen,
@@ -1005,13 +1005,19 @@ export default function Messages() {
     if (!conversations.length) return;
     if (requestedConversationId) {
       const target = conversations.find(c => String(c.id) === String(requestedConversationId));
-      if (target && String(activeId) !== String(target.id)) openConversation(target.id);
-      return;
+      if (target) {
+        if (String(activeId) !== String(target.id)) openConversation(target.id);
+        return;
+      }
+      // A notification may point to a deleted/expired thread. Once the inbox
+      // has finished loading, fall back to a valid conversation instead of
+      // leaving the user on a blank chat pane.
+      if (loading) return;
     }
-    // Select a default only when nothing is active; don't override a newly
-    // created/opened thread while the conversation list refreshes.
+    // Open the most recent available thread on entry; don't override a
+    // conversation the user has already selected while the list refreshes.
     if (!activeId) openConversation(conversations[0].id);
-  }, [requestedConversationId, conversations, activeId, openConversation]);
+  }, [requestedConversationId, conversations, activeId, openConversation, loading]);
 
 
 
@@ -1231,6 +1237,21 @@ export default function Messages() {
         /* Keep the chat in a viewport-sized surface without duplicate page headings. */
         noPadding
       >
+        <nav aria-label="Message page navigation" className="flex min-h-[44px] flex-shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-3 py-2 sm:px-5">
+          <div className="flex min-w-0 items-center gap-2 text-xs font-semibold text-slate-500">
+            <MessageSquare size={15} className="shrink-0 text-emerald-600" />
+            <span className="truncate">Your conversations</span>
+            {connected && <span className="hidden sm:inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"/>Live</span>}
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Link to="/" className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-600 transition hover:border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700">
+              <ArrowLeft size={14}/> <span>Homepage</span>
+            </Link>
+            <Link to="/dashboard" className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700">
+              <PanelLeftOpen size={14}/> <span>Dashboard</span>
+            </Link>
+          </div>
+        </nav>
         {/* Error */}
         {error && (
           <div className="absolute top-2 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2
@@ -1246,7 +1267,7 @@ export default function Messages() {
           │  gives us. Everything inside is flex and never overflows.   │
           └─────────────────────────────────────────────────────────────┘
         */}
-        <div className="msg-layout w-full h-full min-h-0">
+        <div className="msg-layout w-full flex-1 min-h-0" style={{ height: "auto" }}>
 
           {/* ═══════════════ SIDEBAR ═══════════════ */}
           <div className={`msg-sidebar ${showMobile ? "hidden md:flex" : "flex"} flex-col transition-all duration-200 ${sidebarOpen ? "" : "md:hidden"}`}>
