@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowUpRight, BellRing, Check, MessageCircle, Send, X } from "lucide-react";
 import { useNotifications } from "../../hooks/useNotifications";
@@ -36,6 +36,8 @@ export default function GlobalUserNotifications() {
   const navigate = useNavigate();
   const { notifications, unreadCount, markRead, deleteOne } = useNotifications();
   const [visible, setVisible] = useState(null);
+  const swipeStartX = useRef(null);
+  const swipeDeltaX = useRef(0);
   const [replyText, setReplyText] = useState("");
   const [replyBusy, setReplyBusy] = useState(false);
   const [replyError, setReplyError] = useState("");
@@ -162,7 +164,12 @@ export default function GlobalUserNotifications() {
       `}</style>
       <section aria-label="New notification" aria-live="polite"
         className="altuvera-user-toast"
+        onPointerDown={(event) => { swipeStartX.current = event.clientX; swipeDeltaX.current = 0; event.currentTarget.setPointerCapture?.(event.pointerId); }}
+        onPointerMove={(event) => { if (swipeStartX.current === null) return; swipeDeltaX.current = event.clientX - swipeStartX.current; event.currentTarget.style.transform = "translate3d(" + swipeDeltaX.current + "px,0,0)"; event.currentTarget.style.opacity = String(Math.max(.25, 1 - Math.abs(swipeDeltaX.current) / 260)); }}
+        onPointerUp={() => { const delta = swipeDeltaX.current; swipeStartX.current = null; swipeDeltaX.current = 0; if (Math.abs(delta) > 100) dismissNotification(); else { const el = document.querySelector(".altuvera-user-toast"); if (el) { el.style.transform = ""; el.style.opacity = ""; } } }}
+        onPointerCancel={() => { swipeStartX.current = null; swipeDeltaX.current = 0; }}
         style={{
+          touchAction: "pan-y", transition: "transform 120ms ease-out, opacity 120ms ease-out",
           position: "fixed", right: 16, bottom: "max(16px, env(safe-area-inset-bottom))",
           zIndex: 9999, width: "min(410px, calc(100vw - 24px))",
           animation: "altuvera-user-toast-in 240ms cubic-bezier(.2,.8,.2,1)",
