@@ -37,7 +37,7 @@ const ABOUT_STYLES = `
 
   /* ── Sections ── */
   .about-section {
-    padding: clamp(48px, 6vw, 88px) clamp(16px, 3vw, 32px);
+    padding: clamp(28px, 3.5vw, 48px) clamp(16px, 3vw, 32px);
   }
 
   .about-section-title {
@@ -46,7 +46,7 @@ const ABOUT_STYLES = `
     font-weight: 800;
     line-height: 1.15;
     color: #064e3b;
-    margin: 0 0 20px;
+    margin: 0 0 12px;
     letter-spacing: -0.02em;
   }
 
@@ -871,17 +871,7 @@ const About = () => {
       {/* ══════════════════════════════════════════
           OUR TEAM — Live CMS team profiles
       ══════════════════════════════════════════ */}
-      <section aria-labelledby="about-team-heading" style={{ background: '#fafffe' }}>
-        <div style={{ textAlign: 'center', padding: '64px 24px 0' }}>
-          <FadeInSection>
-            <h2 id="about-team-heading" className="about-section-title">
-              Meet the people behind <em>your journey</em>
-            </h2>
-            <p className="about-section-lead">
-              Get to know the Altuvera specialists who help turn your East African travel ideas into thoughtful, authentic experiences.
-            </p>
-          </FadeInSection>
-        </div>
+      <section aria-label="Meet the Altuvera team" style={{ background: '#fafffe', paddingTop: 20 }}>
         <TeamContent />
       </section>
 
