@@ -109,6 +109,7 @@ export function useConversations() {
   const pollRef = useRef(null);
   const socketRef = useRef(null);
   const activeIdRef = useRef(null);
+  const openRequestRef = useRef(0);
   const typingTimerCache = useRef({});
   const [adminTyping, setAdminTyping] = useState(null);
   const [typingConvs, setTypingConvs] = useState(new Set());
@@ -386,7 +387,9 @@ export function useConversations() {
 
   /* ── Open a conversation ─────────────────────────────────── */
   const openConversation = useCallback(async (id) => {
-    if (id === null) {
+    const requestId = ++openRequestRef.current;
+    if (id === null || id === undefined || id === "") {
+      activeIdRef.current = null;
       setAdminPresence({ active: false, activeSince: null, lastSeenAt: null });
       setActiveId(null);
       setActiveConversation(null);
@@ -396,9 +399,13 @@ export function useConversations() {
       loadingOlderRef.current = false;
       setAdminTyping(null);
       setTypingConvs(new Set());
+      setLoadingMsgs(false);
       return;
     }
 
+    // Update the ref synchronously so incoming socket events and fast
+    // conversation switches never target the previously opened thread.
+    activeIdRef.current = String(id);
     setActiveId(id);
     setMessages([]);
     setLoadingMsgs(true);
@@ -412,31 +419,35 @@ export function useConversations() {
 
     try {
       const res = await authFetch(
-        `${API_BASE}/messages/conversations/${id}?limit=10`,
+        `${API_BASE}/messages/conversations/${encodeURIComponent(id)}?limit=10`,
       );
+      const payload = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.message || `Server error ${res.status}`);
+        throw new Error(payload.message || `Server error ${res.status}`);
       }
-      const data = await res.json();
-      const conv = normConv(data.data);
+      // Ignore an older request if the user has already opened another chat.
+      if (requestId !== openRequestRef.current || String(activeIdRef.current) !== String(id)) return;
+      if (!payload.data) throw new Error("This conversation is no longer available.");
+      const conv = normConv(payload.data);
       setActiveConversation(conv);
-      setMessages((data.data?.messages || []).map(normMsg));
-      setHasMoreMessages(Boolean(data.data?.hasMoreMessages));
+      setMessages((payload.data.messages || []).map(normMsg));
+      setHasMoreMessages(Boolean(payload.data.hasMoreMessages));
 
-      // Mark as read
-      authFetch(`${API_BASE}/messages/conversations/${id}/read`, {
+      authFetch(`${API_BASE}/messages/conversations/${encodeURIComponent(id)}/read`, {
         method: "PATCH",
       }).catch(() => {});
 
-      // Reset unread in local list
       setConversations((prev) =>
-        prev.map((c) => (c.id === id ? { ...c, unreadUser: 0 } : c)),
+        prev.map((c) => String(c.id) === String(id) ? { ...c, unreadUser: 0 } : c),
       );
     } catch (err) {
-      setError(err.message || "Failed to open conversation.");
+      if (requestId === openRequestRef.current) {
+        setActiveConversation(null);
+        setMessages([]);
+        setError(err.message || "Failed to open conversation.");
+      }
     } finally {
-      setLoadingMsgs(false);
+      if (requestId === openRequestRef.current) setLoadingMsgs(false);
     }
   }, []);
 
