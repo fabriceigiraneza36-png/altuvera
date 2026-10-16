@@ -201,6 +201,7 @@ export default function PackageDetail() {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(null);
+  const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
   const canRequest = isAuthenticated && !authLoading;
   const accountName = String(user?.fullName || user?.full_name || user?.name || "").trim();
   const accountEmail = String(user?.email || "").trim().toLowerCase();
@@ -319,7 +320,14 @@ export default function PackageDetail() {
   }
   if (loadError || !pkg) return <ErrorState message={loadError} />;
 
-  const cover = pkg.cover_image_url || pkg.image_url || pkg.thumbnail_url;  const destination = pkg.destination_name || pkg.destination || "East Africa";
+  const gallery = useMemo(() => {
+    const raw = firstArray(pkg.image_gallery || pkg.images || pkg.gallery);
+    const urls = raw.map((item) => typeof item === "string" ? item : item?.url || item?.image_url || item?.src).filter(Boolean);
+    const all = [pkg.cover_image_url || pkg.image_url || pkg.thumbnail_url, ...urls].filter(Boolean);
+    return [...new Set(all)];
+  }, [pkg]);
+  const cover = gallery[activeGalleryIndex] || pkg.cover_image_url || pkg.image_url || pkg.thumbnail_url;
+  const destination = pkg.destination_name || pkg.destination || "East Africa";
   const country = pkg.country_name || pkg.country || "";
   const highlights = firstArray(pkg.features || pkg.highlights).slice(0, 3);
 
@@ -360,9 +368,18 @@ export default function PackageDetail() {
       <section className="pkg-layout">
         <div className="pkg-poster">
           {cover ? (
-            <img src={cover} alt={pkg.title} />
+            <img key={cover} src={cover} alt={pkg.title} />
           ) : (
             <div className="pkg-poster-empty"><Sparkles size={48} /></div>
+          )}
+          {gallery.length > 1 && (
+            <div className="pkg-gallery-controls" aria-label="Package photo gallery">
+              <button type="button" aria-label="Previous photo" onClick={() => setActiveGalleryIndex((i) => (i - 1 + gallery.length) % gallery.length)}>‹</button>
+              <div className="pkg-gallery-dots">
+                {gallery.map((url, index) => <button key={url + index} type="button" aria-label={`Show photo ${index + 1}`} aria-current={index === activeGalleryIndex ? "true" : undefined} className={index === activeGalleryIndex ? "active" : ""} onClick={() => setActiveGalleryIndex(index)} />)}
+              </div>
+              <button type="button" aria-label="Next photo" onClick={() => setActiveGalleryIndex((i) => (i + 1) % gallery.length)}>›</button>
+            </div>
           )}
           <div className="pkg-poster-shade" />
           <div className="pkg-poster-copy">
@@ -373,6 +390,14 @@ export default function PackageDetail() {
               {pkg.duration_days && <span><CalendarDays size={15} /> {pkg.duration_days} days</span>}
             </div>
           </div>
+        </div>
+
+        <div className="pkg-detail-copy">
+          {pkg.short_description && <p className="pkg-detail-lead">{pkg.short_description}</p>}
+          {pkg.description && <p className="pkg-detail-description">{pkg.description}</p>}
+          {firstArray(pkg.highlights || pkg.features).length > 0 && <section><h2>Trip highlights</h2><ul>{firstArray(pkg.highlights || pkg.features).map((item, i) => <li key={i}>{typeof item === "string" ? item : item.title || item.name || item.description || JSON.stringify(item)}</li>)}</ul></section>}
+          {firstArray(pkg.inclusions).length > 0 && <section><h2>What's included</h2><ul>{firstArray(pkg.inclusions).map((item, i) => <li key={i}>{typeof item === "string" ? item : item.title || item.name || JSON.stringify(item)}</li>)}</ul></section>}
+          {firstArray(pkg.exclusions).length > 0 && <section><h2>Not included</h2><ul>{firstArray(pkg.exclusions).map((item, i) => <li key={i}>{typeof item === "string" ? item : item.title || item.name || JSON.stringify(item)}</li>)}</ul></section>}
         </div>
 
         {canRequest ? (<form className="pkg-form-card" onSubmit={submit} noValidate>
@@ -492,7 +517,7 @@ const CSS = `
 .pkg-layout{max-width:1400px;margin:auto;padding:0 clamp(16px,4vw,48px);display:grid;grid-template-columns:minmax(0,1.08fr) minmax(420px,.92fr);gap:28px;align-items:start}
 .pkg-poster{position:sticky;top:92px;height:min(76vh,760px);min-height:560px;border-radius:28px;overflow:hidden;background:#064e3b;box-shadow:0 22px 70px rgba(2,44,34,.18)}
 .pkg-poster>img{width:100%;height:100%;object-fit:cover;display:block}
-.pkg-poster-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,44,34,.08) 25%,rgba(2,44,34,.9) 100%)}
+.pkg-gallery-controls{position:absolute;z-index:3;left:16px;right:16px;bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px}.pkg-gallery-controls>button{width:38px;height:38px;border:1px solid rgba(255,255,255,.5);border-radius:50%;background:rgba(8,20,16,.4);color:white;font-size:28px;line-height:1;backdrop-filter:blur(8px)}.pkg-gallery-dots{display:flex;gap:7px;align-items:center;justify-content:center}.pkg-gallery-dots button{width:7px;height:7px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.58)}.pkg-gallery-dots button.active{width:22px;border-radius:9px;background:#fff}.pkg-detail-copy{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;margin:0 0 8px;padding:24px;border:1px solid rgba(16,80,55,.12);border-radius:22px;background:rgba(255,255,255,.92)}.pkg-detail-copy>p{grid-column:1/-1;margin:0;line-height:1.75;color:#475569}.pkg-detail-copy .pkg-detail-lead{font-size:1.12rem;color:#14532d;font-weight:650}.pkg-detail-copy section h2{font-size:1rem;font-weight:750;margin:0 0 10px;color:#0f3527}.pkg-detail-copy ul{margin:0;padding-left:19px;display:grid;gap:7px;color:#475569;font-size:.94rem;line-height:1.5}@media(max-width:720px){.pkg-detail-copy{grid-template-columns:1fr;padding:18px}.pkg-gallery-controls{left:10px;right:10px;bottom:10px}}.pkg-poster-shade{position:absolute;inset:0;background:linear-gradient(180deg,rgba(2,44,34,.08) 25%,rgba(2,44,34,.9) 100%)}
 .pkg-poster-copy{position:absolute;left:clamp(22px,4vw,48px);right:24px;bottom:clamp(24px,4vw,48px);color:white}
 .pkg-poster-copy h1{font:400 clamp(32px,4vw,58px)/1.05 "DM Serif Display",serif;margin:10px 0 18px;max-width:760px}
 .pkg-meta{display:flex;flex-wrap:wrap;gap:10px}.pkg-meta span,.pkg-meta strong{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;border-radius:999px;background:rgba(255,255,255,.13);backdrop-filter:blur(12px);font-size:12px}.pkg-meta strong{background:#10b981}
