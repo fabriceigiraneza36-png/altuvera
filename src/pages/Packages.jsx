@@ -14,7 +14,7 @@ import {
   FiShield, FiCalendar, FiFilter, FiCheck,
   FiChevronRight, FiRefreshCw, FiCompass,
   FiAward, FiWind, FiBookmark, FiTrendingUp,
-  FiCamera, FiSun, FiTarget, FiEye, FiTriangle,
+  FiCamera, FiSun, FiTarget, FiEye, FiTriangle, FiMaximize2,
 } from 'react-icons/fi'
 
 // ✅ FiMountain does NOT exist in react-icons/fi
@@ -218,6 +218,7 @@ const PKG_CSS = `
 }
 
 /* Premium responsive package cards */
+.pk-poster-link{position:relative;border:0;padding:0;background:#052e25;cursor:zoom-in;text-align:inherit}.pk-poster-expand-hint{position:absolute;left:12px;right:12px;bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 12px;border:1px solid rgba(255,255,255,.38);border-radius:12px;background:rgba(4,35,27,.72);color:#fff;font-size:12px;font-weight:750;letter-spacing:.01em;backdrop-filter:blur(10px);opacity:0;transform:translateY(5px);transition:opacity .2s,transform .2s}.pk-poster-card:hover .pk-poster-expand-hint,.pk-poster-link:focus-visible .pk-poster-expand-hint{opacity:1;transform:translateY(0)}.pk-poster-details-link{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px;background:#fff;color:#065f46;text-decoration:none;font-size:13px;font-weight:800;border-top:1px solid #e5f4ec}.pk-poster-lightbox{position:fixed;z-index:10000;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:clamp(12px,3vw,30px);background:rgba(2,10,8,.96);backdrop-filter:blur(12px);animation:pkLightboxIn .18s ease-out}.pk-poster-lightbox-content{min-height:0;min-width:0;flex:1;display:flex;align-items:center;justify-content:center;width:100%}.pk-poster-lightbox-content img{display:block;max-width:100%;max-height:calc(100dvh - 112px);width:auto;height:auto;object-fit:contain;border-radius:4px;box-shadow:0 18px 70px rgba(0,0,0,.4)}.pk-poster-lightbox-close{position:absolute;z-index:2;top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));width:46px;height:46px;display:grid;place-items:center;border:1px solid rgba(255,255,255,.28);border-radius:50%;background:rgba(255,255,255,.12);color:white;cursor:pointer}.pk-poster-lightbox-footer{width:min(100%,1000px);display:flex;align-items:center;justify-content:space-between;gap:14px;color:white;font-size:14px;font-weight:750}.pk-poster-lightbox-footer span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.pk-poster-lightbox-footer a{display:inline-flex;align-items:center;justify-content:center;gap:8px;flex-shrink:0;padding:11px 14px;border-radius:12px;background:#10b981;color:#052e25;text-decoration:none;font-weight:850}@keyframes pkLightboxIn{from{opacity:0}to{opacity:1}}@media(max-width:560px){.pk-poster-expand-hint{opacity:1;transform:none;font-size:11px}.pk-poster-lightbox{padding:12px}.pk-poster-lightbox-content img{max-height:calc(100dvh - 106px);max-width:100%;border-radius:2px}.pk-poster-lightbox-footer{align-items:stretch;flex-direction:column}.pk-poster-lightbox-footer a{width:100%}}
 .pk-poster-card { position:relative; min-width:0; overflow:hidden; border-radius:22px; background:#ecfdf5; box-shadow:0 10px 30px rgba(2,44,34,.12); animation:pkCardIn .55s both; transition:transform .25s,box-shadow .25s; }
 .pk-poster-card:hover { transform:translateY(-5px); box-shadow:0 18px 38px rgba(2,44,34,.18); }
 .pk-poster-link { display:block; width:100%; aspect-ratio:3/4; overflow:hidden; }
@@ -600,19 +601,47 @@ const GridCard = React.memo(function GridCard({ pkg, wishlist, onWishlist, index
   const posterOnly = pkg.poster_mode === "poster";
   const gallery = Array.isArray(pkg.image_gallery) ? pkg.image_gallery.filter(Boolean) : (Array.isArray(pkg.images) ? pkg.images.filter(Boolean) : []);
   const [slide, setSlide] = React.useState(0);
+  const [posterFullscreen, setPosterFullscreen] = React.useState(false);
   const slides = [...new Set([cover, ...gallery].filter(Boolean))];
+  React.useEffect(() => {
+    if (!posterFullscreen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKeyDown = (event) => { if (event.key === "Escape") setPosterFullscreen(false); };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [posterFullscreen]);
   React.useEffect(() => {
     if (posterOnly || slides.length < 2) return;
     const timer = setInterval(() => setSlide(n => (n + 1) % slides.length), 4200);
     return () => clearInterval(timer);
   }, [posterOnly, slides.length]);
   if (posterOnly) return (
-    <article className="pk-poster-card" style={{ animationDelay: `${Math.min(index * 65, 390)}ms` }}>
-      <Link to={to} className="pk-poster-link" aria-label={`View ${title}`}>
-        {cover ? <img src={cover} alt={title} loading="lazy" /> : <div className="pk-card-placeholder"><MountainPlaceholder size={58} /></div>}
-      </Link>
-      <button type="button" className={`pk-poster-wish ${isWish ? "is-wish" : ""}`} aria-label={isWish ? "Remove from wishlist" : "Add to wishlist"} onClick={e => { e.preventDefault(); e.stopPropagation(); onWishlist?.(pkg.id); }}><FiHeart size={17} /></button>
-    </article>
+    <>
+      <article className="pk-poster-card" style={{ animationDelay: `${Math.min(index * 65, 390)}ms` }}>
+        <button type="button" className="pk-poster-link" aria-label={`Open ${title} poster fullscreen`} onClick={() => setPosterFullscreen(true)}>
+          {cover ? <img src={cover} alt={title} loading="lazy" /> : <div className="pk-card-placeholder"><MountainPlaceholder size={58} /></div>}
+          <span className="pk-poster-expand-hint"><FiMaximize2 size={16} /> Tap to read poster</span>
+        </button>
+        <Link to={to} className="pk-poster-details-link" aria-label={`View details for ${title}`}>View trip details <FiArrowRight size={15} /></Link>
+        <button type="button" className={`pk-poster-wish ${isWish ? "is-wish" : ""}`} aria-label={isWish ? "Remove from wishlist" : "Add to wishlist"} onClick={e => { e.preventDefault(); e.stopPropagation(); onWishlist?.(pkg.id); }}><FiHeart size={17} /></button>
+      </article>
+      {posterFullscreen && (
+        <div className="pk-poster-lightbox" role="dialog" aria-modal="true" aria-label={`${title} poster fullscreen`} onMouseDown={e => { if (e.target === e.currentTarget) setPosterFullscreen(false); }}>
+          <button type="button" className="pk-poster-lightbox-close" onClick={() => setPosterFullscreen(false)} aria-label="Close fullscreen poster"><FiX size={23} /></button>
+          <div className="pk-poster-lightbox-content">
+            {cover ? <img src={cover} alt={`${title} — full-size poster`} /> : <p>Poster image unavailable.</p>}
+          </div>
+          <div className="pk-poster-lightbox-footer">
+            <span>{title}</span>
+            <Link to={to} onClick={() => setPosterFullscreen(false)}>View trip details <FiArrowRight size={16} /></Link>
+          </div>
+        </div>
+      )}
+    </>
   );
   return (
     <article className="pk-card" style={{ animationDelay: `${Math.min(index * 65, 390)}ms` }}>
