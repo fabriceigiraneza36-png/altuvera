@@ -226,8 +226,11 @@ const PAGE_CSS = `
 
 /* ═══════ SECTIONS ═══════ */
 .ex-section {
-  padding: clamp(32px,5vw,64px) clamp(16px,5vw,56px);
+  padding: clamp(22px,3vw,40px) clamp(16px,5vw,56px);
 }
+/* Keep section headings clean and reduce decorative clutter. */
+.ex-section-label { display: none !important; }
+.ex-section-head { margin-bottom: clamp(14px,2vw,24px); }
 .ex-section--alt { background: var(--ex-surface); }
 .ex-section--mint { background: var(--ex-mint); }
 .ex-section--forest {
