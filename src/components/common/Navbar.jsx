@@ -470,6 +470,22 @@ const Navbar = () => {
     return items;
   }, [user?.role]);
 
+  useEffect(() => {
+    if (!mobileAccountOpen) return undefined;
+    const frame = requestAnimationFrame(() => {
+      mobileAccountModalRef.current?.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+      mobileAccountModalRef.current?.focus?.({ preventScroll: true });
+    });
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") setMobileAccountOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [mobileAccountOpen]);
+
   /* ── Scroll Logic ── */
   useEffect(() => {
     let ticking = false;
