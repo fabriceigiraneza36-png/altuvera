@@ -252,6 +252,7 @@ const Navbar = () => {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [mobileAccountOpen, setMobileAccountOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -1094,7 +1095,13 @@ const Navbar = () => {
           <div className="mm__auth">
             {isAuthenticated ? (
               <>
-                <div className="mm__profile">
+                <button
+                  type="button"
+                  className={cn("mm__profile", mobileAccountOpen && "mm__profile--open")}
+                  onClick={() => setMobileAccountOpen((open) => !open)}
+                  aria-expanded={mobileAccountOpen}
+                  aria-controls="mm-account-links"
+                >
                   {user?.avatar ? (
                     <span className="mm__pav-wrap">
                       {!avatarLoaded && <span className="nav__avatar-spin" />}
@@ -1109,25 +1116,29 @@ const Navbar = () => {
                   ) : (
                     <span className="mm__pav-init">{getInitials()}</span>
                   )}
-                  <div>
-                    <p className="mm__pname">{displayName}</p>
-                    <p className="mm__pemail">{user?.email}</p>
-                    <p className="mm__pprov">{providerLabel} account</p>
-                  </div>
-                </div>
-                {userMenuItems.map((m) => (
-                  <Link
-                    key={m.to}
-                    to={m.to}
-                    className="mm__auth-link"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <m.icon size={18} /> {m.label}
-                  </Link>
-                ))}
-                <button className="mm__out" onClick={handleLogout}>
-                  <FiLogOut size={18} /> Sign Out
+                  <span className="mm__profile-copy">
+                    <span className="mm__pname">{displayName}</span>
+                    <span className="mm__pemail">{user?.email}</span>
+                    <span className="mm__pprov">{providerLabel} account</span>
+                  </span>
+                  <FiChevronDown className="mm__profile-chevron" size={18} aria-hidden="true" />
                 </button>
+                <div id="mm-account-links" className={cn("mm__account-links", mobileAccountOpen && "mm__account-links--open")} aria-hidden={!mobileAccountOpen}>
+                  {userMenuItems.map((m) => (
+                    <Link
+                      key={m.to}
+                      to={m.to}
+                      className="mm__auth-link"
+                      tabIndex={mobileAccountOpen ? 0 : -1}
+                      onClick={() => { setIsMobileMenuOpen(false); setMobileAccountOpen(false); }}
+                    >
+                      <m.icon size={18} /> {m.label}
+                    </Link>
+                  ))}
+                  <button className="mm__out" tabIndex={mobileAccountOpen ? 0 : -1} onClick={() => { setMobileAccountOpen(false); handleLogout(); }}>
+                    <FiLogOut size={18} /> Sign Out
+                  </button>
+                </div>
               </>
             ) : (
               <button
