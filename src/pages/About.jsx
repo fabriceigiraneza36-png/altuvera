@@ -37,7 +37,7 @@ const ABOUT_STYLES = `
 
   /* ── Sections ── */
   .about-section {
-    padding: clamp(48px, 6vw, 88px) clamp(16px, 3vw, 32px);
+    padding: clamp(28px, 3.5vw, 48px) clamp(16px, 3vw, 32px);
   }
 
   .about-section-title {
@@ -46,7 +46,7 @@ const ABOUT_STYLES = `
     font-weight: 800;
     line-height: 1.15;
     color: #064e3b;
-    margin: 0 0 20px;
+    margin: 0 0 12px;
     letter-spacing: -0.02em;
   }
 
