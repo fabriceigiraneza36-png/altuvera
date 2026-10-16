@@ -3354,3 +3354,101 @@
 @media(prefers-reduced-motion:reduce){
   .nav-search-country-card--photo,.nav-search-country-photo>img,.nav-search-story-card,.nav__user-drop,.nav__user-drop-item{animation:none!important;transition:none!important}
 }
+
+
+/* Mobile-only account accordion: desktop account-menu behavior is unchanged. */
+.mm__profile{
+  width:100%;
+  border:0;
+  border-radius:14px;
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  text-align:left;
+  cursor:pointer;
+  position:relative;
+  padding-right:42px;
+  transition:background .22s ease,box-shadow .22s ease;
+}
+.mm__profile:hover,.mm__profile:focus-visible,.mm__profile--open{
+  background:#f0faf4;
+  outline:none;
+  box-shadow:inset 0 0 0 1px rgba(5,150,105,.12);
+}
+.mm__profile-copy{display:flex;flex:1;min-width:0;flex-direction:column;align-items:flex-start}
+.mm__profile-chevron{
+  position:absolute;right:14px;top:50%;transform:translateY(-50%);
+  color:#07865c;transition:transform .28s cubic-bezier(.2,.8,.2,1);
+}
+.mm__profile--open .mm__profile-chevron{transform:translateY(-50%) rotate(180deg)}
+.mm__account-links{
+  display:grid;
+  grid-template-rows:0fr;
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  overflow:hidden;
+  max-height:0;
+  transform:translateY(-7px);
+  transition:grid-template-rows .34s cubic-bezier(.2,.8,.2,1),opacity .22s ease,transform .28s ease,visibility .22s ease,max-height .34s ease;
+}
+.mm__account-links--open{
+  grid-template-rows:1fr;
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  max-height:420px;
+  transform:translateY(0);
+  padding-top:7px;
+}
+.mm__account-links>.mm__auth-link,.mm__account-links>.mm__out{min-height:46px}
+.mm__account-links>.mm__auth-link{opacity:0;transform:translateX(-8px);transition:opacity .22s ease,transform .28s ease,background .2s ease}
+.mm__account-links--open>.mm__auth-link{opacity:1;transform:translateX(0)}
+.mm__account-links--open>.mm__auth-link:nth-child(2){transition-delay:35ms}
+.mm__account-links--open>.mm__auth-link:nth-child(3){transition-delay:70ms}
+.mm__account-links--open>.mm__auth-link:nth-child(4){transition-delay:105ms}
+.mm__account-links--open>.mm__auth-link:nth-child(5){transition-delay:140ms}
+.mm__account-links--open>.mm__out{animation:mmAccountItemIn .3s ease both;animation-delay:150ms}
+@keyframes mmAccountItemIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
+
+/* Touch-first carousel rails inside the navbar discovery modal. */
+@media(max-width:760px){
+  .nav-search-story-rail{
+    overflow-x:auto;
+    overflow-y:hidden;
+    touch-action:pan-x pan-y;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-x:contain;
+    scroll-snap-type:x mandatory;
+    scroll-behavior:smooth;
+    user-select:none;
+  }
+  .nav-search-story-card{touch-action:pan-x pan-y}
+  .nav-search-country-rail{
+    display:block;
+    overflow-x:auto!important;
+    overflow-y:hidden;
+    touch-action:pan-x pan-y;
+    -webkit-overflow-scrolling:touch;
+    overscroll-behavior-x:contain;
+    scroll-snap-type:x mandatory;
+    scroll-behavior:smooth;
+    scrollbar-width:none;
+    cursor:grab;
+  }
+  .nav-search-country-rail:active{cursor:grabbing}
+  .nav-search-country-track{
+    display:flex;
+    width:max-content;
+    max-width:none;
+    animation:none!important;
+    transform:none!important;
+    will-change:auto;
+  }
+  .nav-search-country-card--photo{scroll-snap-align:start;touch-action:pan-x pan-y}
+}
+@media(prefers-reduced-motion:reduce){
+  .mm__profile-chevron,.mm__account-links,.mm__account-links>.mm__auth-link{transition:none!important}
+  .mm__account-links--open>.mm__out{animation:none!important}
+  .nav-search-story-rail,.nav-search-country-rail{scroll-behavior:auto}
+}
