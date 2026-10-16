@@ -253,6 +253,8 @@ const Navbar = () => {
   const [activeMobileDropdown, setActiveMobileDropdown] = useState(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileAccountOpen, setMobileAccountOpen] = useState(false);
+  const mobileProfileRef = useRef(null);
+  const mobileAccountModalRef = useRef(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [desktopSearchOpen, setDesktopSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -1097,14 +1099,15 @@ const Navbar = () => {
               <>
                 <button
                   type="button"
+                  ref={mobileProfileRef}
                   className={cn("mm__profile", mobileAccountOpen && "mm__profile--open")}
-                  onClick={() => setMobileAccountOpen((open) => !open)}
+                  onClick={() => setMobileAccountOpen(true)}
+                  aria-haspopup="dialog"
                   aria-expanded={mobileAccountOpen}
-                  aria-controls="mm-account-links"
+                  aria-controls="mm-account-modal"
                 >
-                  {user?.avatar ? (
-                    <span className="mm__pav-wrap">
-                      {!avatarLoaded && <span className="nav__avatar-spin" />}
+                  <span className="mm__profile-avatar-frame">
+                    {user?.avatar ? (
                       <img
                         src={user.avatar}
                         alt=""
@@ -1112,33 +1115,89 @@ const Navbar = () => {
                         onLoad={() => setAvatarLoaded(true)}
                         onError={() => setAvatarLoaded(true)}
                       />
-                    </span>
-                  ) : (
-                    <span className="mm__pav-init">{getInitials()}</span>
-                  )}
+                    ) : (
+                      <span className="mm__pav-init">{getInitials()}</span>
+                    )}
+                    <span className="mm__avatar-glow" aria-hidden="true" />
+                    <span className="mm__avatar-edit-mark" aria-hidden="true"><FiUser size={13} /></span>
+                  </span>
                   <span className="mm__profile-copy">
                     <span className="mm__pname">{displayName}</span>
                     <span className="mm__pemail">{user?.email}</span>
                     <span className="mm__pprov">{providerLabel} account</span>
                   </span>
-                  <FiChevronDown className="mm__profile-chevron" size={18} aria-hidden="true" />
+                  <span className="mm__profile-open-indicator"><FiChevronDown size={17} /></span>
                 </button>
-                <div id="mm-account-links" className={cn("mm__account-links", mobileAccountOpen && "mm__account-links--open")} aria-hidden={!mobileAccountOpen}>
-                  {userMenuItems.map((m) => (
-                    <Link
-                      key={m.to}
-                      to={m.to}
-                      className="mm__auth-link"
-                      tabIndex={mobileAccountOpen ? 0 : -1}
-                      onClick={() => { setIsMobileMenuOpen(false); setMobileAccountOpen(false); }}
+                <AnimatePresence>
+                  {mobileAccountOpen && (
+                    <motion.div
+                      className="mm__account-overlay"
+                      role="presentation"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      onClick={(event) => {
+                        if (event.target === event.currentTarget) setMobileAccountOpen(false);
+                      }}
                     >
-                      <m.icon size={18} /> {m.label}
-                    </Link>
-                  ))}
-                  <button className="mm__out" tabIndex={mobileAccountOpen ? 0 : -1} onClick={() => { setMobileAccountOpen(false); handleLogout(); }}>
-                    <FiLogOut size={18} /> Sign Out
-                  </button>
-                </div>
+                      <motion.section
+                        id="mm-account-modal"
+                        ref={mobileAccountModalRef}
+                        className="mm__account-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="mm-account-modal-title"
+                        initial={{ opacity: 0, y: 28, scale: 0.94 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 18, scale: 0.97 }}
+                        transition={{ type: "spring", stiffness: 360, damping: 28 }}
+                      >
+                        <div className="mm__account-modal-top">
+                          <span className="mm__account-modal-kicker">YOUR ACCOUNT</span>
+                          <button type="button" className="mm__account-modal-close" onClick={() => setMobileAccountOpen(false)} aria-label="Close account menu">
+                            <FiX size={21} />
+                          </button>
+                        </div>
+                        <div className="mm__account-hero">
+                          <span className="mm__account-avatar-wrap">
+                            {user?.avatar ? (
+                              <img src={user.avatar} alt="" className="mm__account-avatar" />
+                            ) : (
+                              <span className="mm__account-avatar mm__account-avatar--initials">{getInitials()}</span>
+                            )}
+                            <span className="mm__account-avatar-ring" aria-hidden="true" />
+                            <span className="mm__account-online" aria-hidden="true" />
+                          </span>
+                          <div className="mm__account-hero-copy">
+                            <h3 id="mm-account-modal-title">{displayName}</h3>
+                            <p>{user?.email}</p>
+                            <span className="mm__account-provider"><FiUser size={12} /> {providerLabel} account</span>
+                          </div>
+                        </div>
+                        <div className="mm__account-modal-links">
+                          {userMenuItems.map((m, mi) => (
+                            <Link
+                              key={m.to}
+                              to={m.to}
+                              className="mm__account-modal-link"
+                              style={{ "--account-i": mi }}
+                              onClick={() => { setIsMobileMenuOpen(false); setMobileAccountOpen(false); }}
+                            >
+                              <span className="mm__account-modal-icon"><m.icon size={19} /></span>
+                              <span>{m.label}</span>
+                              <FiChevronRight size={17} className="mm__account-modal-arrow" />
+                            </Link>
+                          ))}
+                        </div>
+                        <button className="mm__account-modal-signout" onClick={() => { setMobileAccountOpen(false); handleLogout(); }}>
+                          <FiLogOut size={18} /> Sign Out
+                        </button>
+                        <p className="mm__account-modal-foot">Your journeys, all in one place.</p>
+                      </motion.section>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </>
             ) : (
               <button
