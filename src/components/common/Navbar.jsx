@@ -22,6 +22,14 @@ import {
   FiTrendingUp,
   FiGlobe,
   FiCompass,
+  FiHome,
+  FiMap,
+  FiInfo,
+  FiMail,
+  FiBookOpen,
+  FiBriefcase,
+  FiCreditCard,
+  FiUsers,
 } from "react-icons/fi";
 import { useApp } from "../../context/AppContext";
 import { useUserAuth } from "../../context/UserAuthContext";
@@ -434,22 +442,23 @@ const Navbar = () => {
 
   const navLinks = useMemo(
     () => [
-      { name: "Home", path: "/" },
-      { name: "Explore", path: "/explore" },
-      { name: "Destinations", path: "/destinations" },
-      { name: "Interactive Map", path: "/interactive-map" },
-      { name: "Tips", path: "/tips" },
+      { name: "Home", path: "/", icon: FiHome },
+      { name: "Explore", path: "/explore", icon: FiCompass },
+      { name: "Destinations", path: "/destinations", icon: FiMapPin },
+      { name: "Interactive Map", path: "/interactive-map", icon: FiMap },
+      { name: "Tips", path: "/tips", icon: FiBookOpen },
       {
         name: "About",
         path: "/about",
+        icon: FiInfo,
         dropdown: [
-          { name: "About Us", path: "/about" },
-          { name: "Our Services", path: "/services" },
-          { name: "Payment Terms", path: "/payment-terms" },
-          { name: "Our Team", path: "/team" },
+          { name: "About Us", path: "/about", icon: FiInfo },
+          { name: "Our Services", path: "/services", icon: FiBriefcase },
+          { name: "Payment Terms", path: "/payment-terms", icon: FiCreditCard },
+          { name: "Our Team", path: "/team", icon: FiUsers },
         ],
       },
-      { name: "Contact", path: "/contact" },
+      { name: "Contact", path: "/contact", icon: FiMail },
     ],
     [destinationsDropdown]
   );
@@ -784,7 +793,7 @@ const Navbar = () => {
                     link.dropdown ? activeDropdown === link.name : undefined
                   }
                 >
-                  <span className="nav__link-text">{link.name}</span>
+                  <span className="nav__link-text">{link.icon && <link.icon className="nav__link-icon" size={15} aria-hidden="true" />}<span>{link.name}</span></span>
                   {link.dropdown && (
                     <FiChevronDown
                       size={14}
@@ -817,6 +826,7 @@ const Navbar = () => {
                           style={{ "--si": si }}
                           onClick={() => setActiveDropdown(null)}
                         >
+                          {sub.icon && <span className="nav__dropdown-icon"><sub.icon size={16} aria-hidden="true" /></span>}
                           {sub.flag ? (
                             <span className="nav__dropdown-flag">
                               {sub.flag.startsWith("http") ||
@@ -1042,7 +1052,7 @@ const Navbar = () => {
                     onClick={() => toggleMobileDropdown(link.name)}
                     aria-expanded={activeMobileDropdown === link.name}
                   >
-                    <span className="mm__toggle-text">{link.name}</span>
+                    <span className="mm__toggle-text">{link.icon && <link.icon className="mm__nav-icon" size={19} aria-hidden="true" />}<span>{link.name}</span></span>
                     <FiChevronDown
                       size={18}
                       className={cn(
@@ -1070,6 +1080,7 @@ const Navbar = () => {
                         style={{ "--si": si }}
                         onClick={() => setIsMobileMenuOpen(false)}
                       >
+                        {sub.icon && <span className="mm__sub-icon"><sub.icon size={17} aria-hidden="true" /></span>}
                         {sub.flag ? (
                           <span className="mm__sub-flag">
                             {sub.flag.startsWith("http") ||
@@ -1101,7 +1112,8 @@ const Navbar = () => {
                   )}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  {link.name}
+                  {link.icon && <link.icon className="mm__nav-icon" size={19} aria-hidden="true" />}
+                  <span>{link.name}</span>
                 </Link>
               )}
             </div>
