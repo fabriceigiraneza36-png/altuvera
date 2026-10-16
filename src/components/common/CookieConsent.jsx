@@ -653,35 +653,21 @@ CookieModal.displayName = "CookieModal";
 
 // ─── Success Toast ────────────────────────────────────────────────────────────
 
-const ConsentToast = React.memo(({ prefs, onManage }) => (
+const ConsentToast = React.memo(() => (
   <motion.div
-    className="fixed bottom-5 right-5 z-[9998] max-w-[300px]"
-    initial={{ opacity: 0, x: 20, scale: 0.95 }}
-    animate={{ opacity: 1, x: 0, scale: 1 }}
-    exit={{ opacity: 0, x: 20, scale: 0.95 }}
-    transition={{ type: "spring", stiffness: 200, damping: 22 }}
+    className="fixed bottom-5 right-5 z-[9998] max-w-[min(320px,calc(100vw-24px))]"
+    initial={{ opacity: 0, y: 12, scale: 0.96 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    exit={{ opacity: 0, y: 8, scale: 0.96 }}
+    transition={{ type: "spring", stiffness: 240, damping: 24 }}
+    role="status"
+    aria-live="polite"
   >
-    <div className="bg-white rounded-2xl border border-emerald-100 shadow-xl shadow-slate-900/10 overflow-hidden">
-      <div className="h-0.5 bg-gradient-to-r from-emerald-400 to-green-600" />
-      <div className="px-4 py-3">
-        <div className="flex items-start gap-3">
-          <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-            <CheckIcon size={10} className="text-emerald-700" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-slate-800 mb-0.5">
-              Preferences Saved
-            </p>
-            <ConsentSummary prefs={prefs} />
-            <button
-              onClick={onManage}
-              className="text-[11px] text-emerald-600 font-semibold hover:text-emerald-700 mt-1.5 focus:outline-none underline-offset-2 hover:underline"
-            >
-              Manage preferences →
-            </button>
-          </div>
-        </div>
-      </div>
+    <div className="flex items-center gap-2.5 rounded-xl border border-emerald-100 bg-white px-4 py-3 shadow-lg shadow-slate-900/10">
+      <span className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+        <CheckIcon size={12} />
+      </span>
+      <p className="m-0 text-sm font-semibold text-slate-800">Cookie preferences saved.</p>
     </div>
   </motion.div>
 ));
@@ -818,10 +804,7 @@ export default function CookieConsent() {
       {/* ── Success Toast ── */}
       <AnimatePresence>
         {showToast && (
-          <ConsentToast
-            prefs={prefs}
-            onManage={handleManageFromToast}
-          />
+          <ConsentToast />
         )}
       </AnimatePresence>
     </>
