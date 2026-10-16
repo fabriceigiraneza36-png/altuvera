@@ -517,7 +517,7 @@ const AutoplayVideoCard = ({ video, onClick, isHero = false }) => {
   const src = [
     `https://www.youtube.com/embed/${video.videoId}`,
     `?autoplay=1&mute=1&loop=1&playlist=${video.videoId}`,
-    `&controls=0&disablekb=1&modestbranding=1`,
+    `&controls=0&disablekb=1&modestbranding=1&fs=0`,
     `&showinfo=0&rel=0&iv_load_policy=3`,
     `&playsinline=1&fs=0&enablejsapi=0`,
   ].join('');
@@ -536,14 +536,11 @@ const AutoplayVideoCard = ({ video, onClick, isHero = false }) => {
           className="about-video-iframe"
           src={src}
           title={video.title}
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allow="autoplay; encrypted-media"
           allowFullScreen={false}
           loading="lazy"
         />
         <div className="about-video-shield" />
-        <div className="about-video-play-btn">
-          <Play size={isHero ? 30 : 22} style={{ marginLeft: 3 }} />
-        </div>
         <div className="about-video-meta">
           <h4 style={{
             color: 'white',
