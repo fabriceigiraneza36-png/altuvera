@@ -447,7 +447,6 @@ export default function UserSettings() {
                 desc: "Trip reminders, booking confirmations, and alerts.",
               },
               {
-              {
                 key: "marketingEmails",
                 icon: <HiSparkles size={16} />,
                 label: "Marketing Emails",
