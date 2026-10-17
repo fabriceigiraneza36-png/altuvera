@@ -1,5 +1,5 @@
   // src/pages/Notifications.jsx
-  import React, { useState, useMemo } from 'react';
+  import React, { useState, useMemo, useRef } from 'react';
   import { Helmet }     from 'react-helmet-async';
   import { motion, AnimatePresence } from 'framer-motion';
   import DashboardLayout from '../../components/auth/DashboardLayout';
@@ -53,7 +53,7 @@
       notifications, groupedNotifications, unreadCount,
       loading, hasMore, total, tripAlerts,
       dismissTripAlert, dismissAllTripAlerts,
-      markRead, markAllRead, react, reply, deleteOne, clearAll, loadMore, refresh,
+      markRead, markAllRead, deleteOne, clearAll, loadMore, refresh,
     } = useNotifications();
 
     const grouped = useMemo(() => groupedNotifications || { all: [], booking: [], system: [] }, [groupedNotifications]);
@@ -62,6 +62,8 @@
     const [replyingId, setReplyingId] = useState(null);
     const [replyTexts, setReplyTexts] = useState({});
     const [sending,    setSending]    = useState({});
+    const swipeStarts = useRef(new Map());
+    const [swipeOffsets, setSwipeOffsets] = useState({});
 
     const displayed = useMemo(() => {
       if (tab === 'bookings') return grouped.booking;
@@ -207,12 +209,19 @@
                     <motion.div
                       key={n.id} layout
                       initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: 30 }}
+                      exit={{ opacity: 0, x: 80, scale: 0.98 }}
+                      onPointerDown={(event) => { swipeStarts.current.set(n.id, { x: event.clientX, y: event.clientY, dx: 0 }); event.currentTarget.setPointerCapture?.(event.pointerId); }}
+                      onPointerMove={(event) => { const start = swipeStarts.current.get(n.id); if (!start) return; const dx = event.clientX - start.x; const dy = event.clientY - start.y; if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 5) { start.dx = dx; setSwipeOffsets(p => ({ ...p, [n.id]: { x: dx, opacity: Math.max(.18, 1 - Math.abs(dx) / 260) } })); } }}
+                      onPointerUp={() => { const start = swipeStarts.current.get(n.id); swipeStarts.current.delete(n.id); if (!start) return; if (Math.abs(start.dx) > 95) { setSwipeOffsets(p => ({ ...p, [n.id]: { x: start.dx < 0 ? -window.innerWidth : window.innerWidth, opacity: 0 } })); window.setTimeout(() => deleteOne(n.id), 180); } else setSwipeOffsets(p => ({ ...p, [n.id]: { x: 0, opacity: 1 } })); }}
+                      onPointerCancel={() => { swipeStarts.current.delete(n.id); setSwipeOffsets(p => ({ ...p, [n.id]: { x: 0, opacity: 1 } })); }}
+                      className="notification-card"
                       style={{
                         padding: '18px 24px',
                         borderBottom: idx < displayed.length - 1 ? '1px solid #f1f5f9' : 'none',
                         background: n.is_read ? '#fff' : '#f0fdf4',
-                        position: 'relative',
+                        position: 'relative', touchAction: 'pan-y', willChange: 'transform, opacity',
+                        transform: 'translate3d(' + (swipeOffsets[n.id]?.x || 0) + 'px,0,0)', opacity: swipeOffsets[n.id]?.opacity ?? 1,
+                        transition: swipeStarts.current.has(n.id) ? 'none' : 'transform 220ms cubic-bezier(.2,.8,.2,1), opacity 220ms ease',
                       }}
                     >
                       {!n.is_read && (
@@ -323,20 +332,6 @@
                             {!n.is_read && (
                               <button onClick={() => markRead(n.id)} style={btnStyle('#059669')}>
                                 ✓ Mark read
-                              </button>
-                            )}
-                            <button
-                              onClick={() => react(n.id, n.reaction === 'like' ? null : 'like')}
-                              style={btnStyle(n.reaction === 'like' ? '#059669' : '#94a3b8')}
-                            >
-                              👍 {n.reaction === 'like' ? 'Liked' : 'Like'}
-                            </button>
-                            {!(n.reply_text || n.replyText) && (
-                              <button
-                                onClick={() => setReplyingId(replyingId === n.id ? null : n.id)}
-                                style={btnStyle('#0ea5e9')}
-                              >
-                                💬 {replyingId === n.id ? 'Cancel' : 'Reply to Team'}
                               </button>
                             )}
                             <button onClick={() => deleteOne(n.id)} style={btnStyle('#ef4444')}>
