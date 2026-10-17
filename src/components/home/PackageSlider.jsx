@@ -200,6 +200,54 @@ export default function PackageSlider({ limit = 8 }) {
         .pkg-slider-img-wrap { position:relative; overflow:hidden; }
         .pkg-slider-img { transition:transform .6s ease; }
         .pkg-slider-card:hover .pkg-slider-img { transform:scale(1.045); }
+        .pkg-slider-card {
+          border: 1px solid rgba(255,255,255,.72);
+          border-radius: 24px !important;
+          overflow: hidden;
+          isolation: isolate;
+          background: #062e25;
+          box-shadow: 0 14px 34px rgba(6, 78, 59, .13), 0 2px 8px rgba(15,23,42,.05);
+          transition: box-shadow .35s ease, border-color .35s ease, transform .35s ease;
+        }
+        .pkg-slider-card:hover {
+          border-color: rgba(16,185,129,.65);
+          box-shadow: 0 24px 48px rgba(6,78,59,.24), 0 0 0 1px rgba(16,185,129,.12);
+        }
+        .pkg-slider-img-wrap { aspect-ratio: 4 / 5; }
+        .pkg-slider-img { width:100%; height:100%; object-fit:cover; display:block; }
+        .pkg-slider-gradient {
+          position:absolute; inset:0; z-index:1; pointer-events:none;
+          background:linear-gradient(180deg,rgba(2,44,34,.04) 20%,rgba(2,44,34,.08) 43%,rgba(2,44,34,.86) 100%);
+        }
+        .pkg-slider-poster-overlay {
+          justify-content:flex-end;
+          padding:20px;
+          background:linear-gradient(180deg,rgba(2,44,34,.04) 10%,rgba(2,44,34,.18) 42%,rgba(2,44,34,.92) 100%);
+        }
+        .pkg-slider-poster-label span {
+          display:inline-flex; align-self:flex-start; align-items:center;
+          padding:6px 9px; border:1px solid rgba(255,255,255,.28);
+          border-radius:999px; background:rgba(255,255,255,.13);
+          backdrop-filter:blur(10px); font-size:9px; letter-spacing:.16em;
+        }
+        .pkg-slider-poster-label strong {
+          font-size:clamp(17px,1.6vw,22px); line-height:1.15;
+          letter-spacing:-.025em; max-width:18ch;
+        }
+        .pkg-slider-request-cta {
+          padding:10px 13px; border:1px solid rgba(255,255,255,.65);
+          background:linear-gradient(135deg,#fff,#ecfdf5);
+          transition:transform .25s ease, box-shadow .25s ease;
+        }
+        .pkg-slider-card:hover .pkg-slider-request-cta {
+          transform:translateY(-2px); box-shadow:0 10px 25px rgba(0,0,0,.22);
+        }
+        .pkg-slider-wishlist {
+          z-index:5; width:42px; height:42px; display:grid; place-items:center;
+          border:1px solid rgba(255,255,255,.65); border-radius:50%;
+          background:rgba(255,255,255,.9); color:#047857;
+          box-shadow:0 6px 20px rgba(0,0,0,.16); backdrop-filter:blur(10px);
+        }
         .pkg-slider-link { position:relative; display:block; height:100%; overflow:hidden; }
         @media (max-width:640px) {
           .pkg-slider-poster-overlay { padding:14px; gap:9px; }
