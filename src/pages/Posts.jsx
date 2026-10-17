@@ -931,7 +931,7 @@ const Posts = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
-  const POSTS_PER_PAGE = 9;
+  const POSTS_PER_PAGE = 12;
   const w = useWindowSize();
   const isMobile = w < 768;
 
@@ -952,9 +952,25 @@ const Posts = () => {
       if (!res.ok) throw new Error(`Server error ${res.status}`);
       const json = await res.json();
 
-      const raw = json?.data || json?.posts || json || [];
-      setPosts(Array.isArray(raw) ? raw.map(normalise) : []);
-      setTotalCount(json?.totalCount || json?.total || raw.length || 0);
+      // Accept the common API response shapes without silently dropping rows.
+      const payload = json?.data ?? json?.posts ?? json;
+      const raw = Array.isArray(payload)
+        ? payload
+        : Array.isArray(payload?.posts)
+          ? payload.posts
+          : Array.isArray(payload?.items)
+            ? payload.items
+            : Array.isArray(payload?.results)
+              ? payload.results
+              : [];
+      const meta = json?.pagination || json?.meta || payload?.pagination || payload?.meta || {};
+      setPosts(raw.map(normalise));
+      setTotalCount(Number(
+        json?.totalCount ?? json?.total_count ?? json?.total ??
+        meta?.totalCount ?? meta?.total_count ?? meta?.total ??
+        payload?.totalCount ?? payload?.total_count ?? payload?.total ??
+        raw.length
+      ) || 0);
     } catch (err) {
       if (err?.name === "AbortError") return;
       setError(err?.message || "Failed to load posts");
@@ -1025,10 +1041,9 @@ const Posts = () => {
   const featuredPost = useMemo(() => posts.find((p) => p.featured), [posts]);
   const totalPages = Math.ceil(totalCount / POSTS_PER_PAGE);
 
-  const displayPosts = useMemo(() => {
-    if (search.trim() || category !== "all") return posts;
-    return featuredPost ? posts.filter((p) => !p.featured) : posts;
-  }, [posts, featuredPost, search, category]);
+  // Keep every post returned for the current page visible. The featured story
+  // may also appear in the feed; hiding it here made the page look incomplete.
+  const displayPosts = useMemo(() => posts, [posts]);
 
   /* ── Stat values ─────────────────────────────────────── */
   const statItems = [
@@ -1080,21 +1095,26 @@ const Posts = () => {
             {/* Search */}
             <div
               className="ps-search-wrap"
-              style={{ position: "relative", flex: "1 1 300px", maxWidth: isMobile ? "100%" : 400 }}
+              style={{ position: "relative", flex: "1 1 320px", width: "100%", minWidth: 0, maxWidth: isMobile ? "100%" : 520 }}
             >
-              <FiSearch size={17} style={{
-                position: "absolute", left: 15, top: "50%",
-                transform: "translateY(-50%)", color: "#9CA3AF",
-              }} />
+              <span aria-hidden="true" style={{
+                position: "absolute", insetInlineStart: 15, top: "50%",
+                transform: "translateY(-50%)", width: 20, height: 20,
+                display: "grid", placeItems: "center", color: "#059669",
+                pointerEvents: "none", zIndex: 2, lineHeight: 0,
+              }}>
+                <FiSearch size={18} strokeWidth={2.2} />
+              </span>
               <input
                 type="text"
                 placeholder="Search articles, authors, topics…"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                 className="ps-focus-ring"
                 style={{
                   width: "100%", boxSizing: "border-box",
-                  padding: "13px 42px 13px 46px",
+                  padding: "14px 44px 14px 46px",
+                  display: "block", minWidth: 0, fontFamily: "Inter, sans-serif",
                   borderRadius: "var(--ps-radius-full)",
                   border: "2px solid #E5E7EB",
                   backgroundColor: "white", fontSize: 13.5,
@@ -1113,7 +1133,7 @@ const Posts = () => {
               />
               {search && (
                 <button
-                  onClick={() => setSearch("")}
+                  onClick={() => { setSearch(""); setCurrentPage(1); }}
                   style={{
                     position: "absolute", right: 12, top: "50%",
                     transform: "translateY(-50%)",
