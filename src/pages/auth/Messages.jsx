@@ -604,6 +604,9 @@ const MsgBubble = React.memo(function MsgBubble({
   const [menuOpen, setMenuOpen] = useState(false);
   const [reactionPickerOpen, setReactionPickerOpen] = useState(false);
   const touchStartX = useRef(null);
+  const swipeOffsetX = useRef(0);
+  const swipeTriggered = useRef(false);
+  const [swipeOffset, setSwipeOffset] = useState(0);
   const reactions = useMemo(() => {
     const r = message.reactions || {};
     return Object.entries(r).filter(([,ids]) => ids?.length > 0);
