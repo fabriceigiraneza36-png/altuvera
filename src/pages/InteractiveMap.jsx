@@ -322,10 +322,30 @@ const injectStyles = `
   .im-map-shell:fullscreen .im-map-area { width:100% !important; height:100vh !important; height:100dvh !important; max-height:100dvh !important; border-radius:0 !important; }
   .im-map-tool-toggle { display:flex; align-items:center; justify-content:center; gap:8px; min-width:48px; min-height:48px; border:1px solid rgba(255,255,255,.72); border-radius:999px; background:linear-gradient(135deg,#059669,#047857); color:white; box-shadow:0 10px 30px rgba(4,120,87,.3); cursor:pointer; transition:transform .2s ease,box-shadow .2s ease; }
   .im-map-tool-toggle:hover { transform:translateY(-2px); box-shadow:0 14px 34px rgba(4,120,87,.38); }
-  .im-map-fullscreen-toolbar { display:flex; gap:8px; position:absolute; top:16px; right:16px; z-index:30; }
+  .im-map-fullscreen-toolbar { display:flex; gap:8px; position:absolute; top:72px; right:12px; z-index:30; max-width:calc(100% - 24px); flex-wrap:wrap; justify-content:flex-end; }
+  .im-info-badge { top:12px !important; left:12px !important; right:12px !important; width:max-content; max-width:calc(100% - 24px) !important; min-width:0; flex-wrap:wrap; white-space:normal; line-height:1.4; }
+  .im-map-view-toolbar { top:132px !important; right:12px !important; left:12px !important; max-width:calc(100% - 24px) !important; flex-wrap:wrap !important; justify-content:flex-start; }
+  .im-map-shell .im-map-area { min-width:0; }
+  .im-map-shell:fullscreen .im-info-badge { top:12px !important; left:12px !important; right:12px !important; }
+  .im-map-shell:fullscreen .im-map-fullscreen-toolbar { top:72px !important; right:12px !important; left:12px !important; justify-content:flex-end; }
+  .im-map-shell:fullscreen .im-map-view-toolbar { top:132px !important; }
   .im-map-tools-popover { animation:slideUp .18s ease both; }
   .im-map-shell:fullscreen .im-map-tools-popover { position:absolute; bottom:16px; right:16px; }
-  @media (max-width:768px) { .im-map-fullscreen-toolbar { top:10px; right:10px; } .im-map-tool-toggle { min-width:44px; min-height:44px; } .im-map-shell:fullscreen .im-map-tools-popover { bottom:10px; right:10px; max-width:calc(100vw - 20px); } }
+  @media (max-width:768px) {
+    .im-map-fullscreen-toolbar { top:70px !important; right:10px !important; left:10px !important; gap:6px; }
+    .im-map-tool-toggle { min-width:44px; min-height:44px; padding:0 12px; }
+    .im-info-badge { top:10px !important; left:10px !important; right:10px !important; padding:9px 12px !important; font-size:11px !important; gap:7px !important; }
+    .im-map-view-toolbar { top:126px !important; left:10px !important; right:10px !important; padding:4px !important; gap:2px !important; }
+    .im-map-view-toolbar button { padding:8px 10px !important; font-size:11px !important; }
+    .im-map-shell:fullscreen .im-map-tools-popover { bottom:10px; right:10px; max-width:calc(100vw - 20px); }
+    .im-map-shell:fullscreen .im-map-area { min-height:100dvh !important; }
+  }
+  @media (max-width:420px) {
+    .im-map-fullscreen-toolbar { top:76px !important; }
+    .im-map-tool-toggle span { display:none; }
+    .im-map-view-toolbar { top:128px !important; }
+    .im-info-badge { font-size:10px !important; }
+  }
   /* Responsive */
   @media (max-width: 1200px) {
     .im-main-grid {
@@ -2000,7 +2020,7 @@ const InteractiveMap = () => {
 
                       {/* ── Map view toggle ── */}
                       <div
-                        className="im-glass"
+                        className="im-glass im-map-view-toolbar"
                         style={{
                           position: "absolute",
                           top: 12,
