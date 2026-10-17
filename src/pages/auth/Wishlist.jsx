@@ -11,6 +11,7 @@ import {
   FiSearch, FiRefreshCw, FiGrid, FiList, FiCamera,
 } from "react-icons/fi";
 import { HiOutlineLocationMarker } from "react-icons/hi";
+import packagesAPI from "../../api/packages";
 
 const API_BASE =
   import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
@@ -470,12 +471,39 @@ function DestinationRow({ destination, onRemove }) {
   );
 }
 
-// ─── Main Wishlist Page ────────────────────────────────────────────────────────
+
+function PackageWishlistCard({ pkg, onRemove }) {
+  const id = pkg.id ?? pkg._id;
+  const image = pkg.cover_image_url || pkg.thumbnail_url || pkg.image_url || pkg.image || pkg.images?.[0]?.url;
+  return <motion.article layout className="wl-card">
+    <div className="wl-card-img-wrap">{image ? <img className="wl-card-img" src={image} alt={pkg.title || pkg.name || "Safari package"} loading="lazy"/> : <div className="wl-card-img-placeholder"><FiMapPin size={36}/></div>}
+      <button className="wl-card-remove" onClick={() => onRemove(id)} aria-label="Remove package from wishlist"><FiTrash2 size={16}/></button>
+    </div>
+    <div className="wl-card-body"><h3 className="wl-card-name">{pkg.title || pkg.name || "Safari package"}</h3>
+      <p className="wl-card-desc">{pkg.short_description || pkg.description || "Explore this Altuvera safari package."}</p>
+      <div className="wl-card-meta">{pkg.category && <span className="wl-card-tag">{pkg.category}</span>}</div>
+      <div className="wl-card-actions"><Link className="wl-card-btn wl-card-btn-primary" to={`/packages/${pkg.slug || id}`}><FiExternalLink size={14}/> View package</Link><button className="wl-card-btn wl-card-btn-ghost" onClick={() => onRemove(id)}><FiTrash2 size={14}/> Remove</button></div>
+    </div>
+  </motion.article>;
+}
+function PackageWishlistRow({ pkg, onRemove }) {
+  const id = pkg.id ?? pkg._id;
+  const image = pkg.cover_image_url || pkg.thumbnail_url || pkg.image_url || pkg.image || pkg.images?.[0]?.url;
+  return <motion.article layout className="wl-list-card">
+    <div className="wl-list-img">{image ? <img src={image} alt="" loading="lazy"/> : <FiMapPin size={26} color="#059669"/>}</div>
+    <div className="wl-list-body"><p className="wl-list-name">{pkg.title || pkg.name || "Safari package"}</p>
+      <p className="wl-list-location"><FiMapPin size={12} color="#059669"/> Safari package</p>
+      <div className="wl-list-tags">{pkg.category && <span className="wl-card-tag">{pkg.category}</span>}</div>
+    </div>
+    <div className="wl-list-actions"><Link to={`/packages/${pkg.slug || id}`} className="wl-list-action-btn" style={{background:"linear-gradient(135deg,#059669,#047857)",color:"#fff",textDecoration:"none"}}><FiExternalLink size={13}/> View</Link><button className="wl-list-action-btn" onClick={() => onRemove(id)} style={{background:"#fef2f2",color:"#dc2626",border:"1.5px solid #fecaca"}}><FiTrash2 size={13}/> Remove</button></div>
+  </motion.article>;
+}
+\n// ─── Main Wishlist Page ────────────────────────────────────────────────────────
 export default function Wishlist() {
   const { wishlistIds, toggleWishlist, loaded } = useWishlist();
   const { authFetch } = useUserAuth();
 
-  const [destinations,  setDestinations]  = useState([]);
+  const [destinations,  setDestinations]  = useState([]);\n  const [packages, setPackages] = useState([]);\n  const [packageIds, setPackageIds] = useState(() => { try { return new Set(JSON.parse(localStorage.getItem("altuvera_wishlist") || "[]").map(String)); } catch { return new Set(); } });
   const [loading,       setLoading]       = useState(false);
   const [search,        setSearch]        = useState("");
   const [view,          setView]          = useState("grid"); // "grid" | "list"
@@ -501,7 +529,7 @@ export default function Wishlist() {
       const valid = results
         .filter((r) => r.status === "fulfilled" && r.value?.id)
         .map((r) => r.value);
-      setDestinations(valid);
+      setDestinations(valid);\n      const savedPackageIds = (() => { try { return new Set(JSON.parse(localStorage.getItem("altuvera_wishlist") || "[]").map(String)); } catch { return new Set(); } })();\n      setPackageIds(savedPackageIds);\n      if (savedPackageIds.size) {\n        const response = await packagesAPI.getAll({ limit: 100, is_active: true });\n        const rows = response?.data ?? response?.packages ?? [];\n        setPackages((Array.isArray(rows) ? rows : []).filter((pkg) => savedPackageIds.has(String(pkg.id ?? pkg._id))));\n      } else setPackages([]);
     } catch (err) {
       setFetchError(err.message || "Failed to load wishlist destinations.");
     } finally {
@@ -536,7 +564,7 @@ export default function Wishlist() {
         String(d.country_name || "").toLowerCase().includes(q) ||
         String(d.category || "").toLowerCase().includes(q)
     );
-  }, [destinations, search]);
+  }, [destinations, search]);\n\n  const allSavedCount = wishlistArr.length + packageIds.size;\n  const filteredPackages = useMemo(() => { const q = search.toLowerCase().trim(); return packages.filter((p) => !q || String(p.title || p.name || "").toLowerCase().includes(q) || String(p.category || "").toLowerCase().includes(q)); }, [packages, search]);\n  const removePackage = useCallback((id) => { const next = new Set(packageIds); next.delete(String(id)); setPackageIds(next); setPackages((prev) => prev.filter((p) => String(p.id ?? p._id) !== String(id))); try { localStorage.setItem("altuvera_wishlist", JSON.stringify([...next])); } catch {} }, [packageIds]);
 
   return (
     <>
@@ -563,7 +591,7 @@ export default function Wishlist() {
             </div>
             <div className="wl-hero-stats">
               <div className="wl-hero-stat">
-                <span className="wl-hero-stat-num">{wishlistArr.length}</span>
+                <span className="wl-hero-stat-num">{allSavedCount}</span>
                 <span className="wl-hero-stat-label">Saved</span>
               </div>
               <div className="wl-hero-stat">
@@ -640,7 +668,7 @@ export default function Wishlist() {
           )}
 
           {/* ── Empty — wishlist itself is empty ── */}
-          {!loading && wishlistArr.length === 0 && (
+          {!loading && allSavedCount === 0 && (
             <div className="wl-empty">
               <div className="wl-empty-icon">💔</div>
               <h3>Your wishlist is empty</h3>
@@ -655,7 +683,7 @@ export default function Wishlist() {
           )}
 
           {/* ── Empty — search has no results ── */}
-          {!loading && wishlistArr.length > 0 && filtered.length === 0 && search && (
+          {!loading && allSavedCount > 0 && filtered.length === 0 && filteredPackages.length === 0 && search && (
             <div className="wl-empty">
               <div className="wl-empty-icon">🔍</div>
               <h3>No results for "{search}"</h3>
@@ -674,7 +702,7 @@ export default function Wishlist() {
           )}
 
           {/* ── Destination Grid ── */}
-          {!loading && filtered.length > 0 && view === "grid" && (
+          {!loading && (filtered.length > 0 || filteredPackages.length > 0) && view === "grid" && (
             <div className="wl-grid">
               <AnimatePresence>
                 {filtered.map((dest) => (
@@ -689,7 +717,7 @@ export default function Wishlist() {
           )}
 
           {/* ── Destination List ── */}
-          {!loading && filtered.length > 0 && view === "list" && (
+          {!loading && (filtered.length > 0 || filteredPackages.length > 0) && view === "list" && (
             <div className="wl-list">
               <AnimatePresence>
                 {filtered.map((dest) => (
