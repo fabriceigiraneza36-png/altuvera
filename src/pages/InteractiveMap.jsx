@@ -52,6 +52,7 @@ import {
   FiRotateCcw,
   FiFilter,
   FiList,
+  FiSliders,
   FiMail,
   FiMessageCircle,
   FiZap,
@@ -317,6 +318,14 @@ const injectStyles = `
   .im-page-root { overflow-x: clip; }
   .im-page-root .im-main-grid, .im-page-root .im-main-grid > * { min-width: 0; max-width: 100%; }
   .im-map-area { width: 100%; max-width: 100%; }
+  .im-map-shell:fullscreen { width:100vw !important; height:100vh !important; height:100dvh !important; max-width:100vw !important; max-height:100dvh !important; border-radius:0 !important; margin:0 !important; padding:0 !important; background:#e8f3ef !important; overflow:hidden !important; }
+  .im-map-shell:fullscreen .im-map-area { width:100% !important; height:100vh !important; height:100dvh !important; max-height:100dvh !important; border-radius:0 !important; }
+  .im-map-tool-toggle { display:flex; align-items:center; justify-content:center; gap:8px; min-width:48px; min-height:48px; border:1px solid rgba(255,255,255,.72); border-radius:999px; background:linear-gradient(135deg,#059669,#047857); color:white; box-shadow:0 10px 30px rgba(4,120,87,.3); cursor:pointer; transition:transform .2s ease,box-shadow .2s ease; }
+  .im-map-tool-toggle:hover { transform:translateY(-2px); box-shadow:0 14px 34px rgba(4,120,87,.38); }
+  .im-map-fullscreen-toolbar { display:flex; gap:8px; position:absolute; top:16px; right:16px; z-index:30; }
+  .im-map-tools-popover { animation:slideUp .18s ease both; }
+  .im-map-shell:fullscreen .im-map-tools-popover { position:absolute; bottom:16px; right:16px; }
+  @media (max-width:768px) { .im-map-fullscreen-toolbar { top:10px; right:10px; } .im-map-tool-toggle { min-width:44px; min-height:44px; } .im-map-shell:fullscreen .im-map-tools-popover { bottom:10px; right:10px; max-width:calc(100vw - 20px); } }
   /* Responsive */
   @media (max-width: 1200px) {
     .im-main-grid {
@@ -1409,6 +1418,7 @@ const InteractiveMap = () => {
   const [panelTab, setPanelTab] = useState("list");
   const [favorites, setFavorites] = useState(new Set());
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showMapTools, setShowMapTools] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [miniMapExpanded, setMiniMapExpanded] = useState(false);
@@ -1777,12 +1787,16 @@ const InteractiveMap = () => {
                 <AnimatedSection animation="fadeInUp">
                   <div
                     ref={mapContainerRef}
+                    className="im-map-shell"
                     style={{
                       position: "relative",
                       backgroundColor: "#fff",
                       borderRadius: isFullscreen ? 0 : "var(--im-radius-xl)",
+                      width: isFullscreen ? "100vw" : "100%",
+                      height: isFullscreen ? "100vh" : "auto",
+                      maxWidth: isFullscreen ? "100vw" : "100%",
                       overflow: "hidden",
-                      boxShadow: "var(--im-shadow-xl)",
+                      boxShadow: isFullscreen ? "none" : "var(--im-shadow-xl)",
                     }}
                   >
                     <div
@@ -1798,6 +1812,8 @@ const InteractiveMap = () => {
                         position: "relative",
                         width: "100%",
                         height: isFullscreen ? "100vh" : "620px",
+                        minHeight: isFullscreen ? "100dvh" : undefined,
+                        maxHeight: isFullscreen ? "100dvh" : undefined,
                         overflow: "hidden",
                         cursor: isDragging ? "grabbing" : "grab",
                         userSelect: "none",
@@ -2034,9 +2050,17 @@ const InteractiveMap = () => {
                         ))}
                       </div>
 
-                      {/* ── Zoom controls ── */}
-                      <div
-                        className="im-zoom-controls"
+                      <div className="im-map-fullscreen-toolbar">
+                        <button type="button" className="im-map-tool-toggle" onClick={() => setShowMapTools((value) => !value)} aria-label={showMapTools ? "Hide map tools" : "Show map tools"} aria-expanded={showMapTools} title={showMapTools ? "Hide map tools" : "Map tools"}>
+                          {showMapTools ? <FiX size={19} /> : <FiSliders size={19} />}
+                          <span style={{fontSize:12,fontWeight:700,paddingRight:4}}>{showMapTools ? "Close tools" : "Tools"}</span>
+                        </button>
+                        <button type="button" className="im-map-tool-toggle" onClick={toggleFullscreen} aria-label={isFullscreen ? "Exit fullscreen map" : "Open fullscreen map"} title={isFullscreen ? "Exit fullscreen" : "Fullscreen map"}>
+                          {isFullscreen ? <FiMinimize2 size={19} /> : <FiMaximize2 size={19} />}
+                        </button>
+                      </div>
+                      {showMapTools && <div
+                        className="im-zoom-controls im-map-tools-popover"
                         style={{
                           position: "absolute",
                           bottom: 20,
@@ -2096,7 +2120,7 @@ const InteractiveMap = () => {
                         >
                           {Math.round(zoom * 100)}%
                         </div>
-                      </div>
+                      </div>}
 
                       {/* ── Bottom action bar ── */}
                       <div
