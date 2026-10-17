@@ -222,6 +222,19 @@ const globalStyles = `
     .ps-featured-content { padding: 22px !important; }
     .ps-post-content     { padding: 18px !important; }
   }
+  /* Posts page: compact spacing and more consistent mobile rhythm */
+  .ps-posts-grid { gap: 20px !important; }
+  .ps-featured-card { border-radius: 24px !important; overflow: hidden; }
+  .ps-search-wrap { min-width: 0; }
+  @media (max-width: 768px) {
+    .ps-posts-grid { grid-template-columns: repeat(1,minmax(0,1fr)) !important; gap: 14px !important; }
+    .ps-featured-content { padding: 20px !important; }
+    .ps-filter-row { gap: 10px !important; margin-bottom: 18px !important; }
+    .ps-newsletter { margin-top: 26px !important; }
+  }
+  @media (min-width: 769px) and (max-width: 1100px) {
+    .ps-posts-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 16px !important; }
+  }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
@@ -1040,14 +1053,14 @@ const Posts = () => {
       />
 
       <section style={{
-        padding: isMobile ? "28px 16px 72px" : "56px 24px 112px",
+        padding: isMobile ? "20px 16px 56px" : "36px 24px 80px",
         maxWidth: 1280, margin: "0 auto",
       }}>
 
         {/* ════ STATS BAR ════ */}
         <AnimatedSection animation="fadeInUp">
           <div style={{
-            display: "flex", gap: 16, marginBottom: 40, flexWrap: "wrap",
+            display: "flex", gap: 12, marginBottom: 20, flexWrap: "wrap",
           }}>
             {statItems.map((s, i) => (
               <StatCard key={i} icon={s.icon} value={s.value} label={s.label} />
@@ -1060,7 +1073,7 @@ const Posts = () => {
           <div
             className="ps-filter-row"
             style={{
-              display: "flex", gap: 14, marginBottom: 36,
+              display: "flex", gap: 12, marginBottom: 22,
               alignItems: "center", flexWrap: "wrap",
             }}
           >
