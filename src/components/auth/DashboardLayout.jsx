@@ -152,6 +152,15 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
           min-width: 0;
           min-height: 0;
         }
+        .notification-card { border-radius: 20px; background: rgba(255,255,255,.96); box-shadow: 0 8px 26px rgba(15,23,42,.045); }
+        .notification-card:hover { box-shadow: 0 12px 32px rgba(15,23,42,.075); }
+        .wl-card, .wl-list-card { transition: transform .22s ease, box-shadow .22s ease, border-color .22s ease; }
+        .wl-card:hover, .wl-list-card:hover { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(15,23,42,.08); }
+        @media (max-width: 640px) {
+          .notification-card { padding: 14px !important; }
+          .notification-card > div { min-width: 0; }
+          .wl-card, .wl-list-card { max-width: 100%; }
+        }
         /* Premium responsive treatment shared by all signed-in user pages. */
         .dashboard-content { max-width: 1240px; padding: clamp(20px, 3vw, 36px); }
         .dashboard-header { margin-bottom: clamp(18px, 2.4vw, 28px); }
