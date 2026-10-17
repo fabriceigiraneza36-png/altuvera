@@ -247,15 +247,66 @@ const PAGE_CSS = `
     display: grid;
     place-items: center;
   }
-  .cd-toolbar__filters {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid #f1f5f9;
-    animation: cdSlideDown .3s ease;
+  .cd-toolbar__filter-wrap {
+    position: relative;
+    flex: 0 0 auto;
+    z-index: 30;
   }
+  .cd-toolbar__filters {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 60;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    width: min(360px, calc(100vw - 32px));
+    max-height: min(70vh, 520px);
+    overflow-y: auto;
+    padding: 18px;
+    border: 1px solid rgba(15,23,42,.1);
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 18px 48px rgba(15,23,42,.18), 0 3px 10px rgba(15,23,42,.06);
+    animation: cdSlideDown .22s cubic-bezier(.2,.8,.2,1);
+  }
+  .cd-toolbar__filters::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    right: 25px;
+    width: 11px;
+    height: 11px;
+    background: #fff;
+    border-top: 1px solid rgba(15,23,42,.1);
+    border-left: 1px solid rgba(15,23,42,.1);
+    transform: rotate(45deg);
+  }
+  .cd-toolbar__filters-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eef2f7;
+    color: #0f172a;
+    font-size: 14px;
+    font-weight: 800;
+  }
+  .cd-toolbar__filter-field {
+    display: grid;
+    gap: 7px;
+    min-width: 0;
+  }
+  .cd-toolbar__filter-label {
+    color: #64748b;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+  }
+  .cd-toolbar__filters .cd-toolbar__select { width: 100%; min-height: 44px; }
+  .cd-toolbar__filters .cd-toolbar__clear-all { width: 100%; justify-content: center; }
   .cd-toolbar__select {
     padding: 11px 36px 11px 14px;
     border: 1.5px solid #e2e8f0;
@@ -748,31 +799,45 @@ function CountryDestinationsPage() {
                 </div>
               </div>
 
-              <button
-                className={`cd-toolbar__filter-btn${showFilters ? " active" : ""}`}
-                onClick={() => setShowFilters(p => !p)}
-              >
-                <FiFilter size={14} />
-                Filters
-                {activeFilters > 0 && <span className="cd-toolbar__badge">{activeFilters}</span>}
-              </button>
-            </div>
-
-            {showFilters && (
-              <div className="cd-toolbar__filters">
-                <select className="cd-toolbar__select" value={category} onChange={(e) => setCategory(e.target.value)}>
-                  <option value="all">All Categories</option>
-                  {categories.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1).replace(/_/g, " ")}</option>)}
-                </select>
-                <select className="cd-toolbar__select" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
-                  <option value="all">All Difficulties</option>
-                  {difficulties.map(d => <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>)}
-                </select>
-                {activeFilters > 0 && (
-                  <button className="cd-toolbar__clear-all" onClick={clearAll}><FiX size={13} /> Clear</button>
+              <div className="cd-toolbar__filter-wrap">
+                <button
+                  type="button"
+                  className={`cd-toolbar__filter-btn${showFilters ? " active" : ""}`}
+                  aria-expanded={showFilters}
+                  aria-haspopup="dialog"
+                  onClick={() => setShowFilters(p => !p)}
+                >
+                  <FiFilter size={14} />
+                  Filters
+                  {activeFilters > 0 && <span className="cd-toolbar__badge">{activeFilters}</span>}
+                </button>
+                {showFilters && (
+                  <div className="cd-toolbar__filters" role="dialog" aria-label="Destination filters">
+                    <div className="cd-toolbar__filters-heading">
+                      <span>Refine destinations</span>
+                      <span>{activeFilters} active</span>
+                    </div>
+                    <label className="cd-toolbar__filter-field">
+                      <span className="cd-toolbar__filter-label">Experience category</span>
+                      <select className="cd-toolbar__select" value={category} onChange={(e) => setCategory(e.target.value)}>
+                        <option value="all">All categories</option>
+                        {categories.map(c => <option key={c} value={c}>{c.charAt(0).toUpperCase() + c.slice(1).replace(/_/g, " ")}</option>)}
+                      </select>
+                    </label>
+                    <label className="cd-toolbar__filter-field">
+                      <span className="cd-toolbar__filter-label">Difficulty</span>
+                      <select className="cd-toolbar__select" value={difficulty} onChange={(e) => setDifficulty(e.target.value)}>
+                        <option value="all">All difficulties</option>
+                        {difficulties.map(d => <option key={d} value={d}>{d.charAt(0).toUpperCase() + d.slice(1)}</option>)}
+                      </select>
+                    </label>
+                    {activeFilters > 0 && (
+                      <button type="button" className="cd-toolbar__clear-all" onClick={clearAll}><FiX size={13} /> Clear all filters</button>
+                    )}
+                  </div>
                 )}
               </div>
-            )}
+            </div>
 
             <div className="cd-toolbar__status">
               <span>
