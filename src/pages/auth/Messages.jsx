@@ -248,14 +248,22 @@ const MSG_STYLES = `
   padding-bottom:max(10px, env(safe-area-inset-bottom));
 }
 .msg-composer-row {
-  min-width:0; border:1px solid transparent; background:#fff;
-  box-shadow:0 3px 14px rgba(15,23,42,.06);
-  transition:border-color .18s, box-shadow .18s, background .18s;
+  position:relative; isolation:isolate; min-width:0; border:1px solid transparent; border-radius:22px;
+  background:linear-gradient(#fff,#fff) padding-box, linear-gradient(110deg,#059669,#6ee7b7,#38bdf8,#059669) border-box;
+  background-size:100% 100%, 260% 100%; animation:msgBorderFlow 6s linear infinite;
+  box-shadow:0 8px 26px rgba(15,23,42,.08),0 2px 7px rgba(5,150,105,.06);
+  transition:box-shadow .22s, transform .22s;
 }
 .msg-composer-row:focus-within {
-  border-color:#10b981;
-  box-shadow:0 0 0 3px rgba(16,185,129,.10), 0 5px 18px rgba(15,23,42,.07);
+  animation-duration:2.4s; transform:translateY(-1px);
+  box-shadow:0 0 0 3px rgba(16,185,129,.11),0 12px 32px rgba(5,150,105,.13);
 }
+@keyframes msgBorderFlow { to { background-position:0 0,260% 0; } }
+.msg-composer-row textarea { line-height:1.45; padding-top:12px; padding-bottom:12px; }
+.msg-composer-row button { transition:transform .18s, background .18s, box-shadow .18s; }
+.msg-composer-row button:active { transform:scale(.94); }
+.msg-composer-row:focus-within textarea::placeholder { color:#94a3b8; }
+@media (prefers-reduced-motion:reduce) { .msg-composer-row { animation:none; transition:none; } }
 .msg-composer-row textarea {
   min-width:0; border:0 !important; outline:none !important;
   box-shadow:none !important; background:transparent !important;
@@ -264,7 +272,14 @@ const MSG_STYLES = `
 .msg-chat { position:relative; }
 .msg-chat .msg-scroll-layer { position:absolute; inset:0; pointer-events:none; z-index:5; }
 .msg-chat .msg-scroll-layer > * { pointer-events:auto; }
-.msg-bubble-wrap { touch-action:pan-y; }
+.msg-bubble-wrap { touch-action:pan-y; will-change:transform; }
+/* Keep the conversation directly beneath the site navbar; no duplicated 80px spacer. */
+.dashboard-layout:has(.msg-layout) { padding-top:0 !important; min-height:0; }
+.dashboard-layout:has(.msg-layout) .dashboard-content { padding:0 !important; height:calc(100dvh - var(--site-nav-height, 80px)); }
+.dashboard-layout:has(.msg-layout) .dashboard-header { display:none; }
+.msg-chat-foot { background:rgba(255,255,255,.96); backdrop-filter:blur(16px); }
+.msg-send-button { background:linear-gradient(135deg,#059669,#10b981); box-shadow:0 5px 14px rgba(5,150,105,.22); }
+.msg-send-button:hover { box-shadow:0 8px 20px rgba(5,150,105,.3); transform:translateY(-1px); }
 @media (max-width:767px) {
   .msg-chat-head { gap:8px; padding-top:10px; padding-bottom:10px; }
   .msg-chat-body { padding:10px 9px; }
@@ -601,11 +616,18 @@ const MsgBubble = React.memo(function MsgBubble({
   return (
     <div
       className={`msg-bubble-wrap flex ${mine ? "justify-end" : "justify-start"} mb-1`}
-      onTouchStart={event => { touchStartX.current = event.changedTouches?.[0]?.clientX ?? null; }}
-      onTouchEnd={event => {
-        const endX = event.changedTouches?.[0]?.clientX;
-        if (touchStartX.current != null && endX != null && Math.abs(touchStartX.current - endX) > 55) onReply(message.id);
-        touchStartX.current = null;
+      style={{ transform: `translateX(${swipeOffset}px)`, transition: touchStartX.current == null ? "transform 180ms cubic-bezier(.2,.8,.2,1)" : "none" }}
+      onTouchStart={event => { touchStartX.current = event.touches?.[0]?.clientX ?? null; swipeOffsetX.current = 0; swipeTriggered.current = false; }}
+      onTouchMove={event => {
+        if (touchStartX.current == null) return;
+        const currentX = event.touches?.[0]?.clientX;
+        if (currentX == null) return;
+        const delta = currentX - touchStartX.current;
+        if (Math.abs(delta) > 8) { swipeOffsetX.current = Math.max(-12, Math.min(76, delta)); setSwipeOffset(swipeOffsetX.current); }
+      }}
+      onTouchEnd={() => {
+        if (Math.abs(swipeOffsetX.current) > 48 && !swipeTriggered.current) { swipeTriggered.current = true; onReply(message.id); }
+        touchStartX.current = null; swipeOffsetX.current = 0; setSwipeOffset(0);
       }}
       title="Swipe horizontally to reply on touch screens">
       {!mine && <div className="w-7 h-7 rounded-full bg-gradient-to-br from-slate-600 to-slate-800 text-white text-[10px] font-bold flex items-center justify-center flex-shrink-0 mr-2 self-end mb-6">A</div>}
