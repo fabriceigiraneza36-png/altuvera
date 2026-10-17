@@ -152,6 +152,27 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
           min-width: 0;
           min-height: 0;
         }
+        /* Premium responsive treatment shared by all signed-in user pages. */
+        .dashboard-content { max-width: 1240px; padding: clamp(20px, 3vw, 36px); }
+        .dashboard-header { margin-bottom: clamp(18px, 2.4vw, 28px); }
+        .dashboard-title { font-size: clamp(28px, 3.2vw, 38px); letter-spacing: -.035em; line-height: 1.12; }
+        .dashboard-subtitle { max-width: 680px; line-height: 1.65; }
+        .dashboard-inner-content { min-width: 0; }
+        .dashboard-content button, .dashboard-content a { -webkit-tap-highlight-color: transparent; }
+        .dashboard-content button { transition: transform .18s ease, box-shadow .2s ease, border-color .2s ease, background .2s ease; }
+        .dashboard-content button:active { transform: scale(.975); }
+        .dashboard-content img { max-width: 100%; }
+        .dashboard-content > * { min-width: 0; }
+        @media (max-width: 640px) {
+          .dashboard-content { padding: 20px 14px 88px; }
+          .dashboard-header { margin-bottom: 20px; }
+          .dashboard-title { font-size: clamp(27px, 8vw, 34px); }
+          .dashboard-subtitle { font-size: 14px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .dashboard-content button, .dashboard-content a, .dashboard-nav-link { transition: none !important; }
+        }
+
         .dashboard-header { margin-bottom: 28px; }
         .dashboard-title {
           font-family: 'Playfair Display', serif;
