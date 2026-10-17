@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
 
 const ToastContext = createContext(null);
 
@@ -30,6 +30,8 @@ const makeToast = ({ type = "info", title, message, duration = 4000 }) => ({
 
 export function ToastProvider({ children }) {
   const [toasts, setToasts] = useState([]);
+  const swipeRef = useRef(new Map());
+  const [swipePositions, setSwipePositions] = useState({});
 
   const removeToast = useCallback((id) => {
     setToasts((prev) => prev.filter((toast) => toast.id !== id));
@@ -81,6 +83,37 @@ export function ToastProvider({ children }) {
           return (
             <div
               key={toast.id}
+              onPointerDown={(event) => {
+                swipeRef.current.set(toast.id, { startX: event.clientX, startY: event.clientY, deltaX: 0, startAt: Date.now() });
+                event.currentTarget.setPointerCapture?.(event.pointerId);
+              }}
+              onPointerMove={(event) => {
+                const start = swipeRef.current.get(toast.id);
+                if (!start) return;
+                const dx = event.clientX - start.startX;
+                const dy = event.clientY - start.startY;
+                if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 4) {
+                  start.deltaX = dx;
+                  setSwipePositions((prev) => ({ ...prev, [toast.id]: { x: dx, opacity: Math.max(.2, 1 - Math.abs(dx) / 240) } }));
+                }
+              }}
+              onPointerUp={() => {
+                const start = swipeRef.current.get(toast.id);
+                swipeRef.current.delete(toast.id);
+                if (!start) return;
+                const dx = start.deltaX;
+                const fast = Date.now() - start.startAt < 240 && Math.abs(dx) > 35;
+                if (Math.abs(dx) > 90 || fast) {
+                  setSwipePositions((prev) => ({ ...prev, [toast.id]: { x: dx < 0 ? -window.innerWidth : window.innerWidth, opacity: 0 } }));
+                  window.setTimeout(() => removeToast(toast.id), 170);
+                } else {
+                  setSwipePositions((prev) => ({ ...prev, [toast.id]: { x: 0, opacity: 1 } }));
+                }
+              }}
+              onPointerCancel={() => {
+                swipeRef.current.delete(toast.id);
+                setSwipePositions((prev) => ({ ...prev, [toast.id]: { x: 0, opacity: 1 } }));
+              }}
               style={{
                 pointerEvents: "auto",
                 padding: "14px 16px",
@@ -91,6 +124,11 @@ export function ToastProvider({ children }) {
                 color: theme.color,
                 minWidth: 260,
                 overflow: "hidden",
+                touchAction: "pan-y",
+                transform: "translate3d(" + (swipePositions[toast.id]?.x || 0) + "px,0,0)",
+                opacity: swipePositions[toast.id]?.opacity ?? 1,
+                transition: swipeRef.current.has(toast.id) ? "none" : "transform 220ms cubic-bezier(.2,.8,.2,1), opacity 220ms ease",
+                willChange: "transform, opacity",
               }}
             >
               <div
