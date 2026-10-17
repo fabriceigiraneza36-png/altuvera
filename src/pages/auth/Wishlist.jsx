@@ -212,7 +212,7 @@ const css = `
     display: flex; align-items: center; justify-content: center;
     font-size: 1.8rem; overflow: hidden;
   }
-  .wl-list-img img { width: 100%; height: 100%; object-fit: cover; }
+  .wl-list-img img { width: 100%; height: 100%; object-fit: cover; }\n  .wl-list-img--symbol { background:linear-gradient(145deg,#f1f5f9,#e8f7f0); border:1px solid #e2e8f0; }
   .wl-list-body { flex: 1; min-width: 0; }
   .wl-list-name {
     font-size: 0.95rem; font-weight: 800; color: #0f172a; margin: 0 0 4px;
@@ -417,11 +417,8 @@ function DestinationRow({ destination, onRemove }) {
       transition={{ duration: 0.22 }}
       className="wl-list-card"
     >
-      <div className="wl-list-img">
-        {img
-          ? <img src={img} alt={destination.name} />
-          : "🌍"
-        }
+      <div className="wl-list-img wl-list-img--symbol" aria-hidden="true">
+        <FiMapPin size={28} color="#059669" />
       </div>
 
       <div className="wl-list-body">
