@@ -212,7 +212,8 @@ const css = `
     display: flex; align-items: center; justify-content: center;
     font-size: 1.8rem; overflow: hidden;
   }
-  .wl-list-img img { width: 100%; height: 100%; object-fit: cover; }\n  .wl-list-img--symbol { background:linear-gradient(145deg,#f1f5f9,#e8f7f0); border:1px solid #e2e8f0; }
+  .wl-list-img img { width: 100%; height: 100%; object-fit: cover; }
+  .wl-list-img--symbol { background:linear-gradient(145deg,#f1f5f9,#e8f7f0); border:1px solid #e2e8f0; }
   .wl-list-body { flex: 1; min-width: 0; }
   .wl-list-name {
     font-size: 0.95rem; font-weight: 800; color: #0f172a; margin: 0 0 4px;
@@ -495,12 +496,15 @@ function PackageWishlistRow({ pkg, onRemove }) {
     <div className="wl-list-actions"><Link to={`/packages/${pkg.slug || id}`} className="wl-list-action-btn" style={{background:"linear-gradient(135deg,#059669,#047857)",color:"#fff",textDecoration:"none"}}><FiExternalLink size={13}/> View</Link><button className="wl-list-action-btn" onClick={() => onRemove(id)} style={{background:"#fef2f2",color:"#dc2626",border:"1.5px solid #fecaca"}}><FiTrash2 size={13}/> Remove</button></div>
   </motion.article>;
 }
-\n// ─── Main Wishlist Page ────────────────────────────────────────────────────────
+
+// ─── Main Wishlist Page ────────────────────────────────────────────────────────
 export default function Wishlist() {
   const { wishlistIds, toggleWishlist, loaded } = useWishlist();
   const { authFetch } = useUserAuth();
 
-  const [destinations,  setDestinations]  = useState([]);\n  const [packages, setPackages] = useState([]);\n  const [packageIds, setPackageIds] = useState(() => { try { return new Set(JSON.parse(localStorage.getItem("altuvera_wishlist") || "[]").map(String)); } catch { return new Set(); } });
+  const [destinations,  setDestinations]  = useState([]);
+  const [packages, setPackages] = useState([]);
+  const [packageIds, setPackageIds] = useState(() => { try { return new Set(JSON.parse(localStorage.getItem("altuvera_wishlist") || "[]").map(String)); } catch { return new Set(); } });
   const [loading,       setLoading]       = useState(false);
   const [search,        setSearch]        = useState("");
   const [view,          setView]          = useState("grid"); // "grid" | "list"
@@ -526,7 +530,14 @@ export default function Wishlist() {
       const valid = results
         .filter((r) => r.status === "fulfilled" && r.value?.id)
         .map((r) => r.value);
-      setDestinations(valid);\n      const savedPackageIds = (() => { try { return new Set(JSON.parse(localStorage.getItem("altuvera_wishlist") || "[]").map(String)); } catch { return new Set(); } })();\n      setPackageIds(savedPackageIds);\n      if (savedPackageIds.size) {\n        const response = await packagesAPI.getAll({ limit: 100, is_active: true });\n        const rows = response?.data ?? response?.packages ?? [];\n        setPackages((Array.isArray(rows) ? rows : []).filter((pkg) => savedPackageIds.has(String(pkg.id ?? pkg._id))));\n      } else setPackages([]);
+      setDestinations(valid);
+      const savedPackageIds = (() => { try { return new Set(JSON.parse(localStorage.getItem("altuvera_wishlist") || "[]").map(String)); } catch { return new Set(); } })();
+      setPackageIds(savedPackageIds);
+      if (savedPackageIds.size) {
+        const response = await packagesAPI.getAll({ limit: 100, is_active: true });
+        const rows = response?.data ?? response?.packages ?? [];
+        setPackages((Array.isArray(rows) ? rows : []).filter((pkg) => savedPackageIds.has(String(pkg.id ?? pkg._id))));
+      } else setPackages([]);
     } catch (err) {
       setFetchError(err.message || "Failed to load wishlist destinations.");
     } finally {
@@ -561,7 +572,11 @@ export default function Wishlist() {
         String(d.country_name || "").toLowerCase().includes(q) ||
         String(d.category || "").toLowerCase().includes(q)
     );
-  }, [destinations, search]);\n\n  const allSavedCount = wishlistArr.length + packageIds.size;\n  const filteredPackages = useMemo(() => { const q = search.toLowerCase().trim(); return packages.filter((p) => !q || String(p.title || p.name || "").toLowerCase().includes(q) || String(p.category || "").toLowerCase().includes(q)); }, [packages, search]);\n  const removePackage = useCallback((id) => { const next = new Set(packageIds); next.delete(String(id)); setPackageIds(next); setPackages((prev) => prev.filter((p) => String(p.id ?? p._id) !== String(id))); try { localStorage.setItem("altuvera_wishlist", JSON.stringify([...next])); } catch {} }, [packageIds]);
+  }, [destinations, search]);
+
+  const allSavedCount = wishlistArr.length + packageIds.size;
+  const filteredPackages = useMemo(() => { const q = search.toLowerCase().trim(); return packages.filter((p) => !q || String(p.title || p.name || "").toLowerCase().includes(q) || String(p.category || "").toLowerCase().includes(q)); }, [packages, search]);
+  const removePackage = useCallback((id) => { const next = new Set(packageIds); next.delete(String(id)); setPackageIds(next); setPackages((prev) => prev.filter((p) => String(p.id ?? p._id) !== String(id))); try { localStorage.setItem("altuvera_wishlist", JSON.stringify([...next])); } catch {} }, [packageIds]);
 
   return (
     <>
