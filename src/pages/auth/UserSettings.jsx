@@ -4,8 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { useUserAuth } from "../../context/UserAuthContext";
 import DashboardLayout from "../../components/auth/DashboardLayout";
 import {
-  HiLogout, HiBell, HiDeviceMobile, HiCheckCircle,
-  HiExclamationCircle, HiSparkles, HiGlobeAlt, HiRefresh,
+  HiLogout, HiBell, HiCheckCircle,
+  HiExclamationCircle, HiSparkles, HiRefresh,
 } from "react-icons/hi";
 import {
   FiSave, FiLogOut, FiShield, FiBell,
@@ -15,8 +15,43 @@ import {
 const css = `
   .us-root * { box-sizing: border-box; }
   .us-root {
-    display: flex; flex-direction: column; gap: 1.5rem;
-    animation: usFadeIn 0.5s ease-out;
+    display: grid; grid-template-columns: minmax(0, 1fr); gap: clamp(12px, 2vw, 20px);
+    width: 100%; min-width: 0; animation: usFadeIn 0.5s ease-out;
+  }
+  /* The global dashboard shell reserves space for a fixed navbar. The site
+     navbar is in normal flow, so settings must not add that space a second time. */
+  .dashboard-layout:has(.us-root) { padding-top: 0; }
+  .dashboard-layout:has(.us-root) .dashboard-content {
+    padding: clamp(14px, 2.5vw, 28px); min-width: 0; max-width: 1180px;
+  }
+  .dashboard-layout:has(.us-root) .dashboard-header { margin-bottom: 14px; }
+  .us-root .us-card { min-width: 0; }
+  .us-root .us-card-body .us-fields { gap: 8px; }
+  .us-root .us-toggle-row { min-width: 0; padding: 12px 14px; }
+  .us-root .us-toggle-left { min-width: 0; }
+  .us-root .us-toggle-label, .us-root .us-toggle-desc { overflow-wrap: anywhere; }
+  .us-root .us-toggle-desc { line-height: 1.45; }
+  .us-root .us-card-header { padding: 16px 20px; }
+  .us-root .us-card-body { padding: 16px 20px; }
+  .us-root .us-danger-body, .us-root .us-danger-header { padding: 16px 20px; }
+  @media (min-width: 900px) {
+    .us-root { grid-template-columns: minmax(0, 1fr) minmax(280px, .72fr); align-items: start; }
+    .us-root > .us-card { grid-column: 1 / -1; }
+  }
+  @media (max-width: 640px) {
+    .dashboard-layout:has(.us-root) .dashboard-content { padding: 12px; }
+    .dashboard-layout:has(.us-root) .dashboard-header { margin-bottom: 10px; }
+    .us-root { gap: 12px; }
+    .us-root .us-card-header { padding: 14px 16px; }
+    .us-root .us-card-body { padding: 12px; }
+    .us-root .us-toggle-row { flex-direction: row; align-items: center; gap: 10px; }
+    .us-root .us-toggle-left { flex: 1; }
+    .us-root .us-toggle-icon { width: 32px; height: 32px; }
+    .us-root .us-toggle-label { font-size: .84rem; }
+    .us-root .us-toggle-desc { font-size: .72rem; }
+    .us-root .us-switch { margin-left: auto; }
+    .us-root .us-danger-header, .us-root .us-danger-body { padding: 14px 16px; }
+  }
   }
 
   /* ── Notification ── */
@@ -412,11 +447,6 @@ export default function UserSettings() {
                 desc: "Trip reminders, booking confirmations, and alerts.",
               },
               {
-                key: "smsNotifications",
-                icon: <HiDeviceMobile size={16} />,
-                label: "SMS Notifications",
-                desc: "Critical travel updates via text message.",
-              },
               {
                 key: "marketingEmails",
                 icon: <HiSparkles size={16} />,
@@ -425,7 +455,7 @@ export default function UserSettings() {
               },
               {
                 key: "travelUpdates",
-                icon: <HiGlobeAlt size={16} />,
+                icon: <HiSparkles size={16} />,
                 label: "Travel Updates",
                 desc: "Safety advisories and destination news.",
               },
