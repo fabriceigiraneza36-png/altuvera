@@ -5,7 +5,7 @@ import { useUserAuth } from "../../context/UserAuthContext";
 import DashboardLayout from "../../components/auth/DashboardLayout";
 import {
   HiLogout, HiBell, HiDeviceMobile, HiCheckCircle,
-  HiExclamationCircle,
+  HiExclamationCircle, HiSparkles, HiGlobeAlt, HiRefresh,
 } from "react-icons/hi";
 import {
   FiSave, FiLogOut, FiShield, FiBell,
