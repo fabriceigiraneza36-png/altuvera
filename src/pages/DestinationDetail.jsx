@@ -197,7 +197,7 @@ export default function DestinationDetail() {
   const gallery = useMemo(
     () =>
       destination
-        ? extractUniqueImages(destination).map((img) => ({
+        ? extractUniqueImages(destination, 12).map((img) => ({
             ...img,
             url: resolveImageUrl(img?.url || img?.imageUrl || img?.image),
           }))
@@ -231,9 +231,10 @@ export default function DestinationDetail() {
     return () => window.clearInterval(timer);
   }, [heroSlides.length]);
 
-  // Keep the complete destination gallery, including images also used in the hero slideshow.
-  // Every image is available in the gallery grid and opens in the same lightbox.
-  const additionalImages = useMemo(() => gallery, [gallery]);
+  const additionalImages = useMemo(
+    () => gallery.filter((img) => !heroSlides.includes(img.url)),
+    [gallery, heroSlides]
+  );
 
   useEffect(() => {
     setLightboxIndex(null);
