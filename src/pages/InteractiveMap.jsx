@@ -1600,14 +1600,20 @@ const InteractiveMap = () => {
   }, [isDragging, handleMapMouseUp, handleMapTouchEnd]);
 
   /* ── Fullscreen ── */
-  const toggleFullscreen = useCallback(() => {
-    if (!mapContainerRef.current) return;
-    if (!document.fullscreenElement) {
-      mapContainerRef.current.requestFullscreen?.();
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen?.();
-      setIsFullscreen(false);
+  const toggleFullscreen = useCallback(async () => {
+    const target = mapContainerRef.current;
+    try {
+      if (!document.fullscreenElement) {
+        if (target?.requestFullscreen) await target.requestFullscreen();
+        else if (target?.webkitRequestFullscreen) target.webkitRequestFullscreen();
+      } else if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      }
+    } catch (error) {
+      // Keep the page usable when browser fullscreen is denied; do not throw a runtime error.
+      setIsFullscreen(Boolean(document.fullscreenElement));
     }
   }, []);
 
