@@ -19,6 +19,9 @@ import {
   Users,
   Leaf,
   X,
+  ArrowDown,
+  Share2,
+  Heart,
 } from "lucide-react";
 import { useDestination } from "../hooks/useDestinations";
 import "./DestinationDetail.css";
@@ -436,24 +439,21 @@ export default function DestinationDetail() {
               <h1 className="d-hero__title">{destination.name}</h1>
               {destination.tagline && <p className="d-hero__sub">{destination.tagline}</p>}
               <div className="d-hero__ctas" aria-label="Destination actions">
-                <span className="d-hero-tool" aria-label={`${gallery.length} destination photos`}>
-                  <span aria-hidden="true"><Ic n="camera" size={15}/></span>
-                  <span className="d-hero-tool__label">{gallery.length} {gallery.length === 1 ? "photo" : "photos"}</span>
-                </span>
-                <button className="d-btn d-btn--emerald d-btn--lg" onClick={() => navigate(`/booking?destination=${destination.slug}`)}>
-                  <Calendar size={17} /> Book This Destination
+                <button className="d-btn d-btn--emerald d-btn--lg" onClick={() => navigate(`/booking?destination=${encodeURIComponent(destination.slug || target)}`)}>
+                  <Calendar size={18} /> Book This Destination
                 </button>
-                <button type="button" className="d-hero-tool" onClick={toggleSaved} aria-pressed={saved}>
-                  <span aria-hidden="true">{saved ? "♥" : "♡"}</span>
-                  <span className="d-hero-tool__label">{saved ? "Saved" : "Save"}</span>
-                </button>
-                <button type="button" className="d-hero-tool" onClick={shareDestination}>
-                  <span aria-hidden="true">↗</span>
-                  <span className="d-hero-tool__label">{shareState}</span>
+                <button type="button" className="d-hero-tool d-hero-tool--share" onClick={shareDestination}>
+                  <Share2 size={17} /> <span>{shareState}</span>
                 </button>
               </div>
             </div>
           </div>
+          <span className="d-hero__photo-count" aria-label={`${gallery.length} destination photos`}>
+            <Camera size={16} /> {gallery.length} {gallery.length === 1 ? "photo" : "photos"}
+          </span>
+          <a className="d-hero__scroll-link" href="#dd-about" aria-label="Scroll down to destination details">
+            <span>Scroll to explore</span><ArrowDown size={17} className="d-hero__scroll-icon" />
+          </a>
         </header>
 
         <nav className="d-quicknav" aria-label="Destination sections">
@@ -843,8 +843,11 @@ export default function DestinationDetail() {
               <h2>Make {destination.name} part of your story.</h2>
               <p>Tell us what you want to experience. Our team will shape a thoughtful, responsive journey around your interests, timing and travel style.</p>
               <div className="d-final-cta__actions">
-                <button className="d-btn d-btn--emerald d-btn--lg" onClick={() => navigate(`/booking?destination=${destination.slug}`)}>
+                <button className="d-btn d-btn--emerald d-btn--lg" onClick={() => navigate(`/booking?destination=${encodeURIComponent(destination.slug || target)}`)}>
                   <Calendar size={17} /> Plan This Journey
+                </button>
+                <button type="button" className="d-btn d-btn--glass d-btn--lg d-save-destination" onClick={toggleSaved} aria-pressed={saved}>
+                  <Heart size={17} fill={saved ? "currentColor" : "none"} /> {saved ? "Saved to favorites" : "Save Destination"}
                 </button>
                 <button className="d-btn d-btn--glass d-btn--lg" onClick={() => navigate("/contact")}>
                   <Mail size={17} /> Talk to Altuvera
