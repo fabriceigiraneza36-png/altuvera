@@ -205,17 +205,24 @@ export default function DestinationDetail() {
     [destination]
   );
   const heroSlides = useMemo(() => {
-    const preferred = [
+    const heroSources = [
       ...(Array.isArray(destination?.heroImages) ? destination.heroImages : []),
+      ...(Array.isArray(destination?.hero_images) ? destination.hero_images : []),
+      ...(Array.isArray(destination?.heroSlides) ? destination.heroSlides : []),
+      ...(Array.isArray(destination?.hero_slides) ? destination.hero_slides : []),
+      ...(Array.isArray(destination?.bannerSlides) ? destination.bannerSlides : []),
+      ...(Array.isArray(destination?.banner_slides) ? destination.banner_slides : []),
       destination?.heroImage,
-      ...gallery.map((img) => img.url),
+      destination?.hero_image,
     ].filter(Boolean);
-
-    return [...new Set(preferred.map((value) => {
-      if (typeof value === "string") return resolveImageUrl(value);
-      return resolveImageUrl(value?.imageUrl || value?.image_url || value?.url || value?.image);
-    }).filter(Boolean))].slice(0, 4);
-  }, [destination?.heroImages, destination?.heroImage, gallery]);
+    const normalize = (value) => resolveImageUrl(
+      typeof value === "string" ? value :
+      value?.imageUrl || value?.image_url || value?.url || value?.image || value?.src || value?.thumbnailUrl || value?.thumbnail_url
+    );
+    const explicit = [...new Set(heroSources.map(normalize).filter(Boolean))];
+    const fallback = normalize(destination?.coverImageUrl || destination?.cover_image_url || destination?.imageUrl || destination?.image_url || destination?.thumbnailUrl || destination?.thumbnail_url);
+    return (explicit.length ? explicit : fallback ? [fallback] : []).slice(0, 4);
+  }, [destination, gallery]);
 
   const [heroSlide, setHeroSlide] = useState(0);
 
