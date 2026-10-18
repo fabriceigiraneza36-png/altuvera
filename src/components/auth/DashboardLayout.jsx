@@ -213,8 +213,10 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
           .dashboard-overlay.open { display: block; }
            .mobile-menu-toggle { display: flex; }
           .dashboard-layout-no-padding .mobile-menu-toggle {
-            top: auto; bottom: 112px; right: 14px;
-            width: 44px; height: 44px; z-index: 80;
+            /* Keep sidebar navigation available without covering the composer/send control.
+               The scroll-to-bottom control stays on the opposite side. */
+            top: auto; bottom: 156px; left: 14px; right: auto;
+            width: 44px; height: 44px; z-index: 30;
             box-shadow: 0 3px 12px rgba(5,150,105,0.25);
           }
           .dashboard-content { padding: 20px 16px 80px; min-height: 0; }
