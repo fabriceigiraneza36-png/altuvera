@@ -895,12 +895,16 @@ const getHeroImages = (c) => {
       try { JSON.parse(value).forEach(a); } catch { /* ignore malformed image data */ }
     }
   };
-  addMany(c?.hero_images);
-  a(c?.image_url); a(c?.heroImage); a(c?.hero_image); a(c?.coverImageUrl); a(c?.cover_image_url); a(c?.image);
-  addMany(c?.media?.hero_images);
-  addMany(c?.media?.gallery);
-  addMany(c?.images);
-  return [...s].filter(Boolean).slice(0, 8);
+  [
+    c?.hero_images, c?.heroImages, c?.hero_slides, c?.heroSlides,
+    c?.banner_slides, c?.bannerSlides, c?.image_urls, c?.imageUrls,
+    c?.gallery, c?.gallery_images, c?.galleryImages, c?.photos, c?.images,
+    c?.media?.hero_images, c?.media?.heroImages, c?.media?.gallery,
+    c?.media?.images, c?.media?.photos, c?.attraction_images, c?.attractionImages,
+  ].forEach(addMany);
+  [c?.image_url, c?.imageUrl, c?.heroImage, c?.hero_image, c?.coverImageUrl, c?.cover_image_url, c?.image]
+    .forEach(a);
+  return [...s].filter(Boolean).slice(0, 12);
 };
 
 const getGalleryImages = (c) => {
@@ -915,11 +919,14 @@ const getGalleryImages = (c) => {
       try { JSON.parse(value).forEach(a); } catch { /* ignore malformed image data */ }
     }
   };
-  addMany(c?.media?.gallery);
-  addMany(c?.media?.hero_images);
-  addMany(c?.hero_images);
-  addMany(c?.images);
-  a(c?.image_url);
+  [
+    c?.media?.gallery, c?.media?.hero_images, c?.media?.images, c?.media?.photos,
+    c?.gallery, c?.gallery_images, c?.galleryImages, c?.hero_images, c?.heroImages,
+    c?.hero_slides, c?.heroSlides, c?.image_urls, c?.imageUrls, c?.images,
+    c?.photos, c?.attraction_images, c?.attractionImages, c?.banner_slides, c?.bannerSlides,
+  ].forEach(addMany);
+  [c?.image_url, c?.imageUrl, c?.heroImage, c?.hero_image, c?.coverImageUrl, c?.cover_image_url]
+    .forEach(a);
   return [...s].filter(Boolean);
 };
 
