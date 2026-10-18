@@ -41,46 +41,38 @@ const resolveImageUrl = (url) => {
 
 const extractUniqueImages = (destination, limit = Number.POSITIVE_INFINITY) => {
   if (!destination) return [];
-
-  const seen = new Set();
-  const push = (value) => {
-    if (!value || typeof value !== "string") return;
-    const clean = value.trim();
-    if (!clean || seen.has(clean)) return;
-    seen.add(clean);
-    result.push({ url: clean });
-  };
-
   const result = [];
-  const sources = [];
-
-  sources.push(...(Array.isArray(destination.heroImages) ? destination.heroImages : []));
-  sources.push(...(Array.isArray(destination.hero_images) ? destination.hero_images : []));
-  sources.push(...(Array.isArray(destination.bannerSlides) ? destination.bannerSlides : []));
-  sources.push(...(Array.isArray(destination.banner_slides) ? destination.banner_slides : []));
-  sources.push(...(Array.isArray(destination.images) ? destination.images : []));
-  sources.push(...(Array.isArray(destination.image_urls) ? destination.image_urls : []));
-  sources.push(...(Array.isArray(destination.imageUrls) ? destination.imageUrls : []));
-  sources.push(...(Array.isArray(destination.gallery) ? destination.gallery : []));
-  sources.push(destination.heroImage, destination.hero_image, destination.coverImageUrl, destination.cover_image_url, destination.imageUrl, destination.image_url, destination.thumbnailUrl, destination.thumbnail_url);
-  if (Array.isArray(destination.attractions)) {
-    sources.push(...destination.attractions);
-  }
-
-  for (const item of sources) {
-    if (typeof item === "string") {
-      push(item);
-      continue;
+  const seen = new Set();
+  const add = (value, depth = 0) => {
+    if (!value || depth > 4) return;
+    if (typeof value === "string") {
+      const clean = value.trim();
+      if (!clean || seen.has(clean)) return;
+      seen.add(clean);
+      result.push({ url: clean });
+      return;
     }
-    if (item && typeof item === "object") {
-      push(item.url || item.imageUrl || item.image || item.image_url || item.src || item.thumbnailUrl);
+    if (Array.isArray(value)) {
+      value.forEach((entry) => add(entry, depth + 1));
+      return;
     }
-  }
-
-  if (!result.length) {
-    push(destination.heroImage || destination.imageUrl || destination.image || destination.thumbnailUrl || destination.coverImageUrl);
-  }
-
+    if (typeof value === "object") {
+      const direct = value.url || value.imageUrl || value.image_url || value.image || value.src ||
+        value.thumbnailUrl || value.thumbnail_url || value.secure_url || value.originalUrl || value.original_url;
+      if (direct) add(direct, depth + 1);
+      ["images", "gallery", "galleryImages", "gallery_images", "photos", "media", "items"].forEach((key) => {
+        if (value[key]) add(value[key], depth + 1);
+      });
+    }
+  };
+  [
+    destination.heroImages, destination.hero_images, destination.heroSlides, destination.hero_slides,
+    destination.bannerSlides, destination.banner_slides, destination.images, destination.image_urls,
+    destination.imageUrls, destination.gallery, destination.galleryImages, destination.gallery_images,
+    destination.photos, destination.media, destination.attractions,
+    destination.heroImage, destination.hero_image, destination.coverImageUrl, destination.cover_image_url,
+    destination.imageUrl, destination.image_url, destination.image, destination.thumbnailUrl, destination.thumbnail_url,
+  ].forEach((source) => add(source));
   return result.slice(0, limit);
 };
 
@@ -197,7 +189,7 @@ export default function DestinationDetail() {
   const gallery = useMemo(
     () =>
       destination
-        ? extractUniqueImages(destination, 12).map((img) => ({
+        ? extractUniqueImages(destination).map((img) => ({
             ...img,
             url: resolveImageUrl(img?.url || img?.imageUrl || img?.image),
           }))
@@ -221,7 +213,10 @@ export default function DestinationDetail() {
     );
     const explicit = [...new Set(heroSources.map(normalize).filter(Boolean))];
     const fallback = normalize(destination?.coverImageUrl || destination?.cover_image_url || destination?.imageUrl || destination?.image_url || destination?.thumbnailUrl || destination?.thumbnail_url);
-    return (explicit.length ? explicit : fallback ? [fallback] : []).slice(0, 4);
+    const photos = gallery.map((img) => img.url).filter(Boolean);
+    const slides = explicit.length ? [...explicit] : (fallback ? [fallback] : []);
+    if (slides.length < 2) photos.forEach((url) => { if (!slides.includes(url)) slides.push(url); });
+    return [...new Set(slides)].slice(0, 10);
   }, [destination, gallery]);
 
   const [heroSlide, setHeroSlide] = useState(0);
