@@ -317,8 +317,14 @@ export default function DestinationDetail() {
       return url ? [url, { url, caption: typeof item === "object" ? item.caption || item.title || item.name || "" : "" }] : null;
     }).filter(Boolean)
   ).values()];
+  // Use one canonical, de-duplicated image collection for the count and gallery.
+  // Include hero/cover images as well as additional and attraction-specific photos.
   const attractionGalleryImages = [...new Map(
-    [...additionalImages, ...attractionImages]
+    [...gallery, ...attractionImages]
+      .map((img) => ({
+        ...img,
+        url: resolveImageUrl(img?.url || img?.imageUrl || img?.image_url || img?.image || img?.src),
+      }))
       .filter((img) => img?.url)
       .map((img) => [img.url, img])
   ).values()];
@@ -459,8 +465,8 @@ export default function DestinationDetail() {
               </div>
             </div>
           </div>
-          <span className="d-hero__photo-count" aria-label={`${gallery.length} destination photos`}>
-            <Camera size={16} /> {gallery.length} {gallery.length === 1 ? "photo" : "photos"}
+          <span className="d-hero__photo-count" aria-label={`${attractionGalleryImages.length} destination photos`}>
+            <Camera size={16} /> {attractionGalleryImages.length} {attractionGalleryImages.length === 1 ? "photo" : "photos"}
           </span>
           <a className="d-hero__scroll-link" href="#dd-about" aria-label="Scroll down to destination details">
             <span>Scroll to explore</span><ArrowDown size={17} className="d-hero__scroll-icon" />
@@ -473,7 +479,7 @@ export default function DestinationDetail() {
             <div className="d-quicknav__links">
               <a href="#dd-about">Story</a>
               <a href="#dd-facts">Facts</a>
-              {additionalImages.length > 0 && <a href="#dd-gallery">Gallery</a>}
+              {attractionGalleryImages.length > 0 && <a href="#dd-attraction-gallery">Gallery</a>}
               {highlights.length > 0 && <a href="#dd-experiences">Experiences</a>}
               <a href="#dd-plan">Plan</a>
             </div>
