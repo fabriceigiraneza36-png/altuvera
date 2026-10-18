@@ -145,14 +145,35 @@ export function useDestination(idOrSlug) {
 
   const result = useFetch(endpoint, !!idOrSlug);
 
+  // Destination detail payloads can omit the separately stored destination_images
+  // records. Fetch that collection explicitly, then merge before adapting.
+  const destinationId = result.data && typeof result.data === "object"
+    ? (result.data.id ?? result.data.destinationId ?? result.data.destination_id ?? null)
+    : null;
+  const imageEndpoint = destinationId != null
+    ? `/destinations/${encodeURIComponent(destinationId)}/images`
+    : null;
+  const imageResult = useFetch(imageEndpoint, destinationId != null);
+
   const destination = useMemo(() => {
-    if (!result.data) return null;
-    // result.data is the full destination object from backend
-    const raw = result.data && typeof result.data === "object"
-      ? result.data
-      : null;
-    return raw ? adaptDestination(raw) : null;
-  }, [result.data]);
+    if (!result.data || typeof result.data !== "object") return null;
+    const raw = result.data;
+    const stored = Array.isArray(imageResult.data) ? imageResult.data : [];
+    const normalized = stored.map((item) => {
+      if (typeof item === "string") return item;
+      if (!item || typeof item !== "object") return null;
+      const url = item.imageUrl || item.image_url || item.url || item.image || item.src;
+      return url ? { ...item, imageUrl: url, image_url: url } : null;
+    }).filter(Boolean);
+    return adaptDestination({
+      ...raw,
+      images: [...(Array.isArray(raw.images) ? raw.images : []), ...normalized],
+      imageUrls: [...(Array.isArray(raw.imageUrls) ? raw.imageUrls : []), ...normalized],
+      image_urls: [...(Array.isArray(raw.image_urls) ? raw.image_urls : []), ...normalized],
+      gallery: [...(Array.isArray(raw.gallery) ? raw.gallery : []), ...normalized],
+      galleryImages: [...(Array.isArray(raw.galleryImages) ? raw.galleryImages : []), ...normalized],
+    });
+  }, [result.data, imageResult.data]);
 
   return {
     destination,
