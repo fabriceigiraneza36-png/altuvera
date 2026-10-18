@@ -430,6 +430,12 @@ export default function DestinationDetail() {
             )}
           </div>
           <div className="d-hero__ov" />
+          <div className="d-hero__fog" aria-hidden="true">
+            <div className="d-hero__fog-layer d-hero__fog-layer--1" />
+            <div className="d-hero__fog-layer d-hero__fog-layer--2" />
+          </div>
+          <div className="d-hero__fog-bottom" aria-hidden="true" />
+          <div className="d-hero__grain" aria-hidden="true" />
 
           <div className="d-wrap d-hero__clean-wrap">
             <div className="d-hero__body">
