@@ -501,7 +501,7 @@ function ScrollToBottomBtn({ visible, onClick, composerVisible = true }) {
   return (
     <button onClick={onClick} aria-label="Scroll to bottom"
       style={{
-        position:"absolute", bottom: composerVisible ? 92 : 18, right:16, zIndex:10,
+        position:"absolute", bottom: composerVisible ? 144 : 18, right:16, zIndex:10,
         transition:"opacity .25s, transform .25s",
         opacity: visible ? 1 : 0,
         transform: visible ? "translateY(0)" : "translateY(12px)",
@@ -1283,8 +1283,10 @@ export default function Messages() {
       <Helmet><title>Messages | Altuvera</title></Helmet>
 
       <DashboardLayout
-        /* Keep the chat in a viewport-sized surface without duplicate page headings. */
+        /* Keep the chat viewport-sized; the site navbar already provides navigation,
+           so the floating dashboard toggle must not cover chat controls on mobile. */
         noPadding
+        hideMobileMenuToggle
       >
         <nav aria-label="Message page navigation" className="flex min-h-[44px] flex-shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-3 py-2 sm:px-5">
           <div className="flex min-w-0 items-center gap-2 text-xs font-semibold text-slate-500">
