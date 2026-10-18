@@ -42,6 +42,21 @@ const resolveImageUrl = (url) => {
   }
 };
 
+const canonicalImageKey = (value) => {
+  if (typeof value !== "string") return "";
+  const raw = value.trim();
+  if (!raw) return "";
+  try {
+    const url = new URL(raw, API_URL);
+    url.hash = "";
+    url.hostname = url.hostname.toLowerCase();
+    if (url.pathname.length > 1) url.pathname = url.pathname.replace(/\/+$/, "");
+    return url.toString();
+  } catch {
+    return raw.replace(/\/+$/, "");
+  }
+};
+
 const extractUniqueImages = (destination, limit = Number.POSITIVE_INFINITY) => {
   if (!destination) return [];
   const result = [];
@@ -50,8 +65,9 @@ const extractUniqueImages = (destination, limit = Number.POSITIVE_INFINITY) => {
     if (!value || depth > 4) return;
     if (typeof value === "string") {
       const clean = value.trim();
-      if (!clean || seen.has(clean)) return;
-      seen.add(clean);
+      const key = canonicalImageKey(clean);
+      if (!key || seen.has(key)) return;
+      seen.add(key);
       result.push({ url: clean });
       return;
     }
