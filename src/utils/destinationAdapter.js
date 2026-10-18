@@ -274,17 +274,38 @@ export const adaptDestination = (raw) => {
                 if (typeof u === "string" && u.trim()) urls.push(u.trim());
             });
         }
-        // Gallery array (if present)
-        if (Array.isArray(dest.gallery)) {
-            dest.gallery.forEach(img => {
-                if (typeof img === "string" && img.trim()) {
-                    urls.push(img.trim());
-                } else if (img && typeof img === "object") {
-                    const u = img.imageUrl || img.image_url || img.url || img.thumbnailUrl || img.thumbnail_url;
-                    if (typeof u === "string" && u.trim()) {
-                        urls.push(u.trim());
-                    }
-                }
+        // All gallery and attraction image collections returned by the API.
+        const collections = [
+            dest.gallery, dest.galleryImages, dest.gallery_images, dest.photos, dest.media,
+            dest.attractionImages, dest.attraction_images, dest.attractionsImages, dest.attractions_images,
+            dest.bannerSlides, dest.banner_slides, dest.attractionGallery, dest.attraction_gallery,
+        ];
+        collections.filter(Array.isArray).forEach(items => {
+            items.forEach(img => {
+                const u = typeof img === "string" ? img :
+                    img?.imageUrl || img?.image_url || img?.url || img?.image || img?.src ||
+                    img?.secure_url || img?.originalUrl || img?.original_url ||
+                    img?.thumbnailUrl || img?.thumbnail_url;
+                if (typeof u === "string" && u.trim()) urls.push(u.trim());
+            });
+        });
+        // Attraction records may each own one or more images.
+        if (Array.isArray(dest.attractions)) {
+            dest.attractions.forEach(item => {
+                if (typeof item === "string") return;
+                const candidates = [
+                    item?.imageUrl, item?.image_url, item?.image, item?.url, item?.src,
+                    item?.images, item?.gallery, item?.photos, item?.media,
+                ];
+                candidates.forEach(candidate => {
+                    const list = Array.isArray(candidate) ? candidate : [candidate];
+                    list.forEach(img => {
+                        const u = typeof img === "string" ? img :
+                            img?.imageUrl || img?.image_url || img?.url || img?.image || img?.src ||
+                            img?.secure_url || img?.originalUrl || img?.original_url;
+                        if (typeof u === "string" && u.trim()) urls.push(u.trim());
+                    });
+                });
             });
         }
         // Single image fields
@@ -311,12 +332,25 @@ export const adaptDestination = (raw) => {
       : {};
 
   /* ── Gallery ────────────────────────────────────────────── */
+  const gallerySources = [
+    ...toArr(raw.gallery), ...toArr(raw.galleryImages), ...toArr(raw.gallery_images),
+    ...toArr(raw.images), ...toArr(raw.image_urls), ...toArr(raw.imageUrls),
+    ...toArr(raw.photos), ...toArr(raw.media),
+  ];
   const gallery = [...new Map(
-    [...toArr(raw.gallery), ...toArr(raw.galleryImages || raw.gallery_images)]
-      .map(adaptGalleryItem)
+    gallerySources.map(adaptGalleryItem)
       .filter(item => item?.imageUrl)
       .map(item => [item.imageUrl, item])
   ).values()];
+  const attractionImages = [
+    ...toArr(raw.attractionImages), ...toArr(raw.attraction_images),
+    ...toArr(raw.attractionsImages), ...toArr(raw.attractions_images),
+    ...toArr(raw.attractionGallery), ...toArr(raw.attraction_gallery),
+    ...toArr(raw.attractions).flatMap(item => typeof item === "object" && item
+      ? [...toArr(item.images), ...toArr(item.gallery), ...toArr(item.photos), ...toArr(item.media),
+          item.imageUrl || item.image_url || item.image || item.url || item.src].filter(Boolean)
+      : []),
+  ].map(adaptGalleryItem).filter(item => item?.imageUrl);
   const bannerSlides = toArr(raw.bannerSlides || raw.banner_slides).map(adaptGalleryItem).filter(item => item?.imageUrl);
   const heroImages = toArr(raw.heroImages || raw.hero_images || raw.heroSlides || raw.hero_slides).map(adaptGalleryItem).filter(item => item?.imageUrl);
 
@@ -415,6 +449,7 @@ export const adaptDestination = (raw) => {
     banner_slides: bannerSlides,
     gallery,
     galleryImages: gallery,
+    attractionImages: [...new Map(attractionImages.map(item => [item.imageUrl, item])).values()],
     hero_slides: heroImages,
     thumbnailUrl:  raw.thumbnailUrl  || raw.thumbnail_url || images[0] || null,
     coverImageUrl:  raw.coverImageUrl || raw.cover_image_url || null,
