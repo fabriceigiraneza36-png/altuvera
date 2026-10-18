@@ -60,7 +60,7 @@ const extractUniqueImages = (destination, limit = Number.POSITIVE_INFINITY) => {
       const direct = value.url || value.imageUrl || value.image_url || value.image || value.src ||
         value.thumbnailUrl || value.thumbnail_url || value.secure_url || value.originalUrl || value.original_url;
       if (direct) add(direct, depth + 1);
-      ["images", "gallery", "galleryImages", "gallery_images", "photos", "media", "items"].forEach((key) => {
+      ["images", "gallery", "galleryImages", "gallery_images", "photos", "media", "items", "attractionImages", "attraction_images", "attractionsImages", "attractions_images"].forEach((key) => {
         if (value[key]) add(value[key], depth + 1);
       });
     }
@@ -70,6 +70,7 @@ const extractUniqueImages = (destination, limit = Number.POSITIVE_INFINITY) => {
     destination.bannerSlides, destination.banner_slides, destination.images, destination.image_urls,
     destination.imageUrls, destination.gallery, destination.galleryImages, destination.gallery_images,
     destination.photos, destination.media, destination.attractions,
+    destination.attractionImages, destination.attraction_images, destination.attractionsImages, destination.attractions_images, destination.attractionGallery, destination.attraction_gallery,
     destination.heroImage, destination.hero_image, destination.coverImageUrl, destination.cover_image_url,
     destination.imageUrl, destination.image_url, destination.image, destination.thumbnailUrl, destination.thumbnail_url,
   ].forEach((source) => add(source));
@@ -291,6 +292,28 @@ export default function DestinationDetail() {
   const heroImage = heroSlides[0] || gallery[0]?.url || destination.heroImage || destination.imageUrl || destination.image || "";
   const description = destination.description || destination.shortDescription || destination.overview || "";
   const attractions = Array.isArray(destination.attractions) ? destination.attractions : [];
+  const attractionImages = [...new Map(
+    [
+      ...(Array.isArray(destination.attractionImages) ? destination.attractionImages : []),
+      ...(Array.isArray(destination.attraction_images) ? destination.attraction_images : []),
+      ...(Array.isArray(destination.attractionsImages) ? destination.attractionsImages : []),
+      ...(Array.isArray(destination.attractions_images) ? destination.attractions_images : []),
+      ...attractions.flatMap((item) => {
+        if (!item || typeof item !== "object") return [];
+        return [
+          ...(Array.isArray(item.images) ? item.images : []),
+          ...(Array.isArray(item.gallery) ? item.gallery : []),
+          ...(Array.isArray(item.photos) ? item.photos : []),
+          item.imageUrl || item.image_url || item.image || item.url || item.src,
+        ].filter(Boolean);
+      }),
+    ].map((item) => {
+      const url = resolveImageUrl(typeof item === "string" ? item :
+        item?.imageUrl || item?.image_url || item?.url || item?.image || item?.src ||
+        item?.secure_url || item?.originalUrl || item?.original_url || item?.thumbnailUrl || item?.thumbnail_url);
+      return url ? [url, { url, caption: typeof item === "object" ? item.caption || item.title || item.name || "" : "" }] : null;
+    }).filter(Boolean)
+  ).values()];
   const highlights = Array.isArray(destination.highlights) ? destination.highlights : [];
   const countryInfo = destination.countryObj || destination.country || {};
 
@@ -728,6 +751,31 @@ export default function DestinationDetail() {
               <SH title="Frequently asked questions" sub={`Helpful answers before visiting ${destination.name}`} />
               <div className="d-deepdive__grid">
                 {destination.faqs.map((faq, index) => <article key={faq.id || index} className="d-deepdive__block"><h3>{faq.question || faq.title || `Question ${index + 1}`}</h3><p className="d-deepdive__para">{faq.answer || faq.description || ""}</p></article>)}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {attractionImages.length > 0 && (
+          <section id="dd-attraction-gallery" className="d-sec d-sec--white d-destination-gallery">
+            <div className="d-wrap">
+              <Reveal from="bottom">
+                <SH title="Attractions Gallery" sub={`Explore the sights and experiences around ${destination.name}`} />
+              </Reveal>
+              <div className="d-gal-mosaic">
+                {attractionImages.map((img, index) => (
+                  <a
+                    key={img.url}
+                    className={`d-gal-cell ${index === 0 ? "d-gal-cell--wide" : ""}`}
+                    href={img.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={`Open attraction photo ${index + 1} for ${destination.name}`}
+                  >
+                    <img src={img.url} alt={img.caption || `${destination.name} attraction ${index + 1}`} loading="lazy" />
+                    <span className="d-gal-cell__ov"><span>View photo</span></span>
+                  </a>
+                ))}
               </div>
             </div>
           </section>
