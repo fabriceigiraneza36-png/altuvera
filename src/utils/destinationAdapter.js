@@ -29,7 +29,7 @@ const adaptAttraction = (raw) => {
     name,
     title: raw.title || name,
     slug: raw.slug || slugify(name),
-    imageUrl: raw.imageUrl || raw.image_url || raw.image || null,
+    imageUrl: raw.imageUrl || raw.image_url || raw.image || raw.url || raw.src || raw.thumbnailUrl || raw.thumbnail_url || null,
     description: raw.description || raw.summary || "",
   };
 };
@@ -162,15 +162,20 @@ const adaptReview = (raw) => {
 };
 
 /* ── Gallery item sub-adapter ───────────────────────────── */
-const adaptGalleryItem = (raw) => ({
-  id:           raw.id,
-  imageUrl:     raw.imageUrl     || raw.image_url || null,
-  thumbnailUrl: raw.thumbnailUrl || null,
-  caption:      raw.caption      || null,
-  altText:      raw.altText      || null,
-  isPrimary:    toBool(raw.isPrimary),
-  sortOrder:    toNum(raw.sortOrder, 0),
-});
+const adaptGalleryItem = (raw) => {
+  if (typeof raw === "string") return { imageUrl: raw, thumbnailUrl: null, caption: null, altText: null, isPrimary: false, sortOrder: 0 };
+  if (!raw || typeof raw !== "object") return null;
+  return {
+    ...raw,
+    id:           raw.id,
+    imageUrl:     raw.imageUrl || raw.image_url || raw.url || raw.image || raw.src || raw.thumbnailUrl || raw.thumbnail_url || null,
+    thumbnailUrl: raw.thumbnailUrl || raw.thumbnail_url || null,
+    caption:      raw.caption || raw.title || raw.name || null,
+    altText:      raw.altText || raw.alt_text || raw.alt || null,
+    isPrimary:    toBool(raw.isPrimary ?? raw.is_primary),
+    sortOrder:    toNum(raw.sortOrder ?? raw.sort_order, 0),
+  };
+};
 
 /* ── Itinerary day sub-adapter ──────────────────────────── */
 const adaptItineraryDay = (raw) => ({
@@ -307,11 +312,13 @@ export const adaptDestination = (raw) => {
 
   /* ── Gallery ────────────────────────────────────────────── */
   const gallery = [...new Map(
-    toArr(raw.gallery)
+    [...toArr(raw.gallery), ...toArr(raw.galleryImages || raw.gallery_images)]
       .map(adaptGalleryItem)
-      .filter(item => item.imageUrl)
+      .filter(item => item?.imageUrl)
       .map(item => [item.imageUrl, item])
   ).values()];
+  const bannerSlides = toArr(raw.bannerSlides || raw.banner_slides).map(adaptGalleryItem).filter(item => item?.imageUrl);
+  const heroImages = toArr(raw.heroImages || raw.hero_images || raw.heroSlides || raw.hero_slides).map(adaptGalleryItem).filter(item => item?.imageUrl);
 
   /* ── Itinerary ──────────────────────────────────────────── */
   const itinerary = toArr(raw.itinerary).map(adaptItineraryDay);
@@ -403,9 +410,12 @@ export const adaptDestination = (raw) => {
     images,
     imageUrl:      raw.imageUrl      || raw.image_url || null,
     heroImage:     raw.heroImage     || raw.hero_image || images[0] || null,
-    heroImages:    toArr(raw.heroImages || raw.hero_images || raw.heroSlides || raw.hero_slides).length
-      ? toArr(raw.heroImages || raw.hero_images || raw.heroSlides || raw.hero_slides)
-      : images.slice(0, 3),
+    heroImages:    heroImages.length ? heroImages : (raw.heroImage || raw.hero_image ? [raw.heroImage || raw.hero_image] : images.slice(0, 1)),
+    bannerSlides,
+    banner_slides: bannerSlides,
+    gallery,
+    galleryImages: gallery,
+    hero_slides: heroImages,
     thumbnailUrl:  raw.thumbnailUrl  || raw.thumbnail_url || images[0] || null,
     coverImageUrl:  raw.coverImageUrl || raw.cover_image_url || null,
     videoUrl:      raw.videoUrl      || null,
