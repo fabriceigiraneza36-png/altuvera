@@ -1283,10 +1283,8 @@ export default function Messages() {
       <Helmet><title>Messages | Altuvera</title></Helmet>
 
       <DashboardLayout
-        /* Keep the chat viewport-sized; the site navbar already provides navigation,
-           so the floating dashboard toggle must not cover chat controls on mobile. */
+        /* Keep the chat viewport-sized and retain the mobile toggle for dashboard sidebar navigation. */
         noPadding
-        hideMobileMenuToggle
       >
         <nav aria-label="Message page navigation" className="flex min-h-[44px] flex-shrink-0 items-center justify-between gap-3 border-b border-slate-200 bg-white px-3 py-2 sm:px-5">
           <div className="flex min-w-0 items-center gap-2 text-xs font-semibold text-slate-500">
