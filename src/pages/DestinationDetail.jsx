@@ -317,6 +317,11 @@ export default function DestinationDetail() {
       return url ? [url, { url, caption: typeof item === "object" ? item.caption || item.title || item.name || "" : "" }] : null;
     }).filter(Boolean)
   ).values()];
+  const attractionGalleryImages = [...new Map(
+    [...additionalImages, ...attractionImages]
+      .filter((img) => img?.url)
+      .map((img) => [img.url, img])
+  ).values()];
   const highlights = Array.isArray(destination.highlights) ? destination.highlights : [];
   const countryInfo = destination.countryObj || destination.country || {};
 
@@ -572,20 +577,20 @@ export default function DestinationDetail() {
           </div>
         </section>
 
-        {additionalImages.length > 0 && (
-          <section id="dd-gallery" className="d-sec d-sec--soft d-destination-gallery">
+        {attractionGalleryImages.length > 0 && (
+          <section id="dd-attraction-gallery" className="d-sec d-sec--soft d-destination-gallery">
             <div className="d-wrap">
               <Reveal from="bottom">
-                <SH title="See More of the Journey" sub={`A closer look at ${destination.name}`} />
+                <SH title="Explore More Attractions" sub={`Discover more sights and experiences at ${destination.name}`} />
               </Reveal>
               <div className="d-gal-mosaic">
-                {additionalImages.map((img, index) => (
+                {attractionGalleryImages.map((img, index) => (
                   <button
                     key={img.url}
                     type="button"
                     className={`d-gal-cell ${index === 0 ? "d-gal-cell--wide" : ""}`}
                     onClick={() => setLightboxIndex(index)}
-                    aria-label={`Open ${destination.name} gallery image ${index + 1}`}
+                    aria-label={`Open ${destination.name} attraction photo ${index + 1}`}
                   >
                     <img src={img.url} alt={img.caption || `${destination.name} gallery image ${index + 1}`} loading="lazy" />
                     <span className="d-gal-cell__ov"><span>View photo</span></span>
@@ -762,31 +767,6 @@ export default function DestinationDetail() {
           </section>
         )}
 
-        {attractionImages.length > 0 && (
-          <section id="dd-attraction-gallery" className="d-sec d-sec--white d-destination-gallery">
-            <div className="d-wrap">
-              <Reveal from="bottom">
-                <SH title="Attractions Gallery" sub={`Explore the sights and experiences around ${destination.name}`} />
-              </Reveal>
-              <div className="d-gal-mosaic">
-                {attractionImages.map((img, index) => (
-                  <a
-                    key={img.url}
-                    className={`d-gal-cell ${index === 0 ? "d-gal-cell--wide" : ""}`}
-                    href={img.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    aria-label={`Open attraction photo ${index + 1} for ${destination.name}`}
-                  >
-                    <img src={img.url} alt={img.caption || `${destination.name} attraction ${index + 1}`} loading="lazy" />
-                    <span className="d-gal-cell__ov"><span>View photo</span></span>
-                  </a>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
         {attractions.length > 0 && (
           <section className="d-sec d-sec--white">
             <div className="d-wrap">
@@ -864,7 +844,7 @@ export default function DestinationDetail() {
         </section>
       </div>
 
-      {lightboxIndex !== null && additionalImages.length > 0 && (
+      {lightboxIndex !== null && attractionGalleryImages.length > 0 && (
         <div
           className="d-lightbox"
           role="dialog"
@@ -880,7 +860,7 @@ export default function DestinationDetail() {
             className="d-lightbox__arrow d-lightbox__arrow--p"
             onClick={(e) => {
               e.stopPropagation();
-              setLightboxIndex((lightboxIndex - 1 + additionalImages.length) % additionalImages.length);
+              setLightboxIndex((lightboxIndex - 1 + attractionGalleryImages.length) % attractionGalleryImages.length);
             }}
             aria-label="Previous photo"
           >
@@ -888,8 +868,8 @@ export default function DestinationDetail() {
           </button>
           <img
             className="d-lightbox__image"
-            src={additionalImages[lightboxIndex]?.url}
-            alt={additionalImages[lightboxIndex]?.caption || `${destination.name} photo ${lightboxIndex + 1}`}
+            src={attractionGalleryImages[lightboxIndex]?.url}
+            alt={attractionGalleryImages[lightboxIndex]?.caption || `${destination.name} attraction photo ${lightboxIndex + 1}`}
             onClick={(e) => e.stopPropagation()}
           />
           <button
@@ -897,13 +877,13 @@ export default function DestinationDetail() {
             className="d-lightbox__arrow d-lightbox__arrow--n"
             onClick={(e) => {
               e.stopPropagation();
-              setLightboxIndex((lightboxIndex + 1) % additionalImages.length);
+              setLightboxIndex((lightboxIndex + 1) % attractionGalleryImages.length);
             }}
             aria-label="Next photo"
           >
             <ChevronRight size={24} />
           </button>
-          <div className="d-lightbox__counter">{lightboxIndex + 1} / {additionalImages.length}</div>
+          <div className="d-lightbox__counter">{lightboxIndex + 1} / {attractionGalleryImages.length}</div>
         </div>
       )}
     </ScrollProvider>
