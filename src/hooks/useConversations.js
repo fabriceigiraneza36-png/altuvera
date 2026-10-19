@@ -42,6 +42,20 @@ const authFetch = (url, opts = {}) => {
 };
 
 /* ─── Serialise snake_case → camelCase ──────────────────────────────── */
+const notifyMessage = (title, body, tag) => {
+  try {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (Notification.permission === "granted") {
+      const notification = new Notification(title, { body, tag, icon: "/favicon.ico", badge: "/favicon.ico" });
+      notification.onclick = () => { window.focus(); notification.close(); };
+    } else if (Notification.permission === "default") {
+      Notification.requestPermission().then((permission) => {
+        if (permission === "granted") new Notification(title, { body, tag, icon: "/favicon.ico" });
+      }).catch(() => {});
+    }
+  } catch { /* browser notifications are optional; inbox remains the source of truth */ }
+};
+
 const getCurrentUserId = () => {
   try {
     const token = getToken();
@@ -313,6 +327,10 @@ export function useConversations() {
       const cid = String(payload?.conversationId || msg?.conversationId || "");
       if (!msg?.id || !cid) return;
 
+      if (msg.senderType === "admin" && cid !== String(activeIdRef.current)) {
+        notifyMessage(payload?.groupName || "Altuvera group message", msg.body?.slice(0, 160) || "You received a new group message.", `altuvera-group-${payload?.groupId || cid}`);
+      }
+
       setConversations((prev) => {
         const idx = prev.findIndex((c) => String(c.id) === cid);
         if (idx < 0) {
@@ -342,6 +360,20 @@ export function useConversations() {
     };
     s.on("msg:group-message", onGroupMessage);
 
+    s.on("msg:conversation-deleted", ({ conversationId } = {}) => {
+      if (conversationId == null) return;
+      const deletedId = String(conversationId);
+      setConversations((prev) => prev.filter((conversation) => String(conversation.id) !== deletedId));
+      if (deletedId === String(activeIdRef.current)) {
+        activeIdRef.current = null;
+        setActiveId(null);
+        setActiveConversation(null);
+        setMessages([]);
+        notifyMessage("Conversation removed", "Your direct conversation was removed. Any group conversations you belong to remain available in Messages.", `altuvera-conversation-deleted-${deletedId}`);
+      }
+      fetchConversations();
+    });
+
     s.on("msg:groups-updated", ({ groupId } = {}) => {
       if (groupId) s.emit("msg:join-group", { groupId });
       fetchConversations();
@@ -356,6 +388,7 @@ export function useConversations() {
       s.off("msg:message-highlighted", applyMessageMutation);
       s.off("msg:group-message", onGroupMessage);
       s.off("msg:groups-updated");
+      s.off("msg:conversation-deleted");
       s.disconnect();
     };
   }, [fetchConversations]);
