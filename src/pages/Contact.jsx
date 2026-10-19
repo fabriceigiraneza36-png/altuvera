@@ -94,7 +94,7 @@ const INIT_FORM = { name: "", email: "", phone: "", tripType: "", travelDate: ""
 const CONTACT_CARDS = [
   { icon: FiMapPin, title: "Visit Us", lines: ["Musanze, Rwanda"], href: "https://maps.google.com/?q=Musanze+Rwanda", accent: "#059669" },
   { icon: FiPhone, title: "Call Us", lines: ["+250 792 352 409"], href: "tel:+250792352409", accent: "#047857" },
-  { icon: FiMail, title: "Email Us", lines: ["altuverasafari@gmail.com"], href: "mailto:altuverasafari@gmail.com", accent: "#065f46" },
+  { icon: FiMail, title: "Email Us", lines: ["info@altuverasafaris.com"], href: "mailto:info@altuverasafaris.com", accent: "#065f46" },
   { icon: FiClock, title: "Working Hours", lines: ["Mon–Fri: 8 AM – 6 PM", "Sat: 9 AM – 2 PM"], accent: "#064e3b" },
 ];
 
@@ -116,7 +116,7 @@ const SOCIALS = [
 const QUICK_CHANNELS = [
   { icon: FaWhatsapp, title: "WhatsApp", subtitle: "Instant chat", detail: "+250 785 751 391", href: "https://wa.me/250785751391", color: "#25D366" },
   { icon: FiPhone, title: "Call Us", subtitle: "Speak to an expert", detail: "+250 792 352 409", href: "tel:+250792352409", color: "#047857" },
-  { icon: FiMail, title: "Email", subtitle: "Detailed inquiries", detail: "altuverasafari@gmail.com", href: "mailto:altuverasafari@gmail.com", color: "#3B82F6" },
+  { icon: FiMail, title: "Email", subtitle: "Detailed inquiries", detail: "info@altuverasafaris.com", href: "mailto:info@altuverasafaris.com", color: "#3B82F6" },
 ];
 
 const FALLBACK_FAQS = [
