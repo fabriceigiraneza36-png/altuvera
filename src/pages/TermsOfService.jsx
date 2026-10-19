@@ -90,7 +90,7 @@ const SECTIONS = [
     color: "#8B5CF6",
     body: [
       "When you create an account with Altuvera, you are responsible for maintaining the confidentiality of your login credentials and for all activities that occur under your account.",
-      "You agree to notify us immediately at altuverasafari@gmail.com if you suspect any unauthorized access to your account or any other security breach.",
+      "You agree to notify us immediately at info@altuverasafaris.com if you suspect any unauthorized access to your account or any other security breach.",
     ],
   },
   {
@@ -181,7 +181,7 @@ const SECTIONS = [
     title: "Contact Us",
     color: BRAND.green700,
     body: [
-      "If you have any questions about these Terms of Service, please contact us at altuverasafari@gmail.com.",
+      "If you have any questions about these Terms of Service, please contact us at info@altuverasafaris.com.",
     ],
     isContact: true,
   },
@@ -280,7 +280,7 @@ export default function TermsOfService() {
               { icon: FiCreditCard, title: "Payment Terms", desc: "Deposits and cancellation policies apply" },
               { icon: FiShield, title: "Limited Liability", desc: "We're not liable for third-party issues" },
               { icon: FiGlobe, title: "Rwandan Law", desc: "These terms are governed by Rwandan law" },
-              { icon: FiMail, title: "Questions?", desc: "Contact altuverasafari@gmail.com" },
+              { icon: FiMail, title: "Questions?", desc: "Contact info@altuverasafaris.com" },
             ].map((point, i) => (
               <ScrollReveal key={i} delay={i * 0.05}>
                 <div style={styles.keyPoint}>
@@ -458,8 +458,8 @@ export default function TermsOfService() {
                             <FiMail size={18} color={BRAND.green700} />
                             <div>
                               <span style={styles.contactLabel}>Legal Inquiries</span>
-                              <a href="mailto:altuverasafari@gmail.com" style={styles.contactLink}>
-                                altuverasafari@gmail.com
+                              <a href="mailto:info@altuverasafaris.com" style={styles.contactLink}>
+                                info@altuverasafaris.com
                               </a>
                             </div>
                           </div>
@@ -467,8 +467,8 @@ export default function TermsOfService() {
                             <FiMail size={18} color={BRAND.green700} />
                             <div>
                               <span style={styles.contactLabel}>General Questions</span>
-                              <a href="mailto:altuverasafari@gmail.com" style={styles.contactLink}>
-                                altuverasafari@gmail.com
+                              <a href="mailto:info@altuverasafaris.com" style={styles.contactLink}>
+                                info@altuverasafaris.com
                               </a>
                             </div>
                           </div>
