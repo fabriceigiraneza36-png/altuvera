@@ -29,8 +29,8 @@ export const BRAND_COLORS = {
 export const BRAND_CONTACT = {
   phone: "+250 792352409",
   phoneAlt: "+250 792352409",
-  email: "altuverasafari@gmail.com",
-  emailBookings: "altuverasafari@gmail.com",
+  email: "info@altuverasafaris.com",
+  emailBookings: "info@altuverasafaris.com",
   address: "Musanze, Rwanda",
   whatsapp: "https://wa.me/250785751391",
 };
