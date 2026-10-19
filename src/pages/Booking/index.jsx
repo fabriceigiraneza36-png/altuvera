@@ -70,7 +70,8 @@ function BookingInner({ user }) {
         country:String(x.country?.name??x.countryName??x.country??""),
         countryId:String(x.country_id??x.countryId??x.country?.id??""),
         image:String(x.image??x.thumbnail??x.imageUrl??x.image_url??""),
-        category:String(x.category??x.type??x.destination_type??"").toLowerCase()
+        category:String(x.category??x.type??x.destination_type??"").toLowerCase(),
+        attractions:(Array.isArray(x.attractions)?x.attractions:Array.isArray(x.highlights)?x.highlights:Array.isArray(x.activities)?x.activities:[]).map(a=>typeof a==="string"?a:String(a?.name||a?.title||a?.label||a?.attraction_name||"")).filter(Boolean)
       })).filter(x=>x.value);
       setCountriesList(mappedCountries);
       setDestinationsList(mappedDestinations);
