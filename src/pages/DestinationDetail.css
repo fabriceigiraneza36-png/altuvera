@@ -1332,24 +1332,34 @@ html { scroll-behavior: smooth; }
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
-  background: rgba(2, 12, 8, .94);
-  backdrop-filter: blur(14px);
-  animation: dLightboxIn .22s ease both;
+  padding: clamp(12px, 2.5vw, 32px);
+  background: rgba(2, 12, 8, .97);
+  backdrop-filter: blur(18px);
+  overflow: hidden;
+  overscroll-behavior: contain;
+  animation: dLightboxIn .24s ease both;
 }
 @keyframes dLightboxIn {
   from { opacity: 0; }
   to { opacity: 1; }
 }
 .d-lightbox__image {
-  max-width: min(1180px, 88vw);
-  max-height: 82vh;
+  display: block;
+  max-width: calc(100vw - 140px);
+  max-height: calc(100dvh - 112px);
   width: auto;
   height: auto;
   object-fit: contain;
-  border-radius: 18px;
+  border-radius: clamp(8px, 1.4vw, 18px);
   box-shadow: 0 28px 90px rgba(0,0,0,.5);
   user-select: none;
+  -webkit-user-drag: none;
+  animation: dLightboxImageIn .34s cubic-bezier(.2,.75,.25,1) both;
+  will-change: opacity, transform, filter;
+}
+@keyframes dLightboxImageIn {
+  from { opacity: .25; transform: scale(.965) translateY(8px); filter: blur(5px); }
+  to { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); }
 }
 .d-lightbox__close,
 .d-lightbox__arrow {
@@ -1403,13 +1413,13 @@ html { scroll-behavior: smooth; }
   outline-offset: 3px;
 }
 @media (max-width: 600px) {
-  .d-lightbox { padding: 12px; }
-  .d-lightbox__image { max-width: 94vw; max-height: 76vh; border-radius: 12px; }
-  .d-lightbox__close { top: 12px; right: 12px; width: 40px; height: 40px; }
+  .d-lightbox { padding: 0; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  .d-lightbox__image { max-width: 100vw; max-height: 100dvh; width: auto; height: auto; border-radius: 0; box-shadow: none; }
+  .d-lightbox__close { top: max(12px, env(safe-area-inset-top, 0px)); right: 12px; width: 42px; height: 42px; }
   .d-lightbox__arrow { width: 40px; height: 40px; }
   .d-lightbox__arrow--p { left: 10px; }
   .d-lightbox__arrow--n { right: 10px; }
-  .d-lightbox__counter { bottom: 12px; }
+  .d-lightbox__counter { bottom: max(14px, env(safe-area-inset-bottom, 0px)); }
 }
 
 
@@ -3245,4 +3255,8 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   .d-hero__fog-layer--1,
   .d-hero__fog-layer--2 { animation: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .d-lightbox, .d-lightbox__image { animation-duration: .01ms !important; }
 }
