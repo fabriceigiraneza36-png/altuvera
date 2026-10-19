@@ -889,6 +889,7 @@ export default function DestinationDetail() {
             <ChevronLeft size={24} />
           </button>
           <img
+            key={attractionGalleryImages[lightboxIndex]?.url || lightboxIndex}
             className="d-lightbox__image"
             src={attractionGalleryImages[lightboxIndex]?.url}
             alt={attractionGalleryImages[lightboxIndex]?.caption || `${destination.name} attraction photo ${lightboxIndex + 1}`}
