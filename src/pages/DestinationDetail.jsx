@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
@@ -203,6 +203,11 @@ export default function DestinationDetail() {
 
   const { destination, loading, error } = useDestination(target);
   const [lightboxIndex, setLightboxIndex] = useState(null);
+  const [lightboxControlsVisible, setLightboxControlsVisible] = useState(true);
+  const [lightboxZoom, setLightboxZoom] = useState(1);
+  const touchStartRef = useRef(null);
+  const pinchStartRef = useRef(null);
+  const lastTapRef = useRef(0);
   const [saved, setSaved] = useState(false);
   const [shareState, setShareState] = useState("Share");
 
@@ -868,47 +873,81 @@ export default function DestinationDetail() {
 
       {lightboxIndex !== null && attractionGalleryImages.length > 0 && (
         <div
-          className="d-lightbox"
+          className={`d-lightbox ${lightboxControlsVisible ? "d-lightbox--controls" : "d-lightbox--quiet"}`}
           role="dialog"
           aria-modal="true"
-          aria-label={`${destination.name} photo gallery`}
-          onClick={() => setLightboxIndex(null)}
+          aria-label={`${destination.name} photo stories`}
+          onClick={() => setLightboxControlsVisible((visible) => !visible)}
+          onTouchStart={(event) => {
+            if (event.touches.length === 2) {
+              const dx = event.touches[0].clientX - event.touches[1].clientX;
+              const dy = event.touches[0].clientY - event.touches[1].clientY;
+              pinchStartRef.current = { distance: Math.hypot(dx, dy), zoom: lightboxZoom };
+              touchStartRef.current = null;
+            } else if (event.touches.length === 1) {
+              touchStartRef.current = { x: event.touches[0].clientX, y: event.touches[0].clientY, time: Date.now() };
+            }
+          }}
+          onTouchMove={(event) => {
+            if (event.touches.length === 2 && pinchStartRef.current) {
+              event.preventDefault();
+              const dx = event.touches[0].clientX - event.touches[1].clientX;
+              const dy = event.touches[0].clientY - event.touches[1].clientY;
+              const distance = Math.hypot(dx, dy);
+              setLightboxZoom(Math.max(1, Math.min(4, pinchStartRef.current.zoom * distance / Math.max(1, pinchStartRef.current.distance))));
+            }
+          }}
+          onTouchEnd={(event) => {
+            if (pinchStartRef.current && event.touches.length < 2) { pinchStartRef.current = null; return; }
+            const start = touchStartRef.current;
+            if (!start || lightboxZoom > 1.02) { touchStartRef.current = null; return; }
+            const changed = event.changedTouches?.[0];
+            if (!changed) return;
+            const dx = changed.clientX - start.x;
+            const dy = changed.clientY - start.y;
+            if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+              setLightboxIndex((index) => (index + (dx < 0 ? 1 : -1) + attractionGalleryImages.length) % attractionGalleryImages.length);
+              setLightboxZoom(1);
+              setLightboxControlsVisible(true);
+            } else if (Math.abs(dy) > 100 && dy > 0) { setLightboxIndex(null); setLightboxZoom(1); }
+            touchStartRef.current = null;
+          }}
+          onWheel={(event) => {
+            if (event.ctrlKey || event.metaKey) {
+              event.preventDefault();
+              setLightboxZoom((zoom) => Math.max(1, Math.min(4, zoom + (event.deltaY < 0 ? 0.15 : -0.15))));
+            }
+          }}
         >
-          <button type="button" className="d-lightbox__close" onClick={() => setLightboxIndex(null)} aria-label="Close photo gallery">
-            <X size={22} />
-          </button>
-          <button
-            type="button"
-            className="d-lightbox__arrow d-lightbox__arrow--p"
-            onClick={(e) => {
-              e.stopPropagation();
-              setLightboxIndex((lightboxIndex - 1 + attractionGalleryImages.length) % attractionGalleryImages.length);
-            }}
-            aria-label="Previous photo"
-          >
-            <ChevronLeft size={24} />
-          </button>
+          <div className="d-story__backdrop" style={{ backgroundImage: `url("${attractionGalleryImages[lightboxIndex]?.url}")` }} />
+          <div className="d-story__progress" aria-hidden="true">
+            {attractionGalleryImages.map((_, index) => <span key={index} className={index === lightboxIndex ? "is-active" : index < lightboxIndex ? "is-seen" : ""}><i /></span>)}
+          </div>
+          <button type="button" className="d-lightbox__close d-story__control" onClick={(event) => { event.stopPropagation(); setLightboxIndex(null); setLightboxZoom(1); }} aria-label="Close photo stories"><X size={22} /></button>
+          {attractionGalleryImages.length > 1 && <div className="d-story__side d-story__side--previous" aria-hidden="true"><img src={attractionGalleryImages[(lightboxIndex - 1 + attractionGalleryImages.length) % attractionGalleryImages.length]?.url} alt="" /></div>}
+          {attractionGalleryImages.length > 1 && <div className="d-story__side d-story__side--next" aria-hidden="true"><img src={attractionGalleryImages[(lightboxIndex + 1) % attractionGalleryImages.length]?.url} alt="" /></div>}
+          <button type="button" className="d-lightbox__arrow d-lightbox__arrow--p d-story__control" onClick={(event) => { event.stopPropagation(); setLightboxIndex((index) => (index - 1 + attractionGalleryImages.length) % attractionGalleryImages.length); setLightboxZoom(1); setLightboxControlsVisible(true); }} aria-label="Previous photo"><ChevronLeft size={26} /></button>
           <img
-            key={attractionGalleryImages[lightboxIndex]?.url || lightboxIndex}
-            className="d-lightbox__image"
+            key={`${attractionGalleryImages[lightboxIndex]?.url || lightboxIndex}-${lightboxIndex % 10}`}
+            className={`d-lightbox__image d-story__image d-story__transition-${lightboxIndex % 10}`}
             src={attractionGalleryImages[lightboxIndex]?.url}
             alt={attractionGalleryImages[lightboxIndex]?.caption || `${destination.name} attraction photo ${lightboxIndex + 1}`}
-            onClick={(e) => e.stopPropagation()}
-          />
-          <button
-            type="button"
-            className="d-lightbox__arrow d-lightbox__arrow--n"
-            onClick={(e) => {
-              e.stopPropagation();
-              setLightboxIndex((lightboxIndex + 1) % attractionGalleryImages.length);
+            style={{ transform: `scale(${lightboxZoom})`, touchAction: "pan-y pinch-zoom" }}
+            onClick={(event) => {
+              event.stopPropagation();
+              const now = Date.now();
+              if (now - lastTapRef.current < 320) setLightboxZoom((zoom) => zoom > 1 ? 1 : 2.2);
+              else setLightboxControlsVisible((visible) => !visible);
+              lastTapRef.current = now;
             }}
-            aria-label="Next photo"
-          >
-            <ChevronRight size={24} />
-          </button>
-          <div className="d-lightbox__counter">{lightboxIndex + 1} / {attractionGalleryImages.length}</div>
+            onDoubleClick={(event) => { event.stopPropagation(); setLightboxZoom((zoom) => zoom > 1 ? 1 : 2.2); }}
+            draggable={false}
+          />
+          <button type="button" className="d-lightbox__arrow d-lightbox__arrow--n d-story__control" onClick={(event) => { event.stopPropagation(); setLightboxIndex((index) => (index + 1) % attractionGalleryImages.length); setLightboxZoom(1); setLightboxControlsVisible(true); }} aria-label="Next photo"><ChevronRight size={26} /></button>
+          <div className="d-lightbox__counter d-story__counter">{lightboxIndex + 1} <span>/</span> {attractionGalleryImages.length}{attractionGalleryImages[lightboxIndex]?.caption ? <small>{attractionGalleryImages[lightboxIndex].caption}</small> : null}</div>
+          {lightboxZoom > 1 && <button type="button" className="d-story__zoom-reset" onClick={(event) => { event.stopPropagation(); setLightboxZoom(1); }} aria-label="Reset zoom">Reset zoom · {Math.round(lightboxZoom * 100)}%</button>}
         </div>
-      )}
+      )}}
     </ScrollProvider>
   );
 }
