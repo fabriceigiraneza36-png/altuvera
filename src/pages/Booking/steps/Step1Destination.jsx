@@ -85,7 +85,7 @@ export default function Step1Destination({
             aria-autocomplete="list" autoComplete="off" value={countryQuery}
             placeholder="Search countries…"
             onFocus={() => setCountryPickerOpen(true)}
-            onChange={(e) => { setCountryQuery(e.target.value); setCountryPickerOpen(true); set("countryId", ""); set("destinationId", ""); }}
+            onChange={(e) => { setCountryQuery(e.target.value); setCountryPickerOpen(true); set("countryId", ""); set("destinationId", ""); set("attractionName", ""); }}
             onKeyDown={(e) => { if (e.key === "Escape") setCountryPickerOpen(false); }}
             className={`bk-input${touched.countryId && errors.countryId ? " bk-input--err" : ""}`} />
           {countryPickerOpen && matchingCountries.length > 0 && (
@@ -141,6 +141,7 @@ export default function Step1Destination({
                         className="bk-country-suggest__item" onMouseDown={e => e.preventDefault()}
                         onClick={() => {
                           set("destinationId", d.value);
+                          set("attractionName", "");
                           setDestinationQuery(d.label);
                           setDestinationPickerOpen(false);
                           touch("destinationId");
@@ -164,6 +165,7 @@ export default function Step1Destination({
                     className={`bk-dest-card${active ? " bk-dest-card--active" : ""}`}
                     onClick={() => {
                       set("destinationId", d.value);
+                      set("attractionName", "");
                       touch("destinationId");
                     }}
                     style={{ textAlign: "left" }}
