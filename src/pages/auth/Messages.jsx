@@ -727,6 +727,7 @@ function NewConvModal({ onClose, onCreated }) {
   const [subject,  setSubject]  = useState("");
   const [destinationName, setDestinationName] = useState("");
   const [destinationOptions, setDestinationOptions] = useState([]);
+  const [selectedDestination, setSelectedDestination] = useState(null);
   const [destinationPickerOpen, setDestinationPickerOpen] = useState(false);
   const [body,     setBody]     = useState("");
   const [creating, setCreating] = useState(false);
@@ -768,16 +769,27 @@ function NewConvModal({ onClose, onCreated }) {
 
   const handle = async () => {
     if (!body.trim()) { setError("Please enter a message."); return; }
+    const typedDestination = destinationName.trim();
+    const matchedDestination = typedDestination
+      ? destinationOptions.find(d => d.name.toLowerCase() === typedDestination.toLowerCase())
+      : null;
+    if (typedDestination && !matchedDestination) {
+      setError("Please choose a destination from the live suggestions, or clear the destination field.");
+      setDestinationPickerOpen(true);
+      return;
+    }
+    const validDestination = matchedDestination || selectedDestination;
     setError(""); setCreating(true);
     try {
       const res  = await authFetch(`${API_BASE}/messages/conversations`, {
         method:"POST",
         body: JSON.stringify({
-          subject: subject.trim() || (destinationName.trim() ? `Question about ${destinationName.trim()}` : "General Enquiry"),
+          subject: subject.trim() || (validDestination ? `Question about ${validDestination.name}` : "General Enquiry"),
           body: body.trim(),
           firstMessage: body.trim(),
-          destinationName: destinationName.trim() || null,
-          metadata: destinationName.trim() ? { destinationName: destinationName.trim() } : {},
+          destinationName: validDestination?.name || null,
+          destinationId: validDestination?.id || null,
+          metadata: validDestination ? { destinationName: validDestination.name, destinationId: validDestination.id } : {},
           kind: "general",
         }),
       });
@@ -848,7 +860,7 @@ function NewConvModal({ onClose, onCreated }) {
               <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600" />
               <input value={destinationName}
                 onFocus={() => setDestinationPickerOpen(true)}
-                onChange={e => { setDestinationName(e.target.value); setDestinationPickerOpen(true); }}
+                onChange={e => { setDestinationName(e.target.value); setSelectedDestination(null); setDestinationPickerOpen(true); }}
                 onKeyDown={e => { if (e.key === "Escape") setDestinationPickerOpen(false); }}
                 autoComplete="off"
                 placeholder="Search live destinations…"
@@ -861,6 +873,7 @@ function NewConvModal({ onClose, onCreated }) {
                     <button key={String(destination.id ?? destination.name) + index} type="button"
                       onClick={() => {
                         setDestinationName(destination.name);
+                        setSelectedDestination(destination);
                         setDestinationPickerOpen(false);
                         if (!subject.trim()) setSubject(`Question about ${destination.name}`);
                       }}
