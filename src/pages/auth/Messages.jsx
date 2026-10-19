@@ -6,7 +6,7 @@ import React, {
 import { Helmet } from "react-helmet-async";
 import { Link, useSearchParams } from "react-router-dom";
 import {
-  MessageSquare, Send, Smile, X, CornerUpLeft,
+  MessageSquare, UsersRound, Send, Smile, X, CornerUpLeft,
   Check, CheckCheck, RefreshCw, ArrowLeft, Plus, PanelLeftClose, PanelLeftOpen,
   ChevronDown, Circle, MoreHorizontal, Edit3, Pin, Highlighter, Undo2, Search, MapPin,
 } from "lucide-react";
@@ -519,7 +519,8 @@ function ScrollToBottomBtn({ visible, onClick, composerVisible = true }) {
 ══════════════════════════════════════════════════════════════════════════ */
 
 const ConvRow = React.memo(function ConvRow({ conv, active, onSelect, isTyping }) {
-  const title    = conv.subject ||
+  const isGroup = conv.conversationType === "group" || Boolean(conv.groupId);
+  const title    = conv.groupName || conv.subject ||
     (conv.bookingNumber ? `Booking #${conv.bookingNumber}` : conv.guestName || "Conversation");
   const hasUnread = (conv.unreadUser || 0) > 0;
 
@@ -542,7 +543,7 @@ const ConvRow = React.memo(function ConvRow({ conv, active, onSelect, isTyping }
                           ? "bg-emerald-600"
                           : "bg-gradient-to-br from-emerald-100 to-emerald-200"
                         }`}>
-          <MessageSquare size={15} className={active ? "text-white" : "text-emerald-600"} />
+          {isGroup ? <UsersRound size={15} className={active ? "text-white" : "text-emerald-600"} /> : <MessageSquare size={15} className={active ? "text-white" : "text-emerald-600"} />}
         </div>
 
         <div className="flex-1 min-w-0">
@@ -552,6 +553,7 @@ const ConvRow = React.memo(function ConvRow({ conv, active, onSelect, isTyping }
                               ${hasUnread ? "font-bold text-slate-900" : "font-semibold text-slate-700"}`}>
               {title}
             </span>
+            {isGroup && <span className="rounded-full bg-violet-50 px-1.5 py-0.5 text-[9px] font-extrabold tracking-wide text-violet-700 border border-violet-100">GROUP</span>}
             <div className="flex items-center gap-1 flex-shrink-0 ml-1">
               {hasUnread && (
                 <span className="bg-emerald-600 text-white rounded-full text-[10px] font-bold
@@ -1525,6 +1527,7 @@ export default function Messages() {
                     <p className="font-bold text-sm text-slate-900 truncate leading-tight">
                       {convTitle}
                     </p>
+                    {activeConversation?.groupId && <span className="mt-1 inline-flex rounded-full bg-violet-50 px-2 py-0.5 text-[9px] font-extrabold tracking-wide text-violet-700 border border-violet-100">SHARED GROUP CONVERSATION</span>}
                     <div className="flex items-center gap-2 mt-0.5">
                       <p className="text-[11px] text-slate-400 truncate">
                         <span className={adminPresence.active ? "text-emerald-600 font-semibold" : ""}>
