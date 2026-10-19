@@ -1088,3 +1088,57 @@
  .home-hero-premium .scroll-indicator-btn span{font-size:10px;letter-spacing:.18em}
  .home-hero-premium .scroll-indicator-btn svg{width:20px;height:20px}
 }
+
+
+/* Desktop homepage intro: give the copy one side and let all three destination cards
+   use the remaining width instead of leaving a large blank area. Mobile/tablet
+   stacking and the existing small-screen card behavior remain unchanged. */
+@media (min-width: 901px) {
+  .home-root .intro-layout {
+    grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.42fr) !important;
+    gap: clamp(1.5rem, 3vw, 3rem) !important;
+    align-items: stretch !important;
+  }
+
+  .home-root .intro-text {
+    min-width: 0;
+    max-width: 100%;
+    align-self: center;
+  }
+
+  .home-root .intro-heading {
+    font-size: clamp(2rem, 2.8vw, 3rem);
+    line-height: 1.12;
+    text-wrap: balance;
+  }
+
+  .home-root .intro-paragraph {
+    font-size: clamp(1rem, 1.18vw, 1.15rem);
+    line-height: 1.75;
+  }
+
+  .home-root .intro-media-grid {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0;
+    height: clamp(360px, 31vw, 470px) !important;
+    margin-top: 0 !important;
+    grid-template-columns: minmax(0, 1.18fr) minmax(0, 1fr) !important;
+    grid-template-rows: repeat(2, minmax(0, 1fr)) !important;
+    gap: clamp(.65rem, 1vw, 1rem) !important;
+  }
+
+  .home-root .intro-slot,
+  .home-root .intro-slot > .intro-dest-card {
+    min-width: 0;
+    min-height: 0;
+  }
+
+  .home-root .intro-dest-main-title {
+    font-size: clamp(1.05rem, 1.35vw, 1.4rem);
+  }
+
+  .home-root .intro-dest-side-title {
+    font-size: clamp(.78rem, .95vw, 1rem);
+  }
+}
