@@ -3408,3 +3408,15 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) {
   .d-story__image, .d-story__control, .d-gal-cell, .d-gal-cell img { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+
+/* Keep transition transforms on the frame so image zoom remains interactive. */
+.d-story__frame {
+  position: relative; z-index: 3; display: flex; align-items: center; justify-content: center;
+  max-width: min(74vw, 1180px); max-height: calc(100dvh - 112px);
+  transform-origin: center center; will-change: opacity, transform, filter;
+}
+.d-lightbox__image.d-story__image { animation: none; transition: transform .18s ease; }
+@media (max-width: 760px) {
+  .d-story__frame { max-width: 100vw; max-height: 100dvh; }
+}
