@@ -59,6 +59,9 @@ const normConv = (c) => ({
   guestEmail:     c.guest_email     || c.guestEmail,
   userFullName:   c.user_full_name  || c.userFullName,
   subject:        c.subject,
+  groupId:        c.group_id ?? c.groupId ?? null,
+  groupName:      c.group_name || c.groupName || null,
+  conversationType: c.conversation_type || c.conversationType || (c.group_id ? "group" : "direct"),
   status:         c.status          || "open",
   priority:       c.priority        || "normal",
   bookingNumber:  c.booking_number  || c.bookingNumber,
@@ -184,6 +187,8 @@ export function useConversations() {
 
     s.on("connect", () => {
       setConnected(true);
+      const currentUserId = getCurrentUserId();
+      if (currentUserId) s.emit("join:user", { userId: currentUserId });
       s.emit("msg:inbox-open", { open: true });
       if (import.meta.env.DEV) console.info("[Socket] Connected:", s.id);
     });
