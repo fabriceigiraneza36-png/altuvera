@@ -137,7 +137,7 @@ const SECTIONS = [
       "If you have questions, concerns, or requests regarding this Privacy Policy or our data practices, we'd love to hear from you.",
     ],
     contact: {
-      email: "altuverasafari@gmail.com",
+      email: "info@altuverasafaris.com",
       address: "Musanze, Rwanda",
       response: "We aim to respond within 48 hours on business days.",
     },
@@ -1325,7 +1325,7 @@ export default function PrivacyPolicy() {
                       we'll respond within 48 hours.
                     </p>
                     <div className="pp-cta__btns">
-                      <a href="mailto:altuverasafari@gmail.com" className="pp-cta__btn-a">
+                      <a href="mailto:info@altuverasafaris.com" className="pp-cta__btn-a">
                         <FiMail size={15} /> Contact Our Team
                       </a>
                       <a href="/terms" className="pp-cta__btn-b">
