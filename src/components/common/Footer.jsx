@@ -565,7 +565,7 @@ bottomLink: {
                 <FiMail size={18} />
               </div>
               <span style={styles.contactText}>
-                altuverasafari@gmail.com
+                info@altuverasafaris.com
 
               </span>
             </div>
