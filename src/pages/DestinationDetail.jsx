@@ -616,7 +616,7 @@ export default function DestinationDetail() {
                     key={img.url}
                     type="button"
                     className={`d-gal-cell ${index === 0 ? "d-gal-cell--wide" : ""}`}
-                    onClick={() => setLightboxIndex(index)}
+                    onClick={() => { setLightboxIndex(index); setLightboxZoom(1); setLightboxControlsVisible(false); }}
                     aria-label={`Open ${destination.name} attraction photo ${index + 1}`}
                   >
                     <img src={img.url} alt={img.caption || `${destination.name} gallery image ${index + 1}`} loading="lazy" />
@@ -927,22 +927,23 @@ export default function DestinationDetail() {
           {attractionGalleryImages.length > 1 && <div className="d-story__side d-story__side--previous" aria-hidden="true"><img src={attractionGalleryImages[(lightboxIndex - 1 + attractionGalleryImages.length) % attractionGalleryImages.length]?.url} alt="" /></div>}
           {attractionGalleryImages.length > 1 && <div className="d-story__side d-story__side--next" aria-hidden="true"><img src={attractionGalleryImages[(lightboxIndex + 1) % attractionGalleryImages.length]?.url} alt="" /></div>}
           <button type="button" className="d-lightbox__arrow d-lightbox__arrow--p d-story__control" onClick={(event) => { event.stopPropagation(); setLightboxIndex((index) => (index - 1 + attractionGalleryImages.length) % attractionGalleryImages.length); setLightboxZoom(1); setLightboxControlsVisible(true); }} aria-label="Previous photo"><ChevronLeft size={26} /></button>
-          <img
-            key={`${attractionGalleryImages[lightboxIndex]?.url || lightboxIndex}-${lightboxIndex % 10}`}
-            className={`d-lightbox__image d-story__image d-story__transition-${lightboxIndex % 10}`}
-            src={attractionGalleryImages[lightboxIndex]?.url}
-            alt={attractionGalleryImages[lightboxIndex]?.caption || `${destination.name} attraction photo ${lightboxIndex + 1}`}
-            style={{ transform: `scale(${lightboxZoom})`, touchAction: "pan-y pinch-zoom" }}
-            onClick={(event) => {
-              event.stopPropagation();
-              const now = Date.now();
-              if (now - lastTapRef.current < 320) setLightboxZoom((zoom) => zoom > 1 ? 1 : 2.2);
-              else setLightboxControlsVisible((visible) => !visible);
-              lastTapRef.current = now;
-            }}
-            onDoubleClick={(event) => { event.stopPropagation(); setLightboxZoom((zoom) => zoom > 1 ? 1 : 2.2); }}
-            draggable={false}
-          />
+          <div key={`${attractionGalleryImages[lightboxIndex]?.url || lightboxIndex}-${lightboxIndex % 10}`} className={`d-story__frame d-story__transition-${lightboxIndex % 10}`}>
+            <img
+              className="d-lightbox__image d-story__image"
+              src={attractionGalleryImages[lightboxIndex]?.url}
+              alt={attractionGalleryImages[lightboxIndex]?.caption || `${destination.name} attraction photo ${lightboxIndex + 1}`}
+              style={{ transform: `scale(${lightboxZoom})`, touchAction: "pan-y pinch-zoom" }}
+              onClick={(event) => {
+                event.stopPropagation();
+                const now = Date.now();
+                if (now - lastTapRef.current < 320) setLightboxZoom((zoom) => zoom > 1 ? 1 : 2.2);
+                else setLightboxControlsVisible((visible) => !visible);
+                lastTapRef.current = now;
+              }}
+              onDoubleClick={(event) => { event.stopPropagation(); setLightboxZoom((zoom) => zoom > 1 ? 1 : 2.2); }}
+              draggable={false}
+            />
+          </div>
           <button type="button" className="d-lightbox__arrow d-lightbox__arrow--n d-story__control" onClick={(event) => { event.stopPropagation(); setLightboxIndex((index) => (index + 1) % attractionGalleryImages.length); setLightboxZoom(1); setLightboxControlsVisible(true); }} aria-label="Next photo"><ChevronRight size={26} /></button>
           <div className="d-lightbox__counter d-story__counter">{lightboxIndex + 1} <span>/</span> {attractionGalleryImages.length}{attractionGalleryImages[lightboxIndex]?.caption ? <small>{attractionGalleryImages[lightboxIndex].caption}</small> : null}</div>
           {lightboxZoom > 1 && <button type="button" className="d-story__zoom-reset" onClick={(event) => { event.stopPropagation(); setLightboxZoom(1); }} aria-label="Reset zoom">Reset zoom · {Math.round(lightboxZoom * 100)}%</button>}
