@@ -272,7 +272,7 @@ export default function CookieDocumentation() {
                     },
                     {
                       title: "Right to Access",
-                      desc: "You can request a copy of all personal data we hold about you by contacting altuverasafari@gmail.com.",
+                      desc: "You can request a copy of all personal data we hold about you by contacting info@altuverasafaris.com.",
                     },
                     {
                       title: "Right to Erasure",
@@ -358,10 +358,10 @@ export default function CookieDocumentation() {
                     For privacy enquiries, contact Altuvera Safaris:
                   </p>
                   <a
-                    href="mailto:altuverasafari@gmail.com"
+                    href="mailto:info@altuverasafaris.com"
                     className="text-[12px] text-emerald-600 font-bold hover:text-emerald-700 focus:outline-none underline-offset-2 hover:underline"
                   >
-                    altuverasafari@gmail.com
+                    info@altuverasafaris.com
                   </a>
                   <p className="text-[11px] text-slate-400 mt-1">
                     Altuvera Safaris, Musanze, Rwanda
