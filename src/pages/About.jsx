@@ -1192,11 +1192,11 @@ const About = () => {
                 </div>
               </a>
 
-              <a href="mailto:altuverasafari@gmail.com" className="about-contact-card">
+              <a href="mailto:info@altuverasafaris.com" className="about-contact-card">
                 <div className="about-contact-icon"><Mail size={20} /></div>
                 <div>
                   <div className="about-contact-label">Email</div>
-                  <div className="about-contact-val">altuverasafari@gmail.com</div>
+                  <div className="about-contact-val">info@altuverasafaris.com</div>
                 </div>
               </a>
 
