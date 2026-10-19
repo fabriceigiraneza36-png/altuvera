@@ -271,6 +271,28 @@ export default function DestinationDetail() {
     } catch { setSaved(false); }
   }, [target]);
 
+  // Keep the destination page behind the fullscreen viewer from scrolling and
+  // provide a reliable keyboard escape route without changing gallery navigation.
+  useEffect(() => {
+    if (lightboxIndex === null) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
+    document.body.style.overflow = "hidden";
+    document.body.style.touchAction = "none";
+    const handleKeyDown = (event) => {
+      if (event.key === "Escape") {
+        setLightboxIndex(null);
+        setLightboxZoom(1);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [lightboxIndex]);
+
   const toggleSaved = () => {
     const next = !saved;
     setSaved(next);
