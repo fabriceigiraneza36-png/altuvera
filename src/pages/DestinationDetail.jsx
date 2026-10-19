@@ -947,7 +947,7 @@ export default function DestinationDetail() {
           <div className="d-lightbox__counter d-story__counter">{lightboxIndex + 1} <span>/</span> {attractionGalleryImages.length}{attractionGalleryImages[lightboxIndex]?.caption ? <small>{attractionGalleryImages[lightboxIndex].caption}</small> : null}</div>
           {lightboxZoom > 1 && <button type="button" className="d-story__zoom-reset" onClick={(event) => { event.stopPropagation(); setLightboxZoom(1); }} aria-label="Reset zoom">Reset zoom · {Math.round(lightboxZoom * 100)}%</button>}
         </div>
-      )}}
+      )}
     </ScrollProvider>
   );
 }
