@@ -355,7 +355,7 @@ export default function UserSettings() {
   const initialPrefs = useMemo(() => ({
     emailNotifications: user?.preferences?.emailNotifications ?? true,
     smsNotifications: user?.preferences?.smsNotifications ?? false,
-    marketingEmails: user?.preferences?.marketingEmails ?? true,
+    marketingEmails: user?.preferences?.marketingEmails ?? false,
     travelUpdates: user?.preferences?.travelUpdates ?? true,
   }), [user]);
 
