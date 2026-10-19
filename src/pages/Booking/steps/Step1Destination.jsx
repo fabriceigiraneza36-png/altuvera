@@ -231,6 +231,56 @@ export default function Step1Destination({
               </p>
             )}
 
+                        {selectedDest && Array.isArray(selectedDest.attractions) && selectedDest.attractions.length > 0 && (
+              <section className="bk-attraction-picker" aria-labelledby="bk-attraction-title">
+                <div className="bk-attraction-heading">
+                  <div>
+                    <p className="bk-attraction-eyebrow">Optional add-ons</p>
+                    <h3 id="bk-attraction-title">Choose attractions to include</h3>
+                    <p>Select any experiences you want us to include in your booking for {selectedDest.label}. You can leave this blank.</p>
+                  </div>
+                  <span className="bk-attraction-count">{(data.attractionName || "").split("; ").filter(Boolean).length} selected</span>
+                </div>
+                <div className="bk-attraction-list">
+                  {selectedDest.attractions.map((attraction) => {
+                    const name = typeof attraction === "string" ? attraction : String(attraction?.name || attraction?.title || attraction?.label || attraction?.attraction_name || "").trim();
+                    if (!name) return null;
+                    const selected = (data.attractionName || "").split("; ").filter(Boolean).includes(name);
+                    return <label key={name} className={`bk-attraction-option${selected ? " is-selected" : ""}`}>
+                      <input type="checkbox" checked={selected} onChange={() => {
+                        const current = (data.attractionName || "").split("; ").filter(Boolean);
+                        const next = selected ? current.filter(item => item !== name) : [...current, name];
+                        set("attractionName", next.join("; "));
+                      }} />
+                      <span className="bk-attraction-check"><Check size={14} /></span>
+                      <span className="bk-attraction-name">{name}</span>
+                      <span className="bk-attraction-state">{selected ? "Included" : "Add"}</span>
+                    </label>;
+                  })}
+                </div>
+                {data.attractionName && <button type="button" className="bk-attraction-clear" onClick={() => set("attractionName", "")}>Clear selected attractions</button>}
+                <style>{`
+                  .bk-attraction-picker{margin-top:22px;padding:18px;border:1px solid #d8eee0;border-radius:18px;background:linear-gradient(145deg,#f8fdf9,#effaf3)}
+                  .bk-attraction-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:14px}
+                  .bk-attraction-eyebrow{font-size:10px;font-weight:850;letter-spacing:.12em;text-transform:uppercase;color:#16834c;margin-bottom:4px}
+                  .bk-attraction-heading h3{font-size:16px;line-height:1.3;color:#123d29;font-weight:850}
+                  .bk-attraction-heading p:not(.bk-attraction-eyebrow){font-size:12px;color:#64766b;line-height:1.5;margin-top:5px;max-width:500px}
+                  .bk-attraction-count{flex-shrink:0;padding:5px 9px;border-radius:999px;background:#d8f6e3;color:#12683b;font-size:10px;font-weight:800}
+                  .bk-attraction-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+                  .bk-attraction-option{min-width:0;display:flex;align-items:center;gap:9px;padding:11px;border:1px solid #e0e9e3;border-radius:12px;background:#fff;cursor:pointer;transition:border-color .2s,background .2s,box-shadow .2s}
+                  .bk-attraction-option.is-selected{border-color:#24a565;background:#e9f9ef;box-shadow:0 0 0 2px rgba(36,165,101,.08)}
+                  .bk-attraction-option input{position:absolute;opacity:0;width:1px;height:1px}
+                  .bk-attraction-check{width:19px;height:19px;flex-shrink:0;border:1px solid #b8cabe;border-radius:6px;display:flex;align-items:center;justify-content:center;color:transparent}
+                  .bk-attraction-option.is-selected .bk-attraction-check{background:#16834c;border-color:#16834c;color:#fff}
+                  .bk-attraction-name{font-size:12px;font-weight:750;color:#203b2c;line-height:1.35;overflow-wrap:anywhere}
+                  .bk-attraction-state{margin-left:auto;font-size:9px;font-weight:800;text-transform:uppercase;color:#748579;white-space:nowrap}
+                  .bk-attraction-option.is-selected .bk-attraction-state{color:#16834c}
+                  .bk-attraction-clear{margin-top:12px;border:0;background:transparent;color:#46745a;font-size:11px;font-weight:750;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+                  @media(max-width:520px){.bk-attraction-picker{padding:13px}.bk-attraction-list{grid-template-columns:1fr}.bk-attraction-heading h3{font-size:14px}}
+                `}</style>
+              </section>
+            )}
+
             {selectedDest && false && (
               <div
                 className="bk-selected"
