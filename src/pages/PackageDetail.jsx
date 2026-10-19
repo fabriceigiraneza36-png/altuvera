@@ -320,12 +320,17 @@ export default function PackageDetail() {
   }
   if (loadError || !pkg) return <ErrorState message={loadError} />;
 
-  const gallery = useMemo(() => {
-    const raw = firstArray(pkg.image_gallery || pkg.images || pkg.gallery);
-    const urls = raw.map((item) => typeof item === "string" ? item : item?.url || item?.image_url || item?.src).filter(Boolean);
-    const all = [pkg.cover_image_url || pkg.image_url || pkg.thumbnail_url, ...urls].filter(Boolean);
-    return [...new Set(all)];
-  }, [pkg]);
+  // This is derived display data, not state. Keep it as a plain calculation:
+  // PackageDetail has loading/error early returns above, so a hook here would
+  // change the hook count between renders and trigger React error #310.
+  const rawGallery = firstArray(pkg.image_gallery || pkg.images || pkg.gallery);
+  const galleryUrls = rawGallery
+    .map((item) => typeof item === "string" ? item : item?.url || item?.image_url || item?.src)
+    .filter(Boolean);
+  const gallery = [...new Set([
+    pkg.cover_image_url || pkg.image_url || pkg.thumbnail_url,
+    ...galleryUrls,
+  ].filter(Boolean))];
   const cover = gallery[activeGalleryIndex] || pkg.cover_image_url || pkg.image_url || pkg.thumbnail_url;
   const destination = pkg.destination_name || pkg.destination || "East Africa";
   const country = pkg.country_name || pkg.country || "";
