@@ -3918,14 +3918,16 @@ html { scroll-behavior: smooth; }
 .d-about__main, .d-about__aside, .d-prose { min-width: 0; }
 .d-prose { max-width: none; width: 100%; }
 .d-prose p { max-width: none; overflow-wrap: break-word; word-break: normal; hyphens: auto; }
-@media (max-width: 900px) {
-  .d-about { grid-template-columns: minmax(0, 1fr) !important; gap: 26px !important; }
-  .d-about__main { width: 100%; max-width: none; }
-  .d-about__aside { width: 100%; position: static !important; }
-  .d-prose { width: 100%; }
-}
 @media (max-width: 600px) {
   .d-wrap { padding-left: 18px; padding-right: 18px; }
   .d-about { gap: 22px !important; }
   .d-prose p { font-size: .94rem; line-height: 1.8; }
 }
+
+
+/* Keep the gallery beside the introductory copy; long-form details continue below it at full width. */
+.d-about { align-items: start; }
+.d-about__main, .d-about__aside { min-width: 0; }
+.d-about__additional-copy { display: block; width: 100%; max-width: none; margin-top: 28px; }
+.d-about__additional-copy .d-prose { width: 100%; max-width: none; }
+.d-about__additional-copy .d-prose p { max-width: none; }
