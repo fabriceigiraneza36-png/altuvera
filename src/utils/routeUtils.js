@@ -167,10 +167,6 @@ const URL_CORRECTIONS = {
   "/index": "/",
   "/index.html": "/",
 
-  // Legacy virtual-tour alias
-  "/virtual-tour": "/gallery",
-  "/virtual": "/gallery",
-
   // Destination typos
   "/destinations": "/destinations",
   "/destionation": "/destinations",
