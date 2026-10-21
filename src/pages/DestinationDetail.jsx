@@ -751,27 +751,23 @@ export default function DestinationDetail() {
         )}
 
         {highlights.length > 0 && (
-          <section className="d-sec d-sec--soft">
+          <section id="dd-experiences" className="d-sec d-sec--white d-experiences">
             <div className="d-wrap">
-              <Reveal from="bottom">
-                <SH title={`What Makes ${destination.name} Unforgettable`} sub="Explore the highlights of this unforgettable destination" />
+              <Reveal from="left">
+                <SH title={`Experiences that define ${destination.name}`} sub="Swipe through the moments that make this destination special. Each experience is presented here to explore — bookings are for attractions." tag="The Altuvera experience" center={false} />
               </Reveal>
-
-              <div className="d-exp-grid">
-                {highlights.slice(0, 6).map((item, index) => (
-                  <Reveal key={index} from="scale" delay={index * 40}>
-                    <div className="d-exp-card">
-                      <div className="d-exp-card__media">
-                        <img src={gallery[index % Math.max(gallery.length, 1)]?.url || heroImage} alt={String(item)} loading="lazy" />
-                        <div className="d-exp-card__overlay">
-                          <h4 className="d-exp-card__ov-title">{item}</h4>
-                          <p className="d-exp-card__ov-desc">Experience the wonder of {item}.</p>
-                        </div>
-                      </div>
-                    </div>
-                  </Reveal>
-                ))}
+              <div className="d-experience-carousel" role="region" aria-label={`Experiences in ${destination.name}`} tabIndex={0}>
+                {highlights.slice(0, 12).map((item, index) => {
+                  const experienceTitle = displayText(item?.name) || displayText(item?.title) || displayText(item, `Experience ${index + 1}`);
+                  const description = typeof item === "object" ? (displayText(item?.description) || displayText(item?.summary) || displayText(item?.details)) : "";
+                  const image = (typeof item === "object" && (item.imageUrl || item.image_url || item.image || item.coverImage || item.cover_image_url)) || gallery[index % Math.max(gallery.length, 1)]?.url || heroImage;
+                  return <article key={`${experienceTitle}-${index}`} className="d-experience-card" style={{"--experience-index": index}}>
+                    <div className="d-experience-card__image-wrap"><img className="d-experience-card__image" src={typeof image === "string" ? image : heroImage} alt={experienceTitle} loading="lazy" onError={(event) => { event.currentTarget.onerror = null; event.currentTarget.src = heroImage; }} /><span className="d-experience-card__number">{String(index + 1).padStart(2,"0")}</span><span className="d-experience-card__tag"><Leaf size={13}/> Signature experience</span></div>
+                    <div className="d-experience-card__body"><h3>{experienceTitle}</h3><p>{description || `Discover ${experienceTitle.toLowerCase()} in ${displayText(destination.name, "this destination")} — a memorable way to connect with its landscapes, wildlife and local character.`}</p><div className="d-experience-card__footer"><span><Compass size={15}/> Explore at your pace</span><span className="d-experience-card__arrow" aria-hidden="true"><ChevronRight size={18}/></span></div></div>
+                  </article>;
+                })}
               </div>
+              <p className="d-experience-note"><Compass size={15}/> Experiences are for inspiration and discovery. You can book available attractions separately.</p>
             </div>
           </section>
         )}
