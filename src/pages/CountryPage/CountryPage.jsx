@@ -19,6 +19,7 @@ import {
 import SEO from "@components/common/SEO";
 import AnimatedSection from "@components/common/AnimatedSection";
 import Loader from "@components/common/Loader";
+import AltuveraLoader from "@components/common/AltuveraLoader";
 import DestinationCard, {
   DestinationCardSkeleton,
 } from "@components/common/DestinationCard";
@@ -1534,9 +1535,7 @@ export default function CountryPage() {
 
   if (loading) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#f8fafb" }}>
-        <Loader />
-      </div>
+      <AltuveraLoader title="Exploring this country" message="We’re gathering the destinations, landscapes and local experiences across this country." />
     );
   }
 
