@@ -1039,26 +1039,44 @@ export default function Messages() {
     const query = conversationSearch.trim().toLocaleLowerCase();
     if (!query) return conversations;
     return conversations.filter(c => [
-      c.subject, c.guestName, c.guestEmail, c.lastMessage, c.bookingNumber,
+      c.subject, c.groupName, c.guestName, c.guestEmail, c.lastMessage, c.bookingNumber,
     ].some(value => String(value || "").toLocaleLowerCase().includes(query)));
   }, [conversations, conversationSearch]);
 
   useEffect(() => {
     if (!conversations.length) return;
+
+    // Notification links intentionally open the exact thread, including a
+    // group thread. This takes precedence over the normal inbox entry rules.
     if (requestedConversationId) {
       const target = conversations.find(c => String(c.id) === String(requestedConversationId));
       if (target) {
         if (String(activeId) !== String(target.id)) openConversation(target.id);
         return;
       }
-      // A notification may point to a deleted/expired thread. Once the inbox
-      // has finished loading, fall back to a valid conversation instead of
-      // leaving the user on a blank chat pane.
+      // Wait for the initial list request before handling stale notification URLs.
       if (loading) return;
     }
-    // Open the most recent available thread on entry; don't override a
-    // conversation the user has already selected while the list refreshes.
-    if (!activeId) openConversation(conversations[0].id);
+
+    // A chooser is required whenever the user belongs to any group, or has
+    // more than one conversation. Only a single private conversation should
+    // open automatically on portal entry.
+    const hasGroupConversation = conversations.some(c =>
+      c.conversationType === "group" || Boolean(c.groupId)
+    );
+    const shouldChooseConversation = hasGroupConversation || conversations.length > 1;
+
+    if (shouldChooseConversation) {
+      // Do not silently select a group or replace a thread the user has chosen.
+      return;
+    }
+
+    if (!activeId && conversations.length === 1) {
+      const onlyConversation = conversations[0];
+      if (onlyConversation.conversationType !== "group" && !onlyConversation.groupId) {
+        openConversation(onlyConversation.id);
+      }
+    }
   }, [requestedConversationId, conversations, activeId, openConversation, loading]);
 
 
