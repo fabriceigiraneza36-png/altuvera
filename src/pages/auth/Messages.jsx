@@ -177,12 +177,15 @@ const MSG_STYLES = `
   width: 100%;
   height: 100%;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
   position: relative;
 }
 /* SIDEBAR */
 .msg-sidebar {
   width: 300px;
+  max-width: 100%;
+  min-width: 0;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -297,13 +300,15 @@ const MSG_STYLES = `
 
 /* MOBILE: full panel swap */
 @media (max-width: 767px) {
-  .msg-layout { width: 100%; height: 100%; min-height: 0; }
-  .msg-sidebar { width: 100%; min-width: 0; border-right: none; }
-  .msg-chat { position: absolute; inset: 0; z-index: 10; width: 100%; min-width: 0; }
+  .msg-layout { width: 100%; height: 100%; min-height: 0; min-width: 0; flex: 1 1 0%; }
+  .msg-sidebar { width: 100%; max-width: 100%; min-width: 0; border-right: none; }
+  .msg-chat { position: absolute; inset: 0; z-index: 10; width: 100%; min-width: 0; max-width: 100%; }
+  .msg-sidebar-head, .msg-sidebar-list, .msg-chat-head, .msg-chat-body, .msg-chat-foot { min-width: 0; }
   .msg-chat-head { min-height: 64px; padding-left: 12px; padding-right: 12px; }
-  .msg-chat-body { padding: 12px; }
-  .msg-chat-foot { padding: 8px 10px max(10px, env(safe-area-inset-bottom)); }
+  .msg-chat-body { padding: 12px; overscroll-behavior-y: contain; }
+  .msg-chat-foot { padding: 8px 10px max(12px, env(safe-area-inset-bottom)); }
   .msg-chat-foot textarea { min-width: 0; width: 100%; }
+  .msg-layout button, .msg-layout input, .msg-layout textarea { touch-action: manipulation; }
 }
 
 /* Typing dots */
@@ -1822,6 +1827,7 @@ export default function Messages() {
           <NewConvModal
             onClose={() => setShowNewChat(false)}
             onCreated={handleNewConvCreated}
+            existingConversation={contextConversation}
           />
         )}
       </DashboardLayout>
