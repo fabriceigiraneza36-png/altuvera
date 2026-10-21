@@ -972,8 +972,8 @@ const {
      region,
      duration,
      durationDays,
-     rating           = 0,
-     reviewCount      = 0,
+     rating,
+     reviewCount,
      highlights       = [],
      shortDescription,
      description,
@@ -986,6 +986,25 @@ const {
        minGroupSize,
      maxGroupSize,
    } = destination;
+
+   // Normalize rating fields from both camelCase and API snake_case responses.
+   // A destination with no submitted ratings should read "New", not "0.0".
+   const ratingValue = destination.average_rating
+     ?? destination.averageRating
+     ?? rating;
+   const normalizedRating = ratingValue == null || ratingValue === ""
+     ? null
+     : Number(ratingValue);
+   const rating = Number.isFinite(normalizedRating) ? normalizedRating : null;
+   const reviewCountValue = destination.review_count
+     ?? destination.reviewCount
+     ?? destination.total_reviews
+     ?? destination.totalReviews
+     ?? destination.reviews_count
+     ?? 0;
+   const reviewCount = Array.isArray(reviewCountValue)
+     ? reviewCountValue.length
+     : Math.max(0, Number(reviewCountValue) || 0);
 
    // Clean unwanted text from description fields
    const cleanText = (text) => {
