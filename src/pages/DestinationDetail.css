@@ -3947,3 +3947,14 @@ html { scroll-behavior: smooth; }
 @media (max-width: 380px) {
   .d-about__aside { width: 42%; margin-left: 12px; }
 }
+
+
+/* Three compact highlight cards sit beneath the story image without changing its dimensions. */
+.d-about-mini-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 12px; width: 100%; }
+.d-about-mini-fact { display: flex; align-items: flex-start; gap: 7px; min-width: 0; padding: 10px 9px; border: 1px solid rgba(16, 125, 85, .12); border-radius: 13px; background: rgba(255,255,255,.94); box-shadow: 0 5px 16px rgba(18, 70, 52, .045); }
+.d-about-mini-fact__icon { display: inline-flex; flex: 0 0 27px; width: 27px; height: 27px; align-items: center; justify-content: center; border-radius: 9px; background: #e9f8f0; color: #148257; }
+.d-about-mini-fact__copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.d-about-mini-fact__copy small { color: #728078; font-size: 9px; line-height: 1.2; font-weight: 700; text-transform: uppercase; letter-spacing: .045em; }
+.d-about-mini-fact__copy strong { color: #183b2e; font-size: 11px; line-height: 1.35; font-weight: 700; overflow-wrap: anywhere; }
+@media (max-width: 640px) { .d-about-mini-facts { gap: 6px; margin-top: 9px; } .d-about-mini-fact { flex-direction: column; padding: 8px 7px; gap: 6px; border-radius: 11px; } .d-about-mini-fact__copy strong { font-size: 10px; } .d-about-mini-fact__copy small { font-size: 8px; } }
+@media (max-width: 380px) { .d-about-mini-facts { grid-template-columns: 1fr; } .d-about-mini-fact { flex-direction: row; align-items: center; } }
