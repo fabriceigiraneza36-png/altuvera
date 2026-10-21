@@ -544,6 +544,19 @@ export default function DestinationDetail() {
         <section id="dd-about" className="d-sec d-sec--white">
           <div className="d-wrap">
             <div className="d-about">
+                            <aside className="d-about__aside">
+                {additionalImages.length > 0 && (
+                  <Reveal from="right" delay={60}>
+                    <div className="d-aside-slider d-about-photo-panel">
+                      <img src={additionalImages[0].url} alt={`${destination.name} experience`} loading="lazy" />
+                      <div className="d-about-photo-panel__caption">
+                        <span>More of {destination.name}</span>
+                        <strong>{gallery.length} photos in the destination gallery</strong>
+                      </div>
+                    </div>
+                  </Reveal>
+                )}
+              </aside>
               <div className="d-about__main">
                 <Reveal from="left">
                   <h2 className="d-about__title">Discover {destination.name}</h2>
@@ -558,22 +571,7 @@ export default function DestinationDetail() {
                     </div>
                   </Reveal>
                 )}
-              </div>
 
-              <aside className="d-about__aside">
-                {additionalImages.length > 0 && (
-                  <Reveal from="right" delay={60}>
-                    <div className="d-aside-slider d-about-photo-panel">
-                      <img src={additionalImages[0].url} alt={`${destination.name} experience`} loading="lazy" />
-                      <div className="d-about-photo-panel__caption">
-                        <span>More of {destination.name}</span>
-                        <strong>{gallery.length} photos in the destination gallery</strong>
-                      </div>
-                    </div>
-                  </Reveal>
-                )}
-              </aside>
-            </div>
             <div className="d-about__additional-copy">
               {destination.shortDescription && destination.shortDescription !== description && (
                 <Reveal from="left" delay={90}>
