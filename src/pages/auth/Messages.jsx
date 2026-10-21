@@ -128,7 +128,9 @@ function useUserSocket(userId, activeConvId, handlers) {
           auth:              { token: getToken() },
           transports:        ["websocket","polling"],
           reconnection:      true,
+          reconnectionAttempts: Infinity,
           reconnectionDelay: 1500,
+          reconnectionDelayMax: 30_000,
           timeout:           10_000,
         });
         socketRef.current = socket;
