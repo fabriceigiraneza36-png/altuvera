@@ -70,7 +70,6 @@ const buildSitemap = async () => {
     "/tips",
     "/posts",
     "/interactive-map",
-    "/virtual-tour",
     "/team",
     "/faq",
     "/privacy",
