@@ -196,6 +196,7 @@ export default function PackageDetail() {
     guest_phone: "",
     accommodation_preference: "",
     trip_style: "",    special_requests: "",
+    newsletter_opt_in: false,
   });
 
   const [errors, setErrors] = useState({});
@@ -289,7 +290,9 @@ export default function PackageDetail() {
         preferred_contact_method: form.preferred_contact_method,
         guest_phone: needsPhone ? form.guest_phone.trim() : undefined,
         accommodation_preference: form.accommodation_preference || undefined,
-        trip_style: form.trip_style || undefined,        special_requests: form.special_requests.trim() || undefined,
+        trip_style: form.trip_style || undefined,
+        special_requests: form.special_requests.trim() || undefined,
+        newsletter_opt_in: Boolean(form.newsletter_opt_in),
       };
 
       const body = await packagesAPI.createBooking(pkg.id, payload);
@@ -486,6 +489,21 @@ export default function PackageDetail() {
               placeholder="Tell us about dietary needs, celebrations, accessibility, preferred experiences, or anything else…"
               rows={5}
             />
+          </div>
+
+          <div className="px-5 sm:px-7 py-4 border-t border-emerald-100 bg-emerald-50/50">
+            <label className="flex items-start gap-3 cursor-pointer text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={Boolean(form.newsletter_opt_in)}
+                onChange={(e) => update("newsletter_opt_in", e.target.checked)}
+                className="mt-1 h-4 w-4 accent-emerald-600 flex-shrink-0"
+              />
+              <span>
+                <strong className="block font-semibold text-slate-800">Email me travel inspiration and Altuvera updates (optional)</strong>
+                <small className="block mt-1 text-xs leading-relaxed text-slate-500">Receive relevant new destinations, packages, travel guides, and occasional trip ideas. You can unsubscribe at any time. This does not affect essential booking messages.</small>
+              </span>
+            </label>
           </div>
 
           <div className="pkg-submit-row">
