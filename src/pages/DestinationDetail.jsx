@@ -782,8 +782,8 @@ export default function DestinationDetail() {
               <SH title="Activities" sub={`Things you can experience at ${destination.name}`} />
               <div className="d-facts-grid">
                 {destination.activities.map((activity, index) => {
-                  const label = typeof activity === "string" ? activity : activity?.name || activity?.title || activity?.label || "";
-                  const detail = typeof activity === "object" ? activity?.description || activity?.details : "";
+                  const label = displayText(activity?.name) || displayText(activity?.title) || displayText(activity?.label) || displayText(activity);
+                  const detail = typeof activity === "object" ? (displayText(activity?.description) || displayText(activity?.details)) : "";
                   if (!label) return null;
                   return <article key={`${label}-${index}`} className="d-fact-card"><div className="d-fact-card__icon"><Compass size={18}/></div><div><span>Activity</span><strong style={{whiteSpace:"normal",overflowWrap:"anywhere"}}>{label}</strong>{detail && <p style={{marginTop:6,color:"#64748b",lineHeight:1.6}}>{detail}</p>}</div></article>;
                 })}
@@ -808,7 +808,7 @@ export default function DestinationDetail() {
             <div className="d-wrap">
               <SH title="Suggested itinerary" sub={`Explore ${destination.name} day by day`} />
               <div className="d-deepdive__grid">
-                {destination.itinerary.map((day, index) => <article key={day.id || index} className="d-deepdive__block"><div className="d-deepdive__block-icon"><Calendar size={20}/></div><h3>{day.title || `Day ${day.dayNumber || index + 1}`}</h3>{day.description && <p className="d-deepdive__para">{day.description}</p>}{Array.isArray(day.activities) && day.activities.length > 0 && <p className="d-deepdive__para">{day.activities.join(" · ")}</p>}{day.accommodation && <p className="d-deepdive__para"><strong>Accommodation:</strong> {day.accommodation}</p>}</article>)}
+                {destination.itinerary.map((day, index) => <article key={day.id || index} className="d-deepdive__block"><div className="d-deepdive__block-icon"><Calendar size={20}/></div><h3>{displayText(day.title) || `Day ${day.dayNumber || index + 1}`}</h3>{displayText(day.description) && <p className="d-deepdive__para">{displayText(day.description)}</p>}{Array.isArray(day.activities) && day.activities.length > 0 && <p className="d-deepdive__para">{day.activities.join(" · ")}</p>}{day.accommodation && <p className="d-deepdive__para"><strong>Accommodation:</strong> {day.accommodation}</p>}</article>)}
               </div>
             </div>
           </section>
@@ -819,7 +819,7 @@ export default function DestinationDetail() {
             <div className="d-wrap">
               <SH title="Frequently asked questions" sub={`Helpful answers before visiting ${destination.name}`} />
               <div className="d-deepdive__grid">
-                {destination.faqs.map((faq, index) => <article key={faq.id || index} className="d-deepdive__block"><h3>{faq.question || faq.title || `Question ${index + 1}`}</h3><p className="d-deepdive__para">{faq.answer || faq.description || ""}</p></article>)}
+                {destination.faqs.map((faq, index) => <article key={faq.id || index} className="d-deepdive__block"><h3>{displayText(faq.question) || displayText(faq.title) || `Question ${index + 1}`}</h3><p className="d-deepdive__para">{displayText(faq.answer) || displayText(faq.description)}</p></article>)}
               </div>
             </div>
           </section>
