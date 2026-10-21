@@ -104,7 +104,7 @@ export default function ItineraryDownloadButton({ booking, itinerary }) {
   };
 
   return (
-    <button type="button" onClick={download} disabled={busy} style={{border:"1px solid #a7f3d0",borderRadius:11,padding:"10px 14px",background:"#fff",color:"#047857",fontWeight:800,fontSize:12,cursor:busy?"wait":"pointer",opacity:busy?.7:1}}>
+    <button type="button" onClick={download} disabled={busy} style={{border:"1px solid #a7f3d0",borderRadius:11,padding:"10px 14px",background:"#fff",color:"#047857",fontWeight:800,fontSize:12,cursor:busy?"wait":"pointer",opacity:busy ? 0.7 : 1}}>
       {busy ? <LoaderCircle size={14} className="inline mr-1 animate-spin"/> : <Download size={14} className="inline mr-1"/>}
       {busy ? "Preparing PDF…" : "Download itinerary PDF"}
     </button>
