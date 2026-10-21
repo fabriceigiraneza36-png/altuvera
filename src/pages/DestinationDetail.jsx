@@ -782,8 +782,10 @@ export default function DestinationDetail() {
                   const rawText = isText ? activity.trim() : "";
                   const label = displayText(activity?.name) || displayText(activity?.title) || displayText(activity?.label) || (isText && rawText.length <= 72 ? rawText : "") || "Nature & wildlife experience";
                   const detail = isText ? (rawText.length > 72 ? rawText : "") : (displayText(activity?.description) || displayText(activity?.details) || displayText(activity?.summary));
+                  const activityText = `${label} ${detail}`.toLowerCase();
+                  const ActivityIcon = /bird|chimp|gorilla|wildlife|animal|tracking|safari/.test(activityText) ? Camera : /hike|trek|mountain|trail|walk|climb/.test(activityText) ? Mountain : /culture|community|village|local|people|tradition/.test(activityText) ? Users : /canoe|kayak|boat|lake|river|water|rafting/.test(activityText) ? Route : /nature|forest|canopy|conservation|plant|garden/.test(activityText) ? Leaf : Compass;
                   if (!label && !detail) return null;
-                  return <article key={`${label}-${index}`} className="d-activity-card"><div className="d-activity-card__top"><div className="d-activity-card__icon"><Compass size={21}/></div><div><span className="d-activity-card__eyebrow">Experience {String(index + 1).padStart(2, "0")}</span><h3 className="d-activity-card__title">{label}</h3></div></div>{detail && <p className="d-activity-card__description">{detail}</p>}</article>;
+                  return <article key={`${label}-${index}`} className="d-activity-card"><div className="d-activity-card__top"><div className="d-activity-card__icon"><ActivityIcon size={21}/></div><div><span className="d-activity-card__eyebrow">Experience {String(index + 1).padStart(2, "0")}</span><h3 className="d-activity-card__title">{label}</h3></div></div>{detail && <p className="d-activity-card__description">{detail}</p>}</article>;
                 })}
               </div>
             </div>
