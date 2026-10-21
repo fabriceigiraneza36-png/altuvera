@@ -21,18 +21,34 @@ export default function ConfirmBookingRequest() {
       return;
     }
     fetch(`${API}/bookings/verify-email/${encodeURIComponent(token)}?json=1`, {
-      credentials: "include",
+      method: "GET",
+      // Verification uses a signed one-time token, not a session cookie.
+      // Omitting credentials avoids browser-specific credentialed-CORS failures.
+      credentials: "omit",
+      cache: "no-store",
+      headers: { Accept: "application/json" },
     })
       .then(async r => {
-        const body = await r.json().catch(() => ({}));
-        if (!r.ok || !body.success) throw new Error(body.message || body.error || "Confirmation failed.");
+        const contentType = r.headers.get("content-type") || "";
+        const body = contentType.includes("application/json")
+          ? await r.json().catch(() => ({}))
+          : {};
+        if (!contentType.includes("application/json")) {
+          throw new Error("The confirmation service returned an unexpected response. Please reopen the link or contact Altuvera.");
+        }
+        if (!r.ok || !body.success) {
+          throw new Error(body.message || body.error || `Confirmation failed (HTTP ${r.status}).`);
+        }
         setState("success");
-        setMessage("Your booking request is confirmed. Altuvera can now begin reviewing and planning your trip.");
-        setTimeout(() => navigate(`/booking/verify?status=success&ref=${encodeURIComponent(body.data?.booking_number || "")}`, { replace:true }), 900);
+        setMessage(body.alreadyVerified
+          ? "Your email was already verified. Altuvera can now review your booking request."
+          : "Your booking request email is confirmed. Altuvera can now review and plan your trip.");
+        const reference = body.data?.booking_number || "";
+        setTimeout(() => navigate(`/booking/verify?status=${body.alreadyVerified ? "already_verified" : "success"}&ref=${encodeURIComponent(reference)}`, { replace:true }), 900);
       })
       .catch(e => {
         setState("error");
-        setMessage(e.message || "This confirmation link is invalid or expired.");
+        setMessage(e.message || "This confirmation link is invalid or expired. Please contact Altuvera for help.");
       });
   }, [params, navigate, status]);
 
