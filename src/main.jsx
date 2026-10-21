@@ -132,7 +132,6 @@ const warmPublicData = () => {
     "/testimonials",
     "/tips",
     "/pages",
-    "/virtual-tours",
   ];
 
   const run = () => {
