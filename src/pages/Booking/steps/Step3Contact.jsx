@@ -177,7 +177,7 @@ export default function Step3Contact({ data, set, touch, errors, touched }) {
           <span className="bk-check-box" aria-hidden="true">
             {data.newsletterOptIn && <Check size={13} strokeWidth={3} />}
           </span>
-          <span className="bk-check-txt">Send me safari tips and exclusive offers</span>
+          <span className="bk-check-txt">Email me new destinations, safari tips and occasional offers (optional). Unsubscribe anytime; booking updates are separate.</span>
         </label>
 
         <label className={`bk-check-row bk-check-row--terms${data.agreeToTerms ? " bk-check-row--on" : ""}${touched.agreeToTerms && errors.agreeToTerms ? " bk-check-row--err" : ""}`}>
