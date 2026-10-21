@@ -35,7 +35,6 @@ import CongratulationWindow from "./components/auth/CongratulationWindow";
 import NotLoggedInMessage   from "./components/auth/NotLoggedInMessage";
 import ProtectedRoute       from "./components/auth/ProtectedRoute";
 import PageWrapper          from "./components/common/PageWrapper";
-import BookingVerifyResult  from "./pages/Booking/BookingVerifyResult";
 import ConfirmBookingRequest from "./pages/Booking/ConfirmBookingRequest";
 import WhatsAppButton       from "./components/common/WhatsAppButton";
 import UserNotifications    from "./pages/auth/UserNotifications";
@@ -278,11 +277,6 @@ const publicRoutes = [
     path: "/terms",
     component: React.lazy(() => import("./pages/TermsOfService")),
     meta: { title: "Terms of Service" },
-  },
-  {
-    path: "/booking/verify",
-    component: ConfirmBookingRequest,
-    meta: { title: "Confirm Booking Request", noindex: true },
   },
   {
     path: "/booking/*",
