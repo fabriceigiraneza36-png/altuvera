@@ -17,8 +17,11 @@ const StarRow = ({ rating, size = 14 }) => (
 
 export default function ReviewsSection({ country, reviews, reviewAgg }) {
   if (!reviews.length && !reviewAgg) return null;
-  const total = reviewAgg?.totalReviews || country?.reviewCount || 0;
-  const avg = reviewAgg?.avgRating || country?.rating || 0;
+  const totalValue = reviewAgg?.totalReviews ?? reviewAgg?.total_reviews ?? country?.reviewCount ?? country?.review_count ?? reviews.length;
+  const total = Math.max(0, Number(totalValue) || 0);
+  const avgValue = reviewAgg?.avgRating ?? reviewAgg?.average_rating ?? reviewAgg?.avg_rating ?? country?.average_rating ?? country?.rating;
+  const avgNumber = avgValue == null || avgValue === "" ? null : Number(avgValue);
+  const avg = Number.isFinite(avgNumber) ? avgNumber : null;
   const dist = reviewAgg?.distribution;
   const bars = dist ? [
     { l:"5★",c:dist.fiveStar||0 },{ l:"4★",c:dist.fourStar||0 },
@@ -36,8 +39,8 @@ export default function ReviewsSection({ country, reviews, reviewAgg }) {
           <AnimatedSection animation="fadeInUp" delay={0.1}>
             <div className="cpx-rev-agg">
               <div className="cpx-rev-agg__score">
-                <span className="cpx-rev-agg__num">{Number(avg).toFixed(1)}</span>
-                <StarRow rating={avg} size={20} />
+                <span className="cpx-rev-agg__num">{avg == null || total === 0 ? "New" : avg.toFixed(1)}</span>
+                <StarRow rating={avg ?? 0} size={20} />
                 <span className="cpx-rev-agg__total">{total.toLocaleString()} reviews</span>
               </div>
               {bars.length > 0 && (
