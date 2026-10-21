@@ -328,7 +328,7 @@ export default function DestinationDetail() {
   };
 
   if (loading) {
-    return <AltuveraLoader title="Discovering this destination" message="We’re bringing its landscapes, wildlife and unforgettable experiences into view." />;
+    return <AltuveraLoader bareLogo title="Discovering this destination" message="We’re bringing its landscapes, wildlife and unforgettable experiences into view." />;
   }
 
   if (error || !destination) {
