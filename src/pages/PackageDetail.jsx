@@ -501,7 +501,7 @@ export default function PackageDetail() {
               />
               <span>
                 <strong className="block font-semibold text-slate-800">Email me travel inspiration and Altuvera updates (optional)</strong>
-                <small className="block mt-1 text-xs leading-relaxed text-slate-500">Receive relevant new destinations, packages, travel guides, and occasional trip ideas. You can unsubscribe at any time. This does not affect essential booking messages.</small>
+                <small className="block mt-1 text-xs leading-relaxed text-slate-500">Receive relevant new destinations, packages, travel guides, and occasional trip ideas. You can unsubscribe at any time; essential booking updates are sent separately.</small>
               </span>
             </label>
           </div>
