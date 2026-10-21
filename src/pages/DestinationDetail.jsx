@@ -780,12 +780,14 @@ export default function DestinationDetail() {
           <section className="d-sec d-sec--soft">
             <div className="d-wrap">
               <SH title="Activities" sub={`Things you can experience at ${destination.name}`} />
-              <div className="d-facts-grid">
+              <div className="d-activities-grid">
                 {destination.activities.map((activity, index) => {
-                  const label = displayText(activity?.name) || displayText(activity?.title) || displayText(activity?.label) || displayText(activity);
-                  const detail = typeof activity === "object" ? (displayText(activity?.description) || displayText(activity?.details)) : "";
-                  if (!label) return null;
-                  return <article key={`${label}-${index}`} className="d-fact-card"><div className="d-fact-card__icon"><Compass size={18}/></div><div><span>Activity</span><strong style={{whiteSpace:"normal",overflowWrap:"anywhere"}}>{label}</strong>{detail && <p style={{marginTop:6,color:"#64748b",lineHeight:1.6}}>{detail}</p>}</div></article>;
+                  const isText = typeof activity === "string";
+                  const rawText = isText ? activity.trim() : "";
+                  const label = displayText(activity?.name) || displayText(activity?.title) || displayText(activity?.label) || (isText && rawText.length <= 72 ? rawText : "") || "Nature & wildlife experience";
+                  const detail = isText ? (rawText.length > 72 ? rawText : "") : (displayText(activity?.description) || displayText(activity?.details) || displayText(activity?.summary));
+                  if (!label && !detail) return null;
+                  return <article key={`${label}-${index}`} className="d-activity-card"><div className="d-activity-card__top"><div className="d-activity-card__icon"><Compass size={21}/></div><div><span className="d-activity-card__eyebrow">Experience {String(index + 1).padStart(2, "0")}</span><h3 className="d-activity-card__title">{label}</h3></div></div>{detail && <p className="d-activity-card__description">{detail}</p>}</article>;
                 })}
               </div>
             </div>
