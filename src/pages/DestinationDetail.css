@@ -3875,3 +3875,30 @@ html { scroll-behavior: smooth; }
 @media (max-width: 900px) { .d-activities-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; } }
 @media (max-width: 560px) { .d-activities-grid { grid-template-columns: minmax(0, 1fr); gap: 13px; } .d-activity-card { padding: 19px; border-radius: 18px; gap: 12px; } .d-activity-card__description { font-size: .88rem; } }
 @media (prefers-reduced-motion: reduce) { .d-activity-card { transition: none; } .d-activity-card:hover { transform: none; } }
+
+
+/* Signature experiences: image-led horizontal snap carousel, touch and keyboard friendly. */
+.d-experience-carousel { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(270px, 31%); gap: 20px; width: 100%; margin-top: 28px; padding: 8px 3px 22px; overflow-x: auto; overflow-y: hidden; overscroll-behavior-inline: contain; scroll-snap-type: x mandatory; scroll-padding-inline: 4px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: thin; scrollbar-color: #86c99d #eaf6ee; }
+.d-experience-carousel:focus-visible { outline: 2px solid #15803d; outline-offset: 4px; border-radius: 16px; }
+.d-experience-card { min-width: 0; overflow: hidden; border: 1px solid #deeee3; border-radius: 22px; background: #fff; box-shadow: 0 10px 28px rgba(5,46,22,.07); scroll-snap-align: start; scroll-snap-stop: normal; animation: dExperienceEnter .6s both; animation-delay: calc(min(var(--experience-index, 0), 8) * 55ms); transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease; }
+.d-experience-card:hover { transform: translateY(-4px); border-color: #a7dfb8; box-shadow: 0 18px 36px rgba(5,46,22,.13); }
+.d-experience-card__image-wrap { position: relative; height: 190px; overflow: hidden; background: #e5f3e9; }
+.d-experience-card__image { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .65s cubic-bezier(.2,.7,.2,1); }
+.d-experience-card:hover .d-experience-card__image { transform: scale(1.055); }
+.d-experience-card__image-wrap::after { content: ''; position: absolute; inset: 35% 0 0; background: linear-gradient(180deg, transparent, rgba(4,32,17,.42)); pointer-events: none; }
+.d-experience-card__number { position: absolute; z-index: 1; top: 13px; left: 13px; display: grid; place-items: center; width: 37px; height: 37px; border: 1px solid rgba(255,255,255,.6); border-radius: 12px; background: rgba(255,255,255,.9); color: #14532d; font-size: .78rem; font-weight: 800; backdrop-filter: blur(8px); }
+.d-experience-card__tag { position: absolute; z-index: 1; left: 13px; bottom: 13px; display: inline-flex; align-items: center; gap: 6px; padding: 7px 10px; border: 1px solid rgba(255,255,255,.35); border-radius: 999px; color: white; background: rgba(5,46,22,.55); font-size: .7rem; font-weight: 700; backdrop-filter: blur(8px); }
+.d-experience-card__body { display: flex; flex-direction: column; min-height: 190px; padding: 19px 20px 16px; }
+.d-experience-card__body h3 { margin: 0 0 9px; color: #123c25; font-size: 1.08rem; line-height: 1.35; font-weight: 800; overflow-wrap: anywhere; }
+.d-experience-card__body p { display: -webkit-box; margin: 0; overflow: hidden; color: #5b6f62; font-size: .86rem; line-height: 1.65; overflow-wrap: anywhere; -webkit-box-orient: vertical; -webkit-line-clamp: 4; }
+.d-experience-card__footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: auto; padding-top: 16px; color: #267344; font-size: .76rem; font-weight: 700; }
+.d-experience-card__footer > span:first-child { display: inline-flex; align-items: center; gap: 7px; }
+.d-experience-card__arrow { display: grid; place-items: center; width: 31px; height: 31px; flex: 0 0 31px; border-radius: 50%; background: #e8f8ed; }
+.d-experience-note { display: flex; align-items: center; gap: 8px; margin: 2px 0 0; color: #64776b; font-size: .8rem; line-height: 1.6; }
+.d-experience-note svg { flex: 0 0 auto; color: #27804a; }
+@keyframes dExperienceEnter { from { opacity: 0; transform: translateY(16px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@media (min-width: 1200px) { .d-experience-carousel { grid-auto-columns: minmax(280px, 28%); gap: 22px; } .d-experience-card__image-wrap { height: 205px; } }
+@media (max-width: 900px) { .d-experience-carousel { grid-auto-columns: minmax(265px, 43%); gap: 16px; } .d-experience-card__image-wrap { height: 180px; } }
+@media (max-width: 600px) { .d-experience-carousel { grid-auto-columns: minmax(0, 84%); gap: 13px; margin-top: 20px; padding: 5px 2px 18px; scroll-padding-inline: 2px; } .d-experience-card { border-radius: 19px; } .d-experience-card__image-wrap { height: 185px; } .d-experience-card__body { min-height: 175px; padding: 16px; } .d-experience-card__body p { -webkit-line-clamp: 4; font-size: .84rem; } }
+@media (max-width: 360px) { .d-experience-carousel { grid-auto-columns: 90%; } .d-experience-card__image-wrap { height: 165px; } }
+@media (prefers-reduced-motion: reduce) { .d-experience-carousel { scroll-behavior: auto; } .d-experience-card, .d-experience-card__image { animation: none !important; transition: none !important; } }
