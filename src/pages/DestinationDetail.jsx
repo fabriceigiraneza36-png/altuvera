@@ -662,7 +662,7 @@ export default function DestinationDetail() {
                     key={img.url}
                     type="button"
                     className={`d-gal-cell ${index === 0 ? "d-gal-cell--wide" : ""}`}
-                    onClick={() => { setLightboxIndex(index); setLightboxZoom(1); setLightboxControlsVisible(false); }}
+                    onClick={() => { setLightboxIndex(index); setLightboxZoom(1); setLightboxControlsVisible(true); }}
                     aria-label={`Open ${destination.name} attraction photo ${index + 1}`}
                   >
                     <img src={img.url} alt={img.caption || `${destination.name} gallery image ${index + 1}`} loading="lazy" />
