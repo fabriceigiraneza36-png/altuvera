@@ -454,7 +454,6 @@ export const adaptDestination = (raw) => {
     thumbnailUrl:  raw.thumbnailUrl  || raw.thumbnail_url || images[0] || null,
     coverImageUrl:  raw.coverImageUrl || raw.cover_image_url || null,
     videoUrl:      raw.videoUrl      || null,
-    virtualTourUrl:raw.virtualTourUrl || null,
     likesCount:    toNum(raw.likesCount ?? raw.likes_count, 0),
     commentsCount: toNum(raw.commentsCount ?? raw.comments_count, 0),
 

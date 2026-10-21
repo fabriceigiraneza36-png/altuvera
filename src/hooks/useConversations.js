@@ -194,7 +194,8 @@ export function useConversations() {
       auth: token ? { token } : {},
       transports: ["websocket", "polling"],
       reconnection: true,
-      reconnectionAttempts: 6,
+      reconnectionAttempts: Infinity,
+      reconnectionDelayMax: 30_000,
       reconnectionDelay: 1_000,
     });
     socketRef.current = s;

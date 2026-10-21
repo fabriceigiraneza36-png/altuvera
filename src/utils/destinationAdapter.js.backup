@@ -378,7 +378,6 @@ export const adaptDestination = (raw) => {
     heroImage:     raw.heroImage     || raw.hero_image || null,
     thumbnailUrl:  raw.thumbnailUrl  || raw.thumbnail_url || null,
     videoUrl:      raw.videoUrl      || null,
-    virtualTourUrl:raw.virtualTourUrl || null,
     likesCount:    toNum(raw.likesCount ?? raw.likes_count, 0),
     commentsCount: toNum(raw.commentsCount ?? raw.comments_count, 0),
 

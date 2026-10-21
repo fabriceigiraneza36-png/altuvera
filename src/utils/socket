@@ -98,7 +98,7 @@ export const connectSocket = (token, options = {}) => {
 
     // Reconnection strategy
     reconnection: true,
-    reconnectionAttempts: 8,
+    reconnectionAttempts: Infinity,
     reconnectionDelay: 1_000,
     reconnectionDelayMax: 30_000,
     randomizationFactor: 0.5,
