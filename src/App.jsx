@@ -1024,7 +1024,7 @@ useEffect(injectAppStyles, []);
         />
 
         {/* ── Booking email verification ── */}
-        <Route path="/booking/verify" element={<BookingVerifyResult />} />
+        <Route path="/booking/verify" element={<ConfirmBookingRequest />} />
 
         {/* ── Main shell (Navbar + Footer) ── */}
         <Route element={<AppLayout />}>
