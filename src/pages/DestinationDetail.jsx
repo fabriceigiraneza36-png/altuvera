@@ -558,33 +558,6 @@ export default function DestinationDetail() {
                     </div>
                   </Reveal>
                 )}
-                {destination.shortDescription && destination.shortDescription !== description && (
-                  <Reveal from="left" delay={90}>
-                    <div className="d-prose">
-                      <h3>In brief</h3>
-                      {destination.shortDescription.split("\n\n").filter(Boolean).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
-                    </div>
-                  </Reveal>
-                )}
-                {destination.overview && destination.overview !== description && (
-                  <Reveal from="left" delay={120}>
-                    <div className="d-prose">
-                      <h3>Destination overview</h3>
-                      {destination.overview.split("\n\n").filter(Boolean).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
-                    </div>
-                  </Reveal>
-                )}
-
-                <Reveal from="bottom" delay={180}>
-                  <div className="d-about__book-row">
-                    <button className="d-btn d-btn--emerald" onClick={() => navigate(`/booking?destination=${destination.slug}`)}>
-                      <Ic n="calendar" size={15} /> Reserve Your Spot
-                    </button>
-                    <button className="d-btn d-btn--outline" onClick={() => navigate("/contact")}>
-                      <Ic n="mail" size={15} /> Send Enquiry
-                    </button>
-                  </div>
-                </Reveal>
               </div>
 
               <aside className="d-about__aside">
@@ -600,6 +573,34 @@ export default function DestinationDetail() {
                   </Reveal>
                 )}
               </aside>
+            </div>
+            <div className="d-about__additional-copy">
+              {destination.shortDescription && destination.shortDescription !== description && (
+                <Reveal from="left" delay={90}>
+                  <div className="d-prose">
+                    <h3>In brief</h3>
+                    {destination.shortDescription.split("\n\n").filter(Boolean).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+                  </div>
+                </Reveal>
+              )}
+              {destination.overview && destination.overview !== description && (
+                <Reveal from="left" delay={120}>
+                  <div className="d-prose">
+                    <h3>Destination overview</h3>
+                    {destination.overview.split("\n\n").filter(Boolean).map((paragraph, index) => <p key={index}>{paragraph}</p>)}
+                  </div>
+                </Reveal>
+              )}
+              <Reveal from="bottom" delay={180}>
+                <div className="d-about__book-row">
+                  <button className="d-btn d-btn--emerald" onClick={() => navigate(`/booking?destination=${destination.slug}`)}>
+                    <Ic n="calendar" size={15} /> Reserve Your Spot
+                  </button>
+                  <button className="d-btn d-btn--outline" onClick={() => navigate("/contact")}>
+                    <Ic n="mail" size={15} /> Send Enquiry
+                  </button>
+                </div>
+              </Reveal>
             </div>
           </div>
         </section>
