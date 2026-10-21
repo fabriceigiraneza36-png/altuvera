@@ -995,17 +995,25 @@ const {
    const normalizedRating = ratingValue == null || ratingValue === ""
      ? null
      : Number(ratingValue);
-   const rating = Number.isFinite(normalizedRating) ? normalizedRating : null;
    const reviewCountValue = destination.review_count
      ?? destination.reviewCount
      ?? destination.total_reviews
      ?? destination.totalReviews
      ?? destination.reviews_count
      ?? sourceReviewCount
-     ?? 0;
+     ?? (Array.isArray(destination.reviews) ? destination.reviews.length : 0);
    const reviewCount = Array.isArray(reviewCountValue)
      ? reviewCountValue.length
      : Math.max(0, Number(reviewCountValue) || 0);
+   // Only show a numeric rating when it is in range and supported by reviews.
+   // APIs often send average_rating: 0 for an empty aggregate; that means unrated,
+   // not a genuine zero-star score.
+   const rating = Number.isFinite(normalizedRating)
+     && normalizedRating >= 0
+     && normalizedRating <= 5
+     && (reviewCount > 0 || normalizedRating > 0)
+     ? normalizedRating
+     : null;
 
    // Clean unwanted text from description fields
    const cleanText = (text) => {
