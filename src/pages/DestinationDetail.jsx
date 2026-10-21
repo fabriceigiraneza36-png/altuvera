@@ -25,8 +25,23 @@ import {
 } from "lucide-react";
 import { useDestination } from "../hooks/useDestinations";
 import "./DestinationDetail.css";
+import AltuveraLoader from "../components/common/AltuveraLoader";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://api.altuverasafaris.com";
+
+const displayText = (value, fallback = "") => {
+  if (typeof value === "string" || typeof value === "number") return String(value);
+  if (Array.isArray(value)) return value.map((item) => displayText(item)).filter(Boolean).join(", ") || fallback;
+  if (value && typeof value === "object") {
+    for (const key of ["name", "title", "label", "description", "slug"]) {
+      const candidate = value[key];
+      if ((typeof candidate === "string" || typeof candidate === "number") && String(candidate).trim()) return String(candidate);
+    }
+  }
+  return fallback;
+};
+
+
 
 const resolveImageUrl = (url) => {
   if (!url || typeof url !== "string") return "";
@@ -313,13 +328,7 @@ export default function DestinationDetail() {
   };
 
   if (loading) {
-    return (
-      <div className="d-page">
-        <div className="d-wrap" style={{ padding: "64px 24px" }}>
-          <p>Loading destination…</p>
-        </div>
-      </div>
-    );
+    return <AltuveraLoader title="Discovering this destination" message="We’re bringing its landscapes, wildlife and unforgettable experiences into view." />;
   }
 
   if (error || !destination) {
@@ -371,7 +380,7 @@ export default function DestinationDetail() {
       .filter((img) => img?.url)
       .map((img) => [img.url, img])
   ).values()];
-  const highlights = Array.isArray(destination.highlights) ? destination.highlights : [];
+  const highlights = Array.isArray(destination.highlights) ? destination.highlights.map((item) => displayText(item)).filter(Boolean) : [];
   const countryInfo = destination.countryObj || destination.country || {};
 
   const seoTitle = `${destination.name} Safari & Travel Guide | Altuvera Safaris`;
@@ -788,7 +797,7 @@ export default function DestinationDetail() {
             <div className="d-wrap">
               <SH title="Wildlife & nature" sub={`Nature highlights around ${destination.name}`} />
               <div className="d-chips" style={{display:"flex",flexWrap:"wrap",gap:10}}>
-                {destination.wildlife.map((item, index) => <span key={index} className="d-chip" style={{display:"inline-flex",padding:"9px 13px",borderRadius:999,background:"#ecfdf5",border:"1px solid #a7f3d0",color:"#065f46",whiteSpace:"normal"}}>{typeof item === "string" ? item : item?.name || item?.title || JSON.stringify(item)}</span>)}
+                {destination.wildlife.map((item, index) => <span key={index} className="d-chip" style={{display:"inline-flex",padding:"9px 13px",borderRadius:999,background:"#ecfdf5",border:"1px solid #a7f3d0",color:"#065f46",whiteSpace:"normal"}}>{displayText(item, "Wildlife highlight")}</span>)}
               </div>
             </div>
           </section>
@@ -825,7 +834,7 @@ export default function DestinationDetail() {
 
               <div className="d-exp-grid">
                 {attractions.map((attraction, index) => {
-                  const name = attraction.name || attraction.title || attraction || "Attraction";
+                  const name = displayText(attraction?.name) || displayText(attraction?.title) || displayText(attraction, "Attraction");
                   const image =
                     attraction.imageUrl ||
                     attraction.image_url ||
@@ -848,7 +857,7 @@ export default function DestinationDetail() {
                           <img src={image} alt={String(name)} loading="lazy" />
                           <div className="d-exp-card__overlay">
                             <h4 className="d-exp-card__ov-title">{name}</h4>
-                            <p className="d-exp-card__ov-desc">{attraction.description || `Explore ${name}.`}</p>
+                            <p className="d-exp-card__ov-desc">{displayText(attraction?.description) || `Explore ${name}.`}</p>
                             <div className="d-exp-card__ov-actions">
                               <Link className="d-btn d-btn--white" to={`/destinations/${destination.slug}/attractions/${slug}`}>
                                 Learn more
