@@ -3931,3 +3931,19 @@ html { scroll-behavior: smooth; }
 .d-about__additional-copy { display: block; width: 100%; max-width: none; margin-top: 28px; }
 .d-about__additional-copy .d-prose { width: 100%; max-width: none; }
 .d-about__additional-copy .d-prose p { max-width: none; }
+
+
+/* Let destination paragraphs flow beside the unchanged image card, then expand beneath it. */
+.d-about { display: block !important; min-width: 0; }
+.d-about__aside { float: right; display: block; width: min(44%, 400px); margin: 0 0 22px 30px; position: static !important; }
+.d-about__main { display: block; width: auto; min-width: 0; }
+.d-about__main .d-prose, .d-about__additional-copy, .d-about__additional-copy .d-prose { width: auto; max-width: none; }
+.d-about__additional-copy { margin-top: 22px; }
+.d-about__aside::after { content: ""; display: table; clear: both; }
+@media (max-width: 640px) {
+  .d-about__aside { width: min(46%, 260px); margin: 0 0 16px 16px; }
+  .d-about__title { font-size: clamp(1.55rem, 6vw, 2rem); }
+}
+@media (max-width: 380px) {
+  .d-about__aside { width: 42%; margin-left: 12px; }
+}
