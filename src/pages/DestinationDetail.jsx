@@ -556,20 +556,6 @@ export default function DestinationDetail() {
                     </div>
                   </Reveal>
                 )}
-                <div className="d-about-mini-facts" aria-label="Destination highlights">
-                  <article className="d-about-mini-fact">
-                    <span className="d-about-mini-fact__icon"><Clock3 size={15} /></span>
-                    <span className="d-about-mini-fact__copy"><small>Duration</small><strong>{destination.durationDays ? `${destination.durationDays} days` : destination.duration || "Flexible"}</strong></span>
-                  </article>
-                  <article className="d-about-mini-fact">
-                    <span className="d-about-mini-fact__icon"><Calendar size={15} /></span>
-                    <span className="d-about-mini-fact__copy"><small>Best time</small><strong>{destination.bestTimeToVisit || "Year-round"}</strong></span>
-                  </article>
-                  <article className="d-about-mini-fact">
-                    <span className="d-about-mini-fact__icon"><Compass size={15} /></span>
-                    <span className="d-about-mini-fact__copy"><small>Experience</small><strong>{destination.destinationType || "Safari & discovery"}</strong></span>
-                  </article>
-                </div>
               </aside>
               <div className="d-about__main">
                 <Reveal from="left">
@@ -585,6 +571,21 @@ export default function DestinationDetail() {
                     </div>
                   </Reveal>
                 )}
+
+                <div className="d-about-mini-facts" aria-label="Destination highlights">
+                  <article className="d-about-mini-fact">
+                    <span className="d-about-mini-fact__icon"><Clock3 size={15} /></span>
+                    <span className="d-about-mini-fact__copy"><small>Duration</small><strong>{destination.durationDays ? `${destination.durationDays} days` : destination.duration || "Flexible"}</strong></span>
+                  </article>
+                  <article className="d-about-mini-fact">
+                    <span className="d-about-mini-fact__icon"><Calendar size={15} /></span>
+                    <span className="d-about-mini-fact__copy"><small>Best time</small><strong>{destination.bestTimeToVisit || "Year-round"}</strong></span>
+                  </article>
+                  <article className="d-about-mini-fact">
+                    <span className="d-about-mini-fact__icon"><Compass size={15} /></span>
+                    <span className="d-about-mini-fact__copy"><small>Experience</small><strong>{destination.destinationType || "Safari & discovery"}</strong></span>
+                  </article>
+                </div>
 
             <div className="d-about__additional-copy">
               {destination.shortDescription && destination.shortDescription !== description && (
