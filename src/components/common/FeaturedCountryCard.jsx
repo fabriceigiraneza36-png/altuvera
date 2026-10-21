@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { MapPin, Star } from 'lucide-react';
 
 /**
  * FeaturedCountryCard - A beautifully designed card for featured countries
@@ -37,6 +38,11 @@ export default function FeaturedCountryCard({ destination }) {
     'Discover breathtaking landscapes, rich cultural heritage, and unforgettable adventures in this stunning destination.';
   const slug = destination.slug || destination.id || destination.name?.toLowerCase().replace(/\s+/g, '-');
   const countrySlug = destination.countrySlug || destination.slug || destination.id || slug;
+  const ratingValue = destination.average_rating ?? destination.averageRating ?? destination.rating;
+  const parsedRating = ratingValue == null || ratingValue === '' ? null : Number(ratingValue);
+  const rating = Number.isFinite(parsedRating) ? parsedRating : null;
+  const countValue = destination.review_count ?? destination.reviewCount ?? destination.total_reviews ?? destination.totalReviews ?? 0;
+  const reviewCount = Math.max(0, Number(countValue) || 0);
 
   return (
     <div className="featured-country-card-wrapper" style={{ height: '100%' }}>
@@ -243,8 +249,11 @@ export default function FeaturedCountryCard({ destination }) {
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
                 marginBottom: '0.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
               }}>
-                Location
+                <MapPin size={13} aria-hidden="true" /> Location
               </p>
               <p style={{
                 fontWeight: 600,
@@ -269,8 +278,11 @@ export default function FeaturedCountryCard({ destination }) {
                 textTransform: 'uppercase',
                 letterSpacing: '0.05em',
                 marginBottom: '0.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem',
               }}>
-                Rating
+                <Star size={13} aria-hidden="true" /> Traveler rating
               </p>
               <p style={{
                 fontWeight: 600,
@@ -280,7 +292,7 @@ export default function FeaturedCountryCard({ destination }) {
                 alignItems: 'center',
                 gap: '4px',
               }}>
-                <span style={{ color: '#F59E0B' }}>★</span> 5.0
+                {rating == null || reviewCount === 0 ? <span style={{ fontWeight: 500, color: '#6B7280' }}>Not rated yet</span> : <><span style={{ color: '#F59E0B' }}>★</span> {rating.toFixed(1)} <span style={{ fontWeight: 400, color: '#6B7280', fontSize: '0.75rem' }}>({reviewCount} {reviewCount === 1 ? 'review' : 'reviews'})</span></>}
               </p>
             </div>
           </div>
