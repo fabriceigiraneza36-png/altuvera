@@ -788,6 +788,11 @@ function NewConvModal({ onClose, onCreated, existingConversation = null }) {
       return;
     }
     const validDestination = matchedDestination || selectedDestination;
+    if (existingConversation && !validDestination) {
+      setError("Choose a destination from the live suggestions to update this conversation.");
+      setDestinationPickerOpen(true);
+      return;
+    }
     setError(""); setCreating(true);
     try {
       const res = existingConversation
