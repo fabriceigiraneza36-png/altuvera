@@ -3902,3 +3902,12 @@ html { scroll-behavior: smooth; }
 @media (max-width: 600px) { .d-experience-carousel { grid-auto-columns: minmax(0, 84%); gap: 13px; margin-top: 20px; padding: 5px 2px 18px; scroll-padding-inline: 2px; } .d-experience-card { border-radius: 19px; } .d-experience-card__image-wrap { height: 185px; } .d-experience-card__body { min-height: 175px; padding: 16px; } .d-experience-card__body p { -webkit-line-clamp: 4; font-size: .84rem; } }
 @media (max-width: 360px) { .d-experience-carousel { grid-auto-columns: 90%; } .d-experience-card__image-wrap { height: 165px; } }
 @media (prefers-reduced-motion: reduce) { .d-experience-carousel { scroll-behavior: auto; } .d-experience-card, .d-experience-card__image { animation: none !important; transition: none !important; } }
+
+
+/* Prevent legacy one-paragraph activity records from creating tall, narrow cards. */
+.d-activities-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); }
+.d-activity-card { width: 100%; min-height: 0; align-items: stretch; }
+.d-activity-card__top > div:last-child { min-width: 0; }
+.d-activity-card__title { margin: 0; }
+.d-activity-card__description { display: -webkit-box; max-width: 68ch; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 6; }
+@media (max-width: 640px) { .d-activities-grid { grid-template-columns: minmax(0, 1fr); } .d-activity-card__description { -webkit-line-clamp: 7; } }
