@@ -1001,6 +1001,7 @@ const {
      ?? destination.total_reviews
      ?? destination.totalReviews
      ?? destination.reviews_count
+     ?? sourceReviewCount
      ?? 0;
    const reviewCount = Array.isArray(reviewCountValue)
      ? reviewCountValue.length
