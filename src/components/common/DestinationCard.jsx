@@ -972,8 +972,8 @@ const {
      region,
      duration,
      durationDays,
-     rating,
-     reviewCount,
+     rating: sourceRating,
+     reviewCount: sourceReviewCount,
      highlights       = [],
      shortDescription,
      description,
@@ -991,7 +991,7 @@ const {
    // A destination with no submitted ratings should read "New", not "0.0".
    const ratingValue = destination.average_rating
      ?? destination.averageRating
-     ?? rating;
+     ?? sourceRating;
    const normalizedRating = ratingValue == null || ratingValue === ""
      ? null
      : Number(ratingValue);
