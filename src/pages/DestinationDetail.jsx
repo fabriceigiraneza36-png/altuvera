@@ -600,6 +600,8 @@ export default function DestinationDetail() {
                 </div>
               </Reveal>
             </div>
+              </div>
+            </div>
           </div>
         </section>
 
