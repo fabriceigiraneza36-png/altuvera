@@ -3593,3 +3593,21 @@
 @media(prefers-reduced-motion:reduce){
   .mm__profile-avatar-frame:before,.mm__account-avatar-wrap:before{animation:none!important}
 }
+
+
+/* Brand mark clarity: keep the complete navbar logo legible on small screens. */
+.nav__logo { gap: 9px; min-width: 0; }
+.nav__logo-img-wrapper { width: 60px; height: 56px; overflow: visible; }
+.nav__logo-img { display: block; object-fit: contain; transform: scale(1.12); transform-origin: center; filter: drop-shadow(0 2px 5px rgba(0,0,0,.12)); }
+.nav--scrolled .nav__logo-img-wrapper { width: 56px; height: 52px; }
+.nav__logo-text { font-size: clamp(18px, 1.8vw, 23px); letter-spacing: -.45px; }
+@media (max-width: 760px) {
+  .nav__logo { gap: 7px; }
+  .nav__logo-img-wrapper, .nav--scrolled .nav__logo-img-wrapper { width: 50px; height: 46px; }
+  .nav__logo-img { transform: scale(1.15); }
+  .nav__logo-text { display: inline; font-size: 16px; letter-spacing: -.3px; }
+}
+@media (max-width: 380px) {
+  .nav__logo-img-wrapper, .nav--scrolled .nav__logo-img-wrapper { width: 43px; height: 42px; }
+  .nav__logo-text { font-size: 15px; }
+}
