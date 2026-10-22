@@ -1678,3 +1678,73 @@
 
 .am-mobile-only { display: flex; }
 @media (min-width: 640px) { .am-mobile-only { display: none; } }
+
+/* Responsive verification modal refinements */
+.am-verify-hero-icon {
+  box-shadow: 0 10px 26px rgba(5, 150, 105, 0.10);
+  border: 1px solid rgba(16, 185, 129, 0.16);
+  animation: am-verify-pop 420ms cubic-bezier(.2,.8,.2,1) both;
+}
+.am-verify-email-chip {
+  max-width: 100%;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  box-shadow: 0 2px 8px rgba(17,24,39,.035);
+}
+.am-verify-code-row {
+  width: 100%;
+  max-width: 100%;
+  align-items: center;
+  touch-action: manipulation;
+}
+.am-verify-digit {
+  width: clamp(2.25rem, 11vw, 2.85rem);
+  height: clamp(2.75rem, 13vw, 3.4rem);
+  flex: 0 1 2.85rem;
+  min-width: 0;
+  padding: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  caret-color: var(--am-green-600);
+}
+.am-verify-digit:focus-visible {
+  outline: 3px solid rgba(16,185,129,.22);
+  outline-offset: 2px;
+}
+.am-verify-utility-btn {
+  min-height: 40px;
+  box-shadow: 0 1px 2px rgba(17,24,39,.04);
+}
+.am-verify-utility-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 14px rgba(17,24,39,.07);
+}
+.am-verify-inline-error {
+  padding: 10px 12px;
+  border: 1px solid var(--am-red-200);
+  border-radius: 12px;
+  background: var(--am-red-50);
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  animation: am-slideDown 180ms ease-out both;
+}
+@keyframes am-verify-pop {
+  from { opacity: 0; transform: translateY(5px) scale(.94); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (max-width: 360px) {
+  .am-verify-form { gap: 14px; }
+  .am-verify-code-row { gap: 5px; }
+  .am-verify-digit {
+    width: min(12.5vw, 2.35rem);
+    height: 2.8rem;
+    font-size: 1.15rem;
+    border-radius: 9px;
+  }
+  .am-verify-email-chip { padding: 8px 10px; font-size: 12px; }
+  .am-verify-utility-btn { flex: 1 1 120px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .am-verify-hero-icon, .am-verify-inline-error { animation: none !important; }
+  .am-verify-utility-btn { transition: none !important; }
+}
