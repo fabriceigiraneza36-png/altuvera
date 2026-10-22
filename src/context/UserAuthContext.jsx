@@ -530,7 +530,7 @@ export function UserAuthProvider({ children }) {
   const isAuthenticated  = useMemo(() => !!user && !!token, [user, token]);
 
   const hasGooglePending = useMemo(
-    () => !!googleUser?.email && !!googleUser?.credential,
+    () => !!googleUser?.email && (!!googleUser?.credential || (googleUser?.provider === "github" && !!googleUser?.profileToken)),
     [googleUser],
   );
 
@@ -1327,6 +1327,25 @@ export function UserAuthProvider({ children }) {
 
   const completeGoogleSignUp = useCallback(async (profileData = {}) => {
     const pending = googleUser || store.getJSON(KEYS.GOOGLE_PENDING);
+    if (pending?.provider === "github" && pending?.profileToken) {
+      const data = await authFetch("/users/github/signup-complete", {
+        method: "POST",
+        body: JSON.stringify({
+          profileToken: pending.profileToken,
+          fullName: trim(profileData?.fullName || pending.name),
+          phone: trim(profileData?.phone),
+          residenceCountry: trim(profileData?.residenceCountry),
+          preferredLanguage: trim(profileData?.preferredLanguage),
+          travelStyles: Array.isArray(profileData?.travelStyles) ? profileData.travelStyles : [],
+        }),
+      });
+      saveAuth(data, { persist: persistSession });
+      setGoogleUser(null);
+      store.remove(KEYS.GOOGLE_PENDING);
+      closeModal();
+      triggerCongratulation("signup");
+      return data;
+    }
     if (!pending?.credential) {
       throw new Error(
         "Google authentication required. Please sign in with Google first.",
@@ -1414,8 +1433,21 @@ export function UserAuthProvider({ children }) {
         }),
       });
 
-      const { token: tok } = extractPayload(data);
-      if (!tok)
+      const payload = extractPayload(data);
+      if (payload?.requiresProfile && payload?.profileToken) {
+        const pending = {
+          provider: "github",
+          profileToken: payload.profileToken,
+          email: payload.githubProfile?.email || "",
+          name: payload.githubProfile?.name || "",
+          picture: payload.githubProfile?.avatar || "",
+        };
+        setGoogleUser(pending);
+        store.setJSON(KEYS.GOOGLE_PENDING, pending);
+        openModal("register");
+        return { ...data, requiresProfile: true, githubUser: pending };
+      }
+      if (!payload?.token)
         throw new Error("GitHub authentication did not return a valid session.");
 
       saveAuth(data, { persist: persistSession });
@@ -1442,7 +1474,7 @@ export function UserAuthProvider({ children }) {
     } finally {
       setGithubLoading(false);
     }
-  }, [authFetch, closeModal, persistSession, saveAuth, triggerCongratulation]);
+  }, [authFetch, closeModal, openModal, persistSession, saveAuth, triggerCongratulation]);
 
   const startGithubAuth = useCallback((mode = "signin") => {
     if (!GITHUB_CLIENT_ID) {

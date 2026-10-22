@@ -707,7 +707,7 @@ export default function AuthModal() {
       }));
       setSignUpStep(2);
       setAuthMethod("google");
-      setSuccess("Google account connected! Complete your profile.");
+      setSuccess(`${googleUser.provider === "github" ? "GitHub" : "Google"} account connected! Complete your profile.`);
     }
   }, [googleUser, isRegister]);
 
@@ -994,22 +994,16 @@ export default function AuthModal() {
         await completeGoogleSignUp({
           fullName: form.fullName.trim(),
           phone: form.phone.trim(),
-          bio: form.bio.trim(),
-          role: form.role,
           avatar,
-          dateOfBirth: form.dateOfBirth,
-          nationality: form.nationality,
           residenceCountry: form.residenceCountry,
           preferredLanguage: form.preferredLanguage,
-          profession: form.profession,
           travelStyles: form.travelStyles,
         });
         setSuccess("Account created! Welcome to Altuvera.");
       } else {
         await register({
           email: form.email.trim(), fullName: form.fullName.trim(),
-          phone: form.phone.trim(), bio: form.bio.trim(),
-          role: form.role, avatar, persistSession: form.keepSignedIn,
+          phone: form.phone.trim(), avatar, persistSession: form.keepSignedIn,
         });
         startExpiryCountdown(CODE_TTL_LOGIN_REGISTER);
         setSuccess("Verification code sent.");
@@ -1610,15 +1604,13 @@ export default function AuthModal() {
                     </div>
                   )}
 
-                  {/* ── Step 2 ── */}
+                  {/* ── Step 2: useful contact details ── */}
                   {signUpStep === 2 && (
                     <div className="space-y-4 am-stepIn">
                       {googleUser && (
                         <div className="flex items-center gap-3 p-3.5 rounded-xl bg-gray-50 border border-gray-200">
-                          <img
-                            src={googleUser.picture || initAvatar(googleUser.name)} alt=""
-                            style={{ width:"2.5rem", height:"2.5rem", borderRadius:"9999px", objectFit:"cover", display:"block", border:"2px solid #e5e7eb", flexShrink:0 }}
-                          />
+                          <img src={googleUser.picture || initAvatar(googleUser.name)} alt=""
+                            style={{ width:"2.5rem", height:"2.5rem", borderRadius:"9999px", objectFit:"cover", display:"block", border:"2px solid #e5e7eb", flexShrink:0 }} />
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-semibold text-gray-900 truncate">{googleUser.name}</p>
                             <p className="text-xs text-gray-500 truncate">{googleUser.email}</p>
@@ -1630,190 +1622,67 @@ export default function AuthModal() {
                         <label className="block text-sm font-semibold text-gray-700">
                           Phone Number <span className="text-gray-400 font-normal text-xs">— Optional</span>
                         </label>
-                        <CountryPhoneSelect
-                          value={form.phone}
-                          onChange={(v) => set("phone", v)}
-                          placeholder="000 000 0000"
-                          valid={form.phone.length > 8}
-                        />
+                        <CountryPhoneSelect value={form.phone} onChange={(v) => set("phone", v)}
+                          placeholder="000 000 0000" valid={form.phone.length > 8} />
                         <p className="text-xs text-gray-400 flex items-center gap-1">
                           <HiInformationCircle className="w-3.5 h-3.5 flex-shrink-0" />
-                          Used by guides/operators to reach you via WhatsApp
+                          Used only when you choose phone or WhatsApp as your contact method.
                         </p>
-                      </div>
-                      <div className="space-y-2">
-                        <span className="block text-sm font-semibold text-gray-700">I am a…</span>
-                        <div className="grid grid-cols-3 gap-2">
-                          {ROLES.map(({ value, label, icon: RIcon, desc }) => (
-                            <button key={value} type="button" onClick={() => set("role", value)}
-                              className={`relative flex flex-col items-center text-center p-2.5 sm:p-3.5 rounded-xl border-2 transition-all duration-200 ${
-                                form.role === value
-                                  ? "border-emerald-400 bg-emerald-50/80 shadow-sm"
-                                  : "border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50"
-                              }`}
-                            >
-                              <div className={`w-8 h-8 rounded-xl flex items-center justify-center mb-1.5 transition-all ${
-                                form.role === value ? "bg-emerald-500 text-white" : "bg-gray-100 text-gray-500"
-                              }`}>
-                                <RIcon className="w-4 h-4" />
-                              </div>
-                              <span className="text-xs font-semibold text-gray-800">{label}</span>
-                              <span className="text-[9px] sm:text-[10px] text-gray-400 mt-0.5 leading-tight">{desc}</span>
-                              {form.role === value && (
-                                <div className="am-scaleIn absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-emerald-500 flex items-center justify-center">
-                                  <HiCheck className="w-2.5 h-2.5 text-white" />
-                                </div>
-                              )}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="space-y-1.5">
-                        <label htmlFor="reg-bio" className="block text-sm font-semibold text-gray-700">
-                          Short Bio <span className="text-gray-400 font-normal text-xs">— Optional</span>
-                        </label>
-                        <textarea id="reg-bio" rows={3} value={form.bio}
-                          onChange={(e) => set("bio", e.target.value)}
-                          placeholder="Tell us about your travel style…"
-                          maxLength={MAX_BIO + 20}
-                          className="w-full rounded-xl border-2 border-gray-200 bg-gray-50/50 text-gray-900 text-sm p-3.5 placeholder:text-gray-400 outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100 hover:border-gray-300 resize-none transition-all"
-                        />
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs text-gray-400 flex items-center gap-1">
-                            <HiInformationCircle className="w-3.5 h-3.5" />Shown on your public profile
-                          </p>
-                          <span className={`text-xs tabular-nums ${
-                            form.bio.length > MAX_BIO * 0.85
-                              ? form.bio.length > MAX_BIO ? "text-red-500 font-semibold" : "text-amber-500"
-                              : "text-gray-400"
-                          }`}>{form.bio.length}/{MAX_BIO}</span>
-                        </div>
                       </div>
                       <div className="flex gap-3 pt-1">
                         <button type="button" onClick={() => { setSignUpStep(1); clearGooglePending?.(); }}
-                          className="flex items-center gap-2 px-4 h-11 rounded-xl text-gray-600 font-medium text-sm hover:bg-gray-100 transition-all"
-                        >
+                          className="flex items-center gap-2 px-4 h-11 rounded-xl text-gray-600 font-medium text-sm hover:bg-gray-100 transition-all">
                           <HiArrowLeft className="w-4 h-4" /> Back
                         </button>
-                        <button type="button"
-                          onClick={() => {
-                            if (!bioOk) { setError(`Bio max ${MAX_BIO} chars.`); return; }
-                            setError(""); setSignUpStep(3);
-                          }}
-                          disabled={!bioOk}
-                          className="flex-1 h-11 rounded-xl bg-emerald-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-700 disabled:opacity-50 transition-all"
-                        >
+                        <button type="button" onClick={() => { setError(""); setSignUpStep(3); }}
+                          className="flex-1 h-11 rounded-xl bg-emerald-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all">
                           Continue <HiArrowRight className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
                   )}
 
-                  {/* ── Step 3 ── */}
+                  {/* ── Step 3: preferences that help plan trips ── */}
                   {signUpStep === 3 && (
                     <div className="space-y-4 am-stepIn">
-                      <InputField
-                        id="reg-dob" label="Date of Birth" icon={HiCalendar}
-                        type="date" value={form.dateOfBirth}
-                        onChange={(v) => set("dateOfBirth", v)}
-                        max={todayStr}
-                        hint="Helps with age-restricted permits & park fees"
-                      />
-                      <SelectField
-                        id="reg-nationality" label="Nationality"
-                        icon={HiLocationMarker} value={form.nationality}
-                        onChange={(v) => set("nationality", v)}
-                        hint="Affects park entry fees & visa advice"
-                      >
-                        <option value="">Select nationality…</option>
-                        {COUNTRIES.map((c) => (
-                          <option key={c.code} value={c.name}>{c.code}  {c.name}  {c.dial}</option>
-                        ))}
-                      </SelectField>
-                      <SelectField
-                        id="reg-residence" label="Country of Residence"
+                      <SelectField id="reg-residence" label="Country of Residence"
                         icon={HiGlobe} value={form.residenceCountry}
                         onChange={(v) => set("residenceCountry", v)}
-                        hint="Used for permit cost calculations"
-                      >
+                        hint="Helps us provide relevant travel and permit guidance">
                         <option value="">Select country…</option>
-                        {COUNTRIES.map((c) => (
-                          <option key={c.code} value={c.name}>{c.code}  {c.name}</option>
+                        {COUNTRIES.map((country) => (
+                          <option key={country.code} value={country.name}>{country.name}</option>
                         ))}
                       </SelectField>
-                      <SelectField
-                        id="reg-lang" label="Preferred Language"
+                      <SelectField id="reg-lang" label="Preferred Language"
                         icon={HiTranslate} value={form.preferredLanguage}
                         onChange={(v) => set("preferredLanguage", v)}
-                        hint="We'll communicate in this language"
-                      >
-                        <option value="">Select language…</option>
-                        {LANGUAGES.map((l) => (
-                          <option key={l} value={l}>{l}</option>
+                        hint="Helps us communicate with you clearly">
+                        <option value="">Choose a language (optional)…</option>
+                        {LANGUAGES.map((language) => (
+                          <option key={language} value={language}>{language}</option>
                         ))}
                       </SelectField>
-                      <div className="space-y-1.5">
-                        <label className="block text-sm font-semibold text-gray-700">
-                          Profession <span className="text-gray-400 font-normal text-xs">— Optional</span>
-                        </label>
-                        <button type="button" onClick={() => setProfessionOpen(true)}
-                          className={`w-full h-12 rounded-xl border-2 flex items-center gap-3 px-4 text-sm transition-all duration-200 ${
-                            form.profession
-                              ? "border-emerald-300 bg-emerald-50/50 text-emerald-700 hover:border-emerald-400"
-                              : "border-gray-200 bg-gray-50/50 text-gray-400 hover:border-gray-300"
-                          }`}
-                        >
-                          <HiOfficeBuilding className={`w-[18px] h-[18px] flex-shrink-0 ${form.profession ? "text-emerald-500" : "text-gray-400"}`} />
-                          <span className="flex-1 text-left truncate">{form.profession || "Select your profession…"}</span>
-                          {form.profession
-                            ? <HiCheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                            : <HiPencil className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                          }
-                        </button>
-                      </div>
                       <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-semibold text-gray-700">
-                            Travel Style <span className="text-gray-400 font-normal text-xs">— Optional</span>
-                          </span>
-                          {form.travelStyles.length > 0 && (
-                            <button type="button"
-                              onClick={() => setForm((p) => ({ ...p, travelStyles: [] }))}
-                              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
-                            >Clear all</button>
-                          )}
-                        </div>
+                        <span className="block text-sm font-semibold text-gray-700">Travel interests <span className="text-gray-400 font-normal text-xs">— Optional</span></span>
                         <div className="flex flex-wrap gap-1.5">
                           {TRAVEL_STYLES.map(({ label, emoji }) => {
                             const active = form.travelStyles.includes(label);
-                            return (
-                              <button key={label} type="button" onClick={() => toggleTravelStyle(label)}
-                                className={`flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full text-xs font-medium border-2 transition-all duration-150 ${
-                                  active
-                                    ? "bg-emerald-500 border-emerald-500 text-white shadow-sm"
-                                    : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
-                                }`}
-                              >
-                                <span>{emoji}</span>
-                                <span>{label}</span>
-                                {active && <HiCheck className="w-3 h-3" />}
-                              </button>
-                            );
+                            return <button key={label} type="button" onClick={() => toggleTravelStyle(label)}
+                              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border-2 transition-all ${active ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-gray-200 text-gray-600 hover:border-gray-300"}`}>
+                              <span>{emoji}</span><span>{label}</span>{active && <HiCheck className="w-3 h-3" />}
+                            </button>;
                           })}
                         </div>
-                        <p className="text-xs text-gray-400 flex items-center gap-1">
-                          <HiInformationCircle className="w-3.5 h-3.5" />Select all that apply — or skip
-                        </p>
+                        <p className="text-xs text-gray-400">You can change these preferences later.</p>
                       </div>
                       <div className="flex gap-3 pt-1">
                         <button type="button" onClick={() => setSignUpStep(2)}
-                          className="flex items-center gap-2 px-4 h-11 rounded-xl text-gray-600 font-medium text-sm hover:bg-gray-100 transition-all"
-                        >
+                          className="flex items-center gap-2 px-4 h-11 rounded-xl text-gray-600 font-medium text-sm hover:bg-gray-100 transition-all">
                           <HiArrowLeft className="w-4 h-4" /> Back
                         </button>
                         <button type="button" onClick={() => { setError(""); setSignUpStep(4); }}
-                          className="flex-1 h-11 rounded-xl bg-emerald-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all"
-                        >
+                          className="flex-1 h-11 rounded-xl bg-emerald-600 text-white font-semibold text-sm flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all">
                           Continue <HiArrowRight className="w-4 h-4" />
                         </button>
                       </div>
@@ -1860,7 +1729,7 @@ export default function AuthModal() {
                             ["Email",        form.email             || googleUser?.email],
                             ["Phone",        form.phone             || "Not provided"],
                             ["Role",         currentRole?.label],
-                            ["Auth",         authMethod === "google" ? "Google" : "Email OTP"],
+                            ["Auth",         googleUser?.provider === "github" ? "GitHub" : authMethod === "google" ? "Google" : "Email OTP"],
                             ["Nationality",  form.nationality        || "Not provided"],
                             ["Residence",    form.residenceCountry   || "Not provided"],
                             ["Language",     form.preferredLanguage  || "Not provided"],
