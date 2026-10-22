@@ -13,7 +13,7 @@ self.addEventListener("push", (event) => {
     badge: data.badge || "/favicon.ico",
     tag: data.tag || (data.id ? `altuvera-${data.id}` : "altuvera-notification"),
     renotify: Boolean(data.tag),
-    data: { ...(data.data || {}), url: data.data?.url || "https://www.altuverasafaris.com/dashboard/notifications" },
+    data: { ...(data.data || {}), url: data.data?.url || "https://www.altuverasafaris.com/notifications" },
   };
 
   event.waitUntil(self.registration.showNotification(title, options));
@@ -21,7 +21,7 @@ self.addEventListener("push", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const target = event.notification.data?.url || "https://www.altuverasafaris.com/dashboard/notifications";
+  const target = event.notification.data?.url || "https://www.altuverasafaris.com/notifications";
   event.waitUntil((async () => {
     const targetUrl = new URL(target, self.location.origin);
     const windows = await clients.matchAll({ type: "window", includeUncontrolled: true });
