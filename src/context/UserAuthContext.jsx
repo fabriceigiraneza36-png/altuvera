@@ -1104,7 +1104,7 @@ export function UserAuthProvider({ children }) {
 
       if (data?.requiresEmailVerification || data?.data?.requiresEmailVerification) {
         setPendingEmail(data?.data?.email || "");
-        setModalView("verify");
+        openModal("verify", { skipNotLoggedInMessage: true });
         return { requiresVerification: true, email: data?.data?.email || "" };
       }
 
@@ -1436,7 +1436,7 @@ export function UserAuthProvider({ children }) {
 
     if (data?.requiresEmailVerification || data?.data?.requiresEmailVerification) {
       setPendingEmail(data?.data?.email || pending.email);
-      setModalView("verify");
+      openModal("verify", { skipNotLoggedInMessage: true });
       pendingRef.current = null;
       setGoogleUser(null);
       store.remove(KEYS.GOOGLE_PENDING);
@@ -1518,7 +1518,7 @@ export function UserAuthProvider({ children }) {
     } finally {
       setGithubLoading(false);
     }
-  }, [authFetch, closeModal, persistSession, saveAuth, triggerCongratulation]);
+  }, [authFetch, closeModal, openModal, persistSession, saveAuth, triggerCongratulation]);
 
   const startGithubAuth = useCallback((mode = "signin") => {
     if (!GITHUB_CLIENT_ID) {
