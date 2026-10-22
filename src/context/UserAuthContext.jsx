@@ -1599,7 +1599,7 @@ export function UserAuthProvider({ children }) {
       sessionStorage.removeItem(KEYS.GITHUB_INTENT);
       setGithubLoading(false);
     }
-  }, [githubSignIn, openModal]);
+  }, [githubSignIn, openModal, login]);
 
   // ============================================================================
   // Profile Management
