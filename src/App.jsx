@@ -136,6 +136,8 @@ const getRedirectUrl = (pathname) => {
 /**
  * PUBLIC routes — accessible without authentication.
  */
+const AccountRecoveryComplete = React.lazy(() => import("./pages/auth/AccountRecoveryComplete"));
+
 const publicRoutes = [
   // ── Auth-dashboard utilities (public but user-specific) ──
   {
@@ -312,6 +314,11 @@ const protectedRoutes = [
     path: "/settings",
     component: React.lazy(() => import("./pages/auth/UserSettings")),
     meta: { title: "Settings", noindex: true },
+  },
+  {
+    path: "/account/security",
+    component: React.lazy(() => import("./pages/auth/AccountSecurity")),
+    meta: { title: "Account Security", noindex: true },
   },
   {
     path: "/notifications",
@@ -1016,6 +1023,8 @@ useEffect(injectAppStyles, []);
           path="/auth/google/callback"
           element={<GoogleCallbackPage />}
         />
+
+        <Route path="/account/recovery/complete" element={<PageWrapper title="Complete Account Recovery" noindex><AccountRecoveryComplete /></PageWrapper>} />
 
         {/* ── Booking email verification ── */}
         <Route path="/booking/verify" element={<ConfirmBookingRequest />} />

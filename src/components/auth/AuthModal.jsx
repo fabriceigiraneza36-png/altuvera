@@ -465,8 +465,8 @@ const SocialButtons = ({
 export default function AuthModal() {
   const {
     isModalOpen, modalView, setModalView, closeModal,
-    login, register, verifyCode, resendCode,
-    pendingEmail, persistSession, setSessionPreference,
+    login, register, verifyCode, beginFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode,
+    pendingEmail, pendingFactorMethods, persistSession, setSessionPreference,
     googleUser, googleLoaded, googleLoading, githubLoading,
     hasGooglePending, promptGoogleAuth, startGithubAuth,
     completeGoogleSignUp, clearGooglePending,
@@ -494,6 +494,9 @@ export default function AuthModal() {
   const [error,           setError]           = useState("");
   const [success,         setSuccess]         = useState("");
   const [code,            setCode]            = useState(emptyCode());
+  const [factorCode, setFactorCode] = useState("");
+  const [factorMethod, setFactorMethod] = useState("totp");
+  useEffect(() => { if (pendingFactorMethods.length && !pendingFactorMethods.includes(factorMethod)) setFactorMethod(pendingFactorMethods.includes("totp") ? "totp" : "recovery_code"); }, [pendingFactorMethods, factorMethod]);
   const [resendTimer,     setResendTimer]     = useState(0);
   const [verifySource,    setVerifySource]    = useState("login");
   const [authMethod,      setAuthMethod]      = useState("email");
@@ -527,6 +530,7 @@ export default function AuthModal() {
   const isLogin    = modalView === "login";
   const isRegister = modalView === "register";
   const isVerify   = modalView === "verify";
+  const isFactor   = modalView === "factor";
 
   const activeEmail   = (pendingEmail || form.email || googleUser?.email || "").trim();
   const emailOk       = EMAIL_RE.test(form.email.trim());
@@ -844,6 +848,11 @@ export default function AuthModal() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Verification failed.");
+      if (data?.requiresSecondFactor || data?.data?.requiresSecondFactor) {
+        beginFactorChallenge(data?.data?.challengeToken || data?.challengeToken, data?.data?.methods || data?.methods || []);
+        resetForgotUsername();
+        return;
+      }
 
       /* Mark code boxes as success */
       setForgotCodeState("success");
@@ -884,7 +893,7 @@ export default function AuthModal() {
     }
   }, [
     forgotEmail, forgotCodeExpired, stopForgotExpiryCountdown,
-    form.keepSignedIn, saveAuth, resetForgotUsername, closeModal,
+    form.keepSignedIn, saveAuth, resetForgotUsername, closeModal, beginFactorChallenge,
   ]);
 
   /* Auto-submit when 6 digits entered */
@@ -1934,6 +1943,35 @@ export default function AuthModal() {
                       Sign in <HiArrowRight className="w-3.5 h-3.5" />
                     </button>
                   </div>
+                </div>
+              )}
+
+              {isFactor && (
+                <div className="am-viewIn">
+                  <div className="text-center mb-6">
+                    <HiShieldCheck className="mx-auto mb-3 h-10 w-10 text-emerald-700" />
+                    <h2 id="auth-title" className="text-xl font-extrabold text-gray-900">Verify it’s you</h2>
+                    <p className="mt-2 text-sm text-gray-600">Email verified. Complete your additional security check to sign in.</p>
+                  </div>
+                  <form className="space-y-4" onSubmit={async (e) => {
+                    e.preventDefault(); setLoading(true); setError("");
+                    try { await verifyLoginFactor(factorMethod, factorCode); setFactorCode(""); }
+                    catch (err) { setError(err?.message || "Verification failed."); }
+                    finally { setLoading(false); }
+                  }}>
+                    {pendingFactorMethods.includes("passkey") && (
+                    <button type="button" disabled={loading} onClick={async()=>{setLoading(true);setError("");try{await verifyLoginPasskey();setFactorCode("");}catch(err){setError(err?.message||"Passkey verification failed.");}finally{setLoading(false);}}} className="mb-3 w-full rounded-xl border border-emerald-700 p-3 font-semibold text-emerald-800 disabled:opacity-50">Use a passkey on this device</button>
+                    )}
+                    <div className="flex gap-2">
+                      {pendingFactorMethods.includes("totp") && (<button type="button" onClick={() => {setFactorMethod("totp");setFactorCode("");}} className="rounded-xl border px-3 py-2 text-sm">Authenticator app</button> )}
+                      {pendingFactorMethods.includes("recovery_code") && (<button type="button" onClick={() => {setFactorMethod("recovery_code");setFactorCode("");}} className="rounded-xl border px-3 py-2 text-sm">Recovery code</button> )}
+                    </div>
+                    <label htmlFor="login-factor-code" className="block text-sm font-medium">{factorMethod === "totp" ? "6-digit authenticator code" : "5-digit recovery code"}</label>
+                    <input id="login-factor-code" value={factorCode} onChange={(e) => setFactorCode(e.target.value.replace(/[^0-9]/g, "").slice(0, factorMethod === "totp" ? 6 : 5))} inputMode="numeric" autoComplete="one-time-code" className="w-full rounded-xl border-2 border-gray-200 p-3 text-lg tracking-widest" placeholder={factorMethod === "totp" ? "000000" : "00000"} />
+                    {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
+                    <button type="submit" disabled={loading || factorCode.length !== (factorMethod === "totp" ? 6 : 5)} className="w-full rounded-xl bg-emerald-700 p-3 font-semibold text-white disabled:opacity-50">{loading ? "Verifying…" : "Verify and sign in"}</button>
+                    <p className="text-xs text-gray-500">If you lose access to both methods, request account recovery after signing in on another trusted session or contact support.</p>
+                  </form>
                 </div>
               )}
 

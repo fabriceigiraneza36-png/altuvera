@@ -13,6 +13,7 @@ import React, {
 } from "react";
 import { connectSocket, disconnectSocket, getSocket } from "../utils/socket";
 import userDataCache from "../utils/userDataCache";
+import { startAuthentication } from "@simplewebauthn/browser";
 
 // ============================================================================
 // Configuration
@@ -496,6 +497,8 @@ export function UserAuthProvider({ children }) {
   const [isModalOpen, setIsModalOpen]   = useState(false);
   const [modalView,   setModalView]     = useState("login");
   const [pendingEmail, setPendingEmail] = useState("");
+  const [pendingFactorChallenge, setPendingFactorChallenge] = useState("");
+  const [pendingFactorMethods, setPendingFactorMethods] = useState([]);
 
   // ── Re-verification ───────────────────────────────────────────────────────
   const [requiresLoginVerification, setRequiresLoginVerification] = useState(false);
@@ -953,6 +956,16 @@ export function UserAuthProvider({ children }) {
       body:   JSON.stringify({ email: e, code: c }),
     });
 
+    if (data?.requiresSecondFactor || data?.data?.requiresSecondFactor) {
+      const challenge = data.challengeToken || data.data?.challengeToken;
+      if (!challenge) throw new Error("The additional verification challenge was missing. Please sign in again.");
+      setPendingFactorChallenge(challenge);
+      const methods = data.methods || data.data?.methods || ["totp", "recovery_code"];
+      setPendingFactorMethods(methods);
+      setModalView("factor");
+      return { requiresSecondFactor: true, methods };
+    }
+
     const payload    = extractPayload(data);
     const newCounter = payload.loginCounter
       ?? data?.data?.loginCounter
@@ -990,6 +1003,60 @@ export function UserAuthProvider({ children }) {
     authFetch, closeModal, pendingEmail, pendingSocialAuth,
     persistSession, requiresLoginVerification, saveAuth, triggerCongratulation,
   ]);
+
+  const beginFactorChallenge = useCallback((challenge, methods = []) => {
+    if (!challenge) throw new Error("The additional verification challenge was missing. Please sign in again.");
+    setPendingFactorChallenge(challenge);
+    setPendingFactorMethods(Array.isArray(methods) ? methods : []);
+    setModalView("factor");
+  }, []);
+
+  const verifyLoginFactor = useCallback(async (method, code) => {
+    if (!pendingFactorChallenge) throw new Error("Your verification session expired. Please sign in again.");
+    const data = await authFetch("/users/login/verify-factor", {
+      method: "POST",
+      body: JSON.stringify({ challengeToken: pendingFactorChallenge, method, code: trim(code) }),
+    });
+    if (data?.success === false) throw new Error(data.message || "Additional verification failed.");
+    const payload = extractPayload(data);
+    saveAuth(data, { persist: persistSession });
+    const newCounter = payload.loginCounter ?? data?.data?.loginCounter ?? 0;
+    setLoginCounter(newCounter);
+    store.setLoginCounter(newCounter);
+    setPendingFactorChallenge("");
+    setPendingFactorMethods([]);
+    setPendingEmail("");
+    closeModal();
+    triggerCongratulation("login");
+    return data;
+  }, [authFetch, pendingFactorChallenge, persistSession, saveAuth, closeModal, triggerCongratulation]);
+
+
+  const verifyLoginPasskey = useCallback(async () => {
+    if (!pendingFactorChallenge) throw new Error("Your verification session expired. Please sign in again.");
+    if (!window.PublicKeyCredential || !navigator.credentials) throw new Error("Passkeys are not supported in this browser.");
+    const options = await authFetch("/users/login/passkey/options", {
+      method: "POST",
+      body: JSON.stringify({ challengeToken: pendingFactorChallenge }),
+    });
+    const assertion = await startAuthentication({ optionsJSON: options.data || options });
+    const data = await authFetch("/users/login/passkey/verify", {
+      method: "POST",
+      body: JSON.stringify({ challengeToken: pendingFactorChallenge, response: assertion }),
+    });
+    if (data?.success === false) throw new Error(data.message || "Passkey verification failed.");
+    const payload = extractPayload(data);
+    saveAuth(data, { persist: persistSession });
+    const newCounter = payload.loginCounter ?? data?.data?.loginCounter ?? 0;
+    setLoginCounter(newCounter);
+    store.setLoginCounter(newCounter);
+    setPendingFactorChallenge("");
+    setPendingFactorMethods([]);
+    setPendingEmail("");
+    closeModal();
+    triggerCongratulation("login");
+    return data;
+  }, [pendingFactorChallenge, authFetch, persistSession, saveAuth, closeModal, triggerCongratulation]);
 
   // ============================================================================
   // Resend Code
@@ -1046,6 +1113,12 @@ export function UserAuthProvider({ children }) {
           avatar:   trim(extra.avatar),
         }),
       });
+
+      if (data?.requiresEmailVerification || data?.data?.requiresEmailVerification) {
+        setPendingEmail(data?.data?.email || "");
+        openModal("verify", { skipNotLoggedInMessage: true });
+        return { requiresVerification: true, email: data?.data?.email || "" };
+      }
 
       const { isNewUser, requiresProfile } = extractPayload(data);
 
@@ -1373,6 +1446,15 @@ export function UserAuthProvider({ children }) {
       throw err;
     }
 
+    if (data?.requiresEmailVerification || data?.data?.requiresEmailVerification) {
+      setPendingEmail(data?.data?.email || pending.email);
+      openModal("verify", { skipNotLoggedInMessage: true });
+      pendingRef.current = null;
+      setGoogleUser(null);
+      store.remove(KEYS.GOOGLE_PENDING);
+      return { requiresVerification: true, email: data?.data?.email || pending.email };
+    }
+
     const extracted = extractPayload(data);
 
     if (extracted.requiresProfile && !extracted.token) {
@@ -1414,6 +1496,12 @@ export function UserAuthProvider({ children }) {
         }),
       });
 
+      if (data?.requiresEmailVerification || data?.data?.requiresEmailVerification) {
+        setPendingEmail(data?.data?.email || "");
+        openModal("verify", { skipNotLoggedInMessage: true });
+        return { requiresVerification: true, email: data?.data?.email || "" };
+      }
+
       const { token: tok } = extractPayload(data);
       if (!tok)
         throw new Error("GitHub authentication did not return a valid session.");
@@ -1442,7 +1530,7 @@ export function UserAuthProvider({ children }) {
     } finally {
       setGithubLoading(false);
     }
-  }, [authFetch, closeModal, persistSession, saveAuth, triggerCongratulation]);
+  }, [authFetch, closeModal, openModal, persistSession, saveAuth, triggerCongratulation]);
 
   const startGithubAuth = useCallback((mode = "signin") => {
     if (!GITHUB_CLIENT_ID) {
@@ -1477,7 +1565,17 @@ export function UserAuthProvider({ children }) {
     const oauthErr = url.searchParams.get("error");
     const errDesc  = url.searchParams.get("error_description");
     const provider = url.searchParams.get("auth_provider");
+    const emailOtpRequired = url.searchParams.get("emailOtpRequired");
+    const emailOtpAddress = url.searchParams.get("email");
 
+    if (emailOtpRequired === "1" && emailOtpAddress) {
+      ["emailOtpRequired", "email", "provider"].forEach((p) => url.searchParams.delete(p));
+      window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+      openModal("login", { skipNotLoggedInMessage: true });
+      try { await login({ email: emailOtpAddress }); }
+      catch (err) { setSocialAuthError(err?.message || "Could not send email verification code."); }
+      return;
+    }
     if (!code && !oauthErr) return;
     if (provider && provider !== "github") return;
 
@@ -1513,7 +1611,7 @@ export function UserAuthProvider({ children }) {
       sessionStorage.removeItem(KEYS.GITHUB_INTENT);
       setGithubLoading(false);
     }
-  }, [githubSignIn, openModal]);
+  }, [githubSignIn, openModal, login]);
 
   // ============================================================================
   // Profile Management
@@ -1637,13 +1735,13 @@ export function UserAuthProvider({ children }) {
 
   const value = useMemo(() => ({
     user, token, isAuthenticated, authLoading,
-    isModalOpen, modalView, pendingEmail,
+    isModalOpen, modalView, pendingEmail, pendingFactorChallenge, pendingFactorMethods,
     googleUser, googleLoaded, googleLoading, githubLoading,
     hasGooglePending, socialAuthError, persistSession,
     showCongratulation, congratulationType, showNotLoggedInMessage,
     requiresLoginVerification,
     openModal, closeModal, setModalView,
-    login, register, verifyCode, resendCode, checkEmail,
+    login, register, verifyCode, beginFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode, checkEmail,
     googleSignIn, completeGoogleSignUp, promptGoogleAuth,
     clearGooglePending, clearSocialAuthError,
     githubSignIn, startGithubAuth,
@@ -1653,13 +1751,13 @@ export function UserAuthProvider({ children }) {
     fetchUser, authFetch, saveAuth,
   }), [
     user, token, isAuthenticated, authLoading,
-    isModalOpen, modalView, pendingEmail,
+    isModalOpen, modalView, pendingEmail, pendingFactorChallenge, pendingFactorMethods,
     googleUser, googleLoaded, googleLoading, githubLoading,
     hasGooglePending, socialAuthError, persistSession,
     showCongratulation, congratulationType, showNotLoggedInMessage,
     requiresLoginVerification,
     openModal, closeModal, setModalView,
-    login, register, verifyCode, resendCode, checkEmail,
+    login, register, verifyCode, beginFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode, checkEmail,
     googleSignIn, completeGoogleSignUp, promptGoogleAuth,
     clearGooglePending, clearSocialAuthError,
     githubSignIn, startGithubAuth,
