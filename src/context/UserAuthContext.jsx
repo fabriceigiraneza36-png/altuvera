@@ -1044,6 +1044,7 @@ export function UserAuthProvider({ children }) {
     setLoginCounter(newCounter);
     store.setLoginCounter(newCounter);
     setPendingFactorChallenge("");
+    setPendingFactorMethods([]);
     setPendingEmail("");
     closeModal();
     triggerCongratulation("login");
