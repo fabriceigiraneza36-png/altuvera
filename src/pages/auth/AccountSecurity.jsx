@@ -162,7 +162,7 @@ export default function AccountSecurity() {
         @media(max-width:960px){.as-grid{grid-template-columns:minmax(0,1fr)}.as-method-strip{grid-template-columns:repeat(2,minmax(0,1fr))}}
         @media(max-width:520px){.as-hero{border-radius:20px;padding:22px 18px}.as-card{border-radius:17px}.as-card-head{padding:16px 14px 13px;gap:10px}.as-card-body{padding:15px 14px}.as-icon{width:38px;height:38px}.as-status{font-size:9px;padding:5px 7px}.as-method-strip{gap:8px}.as-method{padding:10px 8px;gap:7px}.as-method-icon{width:30px;height:30px}.as-method strong{font-size:10px}.as-method span{font-size:9px}.as-btn{width:100%}.as-btn-row{gap:8px}.as-passkey-row{align-items:flex-start}.as-codes{grid-template-columns:repeat(2,minmax(0,1fr))}}
       `}</style>
-      <DashboardLayout title="Security & Recovery" subtitle="Protect your account and keep access to your trips.">
+      <DashboardLayout compactTop title="" subtitle="">
         <main className="as-page">
           <div className="as-hero">
             <div className="as-eyebrow"><FiShield size={15} /> Altuvera account protection</div>
