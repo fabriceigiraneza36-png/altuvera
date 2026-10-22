@@ -707,7 +707,7 @@ export default function AuthModal() {
       }));
       setSignUpStep(2);
       setAuthMethod("google");
-      setSuccess("Google account connected! Complete your profile.");
+      setSuccess(`${googleUser.provider === "github" ? "GitHub" : "Google"} account connected! Complete your profile.`);
     }
   }, [googleUser, isRegister]);
 
@@ -994,22 +994,16 @@ export default function AuthModal() {
         await completeGoogleSignUp({
           fullName: form.fullName.trim(),
           phone: form.phone.trim(),
-          bio: form.bio.trim(),
-          role: form.role,
           avatar,
-          dateOfBirth: form.dateOfBirth,
-          nationality: form.nationality,
           residenceCountry: form.residenceCountry,
           preferredLanguage: form.preferredLanguage,
-          profession: form.profession,
           travelStyles: form.travelStyles,
         });
         setSuccess("Account created! Welcome to Altuvera.");
       } else {
         await register({
           email: form.email.trim(), fullName: form.fullName.trim(),
-          phone: form.phone.trim(), bio: form.bio.trim(),
-          role: form.role, avatar, persistSession: form.keepSignedIn,
+          phone: form.phone.trim(), avatar, persistSession: form.keepSignedIn,
         });
         startExpiryCountdown(CODE_TTL_LOGIN_REGISTER);
         setSuccess("Verification code sent.");
@@ -1735,7 +1729,7 @@ export default function AuthModal() {
                             ["Email",        form.email             || googleUser?.email],
                             ["Phone",        form.phone             || "Not provided"],
                             ["Role",         currentRole?.label],
-                            ["Auth",         authMethod === "google" ? "Google" : "Email OTP"],
+                            ["Auth",         googleUser?.provider === "github" ? "GitHub" : authMethod === "google" ? "Google" : "Email OTP"],
                             ["Nationality",  form.nationality        || "Not provided"],
                             ["Residence",    form.residenceCountry   || "Not provided"],
                             ["Language",     form.preferredLanguage  || "Not provided"],
