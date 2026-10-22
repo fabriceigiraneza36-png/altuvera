@@ -391,7 +391,22 @@ const Navbar = () => {
         _isCountry: false, _label: label,
       };
     });
-    const matches = item => !query || flatten(item).toLocaleLowerCase().includes(query);
+    const normalizeSearch = value => String(value ?? "")
+      .normalize("NFD")
+      .replace(/[\\u0300-\\u036f]/g, "")
+      .toLocaleLowerCase()
+      .replace(/[^\\p{L}\\p{N}]+/gu, " ")
+      .trim();
+    const normalizedQuery = normalizeSearch(query);
+    const matches = item => {
+      if (!normalizedQuery) return true;
+      const searchable = normalizeSearch([
+        item._label, item.name, item.title, item.slug, item.country, item.countryName,
+        item.country_name, item.region, item.continent, item.category, item.shortDescription,
+        item.description, item.location, item.highlights, flatten(item)
+      ].map(value => displaySearchText(value)).join(" "));
+      return searchable.includes(normalizedQuery);
+    };
     const metric = (item, fields) => fields.reduce((score, field) => score + (Number(item[field]) || 0), 0);
     const ranked = (items, fields) => [...items].filter(matches).sort((a, b) => metric(b, fields) - metric(a, fields));
     const countryFields = searchSort === "searched" ? ["search_count", "searchCount", "searches", "views"] : ["featured_score", "is_featured", "featured", "visit_count", "visits", "popularity"];
@@ -559,17 +574,38 @@ const Navbar = () => {
     const start = e => {
       if (window.innerWidth > 1024 || !e.touches?.length) return;
       const touch = e.touches[0];
+      const target = e.target instanceof Element ? e.target : null;
       const drawer = document.querySelector(".mm");
-      const inDrawer = drawer?.contains(e.target);
-      const fromRightEdge = touch.clientX >= window.innerWidth - 36;
-      if ((isMobileMenuOpen && inDrawer) || (!isMobileMenuOpen && fromRightEdge)) {
-        touchStartRef.current = { x: touch.clientX, y: touch.clientY, opened: isMobileMenuOpen, horizontal: false };
-        setMobileDragX(0);
-        setIsDraggingMenu(true);
-      } else {
+      const inDrawer = Boolean(drawer?.contains(e.target));
+      // Never steal horizontal gestures from controls, carousels, maps, galleries,
+      // chat panes, or any element that actually has horizontal overflow.
+      const excluded = target?.closest([
+        "input", "textarea", "select", "button", "a", "[role='button']",
+        "[role='slider']", "[contenteditable='true']", "[data-no-menu-swipe]",
+        ".nav-search-story-rail", ".nav-search-country-rail", ".nav-search-country-track",
+        ".carousel", "[data-carousel]", ".swiper", ".slick-slider", ".embla",
+        ".gallery", ".leaflet-container", ".map-container", ".messages",
+        ".chat", ".chat-window", ".horizontal-scroll"
+      ].join(","));
+      const horizontalScroller = target?.closest("*");
+      const hasHorizontalScroll = (() => {
+        let node = horizontalScroller;
+        while (node && node !== document.body) {
+          const style = window.getComputedStyle(node);
+          if (node.scrollWidth > node.clientWidth + 8 &&
+              /(auto|scroll|overlay)/.test(style.overflowX)) return true;
+          node = node.parentElement;
+        }
+        return false;
+      })();
+      if (excluded || hasHorizontalScroll || (isMobileMenuOpen && !inDrawer)) {
         touchStartRef.current = null;
         setIsDraggingMenu(false);
+        return;
       }
+      touchStartRef.current = { x: touch.clientX, y: touch.clientY, opened: isMobileMenuOpen, horizontal: false };
+      setMobileDragX(0);
+      setIsDraggingMenu(false);
     };
     const move = e => {
       if (!touchStartRef.current || !e.touches?.length || window.innerWidth > 1024) return;
@@ -1257,7 +1293,7 @@ const Navbar = () => {
           <motion.div className="nav-search-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={e => { if (e.target === e.currentTarget) setSearchOpen(false); }}>
             <motion.section className="nav-search-modal" role="dialog" aria-modal="true" aria-label="Search countries and destinations" initial={{ opacity: 0, y: 18, scale: .98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12, scale: .98 }} transition={{ duration: .2 }}>
               <div className="nav-search-top"><div><span className="nav-search-eyebrow">DISCOVER ALTUVERA</span><h2>Where would you like to go?</h2></div><button className="nav-search-close" aria-label="Close search" onClick={() => { setSearchOpen(false); setSearchQuery(""); setSearchResultsView(false); setActiveStoryIndex(0); }}><FiX size={20}/></button></div>
-              <div className="nav-search-input-wrap"><FiSearch size={19}/><input ref={searchInputRef} value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setSearchResultsView(false); }} placeholder="Search countries, destinations, places..." aria-label="Search destinations"/>{searchQuery && <button onClick={() => setSearchQuery("")} aria-label="Clear search"><FiX size={17}/></button>}</div>
+              <div className="nav-search-input-wrap"><FiSearch size={19}/><input ref={searchInputRef} value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setSearchResultsView(false); }} onKeyDown={e => { if (e.key === "Enter" && searchQuery.trim()) { e.preventDefault(); setSearchResultsView(true); } if (e.key === "Escape") { setSearchOpen(false); setSearchResultsView(false); } }} placeholder="Search countries, destinations, places..." aria-label="Search destinations"/>{searchQuery && <button onClick={() => setSearchQuery("")} aria-label="Clear search"><FiX size={17}/></button>}</div>
               <div className="nav-search-filter-shell">
                 <button type="button" className="nav-search-filter-toggle" aria-expanded={searchFiltersOpen} onClick={() => setSearchFiltersOpen(open => !open)}>
                   <span className="nav-search-filter-toggle__icon"><FiTrendingUp size={15}/></span>
@@ -1287,7 +1323,7 @@ const Navbar = () => {
                   <button type="button" className="nav-search-back" onClick={()=>{setSearchResultsView(false);searchInputRef.current?.focus();}}>← Edit search</button>
                   <h3 className="nav-search-section-title">Destinations matching “{searchQuery}”</h3>
                   <div className="nav-search-destination-grid">{searchResults.destinations.slice(0,20).map((item,i)=><div className="nav-search-explore-card" key={item.id||item._id||item.slug||item._label+i}><ExploreDestinationCard destination={item}/></div>)}</div>
-                  {!searchResults.destinations.length && <p className="nav-search-empty">No matching destinations found. Try a broader search.</p>}
+                  {!searchResults.destinations.length && !searchResults.relatedCountries.length && <p className="nav-search-empty">No matching destinations or countries found. Try another spelling or a broader search.</p>}
                   <h3 className="nav-search-section-title">Related countries</h3>
                   <div className="nav-search-country-grid">{searchResults.relatedCountries.slice(0,20).map((item,i)=><button type="button" className="nav-search-country-card nav-search-country-card--photo" style={{ "--country-index": i }} key={item.id||item.slug||item._label+i} onClick={()=>navigate(`/country/${getCountrySlug(item)}`)}><span className="nav-search-country-photo">{getCountryImageUrl(item) ? <img src={getCountryImageUrl(item)} alt="" loading="lazy"/> : <span className="nav-search-country-photo-placeholder"><FiGlobe size={34}/></span>}<span className="nav-search-country-photo-shade"/></span><span className="nav-search-country-flag">{getCountryFlagUrl(item) ? <img src={getCountryFlagUrl(item)} alt="" loading="lazy"/> : <FiGlobe/>}</span>{(item.destinationsCount ?? item.destinations_count ?? item.destinationCount) > 0 && <span className="nav-search-country-count">{item.destinationsCount ?? item.destinations_count ?? item.destinationCount} destinations</span>}<span className="nav-search-country-copy"><strong>{displaySearchText(item._label,"Country")}</strong><small>{displaySearchText(item.region||item.continent,"Explore country")}</small>{(item.emotional_description || item.description) && <span className="nav-search-country-description">{displaySearchText(item.emotional_description || item.description).slice(0,110)}</span>}<span className="nav-search-country-cta">Explore {displaySearchText(item._label,"country")} <FiArrowRight size={13}/></span></span></button>)}</div>
                 </> : <>
