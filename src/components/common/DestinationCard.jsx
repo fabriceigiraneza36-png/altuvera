@@ -511,7 +511,9 @@ const CSS = `
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-top: auto;
+  /* Keep the action buttons close to the description instead of pushing
+     them to the bottom of a stretched grid card and leaving a large void. */
+  margin-top: 2px;
 }
 
 .dc-btn-learn {
