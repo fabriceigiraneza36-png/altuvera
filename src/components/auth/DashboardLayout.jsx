@@ -42,7 +42,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
     };
 
     const onTouchStart = (event) => {
-      if (window.innerWidth >= 1024 || !event.touches?.length) return;
+      if (window.innerWidth > 768 || !event.touches?.length) return;
       const target = event.target instanceof Element ? event.target : null;
       const drawer = document.querySelector('.dashboard-sidebar');
       if (excludedTarget(target) || (mobileMenuOpen && !drawer?.contains(target))) {
@@ -56,7 +56,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
     const onTouchMove = (event) => {
       const start = sidebarTouchStart.current;
       const touch = event.touches?.[0];
-      if (!start || !touch || window.innerWidth >= 1024) return;
+      if (!start || !touch || window.innerWidth > 768) return;
       const dx = touch.clientX - start.x;
       const dy = touch.clientY - start.y;
       if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
@@ -71,7 +71,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
       const start = sidebarTouchStart.current;
       sidebarTouchStart.current = null;
       const touch = event.changedTouches?.[0];
-      if (!start || !touch || !start.horizontal || window.innerWidth >= 1024) return;
+      if (!start || !touch || !start.horizontal || window.innerWidth > 768) return;
       const dx = touch.clientX - start.x;
       const dy = touch.clientY - start.y;
       // A short, intentional swipe is enough; the starting screen position
