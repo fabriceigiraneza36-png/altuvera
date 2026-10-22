@@ -1429,7 +1429,7 @@ const Navbar = () => {
                     <div className="nav-search-suggestion-group"><span className="nav-search-suggestion-label"><FiMapPin size={13}/> Destinations <span className="nav-search-result-count">{searchResults.destinations.length}</span></span><div className="nav-search-inline" role="listbox" aria-label="Matching destinations">{searchResults.destinations.slice(0,12).map((item,i)=><button type="button" role="option" aria-selected={selectedSuggestionIndex===i+searchResults.countries.slice(0,8).length} data-search-suggestion="true" key={item.id || item.slug || item._label+i} onFocus={()=>setSelectedSuggestionIndex(i+searchResults.countries.slice(0,8).length)} onClick={()=>selectSearchSuggestion(item)}>{displaySearchText(item._label,"Destination")}<small>Destination</small></button>)}</div></div>
                     {!searchResults.countries.length && !searchResults.destinations.length && <p className="nav-search-empty" role="status">{searchDataError ? "Search data could not be loaded. Please try again shortly." : "No suggestions found. Try another name, activity, or destination."}</p>}
                     <button type="button" className="nav-search-view-all" onClick={()=>{rememberSearch(searchQuery);setSearchResultsView(true);}}>View all matching results <FiArrowRight size={14}/></button>
-                  </>
+                  </>}
                 </> : searchResultsView ? <>
                   <button type="button" className="nav-search-back" onClick={()=>{setSearchResultsView(false);searchInputRef.current?.focus();}}>← Edit search</button>
                   <h3 className="nav-search-section-title">Destinations matching “{searchQuery}”</h3>
