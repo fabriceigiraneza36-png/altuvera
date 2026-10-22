@@ -496,6 +496,7 @@ export default function AuthModal() {
   const [code,            setCode]            = useState(emptyCode());
   const [factorCode, setFactorCode] = useState("");
   const [factorMethod, setFactorMethod] = useState("totp");
+  useEffect(() => { if (pendingFactorMethods.length && !pendingFactorMethods.includes(factorMethod)) setFactorMethod(pendingFactorMethods.includes("totp") ? "totp" : "recovery_code"); }, [pendingFactorMethods, factorMethod]);
   const [resendTimer,     setResendTimer]     = useState(0);
   const [verifySource,    setVerifySource]    = useState("login");
   const [authMethod,      setAuthMethod]      = useState("email");
@@ -1957,8 +1958,8 @@ export default function AuthModal() {
                     <button type="button" disabled={loading} onClick={async()=>{setLoading(true);setError("");try{await verifyLoginPasskey();setFactorCode("");}catch(err){setError(err?.message||"Passkey verification failed.");}finally{setLoading(false);}}} className="mb-3 w-full rounded-xl border border-emerald-700 p-3 font-semibold text-emerald-800 disabled:opacity-50">Use a passkey on this device</button>
                     )}
                     <div className="flex gap-2">
-                      <button type="button" onClick={() => {setFactorMethod("totp");setFactorCode("");}} className="rounded-xl border px-3 py-2 text-sm">Authenticator app</button>
-                      <button type="button" onClick={() => {setFactorMethod("recovery_code");setFactorCode("");}} className="rounded-xl border px-3 py-2 text-sm">Recovery code</button>
+                      {pendingFactorMethods.includes("totp") && (<button type="button" onClick={() => {setFactorMethod("totp");setFactorCode("");}} className="rounded-xl border px-3 py-2 text-sm">Authenticator app</button> )}
+                      {pendingFactorMethods.includes("recovery_code") && (<button type="button" onClick={() => {setFactorMethod("recovery_code");setFactorCode("");}} className="rounded-xl border px-3 py-2 text-sm">Recovery code</button> )}
                     </div>
                     <label htmlFor="login-factor-code" className="block text-sm font-medium">{factorMethod === "totp" ? "6-digit authenticator code" : "5-digit recovery code"}</label>
                     <input id="login-factor-code" value={factorCode} onChange={(e) => setFactorCode(e.target.value.replace(/[^0-9]/g, "").slice(0, factorMethod === "totp" ? 6 : 5))} inputMode="numeric" autoComplete="one-time-code" className="w-full rounded-xl border-2 border-gray-200 p-3 text-lg tracking-widest" placeholder={factorMethod === "totp" ? "000000" : "00000"} />
