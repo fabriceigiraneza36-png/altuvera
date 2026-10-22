@@ -177,12 +177,15 @@ const MSG_STYLES = `
   width: 100%;
   height: 100%;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
   position: relative;
 }
 /* SIDEBAR */
 .msg-sidebar {
   width: 300px;
+  max-width: 100%;
+  min-width: 0;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -277,7 +280,7 @@ const MSG_STYLES = `
 .msg-bubble-wrap { touch-action:pan-y; will-change:transform; }
 /* Keep the conversation directly beneath the site navbar; no duplicated 80px spacer. */
 .dashboard-layout:has(.msg-layout) { padding-top:0 !important; min-height:0; }
-.dashboard-layout:has(.msg-layout) .dashboard-content { padding:0 !important; height:calc(100dvh - var(--site-nav-height, 80px)); }
+.dashboard-layout:has(.msg-layout) .dashboard-content { padding:0 !important; height:calc(100dvh - var(--site-nav-height, 80px)); min-height:0; overflow:hidden; display:flex; flex-direction:column; }
 .dashboard-layout:has(.msg-layout) .dashboard-header { display:none; }
 .msg-chat-foot { background:rgba(255,255,255,.96); backdrop-filter:blur(16px); }
 .msg-send-button { background:linear-gradient(135deg,#059669,#10b981); box-shadow:0 5px 14px rgba(5,150,105,.22); }
@@ -297,13 +300,15 @@ const MSG_STYLES = `
 
 /* MOBILE: full panel swap */
 @media (max-width: 767px) {
-  .msg-layout { width: 100%; height: 100%; min-height: 0; }
-  .msg-sidebar { width: 100%; min-width: 0; border-right: none; }
-  .msg-chat { position: absolute; inset: 0; z-index: 10; width: 100%; min-width: 0; }
+  .msg-layout { width: 100%; height: 100%; min-height: 0; min-width: 0; flex: 1 1 0%; }
+  .msg-sidebar { width: 100%; max-width: 100%; min-width: 0; border-right: none; }
+  .msg-chat { position: absolute; inset: 0; z-index: 10; width: 100%; min-width: 0; max-width: 100%; }
+  .msg-sidebar-head, .msg-sidebar-list, .msg-chat-head, .msg-chat-body, .msg-chat-foot { min-width: 0; }
   .msg-chat-head { min-height: 64px; padding-left: 12px; padding-right: 12px; }
-  .msg-chat-body { padding: 12px; }
-  .msg-chat-foot { padding: 8px 10px max(10px, env(safe-area-inset-bottom)); }
+  .msg-chat-body { padding: 12px; overscroll-behavior-y: contain; }
+  .msg-chat-foot { padding: 8px 10px max(12px, env(safe-area-inset-bottom)); }
   .msg-chat-foot textarea { min-width: 0; width: 100%; }
+  .msg-layout button, .msg-layout input, .msg-layout textarea { touch-action: manipulation; }
 }
 
 /* Typing dots */
@@ -727,7 +732,7 @@ const MsgBubble = React.memo(function MsgBubble({
    NEW CONVERSATION MODAL
 ══════════════════════════════════════════════════════════════════════════ */
 
-function NewConvModal({ onClose, onCreated }) {
+function NewConvModal({ onClose, onCreated, existingConversation = null }) {
   const [subject,  setSubject]  = useState("");
   const [destinationName, setDestinationName] = useState("");
   const [destinationOptions, setDestinationOptions] = useState([]);
@@ -783,20 +788,34 @@ function NewConvModal({ onClose, onCreated }) {
       return;
     }
     const validDestination = matchedDestination || selectedDestination;
+    if (existingConversation && !validDestination) {
+      setError("Choose a destination from the live suggestions to update this conversation.");
+      setDestinationPickerOpen(true);
+      return;
+    }
     setError(""); setCreating(true);
     try {
-      const res  = await authFetch(`${API_BASE}/messages/conversations`, {
-        method:"POST",
-        body: JSON.stringify({
-          subject: subject.trim() || (validDestination ? `Question about ${validDestination.name}` : "General Enquiry"),
-          body: body.trim(),
-          firstMessage: body.trim(),
-          destinationName: validDestination?.name || null,
-          destinationId: validDestination?.id || null,
-          metadata: validDestination ? { destinationName: validDestination.name, destinationId: validDestination.id } : {},
-          kind: "general",
-        }),
-      });
+      const res = existingConversation
+        ? await authFetch(`${API_BASE}/messages/conversations/${encodeURIComponent(existingConversation.id)}/context`, {
+            method: "PATCH",
+            body: JSON.stringify({
+              destinationName: validDestination?.name || null,
+              destinationId: validDestination?.id || null,
+              body: body.trim(),
+            }),
+          })
+        : await authFetch(`${API_BASE}/messages/conversations`, {
+            method: "POST",
+            body: JSON.stringify({
+              subject: subject.trim() || (validDestination ? `Question about ${validDestination.name}` : "General Enquiry"),
+              body: body.trim(),
+              firstMessage: body.trim(),
+              destinationName: validDestination?.name || null,
+              destinationId: validDestination?.id || null,
+              metadata: validDestination ? { destinationName: validDestination.name, destinationId: validDestination.id } : {},
+              kind: "general",
+            }),
+          });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed");
       onCreated(data.data);
@@ -821,11 +840,11 @@ function NewConvModal({ onClose, onCreated }) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center">
-              <Plus size={16} className="text-emerald-600" />
+              {existingConversation ? <MapPin size={16} className="text-emerald-600" /> : <Plus size={16} className="text-emerald-600" />}
             </div>
             <div>
-              <h3 className="font-bold text-slate-800 text-sm">New Message</h3>
-              <p className="text-[10px] text-slate-400">Write to Altuvera support</p>
+              <h3 className="font-bold text-slate-800 text-sm">{existingConversation ? "Change conversation topic" : "New Message"}</h3>
+              <p className="text-[10px] text-slate-400">{existingConversation ? "Keep this chat and its history; choose a new destination" : "Write to Altuvera support"}</p>
             </div>
           </div>
           <button onClick={onClose} aria-label="Close"
@@ -949,7 +968,7 @@ function NewConvModal({ onClose, onCreated }) {
                        hover:bg-emerald-700 disabled:opacity-40 transition flex items-center gap-2">
             {creating
               ? <><RefreshCw size={14} className="animate-spin"/> Sending…</>
-              : <><Send size={14}/> Send Message</>
+              : existingConversation ? <><MapPin size={14}/> Update topic & send</> : <><Send size={14}/> Send Message</>
             }
           </button>
         </div>
@@ -1309,6 +1328,9 @@ export default function Messages() {
     || activeConversation?.guestName || "Conversation";
 
   const showMobile = !!activeId;
+  const contextConversation = (activeConversation && activeConversation.conversationType !== "group" && !activeConversation.groupId)
+    ? activeConversation
+    : conversations.find(c => c.conversationType !== "group" && !c.groupId) || null;
 
   /* ══════════════════════════════════════════════════════════════════════
      RENDER
@@ -1522,7 +1544,7 @@ export default function Messages() {
                 <button onClick={()=>setShowNewChat(true)}
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white
                              text-sm font-bold rounded-xl hover:bg-emerald-700 transition shadow-sm">
-                  <Plus size={15}/> New Conversation
+                  <Plus size={15}/> {contextConversation ? "Change destination" : "New Conversation"}
                 </button>
               </div>
             ) : (
@@ -1570,6 +1592,13 @@ export default function Messages() {
                     </div>
                   </div>
 
+                  {contextConversation && <button
+                    type="button"
+                    onClick={() => setShowNewChat(true)}
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50 px-2.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                    aria-label="Change destination in this conversation"
+                    title="Change destination without starting another conversation"
+                  ><MapPin size={14}/><span className="hidden sm:inline">Change topic</span></button>}
                   <ChatPreferencesPanel value={chatPrefs} onSave={saveChatPrefs} />
 
                   {/* Status pill */}
@@ -1803,6 +1832,7 @@ export default function Messages() {
           <NewConvModal
             onClose={() => setShowNewChat(false)}
             onCreated={handleNewConvCreated}
+            existingConversation={contextConversation}
           />
         )}
       </DashboardLayout>
