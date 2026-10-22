@@ -1102,6 +1102,12 @@ export function UserAuthProvider({ children }) {
         }),
       });
 
+      if (data?.requiresEmailVerification || data?.data?.requiresEmailVerification) {
+        setPendingEmail(data?.data?.email || "");
+        setModalView("verify");
+        return { requiresVerification: true, email: data?.data?.email || "" };
+      }
+
       const { isNewUser, requiresProfile } = extractPayload(data);
 
       if (isNewUser || requiresProfile) {
@@ -1428,6 +1434,15 @@ export function UserAuthProvider({ children }) {
       throw err;
     }
 
+    if (data?.requiresEmailVerification || data?.data?.requiresEmailVerification) {
+      setPendingEmail(data?.data?.email || pending.email);
+      setModalView("verify");
+      pendingRef.current = null;
+      setGoogleUser(null);
+      store.remove(KEYS.GOOGLE_PENDING);
+      return { requiresVerification: true, email: data?.data?.email || pending.email };
+    }
+
     const extracted = extractPayload(data);
 
     if (extracted.requiresProfile && !extracted.token) {
@@ -1468,6 +1483,12 @@ export function UserAuthProvider({ children }) {
           bio:   trim(profileData?.bio),
         }),
       });
+
+      if (data?.requiresEmailVerification || data?.data?.requiresEmailVerification) {
+        setPendingEmail(data?.data?.email || "");
+        setModalView("verify");
+        return { requiresVerification: true, email: data?.data?.email || "" };
+      }
 
       const { token: tok } = extractPayload(data);
       if (!tok)
