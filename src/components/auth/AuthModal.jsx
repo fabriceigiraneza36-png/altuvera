@@ -1048,8 +1048,30 @@ export default function AuthModal() {
     if (!digits) return;
     const next = emptyCode();
     digits.split("").forEach((d, i) => { next[i] = d; });
-    setCode(next); setCodeState("");
+    setCode(next); setCodeState(""); setError("");
     codeRefs.current[Math.min(digits.length, 5)]?.focus();
+  }, []);
+
+  const handlePasteCodeButton = useCallback(async () => {
+    try {
+      if (!navigator.clipboard?.readText) {
+        setError("Paste is not available here. Tap the first box and paste your code.");
+        codeRefs.current[0]?.focus();
+        return;
+      }
+      const digits = (await navigator.clipboard.readText()).replace(/\D/g, "").slice(0, 6);
+      if (!digits) {
+        setError("No verification digits found on your clipboard.");
+        return;
+      }
+      const next = emptyCode();
+      digits.split("").forEach((d, i) => { next[i] = d; });
+      setCode(next); setCodeState(""); setError("");
+      codeRefs.current[Math.min(digits.length, 5)]?.focus();
+    } catch {
+      setError("Clipboard access was blocked. Tap the first box and paste your code instead.");
+      codeRefs.current[0]?.focus();
+    }
   }, []);
 
   const handleResend = useCallback(async () => {
@@ -1978,17 +2000,19 @@ export default function AuthModal() {
               {/* ════════ VERIFY ════════ */}
               {isVerify && (
                 <div className="am-viewIn">
-                  <div className="text-center mb-6">
-                    <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-indigo-100 to-indigo-50 mb-3 sm:mb-4 p-2.5">
-                      <HiMail className="w-6 h-6 sm:w-7 sm:h-7 text-indigo-600" />
+                  <div className="text-center mb-5 sm:mb-6">
+                    <div className="am-verify-hero-icon inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-emerald-100 via-white to-teal-50 mb-3 sm:mb-4 p-3">
+                      {codeState === "success"
+                        ? <HiCheckCircle className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-600" />
+                        : <HiShieldCheck className="w-7 h-7 sm:w-8 sm:h-8 text-emerald-700" />}
                     </div>
                     <h2 id="auth-title" className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">
-                      Check Your Inbox
+                      {codeState === "success" ? "Email Verified" : "Verify Your Email"}
                     </h2>
-                    <p className="text-sm text-gray-500 mt-1">We sent a 6-digit code to:</p>
-                    <div className="inline-flex items-center gap-2 mt-3 px-4 py-2 rounded-full bg-gray-100 border border-gray-200 text-sm font-semibold text-gray-800">
-                      <HiMail className="w-4 h-4 text-emerald-500" />
-                      <span className="break-all">{activeEmail || "No email"}</span>
+                    <p className="text-sm text-gray-500 mt-1 px-1">Enter the 6-digit security code we sent to</p>
+                    <div className="am-verify-email-chip inline-flex items-center gap-2 mt-3 px-3 sm:px-4 py-2 rounded-xl sm:rounded-full bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-800 max-w-full">
+                      <HiMail className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+                      <span className="break-all min-w-0">{activeEmail || "No email"}</span>
                     </div>
 
                     {codeState !== "success" && (
@@ -2012,9 +2036,9 @@ export default function AuthModal() {
                     )}
                   </div>
 
-                  <form onSubmit={(e) => { e.preventDefault(); doVerify(code.join("")); }} noValidate className="space-y-5">
+                  <form onSubmit={(e) => { e.preventDefault(); doVerify(code.join("")); }} noValidate className="am-verify-form space-y-4 sm:space-y-5">
                     <div
-                      className={`flex justify-center gap-2 sm:gap-3 ${codeState === "verifying" ? "animate-pulse" : ""} ${codeState === "error" ? "am-shake" : ""}`}
+                      className={`am-verify-code-row flex justify-center gap-2 sm:gap-3 ${codeState === "verifying" ? "animate-pulse" : ""} ${codeState === "error" ? "am-shake" : ""}`}
                       onPaste={handleCodePaste} role="group" aria-label="Verification code"
                     >
                       {code.map((digit, i) => (
@@ -2025,7 +2049,7 @@ export default function AuthModal() {
                           onChange={(e) => handleCodeChange(i, e.target.value)}
                           onKeyDown={(e) => handleCodeKey(i, e)}
                           disabled={codeState === "verifying" || codeState === "success" || codeExpired}
-                          className={`text-center text-xl sm:text-2xl font-bold font-mono rounded-xl border-2 outline-none transition-all duration-200 ${
+                          className={`am-verify-digit text-center text-xl sm:text-2xl font-bold font-mono rounded-xl border-2 outline-none transition-all duration-200 ${
                             codeExpired
                               ? "border-red-200 bg-red-50/50 text-red-300 cursor-not-allowed"
                               : codeState === "success"
@@ -2036,12 +2060,33 @@ export default function AuthModal() {
                                     ? "border-emerald-400 bg-emerald-50/50 text-gray-900"
                                     : "border-gray-200 bg-gray-50/50 text-gray-900 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-100"
                           }`}
-                          style={{ width: "2.75rem", height: "3.25rem" }}
-                          aria-label={`Digit ${i + 1}`}
+                          aria-label={`Digit ${i + 1} of 6`}
                           autoComplete={i === 0 ? "one-time-code" : "off"}
+                          aria-invalid={codeState === "error"}
+                          aria-describedby={error ? "verify-code-error" : "verify-code-help"}
                         />
                       ))}
                     </div>
+
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <button type="button" onClick={handlePasteCodeButton}
+                        disabled={loading || codeState === "success" || codeExpired}
+                        className="am-verify-utility-btn inline-flex items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-white px-3 py-2 text-xs sm:text-sm font-semibold text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      >
+                        <HiClipboardCopy className="w-4 h-4" /> Paste code
+                      </button>
+                      <button type="button" onClick={() => { setCode(emptyCode()); setCodeState(""); setError(""); codeRefs.current[0]?.focus(); }}
+                        disabled={!code.some(Boolean) || loading || codeState === "success" || codeExpired}
+                        className="am-verify-utility-btn inline-flex items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs sm:text-sm font-semibold text-gray-600 hover:bg-gray-50 active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                      >
+                        <HiX className="w-4 h-4" /> Clear code
+                      </button>
+                    </div>
+                    <p id="verify-code-help" className="text-center text-xs text-gray-400 flex items-center justify-center gap-1.5">
+                      <HiInformationCircle className="w-3.5 h-3.5 flex-shrink-0" />
+                      You can paste all 6 digits into any box.
+                    </p>
+                    {error && <p id="verify-code-error" role="alert" className="am-verify-inline-error text-center text-sm text-red-600 flex items-center justify-center gap-2"><HiExclamationCircle className="w-4 h-4 flex-shrink-0" />{error}</p>}
 
                     {codeState === "verifying" && (
                       <div className="am-slideDown flex items-center justify-center gap-2 p-3 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-sm font-medium">
