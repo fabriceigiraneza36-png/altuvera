@@ -487,6 +487,14 @@ export default function UserSettings() {
               <p style={{ margin: 0, fontSize: "0.8rem", color: "#166534", opacity: 0.8 }}>
                 Keep this email accessible while traveling to ensure uninterrupted access.
               </p>
+              <div style={{ marginTop: 16, display: "flex", flexWrap: "wrap", alignItems: "center", gap: 12 }}>
+                <Link to="/account/security" className="us-btn us-btn-primary" style={{ textDecoration: "none" }}>
+                  <FiShield size={16} /> Manage passkeys & recovery
+                </Link>
+                <span style={{ fontSize: "0.8rem", color: "#64748b" }}>
+                  Set up passkeys, an authenticator app, backup codes, and account recovery.
+                </span>
+              </div>
             </div>
 
             {/* Sync Status + Save */}

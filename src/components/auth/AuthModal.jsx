@@ -11,6 +11,7 @@ import {
   HiArrowRight,
   HiCheck,
   HiLockClosed,
+  HiKey,
   HiMail,
   HiPhone,
   HiPhotograph,
@@ -497,6 +498,7 @@ export default function AuthModal() {
   const [code,            setCode]            = useState(emptyCode());
   const [factorCode, setFactorCode] = useState("");
   const [factorMethod, setFactorMethod] = useState("totp");
+  const [showMoreWaysToVerify, setShowMoreWaysToVerify] = useState(false);
   useEffect(() => { if (pendingFactorMethods.length && !pendingFactorMethods.includes(factorMethod)) setFactorMethod(pendingFactorMethods.includes("totp") ? "totp" : "recovery_code"); }, [pendingFactorMethods, factorMethod]);
   const [resendTimer,     setResendTimer]     = useState(0);
   const [verifySource,    setVerifySource]    = useState("login");
@@ -1974,26 +1976,40 @@ export default function AuthModal() {
                   <div className="text-center mb-6">
                     <HiShieldCheck className="mx-auto mb-3 h-10 w-10 text-emerald-700" />
                     <h2 id="auth-title" className="text-xl font-extrabold text-gray-900">Verify it’s you</h2>
-                    <p className="mt-2 text-sm text-gray-600">Email verified. Complete your additional security check to sign in.</p>
+                    <p className="mt-2 text-sm text-gray-600">Email verified. Choose one of the extra security methods you previously enabled.</p>
                   </div>
+                  <button type="button" onClick={() => setShowMoreWaysToVerify((value) => !value)} aria-expanded={showMoreWaysToVerify} className="mb-4 flex w-full items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-left font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-100">
+                    <span className="flex items-center gap-2"><RiShieldKeyholeLine className="h-5 w-5" /> More ways to verify</span>
+                    <span className="text-xs">{showMoreWaysToVerify ? "Hide options −" : "Show options +"}</span>
+                  </button>
+                  {showMoreWaysToVerify && <div className="mb-4 rounded-2xl border border-gray-200 bg-white p-3 sm:p-4">
+                    <p className="mb-3 text-xs leading-5 text-gray-500">Use any method available for your account. If you have lost access to all of them, use account recovery after signing in on a trusted device or contact Altuvera support.</p>
+                    <div className="flex flex-wrap gap-2">
+                      {pendingFactorMethods.includes("passkey") && <span className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800"><HiShieldCheck className="mr-1 inline h-3.5 w-3.5" /> Passkey</span>}
+                      {pendingFactorMethods.includes("totp") && <span className="rounded-full bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-800"><HiLockClosed className="mr-1 inline h-3.5 w-3.5" /> Authenticator app</span>}
+                      {pendingFactorMethods.includes("recovery_code") && <span className="rounded-full bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-800"><HiKey className="mr-1 inline h-3.5 w-3.5" /> Recovery code</span>}
+                    </div>
+                  </div>}
                   <form className="space-y-4" onSubmit={async (e) => {
                     e.preventDefault(); setLoading(true); setError("");
                     try { await verifyLoginFactor(factorMethod, factorCode); setFactorCode(""); }
                     catch (err) { setError(err?.message || "Verification failed."); }
                     finally { setLoading(false); }
                   }}>
+                    {showMoreWaysToVerify && <>
                     {pendingFactorMethods.includes("passkey") && (
-                    <button type="button" disabled={loading} onClick={async()=>{setLoading(true);setError("");try{await verifyLoginPasskey();setFactorCode("");}catch(err){setError(err?.message||"Passkey verification failed.");}finally{setLoading(false);}}} className="mb-3 w-full rounded-xl border border-emerald-700 p-3 font-semibold text-emerald-800 disabled:opacity-50">Use a passkey on this device</button>
+                    <button type="button" disabled={loading} onClick={async()=>{setLoading(true);setError("");try{await verifyLoginPasskey();setFactorCode("");}catch(err){setError(err?.message||"Passkey verification failed.");}finally{setLoading(false);}}} className="mb-3 flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-700 bg-emerald-50 p-3 font-semibold text-emerald-800 disabled:opacity-50"><RiShieldKeyholeLine className="h-5 w-5" /> Use a passkey on this device</button>
                     )}
-                    <div className="flex gap-2">
-                      {pendingFactorMethods.includes("totp") && (<button type="button" onClick={() => {setFactorMethod("totp");setFactorCode("");}} className="rounded-xl border px-3 py-2 text-sm">Authenticator app</button> )}
-                      {pendingFactorMethods.includes("recovery_code") && (<button type="button" onClick={() => {setFactorMethod("recovery_code");setFactorCode("");}} className="rounded-xl border px-3 py-2 text-sm">Recovery code</button> )}
+                    <div className="flex flex-wrap gap-2">
+                      {pendingFactorMethods.includes("totp") && (<button type="button" onClick={() => {setFactorMethod("totp");setFactorCode("");}} className={`rounded-xl border px-3 py-2 text-sm font-semibold ${factorMethod === "totp" ? "border-emerald-600 bg-emerald-50 text-emerald-800" : "border-gray-200 text-gray-600"}`}><HiLockClosed className="mr-1 inline h-4 w-4"/>Authenticator app</button> )}
+                      {pendingFactorMethods.includes("recovery_code") && (<button type="button" onClick={() => {setFactorMethod("recovery_code");setFactorCode("");}} className={`rounded-xl border px-3 py-2 text-sm font-semibold ${factorMethod === "recovery_code" ? "border-emerald-600 bg-emerald-50 text-emerald-800" : "border-gray-200 text-gray-600"}`}><HiKey className="mr-1 inline h-4 w-4"/>Recovery code</button> )}
                     </div>
                     <label htmlFor="login-factor-code" className="block text-sm font-medium">{factorMethod === "totp" ? "6-digit authenticator code" : "5-digit recovery code"}</label>
                     <input id="login-factor-code" value={factorCode} onChange={(e) => setFactorCode(e.target.value.replace(/[^0-9]/g, "").slice(0, factorMethod === "totp" ? 6 : 5))} inputMode="numeric" autoComplete="one-time-code" className="w-full rounded-xl border-2 border-gray-200 p-3 text-lg tracking-widest" placeholder={factorMethod === "totp" ? "000000" : "00000"} />
                     {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-sm text-red-700">{error}</p>}
                     <button type="submit" disabled={loading || factorCode.length !== (factorMethod === "totp" ? 6 : 5)} className="w-full rounded-xl bg-emerald-700 p-3 font-semibold text-white disabled:opacity-50">{loading ? "Verifying…" : "Verify and sign in"}</button>
-                    <p className="text-xs text-gray-500">If you lose access to both methods, request account recovery after signing in on another trusted session or contact support.</p>
+                    <p className="text-xs text-gray-500">If you lose access to your enabled methods, request account recovery after signing in on another trusted session or contact Altuvera support.</p>
+                    </>}
                   </form>
                 </div>
               )}
@@ -2115,6 +2131,13 @@ export default function AuthModal() {
                       )}
                     </button>
 
+                    <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-3 sm:p-4">
+                      <button type="button" onClick={() => setShowMoreWaysToVerify((value) => !value)} aria-expanded={showMoreWaysToVerify} className="flex w-full items-center justify-between gap-3 text-left text-sm font-bold text-emerald-800">
+                        <span className="inline-flex items-center gap-2"><RiShieldKeyholeLine className="h-5 w-5"/> More ways to verify</span>
+                        <span>{showMoreWaysToVerify ? "Hide −" : "Learn more +"}</span>
+                      </button>
+                      {showMoreWaysToVerify && <p className="mt-2 text-xs leading-5 text-gray-600">This email code confirms access to your registered email. If you enabled a passkey, authenticator app, or recovery codes, Altuvera will offer those after this first check. Once signed in, open Account → Security & Recovery to set up or manage these options. If you cannot access your account at all, contact Altuvera support for a manual recovery review.</p>}
+                    </div>
                     <div className="flex flex-col sm:flex-row gap-3">
                       <button type="button" onClick={handleBackFromVerify} disabled={loading}
                         className="flex items-center justify-center gap-2 px-5 h-11 rounded-xl text-gray-600 font-medium text-sm border border-gray-200 hover:bg-gray-50 transition-all sm:w-auto w-full"
