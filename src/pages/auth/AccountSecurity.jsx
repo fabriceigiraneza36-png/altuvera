@@ -1,0 +1,39 @@
+import React, { useCallback, useEffect, useState } from "react";
+import { API_URL } from "../../utils/apiBase";
+
+const api = async (path, body) => {
+  const token = localStorage.getItem("altuvera_auth_token") || sessionStorage.getItem("altuvera_auth_token");
+  const response = await fetch(`${API_URL}/users${path}`, {
+    method: body ? "POST" : "GET",
+    headers: { "Content-Type":"application/json", ...(token ? {Authorization:`Bearer ${token}`} : {}) },
+    ...(body ? {body:JSON.stringify(body)} : {}),
+  });
+  const result = await response.json().catch(()=>({}));
+  if (!response.ok || result.success === false) throw new Error(result.message || "Security request failed.");
+  return result;
+};
+
+export default function AccountSecurity() {
+  const [status,setStatus] = useState(null);
+  const [secret,setSecret] = useState(null);
+  const [code,setCode] = useState("");
+  const [recoveryCodes,setRecoveryCodes] = useState([]);
+  const [busy,setBusy] = useState(false);
+  const [message,setMessage] = useState("");
+  const [error,setError] = useState("");
+  const refresh = useCallback(async()=>{ try { const r=await api("/security/factors"); setStatus(r.data); } catch(e){setError(e.message);} },[]);
+  useEffect(()=>{refresh();},[refresh]);
+  const run = async (fn) => { setBusy(true);setError("");setMessage("");try{await fn();}catch(e){setError(e.message);}finally{setBusy(false);} };
+  return <main className="mx-auto max-w-3xl px-4 py-10 text-gray-900">
+    <header className="mb-8"><p className="text-sm font-semibold uppercase tracking-widest text-emerald-700">Account protection</p><h1 className="mt-2 text-3xl font-bold">Security & recovery</h1><p className="mt-3 text-gray-600">Email verification is used whenever you sign in. Add an authenticator and save recovery codes so you have another way to prove account ownership.</p></header>
+    {error && <p role="alert" className="mb-4 rounded-xl bg-red-50 p-3 text-red-700">{error}</p>}
+    {message && <p role="status" className="mb-4 rounded-xl bg-emerald-50 p-3 text-emerald-800">{message}</p>}
+    <section className="mb-5 rounded-2xl border border-gray-200 p-5"><h2 className="text-lg font-semibold">Email verification</h2><p className="mt-1 text-sm text-gray-600">Enabled — Altuvera emails a one-time code for each passwordless sign-in, including after logout.</p></section>
+    <section className="mb-5 rounded-2xl border border-gray-200 p-5"><div className="flex flex-wrap items-center justify-between gap-3"><div><h2 className="text-lg font-semibold">Authenticator app</h2><p className="mt-1 text-sm text-gray-600">Use Google Authenticator, Microsoft Authenticator, Aegis or another TOTP app. Free; no SMS charges.</p></div><span className="rounded-full bg-gray-100 px-3 py-1 text-sm">{status?.authenticatorEnabled ? "Enabled" : "Not enabled"}</span></div>
+    {!secret ? <button disabled={busy || status?.authenticatorEnabled} onClick={()=>run(async()=>{const r=await api("/security/totp/setup",{});setSecret(r.data);})} className="mt-4 rounded-xl bg-emerald-700 px-4 py-2 font-semibold text-white disabled:opacity-50">Set up authenticator</button> : <div className="mt-4 space-y-3"><p className="text-sm">Add this key manually in your authenticator app:</p><code className="block break-all rounded-lg bg-gray-100 p-3">{secret.secret}</code><a className="inline-block text-sm font-semibold text-emerald-700 underline" href={secret.otpauthUrl}>Open authenticator link</a><label className="block text-sm font-medium" htmlFor="totp-code">6-digit code</label><input id="totp-code" value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))} inputMode="numeric" autoComplete="one-time-code" className="w-full rounded-xl border p-3" placeholder="000000"/><button disabled={busy || code.length!==6} onClick={()=>run(async()=>{const r=await api("/security/totp/confirm",{code});setSecret(null);setCode("");setMessage(r.message);await refresh();})} className="rounded-xl bg-emerald-700 px-4 py-2 font-semibold text-white disabled:opacity-50">Verify and enable</button><button onClick={()=>{setSecret(null);setCode("");}} className="ml-3 rounded-xl border px-4 py-2">Cancel</button></div>}
+    {status?.authenticatorEnabled && <div className="mt-4 flex flex-wrap gap-2"><input aria-label="Authenticator code to disable" value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,"").slice(0,6))} inputMode="numeric" className="min-w-0 flex-1 rounded-xl border p-3" placeholder="Current 6-digit code"/><button disabled={busy||code.length!==6} onClick={()=>run(async()=>{const r=await api("/security/totp/disable",{code});setCode("");setMessage(r.message);await refresh();})} className="rounded-xl border border-red-300 px-4 py-2 text-red-700">Disable</button></div>}
+    </section>
+    <section className="mb-5 rounded-2xl border border-gray-200 p-5"><h2 className="text-lg font-semibold">One-time recovery codes</h2><p className="mt-1 text-sm text-gray-600">Generate ten backup codes. Each code works once; store them securely and do not share them.</p><button disabled={busy} onClick={()=>run(async()=>{const r=await api("/security/recovery-codes",{});setRecoveryCodes(r.data.codes||[]);setMessage(r.message);await refresh();})} className="mt-4 rounded-xl border px-4 py-2 font-semibold">Generate / replace codes</button>{recoveryCodes.length>0 && <div className="mt-4 rounded-xl bg-gray-50 p-4"><p className="mb-3 text-sm font-semibold">Shown only now — save these before leaving.</p><div className="grid grid-cols-2 gap-2 font-mono text-sm">{recoveryCodes.map(c=><code key={c}>{c}</code>)}</div><button onClick={()=>navigator.clipboard?.writeText(recoveryCodes.join("\n"))} className="mt-4 rounded-lg bg-emerald-700 px-3 py-2 text-sm text-white">Copy codes</button></div>}</section>
+    <section className="rounded-2xl border border-gray-200 p-5"><h2 className="text-lg font-semibold">Can’t access your account?</h2><p className="mt-1 text-sm text-gray-600">Request a manual recovery review. For your safety, a request never grants access automatically; the Altuvera team must verify ownership.</p><p className="mt-3 text-sm">Recovery codes remaining: {status?.recoveryCodesRemaining ?? "—"}</p></section>
+  </main>;
+}
