@@ -1553,7 +1553,17 @@ export function UserAuthProvider({ children }) {
     const oauthErr = url.searchParams.get("error");
     const errDesc  = url.searchParams.get("error_description");
     const provider = url.searchParams.get("auth_provider");
+    const emailOtpRequired = url.searchParams.get("emailOtpRequired");
+    const emailOtpAddress = url.searchParams.get("email");
 
+    if (emailOtpRequired === "1" && emailOtpAddress) {
+      ["emailOtpRequired", "email", "provider"].forEach((p) => url.searchParams.delete(p));
+      window.history.replaceState({}, document.title, `${url.pathname}${url.search}${url.hash}`);
+      openModal("login", { skipNotLoggedInMessage: true });
+      try { await login({ email: emailOtpAddress }); }
+      catch (err) { setSocialAuthError(err?.message || "Could not send email verification code."); }
+      return;
+    }
     if (!code && !oauthErr) return;
     if (provider && provider !== "github") return;
 
