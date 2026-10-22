@@ -530,7 +530,7 @@ export function UserAuthProvider({ children }) {
   const isAuthenticated  = useMemo(() => !!user && !!token, [user, token]);
 
   const hasGooglePending = useMemo(
-    () => !!googleUser?.email && !!googleUser?.credential,
+    () => !!googleUser?.email && (!!googleUser?.credential || (googleUser?.provider === "github" && !!googleUser?.profileToken)),
     [googleUser],
   );
 
