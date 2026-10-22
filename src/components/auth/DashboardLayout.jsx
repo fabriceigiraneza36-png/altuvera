@@ -1,5 +1,5 @@
 // src/components/auth/DashboardLayout.jsx
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { NavLink, useNavigate, Link } from "react-router-dom";
 import { useUserAuth } from "../../context/UserAuthContext";
 import {
@@ -18,6 +18,78 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { tripAlerts, dismissTripAlert, unreadCount } = useNotifications();
   const { unreadCount: unreadMessages } = useConversations();
+  const sidebarTouchStart = useRef(null);
+
+  // On signed-in pages, a deliberate right-to-left swipe anywhere on the page
+  // opens the account drawer. A reverse swipe inside the open drawer closes it.
+  // Vertical scrolling and horizontal controls/galleries retain their gestures.
+  useEffect(() => {
+    const isExcludedTarget = (target) => {
+      if (!(target instanceof Element)) return false;
+      if (target.closest([
+        "input", "textarea", "select", "button", "a", "[role='button']",
+        "[role='slider']", "[contenteditable='true']", "[data-no-menu-swipe]",
+        ".carousel", "[data-carousel]", ".swiper", ".slick-slider", ".embla",
+        ".gallery", ".leaflet-container", ".map-container", ".messages",
+        ".chat", ".chat-window", ".horizontal-scroll"
+      ].join(","))) return true;
+      let node = target;
+      while (node && node !== document.body) {
+        const style = window.getComputedStyle(node);
+        if (node.scrollWidth > node.clientWidth + 8 &&
+            /(auto|scroll|overlay)/.test(style.overflowX)) return true;
+        node = node.parentElement;
+      }
+      return false;
+    };
+
+    const onTouchStart = (event) => {
+      if (window.innerWidth > 1024 || !event.touches?.length) return;
+      const touch = event.touches[0];
+      const target = event.target instanceof Element ? event.target : null;
+      const drawer = document.querySelector(".dashboard-sidebar");
+      if (isExcludedTarget(target) || (mobileMenuOpen && !drawer?.contains(target))) {
+        sidebarTouchStart.current = null;
+        return;
+      }
+      sidebarTouchStart.current = { x: touch.clientX, y: touch.clientY, horizontal: false };
+    };
+    const onTouchMove = (event) => {
+      const start = sidebarTouchStart.current;
+      const touch = event.touches?.[0];
+      if (!start || !touch || window.innerWidth > 1024) return;
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+      if (Math.abs(dy) > Math.abs(dx) * 1.15) {
+        sidebarTouchStart.current = null;
+        return;
+      }
+      start.horizontal = true;
+    };
+    const onTouchEnd = (event) => {
+      const start = sidebarTouchStart.current;
+      sidebarTouchStart.current = null;
+      const touch = event.changedTouches?.[0];
+      if (!start || !touch || !start.horizontal || window.innerWidth > 1024) return;
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      if (Math.abs(dx) < 64 || Math.abs(dx) < Math.abs(dy) * 1.15) return;
+      if (!mobileMenuOpen && dx < 0) setMobileMenuOpen(true);
+      else if (mobileMenuOpen && dx > 0) setMobileMenuOpen(false);
+    };
+
+    document.addEventListener("touchstart", onTouchStart, { passive: true });
+    document.addEventListener("touchmove", onTouchMove, { passive: true });
+    document.addEventListener("touchend", onTouchEnd, { passive: true });
+    document.addEventListener("touchcancel", onTouchEnd, { passive: true });
+    return () => {
+      document.removeEventListener("touchstart", onTouchStart);
+      document.removeEventListener("touchmove", onTouchMove);
+      document.removeEventListener("touchend", onTouchEnd);
+      document.removeEventListener("touchcancel", onTouchEnd);
+    };
+  }, [mobileMenuOpen]);
 
   const handleLogout = () => { logout(); navigate("/"); };
 
