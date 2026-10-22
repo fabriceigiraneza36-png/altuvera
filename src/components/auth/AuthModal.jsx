@@ -465,7 +465,7 @@ const SocialButtons = ({
 export default function AuthModal() {
   const {
     isModalOpen, modalView, setModalView, closeModal,
-    login, register, verifyCode, verifyLoginFactor, verifyLoginPasskey, resendCode,
+    login, register, verifyCode, beginFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode,
     pendingEmail, pendingFactorMethods, persistSession, setSessionPreference,
     googleUser, googleLoaded, googleLoading, githubLoading,
     hasGooglePending, promptGoogleAuth, startGithubAuth,
@@ -848,6 +848,11 @@ export default function AuthModal() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Verification failed.");
+      if (data?.requiresSecondFactor || data?.data?.requiresSecondFactor) {
+        beginFactorChallenge(data?.data?.challengeToken || data?.challengeToken, data?.data?.methods || data?.methods || []);
+        resetForgotUsername();
+        return;
+      }
 
       /* Mark code boxes as success */
       setForgotCodeState("success");
@@ -888,7 +893,7 @@ export default function AuthModal() {
     }
   }, [
     forgotEmail, forgotCodeExpired, stopForgotExpiryCountdown,
-    form.keepSignedIn, saveAuth, resetForgotUsername, closeModal,
+    form.keepSignedIn, saveAuth, resetForgotUsername, closeModal, beginFactorChallenge,
   ]);
 
   /* Auto-submit when 6 digits entered */
