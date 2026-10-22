@@ -44,6 +44,17 @@ import "./Navbar.css";
 
 const cn = (...c) => c.filter(Boolean).join(" ");
 
+const normalizeSearchValue = (value) => String(value ?? "")
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  .toLocaleLowerCase().replace(/[^\p{L}\p{N}\s-]/gu, " ")
+  .replace(/[_-]+/g, " ").replace(/\s+/g, " ").trim();
+
+const isSearchTypingTarget = (target) => {
+  if (!target) return false;
+  const tag = target.tagName?.toLowerCase();
+  return target.isContentEditable || ["input", "textarea", "select"].includes(tag);
+};
+
 // API country/destination fields can be populated objects; never render them directly.
 const safeText = (value, fallback = "") => {
   if (value == null) return fallback;
@@ -270,19 +281,25 @@ const Navbar = () => {
   const [searchResultsView, setSearchResultsView] = useState(false);
   const [searchFiltersOpen, setSearchFiltersOpen] = useState(true);
   const [activeStoryIndex, setActiveStoryIndex] = useState(0);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
+  const [recentSearches, setRecentSearches] = useState([]);
   const storyRailRef = useRef(null);
+  const searchDialogRef = useRef(null);
+  const searchInputRef = useRef(null);
+  const searchTriggerRef = useRef(null);
+  const touchStartRef = useRef(null);
   const [mobileDragX, setMobileDragX] = useState(0);
   const [isDraggingMenu, setIsDraggingMenu] = useState(false);
-  const searchInputRef = useRef(null);
-  const touchStartRef = useRef(null);
   const [avatarLoaded, setAvatarLoaded] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { favorites } = useApp();
   const { user, isAuthenticated, authLoading, openModal, logout } =
     useUserAuth();
-  const { countries: backendCountries } = useCountries({ limit: 500 });
-  const { data: searchDestinations = [] } = useDestinationsList({ limit: 1000 });
+  const { countries: backendCountries = [], loading: countriesLoading, error: countriesError } = useCountries({ limit: 500 });
+  const { data: searchDestinations = [], loading: destinationsLoading, error: destinationsError } = useDestinationsList({ limit: 1000 });
+  const searchDataLoading = countriesLoading || destinationsLoading;
+  const searchDataError = Boolean(countriesError || destinationsError);
 
   const headerRef = useRef(null);
   const userMenuRef = useRef(null);
@@ -355,7 +372,7 @@ const Navbar = () => {
   };
 
   const searchResults = useMemo(() => {
-    const query = searchQuery.trim().toLocaleLowerCase();
+    const query = normalizeSearchValue(searchQuery);
     const mediaKey = /^(?:image|images|gallery|heroImage|heroImages|hero_images|imageUrl|image_url|imageUrls|thumbnailUrl|thumbnail_url|coverImage|cover_image|coverImageUrl|cover_image_url|video|videos|createdAt|updatedAt|__v)$/i;
     const flatten = (value, seen = new WeakSet()) => {
       if (value == null || typeof value === "boolean" || typeof value === "function") return "";
@@ -391,9 +408,38 @@ const Navbar = () => {
         _isCountry: false, _label: label,
       };
     });
-    const matches = item => !query || flatten(item).toLocaleLowerCase().includes(query);
+    const matches = (item) => {
+      if (!query) return true;
+      const label = normalizeSearchValue(item._label || item.name || item.title);
+      const searchable = normalizeSearchValue(flatten(item));
+      if (label.includes(query) || searchable.includes(query)) return true;
+      const words = query.split(" ").filter(Boolean);
+      if (words.length > 1 && words.every(word => searchable.includes(word))) return true;
+      if (query.length >= 5 && words.length === 1) {
+        return searchable.split(" ").some(word => word.length >= 4 &&
+          (word.startsWith(query) || query.startsWith(word) ||
+          (Math.abs(word.length - query.length) <= 1 && (() => {
+            let differences = 0, i = 0, k = 0;
+            while (i < word.length && k < query.length) {
+              if (word[i] === query[k]) { i++; k++; continue; }
+              differences++;
+              if (differences > 1) return false;
+              if (word.length > query.length) i++;
+              else if (query.length > word.length) k++;
+              else { i++; k++; }
+            }
+            return differences + (i < word.length || k < query.length ? 1 : 0) <= 1;
+          })())));
+      }
+      return false;
+    };
     const metric = (item, fields) => fields.reduce((score, field) => score + (Number(item[field]) || 0), 0);
-    const ranked = (items, fields) => [...items].filter(matches).sort((a, b) => metric(b, fields) - metric(a, fields));
+    const rankScore = (item, fields) => {
+      const label = normalizeSearchValue(item._label || item.name || item.title);
+      const boost = query && label === query ? 100000 : query && label.startsWith(query) ? 10000 : query && label.includes(query) ? 1000 : 0;
+      return boost + metric(item, fields);
+    };
+    const ranked = (items, fields) => [...items].filter(matches).sort((a, b) => rankScore(b, fields) - rankScore(a, fields));
     const countryFields = searchSort === "searched" ? ["search_count", "searchCount", "searches", "views"] : ["featured_score", "is_featured", "featured", "visit_count", "visits", "popularity"];
     const destinationFields = searchSort === "searched" ? ["search_count", "searchCount", "searches", "searches_count"] : searchSort === "visited" ? ["visit_count", "visitCount", "visits", "views", "view_count", "popularity"] : ["featured_score", "is_featured", "featured", "isFeatured", "visit_count", "visits", "rating"];
     const matchedDestinations = ranked(destinations, destinationFields);
@@ -411,11 +457,74 @@ const Navbar = () => {
     return { countries: matchedCountries, destinations: matchedDestinations, relatedCountries };
   }, [backendCountries, searchDestinations, searchQuery, searchSort]);
 
+  const rememberSearch = (value) => {
+    const term = String(value || "").trim().replace(/\s+/g, " ");
+    if (!term) return;
+    setRecentSearches(previous => {
+      const next = [term, ...previous.filter(item => normalizeSearchValue(item) !== normalizeSearchValue(term))].slice(0, 6);
+      try { window.localStorage.setItem("altuvera-recent-searches", JSON.stringify(next)); } catch { /* storage may be unavailable */ }
+      return next;
+    });
+  };
+
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setDesktopSearchOpen(false);
+    setSearchQuery("");
+    setSearchResultsView(false);
+    setActiveStoryIndex(0);
+    setSelectedSuggestionIndex(0);
+  };
+
+  const openSearch = (event) => {
+    if (event?.currentTarget) searchTriggerRef.current = event.currentTarget;
+    setSearchOpen(true);
+    setDesktopSearchOpen(false);
+  };
+
   const selectSearchSuggestion = (item) => {
     const term = String(item?._label || "").trim();
     if (!term) return;
-    setSearchQuery(term); setSearchResultsView(true);
+    rememberSearch(term);
+    if (item?._isCountry) {
+      closeSearch();
+      navigate("/country/" + getCountrySlug(item));
+      return;
+    }
+    setSearchQuery(term);
+    setSearchResultsView(true);
+    setSelectedSuggestionIndex(0);
     if (searchInputRef.current) searchInputRef.current.blur();
+  };
+
+  const handleSuggestionKeyDown = (event) => {
+    if (!["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) return;
+    const suggestions = Array.from(searchDialogRef.current?.querySelectorAll('[data-search-suggestion="true"]') || []);
+    if (!suggestions.length) return;
+    const currentIndex = suggestions.indexOf(document.activeElement);
+    let nextIndex = currentIndex;
+    if (event.key === "ArrowDown") nextIndex = (currentIndex + 1) % suggestions.length;
+    if (event.key === "ArrowUp") nextIndex = (currentIndex - 1 + suggestions.length) % suggestions.length;
+    if (event.key === "Home") nextIndex = 0;
+    if (event.key === "End") nextIndex = suggestions.length - 1;
+    event.preventDefault();
+    suggestions[nextIndex]?.focus();
+  };
+
+  const handleSearchInputKeyDown = (event) => {
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      searchDialogRef.current?.querySelector('[data-search-suggestion="true"]')?.focus();
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      const suggestions = searchDialogRef.current?.querySelectorAll('[data-search-suggestion="true"]');
+      suggestions?.[suggestions.length - 1]?.focus();
+    } else if (event.key === "Enter" && searchQuery.trim()) {
+      event.preventDefault();
+      rememberSearch(searchQuery);
+      setSearchResultsView(true);
+      searchInputRef.current?.blur();
+    }
   };
 
   const handleStoryRailScroll = useCallback(() => {
@@ -553,8 +662,57 @@ const Navbar = () => {
   }, []);
 
   useEffect(() => closeAll(), [location.pathname, closeAll]);
-  useEffect(() => { setSearchOpen(false); setDesktopSearchOpen(false); setSearchQuery(""); setSearchResultsView(false); setActiveStoryIndex(0); }, [location.pathname]);
-  useEffect(() => { if (searchOpen) requestAnimationFrame(() => searchInputRef.current?.focus()); }, [searchOpen]);
+  useEffect(() => { setSearchOpen(false); setDesktopSearchOpen(false); setSearchQuery(""); setSearchResultsView(false); setActiveStoryIndex(0); setSelectedSuggestionIndex(0); }, [location.pathname]);
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(window.localStorage.getItem("altuvera-recent-searches") || "[]");
+      if (Array.isArray(saved)) setRecentSearches(saved.filter(item => typeof item === "string").slice(0, 6));
+    } catch { setRecentSearches([]); }
+  }, []);
+
+  useEffect(() => {
+    if (!searchOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const frame = window.requestAnimationFrame(() => searchInputRef.current?.focus());
+    const onDialogKeyDown = (event) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeSearch();
+        window.requestAnimationFrame(() => searchTriggerRef.current?.focus?.());
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const dialog = searchDialogRef.current;
+      const focusable = dialog?.querySelectorAll('button:not([disabled]), input:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])');
+      if (!focusable?.length) { event.preventDefault(); dialog?.focus(); return; }
+      const first = focusable[0], last = focusable[focusable.length - 1];
+      if (event.shiftKey && (document.activeElement === first || !dialog.contains(document.activeElement))) {
+        event.preventDefault(); last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !dialog.contains(document.activeElement))) {
+        event.preventDefault(); first.focus();
+      }
+    };
+    document.addEventListener("keydown", onDialogKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.cancelAnimationFrame(frame);
+      document.removeEventListener("keydown", onDialogKeyDown);
+    };
+  }, [searchOpen]);
+
+  useEffect(() => {
+    const onGlobalShortcut = (event) => {
+      if (searchOpen || isSearchTypingTarget(event.target)) return;
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault(); openSearch();
+      } else if (event.key === "/" && !event.altKey && !event.ctrlKey && !event.metaKey) {
+        event.preventDefault(); openSearch();
+      }
+    };
+    document.addEventListener("keydown", onGlobalShortcut);
+    return () => document.removeEventListener("keydown", onGlobalShortcut);
+  }, [searchOpen]);
   useEffect(() => {
     const start = e => {
       if (window.innerWidth > 1024 || !e.touches?.length) return;
@@ -763,7 +921,7 @@ const Navbar = () => {
           {/* ── Desktop Links ── */}
           <div className="nav__links">
                         <div className={cn("nav-search-desktop", desktopSearchOpen && "nav-search-desktop--open")} onMouseEnter={() => { if (window.innerWidth > 760) setDesktopSearchOpen(true); }} onMouseLeave={() => { if (window.innerWidth > 760 && !searchQuery) setDesktopSearchOpen(false); }}>
-              <button type="button" className="nav__search-trigger" aria-label="Search destinations and countries" onClick={() => { if (window.innerWidth <= 760) setSearchOpen(true); else setDesktopSearchOpen(true); }} onFocus={() => { if (window.innerWidth > 760) setDesktopSearchOpen(true); }}><FiSearch size={19} /></button>
+              <button type="button" className="nav__search-trigger" aria-label="Search destinations and countries" aria-haspopup="dialog" onClick={(event) => { if (window.innerWidth <= 760) openSearch(event); else setDesktopSearchOpen(true); }} onFocus={() => { if (window.innerWidth > 760) setDesktopSearchOpen(true); }}><FiSearch size={19} /></button>
               <input className="nav-search-desktop-input" aria-label="Search destinations and countries" placeholder="Search places..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onFocus={() => setDesktopSearchOpen(true)} onKeyDown={e => { if (e.key === "Escape") { setDesktopSearchOpen(false); setSearchQuery(""); } if (e.key === "Enter") setSearchOpen(true); }} />
               {desktopSearchOpen && searchQuery.trim() && <div className="nav-search-desktop-results" role="listbox" aria-label="Search suggestions">{searchResults.countries.slice(0,4).map((item,i)=><button type="button" role="option" key={item.id || item._label+i} onClick={()=>selectSearchSuggestion(item)}><span>{displaySearchText(item._label,"Country")}</span><small>Country</small></button>)}{searchResults.destinations.slice(0,8).map((item,i)=><button type="button" role="option" key={item.id || item._label+i} onClick={()=>selectSearchSuggestion(item)}><span>{displaySearchText(item._label,"Destination")}</span><small>Destination</small></button>)}<button className="nav-search-view-all" onClick={()=>selectSearchSuggestion({_label:searchQuery})}>See all matching results <FiArrowRight size={14}/></button></div>}
             </div>
@@ -1039,7 +1197,7 @@ const Navbar = () => {
 
         {/* Mobile Body */}
         <div className="mm__body">
-          <button type="button" className="mm__search-link" onClick={() => { setIsMobileMenuOpen(false); setSearchOpen(true); }}><FiSearch size={19}/><span>Search destinations & countries</span><FiArrowRight size={17}/></button>
+          <button type="button" className="mm__search-link" onClick={(event) => { setIsMobileMenuOpen(false); openSearch(event); }}><FiSearch size={19}/><span>Search destinations & countries</span><FiArrowRight size={17}/></button>
           {navLinks.map((link, idx) => (
             <div key={link.name} className="mm__item" style={{ "--idx": idx }}>
               {link.dropdown ? (
@@ -1254,10 +1412,10 @@ const Navbar = () => {
       </aside>
       <AnimatePresence>
         {searchOpen && (
-          <motion.div className="nav-search-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={e => { if (e.target === e.currentTarget) setSearchOpen(false); }}>
-            <motion.section className="nav-search-modal" role="dialog" aria-modal="true" aria-label="Search countries and destinations" initial={{ opacity: 0, y: 18, scale: .98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12, scale: .98 }} transition={{ duration: .2 }}>
-              <div className="nav-search-top"><div><span className="nav-search-eyebrow">DISCOVER ALTUVERA</span><h2>Where would you like to go?</h2></div><button className="nav-search-close" aria-label="Close search" onClick={() => { setSearchOpen(false); setSearchQuery(""); setSearchResultsView(false); setActiveStoryIndex(0); }}><FiX size={20}/></button></div>
-              <div className="nav-search-input-wrap"><FiSearch size={19}/><input ref={searchInputRef} value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setSearchResultsView(false); }} placeholder="Search countries, destinations, places..." aria-label="Search destinations"/>{searchQuery && <button onClick={() => setSearchQuery("")} aria-label="Clear search"><FiX size={17}/></button>}</div>
+          <motion.div className="nav-search-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={e => { if (e.target === e.currentTarget) closeSearch(); }}>
+            <motion.section ref={searchDialogRef} className="nav-search-modal" role="dialog" aria-modal="true" aria-labelledby="nav-search-dialog-title" aria-describedby="nav-search-dialog-description" tabIndex={-1} initial={{ opacity: 0, y: 18, scale: .98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 12, scale: .98 }} transition={{ duration: .2 }}>
+              <div className="nav-search-top"><div><span className="nav-search-eyebrow">DISCOVER ALTUVERA</span><h2 id="nav-search-dialog-title">Where would you like to go?</h2><p id="nav-search-dialog-description" className="nav-search-dialog-description">Find countries, destinations, and experiences across East Africa.</p></div><button type="button" className="nav-search-close" aria-label="Close search" onClick={() => { closeSearch(); window.requestAnimationFrame(() => searchTriggerRef.current?.focus?.()); }}><FiX size={20}/></button></div>
+              <div className="nav-search-input-wrap"><FiSearch size={19} aria-hidden="true"/><input ref={searchInputRef} value={searchQuery} onChange={e => { setSearchQuery(e.target.value); setSearchResultsView(false); setSelectedSuggestionIndex(0); }} onKeyDown={handleSearchInputKeyDown} placeholder="Search countries, destinations, activities..." aria-label="Search destinations" aria-controls="nav-search-results" aria-autocomplete="list"/>{searchQuery && <button type="button" onClick={() => { setSearchQuery(""); setSearchResultsView(false); searchInputRef.current?.focus(); }} aria-label="Clear search"><FiX size={17}/></button>}</div>
               <div className="nav-search-filter-shell">
                 <button type="button" className="nav-search-filter-toggle" aria-expanded={searchFiltersOpen} onClick={() => setSearchFiltersOpen(open => !open)}>
                   <span className="nav-search-filter-toggle__icon"><FiTrendingUp size={15}/></span>
@@ -1270,31 +1428,35 @@ const Navbar = () => {
                       <div className="nav-search-filter-sort" role="group" aria-label="Sort discovery results">
                         {[{label:"Featured",value:"featured"},{label:"Most visited",value:"visited"},{label:"Most searched",value:"searched"}].map(option=><button className={searchSort===option.value?"is-active":""} key={option.value} onClick={()=>setSearchSort(option.value)}>{option.label}</button>)}
                       </div>
-                      <div className="nav-search-filter-tags" aria-label="Popular searches">
-                        {["Safari","Wildlife","Nature","Adventure"].map(term=><button key={term} onClick={()=>{setSearchQuery(term);setSearchResultsView(true);}}>{term}<FiArrowRight size={12}/></button>)}
+                      <div className="nav-search-filter-tags" role="group" aria-label="Popular searches">
+                        {["Safari","Wildlife","Nature","Adventure","Gorilla trekking","Culture"].map(term=><button type="button" key={term} onClick={()=>{setSearchQuery(term);setSearchResultsView(true);rememberSearch(term);}}>{term}<FiArrowRight size={12}/></button>)}
                       </div>
+                      <button type="button" className="nav-search-reset" onClick={()=>{setSearchSort("featured");setSearchQuery("");setSearchResultsView(false);}}> <FiX size={13}/> Reset filters & search</button>
                     </motion.div>
                   )}
                 </AnimatePresence>
               </div>
-              <div className="nav-search-results">
+              <div className="nav-search-results" id="nav-search-results" aria-live="polite" aria-busy={searchDataLoading ? "true" : "false"}>
                 {searchQuery.trim() && !searchResultsView ? <>
-                  <div className="nav-search-suggestion-group"><span className="nav-search-suggestion-label"><FiGlobe size={13}/> Countries</span><div className="nav-search-inline">{searchResults.countries.slice(0,8).map((item,i)=><button type="button" key={item.id || item.slug || item._label+i} onClick={()=>selectSearchSuggestion(item)}>{displaySearchText(item._label,"Country")}<small>Country</small></button>)}</div></div>
-                  <div className="nav-search-suggestion-group"><span className="nav-search-suggestion-label"><FiMapPin size={13}/> Destinations</span><div className="nav-search-inline">{searchResults.destinations.slice(0,12).map((item,i)=><button type="button" key={item.id || item.slug || item._label+i} onClick={()=>selectSearchSuggestion(item)}>{displaySearchText(item._label,"Destination")}<small>Destination</small></button>)}</div></div>
-                  {!searchResults.countries.length && !searchResults.destinations.length && <p className="nav-search-empty">No suggestions found. Try another name, activity, feature, or detail.</p>}
-                  <button type="button" className="nav-search-view-all" onClick={()=>setSearchResultsView(true)}>View matching destinations and countries <FiArrowRight size={14}/></button>
+                  {searchDataLoading && !searchResults.countries.length && !searchResults.destinations.length ? <div className="nav-search-loading" role="status"><span className="nav-search-spinner"/><span>Finding your next adventure…</span></div> : <>
+                    <div className="nav-search-suggestion-group"><span className="nav-search-suggestion-label"><FiGlobe size={13}/> Countries <span className="nav-search-result-count">{searchResults.countries.length}</span></span><div className="nav-search-inline" role="listbox" aria-label="Matching countries">{searchResults.countries.slice(0,8).map((item,i)=><button type="button" role="option" aria-selected={selectedSuggestionIndex===i} data-search-suggestion="true" key={item.id || item.slug || item._label+i} onFocus={()=>setSelectedSuggestionIndex(i)} onKeyDown={handleSuggestionKeyDown} onClick={()=>selectSearchSuggestion(item)}>{displaySearchText(item._label,"Country")}<small>Country</small></button>)}</div></div>
+                    <div className="nav-search-suggestion-group"><span className="nav-search-suggestion-label"><FiMapPin size={13}/> Destinations <span className="nav-search-result-count">{searchResults.destinations.length}</span></span><div className="nav-search-inline" role="listbox" aria-label="Matching destinations">{searchResults.destinations.slice(0,12).map((item,i)=><button type="button" role="option" aria-selected={selectedSuggestionIndex===i+searchResults.countries.slice(0,8).length} data-search-suggestion="true" key={item.id || item.slug || item._label+i} onFocus={()=>setSelectedSuggestionIndex(i+searchResults.countries.slice(0,8).length)} onKeyDown={handleSuggestionKeyDown} onClick={()=>selectSearchSuggestion(item)}>{displaySearchText(item._label,"Destination")}<small>Destination</small></button>)}</div></div>
+                    {!searchResults.countries.length && !searchResults.destinations.length && <p className="nav-search-empty" role="status">{searchDataError ? "Search data could not be loaded. Please try again shortly." : "No suggestions found. Try another name, activity, or destination."}</p>}
+                    <button type="button" className="nav-search-view-all" onClick={()=>{rememberSearch(searchQuery);setSearchResultsView(true);}}>View all matching results <FiArrowRight size={14}/></button>
+                  </>}
                 </> : searchResultsView ? <>
                   <button type="button" className="nav-search-back" onClick={()=>{setSearchResultsView(false);searchInputRef.current?.focus();}}>← Edit search</button>
                   <h3 className="nav-search-section-title">Destinations matching “{searchQuery}”</h3>
                   <div className="nav-search-destination-grid">{searchResults.destinations.slice(0,20).map((item,i)=><div className="nav-search-explore-card" key={item.id||item._id||item.slug||item._label+i}><ExploreDestinationCard destination={item}/></div>)}</div>
                   {!searchResults.destinations.length && <p className="nav-search-empty">No matching destinations found. Try a broader search.</p>}
                   <h3 className="nav-search-section-title">Related countries</h3>
-                  <div className="nav-search-country-grid">{searchResults.relatedCountries.slice(0,20).map((item,i)=><button type="button" className="nav-search-country-card nav-search-country-card--photo" style={{ "--country-index": i }} key={item.id||item.slug||item._label+i} onClick={()=>navigate(`/country/${getCountrySlug(item)}`)}><span className="nav-search-country-photo">{getCountryImageUrl(item) ? <img src={getCountryImageUrl(item)} alt="" loading="lazy"/> : <span className="nav-search-country-photo-placeholder"><FiGlobe size={34}/></span>}<span className="nav-search-country-photo-shade"/></span><span className="nav-search-country-flag">{getCountryFlagUrl(item) ? <img src={getCountryFlagUrl(item)} alt="" loading="lazy"/> : <FiGlobe/>}</span>{(item.destinationsCount ?? item.destinations_count ?? item.destinationCount) > 0 && <span className="nav-search-country-count">{item.destinationsCount ?? item.destinations_count ?? item.destinationCount} destinations</span>}<span className="nav-search-country-copy"><strong>{displaySearchText(item._label,"Country")}</strong><small>{displaySearchText(item.region||item.continent,"Explore country")}</small>{(item.emotional_description || item.description) && <span className="nav-search-country-description">{displaySearchText(item.emotional_description || item.description).slice(0,110)}</span>}<span className="nav-search-country-cta">Explore {displaySearchText(item._label,"country")} <FiArrowRight size={13}/></span></span></button>)}</div>
+                  <div className="nav-search-country-grid">{searchResults.relatedCountries.slice(0,20).map((item,i)=><button type="button" className="nav-search-country-card nav-search-country-card--photo" style={{ "--country-index": i }} key={item.id||item.slug||item._label+i} onClick={()=>navigate(`/country/${getCountrySlug(item)}`)}><span className="nav-search-country-photo">{getCountryImageUrl(item) ? <img src={getCountryImageUrl(item)} alt="" loading="lazy" onError={e=>{e.currentTarget.style.visibility="hidden";e.currentTarget.parentElement?.classList.add("has-image-error");}}/> : <span className="nav-search-country-photo-placeholder"><FiGlobe size={34}/></span>}<span className="nav-search-country-photo-shade"/></span><span className="nav-search-country-flag">{getCountryFlagUrl(item) ? <img src={getCountryFlagUrl(item)} alt="" loading="lazy" onError={e=>{e.currentTarget.style.display="none";}}/> : <FiGlobe/>}</span>{(item.destinationsCount ?? item.destinations_count ?? item.destinationCount) > 0 && <span className="nav-search-country-count">{item.destinationsCount ?? item.destinations_count ?? item.destinationCount} destinations</span>}<span className="nav-search-country-copy"><strong>{displaySearchText(item._label,"Country")}</strong><small>{displaySearchText(item.region||item.continent,"Explore country")}</small>{(item.emotional_description || item.description) && <span className="nav-search-country-description">{displaySearchText(item.emotional_description || item.description).slice(0,110)}</span>}<span className="nav-search-country-cta">Explore {displaySearchText(item._label,"country")} <FiArrowRight size={13}/></span></span></button>)}</div>
                 </> : <>
+                  {recentSearches.length > 0 && <div className="nav-search-recent-group"><div className="nav-search-recent-heading"><span><FiClock size={13}/> Recent searches</span><button type="button" onClick={()=>{setRecentSearches([]);try{window.localStorage.removeItem("altuvera-recent-searches");}catch{ /* storage may be unavailable */ }}}>Clear history</button></div><div className="nav-search-inline">{recentSearches.map((term,i)=><button type="button" key={term + "-" + i} onClick={()=>{setSearchQuery(term);setSearchResultsView(true);}}><FiClock size={12}/>{term}</button>)}</div></div>}
                   <div className="nav-search-story-heading"><span className="nav-search-suggestion-label">DESTINATION STORIES</span><small>Swipe to explore</small></div>
-                  <div className="nav-search-story-rail" ref={storyRailRef} onScroll={handleStoryRailScroll}>{searchResults.destinations.slice(0,20).map((item,i)=>{const rawImage=item.heroImage||item.hero_image||item.imageUrl||item.image_url||item.thumbnailUrl||item.coverImageUrl||item.cover_image_url||item.coverImage||item.images?.[0]||item.gallery?.[0]||item.heroImages?.[0]||item.hero_images?.[0];const img=typeof rawImage==="string"?rawImage:(rawImage?.url||rawImage?.imageUrl||rawImage?.image_url||rawImage?.src||"");return <button type="button" className={`nav-search-story-card${i===activeStoryIndex?" is-active":""}`} style={{ "--story-index": i }} key={item.id||item._id||item.slug||item._label+i} onClick={()=>selectSearchSuggestion(item)}>{img?<img src={img} alt="" loading="lazy"/>:<span className="nav-search-story-placeholder"><FiMapPin/></span>}<span className="nav-search-story-float"><FiCompass/></span><strong>{displaySearchText(item._label,"Destination")}</strong></button>;})}</div>
+                  <div className="nav-search-story-rail" ref={storyRailRef} onScroll={handleStoryRailScroll}>{searchResults.destinations.slice(0,20).map((item,i)=>{const rawImage=item.heroImage||item.hero_image||item.imageUrl||item.image_url||item.thumbnailUrl||item.coverImageUrl||item.cover_image_url||item.coverImage||item.images?.[0]||item.gallery?.[0]||item.heroImages?.[0]||item.hero_images?.[0];const img=typeof rawImage==="string"?rawImage:(rawImage?.url||rawImage?.imageUrl||rawImage?.image_url||rawImage?.src||"");return <button type="button" className={`nav-search-story-card${i===activeStoryIndex?" is-active":""}`} style={{ "--story-index": i }} key={item.id||item._id||item.slug||item._label+i} onClick={()=>selectSearchSuggestion(item)}>{img?<img src={img} alt="" loading="lazy" onError={e=>{e.currentTarget.style.display="none";}}/>:<span className="nav-search-story-placeholder"><FiMapPin/></span>}<span className="nav-search-story-float"><FiCompass/></span><strong>{displaySearchText(item._label,"Destination")}</strong></button>;})}</div>
                   <div className="nav-search-story-heading"><span className="nav-search-suggestion-label"><FiGlobe size={13}/> COUNTRIES</span><small>Featured places</small></div>
-                  <div className="nav-search-country-rail" tabIndex={0} aria-label="Countries carousel"><div className="nav-search-country-track">{[...searchResults.countries,...searchResults.countries,...searchResults.countries].map((item,i)=><button type="button" className="nav-search-country-card nav-search-country-card--photo" style={{ "--country-index": i }} key={(item.id||item.slug||item._label)+i} onClick={()=>navigate(`/country/${getCountrySlug(item)}`)}><span className="nav-search-country-photo">{getCountryImageUrl(item) ? <img src={getCountryImageUrl(item)} alt="" loading="lazy"/> : <span className="nav-search-country-photo-placeholder"><FiGlobe size={34}/></span>}<span className="nav-search-country-photo-shade"/></span><span className="nav-search-country-flag">{getCountryFlagUrl(item) ? <img src={getCountryFlagUrl(item)} alt="" loading="lazy"/> : <FiGlobe/>}</span>{(item.destinationsCount ?? item.destinations_count ?? item.destinationCount) > 0 && <span className="nav-search-country-count">{item.destinationsCount ?? item.destinations_count ?? item.destinationCount} destinations</span>}<span className="nav-search-country-copy"><strong>{displaySearchText(item._label,"Country")}</strong><small>{displaySearchText(item.region||item.continent,"Explore country")}</small>{(item.emotional_description || item.description) && <span className="nav-search-country-description">{displaySearchText(item.emotional_description || item.description).slice(0,110)}</span>}<span className="nav-search-country-cta">Explore {displaySearchText(item._label,"country")} <FiArrowRight size={13}/></span></span></button>)}</div></div>
+                  <div className="nav-search-country-rail" tabIndex={0} aria-label="Countries carousel"><div className="nav-search-country-track">{[...searchResults.countries,...searchResults.countries,...searchResults.countries].map((item,i)=><button type="button" className="nav-search-country-card nav-search-country-card--photo" style={{ "--country-index": i }} key={(item.id||item.slug||item._label)+i} onClick={()=>navigate(`/country/${getCountrySlug(item)}`)}><span className="nav-search-country-photo">{getCountryImageUrl(item) ? <img src={getCountryImageUrl(item)} alt="" loading="lazy" onError={e=>{e.currentTarget.style.visibility="hidden";e.currentTarget.parentElement?.classList.add("has-image-error");}}/> : <span className="nav-search-country-photo-placeholder"><FiGlobe size={34}/></span>}<span className="nav-search-country-photo-shade"/></span><span className="nav-search-country-flag">{getCountryFlagUrl(item) ? <img src={getCountryFlagUrl(item)} alt="" loading="lazy" onError={e=>{e.currentTarget.style.display="none";}}/> : <FiGlobe/>}</span>{(item.destinationsCount ?? item.destinations_count ?? item.destinationCount) > 0 && <span className="nav-search-country-count">{item.destinationsCount ?? item.destinations_count ?? item.destinationCount} destinations</span>}<span className="nav-search-country-copy"><strong>{displaySearchText(item._label,"Country")}</strong><small>{displaySearchText(item.region||item.continent,"Explore country")}</small>{(item.emotional_description || item.description) && <span className="nav-search-country-description">{displaySearchText(item.emotional_description || item.description).slice(0,110)}</span>}<span className="nav-search-country-cta">Explore {displaySearchText(item._label,"country")} <FiArrowRight size={13}/></span></span></button>)}</div></div>
                   <h3 className="nav-search-section-title">Explore destinations</h3>
                   <div className="nav-search-destination-grid">{searchResults.destinations.slice(0,20).map((item,i)=><div className="nav-search-explore-card" key={item.id||item._id||item.slug||item._label+i}><ExploreDestinationCard destination={item}/></div>)}</div>
                 </>}
