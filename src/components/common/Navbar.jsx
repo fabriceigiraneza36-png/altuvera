@@ -429,7 +429,7 @@ const Navbar = () => {
               else { i++; k++; }
             }
             return differences + (i < word.length || k < query.length ? 1 : 0) <= 1;
-          })()));
+          })())));
       }
       return false;
     };
