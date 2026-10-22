@@ -21,6 +21,7 @@ import {
   HiShieldCheck,
   HiGlobe,
   HiCheckCircle,
+  HiClipboardCopy,
   HiExclamationCircle,
   HiInformationCircle,
   HiChevronLeft,
