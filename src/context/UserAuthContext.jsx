@@ -13,6 +13,7 @@ import React, {
 } from "react";
 import { connectSocket, disconnectSocket, getSocket } from "../utils/socket";
 import userDataCache from "../utils/userDataCache";
+import { startAuthentication } from "@simplewebauthn/browser";
 
 // ============================================================================
 // Configuration
@@ -1019,6 +1020,32 @@ export function UserAuthProvider({ children }) {
     return data;
   }, [authFetch, pendingFactorChallenge, persistSession, saveAuth, closeModal, triggerCongratulation]);
 
+
+  const verifyLoginPasskey = useCallback(async () => {
+    if (!pendingFactorChallenge) throw new Error("Your verification session expired. Please sign in again.");
+    if (!window.PublicKeyCredential || !navigator.credentials) throw new Error("Passkeys are not supported in this browser.");
+    const options = await authFetch("/users/login/passkey/options", {
+      method: "POST",
+      body: JSON.stringify({ challengeToken: pendingFactorChallenge }),
+    });
+    const assertion = await startAuthentication({ optionsJSON: options.data || options });
+    const data = await authFetch("/users/login/passkey/verify", {
+      method: "POST",
+      body: JSON.stringify({ challengeToken: pendingFactorChallenge, response: assertion }),
+    });
+    if (data?.success === false) throw new Error(data.message || "Passkey verification failed.");
+    const payload = extractPayload(data);
+    saveAuth(data, { persist: persistSession });
+    const newCounter = payload.loginCounter ?? data?.data?.loginCounter ?? 0;
+    setLoginCounter(newCounter);
+    store.setLoginCounter(newCounter);
+    setPendingFactorChallenge("");
+    setPendingEmail("");
+    closeModal();
+    triggerCongratulation("login");
+    return data;
+  }, [pendingFactorChallenge, authFetch, persistSession, saveAuth, closeModal, triggerCongratulation]);
+
   // ============================================================================
   // Resend Code
   // ============================================================================
@@ -1665,13 +1692,13 @@ export function UserAuthProvider({ children }) {
 
   const value = useMemo(() => ({
     user, token, isAuthenticated, authLoading,
-    isModalOpen, modalView, pendingEmail, pendingFactorChallenge, pendingFactorChallenge,
+    isModalOpen, modalView, pendingEmail, pendingFactorChallenge,
     googleUser, googleLoaded, googleLoading, githubLoading,
     hasGooglePending, socialAuthError, persistSession,
     showCongratulation, congratulationType, showNotLoggedInMessage,
     requiresLoginVerification,
     openModal, closeModal, setModalView,
-    login, register, verifyCode, verifyLoginFactor, resendCode, checkEmail,
+    login, register, verifyCode, verifyLoginFactor, verifyLoginPasskey, resendCode, checkEmail,
     googleSignIn, completeGoogleSignUp, promptGoogleAuth,
     clearGooglePending, clearSocialAuthError,
     githubSignIn, startGithubAuth,
@@ -1687,7 +1714,7 @@ export function UserAuthProvider({ children }) {
     showCongratulation, congratulationType, showNotLoggedInMessage,
     requiresLoginVerification,
     openModal, closeModal, setModalView,
-    login, register, verifyCode, verifyLoginFactor, resendCode, checkEmail,
+    login, register, verifyCode, verifyLoginFactor, verifyLoginPasskey, resendCode, checkEmail,
     googleSignIn, completeGoogleSignUp, promptGoogleAuth,
     clearGooglePending, clearSocialAuthError,
     githubSignIn, startGithubAuth,
