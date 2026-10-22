@@ -28,7 +28,16 @@ export default function AccountSecurity() {
   const [recoveryContactEmail,setRecoveryContactEmail] = useState("");
   const [recoveryRequested,setRecoveryRequested] = useState(false);
   const [rotateCode,setRotateCode] = useState("");
-  const refresh = useCallback(async()=>{ try { const r=await api("/security/factors"); setStatus(r.data); const p=await api("/security/passkeys"); setPasskeys(p.data||[]); } catch(e){setError(e.message);} },[]);
+  const refresh = useCallback(async()=>{
+    const [factorsResult, passkeysResult] = await Promise.allSettled([
+      api("/security/factors"),
+      api("/security/passkeys"),
+    ]);
+    if (factorsResult.status === "fulfilled") setStatus(factorsResult.value.data || {});
+    else setError(factorsResult.reason?.message || "Security status is temporarily unavailable.");
+    if (passkeysResult.status === "fulfilled") setPasskeys(Array.isArray(passkeysResult.value.data) ? passkeysResult.value.data : []);
+    else setError((current) => current || passkeysResult.reason?.message || "Passkeys are temporarily unavailable.");
+  },[]);
   useEffect(()=>{refresh();},[refresh]);
   const run = async (fn) => { setBusy(true);setError("");setMessage("");try{await fn();}catch(e){setError(e.message);}finally{setBusy(false);} };
   return <main className="mx-auto max-w-3xl px-4 py-10 text-gray-900">
