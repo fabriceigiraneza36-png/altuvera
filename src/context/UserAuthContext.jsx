@@ -1474,7 +1474,7 @@ export function UserAuthProvider({ children }) {
     } finally {
       setGithubLoading(false);
     }
-  }, [authFetch, closeModal, persistSession, saveAuth, triggerCongratulation]);
+  }, [authFetch, closeModal, openModal, persistSession, saveAuth, triggerCongratulation]);
 
   const startGithubAuth = useCallback((mode = "signin") => {
     if (!GITHUB_CLIENT_ID) {
