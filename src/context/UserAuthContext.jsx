@@ -1004,6 +1004,13 @@ export function UserAuthProvider({ children }) {
     persistSession, requiresLoginVerification, saveAuth, triggerCongratulation,
   ]);
 
+  const beginFactorChallenge = useCallback((challenge, methods = []) => {
+    if (!challenge) throw new Error("The additional verification challenge was missing. Please sign in again.");
+    setPendingFactorChallenge(challenge);
+    setPendingFactorMethods(Array.isArray(methods) ? methods : []);
+    setModalView("factor");
+  }, []);
+
   const verifyLoginFactor = useCallback(async (method, code) => {
     if (!pendingFactorChallenge) throw new Error("Your verification session expired. Please sign in again.");
     const data = await authFetch("/users/login/verify-factor", {
@@ -1734,7 +1741,7 @@ export function UserAuthProvider({ children }) {
     showCongratulation, congratulationType, showNotLoggedInMessage,
     requiresLoginVerification,
     openModal, closeModal, setModalView,
-    login, register, verifyCode, verifyLoginFactor, verifyLoginPasskey, resendCode, checkEmail,
+    login, register, verifyCode, beginFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode, checkEmail,
     googleSignIn, completeGoogleSignUp, promptGoogleAuth,
     clearGooglePending, clearSocialAuthError,
     githubSignIn, startGithubAuth,
