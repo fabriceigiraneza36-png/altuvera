@@ -584,7 +584,7 @@ const Navbar = () => {
         "[role='slider']", "[contenteditable='true']", "[data-no-menu-swipe]",
         ".nav-search-story-rail", ".nav-search-country-rail", ".nav-search-country-track",
         ".carousel", "[data-carousel]", ".swiper", ".slick-slider", ".embla",
-        ".gallery", ".leaflet-container", ".map-container", ".messages",
+        ".gallery", ".leaflet-container", ".map-container", ".messages", ".dashboard-layout",
         ".chat", ".chat-window", ".horizontal-scroll"
       ].join(","));
       const horizontalScroller = target?.closest("*");
