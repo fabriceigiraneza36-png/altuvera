@@ -498,6 +498,7 @@ export function UserAuthProvider({ children }) {
   const [modalView,   setModalView]     = useState("login");
   const [pendingEmail, setPendingEmail] = useState("");
   const [pendingFactorChallenge, setPendingFactorChallenge] = useState("");
+  const [pendingFactorMethods, setPendingFactorMethods] = useState([]);
 
   // ── Re-verification ───────────────────────────────────────────────────────
   const [requiresLoginVerification, setRequiresLoginVerification] = useState(false);
@@ -959,8 +960,10 @@ export function UserAuthProvider({ children }) {
       const challenge = data.challengeToken || data.data?.challengeToken;
       if (!challenge) throw new Error("The additional verification challenge was missing. Please sign in again.");
       setPendingFactorChallenge(challenge);
+      const methods = data.methods || data.data?.methods || ["totp", "recovery_code"];
+      setPendingFactorMethods(methods);
       setModalView("factor");
-      return { requiresSecondFactor: true, methods: data.methods || data.data?.methods || ["totp", "recovery_code"] };
+      return { requiresSecondFactor: true, methods };
     }
 
     const payload    = extractPayload(data);
@@ -1014,6 +1017,7 @@ export function UserAuthProvider({ children }) {
     setLoginCounter(newCounter);
     store.setLoginCounter(newCounter);
     setPendingFactorChallenge("");
+    setPendingFactorMethods([]);
     setPendingEmail("");
     closeModal();
     triggerCongratulation("login");
@@ -1723,7 +1727,7 @@ export function UserAuthProvider({ children }) {
 
   const value = useMemo(() => ({
     user, token, isAuthenticated, authLoading,
-    isModalOpen, modalView, pendingEmail, pendingFactorChallenge,
+    isModalOpen, modalView, pendingEmail, pendingFactorChallenge, pendingFactorMethods,
     googleUser, googleLoaded, googleLoading, githubLoading,
     hasGooglePending, socialAuthError, persistSession,
     showCongratulation, congratulationType, showNotLoggedInMessage,
@@ -1739,7 +1743,7 @@ export function UserAuthProvider({ children }) {
     fetchUser, authFetch, saveAuth,
   }), [
     user, token, isAuthenticated, authLoading,
-    isModalOpen, modalView, pendingEmail,
+    isModalOpen, modalView, pendingEmail, pendingFactorChallenge, pendingFactorMethods,
     googleUser, googleLoaded, googleLoading, githubLoading,
     hasGooglePending, socialAuthError, persistSession,
     showCongratulation, congratulationType, showNotLoggedInMessage,
