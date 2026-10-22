@@ -12,7 +12,7 @@ import NotificationBell from "./NotificationBell";
 import { useNotifications } from "../../hooks/useNotifications";
 import { useConversations } from "../../hooks/useConversations";
 
-const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMobileMenuToggle = false }) => {
+const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMobileMenuToggle = false, compactTop = false }) => {
   const { user, logout }    = useUserAuth();
   const navigate             = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -35,7 +35,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
   ];
 
   return (
-    <div className={`dashboard-layout ${noPadding ? "dashboard-layout-no-padding" : ""}`}>
+    <div className={`dashboard-layout ${noPadding ? "dashboard-layout-no-padding" : ""} ${compactTop ? "dashboard-layout-compact-top" : ""}`}>
       <style>{`
         .dashboard-layout {
           display: flex;
@@ -50,7 +50,7 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
           padding-top: 80px;
           overflow: visible;
         }
-        .dashboard-sidebar {
+        .dashboard-layout-compact-top { padding-top: 0; min-height: 100vh; min-height: 100dvh; }\n        .dashboard-sidebar {
           width: 260px; background: #ffffff;
           border-right: 1px solid #e2e8f0;
           padding: 24px 16px; display: flex; flex-direction: column;
