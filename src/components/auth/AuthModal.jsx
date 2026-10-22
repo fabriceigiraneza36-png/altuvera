@@ -466,7 +466,7 @@ export default function AuthModal() {
   const {
     isModalOpen, modalView, setModalView, closeModal,
     login, register, verifyCode, verifyLoginFactor, verifyLoginPasskey, resendCode,
-    pendingEmail, persistSession, setSessionPreference,
+    pendingEmail, pendingFactorMethods, persistSession, setSessionPreference,
     googleUser, googleLoaded, googleLoading, githubLoading,
     hasGooglePending, promptGoogleAuth, startGithubAuth,
     completeGoogleSignUp, clearGooglePending,
@@ -1953,7 +1953,9 @@ export default function AuthModal() {
                     catch (err) { setError(err?.message || "Verification failed."); }
                     finally { setLoading(false); }
                   }}>
+                    {pendingFactorMethods.includes("passkey") && (
                     <button type="button" disabled={loading} onClick={async()=>{setLoading(true);setError("");try{await verifyLoginPasskey();setFactorCode("");}catch(err){setError(err?.message||"Passkey verification failed.");}finally{setLoading(false);}}} className="mb-3 w-full rounded-xl border border-emerald-700 p-3 font-semibold text-emerald-800 disabled:opacity-50">Use a passkey on this device</button>
+                    )}
                     <div className="flex gap-2">
                       <button type="button" onClick={() => {setFactorMethod("totp");setFactorCode("");}} className="rounded-xl border px-3 py-2 text-sm">Authenticator app</button>
                       <button type="button" onClick={() => {setFactorMethod("recovery_code");setFactorCode("");}} className="rounded-xl border px-3 py-2 text-sm">Recovery code</button>
