@@ -325,6 +325,110 @@ function ToggleRow({ icon, label, desc, checked, onChange, right }) {
 }
 
 // ─── Section Card ─────────────────────────────────────────────────────────────
+function UserPushNotifications() {
+  const [supported, setSupported] = useState(false);
+  const [permission, setPermission] = useState(() => typeof Notification !== "undefined" ? Notification.permission : "unsupported");
+  const [subscribed, setSubscribed] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const apiBase = import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
+
+  const toUint8Array = (value) => {
+    const padding = "=".repeat((4 - value.length % 4) % 4);
+    const decoded = atob((value + padding).replace(/-/g, "+").replace(/_/g, "/"));
+    return Uint8Array.from(decoded, (char) => char.charCodeAt(0));
+  };
+
+  useEffect(() => {
+    let active = true;
+    if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
+      setSupported(false);
+      return () => { active = false; };
+    }
+    setSupported(true);
+    navigator.serviceWorker.register("/push-sw.js", { scope: "/" })
+      .then((registration) => registration.pushManager.getSubscription())
+      .then((subscription) => { if (active) setSubscribed(Boolean(subscription)); })
+      .catch(() => { if (active) setMessage("Push is not available in this browser yet. Try updating your browser and reopening Altuvera."); });
+    return () => { active = false; };
+  }, []);
+
+  const enablePush = async () => {
+    setLoading(true); setMessage("");
+    try {
+      if (!("Notification" in window)) throw new Error("This browser does not support web notifications.");
+      let currentPermission = Notification.permission;
+      if (currentPermission !== "granted") {
+        currentPermission = await Notification.requestPermission();
+        setPermission(currentPermission);
+      }
+      if (currentPermission !== "granted") throw new Error(currentPermission === "denied"
+        ? "Notifications are blocked by your browser. Allow them in site settings, then try again."
+        : "Please allow notifications to continue.");
+      const keyResponse = await fetch(`${apiBase}/push/vapid-public-key`);
+      if (!keyResponse.ok) throw new Error("Could not connect to Altuvera's notification service.");
+      const keyData = await keyResponse.json();
+      if (!keyData.publicKey) throw new Error("Push notifications are not configured on the server yet.");
+      const registration = await navigator.serviceWorker.ready;
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true, applicationServerKey: toUint8Array(keyData.publicKey),
+      });
+      const token = localStorage.getItem("altuvera_auth_token") || sessionStorage.getItem("altuvera_auth_token") || "";
+      if (!token) throw new Error("Please sign in again before enabling push notifications.");
+      const response = await fetch(`${apiBase}/push/subscribe`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ endpoint: subscription.endpoint, p256dh: subscription.toJSON().keys?.p256dh, auth: subscription.toJSON().keys?.auth, userAgent: navigator.userAgent }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result.success === false) throw new Error(result.message || "Could not save this device subscription.");
+      setSubscribed(true); setPermission("granted"); setMessage("Push notifications are enabled on this device.");
+    } catch (error) { setMessage(error.message || "Could not enable push notifications."); }
+    finally { setLoading(false); }
+  };
+
+  const disablePush = async () => {
+    setLoading(true); setMessage("");
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      const subscription = await registration.pushManager.getSubscription();
+      if (subscription) {
+        const token = localStorage.getItem("altuvera_auth_token") || sessionStorage.getItem("altuvera_auth_token") || "";
+        await fetch(`${apiBase}/push/unsubscribe`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+          body: JSON.stringify({ endpoint: subscription.endpoint }),
+        });
+        await subscription.unsubscribe();
+      }
+      setSubscribed(false); setMessage("Push notifications are disabled on this device.");
+    } catch (error) { setMessage(error.message || "Could not disable push notifications."); }
+    finally { setLoading(false); }
+  };
+
+  return (
+    <SectionCard icon={<FiBell size={18} />} title="Push Notifications" subtitle="Receive important booking, account, and travel updates even when Altuvera is not open">
+      {!supported ? (
+        <p style={{ margin: 0, color: "#64748b", fontSize: ".88rem" }}>This browser does not support web push notifications. Try a supported browser or install Altuvera from a supported browser on your device.</p>
+      ) : (
+        <>
+          <div className="us-security-info">
+            <strong>{subscribed ? "This device is subscribed" : "Push notifications are not enabled on this device"}</strong>
+            <p style={{ margin: "6px 0 0" }}>Browser permission: <strong>{permission}</strong>. You can change this choice at any time.</p>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+            <button className="us-btn us-btn-primary" type="button" onClick={subscribed ? disablePush : enablePush} disabled={loading}>
+              {loading ? "Please wait…" : subscribed ? "Disable on this device" : "Enable push notifications"}
+            </button>
+            {message && <p role="status" style={{ margin: 0, fontSize: ".82rem", color: message.includes("enabled") || message.includes("disabled") ? "#047857" : "#b91c1c", flexBasis: "100%" }}>{message}</p>}
+          </div>
+        </>
+      )}
+    </SectionCard>
+  );
+}
+
 function SectionCard({ icon, title, subtitle, children }) {
   return (
     <div className="us-card">
@@ -469,6 +573,8 @@ export default function UserSettings() {
               />
             ))}
           </SectionCard>
+
+          <UserPushNotifications />
 
           {/* Experience and personalization controls that were not connected to
               working site behavior have been removed. */}
