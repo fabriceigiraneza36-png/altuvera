@@ -1757,7 +1757,7 @@ export function UserAuthProvider({ children }) {
     showCongratulation, congratulationType, showNotLoggedInMessage,
     requiresLoginVerification,
     openModal, closeModal, setModalView,
-    login, register, verifyCode, verifyLoginFactor, verifyLoginPasskey, resendCode, checkEmail,
+    login, register, verifyCode, beginFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode, checkEmail,
     googleSignIn, completeGoogleSignUp, promptGoogleAuth,
     clearGooglePending, clearSocialAuthError,
     githubSignIn, startGithubAuth,
