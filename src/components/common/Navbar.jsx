@@ -458,7 +458,7 @@ const Navbar = () => {
   }, [backendCountries, searchDestinations, searchQuery, searchSort]);
 
   const rememberSearch = (value) => {
-    const term = String(value || "").trim().replace(/\\s+/g, " ");
+    const term = String(value || "").trim().replace(/\s+/g, " ");
     if (!term) return;
     setRecentSearches(previous => {
       const next = [term, ...previous.filter(item => normalizeSearchValue(item) !== normalizeSearchValue(term))].slice(0, 6);
