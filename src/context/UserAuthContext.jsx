@@ -1486,7 +1486,7 @@ export function UserAuthProvider({ children }) {
 
       if (data?.requiresEmailVerification || data?.data?.requiresEmailVerification) {
         setPendingEmail(data?.data?.email || "");
-        setModalView("verify");
+        openModal("verify", { skipNotLoggedInMessage: true });
         return { requiresVerification: true, email: data?.data?.email || "" };
       }
 
