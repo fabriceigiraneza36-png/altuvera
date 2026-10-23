@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Run tests when configured
-        run: npm test --if-present
+        run: npm run test --if-present
       - name: Build production bundle
         run: npm run build
 
