@@ -20,7 +20,7 @@ const BODY_FONT =
 // CONFIGURATION
 // ============================================================
 const CONTACT_INFO = {
-  name: "IGIRANEZA Fabrice",
+  name: "Admin",
   phone1: "+250 785751391",
   phone2: "+250 785751391",
   whatsapp: "+250785751391",
