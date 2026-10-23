@@ -105,7 +105,7 @@ const teamAPI = {
 const FALLBACK_TEAM = [
   {
     id: 1,
-    name: "IGIRANEZA Fabrice",
+    name: "Admin",
     role: "Founder & CEO",
     department: "Leadership",
     image_url: "https://randomuser.me/api/portraits/men/32.jpg",
