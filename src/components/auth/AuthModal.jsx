@@ -616,6 +616,8 @@ export default function AuthModal() {
   const [verifySource,    setVerifySource]    = useState("login");
   const [authMethod,      setAuthMethod]      = useState("email");
   const [showAuthMethods, setShowAuthMethods] = useState(false);
+  const [switchingView,   setSwitchingView]   = useState(false);
+  const switchViewTimerRef = useRef(null);
   const [codeState,       setCodeState]       = useState("");
   const [emailTouched,    setEmailTouched]    = useState(false);
   const [nameTouched,     setNameTouched]     = useState(false);
@@ -774,21 +776,32 @@ export default function AuthModal() {
      SWITCH VIEW
   ═══════════════════════════════════════════════════════════ */
   const switchView = useCallback((view) => {
-    if (isBusy) return;
-    stopExpiryCountdown();
-    resetForgotUsername();
-    setModalView(view);
-    setError(""); setSuccess("");
-    setCode(emptyCode());
-    setAuthMethod("email");
-    setEmailTouched(false); setNameTouched(false); setTermsTouched(false);
-    clearSocialAuthError?.();
-    if (view === "login") clearGooglePending?.();
-  }, [clearGooglePending, clearSocialAuthError, isBusy, resetForgotUsername, setModalView, stopExpiryCountdown]);
+    if (isBusy || switchingView || view === modalView) return;
+    if (switchViewTimerRef.current) window.clearTimeout(switchViewTimerRef.current);
+    setSwitchingView(true);
+    switchViewTimerRef.current = window.setTimeout(() => {
+      stopExpiryCountdown();
+      resetForgotUsername();
+      setModalView(view);
+      setError(""); setSuccess("");
+      setCode(emptyCode());
+      setAuthMethod("email");
+      setShowAuthMethods(false);
+      setEmailTouched(false); setNameTouched(false); setTermsTouched(false);
+      clearSocialAuthError?.();
+      if (view === "login") clearGooglePending?.();
+      setSwitchingView(false);
+      switchViewTimerRef.current = null;
+    }, 1500);
+  }, [clearGooglePending, clearSocialAuthError, isBusy, switchingView, modalView, resetForgotUsername, setModalView, stopExpiryCountdown]);
 
   /* ═══════════════════════════════════════════════════════════
      EFFECTS
   ═══════════════════════════════════════════════════════════ */
+  useEffect(() => () => {
+    if (switchViewTimerRef.current) window.clearTimeout(switchViewTimerRef.current);
+  }, []);
+
   useEffect(() => {
     if (!isModalOpen) return undefined;
     const previouslyFocused = document.activeElement;
@@ -1356,6 +1369,12 @@ export default function AuthModal() {
 
           {/* Form panel */}
           <div className="am-form-panel flex-1 flex flex-col min-w-0 bg-white overflow-hidden">
+            {switchingView && (
+              <div className="am-switch-transition" role="status" aria-live="polite" aria-label="Switching authentication form">
+                <img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT} className="am-switch-transition__logo" />
+                <span className="am-switch-transition__label">Altuvera</span>
+              </div>
+            )}
 
             {/* Header */}
             <div className="am-header flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex-shrink-0">
@@ -1621,7 +1640,7 @@ export default function AuthModal() {
                   <div className="text-center mt-4 mb-6"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700"><HiShieldCheck className="h-6 w-6" /></div><h2 id="auth-title" className="mt-3 text-xl sm:text-2xl font-extrabold text-gray-900">Choose how to sign in</h2><p className="mt-1 text-sm text-gray-500">Use the method that is most convenient for you.</p></div>
                   {error && <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">{error}</div>}
                   <div className="grid gap-3">
-                    <button type="button" disabled={isBusy || !isOnline} onClick={async () => { setLoading(true); setError(""); try { await verifyLoginPasskey(); } catch (err) { setError(formatAuthError(err, "Passkey sign-in could not be completed. Try email or another method.")); } finally { setLoading(false); } }} className="am-method-option"><span className="am-method-icon"><RiShieldKeyholeLine className="h-5 w-5" /></span><span className="am-method-copy"><strong>Passkey</strong><small>Use your fingerprint, face unlock, device PIN, or security key</small></span><HiArrowRight className="h-4 w-4 am-method-arrow" /></button>
+                    <button type="button" disabled={isBusy || !isOnline || switchingView} onClick={() => { setShowAuthMethods(false); setAuthMethod("email"); setError("Passkeys are available after you start email sign-in and reach the additional verification step. Enter your email and full name to continue."); setSuccess(""); window.setTimeout(() => firstInputRef.current?.focus(), 80); }} className="am-method-option"><span className="am-method-icon"><RiShieldKeyholeLine className="h-5 w-5" /></span><span className="am-method-copy"><strong>Continue with a passkey</strong><small>Available after starting sign-in with your email</small></span><HiArrowRight className="h-4 w-4 am-method-arrow" /></button>
                     <button type="button" disabled={googleLoading || githubLoading || loading || !isOnline} onClick={() => handleGoogleAuth("signin")} className="am-method-option"><span className="am-method-icon"><FcGoogle className="h-5 w-5" /></span><span className="am-method-copy"><strong>Continue with Google</strong><small>Sign in with your Google account</small></span><HiArrowRight className="h-4 w-4 am-method-arrow" /></button>
                     <button type="button" disabled={googleLoading || githubLoading || loading || !isOnline} onClick={() => handleGithubAuth("signin")} className="am-method-option"><span className="am-method-icon"><FiGithub className="h-5 w-5" /></span><span className="am-method-copy"><strong>Continue with GitHub</strong><small>Use your GitHub account</small></span><HiArrowRight className="h-4 w-4 am-method-arrow" /></button>
                     <button type="button" onClick={() => { setShowAuthMethods(false); setAuthMethod("email"); setError(""); setTimeout(() => firstInputRef.current?.focus(), 50); }} className="am-method-option"><span className="am-method-icon"><HiMail className="h-5 w-5" /></span><span className="am-method-copy"><strong>Email verification</strong><small>Receive a one-time verification code by email</small></span><HiArrowRight className="h-4 w-4 am-method-arrow" /></button>
