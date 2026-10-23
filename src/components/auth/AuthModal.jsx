@@ -115,22 +115,22 @@ const LANGUAGES = [
 ];
 
 const TRAVEL_STYLES = [
-  { label: "Adventure",   emoji: "🧗" },
-  { label: "Luxury",      emoji: "✨" },
-  { label: "Budget",      emoji: "💰" },
-  { label: "Cultural",    emoji: "🏛️" },
-  { label: "Wildlife",    emoji: "🦁" },
-  { label: "Beach",       emoji: "🏖️" },
-  { label: "Mountain",    emoji: "🏔️" },
-  { label: "City Break",  emoji: "🏙️" },
-  { label: "Road Trip",   emoji: "🚗" },
-  { label: "Backpacking", emoji: "🎒" },
-  { label: "Family",      emoji: "👨‍👩‍👧" },
-  { label: "Solo",        emoji: "🙋" },
-  { label: "Eco-Tourism", emoji: "🌿" },
-  { label: "Photography", emoji: "📸" },
-  { label: "Culinary",    emoji: "🍽️" },
-  { label: "Spiritual",   emoji: "🧘" },
+  { label: "Adventure", icon: HiSparkles },
+  { label: "Luxury", icon: HiShieldCheck },
+  { label: "Budget", icon: HiCheckCircle },
+  { label: "Cultural", icon: HiOfficeBuilding },
+  { label: "Wildlife", icon: HiGlobe },
+  { label: "Beach", icon: HiGlobe },
+  { label: "Mountain", icon: HiLocationMarker },
+  { label: "City Break", icon: HiOfficeBuilding },
+  { label: "Road Trip", icon: HiLocationMarker },
+  { label: "Backpacking", icon: HiPhotograph },
+  { label: "Family", icon: HiUser },
+  { label: "Solo", icon: HiUser },
+  { label: "Eco-Tourism", icon: HiGlobe },
+  { label: "Photography", icon: HiPhotograph },
+  { label: "Culinary", icon: HiCalendar },
+  { label: "Spiritual", icon: HiSparkles },
 ];
 
 /* ═══════════════════════════════════════════════════════════════
@@ -2025,7 +2025,7 @@ export default function AuthModal() {
                           )}
                         </div>
                         <div className="flex flex-wrap gap-1.5">
-                          {TRAVEL_STYLES.map(({ label, emoji }) => {
+                          {TRAVEL_STYLES.map(({ label, icon: TravelIcon }) => {
                             const active = form.travelStyles.includes(label);
                             return (
                               <button key={label} type="button" onClick={() => toggleTravelStyle(label)}
@@ -2035,7 +2035,7 @@ export default function AuthModal() {
                                     : "bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50"
                                 }`}
                               >
-                                <span>{emoji}</span>
+                                <TravelIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
                                 <span>{label}</span>
                                 {active && <HiCheck className="w-3 h-3" />}
                               </button>
