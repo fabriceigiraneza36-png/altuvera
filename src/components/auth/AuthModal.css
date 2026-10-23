@@ -2190,3 +2190,23 @@
 @media (prefers-reduced-motion: reduce) {
   .am-auth-terms { transition: none !important; }
 }
+
+
+/* Keyboard-visible consent and session-preference controls. */
+.am-keep-signed {
+  min-height: 42px;
+  border-radius: 10px;
+  padding: 5px 7px;
+}
+.am-keep-signed:focus-within {
+  outline: 2px solid rgba(5, 150, 105, .72);
+  outline-offset: 2px;
+  background: rgba(236, 253, 245, .72);
+}
+.am-keep-signed input:focus {
+  box-shadow: none !important;
+}
+.am-auth-offline p,
+.am-auth-field-error {
+  overflow-wrap: anywhere;
+}
