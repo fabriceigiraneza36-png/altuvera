@@ -2904,3 +2904,78 @@
     overflow-y: auto;
   }
 }
+
+/* Auth modal final polish: generous viewport height and branded view transition. */
+@keyframes am-logo-bounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  18% { transform: translateY(-13px) scale(1.035); }
+  36% { transform: translateY(0) scale(.985); }
+  54% { transform: translateY(-7px) scale(1.02); }
+  72% { transform: translateY(0) scale(1); }
+}
+.am-switch-transition {
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 24px;
+  background: rgba(255,255,255,.97);
+  animation: am-transition-veil 220ms ease-out both;
+}
+.am-switch-transition__logo {
+  display: block;
+  width: clamp(76px, 12vw, 112px);
+  height: clamp(76px, 12vw, 112px);
+  object-fit: contain;
+  filter: drop-shadow(0 12px 18px rgba(5, 100, 55, .14));
+  animation: am-logo-bounce 1.15s cubic-bezier(.34,1.56,.64,1) both;
+}
+.am-switch-transition__label {
+  color: #075e3b;
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  animation: am-transition-label 420ms ease-out both;
+}
+@keyframes am-transition-veil {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes am-transition-label {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.am-modal { max-height: min(94dvh, 960px); }
+@media (min-width: 1024px) {
+  .am-modal { min-height: min(86dvh, 900px) !important; }
+  .am-form-panel { min-height: min(86dvh, 900px); }
+}
+.am-header > button[aria-label="Close"] {
+  flex: 0 0 auto;
+  width: 42px !important;
+  height: 42px !important;
+  border: 1px solid #dcebe1;
+  border-radius: 13px !important;
+  color: #075e3b !important;
+  background: #f5fbf7;
+  box-shadow: 0 3px 12px rgba(5, 100, 55, .08);
+}
+.am-header > button[aria-label="Close"]:hover {
+  color: #064e3b !important;
+  background: #e8f7ed !important;
+  transform: rotate(4deg);
+}
+.am-header > button[aria-label="Close"] svg { width: 21px; height: 21px; }
+@media (max-width: 639px) {
+  .am-modal { height: 100dvh !important; max-height: 100dvh !important; }
+  .am-switch-transition { padding-bottom: max(24px, env(safe-area-inset-bottom)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .am-switch-transition, .am-switch-transition__logo, .am-switch-transition__label {
+    animation: none !important;
+  }
+}
