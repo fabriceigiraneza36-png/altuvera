@@ -26,7 +26,7 @@ function CommentCard({ comment }) {
 export default function CommentsCarousel({ destination, entityType = "destination" }) {
   const destinationId = destination?.numericId || destination?.id || destination?._id || destination?.slug;
   const { comments, loading, error, createComment, refetch } = useDestinationComments(destinationId, entityType);
-  const { isAuthenticated = false, openModal } = useUserAuth() || {};
+  const { isAuthenticated = false, openModal, user } = useUserAuth() || {};
   const [modalOpen, setModalOpen] = useState(false);
   const [text, setText] = useState("");
   const [emojiOpen, setEmojiOpen] = useState(false);
@@ -36,9 +36,40 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [fabVisible, setFabVisible] = useState(false);
+  const lastScrollY = useRef(0);
+  const noticeTimer = useRef(null);
 
   const visibleComments = useMemo(() => comments.filter((comment) => comment && comment.content), [comments]);
   const loopComments = useMemo(() => visibleComments.length > 0 ? [...visibleComments, ...visibleComments] : [], [visibleComments]);
+  const currentUserId = user?.id || user?._id || user?.userId || user?.uid;
+  const alreadyCommented = useMemo(() => Boolean(currentUserId) && visibleComments.some((comment) => {
+    const authorId = comment?.userId || comment?.user_id || comment?.user?.id || comment?.user?._id || comment?.authorId;
+    return authorId != null && String(authorId) === String(currentUserId);
+  }), [currentUserId, visibleComments]);
+  useEffect(() => {
+    const updateFab = () => {
+      const currentY = window.scrollY || 0;
+      const direction = currentY - lastScrollY.current;
+      const gallery = document.querySelector("#dd-attraction-gallery");
+      const galleryBottom = gallery ? gallery.getBoundingClientRect().bottom + currentY : Infinity;
+      const pastGallery = currentY >= galleryBottom - 24;
+      setFabVisible((wasVisible) => {
+        if (alreadyCommented || modalOpen || !pastGallery) return false;
+        if (direction > 2) return false;
+        if (direction < -2) return true;
+        return wasVisible;
+      });
+      lastScrollY.current = currentY;
+    };
+    lastScrollY.current = window.scrollY || 0;
+    window.addEventListener("scroll", updateFab, { passive: true });
+    window.addEventListener("resize", updateFab);
+    updateFab();
+    return () => { window.removeEventListener("scroll", updateFab); window.removeEventListener("resize", updateFab); };
+  }, [alreadyCommented, modalOpen, destinationId]);
+  useEffect(() => () => window.clearTimeout(noticeTimer.current), []);
 
   const closeModal = useCallback(() => {
     setModalOpen(false);
@@ -112,7 +143,12 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
       setEmojiFiltersOpen(false);
       setSubmitSuccess(true);
       await refetch();
-      window.setTimeout(() => setSubmitSuccess(false), 2500);
+      setModalOpen(false);
+      setSubmitSuccess(false);
+      setNotice("Thanks" + (user?.name ? ", " + user.name : "") + "! Your comment is published. You can add one comment per destination.");
+      window.clearTimeout(noticeTimer.current);
+      noticeTimer.current = window.setTimeout(() => setNotice(""), 7000);
+      setFabVisible(false);
     } catch (err) {
       setSubmitError(err?.message || "Your comment could not be saved. Check your connection and try again.");
     } finally {
@@ -136,15 +172,16 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
         </section>
       )}
 
-      <button
-        type="button"
-        className="dc-comment-fab"
-        onClick={openCommentModal}
-        aria-label="Write a comment"
-        title="Write a comment"
-      >
-        <MessageCircle size={22} />
-      </button>
+      {fabVisible && !alreadyCommented && (
+        <button type="button" className="dc-comment-fab" onClick={openCommentModal}
+          aria-label={"Add a comment about " + (destination?.name || "this destination")} title="Share your experience">
+          <MessageCircle size={22} /><span>Share your experience</span>
+        </button>
+      )}
+      {notice && <div className="dc-comment-success-toast" role="status" aria-live="polite">
+        <span className="dc-comment-success-toast__icon" aria-hidden="true">✓</span><span>{notice}</span>
+        <button type="button" onClick={() => { setNotice(""); window.clearTimeout(noticeTimer.current); }} aria-label="Dismiss notification"><X size={16} /></button>
+      </div>
 
       {(error || submitError) && !modalOpen && (
         <div className="dc-comment-error-toast" role="alert">
@@ -156,12 +193,13 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
 
       {modalOpen && (
         <div className="dc-comment-modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) closeModal(); }}>
-          <section className="dc-comment-modal" role="dialog" aria-modal="true" aria-label="Write a destination comment">
+          <section className={"dc-comment-modal" + (submitting ? " dc-comment-modal--submitting" : "")} role="dialog" aria-modal="true" aria-label="Write a destination comment">
             <button type="button" className="dc-comment-modal__close" onClick={closeModal} aria-label="Close comment modal"><X size={19} /></button>
             <form onSubmit={handleSubmit}>
               <textarea
                 className="dc-comment-modal__textarea"
                 value={text}
+                disabled={submitting}
                 onChange={(event) => { setText(event.target.value); setSubmitError(""); }}
                 placeholder={`Share your experience at ${destination?.name || "this destination"}…`}
                 maxLength={2000}
@@ -170,12 +208,12 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
                 aria-label="Your comment"
               />
               <div className="dc-comment-modal__tools">
-                <button ref={emojiToggleRef} type="button" className="dc-comment-modal__emoji" onClick={() => { setEmojiOpen((open) => !open); setEmojiFiltersOpen(false); }} aria-label="Open emoji picker" aria-expanded={emojiOpen}>
+                <button ref={emojiToggleRef} type="button" className="dc-comment-modal__emoji" disabled={submitting} onClick={() => { setEmojiOpen((open) => !open); setEmojiFiltersOpen(false); }} aria-label="Open emoji picker" aria-expanded={emojiOpen}>
                   <Smile size={20} />
                 </button>
                 <span className="dc-comment-modal__length">{text.length}/2000</span>
-                <button type="submit" className="dc-comment-modal__send" disabled={submitting || !text.trim()}>
-                  <Send size={16} />
+                <button type="submit" className="dc-comment-modal__send" disabled={submitting || !text.trim()} aria-busy={submitting}>
+                  {submitting ? <span className="dc-comment-spinner" aria-hidden="true" /> : <Send size={16} />}
                 </button>
               </div>
               {emojiOpen && (
