@@ -35,7 +35,19 @@ export function useDestinationComments(destinationId, resource = "destination") 
     }
   }, [destinationId, resource]);
 
-  useEffect(() => { fetchComments(); }, [fetchComments]);
+  useEffect(() => {
+    fetchComments();
+    // Poll so comments posted by other signed-in visitors appear without a reload.
+    const intervalId = window.setInterval(() => {
+      if (document.visibilityState === "visible") fetchComments();
+    }, 10000);
+    const refreshOnFocus = () => fetchComments();
+    window.addEventListener("focus", refreshOnFocus);
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", refreshOnFocus);
+    };
+  }, [fetchComments]);
 
   const createComment = useCallback(async (destId, content) => {
     setError(null);
