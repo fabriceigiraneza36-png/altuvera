@@ -1,6 +1,6 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import EmojiPickerNative from "emoji-picker-react";
-import { MessageCircle, Send, Smile, X, AlertCircle } from "lucide-react";
+import { MessageCircle, Send, Smile, X, AlertCircle, SlidersHorizontal } from "lucide-react";
 import { useDestinationComments } from "../hooks/useDestinationComments";
 import { useUserAuth } from "../context/UserAuthContext";
 import "./CommentsCarousel.css";
@@ -30,6 +30,9 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
   const [modalOpen, setModalOpen] = useState(false);
   const [text, setText] = useState("");
   const [emojiOpen, setEmojiOpen] = useState(false);
+  const [emojiFiltersOpen, setEmojiFiltersOpen] = useState(false);
+  const emojiPickerRef = useRef(null);
+  const emojiToggleRef = useRef(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitSuccess, setSubmitSuccess] = useState(false);
@@ -40,17 +43,37 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
   const closeModal = useCallback(() => {
     setModalOpen(false);
     setEmojiOpen(false);
+    setEmojiFiltersOpen(false);
     setSubmitError("");
   }, []);
 
   useEffect(() => {
     if (!modalOpen) return undefined;
     const onKeyDown = (event) => {
-      if (event.key === "Escape") closeModal();
+      if (event.key !== "Escape") return;
+      if (emojiOpen) {
+        setEmojiOpen(false);
+        setEmojiFiltersOpen(false);
+      } else {
+        closeModal();
+      }
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);
-  }, [modalOpen, closeModal]);
+  }, [modalOpen, emojiOpen, closeModal]);
+
+  // Clicking elsewhere closes only the picker, not the comment composer.
+  useEffect(() => {
+    if (!emojiOpen) return undefined;
+    const onPointerDown = (event) => {
+      const target = event.target;
+      if (emojiPickerRef.current?.contains(target) || emojiToggleRef.current?.contains(target)) return;
+      setEmojiOpen(false);
+      setEmojiFiltersOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () => document.removeEventListener("pointerdown", onPointerDown, true);
+  }, [emojiOpen]);
 
   const openCommentModal = () => {
     if (!isAuthenticated) {
@@ -86,6 +109,7 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
       await createComment(destinationId, clean);
       setText("");
       setEmojiOpen(false);
+      setEmojiFiltersOpen(false);
       setSubmitSuccess(true);
       await refetch();
       window.setTimeout(() => setSubmitSuccess(false), 2500);
@@ -146,7 +170,7 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
                 aria-label="Your comment"
               />
               <div className="dc-comment-modal__tools">
-                <button type="button" className="dc-comment-modal__emoji" onClick={() => setEmojiOpen((open) => !open)} aria-label="Open emoji picker" aria-expanded={emojiOpen}>
+                <button ref={emojiToggleRef} type="button" className="dc-comment-modal__emoji" onClick={() => { setEmojiOpen((open) => !open); setEmojiFiltersOpen(false); }} aria-label="Open emoji picker" aria-expanded={emojiOpen}>
                   <Smile size={20} />
                 </button>
                 <span className="dc-comment-modal__length">{text.length}/2000</span>
@@ -155,12 +179,34 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
                 </button>
               </div>
               {emojiOpen && (
-                <div className="dc-comment-modal__emoji-picker">
+                <div
+                  ref={emojiPickerRef}
+                  className={`dc-comment-modal__emoji-picker ${emojiFiltersOpen ? "dc-comment-modal__emoji-picker--filters-open" : ""}`}
+                  aria-label="Emoji picker"
+                >
+                  <div className="dc-comment-modal__emoji-picker-toolbar">
+                    <span className="dc-comment-modal__emoji-picker-label">Choose an emoji</span>
+                    <button
+                      type="button"
+                      className="dc-comment-modal__emoji-filter-toggle"
+                      onClick={() => setEmojiFiltersOpen((open) => !open)}
+                      aria-expanded={emojiFiltersOpen}
+                      aria-label={emojiFiltersOpen ? "Hide emoji categories" : "Show emoji categories"}
+                    >
+                      <SlidersHorizontal size={15} />
+                      <span>Categories</span>
+                    </button>
+                  </div>
                   <EmojiPickerNative
-                    onEmojiClick={(emojiData) => setText((current) => (current + (emojiData?.emoji || "")).slice(0, 2000))}
-                    height={330}
+                    onEmojiClick={(emojiData) => {
+                      const pickedEmoji = emojiData?.emoji || "";
+                      if (pickedEmoji) setText((current) => (current + pickedEmoji).slice(0, 2000));
+                    }}
+                    height="clamp(210px, 34dvh, 285px)"
                     width="100%"
                     lazyLoadEmojis
+                    previewConfig={{ showPreview: false }}
+                    skinTonesDisabled
                   />
                 </div>
               )}
