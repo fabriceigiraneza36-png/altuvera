@@ -886,7 +886,6 @@ function NewConvModal({ onClose, onCreated }) {
               {inquiryType === "destination" ? "Destination" : activeInquiry.referenceLabel} <span className="text-slate-300 normal-case font-normal">(optional)</span>
             </label>
             {inquiryType === "destination" ? <div className="relative">
-            <div className="relative">
               <MapPin size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-600" />
               <input value={destinationName}
                 onFocus={() => setDestinationPickerOpen(true)}
