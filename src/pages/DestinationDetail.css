@@ -4175,3 +4175,65 @@ html { scroll-behavior: smooth; }
     line-height: 1.15;
   }
 }
+
+
+/* Attraction gallery: gentle image reveal and a clear active-photo focus. */
+.d-destination-gallery .d-gal-cell {
+  overflow: hidden;
+  isolation: isolate;
+}
+.d-destination-gallery .d-gal-cell img {
+  animation: dAttractionPhotoFadeIn .72s cubic-bezier(.2,.7,.2,1) both;
+  transition: transform .65s cubic-bezier(.2,.75,.25,1), filter .45s ease, opacity .45s ease;
+}
+.d-destination-gallery .d-gal-cell:nth-child(2) img { animation-delay: .06s; }
+.d-destination-gallery .d-gal-cell:nth-child(3) img { animation-delay: .12s; }
+.d-destination-gallery .d-gal-cell:nth-child(4) img { animation-delay: .18s; }
+.d-destination-gallery .d-gal-cell:nth-child(5) img { animation-delay: .24s; }
+@keyframes dAttractionPhotoFadeIn {
+  from { opacity: 0; transform: scale(1.035); }
+  to { opacity: 1; transform: scale(1); }
+}
+/* Desktop viewer: neighboring photos stay dimmed while the active image stays crisp. */
+.d-lightbox[role="dialog"] .d-story__side {
+  filter: brightness(.52) saturate(.72);
+  opacity: .58;
+  transition: filter .35s ease, opacity .35s ease, transform .45s cubic-bezier(.2,.75,.25,1);
+}
+.d-lightbox[role="dialog"] .d-story__side:hover,
+.d-lightbox[role="dialog"] .d-story__side:focus-visible {
+  filter: brightness(.78) saturate(.9);
+  opacity: .88;
+}
+.d-lightbox[role="dialog"] .d-story__frame {
+  animation: dAttractionActiveFrameIn .48s cubic-bezier(.2,.75,.25,1) both;
+}
+.d-lightbox[role="dialog"] .d-lightbox__image.d-story__image {
+  filter: brightness(1) saturate(1.04);
+  transition: filter .3s ease, transform .22s ease;
+}
+@keyframes dAttractionActiveFrameIn {
+  from { opacity: 0; transform: translateY(8px) scale(.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@media (max-width: 700px) {
+  /* Phones navigate by finger swipes; keep the image unobstructed by arrow controls. */
+  .d-lightbox[role="dialog"] .d-lightbox__arrow.d-story__control {
+    display: none !important;
+  }
+  .d-lightbox[role="dialog"] .d-story__frame {
+    animation-duration: .38s;
+  }
+  .d-lightbox[role="dialog"] .d-lightbox__image.d-story__image {
+    user-select: none;
+    -webkit-user-drag: none;
+    touch-action: pan-y pinch-zoom;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .d-destination-gallery .d-gal-cell img,
+  .d-lightbox[role="dialog"] .d-story__frame {
+    animation: none !important;
+    transition: none !important;
+  }
+}
