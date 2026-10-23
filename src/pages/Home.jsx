@@ -1383,7 +1383,20 @@ const destinationImageUrl = (item) => {
 };
 
 const destinationImagesForCard = (destination) => {
-  const asList = (value) => Array.isArray(value) ? value : value ? [value] : [];
+  const asList = (value) => {
+    if (Array.isArray(value)) return value;
+    if (typeof value === "string") {
+      const trimmed = value.trim();
+      if (trimmed.startsWith("[")) {
+        try {
+          const parsed = JSON.parse(trimmed);
+          if (Array.isArray(parsed)) return parsed;
+        } catch { /* Keep plain image URLs as single entries. */ }
+      }
+      return trimmed ? [trimmed] : [];
+    }
+    return value ? [value] : [];
+  };
   const unique = (items) => {
     const seen = new Set();
     return items.map((item) => {
