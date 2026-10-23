@@ -179,8 +179,11 @@ const KEYFRAMES = `
     border-radius: 10px;
   }
 
-  /* Responsive */
-  @media (max-width: 900px) {
+  /* Responsive horizontal overview-card carousel */
+  .db-stats-grid { display:flex !important; flex-wrap:nowrap; overflow-x:auto; overflow-y:hidden; gap:12px !important; padding:4px 3px 14px; scroll-snap-type:x mandatory; overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch; scrollbar-width:thin; scrollbar-color:#a7f3d0 transparent; max-width:100%; }
+  .db-stats-grid > * { flex:0 0 clamp(168px,21vw,210px); min-width:0; scroll-snap-align:start; }
+  .db-stats-grid:focus-visible { outline:3px solid #34d399; outline-offset:3px; border-radius:14px; }
+  @media (max-width: 900px) { .db-stats-grid > * { flex-basis:clamp(170px,34vw,220px); }
     .db-charts-row { grid-template-columns: 1fr !important; }
     .db-two-col    { grid-template-columns: 1fr !important; }
   }
@@ -190,7 +193,7 @@ const KEYFRAMES = `
     .db-quick-grid  { grid-template-columns: repeat(2, 1fr) !important; }
     .db-prog-grid   { grid-template-columns: repeat(2, 1fr) !important; }
   }
-  @media (max-width: 420px) {
+  @media (max-width: 420px) { .db-stats-grid > * { flex-basis:min(72vw,230px); }
     .db-stats-grid  { grid-template-columns: 1fr 1fr !important; }
     .db-quick-grid  { grid-template-columns: 1fr 1fr !important; }
   }
@@ -1092,6 +1095,24 @@ export default function UserDashboard() {
   const [loadingB,  setLoadingB]  = useState(true);
   const [authWarn,  setAuthWarn]  = useState(null);
   const [fetchErr,  setFetchErr]  = useState(null);
+  const overviewTrackRef = useRef(null);
+
+  // Auto-advance overview cards while preserving touch, keyboard and reduced-motion control.
+  useEffect(() => {
+    const track = overviewTrackRef.current;
+    if (!track || typeof window === "undefined") return undefined;
+    if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return undefined;
+    const timer = window.setInterval(() => {
+      if (!track.isConnected || track.matches(":hover") || track.contains(document.activeElement)) return;
+      const first = track.firstElementChild;
+      if (!first) return;
+      const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+      if (maxScroll <= 4) return;
+      if (track.scrollLeft >= maxScroll - 8) track.scrollTo({ left: 0, behavior: "smooth" });
+      else track.scrollBy({ left: first.getBoundingClientRect().width + 12, behavior: "smooth" });
+    }, 3800);
+    return () => window.clearInterval(timer);
+  }, []);
 
   /* ── Fetch bookings ── */
   const fetchBookings = useCallback(async (requestOptions = {}) => {
