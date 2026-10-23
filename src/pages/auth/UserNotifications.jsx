@@ -2,7 +2,7 @@
   import React, { useState, useMemo, useRef, useEffect } from 'react';
   import {
     Bell, CalendarDays, Pencil, CheckCircle2, XCircle, Trash2,
-    CreditCard, Wallet, Map, Globe2, FileText, Package, ClipboardList,
+    CreditCard, Wallet, Map as MapIcon, Globe2, FileText, Package, ClipboardList,
     PartyPopper, Newspaper, AlertTriangle, Siren, Settings, MessageCircle,
     ShieldCheck, CheckCheck,
   } from 'lucide-react';
@@ -19,7 +19,7 @@
     booking_deleted: { icon: Trash2, color: '#7c3aed' },
     payment_confirmed: { icon: CreditCard, color: '#059669' },
     payment_request: { icon: Wallet, color: '#d97706' },
-    new_destination: { icon: Map, color: '#0891b2' },
+    new_destination: { icon: MapIcon, color: '#0891b2' },
     new_country: { icon: Globe2, color: '#0891b2' },
     new_post: { icon: FileText, color: '#7c3aed' },
     new_package: { icon: Package, color: '#d97706' },
@@ -78,7 +78,7 @@
       notifications, groupedNotifications, unreadCount,
       loading, hasMore, total, tripAlerts,
       dismissTripAlert, dismissAllTripAlerts,
-      markRead, markAllRead, deleteOne, clearAll, loadMore, refresh,
+      markRead, markAllRead, deleteOne, clearAll, loadMore, refresh, reply,
     } = useNotifications();
 
     const grouped = useMemo(() => groupedNotifications || { all: [], booking: [], system: [] }, [groupedNotifications]);
