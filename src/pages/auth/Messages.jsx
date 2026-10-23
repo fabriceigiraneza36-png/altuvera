@@ -272,8 +272,7 @@ const MSG_STYLES = `
 }
 .msg-chat-head > * { min-width:0; }
 .msg-chat { position:relative; }
-.msg-chat .msg-scroll-layer { position:absolute; inset:0; pointer-events:none; z-index:5; }
-.msg-chat .msg-scroll-layer > * { pointer-events:auto; }
+.msg-chat .msg-scroll-layer { display:none !important; }
 .msg-bubble-wrap { touch-action:pan-y; will-change:transform; }
 /* Keep the conversation directly beneath the site navbar; no duplicated 80px spacer. */
 .dashboard-layout:has(.msg-layout) { padding-top:0 !important; min-height:0; }
@@ -1670,7 +1669,7 @@ export default function Messages() {
                   )}
                 </div>
 
-                <div className="msg-scroll-layer" aria-hidden={!showScrollBtn}>
+                <div className="msg-scroll-layer" aria-hidden="true">
                   <ScrollToBottomBtn
                     visible={showScrollBtn}
                     composerVisible={composerVisible}
