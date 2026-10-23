@@ -13,6 +13,7 @@ import {
 import ChatPreferencesPanel from "../../components/auth/ChatPreferencesPanel";
 import DashboardLayout      from "../../components/auth/DashboardLayout";
 import { useConversations } from "../../hooks/useConversations";
+import "../../messaging-phase2.css";
 
 /* ══════════════════════════════════════════════════════════════════════════
    CONSTANTS & HELPERS
