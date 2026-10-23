@@ -560,23 +560,28 @@ export function UserAuthProvider({ children }) {
   // ============================================================================
 
   const triggerCongratulation = useCallback((type) => {
-    try {
-      if (type !== "signup") return;
-      const email = (user?.email || pendingRef.current?.email || "").toLowerCase();
-      if (!email) return;
-      const key = `${KEYS.WELCOME_SHOWN_PREFIX}${email}`;
-      if (localStorage.getItem(key)) return;
-      localStorage.setItem(key, Date.now().toString());
-    } catch { /* storage unavailable */ }
-
+    if (type === "signup") {
+      try {
+        const email = (user?.email || pendingRef.current?.email || "").toLowerCase();
+        if (email) {
+          const key = `${KEYS.WELCOME_SHOWN_PREFIX}${email}`;
+          if (localStorage.getItem(key)) return;
+          localStorage.setItem(key, Date.now().toString());
+        }
+      } catch { /* storage unavailable */ }
+    }
     if (congratTimerRef.current) clearTimeout(congratTimerRef.current);
-    setCongratulationType(type);
+    setCongratulationType(type === "signup" ? "signup" : "login");
     setShowCongratulation(true);
-    congratTimerRef.current = setTimeout(() => {
-      setShowCongratulation(false);
-      congratTimerRef.current = null;
-    }, 3000);
+    // Keep the success modal visible until dismissed or a quick link is chosen.
+    congratTimerRef.current = null;
   }, [user]);
+
+  const dismissCongratulation = useCallback(() => {
+    if (congratTimerRef.current) clearTimeout(congratTimerRef.current);
+    congratTimerRef.current = null;
+    setShowCongratulation(false);
+  }, []);
 
   // ============================================================================
   // Profile Cache
@@ -1739,7 +1744,7 @@ export function UserAuthProvider({ children }) {
     googleUser, googleLoaded, googleLoading, githubLoading,
     hasGooglePending, socialAuthError, persistSession,
     showCongratulation, congratulationType, showNotLoggedInMessage,
-    requiresLoginVerification,
+    requiresLoginVerification, dismissCongratulation,
     openModal, closeModal, setModalView,
     login, register, verifyCode, beginFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode, checkEmail,
     googleSignIn, completeGoogleSignUp, promptGoogleAuth,
@@ -1755,7 +1760,7 @@ export function UserAuthProvider({ children }) {
     googleUser, googleLoaded, googleLoading, githubLoading,
     hasGooglePending, socialAuthError, persistSession,
     showCongratulation, congratulationType, showNotLoggedInMessage,
-    requiresLoginVerification,
+    requiresLoginVerification, dismissCongratulation,
     openModal, closeModal, setModalView,
     login, register, verifyCode, beginFactorChallenge, verifyLoginFactor, verifyLoginPasskey, resendCode, checkEmail,
     googleSignIn, completeGoogleSignUp, promptGoogleAuth,
