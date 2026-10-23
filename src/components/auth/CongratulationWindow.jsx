@@ -218,6 +218,9 @@ const S = {
 
 const KEYFRAMES = `
   @keyframes cgProfileReveal { 0% { transform: translateY(10px) scale(.82); opacity: 0; } 65% { transform: translateY(-3px) scale(1.04); opacity: 1; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
+  @keyframes cgBubbleDrift { 0%,100% { transform:translate3d(0,0,0) scale(1); } 50% { transform:translate3d(-10px,8px,0) scale(1.06); } }
+  .cg-bubble { animation:cgBubbleDrift 7s ease-in-out infinite; }
+  .cg-bubble--slow { animation-duration:9s; animation-delay:-2s; }
   .cg-profile-photo { width:100%; height:100%; object-fit:cover; display:block; opacity:.94; }
   .cg-quick-links::-webkit-scrollbar { height:4px; }
   .cg-quick-links::-webkit-scrollbar-thumb { background:#c7e5d4; border-radius:99px; }
@@ -365,8 +368,8 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
               >
                 {/* ── Top strip ─────────────────────────────────────── */}
                 <div className="cg-top" style={S.topStrip}>
-                  <div style={S.stripBubble1} />
-                  <div style={S.stripBubble2} />
+                  <div className="cg-bubble" style={S.stripBubble1} />
+                  <div className="cg-bubble cg-bubble--slow" style={S.stripBubble2} />
 
                   {/* Close */}
                   <button
