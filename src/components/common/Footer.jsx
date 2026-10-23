@@ -13,6 +13,7 @@ import {
   FiArrowRight,
   FiLinkedin,
   FiGlobe,
+  FiAlertTriangle,
 } from "react-icons/fi";
 import { FaXTwitter } from "react-icons/fa6";
 import { openCookieSettings } from "../../utils/cookiePreferences";
@@ -376,7 +377,7 @@ bottomLink: {
       return (
         <li style={styles.linkItem}>
           <span style={styles.errorText}>
-            ⚠ Could not load destinations.
+            <FiAlertTriangle size={14} aria-hidden="true" style={{ display: "inline-block", verticalAlign: "middle", marginRight: 5 }} /> Could not load destinations.
             <br />
             <Link
               to="/destinations"
