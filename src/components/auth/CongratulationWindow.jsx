@@ -7,7 +7,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   X, CheckCircle, ArrowRight, MapPin, Bookmark,
-  Calendar, Star, Sparkles, Globe, Compass,
+  Calendar, Star, Sparkles, Globe, Compass, ShieldCheck,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -278,6 +278,11 @@ const CONTENT = {
 export default function CongratulationWindow({ isVisible, type, user, onClose }) {
   const confettiFiredRef = useRef(false);
   const [activeStep, setActiveStep] = useState(1);
+  const [showSecurityPrompt, setShowSecurityPrompt] = useState(false);
+
+  useEffect(() => {
+    if (isVisible) setShowSecurityPrompt(type === "signup");
+  }, [isVisible, type]);
 
   const cfg       = CONTENT[type] || CONTENT.login;
   const { Icon }  = cfg;
@@ -405,6 +410,22 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                 {/* ── Body ──────────────────────────────────────────── */}
                 <div style={S.body}>
 
+                  {type === "signup" && showSecurityPrompt ? (
+                    <div style={{ textAlign: "center", padding: "8px 0 12px" }}>
+                      <div style={{ width: 62, height: 62, margin: "0 auto 16px", borderRadius: 20, display: "flex", alignItems: "center", justifyContent: "center", color: "#047857", background: "#ecfdf5" }}>
+                        <ShieldCheck size={30} />
+                      </div>
+                      <h3 style={{ margin: "0 0 8px", color: "#102a20", fontSize: "1.2rem", lineHeight: 1.3, fontWeight: 850 }}>Add another way to sign in?</h3>
+                      <p style={{ margin: "0 auto 20px", maxWidth: 330, color: "#64756b", fontSize: "0.88rem", lineHeight: 1.6 }}>Your account is ready. You can set up a passkey using your device's fingerprint, face unlock, PIN, or security key. You can also skip this and continue.</p>
+                      <button type="button" onClick={() => { setShowSecurityPrompt(false); window.open("/account/security", "_blank", "noopener,noreferrer"); }} style={{ ...S.cta, marginBottom: 10 }}>
+                        Set up a passkey <ArrowRight size={18} />
+                      </button>
+                      <button type="button" onClick={() => setShowSecurityPrompt(false)} style={{ width: "100%", minHeight: 44, border: "1px solid #dbe8e0", borderRadius: 13, background: "#fff", color: "#456153", fontSize: "0.88rem", fontWeight: 750, cursor: "pointer" }}>
+                        Skip for now
+                      </button>
+                    </div>
+                  ) : (
+                    <>
                   {/* Personalised greeting */}
                   {firstName && (
                     <motion.div
@@ -483,6 +504,7 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
                     ))}
                   </motion.div>
 
+                    </>)}
                 </div>
               </motion.div>
             </div>
