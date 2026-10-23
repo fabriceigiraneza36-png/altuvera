@@ -1080,10 +1080,13 @@ export default function UserDashboard() {
   const { notifications, unreadCount } = useNotifications();
   const { destinations: allDestinations = [], loading: destinationsLoading } = useDestinations({ limit: 100 });
   const { wishlistIds = new Set() } = useWishlist();
-  const favoriteDestinations = useMemo(() => allDestinations.filter((destination) => {
-    const keys = [destination?.id, destination?._id, destination?.slug, destination?.destinationId, destination?.destination_id].filter((value) => value != null).map(String);
-    return keys.some((key) => wishlistIds.has(key));
-  }), [allDestinations, wishlistIds]);
+  const favoriteDestinations = useMemo(() => {
+    const savedKeys = new Set(Array.from(wishlistIds || []).map(String));
+    return allDestinations.filter((destination) => {
+      const keys = [destination?.id, destination?._id, destination?.slug, destination?.destinationId, destination?.destination_id].filter((value) => value != null).map(String);
+      return keys.some((key) => savedKeys.has(key));
+    });
+  }, [allDestinations, wishlistIds]);
 
   const [bookings,  setBookings]  = useState([]);
   const [loadingB,  setLoadingB]  = useState(true);
