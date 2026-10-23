@@ -1997,7 +1997,7 @@
   -webkit-line-clamp: 3;
   animation: am-slideUp 420ms ease-out both;
 }
-.am-auth-modal input:not([inputmode="numeric"]):not(.am-otp-input):not(.am-verify-digit):focus[aria-invalid="true"],
+.am-modal input:not([inputmode="numeric"]):not(.am-otp-input):not(.am-verify-digit):focus[aria-invalid="true"],
 .am-modal input:not([inputmode="numeric"]):not(.am-otp-input):not(.am-verify-digit):focus[aria-invalid="true"] {
   outline: none !important;
   border-color: #dc2626 !important;
@@ -2101,4 +2101,92 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .am-auth-slideshow__caption h4 { animation: none !important; }
+}
+
+
+/* Altuvera QA pass: actionable validation, connection feedback and keyboard-safe scrolling. */
+.am-modal .auth-scroll {
+  min-height: 0;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5d1 transparent;
+  scroll-padding-block: 16px;
+}
+.am-modal input,
+.am-modal select,
+.am-modal textarea {
+  scroll-margin-block: 18px;
+}
+.am-auth-offline {
+  box-shadow: 0 2px 8px rgba(146, 64, 14, .04);
+  overflow-wrap: anywhere;
+}
+.am-auth-terms {
+  position: relative;
+  overflow-wrap: anywhere;
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+.am-auth-terms:focus-within {
+  outline: 2px solid rgba(5, 150, 105, .72);
+  outline-offset: 3px;
+}
+.am-auth-terms[aria-invalid="true"],
+.am-auth-terms:has(input[aria-invalid="true"]) {
+  border-color: #fca5a5;
+  background: #fff7f7;
+}
+.am-auth-field-error {
+  color: #b91c1c;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.am-modal [aria-invalid="true"]:not([type="checkbox"]) {
+  border-color: #fca5a5 !important;
+}
+.am-modal [aria-invalid="true"]:not([type="checkbox"]):focus {
+  border-color: #dc2626 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, .13) !important;
+}
+.am-modal button:disabled {
+  cursor: not-allowed;
+}
+.am-modal button:not(:disabled):active {
+  -webkit-tap-highlight-color: transparent;
+}
+.am-auth-gallery img {
+  -webkit-user-drag: none;
+  user-select: none;
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .am-modal .auth-scroll { min-height: 0; overflow-y: auto; }
+}
+@media (max-width: 639px) {
+  .am-modal .auth-scroll {
+    min-height: 0;
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    padding-bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  }
+  .am-auth-terms { padding: 12px; gap: 10px; }
+  .am-auth-field-error { font-size: 12px; }
+}
+@media (max-height: 680px) and (min-width: 1024px) {
+  .am-modal {
+    min-height: 0;
+    height: 94dvh !important;
+    max-height: 94dvh !important;
+  }
+  .am-modal .auth-scroll { overflow-y: auto; }
+}
+@media (max-width: 359px) {
+  .am-auth-gallery { height: 7.5rem; }
+  .am-modal .auth-scroll { padding-left: 14px; padding-right: 14px; }
+  .am-modal .flex.items-center.justify-center.mb-5.px-2[role="progressbar"] { gap: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .am-auth-terms { transition: none !important; }
 }
