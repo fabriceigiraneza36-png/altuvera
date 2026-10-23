@@ -240,7 +240,12 @@ export default function GlobalUserNotifications() {
           </div>
 
           {isChatNotification && replyOpen && (
-            <form onSubmit={sendReply} style={{ padding: "0 13px 12px 61px" }}>
+            <div role="dialog" aria-modal="true" aria-label="Quick reply" onClick={() => setReplyOpen(false)} style={{ position: "fixed", inset: 0, zIndex: 100001, background: "rgba(15,23,42,.38)", display: "grid", placeItems: "center", padding: 16 }}>
+            <form onSubmit={sendReply} onClick={(event) => event.stopPropagation()} style={{ width: "min(420px, 100%)", padding: 17, background: "#fff", borderRadius: 17, border: "1px solid #dbe7e0", boxShadow: "0 24px 70px rgba(15,23,42,.22)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginBottom: 12 }}>
+                <strong style={{ fontSize: 15, color: "#111827" }}>Reply to message</strong>
+                <button type="button" onClick={() => setReplyOpen(false)} aria-label="Close reply box" style={{ border: 0, borderRadius: 8, background: "#f3f4f6", padding: 6, cursor: "pointer" }}><X size={15}/></button>
+              </div>
               <label htmlFor="altuvera-notification-reply" style={{ display: "block", marginBottom: 5, color: "#64748b", fontSize: 10, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase" }}>Quick reply</label>
               <div style={{ display: "flex", gap: 7 }}>
                 <input id="altuvera-notification-reply" value={replyText} onChange={(event) => setReplyText(event.target.value)}
@@ -254,6 +259,7 @@ export default function GlobalUserNotifications() {
               </div>
               {replyError && <p role="alert" style={{ margin: "6px 0 0", color: "#dc2626", fontSize: 11, lineHeight: 1.4 }}>{replyError}</p>}
             </form>
+            </div>
           )}
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 13px 11px", borderTop: "1px solid #f1f5f9", background: "#fbfdfc" }}>
