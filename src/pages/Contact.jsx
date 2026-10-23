@@ -15,6 +15,8 @@ import SEO from "../components/common/SEO";
 import EmailAutocompleteInput from "../components/common/EmailAutocompleteInput";
 import { sendMessage } from "../utils/sendMessage";
 import { useUserAuth } from "../context/UserAuthContext";
+import { useLocation } from "react-router-dom";
+import { useDestinations } from "../hooks/useDestinations";
 
 /* ═══════════════════════════════════════════════════
    API BASE
@@ -271,6 +273,11 @@ FormTextarea.displayName = "FormTextarea";
 ═══════════════════════════════════════════════════ */
 const Contact = () => {
   const { user, isAuthenticated } = useUserAuth();
+  const location = useLocation();
+  const { destinations: availableDestinations = [], loading: destinationsLoading } = useDestinations();
+  const [selectedDestinations, setSelectedDestinations] = useState([]);
+  const [destinationQuery, setDestinationQuery] = useState("");
+  const [destinationInquiry, setDestinationInquiry] = useState(false);
 
   const [form, setForm] = useState(INIT_FORM);
   const [errors, setErrors] = useState({});
@@ -314,6 +321,25 @@ const Contact = () => {
       setErrors(p => ({ ...p, ...e }));
     }
   }, [user, isAuthenticated]);
+
+  /* ── Preselect destination when opened from a destination detail page ── */
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const requestedSlug = params.get("destination") || "";
+    const requestedName = params.get("destinationName") || "";
+    if (!requestedSlug && !requestedName) return;
+    const match = availableDestinations.find((item) => {
+      const itemSlug = String(item.slug || "");
+      const itemId = String(item.id || item._id || "");
+      const itemName = String(item.name || item.title || "");
+      return (requestedSlug && [itemSlug, itemId].includes(requestedSlug))
+        || (requestedName && itemName.toLowerCase() === requestedName.toLowerCase());
+    });
+    const selected = match || { id: requestedSlug, slug: requestedSlug, name: requestedName || requestedSlug.replace(/[-_]+/g, " ") };
+    setSelectedDestinations((current) => current.some((item) => String(item.slug || item.id || item._id) === String(selected.slug || selected.id || selected._id)) ? current : [selected, ...current]);
+    setDestinationInquiry(true);
+    setForm((current) => ({ ...current, subject: current.subject || "Destination Inquiry — " + (selected.name || selected.title || requestedName || requestedSlug) }));
+  }, [location.search, availableDestinations]);
 
   /* ── Fetch FAQs ── */
   useEffect(() => {
@@ -378,7 +404,14 @@ const Contact = () => {
     setSubmitting(true); setSubmitProgress(0); setErrors(p => ({ ...p, submit: "" }));
     const tick = setInterval(() => setSubmitProgress(p => Math.min(p + 10, 88)), 100);
     try {
-      const res = await sendMessage(form);
+      const destinationNames = selectedDestinations.map((item) => item.name || item.title).filter(Boolean);
+      const res = await sendMessage({
+        ...form,
+        destinations: selectedDestinations.map((item) => ({ id: item.id || item._id || item.slug, slug: item.slug || "", name: item.name || item.title || "" })),
+        destinationNames,
+        destinationInquiry,
+        source: "website_contact_form",
+      });
       if (res?.error) throw new Error(res.error);
       setSubmittedEmail(form.email);
       setSubmitProgress(100);
@@ -389,10 +422,11 @@ const Contact = () => {
       clearInterval(tick);
       if (mounted.current) setSubmitting(false);
     }
-  }, [form, validateStep]);
+  }, [form, validateStep, selectedDestinations, destinationInquiry]);
 
   const resetForm = useCallback(() => {
     setSubmitted(false); setStep(0); setDirection(1); setForm(INIT_FORM);
+    setSelectedDestinations([]); setDestinationQuery(""); setDestinationInquiry(false);
     setTouched({}); setErrors({}); setSubmitProgress(0); setSubmittedEmail("");
     autoFilled.current = false;
   }, []);
@@ -421,7 +455,8 @@ const Contact = () => {
       />
       <style>{STYLES}</style>
 
-      {/* ═══ HERO ═══ */}
+      {.ct-destination-picker{margin:0 0 18px;padding:16px;border:1px solid #dbe7e1;border-radius:16px;background:linear-gradient(135deg,#f8fffb,#fff);min-width:0}.ct-destination-picker-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap}.ct-destination-picker-heading strong{display:block;color:#064e3b;font-size:14px}.ct-destination-picker-heading p{margin:3px 0 0;color:#64748b;font-size:12px;line-height:1.5;max-width:440px}.ct-destination-toggle{display:flex;align-items:center;gap:7px;color:#334155;font-size:11px;font-weight:700;cursor:pointer}.ct-destination-toggle input{width:16px;height:16px;accent-color:#059669}.ct-destination-search-wrap{display:flex;align-items:center;gap:9px;margin-top:13px;padding:0 12px;min-height:44px;border:1px solid #dbe4e0;border-radius:11px;background:#fff;color:#059669}.ct-destination-search-wrap input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:#0f172a;font:inherit;font-size:13px}.ct-destination-results{display:grid;gap:4px;margin-top:7px;max-height:220px;overflow:auto;padding:5px;border:1px solid #e2e8f0;border-radius:12px;background:#fff}.ct-destination-results button{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px;border:0;border-radius:8px;background:#fff;text-align:left;color:#334155;font:inherit;font-size:13px;cursor:pointer}.ct-destination-results button:hover{background:#ecfdf5;color:#047857}.ct-destination-results p{margin:7px;color:#64748b;font-size:12px}.ct-destination-chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}.ct-destination-chips span{display:inline-flex;align-items:center;gap:8px;max-width:100%;padding:6px 9px;border-radius:999px;background:#d1fae5;color:#065f46;font-size:11px;font-weight:700;overflow-wrap:anywhere}.ct-destination-chips button{border:0;background:transparent;color:#065f46;font-size:18px;line-height:1;cursor:pointer}@media(max-width:520px){.ct-destination-picker{padding:12px}.ct-destination-picker-heading{display:grid;gap:10px}.ct-destination-toggle{align-items:flex-start}}
+/* ═══ HERO ═══ */}
       <section className="ct-hero" ref={heroRef}>
         <motion.div className="ct-hero-bg"
           style={{ backgroundImage: "url(https://i.pinimg.com/736x/bb/ca/d1/bbcad1c07136f38bfc47257f8b38cf2a.jpg)", y: heroY }}
@@ -657,8 +692,39 @@ const Contact = () => {
                               <h4>Your Message</h4>
                               <p>Share your dream trip idea and any questions you have.</p>
                             </div>
+                            <section className="ct-destination-picker" aria-label="Destinations for your inquiry">
+                              <div className="ct-destination-picker-heading">
+                                <div><strong>Destination inquiry</strong><p>Search for one or more destinations so our team can personalise its reply.</p></div>
+                                <label className="ct-destination-toggle"><input type="checkbox" checked={destinationInquiry} onChange={(event) => {
+                                  const checked = event.target.checked;
+                                  setDestinationInquiry(checked);
+                                  if (checked && selectedDestinations.length) setForm((current) => ({ ...current, subject: "Destination Inquiry — " + selectedDestinations.map((item) => item.name || item.title).filter(Boolean).join(", ") }));
+                                  if (!checked && form.subject.startsWith("Destination Inquiry — ")) setForm((current) => ({ ...current, subject: "" }));
+                                }} /><span>Use destination name as subject</span></label>
+                              </div>
+                              <div className="ct-destination-search-wrap"><FiMapPin size={16} aria-hidden="true" />
+                                <input type="search" value={destinationQuery} onChange={(event) => setDestinationQuery(event.target.value)} placeholder={destinationsLoading ? "Loading destinations…" : "Search destinations by name…"} aria-label="Search destinations" />
+                              </div>
+                              {destinationQuery.trim() && <div className="ct-destination-results" role="listbox" aria-label="Destination search results">
+                                {availableDestinations.filter((item) => String(item.name || item.title || "").toLowerCase().includes(destinationQuery.trim().toLowerCase()) && !selectedDestinations.some((selected) => String(selected.slug || selected.id || selected._id) === String(item.slug || item.id || item._id))).slice(0, 7).map((item) => (
+                                  <button type="button" key={String(item.id || item._id || item.slug || item.name)} onClick={() => {
+                                    const next = [...selectedDestinations, item];
+                                    setSelectedDestinations(next); setDestinationQuery("");
+                                    if (destinationInquiry) setForm((current) => ({ ...current, subject: "Destination Inquiry — " + next.map((entry) => entry.name || entry.title).filter(Boolean).join(", ") }));
+                                  }}>{item.name || item.title || "Destination"}<FiArrowRight size={14} aria-hidden="true" /></button>
+                                ))}
+                                {!availableDestinations.some((item) => String(item.name || item.title || "").toLowerCase().includes(destinationQuery.trim().toLowerCase())) && <p>No matching destinations found. Try another name.</p>}
+                              </div>}
+                              {selectedDestinations.length > 0 && <div className="ct-destination-chips" aria-label="Selected destinations">
+                                {selectedDestinations.map((item) => <span key={String(item.id || item._id || item.slug || item.name)}>{item.name || item.title}<button type="button" aria-label={"Remove " + (item.name || item.title)} onClick={() => {
+                                  const next = selectedDestinations.filter((entry) => String(entry.slug || entry.id || entry._id || entry.name) !== String(item.slug || item.id || item._id || item.name));
+                                  setSelectedDestinations(next);
+                                  if (destinationInquiry) setForm((current) => ({ ...current, subject: next.length ? "Destination Inquiry — " + next.map((entry) => entry.name || entry.title).filter(Boolean).join(", ") : "" }));
+                                }}>×</button></span>)}
+                              </div>}
+                            </section>
                             <FormInput name="subject" label="Subject" icon={FiMessageSquare}
-                              placeholder="e.g. 7-Day Gorilla Trekking Inquiry" required
+                              placeholder="e.g. Destination Inquiry — Volcanoes National Park" required
                               value={form.subject} onChange={handleChange} onBlur={handleBlur}
                               error={errors.subject} touched={touched.subject} />
                             <FormTextarea name="message" label="Message" required
