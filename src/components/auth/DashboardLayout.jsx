@@ -213,12 +213,19 @@ const DashboardLayout = ({ children, title, subtitle, noPadding = false, hideMob
           .dashboard-sidebar.open { transform: translateX(0); }
           .dashboard-overlay.open { display: block; }
            .mobile-menu-toggle { display: flex; }
+          .mobile-menu-toggle {
+            /* Replace the floating WhatsApp shortcut in the user portal's usual
+               bottom-left position, without covering chat's send control. */
+            top: auto; bottom: 18px; left: 18px; right: auto;
+            width: 56px; height: 56px; z-index: 60;
+            box-shadow: 0 5px 18px rgba(5,150,105,0.32);
+          }
           .dashboard-layout-no-padding .mobile-menu-toggle {
-            /* Keep sidebar navigation available without covering the composer/send control.
-               The scroll-to-bottom control stays on the opposite side. */
-            top: auto; bottom: 156px; left: 14px; right: auto;
-            width: 44px; height: 44px; z-index: 30;
-            box-shadow: 0 3px 12px rgba(5,150,105,0.25);
+            /* Lift the menu above the message composer while chatting. */
+            bottom: max(112px, calc(env(safe-area-inset-bottom) + 104px));
+            left: 12px;
+            width: 44px; height: 44px;
+            z-index: 30;
           }
           .dashboard-content { padding: 20px 16px 80px; min-height: 0; }
           .dashboard-content.dashboard-no-padding {
