@@ -517,7 +517,6 @@ export default function Wishlist() {
   );
 
   const fetchWishlistDestinations = useCallback(async () => {
-    if (!wishlistArr.length) { setDestinations([]); return; }
     setLoading(true);
     setFetchError(null);
     try {
@@ -528,7 +527,7 @@ export default function Wishlist() {
         )
       );
       const valid = results
-        .filter((r) => r.status === "fulfilled" && r.value?.id)
+        .filter((r) => r.status === "fulfilled" && (r.value?.id || r.value?._id || r.value?.slug))
         .map((r) => r.value);
       setDestinations(valid);
       const savedPackageIds = (() => { try { return new Set(JSON.parse(localStorage.getItem("altuvera_wishlist") || "[]").map(String)); } catch { return new Set(); } })();
@@ -551,10 +550,17 @@ export default function Wishlist() {
 
   const handleRemove = useCallback(
     (id) => {
-      toggleWishlist(id);
-      setDestinations((prev) => prev.filter((d) => String(d.id) !== String(id)));
+      const target = destinations.find((d) =>
+        [d.id, d._id, d.slug].some((candidate) => candidate != null && String(candidate) === String(id))
+      );
+      const candidateIds = target ? [target.slug, target.id, target._id].filter(Boolean).map(String) : [String(id)];
+      const storedId = wishlistArr.find((savedId) => candidateIds.includes(String(savedId))) || String(id);
+      toggleWishlist(storedId);
+      setDestinations((prev) => prev.filter((d) =>
+        ![d.id, d._id, d.slug].some((candidate) => candidate != null && String(candidate) === String(id))
+      ));
     },
-    [toggleWishlist]
+    [destinations, toggleWishlist, wishlistArr]
   );
 
   const handleClearAll = useCallback(() => {
@@ -581,13 +587,13 @@ export default function Wishlist() {
   return (
     <>
       <Helmet>
-        <title>My Wishlist | Altuvera</title>
-        <meta name="description" content="Your saved East African destinations." />
+        <title>My Favourites | Altuvera</title>
+        <meta name="description" content="All your saved Altuvera destinations and safari packages in one place." />
       </Helmet>
 
       <DashboardLayout
-        title="My Wishlist"
-        subtitle="Destinations you've saved for future adventures."
+        title="My Favourites"
+        subtitle="Your saved destinations and safari packages, all together in one place."
       >
         <style>{css}</style>
         <div className="wl-root">
@@ -595,10 +601,10 @@ export default function Wishlist() {
           {/* ── Hero ── */}
           <div className="wl-hero">
             <div className="wl-hero-left">
-              <div className="wl-hero-icon">❤️</div>
-              <h1 className="wl-hero-title">My Wishlist</h1>
+              <div className="wl-hero-icon" aria-hidden="true"><FiHeart size={34} /></div>
+              <h1 className="wl-hero-title">My Favourites</h1>
               <p className="wl-hero-sub">
-                Dream destinations saved for your next adventure
+                Destinations and safari packages you have saved for later
               </p>
             </div>
             <div className="wl-hero-stats">
@@ -621,7 +627,7 @@ export default function Wishlist() {
                 <input
                   type="text"
                   className="wl-search"
-                  placeholder="Search wishlist…"
+                  placeholder="Search your favourites…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
@@ -683,10 +689,9 @@ export default function Wishlist() {
           {!loading && allSavedCount === 0 && (
             <div className="wl-empty">
               <div className="wl-empty-icon">💔</div>
-              <h3>Your wishlist is empty</h3>
+              <h3>Your favourites are empty</h3>
               <p>
-                Explore our destinations and tap the heart icon to save your
-                favourites here.
+                Explore destinations or safari packages and save them here. Everything you save will appear in this one collection.
               </p>
               <Link to="/destinations" className="wl-empty-cta">
                 <FiMapPin size={16} /> Browse Destinations
@@ -713,31 +718,28 @@ export default function Wishlist() {
             </div>
           )}
 
-          {/* ── Destination Grid ── */}
+          {/* Unified favourites collection: destinations and saved packages share one grid/list. */}
           {!loading && (filtered.length > 0 || filteredPackages.length > 0) && view === "grid" && (
             <div className="wl-grid">
               <AnimatePresence>
                 {filtered.map((dest) => (
-                  <DestinationCard
-                    key={String(dest.id)}
-                    destination={dest}
-                    onRemove={handleRemove}
-                  />
+                  <DestinationCard key={"destination-" + String(dest.id ?? dest._id ?? dest.slug)} destination={dest} onRemove={handleRemove} />
+                ))}
+                {filteredPackages.map((pkg) => (
+                  <PackageWishlistCard key={"package-" + String(pkg.id ?? pkg._id)} pkg={pkg} onRemove={removePackage} />
                 ))}
               </AnimatePresence>
             </div>
           )}
 
-          {/* ── Destination List ── */}
           {!loading && (filtered.length > 0 || filteredPackages.length > 0) && view === "list" && (
             <div className="wl-list">
               <AnimatePresence>
                 {filtered.map((dest) => (
-                  <DestinationRow
-                    key={String(dest.id)}
-                    destination={dest}
-                    onRemove={handleRemove}
-                  />
+                  <DestinationRow key={"destination-" + String(dest.id ?? dest._id ?? dest.slug)} destination={dest} onRemove={handleRemove} />
+                ))}
+                {filteredPackages.map((pkg) => (
+                  <PackageWishlistRow key={"package-" + String(pkg.id ?? pkg._id)} pkg={pkg} onRemove={removePackage} />
                 ))}
               </AnimatePresence>
             </div>
