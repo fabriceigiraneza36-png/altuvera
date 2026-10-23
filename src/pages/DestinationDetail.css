@@ -4237,3 +4237,65 @@ html { scroll-behavior: smooth; }
     transition: none !important;
   }
 }
+
+
+/* Unified attraction photo motion: every image uses the same gentle fade. */
+.d-destination-gallery .d-gal-cell img {
+  animation: none !important;
+  opacity: 1;
+  transition: transform .32s ease, filter .32s ease;
+}
+.d-destination-gallery .d-gal-cell:nth-child(n) img { animation-delay: 0s !important; }
+.d-lightbox[role="dialog"] .d-story__frame,
+.d-lightbox[role="dialog"] .d-story__frame[class*="d-story__transition-"] {
+  animation: attractionViewerFade .3s ease both !important;
+  transform: none;
+}
+@keyframes attractionViewerFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+/* Keep the full photo visible and allow the existing pinch/double-tap zoom controls. */
+.d-lightbox[role="dialog"] .d-story__frame {
+  width: auto !important;
+  max-width: calc(100vw - 32px) !important;
+  max-height: calc(100dvh - 120px) !important;
+  overflow: visible;
+}
+.d-lightbox[role="dialog"] .d-lightbox__image.d-story__image {
+  width: auto !important;
+  height: auto !important;
+  max-width: calc(100vw - 32px) !important;
+  max-height: calc(100dvh - 120px) !important;
+  object-fit: contain !important;
+  transform-origin: center center;
+  will-change: transform;
+  touch-action: pan-y pinch-zoom;
+  transition: transform .22s ease !important;
+}
+@media (max-width: 700px) {
+  .d-lightbox[role="dialog"] {
+    padding: max(46px, env(safe-area-inset-top)) 6px max(54px, env(safe-area-inset-bottom)) !important;
+  }
+  .d-lightbox[role="dialog"] .d-story__frame {
+    max-width: calc(100vw - 12px) !important;
+    max-height: calc(100dvh - 106px) !important;
+    border-radius: 8px;
+  }
+  .d-lightbox[role="dialog"] .d-lightbox__image.d-story__image {
+    max-width: calc(100vw - 12px) !important;
+    max-height: calc(100dvh - 106px) !important;
+    border-radius: 8px !important;
+  }
+  .d-lightbox[role="dialog"] .d-lightbox__arrow.d-story__control {
+    display: none !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .d-destination-gallery .d-gal-cell img,
+  .d-lightbox[role="dialog"] .d-story__frame,
+  .d-lightbox[role="dialog"] .d-lightbox__image.d-story__image {
+    animation: none !important;
+    transition: none !important;
+  }
+}
