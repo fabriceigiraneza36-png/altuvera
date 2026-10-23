@@ -615,6 +615,7 @@ export default function AuthModal() {
   const [resendTimer,     setResendTimer]     = useState(0);
   const [verifySource,    setVerifySource]    = useState("login");
   const [authMethod,      setAuthMethod]      = useState("email");
+  const [showAuthMethods, setShowAuthMethods] = useState(false);
   const [codeState,       setCodeState]       = useState("");
   const [emailTouched,    setEmailTouched]    = useState(false);
   const [nameTouched,     setNameTouched]     = useState(false);
@@ -861,7 +862,7 @@ export default function AuthModal() {
     resetForgotUsername();
     setError(""); setSuccess("");
     setCode(emptyCode()); setResendTimer(0);
-    setAuthMethod("email"); setCodeState("");
+    setAuthMethod("email"); setShowAuthMethods(false); setCodeState("");
     setEmailTouched(false); setNameTouched(false); setTermsTouched(false);
     if (isRegister && !hasGooglePending) setSignUpStep(1);
     setForm((p) => ({ ...p, keepSignedIn: persistSession }));
@@ -1354,10 +1355,10 @@ export default function AuthModal() {
           </div>
 
           {/* Form panel */}
-          <div className="flex-1 flex flex-col min-w-0 bg-white overflow-hidden">
+          <div className="am-form-panel flex-1 flex flex-col min-w-0 bg-white overflow-hidden">
 
             {/* Header */}
-            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex-shrink-0">
+            <div className="am-header flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-100 flex-shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg overflow-hidden flex-shrink-0 lg:hidden">
                   <img src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT}
@@ -1614,7 +1615,22 @@ export default function AuthModal() {
               )}
 
               {/* ════════ LOGIN ════════ */}
-              {isLogin && !forgotUsernameMode && (
+              {isLogin && showAuthMethods && !forgotUsernameMode && (
+                <div className="am-viewIn am-auth-methods px-4 sm:px-6 py-5 sm:py-7">
+                  <button type="button" onClick={() => { setShowAuthMethods(false); setError(""); setSuccess(""); }} className="am-method-back" aria-label="Return to email sign in"><HiArrowLeft className="w-4 h-4" /> Back to sign in</button>
+                  <div className="text-center mt-4 mb-6"><div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-700"><HiShieldCheck className="h-6 w-6" /></div><h2 id="auth-title" className="mt-3 text-xl sm:text-2xl font-extrabold text-gray-900">Choose how to sign in</h2><p className="mt-1 text-sm text-gray-500">Use the method that is most convenient for you.</p></div>
+                  {error && <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">{error}</div>}
+                  <div className="grid gap-3">
+                    <button type="button" disabled={isBusy || !isOnline} onClick={async () => { setLoading(true); setError(""); try { await verifyLoginPasskey(); } catch (err) { setError(formatAuthError(err, "Passkey sign-in could not be completed. Try email or another method.")); } finally { setLoading(false); } }} className="am-method-option"><span className="am-method-icon"><RiShieldKeyholeLine className="h-5 w-5" /></span><span className="am-method-copy"><strong>Passkey</strong><small>Use your fingerprint, face unlock, device PIN, or security key</small></span><HiArrowRight className="h-4 w-4 am-method-arrow" /></button>
+                    <button type="button" disabled={googleLoading || githubLoading || loading || !isOnline} onClick={() => handleGoogleAuth("signin")} className="am-method-option"><span className="am-method-icon"><FcGoogle className="h-5 w-5" /></span><span className="am-method-copy"><strong>Continue with Google</strong><small>Sign in with your Google account</small></span><HiArrowRight className="h-4 w-4 am-method-arrow" /></button>
+                    <button type="button" disabled={googleLoading || githubLoading || loading || !isOnline} onClick={() => handleGithubAuth("signin")} className="am-method-option"><span className="am-method-icon"><FiGithub className="h-5 w-5" /></span><span className="am-method-copy"><strong>Continue with GitHub</strong><small>Use your GitHub account</small></span><HiArrowRight className="h-4 w-4 am-method-arrow" /></button>
+                    <button type="button" onClick={() => { setShowAuthMethods(false); setAuthMethod("email"); setError(""); setTimeout(() => firstInputRef.current?.focus(), 50); }} className="am-method-option"><span className="am-method-icon"><HiMail className="h-5 w-5" /></span><span className="am-method-copy"><strong>Email verification</strong><small>Receive a one-time verification code by email</small></span><HiArrowRight className="h-4 w-4 am-method-arrow" /></button>
+                  </div>
+                  <p className="mt-5 text-center text-xs leading-5 text-gray-400">Your available options depend on the methods enabled for your account and device.</p>
+                </div>
+              )}
+
+              {isLogin && !forgotUsernameMode && !showAuthMethods && (
                 <div className="am-viewIn">
                   <div className="text-center mb-6">
                     <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-100 to-emerald-50 mb-3 p-3">
@@ -1699,6 +1715,12 @@ export default function AuthModal() {
                       onGoogle={handleGoogleAuth} onGithub={handleGithubAuth}
                     />
                   </form>
+
+                  <div className="mt-4 text-center">
+                    <button type="button" onClick={() => { setShowAuthMethods(true); setError(""); setSuccess(""); }} className="am-other-methods-link">
+                      <RiShieldKeyholeLine className="h-4 w-4" /> Try another sign-in method <HiArrowRight className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
 
                   <div className="flex items-center justify-center gap-5 mt-5 flex-wrap">
                     {[
