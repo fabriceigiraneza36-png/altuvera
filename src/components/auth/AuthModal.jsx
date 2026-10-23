@@ -196,120 +196,198 @@ const GallerySlideshow = ({ intervalMs = 5000 }) => {
   const [gallery, setGallery] = useState(GALLERY);
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const timerRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
+
+    const normalizeImage = (value, depth = 0) => {
+      if (!value || depth > 4) return "";
+      if (typeof value === "string") return value.trim();
+      if (Array.isArray(value)) {
+        for (const entry of value) {
+          const src = normalizeImage(entry, depth + 1);
+          if (src) return src;
+        }
+        return "";
+      }
+      if (typeof value !== "object") return "";
+      for (const key of [
+        "url", "imageUrl", "image_url", "image", "src", "secure_url",
+        "thumbnailUrl", "thumbnail_url", "originalUrl", "original_url",
+      ]) {
+        const src = normalizeImage(value[key], depth + 1);
+        if (src) return src;
+      }
+      return "";
+    };
+
+    const resolveImageUrl = (value) => {
+      const raw = normalizeImage(value);
+      if (!raw) return "";
+      if (/^(https?:)?\/\//i.test(raw) || /^(data:|blob:)/i.test(raw)) return raw;
+      try {
+        const origin = new URL(API_BASE).origin;
+        return new URL(raw.startsWith("/") ? raw : "/" + raw, origin).toString();
+      } catch {
+        return raw;
+      }
+    };
+
     const imageOf = (item) => {
       const candidates = [
-        item?.image_url, item?.imageUrl, item?.cover_image, item?.coverImage,
-        item?.featured_image, item?.featuredImage, item?.thumbnail,
-        item?.hero_image, item?.heroImage, item?.main_image, item?.mainImage,
-        item?.images?.[0]?.url, item?.images?.[0]?.image_url,
-        typeof item?.images?.[0] === "string" ? item.images[0] : null,
-        item?.gallery?.[0]?.url, item?.gallery?.[0]?.image_url,
-        typeof item?.gallery?.[0] === "string" ? item.gallery[0] : null,
+        item?.image_url, item?.imageUrl, item?.image, item?.cover_image,
+        item?.coverImage, item?.cover_image_url, item?.coverImageUrl,
+        item?.featured_image, item?.featuredImage, item?.hero_image,
+        item?.heroImage, item?.main_image, item?.mainImage, item?.thumbnail,
+        item?.thumbnail_url, item?.thumbnailUrl, item?.image_urls, item?.imageUrls,
+        item?.hero_images, item?.heroImages, item?.images,
+        item?.gallery, item?.gallery_images, item?.galleryImages,
+        item?.photos, item?.media,
       ];
-      return candidates.find((value) => typeof value === "string" && value.trim()) || "";
+      for (const candidate of candidates) {
+        const src = resolveImageUrl(candidate);
+        if (src) return src;
+      }
+      return "";
     };
-    const titleOf = (item) => item?.name || item?.title || item?.destination_name || item?.destinationName || "Explore Africa";
-    fetch(`${String(API_BASE || "").replace(/\/$/, "")}/destinations`)
-      .then((response) => { if (!response.ok) throw new Error("Destinations unavailable"); return response.json(); })
+
+    const arrayFrom = (payload) => {
+      const candidates = [
+        payload, payload?.data, payload?.destinations, payload?.results,
+        payload?.items, payload?.data?.destinations, payload?.data?.results,
+        payload?.data?.items, payload?.data?.data,
+      ];
+      return candidates.find((candidate) => Array.isArray(candidate)) || [];
+    };
+
+    const titleOf = (item) => {
+      const value = item?.name || item?.title || item?.destination_name ||
+        item?.destinationName || item?.country_name;
+      return typeof value === "string" && value.trim() ? value.trim() : "Explore Africa";
+    };
+
+    const subtitleOf = (item) => {
+      const candidates = [
+        item?.short_description, item?.shortDescription, item?.tagline,
+        item?.subtitle, item?.description,
+      ];
+      const value = candidates.find((candidate) =>
+        typeof candidate === "string" && candidate.trim()
+      );
+      return value ? value.trim() : "Discover unforgettable African experiences";
+    };
+
+    fetch(String(API_BASE || "").replace(/\/+$/, "") + "/destinations")
+      .then((response) => {
+        if (!response.ok) throw new Error("Destinations unavailable");
+        return response.json();
+      })
       .then((payload) => {
-        const items = Array.isArray(payload) ? payload : payload?.data || payload?.destinations || payload?.results || payload?.items || [];
-        const slides = items.slice(0, 20).map((item) => ({
-          src: imageOf(item),
-          alt: `Discover ${titleOf(item)}`,
-          caption: titleOf(item),
-          subtitle: item?.short_description || item?.shortDescription || item?.description || "Discover unforgettable African experiences",
-        })).filter((item) => item.src);
-        if (!cancelled && slides.length) { setGallery(slides); setCurrent(0); }
-      }).catch(() => {});
+        const items = arrayFrom(payload);
+        const slides = items.slice(0, 20).map((item) => {
+          const caption = titleOf(item);
+          return {
+            src: imageOf(item),
+            alt: "Discover " + caption,
+            caption,
+            subtitle: subtitleOf(item),
+          };
+        }).filter((slide) => Boolean(slide.src));
+
+        if (!cancelled && slides.length) {
+          setGallery(slides);
+          setCurrent(0);
+        }
+      })
+      .catch(() => {
+        // Keep the built-in Africa imagery available if the destinations API is offline.
+      });
+
     return () => { cancelled = true; };
   }, []);
 
   const advance = useCallback(
-    (dir = 1) => setCurrent((i) => (i + dir + gallery.length) % gallery.length),
+    () => setCurrent((index) => (index + 1) % gallery.length),
     [gallery.length],
   );
 
   useEffect(() => {
-    if (isPaused) return;
-    timerRef.current = setInterval(() => advance(1), intervalMs);
-    return () => clearInterval(timerRef.current);
-  }, [advance, intervalMs, isPaused]);
+    if (isPaused || gallery.length < 2) return undefined;
+    const timer = setInterval(advance, intervalMs);
+    return () => clearInterval(timer);
+  }, [advance, gallery.length, intervalMs, isPaused]);
 
   useEffect(() => {
-    const img = new Image();
-    img.src = gallery[(current + 1) % gallery.length].src;
+    const next = gallery[(current + 1) % gallery.length];
+    if (!next?.src) return undefined;
+    const image = new Image();
+    image.src = next.src;
+    return () => { image.onload = null; image.onerror = null; };
   }, [current, gallery]);
 
   const slide = gallery[current] || GALLERY[0];
 
   return (
     <div
-      className="relative h-full w-full overflow-hidden group"
+      className="am-auth-slideshow relative h-full w-full overflow-hidden"
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
-      aria-hidden="true"
+      role="region"
+      aria-label="Featured African destinations"
     >
-      {gallery.map((item, i) => (
+      {gallery.map((item, index) => (
         <div
-          key={i}
+          key={item.src + "-" + index}
           style={{
             position: "absolute", inset: 0,
             transition: "opacity 1200ms ease-in-out, transform 1200ms ease-in-out",
-            opacity:   i === current ? 1 : 0,
-            transform: i === current ? "scale(1)" : "scale(1.05)",
+            opacity: index === current ? 1 : 0,
+            transform: index === current ? "scale(1)" : "scale(1.045)",
+            pointerEvents: index === current ? "auto" : "none",
           }}
+          aria-hidden={index !== current}
         >
           <img
-            src={item.src} alt={item.alt}
+            src={item.src}
+            alt={item.alt}
+            onError={(event) => {
+              const image = event.currentTarget;
+              if (image.dataset.authFallbackApplied === "true") {
+                image.style.opacity = "0";
+                return;
+              }
+              image.dataset.authFallbackApplied = "true";
+              image.src = GALLERY[index % GALLERY.length].src;
+            }}
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-            loading={i <= 1 ? "eager" : "lazy"} decoding="async"
+            loading={index === current || index === (current + 1) % gallery.length ? "eager" : "lazy"}
+            decoding="async"
           />
         </div>
       ))}
 
-      <div style={{ position: "absolute", inset: 0, zIndex: 10 }}
-        className="bg-gradient-to-t from-black/70 via-black/20 to-black/30" />
-      <div style={{ position: "absolute", inset: 0, zIndex: 10 }}
-        className="bg-gradient-to-r from-black/20 to-transparent" />
+      <div className="am-auth-slideshow__shade am-auth-slideshow__shade--bottom" aria-hidden="true" />
+      <div className="am-auth-slideshow__shade am-auth-slideshow__shade--side" aria-hidden="true" />
 
-      <div style={{ position: "absolute", inset: 0, zIndex: 20 }}
-        className="flex flex-col justify-between p-6 sm:p-8"
-      >
-        {/* Brand */}
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-md p-1.5 ring-1 ring-white/20 flex items-center justify-center">
+      <div className="am-auth-slideshow__content">
+        <div className="am-auth-slideshow__brand">
+          <div className="am-auth-slideshow__logo">
             <img
-              src={getBrandLogoUrl()} alt={BRAND_LOGO_ALT}
-              style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
+              src={getBrandLogoUrl()}
+              alt={BRAND_LOGO_ALT}
               loading="eager"
+              onError={(event) => { event.currentTarget.style.visibility = "hidden"; }}
             />
           </div>
           <div>
-            <h3 className="text-white font-bold text-lg leading-tight tracking-tight">Altuvera</h3>
-            <p className="text-white/60 text-[10px] uppercase tracking-widest font-medium">Premium Adventures</p>
+            <h3>Altuvera</h3>
+            <p>Premium African Adventures</p>
           </div>
         </div>
 
-        {/* Caption + controls */}
-        <div className="space-y-4">
-          <div key={current} className="transition-all duration-500">
-            <p className="text-emerald-400 text-xs font-semibold uppercase tracking-widest mb-1">
-              {slide.caption}
-            </p>
-            <h4
-              className="text-white text-2xl sm:text-3xl font-extrabold leading-tight tracking-tight"
-              style={{ animation: "fadeSlideUp 600ms ease-out both" }}
-            >
-              {slide.subtitle}
-            </h4>
-          </div>
-
-
-
+        <div className="am-auth-slideshow__caption" aria-live="polite" aria-atomic="true">
+          <p>{slide.caption}</p>
+          <h4 key={current}>{slide.subtitle}</h4>
         </div>
       </div>
     </div>
@@ -351,6 +429,8 @@ const InputField = ({
           autoComplete={autoComplete || "email"}
           required={required}
           disabled={disabled}
+          aria-invalid={Boolean(fieldError)}
+          aria-describedby={fieldError ? id + "-error" : hint ? id + "-hint" : undefined}
           className={`w-full h-12 pl-11 pr-10 rounded-xl border-2 bg-gray-50/50 text-gray-900 text-sm placeholder:text-gray-400 outline-none transition-all duration-200 ${
             disabled ? "opacity-60 cursor-not-allowed bg-gray-100" : ""
           } ${
@@ -372,6 +452,8 @@ const InputField = ({
           autoComplete={autoComplete}
           required={required}
           disabled={disabled}
+          aria-invalid={Boolean(fieldError)}
+          aria-describedby={fieldError ? id + "-error" : hint ? id + "-hint" : undefined}
           className={`w-full h-12 pl-11 pr-10 rounded-xl border-2 bg-gray-50/50 text-gray-900 text-sm placeholder:text-gray-400 outline-none transition-all duration-200 ${
             disabled ? "opacity-60 cursor-not-allowed bg-gray-100" : ""
           } ${
@@ -390,12 +472,12 @@ const InputField = ({
       )}
     </div>
     {hint && !fieldError && (
-      <p className="text-xs text-gray-400 flex items-center gap-1">
+      <p id={id + "-hint"} className="text-xs text-gray-400 flex items-center gap-1">
         <HiInformationCircle className="w-3.5 h-3.5 flex-shrink-0" />{hint}
       </p>
     )}
     {fieldError && (
-      <p className="text-xs text-red-500 flex items-center gap-1">
+      <p id={id + "-error"} className="text-xs text-red-500 flex items-center gap-1" role="alert">
         <HiExclamationCircle className="w-3.5 h-3.5 flex-shrink-0" />{fieldError}
       </p>
     )}
@@ -1159,14 +1241,9 @@ export default function AuthModal() {
           {/* Top accent bar */}
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 via-emerald-400 to-teal-400 z-50" />
 
-          {/* Gallery — desktop */}
-          <div className="hidden lg:block lg:w-[46%] xl:w-[48%] relative bg-gray-900 flex-shrink-0">
+          {/* Single responsive destination slideshow: avoids duplicate API requests and timers */}
+          <div className="am-auth-gallery relative bg-gray-900 flex-shrink-0">
             <GallerySlideshow />
-          </div>
-
-          {/* Gallery — mobile strip */}
-          <div className="lg:hidden relative bg-gray-900 flex-shrink-0" style={{ height: "7rem" }}>
-            <GallerySlideshow intervalMs={6000} />
           </div>
 
           {/* Form panel */}
@@ -1218,7 +1295,7 @@ export default function AuthModal() {
 
               {/* Alerts */}
               {error && (
-                <div className="am-slideDown mb-4 flex items-start gap-3 p-3.5 rounded-xl bg-red-50 border border-red-200">
+                <div role="alert" aria-live="polite" className="am-slideDown mb-4 flex items-start gap-3 p-3.5 rounded-xl bg-red-50 border border-red-200">
                   <HiExclamationCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
                   <p className="flex-1 text-sm text-red-700">{typeof error === "string" ? error : "An error occurred."}</p>
                   <button onClick={() => setError("")} className="text-red-400 hover:text-red-600 p-0.5 rounded transition-colors">
@@ -1227,7 +1304,7 @@ export default function AuthModal() {
                 </div>
               )}
               {success && (
-                <div className="am-slideDown mb-4 flex items-start gap-3 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200">
+                <div role="status" aria-live="polite" className="am-slideDown mb-4 flex items-start gap-3 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200">
                   <HiCheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
                   <p className="flex-1 text-sm text-emerald-700">{success}</p>
                 </div>
