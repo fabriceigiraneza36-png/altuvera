@@ -1,0 +1,34 @@
+/* Phase 2 messaging polish — traveller portal */
+.msg-layout { isolation:isolate; background:#f8fafc; }
+.msg-sidebar { box-shadow: inset -1px 0 0 rgba(15,23,42,.015); }
+.msg-sidebar-head { padding-bottom:12px; }
+.msg-sidebar-list > button,
+.msg-sidebar-list [role="listitem"] { transition:background-color .16s ease, border-color .16s ease; }
+.msg-sidebar-list button:focus-visible,
+.msg-chat button:focus-visible,
+.msg-chat textarea:focus-visible,
+.msg-sidebar input:focus-visible { outline:3px solid rgba(16,185,129,.32); outline-offset:2px; }
+.msg-chat-head { box-shadow:0 3px 14px rgba(15,23,42,.025); }
+.msg-chat-body { scrollbar-gutter:stable; }
+.msg-bubble-wrap { max-width:min(84%, 680px); }
+.msg-bubble-wrap > div { overflow-wrap:anywhere; }
+.msg-sidebar-list button:hover { background-color:#f0fdf4; }
+.msg-sidebar-list button[aria-current="true"],
+.msg-sidebar-list button[aria-selected="true"] { background:linear-gradient(90deg,#ecfdf5,#fff); }
+.msg-chat-foot { padding-left:clamp(8px,1.5vw,18px); padding-right:clamp(8px,1.5vw,18px); }
+.msg-send-button:focus-visible { outline:3px solid rgba(16,185,129,.35); outline-offset:3px; }
+@media (max-width:767px) {
+  .msg-layout { overscroll-behavior:contain; }
+  .msg-sidebar { border-radius:0; }
+  .msg-chat-head { padding-left:12px!important; padding-right:12px!important; }
+  .msg-bubble-wrap { max-width:91%; }
+  .msg-chat-foot { padding-left:8px; padding-right:8px; }
+}
+@media (min-width:768px) {
+  .msg-layout { border:1px solid rgba(226,232,240,.85); border-radius:18px; box-shadow:0 16px 44px rgba(15,23,42,.055); }
+  .msg-sidebar { border-radius:18px 0 0 18px; }
+  .msg-chat { border-radius:0 18px 18px 0; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .msg-sidebar-list button, .msg-chat button { transition:none!important; scroll-behavior:auto!important; }
+}
