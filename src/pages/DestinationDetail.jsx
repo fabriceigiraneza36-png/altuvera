@@ -26,6 +26,7 @@ import {
 import { useDestination } from "../hooks/useDestinations";
 import "./DestinationDetail.css";
 import AltuveraLoader from "../components/common/AltuveraLoader";
+import CommentsCarousel from "./CommentsCarousel";
 
 const API_URL = import.meta.env.VITE_API_URL || "https://api.altuverasafaris.com";
 
@@ -916,6 +917,7 @@ export default function DestinationDetail() {
             </Reveal>
           </div>
         </section>
+        <CommentsCarousel destination={destination} entityType="destination" />
       </div>
 
       {lightboxIndex !== null && attractionGalleryImages.length > 0 && (
