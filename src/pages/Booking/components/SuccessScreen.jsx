@@ -1,231 +1,159 @@
-import React, { useEffect, useRef } from "react";
-import { HiCheckCircle, HiChatAlt2, HiPlus, HiOutlineMail, HiOutlineClock, HiOutlineShieldCheck } from "react-icons/hi";
+import React, { useState } from "react";
+import {
+  HiCheckCircle,
+  HiChatAlt2,
+  HiPlus,
+  HiOutlineMail,
+  HiOutlineClock,
+  HiOutlineShieldCheck,
+  HiOutlineClipboardCopy,
+  HiCheck,
+  HiArrowRight,
+} from "react-icons/hi";
 
 const WA = "250785751391";
 
-function CelebrationParticles({ category = "" }) {
-  const ref = useRef(null);
-
-  useEffect(() => {
-    const canvas = ref.current;
-    if (!canvas) return;
-    const parent = canvas.parentElement;
-    const ctx = canvas.getContext("2d");
-    let raf;
-    let running = true;
-
-    const resize = () => {
-      const rect = parent.getBoundingClientRect();
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.max(1, rect.width * dpr);
-      canvas.height = Math.max(1, rect.height * dpr);
-      canvas.style.width = `${rect.width}px`;
-      canvas.style.height = `${rect.height}px`;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-    resize();
-    window.addEventListener("resize", resize);
-
-    const type = String(category).toLowerCase();
-    const water = /lake|river|water|beach|coast|marine|island/.test(type);
-    const mountain = /mountain|trek|hike|highland/.test(type);
-    const wildlife = /wildlife|safari|game|gorilla|nature/.test(type);
-
-    const rect = () => ({ w: parent.clientWidth, h: parent.clientHeight });
-    const particles = Array.from({ length: 180 }, (_, i) => ({
-      kind: i < 95 ? "confetti" : i < 125 && water ? "bubble" : i < 145 && mountain ? "snow" : i < 160 ? "spark" : "mist",
-      x: Math.random() * Math.max(1, parent.clientWidth),
-      y: -20 - Math.random() * 260,
-      vx: (Math.random() - .5) * 2.8,
-      vy: 1.2 + Math.random() * 3.6,
-      size: 2 + Math.random() * 5,
-      rot: Math.random() * Math.PI,
-      spin: (Math.random() - .5) * .18,
-      life: .65 + Math.random() * .35,
-      hue: i % 5,
-    }));
-
-    const confetti = ["#10b981","#34d399","#6ee7b7","#a7f3d0","#f59e0b","#ffffff"];
-    const draw = (p, w, h) => {
-      p.rot += p.spin;
-      p.x += p.vx + Math.sin(p.y * .012) * .45;
-      p.y += p.vy;
-      if (p.y > h + 20 && !p.burst) { p.y = -20; p.x = Math.random() * w; }
-
-      ctx.save();
-      ctx.globalAlpha = p.life;
-      ctx.translate(p.x, p.y);
-      ctx.rotate(p.rot);
-
-      if (p.kind === "bubble") {
-        ctx.strokeStyle = "rgba(125,211,252,.72)";
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.arc(0, 0, p.size + 2, 0, Math.PI * 2);
-        ctx.stroke();
-        ctx.fillStyle = "rgba(255,255,255,.55)";
-        ctx.fillRect(-p.size * .35, -p.size * .45, 1.5, 1.5);
-      } else if (p.kind === "snow") {
-        ctx.fillStyle = "rgba(255,255,255,.9)";
-        ctx.beginPath(); ctx.arc(0,0,p.size*.8,0,Math.PI*2); ctx.fill();
-      } else if (p.kind === "spark") {
-        ctx.fillStyle = confetti[(p.hue + 2) % confetti.length];
-        ctx.fillRect(-p.size, -p.size * .25, p.size * 2, p.size * .5);
-      } else if (p.kind === "mist") {
-        ctx.fillStyle = "rgba(255,255,255,.22)";
-        ctx.beginPath(); ctx.arc(0,0,p.size*2.4,0,Math.PI*2); ctx.fill();
-      } else {
-        ctx.fillStyle = confetti[p.hue % confetti.length];
-        ctx.fillRect(-p.size*.8, -p.size*.35, p.size*1.6, p.size*.7);
-      }
-      ctx.restore();
-    };
-
-    const animate = () => {
-      if (!running) return;
-      const { w, h } = rect();
-      ctx.clearRect(0, 0, w, h);
-
-      // Sunrise rays behind the celebration.
-      const gradient = ctx.createRadialGradient(w*.5, h*.08, 5, w*.5, h*.08, Math.max(w,h)*.85);
-      gradient.addColorStop(0, "rgba(255,214,102,.28)");
-      gradient.addColorStop(.35, "rgba(255,237,180,.12)");
-      gradient.addColorStop(1, "rgba(255,255,255,0)");
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0,0,w,h);
-
-      ctx.globalAlpha = .12;
-      ctx.strokeStyle = "#fde68a";
-      for (let i=0;i<9;i++) {
-        ctx.beginPath();
-        ctx.moveTo(w*.5, h*.04);
-        ctx.lineTo(w*(i/8), h*.72);
-        ctx.stroke();
-      }
-      ctx.globalAlpha = 1;
-
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const particle = particles[i];
-        draw(particle, w, h);
-        if (particle.burst && ++particle.age > particle.ttl) particles.splice(i, 1);
-      }
-      raf = requestAnimationFrame(animate);
-    };
-    animate();
-
-    // Tap or click the success experience to trigger a fresh confetti burst.
-    const burstAt = (event) => {
-      clearTimeout(stopTimer);
-      if (!running) {
-        running = true;
-        raf = requestAnimationFrame(animate);
-      }
-      stopTimer = setTimeout(() => { running = false; cancelAnimationFrame(raf); }, 8500);
-      const bounds = parent.getBoundingClientRect();
-      const x = event.clientX - bounds.left;
-      const y = event.clientY - bounds.top;
-      for (let i = 0; i < 54; i++) {
-        const angle = (Math.PI * 2 * i) / 54 + (Math.random() - .5) * .24;
-        const speed = 2.2 + Math.random() * 5.2;
-        particles.push({
-          kind: "confetti", x, y,
-          vx: Math.cos(angle) * speed,
-          vy: Math.sin(angle) * speed - 1.4,
-          size: 2.5 + Math.random() * 5,
-          rot: Math.random() * Math.PI,
-          spin: (Math.random() - .5) * .3,
-          life: .95, hue: i % confetti.length,
-          burst: true, age: 0, ttl: 38 + Math.floor(Math.random() * 28),
-        });
-      }
-    };
-    parent.addEventListener("pointerdown", burstAt);
-
-    let stopTimer = setTimeout(() => { running = false; cancelAnimationFrame(raf); }, 8500);
-    return () => {
-      running = false;
-      clearTimeout(stopTimer);
-      cancelAnimationFrame(raf);
-      window.removeEventListener("resize", resize);
-      parent.removeEventListener("pointerdown", burstAt);
-    };
-  }, [category]);
-
-  return <canvas ref={ref} className="absolute inset-0 w-full h-full pointer-events-none z-0" aria-hidden="true" />;
-}
-
-function Confetti({ category }) {
-  return <CelebrationParticles category={category} />;
-}
-
 export default function SuccessScreen({ displayName, bookingRef, email, category, onReset }) {
+  const [copied, setCopied] = useState(false);
+
+  const copyReference = async () => {
+    if (!bookingRef) return;
+    try {
+      await navigator.clipboard.writeText(String(bookingRef));
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 2200);
+    } catch {
+      // Clipboard access can be blocked in some browsers; the reference remains selectable.
+      setCopied(false);
+    }
+  };
+
   return (
-    <div className="relative overflow-hidden bg-white">
-      <Confetti category={category} />
-      <div className="relative z-10 px-4 py-8 sm:px-8 sm:py-12 lg:px-12">
-        <div className="mx-auto max-w-3xl">
-          <div className="text-center">
-            <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 shadow-2xl shadow-emerald-200 ring-8 ring-emerald-50">
-              <HiCheckCircle className="h-12 w-12 text-white" />
-            </div>
+    <main className="relative isolate overflow-hidden bg-gradient-to-b from-emerald-50 via-white to-white px-4 py-7 sm:px-6 sm:py-12 lg:px-8">
+      <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-24 h-64 w-64 rounded-full bg-emerald-200/40 blur-3xl sm:h-80 sm:w-80" />
+      <div aria-hidden="true" className="pointer-events-none absolute -left-24 top-56 h-56 w-56 rounded-full bg-amber-100/50 blur-3xl" />
 
-            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.14em] text-emerald-700">
+      <div className="relative mx-auto w-full max-w-4xl">
+        <section className="overflow-hidden rounded-[1.75rem] border border-emerald-100 bg-white shadow-xl shadow-emerald-950/[0.07] sm:rounded-[2rem]">
+          <div className="relative overflow-hidden bg-gradient-to-br from-[#064e3b] via-[#047857] to-[#059669] px-5 pb-8 pt-8 text-center text-white sm:px-10 sm:pb-10 sm:pt-10">
+            <div aria-hidden="true" className="pointer-events-none absolute -right-8 -top-12 h-40 w-40 rounded-full border border-white/10 sm:h-56 sm:w-56" />
+            <div aria-hidden="true" className="pointer-events-none absolute -left-10 -bottom-24 h-48 w-48 rounded-full border border-white/10" />
+
+            <div className="relative mx-auto mb-5 flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-[1.5rem] bg-white text-emerald-700 shadow-lg shadow-emerald-950/20 ring-8 ring-white/10 sm:h-20 sm:w-20 sm:rounded-[1.7rem]">
+              <HiCheckCircle className="h-11 w-11 sm:h-12 sm:w-12" aria-hidden="true" />
+            </div>
+            <p className="relative mx-auto inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-[0.16em] text-emerald-50 sm:text-xs">
+              <HiCheckCircle className="h-4 w-4" aria-hidden="true" />
               Booking request received
-            </span>
-            <h2 className="mt-4 text-2xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              {displayName ? `You're set, ${displayName}!` : "Your adventure request is in."}
-            </h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-7 text-gray-600 sm:text-base">
-              Thank you for choosing Altuvera. Your request is safely with our travel team, and we’ll help shape the next steps into a memorable East African journey.
+            </p>
+            <h1 className="relative mx-auto mt-4 max-w-2xl text-2xl font-black leading-tight tracking-tight sm:text-4xl lg:text-[2.65rem]">
+              {displayName ? `You're all set, ${displayName}!` : "Your adventure starts here."}
+            </h1>
+            <p className="relative mx-auto mt-3 max-w-xl text-sm leading-6 text-emerald-50/95 sm:text-base sm:leading-7">
+              Thank you for choosing Altuvera Safaris. We’ve received your request and our team will help you plan an unforgettable African journey.
             </p>
           </div>
 
-          <div className="mt-7 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/80 p-4 text-left">
-              <HiOutlineMail className="mb-2 h-5 w-5 text-emerald-600" />
-              <p className="text-xs font-extrabold uppercase tracking-wider text-gray-500">Check your inbox</p>
-              <p className="mt-1 text-xs leading-5 text-gray-700">Confirm that you personally made this booking request.</p>
-            </div>
-            <div className="rounded-2xl border border-emerald-100 bg-white p-4 text-left shadow-sm">
-              <HiOutlineClock className="mb-2 h-5 w-5 text-emerald-600" />
-              <p className="text-xs font-extrabold uppercase tracking-wider text-gray-500">Next step</p>
-              <p className="mt-1 text-xs leading-5 text-gray-700">Our travel team will respond within 24 hours.</p>
-            </div>
-            <div className="rounded-2xl border border-emerald-100 bg-white p-4 text-left shadow-sm">
-              <HiOutlineShieldCheck className="mb-2 h-5 w-5 text-emerald-600" />
-              <p className="text-xs font-extrabold uppercase tracking-wider text-gray-500">Secure request</p>
-              <p className="mt-1 text-xs leading-5 text-gray-700">Planning begins after your email confirmation.</p>
-            </div>
-          </div>
-
-          {bookingRef && (
-            <div className="mx-auto mt-5 flex max-w-xl flex-col items-center justify-between gap-2 rounded-2xl border border-gray-200 bg-gray-50 px-4 py-4 sm:flex-row sm:px-5">
-              <div className="text-center sm:text-left">
-                <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-gray-400">Booking reference</p>
-                <p className="mt-1 break-all font-mono text-sm font-extrabold tracking-wide text-emerald-700">{bookingRef}</p>
+          <div className="px-4 py-5 sm:px-8 sm:py-8 lg:px-10">
+            {bookingRef && (
+              <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-4 sm:flex sm:items-center sm:justify-between sm:gap-5 sm:px-5">
+                <div className="min-w-0 text-center sm:text-left">
+                  <p className="text-[10px] font-extrabold uppercase tracking-[0.16em] text-emerald-800/70">Your booking reference</p>
+                  <p className="mt-1.5 break-all font-mono text-base font-extrabold tracking-wide text-emerald-950 sm:text-lg">{bookingRef}</p>
+                  <p className="mt-1 text-xs leading-5 text-emerald-900/75">Save this number so you can easily refer to your request.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={copyReference}
+                  className="mt-3 inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-sm font-bold text-emerald-800 transition hover:border-emerald-400 hover:bg-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 sm:mt-0 sm:w-auto"
+                  aria-label="Copy booking reference"
+                >
+                  {copied ? <HiCheck className="h-4 w-4" aria-hidden="true" /> : <HiOutlineClipboardCopy className="h-4 w-4" aria-hidden="true" />}
+                  {copied ? "Copied" : "Copy reference"}
+                </button>
               </div>
-              <span className="rounded-full bg-white px-3 py-1 text-[11px] font-bold text-gray-500 shadow-sm">Keep this reference</span>
+            )}
+
+            {email && (
+              <div className="mb-6 flex min-w-0 items-start gap-3 rounded-xl bg-slate-50 px-3.5 py-3 sm:px-4">
+                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white text-emerald-700 shadow-sm">
+                  <HiOutlineMail className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-slate-800">Check your email</p>
+                  <p className="mt-0.5 break-all text-sm leading-5 text-slate-600">We’ll send updates to <span className="font-semibold text-slate-800">{email}</span>.</p>
+                </div>
+              </div>
+            )}
+
+            <div className="grid gap-3 sm:grid-cols-3 sm:gap-4">
+              <div className="flex items-start gap-3 rounded-2xl border border-slate-200 p-3.5 sm:block sm:p-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                  <HiOutlineShieldCheck className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div className="min-w-0 sm:mt-3">
+                  <h2 className="text-sm font-extrabold text-slate-900">Request secured</h2>
+                  <p className="mt-1 text-xs leading-5 text-slate-600">Your request has been submitted to our team for review.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 rounded-2xl border border-slate-200 p-3.5 sm:block sm:p-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                  <HiOutlineClock className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div className="min-w-0 sm:mt-3">
+                  <h2 className="text-sm font-extrabold text-slate-900">What happens next?</h2>
+                  <p className="mt-1 text-xs leading-5 text-slate-600">Our travel team aims to contact you within 24 hours.</p>
+                </div>
+              </div>
+              <div className="flex items-start gap-3 rounded-2xl border border-slate-200 p-3.5 sm:block sm:p-4">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                  <HiOutlineMail className="h-5 w-5" aria-hidden="true" />
+                </span>
+                <div className="min-w-0 sm:mt-3">
+                  <h2 className="text-sm font-extrabold text-slate-900">Stay reachable</h2>
+                  <p className="mt-1 text-xs leading-5 text-slate-600">Keep an eye on your inbox and check your spam folder too.</p>
+                </div>
+              </div>
             </div>
-          )}
 
-          {email && (
-            <p className="mt-4 text-center text-xs text-gray-500">
-              Confirmation sent to <span className="font-semibold text-gray-700 break-all">{email}</span>
-            </p>
-          )}
+            <div className="mt-6 rounded-2xl bg-slate-50 p-4 sm:mt-7 sm:flex sm:items-center sm:justify-between sm:gap-5 sm:p-5">
+              <div className="text-center sm:text-left">
+                <h2 className="text-base font-extrabold text-slate-900">Have a question about your trip?</h2>
+                <p className="mt-1 text-sm leading-5 text-slate-600">Talk directly with our team if you need help or want to add details.</p>
+              </div>
+              <a
+                href={`https://wa.me/${WA}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex min-h-11 w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#128c55] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-[#0b7445] focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 sm:mt-0 sm:w-auto"
+              >
+                <HiChatAlt2 className="h-5 w-5" aria-hidden="true" />
+                Chat on WhatsApp
+                <HiArrowRight className="h-4 w-4" aria-hidden="true" />
+              </a>
+            </div>
 
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <a href={`https://wa.me/${WA}`} target="_blank" rel="noopener noreferrer"
-              className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl bg-[#25D366] px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-green-100 transition-all hover:-translate-y-0.5 hover:bg-[#1ebe5d] sm:max-w-xs">
-              <HiChatAlt2 className="h-5 w-5" /> WhatsApp Us
-            </a>
-            <button type="button" onClick={onReset}
-              className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-6 py-3.5 text-sm font-bold text-gray-600 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:text-emerald-700 sm:max-w-xs">
-              <HiPlus className="h-4 w-4" /> Start another booking
-            </button>
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <button
+                type="button"
+                onClick={onReset}
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-6 py-3 text-sm font-extrabold text-white shadow-md shadow-emerald-900/10 transition hover:-translate-y-0.5 hover:bg-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 sm:w-auto sm:min-w-52"
+              >
+                <HiPlus className="h-4 w-4" aria-hidden="true" />
+                Make another request
+              </button>
+              <a
+                href="/"
+                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-bold text-slate-700 transition hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 sm:w-auto"
+              >
+                Back to homepage
+                <HiArrowRight className="h-4 w-4" aria-hidden="true" />
+              </a>
+            </div>
+            <p className="mt-5 text-center text-[11px] leading-5 text-slate-400">Altuvera Safaris · Thoughtfully planned journeys across Africa</p>
           </div>
-        </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
