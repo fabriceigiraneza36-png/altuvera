@@ -3,7 +3,7 @@
 // CONGRATULATION WINDOW v2.0 — Green/White Theme, Lucide Icons, No Emojis
 // ═══════════════════════════════════════════════════════════════════════════════
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   X, CheckCircle, ArrowRight, MapPin, Bookmark,
@@ -276,8 +276,8 @@ const CONTENT = {
 ═══════════════════════════════════════════════════════════════════════════ */
 
 export default function CongratulationWindow({ isVisible, type, user, onClose }) {
-  const [confettiFired, setConfettiFired] = useState(false);
-  const [activeStep,    setActiveStep]    = useState(1);
+  const confettiFiredRef = useRef(false);
+  const [activeStep, setActiveStep] = useState(1);
 
   const cfg       = CONTENT[type] || CONTENT.login;
   const { Icon }  = cfg;
@@ -285,27 +285,31 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
 
   /* ── Confetti ── */
   useEffect(() => {
-    if (!isVisible || confettiFired) return;
-    setConfettiFired(true);
+    if (!isVisible) {
+      confettiFiredRef.current = false;
+      return undefined;
+    }
+    if (confettiFiredRef.current) return undefined;
+    confettiFiredRef.current = true;
 
     const fire = () => {
       confetti({
-        particleCount: 80,
-        spread:        70,
-        origin:        { y: 0.6 },
-        gravity:       0.8,
-        shapes:        ["circle", "square"],
-        colors:        ["#059669", "#10b981", "#34d399", "#a7f3d0", "#d1fae5"],
+        particleCount: 100,
+        spread: 78,
+        origin: { y: 0.58 },
+        gravity: 0.78,
+        shapes: ["circle", "square"],
+        colors: ["#059669", "#10b981", "#34d399", "#a7f3d0", "#d1fae5", "#fbbf24"],
       });
       setTimeout(() => {
-        confetti({ particleCount: 35, spread: 100, origin: { x: 0.2, y: 0.35 } });
-        confetti({ particleCount: 35, spread: 100, origin: { x: 0.8, y: 0.35 } });
-      }, 180);
+        confetti({ particleCount: 40, spread: 100, origin: { x: 0.18, y: 0.35 } });
+        confetti({ particleCount: 40, spread: 100, origin: { x: 0.82, y: 0.35 } });
+      }, 220);
     };
 
-    const t = setTimeout(fire, 200);
-    return () => clearTimeout(t);
-  }, [isVisible, confettiFired]);
+    const timer = setTimeout(fire, 160);
+    return () => clearTimeout(timer);
+  }, [isVisible]);
 
   /* ── Dot animation ── */
   useEffect(() => {
@@ -318,7 +322,7 @@ export default function CongratulationWindow({ isVisible, type, user, onClose })
   }, [isVisible]);
 
   const handleClose = () => {
-    setConfettiFired(false);
+    confettiFiredRef.current = false;
     onClose?.();
   };
 
