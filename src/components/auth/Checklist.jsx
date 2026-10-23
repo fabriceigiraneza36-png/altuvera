@@ -100,6 +100,29 @@ const css = `
   @keyframes clFade { from{opacity:0;transform:translateY(12px);} to{opacity:1;transform:translateY(0);} }
   .cl-spin { animation: clSpin 1s linear infinite; }
   @keyframes clSpin { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }
+  @media (max-width: 760px) {
+    .cl-hero { padding: clamp(20px,5vw,30px) !important; border-radius:17px; }
+    .cl-hero-title { font-size:clamp(1.35rem,5vw,1.7rem); line-height:1.2; overflow-wrap:anywhere; }
+    .cl-hero-sub { font-size:.88rem; line-height:1.65; max-width:58ch; }
+    .cl-request-card { padding:clamp(16px,4vw,22px); border-radius:16px; }
+    .cl-field { min-width:0; }
+    .cl-input,.cl-select,.cl-textarea { width:100%; min-width:0; max-width:100%; font-size:16px; }
+    .cl-submit-btn { width:100%; justify-content:center; min-height:46px; }
+    .cl-req-body { padding:14px; }
+    .cl-req-top { align-items:flex-start; }
+    .cl-req-title { overflow-wrap:anywhere; }
+    .cl-notif-hint { align-items:flex-start; padding:12px; }
+  }
+  @media (max-width: 380px) {
+    .cl-root { gap:1rem; }
+    .cl-hero { padding:18px !important; }
+    .cl-hero-title { font-size:1.3rem; }
+    .cl-req-status { white-space:normal; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cl-root,.cl-spin { animation:none !important; }
+    .cl-submit-btn,.cl-download-btn { transition:none; }
+  }
 `;
 
 const REQUEST_TYPES = [
@@ -211,7 +234,7 @@ export default function Checklist() {
         <div className="cl-root">
 
           <div className="cl-hero">
-            <div style={{ fontSize: "2rem", marginBottom: 8, position: "relative", zIndex: 1 }}>📋</div>
+            <div aria-hidden="true" style={{ display: "grid", placeItems: "center", width: 44, height: 44, borderRadius: 13, marginBottom: 12, position: "relative", zIndex: 1, background: "rgba(255,255,255,.16)", color: "#fff" }}><FiCheckSquare size={24} /></div>
             <h1 className="cl-hero-title">Request a Trip Checklist</h1>
             <p className="cl-hero-sub">
               Our team will prepare a personalized PDF checklist for your adventure and send it to you directly.
