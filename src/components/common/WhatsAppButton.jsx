@@ -809,6 +809,9 @@ const WhatsAppButton = () => {
     e.target.style.backgroundColor = "#fafffe";
   };
 
+  // Never mount the floating WhatsApp widget or its modal anywhere in the signed-in user portal.
+  if (isUserPortalRoute) return null;
+
   // ============================================================
   // RENDER
   // ============================================================
