@@ -33,16 +33,18 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Run tests when configured
+        run: npm test --if-present
       - name: Build production bundle
         run: npm run build
 
   request-auto-merge:
-    name: Enable automatic merge
+    name: Auto merge after verification
     needs: verify
     if: github.event_name == 'pull_request' && github.event.pull_request.draft == false && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
-      - name: Enable squash auto-merge after successful verification
+      - name: Merge pull request after successful verification
         env:
           GH_TOKEN: ${{ github.token }}
           PR_URL: ${{ github.event.pull_request.html_url }}
