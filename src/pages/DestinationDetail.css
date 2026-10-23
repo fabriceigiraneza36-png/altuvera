@@ -4032,3 +4032,89 @@ html { scroll-behavior: smooth; }
   .d-about-mini-fact__copy strong { font-size: .9rem; }
 }
 @media (prefers-reduced-motion: reduce) { .d-about-mini-fact { transition: none; } .d-about-mini-fact:hover { transform: none; } }
+
+/* Refined final destination call-to-action */
+.d-final-cta {
+  isolation: isolate;
+  min-height: clamp(350px, 42vw, 510px);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border-radius: clamp(22px, 3vw, 36px);
+  margin: clamp(28px, 5vw, 72px) auto;
+  width: min(calc(100% - 32px), 1440px);
+  background: #052e24;
+  box-shadow: 0 22px 65px rgba(4, 47, 32, .2);
+}
+.d-final-cta__media { position: absolute; inset: 0; z-index: -2; overflow: hidden; }
+.d-final-cta__media img {
+  width: 100%; height: 100%; object-fit: cover;
+  transform: scale(1.015);
+  transition: transform 1.2s cubic-bezier(.2,.7,.2,1);
+}
+.d-final-cta:hover .d-final-cta__media img { transform: scale(1.055); }
+.d-final-cta__overlay {
+  position: absolute; inset: 0; z-index: -1;
+  background: linear-gradient(90deg, rgba(2,35,26,.96) 0%, rgba(2,45,33,.86) 42%, rgba(2,45,33,.34) 100%),
+              linear-gradient(0deg, rgba(2,35,26,.38), transparent 55%);
+}
+.d-final-cta__inner { width: 100%; padding-block: clamp(38px, 6vw, 78px); }
+.d-final-cta__inner > div { max-width: 710px; }
+.d-final-cta__eyebrow {
+  display: inline-flex; align-items: center; gap: 9px;
+  width: fit-content; max-width: 100%; padding: 9px 13px;
+  border: 1px solid rgba(167,243,208,.28); border-radius: 999px;
+  background: rgba(5,150,105,.18); color: #bbf7d0;
+  font-size: 11px; line-height: 1.35; font-weight: 800;
+  letter-spacing: .11em; overflow-wrap: anywhere;
+}
+.d-final-cta__inner h2 {
+  max-width: 680px; margin: 19px 0 13px;
+  color: #fff; font-size: clamp(2rem, 4.6vw, 4rem);
+  font-weight: 850; letter-spacing: -.045em; line-height: 1.04;
+  text-wrap: balance;
+}
+.d-final-cta__inner p {
+  max-width: 590px; margin: 0; color: rgba(240,253,244,.83);
+  font-size: clamp(.94rem, 1.3vw, 1.08rem); line-height: 1.8;
+}
+.d-final-cta__actions {
+  display: flex; align-items: center; flex-wrap: wrap; gap: 12px;
+  margin-top: 27px;
+}
+.d-final-cta__actions .d-btn {
+  min-height: 50px; max-width: 100%; border-radius: 14px;
+  padding: 13px 19px; font-size: 13px; font-weight: 800;
+  justify-content: center; white-space: normal; text-align: center;
+  overflow-wrap: anywhere; transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.d-final-cta__actions .d-btn:hover { transform: translateY(-2px); }
+.d-final-cta__actions .d-btn--emerald {
+  color: #064e3b; background: #d1fae5; border: 1px solid #d1fae5;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+}
+.d-final-cta__actions .d-btn--emerald:hover { background: #ecfdf5; box-shadow: 0 12px 28px rgba(0,0,0,.18); }
+.d-final-cta__actions .d-btn--glass {
+  color: #fff; background: rgba(255,255,255,.09);
+  border: 1px solid rgba(255,255,255,.36); backdrop-filter: blur(14px);
+}
+.d-final-cta__actions .d-btn--glass:hover { background: rgba(255,255,255,.17); }
+@media (max-width: 700px) {
+  .d-final-cta { width: calc(100% - 24px); min-height: 0; border-radius: 22px; margin-block: 28px; }
+  .d-final-cta__overlay { background: linear-gradient(90deg, rgba(2,35,26,.92), rgba(2,45,33,.76)), linear-gradient(0deg, rgba(2,35,26,.28), transparent); }
+  .d-final-cta__inner { padding-block: 34px; }
+  .d-final-cta__eyebrow { font-size: 9px; letter-spacing: .07em; padding: 8px 10px; }
+  .d-final-cta__inner h2 { font-size: clamp(1.9rem, 8vw, 2.7rem); margin-top: 16px; }
+  .d-final-cta__inner p { font-size: 14px; line-height: 1.7; }
+  .d-final-cta__actions { display: grid; grid-template-columns: minmax(0,1fr); gap: 10px; margin-top: 22px; }
+  .d-final-cta__actions .d-btn { width: 100%; min-height: 48px; }
+}
+@media (max-width: 360px) {
+  .d-final-cta { width: calc(100% - 18px); }
+  .d-final-cta__inner { padding-block: 28px; }
+  .d-final-cta__inner h2 { font-size: 1.8rem; }
+  .d-final-cta__eyebrow { white-space: normal; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .d-final-cta__media img, .d-final-cta__actions .d-btn { transition: none; }
+}
