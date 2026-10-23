@@ -3698,3 +3698,18 @@
 .nav-search-desktop-results>button .nav-search-result-arrow{margin-left:auto}
 @media(max-width:760px){.nav-search-inline button{min-height:44px;gap:8px;padding:7px 10px}.nav-search-result-icon{width:32px;height:32px;flex-basis:32px}.nav-search-inline button .nav-search-result-name{font-size:12px}}
 @media(prefers-reduced-motion:reduce){.nav-search-result-icon,.nav-search-result-arrow{transition:none!important}}
+
+
+/* Hamburger contrast must follow the navbar surface, not its screen position.
+   Keep this block last so responsive rules cannot restore the wrong line color. */
+.nav:not(.nav--scrolled) .nav__hamburger .nav__hline,
+.nav:not(.nav--scrolled) .nav__hamburger--open .nav__hline {
+  background-color: #ffffff !important;
+}
+.nav.nav--scrolled .nav__hamburger .nav__hline,
+.nav.nav--scrolled .nav__hamburger--open .nav__hline {
+  background-color: #064e3b !important;
+}
+.nav.nav--scrolled .nav__hamburger {
+  color: #064e3b !important;
+}
