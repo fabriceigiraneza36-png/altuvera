@@ -2210,3 +2210,151 @@
 .am-auth-field-error {
   overflow-wrap: anywhere;
 }
+
+
+/* Responsive auth hardening: prevent viewport overflow and keep the destination
+   slideshow intentionally quiet with one short, readable phrase only. */
+.am-auth-slideshow__content {
+  inset: auto 0 0 0 !important;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  min-width: 0;
+  max-width: 100%;
+  padding: clamp(12px, 2vw, 24px) !important;
+  overflow: hidden;
+  pointer-events: none;
+}
+.am-auth-slideshow__single-phrase {
+  display: block;
+  width: fit-content;
+  max-width: min(100%, 30rem);
+  margin: 0;
+  padding: 7px 11px;
+  border: 1px solid rgba(255,255,255,.22);
+  border-radius: 10px;
+  color: #fff;
+  background: rgba(3, 30, 23, .66);
+  box-shadow: 0 4px 16px rgba(0,0,0,.16);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  font-size: clamp(11px, 1.1vw, 14px);
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: .005em;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  animation: am-slideUp 300ms ease-out both;
+}
+.am-auth-slideshow__brand,
+.am-auth-slideshow__caption { display: none !important; }
+
+.am-modal,
+.am-modal-mobile,
+.am-form-panel,
+.am-auth-gallery,
+.am-gallery-inner,
+.am-modal .auth-scroll,
+.am-modal-mobile .auth-scroll {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.am-modal,
+.am-modal-mobile { overscroll-behavior: contain; }
+.am-modal .auth-scroll,
+.am-modal-mobile .auth-scroll {
+  overflow-x: clip;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+.am-modal button,
+.am-modal-mobile button,
+.am-modal a,
+.am-modal-mobile a {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  touch-action: manipulation;
+}
+.am-modal .flex,
+.am-modal-mobile .flex { min-width: 0; }
+.am-modal input,
+.am-modal-mobile input,
+.am-modal select,
+.am-modal-mobile select,
+.am-modal textarea,
+.am-modal-mobile textarea {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.am-modal button:focus-visible,
+.am-modal-mobile button:focus-visible,
+.am-modal a:focus-visible,
+.am-modal-mobile a:focus-visible,
+.am-modal input:focus-visible,
+.am-modal-mobile input:focus-visible,
+.am-modal select:focus-visible,
+.am-modal-mobile select:focus-visible,
+.am-modal textarea:focus-visible,
+.am-modal-mobile textarea:focus-visible {
+  outline: 3px solid rgba(5,150,105,.32) !important;
+  outline-offset: 2px;
+}
+.am-modal button:not(:disabled):hover,
+.am-modal-mobile button:not(:disabled):hover {
+  filter: brightness(.98);
+}
+.am-modal button:not(:disabled):active,
+.am-modal-mobile button:not(:disabled):active {
+  transform: translateY(1px);
+}
+.am-modal button:disabled,
+.am-modal-mobile button:disabled {
+  filter: grayscale(.12);
+  opacity: .58;
+}
+@media (min-width: 640px) and (max-width: 1023px) {
+  .am-modal {
+    width: min(700px, calc(100vw - 24px));
+    max-height: calc(100dvh - 24px) !important;
+    height: auto !important;
+    min-height: 0;
+  }
+  .am-auth-gallery { flex: 0 0 auto; height: clamp(76px, 14dvh, 112px); }
+  .am-modal .auth-scroll { max-height: 100%; }
+}
+@media (max-width: 639px) {
+  .am-backdrop { width: 100%; max-width: 100vw; overflow: hidden; }
+  .am-modal-mobile {
+    width: 100%;
+    max-width: 100vw;
+    height: 100dvh;
+    min-height: 0;
+    max-height: 100dvh;
+    overflow-x: clip;
+    overflow-y: auto;
+  }
+  .am-auth-gallery { width: 100%; height: clamp(76px, 12dvh, 104px); min-height: 76px; }
+  .am-auth-slideshow__content { padding: 8px 12px !important; }
+  .am-auth-slideshow__single-phrase {
+    padding: 6px 9px;
+    font-size: 11px;
+    line-height: 1.3;
+    max-width: 100%;
+  }
+  .am-mobile-body { padding-left: 16px; padding-right: 16px; }
+  .am-mobile-footer { padding-left: 16px; padding-right: 16px; }
+}
+@media (max-width: 359px) {
+  .am-auth-gallery { height: 72px; min-height: 72px; }
+  .am-auth-slideshow__single-phrase { font-size: 10px; padding: 5px 8px; }
+}
+@media (max-height: 600px) {
+  .am-modal-mobile { height: 100dvh; max-height: 100dvh; }
+  .am-auth-gallery { height: 68px; min-height: 68px; }
+  .am-modal .auth-scroll { padding-top: 12px; padding-bottom: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .am-auth-slideshow__single-phrase { animation: none !important; }
+}
