@@ -917,6 +917,7 @@ const {
      showCongratulation,
      congratulationType,
      showNotLoggedInMessage,
+     dismissCongratulation,
    } = useUserAuth();
 
    // Toast state
@@ -1050,7 +1051,7 @@ useEffect(injectAppStyles, []);
            isVisible={showCongratulation}
            type={congratulationType}
            user={user}
-           onClose={() => {}}
+           onClose={dismissCongratulation}
          />
 
       <NotLoggedInMessage isVisible={showNotLoggedInMessage} />
