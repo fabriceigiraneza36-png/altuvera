@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowUpRight, BellRing, Check, MessageCircle, Send, X } from "lucide-react";
+import { ArrowUpRight, BellRing, Check, MessageCircle, Send, X, CalendarCheck, CreditCard, MapPin, ShieldCheck, UserRound, Info, MessageSquareReply, ChevronRight } from "lucide-react";
 import { useNotifications } from "../../hooks/useNotifications";
 
 const API_BASE = import.meta.env.VITE_API_URL || "https://backend-jd8f.onrender.com/api";
@@ -38,7 +38,7 @@ export default function GlobalUserNotifications() {
   const [visible, setVisible] = useState(null);
   const swipeStartX = useRef(null);
   const swipeDeltaX = useRef(0);
-  const [replyText, setReplyText] = useState("");
+  const [replyText, setReplyText] = useState("");\n  const [replyOpen, setReplyOpen] = useState(false);\n  const [showFullDetails, setShowFullDetails] = useState(false);\n  const longPressTimer = useRef(null);
   const [replyBusy, setReplyBusy] = useState(false);
   const [replyError, setReplyError] = useState("");
   const [seen, setSeen] = useState(() => {
@@ -176,7 +176,7 @@ export default function GlobalUserNotifications() {
           fontFamily: "Inter, system-ui, sans-serif",
         }}>
         <div style={{
-          background: "#fff", border: "1px solid #dbe7e0", borderLeft: `4px solid ${meta[1]}`,
+          background: "#fff", border: "1px solid #dbe7e0", borderLeft: `4px solid ${meta.color}`,
           borderRadius: 19, boxShadow: "0 22px 65px rgba(15,23,42,.2)", overflow: "hidden",
         }}>
           <div style={{ padding: "15px 16px 12px", display: "flex", alignItems: "flex-start", gap: 11 }}>
@@ -198,12 +198,14 @@ export default function GlobalUserNotifications() {
                   <X size={15}/>
                 </button>
               </div>
-              <p style={{ margin: "9px 0 0", color: "#475569", fontSize: 13, lineHeight: 1.55, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{body}</p>
+              {isBookingConfirmed && destinationImage && <img src={destinationImage} alt={visible.destination_name || visible.destinationName || "Booked destination"} loading="lazy" style={{ width: "100%", height: 92, objectFit: "cover", borderRadius: 10, marginTop: 9 }} onError={(event) => { event.currentTarget.style.display = "none"; }} />}
+              <button type="button" onClick={openNotification} style={{ display: "block", width: "100%", textAlign: "left", border: 0, background: "transparent", padding: 0, margin: "7px 0 0", color: "#374151", fontSize: 12, lineHeight: 1.45, overflowWrap: "anywhere", cursor: "pointer" }}>{body} <span style={{ color: "#065f46", fontWeight: 700 }}>Read details <ChevronRight size={12} style={{ display: "inline", verticalAlign: "middle" }}/></span></button>
+              {isMessageType && <button type="button" onClick={() => setReplyOpen((value) => !value)} style={{ border: 0, background: "transparent", color: "#065f46", fontWeight: 800, fontSize: 12, padding: "7px 0 0", display: "inline-flex", alignItems: "center", gap: 5, cursor: "pointer" }}><MessageSquareReply size={13}/> {replyOpen ? "Close reply" : "Reply"}</button>}
             </div>
           </div>
 
           {isChatNotification && (
-            <form onSubmit={sendReply} style={{ padding: "0 16px 12px 69px" }}>
+            <form onSubmit={sendReply} style={{ padding: "0 13px 12px 61px" }}>
               <label htmlFor="altuvera-notification-reply" style={{ display: "block", marginBottom: 5, color: "#64748b", fontSize: 10, fontWeight: 700, letterSpacing: ".08em", textTransform: "uppercase" }}>Quick reply</label>
               <div style={{ display: "flex", gap: 7 }}>
                 <input id="altuvera-notification-reply" value={replyText} onChange={(event) => setReplyText(event.target.value)}
@@ -211,7 +213,7 @@ export default function GlobalUserNotifications() {
                   style={{ flex: 1, minWidth: 0, border: "1px solid #dbe4df", borderRadius: 11, padding: "10px 11px", outline: "none", fontSize: 12, color: "#0f172a", background: "#fbfdfc" }}/>
                 <button type="submit" disabled={!replyText.trim() || replyBusy}
                   aria-label="Send quick reply"
-                  style={{ border: 0, borderRadius: 11, width: 40, flexShrink: 0, display: "grid", placeItems: "center", background: "#059669", color: "#fff", cursor: replyText.trim() ? "pointer" : "not-allowed", opacity: !replyText.trim() || replyBusy ? .5 : 1 }}>
+                  style={{ border: 0, borderRadius: 11, width: 40, flexShrink: 0, display: "grid", placeItems: "center", background: "#065f46", color: "#fff", cursor: replyText.trim() ? "pointer" : "not-allowed", opacity: !replyText.trim() || replyBusy ? .5 : 1 }}>
                   {replyBusy ? <span style={{ fontSize: 11 }}>…</span> : <Send size={15}/>}
                 </button>
               </div>
@@ -219,7 +221,7 @@ export default function GlobalUserNotifications() {
             </form>
           )}
 
-          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 16px 13px", borderTop: "1px solid #f1f5f9", background: "#fbfdfc" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 13px 11px", borderTop: "1px solid #f1f5f9", background: "#fbfdfc" }}>
             <button type="button" onClick={openNotification}
               style={{ flex: 1, minHeight: 37, display: "inline-flex", justifyContent: "center", alignItems: "center", gap: 7, padding: "9px 12px", border: 0, borderRadius: 11, background: "#059669", color: "#fff", fontSize: 12, fontWeight: 800, cursor: "pointer", boxShadow: "0 4px 10px rgba(5,150,105,.16)" }}>
               {conversationId ? <MessageCircle size={15}/> : <BellRing size={15}/>}
@@ -227,7 +229,20 @@ export default function GlobalUserNotifications() {
             </button>
             <span style={{ color: "#94a3b8", fontSize: 10, display: "inline-flex", alignItems: "center", gap: 4, flexShrink: 0 }}><Check size={12}/> Clears when opened</span>
           </div>
-          {unreadCount > 1 && <div style={{ padding: "0 16px 10px", color: "#94a3b8", fontSize: 10 }}>{unreadCount} unread notifications in your inbox</div>}
+          {unreadCount > 1 && <div style={{ padding: "0 13px 9px", color: "#6b7280", fontSize: 10 }}>{unreadCount} unread notifications</div>}
+        </div>
+      </section>
+      {showFullDetails && <div role="dialog" aria-modal="true" aria-label="Full notification details" onClick={() => setShowFullDetails(false)} style={{ position: "fixed", inset: 0, zIndex: 100000, background: "rgba(15,23,42,.35)", display: "grid", placeItems: "center", padding: 16 }}>
+        <div onClick={(event) => event.stopPropagation()} style={{ width: "min(440px, 100%)", maxHeight: "min(70vh, 560px)", overflow: "auto", background: "#fff", borderRadius: 18, padding: 18, boxShadow: "0 24px 70px rgba(15,23,42,.22)", color: "#111827" }}>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 12 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 9 }}><Icon size={20} color={meta.color}/><h2 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>{title}</h2></div>
+            <button type="button" onClick={() => setShowFullDetails(false)} aria-label="Close full notification" style={{ border: 0, background: "#f3f4f6", borderRadius: 9, padding: 6, cursor: "pointer" }}><X size={16}/></button>
+          </div>
+          {isBookingConfirmed && destinationImage && <img src={destinationImage} alt={visible.destination_name || visible.destinationName || "Booked destination"} style={{ width: "100%", maxHeight: 190, objectFit: "cover", borderRadius: 12, marginTop: 14 }} />}
+          <p style={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere", fontSize: 14, lineHeight: 1.65, color: "#374151" }}>{fullBody}</p>
+          <button type="button" onClick={() => { setShowFullDetails(false); openNotification(); }} style={{ width: "100%", padding: "11px 14px", border: 0, borderRadius: 11, background: "#065f46", color: "#fff", fontWeight: 800, cursor: "pointer" }}>{actionLabel}</button>
+        </div>
+      </div>}
         </div>
       </section>
     </>
