@@ -180,10 +180,22 @@ export default function CommentsCarousel({ destination, entityType = "destinatio
           <MessageCircle size={22} /><span>Share your experience</span>
         </button>
       )}
-      {notice && <div className="dc-comment-success-toast" role="status" aria-live="polite">
-        <span className="dc-comment-success-toast__icon" aria-hidden="true">✓</span><span>{notice}</span>
-        <button type="button" onClick={() => { setNotice(""); window.clearTimeout(noticeTimer.current); }} aria-label="Dismiss notification"><X size={16} /></button>
-      </div>}
+      {notice && (
+        <div className="dc-comment-success-toast" role="status" aria-live="polite">
+          <span className="dc-comment-success-toast__icon" aria-hidden="true">✓</span>
+          <span>{notice}</span>
+          <button
+            type="button"
+            onClick={() => {
+              setNotice("");
+              window.clearTimeout(noticeTimer.current);
+            }}
+            aria-label="Dismiss notification"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       {(error || submitError) && !modalOpen && (
         <div className="dc-comment-error-toast" role="alert">
